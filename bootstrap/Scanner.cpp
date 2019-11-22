@@ -37,13 +37,11 @@ Token *scan_token() {
         return new Token(Token::END_OF_FILE, "<<EOF>>", line, column);
     }
 
-    lexeme = current_char;
-
     if (isalpha(current_char) || current_char == '_') {
+        lexeme = current_char;
         while (isalnum(current_char = next_char()) || current_char == '_') {
             lexeme += current_char;
         }
-
         if (lexeme == "enum") {
             return new Token(Token::ENUM, lexeme, line, column);
         }
@@ -54,15 +52,57 @@ Token *scan_token() {
     }
 
     if (isdigit(current_char)) {
+        lexeme = current_char;
+        int value = current_char - '0';
         while (isdigit(current_char = next_char())) {
             lexeme += current_char;
+            value = value * 10 + current_char - '0';
         }
-
-        int value = strtod(lexeme.c_str(), 0);
-
         return new Token(value, lexeme, line, column);
     }
 
+    if (current_char == '\'') {
+        lexeme = current_char;
+        char value;
+        switch (next_char()) {
+        case '\\':
+            lexeme += current_char;
+            switch (next_char()) {
+            case 'n':
+                value = '\n';
+                break;
+            case '\'':
+                value = '\'';
+                break;
+            case '\"':
+                value = '\"';
+                break;
+            case 't':
+                value = '\t';
+                break;
+            case 'r':
+                value = '\r';
+                break;
+            default:
+                return new Token(Token::ERROR, lexeme, line, column);
+            }
+            break;
+        case EOF:
+        case '\n':
+            return new Token(Token::ERROR, lexeme, line, column);
+        default:
+            value = current_char;
+            break;
+        }
+        lexeme += current_char;
+        if (next_char() != '\'') {
+            return new Token(Token::ERROR, lexeme, line, column);
+        }
+        lexeme += current_char;
+        return new Token(value, lexeme, line, column);
+    }
+
+    lexeme = current_char;
     current_char = next_char();
     return new Token(Token::OTHER, lexeme, line, column);
 }

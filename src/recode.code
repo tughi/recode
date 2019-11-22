@@ -1,0 +1,30 @@
+TokenType :: enum {
+  CHAR
+  COMMENT
+  END_OF_FILE
+  ERROR
+  IDENTIFIER
+  INTEGER
+  OTHER
+  STRING
+}
+
+Token :: struct {
+  type : TokenType
+  lexeme : String
+  line : Int
+  column : Int
+  int_value : Int
+  char_value : Char
+  string_value : String
+}
+
+name :: (self: Token) -> String {
+  a := 42
+  b := 'b'
+  c := '\n'
+  d := '\t'
+  e := '\''
+  f := '\"'
+  return "TEST"
+}
