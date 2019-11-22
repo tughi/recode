@@ -157,6 +157,8 @@ Token *scan_token() {
     }
 
     lexeme = current_char;
-    next_char();
-    return new Token(Token::OTHER, copy_string(lexeme), line, column);
+    while (next_char() != EOF && !isspace(current_char) && !isalnum(current_char) && current_char != '_' && current_char != '\'' && current_char != '\"') {
+        lexeme += current_char;
+    }
+    return new Token(Token::OPERATOR, copy_string(lexeme), line, column);
 }

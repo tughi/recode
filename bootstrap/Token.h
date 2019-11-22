@@ -10,7 +10,7 @@ struct Token {
         ERROR,
         IDENTIFIER,
         INTEGER,
-        OTHER,
+        OPERATOR,
         STRING,
         STRUCT,
     };
