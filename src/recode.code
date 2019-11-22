@@ -26,5 +26,5 @@ name :: (self: Token) -> String {
   d := '\t'
   e := '\''
   f := '\"'
-  return "TEST"
+  return "This is a string with following escapes: \t, \\, \', \", \n"
 }

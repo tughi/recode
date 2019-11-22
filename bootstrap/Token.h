@@ -1,8 +1,6 @@
 #ifndef __recode__token_h__
 #define __recode__token_h__
 
-#include <string>
-
 struct Token {
     enum Type {
         CHAR,
@@ -13,25 +11,29 @@ struct Token {
         IDENTIFIER,
         INTEGER,
         OTHER,
+        STRING,
         STRUCT,
     };
 
     Type type;
 
-    std::string lexeme;
+    const char *lexeme;
     int line;
     int column;
 
     union {
         char character;
         int integer;
+        const char *string;
     };
 
-    Token(Type type, std::string lexeme, int line, int column);
+    Token(Type type, const char *lexeme, int line, int column);
 
-    Token(char character, std::string lexeme, int line, int column);
+    Token(char character, const char *lexeme, int line, int column);
 
-    Token(int integer, std::string lexeme, int line, int column);
+    Token(int integer, const char *lexeme, int line, int column);
+
+    Token(const char *string, const char *lexeme, int line, int column);
 };
 
 #endif
