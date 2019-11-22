@@ -1,6 +1,8 @@
 #ifndef __recode__token_h__
 #define __recode__token_h__
 
+#include "String.h"
+
 struct Token {
     enum Type {
         CHAR,
@@ -17,23 +19,23 @@ struct Token {
 
     Type type;
 
-    const char *lexeme;
+    String *lexeme;
     int line;
     int column;
 
     union {
         char character;
         int integer;
-        const char *string;
+        String *string;
     };
 
-    Token(Type type, const char *lexeme, int line, int column);
+    Token(Type type, String *lexeme, int line, int column);
 
-    Token(char character, const char *lexeme, int line, int column);
+    Token(char character, String *lexeme, int line, int column);
 
-    Token(int integer, const char *lexeme, int line, int column);
+    Token(int integer, String *lexeme, int line, int column);
 
-    Token(const char *string, const char *lexeme, int line, int column);
+    Token(String *string, String *lexeme, int line, int column);
 };
 
 #endif

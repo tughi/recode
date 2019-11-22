@@ -17,6 +17,6 @@ int main() {
             line = token->line;
             cout << setw(4) << line << ": ";
         }
-        cout << token->lexeme << " ";
+        cout << token->lexeme->data << " ";
     }
 }
