@@ -6,6 +6,7 @@
 struct Token {
     enum Type {
         END_OF_FILE,
+        END_OF_LINE,
         ENUM,
         IDENTIFIER,
         INTEGER,

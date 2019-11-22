@@ -5,15 +5,12 @@
 Token *scan_token() {
     static int current_char = ' ';
     static int current_line = 1;
-    static int current_column = 1;
-
-    std::string lexeme;
-    int line = current_line;
-    int column = current_column;
+    static int current_column = 0;
 
     auto next_char = []() {
+        auto previous_char = current_char;
         current_char = getchar();
-        if (current_char == '\n') {
+        if (previous_char == '\n') {
             current_line += 1;
             current_column = 1;
         } else {
@@ -22,14 +19,22 @@ Token *scan_token() {
         return current_char;
     };
 
+    std::string lexeme;
+    int line = current_line;
+    int column = current_column;
+
     while (isspace(current_char)) {
+        auto previous_char = current_char;
+        current_char = next_char();
+        if (previous_char == '\n') {
+            return new Token(Token::END_OF_LINE, "<EOL>", line, column);
+        }
         line = current_line;
         column = current_column;
-        current_char = next_char();
     }
 
     if (current_char == EOF) {
-        return new Token(Token::END_OF_FILE, "", line, column);
+        return new Token(Token::END_OF_FILE, "<<EOF>>", line, column);
     }
 
     lexeme = current_char;
