@@ -12,7 +12,9 @@ BIN_FILE = os.path.join(BUILD_DIR, 'bootstrap')
 
 def execute(command):
     print(command)
-    subprocess.call(command.split(' '))
+    return_code = subprocess.call(command.split(' '))
+    if return_code != 0:
+        exit(return_code)
 
 
 def clean():
