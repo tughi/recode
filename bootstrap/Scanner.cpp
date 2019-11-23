@@ -1,8 +1,19 @@
 #include "Scanner.h"
 #include "String.h"
 
-#include <ctype.h>
 #include <stdio.h>
+
+bool is_space(int c) {
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r';
+}
+
+bool is_digit(int c) {
+    return c >= '0' && c <= '9';
+}
+
+bool is_letter(int c) {
+    return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+}
 
 Token *scan_token() {
     static int current_char = ' ';
@@ -25,7 +36,7 @@ Token *scan_token() {
     int line = current_line;
     int column = current_column;
 
-    while (isspace(current_char)) {
+    while (is_space(current_char)) {
         auto previous_char = current_char;
         next_char();
         if (previous_char == '\n') {
@@ -39,9 +50,9 @@ Token *scan_token() {
         return new Token(Token::END_OF_FILE, new String("<<EOF>>"), line, column);
     }
 
-    if (isalpha(current_char) || current_char == '_') {
+    if (is_letter(current_char) || current_char == '_') {
         lexeme->append(current_char);
-        while (isalnum(next_char()) || current_char == '_') {
+        while (is_letter(next_char()) || is_digit(current_char) || current_char == '_') {
             lexeme->append(current_char);
         }
         if (lexeme->equals("enum")) {
@@ -53,10 +64,10 @@ Token *scan_token() {
         return new Token(Token::IDENTIFIER, lexeme, line, column);
     }
 
-    if (isdigit(current_char)) {
+    if (is_digit(current_char)) {
         lexeme->append(current_char);
         int value = current_char - '0';
-        while (isdigit(next_char())) {
+        while (is_digit(next_char())) {
             lexeme->append(current_char);
             value = value * 10 + current_char - '0';
         }
@@ -151,7 +162,7 @@ Token *scan_token() {
     }
 
     lexeme->append(current_char);
-    while (next_char() != EOF && !isspace(current_char) && !isalnum(current_char) && current_char != '_' && current_char != '\'' && current_char != '\"') {
+    while (next_char() != EOF && !is_space(current_char) && !is_digit(current_char) && !is_letter(current_char) && current_char != '_' && current_char != '\'' && current_char != '\"') {
         lexeme->append(current_char);
     }
     return new Token(Token::OPERATOR, lexeme, line, column);
