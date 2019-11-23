@@ -5,7 +5,7 @@
 
 struct Token {
     enum Type {
-        CHAR,
+        CHARACTER,
         END_OF_FILE,
         END_OF_LINE,
         ENUM,
@@ -24,18 +24,24 @@ struct Token {
     int column;
 
     union {
-        char character;
-        int integer;
-        String *string;
+        struct {
+            char value;
+        } character;
+        struct {
+            int value;
+        } integer;
+        struct {
+            String *value;
+        } string;
     };
 
     Token(Type type, String *lexeme, int line, int column);
 
-    Token(char character, String *lexeme, int line, int column);
+    Token(char value, String *lexeme, int line, int column);
 
-    Token(int integer, String *lexeme, int line, int column);
+    Token(int value, String *lexeme, int line, int column);
 
-    Token(String *string, String *lexeme, int line, int column);
+    Token(String *value, String *lexeme, int line, int column);
 };
 
 #endif

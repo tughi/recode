@@ -7,14 +7,14 @@ Token::Token(Token::Type type, String *lexeme, int line, int column) {
     this->column = column;
 }
 
-Token::Token(char character, String *lexeme, int line, int column) : Token(INTEGER, lexeme, line, column) {
-    this->character = character;
+Token::Token(char value, String *lexeme, int line, int column) : Token(CHARACTER, lexeme, line, column) {
+    this->character.value = value;
 }
 
-Token::Token(int integer, String *lexeme, int line, int column) : Token(CHAR, lexeme, line, column) {
-    this->integer = integer;
+Token::Token(int value, String *lexeme, int line, int column) : Token(INTEGER, lexeme, line, column) {
+    this->integer.value = value;
 }
 
-Token::Token(String *string, String *lexeme, int line, int column) : Token(STRING, lexeme, line, column) {
-    this->string = string;
+Token::Token(String *value, String *lexeme, int line, int column) : Token(STRING, lexeme, line, column) {
+    this->string.value = value;
 }

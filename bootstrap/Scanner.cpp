@@ -40,14 +40,14 @@ Token *scan_token() {
         auto previous_char = current_char;
         next_char();
         if (previous_char == '\n') {
-            return new Token(Token::END_OF_LINE, new String("<EOL>"), line, column);
+            return new Token(Token::END_OF_LINE, new String(""), line, column);
         }
         line = current_line;
         column = current_column;
     }
 
     if (current_char == EOF) {
-        return new Token(Token::END_OF_FILE, new String("<<EOF>>"), line, column);
+        return new Token(Token::END_OF_FILE, new String(""), line, column);
     }
 
     if (is_letter(current_char) || current_char == '_') {
