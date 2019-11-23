@@ -69,7 +69,7 @@ def build():
             execute(f"""g++ -c -o {obj_file} {cpp_file}""")
             obj_files_changed = True
 
-    if obj_files_changed:
+    if obj_files_changed or not os.path.exists(BIN_FILE):
         execute(f"""g++ -o {BIN_FILE} {' '.join(obj_files)}""")
 
 
