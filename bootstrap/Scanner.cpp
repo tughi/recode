@@ -93,6 +93,7 @@ Token *scan_token() {
             }
             break;
         case EOF:
+        case '\'':
         case '\n':
             return new Token(Token::ERROR, lexeme, line, column);
         default:
