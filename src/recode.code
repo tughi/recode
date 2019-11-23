@@ -1,30 +1,43 @@
-TokenType :: enum {
-  CHAR
-  COMMENT
-  END_OF_FILE
-  ERROR
-  IDENTIFIER
-  INTEGER
-  OTHER
-  STRING
+Token :: enum (line: int, column: int, lexeme: str) {
+	Character(value: char)
+	Comment(text: str)
+	EndOfFile
+	Error(message: str)
+	Identifier(name: str)
+	Integer(value: int)
+	Other
+	String(value: str)
 }
 
-Token :: struct {
-  type : TokenType
-  lexeme : String
-  line : Int
-  column : Int
-  int_value : Int
-  char_value : Char
-  string_value : String
+Source :: struct {
+	data: [char]
+	current_index: int = 0
+	current_line: int = 1
+	current_column: int = 1
 }
 
-name :: (self: Token) -> String {
-  a := 42
-  b := 'b'
-  c := '\n'
-  d := '\t'
-  e := '\''
-  f := '\"'
-  return "This is a string with following escapes: \t, \\, \', \", \n"
+current :: (self : Source) -> char {
+	if (self.current_index < self.data.length) {
+		return self.data[self.current_index]
+	}
+	return 0
+}
+
+advance :: (self : Source, accepted : (char) -> bool) -> char {
+	if (self.current_index < self.data.length) {
+		current := self.data[self.current_index]
+		if (accepted(current)) {
+			self.current_index += 1
+			if (current == '\n') {
+				self.current_line += 1
+				self.current_column = 1
+			} else {
+				self.current_column += 1
+			}
+			return current
+		}
+	}
+}
+
+next_token :: () -> Token {
 }
