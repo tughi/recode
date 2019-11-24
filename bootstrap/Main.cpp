@@ -50,36 +50,34 @@ char *load_file(string file_name) {
 std::ostream &operator<<(std::ostream &os, const Token &token) {
     switch (token.type) {
     case Token::CHARACTER:
-        os << token.lexeme->data;
+        os << "\x1B[32m" << token.lexeme->data << "\033[0m";
         return os;
     case Token::END_OF_FILE:
-        os << "<<EOF>>";
+        os << "\x1B[30m" << "<<EOF>>" << "\033[0m" << endl;
         return os;
     case Token::END_OF_LINE:
-        os << "<EOL>";
+        os << "\x1B[30m" << "<EOL>" << "\033[0m";
         return os;
     case Token::ERROR:
-        os << '!' << token.lexeme->data << '!';
+        os << "\033[42;41m" << token.lexeme->data << "\033[0m";
         return os;
     case Token::IDENTIFIER:
-        os << token.lexeme->data;
+        os << "\x1B[2;39m" << token.lexeme->data << "\033[0m";
         return os;
     case Token::INTEGER:
-        os << token.integer.value;
+        os << "\x1B[36m" << token.lexeme->data << "\033[0m";
         return os;
     case Token::KEYWORD:
-        for (int i = 0; i < token.lexeme->length; i++) {
-            cout << (char)toupper(token.lexeme->data[i]);
-        }
+        os << "\x1B[34m" << token.lexeme->data << "\033[0m";
         return os;
     case Token::OTHER:
-        os << '_' << token.lexeme->data << '_';
+        os << "\x1B[37m" << token.lexeme->data << "\033[0m";
         return os;
     case Token::SPACE:
         os << ' ';
         return os;
     case Token::STRING:
-        os << token.lexeme->data;
+        os << "\x1B[32m" << token.lexeme->data << "\033[0m";
         return os;
     case Token::TAB:
         os << "    ";
