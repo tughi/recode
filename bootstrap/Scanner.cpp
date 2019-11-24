@@ -3,167 +3,203 @@
 
 #include <stdio.h>
 
-bool is_space(int c) {
-    return c == ' ' || c == '\n' || c == '\t' || c == '\r';
+#define KEYWORDS_COUNT 4
+
+const char *KEYWORDS[] = {
+    "bool",
+    "enum",
+    "struct",
+    "return",
+};
+
+bool is_character(char c) {
+    return c >= ' ' && c < 128 && c != '\'';
 }
 
-bool is_digit(int c) {
+bool is_digit(char c) {
     return c >= '0' && c <= '9';
 }
 
-bool is_letter(int c) {
-    return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z';
+bool is_double_quote(char c) {
+    return c == '\"';
 }
 
-Token *scan_token() {
-    static int current_char = ' ';
-    static int current_line = 1;
-    static int current_column = 0;
+bool is_escape(char c) {
+    return c == 'n' || c == 't' || c == '\"' || c == '\'' || c == '\\';
+}
 
-    auto next_char = []() {
-        auto previous_char = current_char;
-        current_char = getchar();
-        if (previous_char == '\n') {
-            current_line += 1;
-            current_column = 1;
-        } else {
-            current_column += 1;
-        }
-        return current_char;
-    };
+char get_escape(char c) {
+    switch (c) {
+    case '\"':
+        return '\"';
+    case '\'':
+        return '\'';
+    case '\\':
+        return '\\';
+    case 'n':
+        return '\n';
+    case 't':
+        return '\t';
+    }
+    return 0;
+}
 
+bool is_identifier_start(char c) {
+    return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_';
+}
+
+bool is_identifier_body(char c) {
+    return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_' || c >= '0' && c <= '9';
+}
+
+bool is_single_quote(char c) {
+    return c == '\'';
+}
+
+bool is_string_character(char c) {
+    return c >= ' ' && c < 128 && c != '\"';
+}
+
+bool is_valid(char c) {
+    return c > 0 && c < 128;
+}
+
+Token *read_character(Source &source) {
     String *lexeme = new String();
-    int line = current_line;
-    int column = current_column;
+    int line = source.current_line();
+    int column = source.current_column();
 
-    while (is_space(current_char)) {
-        auto previous_char = current_char;
-        next_char();
-        if (previous_char == '\n') {
-            return new Token(Token::END_OF_LINE, new String(""), line, column);
-        }
-        line = current_line;
-        column = current_column;
-    }
-
-    if (current_char == EOF) {
-        return new Token(Token::END_OF_FILE, new String(""), line, column);
-    }
-
-    if (is_letter(current_char) || current_char == '_') {
-        lexeme->append(current_char);
-        while (is_letter(next_char()) || is_digit(current_char) || current_char == '_') {
-            lexeme->append(current_char);
-        }
-        if (lexeme->equals("enum")) {
-            return new Token(Token::ENUM, lexeme, line, column);
-        }
-        if (lexeme->equals("struct")) {
-            return new Token(Token::STRUCT, lexeme, line, column);
-        }
-        return new Token(Token::IDENTIFIER, lexeme, line, column);
-    }
-
-    if (is_digit(current_char)) {
-        lexeme->append(current_char);
-        int value = current_char - '0';
-        while (is_digit(next_char())) {
-            lexeme->append(current_char);
-            value = value * 10 + current_char - '0';
-        }
-        return new Token(value, lexeme, line, column);
-    }
-
-    if (current_char == '\'') {
-        lexeme->append(current_char);
-        char value;
-        switch (next_char()) {
-        case '\\':
-            lexeme->append(current_char);
-            switch (next_char()) {
-            case 'n':
-                value = '\n';
-                break;
-            case '\'':
-                value = '\'';
-                break;
-            case '\"':
-                value = '\"';
-                break;
-            case '\\':
-                value = '\\';
-                break;
-            case 't':
-                value = '\t';
-                break;
-            case 'r':
-                value = '\r';
-                break;
-            default:
-                return new Token(Token::ERROR, lexeme, line, column);
+    char value = 0;
+    char consumed;
+    if (consumed = source.advance(is_single_quote)) {
+        lexeme->append(consumed);
+        if (consumed = source.advance(is_character)) {
+            lexeme->append(consumed);
+            if (consumed == '\\') {
+                if (consumed = source.advance(is_escape)) {
+                    lexeme->append(consumed);
+                    value = get_escape(consumed);
+                }
+            } else {
+                value = consumed;
             }
-            break;
-        case EOF:
-        case '\'':
-        case '\n':
-            return new Token(Token::ERROR, lexeme, line, column);
-        default:
-            value = current_char;
-            break;
         }
-        lexeme->append(current_char);
-        if (next_char() != '\'') {
-            return new Token(Token::ERROR, lexeme, line, column);
-        }
-        lexeme->append(current_char);
-        next_char();
+    }
+    if (value && (consumed = source.advance(is_single_quote))) {
+        lexeme->append(consumed);
         return new Token(value, lexeme, line, column);
     }
 
-    if (current_char == '\"') {
-        lexeme->append(current_char);
-        String *value = new String();
-        while (next_char() != EOF && current_char != '\n' && current_char != '\"') {
-            lexeme->append(current_char);
-            if (current_char == '\\') {
-                switch (next_char()) {
-                case 'n':
-                    value->append('\n');
-                    break;
-                case '\'':
-                    value->append('\'');
-                    break;
-                case '\"':
-                    value->append('\"');
-                    break;
-                case '\\':
-                    value->append('\\');
-                    break;
-                case 't':
-                    value->append('\t');
-                    break;
-                case 'r':
-                    value->append('\r');
-                    break;
-                default:
+    return new Token(Token::ERROR, lexeme, line, column);
+}
+
+Token *read_identifier(Source &source) {
+    String *lexeme = new String();
+    int line = source.current_line();
+    int column = source.current_column();
+
+    char current;
+    while ((current = source.advance(is_identifier_body))) {
+        lexeme->append(current);
+    }
+
+    for (int i = 0; i < KEYWORDS_COUNT; i++) {
+        if (lexeme->equals(KEYWORDS[i])) {
+            return new Token(Token::KEYWORD, lexeme, line, column);
+        }
+    }
+
+    return new Token(Token::IDENTIFIER, lexeme, line, column);
+}
+
+Token *read_integer(Source &source) {
+    String *lexeme = new String();
+    int line = source.current_line();
+    int column = source.current_column();
+
+    char current;
+    int value = 0;
+    while ((current = source.advance(is_digit))) {
+        lexeme->append(current);
+        value = value * 10 + (current - '0');
+    }
+
+    return new Token(value, lexeme, line, column);
+}
+
+Token *read_other(Source &source) {
+    String *lexeme = new String();
+    int line = source.current_line();
+    int column = source.current_column();
+
+    char consumed = source.advance(is_valid);
+    switch (consumed) {
+    case '\t':
+        return new Token(Token::TAB, lexeme, line, column);
+    case '\n':
+        return new Token(Token::END_OF_LINE, lexeme, line, column);
+    case ' ':
+        return new Token(Token::SPACE, lexeme, line, column);
+    }
+    lexeme->append(consumed);
+    return new Token(Token::OTHER, lexeme, line, column);
+}
+
+Token *read_string(Source &source) {
+    String *lexeme = new String();
+    int line = source.current_line();
+    int column = source.current_column();
+
+    String *value = new String();
+    char consumed;
+    if (consumed = source.advance(is_double_quote)) {
+        lexeme->append(consumed);
+        while (consumed = source.advance(is_string_character)) {
+            lexeme->append(consumed);
+            if (consumed == '\\') {
+                if (consumed = source.advance(is_escape)) {
+                    lexeme->append(consumed);
+                    value->append(get_escape(consumed));
+                } else {
                     return new Token(Token::ERROR, lexeme, line, column);
                 }
-                lexeme->append(current_char);
             } else {
-                value->append(current_char);
+                value->append(consumed);
             }
         }
-        if (current_char != '\"') {
-            return new Token(Token::ERROR, lexeme, line, column);
+        if (consumed = source.advance(is_double_quote)) {
+            lexeme->append(consumed);
+            return new Token(value, lexeme, line, column);
         }
-        lexeme->append(current_char);
-        next_char();
-        return new Token(value, lexeme, line, column);
+    }
+    return new Token(Token::ERROR, lexeme, line, column);
+}
+
+Token *scan_token(Source &source) {
+    char current = source.current();
+    int token_line = source.current_line();
+    int token_column = source.current_column();
+
+    if (!is_valid(current)) {
+        return new Token(Token::END_OF_FILE, new String(""), token_line, token_column);
     }
 
-    lexeme->append(current_char);
-    while (next_char() != EOF && !is_space(current_char) && !is_digit(current_char) && !is_letter(current_char) && current_char != '_' && current_char != '\'' && current_char != '\"') {
-        lexeme->append(current_char);
+    Token *token;
+    if (is_identifier_start(current)) {
+        token = read_identifier(source);
+    } else if (is_digit(current)) {
+        token = read_integer(source);
+    } else if (is_double_quote(current)) {
+        token = read_string(source);
+    } else if (is_single_quote(current)) {
+        token = read_character(source);
+    } else {
+        token = read_other(source);
     }
-    return new Token(Token::OPERATOR, lexeme, line, column);
+
+    if (token_column == source.current_column() && token_line == source.current_line()) {
+        throw "Each scan must advance the source";
+    }
+
+    return token;
 }

@@ -8,13 +8,14 @@ struct Token {
         CHARACTER,
         END_OF_FILE,
         END_OF_LINE,
-        ENUM,
         ERROR,
         IDENTIFIER,
         INTEGER,
-        OPERATOR,
+        KEYWORD,
+        OTHER,
+        SPACE,
         STRING,
-        STRUCT,
+        TAB,
     };
 
     Type type;
