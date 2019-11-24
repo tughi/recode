@@ -39,5 +39,6 @@ advance :: (self : Source, accepted : (char) -> bool) -> char {
 	}
 }
 
-next_token :: () -> Token {
+main :: () {
+	echo("Hello world!")
 }
