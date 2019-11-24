@@ -3,13 +3,19 @@
 
 #include <stdio.h>
 
-#define KEYWORDS_COUNT 4
+#define KEYWORDS_COUNT 10
 
 const char *KEYWORDS[] = {
     "bool",
+    "char",
+    "else",
     "enum",
-    "struct",
+    "if",
+    "int",
     "return",
+    "str",
+    "struct",
+    "while",
 };
 
 bool is_character(char c) {
