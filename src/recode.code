@@ -49,9 +49,14 @@ main :: () {
 		return char > 0 && char < 128
 	}
 
-	consumed := source.consume(is_valid)
-	while (consumed != 0) {
+	loop {
+		consumed := source.consume(is_valid)
+		if (consumed == 0) {
+			break
+		}
+		if (consumed == '!') {
+			skip
+		}
 		echo(consumed)
-		consumed = source.consume(is_valid)
 	}
 }

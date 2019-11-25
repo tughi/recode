@@ -15,9 +15,9 @@ const char *KEYWORDS[] = {
     "int",
     "loop",
     "return",
+    "skip",
     "string",
     "struct",
-    "while",
 };
 
 bool is_character(char c) {
