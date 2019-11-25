@@ -1,12 +1,12 @@
-Token :: enum (line: int, column: int, lexeme: str) {
+Token :: enum (line: int, column: int, lexeme: string) {
 	Character(value: char)
-	Comment(text: str)
+	Comment(text: string)
 	EndOfFile
-	Error(message: str)
-	Identifier(name: str)
+	Error(message: string)
+	Identifier(name: string)
 	Integer(value: int)
 	Other
-	String(value: str)
+	String(value: string)
 }
 
 Source :: struct {
@@ -16,14 +16,16 @@ Source :: struct {
 	current_column: int = 1
 }
 
-current :: (self : Source) -> char {
+\ returns the character that is about to be consumed
+peek :: (self: Source) -> char {
 	if (self.current_index < self.data.length) {
 		return self.data[self.current_index]
 	}
 	return 0
 }
 
-advance :: (self : Source, accepted : (char) -> bool) -> char {
+\ consume and return the current character if it's accepted by the provided function
+consume :: (self: Source, accepted: (char) -> bool) -> char {
 	if (self.current_index < self.data.length) {
 		current := self.data[self.current_index]
 		if (accepted(current)) {
@@ -37,8 +39,19 @@ advance :: (self : Source, accepted : (char) -> bool) -> char {
 			return current
 		}
 	}
+	return 0
 }
 
 main :: () {
-	echo("Hello world!")
+	source := Source("Hello world!")
+
+	is_valid :: (char) -> bool {
+		return char > 0 && char < 128
+	}
+
+	consumed := source.consume(is_valid)
+	while (consumed != 0) {
+		echo(consumed)
+		consumed = source.consume(is_valid)
+	}
 }

@@ -6,6 +6,7 @@
 struct Token {
     enum Type {
         CHARACTER,
+        COMMENT,
         END_OF_FILE,
         END_OF_LINE,
         ERROR,

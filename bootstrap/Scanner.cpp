@@ -3,17 +3,19 @@
 
 #include <stdio.h>
 
-#define KEYWORDS_COUNT 10
+#define KEYWORDS_COUNT 12
 
 const char *KEYWORDS[] = {
     "bool",
+    "break",
     "char",
     "else",
     "enum",
     "if",
     "int",
+    "loop",
     "return",
-    "str",
+    "string",
     "struct",
     "while",
 };
@@ -58,6 +60,14 @@ bool is_identifier_body(char c) {
     return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_' || c >= '0' && c <= '9';
 }
 
+bool is_comment_start(char c) {
+    return c == '\\';
+}
+
+bool is_comment_body(char c) {
+    return c >= 32 && c <= 127 || c == '\t';
+}
+
 bool is_single_quote(char c) {
     return c == '\'';
 }
@@ -95,8 +105,19 @@ Token *read_character(Source &source) {
         lexeme->append(consumed);
         return new Token(value, lexeme, line, column);
     }
-
     return new Token(Token::ERROR, lexeme, line, column);
+}
+
+Token *read_comment(Source &source) {
+    String *lexeme = new String();
+    int line = source.current_line();
+    int column = source.current_column();
+
+    char consumed;
+    while (consumed = source.advance(is_comment_body)) {
+        lexeme->append(consumed);
+    }
+    return new Token(Token::COMMENT, lexeme, line, column);
 }
 
 Token *read_identifier(Source &source) {
@@ -108,13 +129,11 @@ Token *read_identifier(Source &source) {
     while ((current = source.advance(is_identifier_body))) {
         lexeme->append(current);
     }
-
     for (int i = 0; i < KEYWORDS_COUNT; i++) {
         if (lexeme->equals(KEYWORDS[i])) {
             return new Token(Token::KEYWORD, lexeme, line, column);
         }
     }
-
     return new Token(Token::IDENTIFIER, lexeme, line, column);
 }
 
@@ -129,7 +148,6 @@ Token *read_integer(Source &source) {
         lexeme->append(current);
         value = value * 10 + (current - '0');
     }
-
     return new Token(value, lexeme, line, column);
 }
 
@@ -199,6 +217,8 @@ Token *scan_token(Source &source) {
         token = read_string(source);
     } else if (is_single_quote(current)) {
         token = read_character(source);
+    } else if (is_comment_start(current)) {
+        token = read_comment(source);
     } else {
         token = read_other(source);
     }
