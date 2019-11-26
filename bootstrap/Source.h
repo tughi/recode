@@ -11,7 +11,7 @@ struct Source {
   public:
     Source(char *data);
 
-    char current() { return this->data[this->index]; }
+    char peek() { return this->data[this->index]; }
 
     int current_line() { return this->line; }
 

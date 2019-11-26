@@ -125,9 +125,9 @@ Token *read_identifier(Source &source) {
     int line = source.current_line();
     int column = source.current_column();
 
-    char current;
-    while ((current = source.advance(is_identifier_body))) {
-        lexeme->append(current);
+    char consumed;
+    while ((consumed = source.advance(is_identifier_body))) {
+        lexeme->append(consumed);
     }
     for (int i = 0; i < KEYWORDS_COUNT; i++) {
         if (lexeme->equals(KEYWORDS[i])) {
@@ -142,11 +142,11 @@ Token *read_integer(Source &source) {
     int line = source.current_line();
     int column = source.current_column();
 
-    char current;
+    char consumed;
     int value = 0;
-    while ((current = source.advance(is_digit))) {
-        lexeme->append(current);
-        value = value * 10 + (current - '0');
+    while ((consumed = source.advance(is_digit))) {
+        lexeme->append(consumed);
+        value = value * 10 + (consumed - '0');
     }
     return new Token(value, lexeme, line, column);
 }
@@ -200,24 +200,24 @@ Token *read_string(Source &source) {
 }
 
 Token *scan_token(Source &source) {
-    char current = source.current();
+    char next_char = source.peek();
     int token_line = source.current_line();
     int token_column = source.current_column();
 
-    if (!is_valid(current)) {
+    if (!is_valid(next_char)) {
         return new Token(Token::END_OF_FILE, new String(""), token_line, token_column);
     }
 
     Token *token;
-    if (is_identifier_start(current)) {
+    if (is_identifier_start(next_char)) {
         token = read_identifier(source);
-    } else if (is_digit(current)) {
+    } else if (is_digit(next_char)) {
         token = read_integer(source);
-    } else if (is_double_quote(current)) {
+    } else if (is_double_quote(next_char)) {
         token = read_string(source);
-    } else if (is_single_quote(current)) {
+    } else if (is_single_quote(next_char)) {
         token = read_character(source);
-    } else if (is_comment_start(current)) {
+    } else if (is_comment_start(next_char)) {
         token = read_comment(source);
     } else {
         token = read_other(source);
