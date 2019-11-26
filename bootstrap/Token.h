@@ -37,6 +37,8 @@ struct Token {
         } string;
     };
 
+    Token *next = nullptr;
+
     Token(Type type, String *lexeme, int line, int column);
 
     Token(char value, String *lexeme, int line, int column);

@@ -14,11 +14,8 @@ int main(int argc, char *argv[]) {
     auto source_file = string("../src/Expressions.code");
     auto source = Source(load_file(source_file));
 
-    Token *token;
-    int line = 0;
-
-    do {
-        token = scan_token(source);
+    auto token = scan_tokens(source);
+    for (int line = 0; token != nullptr; token = token->next) {
         if (token->line != line) {
             if (line > 0) {
                 cout << endl;
@@ -27,7 +24,7 @@ int main(int argc, char *argv[]) {
             cout << setw(4) << line << ": ";
         }
         cout << *token;
-    } while (token->type != Token::END_OF_FILE);
+    }
 }
 
 char *load_file(string file_name) {

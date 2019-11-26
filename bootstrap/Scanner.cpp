@@ -229,3 +229,15 @@ Token *scan_token(Source &source) {
 
     return token;
 }
+
+Token *scan_tokens(Source &source) {
+    Token *first = scan_token(source);
+    Token *last = first;
+
+    while (last->type != Token::END_OF_FILE) {
+        last->next = scan_token(source);
+        last = last->next;
+    }
+
+    return first;
+}

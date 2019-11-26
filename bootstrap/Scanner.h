@@ -4,6 +4,6 @@
 #include "Source.h"
 #include "Token.h"
 
-Token *scan_token(Source &source);
+Token *scan_tokens(Source &source);
 
 #endif
