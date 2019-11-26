@@ -11,7 +11,7 @@ char *load_file(string filen_name);
 std::ostream &operator<<(std::ostream &os, const Token &token);
 
 int main(int argc, char *argv[]) {
-    auto source_file = string("../src/recode.code");
+    auto source_file = string("../src/Expressions.code");
     auto source = Source(load_file(source_file));
 
     Token *token;
@@ -32,6 +32,12 @@ int main(int argc, char *argv[]) {
 
 char *load_file(string file_name) {
     auto file = ifstream(file_name);
+    if (file.fail()) {
+        cout << "\033[42;41m";
+        cout << "Couldn't open file: " << file_name << endl;
+        cout << "\033[0m";
+        exit(1);
+    }
     file.seekg(0, ios::end);
     int file_size = file.tellg();
     if (file_size > 0) {
@@ -40,9 +46,6 @@ char *load_file(string file_name) {
         file.read(buffer, file_size);
         buffer[file_size] = 0;
         return buffer;
-    } else {
-        cout << "File not found" << endl;
-        exit(1);
     }
     return new char[0];
 }
