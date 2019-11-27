@@ -230,7 +230,7 @@ Token *scan_token(Source &source) {
     return token;
 }
 
-Token *scan_tokens(Source &source) {
+Token *scan(Source &source) {
     Token *first = scan_token(source);
     Token *last = first;
 

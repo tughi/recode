@@ -8,16 +8,16 @@ Source::Source(char *data) {
 }
 
 char Source::advance(bool (*accepts)(char)) {
-    char current = this->data[this->index];
-    if (current && (*accepts)(current)) {
+    char next_char = this->data[this->index];
+    if (next_char && (*accepts)(next_char)) {
         this->index += 1;
-        if (current == '\n') {
+        if (next_char == '\n') {
             this->line += 1;
             this->column = 1;
         } else {
             this->column += 1;
         }
-        return current;
+        return next_char;
     }
     return 0;
 }

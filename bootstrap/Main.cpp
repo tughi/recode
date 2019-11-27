@@ -11,10 +11,10 @@ char *load_file(string filen_name);
 std::ostream &operator<<(std::ostream &os, const Token &token);
 
 int main(int argc, char *argv[]) {
-    auto source_file = string("../src/Expressions.code");
+    auto source_file = string("../src/Source.code");
     auto source = Source(load_file(source_file));
 
-    auto token = scan_tokens(source);
+    auto token = scan(source);
     for (int line = 0; token != nullptr; token = token->next) {
         if (token->line != line) {
             if (line > 0) {
@@ -27,12 +27,20 @@ int main(int argc, char *argv[]) {
     }
 }
 
+const char *SGR_RESET = "\033[0m";
+const char *SGR_ERROR = "\033[42;41m";
+const char *SGR_BLACK = "\033[30m";
+const char *SGR_CYAN = "\033[36m";
+const char *SGR_DEFAULT = "\033[39m";
+const char *SGR_DEFAULT_FAINT = "\033[39;2m";
+const char *SGR_GREEN = "\033[32m";
+const char *SGR_WHITE_BOLD = "\033[37;1m";
+const char *SGR_YELLOW = "\033[33m";
+
 char *load_file(string file_name) {
     auto file = ifstream(file_name);
     if (file.fail()) {
-        cout << "\033[42;41m";
-        cout << "Couldn't open file: " << file_name << endl;
-        cout << "\033[0m";
+        cout << SGR_ERROR << "Couldn't open file: " << file_name << SGR_RESET << endl;
         exit(1);
     }
     file.seekg(0, ios::end);
@@ -50,41 +58,37 @@ char *load_file(string file_name) {
 std::ostream &operator<<(std::ostream &os, const Token &token) {
     switch (token.type) {
     case Token::CHARACTER:
-        os << "\x1B[32m" << token.lexeme->data << "\033[0m";
+        os << SGR_GREEN << token.lexeme->data << SGR_RESET;
         return os;
     case Token::COMMENT:
-        os << "\x1B[2;39m" << token.lexeme->data << "\033[0m";
+        os << SGR_DEFAULT_FAINT << token.lexeme->data << SGR_RESET;
         return os;
     case Token::END_OF_FILE:
-        os << "\x1B[30m"
-           << "<<EOF>>"
-           << "\033[0m" << endl;
+        os << SGR_BLACK << "<<EOF>>" << SGR_RESET << endl;
         return os;
     case Token::END_OF_LINE:
-        os << "\x1B[30m"
-           << "<EOL>"
-           << "\033[0m";
+        os << SGR_BLACK << "<EOL>" << SGR_RESET;
         return os;
     case Token::ERROR:
-        os << "\033[42;41m" << token.lexeme->data << "\033[0m";
+        os << SGR_ERROR << token.lexeme->data << SGR_RESET;
         return os;
     case Token::IDENTIFIER:
-        os << "\x1B[39m" << token.lexeme->data << "\033[0m";
+        os << SGR_DEFAULT << token.lexeme->data << SGR_RESET;
         return os;
     case Token::INTEGER:
-        os << "\x1B[36m" << token.lexeme->data << "\033[0m";
+        os << SGR_CYAN << token.lexeme->data << SGR_RESET;
         return os;
     case Token::KEYWORD:
-        os << "\x1B[33m" << token.lexeme->data << "\033[0m";
+        os << SGR_YELLOW << token.lexeme->data << SGR_RESET;
         return os;
     case Token::OTHER:
-        os << "\x1B[1;37m" << token.lexeme->data << "\033[0m";
+        os << SGR_WHITE_BOLD << token.lexeme->data << SGR_RESET;
         return os;
     case Token::SPACE:
         os << ' ';
         return os;
     case Token::STRING:
-        os << "\x1B[32m" << token.lexeme->data << "\033[0m";
+        os << SGR_GREEN << token.lexeme->data << SGR_RESET;
         return os;
     case Token::TAB:
         os << "    ";
