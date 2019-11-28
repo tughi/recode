@@ -1,3 +1,4 @@
+#include "Parser.h"
 #include "Scanner.h"
 
 #include <fstream>
@@ -8,23 +9,30 @@ using namespace std;
 
 char *load_file(string filen_name);
 
+std::ostream &operator<<(std::ostream &os, const Expression *expression);
+std::ostream &operator<<(std::ostream &os, const Expression &expression);
+std::ostream &operator<<(std::ostream &os, const Token *token);
 std::ostream &operator<<(std::ostream &os, const Token &token);
 
 int main(int argc, char *argv[]) {
-    auto source_file = string("../src/Source.code");
+    auto source_file = string("../src/Expressions.code");
     auto source = Source(load_file(source_file));
 
-    auto token = scan(source);
-    for (int line = 0; token != nullptr; token = token->next) {
-        if (token->line != line) {
-            if (line > 0) {
-                cout << endl;
-            }
-            line = token->line;
-            cout << setw(4) << line << ": ";
-        }
-        cout << *token;
-    }
+    auto first_token = scan(source);
+
+    // auto token = first_token;
+    // for (int line = 0; token != nullptr; token = token->next) {
+    //     if (token->line != line) {
+    //         if (line > 0) {
+    //             cout << endl;
+    //         }
+    //         line = token->line;
+    //         cout << setw(4) << line << ": ";
+    //     }
+    //     cout << token;
+    // }
+
+    cout << parse(first_token) << endl;
 }
 
 const char *SGR_RESET = "\033[0m";
@@ -53,6 +61,39 @@ char *load_file(string file_name) {
         return buffer;
     }
     return new char[0];
+}
+
+std::ostream &operator<<(std::ostream &os, const Expression *expression) {
+    if (expression) {
+        os << *expression;
+    } else {
+        os << SGR_ERROR << "NULL expression" << SGR_RESET;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const Expression &expression) {
+    switch (expression.type) {
+    case Expression::LITERAL:
+        os << expression.literal.value;
+        return os;
+    case Expression::MULTIPLICATION: {
+        os << expression.multiplication.left_expression << ' ' << expression.multiplication.operator_token << ' ' << expression.multiplication.right_expression;
+        return os;
+    }
+    default:
+        os << SGR_ERROR << "Unsupported expression type: " << expression.type << SGR_RESET;
+        return os;
+    }
+}
+
+std::ostream &operator<<(std::ostream &os, const Token *token) {
+    if (token) {
+        os << *token;
+    } else {
+        os << SGR_ERROR << "NULL token" << SGR_RESET;
+    }
+    return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const Token &token) {
