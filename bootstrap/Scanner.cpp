@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 
-#define KEYWORDS_COUNT 12
+#define KEYWORDS_COUNT 14
 
 const char *KEYWORDS[] = {
     "bool",
@@ -11,6 +11,7 @@ const char *KEYWORDS[] = {
     "char",
     "else",
     "enum",
+    "false",
     "if",
     "int",
     "loop",
@@ -18,6 +19,7 @@ const char *KEYWORDS[] = {
     "skip",
     "string",
     "struct",
+    "true",
 };
 
 bool is_character(char c) {

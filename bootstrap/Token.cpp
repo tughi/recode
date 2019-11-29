@@ -18,3 +18,10 @@ Token::Token(int value, String *lexeme, int line, int column) : Token(INTEGER, l
 Token::Token(String *value, String *lexeme, int line, int column) : Token(STRING, lexeme, line, column) {
     this->string.value = value;
 }
+
+void Token::join_next() {
+    if (this->next) {
+        this->lexeme->append(*this->next->lexeme);
+        this->next = this->next->next;
+    }
+}

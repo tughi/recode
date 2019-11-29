@@ -46,6 +46,8 @@ struct Token {
     Token(int value, String *lexeme, int line, int column);
 
     Token(String *value, String *lexeme, int line, int column);
+
+    void join_next();
 };
 
 #endif

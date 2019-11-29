@@ -4,15 +4,17 @@
 struct String {
     char *data;
     int length;
-    int size;
+    int allocated;
 
     String();
 
-    String(int size);
+    String(int allocated);
 
     String(const char *data);
 
-    void append(char c);
+    void append(char data);
+
+    void append(String &other);
 
     bool equals(const char *data);
 };

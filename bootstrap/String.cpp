@@ -7,11 +7,11 @@
 
 String::String() : String(DEFAULT_SIZE) {}
 
-String::String(int size) {
-    this->data = (char *)malloc(size);
+String::String(int allocated) {
+    this->data = (char *)malloc(allocated);
     this->data[0] = 0;
     this->length = 0;
-    this->size = size;
+    this->allocated = allocated;
 }
 
 String::String(const char *data) {
@@ -20,17 +20,28 @@ String::String(const char *data) {
     strncpy(this->data, data, data_length);
     this->data[data_length] = 0;
     this->length = data_length;
-    this->size = data_length + 1;
+    this->allocated = data_length + 1;
 }
 
-void String::append(char c) {
-    if (this->length == this->size - 1) {
-        this->size += DEFAULT_SIZE;
-        this->data = (char *)realloc(this->data, this->size);
+void String::append(char data) {
+    if (this->length + 1 >= this->allocated) {
+        this->allocated += DEFAULT_SIZE;
+        this->data = (char *)realloc(this->data, this->allocated);
     }
-    this->data[this->length] = c;
+    this->data[this->length] = data;
     this->length += 1;
     this->data[this->length] = 0;
+}
+
+void String::append(String &other) {
+    if (this->length + other.length >= this->allocated) {
+        this->allocated = this->length + other.length + 1;
+        this->data = (char *)realloc(this->data, this->allocated);
+    }
+    for (int i = 0; i <= other.length; i++) {
+        this->data[this->length + i] = other.data[i];
+    }
+    this->length += other.length;
 }
 
 bool String::equals(const char *data) {

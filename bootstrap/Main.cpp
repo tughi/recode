@@ -67,22 +67,25 @@ std::ostream &operator<<(std::ostream &os, const Expression *expression) {
     if (expression) {
         os << *expression;
     } else {
-        os << SGR_ERROR << "NULL expression" << SGR_RESET;
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- NULL expression" << SGR_RESET;
     }
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const Expression &expression) {
     switch (expression.type) {
+    case Expression::BINARY: {
+        os << SGR_BLACK << '(' << expression.binary.left_expression << ' ' << expression.binary.operator_token << ' ' << expression.binary.right_expression << SGR_BLACK << ')' << SGR_RESET;
+        return os;
+    }
     case Expression::LITERAL:
         os << expression.literal.value;
         return os;
-    case Expression::MULTIPLICATION: {
-        os << expression.multiplication.left_expression << ' ' << expression.multiplication.operator_token << ' ' << expression.multiplication.right_expression;
+    case Expression::VARIABLE:
+        os << expression.variable.name;
         return os;
-    }
     default:
-        os << SGR_ERROR << "Unsupported expression type: " << expression.type << SGR_RESET;
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported expression type: " << expression.type << SGR_RESET;
         return os;
     }
 }

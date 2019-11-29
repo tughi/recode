@@ -5,8 +5,8 @@
 
 struct Expression {
     enum Type {
+        BINARY,
         LITERAL,
-        MULTIPLICATION,
         UNARY,
         VARIABLE,
     };
@@ -15,13 +15,13 @@ struct Expression {
 
     union {
         struct {
-            Token *value;
-        } literal;
-        struct {
             Token *operator_token;
             Expression *left_expression;
             Expression *right_expression;
-        } multiplication;
+        } binary;
+        struct {
+            Token *value;
+        } literal;
         struct {
             Token *operator_token;
             Expression *expression;
