@@ -46,7 +46,7 @@ def build():
                         source_file_includes.update(loaded_includes[source_file_include])
         return source_file_includes
 
-    cpp_files = [file for file in os.listdir('.') if file.endswith('.cpp')]
+    cpp_files = [file for file in os.listdir('.') if file[0] != '.' and file.endswith('.cpp')]
     cpp_files.sort()
     for cpp_file in cpp_files:
         obj_file = os.path.join(BUILD_DIR, cpp_file.replace('.cpp', '.o'))
