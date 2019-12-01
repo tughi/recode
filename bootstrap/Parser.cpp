@@ -394,36 +394,52 @@ bool is_end_of_line(Token *token) {
     return token->type == Token::END_OF_LINE;
 }
 
+Statement *create_error_statement(int parser_line, const char *expected_token, Token *found_token) {
+    return new Statement{
+        kind : Statement::ERROR,
+        error : {
+            parser_file : __FILE__,
+            parser_line : __LINE__,
+            expected_token : expected_token,
+            found_token : found_token,
+        },
+    };
+}
+
 // struct
 //      : IDENTIFIER " " ":" ":" "struct" " " "{" <EOL> (ALINGMENT+1 struct_member <EOL>)* ALIGNMENT "}"
 Statement *parse_struct(Context *context) {
     auto name = consume(context, is_identifier);
-    if (name != nullptr) {
-        consume_space(context);
-        auto assign_operator = consume(context, is_colon, is_colon);
-        if (assign_operator != nullptr) {
-            assign_operator->join_next();
-            consume_space(context);
-            if (consume(context, is_struct)) {
-                consume_space(context);
-                if (consume(context, is_open_brace)) {
-                    consume_space(context);
-                    if (consume(context, is_end_of_line)) {
-                        // TODO: (ALINGMENT+1 struct_member <EOL>)* ALIGNMENT
-                        if (consume(context, is_close_brace)) {
-                            return new Statement{
-                                kind : Statement::STRUCT_DECLARATION,
-                                struct_declaration : {
-                                    name : name,
-                                }
-                            };
-                        }
-                    }
-                }
-            }
-        }
+    if (name == nullptr) {
+        return create_error_statement(__LINE__, "struct name", context->next_token);
     }
-    return nullptr;
+    consume_space(context);
+    auto assign_operator = consume(context, is_colon, is_colon);
+    if (assign_operator == nullptr) {
+        return create_error_statement(__LINE__, "::", context->next_token);
+    }
+    assign_operator->join_next();
+    consume_space(context);
+    if (consume(context, is_struct) == nullptr) {
+        return create_error_statement(__LINE__, "struct", context->next_token);
+    }
+    consume_space(context);
+    if (consume(context, is_open_brace) == nullptr) {
+        return create_error_statement(__LINE__, "}", context->next_token);
+    }
+    consume_space(context);
+    if (consume(context, is_end_of_line) == nullptr) {
+        return create_error_statement(__LINE__, "}", context->next_token);
+    }
+    // TODO: (ALINGMENT+1 struct_member <EOL>)* ALIGNMENT
+    if (consume(context, is_close_brace)) {
+    }
+    return new Statement{
+        kind : Statement::STRUCT_DECLARATION,
+        struct_declaration : {
+            name : name,
+        },
+    };
 }
 
 // statement

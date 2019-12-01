@@ -77,6 +77,9 @@ std::ostream &operator<<(std::ostream &os, const Statement *statement) {
 
 std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     switch (statement.kind) {
+    case Statement::ERROR: 
+        os << SGR_ERROR << statement.error.parser_file << ":" << statement.error.parser_line << " -- Extected " << statement.error.expected_token << " instead of: " << statement.error.found_token << SGR_RESET;
+        return os;
     case Statement::STRUCT_DECLARATION: 
         os << statement.struct_declaration.name;
         return os;

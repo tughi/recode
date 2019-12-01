@@ -33,13 +33,20 @@ struct Expression {
 struct Statement {
     enum Kind {
         DECLARATION,
+        ERROR,
         ASSIGNMENT,
         STRUCT_DECLARATION,
     } kind;
 
     union {
         struct {
-             Token *name;
+            const char *parser_file;
+            int parser_line;
+            const char *expected_token;
+            Token *found_token;
+        } error;
+        struct {
+            Token *name;
         } struct_declaration;
     };
 };
