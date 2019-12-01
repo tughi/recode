@@ -4,7 +4,7 @@
 #include "String.h"
 
 struct Token {
-    enum Type {
+    enum Kind {
         CHARACTER,
         COMMENT,
         END_OF_FILE,
@@ -19,7 +19,7 @@ struct Token {
         TAB,
     };
 
-    Type type;
+    Kind type;
 
     String *lexeme;
     int line;
@@ -39,7 +39,7 @@ struct Token {
 
     Token *next = nullptr;
 
-    Token(Type type, String *lexeme, int line, int column);
+    Token(Kind type, String *lexeme, int line, int column);
 
     Token(char value, String *lexeme, int line, int column);
 

@@ -9,6 +9,8 @@ using namespace std;
 
 char *load_file(string filen_name);
 
+std::ostream &operator<<(std::ostream &os, const Statement *statement);
+std::ostream &operator<<(std::ostream &os, const Statement &statement);
 std::ostream &operator<<(std::ostream &os, const Expression *expression);
 std::ostream &operator<<(std::ostream &os, const Expression &expression);
 std::ostream &operator<<(std::ostream &os, const Token *token);
@@ -64,6 +66,26 @@ char *load_file(string file_name) {
     return new char[0];
 }
 
+std::ostream &operator<<(std::ostream &os, const Statement *statement) {
+    if (statement) {
+        os << *statement;
+    } else {
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- NULL statement" << SGR_RESET;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const Statement &statement) {
+    switch (statement.kind) {
+    case Statement::STRUCT_DECLARATION: 
+        os << statement.struct_declaration.name;
+        return os;
+    default:
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported statement kind: " << statement.kind << SGR_RESET;
+        return os;
+    }
+}
+
 std::ostream &operator<<(std::ostream &os, const Expression *expression) {
     if (expression) {
         os << *expression;
@@ -74,7 +96,7 @@ std::ostream &operator<<(std::ostream &os, const Expression *expression) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Expression &expression) {
-    switch (expression.expression_type) {
+    switch (expression.kind) {
     case Expression::BINARY: {
         os << SGR_BLACK << '(' << expression.binary.left_expression << ' ' << expression.binary.operator_token << ' ' << expression.binary.right_expression << SGR_BLACK << ')' << SGR_RESET;
         return os;
@@ -89,7 +111,7 @@ std::ostream &operator<<(std::ostream &os, const Expression &expression) {
         os << SGR_BLACK << '(' << expression.unary.operator_token << expression.unary.expression << SGR_BLACK << ')' << SGR_RESET;
         return os;
     default:
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported expression type: " << expression.expression_type << SGR_RESET;
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported expression kind: " << expression.kind << SGR_RESET;
         return os;
     }
 }

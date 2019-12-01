@@ -1,7 +1,7 @@
 #include "Token.h"
 
-Token::Token(Token::Type type, String *lexeme, int line, int column) {
-    this->type = type;
+Token::Token(Token::Kind kind, String *lexeme, int line, int column) {
+    this->type = kind;
     this->lexeme = lexeme;
     this->line = line;
     this->column = column;

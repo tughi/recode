@@ -4,14 +4,12 @@
 #include "Token.h"
 
 struct Expression {
-    enum Type {
+    enum Kind {
         BINARY,
         LITERAL,
         UNARY,
         VARIABLE,
-    };
-
-    Type expression_type;
+    } kind;
 
     union {
         struct {
@@ -32,6 +30,20 @@ struct Expression {
     };
 };
 
-Expression *parse(Token *first);
+struct Statement {
+    enum Kind {
+        DECLARATION,
+        ASSIGNMENT,
+        STRUCT_DECLARATION,
+    } kind;
+
+    union {
+        struct {
+             Token *name;
+        } struct_declaration;
+    };
+};
+
+Statement *parse(Token *first);
 
 #endif
