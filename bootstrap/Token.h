@@ -17,7 +17,6 @@ struct Token {
         SPACE,
         STRING,
         TAB,
-        TYPE,
     };
 
     Type type;

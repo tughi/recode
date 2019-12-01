@@ -121,7 +121,7 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         os << SGR_ERROR << token.lexeme->data << SGR_RESET;
         return os;
     case Token::IDENTIFIER:
-        os << SGR_DEFAULT << token.lexeme->data << SGR_RESET;
+        os << (token.lexeme->data[0] <= 'Z' ? SGR_FAINT_YELLOW : SGR_DEFAULT) << token.lexeme->data << SGR_RESET;
         return os;
     case Token::INTEGER:
         os << SGR_CYAN << token.lexeme->data << SGR_RESET;
@@ -140,9 +140,6 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         return os;
     case Token::TAB:
         os << "    ";
-        return os;
-    case Token::TYPE:
-        os << SGR_FAINT_YELLOW << token.lexeme->data << SGR_RESET;
         return os;
     }
     return os;
