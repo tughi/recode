@@ -3,21 +3,17 @@
 
 #include <stdio.h>
 
-#define KEYWORDS_COUNT 14
+#define KEYWORDS_COUNT 10
 
 const char *KEYWORDS[] = {
-    "bool",
     "break",
-    "char",
     "else",
     "enum",
     "false",
     "if",
-    "int",
     "loop",
     "return",
     "skip",
-    "string",
     "struct",
     "true",
 };
@@ -82,6 +78,10 @@ bool is_valid(char c) {
     return c > 0 && c < 128;
 }
 
+bool is_capital_letter(char c) {
+    return c >= 'A' && c <= 'Z';
+}
+
 Token *read_character(Source &source) {
     String *lexeme = new String();
     int line = source.current_line();
@@ -130,6 +130,9 @@ Token *read_identifier(Source &source) {
     char consumed;
     while ((consumed = source.advance(is_identifier_body))) {
         lexeme->append(consumed);
+    }
+    if (is_capital_letter(lexeme->data[0])) {
+        return new Token(Token::TYPE, lexeme, line, column);
     }
     for (int i = 0; i < KEYWORDS_COUNT; i++) {
         if (lexeme->equals(KEYWORDS[i])) {

@@ -107,7 +107,7 @@ Expression *Parser::parse_logic_or_expression() {
             auto right_expression = this->parse_logic_and_expression();
             if (right_expression) {
                 expression = new Expression{
-                    type : Expression::BINARY,
+                    expression_type : Expression::BINARY,
                     binary : {
                         operator_token : operator_token,
                         left_expression : expression,
@@ -138,7 +138,7 @@ Expression *Parser::parse_logic_and_expression() {
             auto right_expression = this->parse_equality_expression();
             if (right_expression) {
                 expression = new Expression{
-                    type : Expression::BINARY,
+                    expression_type : Expression::BINARY,
                     binary : {
                         operator_token : operator_token,
                         left_expression : expression,
@@ -171,7 +171,7 @@ Expression *Parser::parse_equality_expression() {
             auto right_expression = this->parse_comparison_expression();
             if (right_expression) {
                 expression = new Expression{
-                    type : Expression::BINARY,
+                    expression_type : Expression::BINARY,
                     binary : {
                         operator_token : operator_token,
                         left_expression : expression,
@@ -204,7 +204,7 @@ Expression *Parser::parse_comparison_expression() {
             auto right_expression = this->parse_addition_expression();
             if (right_expression) {
                 expression = new Expression{
-                    type : Expression::BINARY,
+                    expression_type : Expression::BINARY,
                     binary : {
                         operator_token : operator_token,
                         left_expression : expression,
@@ -234,7 +234,7 @@ Expression *Parser::parse_addition_expression() {
             auto right_expression = this->parse_multiplication_expression();
             if (right_expression) {
                 expression = new Expression{
-                    type : Expression::BINARY,
+                    expression_type : Expression::BINARY,
                     binary : {
                         operator_token : operator_token,
                         left_expression : expression,
@@ -264,7 +264,7 @@ Expression *Parser::parse_multiplication_expression() {
             auto right_expression = this->parse_unary_expression();
             if (right_expression) {
                 expression = new Expression{
-                    type : Expression::BINARY,
+                    expression_type : Expression::BINARY,
                     binary : {
                         operator_token : operator_token,
                         left_expression : expression,
@@ -293,7 +293,7 @@ Expression *Parser::parse_unary_expression() {
         auto unary_expression = this->parse_unary_expression();
         if (unary_expression != nullptr) {
             return new Expression{
-                type : Expression::UNARY,
+                expression_type : Expression::UNARY,
                 unary : {
                     operator_token : unary_operator,
                     expression : unary_expression,
@@ -342,7 +342,7 @@ Expression *Parser::parse_primary_expression() {
         auto name = this->first;
         this->first = name->next;
         return new Expression{
-            type : Expression::VARIABLE,
+            expression_type : Expression::VARIABLE,
             variable : {
                 name : name,
             },
@@ -352,7 +352,7 @@ Expression *Parser::parse_primary_expression() {
         auto value = this->first;
         this->first = value->next;
         return new Expression{
-            type : Expression::LITERAL,
+            expression_type : Expression::LITERAL,
             literal : {
                 value : value,
             },

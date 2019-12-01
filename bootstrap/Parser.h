@@ -11,7 +11,7 @@ struct Expression {
         VARIABLE,
     };
 
-    Type type;
+    Type expression_type;
 
     union {
         struct {

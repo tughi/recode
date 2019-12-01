@@ -1,12 +1,12 @@
 Source :: struct {
-	data: [char]
-	current_index: int = 0
-	current_line: int = 1
-	current_column: int = 1
+	data: [Char]
+	current_index: Int = 0
+	current_line: Int = 1
+	current_column: Int = 1
 }
 
 \ returns the next character that will be consumed
-peek :: (self: Source) -> char {
+peek :: (self: Source) -> Char {
 	if (self.current_index < self.data.length) {
 		return self.data[self.current_index]
 	}
@@ -14,7 +14,7 @@ peek :: (self: Source) -> char {
 }
 
 \ consume and return the current character if it's accepted by the provided function
-consume :: (self: Source, accepted: (char) -> bool) -> char {
+consume :: (self: Source, accepted: (Char) -> Bool) -> Char {
 	if (self.current_index < self.data.length) {
 		current := self.data[self.current_index]
 		if (accepted(current)) {
@@ -34,7 +34,7 @@ consume :: (self: Source, accepted: (char) -> bool) -> char {
 main :: () {
 	source := Source("Hello world!")
 
-	is_valid :: (char) -> bool {
+	is_valid :: (char: Char) -> Bool {
 		return char > 0 && char < 128
 	}
 

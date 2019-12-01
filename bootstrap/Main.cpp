@@ -15,22 +15,22 @@ std::ostream &operator<<(std::ostream &os, const Token *token);
 std::ostream &operator<<(std::ostream &os, const Token &token);
 
 int main(int argc, char *argv[]) {
-    auto source_file = string("../src/Expressions.code");
+    auto source_file = string("../src/Source.code");
     auto source = Source(load_file(source_file));
 
     auto first_token = scan(source);
 
-    // auto token = first_token;
-    // for (int line = 0; token != nullptr; token = token->next) {
-    //     if (token->line != line) {
-    //         if (line > 0) {
-    //             cout << endl;
-    //         }
-    //         line = token->line;
-    //         cout << setw(4) << line << ": ";
-    //     }
-    //     cout << token;
-    // }
+    auto token = first_token;
+    for (int line = 0; token != nullptr; token = token->next) {
+        if (token->line != line) {
+            if (line > 0) {
+                cout << endl;
+            }
+            line = token->line;
+            cout << setw(4) << line << ": ";
+        }
+        cout << token;
+    }
 
     cout << parse(first_token) << endl;
 }
@@ -40,10 +40,11 @@ const char *SGR_ERROR = "\033[42;41m";
 const char *SGR_BLACK = "\033[30m";
 const char *SGR_CYAN = "\033[36m";
 const char *SGR_DEFAULT = "\033[39m";
-const char *SGR_DEFAULT_FAINT = "\033[39;2m";
 const char *SGR_GREEN = "\033[32m";
 const char *SGR_WHITE_BOLD = "\033[37;1m";
 const char *SGR_YELLOW = "\033[33m";
+const char *SGR_FAINT_DEFAULT = "\033[2;39m";
+const char *SGR_FAINT_YELLOW = "\033[2;33m";
 
 char *load_file(string file_name) {
     auto file = ifstream(file_name);
@@ -73,7 +74,7 @@ std::ostream &operator<<(std::ostream &os, const Expression *expression) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Expression &expression) {
-    switch (expression.type) {
+    switch (expression.expression_type) {
     case Expression::BINARY: {
         os << SGR_BLACK << '(' << expression.binary.left_expression << ' ' << expression.binary.operator_token << ' ' << expression.binary.right_expression << SGR_BLACK << ')' << SGR_RESET;
         return os;
@@ -84,8 +85,11 @@ std::ostream &operator<<(std::ostream &os, const Expression &expression) {
     case Expression::VARIABLE:
         os << expression.variable.name;
         return os;
+    case Expression::UNARY:
+        os << SGR_BLACK << '(' << expression.unary.operator_token << expression.unary.expression << SGR_BLACK << ')' << SGR_RESET;
+        return os;
     default:
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported expression type: " << expression.type << SGR_RESET;
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported expression type: " << expression.expression_type << SGR_RESET;
         return os;
     }
 }
@@ -105,7 +109,7 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         os << SGR_GREEN << token.lexeme->data << SGR_RESET;
         return os;
     case Token::COMMENT:
-        os << SGR_DEFAULT_FAINT << token.lexeme->data << SGR_RESET;
+        os << SGR_FAINT_DEFAULT << token.lexeme->data << SGR_RESET;
         return os;
     case Token::END_OF_FILE:
         os << SGR_BLACK << "<<EOF>>" << SGR_RESET << endl;
@@ -136,6 +140,9 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         return os;
     case Token::TAB:
         os << "    ";
+        return os;
+    case Token::TYPE:
+        os << SGR_FAINT_YELLOW << token.lexeme->data << SGR_RESET;
         return os;
     }
     return os;
