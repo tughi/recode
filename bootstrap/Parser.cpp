@@ -358,13 +358,13 @@ Expression *parse_expression(Context *context) {
     return parse_logic_or_expression(context);
 }
 
-int consume_space(Context *context) {
+int consume_space(Context *context, int expected_spaces) {
     int spaces = 0;
     while (is_space(context->next_token)) {
         spaces += 1;
         context->next_token = context->next_token->next;
     }
-    if (spaces != 1) {
+    if (spaces != expected_spaces) {
         // TODO: warn about incorect space count
     }
     return spaces;
@@ -394,15 +394,87 @@ bool is_end_of_line(Token *token) {
     return token->type == Token::END_OF_LINE;
 }
 
-Statement *create_error_statement(int parser_line, const char *expected_token, Token *found_token) {
-    return new Statement{
-        kind : Statement::ERROR,
-        error : {
-            parser_file : __FILE__,
-            parser_line : __LINE__,
-            expected_token : expected_token,
-            found_token : found_token,
-        },
+void report_error(int parser_line, Context *context, const char *expected_token) {
+    auto next_token = context->next_token;
+    std::cout << "\033[42;41m" << __FILE__ << ":" << parser_line << " -- (" << next_token->line << ':' << next_token->column << ')' << " -- Extected " << expected_token << " instead of: " << next_token->lexeme->data << "\033[0m" << std::endl;
+    exit(1);
+}
+
+bool is_open_braket(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals("[");
+}
+
+bool is_close_braket(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals("]");
+}
+
+// type
+//      : IDENTIFIER
+//      | "[" type "]"
+Type *parse_type(Context *context) {
+    if (consume(context, is_open_braket)) {
+        consume_space(context, 0);
+        auto item_type = parse_type(context);
+        if (item_type == nullptr) {
+            report_error(__LINE__, context, "array item type");
+        }
+        consume_space(context, 0);
+        if (consume(context, is_close_braket) == nullptr) {
+            report_error(__LINE__, context, "]");
+        }
+        consume_space(context, 0);
+        return new Type{
+            kind : Type::ARRAY,
+            array : {
+                item_type : item_type,
+            },
+        };
+    } else {
+        auto name = consume(context, is_identifier);
+        if (name == nullptr) {
+            report_error(__LINE__, context, "type name");
+        }
+        return new Type{
+            kind : Type::SIMPLE,
+            simple : {
+                name : name,
+            },
+        };
+    }
+}
+
+// struct_member
+//      : IDENTIFIER ":" " " value_type (" " "=" " " expression)? <EOL>
+StructMemberDeclaration *parse_struct_member(Context *context) {
+    auto name = consume(context, is_identifier);
+    if (name == nullptr) {
+        report_error(__LINE__, context, "struct member name");
+    }
+    consume_space(context, 0);
+    if (consume(context, is_colon) == nullptr) {
+        report_error(__LINE__, context, ":");
+    }
+    consume_space(context, 1);
+    auto type = parse_type(context);
+    if (type == nullptr) {
+        report_error(__LINE__, context, "struct member type");
+    }
+    Expression *default_value = nullptr;
+    if (matches(context->next_token, is_space)) {
+        consume_space(context, 1);
+        if (consume(context, is_assign_operator)) {
+            consume_space(context, 1);
+            default_value = parse_expression(context);
+            consume_space(context, 0);
+        }
+    }
+    if (consume(context, is_end_of_line) == nullptr) {
+        report_error(__LINE__, context, "<EOL>");
+    }
+    return new StructMemberDeclaration{
+        name : name,
+        type : type,
+        default_value : default_value,
     };
 }
 
@@ -411,33 +483,49 @@ Statement *create_error_statement(int parser_line, const char *expected_token, T
 Statement *parse_struct(Context *context) {
     auto name = consume(context, is_identifier);
     if (name == nullptr) {
-        return create_error_statement(__LINE__, "struct name", context->next_token);
+        report_error(__LINE__, context, "struct name");
     }
-    consume_space(context);
+    consume_space(context, 1);
     auto assign_operator = consume(context, is_colon, is_colon);
     if (assign_operator == nullptr) {
-        return create_error_statement(__LINE__, "::", context->next_token);
+        report_error(__LINE__, context, "::");
     }
     assign_operator->join_next();
-    consume_space(context);
+    consume_space(context, 1);
     if (consume(context, is_struct) == nullptr) {
-        return create_error_statement(__LINE__, "struct", context->next_token);
+        report_error(__LINE__, context, "struct");
     }
-    consume_space(context);
+    consume_space(context, 1);
     if (consume(context, is_open_brace) == nullptr) {
-        return create_error_statement(__LINE__, "}", context->next_token);
+        report_error(__LINE__, context, "}");
     }
-    consume_space(context);
+    consume_space(context, 1);
     if (consume(context, is_end_of_line) == nullptr) {
-        return create_error_statement(__LINE__, "}", context->next_token);
+        report_error(__LINE__, context, "<EOL>");
     }
-    // TODO: (ALINGMENT+1 struct_member <EOL>)* ALIGNMENT
-    if (consume(context, is_close_brace)) {
+    StructMemberDeclaration *first_member = nullptr;
+    StructMemberDeclaration *last_member = nullptr;
+    do {
+        consume_space(context, 4); // TODO: consume alignment
+        auto struct_member = parse_struct_member(context);
+        if (!struct_member) {
+            report_error(__LINE__, context, "struct member");
+        }
+        if (last_member) {
+            last_member->next_member = struct_member;
+        } else {
+            first_member = struct_member;
+        }
+        last_member = struct_member;
+    } while (!matches(context->next_token, is_close_brace));
+    if (consume(context, is_close_brace) == nullptr) {
+        report_error(__LINE__, context, "}");
     }
     return new Statement{
         kind : Statement::STRUCT_DECLARATION,
         struct_declaration : {
             name : name,
+            first_member : first_member,
         },
     };
 }

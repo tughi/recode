@@ -3,6 +3,22 @@
 
 #include "Token.h"
 
+struct Type {
+    enum Kind {
+        ARRAY,
+        SIMPLE,
+    } kind;
+
+    union {
+        struct {
+            Type *item_type;
+        } array;
+        struct {
+            Token *name;
+        } simple;
+    };
+};
+
 struct Expression {
     enum Kind {
         BINARY,
@@ -30,23 +46,24 @@ struct Expression {
     };
 };
 
+struct StructMemberDeclaration {
+    Token *name;
+    Type *type;
+    Expression *default_value = nullptr;
+    StructMemberDeclaration* next_member = nullptr;
+};
+
 struct Statement {
     enum Kind {
         DECLARATION,
-        ERROR,
         ASSIGNMENT,
         STRUCT_DECLARATION,
     } kind;
 
     union {
         struct {
-            const char *parser_file;
-            int parser_line;
-            const char *expected_token;
-            Token *found_token;
-        } error;
-        struct {
             Token *name;
+            StructMemberDeclaration *first_member;
         } struct_declaration;
     };
 };

@@ -9,6 +9,8 @@ using namespace std;
 
 char *load_file(string filen_name);
 
+std::ostream &operator<<(std::ostream &os, const Type *type);
+std::ostream &operator<<(std::ostream &os, const Type &type);
 std::ostream &operator<<(std::ostream &os, const Statement *statement);
 std::ostream &operator<<(std::ostream &os, const Statement &statement);
 std::ostream &operator<<(std::ostream &os, const Expression *expression);
@@ -66,6 +68,31 @@ char *load_file(string file_name) {
     return new char[0];
 }
 
+std::ostream &operator<<(std::ostream &os, const Type *type) {
+    if (type) {
+        os << *type;
+    } else {
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- NULL type" << SGR_RESET;
+    }
+    return os;
+}
+
+std::ostream &operator<<(std::ostream &os, const Type &type) {
+    switch (type.kind) {
+    case Type::ARRAY: {
+        os << '[' << type.array.item_type << ']';
+        return os;
+    }
+    case Type::SIMPLE: {
+        os << type.simple.name;
+        return os;
+    }
+    default:
+        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported type kind: " << type.kind << SGR_RESET;
+        return os;
+    }
+}
+
 std::ostream &operator<<(std::ostream &os, const Statement *statement) {
     if (statement) {
         os << *statement;
@@ -77,12 +104,20 @@ std::ostream &operator<<(std::ostream &os, const Statement *statement) {
 
 std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     switch (statement.kind) {
-    case Statement::ERROR: 
-        os << SGR_ERROR << statement.error.parser_file << ":" << statement.error.parser_line << " -- Extected " << statement.error.expected_token << " instead of: " << statement.error.found_token << SGR_RESET;
+    case Statement::STRUCT_DECLARATION: {
+        os << statement.struct_declaration.name << " :: struct {" << endl;
+        auto member = statement.struct_declaration.first_member;
+        while (member) {
+            os << "    " << member->name << ": " << member->type;
+            if (member->default_value) {
+                os << " = " << member->default_value;
+            }
+            os << endl;
+            member = member->next_member;
+        }
+        os << "}" << endl;
         return os;
-    case Statement::STRUCT_DECLARATION: 
-        os << statement.struct_declaration.name;
-        return os;
+    }
     default:
         os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported statement kind: " << statement.kind << SGR_RESET;
         return os;
@@ -137,10 +172,10 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         os << SGR_FAINT_DEFAULT << token.lexeme->data << SGR_RESET;
         return os;
     case Token::END_OF_FILE:
-        os << SGR_BLACK << "<<EOF>>" << SGR_RESET << endl;
+        os << SGR_BLACK << token.lexeme->data << SGR_RESET << endl;
         return os;
     case Token::END_OF_LINE:
-        os << SGR_BLACK << "<EOL>" << SGR_RESET;
+        os << SGR_BLACK << token.lexeme->data << SGR_RESET;
         return os;
     case Token::ERROR:
         os << SGR_ERROR << token.lexeme->data << SGR_RESET;

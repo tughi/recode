@@ -158,8 +158,11 @@ Token *read_other(Source &source) {
     switch (consumed) {
     case '\t':
         return new Token(Token::TAB, lexeme, line, column);
-    case '\n':
+    case '\n': {
+        auto eol = String("<EOL>");
+        lexeme->append(eol);
         return new Token(Token::END_OF_LINE, lexeme, line, column);
+    }
     case ' ':
         return new Token(Token::SPACE, lexeme, line, column);
     }
@@ -203,7 +206,7 @@ Token *scan_token(Source &source) {
     int token_column = source.current_column();
 
     if (!is_valid(next_char)) {
-        return new Token(Token::END_OF_FILE, new String(""), token_line, token_column);
+        return new Token(Token::END_OF_FILE, new String("<<EOF>>"), token_line, token_column);
     }
 
     Token *token;
