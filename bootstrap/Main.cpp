@@ -171,7 +171,8 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             os << endl;
             member = member->next;
         }
-        os << "}" << endl;
+        os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << ""
+           << "}" << endl;
         return os;
     }
     default:

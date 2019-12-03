@@ -57,15 +57,13 @@ Token *consume(Context *context, bool (*accepts_first)(Token *), bool (*accepts_
     return nullptr;
 }
 
-bool line_contains(Context *context, bool (*accepts_first)(Token *)) {
-    auto token = context->next_token;
-    while (token->type != Token::END_OF_FILE && token->type != Token::END_OF_FILE) {
-        if (matches_one(token, accepts_first)) {
-            return true;
-        }
-        token = token->next;
+Token *consume(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *)) {
+    auto first_token = context->next_token;
+    if (matches(context, accepts_first, accepts_second, accepts_third)) {
+        context->next_token = first_token->next->next->next;
+        return first_token;
     }
-    return false;
+    return nullptr;
 }
 
 bool is_boolean_literal(Token *token) {
@@ -586,6 +584,9 @@ Statement *parse_struct(Context *context) {
     if (consume(context, is_close_brace) == nullptr) {
         CONSUME_ERROR(context, "}");
     }
+    if (consume_end_of_line(context) == nullptr) {
+        CONSUME_ERROR(context, "<EOL>");
+    }
     return new Statement{
         kind : Statement::STRUCT_DECLARATION,
         struct_declaration : {
@@ -605,15 +606,18 @@ Statement *parse_statement(Context *context);
 Statement *parse_statements(Context *context) {
     Statement *first_statement = nullptr;
     Statement *last_statement = nullptr;
-    while (!matches(context, is_space, is_close_brace) && !matches(context, is_close_brace) && !matches(context, is_end_of_file)) {
+    do {
         auto statement = parse_statement(context);
+        if (statement == nullptr) {
+            break;
+        }
         if (last_statement != nullptr) {
             last_statement->next = statement;
         } else {
             first_statement = statement;
         }
         last_statement = statement;
-    }
+    } while (true);
     return first_statement;
 }
 
@@ -661,6 +665,9 @@ Statement *parse_procedure(Context *context) {
     if (consume(context, is_close_brace) == nullptr) {
         CONSUME_ERROR(context, "}");
     }
+    if (consume_end_of_line(context) == nullptr) {
+        CONSUME_ERROR(context, "<EOL>");
+    }
     return new Statement{
         kind : Statement::PROCEDURE_DECLARATION,
         procedure_declaration : {
@@ -695,23 +702,37 @@ Statement *parse_return_statement(Context *context) {
     };
 }
 
+bool line_contains(Context *context, bool (*accepts_first)(Token *)) {
+    auto token = context->next_token;
+    while (token->type != Token::END_OF_LINE && token->type != Token::END_OF_FILE) {
+        if (matches_one(token, accepts_first)) {
+            return true;
+        }
+        token = token->next;
+    }
+    return false;
+}
+
 // statement
 //      : struct <EOL>
 //      | procedure <EOL>
 //      | assignment <EOL>
 //      | procedure_call <EOL>
 Statement *parse_statement(Context *context) {
-    do {
-        consume_space(context, context->alignment * ALIGNMENT_SIZE);
-    } while (consume_end_of_line(context));
+    while (consume(context, is_end_of_line) || consume(context, is_space, is_end_of_line) || consume(context, is_space, is_comment, is_end_of_line) || consume(context, is_comment, is_end_of_line)) {
+        // do nothing
+    }
+    if (matches(context, is_space, is_close_brace) || matches(context, is_close_brace)) {
+        return nullptr;
+    }
+
+    consume_space(context, context->alignment * ALIGNMENT_SIZE);
 
     if (matches(context, is_keyword_return)) {
         return parse_return_statement(context);
     }
 
     // TODO: parse other statements
-
-    DUMP_CONTEXT(context);
 
     auto next_token = context->next_token;
     if (line_contains(context, is_struct)) {
