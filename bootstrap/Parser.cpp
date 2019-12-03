@@ -372,7 +372,7 @@ Expression *parse_expression(Context *context) {
 
 int consume_space(Context *context, int expected_spaces) {
     auto token = consume(context, is_space);
-    int spaces = token != nullptr ? token->space.count :  0;
+    int spaces = token != nullptr ? token->space.count : 0;
     if (expected_spaces >= 0 && spaces != expected_spaces) {
         WARNING(LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
     }
@@ -434,12 +434,8 @@ Member *parse_member(Context *context) {
     }
     consume_space(context, 1);
     auto type = parse_type(context);
-    auto lookahead_next_token = context->next_token;
-    consume_space(context, -1);
-    auto with_default_value = matches(context, is_assign_operator);
-    context->next_token = lookahead_next_token;
     Expression *default_value = nullptr;
-    if (with_default_value) {
+    if (matches(context, is_space, is_assign_operator) || matches(context, is_assign_operator)) {
         consume_space(context, 1);
         consume(context, is_assign_operator);
         consume_space(context, 1);
@@ -500,11 +496,7 @@ Type *parse_type(Context *context) {
                 CONSUME_ERROR(context, ")");
             }
         }
-        auto lookahead_next_token = context->next_token;
-        consume_space(context, -1);
-        auto is_procedure = matches(context, is_hyphen, is_close_angled_bracket);
-        context->next_token = lookahead_next_token;
-        if (is_procedure) {
+        if (matches(context, is_space, is_hyphen, is_close_angled_bracket) || matches(context, is_hyphen, is_close_angled_bracket)) {
             consume_space(context, 1);
             consume(context, is_hyphen, is_close_angled_bracket);
             consume_space(context, 1);
@@ -577,24 +569,19 @@ Statement *parse_struct(Context *context) {
     }
     Member *first_member = nullptr;
     Member *last_member = nullptr;
-    do {
-        auto lookahead_next_token = context->next_token;
-        consume_space(context, -1);
-        auto finish = matches(context, is_close_brace);
-        context->next_token = lookahead_next_token;
-        if (finish) {
-            break;
-        }
-
+    while (!matches(context, is_space, is_close_brace) && !matches(context, is_close_brace)) {
         consume_space(context, (context->alignment + 1) * ALIGNMENT_SIZE);
         auto member = parse_member(context);
+        if (consume_end_of_line(context) == nullptr) {
+            CONSUME_ERROR(context, "<EOL>");
+        }
         if (last_member != nullptr) {
             last_member->next = member;
         } else {
             first_member = member;
         }
         last_member = member;
-    } while (consume_end_of_line(context));
+    }
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     if (consume(context, is_close_brace) == nullptr) {
         CONSUME_ERROR(context, "}");
@@ -618,15 +605,7 @@ Statement *parse_statement(Context *context);
 Statement *parse_statements(Context *context) {
     Statement *first_statement = nullptr;
     Statement *last_statement = nullptr;
-    while (!matches(context, is_end_of_file)) {
-        auto lookahead_next_token = context->next_token;
-        consume_space(context, -1);
-        auto finish = matches(context, is_close_brace);
-        context->next_token = lookahead_next_token;
-        if (finish) {
-            break;
-        }
-
+    while (!matches(context, is_space, is_close_brace) && !matches(context, is_close_brace) && !matches(context, is_end_of_file)) {
         auto statement = parse_statement(context);
         if (last_statement != nullptr) {
             last_statement->next = statement;
