@@ -122,7 +122,11 @@ std::ostream &operator<<(std::ostream &os, const Statement *statement) {
     return os;
 }
 
+#define ALIGNMENT_SIZE 2
+
 std::ostream &operator<<(std::ostream &os, const Statement &statement) {
+    static int alignment = 0;
+    os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << "";
     switch (statement.kind) {
     case Statement::PROCEDURE_DECLARATION: {
         os << statement.procedure_declaration.name << " :: (";
@@ -139,7 +143,21 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             os << " -> " << statement.procedure_declaration.return_type;
         }
         os << " {" << endl;
-        os << "}" << endl;
+
+        alignment += 1;
+        auto procedure_statement = statement.procedure_declaration.first_statement;
+        while (procedure_statement != nullptr) {
+            os << procedure_statement;
+            procedure_statement = procedure_statement->next;
+        }
+        alignment -= 1;
+
+        os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << ""
+           << "}" << endl;
+        return os;
+    }
+    case Statement::RETURN: {
+        os << "return " << statement.return_expression << endl;
         return os;
     }
     case Statement::STRUCT_DECLARATION: {
@@ -157,7 +175,7 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
         return os;
     }
     default:
-        os << SGR_ERROR << "Statement::" << statement.kind << SGR_RESET;
+        os << SGR_ERROR << "Statement::" << statement.kind << SGR_RESET << endl;
         return os;
     }
 }

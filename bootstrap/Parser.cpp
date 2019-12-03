@@ -612,7 +612,34 @@ Statement *parse_struct(Context *context) {
     };
 }
 
+bool is_end_of_file(Token *token) {
+    return token->type == Token::END_OF_FILE;
+}
+
 Statement *parse_statement(Context *context);
+
+Statement *parse_statements(Context *context) {
+    Statement *first_statement = nullptr;
+    Statement *last_statement = nullptr;
+    while (!matches(context, is_end_of_file)) {
+        auto lookahead_next_token = context->next_token;
+        consume_space(context, -1);
+        auto finish = matches(context, is_close_brace);
+        context->next_token = lookahead_next_token;
+        if (finish) {
+            break;
+        }
+
+        auto statement = parse_statement(context);
+        if (last_statement != nullptr) {
+            last_statement->next = statement;
+        } else {
+            first_statement = statement;
+        }
+        last_statement = statement;
+    }
+    return first_statement;
+}
 
 // procedure
 //      : IDENTIFIER "::" "(" (comma_separated_members)? ")" ("->" type)? "{" <EOL> statement* "}"
@@ -651,22 +678,10 @@ Statement *parse_procedure(Context *context) {
     if (consume_end_of_line(context) == nullptr) {
         CONSUME_ERROR(context, "<EOL>");
     }
-    Statement *first_statement = nullptr;
-    Statement *last_statement = nullptr;
     context->alignment += 1;
-    while (true) {
-        Statement *statement = parse_statement(context);
-        if (statement == nullptr) {
-            break;
-        }
-        if (last_statement != nullptr) {
-            last_statement->next = statement;
-        } else {
-            first_statement = statement;
-        }
-        last_statement = statement;
-    }
+    auto first_statement = parse_statements(context);
     context->alignment -= 1;
+    consume_space(context, context->alignment * ALIGNMENT_SIZE);
     if (consume(context, is_close_brace) == nullptr) {
         CONSUME_ERROR(context, "}");
     }
@@ -676,7 +691,30 @@ Statement *parse_procedure(Context *context) {
             name : name,
             first_parameter : first_parameter,
             return_type : return_type,
+            first_statement : first_statement,
         },
+        next : nullptr,
+    };
+}
+
+bool is_keyword_return(Token *token) {
+    return is_keyword(token, "return");
+}
+
+// return
+//      : "return" expression <EOL>
+Statement *parse_return_statement(Context *context) {
+    if (consume(context, is_keyword_return) == nullptr) {
+        CONSUME_ERROR(context, "return");
+    }
+    consume_space(context, 1);
+    auto expression = parse_expression(context);
+    if (consume_end_of_line(context) == nullptr) {
+        CONSUME_ERROR(context, "<EOL>");
+    }
+    return new Statement{
+        kind : Statement::RETURN,
+        return_expression : expression,
         next : nullptr,
     };
 }
@@ -690,6 +728,12 @@ Statement *parse_statement(Context *context) {
     do {
         consume_space(context, context->alignment * ALIGNMENT_SIZE);
     } while (consume_end_of_line(context));
+
+    if (matches(context, is_keyword_return)) {
+        return parse_return_statement(context);
+    }
+
+    // TODO: parse other statements
 
     DUMP_CONTEXT(context);
 
@@ -707,11 +751,6 @@ Statement *parse(Token *first_token) {
         next_token : first_token,
         alignment : 0,
     };
-    auto first_statement = parse_statement(&context);
-    auto last_statement = first_statement;
-    while (last_statement != nullptr) {
-        last_statement->next = parse_statement(&context);
-        last_statement = last_statement->next;
-    }
+    auto first_statement = parse_statements(&context);
     return first_statement;
 }
