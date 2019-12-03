@@ -249,13 +249,10 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         os << SGR_WHITE_BOLD << token.lexeme->data << SGR_RESET;
         return os;
     case Token::SPACE:
-        os << ' ';
+        os << token.lexeme->data;
         return os;
     case Token::STRING:
         os << SGR_GREEN << token.lexeme->data << SGR_RESET;
-        return os;
-    case Token::TAB:
-        os << "    ";
         return os;
     }
     return os;

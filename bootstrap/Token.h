@@ -16,7 +16,6 @@ struct Token {
         OTHER,
         SPACE,
         STRING,
-        TAB,
     };
 
     Kind type;
@@ -33,21 +32,28 @@ struct Token {
             int value;
         } integer;
         struct {
+            int count;
+        } space;
+        struct {
             String *value;
         } string;
     };
 
     Token *next = nullptr;
 
-    Token(Kind type, String *lexeme, int line, int column);
-
-    Token(char value, String *lexeme, int line, int column);
-
-    Token(int value, String *lexeme, int line, int column);
-
-    Token(String *value, String *lexeme, int line, int column);
-
     void join_next();
 };
+
+Token *create_character(String *lexeme, int line, int column, char value);
+Token *create_comment(String *lexeme, int line, int column);
+Token *create_end_of_file(String *lexeme, int line, int column);
+Token *create_end_of_line(String *lexeme, int line, int column);
+Token *create_error(String *lexeme, int line, int column);
+Token *create_identifier(String *lexeme, int line, int column);
+Token *create_integer(String *lexeme, int line, int column, int value);
+Token *create_keyword(String *lexeme, int line, int column);
+Token *create_other(String *lexeme, int line, int column);
+Token *create_space(String *lexeme, int line, int column, int count);
+Token *create_string(String *lexeme, int line, int column, String *value);
 
 #endif

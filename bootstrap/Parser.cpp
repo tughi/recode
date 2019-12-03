@@ -371,11 +371,8 @@ Expression *parse_expression(Context *context) {
 }
 
 int consume_space(Context *context, int expected_spaces) {
-    int spaces = 0;
-    while (is_space(context->next_token)) {
-        spaces += 1;
-        context->next_token = context->next_token->next;
-    }
+    auto token = consume(context, is_space);
+    int spaces = token != nullptr ? token->space.count :  0;
     if (expected_spaces >= 0 && spaces != expected_spaces) {
         WARNING(LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
     }

@@ -70,6 +70,10 @@ bool is_single_quote(char c) {
     return c == '\'';
 }
 
+bool is_space(char c) {
+    return c == ' ';
+}
+
 bool is_string_character(char c) {
     return c >= ' ' && c < 128 && c != '\"';
 }
@@ -101,9 +105,23 @@ Token *read_character(Source &source) {
     }
     if (value && (consumed = source.advance(is_single_quote))) {
         lexeme->append(consumed);
-        return new Token(value, lexeme, line, column);
+        return create_character(lexeme, line, column, value);
     }
-    return new Token(Token::ERROR, lexeme, line, column);
+    return create_error(lexeme, line, column);
+}
+
+Token *read_space(Source &source) {
+    String *lexeme = new String();
+    int line = source.current_line();
+    int column = source.current_column();
+
+    char consumed;
+    int count = 0;
+    while (consumed = source.advance(is_space)) {
+        count += 1;
+        lexeme->append(consumed);
+    }
+    return create_space(lexeme, line, column, count);
 }
 
 Token *read_comment(Source &source) {
@@ -115,7 +133,7 @@ Token *read_comment(Source &source) {
     while (consumed = source.advance(is_comment_body)) {
         lexeme->append(consumed);
     }
-    return new Token(Token::COMMENT, lexeme, line, column);
+    return create_comment(lexeme, line, column);
 }
 
 Token *read_identifier(Source &source) {
@@ -129,10 +147,10 @@ Token *read_identifier(Source &source) {
     }
     for (int i = 0; i < KEYWORDS_COUNT; i++) {
         if (lexeme->equals(KEYWORDS[i])) {
-            return new Token(Token::KEYWORD, lexeme, line, column);
+            return create_keyword(lexeme, line, column);
         }
     }
-    return new Token(Token::IDENTIFIER, lexeme, line, column);
+    return create_identifier(lexeme, line, column);
 }
 
 Token *read_integer(Source &source) {
@@ -146,7 +164,7 @@ Token *read_integer(Source &source) {
         lexeme->append(consumed);
         value = value * 10 + (consumed - '0');
     }
-    return new Token(value, lexeme, line, column);
+    return create_integer(lexeme, line, column, value);
 }
 
 Token *read_other(Source &source) {
@@ -155,19 +173,14 @@ Token *read_other(Source &source) {
     int column = source.current_column();
 
     char consumed = source.advance(is_valid);
-    switch (consumed) {
-    case '\t':
-        return new Token(Token::TAB, lexeme, line, column);
-    case '\n': {
+    if (consumed == '\n') {
         auto eol = String("<EOL>");
         lexeme->append(eol);
-        return new Token(Token::END_OF_LINE, lexeme, line, column);
+        return create_end_of_line(lexeme, line, column);
     }
-    case ' ':
-        return new Token(Token::SPACE, lexeme, line, column);
-    }
+
     lexeme->append(consumed);
-    return new Token(Token::OTHER, lexeme, line, column);
+    return create_other(lexeme, line, column);
 }
 
 Token *read_string(Source &source) {
@@ -186,7 +199,7 @@ Token *read_string(Source &source) {
                     lexeme->append(consumed);
                     value->append(get_escape(consumed));
                 } else {
-                    return new Token(Token::ERROR, lexeme, line, column);
+                    return create_error(lexeme, line, column);
                 }
             } else {
                 value->append(consumed);
@@ -194,10 +207,10 @@ Token *read_string(Source &source) {
         }
         if (consumed = source.advance(is_double_quote)) {
             lexeme->append(consumed);
-            return new Token(value, lexeme, line, column);
+            return create_string(lexeme, line, column, value);
         }
     }
-    return new Token(Token::ERROR, lexeme, line, column);
+    return create_error(lexeme, line, column);
 }
 
 Token *scan_token(Source &source) {
@@ -206,7 +219,7 @@ Token *scan_token(Source &source) {
     int token_column = source.current_column();
 
     if (!is_valid(next_char)) {
-        return new Token(Token::END_OF_FILE, new String("<<EOF>>"), token_line, token_column);
+        return create_end_of_file(new String("<<EOF>>"), token_line, token_column);
     }
 
     Token *token;
@@ -220,6 +233,8 @@ Token *scan_token(Source &source) {
         token = read_character(source);
     } else if (is_comment_start(next_char)) {
         token = read_comment(source);
+    } else if (is_space(next_char)) {
+        token = read_space(source);
     } else {
         token = read_other(source);
     }
