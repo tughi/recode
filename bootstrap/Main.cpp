@@ -1,9 +1,8 @@
+#include "Logging.h"
 #include "Parser.h"
 #include "Scanner.h"
 
 #include <fstream>
-#include <iomanip>
-#include <iostream>
 
 using namespace std;
 
@@ -31,29 +30,24 @@ int main(int argc, char *argv[]) {
                 cout << endl;
             }
             line = token->line;
-            cout << setw(4) << line << ": ";
+            cout << setw(3) << setfill('0') << line << ": ";
         }
         cout << token;
     }
 
-    cout << parse(first_token) << endl;
-}
+    auto first_statement = parse(first_token);
 
-const char *SGR_RESET = "\033[0m";
-const char *SGR_ERROR = "\033[42;41m";
-const char *SGR_BLACK = "\033[30m";
-const char *SGR_CYAN = "\033[36m";
-const char *SGR_DEFAULT = "\033[39m";
-const char *SGR_GREEN = "\033[32m";
-const char *SGR_WHITE_BOLD = "\033[37;1m";
-const char *SGR_YELLOW = "\033[33m";
-const char *SGR_FAINT_DEFAULT = "\033[2;39m";
-const char *SGR_FAINT_YELLOW = "\033[2;33m";
+    auto statement = first_statement;
+    while (statement) {
+        cout << statement << endl;
+        statement = statement->next;
+    }
+}
 
 char *load_file(string file_name) {
     auto file = ifstream(file_name);
     if (file.fail()) {
-        cout << SGR_ERROR << "Couldn't open file: " << file_name << SGR_RESET << endl;
+        ERROR("Couldn't open file: " << file_name);
         exit(1);
     }
     file.seekg(0, ios::end);
@@ -72,7 +66,7 @@ std::ostream &operator<<(std::ostream &os, const Type *type) {
     if (type) {
         os << *type;
     } else {
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- NULL type" << SGR_RESET;
+        os << SGR_ERROR << "Type::NULL" << SGR_RESET;
     }
     return os;
 }
@@ -83,12 +77,38 @@ std::ostream &operator<<(std::ostream &os, const Type &type) {
         os << '[' << type.array.item_type << ']';
         return os;
     }
+    case Type::PROCEDURE: {
+        os << '(';
+        auto parameter = type.procedure.first_parameter;
+        while (parameter != nullptr) {
+            os << parameter->name << ": " << parameter->type;
+            parameter = parameter->next;
+            if (parameter != nullptr) {
+                os << ", ";
+            }
+        }
+        os << ") -> " << type.procedure.return_type;
+        return os;
+    }
     case Type::SIMPLE: {
         os << type.simple.name;
         return os;
     }
+    case Type::TUPLE: {
+        os << '(';
+        auto member = type.tuple.first_member;
+        while (member != nullptr) {
+            os << member->name << ": " << member->type;
+            member = member->next;
+            if (member != nullptr) {
+                os << ", ";
+            }
+        }
+        os << ')';
+        return os;
+    }
     default:
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported type kind: " << type.kind << SGR_RESET;
+        os << SGR_ERROR << "Type::" << type.kind << SGR_RESET;
         return os;
     }
 }
@@ -97,13 +117,31 @@ std::ostream &operator<<(std::ostream &os, const Statement *statement) {
     if (statement) {
         os << *statement;
     } else {
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- NULL statement" << SGR_RESET;
+        os << SGR_ERROR << "Statement::NULL" << SGR_RESET;
     }
     return os;
 }
 
 std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     switch (statement.kind) {
+    case Statement::PROCEDURE_DECLARATION: {
+        os << statement.procedure_declaration.name << " :: (";
+        auto parameter = statement.procedure_declaration.first_parameter;
+        while (parameter != nullptr) {
+            os << parameter->name << ": " << parameter->type;
+            parameter = parameter->next;
+            if (parameter != nullptr) {
+                os << ", ";
+            }
+        }
+        os << ")";
+        if (statement.procedure_declaration.return_type != nullptr) {
+            os << " -> " << statement.procedure_declaration.return_type;
+        }
+        os << " {" << endl;
+        os << "}" << endl;
+        return os;
+    }
     case Statement::STRUCT_DECLARATION: {
         os << statement.struct_declaration.name << " :: struct {" << endl;
         auto member = statement.struct_declaration.first_member;
@@ -113,13 +151,13 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
                 os << " = " << member->default_value;
             }
             os << endl;
-            member = member->next_member;
+            member = member->next;
         }
         os << "}" << endl;
         return os;
     }
     default:
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported statement kind: " << statement.kind << SGR_RESET;
+        os << SGR_ERROR << "Statement::" << statement.kind << SGR_RESET;
         return os;
     }
 }
@@ -128,7 +166,7 @@ std::ostream &operator<<(std::ostream &os, const Expression *expression) {
     if (expression) {
         os << *expression;
     } else {
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- NULL expression" << SGR_RESET;
+        os << SGR_ERROR << "Expression::NULL" << SGR_RESET;
     }
     return os;
 }
@@ -149,7 +187,7 @@ std::ostream &operator<<(std::ostream &os, const Expression &expression) {
         os << SGR_BLACK << '(' << expression.unary.operator_token << expression.unary.expression << SGR_BLACK << ')' << SGR_RESET;
         return os;
     default:
-        os << SGR_ERROR << __FILE__ << ':' << __LINE__ << " -- Unsupported expression kind: " << expression.kind << SGR_RESET;
+        os << SGR_ERROR << "Expression::" << expression.kind << SGR_RESET;
         return os;
     }
 }
@@ -158,7 +196,7 @@ std::ostream &operator<<(std::ostream &os, const Token *token) {
     if (token) {
         os << *token;
     } else {
-        os << SGR_ERROR << "NULL token" << SGR_RESET;
+        os << SGR_ERROR << "Token::NULL" << SGR_RESET;
     }
     return os;
 }

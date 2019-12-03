@@ -1,15 +1,19 @@
 #include "Parser.h"
-
-#include <cstdarg>
-#include <iostream>
+#include "Logging.h"
 
 struct Context {
     Token *next_token;
 };
 
-void dump_context(Context *context) {
-    std::cout << "Context { next_token: " << context->next_token->lexeme->data << std::endl;
-}
+#define LOCATION(context) "(" << std::setw(3) << std::setfill('0') << context->next_token->line << "," << std::setw(3) << std::setfill('0') << context->next_token->column << ") -- "
+
+#define NEXT_TOKEN(context) context->next_token->lexeme->data
+
+#define DUMP_CONTEXT(context) INFO(LOCATION(context) << "Token : " << NEXT_TOKEN(context))
+
+#define CONSUME_ERROR(context, expected)                                                           \
+    ERROR(LOCATION(context) << "Expected " << expected << " instead of: " << NEXT_TOKEN(context)); \
+    exit(1)
 
 bool matches(Token *token, bool (*accepts_first)(Token *)) {
     return (*accepts_first)(token);
@@ -364,8 +368,8 @@ int consume_space(Context *context, int expected_spaces) {
         spaces += 1;
         context->next_token = context->next_token->next;
     }
-    if (spaces != expected_spaces) {
-        // TODO: warn about incorect space count
+    if (expected_spaces >= 0 && spaces != expected_spaces) {
+        WARNING(LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
     }
     return spaces;
 }
@@ -390,16 +394,6 @@ bool is_close_brace(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("}");
 }
 
-bool is_end_of_line(Token *token) {
-    return token->type == Token::END_OF_LINE;
-}
-
-void report_error(int parser_line, Context *context, const char *expected_token) {
-    auto next_token = context->next_token;
-    std::cout << "\033[42;41m" << __FILE__ << ":" << parser_line << " -- (" << next_token->line << ':' << next_token->column << ')' << " -- Extected " << expected_token << " instead of: " << next_token->lexeme->data << "\033[0m" << std::endl;
-    exit(1);
-}
-
 bool is_open_braket(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("[");
 }
@@ -408,19 +402,82 @@ bool is_close_braket(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("]");
 }
 
+bool is_comma(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals(",");
+}
+
+bool is_hyphen(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals("-");
+}
+
+bool is_close_angled_bracket(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals(">");
+}
+
+Type *parse_type(Context *context);
+
+// member
+//      : IDENTIFIER ":" type ("=" expression)?
+Member *parse_member(Context *context) {
+    auto name = consume(context, is_identifier);
+    if (name == nullptr) {
+        CONSUME_ERROR(context, "name");
+    }
+    consume_space(context, 0);
+    if (consume(context, is_colon) == nullptr) {
+        CONSUME_ERROR(context, ":");
+    }
+    consume_space(context, 1);
+    auto type = parse_type(context);
+    auto lookahead_next_token = context->next_token;
+    consume_space(context, -1);
+    auto with_default_value = matches(context->next_token, is_assign_operator);
+    context->next_token = lookahead_next_token;
+    Expression *default_value = nullptr;
+    if (with_default_value) {
+        consume_space(context, 1);
+        consume(context, is_assign_operator);
+        consume_space(context, 1);
+        default_value = parse_expression(context);
+    }
+    return new Member{
+        name : name,
+        type : type,
+        default_value : default_value,
+        next : nullptr,
+    };
+}
+
+// comma_separated_members
+//      : member ("," member)*
+Member *parse_comma_separated_members(Context *context) {
+    Member *first_member = nullptr;
+    Member *last_member = nullptr;
+    do {
+        consume_space(context, first_member == nullptr ? 0 : 1);
+        auto member = parse_member(context);
+        if (last_member == nullptr) {
+            first_member = member;
+        } else {
+            last_member->next = member;
+        }
+        last_member = member;
+        consume_space(context, 0);
+    } while (consume(context, is_comma));
+    return first_member;
+}
+
 // type
 //      : IDENTIFIER
 //      | "[" type "]"
+//      | "(" (comma_separated_members)? ")"
 Type *parse_type(Context *context) {
     if (consume(context, is_open_braket)) {
         consume_space(context, 0);
         auto item_type = parse_type(context);
-        if (item_type == nullptr) {
-            report_error(__LINE__, context, "array item type");
-        }
         consume_space(context, 0);
         if (consume(context, is_close_braket) == nullptr) {
-            report_error(__LINE__, context, "]");
+            CONSUME_ERROR(context, "]");
         }
         consume_space(context, 0);
         return new Type{
@@ -429,10 +486,42 @@ Type *parse_type(Context *context) {
                 item_type : item_type,
             },
         };
+    } else if (consume(context, is_open_paren)) {
+        Member *first_member = nullptr;
+        consume_space(context, 0);
+        if (consume(context, is_close_paren) == nullptr) {
+            first_member = parse_comma_separated_members(context);
+            if (consume(context, is_close_paren) == nullptr) {
+                CONSUME_ERROR(context, ")");
+            }
+        }
+        auto lookahead_next_token = context->next_token;
+        consume_space(context, -1);
+        auto is_procedure = matches(context->next_token, is_hyphen, is_close_angled_bracket);
+        context->next_token = lookahead_next_token;
+        if (is_procedure) {
+            consume_space(context, 1);
+            consume(context, is_hyphen, is_close_angled_bracket);
+            consume_space(context, 1);
+            auto return_type = parse_type(context);
+            return new Type{
+                kind : Type::PROCEDURE,
+                procedure : {
+                    first_parameter : first_member,
+                    return_type : return_type,
+                },
+            };
+        }
+        return new Type{
+            kind : Type::TUPLE,
+            tuple : {
+                first_member : first_member,
+            },
+        };
     } else {
         auto name = consume(context, is_identifier);
         if (name == nullptr) {
-            report_error(__LINE__, context, "type name");
+            CONSUME_ERROR(context, "type name");
         }
         return new Type{
             kind : Type::SIMPLE,
@@ -443,83 +532,67 @@ Type *parse_type(Context *context) {
     }
 }
 
-// struct_member
-//      : IDENTIFIER ":" " " value_type (" " "=" " " expression)? <EOL>
-StructMemberDeclaration *parse_struct_member(Context *context) {
-    auto name = consume(context, is_identifier);
-    if (name == nullptr) {
-        report_error(__LINE__, context, "struct member name");
-    }
+bool is_comment(Token *token) {
+    return token->type == Token::COMMENT;
+}
+
+bool is_end_of_line(Token *token) {
+    return token->type == Token::END_OF_LINE;
+}
+
+Token *consume_end_of_line(Context *context) {
+    consume(context, is_space, is_comment);
+    consume(context, is_comment);
     consume_space(context, 0);
-    if (consume(context, is_colon) == nullptr) {
-        report_error(__LINE__, context, ":");
-    }
-    consume_space(context, 1);
-    auto type = parse_type(context);
-    if (type == nullptr) {
-        report_error(__LINE__, context, "struct member type");
-    }
-    Expression *default_value = nullptr;
-    if (matches(context->next_token, is_space)) {
-        consume_space(context, 1);
-        if (consume(context, is_assign_operator)) {
-            consume_space(context, 1);
-            default_value = parse_expression(context);
-            consume_space(context, 0);
-        }
-    }
-    if (consume(context, is_end_of_line) == nullptr) {
-        report_error(__LINE__, context, "<EOL>");
-    }
-    return new StructMemberDeclaration{
-        name : name,
-        type : type,
-        default_value : default_value,
-    };
+    return consume(context, is_end_of_line);
 }
 
 // struct
-//      : IDENTIFIER " " ":" ":" "struct" " " "{" <EOL> (ALINGMENT+1 struct_member <EOL>)* ALIGNMENT "}"
+//      : IDENTIFIER "::" "struct" "{" <EOL> (member <EOL>)* "}"
 Statement *parse_struct(Context *context) {
     auto name = consume(context, is_identifier);
     if (name == nullptr) {
-        report_error(__LINE__, context, "struct name");
+        CONSUME_ERROR(context, "struct name");
     }
     consume_space(context, 1);
     auto assign_operator = consume(context, is_colon, is_colon);
     if (assign_operator == nullptr) {
-        report_error(__LINE__, context, "::");
+        CONSUME_ERROR(context, "::");
     }
-    assign_operator->join_next();
     consume_space(context, 1);
     if (consume(context, is_struct) == nullptr) {
-        report_error(__LINE__, context, "struct");
+        CONSUME_ERROR(context, "struct");
     }
     consume_space(context, 1);
     if (consume(context, is_open_brace) == nullptr) {
-        report_error(__LINE__, context, "}");
+        CONSUME_ERROR(context, "{");
     }
-    consume_space(context, 1);
-    if (consume(context, is_end_of_line) == nullptr) {
-        report_error(__LINE__, context, "<EOL>");
+    if (consume_end_of_line(context) == nullptr) {
+        CONSUME_ERROR(context, "<EOL>");
     }
-    StructMemberDeclaration *first_member = nullptr;
-    StructMemberDeclaration *last_member = nullptr;
+    Member *first_member = nullptr;
+    Member *last_member = nullptr;
     do {
+        auto lookahead_next_token = context->next_token;
+        consume_space(context, -1);
+        auto finish = matches(context->next_token, is_close_brace);
+        context->next_token = lookahead_next_token;
+        if (finish) {
+            break;
+        }
+
         consume_space(context, 4); // TODO: consume alignment
-        auto struct_member = parse_struct_member(context);
-        if (!struct_member) {
-            report_error(__LINE__, context, "struct member");
-        }
-        if (last_member) {
-            last_member->next_member = struct_member;
+        auto member = parse_member(context);
+        if (last_member != nullptr) {
+            last_member->next = member;
         } else {
-            first_member = struct_member;
+            first_member = member;
         }
-        last_member = struct_member;
-    } while (!matches(context->next_token, is_close_brace));
+        last_member = member;
+    } while (consume_end_of_line(context));
+    consume_space(context, 0); // TODO: consume alignment
     if (consume(context, is_close_brace) == nullptr) {
-        report_error(__LINE__, context, "}");
+        CONSUME_ERROR(context, "}");
     }
     return new Statement{
         kind : Statement::STRUCT_DECLARATION,
@@ -527,24 +600,88 @@ Statement *parse_struct(Context *context) {
             name : name,
             first_member : first_member,
         },
+        next : nullptr,
+    };
+}
+
+// procedure
+//      : IDENTIFIER "::" "(" (comma_separated_members)? ")" ("->" type)? "{" <EOL> statement* "}"
+Statement *parse_procedure(Context *context) {
+    auto name = consume(context, is_identifier);
+    if (name == nullptr) {
+        CONSUME_ERROR(context, "procedure name");
+    }
+    consume_space(context, 1);
+    auto assign_operator = consume(context, is_colon, is_colon);
+    if (assign_operator == nullptr) {
+        CONSUME_ERROR(context, "::");
+    }
+    consume_space(context, 1);
+    if (consume(context, is_open_paren) == nullptr) {
+        CONSUME_ERROR(context, "(");
+    }
+    consume_space(context, 0);
+    Member *first_parameter = nullptr;
+    if (consume(context, is_close_paren) == nullptr) {
+        first_parameter = parse_comma_separated_members(context);
+        if (consume(context, is_close_paren) == nullptr) {
+            CONSUME_ERROR(context, ")");
+        }
+    }
+    consume_space(context, 1);
+    Type *return_type = nullptr;
+    if (consume(context, is_hyphen, is_close_angled_bracket) != nullptr) {
+        consume_space(context, 1);
+        return_type = parse_type(context);
+        consume_space(context, 1);
+    }
+    if (consume(context, is_open_brace) == nullptr) {
+        CONSUME_ERROR(context, "{");
+    }
+    if (consume_end_of_line(context) == nullptr) {
+        CONSUME_ERROR(context, "<EOL>");
+    }
+    DUMP_CONTEXT(context);
+    if (consume(context, is_close_brace) == nullptr) {
+        CONSUME_ERROR(context, "}");
+    }
+    return new Statement{
+        kind : Statement::PROCEDURE_DECLARATION,
+        procedure_declaration : {
+            name : name,
+            first_parameter : first_parameter,
+            return_type : return_type,
+        },
+        next : nullptr,
     };
 }
 
 // statement
-//      | struct <EOL>
+//      : struct <EOL>
 //      | procedure <EOL>
 //      | assignment <EOL>
 //      | procedure_call <EOL>
 Statement *parse_statement(Context *context) {
-    // TODO: consume alignment
+    do {
+        consume_space(context, 0); // TODO: consume alignment
+    } while (consume_end_of_line(context));
+
     auto next_token = context->next_token;
     if (line_contains(context, is_struct)) {
         return parse_struct(context);
+    } else if (line_contains(context, is_open_brace)) {
+        return parse_procedure(context);
     }
     return nullptr;
 }
 
-Statement *parse(Token *first) {
-    auto context = Context{next_token : first};
-    return parse_statement(&context);
+Statement *parse(Token *first_token) {
+    auto context = Context{next_token : first_token};
+    auto first_statement = parse_statement(&context);
+    auto last_statement = first_statement;
+    while (last_statement != nullptr) {
+        last_statement->next = parse_statement(&context);
+        last_statement = last_statement->next;
+    }
+    return first_statement;
 }

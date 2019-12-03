@@ -3,10 +3,22 @@
 
 #include "Token.h"
 
+struct Type;
+struct Expression;
+
+struct Member {
+    Token *name;
+    Type *type;
+    Expression *default_value;
+    Member *next;
+};
+
 struct Type {
     enum Kind {
         ARRAY,
+        PROCEDURE,
         SIMPLE,
+        TUPLE,
     } kind;
 
     union {
@@ -14,8 +26,15 @@ struct Type {
             Type *item_type;
         } array;
         struct {
+            Member *first_parameter;
+            Type *return_type;
+        } procedure;
+        struct {
             Token *name;
         } simple;
+        struct {
+            Member *first_member;
+        } tuple;
     };
 };
 
@@ -46,26 +65,25 @@ struct Expression {
     };
 };
 
-struct StructMemberDeclaration {
-    Token *name;
-    Type *type;
-    Expression *default_value = nullptr;
-    StructMemberDeclaration* next_member = nullptr;
-};
-
 struct Statement {
     enum Kind {
-        DECLARATION,
-        ASSIGNMENT,
+        PROCEDURE_DECLARATION,
         STRUCT_DECLARATION,
     } kind;
 
     union {
         struct {
             Token *name;
-            StructMemberDeclaration *first_member;
+            Member *first_parameter;
+            Type *return_type;
+        } procedure_declaration;
+        struct {
+            Token *name;
+            Member *first_member;
         } struct_declaration;
     };
+
+    Statement *next;
 };
 
 Statement *parse(Token *first);
