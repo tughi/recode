@@ -3,37 +3,45 @@
 
 struct Context {
     Token *next_token;
+    int alignment;
 };
+
+#define ALIGNMENT_SIZE 4
 
 #define LOCATION(context) "(" << std::setw(3) << std::setfill('0') << context->next_token->line << "," << std::setw(3) << std::setfill('0') << context->next_token->column << ") -- "
 
 #define NEXT_TOKEN(context) context->next_token->lexeme->data
 
-#define DUMP_CONTEXT(context) INFO(LOCATION(context) << "Token : " << NEXT_TOKEN(context))
+#define DUMP_CONTEXT(context) INFO(LOCATION(context) << std::setw(context->alignment * ALIGNMENT_SIZE) << std::setfill(' ') << "" \
+                                                     << "Token : " << NEXT_TOKEN(context))
 
 #define CONSUME_ERROR(context, expected)                                                           \
     ERROR(LOCATION(context) << "Expected " << expected << " instead of: " << NEXT_TOKEN(context)); \
     exit(1)
 
-bool matches(Token *token, bool (*accepts_first)(Token *)) {
-    return (*accepts_first)(token);
+bool matches_one(Token *token, bool (*accepts)(Token *)) {
+    return (*accepts)(token);
 }
 
-bool matches(Token *token, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *)) {
-    return matches(token, accepts_first) && matches(token->next, accepts_second);
+bool matches(Context *context, bool (*accepts_first)(Token *)) {
+    return matches_one(context->next_token, accepts_first);
 }
 
-bool matches(Token *token, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *)) {
-    return matches(token, accepts_first, accepts_second) && matches(token->next->next, accepts_third);
+bool matches(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *)) {
+    return matches(context, accepts_first) && matches_one(context->next_token->next, accepts_second);
 }
 
-bool matches(Token *token, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *), bool (*accepts_fourth)(Token *)) {
-    return matches(token, accepts_first, accepts_second, accepts_third) && matches(token->next->next->next, accepts_fourth);
+bool matches(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *)) {
+    return matches(context, accepts_first, accepts_second) && matches_one(context->next_token->next->next, accepts_third);
+}
+
+bool matches(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *), bool (*accepts_fourth)(Token *)) {
+    return matches(context, accepts_first, accepts_second, accepts_third) && matches_one(context->next_token->next->next->next, accepts_fourth);
 }
 
 Token *consume(Context *context, bool (*accepts_first)(Token *)) {
     auto first_token = context->next_token;
-    if (matches(first_token, accepts_first)) {
+    if (matches(context, accepts_first)) {
         context->next_token = first_token->next;
         return first_token;
     }
@@ -42,7 +50,7 @@ Token *consume(Context *context, bool (*accepts_first)(Token *)) {
 
 Token *consume(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *)) {
     auto first_token = context->next_token;
-    if (matches(first_token, accepts_first, accepts_second)) {
+    if (matches(context, accepts_first, accepts_second)) {
         context->next_token = first_token->next->next;
         return first_token;
     }
@@ -52,7 +60,7 @@ Token *consume(Context *context, bool (*accepts_first)(Token *), bool (*accepts_
 bool line_contains(Context *context, bool (*accepts_first)(Token *)) {
     auto token = context->next_token;
     while (token->type != Token::END_OF_FILE && token->type != Token::END_OF_FILE) {
-        if (matches(token, accepts_first)) {
+        if (matches_one(token, accepts_first)) {
             return true;
         }
         token = token->next;
@@ -99,7 +107,7 @@ Expression *parse_expression(Context *context);
 //      | CHARACTER
 //      | "(" expression ")"
 Expression *parse_primary_expression(Context *context) {
-    if (matches(context->next_token, is_identifier)) {
+    if (matches(context, is_identifier)) {
         auto name = context->next_token;
         context->next_token = name->next;
         return new Expression{
@@ -109,7 +117,7 @@ Expression *parse_primary_expression(Context *context) {
             },
         };
     }
-    if (matches(context->next_token, is_integer_literal) || matches(context->next_token, is_string_literal) || matches(context->next_token, is_boolean_literal) || matches(context->next_token, is_character_literal)) {
+    if (matches(context, is_integer_literal) || matches(context, is_string_literal) || matches(context, is_boolean_literal) || matches(context, is_character_literal)) {
         auto value = context->next_token;
         context->next_token = value->next;
         return new Expression{
@@ -119,11 +127,11 @@ Expression *parse_primary_expression(Context *context) {
             },
         };
     }
-    if (matches(context->next_token, is_open_paren)) {
+    if (matches(context, is_open_paren)) {
         context->next_token = context->next_token->next;
         auto expression = parse_expression(context);
         if (expression) {
-            if (matches(context->next_token, is_close_paren)) {
+            if (matches(context, is_close_paren)) {
                 context->next_token = context->next_token->next;
                 return expression;
             }
@@ -142,7 +150,7 @@ bool is_unary_operator(Token *token) {
 //      : ("!" | "-") unary
 //      | primary
 Expression *parse_unary_expression(Context *context) {
-    if (matches(context->next_token, is_unary_operator)) {
+    if (matches(context, is_unary_operator)) {
         auto unary_operator = context->next_token;
         context->next_token = unary_operator->next;
         auto unary_expression = parse_unary_expression(context);
@@ -173,7 +181,7 @@ bool is_space(Token *token) {
 Expression *parse_multiplication_expression(Context *context) {
     auto expression = parse_unary_expression(context);
     if (expression) {
-        while (matches(context->next_token, is_space, is_multiplication_operator, is_space)) {
+        while (matches(context, is_space, is_multiplication_operator, is_space)) {
             auto operator_token = context->next_token->next;
             context->next_token = operator_token->next->next;
             auto right_expression = parse_unary_expression(context);
@@ -203,7 +211,7 @@ bool is_addition_operator(Token *token) {
 Expression *parse_addition_expression(Context *context) {
     auto expression = parse_multiplication_expression(context);
     if (expression) {
-        while (matches(context->next_token, is_space, is_addition_operator, is_space)) {
+        while (matches(context, is_space, is_addition_operator, is_space)) {
             auto operator_token = context->next_token->next;
             context->next_token = operator_token->next->next;
             auto right_expression = parse_multiplication_expression(context);
@@ -237,7 +245,7 @@ bool is_comparison_operator(Token *token) {
 Expression *parse_comparison_expression(Context *context) {
     auto expression = parse_addition_expression(context);
     if (expression) {
-        if (matches(context->next_token, is_space, is_comparison_operator, is_space) || matches(context->next_token, is_space, is_comparison_operator, is_assign_operator, is_space)) {
+        if (matches(context, is_space, is_comparison_operator, is_space) || matches(context, is_space, is_comparison_operator, is_assign_operator, is_space)) {
             auto operator_token = context->next_token->next;
             if (is_assign_operator(operator_token->next)) {
                 operator_token->join_next();
@@ -270,7 +278,7 @@ bool is_equality_operator(Token *token) {
 Expression *parse_equality_expression(Context *context) {
     auto expression = parse_comparison_expression(context);
     if (expression) {
-        if (matches(context->next_token, is_space, is_equality_operator, is_space) || matches(context->next_token, is_space, is_equality_operator, is_assign_operator, is_space)) {
+        if (matches(context, is_space, is_equality_operator, is_space) || matches(context, is_space, is_equality_operator, is_assign_operator, is_space)) {
             auto operator_token = context->next_token->next;
             if (is_assign_operator(operator_token->next)) {
                 operator_token->join_next();
@@ -303,7 +311,7 @@ bool is_and_operator(Token *token) {
 Expression *parse_logic_and_expression(Context *context) {
     auto expression = parse_equality_expression(context);
     if (expression) {
-        while (matches(context->next_token, is_space, is_and_operator, is_and_operator, is_space)) {
+        while (matches(context, is_space, is_and_operator, is_and_operator, is_space)) {
             auto operator_token = context->next_token->next;
             operator_token->join_next();
             context->next_token = operator_token->next->next;
@@ -334,7 +342,7 @@ bool is_or_operator(Token *token) {
 Expression *parse_logic_or_expression(Context *context) {
     auto expression = parse_logic_and_expression(context);
     if (expression) {
-        while (matches(context->next_token, is_space, is_or_operator, is_or_operator, is_space)) {
+        while (matches(context, is_space, is_or_operator, is_or_operator, is_space)) {
             auto operator_token = context->next_token->next;
             operator_token->join_next();
             context->next_token = operator_token->next->next;
@@ -431,7 +439,7 @@ Member *parse_member(Context *context) {
     auto type = parse_type(context);
     auto lookahead_next_token = context->next_token;
     consume_space(context, -1);
-    auto with_default_value = matches(context->next_token, is_assign_operator);
+    auto with_default_value = matches(context, is_assign_operator);
     context->next_token = lookahead_next_token;
     Expression *default_value = nullptr;
     if (with_default_value) {
@@ -497,7 +505,7 @@ Type *parse_type(Context *context) {
         }
         auto lookahead_next_token = context->next_token;
         consume_space(context, -1);
-        auto is_procedure = matches(context->next_token, is_hyphen, is_close_angled_bracket);
+        auto is_procedure = matches(context, is_hyphen, is_close_angled_bracket);
         context->next_token = lookahead_next_token;
         if (is_procedure) {
             consume_space(context, 1);
@@ -575,13 +583,13 @@ Statement *parse_struct(Context *context) {
     do {
         auto lookahead_next_token = context->next_token;
         consume_space(context, -1);
-        auto finish = matches(context->next_token, is_close_brace);
+        auto finish = matches(context, is_close_brace);
         context->next_token = lookahead_next_token;
         if (finish) {
             break;
         }
 
-        consume_space(context, 4); // TODO: consume alignment
+        consume_space(context, (context->alignment + 1) * ALIGNMENT_SIZE);
         auto member = parse_member(context);
         if (last_member != nullptr) {
             last_member->next = member;
@@ -590,7 +598,7 @@ Statement *parse_struct(Context *context) {
         }
         last_member = member;
     } while (consume_end_of_line(context));
-    consume_space(context, 0); // TODO: consume alignment
+    consume_space(context, context->alignment * ALIGNMENT_SIZE);
     if (consume(context, is_close_brace) == nullptr) {
         CONSUME_ERROR(context, "}");
     }
@@ -603,6 +611,8 @@ Statement *parse_struct(Context *context) {
         next : nullptr,
     };
 }
+
+Statement *parse_statement(Context *context);
 
 // procedure
 //      : IDENTIFIER "::" "(" (comma_separated_members)? ")" ("->" type)? "{" <EOL> statement* "}"
@@ -641,7 +651,22 @@ Statement *parse_procedure(Context *context) {
     if (consume_end_of_line(context) == nullptr) {
         CONSUME_ERROR(context, "<EOL>");
     }
-    DUMP_CONTEXT(context);
+    Statement *first_statement = nullptr;
+    Statement *last_statement = nullptr;
+    context->alignment += 1;
+    while (true) {
+        Statement *statement = parse_statement(context);
+        if (statement == nullptr) {
+            break;
+        }
+        if (last_statement != nullptr) {
+            last_statement->next = statement;
+        } else {
+            first_statement = statement;
+        }
+        last_statement = statement;
+    }
+    context->alignment -= 1;
     if (consume(context, is_close_brace) == nullptr) {
         CONSUME_ERROR(context, "}");
     }
@@ -663,8 +688,10 @@ Statement *parse_procedure(Context *context) {
 //      | procedure_call <EOL>
 Statement *parse_statement(Context *context) {
     do {
-        consume_space(context, 0); // TODO: consume alignment
+        consume_space(context, context->alignment * ALIGNMENT_SIZE);
     } while (consume_end_of_line(context));
+
+    DUMP_CONTEXT(context);
 
     auto next_token = context->next_token;
     if (line_contains(context, is_struct)) {
@@ -676,7 +703,10 @@ Statement *parse_statement(Context *context) {
 }
 
 Statement *parse(Token *first_token) {
-    auto context = Context{next_token : first_token};
+    auto context = Context{
+        next_token : first_token,
+        alignment : 0,
+    };
     auto first_statement = parse_statement(&context);
     auto last_statement = first_statement;
     while (last_statement != nullptr) {
