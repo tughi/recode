@@ -38,6 +38,9 @@ def build():
                 match = include_re.search(source_line)
                 if match:
                     source_file_include = match.group(1)
+                    if not os.path.exists(source_file_include):
+                        print(f"""File "{source_file}" includes non-existing file: {source_file_include}""")
+                        exit(1)
                     if source_file_include not in source_file_includes:
                         source_file_includes.add(source_file_include)
                         if source_file_include not in loaded_includes:
