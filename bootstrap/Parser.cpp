@@ -12,12 +12,9 @@ struct Context {
 
 #define NEXT_TOKEN(context) context->next_token->lexeme->data
 
-#define DUMP_CONTEXT(context) INFO(LOCATION(context) << std::setw(context->alignment * ALIGNMENT_SIZE) << std::setfill(' ') << "" \
-                                                     << "Token : " << NEXT_TOKEN(context))
+#define ES ""
 
-#define CONSUME_ERROR(context, expected)                                                           \
-    ERROR(LOCATION(context) << "Expected " << expected << " instead of: " << NEXT_TOKEN(context)); \
-    exit(1)
+#define DUMP_CONTEXT(context) INFO(LOCATION(context) << std::setw(context->alignment * ALIGNMENT_SIZE) << std::setfill(' ') << ES << "Token : " << NEXT_TOKEN(context))
 
 bool matches_one(Token *token, bool (*accepts)(Token *)) {
     return (*accepts)(token);
@@ -39,32 +36,48 @@ bool matches(Context *context, bool (*accepts_first)(Token *), bool (*accepts_se
     return matches(context, accepts_first, accepts_second, accepts_third) && matches_one(context->next_token->next->next->next, accepts_fourth);
 }
 
-Token *consume(Context *context, bool (*accepts_first)(Token *)) {
+Token *_consume_one_(int source_line, Context *context, const char *expected, bool (*accepts_first)(Token *)) {
     auto first_token = context->next_token;
     if (matches(context, accepts_first)) {
         context->next_token = first_token->next;
         return first_token;
     }
+    if (expected != nullptr) {
+        ERROR(__FILE__, source_line, LOCATION(context) << "Expected " << expected << " instead of: " << NEXT_TOKEN(context));
+        exit(1);
+    }
     return nullptr;
 }
 
-Token *consume(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *)) {
+Token *_consume_two_(int source_line, Context *context, const char *expected, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *)) {
     auto first_token = context->next_token;
     if (matches(context, accepts_first, accepts_second)) {
         context->next_token = first_token->next->next;
         return first_token;
     }
+    if (expected != nullptr) {
+        ERROR(__FILE__, source_line, LOCATION(context) << "Expected " << expected << " instead of: " << NEXT_TOKEN(context));
+        exit(1);
+    }
     return nullptr;
 }
 
-Token *consume(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *)) {
+Token *_consume_three_(int source_line, Context *context, const char *expected, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *)) {
     auto first_token = context->next_token;
     if (matches(context, accepts_first, accepts_second, accepts_third)) {
         context->next_token = first_token->next->next->next;
         return first_token;
     }
+    if (expected != nullptr) {
+        ERROR(__FILE__, source_line, LOCATION(context) << "Expected " << expected << " instead of: " << NEXT_TOKEN(context));
+        exit(1);
+    }
     return nullptr;
 }
+
+#define consume_one(context, expected, accepts_first) _consume_one_(__LINE__, context, expected, accepts_first)
+#define consume_two(context, expected, accepts_first, accepts_second) _consume_two_(__LINE__, context, expected, accepts_first, accepts_second)
+#define consume_three(context, expected, accepts_first, accepts_second, accepts_third) _consume_three_(__LINE__, context, expected, accepts_first, accepts_second, accepts_third)
 
 bool is_boolean_literal(Token *token) {
     return token->type == Token::KEYWORD && (token->lexeme->equals("false") || token->lexeme->equals("true"));
@@ -368,14 +381,16 @@ Expression *parse_expression(Context *context) {
     return parse_logic_or_expression(context);
 }
 
-int consume_space(Context *context, int expected_spaces) {
-    auto token = consume(context, is_space);
+int consume_space(int source_line, Context *context, int expected_spaces) {
+    auto token = consume_one(context, nullptr, is_space);
     int spaces = token != nullptr ? token->space.count : 0;
     if (expected_spaces >= 0 && spaces != expected_spaces) {
-        WARNING(LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
+        WARNING(__FILE__, source_line, LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
     }
     return spaces;
 }
+
+#define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
 
 bool is_colon(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals(":");
@@ -422,20 +437,15 @@ Type *parse_type(Context *context);
 // member
 //      : IDENTIFIER ":" type ("=" expression)?
 Member *parse_member(Context *context) {
-    auto name = consume(context, is_identifier);
-    if (name == nullptr) {
-        CONSUME_ERROR(context, "name");
-    }
+    auto name = consume_one(context, "name", is_identifier);
     consume_space(context, 0);
-    if (consume(context, is_colon) == nullptr) {
-        CONSUME_ERROR(context, ":");
-    }
+    consume_one(context, ":", is_colon);
     consume_space(context, 1);
     auto type = parse_type(context);
     Expression *default_value = nullptr;
     if (matches(context, is_space, is_assign_operator) || matches(context, is_assign_operator)) {
         consume_space(context, 1);
-        consume(context, is_assign_operator);
+        consume_one(context, "=", is_assign_operator);
         consume_space(context, 1);
         default_value = parse_expression(context);
     }
@@ -462,7 +472,7 @@ Member *parse_comma_separated_members(Context *context) {
         }
         last_member = member;
         consume_space(context, 0);
-    } while (consume(context, is_comma));
+    } while (consume_one(context, nullptr, is_comma));
     return first_member;
 }
 
@@ -471,13 +481,11 @@ Member *parse_comma_separated_members(Context *context) {
 //      | "[" type "]"
 //      | "(" (comma_separated_members)? ")"
 Type *parse_type(Context *context) {
-    if (consume(context, is_open_braket)) {
+    if (consume_one(context, nullptr, is_open_braket)) {
         consume_space(context, 0);
         auto item_type = parse_type(context);
         consume_space(context, 0);
-        if (consume(context, is_close_braket) == nullptr) {
-            CONSUME_ERROR(context, "]");
-        }
+        consume_one(context, "]", is_close_braket);
         consume_space(context, 0);
         return new Type{
             kind : Type::ARRAY,
@@ -485,18 +493,16 @@ Type *parse_type(Context *context) {
                 item_type : item_type,
             },
         };
-    } else if (consume(context, is_open_paren)) {
+    } else if (consume_one(context, nullptr, is_open_paren)) {
         Member *first_member = nullptr;
         consume_space(context, 0);
-        if (consume(context, is_close_paren) == nullptr) {
+        if (consume_one(context, nullptr, is_close_paren) == nullptr) {
             first_member = parse_comma_separated_members(context);
-            if (consume(context, is_close_paren) == nullptr) {
-                CONSUME_ERROR(context, ")");
-            }
+            consume_one(context, ")", is_close_paren);
         }
         if (matches(context, is_space, is_hyphen, is_close_angled_bracket) || matches(context, is_hyphen, is_close_angled_bracket)) {
             consume_space(context, 1);
-            consume(context, is_hyphen, is_close_angled_bracket);
+            consume_two(context, "->", is_hyphen, is_close_angled_bracket);
             consume_space(context, 1);
             auto return_type = parse_type(context);
             return new Type{
@@ -514,10 +520,7 @@ Type *parse_type(Context *context) {
             },
         };
     } else {
-        auto name = consume(context, is_identifier);
-        if (name == nullptr) {
-            CONSUME_ERROR(context, "type name");
-        }
+        auto name = consume_one(context, "type name", is_identifier);
         return new Type{
             kind : Type::SIMPLE,
             simple : {
@@ -535,44 +538,32 @@ bool is_end_of_line(Token *token) {
     return token->type == Token::END_OF_LINE;
 }
 
-Token *consume_end_of_line(Context *context) {
-    consume(context, is_space, is_comment);
-    consume(context, is_comment);
+Token *_consume_end_of_line_(int source_line, Context *context, bool required) {
+    consume_two(context, nullptr, is_space, is_comment);
+    consume_one(context, nullptr, is_comment);
     consume_space(context, 0);
-    return consume(context, is_end_of_line);
+    return _consume_one_(source_line, context, required ? "<EOL>" : nullptr, is_end_of_line);
 }
+
+#define consume_end_of_line(context, required) _consume_end_of_line_(__LINE__, context, required)
 
 // struct
 //      : IDENTIFIER "::" "struct" "{" <EOL> (member <EOL>)* "}"
 Statement *parse_struct(Context *context) {
-    auto name = consume(context, is_identifier);
-    if (name == nullptr) {
-        CONSUME_ERROR(context, "struct name");
-    }
+    auto name = consume_one(context, "struct name", is_identifier);
     consume_space(context, 1);
-    auto assign_operator = consume(context, is_colon, is_colon);
-    if (assign_operator == nullptr) {
-        CONSUME_ERROR(context, "::");
-    }
+    consume_two(context, "::", is_colon, is_colon);
     consume_space(context, 1);
-    if (consume(context, is_struct) == nullptr) {
-        CONSUME_ERROR(context, "struct");
-    }
+    consume_one(context, "struct", is_struct);
     consume_space(context, 1);
-    if (consume(context, is_open_brace) == nullptr) {
-        CONSUME_ERROR(context, "{");
-    }
-    if (consume_end_of_line(context) == nullptr) {
-        CONSUME_ERROR(context, "<EOL>");
-    }
+    consume_one(context, "{", is_open_brace);
+    consume_end_of_line(context, true);
     Member *first_member = nullptr;
     Member *last_member = nullptr;
     while (!matches(context, is_space, is_close_brace) && !matches(context, is_close_brace)) {
         consume_space(context, (context->alignment + 1) * ALIGNMENT_SIZE);
         auto member = parse_member(context);
-        if (consume_end_of_line(context) == nullptr) {
-            CONSUME_ERROR(context, "<EOL>");
-        }
+        consume_end_of_line(context, true);
         if (last_member != nullptr) {
             last_member->next = member;
         } else {
@@ -581,12 +572,8 @@ Statement *parse_struct(Context *context) {
         last_member = member;
     }
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
-    if (consume(context, is_close_brace) == nullptr) {
-        CONSUME_ERROR(context, "}");
-    }
-    if (consume_end_of_line(context) == nullptr) {
-        CONSUME_ERROR(context, "<EOL>");
-    }
+    consume_one(context, "}", is_close_brace);
+    consume_end_of_line(context, true);
     return new Statement{
         kind : Statement::STRUCT_DECLARATION,
         struct_declaration : {
@@ -624,50 +611,32 @@ Statement *parse_statements(Context *context) {
 // procedure
 //      : IDENTIFIER "::" "(" (comma_separated_members)? ")" ("->" type)? "{" <EOL> statement* "}"
 Statement *parse_procedure(Context *context) {
-    auto name = consume(context, is_identifier);
-    if (name == nullptr) {
-        CONSUME_ERROR(context, "procedure name");
-    }
+    auto name = consume_one(context, "procedure name", is_identifier);
     consume_space(context, 1);
-    auto assign_operator = consume(context, is_colon, is_colon);
-    if (assign_operator == nullptr) {
-        CONSUME_ERROR(context, "::");
-    }
+    consume_two(context, "::", is_colon, is_colon);
     consume_space(context, 1);
-    if (consume(context, is_open_paren) == nullptr) {
-        CONSUME_ERROR(context, "(");
-    }
+    consume_one(context, "(", is_open_paren);
     consume_space(context, 0);
     Member *first_parameter = nullptr;
-    if (consume(context, is_close_paren) == nullptr) {
+    if (consume_one(context, nullptr, is_close_paren) == nullptr) {
         first_parameter = parse_comma_separated_members(context);
-        if (consume(context, is_close_paren) == nullptr) {
-            CONSUME_ERROR(context, ")");
-        }
+        consume_one(context, ")", is_close_paren);
     }
     consume_space(context, 1);
     Type *return_type = nullptr;
-    if (consume(context, is_hyphen, is_close_angled_bracket) != nullptr) {
+    if (consume_two(context, nullptr, is_hyphen, is_close_angled_bracket) != nullptr) {
         consume_space(context, 1);
         return_type = parse_type(context);
         consume_space(context, 1);
     }
-    if (consume(context, is_open_brace) == nullptr) {
-        CONSUME_ERROR(context, "{");
-    }
-    if (consume_end_of_line(context) == nullptr) {
-        CONSUME_ERROR(context, "<EOL>");
-    }
+    consume_one(context, "{", is_open_brace);
+    consume_end_of_line(context, true);
     context->alignment += 1;
     auto first_statement = parse_statements(context);
     context->alignment -= 1;
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
-    if (consume(context, is_close_brace) == nullptr) {
-        CONSUME_ERROR(context, "}");
-    }
-    if (consume_end_of_line(context) == nullptr) {
-        CONSUME_ERROR(context, "<EOL>");
-    }
+    consume_one(context, "}", is_close_brace);
+    consume_end_of_line(context, true);
     return new Statement{
         kind : Statement::PROCEDURE_DECLARATION,
         procedure_declaration : {
@@ -687,14 +656,10 @@ bool is_keyword_return(Token *token) {
 // return
 //      : "return" expression <EOL>
 Statement *parse_return_statement(Context *context) {
-    if (consume(context, is_keyword_return) == nullptr) {
-        CONSUME_ERROR(context, "return");
-    }
+    consume_one(context, "return", is_keyword_return);
     consume_space(context, 1);
     auto expression = parse_expression(context);
-    if (consume_end_of_line(context) == nullptr) {
-        CONSUME_ERROR(context, "<EOL>");
-    }
+    consume_end_of_line(context, true);
     return new Statement{
         kind : Statement::RETURN,
         return_expression : expression,
@@ -719,7 +684,10 @@ bool line_contains(Context *context, bool (*accepts_first)(Token *)) {
 //      | assignment <EOL>
 //      | procedure_call <EOL>
 Statement *parse_statement(Context *context) {
-    while (consume(context, is_end_of_line) || consume(context, is_space, is_end_of_line) || consume(context, is_space, is_comment, is_end_of_line) || consume(context, is_comment, is_end_of_line)) {
+    while (consume_one(context, nullptr, is_end_of_line) ||
+           consume_two(context, nullptr, is_space, is_end_of_line) ||
+           consume_three(context, nullptr, is_space, is_comment, is_end_of_line) ||
+           consume_two(context, nullptr, is_comment, is_end_of_line)) {
         // do nothing
     }
     if (matches(context, is_space, is_close_brace) || matches(context, is_close_brace)) {

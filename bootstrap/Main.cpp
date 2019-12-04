@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 char *load_file(string file_name) {
     auto file = ifstream(file_name);
     if (file.fail()) {
-        ERROR("Couldn't open file: " << file_name);
+        ERROR(__FILE__, __LINE__, "Couldn't open file: " << file_name);
         exit(1);
     }
     file.seekg(0, ios::end);

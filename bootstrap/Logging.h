@@ -20,12 +20,12 @@
 #define SGR_FAINT_DEFAULT "\033[2;39m"
 #define SGR_FAINT_YELLOW "\033[2;33m"
 
-#define LOG(level, message) std::cout << level << __FILE__ << ':' << __LINE__ << " -- " << message << SGR_RESET << std::endl
+#define LOG(level, source_file, source_line, message) std::cout << level << source_file << ':' << source_line << " -- " << message << SGR_RESET << std::endl
 
-#define ERROR(message) LOG(SGR_ERROR, message)
+#define ERROR(source_file, source_line, message) LOG(SGR_ERROR, source_file, source_line, message)
 
-#define WARNING(message) LOG(SGR_WARNING, message)
+#define WARNING(source_file, source_line, message) LOG(SGR_WARNING, source_file, source_line, message)
 
-#define INFO(message) LOG(SGR_INFO, message)
+#define INFO(source_file, source_line, message) LOG(SGR_INFO, source_file, source_line, message)
 
 #endif
