@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     auto first_statement = parse(first_token);
 
     auto statement = first_statement;
-    while (statement) {
+    while (statement != nullptr) {
         cout << statement << endl;
         statement = statement->next;
     }
@@ -128,9 +128,9 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     static int alignment = 0;
     os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << "";
     switch (statement.kind) {
-    case Statement::PROCEDURE_DECLARATION: {
-        os << statement.procedure_declaration.name << " :: (";
-        auto parameter = statement.procedure_declaration.first_parameter;
+    case Statement::PROCEDURE_DEFINITION: {
+        os << statement.procedure_definition.name << " :: (";
+        auto parameter = statement.procedure_definition.first_parameter;
         while (parameter != nullptr) {
             os << parameter->name << ": " << parameter->type;
             parameter = parameter->next;
@@ -139,13 +139,13 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             }
         }
         os << ")";
-        if (statement.procedure_declaration.return_type != nullptr) {
-            os << " -> " << statement.procedure_declaration.return_type;
+        if (statement.procedure_definition.return_type != nullptr) {
+            os << " -> " << statement.procedure_definition.return_type;
         }
         os << " {" << endl;
 
         alignment += 1;
-        auto procedure_statement = statement.procedure_declaration.first_statement;
+        auto procedure_statement = statement.procedure_definition.first_statement;
         while (procedure_statement != nullptr) {
             os << procedure_statement;
             procedure_statement = procedure_statement->next;
@@ -160,9 +160,9 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
         os << "return " << statement.return_expression << endl;
         return os;
     }
-    case Statement::STRUCT_DECLARATION: {
-        os << statement.struct_declaration.name << " :: struct {" << endl;
-        auto member = statement.struct_declaration.first_member;
+    case Statement::STRUCT_DEFINITION: {
+        os << statement.struct_definition.name << " :: struct {" << endl;
+        auto member = statement.struct_definition.first_member;
         while (member) {
             os << "    " << member->name << ": " << member->type;
             if (member->default_value) {

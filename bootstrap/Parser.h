@@ -67,23 +67,25 @@ struct Expression {
 
 struct Statement {
     enum Kind {
-        PROCEDURE_DECLARATION,
+        EXPRESSION,
+        PROCEDURE_DEFINITION,
         RETURN,
-        STRUCT_DECLARATION,
+        STRUCT_DEFINITION,
     } kind;
 
     union {
+        Expression *expression;
         struct {
-            Token *name;
+            Expression *name;
             Member *first_parameter;
             Type *return_type;
             Statement *first_statement;
-        } procedure_declaration;
+        } procedure_definition;
         Expression *return_expression;
         struct {
-            Token *name;
+            Expression *name;
             Member *first_member;
-        } struct_declaration;
+        } struct_definition;
     };
 
     Statement *next;

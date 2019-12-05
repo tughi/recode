@@ -22,7 +22,10 @@ struct Matcher {
 
 #define NEXT_TOKEN(context) context->next_token->lexeme->data
 
-#define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, LOCATION(context) << std::setw(context->alignment * ALIGNMENT_SIZE) << std::setfill(' ') << ' ' << "Token : " << NEXT_TOKEN(context))
+#define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, LOCATION(context) << std::setw(context->alignment * ALIGNMENT_SIZE) << std::setfill(' ') << "" \
+                                                                         << "Token : " << NEXT_TOKEN(context))
+
+#define PANICK() exit(1)
 
 bool _matches_(int source_line, Context *context, Matcher *matchers[]) {
     auto first_token = context->next_token;
@@ -68,7 +71,7 @@ Token *_consume_(int source_line, Context *context, const char *expected, Matche
         } else if (matchers[index]->required) {
             if (expected != nullptr) {
                 ERROR(__FILE__, source_line, LOCATION(context) << "Expected " << expected << " instead of: " << NEXT_TOKEN(context));
-                exit(1);
+                PANICK();
             }
             return nullptr;
         }
@@ -190,8 +193,7 @@ Expression *parse_primary_expression(Context *context) {
         return expression; // TODO: return group
     }
     ERROR(__FILE__, __LINE__, LOCATION(context) << "Expression expected");
-    exit(1);
-    return nullptr;
+    PANICK();
 }
 
 bool is_unary_operator(Token *token) {
@@ -410,10 +412,6 @@ bool is_keyword(Token *token, const char *lexeme) {
     return token->type == Token::KEYWORD && token->lexeme->equals(lexeme);
 }
 
-bool is_struct(Token *token) {
-    return is_keyword(token, "struct");
-}
-
 bool is_open_brace(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("{");
 }
@@ -548,22 +546,37 @@ bool is_end_of_line(Token *token) {
     return token->type == Token::END_OF_LINE;
 }
 
-Token *_consume_end_of_line_(int source_line, Context *context, bool required) {
-    consume_two(context, nullptr, optional(is_space), optional(is_comment));
-    consume_space(context, 0);
-    return _consume_(source_line, context, required ? "<EOL>" : nullptr, required(is_end_of_line));
+bool is_end_of_file(Token *token) {
+    return token->type == Token::END_OF_FILE;
+}
+
+bool _consume_end_of_line_(int source_line, Context *context, bool required) {
+    if (matches_three(context, optional(is_space), optional(is_comment), required(is_end_of_line)) || matches_three(context, optional(is_space), optional(is_comment), required(is_end_of_file))) {
+        if (matches_two(context, optional(is_space), required(is_comment))) {
+            consume_space(context, context->alignment * ALIGNMENT_SIZE);
+            consume_one(context, nullptr, required(is_comment));
+        } else {
+            consume_space(context, 0);
+        }
+        return consume_one(context, nullptr, required(is_end_of_line));
+    }
+    if (required) {
+        ERROR(__FILE__, source_line, LOCATION(context) << "Expected <EOL> instead of: " << NEXT_TOKEN(context));
+        PANICK();
+    }
+    return false;
 }
 
 #define consume_end_of_line(context, required) _consume_end_of_line_(__LINE__, context, required)
 
+bool is_struct_keyword(Token *token) {
+    return is_keyword(token, "struct");
+}
+
 // struct
-//      : IDENTIFIER "::" "struct" "{" <EOL> (member <EOL>)* "}"
-Statement *parse_struct(Context *context) {
-    auto name = consume_one(context, "struct name", required(is_identifier));
-    consume_space(context, 1);
-    consume_two(context, "::", required(is_colon), required(is_colon));
-    consume_space(context, 1);
-    consume_one(context, "struct", required(is_struct));
+//      : "{" <EOL> (member <EOL>)* "}"
+Statement *parse_struct(Context *context, Expression *name) {
+    consume_one(context, "struct", required(is_struct_keyword));
     consume_space(context, 1);
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, true);
@@ -584,17 +597,12 @@ Statement *parse_struct(Context *context) {
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, true);
     return new Statement{
-        kind : Statement::STRUCT_DECLARATION,
-        struct_declaration : {
+        kind : Statement::STRUCT_DEFINITION,
+        struct_definition : {
             name : name,
             first_member : first_member,
         },
-        next : nullptr,
     };
-}
-
-bool is_end_of_file(Token *token) {
-    return token->type == Token::END_OF_FILE;
 }
 
 Statement *parse_statement(Context *context);
@@ -607,6 +615,7 @@ Statement *parse_statements(Context *context) {
         if (statement == nullptr) {
             break;
         }
+        statement->next = nullptr;
         if (last_statement != nullptr) {
             last_statement->next = statement;
         } else {
@@ -618,12 +627,8 @@ Statement *parse_statements(Context *context) {
 }
 
 // procedure
-//      : IDENTIFIER "::" "(" comma_separated_members? ")" ("->" type)? "{" <EOL> statement* "}"
-Statement *parse_procedure(Context *context) {
-    auto name = consume_one(context, "procedure name", required(is_identifier));
-    consume_space(context, 1);
-    consume_two(context, "::", required(is_colon), required(is_colon));
-    consume_space(context, 1);
+//      : "(" comma_separated_members? ")" ("->" type)? "{" <EOL> statement* "}"
+Statement *parse_procedure(Context *context, Expression *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
     Member *first_parameter = nullptr;
@@ -647,14 +652,13 @@ Statement *parse_procedure(Context *context) {
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, true);
     return new Statement{
-        kind : Statement::PROCEDURE_DECLARATION,
-        procedure_declaration : {
+        kind : Statement::PROCEDURE_DEFINITION,
+        procedure_definition : {
             name : name,
             first_parameter : first_parameter,
             return_type : return_type,
             first_statement : first_statement,
         },
-        next : nullptr,
     };
 }
 
@@ -672,31 +676,17 @@ Statement *parse_return_statement(Context *context) {
     return new Statement{
         kind : Statement::RETURN,
         return_expression : expression,
-        next : nullptr,
     };
 }
 
-bool line_contains(Context *context, bool (*accepts)(Token *)) {
-    auto token = context->next_token;
-    while (token->type != Token::END_OF_LINE && token->type != Token::END_OF_FILE) {
-        if ((*accepts)(token)) {
-            return true;
-        }
-        token = token->next;
-    }
-    return false;
-}
-
 // statement
-//      : struct <EOL>
-//      | procedure <EOL>
-//      | assignment <EOL>
-//      | procedure_call <EOL>
+//      : return_statement
+//      | expression ((":" ":" definition) | (":" declaration) | ("=" assignment))?
 Statement *parse_statement(Context *context) {
-    while (consume_three(context, nullptr, optional(is_space), optional(is_comment), required(is_end_of_line))) {
+    while (consume_end_of_line(context, false)) {
         // do nothing
     }
-    if (matches_two(context, optional(is_space), required(is_close_brace))) {
+    if (matches_one(context, required(is_end_of_file)) || matches_two(context, optional(is_space), required(is_close_brace))) {
         return nullptr;
     }
 
@@ -708,13 +698,26 @@ Statement *parse_statement(Context *context) {
 
     // TODO: parse other statements
 
-    auto next_token = context->next_token;
-    if (line_contains(context, is_struct)) {
-        return parse_struct(context);
-    } else if (line_contains(context, is_open_brace)) {
-        return parse_procedure(context);
+    auto expression = parse_expression(context);
+    if (consume_end_of_line(context, false)) {
+        return new Statement{
+            kind : Statement::EXPRESSION,
+            expression : expression,
+        };
     }
-    return nullptr;
+
+    if (matches_three(context, optional(is_space), required(is_colon), required(is_colon))) {
+        consume_space(context, 1);
+        consume_two(context, nullptr, required(is_colon), required(is_colon));
+        consume_space(context, 1);
+        if (matches_one(context, required(is_struct_keyword))) {
+            return parse_struct(context, expression);
+        }
+        return parse_procedure(context, expression);
+    }
+
+    ERROR(__FILE__, __LINE__, LOCATION(context) << "Unxpected token: " << NEXT_TOKEN(context));
+    PANICK();
 }
 
 Statement *parse(Token *first_token) {
