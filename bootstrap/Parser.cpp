@@ -24,25 +24,39 @@ struct Matcher {
 
 #define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, LOCATION(context) << std::setw(context->alignment * ALIGNMENT_SIZE) << std::setfill(' ') << ' ' << "Token : " << NEXT_TOKEN(context))
 
-bool matches_one(Token *token, bool (*accepts)(Token *)) {
-    return (*accepts)(token);
+bool _matches_(int source_line, Context *context, Matcher *matchers[]) {
+    auto first_token = context->next_token;
+    auto index = 0;
+    auto token = first_token;
+    while (matchers[index] != nullptr) {
+        if ((*matchers[index]->matches)(token)) {
+            token = token->next;
+        } else if (matchers[index]->required) {
+            return false;
+        }
+        index += 1;
+    }
+    return true;
 }
 
-bool matches(Context *context, bool (*accepts_first)(Token *)) {
-    return matches_one(context->next_token, accepts_first);
+bool _matches_(int source_line, Context *context, Matcher first_matcher) {
+    Matcher *matchers[] = {&first_matcher, nullptr};
+    return _matches_(source_line, context, matchers);
 }
 
-bool matches(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *)) {
-    return matches(context, accepts_first) && matches_one(context->next_token->next, accepts_second);
+bool _matches_(int source_line, Context *context, Matcher first_matcher, Matcher second_matcher) {
+    Matcher *matchers[] = {&first_matcher, &second_matcher, nullptr};
+    return _matches_(source_line, context, matchers);
 }
 
-bool matches(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *)) {
-    return matches(context, accepts_first, accepts_second) && matches_one(context->next_token->next->next, accepts_third);
+bool _matches_(int source_line, Context *context, Matcher first_matcher, Matcher second_matcher, Matcher third_matcher) {
+    Matcher *matchers[] = {&first_matcher, &second_matcher, &third_matcher, nullptr};
+    return _matches_(source_line, context, matchers);
 }
 
-bool matches(Context *context, bool (*accepts_first)(Token *), bool (*accepts_second)(Token *), bool (*accepts_third)(Token *), bool (*accepts_fourth)(Token *)) {
-    return matches(context, accepts_first, accepts_second, accepts_third) && matches_one(context->next_token->next->next->next, accepts_fourth);
-}
+#define matches_one(context, first_matcher) _matches_(__LINE__, context, first_matcher)
+#define matches_two(context, first_matcher, second_matcher) _matches_(__LINE__, context, first_matcher, second_matcher)
+#define matches_three(context, first_matcher, second_matcher, third_matcher) _matches_(__LINE__, context, first_matcher, second_matcher, third_matcher)
 
 Token *_consume_(int source_line, Context *context, const char *expected, Matcher *matchers[]) {
     auto first_token = context->next_token;
@@ -125,39 +139,59 @@ Expression *parse_expression(Context *context);
 //      | CHARACTER
 //      | "(" expression ")"
 Expression *parse_primary_expression(Context *context) {
-    if (matches(context, is_identifier)) {
-        auto name = context->next_token;
-        context->next_token = name->next;
+    Token *consumed = consume_one(context, nullptr, required(is_identifier));
+    if (consumed != nullptr) {
         return new Expression{
             kind : Expression::VARIABLE,
             variable : {
-                name : name,
+                name : consumed,
             },
         };
     }
-    if (matches(context, is_integer_literal) || matches(context, is_string_literal) || matches(context, is_boolean_literal) || matches(context, is_character_literal)) {
-        auto value = context->next_token;
-        context->next_token = value->next;
+    consumed = consume_one(context, nullptr, required(is_integer_literal));
+    if (consumed != nullptr) {
         return new Expression{
             kind : Expression::LITERAL,
             literal : {
-                value : value,
+                value : consumed,
             },
         };
     }
-    if (matches(context, is_open_paren)) {
-        context->next_token = context->next_token->next;
-        auto expression = parse_expression(context);
-        if (expression) {
-            if (matches(context, is_close_paren)) {
-                context->next_token = context->next_token->next;
-                return expression;
-            }
-            return nullptr; // TODO: report syntax error
-        }
-        return nullptr; // TODO: report syntax error
+    consumed = consume_one(context, nullptr, required(is_string_literal));
+    if (consumed != nullptr) {
+        return new Expression{
+            kind : Expression::LITERAL,
+            literal : {
+                value : consumed,
+            },
+        };
     }
-    return nullptr; // TODO: report syntax error
+    consumed = consume_one(context, nullptr, required(is_boolean_literal));
+    if (consumed != nullptr) {
+        return new Expression{
+            kind : Expression::LITERAL,
+            literal : {
+                value : consumed,
+            },
+        };
+    }
+    consumed = consume_one(context, nullptr, required(is_character_literal));
+    if (consumed != nullptr) {
+        return new Expression{
+            kind : Expression::LITERAL,
+            literal : {
+                value : consumed,
+            },
+        };
+    }
+    if (consume_one(context, nullptr, required(is_open_paren))) {
+        auto expression = parse_expression(context);
+        consume_one(context, ")", required(is_close_paren));
+        return expression; // TODO: return group
+    }
+    ERROR(__FILE__, __LINE__, LOCATION(context) << "Expression expected");
+    exit(1);
+    return nullptr;
 }
 
 bool is_unary_operator(Token *token) {
@@ -168,9 +202,8 @@ bool is_unary_operator(Token *token) {
 //      : ("!" | "-") unary
 //      | primary
 Expression *parse_unary_expression(Context *context) {
-    if (matches(context, is_unary_operator)) {
-        auto unary_operator = context->next_token;
-        context->next_token = unary_operator->next;
+    if (matches_one(context, required(is_unary_operator))) {
+        auto unary_operator = consume_one(context, nullptr, required(is_unary_operator));
         auto unary_expression = parse_unary_expression(context);
         if (unary_expression != nullptr) {
             return new Expression{
@@ -194,28 +227,34 @@ bool is_space(Token *token) {
     return token->type == Token::SPACE;
 }
 
+int consume_space(int source_line, Context *context, int expected_spaces) {
+    auto token = _consume_(__LINE__, context, nullptr, required(is_space));
+    int spaces = token != nullptr ? token->space.count : 0;
+    if (expected_spaces >= 0 && spaces != expected_spaces) {
+        WARNING(__FILE__, source_line, LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
+    }
+    return spaces;
+}
+
+#define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
+
 // multiplication
-//      : unary ( " " ( "*" | "/" ) " " unary )*
+//      : unary (("*" | "/") unary)*
 Expression *parse_multiplication_expression(Context *context) {
     auto expression = parse_unary_expression(context);
-    if (expression) {
-        while (matches(context, is_space, is_multiplication_operator, is_space)) {
-            auto operator_token = context->next_token->next;
-            context->next_token = operator_token->next->next;
-            auto right_expression = parse_unary_expression(context);
-            if (right_expression) {
-                expression = new Expression{
-                    kind : Expression::BINARY,
-                    binary : {
-                        operator_token : operator_token,
-                        left_expression : expression,
-                        right_expression : right_expression,
-                    },
-                };
-            } else {
-                return right_expression;
-            }
-        }
+    while (matches_two(context, optional(is_space), required(is_multiplication_operator))) {
+        consume_space(context, 1);
+        auto operator_token = consume_one(context, nullptr, required(is_multiplication_operator));
+        consume_space(context, 1);
+        auto right_expression = parse_unary_expression(context);
+        expression = new Expression{
+            kind : Expression::BINARY,
+            binary : {
+                operator_token : operator_token,
+                left_expression : expression,
+                right_expression : right_expression,
+            },
+        };
     }
     return expression;
 }
@@ -225,27 +264,22 @@ bool is_addition_operator(Token *token) {
 }
 
 // addition
-//      : mutliplication ( " " ( "+" | "-" ) " " multiplication )*
+//      : mutliplication (("+" | "-") multiplication)*
 Expression *parse_addition_expression(Context *context) {
     auto expression = parse_multiplication_expression(context);
-    if (expression) {
-        while (matches(context, is_space, is_addition_operator, is_space)) {
-            auto operator_token = context->next_token->next;
-            context->next_token = operator_token->next->next;
-            auto right_expression = parse_multiplication_expression(context);
-            if (right_expression) {
-                expression = new Expression{
-                    kind : Expression::BINARY,
-                    binary : {
-                        operator_token : operator_token,
-                        left_expression : expression,
-                        right_expression : right_expression,
-                    },
-                };
-            } else {
-                return right_expression;
-            }
-        }
+    while (matches_two(context, optional(is_space), required(is_addition_operator))) {
+        consume_space(context, 1);
+        auto operator_token = consume_one(context, nullptr, required(is_addition_operator));
+        consume_space(context, 1);
+        auto right_expression = parse_multiplication_expression(context);
+        expression = new Expression{
+            kind : Expression::BINARY,
+            binary : {
+                operator_token : operator_token,
+                left_expression : expression,
+                right_expression : right_expression,
+            },
+        };
     }
     return expression;
 }
@@ -259,30 +293,27 @@ bool is_comparison_operator(Token *token) {
 }
 
 // comparison
-//      : addition ( " " ( "<" | "<=" | ">" | ">=" ) " " addition )?
+//      : addition (("<" | ">") "="? addition)?
 Expression *parse_comparison_expression(Context *context) {
     auto expression = parse_addition_expression(context);
-    if (expression) {
-        if (matches(context, is_space, is_comparison_operator, is_space) || matches(context, is_space, is_comparison_operator, is_assign_operator, is_space)) {
-            auto operator_token = context->next_token->next;
-            if (is_assign_operator(operator_token->next)) {
-                operator_token->join_next();
-            }
-            context->next_token = operator_token->next->next;
-            auto right_expression = parse_addition_expression(context);
-            if (right_expression) {
-                expression = new Expression{
-                    kind : Expression::BINARY,
-                    binary : {
-                        operator_token : operator_token,
-                        left_expression : expression,
-                        right_expression : right_expression,
-                    },
-                };
-            } else {
-                return right_expression;
-            }
+    if (matches_two(context, optional(is_space), required(is_comparison_operator))) {
+        consume_space(context, 1);
+        auto operator_token = consume_two(context, nullptr, required(is_comparison_operator), required(is_assign_operator));
+        if (operator_token != nullptr) {
+            operator_token->join_next();
+        } else {
+            operator_token = consume_one(context, nullptr, required(is_comparison_operator));
         }
+        consume_space(context, 1);
+        auto right_expression = parse_addition_expression(context);
+        return new Expression{
+            kind : Expression::BINARY,
+            binary : {
+                operator_token : operator_token,
+                left_expression : expression,
+                right_expression : right_expression,
+            },
+        };
     }
     return expression;
 }
@@ -292,30 +323,23 @@ bool is_equality_operator(Token *token) {
 }
 
 // equality
-//      : comparison ( " " ( "!" | "=" ) "=" " " comparison )?
+//      : comparison (("!" | "=") "=" comparison)?
 Expression *parse_equality_expression(Context *context) {
     auto expression = parse_comparison_expression(context);
-    if (expression) {
-        if (matches(context, is_space, is_equality_operator, is_space) || matches(context, is_space, is_equality_operator, is_assign_operator, is_space)) {
-            auto operator_token = context->next_token->next;
-            if (is_assign_operator(operator_token->next)) {
-                operator_token->join_next();
-            }
-            context->next_token = operator_token->next->next;
-            auto right_expression = parse_comparison_expression(context);
-            if (right_expression) {
-                expression = new Expression{
-                    kind : Expression::BINARY,
-                    binary : {
-                        operator_token : operator_token,
-                        left_expression : expression,
-                        right_expression : right_expression,
-                    },
-                };
-            } else {
-                return right_expression;
-            }
-        }
+    if (matches_three(context, optional(is_space), required(is_equality_operator), required(is_assign_operator))) {
+        consume_space(context, 1);
+        auto operator_token = consume_two(context, nullptr, required(is_equality_operator), required(is_assign_operator));
+        operator_token->join_next();
+        consume_space(context, 1);
+        auto right_expression = parse_comparison_expression(context);
+        return new Expression{
+            kind : Expression::BINARY,
+            binary : {
+                operator_token : operator_token,
+                left_expression : expression,
+                right_expression : right_expression,
+            },
+        };
     }
     return expression;
 }
@@ -325,28 +349,23 @@ bool is_and_operator(Token *token) {
 }
 
 // logic_and
-//      : equality ( " " "&" "&" " " equality )*
+//      : equality ("&" "&" equality)*
 Expression *parse_logic_and_expression(Context *context) {
     auto expression = parse_equality_expression(context);
-    if (expression) {
-        while (matches(context, is_space, is_and_operator, is_and_operator, is_space)) {
-            auto operator_token = context->next_token->next;
-            operator_token->join_next();
-            context->next_token = operator_token->next->next;
-            auto right_expression = parse_equality_expression(context);
-            if (right_expression) {
-                expression = new Expression{
-                    kind : Expression::BINARY,
-                    binary : {
-                        operator_token : operator_token,
-                        left_expression : expression,
-                        right_expression : right_expression,
-                    },
-                };
-            } else {
-                return right_expression;
-            }
-        }
+    while (matches_three(context, optional(is_space), required(is_and_operator), required(is_and_operator))) {
+        consume_space(context, 1);
+        auto operator_token = consume_two(context, nullptr, required(is_and_operator), required(is_and_operator));
+        operator_token->join_next();
+        consume_space(context, 1);
+        auto right_expression = parse_equality_expression(context);
+        expression = new Expression{
+            kind : Expression::BINARY,
+            binary : {
+                operator_token : operator_token,
+                left_expression : expression,
+                right_expression : right_expression,
+            },
+        };
     }
     return expression;
 }
@@ -356,28 +375,23 @@ bool is_or_operator(Token *token) {
 }
 
 // logic_or
-//      : logic_and ( " " "|" "|" " " logic_and )*
+//      : logic_and ("|" "|" logic_and)*
 Expression *parse_logic_or_expression(Context *context) {
     auto expression = parse_logic_and_expression(context);
-    if (expression) {
-        while (matches(context, is_space, is_or_operator, is_or_operator, is_space)) {
-            auto operator_token = context->next_token->next;
-            operator_token->join_next();
-            context->next_token = operator_token->next->next;
-            auto right_expression = parse_logic_and_expression(context);
-            if (right_expression) {
-                expression = new Expression{
-                    kind : Expression::BINARY,
-                    binary : {
-                        operator_token : operator_token,
-                        left_expression : expression,
-                        right_expression : right_expression,
-                    },
-                };
-            } else {
-                return right_expression;
-            }
-        }
+    while (matches_three(context, optional(is_space), required(is_or_operator), required(is_or_operator))) {
+        consume_space(context, 1);
+        auto operator_token = consume_two(context, nullptr, required(is_or_operator), required(is_or_operator));
+        operator_token->join_next();
+        consume_space(context, 1);
+        auto right_expression = parse_logic_and_expression(context);
+        expression = new Expression{
+            kind : Expression::BINARY,
+            binary : {
+                operator_token : operator_token,
+                left_expression : expression,
+                right_expression : right_expression,
+            },
+        };
     }
     return expression;
 }
@@ -387,17 +401,6 @@ Expression *parse_logic_or_expression(Context *context) {
 Expression *parse_expression(Context *context) {
     return parse_logic_or_expression(context);
 }
-
-int consume_space(int source_line, Context *context, int expected_spaces) {
-    auto token = _consume_(__LINE__, context, nullptr, required(is_space));
-    int spaces = token != nullptr ? token->space.count : 0;
-    if (expected_spaces >= 0 && spaces != expected_spaces) {
-        WARNING(__FILE__, source_line, LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
-    }
-    return spaces;
-}
-
-#define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
 
 bool is_colon(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals(":");
@@ -450,7 +453,7 @@ Member *parse_member(Context *context) {
     consume_space(context, 1);
     auto type = parse_type(context);
     Expression *default_value = nullptr;
-    if (matches(context, is_space, is_assign_operator) || matches(context, is_assign_operator)) {
+    if (matches_two(context, optional(is_space), required(is_assign_operator))) {
         consume_space(context, 1);
         consume_one(context, "=", required(is_assign_operator));
         consume_space(context, 1);
@@ -486,7 +489,7 @@ Member *parse_comma_separated_members(Context *context) {
 // type
 //      : IDENTIFIER
 //      | "[" type "]"
-//      | "(" (comma_separated_members)? ")"
+//      | "(" comma_separated_members? ")"
 Type *parse_type(Context *context) {
     if (consume_one(context, nullptr, required(is_open_braket))) {
         consume_space(context, 0);
@@ -507,7 +510,7 @@ Type *parse_type(Context *context) {
             first_member = parse_comma_separated_members(context);
             consume_one(context, ")", required(is_close_paren));
         }
-        if (matches(context, is_space, is_hyphen, is_close_angled_bracket) || matches(context, is_hyphen, is_close_angled_bracket)) {
+        if (matches_three(context, optional(is_space), required(is_hyphen), required(is_close_angled_bracket))) {
             consume_space(context, 1);
             consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
             consume_space(context, 1);
@@ -566,7 +569,7 @@ Statement *parse_struct(Context *context) {
     consume_end_of_line(context, true);
     Member *first_member = nullptr;
     Member *last_member = nullptr;
-    while (!matches(context, is_space, is_close_brace) && !matches(context, is_close_brace)) {
+    while (!matches_two(context, optional(is_space), required(is_close_brace))) {
         consume_space(context, (context->alignment + 1) * ALIGNMENT_SIZE);
         auto member = parse_member(context);
         consume_end_of_line(context, true);
@@ -615,7 +618,7 @@ Statement *parse_statements(Context *context) {
 }
 
 // procedure
-//      : IDENTIFIER "::" "(" (comma_separated_members)? ")" ("->" type)? "{" <EOL> statement* "}"
+//      : IDENTIFIER "::" "(" comma_separated_members? ")" ("->" type)? "{" <EOL> statement* "}"
 Statement *parse_procedure(Context *context) {
     auto name = consume_one(context, "procedure name", required(is_identifier));
     consume_space(context, 1);
@@ -673,10 +676,10 @@ Statement *parse_return_statement(Context *context) {
     };
 }
 
-bool line_contains(Context *context, bool (*accepts_first)(Token *)) {
+bool line_contains(Context *context, bool (*accepts)(Token *)) {
     auto token = context->next_token;
     while (token->type != Token::END_OF_LINE && token->type != Token::END_OF_FILE) {
-        if (matches_one(token, accepts_first)) {
+        if ((*accepts)(token)) {
             return true;
         }
         token = token->next;
@@ -693,13 +696,13 @@ Statement *parse_statement(Context *context) {
     while (consume_three(context, nullptr, optional(is_space), optional(is_comment), required(is_end_of_line))) {
         // do nothing
     }
-    if (matches(context, is_space, is_close_brace) || matches(context, is_close_brace)) {
+    if (matches_two(context, optional(is_space), required(is_close_brace))) {
         return nullptr;
     }
 
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
 
-    if (matches(context, is_keyword_return)) {
+    if (matches_one(context, required(is_keyword_return))) {
         return parse_return_statement(context);
     }
 
