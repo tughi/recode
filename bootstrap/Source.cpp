@@ -14,6 +14,8 @@ char Source::advance(bool (*accepts)(char)) {
         if (next_char == '\n') {
             this->line += 1;
             this->column = 1;
+        } else if (next_char == '\t') {
+            this->column = (this->column / TAB_SIZE + 1) * TAB_SIZE + 1;
         } else {
             this->column += 1;
         }

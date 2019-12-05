@@ -1,6 +1,8 @@
 #ifndef __recode__source_h__
 #define __recode__source_h__
 
+#define TAB_SIZE 4
+
 struct Source {
     char *data;
     int index;

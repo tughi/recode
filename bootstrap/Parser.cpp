@@ -1,12 +1,13 @@
 #include "Parser.h"
 #include "Logging.h"
+#include "Source.h"
 
 struct Context {
     Token *next_token;
     int alignment;
 };
 
-#define ALIGNMENT_SIZE 4
+#define ALIGNMENT_SIZE TAB_SIZE
 
 struct Matcher {
     bool (*matches)(Token *);

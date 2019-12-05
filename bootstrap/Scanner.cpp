@@ -71,7 +71,7 @@ bool is_single_quote(char c) {
 }
 
 bool is_space(char c) {
-    return c == ' ';
+    return c == ' ' || c == '\t';
 }
 
 bool is_string_character(char c) {
@@ -118,7 +118,11 @@ Token *read_space(Source &source) {
     char consumed;
     int count = 0;
     while (consumed = source.advance(is_space)) {
-        count += 1;
+        if (consumed == '\t') {
+            count = (count / TAB_SIZE + 1) * TAB_SIZE;
+        } else {
+            count += 1;
+        }
         lexeme->append(consumed);
     }
     return create_space(lexeme, line, column, count);
