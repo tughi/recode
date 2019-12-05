@@ -103,24 +103,16 @@ Token *_consume_(int source_line, Context *context, const char *expected, Matche
 #define consume_two(context, expected, first_matcher, second_matcher) _consume_(__LINE__, context, expected, first_matcher, second_matcher)
 #define consume_three(context, expected, first_matcher, second_matcher, third_matcher) _consume_(__LINE__, context, expected, first_matcher, second_matcher, third_matcher)
 
-bool is_boolean_literal(Token *token) {
-    return token->type == Token::KEYWORD && (token->lexeme->equals("false") || token->lexeme->equals("true"));
-}
-
-bool is_character_literal(Token *token) {
-    return token->type == Token::CHARACTER;
-}
-
 bool is_identifier(Token *token) {
     return token->type == Token::IDENTIFIER;
 }
 
-bool is_integer_literal(Token *token) {
-    return token->type == Token::INTEGER;
+bool is_keyword(Token *token, const char *lexeme) {
+    return token->type == Token::KEYWORD && token->lexeme->equals(lexeme);
 }
 
-bool is_string_literal(Token *token) {
-    return token->type == Token::STRING;
+bool is_literal(Token *token) {
+    return token->type == Token::INTEGER || token->type == Token::STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->type == Token::CHARACTER;
 }
 
 bool is_open_paren(Token *token) {
@@ -142,48 +134,21 @@ Expression *parse_expression(Context *context);
 //      | CHARACTER
 //      | "(" expression ")"
 Expression *parse_primary_expression(Context *context) {
-    Token *consumed = consume_one(context, nullptr, required(is_identifier));
-    if (consumed != nullptr) {
+    auto name = consume_one(context, nullptr, required(is_identifier));
+    if (name != nullptr) {
         return new Expression{
             kind : Expression::VARIABLE,
             variable : {
-                name : consumed,
+                name : name,
             },
         };
     }
-    consumed = consume_one(context, nullptr, required(is_integer_literal));
-    if (consumed != nullptr) {
+    auto literal = consume_one(context, nullptr, required(is_literal));
+    if (literal != nullptr) {
         return new Expression{
             kind : Expression::LITERAL,
             literal : {
-                value : consumed,
-            },
-        };
-    }
-    consumed = consume_one(context, nullptr, required(is_string_literal));
-    if (consumed != nullptr) {
-        return new Expression{
-            kind : Expression::LITERAL,
-            literal : {
-                value : consumed,
-            },
-        };
-    }
-    consumed = consume_one(context, nullptr, required(is_boolean_literal));
-    if (consumed != nullptr) {
-        return new Expression{
-            kind : Expression::LITERAL,
-            literal : {
-                value : consumed,
-            },
-        };
-    }
-    consumed = consume_one(context, nullptr, required(is_character_literal));
-    if (consumed != nullptr) {
-        return new Expression{
-            kind : Expression::LITERAL,
-            literal : {
-                value : consumed,
+                value : literal,
             },
         };
     }
@@ -192,7 +157,7 @@ Expression *parse_primary_expression(Context *context) {
         consume_one(context, ")", required(is_close_paren));
         return expression; // TODO: return group
     }
-    ERROR(__FILE__, __LINE__, LOCATION(context) << "Expression expected");
+    ERROR(__FILE__, __LINE__, LOCATION(context) << "Expected expression instead of: " << NEXT_TOKEN(context));
     PANICK();
 }
 
@@ -406,10 +371,6 @@ Expression *parse_expression(Context *context) {
 
 bool is_colon(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals(":");
-}
-
-bool is_keyword(Token *token, const char *lexeme) {
-    return token->type == Token::KEYWORD && token->lexeme->equals(lexeme);
 }
 
 bool is_open_brace(Token *token) {
