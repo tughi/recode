@@ -88,6 +88,7 @@ struct Expression {
 
 struct Statement {
     enum Kind {
+        ASSIGNMENT,
         EXPRESSION,
         PROCEDURE_DEFINITION,
         RETURN,
@@ -96,6 +97,11 @@ struct Statement {
     } kind;
 
     union {
+        struct {
+            Expression *destination;
+            Token *operator_token;
+            Expression *value;
+        } assignment;
         Expression *expression;
         struct {
             Expression *name;

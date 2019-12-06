@@ -128,6 +128,10 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     static int alignment = 0;
     os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << "";
     switch (statement.kind) {
+    case Statement::ASSIGNMENT: {
+        os << statement.assignment.destination << ' ' << statement.assignment.operator_token << ' ' << statement.assignment.value << endl;
+        return os;
+    }
     case Statement::EXPRESSION: {
         os << statement.expression << endl;
         return os;

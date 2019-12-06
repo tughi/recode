@@ -316,7 +316,7 @@ bool is_multiplication_operator(Token *token) {
 //      : unary (("*" | "/") unary)*
 Expression *parse_multiplication_expression(Context *context) {
     auto expression = parse_unary_expression(context);
-    while (matches_two(context, optional(is_space), required(is_multiplication_operator))) {
+    while (matches_two(context, optional(is_space), required(is_multiplication_operator)) && !matches_three(context, optional(is_space), required(is_multiplication_operator), required(is_assign_operator))) {
         consume_space(context, 1);
         auto operator_token = consume_one(context, nullptr, required(is_multiplication_operator));
         consume_space(context, 1);
@@ -341,7 +341,7 @@ bool is_addition_operator(Token *token) {
 //      : mutliplication (("+" | "-") multiplication)*
 Expression *parse_addition_expression(Context *context) {
     auto expression = parse_multiplication_expression(context);
-    while (matches_two(context, optional(is_space), required(is_addition_operator))) {
+    while (matches_two(context, optional(is_space), required(is_addition_operator)) && !matches_three(context, optional(is_space), required(is_addition_operator), required(is_assign_operator))) {
         consume_space(context, 1);
         auto operator_token = consume_one(context, nullptr, required(is_addition_operator));
         consume_space(context, 1);
@@ -731,6 +731,10 @@ Statement *parse_return_statement(Context *context) {
     };
 }
 
+bool is_assign_variant(Token *token) {
+    return is_addition_operator(token) || is_multiplication_operator(token);
+}
+
 // statement
 //      : return_statement
 //      | expression ((":" ":" definition) | (":" declaration) | ("=" assignment))?
@@ -798,6 +802,25 @@ Statement *parse_statement(Context *context) {
             variable_declaration : {
                 name : expression,
                 type : type,
+                value : value,
+            },
+        };
+    }
+
+    if (matches_three(context, optional(is_space), optional(is_assign_variant), required(is_assign_operator))) {
+        consume_space(context, 1);
+        auto operator_token = consume_two(context, nullptr, optional(is_assign_variant), required(is_assign_operator));
+        if (is_assign_variant(operator_token)) {
+            operator_token->join_next();
+        }
+        consume_space(context, 1);
+        auto value = parse_expression(context);
+        consume_end_of_line(context, true);
+        return new Statement{
+            kind : Statement::ASSIGNMENT,
+            assignment : {
+                destination : expression,
+                operator_token : operator_token,
                 value : value,
             },
         };
