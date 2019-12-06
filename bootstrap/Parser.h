@@ -71,6 +71,7 @@ struct Statement {
         PROCEDURE_DEFINITION,
         RETURN,
         STRUCT_DEFINITION,
+        VARIABLE_DECLARATION,
     } kind;
 
     union {
@@ -86,6 +87,11 @@ struct Statement {
             Expression *name;
             Member *first_member;
         } struct_definition;
+        struct {
+            Expression *name;
+            Type *type;
+            Expression *value;
+        } variable_declaration;
     };
 
     Statement *next;

@@ -175,6 +175,16 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
            << "}" << endl;
         return os;
     }
+    case Statement::VARIABLE_DECLARATION: {
+        os << statement.variable_declaration.name;
+        if (statement.variable_declaration.type != nullptr) {
+            os << ": " << statement.variable_declaration.type << " ";
+        } else {
+            os << " :";
+        }
+        os << "= " << statement.variable_declaration.value << endl;
+        return os;
+    }
     default:
         os << SGR_ERROR << "Statement::" << statement.kind << SGR_RESET << endl;
         return os;

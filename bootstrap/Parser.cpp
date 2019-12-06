@@ -678,6 +678,42 @@ Statement *parse_statement(Context *context) {
         return parse_procedure(context, expression);
     }
 
+    if (matches_two(context, optional(is_space), required(is_colon))) {
+        if (matches_three(context, optional(is_space), required(is_colon), required(is_assign_operator))) {
+            consume_space(context, 1);
+            consume_two(context, nullptr, required(is_colon), required(is_assign_operator));
+            consume_space(context, 1);
+            auto value = parse_expression(context);
+            consume_end_of_line(context, true);
+            return new Statement{
+                kind : Statement::VARIABLE_DECLARATION,
+                variable_declaration : {
+                    name : expression,
+                    type : nullptr,
+                    value : value,
+                },
+            };
+        }
+        consume_space(context, 0);
+        consume_one(context, nullptr, required(is_colon));
+        consume_space(context, 1);
+        auto type = parse_type(context);
+        consume_space(context, 1);
+        consume_one(context, nullptr, required(is_assign_operator));
+        consume_space(context, 1);
+        auto value = parse_expression(context);
+        consume_end_of_line(context, true);
+        return new Statement{
+            kind : Statement::VARIABLE_DECLARATION,
+            variable_declaration : {
+                name : expression,
+                type : type,
+                value : value,
+            },
+        };
+    }
+
+    consume_space(context, 0);
     ERROR(__FILE__, __LINE__, LOCATION(context) << "Unxpected token: " << NEXT_TOKEN(context));
     PANICK();
 }
