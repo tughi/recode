@@ -225,6 +225,9 @@ std::ostream &operator<<(std::ostream &os, const Expression &expression) {
     case Expression::LITERAL:
         os << expression.literal.value;
         return os;
+    case Expression::MEMBER:
+        os << expression.member.object << '.' << expression.member.name;
+        return os;
     case Expression::VARIABLE:
         os << expression.variable.name;
         return os;

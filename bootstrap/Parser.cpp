@@ -181,56 +181,82 @@ bool is_assign_operator(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("=");
 }
 
+Argument *parse_argument(Context *context) {
+    Token *name = nullptr;
+    if (matches_three(context, required(is_identifier), optional(is_space), required(is_assign_operator))) {
+        name = consume_one(context, nullptr, required(is_identifier));
+        consume_space(context, 1);
+        consume_one(context, nullptr, required(is_assign_operator));
+        consume_space(context, 1);
+    }
+    auto value = parse_expression(context);
+    return new Argument{
+        name : name,
+        value : value,
+        next : nullptr,
+    };
+}
+
 bool is_comma(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals(",");
 }
 
+bool is_dot(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals(".");
+}
+
+// call
+//      : primary (("(" argument ("," argument)* ")") | ("." IDENTIFIER))*
 Expression *parse_call_expression(Context *context) {
     Expression *expression = parse_primary_expression(context);
-    while (matches_two(context, optional(is_space), required(is_open_paren))) {
-        consume_space(context, 0);
-        consume_one(context, nullptr, required(is_open_paren));
-        Argument *first_argument = nullptr;
-        if (!matches_two(context, optional(is_space), required(is_close_paren))) {
-            Argument *last_argument = nullptr;
-            do {
-                consume_space(context, first_argument == nullptr ? 0 : 1);
-                Token *name = nullptr;
-                if (matches_three(context, required(is_identifier), optional(is_space), required(is_assign_operator))) {
-                    name = consume_one(context, nullptr, required(is_identifier));
-                    consume_space(context, 1);
-                    consume_one(context, nullptr, required(is_assign_operator));
-                    consume_space(context, 1);
-                }
-                auto value = parse_expression(context);
-                auto argument = new Argument{
+    while (true) {
+        if (matches_two(context, optional(is_space), required(is_open_paren))) {
+            consume_space(context, 0);
+            consume_one(context, nullptr, required(is_open_paren));
+            Argument *first_argument = nullptr;
+            if (!matches_two(context, optional(is_space), required(is_close_paren))) {
+                Argument *last_argument = nullptr;
+                do {
+                    consume_space(context, first_argument == nullptr ? 0 : 1);
+                    auto argument = parse_argument(context);
+                    if (last_argument != nullptr) {
+                        last_argument->next = argument;
+                    } else {
+                        first_argument = argument;
+                    }
+                    last_argument = argument;
+                    if (matches_two(context, optional(is_space), required(is_comma))) {
+                        consume_space(context, 0);
+                        consume_one(context, nullptr, required(is_comma));
+                    } else {
+                        break;
+                    }
+                } while (true);
+            }
+            consume_space(context, 0);
+            consume_one(context, nullptr, required(is_close_paren));
+            expression = new Expression{
+                kind : Expression::CALL,
+                call : {
+                    callee : expression,
+                    first_argument : first_argument,
+                },
+            };
+        } else if (matches_two(context, optional(is_space), required(is_dot))) {
+            consume_space(context, 0);
+            consume_one(context, nullptr, required(is_dot));
+            consume_space(context, 0);
+            auto name = consume_one(context, nullptr, required(is_identifier));
+            expression = new Expression{
+                kind : Expression::MEMBER,
+                member : {
+                    object : expression,
                     name : name,
-                    value : value,
-                    next : nullptr,
-                };
-                if (last_argument != nullptr) {
-                    last_argument->next = argument;
-                } else {
-                    first_argument = argument;
-                }
-                last_argument = argument;
-                if (matches_two(context, optional(is_space), required(is_comma))) {
-                    consume_space(context, 0);
-                    consume_one(context, nullptr, required(is_comma));
-                } else {
-                    break;
-                }
-            } while (true);
+                },
+            };
+        } else {
+            break;
         }
-        consume_space(context, 0);
-        consume_one(context, nullptr, required(is_close_paren));
-        expression = new Expression{
-            kind : Expression::CALL,
-            call : {
-                callee : expression,
-                first_argument : first_argument,
-            },
-        };
     }
     return expression;
 }

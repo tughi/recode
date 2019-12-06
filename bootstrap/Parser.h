@@ -49,6 +49,7 @@ struct Expression {
         BINARY,
         CALL,
         LITERAL,
+        MEMBER,
         UNARY,
         VARIABLE,
     } kind;
@@ -66,6 +67,10 @@ struct Expression {
         struct {
             Token *value;
         } literal;
+        struct {
+            Expression *object;
+            Token *name;
+        } member;
         struct {
             Token *operator_token;
             Expression *expression;
