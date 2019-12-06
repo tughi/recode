@@ -206,6 +206,22 @@ std::ostream &operator<<(std::ostream &os, const Expression &expression) {
         os << SGR_BLACK << '(' << expression.binary.left_expression << ' ' << expression.binary.operator_token << ' ' << expression.binary.right_expression << SGR_BLACK << ')' << SGR_RESET;
         return os;
     }
+    case Expression::CALL: {
+        os << expression.call.callee << SGR_WHITE_BOLD << '(';
+        auto argument = expression.call.first_argument;
+        while (argument != nullptr) {
+            if (argument->name != nullptr) {
+                os << argument->name << " = ";
+            }
+            os << argument->value;
+            argument = argument->next;
+            if (argument != nullptr) {
+                os << SGR_WHITE_BOLD << ", ";
+            }
+        }
+        os << SGR_WHITE_BOLD << ')' << SGR_RESET;
+        return os;
+    }
     case Expression::LITERAL:
         os << expression.literal.value;
         return os;
@@ -248,7 +264,7 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         os << SGR_ERROR << token.lexeme->data << SGR_RESET;
         return os;
     case Token::IDENTIFIER:
-        os << (token.lexeme->data[0] <= 'Z' ? SGR_FAINT_YELLOW : SGR_DEFAULT) << token.lexeme->data << SGR_RESET;
+        os << (token.lexeme->data[0] <= 'Z' ? SGR_FAINT_YELLOW : SGR_RESET) << token.lexeme->data << SGR_RESET;
         return os;
     case Token::INTEGER:
         os << SGR_CYAN << token.lexeme->data << SGR_RESET;
@@ -260,7 +276,7 @@ std::ostream &operator<<(std::ostream &os, const Token &token) {
         os << SGR_WHITE_BOLD << token.lexeme->data << SGR_RESET;
         return os;
     case Token::SPACE:
-        os << token.lexeme->data;
+        os << SGR_RESET << token.lexeme->data;
         return os;
     case Token::STRING:
         os << SGR_GREEN << token.lexeme->data << SGR_RESET;

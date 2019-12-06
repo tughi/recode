@@ -38,9 +38,16 @@ struct Type {
     };
 };
 
+struct Argument {
+    Token *name;
+    Expression *value;
+    Argument *next;
+};
+
 struct Expression {
     enum Kind {
         BINARY,
+        CALL,
         LITERAL,
         UNARY,
         VARIABLE,
@@ -52,6 +59,10 @@ struct Expression {
             Expression *left_expression;
             Expression *right_expression;
         } binary;
+        struct {
+            Expression *callee;
+            Argument *first_argument;
+        } call;
         struct {
             Token *value;
         } literal;

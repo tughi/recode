@@ -162,6 +162,79 @@ Expression *parse_primary_expression(Context *context) {
     PANICK();
 }
 
+bool is_space(Token *token) {
+    return token->type == Token::SPACE;
+}
+
+int consume_space(int source_line, Context *context, int expected_spaces) {
+    auto token = _consume_(__LINE__, context, nullptr, required(is_space));
+    int spaces = token != nullptr ? token->space.count : 0;
+    if (expected_spaces >= 0 && spaces != expected_spaces) {
+        WARNING(__FILE__, source_line, LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
+    }
+    return spaces;
+}
+
+#define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
+
+bool is_assign_operator(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals("=");
+}
+
+bool is_comma(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals(",");
+}
+
+Expression *parse_call_expression(Context *context) {
+    Expression *expression = parse_primary_expression(context);
+    while (matches_two(context, optional(is_space), required(is_open_paren))) {
+        consume_space(context, 0);
+        consume_one(context, nullptr, required(is_open_paren));
+        Argument *first_argument = nullptr;
+        if (!matches_two(context, optional(is_space), required(is_close_paren))) {
+            Argument *last_argument = nullptr;
+            do {
+                consume_space(context, first_argument == nullptr ? 0 : 1);
+                Token *name = nullptr;
+                if (matches_three(context, required(is_identifier), optional(is_space), required(is_assign_operator))) {
+                    name = consume_one(context, nullptr, required(is_identifier));
+                    consume_space(context, 1);
+                    consume_one(context, nullptr, required(is_assign_operator));
+                    consume_space(context, 1);
+                }
+                auto value = parse_expression(context);
+                auto argument = new Argument{
+                    name : name,
+                    value : value,
+                    next : nullptr,
+                };
+                if (last_argument != nullptr) {
+                    last_argument->next = argument;
+                } else {
+                    first_argument = argument;
+                }
+                last_argument = argument;
+                if (matches_two(context, optional(is_space), required(is_comma))) {
+                    consume_space(context, 0);
+                    consume_one(context, nullptr, required(is_comma));
+                } else {
+                    break;
+                }
+            } while (true);
+        }
+        consume_space(context, 0);
+        consume_one(context, nullptr, required(is_close_paren));
+        expression = new Expression{
+            kind : Expression::CALL,
+            call : {
+                callee : expression,
+                first_argument : first_argument,
+            },
+        };
+    }
+    return expression;
+}
+
 bool is_unary_operator(Token *token) {
     return token->type == Token::OTHER && (token->lexeme->equals("!") || token->lexeme->equals("-"));
 }
@@ -184,27 +257,12 @@ Expression *parse_unary_expression(Context *context) {
         }
         return nullptr;
     }
-    return parse_primary_expression(context);
+    return parse_call_expression(context);
 }
 
 bool is_multiplication_operator(Token *token) {
     return token->type == Token::OTHER && (token->lexeme->equals("*") || token->lexeme->equals("/"));
 }
-
-bool is_space(Token *token) {
-    return token->type == Token::SPACE;
-}
-
-int consume_space(int source_line, Context *context, int expected_spaces) {
-    auto token = _consume_(__LINE__, context, nullptr, required(is_space));
-    int spaces = token != nullptr ? token->space.count : 0;
-    if (expected_spaces >= 0 && spaces != expected_spaces) {
-        WARNING(__FILE__, source_line, LOCATION(context) << "Consumed " << spaces << " space" << (spaces == 1 ? "" : "s") << " where " << expected_spaces << (expected_spaces == 1 ? " is" : " are") << " expected");
-    }
-    return spaces;
-}
-
-#define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
 
 // multiplication
 //      : unary (("*" | "/") unary)*
@@ -250,10 +308,6 @@ Expression *parse_addition_expression(Context *context) {
         };
     }
     return expression;
-}
-
-bool is_assign_operator(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("=");
 }
 
 bool is_comparison_operator(Token *token) {
@@ -388,10 +442,6 @@ bool is_open_braket(Token *token) {
 
 bool is_close_braket(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("]");
-}
-
-bool is_comma(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals(",");
 }
 
 bool is_hyphen(Token *token) {
