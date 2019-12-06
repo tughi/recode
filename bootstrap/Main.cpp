@@ -128,6 +128,10 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     static int alignment = 0;
     os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << "";
     switch (statement.kind) {
+    case Statement::EXPRESSION: {
+        os << statement.expression << endl;
+        return os;
+    }
     case Statement::PROCEDURE_DEFINITION: {
         os << statement.procedure_definition.name << " :: (";
         auto parameter = statement.procedure_definition.first_parameter;
@@ -202,6 +206,9 @@ std::ostream &operator<<(std::ostream &os, const Expression *expression) {
 
 std::ostream &operator<<(std::ostream &os, const Expression &expression) {
     switch (expression.kind) {
+    case Expression::ARRAY_ITEM:
+        os << expression.array_item.array << '[' << expression.array_item.index << ']';
+        return os;
     case Expression::BINARY: {
         os << SGR_BLACK << '(' << expression.binary.left_expression << ' ' << expression.binary.operator_token << ' ' << expression.binary.right_expression << SGR_BLACK << ')' << SGR_RESET;
         return os;

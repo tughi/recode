@@ -46,6 +46,7 @@ struct Argument {
 
 struct Expression {
     enum Kind {
+        ARRAY_ITEM,
         BINARY,
         CALL,
         LITERAL,
@@ -55,6 +56,10 @@ struct Expression {
     } kind;
 
     union {
+        struct {
+            Expression *array;
+            Expression *index;
+        } array_item;
         struct {
             Token *operator_token;
             Expression *left_expression;

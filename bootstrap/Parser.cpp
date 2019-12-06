@@ -205,6 +205,14 @@ bool is_dot(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals(".");
 }
 
+bool is_open_bracket(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals("[");
+}
+
+bool is_close_bracket(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals("]");
+}
+
 // call
 //      : primary (("(" argument ("," argument)* ")") | ("." IDENTIFIER))*
 Expression *parse_call_expression(Context *context) {
@@ -252,6 +260,20 @@ Expression *parse_call_expression(Context *context) {
                 member : {
                     object : expression,
                     name : name,
+                },
+            };
+        } else if (matches_two(context, optional(is_space), required(is_open_bracket))) {
+            consume_space(context, 0);
+            consume_one(context, nullptr, required(is_open_bracket));
+            consume_space(context, 0);
+            auto index = parse_expression(context);
+            consume_space(context, 0);
+            consume_one(context, nullptr, required(is_close_bracket));
+            expression = new Expression{
+                kind : Expression::ARRAY_ITEM,
+                array_item : {
+                    array : expression,
+                    index : index,
                 },
             };
         } else {
@@ -462,14 +484,6 @@ bool is_close_brace(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("}");
 }
 
-bool is_open_braket(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("[");
-}
-
-bool is_close_braket(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("]");
-}
-
 bool is_hyphen(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("-");
 }
@@ -527,11 +541,11 @@ Member *parse_comma_separated_members(Context *context) {
 //      | "[" type "]"
 //      | "(" comma_separated_members? ")"
 Type *parse_type(Context *context) {
-    if (consume_one(context, nullptr, required(is_open_braket))) {
+    if (consume_one(context, nullptr, required(is_open_bracket))) {
         consume_space(context, 0);
         auto item_type = parse_type(context);
         consume_space(context, 0);
-        consume_one(context, "]", required(is_close_braket));
+        consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
         return new Type{
             kind : Type::ARRAY,
