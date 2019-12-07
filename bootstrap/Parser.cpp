@@ -126,8 +126,8 @@ bool is_close_paren(Token *token) {
 
 Expression *parse_expression(Context *context);
 
-// primary
-//      : IDENTIFIER
+// primary:
+//      IDENTIFIER
 //      | INTEGER
 //      | STRING
 //      | "false"
@@ -213,8 +213,8 @@ bool is_close_bracket(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("]");
 }
 
-// call
-//      : primary (("(" argument ("," argument)* ")") | ("." IDENTIFIER))*
+// call:
+//      primary (("(" argument ("," argument)* ")") | ("." IDENTIFIER))*
 Expression *parse_call_expression(Context *context) {
     Expression *expression = parse_primary_expression(context);
     while (true) {
@@ -287,8 +287,8 @@ bool is_unary_operator(Token *token) {
     return token->type == Token::OTHER && (token->lexeme->equals("!") || token->lexeme->equals("-"));
 }
 
-// unary
-//      : ("!" | "-") unary
+// unary:
+//      ("!" | "-") unary
 //      | primary
 Expression *parse_unary_expression(Context *context) {
     if (matches_one(context, required(is_unary_operator))) {
@@ -312,8 +312,8 @@ bool is_multiplication_operator(Token *token) {
     return token->type == Token::OTHER && (token->lexeme->equals("*") || token->lexeme->equals("/"));
 }
 
-// multiplication
-//      : unary (("*" | "/") unary)*
+// multiplication:
+//      unary (("*" | "/") unary)*
 Expression *parse_multiplication_expression(Context *context) {
     auto expression = parse_unary_expression(context);
     while (matches_two(context, optional(is_space), required(is_multiplication_operator)) && !matches_three(context, optional(is_space), required(is_multiplication_operator), required(is_assign_operator))) {
@@ -337,8 +337,8 @@ bool is_addition_operator(Token *token) {
     return token->type == Token::OTHER && (token->lexeme->equals("+") || token->lexeme->equals("-"));
 }
 
-// addition
-//      : mutliplication (("+" | "-") multiplication)*
+// addition:
+//      mutliplication (("+" | "-") multiplication)*
 Expression *parse_addition_expression(Context *context) {
     auto expression = parse_multiplication_expression(context);
     while (matches_two(context, optional(is_space), required(is_addition_operator)) && !matches_three(context, optional(is_space), required(is_addition_operator), required(is_assign_operator))) {
@@ -362,8 +362,8 @@ bool is_comparison_operator(Token *token) {
     return token->type == Token::OTHER && (token->lexeme->equals("<") || token->lexeme->equals(">"));
 }
 
-// comparison
-//      : addition (("<" | ">") "="? addition)?
+// comparison:
+//      addition (("<" | ">") "="? addition)?
 Expression *parse_comparison_expression(Context *context) {
     auto expression = parse_addition_expression(context);
     if (matches_two(context, optional(is_space), required(is_comparison_operator))) {
@@ -392,8 +392,8 @@ bool is_equality_operator(Token *token) {
     return token->type == Token::OTHER && (token->lexeme->equals("!") || token->lexeme->equals("="));
 }
 
-// equality
-//      : comparison (("!" | "=") "=" comparison)?
+// equality:
+//      comparison (("!" | "=") "=" comparison)?
 Expression *parse_equality_expression(Context *context) {
     auto expression = parse_comparison_expression(context);
     if (matches_three(context, optional(is_space), required(is_equality_operator), required(is_assign_operator))) {
@@ -418,8 +418,8 @@ bool is_and_operator(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("&");
 }
 
-// logic_and
-//      : equality ("&" "&" equality)*
+// logic_and:
+//      equality ("&" "&" equality)*
 Expression *parse_logic_and_expression(Context *context) {
     auto expression = parse_equality_expression(context);
     while (matches_three(context, optional(is_space), required(is_and_operator), required(is_and_operator))) {
@@ -444,8 +444,8 @@ bool is_or_operator(Token *token) {
     return token->type == Token::OTHER && token->lexeme->equals("|");
 }
 
-// logic_or
-//      : logic_and ("|" "|" logic_and)*
+// logic_or:
+//      logic_and ("|" "|" logic_and)*
 Expression *parse_logic_or_expression(Context *context) {
     auto expression = parse_logic_and_expression(context);
     while (matches_three(context, optional(is_space), required(is_or_operator), required(is_or_operator))) {
@@ -466,8 +466,8 @@ Expression *parse_logic_or_expression(Context *context) {
     return expression;
 }
 
-// expression
-//      : logic_or
+// expression:
+//      logic_or
 Expression *parse_expression(Context *context) {
     return parse_logic_or_expression(context);
 }
@@ -494,8 +494,8 @@ bool is_close_angled_bracket(Token *token) {
 
 Type *parse_type(Context *context);
 
-// member
-//      : IDENTIFIER ":" type ("=" expression)?
+// member:
+//      IDENTIFIER ":" type ("=" expression)?
 Member *parse_member(Context *context) {
     auto name = consume_one(context, "name", required(is_identifier));
     consume_space(context, 0);
@@ -517,8 +517,8 @@ Member *parse_member(Context *context) {
     };
 }
 
-// comma_separated_members
-//      : member ("," member)*
+// comma_separated_members:
+//      member ("," member)*
 Member *parse_comma_separated_members(Context *context) {
     auto first_member = (Member *)nullptr;
     auto last_member = (Member *)nullptr;
@@ -536,18 +536,30 @@ Member *parse_comma_separated_members(Context *context) {
     return first_member;
 }
 
-// type
-//      : IDENTIFIER
-//      | "[" type "]"
-//      | "(" comma_separated_members? ")"
+bool is_reference_operator(Token *token) {
+    return token->type == Token::OTHER && token->lexeme->equals("@");
+}
+
+// type:
+//      "@"? (
+//          IDENTIFIER
+//          | "[" type "]"
+//          | "(" comma_separated_members? ")"
+//      )
 Type *parse_type(Context *context) {
+    auto is_reference = matches_one(context, required(is_reference_operator));
+    if (is_reference) {
+        consume_one(context, nullptr, required(is_reference_operator));
+        consume_space(context, 0);
+    }
+    auto type = (Type *)nullptr;
     if (consume_one(context, nullptr, required(is_open_bracket))) {
         consume_space(context, 0);
         auto item_type = parse_type(context);
         consume_space(context, 0);
         consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
-        return new Type{
+        type = new Type{
             kind : Type::ARRAY,
             array : {
                 item_type : item_type,
@@ -565,29 +577,39 @@ Type *parse_type(Context *context) {
             consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
             consume_space(context, 1);
             auto return_type = parse_type(context);
-            return new Type{
+            type = new Type{
                 kind : Type::PROCEDURE,
                 procedure : {
                     first_parameter : first_member,
                     return_type : return_type,
                 },
             };
+        } else {
+            type = new Type{
+                kind : Type::TUPLE,
+                tuple : {
+                    first_member : first_member,
+                },
+            };
         }
-        return new Type{
-            kind : Type::TUPLE,
-            tuple : {
-                first_member : first_member,
-            },
-        };
     } else {
         auto name = consume_one(context, "type name", required(is_identifier));
-        return new Type{
+        type = new Type{
             kind : Type::SIMPLE,
             simple : {
                 name : name,
             },
         };
     }
+    if (is_reference) {
+        type = new Type{
+            kind : Type::REFERENCE,
+            reference : {
+                type : type,
+            },
+        };
+    }
+    return type;
 }
 
 bool is_comment(Token *token) {
@@ -625,8 +647,8 @@ bool is_struct_keyword(Token *token) {
     return is_keyword(token, "struct");
 }
 
-// struct
-//      : "{" <EOL> (member <EOL>)* "}"
+// struct:
+//      "{" <EOL> (member <EOL>)* "}" <EOL>
 Statement *parse_struct(Context *context, Expression *name) {
     consume_one(context, "struct", required(is_struct_keyword));
     consume_space(context, 1);
@@ -678,8 +700,8 @@ Statement *parse_statements(Context *context) {
     return first_statement;
 }
 
-// procedure
-//      : "(" comma_separated_members? ")" ("->" type)? "{" <EOL> statement* "}"
+// procedure:
+//      "(" comma_separated_members? ")" ("->" type)? "{" <EOL> statement* "}" <EOL>
 Statement *parse_procedure(Context *context, Expression *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
@@ -714,8 +736,8 @@ Statement *parse_procedure(Context *context, Expression *name) {
     };
 }
 
-// block
-//      : "{" <EOL> statement* "}"
+// block:
+//      "{" <EOL> statement* "}" <EOL>
 Statement *parse_block_statement(Context *context, bool inlined) {
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, true);
@@ -743,8 +765,8 @@ bool is_else_keyword(Token *token) {
     return is_keyword(token, "else");
 }
 
-// return
-//      : "if" "(" expression ")" block ("else" block)? <EOL>
+// return:
+//      "if" "(" expression ")" block ("else" block)? <EOL>
 Statement *parse_if_statement(Context *context) {
     consume_one(context, "if", required(is_if_keyword));
     consume_space(context, 1);
@@ -777,8 +799,8 @@ bool is_loop_keyword(Token *token) {
     return is_keyword(token, "loop");
 }
 
-// loop
-//      : "loop" block <EOL>
+// loop:
+//      "loop" block <EOL>
 Statement *parse_loop_statement(Context *context) {
     consume_one(context, "loop", required(is_loop_keyword));
     consume_space(context, 1);
@@ -796,8 +818,8 @@ bool is_break_keyword(Token *token) {
     return is_keyword(token, "break");
 }
 
-// break
-//      : "break" <EOL>
+// break:
+//      "break" <EOL>
 Statement *parse_break_statement(Context *context) {
     consume_one(context, "break", required(is_break_keyword));
     consume_end_of_line(context, true);
@@ -810,8 +832,8 @@ bool is_skip_keyword(Token *token) {
     return is_keyword(token, "skip");
 }
 
-// skip
-//      : "skip" <EOL>
+// skip:
+//      "skip" <EOL>
 Statement *parse_skip_statement(Context *context) {
     consume_one(context, "skip", required(is_skip_keyword));
     consume_end_of_line(context, true);
@@ -824,8 +846,8 @@ bool is_return_keyword(Token *token) {
     return is_keyword(token, "return");
 }
 
-// return
-//      : "return" expression <EOL>
+// return:
+//      "return" expression <EOL>
 Statement *parse_return_statement(Context *context) {
     consume_one(context, "return", required(is_return_keyword));
     consume_space(context, 1);
@@ -841,8 +863,8 @@ bool is_assign_variant(Token *token) {
     return is_addition_operator(token) || is_multiplication_operator(token);
 }
 
-// statement
-//      : break
+// statement:
+//      break
 //      | if
 //      | loop
 //      | return

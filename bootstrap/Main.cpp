@@ -19,6 +19,7 @@ std::ostream &operator<<(std::ostream &os, const Token &token);
 
 int main(int argc, char *argv[]) {
     auto source_file = string("../src/Source.code");
+    // auto source_file = string("../src/Visitor.code");
     auto source = Source(load_file(source_file));
 
     auto first_token = scan(source);
@@ -74,20 +75,24 @@ std::ostream &operator<<(std::ostream &os, const Type *type) {
 std::ostream &operator<<(std::ostream &os, const Type &type) {
     switch (type.kind) {
     case Type::ARRAY: {
-        os << '[' << type.array.item_type << ']';
+        os << SGR_WHITE_BOLD << '[' << type.array.item_type << SGR_WHITE_BOLD << ']';
         return os;
     }
     case Type::PROCEDURE: {
-        os << '(';
+        os << SGR_WHITE_BOLD << '(';
         auto parameter = type.procedure.first_parameter;
         while (parameter != nullptr) {
             os << parameter->name << ": " << parameter->type;
             parameter = parameter->next;
             if (parameter != nullptr) {
-                os << ", ";
+                os << SGR_WHITE_BOLD << ", ";
             }
         }
-        os << ") -> " << type.procedure.return_type;
+        os << SGR_WHITE_BOLD << ") -> " << type.procedure.return_type;
+        return os;
+    }
+    case Type::REFERENCE: {
+        os << SGR_WHITE_BOLD << "@" << type.reference.type;
         return os;
     }
     case Type::SIMPLE: {
@@ -95,16 +100,16 @@ std::ostream &operator<<(std::ostream &os, const Type &type) {
         return os;
     }
     case Type::TUPLE: {
-        os << '(';
+        os << SGR_WHITE_BOLD << '(';
         auto member = type.tuple.first_member;
         while (member != nullptr) {
-            os << member->name << ": " << member->type;
+            os << member->name << SGR_WHITE_BOLD << ": " << member->type;
             member = member->next;
             if (member != nullptr) {
-                os << ", ";
+                os << SGR_WHITE_BOLD << ", ";
             }
         }
-        os << ')';
+        os << SGR_WHITE_BOLD << ')';
         return os;
     }
     default:
@@ -133,7 +138,7 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
         return os;
     }
     case Statement::BLOCK: {
-        os << "{" << endl;
+        os << SGR_WHITE_BOLD << "{" << endl;
         alignment += 1;
         auto block_statement = statement.block.first_statement;
         while (block_statement != nullptr) {
@@ -141,11 +146,11 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             block_statement = block_statement->next;
         }
         alignment -= 1;
-        os << ALIGNMENT << "}" << endl;
+        os << ALIGNMENT << SGR_WHITE_BOLD << "}" << endl;
         return os;
     }
     case Statement::BREAK: {
-        os << "break" << endl;
+        os << SGR_YELLOW << "break" << endl;
         return os;
     }
     case Statement::EXPRESSION: {
@@ -153,7 +158,7 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
         return os;
     }
     case Statement::IF: {
-        os << "if (" << statement.if_.condition << ") {" << endl;
+        os << SGR_YELLOW << "if" << SGR_WHITE_BOLD << " (" << statement.if_.condition << SGR_WHITE_BOLD << ") {" << endl;
         alignment += 1;
         auto block_statement = statement.if_.true_block->block.first_statement;
         while (block_statement != nullptr) {
@@ -161,9 +166,9 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             block_statement = block_statement->next;
         }
         alignment -= 1;
-        os << ALIGNMENT << "}";
+        os << ALIGNMENT << SGR_WHITE_BOLD << "}";
         if (statement.if_.false_block != nullptr) {
-            os << " else {" << endl;
+            os << SGR_YELLOW << " else" << SGR_WHITE_BOLD << " {" << endl;
             alignment += 1;
             auto block_statement = statement.if_.false_block->block.first_statement;
             while (block_statement != nullptr) {
@@ -171,13 +176,13 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
                 block_statement = block_statement->next;
             }
             alignment -= 1;
-            os << ALIGNMENT << "}";
+            os << ALIGNMENT << SGR_WHITE_BOLD << "}";
         }
         os << endl;
         return os;
     }
     case Statement::LOOP: {
-        os << "loop {" << endl;
+        os << SGR_YELLOW << "loop" << SGR_WHITE_BOLD << " {" << endl;
         alignment += 1;
         auto block_statement = statement.loop.block->block.first_statement;
         while (block_statement != nullptr) {
@@ -185,24 +190,24 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             block_statement = block_statement->next;
         }
         alignment -= 1;
-        os << ALIGNMENT << "}" << endl;
+        os << ALIGNMENT << SGR_WHITE_BOLD << "}" << endl;
         return os;
     }
     case Statement::PROCEDURE_DEFINITION: {
-        os << statement.procedure_definition.name << " :: (";
+        os << statement.procedure_definition.name << SGR_WHITE_BOLD << " :: (";
         auto parameter = statement.procedure_definition.first_parameter;
         while (parameter != nullptr) {
-            os << parameter->name << ": " << parameter->type;
+            os << parameter->name << SGR_WHITE_BOLD << ": " << parameter->type;
             parameter = parameter->next;
             if (parameter != nullptr) {
-                os << ", ";
+                os << SGR_WHITE_BOLD << ", ";
             }
         }
-        os << ")";
+        os << SGR_WHITE_BOLD << ")";
         if (statement.procedure_definition.return_type != nullptr) {
-            os << " -> " << statement.procedure_definition.return_type;
+            os << SGR_WHITE_BOLD << " -> " << statement.procedure_definition.return_type;
         }
-        os << " {" << endl;
+        os << SGR_WHITE_BOLD << " {" << endl;
         alignment += 1;
         auto procedure_statement = statement.procedure_definition.first_statement;
         while (procedure_statement != nullptr) {
@@ -210,19 +215,19 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             procedure_statement = procedure_statement->next;
         }
         alignment -= 1;
-        os << ALIGNMENT << "}" << endl;
+        os << ALIGNMENT << SGR_WHITE_BOLD << "}" << endl;
         return os;
     }
     case Statement::RETURN: {
-        os << "return " << statement.return_expression << endl;
+        os << SGR_YELLOW << "return " << statement.return_expression << endl;
         return os;
     }
     case Statement::SKIP: {
-        os << "skip" << endl;
+        os << SGR_YELLOW << "skip" << endl;
         return os;
     }
     case Statement::STRUCT_DEFINITION: {
-        os << statement.struct_definition.name << " :: struct {" << endl;
+        os << statement.struct_definition.name << " :: " << SGR_YELLOW << "struct" << SGR_WHITE_BOLD << " {" << endl;
         auto member = statement.struct_definition.first_member;
         while (member) {
             os << "    " << member->name << ": " << member->type;
@@ -238,11 +243,11 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     case Statement::VARIABLE_DECLARATION: {
         os << statement.variable_declaration.name;
         if (statement.variable_declaration.type != nullptr) {
-            os << ": " << statement.variable_declaration.type << " ";
+            os << SGR_WHITE_BOLD << ": " << statement.variable_declaration.type << " ";
         } else {
-            os << " :";
+            os << SGR_WHITE_BOLD << " :";
         }
-        os << "= " << statement.variable_declaration.value << endl;
+        os << SGR_WHITE_BOLD << "= " << statement.variable_declaration.value << endl;
         return os;
     }
     default:

@@ -17,6 +17,7 @@ struct Type {
     enum Kind {
         ARRAY,
         PROCEDURE,
+        REFERENCE,
         SIMPLE,
         TUPLE,
     } kind;
@@ -29,6 +30,9 @@ struct Type {
             Member *first_parameter;
             Type *return_type;
         } procedure;
+        struct {
+            Type *type;
+        } reference;
         struct {
             Token *name;
         } simple;
