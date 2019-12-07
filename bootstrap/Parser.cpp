@@ -182,7 +182,7 @@ bool is_assign_operator(Token *token) {
 }
 
 Argument *parse_argument(Context *context) {
-    Token *name = nullptr;
+    auto name = (Token *)nullptr;
     if (matches_three(context, required(is_identifier), optional(is_space), required(is_assign_operator))) {
         name = consume_one(context, nullptr, required(is_identifier));
         consume_space(context, 1);
@@ -221,9 +221,9 @@ Expression *parse_call_expression(Context *context) {
         if (matches_two(context, optional(is_space), required(is_open_paren))) {
             consume_space(context, 0);
             consume_one(context, nullptr, required(is_open_paren));
-            Argument *first_argument = nullptr;
+            auto first_argument = (Argument *)nullptr;
             if (!matches_two(context, optional(is_space), required(is_close_paren))) {
-                Argument *last_argument = nullptr;
+                auto last_argument = (Argument *)nullptr;
                 do {
                     consume_space(context, first_argument == nullptr ? 0 : 1);
                     auto argument = parse_argument(context);
@@ -502,7 +502,7 @@ Member *parse_member(Context *context) {
     consume_one(context, ":", required(is_colon));
     consume_space(context, 1);
     auto type = parse_type(context);
-    Expression *default_value = nullptr;
+    auto default_value = (Expression *)nullptr;
     if (matches_two(context, optional(is_space), required(is_assign_operator))) {
         consume_space(context, 1);
         consume_one(context, "=", required(is_assign_operator));
@@ -520,8 +520,8 @@ Member *parse_member(Context *context) {
 // comma_separated_members
 //      : member ("," member)*
 Member *parse_comma_separated_members(Context *context) {
-    Member *first_member = nullptr;
-    Member *last_member = nullptr;
+    auto first_member = (Member *)nullptr;
+    auto last_member = (Member *)nullptr;
     do {
         consume_space(context, first_member == nullptr ? 0 : 1);
         auto member = parse_member(context);
@@ -554,8 +554,8 @@ Type *parse_type(Context *context) {
             },
         };
     } else if (consume_one(context, nullptr, required(is_open_paren))) {
-        Member *first_member = nullptr;
         consume_space(context, 0);
+        auto first_member = (Member *)nullptr;
         if (consume_one(context, nullptr, required(is_close_paren)) == nullptr) {
             first_member = parse_comma_separated_members(context);
             consume_one(context, ")", required(is_close_paren));
@@ -632,8 +632,8 @@ Statement *parse_struct(Context *context, Expression *name) {
     consume_space(context, 1);
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, true);
-    Member *first_member = nullptr;
-    Member *last_member = nullptr;
+    auto first_member = (Member *)nullptr;
+    auto last_member = (Member *)nullptr;
     while (!matches_two(context, optional(is_space), required(is_close_brace))) {
         consume_space(context, (context->alignment + 1) * ALIGNMENT_SIZE);
         auto member = parse_member(context);
@@ -660,8 +660,8 @@ Statement *parse_struct(Context *context, Expression *name) {
 Statement *parse_statement(Context *context);
 
 Statement *parse_statements(Context *context) {
-    Statement *first_statement = nullptr;
-    Statement *last_statement = nullptr;
+    auto first_statement = (Statement *)nullptr;
+    auto last_statement = (Statement *)nullptr;
     do {
         auto statement = parse_statement(context);
         if (statement == nullptr) {
@@ -683,13 +683,13 @@ Statement *parse_statements(Context *context) {
 Statement *parse_procedure(Context *context, Expression *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
-    Member *first_parameter = nullptr;
+    auto first_parameter = (Member *)nullptr;
     if (consume_one(context, nullptr, required(is_close_paren)) == nullptr) {
         first_parameter = parse_comma_separated_members(context);
         consume_one(context, ")", required(is_close_paren));
     }
     consume_space(context, 1);
-    Type *return_type = nullptr;
+    auto return_type = (Type *)nullptr;
     if (consume_two(context, nullptr, required(is_hyphen), required(is_close_angled_bracket)) != nullptr) {
         consume_space(context, 1);
         return_type = parse_type(context);
@@ -710,6 +710,65 @@ Statement *parse_procedure(Context *context, Expression *name) {
             first_parameter : first_parameter,
             return_type : return_type,
             first_statement : first_statement,
+        },
+    };
+}
+
+// block
+//      : "{" <EOL> statement* "}"
+Statement *parse_block_statement(Context *context, bool inlined) {
+    consume_one(context, "{", required(is_open_brace));
+    consume_end_of_line(context, true);
+    context->alignment += 1;
+    auto first_statement = parse_statements(context);
+    context->alignment -= 1;
+    consume_space(context, context->alignment * ALIGNMENT_SIZE);
+    consume_one(context, "}", required(is_close_brace));
+    if (!inlined) {
+        consume_end_of_line(context, true);
+    }
+    return new Statement{
+        kind : Statement::BLOCK,
+        block : {
+            first_statement : first_statement,
+        },
+    };
+}
+
+bool is_keyword_if(Token *token) {
+    return is_keyword(token, "if");
+}
+
+bool is_keyword_else(Token *token) {
+    return is_keyword(token, "else");
+}
+
+// return
+//      : "if" "(" expression ")" block ("else" block)? <EOL>
+Statement *parse_if_statement(Context *context) {
+    consume_one(context, "if", required(is_keyword_if));
+    consume_space(context, 1);
+    consume_one(context, "(", required(is_open_paren));
+    consume_space(context, 0);
+    auto condition = parse_expression(context);
+    consume_space(context, 0);
+    consume_one(context, ")", required(is_close_paren));
+    consume_space(context, 1);
+    auto true_block = parse_block_statement(context, true);
+    auto false_block = (Statement *)nullptr;
+    if (matches_two(context, optional(is_space), required(is_keyword_else))) {
+        consume_space(context, 1);
+        consume_one(context, nullptr, required(is_keyword_else));
+        consume_space(context, 1);
+        false_block = parse_block_statement(context, true);
+    }
+    consume_end_of_line(context, true);
+    return new Statement{
+        kind : Statement::IF,
+        if_ : {
+            condition : condition,
+            true_block : true_block,
+            false_block : false_block,
         },
     };
 }
@@ -747,6 +806,14 @@ Statement *parse_statement(Context *context) {
     }
 
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
+
+    if (matches_one(context, required(is_open_brace))) {
+        return parse_block_statement(context, false);
+    }
+
+    if (matches_one(context, required(is_keyword_if))) {
+        return parse_if_statement(context);
+    }
 
     if (matches_one(context, required(is_keyword_return))) {
         return parse_return_statement(context);

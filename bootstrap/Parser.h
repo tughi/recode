@@ -89,7 +89,9 @@ struct Expression {
 struct Statement {
     enum Kind {
         ASSIGNMENT,
+        BLOCK,
         EXPRESSION,
+        IF,
         PROCEDURE_DEFINITION,
         RETURN,
         STRUCT_DEFINITION,
@@ -102,7 +104,15 @@ struct Statement {
             Token *operator_token;
             Expression *value;
         } assignment;
+        struct {
+            Statement *first_statement;
+        } block;
         Expression *expression;
+        struct {
+            Expression *condition;
+            Statement *true_block;
+            Statement *false_block;
+        } if_;
         struct {
             Expression *name;
             Member *first_parameter;

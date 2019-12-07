@@ -122,18 +122,54 @@ std::ostream &operator<<(std::ostream &os, const Statement *statement) {
     return os;
 }
 
-#define ALIGNMENT_SIZE 2
+#define ALIGNMENT setw(alignment * 2) << setfill(' ') << ""
 
 std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     static int alignment = 0;
-    os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << "";
+    os << ALIGNMENT;
     switch (statement.kind) {
     case Statement::ASSIGNMENT: {
         os << statement.assignment.destination << ' ' << statement.assignment.operator_token << ' ' << statement.assignment.value << endl;
         return os;
     }
+    case Statement::BLOCK: {
+        os << "{" << endl;
+        alignment += 1;
+        auto block_statement = statement.block.first_statement;
+        while (block_statement != nullptr) {
+            os << block_statement;
+            block_statement = block_statement->next;
+        }
+        alignment -= 1;
+        os << ALIGNMENT << "}" << endl;
+        return os;
+    }
     case Statement::EXPRESSION: {
         os << statement.expression << endl;
+        return os;
+    }
+    case Statement::IF: {
+        os << "if (" << statement.if_.condition << ") {" << endl;
+        alignment += 1;
+        auto block_statement = statement.if_.true_block->block.first_statement;
+        while (block_statement != nullptr) {
+            os << block_statement;
+            block_statement = block_statement->next;
+        }
+        alignment -= 1;
+        os << ALIGNMENT << "}";
+        if (statement.if_.false_block != nullptr) {
+            os << " else {" << endl;
+            alignment += 1;
+            auto block_statement = statement.if_.false_block->block.first_statement;
+            while (block_statement != nullptr) {
+                os << block_statement;
+                block_statement = block_statement->next;
+            }
+            alignment -= 1;
+            os << ALIGNMENT << "}";
+        }
+        os << endl;
         return os;
     }
     case Statement::PROCEDURE_DEFINITION: {
@@ -151,7 +187,6 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             os << " -> " << statement.procedure_definition.return_type;
         }
         os << " {" << endl;
-
         alignment += 1;
         auto procedure_statement = statement.procedure_definition.first_statement;
         while (procedure_statement != nullptr) {
@@ -159,9 +194,7 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             procedure_statement = procedure_statement->next;
         }
         alignment -= 1;
-
-        os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << ""
-           << "}" << endl;
+        os << ALIGNMENT << "}" << endl;
         return os;
     }
     case Statement::RETURN: {
@@ -179,8 +212,7 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             os << endl;
             member = member->next;
         }
-        os << setw(alignment * ALIGNMENT_SIZE) << setfill(' ') << ""
-           << "}" << endl;
+        os << ALIGNMENT << "}" << endl;
         return os;
     }
     case Statement::VARIABLE_DECLARATION: {
