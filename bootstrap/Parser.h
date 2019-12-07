@@ -90,10 +90,13 @@ struct Statement {
     enum Kind {
         ASSIGNMENT,
         BLOCK,
+        BREAK,
         EXPRESSION,
         IF,
+        LOOP,
         PROCEDURE_DEFINITION,
         RETURN,
+        SKIP,
         STRUCT_DEFINITION,
         VARIABLE_DECLARATION,
     } kind;
@@ -113,6 +116,9 @@ struct Statement {
             Statement *true_block;
             Statement *false_block;
         } if_;
+        struct {
+            Statement *block;
+        } loop;
         struct {
             Expression *name;
             Member *first_parameter;

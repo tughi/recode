@@ -144,6 +144,10 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
         os << ALIGNMENT << "}" << endl;
         return os;
     }
+    case Statement::BREAK: {
+        os << "break" << endl;
+        return os;
+    }
     case Statement::EXPRESSION: {
         os << statement.expression << endl;
         return os;
@@ -170,6 +174,18 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
             os << ALIGNMENT << "}";
         }
         os << endl;
+        return os;
+    }
+    case Statement::LOOP: {
+        os << "loop {" << endl;
+        alignment += 1;
+        auto block_statement = statement.loop.block->block.first_statement;
+        while (block_statement != nullptr) {
+            os << block_statement;
+            block_statement = block_statement->next;
+        }
+        alignment -= 1;
+        os << ALIGNMENT << "}" << endl;
         return os;
     }
     case Statement::PROCEDURE_DEFINITION: {
@@ -199,6 +215,10 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
     }
     case Statement::RETURN: {
         os << "return " << statement.return_expression << endl;
+        return os;
+    }
+    case Statement::SKIP: {
+        os << "skip" << endl;
         return os;
     }
     case Statement::STRUCT_DEFINITION: {

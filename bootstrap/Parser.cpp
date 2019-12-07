@@ -735,18 +735,18 @@ Statement *parse_block_statement(Context *context, bool inlined) {
     };
 }
 
-bool is_keyword_if(Token *token) {
+bool is_if_keyword(Token *token) {
     return is_keyword(token, "if");
 }
 
-bool is_keyword_else(Token *token) {
+bool is_else_keyword(Token *token) {
     return is_keyword(token, "else");
 }
 
 // return
 //      : "if" "(" expression ")" block ("else" block)? <EOL>
 Statement *parse_if_statement(Context *context) {
-    consume_one(context, "if", required(is_keyword_if));
+    consume_one(context, "if", required(is_if_keyword));
     consume_space(context, 1);
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
@@ -756,9 +756,9 @@ Statement *parse_if_statement(Context *context) {
     consume_space(context, 1);
     auto true_block = parse_block_statement(context, true);
     auto false_block = (Statement *)nullptr;
-    if (matches_two(context, optional(is_space), required(is_keyword_else))) {
+    if (matches_two(context, optional(is_space), required(is_else_keyword))) {
         consume_space(context, 1);
-        consume_one(context, nullptr, required(is_keyword_else));
+        consume_one(context, nullptr, required(is_else_keyword));
         consume_space(context, 1);
         false_block = parse_block_statement(context, true);
     }
@@ -773,14 +773,61 @@ Statement *parse_if_statement(Context *context) {
     };
 }
 
-bool is_keyword_return(Token *token) {
+bool is_loop_keyword(Token *token) {
+    return is_keyword(token, "loop");
+}
+
+// loop
+//      : "loop" block <EOL>
+Statement *parse_loop_statement(Context *context) {
+    consume_one(context, "loop", required(is_loop_keyword));
+    consume_space(context, 1);
+    auto block = parse_block_statement(context, true);
+    consume_end_of_line(context, true);
+    return new Statement{
+        kind : Statement::LOOP,
+        loop : {
+            block : block,
+        },
+    };
+}
+
+bool is_break_keyword(Token *token) {
+    return is_keyword(token, "break");
+}
+
+// break
+//      : "break" <EOL>
+Statement *parse_break_statement(Context *context) {
+    consume_one(context, "break", required(is_break_keyword));
+    consume_end_of_line(context, true);
+    return new Statement{
+        kind : Statement::BREAK,
+    };
+}
+
+bool is_skip_keyword(Token *token) {
+    return is_keyword(token, "skip");
+}
+
+// skip
+//      : "skip" <EOL>
+Statement *parse_skip_statement(Context *context) {
+    consume_one(context, "skip", required(is_skip_keyword));
+    consume_end_of_line(context, true);
+    return new Statement{
+        kind : Statement::SKIP,
+    };
+}
+
+bool is_return_keyword(Token *token) {
     return is_keyword(token, "return");
 }
 
 // return
 //      : "return" expression <EOL>
 Statement *parse_return_statement(Context *context) {
-    consume_one(context, "return", required(is_keyword_return));
+    consume_one(context, "return", required(is_return_keyword));
     consume_space(context, 1);
     auto expression = parse_expression(context);
     consume_end_of_line(context, true);
@@ -795,7 +842,11 @@ bool is_assign_variant(Token *token) {
 }
 
 // statement
-//      : return_statement
+//      : break
+//      | if
+//      | loop
+//      | return
+//      | skip
 //      | expression ((":" ":" definition) | (":" declaration) | ("=" assignment))?
 Statement *parse_statement(Context *context) {
     while (consume_end_of_line(context, false)) {
@@ -811,12 +862,24 @@ Statement *parse_statement(Context *context) {
         return parse_block_statement(context, false);
     }
 
-    if (matches_one(context, required(is_keyword_if))) {
+    if (matches_one(context, required(is_if_keyword))) {
         return parse_if_statement(context);
     }
 
-    if (matches_one(context, required(is_keyword_return))) {
+    if (matches_one(context, required(is_loop_keyword))) {
+        return parse_loop_statement(context);
+    }
+
+    if (matches_one(context, required(is_return_keyword))) {
         return parse_return_statement(context);
+    }
+
+    if (matches_one(context, required(is_break_keyword))) {
+        return parse_break_statement(context);
+    }
+
+    if (matches_one(context, required(is_skip_keyword))) {
+        return parse_skip_statement(context);
     }
 
     // TODO: parse other statements
