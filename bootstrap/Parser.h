@@ -132,6 +132,7 @@ struct Statement {
         Expression *return_expression;
         struct {
             Expression *name;
+            Token *base;
             Member *first_member;
         } struct_definition;
         struct {

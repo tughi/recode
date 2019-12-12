@@ -23,8 +23,7 @@ struct Matcher {
 
 #define NEXT_TOKEN(context) context->next_token->lexeme->data
 
-#define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, LOCATION(context) << std::setw(context->alignment * ALIGNMENT_SIZE) << std::setfill(' ') << "" \
-                                                                         << "Token : " << NEXT_TOKEN(context))
+#define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, LOCATION(context) << "Token : " << NEXT_TOKEN(context))
 
 #define PANICK() exit(1)
 
@@ -214,7 +213,7 @@ bool is_close_bracket(Token *token) {
 }
 
 // call:
-//      primary (("(" argument ("," argument)* ")") | ("." IDENTIFIER))*
+//      primary ("(" argument ("," argument)* ")" | "." IDENTIFIER)*
 Expression *parse_call_expression(Context *context) {
     Expression *expression = parse_primary_expression(context);
     while (true) {
@@ -648,10 +647,16 @@ bool is_struct_keyword(Token *token) {
 }
 
 // struct:
-//      "{" <EOL> (member <EOL>)* "}" <EOL>
+//      "{" EOL (member EOL)* "}" EOL
 Statement *parse_struct(Context *context, Expression *name) {
     consume_one(context, "struct", required(is_struct_keyword));
     consume_space(context, 1);
+    auto base = (Token *)nullptr;
+    if (consume_one(context, nullptr, required(is_colon))) {
+        consume_space(context, 1);
+        base = consume_one(context, "base struct", required(is_identifier));
+        consume_space(context, 1);
+    }
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, true);
     auto first_member = (Member *)nullptr;
@@ -674,6 +679,7 @@ Statement *parse_struct(Context *context, Expression *name) {
         kind : Statement::STRUCT_DEFINITION,
         struct_definition : {
             name : name,
+            base : base,
             first_member : first_member,
         },
     };
@@ -701,7 +707,7 @@ Statement *parse_statements(Context *context) {
 }
 
 // procedure:
-//      "(" comma_separated_members? ")" ("->" type)? "{" <EOL> statement* "}" <EOL>
+//      "(" comma_separated_members? ")" ("->" type)? "{" EOL statement* "}" EOL
 Statement *parse_procedure(Context *context, Expression *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
@@ -737,7 +743,7 @@ Statement *parse_procedure(Context *context, Expression *name) {
 }
 
 // block:
-//      "{" <EOL> statement* "}" <EOL>
+//      "{" EOL statement* "}" EOL
 Statement *parse_block_statement(Context *context, bool inlined) {
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, true);
@@ -766,7 +772,7 @@ bool is_else_keyword(Token *token) {
 }
 
 // return:
-//      "if" "(" expression ")" block ("else" block)? <EOL>
+//      "if" "(" expression ")" block ("else" block)? EOL
 Statement *parse_if_statement(Context *context) {
     consume_one(context, "if", required(is_if_keyword));
     consume_space(context, 1);
@@ -800,7 +806,7 @@ bool is_loop_keyword(Token *token) {
 }
 
 // loop:
-//      "loop" block <EOL>
+//      "loop" block EOL
 Statement *parse_loop_statement(Context *context) {
     consume_one(context, "loop", required(is_loop_keyword));
     consume_space(context, 1);
@@ -819,7 +825,7 @@ bool is_break_keyword(Token *token) {
 }
 
 // break:
-//      "break" <EOL>
+//      "break" EOL
 Statement *parse_break_statement(Context *context) {
     consume_one(context, "break", required(is_break_keyword));
     consume_end_of_line(context, true);
@@ -833,7 +839,7 @@ bool is_skip_keyword(Token *token) {
 }
 
 // skip:
-//      "skip" <EOL>
+//      "skip" EOL
 Statement *parse_skip_statement(Context *context) {
     consume_one(context, "skip", required(is_skip_keyword));
     consume_end_of_line(context, true);
@@ -847,7 +853,7 @@ bool is_return_keyword(Token *token) {
 }
 
 // return:
-//      "return" expression <EOL>
+//      "return" expression EOL
 Statement *parse_return_statement(Context *context) {
     consume_one(context, "return", required(is_return_keyword));
     consume_space(context, 1);

@@ -18,8 +18,8 @@ std::ostream &operator<<(std::ostream &os, const Token *token);
 std::ostream &operator<<(std::ostream &os, const Token &token);
 
 int main(int argc, char *argv[]) {
-    auto source_file = string("../src/Source.code");
-    // auto source_file = string("../src/Visitor.code");
+    // auto source_file = string("../src/Source.code");
+    auto source_file = string("../src/Visitor.code");
     auto source = Source(load_file(source_file));
 
     auto first_token = scan(source);
@@ -227,7 +227,11 @@ std::ostream &operator<<(std::ostream &os, const Statement &statement) {
         return os;
     }
     case Statement::STRUCT_DEFINITION: {
-        os << statement.struct_definition.name << " :: " << SGR_YELLOW << "struct" << SGR_WHITE_BOLD << " {" << endl;
+        os << statement.struct_definition.name << " :: " << SGR_YELLOW << "struct";
+        if (statement.struct_definition.base != nullptr) {
+            os << SGR_WHITE_BOLD << " : " << statement.struct_definition.base;
+        }
+        os << SGR_WHITE_BOLD << " {" << endl;
         auto member = statement.struct_definition.first_member;
         while (member) {
             os << "    " << member->name << ": " << member->type;

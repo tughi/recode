@@ -1,0 +1,68 @@
+Node :: struct {
+}
+
+accept :: (self: @Node, visitor: @Visitor) {
+	panic("No accept function for node type: {node.type}")
+}
+
+Expression :: struct : Node {
+	type: ExpressionType
+}
+
+Literal :: struct {
+}
+
+IntegerLiteral :: struct : Literal {
+	value: Int
+}
+
+CharacterLiteral :: struct : Literal {
+	value: Char
+}
+
+StringLiteral :: struct : Literal {
+	value: String
+}
+
+LiteralExpression :: struct : Expression {
+	literal: Literal
+}
+
+accept :: (self: @LiteralExpression, visitor: @Visitor) {
+	visitor.visit_literal_expression(self)
+}
+
+BinaryExpression :: struct : Expression {
+	operator: String
+	left_expression: @Expression
+	right_expression: @Expression
+}
+
+create :: (left_expression: @Expression, operator: String, right_expression: @Expression) -> BinaryExpression {
+	return BinaryExpression(operator, left_expression, right_expression)
+}
+
+accept :: (self: @BinaryExpression, visitor: @Visitor) {
+	visitor.visit_addition_expression(self)
+}
+
+Visitor :: struct {
+	visit_literal_expression: (self: @Visitor, node: @LiteralExpression) -> Nothing
+	visit_addition_expression: (self: @Visitor, node: @BinaryExpression) -> Nothing
+}
+
+print_binary_expression :: (self: @Visitor, node: @BinaryExpression) {
+	node.left_expression.accept(self)
+	echo("{node.operator}")
+	node.right_expression.accept(self)
+}
+
+print_literal_expression :: (self: @Visitor, node: @LiteralExpression) {
+	echo("{node.value}")
+}
+
+printer := Visitor(visit_binary_expression = print_binary_expression, visit_literal_expression = print_literal_expression)
+
+expression := BinaryExpression("+", LiteralExpression(IntegerLiteral(42)), BinaryExpression("+", LiteralExpression(StringLiteral("Towel")), LiteralExpression(CharacterLiteral('!'))))
+
+expression.accept(printer)
