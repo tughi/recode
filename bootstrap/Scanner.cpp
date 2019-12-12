@@ -254,7 +254,7 @@ Token *scan(Source &source) {
     Token *first = scan_token(source);
     Token *last = first;
 
-    while (last->type != Token::END_OF_FILE) {
+    while (last->kind != Token::END_OF_FILE) {
         last->next = scan_token(source);
         last = last->next;
     }

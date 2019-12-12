@@ -1,3 +1,4 @@
+#include "Generator.h"
 #include "Logging.h"
 #include "Parser.h"
 #include "Scanner.h"
@@ -19,30 +20,33 @@ std::ostream &operator<<(std::ostream &os, const Token &token);
 
 int main(int argc, char *argv[]) {
     // auto source_file = string("../src/Source.code");
-    auto source_file = string("../src/Visitor.code");
+    // auto source_file = string("../src/Visitor.code");
+    auto source_file = string("../src/Test.code");
     auto source = Source(load_file(source_file));
 
     auto first_token = scan(source);
 
-    auto token = first_token;
-    for (int line = 0; token != nullptr; token = token->next) {
-        if (token->line != line) {
-            if (line > 0) {
-                cout << endl;
-            }
-            line = token->line;
-            cout << setw(3) << setfill('0') << line << ": ";
-        }
-        cout << token;
-    }
+    // auto token = first_token;
+    // for (int line = 0; token != nullptr; token = token->next) {
+    //     if (token->line != line) {
+    //         if (line > 0) {
+    //             cout << endl;
+    //         }
+    //         line = token->line;
+    //         cout << setw(3) << setfill('0') << line << ": ";
+    //     }
+    //     cout << token;
+    // }
 
     auto first_statement = parse(first_token);
 
-    auto statement = first_statement;
-    while (statement != nullptr) {
-        cout << statement << endl;
-        statement = statement->next;
-    }
+    // auto statement = first_statement;
+    // while (statement != nullptr) {
+    //     cout << statement << endl;
+    //     statement = statement->next;
+    // }
+
+    generate(first_statement);
 }
 
 char *load_file(string file_name) {
@@ -322,7 +326,7 @@ std::ostream &operator<<(std::ostream &os, const Token *token) {
 }
 
 std::ostream &operator<<(std::ostream &os, const Token &token) {
-    switch (token.type) {
+    switch (token.kind) {
     case Token::CHARACTER:
         os << SGR_GREEN << token.lexeme->data << SGR_RESET;
         return os;

@@ -9,7 +9,7 @@ void Token::join_next() {
 
 Token *create(Token::Kind kind, String *lexeme, int line, int column) {
     return new Token{
-        type : kind,
+        kind : kind,
         lexeme : lexeme,
         line : line,
         column : column,

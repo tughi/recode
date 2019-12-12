@@ -104,23 +104,23 @@ Token *_consume_(int source_line, Context *context, const char *expected, Matche
 #define consume_three(context, expected, first_matcher, second_matcher, third_matcher) _consume_(__LINE__, context, expected, first_matcher, second_matcher, third_matcher)
 
 bool is_identifier(Token *token) {
-    return token->type == Token::IDENTIFIER;
+    return token->kind == Token::IDENTIFIER;
 }
 
 bool is_keyword(Token *token, const char *lexeme) {
-    return token->type == Token::KEYWORD && token->lexeme->equals(lexeme);
+    return token->kind == Token::KEYWORD && token->lexeme->equals(lexeme);
 }
 
 bool is_literal(Token *token) {
-    return token->type == Token::INTEGER || token->type == Token::STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->type == Token::CHARACTER;
+    return token->kind == Token::INTEGER || token->kind == Token::STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->kind == Token::CHARACTER;
 }
 
 bool is_open_paren(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("(");
+    return token->kind == Token::OTHER && token->lexeme->equals("(");
 }
 
 bool is_close_paren(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals(")");
+    return token->kind == Token::OTHER && token->lexeme->equals(")");
 }
 
 Expression *parse_expression(Context *context);
@@ -162,7 +162,7 @@ Expression *parse_primary_expression(Context *context) {
 }
 
 bool is_space(Token *token) {
-    return token->type == Token::SPACE;
+    return token->kind == Token::SPACE;
 }
 
 int consume_space(int source_line, Context *context, int expected_spaces) {
@@ -177,7 +177,7 @@ int consume_space(int source_line, Context *context, int expected_spaces) {
 #define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
 
 bool is_assign_operator(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("=");
+    return token->kind == Token::OTHER && token->lexeme->equals("=");
 }
 
 Argument *parse_argument(Context *context) {
@@ -197,19 +197,19 @@ Argument *parse_argument(Context *context) {
 }
 
 bool is_comma(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals(",");
+    return token->kind == Token::OTHER && token->lexeme->equals(",");
 }
 
 bool is_dot(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals(".");
+    return token->kind == Token::OTHER && token->lexeme->equals(".");
 }
 
 bool is_open_bracket(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("[");
+    return token->kind == Token::OTHER && token->lexeme->equals("[");
 }
 
 bool is_close_bracket(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("]");
+    return token->kind == Token::OTHER && token->lexeme->equals("]");
 }
 
 // call:
@@ -283,7 +283,7 @@ Expression *parse_call_expression(Context *context) {
 }
 
 bool is_unary_operator(Token *token) {
-    return token->type == Token::OTHER && (token->lexeme->equals("!") || token->lexeme->equals("-"));
+    return token->kind == Token::OTHER && (token->lexeme->equals("!") || token->lexeme->equals("-"));
 }
 
 // unary:
@@ -308,7 +308,7 @@ Expression *parse_unary_expression(Context *context) {
 }
 
 bool is_multiplication_operator(Token *token) {
-    return token->type == Token::OTHER && (token->lexeme->equals("*") || token->lexeme->equals("/"));
+    return token->kind == Token::OTHER && (token->lexeme->equals("*") || token->lexeme->equals("/"));
 }
 
 // multiplication:
@@ -333,7 +333,7 @@ Expression *parse_multiplication_expression(Context *context) {
 }
 
 bool is_addition_operator(Token *token) {
-    return token->type == Token::OTHER && (token->lexeme->equals("+") || token->lexeme->equals("-"));
+    return token->kind == Token::OTHER && (token->lexeme->equals("+") || token->lexeme->equals("-"));
 }
 
 // addition:
@@ -358,7 +358,7 @@ Expression *parse_addition_expression(Context *context) {
 }
 
 bool is_comparison_operator(Token *token) {
-    return token->type == Token::OTHER && (token->lexeme->equals("<") || token->lexeme->equals(">"));
+    return token->kind == Token::OTHER && (token->lexeme->equals("<") || token->lexeme->equals(">"));
 }
 
 // comparison:
@@ -388,7 +388,7 @@ Expression *parse_comparison_expression(Context *context) {
 }
 
 bool is_equality_operator(Token *token) {
-    return token->type == Token::OTHER && (token->lexeme->equals("!") || token->lexeme->equals("="));
+    return token->kind == Token::OTHER && (token->lexeme->equals("!") || token->lexeme->equals("="));
 }
 
 // equality:
@@ -414,7 +414,7 @@ Expression *parse_equality_expression(Context *context) {
 }
 
 bool is_and_operator(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("&");
+    return token->kind == Token::OTHER && token->lexeme->equals("&");
 }
 
 // logic_and:
@@ -440,7 +440,7 @@ Expression *parse_logic_and_expression(Context *context) {
 }
 
 bool is_or_operator(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("|");
+    return token->kind == Token::OTHER && token->lexeme->equals("|");
 }
 
 // logic_or:
@@ -472,23 +472,23 @@ Expression *parse_expression(Context *context) {
 }
 
 bool is_colon(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals(":");
+    return token->kind == Token::OTHER && token->lexeme->equals(":");
 }
 
 bool is_open_brace(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("{");
+    return token->kind == Token::OTHER && token->lexeme->equals("{");
 }
 
 bool is_close_brace(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("}");
+    return token->kind == Token::OTHER && token->lexeme->equals("}");
 }
 
 bool is_hyphen(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("-");
+    return token->kind == Token::OTHER && token->lexeme->equals("-");
 }
 
 bool is_close_angled_bracket(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals(">");
+    return token->kind == Token::OTHER && token->lexeme->equals(">");
 }
 
 Type *parse_type(Context *context);
@@ -536,7 +536,7 @@ Member *parse_comma_separated_members(Context *context) {
 }
 
 bool is_reference_operator(Token *token) {
-    return token->type == Token::OTHER && token->lexeme->equals("@");
+    return token->kind == Token::OTHER && token->lexeme->equals("@");
 }
 
 // type:
@@ -612,15 +612,15 @@ Type *parse_type(Context *context) {
 }
 
 bool is_comment(Token *token) {
-    return token->type == Token::COMMENT;
+    return token->kind == Token::COMMENT;
 }
 
 bool is_end_of_line(Token *token) {
-    return token->type == Token::END_OF_LINE;
+    return token->kind == Token::END_OF_LINE;
 }
 
 bool is_end_of_file(Token *token) {
-    return token->type == Token::END_OF_FILE;
+    return token->kind == Token::END_OF_FILE;
 }
 
 bool _consume_end_of_line_(int source_line, Context *context, bool required) {

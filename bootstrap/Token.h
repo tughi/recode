@@ -18,7 +18,7 @@ struct Token {
         STRING,
     };
 
-    Kind type;
+    Kind kind;
 
     String *lexeme;
     int line;
