@@ -1,7 +1,10 @@
-add :: (a: Int, b: Int) -> Int {
-	return a + b
+fib :: (n: Int) -> Int {
+	if (n < 2) {
+		return n
+	}
+	return fib(n - 1) + fib(n - 2)
 }
 
 main :: () {
-	return add((3 * 7 + 21) / 1 - 1, 1)
+	return fib(13)
 }

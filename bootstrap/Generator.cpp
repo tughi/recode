@@ -134,22 +134,19 @@ Local *emit_expression(Context &context, Local *destination, Expression *express
         auto right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
         auto operation = (String *)nullptr;
         if (expression->binary.operator_token->lexeme->equals("+")) {
-            static auto add = new String("add");
-            operation = add;
+            EMIT_LINE("  %" << destination << " = add i32 %" << left_local << ", %" << right_local);
         } else if (expression->binary.operator_token->lexeme->equals("-")) {
-            static auto sub = new String("sub");
-            operation = sub;
+            EMIT_LINE("  %" << destination << " = sub i32 %" << left_local << ", %" << right_local);
         } else if (expression->binary.operator_token->lexeme->equals("*")) {
-            static auto mull = new String("mul");
-            operation = mull;
+            EMIT_LINE("  %" << destination << " = mul i32 %" << left_local << ", %" << right_local);
         } else if (expression->binary.operator_token->lexeme->equals("/")) {
-            static auto div = new String("sdiv");
-            operation = div;
+            EMIT_LINE("  %" << destination << " = sdiv i32 %" << left_local << ", %" << right_local);
+        } else if (expression->binary.operator_token->lexeme->equals("<")) {
+            EMIT_LINE("  %" << destination << " = icmp slt i32 %" << left_local << ", %" << right_local);
         } else {
             ERROR(__FILE__, __LINE__, "Unsupported binary expression operator: " << expression->binary.operator_token->lexeme);
             exit(1);
         }
-        EMIT_LINE("  %" << destination << " = " << operation << " i32 %" << left_local << ", %" << right_local);
         break;
     }
     case Expression::CALL: {
@@ -194,20 +191,43 @@ Local *emit_expression(Context &context, Local *destination, Expression *express
     return destination;
 }
 
-void emit_statement(Context &context, Statement &statement) {
-    switch (statement.kind) {
-    case Statement::RETURN: {
-        auto result = emit_expression(context, create_temp_local(context), statement.return_expression);
-        EMIT_LINE("  ret i32 %" << result);
+void emit_statement(Context &context, Statement *statement) {
+    switch (statement->kind) {
+    case Statement::BLOCK: {
+        auto block_statement = statement->block.first_statement;
+        while (block_statement != nullptr) {
+            emit_statement(context, block_statement);
+            block_statement = block_statement->next;
+        }
+        break;
+    }
+    case Statement::IF: {
+        auto if_cond = emit_expression(context, create_local(context, new String("if_cond")), statement->if_.condition);
+        auto if_true = create_local(context, new String("if_true"));
+        auto if_false = create_local(context, new String("if_false"));
+        auto if_end = create_local(context, new String("if_end"));
+        EMIT_LINE("  br i1 %" << if_cond << ", label %" << if_true << ", label %" << (statement->if_.false_block != nullptr ? if_false : if_end));
+
+        EMIT_LINE(if_true << ":");
+        emit_statement(context, statement->if_.true_block);
+        EMIT_LINE("  br label %" << if_end);
+
+        if (statement->if_.false_block != nullptr) {
+            EMIT_LINE(if_false << ":");
+            emit_statement(context, statement->if_.false_block);
+            EMIT_LINE("  br label %" << if_end);
+        }
+
+        EMIT_LINE(if_end << ":");
         break;
     }
     case Statement::PROCEDURE_DEFINITION: {
-        auto procedure_name = create_local(context, statement.procedure_definition.name->literal.value->lexeme);
+        auto procedure_name = create_local(context, statement->procedure_definition.name->literal.value->lexeme);
 
         auto outer_locals_last = context.locals.last_item;
 
         EMIT("define i32 @" << procedure_name << "(");
-        auto parameter = statement.procedure_definition.first_parameter;
+        auto parameter = statement->procedure_definition.first_parameter;
         while (parameter != nullptr) {
             auto name = create_local(context, parameter->name->lexeme);
             EMIT("i32 %" << name);
@@ -218,9 +238,9 @@ void emit_statement(Context &context, Statement &statement) {
         }
         EMIT_LINE(") {");
 
-        auto body_statement = statement.procedure_definition.first_statement;
+        auto body_statement = statement->procedure_definition.first_statement;
         while (body_statement != nullptr) {
-            emit_statement(context, *body_statement);
+            emit_statement(context, body_statement);
             body_statement = body_statement->next;
         }
 
@@ -231,8 +251,14 @@ void emit_statement(Context &context, Statement &statement) {
 
         break;
     }
+    case Statement::RETURN: {
+        auto result = emit_expression(context, create_temp_local(context), statement->return_expression);
+        EMIT_LINE("  ret i32 %" << result);
+        break;
+    }
     default:
-        WARNING(__FILE__, __LINE__, "Unsupported statement type: " << statement.kind);
+        EMIT_LINE("  %" << create_local(context, new String("nop")) << " = add i1 0, 0");
+        WARNING(__FILE__, __LINE__, "Unsupported statement type: " << statement->kind);
         break;
     }
 }
@@ -244,7 +270,7 @@ void generate(Statement *first_statement) {
 
     Statement *statement = first_statement;
     while (statement != nullptr) {
-        emit_statement(context, *statement);
+        emit_statement(context, statement);
         statement = statement->next;
     }
 
