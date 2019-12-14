@@ -16,6 +16,8 @@ struct String {
 
     void append(String &other);
 
+    void append_int(int value);
+
     bool equals(const char *data);
 };
 

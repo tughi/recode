@@ -44,6 +44,13 @@ void String::append(String &other) {
     this->length += other.length;
 }
 
+void String::append_int(int value) {
+    if (value > 0) {
+        this->append_int(value / 10);
+        this->append(value % 10 + '0');
+    }
+}
+
 bool String::equals(const char *data) {
     return strcmp(this->data, data) == 0;
 }
