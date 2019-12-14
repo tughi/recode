@@ -50,9 +50,22 @@ LocalList::Item *append(LocalList &list, Local *local) {
 }
 
 struct Context {
-    ofstream file;
+    ofstream *file;
     LocalList locals;
 };
+
+Context *clone(Context &context) {
+    auto new_context = new Context();
+    new_context->file = context.file;
+
+    auto locals_item = context.locals.first_item;
+    while (locals_item != nullptr) {
+        append(new_context->locals, locals_item->local);
+        locals_item = locals_item->next;
+    }
+
+    return new_context;
+}
 
 Local *create_local(Context &context, String *name) {
     int name_suffix = -1;
@@ -112,7 +125,7 @@ Local *get_local(Context &context, String *name) {
     return list_item != nullptr ? list_item->local : nullptr;
 }
 
-#define EMIT(code) context.file << code
+#define EMIT(code) *context.file << code
 #define EMIT_LINE(code) EMIT(code) << endl
 
 Local *emit_literal(Context &context, Local *destination, Token *token) {
@@ -224,12 +237,12 @@ void emit_statement(Context &context, Statement *statement) {
     case Statement::PROCEDURE_DEFINITION: {
         auto procedure_name = create_local(context, statement->procedure_definition.name->literal.value->lexeme);
 
-        auto outer_locals_last = context.locals.last_item;
+        auto procedure_context = clone(context);
 
         EMIT("define i32 @" << procedure_name << "(");
         auto parameter = statement->procedure_definition.first_parameter;
         while (parameter != nullptr) {
-            auto name = create_local(context, parameter->name->lexeme);
+            auto name = create_local(*procedure_context, parameter->name->lexeme);
             EMIT("i32 %" << name);
             parameter = parameter->next;
             if (parameter != nullptr) {
@@ -240,14 +253,11 @@ void emit_statement(Context &context, Statement *statement) {
 
         auto body_statement = statement->procedure_definition.first_statement;
         while (body_statement != nullptr) {
-            emit_statement(context, body_statement);
+            emit_statement(*procedure_context, body_statement);
             body_statement = body_statement->next;
         }
 
         EMIT_LINE("}");
-
-        outer_locals_last->next = nullptr;
-        context.locals.last_item = outer_locals_last;
 
         break;
     }
@@ -265,7 +275,7 @@ void emit_statement(Context &context, Statement *statement) {
 
 void generate(Statement *first_statement) {
     auto context = Context{
-        file : ofstream("build/code.ll")
+        file : new ofstream("build/code.ll")
     };
 
     Statement *statement = first_statement;
@@ -274,5 +284,5 @@ void generate(Statement *first_statement) {
         statement = statement->next;
     }
 
-    context.file.close();
+    context.file->close();
 }
