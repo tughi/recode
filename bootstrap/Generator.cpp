@@ -18,27 +18,55 @@ struct Local {
     String *name;
     int name_suffix;
     String *unique_name;
-    Local *next;
 };
+
+std::ostream &operator<<(std::ostream &os, const Local *local) {
+    if (local != nullptr) {
+        os << local->unique_name;
+    } else {
+        os << SGR_ERROR << ":Local:" << SGR_RESET;
+    }
+    return os;
+}
+
+struct LocalList {
+    struct Item {
+        Local *local;
+        Item *next;
+    };
+    Item *first_item = nullptr;
+    Item *last_item = nullptr;
+};
+
+LocalList::Item *append(LocalList &list, Local *local) {
+    auto item = new LocalList::Item{local : local, next : nullptr};
+    if (list.first_item == nullptr) {
+        list.first_item = item;
+    } else {
+        list.last_item->next = item;
+    }
+    list.last_item = item;
+    return item;
+}
 
 struct Context {
     ofstream file;
-    Local *first_local = nullptr;
+    LocalList locals;
 };
 
-String *create_local(Context &context, String *name) {
+Local *create_local(Context &context, String *name) {
     int name_suffix = -1;
     bool retry;
     do {
         retry = false;
-        auto local = context.first_local;
-        while (local != nullptr) {
-            if (local->name_suffix == name_suffix && local->name->equals(name->data)) {
+        auto local_item = context.locals.first_item;
+        while (local_item != nullptr) {
+            if (local_item->local->name_suffix == name_suffix && local_item->local->name->equals(name->data)) {
                 name_suffix += 1;
                 retry = true;
                 break;
             }
-            local = local->next;
+            local_item = local_item->next;
         }
     } while (retry);
 
@@ -60,79 +88,106 @@ String *create_local(Context &context, String *name) {
         }
     }
 
-    context.first_local = new Local{
+    auto local = new Local{
         name : name,
         name_suffix : name_suffix,
         unique_name : unique_name,
-        next : context.first_local,
     };
 
-    return unique_name;
+    append(context.locals, local);
+
+    return local;
 }
 
-String *create_temp_local(Context &context) {
+Local *create_temp_local(Context &context) {
     static auto name = new String("temp");
     return create_local(context, name);
 }
 
-String *get_local(Context &context, String *name) {
-    auto local = context.first_local;
-    while (local != nullptr && !local->name->equals(name->data)) {
-        local = local->next;
+Local *get_local(Context &context, String *name) {
+    auto list_item = context.locals.first_item;
+    while (list_item != nullptr && !list_item->local->name->equals(name->data)) {
+        list_item = list_item->next;
     }
-    return local->unique_name;
+    return list_item != nullptr ? list_item->local : nullptr;
 }
 
 #define EMIT(code) context.file << code
 #define EMIT_LINE(code) EMIT(code) << endl
 
-String *emit_literal(Context &context, String *destination, Token &token) {
-    switch (token.kind) {
+Local *emit_literal(Context &context, Local *destination, Token *token) {
+    switch (token->kind) {
     case Token::INTEGER:
-        EMIT_LINE("  %" << destination << " = add i32 " << token.integer.value << ", 0");
+        EMIT_LINE("  %" << destination << " = add i32 " << token->integer.value << ", 0");
         break;
     default:
-        WARNING(__FILE__, __LINE__, "Unsupported token type: " << token.kind);
+        WARNING(__FILE__, __LINE__, "Unsupported token type: " << token->kind);
         break;
     }
     return destination;
 }
 
-String *emit_expression(Context &context, String *destination, Expression &expression) {
-    switch (expression.kind) {
+Local *emit_expression(Context &context, Local *destination, Expression *expression) {
+    switch (expression->kind) {
     case Expression::BINARY: {
-        auto left_local = emit_expression(context, create_temp_local(context), *expression.binary.left_expression);
-        auto right_local = emit_expression(context, create_temp_local(context), *expression.binary.right_expression);
+        auto left_local = emit_expression(context, create_temp_local(context), expression->binary.left_expression);
+        auto right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
         auto operation = (String *)nullptr;
-        if (expression.binary.operator_token->lexeme->equals("+")) {
+        if (expression->binary.operator_token->lexeme->equals("+")) {
             static auto add = new String("add");
             operation = add;
-        } else if (expression.binary.operator_token->lexeme->equals("-")) {
+        } else if (expression->binary.operator_token->lexeme->equals("-")) {
             static auto sub = new String("sub");
             operation = sub;
-        } else if (expression.binary.operator_token->lexeme->equals("*")) {
+        } else if (expression->binary.operator_token->lexeme->equals("*")) {
             static auto mull = new String("mul");
             operation = mull;
-        } else if (expression.binary.operator_token->lexeme->equals("/")) {
+        } else if (expression->binary.operator_token->lexeme->equals("/")) {
             static auto div = new String("sdiv");
             operation = div;
         } else {
-            ERROR(__FILE__, __LINE__, "Unsupported binary expression operator: " << expression.binary.operator_token->lexeme);
+            ERROR(__FILE__, __LINE__, "Unsupported binary expression operator: " << expression->binary.operator_token->lexeme);
             exit(1);
         }
         EMIT_LINE("  %" << destination << " = " << operation << " i32 %" << left_local << ", %" << right_local);
         break;
     }
+    case Expression::CALL: {
+        auto procedure = get_local(context, expression->call.callee->variable.name->lexeme);
+        if (procedure == nullptr) {
+            ERROR(__FILE__, __LINE__, "Undefined procedure: " << expression->call.callee->variable.name->lexeme);
+            exit(1);
+        }
+        auto procedure_arguments = LocalList{};
+        auto argument = expression->call.first_argument;
+        while (argument != nullptr) {
+            auto procedure_argument = create_temp_local(context);
+            append(procedure_arguments, procedure_argument);
+            emit_expression(context, procedure_argument, argument->value);
+            argument = argument->next;
+        }
+        EMIT("  %" << destination << " = call i32 @" << procedure << "(");
+        auto procedure_arguments_item = procedure_arguments.first_item;
+        while (procedure_arguments_item != nullptr) {
+            EMIT("i32 %" << procedure_arguments_item->local);
+            procedure_arguments_item = procedure_arguments_item->next;
+            if (procedure_arguments_item != nullptr) {
+                EMIT(", ");
+            }
+        }
+        EMIT_LINE(")");
+        break;
+    }
     case Expression::LITERAL: {
-        emit_literal(context, destination, *expression.literal.value);
+        emit_literal(context, destination, expression->literal.value);
         break;
     }
     case Expression::VARIABLE: {
-        EMIT_LINE("  %" << destination << " = add i32 %" << get_local(context, expression.variable.name->lexeme) << ", 0");
+        EMIT_LINE("  %" << destination << " = add i32 %" << get_local(context, expression->variable.name->lexeme) << ", 0");
         break;
     }
     default:
-        WARNING(__FILE__, __LINE__, "Unsupported expression type: " << expression.kind);
+        WARNING(__FILE__, __LINE__, "Unsupported expression type: " << expression->kind);
         break;
     }
 
@@ -142,14 +197,14 @@ String *emit_expression(Context &context, String *destination, Expression &expre
 void emit_statement(Context &context, Statement &statement) {
     switch (statement.kind) {
     case Statement::RETURN: {
-        auto result = emit_expression(context, create_temp_local(context), *statement.return_expression);
+        auto result = emit_expression(context, create_temp_local(context), statement.return_expression);
         EMIT_LINE("  ret i32 %" << result);
         break;
     }
     case Statement::PROCEDURE_DEFINITION: {
         auto procedure_name = create_local(context, statement.procedure_definition.name->literal.value->lexeme);
 
-        auto first_outer_local = context.first_local;
+        auto outer_locals_last = context.locals.last_item;
 
         EMIT("define i32 @" << procedure_name << "(");
         auto parameter = statement.procedure_definition.first_parameter;
@@ -171,7 +226,9 @@ void emit_statement(Context &context, Statement &statement) {
 
         EMIT_LINE("}");
 
-        context.first_local = first_outer_local;
+        outer_locals_last->next = nullptr;
+        context.locals.last_item = outer_locals_last;
+
         break;
     }
     default:

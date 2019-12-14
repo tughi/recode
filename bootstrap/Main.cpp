@@ -40,11 +40,11 @@ int main(int argc, char *argv[]) {
 
     auto first_statement = parse(first_token);
 
-    // auto statement = first_statement;
-    // while (statement != nullptr) {
-    //     cout << statement << endl;
-    //     statement = statement->next;
-    // }
+    auto statement = first_statement;
+    while (statement != nullptr) {
+        cout << statement << endl;
+        statement = statement->next;
+    }
 
     generate(first_statement);
 }
