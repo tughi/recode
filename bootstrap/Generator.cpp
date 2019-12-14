@@ -68,8 +68,7 @@ Context *clone(Context &context) {
     return new_context;
 }
 
-Local *create_local(Context &context, String *name) {
-    int name_suffix = -1;
+Local *create_local(Context &context, String *name, int name_suffix) {
     bool retry;
     do {
         retry = false;
@@ -85,12 +84,8 @@ Local *create_local(Context &context, String *name) {
     } while (retry);
 
     auto unique_name = new String(name->data);
-    auto suffix = name_suffix;
-    while (suffix > 0) {
-        unique_name->append(suffix % 10 + '0');
-        suffix /= 10;
-    }
     if (name_suffix != -1) {
+        unique_name->append('.');
         if (name_suffix < 100) {
             unique_name->append('0');
         }
@@ -100,6 +95,9 @@ Local *create_local(Context &context, String *name) {
         if (name_suffix == 0) {
             unique_name->append('0');
         }
+    }
+    if (name_suffix >= 0) {
+        unique_name->append_int(name_suffix);
     }
 
     auto local = new Local{
@@ -113,9 +111,13 @@ Local *create_local(Context &context, String *name) {
     return local;
 }
 
+Local *create_local(Context &context, String *name) {
+    return create_local(context, name, -1);
+}
+
 Local *create_temp_local(Context &context) {
-    static auto name = new String("temp");
-    return create_local(context, name);
+    static auto name = new String("");
+    return create_local(context, name, 0);
 }
 
 Local *get_local(Context &context, String *name) {
@@ -231,10 +233,10 @@ void emit_statement(Context &context, Statement *statement) {
         break;
     }
     case Statement::IF: {
-        auto if_cond = emit_expression(context, create_local(context, new String("if_cond")), statement->if_.condition);
-        auto if_true = create_local(context, new String("if_true"));
-        auto if_false = create_local(context, new String("if_false"));
-        auto if_end = create_local(context, new String("if_end"));
+        auto if_cond = emit_expression(context, create_local(context, new String("if_cond"), 0), statement->if_.condition);
+        auto if_true = create_local(context, new String("if_true"), 0);
+        auto if_false = create_local(context, new String("if_false"), 0);
+        auto if_end = create_local(context, new String("if_end"), 0);
         EMIT_LINE("  br i1 %" << if_cond << ", label %" << if_true << ", label %" << (statement->if_.false_block != nullptr ? if_false : if_end));
 
         EMIT_LINE(if_true << ":");
@@ -251,9 +253,9 @@ void emit_statement(Context &context, Statement *statement) {
         break;
     }
     case Statement::LOOP: {
-        auto loop_cond = create_local(context, new String("loop_cond"));
-        auto loop_start = create_local(context, new String("loop_start"));
-        auto loop_end = create_local(context, new String("loop_end"));
+        auto loop_cond = create_local(context, new String("loop_cond"), 0);
+        auto loop_start = create_local(context, new String("loop_start"), 0);
+        auto loop_end = create_local(context, new String("loop_end"), 0);
         EMIT_LINE("  %" << loop_cond << " = add i1 1, 0");
         EMIT_LINE("  br i1 %" << loop_cond << ", label %" << loop_start << ", label %" << loop_end);
         EMIT_LINE(loop_start << ":");
