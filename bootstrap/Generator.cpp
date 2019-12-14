@@ -18,6 +18,7 @@ struct Local {
     String *name;
     int name_suffix;
     String *unique_name;
+    bool is_pointer;
 };
 
 std::ostream &operator<<(std::ostream &os, const Local *local) {
@@ -156,6 +157,10 @@ Local *emit_expression(Context &context, Local *destination, Expression *express
             EMIT_LINE("  %" << destination << " = sdiv i32 %" << left_local << ", %" << right_local);
         } else if (expression->binary.operator_token->lexeme->equals("<")) {
             EMIT_LINE("  %" << destination << " = icmp slt i32 %" << left_local << ", %" << right_local);
+        } else if (expression->binary.operator_token->lexeme->equals(">")) {
+            EMIT_LINE("  %" << destination << " = icmp sgt i32 %" << left_local << ", %" << right_local);
+        } else if (expression->binary.operator_token->lexeme->equals("==")) {
+            EMIT_LINE("  %" << destination << " = icmp eq i32 %" << left_local << ", %" << right_local);
         } else {
             ERROR(__FILE__, __LINE__, "Unsupported binary expression operator: " << expression->binary.operator_token->lexeme);
             exit(1);
@@ -193,7 +198,12 @@ Local *emit_expression(Context &context, Local *destination, Expression *express
         break;
     }
     case Expression::VARIABLE: {
-        EMIT_LINE("  %" << destination << " = add i32 %" << get_local(context, expression->variable.name->lexeme) << ", 0");
+        auto variable = get_local(context, expression->variable.name->lexeme);
+        if (variable->is_pointer) {
+            EMIT_LINE("  %" << destination << " = load i32, i32* %" << variable << ", align 4");
+        } else {
+            EMIT_LINE("  %" << destination << " = add i32 %" << variable << ", 0");
+        }
         break;
     }
     default:
@@ -206,6 +216,12 @@ Local *emit_expression(Context &context, Local *destination, Expression *express
 
 void emit_statement(Context &context, Statement *statement) {
     switch (statement->kind) {
+    case Statement::ASSIGNMENT: {
+        auto variable = get_local(context, statement->assignment.destination->variable.name->lexeme);
+        auto value = emit_expression(context, create_temp_local(context), statement->variable_declaration.value);
+        EMIT_LINE("  store i32 %" << value << ", i32* %" << variable << ", align 4");
+        break;
+    }
     case Statement::BLOCK: {
         auto block_statement = statement->block.first_statement;
         while (block_statement != nullptr) {
@@ -232,6 +248,18 @@ void emit_statement(Context &context, Statement *statement) {
         }
 
         EMIT_LINE(if_end << ":");
+        break;
+    }
+    case Statement::LOOP: {
+        auto loop_cond = create_local(context, new String("loop_cond"));
+        auto loop_start = create_local(context, new String("loop_start"));
+        auto loop_end = create_local(context, new String("loop_end"));
+        EMIT_LINE("  %" << loop_cond << " = add i1 1, 0");
+        EMIT_LINE("  br i1 %" << loop_cond << ", label %" << loop_start << ", label %" << loop_end);
+        EMIT_LINE(loop_start << ":");
+        emit_statement(context, statement->loop.block);
+        EMIT_LINE("  br label %" << loop_start);
+        EMIT_LINE(loop_end << ":");
         break;
     }
     case Statement::PROCEDURE_DEFINITION: {
@@ -264,6 +292,14 @@ void emit_statement(Context &context, Statement *statement) {
     case Statement::RETURN: {
         auto result = emit_expression(context, create_temp_local(context), statement->return_expression);
         EMIT_LINE("  ret i32 %" << result);
+        break;
+    }
+    case Statement::VARIABLE_DECLARATION: {
+        auto variable = create_local(context, statement->variable_declaration.name->variable.name->lexeme);
+        variable->is_pointer = true;
+        EMIT_LINE("  %" << variable << " = alloca i32, align 4");
+        auto value = emit_expression(context, create_temp_local(context), statement->variable_declaration.value);
+        EMIT_LINE("  store i32 %" << value << ", i32* %" << variable << ", align 4");
         break;
     }
     default:
