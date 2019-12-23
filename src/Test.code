@@ -20,12 +20,22 @@ lfib :: (n: Int) -> Int {
 		v_0 = v_1
 		v_1 = v_i
 		v_i = v_0 + v_1
-
 		i = i + 1
 	}
-	return 255
 }
 
 main :: () {
-	return lfib(13)
+	i := 0
+	loop {
+		if (i < 25) {
+			if (lfib(i) == rfib(i)) {
+				i = i + 1
+			} else {
+				break
+			}
+		} else {
+			break
+		}
+	}
+	return i
 }

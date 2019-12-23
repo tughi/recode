@@ -50,9 +50,16 @@ LocalList::Item *append(LocalList &list, Local *local) {
     return item;
 }
 
+struct Loop {
+    Local *loop_end;
+    bool has_break;
+    Loop *parent;
+};
+
 struct Context {
     ofstream *file;
     LocalList locals;
+    Loop *loop;
 };
 
 Context *clone(Context &context) {
@@ -232,6 +239,11 @@ void emit_statement(Context &context, Statement *statement) {
         }
         break;
     }
+    case Statement::BREAK: {
+        EMIT_LINE("  br label %" << context.loop->loop_end);
+        context.loop->has_break = true;
+        break;
+    }
     case Statement::IF: {
         auto if_cond = emit_expression(context, create_local(context, new String("if_cond"), 0), statement->if_.condition);
         auto if_true = create_local(context, new String("if_true"), 0);
@@ -253,15 +265,22 @@ void emit_statement(Context &context, Statement *statement) {
         break;
     }
     case Statement::LOOP: {
-        auto loop_cond = create_local(context, new String("loop_cond"), 0);
         auto loop_start = create_local(context, new String("loop_start"), 0);
         auto loop_end = create_local(context, new String("loop_end"), 0);
-        EMIT_LINE("  %" << loop_cond << " = add i1 1, 0");
-        EMIT_LINE("  br i1 %" << loop_cond << ", label %" << loop_start << ", label %" << loop_end);
-        EMIT_LINE(loop_start << ":");
-        emit_statement(context, statement->loop.block);
         EMIT_LINE("  br label %" << loop_start);
-        EMIT_LINE(loop_end << ":");
+        EMIT_LINE(loop_start << ":");
+        auto loop = new Loop{
+            loop_end : loop_end,
+            has_break : false,
+            parent : context.loop,
+        };
+        context.loop = loop;
+        emit_statement(context, statement->loop.block);
+        context.loop = loop->parent;
+        EMIT_LINE("  br label %" << loop_start);
+        if (loop->has_break) {
+            EMIT_LINE(loop_end << ":");
+        }
         break;
     }
     case Statement::PROCEDURE_DEFINITION: {
