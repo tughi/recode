@@ -1,8 +1,7 @@
 #ifndef __recode__logging_h__
 #define __recode__logging_h__
 
-#include <iomanip>
-#include <iostream>
+#include <stdio.h>
 
 #define SGR_RESET "\033[0m"
 
@@ -20,12 +19,12 @@
 #define SGR_FAINT_DEFAULT "\033[0;2;39m"
 #define SGR_FAINT_YELLOW "\033[0;2;33m"
 
-#define LOG(level, source_file, source_line, message) std::cout << level << source_file << ':' << source_line << " -- " << message << SGR_RESET << std::endl
+#define LOG(level, source_file, source_line, format, ...) printf("%s%s:%d -- ", level, source_file, source_line); printf(format, __VA_ARGS__); printf("%s\n", SGR_RESET)
 
-#define ERROR(source_file, source_line, message) LOG(SGR_ERROR, source_file, source_line, message)
+#define ERROR(source_file, source_line, format, ...) LOG(SGR_ERROR, source_file, source_line, format, __VA_ARGS__)
 
-#define WARNING(source_file, source_line, message) LOG(SGR_WARNING, source_file, source_line, message)
+#define WARNING(source_file, source_line, format, ...) LOG(SGR_WARNING, source_file, source_line, format, __VA_ARGS__)
 
-#define INFO(source_file, source_line, message) LOG(SGR_INFO, source_file, source_line, message)
+#define INFO(source_file, source_line, format, ...) LOG(SGR_INFO, source_file, source_line, format, __VA_ARGS__)
 
 #endif

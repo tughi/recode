@@ -3,21 +3,21 @@
 
 #define TAB_SIZE 4
 
-struct Source {
+typedef struct Source {
     char *data;
     int index;
     int line;
     int column;
+} Source;
 
-    Source(char *data);
+Source *source__create(char *data);
 
-    char peek() { return this->data[this->index]; }
+char source__peek(Source *self);
 
-    int current_line() { return this->line; }
+int source__current_line(Source *self);
 
-    int current_column() { return this->column; }
+int source__current_column(Source *self);
 
-    char advance(bool (*accepts)(char));
-};
+char source__advance(Source *self, int (*accepts)(char));
 
 #endif

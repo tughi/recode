@@ -49,18 +49,18 @@ def build():
                         source_file_includes.update(loaded_includes[source_file_include])
         return source_file_includes
 
-    cpp_files = [file for file in os.listdir('.') if file[0] != '.' and file.endswith('.cpp')]
-    cpp_files.sort()
-    for cpp_file in cpp_files:
-        obj_file = os.path.join(BUILD_DIR, cpp_file.replace('.cpp', '.o'))
+    c_files = [file for file in os.listdir('.') if file[0] != '.' and file.endswith('.c')]
+    c_files.sort()
+    for c_file in c_files:
+        obj_file = os.path.join(BUILD_DIR, c_file.replace('.c', '.o'))
         obj_files.append(obj_file)
 
         if os.path.exists(obj_file):
             obj_file_timestamp = os.path.getmtime(obj_file)
 
             obj_file_dependencies = set()
-            obj_file_dependencies.add(cpp_file)
-            obj_file_dependencies.update(load_includes(cpp_file))
+            obj_file_dependencies.add(c_file)
+            obj_file_dependencies.update(load_includes(c_file))
 
             compile_file = False
             for obj_file_dependency in obj_file_dependencies:
@@ -71,11 +71,11 @@ def build():
             compile_file = True
 
         if compile_file:
-            execute(f"""g++ -c -o {obj_file} {cpp_file}""")
+            execute(f"""gcc -c -o {obj_file} {c_file}""")
             obj_files_changed = True
 
     if obj_files_changed or not os.path.exists(BIN_FILE):
-        execute(f"""g++ -o {BIN_FILE} {' '.join(obj_files)}""")
+        execute(f"""gcc -o {BIN_FILE} {' '.join(obj_files)}""")
 
 
 def run():

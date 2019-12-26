@@ -6,32 +6,34 @@
 struct Type;
 struct Expression;
 
-struct Member {
+typedef struct Member {
     Token *name;
-    Type *type;
-    Expression *default_value;
-    Member *next;
-};
+    struct Type *type;
+    struct Expression *default_value;
+    struct Member *next;
+} Member;
 
-struct Type {
-    enum Kind {
-        ARRAY,
-        PROCEDURE,
-        REFERENCE,
-        SIMPLE,
-        TUPLE,
-    } kind;
+typedef enum TypeKind {
+    ARRAY,
+    PROCEDURE,
+    REFERENCE,
+    SIMPLE,
+    TUPLE,
+} TypeKind;
+
+typedef struct Type {
+    TypeKind kind;
 
     union {
         struct {
-            Type *item_type;
+            struct Type *item_type;
         } array;
         struct {
             Member *first_parameter;
-            Type *return_type;
+            struct Type *return_type;
         } procedure;
         struct {
-            Type *type;
+            struct Type *type;
         } reference;
         struct {
             Token *name;
@@ -40,16 +42,15 @@ struct Type {
             Member *first_member;
         } tuple;
     };
-};
+} Type;
 
-struct Argument {
+typedef struct Argument {
     Token *name;
-    Expression *value;
-    Argument *next;
-};
+    struct Expression *value;
+    struct Argument *next;
+} Argument;
 
-struct Expression {
-    enum Kind {
+typedef enum ExpressionKind {
         ARRAY_ITEM,
         BINARY,
         CALL,
@@ -57,53 +58,58 @@ struct Expression {
         MEMBER,
         UNARY,
         VARIABLE,
-    } kind;
+} ExpressionKind;
+
+typedef struct Expression {
+    ExpressionKind kind;
 
     union {
         struct {
-            Expression *array;
-            Expression *index;
+            struct Expression *array;
+            struct Expression *index;
         } array_item;
         struct {
             Token *operator_token;
-            Expression *left_expression;
-            Expression *right_expression;
+            struct Expression *left_expression;
+            struct Expression *right_expression;
         } binary;
         struct {
-            Expression *callee;
+            struct Expression *callee;
             Argument *first_argument;
         } call;
         struct {
             Token *value;
         } literal;
         struct {
-            Expression *object;
+            struct Expression *object;
             Token *name;
         } member;
         struct {
             Token *operator_token;
-            Expression *expression;
+            struct Expression *expression;
         } unary;
         struct {
             Token *name;
         } variable;
     };
-};
+} Expression;
 
-struct Statement {
-    enum Kind {
-        ASSIGNMENT,
-        BLOCK,
-        BREAK,
-        EXPRESSION,
-        IF,
-        LOOP,
-        PROCEDURE_DEFINITION,
-        RETURN,
-        SKIP,
-        STRUCT_DEFINITION,
-        VARIABLE_DECLARATION,
-    } kind;
+typedef enum StatementKind {
+    ASSIGNMENT,
+    BLOCK,
+    BREAK,
+    EXPRESSION,
+    IF,
+    LOOP,
+    PROCEDURE_DEFINITION,
+    RETURN,
+    SKIP,
+    STRUCT_DEFINITION,
+    VARIABLE_DECLARATION,
+} StatementKind;
+
+typedef struct Statement {
+    StatementKind kind;
 
     union {
         struct {
@@ -112,22 +118,22 @@ struct Statement {
             Expression *value;
         } assignment;
         struct {
-            Statement *first_statement;
+            struct Statement *first_statement;
         } block;
         Expression *expression;
         struct {
             Expression *condition;
-            Statement *true_block;
-            Statement *false_block;
+            struct Statement *true_block;
+            struct Statement *false_block;
         } if_;
         struct {
-            Statement *block;
+            struct Statement *block;
         } loop;
         struct {
             Expression *name;
             Member *first_parameter;
             Type *return_type;
-            Statement *first_statement;
+            struct Statement *first_statement;
         } procedure_definition;
         Expression *return_expression;
         struct {
@@ -142,8 +148,8 @@ struct Statement {
         } variable_declaration;
     };
 
-    Statement *next;
-};
+    struct Statement *next;
+} Statement;
 
 Statement *parse(Token *first);
 
