@@ -134,7 +134,7 @@ Local *get_local(Context *context, String *name) {
 
 Local *emit_literal(Context *context, Local *destination, Token *token) {
     switch (token->kind) {
-    case INTEGER:
+    case TOKEN_INTEGER:
         fprintf(context->file, "  %%%s = add i32 %d, 0\n", LOCAL(destination), token->integer.value);
         break;
     default:
@@ -146,7 +146,7 @@ Local *emit_literal(Context *context, Local *destination, Token *token) {
 
 Local *emit_expression(Context *context, Local *destination, Expression *expression) {
     switch (expression->kind) {
-    case BINARY: {
+    case EXPRESSION_BINARY: {
         Local *left_local = emit_expression(context, create_temp_local(context), expression->binary.left_expression);
         String *operation = NULL;
         if (string__equals(expression->binary.operator_token->lexeme, "+")) {
@@ -204,7 +204,7 @@ Local *emit_expression(Context *context, Local *destination, Expression *express
         }
         break;
     }
-    case CALL: {
+    case EXPRESSION_CALL: {
         Local *procedure = get_local(context, expression->call.callee->variable.name->lexeme);
         if (procedure == NULL) {
             ERROR(__FILE__, __LINE__, "Undefined procedure: %s", expression->call.callee->variable.name->lexeme->data);
@@ -230,11 +230,11 @@ Local *emit_expression(Context *context, Local *destination, Expression *express
         fprintf(context->file, ")\n");
         break;
     }
-    case LITERAL: {
+    case EXPRESSION_LITERAL: {
         emit_literal(context, destination, expression->literal.value);
         break;
     }
-    case VARIABLE: {
+    case EXPRESSION_VARIABLE: {
         Local *variable = get_local(context, expression->variable.name->lexeme);
         if (variable->is_pointer) {
             fprintf(context->file, "  %%%s = load i32, i32* %%%s\n", LOCAL(destination), LOCAL(variable));
@@ -253,13 +253,13 @@ Local *emit_expression(Context *context, Local *destination, Expression *express
 
 void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
-    case ASSIGNMENT: {
+    case STATEMENT_ASSIGNMENT: {
         Local *variable = get_local(context, statement->assignment.destination->variable.name->lexeme);
         Local *value = emit_expression(context, create_temp_local(context), statement->variable_declaration.value);
         fprintf(context->file, "  store i32 %%%s, i32* %%%s\n", LOCAL(value), LOCAL(variable));
         break;
     }
-    case BLOCK: {
+    case STATEMENT_BLOCK: {
         Statement *block_statement = statement->block.first_statement;
         while (block_statement != NULL) {
             emit_statement(context, block_statement);
@@ -267,12 +267,12 @@ void emit_statement(Context *context, Statement *statement) {
         }
         break;
     }
-    case BREAK: {
+    case STATEMENT_BREAK: {
         fprintf(context->file, "  br label %%%s\n", LOCAL(context->loop->loop_end));
         context->loop->has_break = TRUE;
         break;
     }
-    case IF: {
+    case STATEMENT_IF: {
         Local *if_cond = emit_expression(context, create_suffixed_local(context, string__create("if_cond"), 0), statement->if_.condition);
         Local *if_true = create_suffixed_local(context, string__create("if_true"), 0);
         Local *if_false = create_suffixed_local(context, string__create("if_false"), 0);
@@ -292,7 +292,7 @@ void emit_statement(Context *context, Statement *statement) {
         fprintf(context->file, "%s:\n", LOCAL(if_end));
         break;
     }
-    case LOOP: {
+    case STATEMENT_LOOP: {
         Local *loop_start = create_suffixed_local(context, string__create("loop_start"), 0);
         Local *loop_end = create_suffixed_local(context, string__create("loop_end"), 0);
         fprintf(context->file, "  br label %%%s\n", LOCAL(loop_start));
@@ -310,7 +310,7 @@ void emit_statement(Context *context, Statement *statement) {
         }
         break;
     }
-    case PROCEDURE_DEFINITION: {
+    case STATEMENT_PROCEDURE_DEFINITION: {
         Local *procedure_name = create_local(context, statement->procedure_definition.name->literal.value->lexeme);
 
         Context *procedure_context = clone(context);
@@ -337,12 +337,12 @@ void emit_statement(Context *context, Statement *statement) {
 
         break;
     }
-    case RETURN: {
+    case STATEMENT_RETURN: {
         Local *result = emit_expression(context, create_temp_local(context), statement->return_expression);
         fprintf(context->file, "  ret i32 %%%s\n", LOCAL(result));
         break;
     }
-    case VARIABLE_DECLARATION: {
+    case STATEMENT_VARIABLE_DECLARATION: {
         Local *variable = create_local(context, statement->variable_declaration.name->variable.name->lexeme);
         variable->is_pointer = TRUE;
         fprintf(context->file, "  %%%s = alloca i32\n", LOCAL(variable));

@@ -70,13 +70,13 @@ void print_type(Type *type) {
     }
 
     switch (type->kind) {
-    case ARRAY: {
+    case TYPE_ARRAY: {
         printf("%s[", SGR_WHITE_BOLD);
         print_type(type->array.item_type);
         printf("%s]", SGR_WHITE_BOLD);
         return;
     }
-    case PROCEDURE: {
+    case TYPE_PROCEDURE: {
         printf("%s(", SGR_WHITE_BOLD);
         Member *parameter = type->procedure.first_parameter;
         while (parameter != NULL) {
@@ -92,16 +92,16 @@ void print_type(Type *type) {
         print_type(type->procedure.return_type);
         return;
     }
-    case REFERENCE: {
+    case TYPE_REFERENCE: {
         printf("%s@", SGR_WHITE_BOLD);
         print_type(type->reference.type);
         return;
     }
-    case SIMPLE: {
+    case TYPE_SIMPLE: {
         print_token(type->simple.name);
         return;
     }
-    case TUPLE: {
+    case TYPE_TUPLE: {
         printf("%s(", SGR_WHITE_BOLD);
         Member *member = type->tuple.first_member;
         while (member != NULL) {
@@ -137,7 +137,7 @@ void print_statement(Statement *statement) {
     static int alignment = 0;
     print_alignment(alignment);
     switch (statement->kind) {
-    case ASSIGNMENT: {
+    case STATEMENT_ASSIGNMENT: {
         print_expression(statement->assignment.destination);
         printf(" ");
         print_token(statement->assignment.operator_token);
@@ -146,7 +146,7 @@ void print_statement(Statement *statement) {
         printf("\n");
         return;
     }
-    case BLOCK: {
+    case STATEMENT_BLOCK: {
         printf("%s{\n", SGR_WHITE_BOLD);
         alignment += 1;
         Statement *block_statement = statement->block.first_statement;
@@ -159,16 +159,16 @@ void print_statement(Statement *statement) {
         printf("%s}\n", SGR_WHITE_BOLD);
         return;
     }
-    case BREAK: {
+    case STATEMENT_BREAK: {
         printf("%sbreak\n", SGR_YELLOW);
         return;
     }
-    case EXPRESSION: {
+    case STATEMENT_EXPRESSION: {
         print_expression(statement->expression);
         printf("\n");
         return;
     }
-    case IF: {
+    case STATEMENT_IF: {
         printf("%sif%s (", SGR_YELLOW, SGR_WHITE_BOLD);
         print_expression(statement->if_.condition);
         printf("%s) {\n", SGR_WHITE_BOLD);
@@ -196,7 +196,7 @@ void print_statement(Statement *statement) {
         printf("\n");
         return;
     }
-    case LOOP: {
+    case STATEMENT_LOOP: {
         printf("%sloop%s {\n", SGR_YELLOW, SGR_WHITE_BOLD);
         alignment += 1;
         Statement *block_statement = statement->loop.block->block.first_statement;
@@ -209,7 +209,7 @@ void print_statement(Statement *statement) {
         printf("%s}\n", SGR_WHITE_BOLD);
         return;
     }
-    case PROCEDURE_DEFINITION: {
+    case STATEMENT_PROCEDURE_DEFINITION: {
         print_expression(statement->procedure_definition.name);
         printf("%s :: (", SGR_WHITE_BOLD);
         Member *parameter = statement->procedure_definition.first_parameter;
@@ -239,17 +239,17 @@ void print_statement(Statement *statement) {
         printf("%s}\n", SGR_WHITE_BOLD);
         return;
     }
-    case RETURN: {
+    case STATEMENT_RETURN: {
         printf("%sreturn ", SGR_YELLOW);
         print_expression(statement->return_expression);
         printf("\n");
         return;
     }
-    case SKIP: {
+    case STATEMENT_SKIP: {
         printf("%sskip\n", SGR_YELLOW);
         return;
     }
-    case STRUCT_DEFINITION: {
+    case STATEMENT_STRUCT_DEFINITION: {
         print_expression(statement->struct_definition.name);
         printf("%s :: %sstruct", SGR_WHITE_BOLD, SGR_YELLOW);
         if (statement->struct_definition.base != NULL) {
@@ -275,7 +275,7 @@ void print_statement(Statement *statement) {
         printf("%s}\n", SGR_WHITE_BOLD);
         return;
     }
-    case VARIABLE_DECLARATION: {
+    case STATEMENT_VARIABLE_DECLARATION: {
         print_expression(statement->variable_declaration.name);
         if (statement->variable_declaration.type != NULL) {
             printf("%s: ", SGR_WHITE_BOLD);
@@ -302,13 +302,13 @@ void print_expression(Expression *expression) {
     }
 
     switch (expression->kind) {
-    case ARRAY_ITEM:
+    case EXPRESSION_ARRAY_ITEM:
         print_expression(expression->array_item.array);
         printf("[");
         print_expression(expression->array_item.index);
         printf("]");
         return;
-    case BINARY: {
+    case EXPRESSION_BINARY: {
         printf("%s(", SGR_BLACK);
         print_expression(expression->binary.left_expression);
         printf(" ");
@@ -318,7 +318,7 @@ void print_expression(Expression *expression) {
         printf("%s)%s", SGR_BLACK, SGR_RESET);
         return;
     }
-    case CALL: {
+    case EXPRESSION_CALL: {
         print_expression(expression->call.callee);
         printf("%s(", SGR_WHITE_BOLD);
         Argument *argument = expression->call.first_argument;
@@ -336,18 +336,18 @@ void print_expression(Expression *expression) {
         printf("%s)%s", SGR_WHITE_BOLD, SGR_RESET);
         return;
     }
-    case LITERAL:
+    case EXPRESSION_LITERAL:
         print_token(expression->literal.value);
         return;
-    case MEMBER:
+    case EXPRESSION_MEMBER:
         print_expression(expression->member.object);
         printf(".");
         print_token(expression->member.name);
         return;
-    case VARIABLE:
+    case EXPRESSION_VARIABLE:
         print_token(expression->variable.name);
         return;
-    case UNARY:
+    case EXPRESSION_UNARY:
         printf("%s(", SGR_BLACK);
         print_token(expression->unary.operator_token);
         print_expression(expression->unary.expression);
@@ -365,37 +365,37 @@ void print_token(Token *token) {
     }
 
     switch (token->kind) {
-    case CHARACTER:
+    case TOKEN_CHARACTER:
         printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
         return;
-    case COMMENT:
+    case TOKEN_COMMENT:
         printf("%s%s%s", SGR_DEFAULT, token->lexeme->data, SGR_RESET);
         return;
-    case END_OF_FILE:
+    case TOKEN_END_OF_FILE:
         printf("%s%s%s\n", SGR_BLACK, token->lexeme->data, SGR_RESET);
         return;
-    case END_OF_LINE:
+    case TOKEN_END_OF_LINE:
         printf("%s%s%s", SGR_BLACK, token->lexeme->data, SGR_RESET);
         return;
-    case ERROR:
+    case TOKEN_ERROR:
         printf("%s%s%s", SGR_ERROR, token->lexeme->data, SGR_RESET);
         return;
-    case IDENTIFIER:
+    case TOKEN_IDENTIFIER:
         printf("%s%s%s", token->lexeme->data[0] <= 'Z' ? SGR_FAINT_YELLOW : SGR_RESET, token->lexeme->data, SGR_RESET);
         return;
-    case INTEGER:
+    case TOKEN_INTEGER:
         printf("%s%s%s", SGR_CYAN, token->lexeme->data, SGR_RESET);
         return;
-    case KEYWORD:
+    case TOKEN_KEYWORD:
         printf("%s%s%s", SGR_YELLOW, token->lexeme->data, SGR_RESET);
         return;
-    case OTHER:
+    case TOKEN_OTHER:
         printf("%s%s%s", SGR_WHITE_BOLD, token->lexeme->data, SGR_RESET);
         return;
-    case SPACE:
+    case TOKEN_SPACE:
         printf("%s%s", SGR_RESET, token->lexeme->data);
         return;
-    case STRING:
+    case TOKEN_STRING:
         printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
         return;
     default:

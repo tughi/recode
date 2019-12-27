@@ -111,37 +111,37 @@ Token *_consume_three_(int source_line, Context *context, const char *expected, 
 #define consume_three(context, expected, first_matcher, second_matcher, third_matcher) _consume_three_(__LINE__, context, expected, first_matcher, second_matcher, third_matcher)
 
 int is_identifier(Token *token) {
-    return token->kind == IDENTIFIER;
+    return token->kind == TOKEN_IDENTIFIER;
 }
 
 int is_keyword(Token *token, const char *lexeme) {
-    return token->kind == KEYWORD && string__equals(token->lexeme, lexeme);
+    return token->kind == TOKEN_KEYWORD && string__equals(token->lexeme, lexeme);
 }
 
 int is_literal(Token *token) {
-    return token->kind == INTEGER || token->kind == STRING || is_keyword(token, "TRUE") || is_keyword(token, "FALSE") || token->kind == CHARACTER;
+    return token->kind == TOKEN_INTEGER || token->kind == TOKEN_STRING || is_keyword(token, "TRUE") || is_keyword(token, "FALSE") || token->kind == TOKEN_CHARACTER;
 }
 
 int is_open_paren(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "(");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "(");
 }
 
 int is_close_paren(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, ")");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ")");
 }
 
 Expression *parse_expression(Context *context);
 
 Expression *expression__create_literal(Token *value) {
     Expression *self = (Expression *)malloc(sizeof(Expression));
-    self->kind = LITERAL;
+    self->kind = EXPRESSION_LITERAL;
     self->literal.value = value;
     return self;
 }
 
 Expression *expression__create_variable(Token *name) {
     Expression *self = (Expression *)malloc(sizeof(Expression));
-    self->kind = VARIABLE;
+    self->kind = EXPRESSION_VARIABLE;
     self->variable.name = name;
     return self;
 }
@@ -173,7 +173,7 @@ Expression *parse_primary_expression(Context *context) {
 }
 
 int is_space(Token *token) {
-    return token->kind == SPACE;
+    return token->kind == TOKEN_SPACE;
 }
 
 int consume_space(int source_line, Context *context, int expected_spaces) {
@@ -188,7 +188,7 @@ int consume_space(int source_line, Context *context, int expected_spaces) {
 #define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
 
 int is_assign_operator(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "=");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "=");
 }
 
 Argument *argument__create(Token *name, Expression *value) {
@@ -212,24 +212,24 @@ Argument *parse_argument(Context *context) {
 }
 
 int is_comma(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, ",");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ",");
 }
 
 int is_dot(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, ".");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ".");
 }
 
 int is_open_bracket(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "[");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "[");
 }
 
 int is_close_bracket(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "]");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "]");
 }
 
 Expression *expression__create_call(Expression *callee, Argument *first_argument) {
     Expression *self = (Expression *)malloc(sizeof(Expression));
-    self->kind = CALL;
+    self->kind = EXPRESSION_CALL;
     self->call.callee = callee;
     self->call.first_argument = first_argument;
     return self;
@@ -237,7 +237,7 @@ Expression *expression__create_call(Expression *callee, Argument *first_argument
 
 Expression *expression__create_member(Expression *object, Token *name) {
     Expression *self = (Expression *)malloc(sizeof(Expression));
-    self->kind = MEMBER;
+    self->kind = EXPRESSION_MEMBER;
     self->member.object = object;
     self->member.name = name;
     return self;
@@ -245,7 +245,7 @@ Expression *expression__create_member(Expression *object, Token *name) {
 
 Expression *expression__create_array_item(Expression *array, Expression *index) {
     Expression *self = (Expression *)malloc(sizeof(Expression));
-    self->kind = ARRAY_ITEM;
+    self->kind = EXPRESSION_ARRAY_ITEM;
     self->array_item.array = array;
     self->array_item.index = index;
     return self;
@@ -304,12 +304,12 @@ Expression *parse_call_expression(Context *context) {
 }
 
 int is_unary_operator(Token *token) {
-    return token->kind == OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "-"));
+    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "-"));
 }
 
 Expression *expression__create_unary(Token *operator_token, Expression *expression) {
     Expression *self = (Expression *)malloc(sizeof(Expression));
-    self->kind = UNARY;
+    self->kind = EXPRESSION_UNARY;
     self->unary.operator_token = operator_token;
     self->unary.expression = expression;
     return self;
@@ -331,12 +331,12 @@ Expression *parse_unary_expression(Context *context) {
 }
 
 int is_multiplication_operator(Token *token) {
-    return token->kind == OTHER && (string__equals(token->lexeme, "*") || string__equals(token->lexeme, "/"));
+    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "*") || string__equals(token->lexeme, "/"));
 }
 
 Expression *expression__create_binary(Token *operator_token, Expression *left_expression, Expression *right_expression) {
     Expression *self = (Expression *)malloc(sizeof(Expression));
-    self->kind = BINARY;
+    self->kind = EXPRESSION_BINARY;
     self->binary.operator_token = operator_token;
     self->binary.left_expression = left_expression;
     self->binary.right_expression = right_expression;
@@ -358,7 +358,7 @@ Expression *parse_multiplication_expression(Context *context) {
 }
 
 int is_addition_operator(Token *token) {
-    return token->kind == OTHER && (string__equals(token->lexeme, "+") || string__equals(token->lexeme, "-"));
+    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "+") || string__equals(token->lexeme, "-"));
 }
 
 // addition:
@@ -376,7 +376,7 @@ Expression *parse_addition_expression(Context *context) {
 }
 
 int is_comparison_operator(Token *token) {
-    return token->kind == OTHER && (string__equals(token->lexeme, "<") || string__equals(token->lexeme, ">"));
+    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "<") || string__equals(token->lexeme, ">"));
 }
 
 // comparison:
@@ -399,7 +399,7 @@ Expression *parse_comparison_expression(Context *context) {
 }
 
 int is_equality_operator(Token *token) {
-    return token->kind == OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "="));
+    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "="));
 }
 
 // equality:
@@ -418,7 +418,7 @@ Expression *parse_equality_expression(Context *context) {
 }
 
 int is_and_operator(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "&");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "&");
 }
 
 // logic_and:
@@ -437,7 +437,7 @@ Expression *parse_logic_and_expression(Context *context) {
 }
 
 int is_or_operator(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "|");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "|");
 }
 
 // logic_or:
@@ -462,23 +462,23 @@ Expression *parse_expression(Context *context) {
 }
 
 int is_colon(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, ":");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ":");
 }
 
 int is_open_brace(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "{");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "{");
 }
 
 int is_close_brace(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "}");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "}");
 }
 
 int is_hyphen(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "-");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "-");
 }
 
 int is_close_angled_bracket(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, ">");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ">");
 }
 
 Type *parse_type(Context *context);
@@ -530,19 +530,19 @@ Member *parse_comma_separated_members(Context *context) {
 }
 
 int is_reference_operator(Token *token) {
-    return token->kind == OTHER && string__equals(token->lexeme, "@");
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
 }
 
 Type *type__create_array(Type *item_type) {
     Type *self = (Type *)malloc(sizeof(Type));
-    self->kind = ARRAY;
+    self->kind = TYPE_ARRAY;
     self->array.item_type = item_type;
     return self;
 }
 
 Type *type__create_function(Member *first_parameter, Type *return_type) {
     Type *self = (Type *)malloc(sizeof(Type));
-    self->kind = PROCEDURE;
+    self->kind = TYPE_PROCEDURE;
     self->procedure.first_parameter = first_parameter;
     self->procedure.return_type = return_type;
     return self;
@@ -550,21 +550,21 @@ Type *type__create_function(Member *first_parameter, Type *return_type) {
 
 Type *type__create_tuple(Member *first_member) {
     Type *self = (Type *)malloc(sizeof(Type));
-    self->kind = TUPLE;
+    self->kind = TYPE_TUPLE;
     self->tuple.first_member = first_member;
     return self;
 }
 
 Type *type__create_simple(Token *name) {
     Type *self = (Type *)malloc(sizeof(Type));
-    self->kind = SIMPLE;
+    self->kind = TYPE_SIMPLE;
     self->simple.name = name;
     return self;
 }
 
 Type *type__create_reference(Type *type) {
     Type *self = (Type *)malloc(sizeof(Type));
-    self->kind = REFERENCE;
+    self->kind = TYPE_REFERENCE;
     self->reference.type = type;
     return self;
 }
@@ -616,15 +616,15 @@ Type *parse_type(Context *context) {
 }
 
 int is_comment(Token *token) {
-    return token->kind == COMMENT;
+    return token->kind == TOKEN_COMMENT;
 }
 
 int is_end_of_line(Token *token) {
-    return token->kind == END_OF_LINE;
+    return token->kind == TOKEN_END_OF_LINE;
 }
 
 int is_end_of_file(Token *token) {
-    return token->kind == END_OF_FILE;
+    return token->kind == TOKEN_END_OF_FILE;
 }
 
 int _consume_end_of_line_(int source_line, Context *context, int required) {
@@ -652,7 +652,7 @@ int is_struct_keyword(Token *token) {
 
 Statement *statement__create_struct_definition(Expression *name, Token *base, Member *first_member) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = STRUCT_DEFINITION;
+    self->kind = STATEMENT_STRUCT_DEFINITION;
     self->struct_definition.name = name;
     self->struct_definition.base = base;
     self->struct_definition.first_member = first_member;
@@ -714,7 +714,7 @@ Statement *parse_statements(Context *context) {
 
 Statement *statement__create_function_definition(Expression *name, Member *first_parameter, Type *return_type, Statement *first_statement) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = PROCEDURE_DEFINITION;
+    self->kind = STATEMENT_PROCEDURE_DEFINITION;
     self->procedure_definition.name = name;
     self->procedure_definition.first_parameter = first_parameter;
     self->procedure_definition.return_type = return_type;
@@ -752,7 +752,7 @@ Statement *parse_procedure(Context *context, Expression *name) {
 
 Statement *statement__create_block(Statement *first_statement) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = BLOCK;
+    self->kind = STATEMENT_BLOCK;
     self->block.first_statement = first_statement;
     return self;
 }
@@ -783,7 +783,7 @@ int is_else_keyword(Token *token) {
 
 Statement *statement__create_if(Expression *condition, Statement *true_block, Statement *false_block) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = IF;
+    self->kind = STATEMENT_IF;
     self->if_.condition = condition;
     self->if_.true_block = true_block;
     self->if_.false_block = false_block;
@@ -819,7 +819,7 @@ int is_loop_keyword(Token *token) {
 
 Statement *statement__create_loop(Statement *block) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = LOOP;
+    self->kind = STATEMENT_LOOP;
     self->loop.block = block;
     return self;
 }
@@ -840,7 +840,7 @@ int is_break_keyword(Token *token) {
 
 Statement *statement__create_break() {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = BREAK;
+    self->kind = STATEMENT_BREAK;
     return self;
 }
 
@@ -858,7 +858,7 @@ int is_skip_keyword(Token *token) {
 
 Statement *statement__create_skip() {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = SKIP;
+    self->kind = STATEMENT_SKIP;
     return self;
 }
 
@@ -876,7 +876,7 @@ int is_return_keyword(Token *token) {
 
 Statement *statement__create_return(Expression *expression) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = RETURN;
+    self->kind = STATEMENT_RETURN;
     self->return_expression = expression;
     return self;
 }
@@ -897,14 +897,14 @@ int is_assign_variant(Token *token) {
 
 Statement *statement__create_expression(Expression *expression) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = EXPRESSION;
+    self->kind = STATEMENT_EXPRESSION;
     self->expression = expression;
     return self;
 }
 
 Statement *statement__create_variable_declaration(Expression *name, Type *type, Expression *value) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = VARIABLE_DECLARATION;
+    self->kind = STATEMENT_VARIABLE_DECLARATION;
     self->variable_declaration.name = name;
     self->variable_declaration.type = type;
     self->variable_declaration.value = value;
@@ -913,7 +913,7 @@ Statement *statement__create_variable_declaration(Expression *name, Type *type, 
 
 Statement *statement__create_assignment(Expression *destination, Token *operator_token, Expression *value) {
     Statement *self = (Statement *)malloc(sizeof(Statement));
-    self->kind = ASSIGNMENT;
+    self->kind = STATEMENT_ASSIGNMENT;
     self->assignment.destination = destination;
     self->assignment.operator_token = operator_token;
     self->assignment.value = value;

@@ -13,16 +13,14 @@ typedef struct Member {
     struct Member *next;
 } Member;
 
-typedef enum TypeKind {
-    ARRAY,
-    PROCEDURE,
-    REFERENCE,
-    SIMPLE,
-    TUPLE,
-} TypeKind;
-
 typedef struct Type {
-    TypeKind kind;
+    enum {
+        TYPE_ARRAY,
+        TYPE_PROCEDURE,
+        TYPE_REFERENCE,
+        TYPE_SIMPLE,
+        TYPE_TUPLE,
+    } kind;
 
     union {
         struct {
@@ -50,18 +48,16 @@ typedef struct Argument {
     struct Argument *next;
 } Argument;
 
-typedef enum ExpressionKind {
-        ARRAY_ITEM,
-        BINARY,
-        CALL,
-        LITERAL,
-        MEMBER,
-        UNARY,
-        VARIABLE,
-} ExpressionKind;
-
 typedef struct Expression {
-    ExpressionKind kind;
+    enum {
+        EXPRESSION_ARRAY_ITEM,
+        EXPRESSION_BINARY,
+        EXPRESSION_CALL,
+        EXPRESSION_LITERAL,
+        EXPRESSION_MEMBER,
+        EXPRESSION_UNARY,
+        EXPRESSION_VARIABLE,
+    } kind;
 
     union {
         struct {
@@ -94,22 +90,20 @@ typedef struct Expression {
     };
 } Expression;
 
-typedef enum StatementKind {
-    ASSIGNMENT,
-    BLOCK,
-    BREAK,
-    EXPRESSION,
-    IF,
-    LOOP,
-    PROCEDURE_DEFINITION,
-    RETURN,
-    SKIP,
-    STRUCT_DEFINITION,
-    VARIABLE_DECLARATION,
-} StatementKind;
-
 typedef struct Statement {
-    StatementKind kind;
+    enum {
+        STATEMENT_ASSIGNMENT,
+        STATEMENT_BLOCK,
+        STATEMENT_BREAK,
+        STATEMENT_EXPRESSION,
+        STATEMENT_IF,
+        STATEMENT_LOOP,
+        STATEMENT_PROCEDURE_DEFINITION,
+        STATEMENT_RETURN,
+        STATEMENT_SKIP,
+        STATEMENT_STRUCT_DEFINITION,
+        STATEMENT_VARIABLE_DECLARATION,
+    } kind;
 
     union {
         struct {

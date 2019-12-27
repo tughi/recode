@@ -3,22 +3,20 @@
 
 #include "String.h"
 
-typedef enum TokenKind {
-    CHARACTER,
-    COMMENT,
-    END_OF_FILE,
-    END_OF_LINE,
-    ERROR,
-    IDENTIFIER,
-    INTEGER,
-    KEYWORD,
-    OTHER,
-    SPACE,
-    STRING,
-} TokenKind;
-
 typedef struct Token {
-    TokenKind kind;
+    enum {
+        TOKEN_CHARACTER,
+        TOKEN_COMMENT,
+        TOKEN_END_OF_FILE,
+        TOKEN_END_OF_LINE,
+        TOKEN_ERROR,
+        TOKEN_IDENTIFIER,
+        TOKEN_INTEGER,
+        TOKEN_KEYWORD,
+        TOKEN_OTHER,
+        TOKEN_SPACE,
+        TOKEN_STRING,
+    } kind;
 
     String *lexeme;
     int line;
