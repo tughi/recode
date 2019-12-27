@@ -148,22 +148,56 @@ Local *emit_expression(Context *context, Local *destination, Expression *express
     switch (expression->kind) {
     case BINARY: {
         Local *left_local = emit_expression(context, create_temp_local(context), expression->binary.left_expression);
-        Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
         String *operation = NULL;
         if (string__equals(expression->binary.operator_token->lexeme, "+")) {
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
             fprintf(context->file, "  %%%s = add i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
         } else if (string__equals(expression->binary.operator_token->lexeme, "-")) {
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
             fprintf(context->file, "  %%%s = sub i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
         } else if (string__equals(expression->binary.operator_token->lexeme, "*")) {
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
             fprintf(context->file, "  %%%s = mul i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
         } else if (string__equals(expression->binary.operator_token->lexeme, "/")) {
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
             fprintf(context->file, "  %%%s = sdiv i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
         } else if (string__equals(expression->binary.operator_token->lexeme, "<")) {
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
             fprintf(context->file, "  %%%s = icmp slt i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
         } else if (string__equals(expression->binary.operator_token->lexeme, ">")) {
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
             fprintf(context->file, "  %%%s = icmp sgt i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
         } else if (string__equals(expression->binary.operator_token->lexeme, "==")) {
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
             fprintf(context->file, "  %%%s = icmp eq i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+        } else if (string__equals(expression->binary.operator_token->lexeme, "&&")) {
+            static int and_suffix = -1;
+            and_suffix += 1;
+            Local *and_true_label = create_suffixed_local(context, string__create("and_true"), and_suffix);
+            Local *and_false_label = create_suffixed_local(context, string__create("and_false"), and_suffix);
+            Local *and_result_label = create_suffixed_local(context, string__create("and_result"), and_suffix);
+            fprintf(context->file, "  br i1 %%%s, label %%%s, label %%%s\n", LOCAL(left_local), LOCAL(and_true_label), LOCAL(and_false_label));
+            fprintf(context->file, "%s:\n", LOCAL(and_true_label));
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
+            fprintf(context->file, "  br label %%%s\n", LOCAL(and_result_label));
+            fprintf(context->file, "%s:\n", LOCAL(and_false_label));
+            fprintf(context->file, "  br label %%%s\n", LOCAL(and_result_label));
+            fprintf(context->file, "%s:\n", LOCAL(and_result_label));
+            fprintf(context->file, "  %%%s = phi i1 [ %%%s, %%%s ], [ 0, %%%s ]\n", LOCAL(destination), LOCAL(right_local), LOCAL(and_true_label), LOCAL(and_false_label));
+        } else if (string__equals(expression->binary.operator_token->lexeme, "||")) {
+            static int or_suffix = -1;
+            or_suffix += 1;
+            Local *or_true_label = create_suffixed_local(context, string__create("or_true"), or_suffix);
+            Local *or_false_label = create_suffixed_local(context, string__create("or_false"), or_suffix);
+            Local *or_result_label = create_suffixed_local(context, string__create("or_result"), or_suffix);
+            fprintf(context->file, "  br i1 %%%s, label %%%s, label %%%s\n", LOCAL(left_local), LOCAL(or_true_label), LOCAL(or_false_label));
+            fprintf(context->file, "%s:\n", LOCAL(or_true_label));
+            fprintf(context->file, "  br label %%%s\n", LOCAL(or_result_label));
+            fprintf(context->file, "%s:\n", LOCAL(or_false_label));
+            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
+            fprintf(context->file, "  br label %%%s\n", LOCAL(or_result_label));
+            fprintf(context->file, "%s:\n", LOCAL(or_result_label));
+            fprintf(context->file, "  %%%s = phi i1 [ %%%s, %%%s ], [ 1, %%%s ]\n", LOCAL(destination), LOCAL(right_local), LOCAL(or_false_label), LOCAL(or_true_label));
         } else {
             ERROR(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary.operator_token->lexeme->data);
             exit(1);

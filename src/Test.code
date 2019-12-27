@@ -27,12 +27,8 @@ lfib :: (n: Int) -> Int {
 main :: () {
 	i := 0
 	loop {
-		if (i < 25) {
-			if (lfib(i) == rfib(i)) {
-				i = i + 1
-			} else {
-				break
-			}
+		if (i < 25 && lfib(i) == rfib(i) || i == 25) {
+			i = i + 1
 		} else {
 			break
 		}
