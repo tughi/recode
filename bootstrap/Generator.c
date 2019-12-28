@@ -46,6 +46,7 @@ typedef struct Loop {
 typedef struct Context {
     FILE *file;
     Values *declarations;
+    Values *allocas;
     Loop *loop;
     int temp_variables;
 } Context;
@@ -99,6 +100,7 @@ Context *context__create(FILE *file) {
     Context *self = (Context *)malloc(sizeof(Context));
     self->file = file;
     self->declarations = values__create();
+    self->allocas = values__create();
     self->loop = NULL;
     self->temp_variables = 0;
     return self;
@@ -109,6 +111,7 @@ Context *context__clone(Context *other) {
     self->file = other->file;
     self->declarations = values__create();
     self->declarations->parent = other->declarations;
+    self->allocas = values__create();
     self->loop = NULL;
     self->temp_variables = other->temp_variables;
     return self;
@@ -138,7 +141,9 @@ Value *value__create_label(Context *context, String *name) {
 Value *value__create_parameter(Context *context, String *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
-    return value__create(VALUE_PARAMETER, type, name, repr);
+    Value *value = value__create(VALUE_PARAMETER, type, name, repr);
+    values__append(context->declarations, value);
+    return value;
 }
 
 Value *value__create_global_variable(Context *context, String *type, String *name) {
@@ -227,12 +232,12 @@ Value *emit_expression(Context *context, Expression *expression) {
             Value *and_false_label = value__create_label(context, string__create("and_false"));
             Value *and_result_label = value__create_label(context, string__create("and_result"));
             fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE_REPR(left_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
-            fprintf(context->file, "%s:\n", and_true_label->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(and_true_label));
             Value *right_value = emit_expression(context, expression->binary.right_expression);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(and_result_label));
-            fprintf(context->file, "%s:\n", and_false_label->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(and_false_label));
             fprintf(context->file, "  br label %s\n", VALUE_REPR(and_result_label));
-            fprintf(context->file, "%s:\n", and_result_label->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(and_result_label));
             Value *result = value__create_temp_variable(context, string__create("i1"));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 0, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
             return result;
@@ -241,12 +246,12 @@ Value *emit_expression(Context *context, Expression *expression) {
             Value *or_false_label = value__create_label(context, string__create("or_false"));
             Value *or_result_label = value__create_label(context, string__create("or_result"));
             fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE_REPR(left_value), VALUE_REPR(or_true_label), VALUE_REPR(or_false_label));
-            fprintf(context->file, "%s:\n", or_true_label->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(or_true_label));
             fprintf(context->file, "  br label %s\n", VALUE_REPR(or_result_label));
-            fprintf(context->file, "%s:\n", or_false_label->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(or_false_label));
             Value *right_value = emit_expression(context, expression->binary.right_expression);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(or_result_label));
-            fprintf(context->file, "%s:\n", or_result_label->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(or_result_label));
             Value *result = value__create_temp_variable(context, string__create("i1"));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 1, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(or_false_label), VALUE_REPR(or_true_label));
             return result;
@@ -370,24 +375,24 @@ void emit_statement(Context *context, Statement *statement) {
         Value *if_end = value__create_label(context, string__create("if_end"));
         fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE_REPR(if_cond), VALUE_REPR(if_true), statement->if_.false_block != NULL ? VALUE_REPR(if_false) : VALUE_REPR(if_end));
 
-        fprintf(context->file, "%s:\n", if_true->name->data);
+        fprintf(context->file, "%s:\n", VALUE_NAME(if_true));
         emit_statement(context, statement->if_.true_block);
         fprintf(context->file, "  br label %s\n", VALUE_REPR(if_end));
 
         if (statement->if_.false_block != NULL) {
-            fprintf(context->file, "%s:\n", if_false->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(if_false));
             emit_statement(context, statement->if_.false_block);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(if_end));
         }
 
-        fprintf(context->file, "%s:\n", if_end->name->data);
+        fprintf(context->file, "%s:\n", VALUE_NAME(if_end));
         break;
     }
     case STATEMENT_LOOP: {
         Value *loop_start = value__create_label(context, string__create("loop_start"));
         Value *loop_end = value__create_label(context, string__create("loop_end"));
         fprintf(context->file, "  br label %s\n", VALUE_REPR(loop_start));
-        fprintf(context->file, "%s:\n", loop_start->name->data);
+        fprintf(context->file, "%s:\n", VALUE_NAME(loop_start));
         Loop *loop = (Loop *)malloc(sizeof(Loop));
         loop->loop_end = loop_end;
         loop->has_break = FALSE;
@@ -397,7 +402,7 @@ void emit_statement(Context *context, Statement *statement) {
         context->loop = loop->parent;
         fprintf(context->file, "  br label %s\n", VALUE_REPR(loop_start));
         if (loop->has_break) {
-            fprintf(context->file, "%s:\n", loop_end->name->data);
+            fprintf(context->file, "%s:\n", VALUE_NAME(loop_end));
         }
         break;
     }
@@ -411,7 +416,6 @@ void emit_statement(Context *context, Statement *statement) {
         Member *parameter = statement->procedure_definition.first_parameter;
         while (parameter != NULL) {
             Value *parameter_value = value__create_parameter(function_context, string__create("i32"), parameter->name->lexeme);
-            values__append(context->declarations, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             parameter = parameter->next;
             if (parameter != NULL) {
@@ -420,11 +424,24 @@ void emit_statement(Context *context, Statement *statement) {
         }
         fprintf(context->file, ") {\n");
 
+        Value *entry_label = value__create_label(context, string__create("entry"));
+        Value *variables_label = value__create_label(context, string__create("variables"));
+        fprintf(context->file, "  br label %s\n", VALUE_REPR(variables_label));
+        fprintf(context->file, "%s:\n", VALUE_NAME(entry_label));
+
         Statement *body_statement = statement->procedure_definition.first_statement;
         while (body_statement != NULL) {
             emit_statement(function_context, body_statement);
             body_statement = body_statement->next;
         }
+
+        fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
+        ValuesItem *alloca_item = function_context->allocas->first;
+        while (alloca_item != NULL) {
+            fprintf(context->file, "  %s = alloca i32\n", VALUE_REPR(alloca_item->value));
+            alloca_item = alloca_item->next;
+        }
+        fprintf(context->file, "  br label %s\n", VALUE_REPR(entry_label));
 
         fprintf(context->file, "}\n\n");
 
@@ -439,7 +456,7 @@ void emit_statement(Context *context, Statement *statement) {
         Value *variable = value__create_local_variable(context, string__create("i32"), statement->variable_declaration.name->variable.name->lexeme);
         variable->kind = VALUE_POINTER;
         values__append(context->declarations, variable);
-        fprintf(context->file, "  %s = alloca i32\n", VALUE_REPR(variable));
+        values__append(context->allocas, variable);
         Value *value = emit_expression(context, statement->variable_declaration.value);
         fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
         break;
