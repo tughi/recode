@@ -33,22 +33,21 @@ print_number :: (n: Int) {
 }
 
 main :: () {
-	n := 0
 	i := 0
 	loop {
-		n = lfib(i)
+		n := lfib(i)
 		print_number(i)
 		fputc(' ' as Int, stdout)
 		fputc('-' as Int, stdout)
 		fputc(' ' as Int, stdout)
 		print_number(n)
 		fputc('\n' as Int, stdout)
-		if (i < 42 && lfib(i) == rfib(i)) {
+		if (i < 42 && n == rfib(i)) {
 			i = i + 1
 		} else {
 			break
 		}
 	}
 	fputc('\n' as Int, stdout)
-	return 0
+	return -1
 }

@@ -339,11 +339,9 @@ Expression *expression__create_unary(Token *operator_token, Expression *expressi
 Expression *parse_unary_expression(Context *context) {
     if (matches_one(context, required(is_unary_operator))) {
         Token *unary_operator = consume_one(context, NULL, required(is_unary_operator));
+        consume_space(context, 0);
         Expression *unary_expression = parse_unary_expression(context);
-        if (unary_expression != NULL) {
-            return expression__create_unary(unary_operator, unary_expression);
-        }
-        return NULL;
+        return expression__create_unary(unary_operator, unary_expression);
     }
     return parse_call_expression(context);
 }

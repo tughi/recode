@@ -300,6 +300,17 @@ Value *emit_expression(Context *context, Expression *expression) {
     case EXPRESSION_LITERAL: {
         return emit_literal(context, expression->literal.value);
     }
+    case EXPRESSION_UNARY: {
+        if (string__equals(expression->unary.operator_token->lexeme, "-")) {
+            Value *right_value = emit_expression(context, expression->unary.expression);
+            Value *result = value__create_temp_variable(context, right_value->type);
+            fprintf(context->file, "  %s = sub %s 0, %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_REPR(right_value));
+            return result;
+        } else {
+            ERROR(__FILE__, __LINE__, "Unsupported unary expression operator: %s", expression->unary.operator_token->lexeme->data);
+            exit(1);
+        }
+    }
     case EXPRESSION_VARIABLE: {
         String *variable_name = expression->variable.name->lexeme;
         Value *variable = values__find(context->declarations, variable_name);
