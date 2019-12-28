@@ -6,257 +6,277 @@
 #define FALSE 0
 #define TRUE 1
 
-typedef struct Local {
+typedef struct Value {
+    enum {
+        VALUE_CONSTANT,
+        VALUE_FUNCTION,
+        VALUE_LABEL,
+        VALUE_NAMED_VARIABLE,
+        VALUE_POINTER,
+        VALUE_TEMP_VARIABLE,
+    } kind;
+
     String *name;
-    int name_suffix;
-    String *unique_name;
-    int is_pointer;
-} Local;
+    String *repr;
 
-typedef struct LocalListItem {
-    Local *local;
-    struct LocalListItem *next;
-} LocalListItem;
+    struct Value *prev;
+    struct Value *next;
+} Value;
 
-
-typedef struct LocalList {
-    LocalListItem *first_item;
-    LocalListItem *last_item;
-} LocalList;
-
-LocalList *local_list__create() {
-    LocalList *self = (LocalList *)malloc(sizeof(LocalList));
-    self->first_item = NULL;
-    self->last_item = NULL;
-    return self;
-}
-
-LocalListItem *append(LocalList *list, Local *local) {
-    LocalListItem *item = (LocalListItem *)malloc(sizeof(LocalListItem));
-    item->local = local;
-    item->next = NULL;
-    if (list->first_item == NULL) {
-        list->first_item = item;
-    } else {
-        list->last_item->next = item;
-    }
-    list->last_item = item;
-    return item;
-}
+typedef struct Values {
+    Value *first;
+    Value *last;
+    struct Values *parent;
+} Values;
 
 typedef struct Loop {
-    Local *loop_end;
+    Value *loop_end;
     int has_break;
     struct Loop *parent;
 } Loop;
 
 typedef struct Context {
     FILE *file;
-    LocalList *locals;
+    Values *declarations;
     Loop *loop;
+    int temp_variables;
 } Context;
 
-Context *clone(Context *context) {
-    Context *new_context = (Context *)malloc(sizeof(Context));
-    new_context->file = context->file;
-    new_context->locals = local_list__create();
-    new_context->loop = NULL;
+Value *value__create(int kind, String *name, String *repr) {
+    Value *value = (Value *)malloc(sizeof(Value));
+    value->kind = kind;
+    value->name = name;
+    value->repr = repr;
+    value->prev = NULL;
+    value->next = NULL;
+    return value;
+}
 
-    LocalListItem *locals_item = context->locals->first_item;
-    while (locals_item != NULL) {
-        append(new_context->locals, locals_item->local);
-        locals_item = locals_item->next;
+Values *values__create() {
+    Values *self = (Values *)malloc(sizeof(Values));
+    self->first = NULL;
+    self->last = NULL;
+    self->parent = NULL;
+    return self;
+}
+
+void values__append(Values *self, Value *value) {
+    if (self->first == NULL) {
+        self->first = value;
+    } else {
+        self->last->next = value;
+        value->prev = self->last;
     }
-    return new_context;
+    self->last = value;
 }
 
-Local *create_suffixed_local(Context *context, String *name, int name_suffix) {
-    int retry;
-    do {
-        retry = FALSE;
-        LocalListItem *local_item = context->locals->first_item;
-        while (local_item != NULL) {
-            if (local_item->local->name_suffix == name_suffix && string__equals(local_item->local->name, name->data)) {
-                name_suffix += 1;
-                retry = TRUE;
-                break;
-            }
-            local_item = local_item->next;
-        }
-    } while (retry);
-
-    String *unique_name = string__create(name->data);
-    if (name_suffix != -1) {
-        string__append_char(unique_name, '.');
-        if (name_suffix < 100) {
-            string__append_char(unique_name, '0');
-        }
-        if (name_suffix < 10) {
-            string__append_char(unique_name, '0');
-        }
-        if (name_suffix == 0) {
-            string__append_char(unique_name, '0');
-        }
+Value *values__find(Values *self, String *name) {
+    if (self == NULL) {
+        return NULL;
     }
-    if (name_suffix >= 0) {
-        string__append_int(unique_name, name_suffix);
+    Value *value = self->last;
+    while (value != NULL) {
+        if (string__equals(value->name, name->data)) {
+            return value;
+        }
+        value = value->prev;
     }
-
-    Local *local = (Local *)malloc(sizeof(Local));
-    local->name = name;
-    local->name_suffix = name_suffix,
-    local->unique_name = unique_name;
-    local->is_pointer = FALSE;
-
-    append(context->locals, local);
-
-    return local;
+    return values__find(self->parent, name);
 }
 
-Local *create_local(Context *context, String *name) {
-    return create_suffixed_local(context, name, -1);
+Context *context__create(FILE *file) {
+    Context *self = (Context *)malloc(sizeof(Context));
+    self->file = file;
+    self->declarations = values__create();
+    self->loop = NULL;
+    self->temp_variables = 0;
+    return self;
 }
 
-Local *create_temp_local(Context *context) {
-    String *name = string__create_empty(1);
-    return create_suffixed_local(context, name, 0);
+Context *context__clone(Context *other) {
+    Context *self = (Context *)malloc(sizeof(Context));
+    self->file = other->file;
+    self->declarations = values__create();
+    self->declarations->parent = other->declarations;
+    self->loop = NULL;
+    self->temp_variables = other->temp_variables;
+    return self;
 }
 
-Local *get_local(Context *context, String *name) {
-    LocalListItem *list_item = context->locals->first_item;
-    while (list_item != NULL && !string__equals(list_item->local->name, name->data)) {
-        list_item = list_item->next;
+Value *value__create_function(Context *context, String *name) {
+    String *repr = string__create("@");
+    string__append_string(repr, name);
+    return value__create(VALUE_FUNCTION, name, repr);
+}
+
+Value *value__create_label(Context *context, String *name) {
+    string__append_char(name, '.');
+    if (context->temp_variables < 100) {
+        string__append_char(name, '0');
     }
-    return list_item != NULL ? list_item->local : NULL;
+    if (context->temp_variables < 10) {
+        string__append_char(name, '0');
+    }
+    string__append_int(name, context->temp_variables);
+    String *repr = string__create("%");
+    string__append_string(repr, name);
+    context->temp_variables += 1;
+    return value__create(VALUE_LABEL, name, repr);
 }
 
-#define LOCAL(local) local->unique_name->data
+Value *value__create_named_variable(Context *context, String *name) {
+    String *repr = string__create("%");
+    string__append_string(repr, name);
+    return value__create(VALUE_NAMED_VARIABLE, name, repr);
+}
 
-Local *emit_literal(Context *context, Local *destination, Token *token) {
+Value *value__create_temp_variable(Context *context) {
+    String *repr = string__create("%.");
+    if (context->temp_variables < 100) {
+        string__append_char(repr, '0');
+    }
+    if (context->temp_variables < 10) {
+        string__append_char(repr, '0');
+    }
+    string__append_int(repr, context->temp_variables);
+    context->temp_variables += 1;
+    return value__create(VALUE_TEMP_VARIABLE, NULL, repr);
+}
+
+#define VALUE(value) value->repr->data
+
+Value *emit_literal(Context *context, Token *token) {
     switch (token->kind) {
-    case TOKEN_INTEGER:
-        fprintf(context->file, "  %%%s = add i32 %d, 0\n", LOCAL(destination), token->integer.value);
-        break;
-    default:
-        WARNING(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
-        break;
+        case TOKEN_INTEGER: {
+            String *constant = string__append_int(string__create_empty(0), token->integer.value);
+            return value__create(VALUE_CONSTANT, NULL, constant);
+        }
+        default: {
+            WARNING(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
+            exit(1);
+        }
     }
-    return destination;
 }
 
-Local *emit_expression(Context *context, Local *destination, Expression *expression) {
+Value *emit_expression(Context *context, Expression *expression) {
     switch (expression->kind) {
     case EXPRESSION_BINARY: {
-        Local *left_local = emit_expression(context, create_temp_local(context), expression->binary.left_expression);
-        String *operation = NULL;
+        Value *destination = value__create_temp_variable(context);
+        Value *left_value = emit_expression(context, expression->binary.left_expression);
         if (string__equals(expression->binary.operator_token->lexeme, "+")) {
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  %%%s = add i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  %s = add i32 %s, %s\n", VALUE(destination), VALUE(left_value), VALUE(right_value));
         } else if (string__equals(expression->binary.operator_token->lexeme, "-")) {
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  %%%s = sub i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  %s = sub i32 %s, %s\n", VALUE(destination), VALUE(left_value), VALUE(right_value));
         } else if (string__equals(expression->binary.operator_token->lexeme, "*")) {
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  %%%s = mul i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  %s = mul i32 %s, %s\n", VALUE(destination), VALUE(left_value), VALUE(right_value));
         } else if (string__equals(expression->binary.operator_token->lexeme, "/")) {
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  %%%s = sdiv i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  %s = sdiv i32 %s, %s\n", VALUE(destination), VALUE(left_value), VALUE(right_value));
         } else if (string__equals(expression->binary.operator_token->lexeme, "<")) {
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  %%%s = icmp slt i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  %s = icmp slt i32 %s, %s\n", VALUE(destination), VALUE(left_value), VALUE(right_value));
         } else if (string__equals(expression->binary.operator_token->lexeme, ">")) {
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  %%%s = icmp sgt i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  %s = icmp sgt i32 %s, %s\n", VALUE(destination), VALUE(left_value), VALUE(right_value));
         } else if (string__equals(expression->binary.operator_token->lexeme, "==")) {
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  %%%s = icmp eq i32 %%%s, %%%s\n", LOCAL(destination), LOCAL(left_local), LOCAL(right_local));
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  %s = icmp eq i32 %s, %s\n", VALUE(destination), VALUE(left_value), VALUE(right_value));
         } else if (string__equals(expression->binary.operator_token->lexeme, "&&")) {
-            static int and_suffix = -1;
-            and_suffix += 1;
-            Local *and_true_label = create_suffixed_local(context, string__create("and_true"), and_suffix);
-            Local *and_false_label = create_suffixed_local(context, string__create("and_false"), and_suffix);
-            Local *and_result_label = create_suffixed_local(context, string__create("and_result"), and_suffix);
-            fprintf(context->file, "  br i1 %%%s, label %%%s, label %%%s\n", LOCAL(left_local), LOCAL(and_true_label), LOCAL(and_false_label));
-            fprintf(context->file, "%s:\n", LOCAL(and_true_label));
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  br label %%%s\n", LOCAL(and_result_label));
-            fprintf(context->file, "%s:\n", LOCAL(and_false_label));
-            fprintf(context->file, "  br label %%%s\n", LOCAL(and_result_label));
-            fprintf(context->file, "%s:\n", LOCAL(and_result_label));
-            fprintf(context->file, "  %%%s = phi i1 [ %%%s, %%%s ], [ 0, %%%s ]\n", LOCAL(destination), LOCAL(right_local), LOCAL(and_true_label), LOCAL(and_false_label));
+            Value *and_true_label = value__create_label(context, string__create("and_true"));
+            Value *and_false_label = value__create_label(context, string__create("and_false"));
+            Value *and_result_label = value__create_label(context, string__create("and_result"));
+            fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE(left_value), VALUE(and_true_label), VALUE(and_false_label));
+            fprintf(context->file, "%s:\n", and_true_label->name->data);
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  br label %s\n", VALUE(and_result_label));
+            fprintf(context->file, "%s:\n", and_false_label->name->data);
+            fprintf(context->file, "  br label %s\n", VALUE(and_result_label));
+            fprintf(context->file, "%s:\n", and_result_label->name->data);
+            fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 0, %s ]\n", VALUE(destination), VALUE(right_value), VALUE(and_true_label), VALUE(and_false_label));
         } else if (string__equals(expression->binary.operator_token->lexeme, "||")) {
-            static int or_suffix = -1;
-            or_suffix += 1;
-            Local *or_true_label = create_suffixed_local(context, string__create("or_true"), or_suffix);
-            Local *or_false_label = create_suffixed_local(context, string__create("or_false"), or_suffix);
-            Local *or_result_label = create_suffixed_local(context, string__create("or_result"), or_suffix);
-            fprintf(context->file, "  br i1 %%%s, label %%%s, label %%%s\n", LOCAL(left_local), LOCAL(or_true_label), LOCAL(or_false_label));
-            fprintf(context->file, "%s:\n", LOCAL(or_true_label));
-            fprintf(context->file, "  br label %%%s\n", LOCAL(or_result_label));
-            fprintf(context->file, "%s:\n", LOCAL(or_false_label));
-            Local *right_local = emit_expression(context, create_temp_local(context), expression->binary.right_expression);
-            fprintf(context->file, "  br label %%%s\n", LOCAL(or_result_label));
-            fprintf(context->file, "%s:\n", LOCAL(or_result_label));
-            fprintf(context->file, "  %%%s = phi i1 [ %%%s, %%%s ], [ 1, %%%s ]\n", LOCAL(destination), LOCAL(right_local), LOCAL(or_false_label), LOCAL(or_true_label));
+            Value *or_true_label = value__create_label(context, string__create("or_true"));
+            Value *or_false_label = value__create_label(context, string__create("or_false"));
+            Value *or_result_label = value__create_label(context, string__create("or_result"));
+            fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE(left_value), VALUE(or_true_label), VALUE(or_false_label));
+            fprintf(context->file, "%s:\n", or_true_label->name->data);
+            fprintf(context->file, "  br label %s\n", VALUE(or_result_label));
+            fprintf(context->file, "%s:\n", or_false_label->name->data);
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            fprintf(context->file, "  br label %s\n", VALUE(or_result_label));
+            fprintf(context->file, "%s:\n", or_result_label->name->data);
+            fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 1, %s ]\n", VALUE(destination), VALUE(right_value), VALUE(or_false_label), VALUE(or_true_label));
         } else {
             ERROR(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary.operator_token->lexeme->data);
             exit(1);
         }
-        break;
+        return destination;
     }
     case EXPRESSION_CALL: {
-        Local *procedure = get_local(context, expression->call.callee->variable.name->lexeme);
-        if (procedure == NULL) {
-            ERROR(__FILE__, __LINE__, "Undefined procedure: %s", expression->call.callee->variable.name->lexeme->data);
+        String *function_name = expression->call.callee->variable.name->lexeme;
+        Value *function = values__find(context->declarations, function_name);
+        if (function == NULL) {
+            ERROR(__FILE__, __LINE__, "Undefined procedure: %s", function_name->data);
             exit(1);
         }
-        LocalList *procedure_arguments = local_list__create();
+        Values *function_arguments = values__create();
         Argument *argument = expression->call.first_argument;
         while (argument != NULL) {
-            Local *procedure_argument = create_temp_local(context);
-            append(procedure_arguments, procedure_argument);
-            emit_expression(context, procedure_argument, argument->value);
+            Value *function_argument = emit_expression(context, argument->value);
+            values__append(function_arguments, function_argument);
             argument = argument->next;
         }
-        fprintf(context->file, "  %%%s = call i32 @%s(", LOCAL(destination), LOCAL(procedure));
-        LocalListItem *procedure_arguments_item = procedure_arguments->first_item;
-        while (procedure_arguments_item != NULL) {
-            fprintf(context->file, "i32 %%%s", LOCAL(procedure_arguments_item->local));
-            procedure_arguments_item = procedure_arguments_item->next;
-            if (procedure_arguments_item != NULL) {
+        Value *destination = value__create_temp_variable(context);
+        fprintf(context->file, "  %s = call i32 %s(", VALUE(destination), VALUE(function));
+        Value *function_argument = function_arguments->first;
+        while (function_argument != NULL) {
+            fprintf(context->file, "i32 %s", VALUE(function_argument));
+            function_argument = function_argument->next;
+            if (function_argument != NULL) {
                 fprintf(context->file, ", ");
             }
         }
         fprintf(context->file, ")\n");
-        break;
+        return destination;
     }
     case EXPRESSION_LITERAL: {
-        emit_literal(context, destination, expression->literal.value);
-        break;
+        return emit_literal(context, expression->literal.value);
     }
     case EXPRESSION_VARIABLE: {
-        Local *variable = get_local(context, expression->variable.name->lexeme);
-        if (variable->is_pointer) {
-            fprintf(context->file, "  %%%s = load i32, i32* %%%s\n", LOCAL(destination), LOCAL(variable));
+        String *variable_name = expression->variable.name->lexeme;
+        Value *variable = values__find(context->declarations, variable_name);
+        if (variable == NULL) {
+            ERROR(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
+            exit(1);
+        }
+        if (variable->kind == VALUE_POINTER) {
+            Value *result = value__create_temp_variable(context);
+            fprintf(context->file, "  %s = load i32, i32* %s\n", VALUE(result), VALUE(variable));
+            return result;
         } else {
-            fprintf(context->file, "  %%%s = add i32 %%%s, 0\n", LOCAL(destination), LOCAL(variable));
+            return variable;
         }
         break;
     }
     default:
-        WARNING(__FILE__, __LINE__, "Unsupported expression type: %d", expression->kind);
-        break;
+        ERROR(__FILE__, __LINE__, "Unsupported expression type: %d", expression->kind);
+        exit(1);
     }
-
-    return destination;
 }
 
 void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
-        Local *variable = get_local(context, statement->assignment.destination->variable.name->lexeme);
-        Local *value = emit_expression(context, create_temp_local(context), statement->variable_declaration.value);
-        fprintf(context->file, "  store i32 %%%s, i32* %%%s\n", LOCAL(value), LOCAL(variable));
+        String *variable_name = statement->assignment.destination->variable.name->lexeme;
+        Value *variable = values__find(context->declarations, variable_name);
+        if (variable == NULL) {
+            ERROR(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
+            exit(1);
+        }
+        Value *value = emit_expression(context, statement->variable_declaration.value);
+        fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE(value), VALUE(variable));
         break;
     }
     case STATEMENT_BLOCK: {
@@ -268,35 +288,39 @@ void emit_statement(Context *context, Statement *statement) {
         break;
     }
     case STATEMENT_BREAK: {
-        fprintf(context->file, "  br label %%%s\n", LOCAL(context->loop->loop_end));
+        fprintf(context->file, "  br label %s\n", VALUE(context->loop->loop_end));
         context->loop->has_break = TRUE;
         break;
     }
+    case STATEMENT_EXPRESSION: {
+        emit_expression(context, statement->expression);
+        break;
+    }
     case STATEMENT_IF: {
-        Local *if_cond = emit_expression(context, create_suffixed_local(context, string__create("if_cond"), 0), statement->if_.condition);
-        Local *if_true = create_suffixed_local(context, string__create("if_true"), 0);
-        Local *if_false = create_suffixed_local(context, string__create("if_false"), 0);
-        Local *if_end = create_suffixed_local(context, string__create("if_end"), 0);
-        fprintf(context->file, "  br i1 %%%s, label %%%s, label %%%s\n", LOCAL(if_cond), LOCAL(if_true), statement->if_.false_block != NULL ? LOCAL(if_false) : LOCAL(if_end));
+        Value *if_cond = emit_expression(context, statement->if_.condition);
+        Value *if_true = value__create_label(context, string__create("if_true"));
+        Value *if_false = value__create_label(context, string__create("if_false"));
+        Value *if_end = value__create_label(context, string__create("if_end"));
+        fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE(if_cond), VALUE(if_true), statement->if_.false_block != NULL ? VALUE(if_false) : VALUE(if_end));
 
-        fprintf(context->file, "%s:\n", LOCAL(if_true));
+        fprintf(context->file, "%s:\n", if_true->name->data);
         emit_statement(context, statement->if_.true_block);
-        fprintf(context->file, "  br label %%%s\n", LOCAL(if_end));
+        fprintf(context->file, "  br label %s\n", VALUE(if_end));
 
         if (statement->if_.false_block != NULL) {
-            fprintf(context->file, "%s:\n", LOCAL(if_false));
+            fprintf(context->file, "%s:\n", if_false->name->data);
             emit_statement(context, statement->if_.false_block);
-            fprintf(context->file, "  br label %%%s\n", LOCAL(if_end));
+            fprintf(context->file, "  br label %s\n", VALUE(if_end));
         }
 
-        fprintf(context->file, "%s:\n", LOCAL(if_end));
+        fprintf(context->file, "%s:\n", if_end->name->data);
         break;
     }
     case STATEMENT_LOOP: {
-        Local *loop_start = create_suffixed_local(context, string__create("loop_start"), 0);
-        Local *loop_end = create_suffixed_local(context, string__create("loop_end"), 0);
-        fprintf(context->file, "  br label %%%s\n", LOCAL(loop_start));
-        fprintf(context->file, "%s:\n", LOCAL(loop_start));
+        Value *loop_start = value__create_label(context, string__create("loop_start"));
+        Value *loop_end = value__create_label(context, string__create("loop_end"));
+        fprintf(context->file, "  br label %s\n", VALUE(loop_start));
+        fprintf(context->file, "%s:\n", loop_start->name->data);
         Loop *loop = (Loop *)malloc(sizeof(Loop));
         loop->loop_end = loop_end;
         loop->has_break = FALSE;
@@ -304,22 +328,24 @@ void emit_statement(Context *context, Statement *statement) {
         context->loop = loop;
         emit_statement(context, statement->loop.block);
         context->loop = loop->parent;
-        fprintf(context->file, "  br label %%%s\n", LOCAL(loop_start));
+        fprintf(context->file, "  br label %s\n", VALUE(loop_start));
         if (loop->has_break) {
-            fprintf(context->file, "%s:\n", LOCAL(loop_end));
+            fprintf(context->file, "%s:\n", loop_end->name->data);
         }
         break;
     }
     case STATEMENT_PROCEDURE_DEFINITION: {
-        Local *procedure_name = create_local(context, statement->procedure_definition.name->literal.value->lexeme);
+        Value *function = value__create_function(context, statement->procedure_definition.name->literal.value->lexeme);
+        values__append(context->declarations, function);
+        
+        Context *function_context = context__clone(context);
 
-        Context *procedure_context = clone(context);
-
-        fprintf(context->file, "define i32 @%s(", LOCAL(procedure_name));
+        fprintf(context->file, "define i32 %s(", VALUE(function));
         Member *parameter = statement->procedure_definition.first_parameter;
         while (parameter != NULL) {
-            Local *name = create_local(procedure_context, parameter->name->lexeme);
-            fprintf(context->file, "i32 %%%s", LOCAL(name));
+            Value *parameter_value = value__create_named_variable(function_context, parameter->name->lexeme);
+            values__append(context->declarations, parameter_value);
+            fprintf(context->file, "i32 %s", VALUE(parameter_value));
             parameter = parameter->next;
             if (parameter != NULL) {
                 fprintf(context->file, ", ");
@@ -329,7 +355,7 @@ void emit_statement(Context *context, Statement *statement) {
 
         Statement *body_statement = statement->procedure_definition.first_statement;
         while (body_statement != NULL) {
-            emit_statement(procedure_context, body_statement);
+            emit_statement(function_context, body_statement);
             body_statement = body_statement->next;
         }
 
@@ -338,20 +364,20 @@ void emit_statement(Context *context, Statement *statement) {
         break;
     }
     case STATEMENT_RETURN: {
-        Local *result = emit_expression(context, create_temp_local(context), statement->return_expression);
-        fprintf(context->file, "  ret i32 %%%s\n", LOCAL(result));
+        Value *result = emit_expression(context, statement->return_expression);
+        fprintf(context->file, "  ret i32 %s\n", VALUE(result));
         break;
     }
     case STATEMENT_VARIABLE_DECLARATION: {
-        Local *variable = create_local(context, statement->variable_declaration.name->variable.name->lexeme);
-        variable->is_pointer = TRUE;
-        fprintf(context->file, "  %%%s = alloca i32\n", LOCAL(variable));
-        Local *value = emit_expression(context, create_temp_local(context), statement->variable_declaration.value);
-        fprintf(context->file, "  store i32 %%%s, i32* %%%s\n", LOCAL(value), LOCAL(variable));
+        Value *variable = value__create_named_variable(context, statement->variable_declaration.name->variable.name->lexeme);
+        variable->kind = VALUE_POINTER;
+        values__append(context->declarations, variable);
+        fprintf(context->file, "  %s = alloca i32\n", VALUE(variable));
+        Value *value = emit_expression(context, statement->variable_declaration.value);
+        fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE(value), VALUE(variable));
         break;
     }
     default:
-        fprintf(context->file, "  %%%s = add i1 0, 0\n", LOCAL(create_local(context, string__create("nop"))));
         WARNING(__FILE__, __LINE__, "Unsupported statement type: %d", statement->kind);
         break;
     }
@@ -360,10 +386,7 @@ void emit_statement(Context *context, Statement *statement) {
 void generate(Statement *first_statement) {
     FILE *file = fopen("build/code.ll", "w");
 
-    Context *context = (Context *)malloc(sizeof(Context));
-    context->file = file;
-    context->locals = local_list__create();
-    context->loop = NULL;
+    Context *context = context__create(file);
 
     Statement *statement = first_statement;
     while (statement != NULL) {
