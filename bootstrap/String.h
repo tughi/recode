@@ -11,13 +11,13 @@ String *string__create_empty(int allocated);
 
 String *string__create(const char *data);
 
-void string__append_char(String *self, char data);
+String *string__append_char(String *self, char data);
 
-void string__append_chars(String *self, char *data, int data_length);
+String *string__append_chars(String *self, char *data, int data_length);
 
-void string__append_string(String *self, String *other);
+String *string__append_string(String *self, String *other);
 
-void string__append_int(String *self, int value);
+String *string__append_int(String *self, int value);
 
 int string__equals(String *self, const char *data);
 

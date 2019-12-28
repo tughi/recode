@@ -25,7 +25,7 @@ String *string__create(const char *data) {
     return self;
 }
 
-void string__append_char(String *self, char data) {
+String *string__append_char(String *self, char data) {
     if (self->length + 1 >= self->allocated) {
         self->allocated += DEFAULT_SIZE;
         self->data = (char *)realloc(self->data, self->allocated);
@@ -33,9 +33,10 @@ void string__append_char(String *self, char data) {
     self->data[self->length] = data;
     self->length += 1;
     self->data[self->length] = 0;
+    return self;
 }
 
-void string__append_chars(String *self, char *data, int data_length) {
+String *string__append_chars(String *self, char *data, int data_length) {
     if (self->length + data_length >= self->allocated) {
         self->allocated = self->length + data_length + 1;
         self->data = (char *)realloc(self->data, self->allocated);
@@ -44,17 +45,24 @@ void string__append_chars(String *self, char *data, int data_length) {
         self->data[self->length + i] = data[i];
     }
     self->length += data_length;
+    return self;
 }
 
-void string__append_string(String *self, String *other) {
+String *string__append_string(String *self, String *other) {
     string__append_chars(self, other->data, other->length);
+    return self;
 }
 
-void string__append_int(String *self, int value) {
-    if (value > 0) {
-        string__append_int(self, value / 10);
+String *string__append_int(String *self, int value) {
+    if (value == 0) {
+        string__append_char(self, '0');
+    } else if (value > 0) {
+        if (value > 9) {
+            string__append_int(self, value / 10);
+        }
         string__append_char(self, value % 10 + '0');
     }
+    return self;
 }
 
 int string__equals(String *self, const char *data) {
