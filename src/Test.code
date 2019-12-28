@@ -24,14 +24,34 @@ lfib :: (n: Int) -> Int {
 	}
 }
 
+print_number :: (n: Int) {
+	if (n > 9) {
+		print_number(n / 10)
+	}
+	fputc(48 + (n - n / 10 * 10), stdout)
+
+	return 0
+}
+
 main :: () {
+	n := 0
 	i := 0
 	loop {
-		if (i < 25 && lfib(i) == rfib(i) || i == 25) {
+		n = lfib(i)
+		print_number(i)
+		fputc(32, stdout) \ ' '
+		fputc(45, stdout) \ '-'
+		fputc(32, stdout) \ ' '
+		print_number(n)
+		fputc(10, stdout) \ '\n'
+
+		if (i < 42 && lfib(i) == rfib(i)) {
 			i = i + 1
 		} else {
 			break
 		}
 	}
-	return i
+
+	fputc(10, stdout) \ '\n'
+	return 0
 }
