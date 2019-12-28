@@ -17,23 +17,23 @@ void print_expression(Expression *expression);
 void print_token(Token *token);
 
 int main(int argc, char *argv[]) {
-    // auto source_file = string("../src/Source.code");
-    // auto source_file = string("../src/Visitor.code");
+    // String *source_file = string__create("../src/Source.code");
+    // String *source_file = string__create("../src/Visitor.code");
     String *source_file = string__create("../src/Test.code");
     Source *source = source__create(load_file(source_file));
 
     Token *first_token = scan(source);
 
-    // auto token = first_token;
+    // Token *token = first_token;
     // for (int line = 0; token != NULL; token = token->next) {
     //     if (token->line != line) {
     //         if (line > 0) {
-    //             cout << endl;
+    //             printf("\n");
     //         }
     //         line = token->line;
-    //         cout << setw(3) << setfill('0') << line << ": ";
+    //         printf("%03d: ", line);
     //     }
-    //     cout << token;
+    //     print_token(token);
     // }
 
     Statement *first_statement = parse(first_token);
