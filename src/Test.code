@@ -28,8 +28,7 @@ print_number :: (n: Int) {
 	if (n > 9) {
 		print_number(n / 10)
 	}
-	fputc(48 + (n - n / 10 * 10), stdout)
-
+	fputc('0' as Int + (n - n / 10 * 10), stdout)
 	return 0
 }
 
@@ -39,19 +38,17 @@ main :: () {
 	loop {
 		n = lfib(i)
 		print_number(i)
-		fputc(32, stdout) \ ' '
-		fputc(45, stdout) \ '-'
-		fputc(32, stdout) \ ' '
+		fputc(' ' as Int, stdout)
+		fputc('-' as Int, stdout)
+		fputc(' ' as Int, stdout)
 		print_number(n)
-		fputc(10, stdout) \ '\n'
-
+		fputc('\n' as Int, stdout)
 		if (i < 42 && lfib(i) == rfib(i)) {
 			i = i + 1
 		} else {
 			break
 		}
 	}
-
-	fputc(10, stdout) \ '\n'
+	fputc('\n' as Int, stdout)
 	return 0
 }

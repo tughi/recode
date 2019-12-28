@@ -4,9 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define KEYWORDS_COUNT 10
+#define KEYWORDS_COUNT 11
 
 const char *KEYWORDS[] = {
+    "as",
     "break",
     "else",
     "enum",

@@ -119,7 +119,7 @@ int is_keyword(Token *token, const char *lexeme) {
 }
 
 int is_literal(Token *token) {
-    return token->kind == TOKEN_INTEGER || token->kind == TOKEN_STRING || is_keyword(token, "TRUE") || is_keyword(token, "FALSE") || token->kind == TOKEN_CHARACTER;
+    return token->kind == TOKEN_INTEGER || token->kind == TOKEN_STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->kind == TOKEN_CHARACTER;
 }
 
 int is_open_paren(Token *token) {
@@ -150,8 +150,8 @@ Expression *expression__create_variable(Token *name) {
 //      IDENTIFIER
 //      | INTEGER
 //      | STRING
-//      | "FALSE"
-//      | "TRUE"
+//      | "false"
+//      | "true"
 //      | CHARACTER
 //      | "(" expression ")"
 Expression *parse_primary_expression(Context *context) {
@@ -251,8 +251,20 @@ Expression *expression__create_array_item(Expression *array, Expression *index) 
     return self;
 }
 
+int is_as_keyword(Token *token) {
+    return is_keyword(token, "as");
+}
+
+Expression *expression__create_cast(Expression *expression, Token *type) {
+    Expression *self = (Expression *)malloc(sizeof(Expression));
+    self->kind = EXPRESSION_CAST;
+    self->cast.expression = expression;
+    self->cast.type = type;
+    return self;
+}
+
 // call:
-//      primary ("(" argument ("," argument)* ")" | "." IDENTIFIER)*
+//      primary ("(" argument ("," argument)* ")" | "." IDENTIFIER | "[" expression "]" | "as" IDENTIFER)*
 Expression *parse_call_expression(Context *context) {
     Expression *expression = parse_primary_expression(context);
     while (TRUE) {
@@ -296,6 +308,12 @@ Expression *parse_call_expression(Context *context) {
             consume_space(context, 0);
             consume_one(context, NULL, required(is_close_bracket));
             expression = expression__create_array_item(expression, index);
+        } else if (matches_two(context, optional(is_space), required(is_as_keyword))) {
+            consume_space(context, 1);
+            consume_one(context, NULL, required(is_as_keyword));
+            consume_space(context, 1);
+            Token *type = consume_one(context, NULL, required(is_identifier));
+            expression = expression__create_cast(expression, type);
         } else {
             break;
         }

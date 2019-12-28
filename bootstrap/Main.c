@@ -336,6 +336,14 @@ void print_expression(Expression *expression) {
         printf("%s)%s", SGR_WHITE_BOLD, SGR_RESET);
         return;
     }
+    case EXPRESSION_CAST: {
+        printf("%s(", SGR_BLACK);
+        print_expression(expression->cast.expression);
+        printf("%s as ", SGR_YELLOW);
+        print_token(expression->cast.type);
+        printf("%s)%s", SGR_BLACK, SGR_RESET);
+        return;
+    }
     case EXPRESSION_LITERAL:
         print_token(expression->literal.value);
         return;

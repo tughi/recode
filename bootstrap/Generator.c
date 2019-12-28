@@ -282,6 +282,21 @@ Value *emit_expression(Context *context, Expression *expression) {
         fprintf(context->file, ")\n");
         return destination;
     }
+    case EXPRESSION_CAST: {
+        Value *operand = emit_expression(context, expression->cast.expression);
+        if (string__equals(expression->cast.type->lexeme, "Int")) {
+            Value *result = value__create_temp_variable(context, string__create("i32"));
+            fprintf(context->file, "  %s = sext %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
+            return result;
+        } else if (string__equals(expression->cast.type->lexeme, "Char")) {
+            Value *result = value__create_temp_variable(context, string__create("i8"));
+            fprintf(context->file, "  %s = trunc %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
+            return result;
+        } else {
+            ERROR(__FILE__, __LINE__, "Cannot cast to %s", expression->cast.type->lexeme->data);
+            exit(1);
+        }
+    }
     case EXPRESSION_LITERAL: {
         return emit_literal(context, expression->literal.value);
     }

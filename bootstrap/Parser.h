@@ -53,6 +53,7 @@ typedef struct Expression {
         EXPRESSION_ARRAY_ITEM,
         EXPRESSION_BINARY,
         EXPRESSION_CALL,
+        EXPRESSION_CAST,
         EXPRESSION_LITERAL,
         EXPRESSION_MEMBER,
         EXPRESSION_UNARY,
@@ -73,6 +74,10 @@ typedef struct Expression {
             struct Expression *callee;
             Argument *first_argument;
         } call;
+        struct {
+            struct Expression *expression;
+            Token *type;
+        } cast;
         struct {
             Token *value;
         } literal;
