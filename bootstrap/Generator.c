@@ -43,12 +43,16 @@ typedef struct Loop {
     struct Loop *parent;
 } Loop;
 
+typedef struct Counter {
+    int count;
+} Counter;
+
 typedef struct Context {
     FILE *file;
     Values *declarations;
     Values *allocas;
     Loop *loop;
-    int temp_variables;
+    Counter *temp_variables;
 } Context;
 
 Value *value__create(int kind, String *type, String *name, String *repr) {
@@ -96,23 +100,42 @@ Value *values__find(Values *self, String *name) {
     return values__find(self->parent, name);
 }
 
+Counter *counter__create() {
+    Counter *self = (Counter *)malloc(sizeof(Counter));
+    self->count = 0;
+    return self;
+}
+
+Counter *counter__clone(Counter *other) {
+    Counter *self = (Counter *)malloc(sizeof(Counter));
+    self->count = other->count;
+    return self;
+}
+
+int counter__get(Counter *self) {
+    return self->count;
+}
+
+void counter__increment(Counter *self) {
+    self->count += 1;
+}
+
 Context *context__create(FILE *file) {
     Context *self = (Context *)malloc(sizeof(Context));
     self->file = file;
     self->declarations = values__create();
     self->allocas = values__create();
     self->loop = NULL;
-    self->temp_variables = 0;
+    self->temp_variables = counter__create();
     return self;
 }
 
 Context *context__clone(Context *other) {
     Context *self = (Context *)malloc(sizeof(Context));
     self->file = other->file;
-    self->declarations = values__create();
-    self->declarations->parent = other->declarations;
-    self->allocas = values__create();
-    self->loop = NULL;
+    self->declarations = other->declarations;
+    self->allocas = other->allocas;
+    self->loop = other->loop;
     self->temp_variables = other->temp_variables;
     return self;
 }
@@ -120,54 +143,60 @@ Context *context__clone(Context *other) {
 Value *value__create_function(Context *context, String *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
-    return value__create(VALUE_FUNCTION, type, name, repr);
+    Value *self = value__create(VALUE_FUNCTION, type, name, repr);
+    values__append(context->declarations, self);
+    return self;
 }
 
 Value *value__create_label(Context *context, String *name) {
     string__append_char(name, '.');
-    if (context->temp_variables < 100) {
+    if (counter__get(context->temp_variables) < 100) {
         string__append_char(name, '0');
     }
-    if (context->temp_variables < 10) {
+    if (counter__get(context->temp_variables) < 10) {
         string__append_char(name, '0');
     }
-    string__append_int(name, context->temp_variables);
+    string__append_int(name, counter__get(context->temp_variables));
     String *repr = string__create("%");
     string__append_string(repr, name);
-    context->temp_variables += 1;
+    counter__increment(context->temp_variables);
     return value__create(VALUE_LABEL, NULL, name, repr);
 }
 
 Value *value__create_parameter(Context *context, String *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
-    Value *value = value__create(VALUE_PARAMETER, type, name, repr);
-    values__append(context->declarations, value);
-    return value;
+    Value *self = value__create(VALUE_PARAMETER, type, name, repr);
+    values__append(context->declarations, self);
+    return self;
 }
 
 Value *value__create_global_variable(Context *context, String *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
-    return value__create(VALUE_POINTER, type, name, repr);
+    Value *self = value__create(VALUE_POINTER, type, name, repr);
+    values__append(context->declarations, self);
+    return self;
 }
 
 Value *value__create_local_variable(Context *context, String *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
-    return value__create(VALUE_POINTER, type, name, repr);
+    Value *self = value__create(VALUE_POINTER, type, name, repr);
+    values__append(context->declarations, self);
+    return self;
 }
 
 Value *value__create_temp_variable(Context *context, String *type) {
     String *repr = string__create("%.");
-    if (context->temp_variables < 100) {
+    if (counter__get(context->temp_variables) < 100) {
         string__append_char(repr, '0');
     }
-    if (context->temp_variables < 10) {
+    if (counter__get(context->temp_variables) < 10) {
         string__append_char(repr, '0');
     }
-    string__append_int(repr, context->temp_variables);
-    context->temp_variables += 1;
+    string__append_int(repr, counter__get(context->temp_variables));
+    counter__increment(context->temp_variables);
     return value__create(VALUE_TEMP_VARIABLE, type, NULL, repr);
 }
 
@@ -334,12 +363,27 @@ Value *emit_expression(Context *context, Expression *expression) {
         } else {
             return variable;
         }
-        break;
     }
     default:
         ERROR(__FILE__, __LINE__, "Unsupported expression type: %d", expression->kind);
         exit(1);
     }
+}
+
+Context *create_function_context(Context *global_context) {
+    Context *function_context = context__clone(global_context);
+    function_context->declarations = values__create();
+    function_context->declarations->parent = global_context->declarations;
+    function_context->allocas = values__create();
+    function_context->temp_variables = counter__create();
+    return function_context;
+}
+
+Context *create_block_context(Context *function_context) {
+    Context *block_context = context__clone(function_context);
+    block_context->declarations = values__create();
+    block_context->declarations->parent = function_context->declarations;
+    return block_context;
 }
 
 void emit_statement(Context *context, Statement *statement) {
@@ -374,24 +418,25 @@ void emit_statement(Context *context, Statement *statement) {
             }
         }
         fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
-        break;
+        return;
     }
     case STATEMENT_BLOCK: {
+        context = create_block_context(context);
         Statement *block_statement = statement->block.first_statement;
         while (block_statement != NULL) {
             emit_statement(context, block_statement);
             block_statement = block_statement->next;
         }
-        break;
+        return;
     }
     case STATEMENT_BREAK: {
         fprintf(context->file, "  br label %s\n", VALUE_REPR(context->loop->loop_end));
         context->loop->has_break = TRUE;
-        break;
+        return;
     }
     case STATEMENT_EXPRESSION: {
         emit_expression(context, statement->expression);
-        break;
+        return;
     }
     case STATEMENT_IF: {
         Value *if_cond = emit_expression(context, statement->if_.condition);
@@ -399,21 +444,19 @@ void emit_statement(Context *context, Statement *statement) {
         Value *if_false = value__create_label(context, string__create("if_false"));
         Value *if_end = value__create_label(context, string__create("if_end"));
         fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE_REPR(if_cond), VALUE_REPR(if_true), statement->if_.false_block != NULL ? VALUE_REPR(if_false) : VALUE_REPR(if_end));
-
         fprintf(context->file, "%s:\n", VALUE_NAME(if_true));
         emit_statement(context, statement->if_.true_block);
         fprintf(context->file, "  br label %s\n", VALUE_REPR(if_end));
-
         if (statement->if_.false_block != NULL) {
             fprintf(context->file, "%s:\n", VALUE_NAME(if_false));
             emit_statement(context, statement->if_.false_block);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(if_end));
         }
-
         fprintf(context->file, "%s:\n", VALUE_NAME(if_end));
-        break;
+        return;
     }
     case STATEMENT_LOOP: {
+        context = create_block_context(context);
         Value *loop_start = value__create_label(context, string__create("loop_start"));
         Value *loop_end = value__create_label(context, string__create("loop_end"));
         fprintf(context->file, "  br label %s\n", VALUE_REPR(loop_start));
@@ -429,18 +472,17 @@ void emit_statement(Context *context, Statement *statement) {
         if (loop->has_break) {
             fprintf(context->file, "%s:\n", VALUE_NAME(loop_end));
         }
-        break;
+        return;
     }
     case STATEMENT_PROCEDURE_DEFINITION: {
         Value *function = value__create_function(context, string__create("i32"), statement->procedure_definition.name->literal.value->lexeme);
-        values__append(context->declarations, function);
         
-        Context *function_context = context__clone(context);
+        context = create_function_context(context);
 
         fprintf(context->file, "define i32 %s(", VALUE_REPR(function));
         Member *parameter = statement->procedure_definition.first_parameter;
         while (parameter != NULL) {
-            Value *parameter_value = value__create_parameter(function_context, string__create("i32"), parameter->name->lexeme);
+            Value *parameter_value = value__create_parameter(context, string__create("i32"), parameter->name->lexeme);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             parameter = parameter->next;
             if (parameter != NULL) {
@@ -456,12 +498,12 @@ void emit_statement(Context *context, Statement *statement) {
 
         Statement *body_statement = statement->procedure_definition.first_statement;
         while (body_statement != NULL) {
-            emit_statement(function_context, body_statement);
+            emit_statement(context, body_statement);
             body_statement = body_statement->next;
         }
 
         fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
-        ValuesItem *alloca_item = function_context->allocas->first;
+        ValuesItem *alloca_item = context->allocas->first;
         while (alloca_item != NULL) {
             fprintf(context->file, "  %s = alloca i32\n", VALUE_REPR(alloca_item->value));
             alloca_item = alloca_item->next;
@@ -470,25 +512,23 @@ void emit_statement(Context *context, Statement *statement) {
 
         fprintf(context->file, "}\n\n");
 
-        break;
+        return;
     }
     case STATEMENT_RETURN: {
         Value *result = emit_expression(context, statement->return_expression);
         fprintf(context->file, "  ret %s %s\n", VALUE_TYPE(result), VALUE_REPR(result));
-        break;
+        return;
     }
     case STATEMENT_VARIABLE_DECLARATION: {
         Value *variable = value__create_local_variable(context, string__create("i32"), statement->variable_declaration.name->variable.name->lexeme);
-        variable->kind = VALUE_POINTER;
-        values__append(context->declarations, variable);
         values__append(context->allocas, variable);
         Value *value = emit_expression(context, statement->variable_declaration.value);
         fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
-        break;
+        return;
     }
     default:
-        WARNING(__FILE__, __LINE__, "Unsupported statement type: %d", statement->kind);
-        break;
+        ERROR(__FILE__, __LINE__, "Unsupported statement type: %d", statement->kind);
+        exit(1);
     }
 }
 
@@ -501,14 +541,11 @@ void generate(Statement *first_statement) {
     fprintf(context->file, "\n");
 
     fprintf(context->file, "@stderr = external global %%libc.File*\n");
-    Value *libc_stderr = value__create_global_variable(context, string__create("%libc.File*"), string__create("stderr"));
-    values__append(context->declarations, libc_stderr);
+    value__create_global_variable(context, string__create("%libc.File*"), string__create("stderr"));
     fprintf(context->file, "@stdin = external global %%libc.File*\n");
-    Value *libc_stdin = value__create_global_variable(context, string__create("%libc.File*"), string__create("stdin"));
-    values__append(context->declarations, libc_stdin);
+    value__create_global_variable(context, string__create("%libc.File*"), string__create("stdin"));
     fprintf(context->file, "@stdout = external global %%libc.File*\n");
-    Value *libc_stdout = value__create_global_variable(context, string__create("%libc.File*"), string__create("stdout"));
-    values__append(context->declarations, libc_stdout);
+    value__create_global_variable(context, string__create("%libc.File*"), string__create("stdout"));
     fprintf(context->file, "\n");
 
     fprintf(context->file, "declare i32 @fputc(i32, %%libc.File*)\n");
