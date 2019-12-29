@@ -182,6 +182,18 @@ Value *value__create_global_variable(Context *context, String *type, String *nam
 Value *value__create_local_variable(Context *context, String *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
+    Value *shadowed_variable = values__find(context->declarations, name);
+    if (shadowed_variable != NULL) {
+        string__append_char(repr, '.');
+        if (counter__get(context->temp_variables) < 100) {
+            string__append_char(repr, '0');
+        }
+        if (counter__get(context->temp_variables) < 10) {
+            string__append_char(repr, '0');
+        }
+        string__append_int(repr, counter__get(context->temp_variables));
+        counter__increment(context->temp_variables);
+    }
     Value *self = value__create(VALUE_POINTER, type, name, repr);
     values__append(context->declarations, self);
     return self;
@@ -482,7 +494,16 @@ void emit_statement(Context *context, Statement *statement) {
         fprintf(context->file, "define i32 %s(", VALUE_REPR(function));
         Member *parameter = statement->procedure_definition.first_parameter;
         while (parameter != NULL) {
-            Value *parameter_value = value__create_parameter(context, string__create("i32"), parameter->name->lexeme);
+            String *parameter_type;
+            if (string__equals(parameter->type->simple.name->lexeme, "Int")) {
+                parameter_type = string__create("i32");
+            } else if (string__equals(parameter->type->simple.name->lexeme, "Char")) {
+                parameter_type = string__create("i8");
+            } else {
+                ERROR(__FILE__, __LINE__, "Unsupported type: %s", parameter->type->simple.name->lexeme->data);
+                exit(1);
+            }
+            Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             parameter = parameter->next;
             if (parameter != NULL) {
@@ -520,9 +541,9 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_VARIABLE_DECLARATION: {
+        Value *value = emit_expression(context, statement->variable_declaration.value);
         Value *variable = value__create_local_variable(context, string__create("i32"), statement->variable_declaration.name->variable.name->lexeme);
         values__append(context->allocas, variable);
-        Value *value = emit_expression(context, statement->variable_declaration.value);
         fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
         return;
     }

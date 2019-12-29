@@ -1,3 +1,8 @@
+putc :: (char: Char) -> Int {
+	char := char as Int
+	return fputc(char, stdout)
+}
+
 rfib :: (n: Int) -> Int {
 	if (n < 2) {
 		return n
@@ -28,7 +33,7 @@ print_number :: (n: Int) {
 	if (n >= 10) {
 		print_number(n / 10)
 	}
-	fputc('0' as Int + (n // 10), stdout)
+	putc('0' + (n // 10) as Char)
 	return 0
 }
 
@@ -37,17 +42,17 @@ main :: () {
 	loop {
 		n := lfib(i)
 		print_number(i)
-		fputc(' ' as Int, stdout)
-		fputc('-' as Int, stdout)
-		fputc(' ' as Int, stdout)
+		putc(' ')
+		putc('-')
+		putc(' ')
 		print_number(n)
-		fputc('\n' as Int, stdout)
+		putc('\n')
 		if (i < 21 && n == rfib(i)) {
 			i += 1
 		} else {
 			break
 		}
 	}
-	fputc('\n' as Int, stdout)
+	putc('\n')
 	return -1
 }
