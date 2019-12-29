@@ -188,51 +188,49 @@ Value *emit_literal(Context *context, Token *token) {
     }
 }
 
+Value *emit_expression(Context *context, Expression *expression);
+
+Value *emit_arithmetic_expression(Context *context, Expression *expression, const char *instruction) {
+    Value *left_value = emit_expression(context, expression->binary.left_expression);
+    Value *right_value = emit_expression(context, expression->binary.right_expression);
+    Value *result = value__create_temp_variable(context, left_value->type);
+    fprintf(context->file, "  %s = %s %s %s, %s\n", VALUE_REPR(result), instruction, VALUE_TYPE(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
+    return result;
+}
+
+Value *emit_comparison_expression(Context *context, Expression *expression, const char *icmp_operand) {
+    Value *left_value = emit_expression(context, expression->binary.left_expression);
+    Value *right_value = emit_expression(context, expression->binary.right_expression);
+    Value *result = value__create_temp_variable(context, string__create("i1"));
+    fprintf(context->file, "  %s = icmp %s %s %s, %s\n", VALUE_REPR(result), icmp_operand, VALUE_TYPE(left_value), VALUE_REPR(left_value), VALUE_REPR(right_value));
+    return result;
+}
+
 Value *emit_expression(Context *context, Expression *expression) {
     switch (expression->kind) {
     case EXPRESSION_BINARY: {
-        Value *left_value = emit_expression(context, expression->binary.left_expression);
         if (string__equals(expression->binary.operator_token->lexeme, "+")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, left_value->type);
-            fprintf(context->file, "  %s = add i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_arithmetic_expression(context, expression, "add");
         } else if (string__equals(expression->binary.operator_token->lexeme, "-")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, left_value->type);
-            fprintf(context->file, "  %s = sub i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_arithmetic_expression(context, expression, "sub");
         } else if (string__equals(expression->binary.operator_token->lexeme, "*")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, left_value->type);
-            fprintf(context->file, "  %s = mul i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_arithmetic_expression(context, expression, "mul");
         } else if (string__equals(expression->binary.operator_token->lexeme, "/")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, left_value->type);
-            fprintf(context->file, "  %s = sdiv i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_arithmetic_expression(context, expression, "sdiv");
         } else if (string__equals(expression->binary.operator_token->lexeme, "//")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, left_value->type);
-            fprintf(context->file, "  %s = srem i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_arithmetic_expression(context, expression, "srem");
         } else if (string__equals(expression->binary.operator_token->lexeme, "<")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, string__create("i1"));
-            fprintf(context->file, "  %s = icmp slt i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_comparison_expression(context, expression, "slt");
+        } else if (string__equals(expression->binary.operator_token->lexeme, "<=")) {
+            return emit_comparison_expression(context, expression, "sle");
         } else if (string__equals(expression->binary.operator_token->lexeme, ">")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, string__create("i1"));
-            fprintf(context->file, "  %s = icmp sgt i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_comparison_expression(context, expression, "sgt");
+        } else if (string__equals(expression->binary.operator_token->lexeme, ">=")) {
+            return emit_comparison_expression(context, expression, "sge");
         } else if (string__equals(expression->binary.operator_token->lexeme, "==")) {
-            Value *right_value = emit_expression(context, expression->binary.right_expression);
-            Value *result = value__create_temp_variable(context, string__create("i1"));
-            fprintf(context->file, "  %s = icmp eq i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
-            return result;
+            return emit_comparison_expression(context, expression, "eq");
         } else if (string__equals(expression->binary.operator_token->lexeme, "&&")) {
+            Value *left_value = emit_expression(context, expression->binary.left_expression);
             Value *and_true_label = value__create_label(context, string__create("and_true"));
             Value *and_false_label = value__create_label(context, string__create("and_false"));
             Value *and_result_label = value__create_label(context, string__create("and_result"));
@@ -247,6 +245,7 @@ Value *emit_expression(Context *context, Expression *expression) {
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 0, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
             return result;
         } else if (string__equals(expression->binary.operator_token->lexeme, "||")) {
+            Value *left_value = emit_expression(context, expression->binary.left_expression);
             Value *or_true_label = value__create_label(context, string__create("or_true"));
             Value *or_false_label = value__create_label(context, string__create("or_false"));
             Value *or_result_label = value__create_label(context, string__create("or_result"));
@@ -352,10 +351,27 @@ void emit_statement(Context *context, Statement *statement) {
             ERROR(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
             exit(1);
         }
-        Value *value = emit_expression(context, statement->variable_declaration.value);
-        if (!string__equals(statement->assignment.operator_token->lexeme, "=")) {
-            ERROR(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment.operator_token->lexeme->data);
-            exit(1);
+        Value *value;
+        if (string__equals(statement->assignment.operator_token->lexeme, "=")) {
+            value = emit_expression(context, statement->variable_declaration.value);
+        } else {
+            Expression *binary_expression = (Expression *)malloc(sizeof(Expression));
+            binary_expression->kind = EXPRESSION_BINARY;
+            binary_expression->binary.operator_token = statement->assignment.operator_token;
+            binary_expression->binary.left_expression = statement->assignment.destination;
+            binary_expression->binary.right_expression = statement->variable_declaration.value;
+            if (string__equals(statement->assignment.operator_token->lexeme, "+=")) {
+                value = emit_arithmetic_expression(context, binary_expression, "add");
+            } else if (string__equals(statement->assignment.operator_token->lexeme, "-=")) {
+                value = emit_arithmetic_expression(context, binary_expression, "sub");
+            } else if (string__equals(statement->assignment.operator_token->lexeme, "*=")) {
+                value = emit_arithmetic_expression(context, binary_expression, "mul");
+            } else if (string__equals(statement->assignment.operator_token->lexeme, "/=")) {
+                value = emit_arithmetic_expression(context, binary_expression, "sdiv");
+            } else {
+                ERROR(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment.operator_token->lexeme->data);
+                exit(1);
+            }
         }
         fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
         break;
