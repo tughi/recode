@@ -6,6 +6,35 @@
 #define FALSE 0
 #define TRUE 1
 
+typedef struct IR_Type {
+    enum {
+        IR_TYPE_BOOLEAN,
+        IR_TYPE_CHARACTER,
+        IR_TYPE_INTEGER,
+        IR_TYPE_POINTER,
+        IR_TYPE_OPAQUE,
+    } kind;
+
+    union {
+        struct {
+            struct IR_Type *type;
+        } pointer;
+    };
+
+    String *name;
+    String *repr;
+} IR_Type;
+
+typedef struct IR_Types_Item {
+    IR_Type *type;
+    struct IR_Types_Item *next;
+} IR_Types_Item;
+
+typedef struct IR_Types {
+    IR_Types_Item *first;
+    IR_Types_Item *last;
+} IR_Types;
+
 typedef struct IR_Value {
     enum {
         IR_VALUE_CONSTANT,
@@ -16,24 +45,24 @@ typedef struct IR_Value {
         IR_VALUE_TEMP_VARIABLE,
     } kind;
 
-    String *type;
+    IR_Type *type;
     String *name;
     String *repr;
 } IR_Value;
 
 #define VALUE_NAME(value) value->name->data
 #define VALUE_REPR(value) value->repr->data
-#define VALUE_TYPE(value) value->type->data
+#define VALUE_TYPE(value) value->type->repr->data
 
-typedef struct IR_ValuesItem {
+typedef struct IR_Values_Item {
     IR_Value *value;
-    struct IR_ValuesItem *prev;
-    struct IR_ValuesItem *next;
-} IR_ValuesItem;
+    struct IR_Values_Item *prev;
+    struct IR_Values_Item *next;
+} IR_Values_Item;
 
 typedef struct IR_Values {
-    IR_ValuesItem *first;
-    IR_ValuesItem *last;
+    IR_Values_Item *first;
+    IR_Values_Item *last;
     struct IR_Values *parent;
 } IR_Values;
 
@@ -49,13 +78,65 @@ typedef struct Counter {
 
 typedef struct Context {
     FILE *file;
+    IR_Types *types;
     IR_Values *declarations;
     IR_Values *allocas;
     Loop *loop;
     Counter *temp_variables;
 } Context;
 
-IR_Value *value__create(int kind, String *type, String *name, String *repr) {
+IR_Type *type__create(int kind, String *name, String *repr) {
+    IR_Type *self = (IR_Type *)malloc(sizeof(IR_Type));
+    self->kind = kind;
+    self->name = name;
+    self->repr = repr;
+    return self;
+}
+
+IR_Type *type__create_pointer(IR_Type *type) {
+    String *name = string__create("@");
+    string__append_string(name, type->name);
+    String *repr = string__create(type->repr->data);
+    string__append_char(repr, '*');
+    return type__create(IR_TYPE_POINTER, name, repr);
+}
+
+IR_Types *types__create() {
+    IR_Types *self = (IR_Types *)malloc(sizeof(IR_Types));
+    self->first = NULL;
+    self->last = NULL;
+    return self;
+}
+
+void types__append(IR_Types *self, IR_Type *type) {
+    IR_Types_Item *item = (IR_Types_Item *)malloc(sizeof(IR_Types_Item));
+    item->type = type;
+    item->next = NULL;
+    if (self->first == NULL) {
+        self->first = item;
+    } else {
+        self->last->next = item;
+    }
+    self->last = item;
+}
+
+IR_Type *types__find(IR_Types *self, String *name) {
+    if (self == NULL) {
+        return NULL;
+    }
+    IR_Types_Item *item = self->first;
+    while (item != NULL) {
+        if (string__equals(item->type->name, name->data)) {
+            return item->type;
+        }
+        item = item->next;
+    }
+    WARNING(__FILE__, __LINE__, "No such type: %s", name->data);
+    exit(42);
+    return NULL;
+}
+
+IR_Value *value__create(int kind, IR_Type *type, String *name, String *repr) {
     IR_Value *value = (IR_Value *)malloc(sizeof(IR_Value));
     value->kind = kind;
     value->type = type;
@@ -73,7 +154,7 @@ IR_Values *values__create() {
 }
 
 void values__append(IR_Values *self, IR_Value *value) {
-    IR_ValuesItem *item = (IR_ValuesItem *)malloc(sizeof(IR_ValuesItem));
+    IR_Values_Item *item = (IR_Values_Item *)malloc(sizeof(IR_Values_Item));
     item->value = value;
     if (self->first == NULL) {
         item->prev = NULL;
@@ -90,7 +171,7 @@ IR_Value *values__find(IR_Values *self, String *name) {
     if (self == NULL) {
         return NULL;
     }
-    IR_ValuesItem *item = self->last;
+    IR_Values_Item *item = self->last;
     while (item != NULL) {
         if (string__equals(item->value->name, name->data)) {
             return item->value;
@@ -123,6 +204,7 @@ void counter__increment(Counter *self) {
 Context *context__create(FILE *file) {
     Context *self = (Context *)malloc(sizeof(Context));
     self->file = file;
+    self->types = types__create();
     self->declarations = values__create();
     self->allocas = values__create();
     self->loop = NULL;
@@ -133,6 +215,7 @@ Context *context__create(FILE *file) {
 Context *context__clone(Context *other) {
     Context *self = (Context *)malloc(sizeof(Context));
     self->file = other->file;
+    self->types = other->types;
     self->declarations = other->declarations;
     self->allocas = other->allocas;
     self->loop = other->loop;
@@ -140,7 +223,7 @@ Context *context__clone(Context *other) {
     return self;
 }
 
-IR_Value *value__create_function(Context *context, String *type, String *name) {
+IR_Value *value__create_function(Context *context, IR_Type *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
     IR_Value *self = value__create(IR_VALUE_FUNCTION, type, name, repr);
@@ -163,7 +246,7 @@ IR_Value *value__create_label(Context *context, String *name) {
     return value__create(IR_VALUE_LABEL, NULL, name, repr);
 }
 
-IR_Value *value__create_parameter(Context *context, String *type, String *name) {
+IR_Value *value__create_parameter(Context *context, IR_Type *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
     IR_Value *self = value__create(IR_VALUE_PARAMETER, type, name, repr);
@@ -171,7 +254,7 @@ IR_Value *value__create_parameter(Context *context, String *type, String *name) 
     return self;
 }
 
-IR_Value *value__create_global_variable(Context *context, String *type, String *name) {
+IR_Value *value__create_global_variable(Context *context, IR_Type *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
     IR_Value *self = value__create(IR_VALUE_POINTER, type, name, repr);
@@ -179,7 +262,7 @@ IR_Value *value__create_global_variable(Context *context, String *type, String *
     return self;
 }
 
-IR_Value *value__create_local_variable(Context *context, String *type, String *name) {
+IR_Value *value__create_local_variable(Context *context, IR_Type *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
     IR_Value *shadowed_variable = values__find(context->declarations, name);
@@ -199,7 +282,7 @@ IR_Value *value__create_local_variable(Context *context, String *type, String *n
     return self;
 }
 
-IR_Value *value__create_temp_variable(Context *context, String *type) {
+IR_Value *value__create_temp_variable(Context *context, IR_Type *type) {
     String *repr = string__create("%.");
     if (counter__get(context->temp_variables) < 100) {
         string__append_char(repr, '0');
@@ -215,12 +298,14 @@ IR_Value *value__create_temp_variable(Context *context, String *type) {
 IR_Value *emit_literal(Context *context, Token *token) {
     switch (token->kind) {
         case TOKEN_CHARACTER: {
-            String *constant = string__append_int(string__create_empty(0), token->character.value);
-            return value__create(IR_VALUE_CONSTANT, string__create("i8"), NULL, constant);
+            IR_Type *type = types__find(context->types, string__create("Char"));
+            String *repr = string__append_int(string__create_empty(0), token->character.value);
+            return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
         }
         case TOKEN_INTEGER: {
-            String *constant = string__append_int(string__create_empty(0), token->integer.value);
-            return value__create(IR_VALUE_CONSTANT, string__create("i32"), NULL, constant);
+            IR_Type *type = types__find(context->types, string__create("Int"));
+            String *repr = string__append_int(string__create_empty(0), token->integer.value);
+            return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
         }
         default: {
             ERROR(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
@@ -242,7 +327,7 @@ IR_Value *emit_arithmetic_expression(Context *context, Expression *expression, c
 IR_Value *emit_comparison_expression(Context *context, Expression *expression, const char *icmp_operand) {
     IR_Value *left_value = emit_expression(context, expression->binary.left_expression);
     IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
-    IR_Value *result = value__create_temp_variable(context, string__create("i1"));
+    IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Bool")));
     fprintf(context->file, "  %s = icmp %s %s %s, %s\n", VALUE_REPR(result), icmp_operand, VALUE_TYPE(left_value), VALUE_REPR(left_value), VALUE_REPR(right_value));
     return result;
 }
@@ -282,7 +367,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             fprintf(context->file, "%s:\n", VALUE_NAME(and_false_label));
             fprintf(context->file, "  br label %s\n", VALUE_REPR(and_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(and_result_label));
-            IR_Value *result = value__create_temp_variable(context, string__create("i1"));
+            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 0, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
             return result;
         } else if (string__equals(expression->binary.operator_token->lexeme, "||")) {
@@ -297,7 +382,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(or_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(or_result_label));
-            IR_Value *result = value__create_temp_variable(context, string__create("i1"));
+            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 1, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(or_false_label), VALUE_REPR(or_true_label));
             return result;
         } else {
@@ -319,9 +404,9 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             values__append(function_arguments, function_argument);
             argument = argument->next;
         }
-        IR_Value *destination = value__create_temp_variable(context, string__create("i32"));
-        fprintf(context->file, "  %s = call %s %s(", VALUE_REPR(destination), VALUE_TYPE(function), VALUE_REPR(function));
-        IR_ValuesItem *function_argument = function_arguments->first;
+        IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Int"))); // TODO: retrieve function return type
+        fprintf(context->file, "  %s = call %s %s(", VALUE_REPR(result), VALUE_TYPE(function), VALUE_REPR(function));
+        IR_Values_Item *function_argument = function_arguments->first;
         while (function_argument != NULL) {
             fprintf(context->file, "%s %s", VALUE_TYPE(function_argument->value), VALUE_REPR(function_argument->value));
             function_argument = function_argument->next;
@@ -330,16 +415,16 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             }
         }
         fprintf(context->file, ")\n");
-        return destination;
+        return result;
     }
     case EXPRESSION_CAST: {
         IR_Value *operand = emit_expression(context, expression->cast.expression);
         if (string__equals(expression->cast.type->lexeme, "Int")) {
-            IR_Value *result = value__create_temp_variable(context, string__create("i32"));
+            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Int")));
             fprintf(context->file, "  %s = sext %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
             return result;
         } else if (string__equals(expression->cast.type->lexeme, "Char")) {
-            IR_Value *result = value__create_temp_variable(context, string__create("i8"));
+            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Char")));
             fprintf(context->file, "  %s = trunc %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
             return result;
         } else {
@@ -487,19 +572,15 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_PROCEDURE_DEFINITION: {
-        IR_Value *function = value__create_function(context, string__create("i32"), statement->procedure_definition.name->literal.value->lexeme);
+        IR_Value *function = value__create_function(context, types__find(context->types, string__create("Int")), statement->procedure_definition.name->literal.value->lexeme);
         
         context = create_function_context(context);
 
         fprintf(context->file, "define i32 %s(", VALUE_REPR(function));
         Member *parameter = statement->procedure_definition.first_parameter;
         while (parameter != NULL) {
-            String *parameter_type;
-            if (string__equals(parameter->type->simple.name->lexeme, "Int")) {
-                parameter_type = string__create("i32");
-            } else if (string__equals(parameter->type->simple.name->lexeme, "Char")) {
-                parameter_type = string__create("i8");
-            } else {
+            IR_Type *parameter_type = types__find(context->types, parameter->type->simple.name->lexeme);
+            if (parameter_type == NULL) {
                 ERROR(__FILE__, __LINE__, "Unsupported type: %s", parameter->type->simple.name->lexeme->data);
                 exit(1);
             }
@@ -524,7 +605,7 @@ void emit_statement(Context *context, Statement *statement) {
         }
 
         fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
-        IR_ValuesItem *alloca_item = context->allocas->first;
+        IR_Values_Item *alloca_item = context->allocas->first;
         while (alloca_item != NULL) {
             fprintf(context->file, "  %s = alloca i32\n", VALUE_REPR(alloca_item->value));
             alloca_item = alloca_item->next;
@@ -542,7 +623,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_VARIABLE_DECLARATION: {
         IR_Value *value = emit_expression(context, statement->variable_declaration.value);
-        IR_Value *variable = value__create_local_variable(context, string__create("i32"), statement->variable_declaration.name->variable.name->lexeme);
+        IR_Value *variable = value__create_local_variable(context, types__find(context->types, string__create("Int")), statement->variable_declaration.name->variable.name->lexeme);
         values__append(context->allocas, variable);
         fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
         return;
@@ -558,19 +639,26 @@ void generate(Statement *first_statement) {
 
     Context *context = context__create(file);
 
-    fprintf(context->file, "%%libc.File = type opaque\n");
+    types__append(context->types, type__create(IR_TYPE_BOOLEAN, string__create("Bool"), string__create("i1")));
+    types__append(context->types, type__create(IR_TYPE_CHARACTER, string__create("Char"), string__create("i8")));
+    types__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
+
+    IR_Type *libc_file_type = type__create(IR_TYPE_OPAQUE, string__create("libc.File"), string__create("%libc.File"));
+    IR_Type *libc_file_type_pointer = type__create_pointer(libc_file_type);
+
+    fprintf(context->file, "%s = type opaque\n", libc_file_type->repr->data);
     fprintf(context->file, "\n");
 
-    fprintf(context->file, "@stderr = external global %%libc.File*\n");
-    value__create_global_variable(context, string__create("%libc.File*"), string__create("stderr"));
-    fprintf(context->file, "@stdin = external global %%libc.File*\n");
-    value__create_global_variable(context, string__create("%libc.File*"), string__create("stdin"));
-    fprintf(context->file, "@stdout = external global %%libc.File*\n");
-    value__create_global_variable(context, string__create("%libc.File*"), string__create("stdout"));
+    fprintf(context->file, "@stderr = external global %s\n", libc_file_type_pointer->repr->data);
+    value__create_global_variable(context, libc_file_type_pointer, string__create("stderr"));
+    fprintf(context->file, "@stdin = external global %s\n", libc_file_type_pointer->repr->data);
+    value__create_global_variable(context, libc_file_type_pointer, string__create("stdin"));
+    fprintf(context->file, "@stdout = external global %s\n", libc_file_type_pointer->repr->data);
+    value__create_global_variable(context, libc_file_type_pointer, string__create("stdout"));
     fprintf(context->file, "\n");
 
-    fprintf(context->file, "declare i32 @fputc(i32, %%libc.File*)\n");
-    values__append(context->declarations, value__create_function(context, string__create("i32"), string__create("fputc")));
+    fprintf(context->file, "declare i32 @fputc(i32, %s)\n", libc_file_type_pointer->repr->data);
+    values__append(context->declarations, value__create_function(context, types__find(context->types, string__create("Int")), string__create("fputc")));
     fprintf(context->file, "\n");
 
     Statement *statement = first_statement;
