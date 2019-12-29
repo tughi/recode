@@ -212,6 +212,11 @@ Value *emit_expression(Context *context, Expression *expression) {
             Value *result = value__create_temp_variable(context, left_value->type);
             fprintf(context->file, "  %s = sdiv i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
             return result;
+        } else if (string__equals(expression->binary.operator_token->lexeme, "//")) {
+            Value *right_value = emit_expression(context, expression->binary.right_expression);
+            Value *result = value__create_temp_variable(context, left_value->type);
+            fprintf(context->file, "  %s = srem i32 %s, %s\n", VALUE_REPR(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
+            return result;
         } else if (string__equals(expression->binary.operator_token->lexeme, "<")) {
             Value *right_value = emit_expression(context, expression->binary.right_expression);
             Value *result = value__create_temp_variable(context, string__create("i1"));

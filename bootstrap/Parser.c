@@ -346,6 +346,10 @@ Expression *parse_unary_expression(Context *context) {
     return parse_call_expression(context);
 }
 
+int is_division_operator(Token *token) {
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "/");
+}
+
 int is_multiplication_operator(Token *token) {
     return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "*") || string__equals(token->lexeme, "/"));
 }
@@ -366,6 +370,9 @@ Expression *parse_multiplication_expression(Context *context) {
     while (matches_two(context, optional(is_space), required(is_multiplication_operator)) && !matches_three(context, optional(is_space), required(is_multiplication_operator), required(is_assign_operator))) {
         consume_space(context, 1);
         Token *operator_token = consume_one(context, NULL, required(is_multiplication_operator));
+        if (consume_one(context, NULL, required(is_division_operator)) != NULL) {
+            token__join_next(operator_token);
+        }
         consume_space(context, 1);
         Expression *right_expression = parse_unary_expression(context);
         expression = expression__create_binary(operator_token, expression, right_expression);

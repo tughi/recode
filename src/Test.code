@@ -28,7 +28,7 @@ print_number :: (n: Int) {
 	if (n > 9) {
 		print_number(n / 10)
 	}
-	fputc('0' as Int + (n - n / 10 * 10), stdout)
+	fputc('0' as Int + (n // 10), stdout)
 	return 0
 }
 
