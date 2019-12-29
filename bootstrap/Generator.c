@@ -353,6 +353,10 @@ void emit_statement(Context *context, Statement *statement) {
             exit(1);
         }
         Value *value = emit_expression(context, statement->variable_declaration.value);
+        if (!string__equals(statement->assignment.operator_token->lexeme, "=")) {
+            ERROR(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment.operator_token->lexeme->data);
+            exit(1);
+        }
         fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
         break;
     }
