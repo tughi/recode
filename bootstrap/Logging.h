@@ -19,7 +19,7 @@
 #define SGR_FAINT_DEFAULT "\033[0;2;39m"
 #define SGR_FAINT_YELLOW "\033[0;2;33m"
 
-#define LOG(level, source_file, source_line, format, ...) printf("%s%s:%d -- ", level, source_file, source_line); printf(format, __VA_ARGS__); printf("%s\n", SGR_RESET)
+#define LOG(level, source_file, source_line, format, ...) fprintf(stderr, "%s%s:%d -- ", level, source_file, source_line); printf(format, __VA_ARGS__); printf("%s\n", SGR_RESET)
 
 #define ERROR(source_file, source_line, format, ...) LOG(SGR_ERROR, source_file, source_line, format, __VA_ARGS__)
 
