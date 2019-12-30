@@ -76,9 +76,9 @@ void print_type(Type *type) {
         printf("%s]", SGR_WHITE_BOLD);
         return;
     }
-    case TYPE_PROCEDURE: {
+    case TYPE_FUNCTION: {
         printf("%s(", SGR_WHITE_BOLD);
-        Member *parameter = type->procedure.first_parameter;
+        Member *parameter = type->function.first_parameter;
         while (parameter != NULL) {
             print_token(parameter->name); 
             printf("%s: ", SGR_WHITE_BOLD);
@@ -89,12 +89,12 @@ void print_type(Type *type) {
             }
         }
         printf("%s) -> ", SGR_WHITE_BOLD);
-        print_type(type->procedure.return_type);
+        print_type(type->function.return_type);
         return;
     }
-    case TYPE_REFERENCE: {
+    case TYPE_POINTER: {
         printf("%s@", SGR_WHITE_BOLD);
-        print_type(type->reference.type);
+        print_type(type->pointer.type);
         return;
     }
     case TYPE_SIMPLE: {
@@ -209,10 +209,10 @@ void print_statement(Statement *statement) {
         printf("%s}\n", SGR_WHITE_BOLD);
         return;
     }
-    case STATEMENT_PROCEDURE_DEFINITION: {
-        print_expression(statement->procedure_definition.name);
+    case STATEMENT_FUNCTION_DECLARATION: {
+        print_expression(statement->function_definition.name);
         printf("%s :: (", SGR_WHITE_BOLD);
-        Member *parameter = statement->procedure_definition.first_parameter;
+        Member *parameter = statement->function_definition.first_parameter;
         while (parameter != NULL) {
             print_token(parameter->name);
             printf("%s: ", SGR_WHITE_BOLD);
@@ -223,16 +223,37 @@ void print_statement(Statement *statement) {
             }
         }
         printf("%s)", SGR_WHITE_BOLD);
-        if (statement->procedure_definition.return_type != NULL) {
+        if (statement->function_definition.return_type != NULL) {
             printf(" -> ");
-            print_type(statement->procedure_definition.return_type);
+            print_type(statement->function_definition.return_type);
+        }
+        printf("%s\n", SGR_RESET);
+        return;
+    }
+    case STATEMENT_FUNCTION_DEFINITION: {
+        print_expression(statement->function_definition.name);
+        printf("%s :: (", SGR_WHITE_BOLD);
+        Member *parameter = statement->function_definition.first_parameter;
+        while (parameter != NULL) {
+            print_token(parameter->name);
+            printf("%s: ", SGR_WHITE_BOLD);
+            print_type(parameter->type);
+            parameter = parameter->next;
+            if (parameter != NULL) {
+                printf("%s, ", SGR_WHITE_BOLD);
+            }
+        }
+        printf("%s)", SGR_WHITE_BOLD);
+        if (statement->function_definition.return_type != NULL) {
+            printf(" -> ");
+            print_type(statement->function_definition.return_type);
         }
         printf("%s {\n", SGR_WHITE_BOLD);
         alignment += 1;
-        Statement *procedure_statement = statement->procedure_definition.first_statement;
-        while (procedure_statement != NULL) {
-            print_statement(procedure_statement);
-            procedure_statement = procedure_statement->next;
+        Statement *function_statement = statement->function_definition.first_statement;
+        while (function_statement != NULL) {
+            print_statement(function_statement);
+            function_statement = function_statement->next;
         }
         alignment -= 1;
         print_alignment(alignment);
@@ -247,6 +268,11 @@ void print_statement(Statement *statement) {
     }
     case STATEMENT_SKIP: {
         printf("%sskip\n", SGR_YELLOW);
+        return;
+    }
+    case STATEMENT_STRUCT_DECLARATION: {
+        print_expression(statement->struct_definition.name);
+        printf("%s :: %sstruct%s\n", SGR_WHITE_BOLD, SGR_YELLOW, SGR_RESET);
         return;
     }
     case STATEMENT_STRUCT_DEFINITION: {
@@ -285,7 +311,11 @@ void print_statement(Statement *statement) {
             printf("%s :", SGR_WHITE_BOLD);
         }
         printf("%s= ", SGR_WHITE_BOLD);
-        print_expression(statement->variable_declaration.value);
+        if (statement->variable_declaration.external) {
+            printf("%sexternal", SGR_YELLOW);
+        } else {
+            print_expression(statement->variable_declaration.value);
+        }
         printf("\n");
         return;
     }
@@ -340,7 +370,7 @@ void print_expression(Expression *expression) {
         printf("%s(", SGR_BLACK);
         print_expression(expression->cast.expression);
         printf("%s as ", SGR_YELLOW);
-        print_token(expression->cast.type);
+        print_type(expression->cast.type);
         printf("%s)%s", SGR_BLACK, SGR_RESET);
         return;
     }

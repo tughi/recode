@@ -11,8 +11,8 @@ typedef struct IR_Type {
         IR_TYPE_BOOLEAN,
         IR_TYPE_CHARACTER,
         IR_TYPE_INTEGER,
-        IR_TYPE_POINTER,
         IR_TYPE_OPAQUE,
+        IR_TYPE_POINTER,
     } kind;
 
     union {
@@ -120,7 +120,7 @@ void types__append(IR_Types *self, IR_Type *type) {
     self->last = item;
 }
 
-IR_Type *types__find(IR_Types *self, String *name) {
+IR_Type *types__get_by_name(IR_Types *self, String *name) {
     if (self == NULL) {
         return NULL;
     }
@@ -132,8 +132,19 @@ IR_Type *types__find(IR_Types *self, String *name) {
         item = item->next;
     }
     WARNING(__FILE__, __LINE__, "No such type: %s", name->data);
-    exit(42);
     return NULL;
+}
+
+IR_Type *types__get_by_type(IR_Types *self, Type *type) {
+    switch (type->kind) {
+    case TYPE_POINTER:
+        return type__create_pointer(types__get_by_type(self, type->pointer.type));
+    case TYPE_SIMPLE:
+        return types__get_by_name(self, type->simple.name->lexeme);
+    default:
+        ERROR(__FILE__, __LINE__, "Unsupported type: %d", type->kind);
+        exit(1);
+    }
 }
 
 IR_Value *value__create(int kind, IR_Type *type, String *name, String *repr) {
@@ -298,12 +309,12 @@ IR_Value *value__create_temp_variable(Context *context, IR_Type *type) {
 IR_Value *emit_literal(Context *context, Token *token) {
     switch (token->kind) {
         case TOKEN_CHARACTER: {
-            IR_Type *type = types__find(context->types, string__create("Char"));
+            IR_Type *type = types__get_by_name(context->types, string__create("Char"));
             String *repr = string__append_int(string__create_empty(0), token->character.value);
             return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
         }
         case TOKEN_INTEGER: {
-            IR_Type *type = types__find(context->types, string__create("Int"));
+            IR_Type *type = types__get_by_name(context->types, string__create("Int"));
             String *repr = string__append_int(string__create_empty(0), token->integer.value);
             return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
         }
@@ -327,7 +338,7 @@ IR_Value *emit_arithmetic_expression(Context *context, Expression *expression, c
 IR_Value *emit_comparison_expression(Context *context, Expression *expression, const char *icmp_operand) {
     IR_Value *left_value = emit_expression(context, expression->binary.left_expression);
     IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
-    IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Bool")));
+    IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Bool")));
     fprintf(context->file, "  %s = icmp %s %s %s, %s\n", VALUE_REPR(result), icmp_operand, VALUE_TYPE(left_value), VALUE_REPR(left_value), VALUE_REPR(right_value));
     return result;
 }
@@ -367,7 +378,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             fprintf(context->file, "%s:\n", VALUE_NAME(and_false_label));
             fprintf(context->file, "  br label %s\n", VALUE_REPR(and_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(and_result_label));
-            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Bool")));
+            IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 0, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
             return result;
         } else if (string__equals(expression->binary.operator_token->lexeme, "||")) {
@@ -382,7 +393,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(or_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(or_result_label));
-            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Bool")));
+            IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 1, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(or_false_label), VALUE_REPR(or_true_label));
             return result;
         } else {
@@ -394,7 +405,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         String *function_name = expression->call.callee->variable.name->lexeme;
         IR_Value *function = values__find(context->declarations, function_name);
         if (function == NULL) {
-            ERROR(__FILE__, __LINE__, "Undefined procedure: %s", function_name->data);
+            ERROR(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
             exit(1);
         }
         IR_Values *function_arguments = values__create();
@@ -404,7 +415,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             values__append(function_arguments, function_argument);
             argument = argument->next;
         }
-        IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Int"))); // TODO: retrieve function return type
+        IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Int"))); // TODO: retrieve function return type
         fprintf(context->file, "  %s = call %s %s(", VALUE_REPR(result), VALUE_TYPE(function), VALUE_REPR(function));
         IR_Values_Item *function_argument = function_arguments->first;
         while (function_argument != NULL) {
@@ -419,16 +430,17 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
     }
     case EXPRESSION_CAST: {
         IR_Value *operand = emit_expression(context, expression->cast.expression);
-        if (string__equals(expression->cast.type->lexeme, "Int")) {
-            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Int")));
+        IR_Type *type = types__get_by_type(context->types, expression->cast.type);
+        if (string__equals(type->name, "Int")) {
+            IR_Value *result = value__create_temp_variable(context, type);
             fprintf(context->file, "  %s = sext %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
             return result;
-        } else if (string__equals(expression->cast.type->lexeme, "Char")) {
-            IR_Value *result = value__create_temp_variable(context, types__find(context->types, string__create("Char")));
+        } else if (string__equals(type->name, "Char")) {
+            IR_Value *result = value__create_temp_variable(context, type);
             fprintf(context->file, "  %s = trunc %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
             return result;
         } else {
-            ERROR(__FILE__, __LINE__, "Cannot cast to %s", expression->cast.type->lexeme->data);
+            ERROR(__FILE__, __LINE__, "Cannot cast to %s", type->name->data);
             exit(1);
         }
     }
@@ -535,6 +547,63 @@ void emit_statement(Context *context, Statement *statement) {
         emit_expression(context, statement->expression);
         return;
     }
+    case STATEMENT_FUNCTION_DECLARATION: {
+        IR_Value *function = value__create_function(context, types__get_by_type(context->types, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
+        fprintf(context->file, "declare i32 %s(", VALUE_REPR(function));
+        Member *parameter = statement->function_definition.first_parameter;
+        while (parameter != NULL) {
+            IR_Type *parameter_type = types__get_by_type(context->types, parameter->type);
+            IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
+            fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
+            parameter = parameter->next;
+            if (parameter != NULL) {
+                fprintf(context->file, ", ");
+            }
+        }
+        fprintf(context->file, ")\n");
+        return;
+    }
+    case STATEMENT_FUNCTION_DEFINITION: {
+        IR_Value *function = value__create_function(context, types__get_by_type(context->types, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
+        
+        context = create_function_context(context);
+
+        fprintf(context->file, "define i32 %s(", VALUE_REPR(function));
+        Member *parameter = statement->function_definition.first_parameter;
+        while (parameter != NULL) {
+            IR_Type *parameter_type = types__get_by_type(context->types, parameter->type);
+            IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
+            fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
+            parameter = parameter->next;
+            if (parameter != NULL) {
+                fprintf(context->file, ", ");
+            }
+        }
+        fprintf(context->file, ") {\n");
+
+        IR_Value *entry_label = value__create_label(context, string__create("entry"));
+        IR_Value *variables_label = value__create_label(context, string__create("variables"));
+        fprintf(context->file, "  br label %s\n", VALUE_REPR(variables_label));
+        fprintf(context->file, "%s:\n", VALUE_NAME(entry_label));
+
+        Statement *body_statement = statement->function_definition.first_statement;
+        while (body_statement != NULL) {
+            emit_statement(context, body_statement);
+            body_statement = body_statement->next;
+        }
+
+        fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
+        IR_Values_Item *alloca_item = context->allocas->first;
+        while (alloca_item != NULL) {
+            fprintf(context->file, "  %s = alloca i32\n", VALUE_REPR(alloca_item->value));
+            alloca_item = alloca_item->next;
+        }
+        fprintf(context->file, "  br label %s\n", VALUE_REPR(entry_label));
+
+        fprintf(context->file, "}\n");
+
+        return;
+    }
     case STATEMENT_IF: {
         IR_Value *if_cond = emit_expression(context, statement->if_.condition);
         IR_Value *if_true = value__create_label(context, string__create("if_true"));
@@ -571,61 +640,31 @@ void emit_statement(Context *context, Statement *statement) {
         }
         return;
     }
-    case STATEMENT_PROCEDURE_DEFINITION: {
-        IR_Value *function = value__create_function(context, types__find(context->types, string__create("Int")), statement->procedure_definition.name->literal.value->lexeme);
-        
-        context = create_function_context(context);
-
-        fprintf(context->file, "define i32 %s(", VALUE_REPR(function));
-        Member *parameter = statement->procedure_definition.first_parameter;
-        while (parameter != NULL) {
-            IR_Type *parameter_type = types__find(context->types, parameter->type->simple.name->lexeme);
-            if (parameter_type == NULL) {
-                ERROR(__FILE__, __LINE__, "Unsupported type: %s", parameter->type->simple.name->lexeme->data);
-                exit(1);
-            }
-            IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
-            fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
-            parameter = parameter->next;
-            if (parameter != NULL) {
-                fprintf(context->file, ", ");
-            }
-        }
-        fprintf(context->file, ") {\n");
-
-        IR_Value *entry_label = value__create_label(context, string__create("entry"));
-        IR_Value *variables_label = value__create_label(context, string__create("variables"));
-        fprintf(context->file, "  br label %s\n", VALUE_REPR(variables_label));
-        fprintf(context->file, "%s:\n", VALUE_NAME(entry_label));
-
-        Statement *body_statement = statement->procedure_definition.first_statement;
-        while (body_statement != NULL) {
-            emit_statement(context, body_statement);
-            body_statement = body_statement->next;
-        }
-
-        fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
-        IR_Values_Item *alloca_item = context->allocas->first;
-        while (alloca_item != NULL) {
-            fprintf(context->file, "  %s = alloca i32\n", VALUE_REPR(alloca_item->value));
-            alloca_item = alloca_item->next;
-        }
-        fprintf(context->file, "  br label %s\n", VALUE_REPR(entry_label));
-
-        fprintf(context->file, "}\n\n");
-
-        return;
-    }
     case STATEMENT_RETURN: {
         IR_Value *result = emit_expression(context, statement->return_expression);
         fprintf(context->file, "  ret %s %s\n", VALUE_TYPE(result), VALUE_REPR(result));
         return;
     }
+    case STATEMENT_STRUCT_DECLARATION: {
+        String *name = statement->struct_declaration.name->variable.name->lexeme;
+        String *repr = string__create("%");
+        string__append_string(repr, name);
+        IR_Type *type = type__create(IR_TYPE_OPAQUE, name, repr);
+        types__append(context->types, type);
+        fprintf(context->file, "%s = type opaque\n", type->repr->data);
+        return;
+    }
     case STATEMENT_VARIABLE_DECLARATION: {
-        IR_Value *value = emit_expression(context, statement->variable_declaration.value);
-        IR_Value *variable = value__create_local_variable(context, types__find(context->types, string__create("Int")), statement->variable_declaration.name->variable.name->lexeme);
-        values__append(context->allocas, variable);
-        fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
+        if (statement->variable_declaration.external == TRUE) {
+            IR_Type *variable_type = types__get_by_type(context->types, statement->variable_declaration.type);
+            IR_Value *variable = value__create_global_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
+            fprintf(context->file, "%s = external global %s\n", VALUE_REPR(variable), VALUE_TYPE(variable));
+        } else {
+            IR_Value *value = emit_expression(context, statement->variable_declaration.value);
+            IR_Value *variable = value__create_local_variable(context, value->type, statement->variable_declaration.name->variable.name->lexeme);
+            values__append(context->allocas, variable);
+            fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
+        }
         return;
     }
     default:
@@ -643,28 +682,11 @@ void generate(Statement *first_statement) {
     types__append(context->types, type__create(IR_TYPE_CHARACTER, string__create("Char"), string__create("i8")));
     types__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
 
-    IR_Type *libc_file_type = type__create(IR_TYPE_OPAQUE, string__create("libc.File"), string__create("%libc.File"));
-    IR_Type *libc_file_type_pointer = type__create_pointer(libc_file_type);
-
-    fprintf(context->file, "%s = type opaque\n", libc_file_type->repr->data);
-    fprintf(context->file, "\n");
-
-    fprintf(context->file, "@stderr = external global %s\n", libc_file_type_pointer->repr->data);
-    value__create_global_variable(context, libc_file_type_pointer, string__create("stderr"));
-    fprintf(context->file, "@stdin = external global %s\n", libc_file_type_pointer->repr->data);
-    value__create_global_variable(context, libc_file_type_pointer, string__create("stdin"));
-    fprintf(context->file, "@stdout = external global %s\n", libc_file_type_pointer->repr->data);
-    value__create_global_variable(context, libc_file_type_pointer, string__create("stdout"));
-    fprintf(context->file, "\n");
-
-    fprintf(context->file, "declare i32 @fputc(i32, %s)\n", libc_file_type_pointer->repr->data);
-    values__append(context->declarations, value__create_function(context, types__find(context->types, string__create("Int")), string__create("fputc")));
-    fprintf(context->file, "\n");
-
     Statement *statement = first_statement;
     while (statement != NULL) {
         emit_statement(context, statement);
         statement = statement->next;
+        fprintf(context->file, "\n");
     }
 
     fclose(context->file);

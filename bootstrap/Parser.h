@@ -16,8 +16,8 @@ typedef struct Member {
 typedef struct Type {
     enum {
         TYPE_ARRAY,
-        TYPE_PROCEDURE,
-        TYPE_REFERENCE,
+        TYPE_FUNCTION,
+        TYPE_POINTER,
         TYPE_SIMPLE,
         TYPE_TUPLE,
     } kind;
@@ -29,10 +29,10 @@ typedef struct Type {
         struct {
             Member *first_parameter;
             struct Type *return_type;
-        } procedure;
+        } function;
         struct {
             struct Type *type;
-        } reference;
+        } pointer;
         struct {
             Token *name;
         } simple;
@@ -76,7 +76,7 @@ typedef struct Expression {
         } call;
         struct {
             struct Expression *expression;
-            Token *type;
+            Type *type;
         } cast;
         struct {
             Token *value;
@@ -101,11 +101,13 @@ typedef struct Statement {
         STATEMENT_BLOCK,
         STATEMENT_BREAK,
         STATEMENT_EXPRESSION,
+        STATEMENT_FUNCTION_DECLARATION,
+        STATEMENT_FUNCTION_DEFINITION,
         STATEMENT_IF,
         STATEMENT_LOOP,
-        STATEMENT_PROCEDURE_DEFINITION,
         STATEMENT_RETURN,
         STATEMENT_SKIP,
+        STATEMENT_STRUCT_DECLARATION,
         STATEMENT_STRUCT_DEFINITION,
         STATEMENT_VARIABLE_DECLARATION,
     } kind;
@@ -121,6 +123,17 @@ typedef struct Statement {
         } block;
         Expression *expression;
         struct {
+            Expression *name;
+            Member *first_parameter;
+            Type *return_type;
+        } function_declaration;
+        struct {
+            Expression *name;
+            Member *first_parameter;
+            Type *return_type;
+            struct Statement *first_statement;
+        } function_definition;
+        struct {
             Expression *condition;
             struct Statement *true_block;
             struct Statement *false_block;
@@ -128,13 +141,10 @@ typedef struct Statement {
         struct {
             struct Statement *block;
         } loop;
+        Expression *return_expression;
         struct {
             Expression *name;
-            Member *first_parameter;
-            Type *return_type;
-            struct Statement *first_statement;
-        } procedure_definition;
-        Expression *return_expression;
+        } struct_declaration;
         struct {
             Expression *name;
             Token *base;
@@ -144,6 +154,7 @@ typedef struct Statement {
             Expression *name;
             Type *type;
             Expression *value;
+            int external;
         } variable_declaration;
     };
 

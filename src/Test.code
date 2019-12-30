@@ -1,3 +1,11 @@
+FILE :: struct
+
+stdin: @FILE = external
+stdout: @FILE = external
+stderr: @FILE = external
+
+fputc :: (char: Int, file: @FILE) -> Int
+
 putc :: (char: Char) -> Int {
 	char := char as Int
 	return fputc(char, stdout)
@@ -29,7 +37,7 @@ lfib :: (n: Int) -> Int {
 	}
 }
 
-print_number :: (n: Int) {
+print_number :: (n: Int) -> Int {
 	if (n >= 10) {
 		print_number(n / 10)
 	}
@@ -37,7 +45,7 @@ print_number :: (n: Int) {
 	return 0
 }
 
-main :: () {
+main :: () -> Int {
 	i := 0
 	loop {
 		n := lfib(i)
