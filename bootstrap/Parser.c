@@ -932,9 +932,12 @@ Statement *statement__create_return(Expression *expression) {
 }
 
 // return:
-//      "return" expression EOL
+//      "return" expression? EOL
 Statement *parse_return_statement(Context *context) {
     consume_one(context, "return", required(is_return_keyword));
+    if (consume_end_of_line(context, FALSE)) {
+        return statement__create_return(NULL);
+    }
     consume_space(context, 1);
     Expression *expression = parse_expression(context);
     consume_end_of_line(context, TRUE);

@@ -262,7 +262,9 @@ void print_statement(Statement *statement) {
     }
     case STATEMENT_RETURN: {
         printf("%sreturn ", SGR_YELLOW);
-        print_expression(statement->return_expression);
+        if (statement->return_expression != NULL) {
+            print_expression(statement->return_expression);
+        }
         printf("\n");
         return;
     }

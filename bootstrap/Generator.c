@@ -12,6 +12,7 @@ typedef struct IR_Type {
         IR_TYPE_CHARACTER,
         IR_TYPE_INTEGER,
         IR_TYPE_OPAQUE,
+        IR_TYPE_NOTHING,
         IR_TYPE_POINTER,
     } kind;
 
@@ -48,6 +49,10 @@ typedef struct IR_Value {
     IR_Type *type;
     String *name;
     String *repr;
+
+    union {
+        struct IR_Values *function_parameters;
+    };
 } IR_Value;
 
 #define VALUE_NAME(value) value->name->data
@@ -238,6 +243,7 @@ IR_Value *value__create_function(Context *context, IR_Type *type, String *name) 
     String *repr = string__create("@");
     string__append_string(repr, name);
     IR_Value *self = value__create(IR_VALUE_FUNCTION, type, name, repr);
+    self->function_parameters = values__create();
     values__append(context->declarations, self);
     return self;
 }
@@ -415,8 +421,14 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             values__append(function_arguments, function_argument);
             argument = argument->next;
         }
-        IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Int"))); // TODO: retrieve function return type
-        fprintf(context->file, "  %s = call %s %s(", VALUE_REPR(result), VALUE_TYPE(function), VALUE_REPR(function));
+        IR_Value *result;
+        if (function->type->kind == IR_TYPE_NOTHING) {
+            result = NULL;
+            fprintf(context->file, "  call %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
+        } else {
+            result = value__create_temp_variable(context, function->type);
+            fprintf(context->file, "  %s = call %s %s(", VALUE_REPR(result), VALUE_TYPE(function), VALUE_REPR(function));
+        }
         IR_Values_Item *function_argument = function_arguments->first;
         while (function_argument != NULL) {
             fprintf(context->file, "%s %s", VALUE_TYPE(function_argument->value), VALUE_REPR(function_argument->value));
@@ -549,11 +561,12 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_FUNCTION_DECLARATION: {
         IR_Value *function = value__create_function(context, types__get_by_type(context->types, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
-        fprintf(context->file, "declare i32 %s(", VALUE_REPR(function));
+        fprintf(context->file, "declare %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
         Member *parameter = statement->function_definition.first_parameter;
         while (parameter != NULL) {
             IR_Type *parameter_type = types__get_by_type(context->types, parameter->type);
             IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
+            values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             parameter = parameter->next;
             if (parameter != NULL) {
@@ -568,11 +581,12 @@ void emit_statement(Context *context, Statement *statement) {
         
         context = create_function_context(context);
 
-        fprintf(context->file, "define i32 %s(", VALUE_REPR(function));
+        fprintf(context->file, "define %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
         Member *parameter = statement->function_definition.first_parameter;
         while (parameter != NULL) {
             IR_Type *parameter_type = types__get_by_type(context->types, parameter->type);
             IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
+            values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             parameter = parameter->next;
             if (parameter != NULL) {
@@ -641,8 +655,12 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_RETURN: {
-        IR_Value *result = emit_expression(context, statement->return_expression);
-        fprintf(context->file, "  ret %s %s\n", VALUE_TYPE(result), VALUE_REPR(result));
+        if (statement->return_expression != NULL) {
+            IR_Value *result = emit_expression(context, statement->return_expression);
+            fprintf(context->file, "  ret %s %s\n", VALUE_TYPE(result), VALUE_REPR(result));
+        } else {
+            fprintf(context->file, "  ret void\n");
+        }
         return;
     }
     case STATEMENT_STRUCT_DECLARATION: {
@@ -681,6 +699,7 @@ void generate(Statement *first_statement) {
     types__append(context->types, type__create(IR_TYPE_BOOLEAN, string__create("Bool"), string__create("i1")));
     types__append(context->types, type__create(IR_TYPE_CHARACTER, string__create("Char"), string__create("i8")));
     types__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
+    types__append(context->types, type__create(IR_TYPE_NOTHING, string__create("Nothing"), string__create("void")));
 
     Statement *statement = first_statement;
     while (statement != NULL) {
