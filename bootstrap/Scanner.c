@@ -21,23 +21,23 @@ const char *KEYWORDS[] = {
     "true",
 };
 
-int is_character(char c) {
+int is_character(unsigned char c) {
     return c >= ' ' && c < 128 && c != '\'';
 }
 
-int is_digit(char c) {
+int is_digit(unsigned char c) {
     return c >= '0' && c <= '9';
 }
 
-int is_double_quote(char c) {
+int is_double_quote(unsigned char c) {
     return c == '\"';
 }
 
-int is_escape(char c) {
+int is_escape(unsigned char c) {
     return c == 'n' || c == 't' || c == '\"' || c == '\'' || c == '\\';
 }
 
-char get_escape(char c) {
+char get_escape(unsigned char c) {
     switch (c) {
     case '\"':
         return '\"';
@@ -53,35 +53,35 @@ char get_escape(char c) {
     return 0;
 }
 
-int is_identifier_start(char c) {
-    return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_';
+int is_identifier_start(unsigned char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
 }
 
-int is_identifier_body(char c) {
-    return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c == '_' || c >= '0' && c <= '9';
+int is_identifier_body(unsigned char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= '0' && c <= '9');
 }
 
-int is_comment_start(char c) {
+int is_comment_start(unsigned char c) {
     return c == '\\';
 }
 
-int is_comment_body(char c) {
-    return c >= 32 && c <= 127 || c == '\t';
+int is_comment_body(unsigned char c) {
+    return (c >= 32 && c <= 127) || c == '\t';
 }
 
-int is_single_quote(char c) {
+int is_single_quote(unsigned char c) {
     return c == '\'';
 }
 
-int is_whitespace(char c) {
+int is_whitespace(unsigned char c) {
     return c == ' ' || c == '\t';
 }
 
-int is_string_character(char c) {
+int is_string_character(unsigned char c) {
     return c >= ' ' && c < 128 && c != '\"';
 }
 
-int is_valid(char c) {
+int is_valid(unsigned char c) {
     return c > 0 && c < 128;
 }
 
@@ -92,12 +92,12 @@ Token *read_character(Source *source) {
 
     char value = 0;
     char consumed;
-    if (consumed = source__advance(source, is_single_quote)) {
+    if ((consumed = source__advance(source, is_single_quote))) {
         string__append_char(lexeme, consumed);
-        if (consumed = source__advance(source, is_character)) {
+        if ((consumed = source__advance(source, is_character))) {
             string__append_char(lexeme, consumed);
             if (consumed == '\\') {
-                if (consumed = source__advance(source, is_escape)) {
+                if ((consumed = source__advance(source, is_escape))) {
                     string__append_char(lexeme, consumed);
                     value = get_escape(consumed);
                 }
@@ -120,7 +120,7 @@ Token *read_space(Source *source) {
 
     char consumed;
     int count = 0;
-    while (consumed = source__advance(source, is_whitespace)) {
+    while ((consumed = source__advance(source, is_whitespace))) {
         if (consumed == '\t') {
             count = (count / TAB_SIZE + 1) * TAB_SIZE;
         } else {
@@ -137,7 +137,7 @@ Token *read_comment(Source *source) {
     int column = source__current_column(source);
 
     char consumed;
-    while (consumed = source__advance(source, is_comment_body)) {
+    while ((consumed = source__advance(source, is_comment_body))) {
         string__append_char(lexeme, consumed);
     }
     return token__create_comment(lexeme, line, column);
@@ -196,12 +196,12 @@ Token *read_string(Source *source) {
 
     String *value = string__create_empty(32);
     char consumed;
-    if (consumed = source__advance(source, is_double_quote)) {
+    if ((consumed = source__advance(source, is_double_quote))) {
         string__append_char(lexeme, consumed);
-        while (consumed = source__advance(source, is_string_character)) {
+        while ((consumed = source__advance(source, is_string_character))) {
             string__append_char(lexeme, consumed);
             if (consumed == '\\') {
-                if (consumed = source__advance(source, is_escape)) {
+                if ((consumed = source__advance(source, is_escape))) {
                     string__append_char(lexeme, consumed);
                     string__append_char(value, get_escape(consumed));
                 } else {
@@ -211,7 +211,7 @@ Token *read_string(Source *source) {
                 string__append_char(value, consumed);
             }
         }
-        if (consumed = source__advance(source, is_double_quote)) {
+        if ((consumed = source__advance(source, is_double_quote))) {
             string__append_char(lexeme, consumed);
             return token__create_string(lexeme, line, column, value);
         }

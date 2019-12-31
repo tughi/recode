@@ -71,11 +71,11 @@ def build():
             compile_file = True
 
         if compile_file:
-            execute(f"""gcc -c -o {obj_file} {c_file}""")
+            execute(f"""clang -c -o {obj_file} {c_file}""")
             obj_files_changed = True
 
     if obj_files_changed or not os.path.exists(BIN_FILE):
-        execute(f"""gcc -o {BIN_FILE} {' '.join(obj_files)}""")
+        execute(f"""clang -o {BIN_FILE} {' '.join(obj_files)}""")
 
 
 def run():

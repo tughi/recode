@@ -18,6 +18,6 @@ int source__current_line(Source *self);
 
 int source__current_column(Source *self);
 
-char source__advance(Source *self, int (*accepts)(char));
+char source__advance(Source *self, int (*accepts)(unsigned char));
 
 #endif

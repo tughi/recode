@@ -23,7 +23,7 @@ int source__current_column(Source *self) {
     return self->column;
 }
 
-char source__advance(Source *self, int (*accepts)(char)) {
+char source__advance(Source *self, int (*accepts)(unsigned char)) {
     char next_char = self->data[self->index];
     if (next_char && (*accepts)(next_char)) {
         self->index += 1;
