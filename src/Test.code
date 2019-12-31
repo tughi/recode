@@ -6,6 +6,8 @@ stderr: @FILE = external
 
 fputc :: (char: Int, file: @FILE) -> Int
 
+fputs :: (string: @Char, file: @FILE) -> Int
+
 putc :: (char: Char) -> Int {
 	char := char as Int
 	return fputc(char, stdout)
@@ -46,6 +48,8 @@ print_number :: (n: Int) -> Nothing {
 }
 
 main :: () -> Int {
+	fputs("Hello World!\n\n", stdout)
+
 	i := 0
 	loop {
 		n := lfib(i)

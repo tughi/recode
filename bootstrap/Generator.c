@@ -82,6 +82,7 @@ typedef struct Counter {
 } Counter;
 
 typedef struct Context {
+    struct Context *global_context;
     FILE *file;
     IR_Types *types;
     IR_Values *declarations;
@@ -209,16 +210,22 @@ Counter *counter__clone(Counter *other) {
     return self;
 }
 
-int counter__get(Counter *self) {
-    return self->count;
-}
-
-void counter__increment(Counter *self) {
-    self->count += 1;
+String *counter__get(Counter *self) {
+    int value = self->count++;
+    String *result = string__create("");
+    if (value < 100) {
+        string__append_char(result, '0');
+    }
+    if (value < 10) {
+        string__append_char(result, '0');
+    }
+    string__append_int(result, value);
+    return result;
 }
 
 Context *context__create(FILE *file) {
     Context *self = (Context *)malloc(sizeof(Context));
+    self->global_context = self;
     self->file = file;
     self->types = types__create();
     self->declarations = values__create();
@@ -230,6 +237,7 @@ Context *context__create(FILE *file) {
 
 Context *context__clone(Context *other) {
     Context *self = (Context *)malloc(sizeof(Context));
+    self->global_context = other->global_context;
     self->file = other->file;
     self->types = other->types;
     self->declarations = other->declarations;
@@ -250,16 +258,9 @@ IR_Value *value__create_function(Context *context, IR_Type *type, String *name) 
 
 IR_Value *value__create_label(Context *context, String *name) {
     string__append_char(name, '.');
-    if (counter__get(context->temp_variables) < 100) {
-        string__append_char(name, '0');
-    }
-    if (counter__get(context->temp_variables) < 10) {
-        string__append_char(name, '0');
-    }
-    string__append_int(name, counter__get(context->temp_variables));
+    string__append_string(name, counter__get(context->temp_variables));
     String *repr = string__create("%");
     string__append_string(repr, name);
-    counter__increment(context->temp_variables);
     return value__create(IR_VALUE_LABEL, NULL, name, repr);
 }
 
@@ -275,7 +276,7 @@ IR_Value *value__create_global_variable(Context *context, IR_Type *type, String 
     String *repr = string__create("@");
     string__append_string(repr, name);
     IR_Value *self = value__create(IR_VALUE_POINTER, type, name, repr);
-    values__append(context->declarations, self);
+    values__append(context->global_context->declarations, self);
     return self;
 }
 
@@ -285,14 +286,7 @@ IR_Value *value__create_local_variable(Context *context, IR_Type *type, String *
     IR_Value *shadowed_variable = values__find(context->declarations, name);
     if (shadowed_variable != NULL) {
         string__append_char(repr, '.');
-        if (counter__get(context->temp_variables) < 100) {
-            string__append_char(repr, '0');
-        }
-        if (counter__get(context->temp_variables) < 10) {
-            string__append_char(repr, '0');
-        }
-        string__append_int(repr, counter__get(context->temp_variables));
-        counter__increment(context->temp_variables);
+        string__append_string(repr, counter__get(context->temp_variables));
     }
     IR_Value *self = value__create(IR_VALUE_POINTER, type, name, repr);
     values__append(context->declarations, self);
@@ -301,15 +295,13 @@ IR_Value *value__create_local_variable(Context *context, IR_Type *type, String *
 
 IR_Value *value__create_temp_variable(Context *context, IR_Type *type) {
     String *repr = string__create("%.");
-    if (counter__get(context->temp_variables) < 100) {
-        string__append_char(repr, '0');
-    }
-    if (counter__get(context->temp_variables) < 10) {
-        string__append_char(repr, '0');
-    }
-    string__append_int(repr, counter__get(context->temp_variables));
-    counter__increment(context->temp_variables);
+    string__append_string(repr, counter__get(context->temp_variables));
     return value__create(IR_VALUE_TEMP_VARIABLE, type, NULL, repr);
+}
+
+void string__append_byte(String *self, char value) {
+    string__append_char(self, ((value >> 4) & 0xf) % 16 + (((value >> 4) & 0xf) < 10 ? '0' : 'A' - 10));
+    string__append_char(self, (value & 0xf) % 16 + ((value & 0xf) < 10 ? '0' : 'A' - 10));
 }
 
 IR_Value *emit_literal(Context *context, Token *token) {
@@ -323,6 +315,32 @@ IR_Value *emit_literal(Context *context, Token *token) {
             IR_Type *type = types__get_by_name(context->types, string__create("Int"));
             String *repr = string__append_int(string__create_empty(0), token->integer.value);
             return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
+        }
+        case TOKEN_STRING: {
+            IR_Type *type = type__create_pointer(types__get_by_name(context->types, string__create("Char")));
+            IR_Value *value = value__create_temp_variable(context, type);
+
+            String *constant_repr = string__create("@.string.");
+            string__append_string(constant_repr, counter__get(context->global_context->temp_variables));
+            String *constant_name = string__create(constant_repr->data);
+            string__append_string(constant_repr, string__create(" = private constant ["));
+            string__append_int(constant_repr, token->string.value->length + 1);
+            string__append_string(constant_repr, string__create(" x i8] c\""));
+            for (int i = 0; i < token->string.value->length; i++) {
+                char c = token->string.value->data[i];
+                if (c > 31 && c < 127) {
+                    string__append_char(constant_repr, c);
+                } else {
+                    string__append_char(constant_repr, '\\');
+                    string__append_byte(constant_repr, c);
+                }
+            }
+            string__append_string(constant_repr, string__create("\\00\""));
+            IR_Value *constant = value__create(IR_VALUE_CONSTANT, NULL, NULL, constant_repr);
+            values__append(context->global_context->allocas, constant);
+
+            fprintf(context->file, "  %s = getelementptr [%d x i8], [%d x i8]* %s, i64 0, i64 0\n", VALUE_REPR(value), token->string.value->length + 1, token->string.value->length + 1, constant_name->data);
+            return value;
         }
         default: {
             ERROR(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
@@ -538,7 +556,7 @@ void emit_statement(Context *context, Statement *statement) {
                 exit(1);
             }
         }
-        fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
+        fprintf(context->file, "  store %s %s, %s* %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
         return;
     }
     case STATEMENT_BLOCK: {
@@ -609,7 +627,7 @@ void emit_statement(Context *context, Statement *statement) {
         fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
         IR_Values_Item *alloca_item = context->allocas->first;
         while (alloca_item != NULL) {
-            fprintf(context->file, "  %s = alloca i32\n", VALUE_REPR(alloca_item->value));
+            fprintf(context->file, "  %s = alloca %s\n", VALUE_REPR(alloca_item->value), VALUE_TYPE(alloca_item->value));
             alloca_item = alloca_item->next;
         }
         fprintf(context->file, "  br label %s\n", VALUE_REPR(entry_label));
@@ -681,7 +699,7 @@ void emit_statement(Context *context, Statement *statement) {
             IR_Value *value = emit_expression(context, statement->variable_declaration.value);
             IR_Value *variable = value__create_local_variable(context, value->type, statement->variable_declaration.name->variable.name->lexeme);
             values__append(context->allocas, variable);
-            fprintf(context->file, "  store i32 %s, i32* %s\n", VALUE_REPR(value), VALUE_REPR(variable));
+            fprintf(context->file, "  store %s %s, %s* %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
         }
         return;
     }
@@ -705,6 +723,13 @@ void generate(Statement *first_statement) {
     while (statement != NULL) {
         emit_statement(context, statement);
         statement = statement->next;
+        fprintf(context->file, "\n");
+    }
+
+    IR_Values_Item *alloca = context->allocas->first;
+    while (alloca != NULL) {
+        fprintf(context->file, "%s\n", VALUE_REPR(alloca->value));
+        alloca = alloca->next;
         fprintf(context->file, "\n");
     }
 
