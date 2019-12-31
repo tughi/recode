@@ -1,6 +1,7 @@
 #ifndef __recode__parser_h__
 #define __recode__parser_h__
 
+#include "List.h"
 #include "Token.h"
 
 struct Type;
@@ -161,6 +162,6 @@ typedef struct Statement {
     struct Statement *next;
 } Statement;
 
-Statement *parse(Token *first);
+Statement *parse(List *tokens);
 
 #endif

@@ -1,8 +1,8 @@
 #include "Scanner.h"
-#include "String.h"
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "Logging.h"
+#include "String.h"
+#include "Token.h"
 
 #define KEYWORDS_COUNT 12
 
@@ -246,21 +246,20 @@ Token *scan_token(Source *source) {
     }
 
     if (token_column == source__current_column(source) && token_line == source__current_line(source)) {
-        printf("Each scan must advance the source");
-        exit(1);
+        PANIC(__FILE__, __LINE__, "Each scan must advance the source%c", 0);
     }
 
     return token;
 }
 
-Token *scan(Source *source) {
-    Token *first = scan_token(source);
-    Token *last = first;
+List *scan(Source *source) {
+    List *tokens = list__create();
 
-    while (last->kind != TOKEN_END_OF_FILE) {
-        last->next = scan_token(source);
-        last = last->next;
+    for (;;) {
+        Token *token = scan_token(source);
+        list__append(tokens, token);
+        if (token->kind == TOKEN_END_OF_FILE) {
+            return tokens;
+        }
     }
-
-    return first;
 }

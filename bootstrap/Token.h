@@ -36,8 +36,6 @@ typedef struct Token {
             String *value;
         } string;
     };
-
-    struct Token *next;
 } Token;
 
 Token *token__create_character(String *lexeme, int line, int column, char value);
@@ -52,6 +50,6 @@ Token *token__create_other(String *lexeme, int line, int column);
 Token *token__create_space(String *lexeme, int line, int column, int count);
 Token *token__create_string(String *lexeme, int line, int column, String *value);
 
-void token__join_next(Token *self);
+void token__join(Token *self, Token *other);
 
 #endif

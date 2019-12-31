@@ -6,48 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *load_file(String *file_name);
-
-void print_type(Type *type);
-
-void print_statement(Statement *statement);
-
-void print_expression(Expression *expression);
-
-void print_token(Token *token);
-
-int main(int argc, char *argv[]) {
-    // String *source_file = string__create("../src/Source.code");
-    // String *source_file = string__create("../src/Visitor.code");
-    String *source_file = string__create("../src/Test.code");
-    Source *source = source__create(load_file(source_file));
-
-    Token *first_token = scan(source);
-
-    // Token *token = first_token;
-    // for (int line = 0; token != NULL; token = token->next) {
-    //     if (token->line != line) {
-    //         if (line > 0) {
-    //             printf("\n");
-    //         }
-    //         line = token->line;
-    //         printf("%03d: ", line);
-    //     }
-    //     print_token(token);
-    // }
-
-    Statement *first_statement = parse(first_token);
-
-    Statement *statement = first_statement;
-    while (statement != NULL) {
-        print_statement(statement);
-        printf("\n");
-        statement = statement->next;
-    }
-
-    generate(first_statement);
-}
-
 char *load_file(String *file_name) {
     FILE *file = fopen(file_name->data, "r");
     if (file == NULL) {
@@ -61,6 +19,68 @@ char *load_file(String *file_name) {
     }
     fclose(file);
     return content->data;
+}
+
+void print_token(Token *token) {
+    if (token == NULL) {
+        printf("%sToken::NULL%s", SGR_ERROR, SGR_RESET);
+        return;
+    }
+
+    switch (token->kind) {
+    case TOKEN_CHARACTER:
+        printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_COMMENT:
+        printf("%s%s%s", SGR_DEFAULT, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_END_OF_FILE:
+        printf("%s%s%s\n", SGR_BLACK, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_END_OF_LINE:
+        printf("%s%s%s", SGR_BLACK, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_ERROR:
+        printf("%s%s%s", SGR_ERROR, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_IDENTIFIER:
+        printf("%s%s%s", token->lexeme->data[0] <= 'Z' ? SGR_FAINT_YELLOW : SGR_RESET, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_INTEGER:
+        printf("%s%s%s", SGR_CYAN, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_KEYWORD:
+        printf("%s%s%s", SGR_YELLOW, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_OTHER:
+        printf("%s%s%s", SGR_WHITE_BOLD, token->lexeme->data, SGR_RESET);
+        return;
+    case TOKEN_SPACE:
+        printf("%s%s", SGR_RESET, token->lexeme->data);
+        return;
+    case TOKEN_STRING:
+        printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
+        return;
+    default:
+        printf("%sToken::%d%s", SGR_ERROR, token->kind, SGR_RESET);
+    }
+}
+
+void dump_tokens(List *tokens) {
+    List_Iterator *tokens_iterator = list__create_iterator(tokens);
+
+    Token *token = NULL;
+    int line = 0;
+    while ((token = list_iterator__next(tokens_iterator)) != NULL) {
+        if (token->line != line) {
+            if (line > 0) {
+                printf("\n");
+            }
+            line = token->line;
+            printf("%03d: ", line);
+        }
+        print_token(token);
+    }
 }
 
 void print_type(Type *type) {
@@ -119,6 +139,77 @@ void print_type(Type *type) {
     default:
         printf("%sType::%d%s", SGR_ERROR, type->kind, SGR_RESET);
         return;
+    }
+}
+
+void print_expression(Expression *expression) {
+    if (expression == NULL) {
+        printf("%sExpression::NULL%s", SGR_ERROR, SGR_RESET);
+        return;
+    }
+
+    switch (expression->kind) {
+    case EXPRESSION_ARRAY_ITEM:
+        print_expression(expression->array_item.array);
+        printf("[");
+        print_expression(expression->array_item.index);
+        printf("]");
+        return;
+    case EXPRESSION_BINARY: {
+        printf("%s(", SGR_BLACK);
+        print_expression(expression->binary.left_expression);
+        printf(" ");
+        print_token(expression->binary.operator_token);
+        printf(" ");
+        print_expression(expression->binary.right_expression);
+        printf("%s)%s", SGR_BLACK, SGR_RESET);
+        return;
+    }
+    case EXPRESSION_CALL: {
+        print_expression(expression->call.callee);
+        printf("%s(", SGR_WHITE_BOLD);
+        Argument *argument = expression->call.first_argument;
+        while (argument != NULL) {
+            if (argument->name != NULL) {
+                print_token(argument->name);
+                printf(" = ");
+            }
+            print_expression(argument->value);
+            argument = argument->next;
+            if (argument != NULL) {
+                printf("%s, ", SGR_WHITE_BOLD);
+            }
+        }
+        printf("%s)%s", SGR_WHITE_BOLD, SGR_RESET);
+        return;
+    }
+    case EXPRESSION_CAST: {
+        printf("%s(", SGR_BLACK);
+        print_expression(expression->cast.expression);
+        printf("%s as ", SGR_YELLOW);
+        print_type(expression->cast.type);
+        printf("%s)%s", SGR_BLACK, SGR_RESET);
+        return;
+    }
+    case EXPRESSION_LITERAL:
+        print_token(expression->literal.value);
+        return;
+    case EXPRESSION_MEMBER:
+        print_expression(expression->member.object);
+        printf(".");
+        print_token(expression->member.name);
+        return;
+    case EXPRESSION_VARIABLE:
+        print_token(expression->variable.name);
+        return;
+    case EXPRESSION_UNARY:
+        printf("%s(", SGR_BLACK);
+        print_token(expression->unary.operator_token);
+        print_expression(expression->unary.expression);
+        printf("%s)%s", SGR_BLACK, SGR_RESET);
+        return;
+    default:
+        printf("%sExpression::%d%s", SGR_ERROR, expression->kind, SGR_RESET);
     }
 }
 
@@ -327,118 +418,28 @@ void print_statement(Statement *statement) {
     }
 }
 
-void print_expression(Expression *expression) {
-    if (expression == NULL) {
-        printf("%sExpression::NULL%s", SGR_ERROR, SGR_RESET);
-        return;
-    }
-
-    switch (expression->kind) {
-    case EXPRESSION_ARRAY_ITEM:
-        print_expression(expression->array_item.array);
-        printf("[");
-        print_expression(expression->array_item.index);
-        printf("]");
-        return;
-    case EXPRESSION_BINARY: {
-        printf("%s(", SGR_BLACK);
-        print_expression(expression->binary.left_expression);
-        printf(" ");
-        print_token(expression->binary.operator_token);
-        printf(" ");
-        print_expression(expression->binary.right_expression);
-        printf("%s)%s", SGR_BLACK, SGR_RESET);
-        return;
-    }
-    case EXPRESSION_CALL: {
-        print_expression(expression->call.callee);
-        printf("%s(", SGR_WHITE_BOLD);
-        Argument *argument = expression->call.first_argument;
-        while (argument != NULL) {
-            if (argument->name != NULL) {
-                print_token(argument->name);
-                printf(" = ");
-            }
-            print_expression(argument->value);
-            argument = argument->next;
-            if (argument != NULL) {
-                printf("%s, ", SGR_WHITE_BOLD);
-            }
-        }
-        printf("%s)%s", SGR_WHITE_BOLD, SGR_RESET);
-        return;
-    }
-    case EXPRESSION_CAST: {
-        printf("%s(", SGR_BLACK);
-        print_expression(expression->cast.expression);
-        printf("%s as ", SGR_YELLOW);
-        print_type(expression->cast.type);
-        printf("%s)%s", SGR_BLACK, SGR_RESET);
-        return;
-    }
-    case EXPRESSION_LITERAL:
-        print_token(expression->literal.value);
-        return;
-    case EXPRESSION_MEMBER:
-        print_expression(expression->member.object);
-        printf(".");
-        print_token(expression->member.name);
-        return;
-    case EXPRESSION_VARIABLE:
-        print_token(expression->variable.name);
-        return;
-    case EXPRESSION_UNARY:
-        printf("%s(", SGR_BLACK);
-        print_token(expression->unary.operator_token);
-        print_expression(expression->unary.expression);
-        printf("%s)%s", SGR_BLACK, SGR_RESET);
-        return;
-    default:
-        printf("%sExpression::%d%s", SGR_ERROR, expression->kind, SGR_RESET);
+void dump_statements(Statement *first_statement) {
+    Statement *statement = first_statement;
+    while (statement != NULL) {
+        print_statement(statement);
+        printf("\n");
+        statement = statement->next;
     }
 }
 
-void print_token(Token *token) {
-    if (token == NULL) {
-        printf("%sToken::NULL%s", SGR_ERROR, SGR_RESET);
-        return;
-    }
+int main(int argc, char *argv[]) {
+    // String *source_file = string__create("../src/Source.code");
+    // String *source_file = string__create("../src/Visitor.code");
+    String *source_file = string__create("../src/Test.code");
+    Source *source = source__create(load_file(source_file));
 
-    switch (token->kind) {
-    case TOKEN_CHARACTER:
-        printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_COMMENT:
-        printf("%s%s%s", SGR_DEFAULT, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_END_OF_FILE:
-        printf("%s%s%s\n", SGR_BLACK, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_END_OF_LINE:
-        printf("%s%s%s", SGR_BLACK, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_ERROR:
-        printf("%s%s%s", SGR_ERROR, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_IDENTIFIER:
-        printf("%s%s%s", token->lexeme->data[0] <= 'Z' ? SGR_FAINT_YELLOW : SGR_RESET, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_INTEGER:
-        printf("%s%s%s", SGR_CYAN, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_KEYWORD:
-        printf("%s%s%s", SGR_YELLOW, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_OTHER:
-        printf("%s%s%s", SGR_WHITE_BOLD, token->lexeme->data, SGR_RESET);
-        return;
-    case TOKEN_SPACE:
-        printf("%s%s", SGR_RESET, token->lexeme->data);
-        return;
-    case TOKEN_STRING:
-        printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
-        return;
-    default:
-        printf("%sToken::%d%s", SGR_ERROR, token->kind, SGR_RESET);
-    }
+    List *tokens = scan(source);
+
+    // dump_tokens(tokens);
+
+    Statement *first_statement = parse(tokens);
+
+    // dump_statements(first_statement);
+
+    generate(first_statement);
 }

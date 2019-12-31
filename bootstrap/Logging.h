@@ -2,6 +2,7 @@
 #define __recode__logging_h__
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #define SGR_RESET "\033[0m"
 
@@ -26,5 +27,7 @@
 #define WARNING(source_file, source_line, format, ...) LOG(SGR_WARNING, source_file, source_line, format, __VA_ARGS__)
 
 #define INFO(source_file, source_line, format, ...) LOG(SGR_INFO, source_file, source_line, format, __VA_ARGS__)
+
+#define PANIC(source_file, source_line, format, ...) ERROR(source_file, source_line, format, __VA_ARGS__); exit(1)
 
 #endif

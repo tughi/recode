@@ -2,20 +2,12 @@
 
 #include <stdlib.h>
 
-void token__join_next(Token *self) {
-    if (self->next) {
-        string__append_string(self->lexeme, self->next->lexeme);
-        self->next = self->next->next;
-    }
-}
-
 static Token *token__create(int kind, String *lexeme, int line, int column) {
-    Token *self = (Token *)malloc(sizeof(Token));
+    Token *self = malloc(sizeof(Token));
     self->kind = kind;
     self->lexeme = lexeme;
     self->line = line;
     self->column = column;
-    self->next = NULL;
     return self;
 }
 
@@ -69,4 +61,9 @@ Token *token__create_string(String *lexeme, int line, int column, String *value)
     Token *self = token__create(TOKEN_STRING, lexeme, line, column);
     self->string.value = value;
     return self;
+}
+
+void token__join(Token *self, Token *other) {
+    string__append_string(self->lexeme, other->lexeme);
+    other->lexeme = string__create("");
 }
