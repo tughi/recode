@@ -213,13 +213,12 @@ void print_alignment(int alignment) {
     }
 }
 
-void print_statement(Statement *statement) {
+void print_statement(Statement *statement, int alignment) {
     if (statement == NULL) {
         printf("%sStatement::NULL%s\n", SGR_ERROR, SGR_RESET);
         return;
     }
 
-    static int alignment = 0;
     print_alignment(alignment);
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
@@ -233,13 +232,10 @@ void print_statement(Statement *statement) {
     }
     case STATEMENT_BLOCK: {
         printf("%s{\n", SGR_WHITE_BOLD);
-        alignment += 1;
-        Statement *block_statement = statement->block.first_statement;
-        while (block_statement != NULL) {
-            print_statement(block_statement);
-            block_statement = block_statement->next;
+        for (List_Iterator *block_statements = list__create_iterator(statement->block.statements); list_iterator__has_next(block_statements); ) {
+            Statement *block_statement = list_iterator__next(block_statements);
+            print_statement(block_statement, alignment + 1);
         }
-        alignment -= 1;
         print_alignment(alignment);
         printf("%s}\n", SGR_WHITE_BOLD);
         return;
@@ -256,42 +252,20 @@ void print_statement(Statement *statement) {
     case STATEMENT_IF: {
         printf("%sif%s (", SGR_YELLOW, SGR_WHITE_BOLD);
         print_expression(statement->if_.condition);
-        printf("%s) {\n", SGR_WHITE_BOLD);
-        alignment += 1;
-        Statement *block_statement = statement->if_.true_block->block.first_statement;
-        while (block_statement != NULL) {
-            print_statement(block_statement);
-            block_statement = block_statement->next;
-        }
-        alignment -= 1;
+        printf("%s) ", SGR_WHITE_BOLD);
+        print_statement(statement->if_.true_block, alignment);
         print_alignment(alignment);
-        printf("%s}", SGR_WHITE_BOLD);
         if (statement->if_.false_block != NULL) {
-            printf("%s else%s {\n", SGR_YELLOW, SGR_WHITE_BOLD);
-            alignment += 1;
-            Statement *block_statement = statement->if_.false_block->block.first_statement;
-            while (block_statement != NULL) {
-                print_statement(block_statement);
-                block_statement = block_statement->next;
-            }
-            alignment -= 1;
+            printf("%selse%s ", SGR_YELLOW, SGR_WHITE_BOLD);
+            print_statement(statement->if_.false_block, alignment);
             print_alignment(alignment);
-            printf("%s}", SGR_WHITE_BOLD);
         }
         printf("\n");
         return;
     }
     case STATEMENT_LOOP: {
-        printf("%sloop%s {\n", SGR_YELLOW, SGR_WHITE_BOLD);
-        alignment += 1;
-        Statement *block_statement = statement->loop.block->block.first_statement;
-        while (block_statement != NULL) {
-            print_statement(block_statement);
-            block_statement = block_statement->next;
-        }
-        alignment -= 1;
-        print_alignment(alignment);
-        printf("%s}\n", SGR_WHITE_BOLD);
+        printf("%sloop%s", SGR_YELLOW, SGR_WHITE_BOLD);
+        print_statement(statement->loop.block, alignment);
         return;
     }
     case STATEMENT_FUNCTION_DECLARATION: {
@@ -332,13 +306,9 @@ void print_statement(Statement *statement) {
             print_type(statement->function_definition.return_type);
         }
         printf("%s {\n", SGR_WHITE_BOLD);
-        alignment += 1;
-        Statement *function_statement = statement->function_definition.first_statement;
-        while (function_statement != NULL) {
-            print_statement(function_statement);
-            function_statement = function_statement->next;
+        for (List_Iterator *function_statements = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(function_statements); ) {
+            print_statement(list_iterator__next(function_statements), alignment + 1);
         }
-        alignment -= 1;
         print_alignment(alignment);
         printf("%s}\n", SGR_WHITE_BOLD);
         return;
@@ -409,12 +379,11 @@ void print_statement(Statement *statement) {
     }
 }
 
-void dump_statements(Statement *first_statement) {
-    Statement *statement = first_statement;
-    while (statement != NULL) {
-        print_statement(statement);
+void dump_statements(List *statements) {
+    for (List_Iterator *iterator = list__create_iterator(statements); list_iterator__has_next(iterator); ) {
+        Statement *block_statement = list_iterator__next(iterator);
+        print_statement(block_statement, 0);
         printf("\n");
-        statement = statement->next;
     }
 }
 
@@ -428,9 +397,9 @@ int main(int argc, char *argv[]) {
 
     // dump_tokens(tokens);
 
-    Statement *first_statement = parse(tokens);
+    List *statements = parse(tokens);
 
-    // dump_statements(first_statement);
+    dump_statements(statements);
 
-    generate(first_statement);
+    generate(statements);
 }

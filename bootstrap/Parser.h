@@ -118,7 +118,7 @@ typedef struct Statement {
             Expression *value;
         } assignment;
         struct {
-            struct Statement *first_statement;
+            List *statements;
         } block;
         Expression *expression;
         struct {
@@ -130,7 +130,7 @@ typedef struct Statement {
             Expression *name;
             Type *return_type;
             List *parameters;
-            struct Statement *first_statement;
+            List *statements;
         } function_definition;
         struct {
             Expression *condition;
@@ -156,10 +156,8 @@ typedef struct Statement {
             int external;
         } variable_declaration;
     };
-
-    struct Statement *next;
 } Statement;
 
-Statement *parse(List *tokens);
+List *parse(List *tokens);
 
 #endif

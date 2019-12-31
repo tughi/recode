@@ -13,6 +13,11 @@ putc :: (char: Char) -> Int {
 	return fputc(char, stdout)
 }
 
+puts :: (message: @Char) -> Nothing {
+	fputs(message, stdout)
+	return
+}
+
 rfib :: (n: Int) -> Int {
 	if (n < 2) {
 		return n
@@ -48,15 +53,11 @@ print_number :: (n: Int) -> Nothing {
 }
 
 main :: () -> Int {
-	fputs("Hello World!\n\n", stdout)
-
 	i := 0
 	loop {
 		n := lfib(i)
 		print_number(i)
-		putc(' ')
-		putc('-')
-		putc(' ')
+		puts(" - ")
 		print_number(n)
 		putc('\n')
 		if (i < 21 && n == rfib(i)) {
@@ -65,6 +66,6 @@ main :: () -> Int {
 			break
 		}
 	}
-	putc('\n')
+	puts("\nGood bye 2019!\n\n")
 	return -1
 }

@@ -1,5 +1,7 @@
 #include "Generator.h"
+
 #include "Logging.h"
+#include "Parser.h"
 
 #include <stdlib.h>
 
@@ -517,10 +519,9 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_BLOCK: {
         context = create_block_context(context);
-        Statement *block_statement = statement->block.first_statement;
-        while (block_statement != NULL) {
+        for (List_Iterator *iterator = list__create_iterator(statement->block.statements); list_iterator__has_next(iterator); ) {
+            Statement *block_statement = list_iterator__next(iterator);
             emit_statement(context, block_statement);
-            block_statement = block_statement->next;
         }
         return;
     }
@@ -571,10 +572,9 @@ void emit_statement(Context *context, Statement *statement) {
         fprintf(context->file, "  br label %s\n", VALUE_REPR(variables_label));
         fprintf(context->file, "%s:\n", VALUE_NAME(entry_label));
 
-        Statement *body_statement = statement->function_definition.first_statement;
-        while (body_statement != NULL) {
+        for (List_Iterator *iterator = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(iterator); ) {
+            Statement *body_statement = list_iterator__next(iterator);
             emit_statement(context, body_statement);
-            body_statement = body_statement->next;
         }
 
         fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
@@ -661,7 +661,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
 }
 
-void generate(Statement *first_statement) {
+void generate(List *statements) {
     FILE *file = fopen("build/code.ll", "w");
 
     Context *context = context__create(file);
@@ -671,10 +671,9 @@ void generate(Statement *first_statement) {
     list__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
     list__append(context->types, type__create(IR_TYPE_NOTHING, string__create("Nothing"), string__create("void")));
 
-    Statement *statement = first_statement;
-    while (statement != NULL) {
+    for (List_Iterator *iterator = list__create_iterator(statements); list_iterator__has_next(iterator); ) {
+        Statement *statement = list_iterator__next(iterator);
         emit_statement(context, statement);
-        statement = statement->next;
         fprintf(context->file, "\n");
     }
 

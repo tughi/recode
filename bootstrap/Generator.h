@@ -1,8 +1,8 @@
 #ifndef __recode__generator_h__
 #define __recode__generator_h__
 
-#include "Parser.h"
+#include "List.h"
 
-void generate(Statement *first_statement);
+void generate(List *statements);
 
 #endif

@@ -710,23 +710,16 @@ Statement *parse_struct(Context *context, Expression *name) {
 
 Statement *parse_statement(Context *context);
 
-Statement *parse_statements(Context *context) {
-    Statement *first_statement = NULL;
-    Statement *last_statement = NULL;
+List *parse_statements(Context *context) {
+    List *statements = list__create();
     do {
         Statement *statement = parse_statement(context);
         if (statement == NULL) {
             break;
         }
-        statement->next = NULL;
-        if (last_statement != NULL) {
-            last_statement->next = statement;
-        } else {
-            first_statement = statement;
-        }
-        last_statement = statement;
+        list__append(statements, statement);
     } while (TRUE);
-    return first_statement;
+    return statements;
 }
 
 Statement *statement__create_function_declaration(Expression *name, Type *return_type, List *parameters) {
@@ -738,13 +731,13 @@ Statement *statement__create_function_declaration(Expression *name, Type *return
     return self;
 }
 
-Statement *statement__create_function_definition(Expression *name, Type *return_type, List *parameters, Statement *first_statement) {
+Statement *statement__create_function_definition(Expression *name, Type *return_type, List *parameters, List *statements) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_FUNCTION_DEFINITION;
     self->function_definition.name = name;
     self->function_definition.return_type = return_type;
     self->function_definition.parameters = parameters;
-    self->function_definition.first_statement = first_statement;
+    self->function_definition.statements = statements;
     return self;
 }
 
@@ -776,18 +769,18 @@ Statement *parse_function(Context *context, Expression *name) {
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, TRUE);
     context->alignment += 1;
-    Statement *first_statement = parse_statements(context);
+    List *statements = parse_statements(context);
     context->alignment -= 1;
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_function_definition(name, return_type, parameters, first_statement);
+    return statement__create_function_definition(name, return_type, parameters, statements);
 }
 
-Statement *statement__create_block(Statement *first_statement) {
+Statement *statement__create_block(List *statements) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_BLOCK;
-    self->block.first_statement = first_statement;
+    self->block.statements = statements;
     return self;
 }
 
@@ -797,14 +790,14 @@ Statement *parse_block_statement(Context *context, int inlined) {
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, TRUE);
     context->alignment += 1;
-    Statement *first_statement = parse_statements(context);
+    List *statements = parse_statements(context);
     context->alignment -= 1;
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     if (!inlined) {
         consume_end_of_line(context, TRUE);
     }
-    return statement__create_block(first_statement);
+    return statement__create_block(statements);
 }
 
 int is_if_keyword(Token *token) {
@@ -1064,11 +1057,10 @@ Statement *parse_statement(Context *context) {
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Unxpected token: %s", LOCATION(context), CURRENT_TOKEN(context));
 }
 
-Statement *parse(List *tokens) {
+List *parse(List *tokens) {
     Context *context = malloc(sizeof(Context));
     context->tokens = list__create_iterator(tokens);
     list_iterator__next(context->tokens);
     context->alignment = 0;
-    Statement *first_statement = parse_statements(context);
-    return first_statement;
+    return parse_statements(context);
 }
