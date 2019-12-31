@@ -515,7 +515,6 @@ Member *member__create(Token *name, Type *type, Expression *default_value) {
     self->name = name;
     self->type = type;
     self->default_value = default_value;
-    self->next = NULL;
     return self;
 }
 
@@ -539,21 +538,16 @@ Member *parse_member(Context *context) {
 
 // comma_separated_members:
 //      member ("," member)*
-Member *parse_comma_separated_members(Context *context) {
-    Member *first_member = NULL;
-    Member *last_member = NULL;
+List *parse_comma_separated_members(Context *context) {
+    List *members = list__create();
+    int space_before_next_member = 0;
     do {
-        consume_space(context, first_member == NULL ? 0 : 1);
-        Member *member = parse_member(context);
-        if (last_member == NULL) {
-            first_member = member;
-        } else {
-            last_member->next = member;
-        }
-        last_member = member;
+        consume_space(context, space_before_next_member);
+        list__append(members, parse_member(context));
         consume_space(context, 0);
+        space_before_next_member = 1;
     } while (consume_one(context, NULL, required(is_comma)));
-    return first_member;
+    return members;
 }
 
 int is_pointer_operator(Token *token) {
@@ -567,18 +561,18 @@ Type *type__create_array(Type *item_type) {
     return self;
 }
 
-Type *type__create_function(Member *first_parameter, Type *return_type) {
+Type *type__create_function(Type *return_type, List *parameters) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_FUNCTION;
-    self->function.first_parameter = first_parameter;
+    self->function.parameters = parameters;
     self->function.return_type = return_type;
     return self;
 }
 
-Type *type__create_tuple(Member *first_member) {
+Type *type__create_tuple(List *members) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_TUPLE;
-    self->tuple.first_member = first_member;
+    self->tuple.members = members;
     return self;
 }
 
@@ -618,9 +612,9 @@ Type *parse_type(Context *context) {
         type = type__create_array(item_type);
     } else if (consume_one(context, NULL, required(is_open_paren))) {
         consume_space(context, 0);
-        Member *first_member = NULL;
+        List *members = NULL;
         if (consume_one(context, NULL, required(is_close_paren)) == NULL) {
-            first_member = parse_comma_separated_members(context);
+            members = parse_comma_separated_members(context);
             consume_one(context, ")", required(is_close_paren));
         }
         if (matches_three(context, optional(is_space), required(is_hyphen), required(is_close_angled_bracket))) {
@@ -628,9 +622,9 @@ Type *parse_type(Context *context) {
             consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
             consume_space(context, 1);
             Type *return_type = parse_type(context);
-            type = type__create_function(first_member, return_type);
+            type = type__create_function(return_type, members);
         } else {
-            type = type__create_tuple(first_member);
+            type = type__create_tuple(members);
         }
     } else {
         Token *name = consume_one(context, "type name", required(is_identifier));
@@ -683,12 +677,12 @@ Statement *statement__create_struct_declaration(Expression *name) {
     return self;
 }
 
-Statement *statement__create_struct_definition(Expression *name, Token *base, Member *first_member) {
+Statement *statement__create_struct_definition(Expression *name, Token *base, List *members) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_STRUCT_DEFINITION;
     self->struct_definition.name = name;
     self->struct_definition.base = base;
-    self->struct_definition.first_member = first_member;
+    self->struct_definition.members = members;
     return self;
 }
 
@@ -708,23 +702,16 @@ Statement *parse_struct(Context *context, Expression *name) {
     }
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, TRUE);
-    Member *first_member = NULL;
-    Member *last_member = NULL;
+    List *members = list__create();
     while (!matches_two(context, optional(is_space), required(is_close_brace))) {
         consume_space(context, (context->alignment + 1) * ALIGNMENT_SIZE);
-        Member *member = parse_member(context);
+        list__append(members, parse_member(context));
         consume_end_of_line(context, TRUE);
-        if (last_member != NULL) {
-            last_member->next = member;
-        } else {
-            first_member = member;
-        }
-        last_member = member;
     }
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_struct_definition(name, base, first_member);
+    return statement__create_struct_definition(name, base, members);
 }
 
 Statement *parse_statement(Context *context);
@@ -748,21 +735,21 @@ Statement *parse_statements(Context *context) {
     return first_statement;
 }
 
-Statement *statement__create_function_declaration(Expression *name, Member *first_parameter, Type *return_type) {
+Statement *statement__create_function_declaration(Expression *name, Type *return_type, List *parameters) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_FUNCTION_DECLARATION;
     self->function_definition.name = name;
-    self->function_definition.first_parameter = first_parameter;
     self->function_definition.return_type = return_type;
+    self->function_definition.parameters = parameters;
     return self;
 }
 
-Statement *statement__create_function_definition(Expression *name, Member *first_parameter, Type *return_type, Statement *first_statement) {
+Statement *statement__create_function_definition(Expression *name, Type *return_type, List *parameters, Statement *first_statement) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_FUNCTION_DEFINITION;
     self->function_definition.name = name;
-    self->function_definition.first_parameter = first_parameter;
     self->function_definition.return_type = return_type;
+    self->function_definition.parameters = parameters;
     self->function_definition.first_statement = first_statement;
     return self;
 }
@@ -772,10 +759,12 @@ Statement *statement__create_function_definition(Expression *name, Member *first
 Statement *parse_function(Context *context, Expression *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
-    Member *first_parameter = NULL;
+    List *parameters = NULL;
     if (consume_one(context, NULL, required(is_close_paren)) == NULL) {
-        first_parameter = parse_comma_separated_members(context);
+        parameters = parse_comma_separated_members(context);
         consume_one(context, ")", required(is_close_paren));
+    } else {
+        parameters = list__create();
     }
     consume_space(context, 1);
     Type *return_type = NULL;
@@ -783,12 +772,12 @@ Statement *parse_function(Context *context, Expression *name) {
         consume_space(context, 1);
         return_type = parse_type(context);
         if (consume_end_of_line(context, FALSE) == TRUE) {
-            return statement__create_function_declaration(name, first_parameter, return_type);
+            return statement__create_function_declaration(name, return_type, parameters);
         } else {
             consume_space(context, 1);
         }
     } else if (consume_end_of_line(context, FALSE) == TRUE) {
-        return statement__create_function_declaration(name, first_parameter, return_type);
+        return statement__create_function_declaration(name, return_type, parameters);
     }
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, TRUE);
@@ -798,7 +787,7 @@ Statement *parse_function(Context *context, Expression *name) {
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_function_definition(name, first_parameter, return_type, first_statement);
+    return statement__create_function_definition(name, return_type, parameters, first_statement);
 }
 
 Statement *statement__create_block(Statement *first_statement) {

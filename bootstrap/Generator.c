@@ -537,14 +537,13 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT_FUNCTION_DECLARATION: {
         IR_Value *function = value__create_function(context, context__make_type(context, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
         fprintf(context->file, "declare %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        Member *parameter = statement->function_definition.first_parameter;
-        while (parameter != NULL) {
+        for (List_Iterator *parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(parameters); ) {
+            Parameter *parameter = list_iterator__next(parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
             values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
-            parameter = parameter->next;
-            if (parameter != NULL) {
+            if (list_iterator__has_next(parameters)) {
                 fprintf(context->file, ", ");
             }
         }
@@ -555,16 +554,14 @@ void emit_statement(Context *context, Statement *statement) {
         IR_Value *function = value__create_function(context, context__make_type(context, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
         
         context = create_function_context(context);
-
         fprintf(context->file, "define %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        Member *parameter = statement->function_definition.first_parameter;
-        while (parameter != NULL) {
+        for (List_Iterator *parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(parameters); ) {
+            Parameter *parameter = list_iterator__next(parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
             values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
-            parameter = parameter->next;
-            if (parameter != NULL) {
+            if (list_iterator__has_next(parameters)) {
                 fprintf(context->file, ", ");
             }
         }

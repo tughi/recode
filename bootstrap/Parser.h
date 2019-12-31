@@ -7,12 +7,11 @@
 struct Type;
 struct Expression;
 
-typedef struct Member {
+typedef struct {
     Token *name;
     struct Type *type;
     struct Expression *default_value;
-    struct Member *next;
-} Member;
+} Member, Parameter;
 
 typedef struct Type {
     enum {
@@ -28,7 +27,7 @@ typedef struct Type {
             struct Type *item_type;
         } array;
         struct {
-            Member *first_parameter;
+            List *parameters;
             struct Type *return_type;
         } function;
         struct {
@@ -38,7 +37,7 @@ typedef struct Type {
             Token *name;
         } simple;
         struct {
-            Member *first_member;
+            List *members;
         } tuple;
     };
 } Type;
@@ -125,13 +124,13 @@ typedef struct Statement {
         Expression *expression;
         struct {
             Expression *name;
-            Member *first_parameter;
             Type *return_type;
+            List *parameters;
         } function_declaration;
         struct {
             Expression *name;
-            Member *first_parameter;
             Type *return_type;
+            List *parameters;
             struct Statement *first_statement;
         } function_definition;
         struct {
@@ -149,7 +148,7 @@ typedef struct Statement {
         struct {
             Expression *name;
             Token *base;
-            Member *first_member;
+            List *members;
         } struct_definition;
         struct {
             Expression *name;
