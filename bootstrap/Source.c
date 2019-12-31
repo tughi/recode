@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 Source *source__create(char *data) {
-    Source *self = (Source *)malloc(sizeof(Source));
+    Source *self = malloc(sizeof(Source));
     self->data = data;
     self->index = 0;
     self->line = 1;

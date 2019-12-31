@@ -92,7 +92,7 @@ typedef struct Context {
 } Context;
 
 IR_Type *type__create(int kind, String *name, String *repr) {
-    IR_Type *self = (IR_Type *)malloc(sizeof(IR_Type));
+    IR_Type *self = malloc(sizeof(IR_Type));
     self->kind = kind;
     self->name = name;
     self->repr = repr;
@@ -108,14 +108,14 @@ IR_Type *type__create_pointer(IR_Type *type) {
 }
 
 IR_Types *types__create() {
-    IR_Types *self = (IR_Types *)malloc(sizeof(IR_Types));
+    IR_Types *self = malloc(sizeof(IR_Types));
     self->first = NULL;
     self->last = NULL;
     return self;
 }
 
 void types__append(IR_Types *self, IR_Type *type) {
-    IR_Types_Item *item = (IR_Types_Item *)malloc(sizeof(IR_Types_Item));
+    IR_Types_Item *item = malloc(sizeof(IR_Types_Item));
     item->type = type;
     item->next = NULL;
     if (self->first == NULL) {
@@ -154,7 +154,7 @@ IR_Type *types__get_by_type(IR_Types *self, Type *type) {
 }
 
 IR_Value *value__create(int kind, IR_Type *type, String *name, String *repr) {
-    IR_Value *value = (IR_Value *)malloc(sizeof(IR_Value));
+    IR_Value *value = malloc(sizeof(IR_Value));
     value->kind = kind;
     value->type = type;
     value->name = name;
@@ -163,7 +163,7 @@ IR_Value *value__create(int kind, IR_Type *type, String *name, String *repr) {
 }
 
 IR_Values *values__create() {
-    IR_Values *self = (IR_Values *)malloc(sizeof(IR_Values));
+    IR_Values *self = malloc(sizeof(IR_Values));
     self->first = NULL;
     self->last = NULL;
     self->parent = NULL;
@@ -171,7 +171,7 @@ IR_Values *values__create() {
 }
 
 void values__append(IR_Values *self, IR_Value *value) {
-    IR_Values_Item *item = (IR_Values_Item *)malloc(sizeof(IR_Values_Item));
+    IR_Values_Item *item = malloc(sizeof(IR_Values_Item));
     item->value = value;
     if (self->first == NULL) {
         item->prev = NULL;
@@ -199,13 +199,13 @@ IR_Value *values__find(IR_Values *self, String *name) {
 }
 
 Counter *counter__create() {
-    Counter *self = (Counter *)malloc(sizeof(Counter));
+    Counter *self = malloc(sizeof(Counter));
     self->count = 0;
     return self;
 }
 
 Counter *counter__clone(Counter *other) {
-    Counter *self = (Counter *)malloc(sizeof(Counter));
+    Counter *self = malloc(sizeof(Counter));
     self->count = other->count;
     return self;
 }
@@ -224,7 +224,7 @@ String *counter__get(Counter *self) {
 }
 
 Context *context__create(FILE *file) {
-    Context *self = (Context *)malloc(sizeof(Context));
+    Context *self = malloc(sizeof(Context));
     self->global_context = self;
     self->file = file;
     self->types = types__create();
@@ -236,7 +236,7 @@ Context *context__create(FILE *file) {
 }
 
 Context *context__clone(Context *other) {
-    Context *self = (Context *)malloc(sizeof(Context));
+    Context *self = malloc(sizeof(Context));
     self->global_context = other->global_context;
     self->file = other->file;
     self->types = other->types;
@@ -538,7 +538,7 @@ void emit_statement(Context *context, Statement *statement) {
         if (string__equals(statement->assignment.operator_token->lexeme, "=")) {
             value = emit_expression(context, statement->variable_declaration.value);
         } else {
-            Expression *binary_expression = (Expression *)malloc(sizeof(Expression));
+            Expression *binary_expression = malloc(sizeof(Expression));
             binary_expression->kind = EXPRESSION_BINARY;
             binary_expression->binary.operator_token = statement->assignment.operator_token;
             binary_expression->binary.left_expression = statement->assignment.destination;
@@ -659,7 +659,7 @@ void emit_statement(Context *context, Statement *statement) {
         IR_Value *loop_end = value__create_label(context, string__create("loop_end"));
         fprintf(context->file, "  br label %s\n", VALUE_REPR(loop_start));
         fprintf(context->file, "%s:\n", VALUE_NAME(loop_start));
-        Loop *loop = (Loop *)malloc(sizeof(Loop));
+        Loop *loop = malloc(sizeof(Loop));
         loop->loop_end = loop_end;
         loop->has_break = FALSE;
         loop->parent = context->loop;

@@ -6,8 +6,8 @@
 #define DEFAULT_SIZE 16
 
 String *string__create_empty(int allocated) {
-    String *self = (String *)malloc(sizeof(String));
-    self->data = (char *)malloc(allocated < 1 ? 1 : allocated);
+    String *self = malloc(sizeof(String));
+    self->data = malloc(allocated < 1 ? 1 : allocated);
     self->data[0] = 0;
     self->length = 0;
     self->allocated = allocated;
@@ -15,9 +15,9 @@ String *string__create_empty(int allocated) {
 }
 
 String *string__create(const char *data) {
-    String *self = (String *)malloc(sizeof(String));
+    String *self = malloc(sizeof(String));
     int data_length = strlen(data);
-    self->data = (char *)malloc(data_length + 1);
+    self->data = malloc(data_length + 1);
     strncpy(self->data, data, data_length);
     self->data[data_length] = 0;
     self->length = data_length;
