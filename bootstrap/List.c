@@ -49,6 +49,10 @@ List_Iterator *list__create_iterator(List *self) {
     return iterator;
 }
 
+int list_iterator__has_next(List_Iterator *self) {
+    return self->next != NULL;
+}
+
 void *list_iterator__current(List_Iterator *self) {
     if (self->current == NULL) {
         return NULL;

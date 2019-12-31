@@ -66,11 +66,9 @@ void print_token(Token *token) {
 }
 
 void dump_tokens(List *tokens) {
-    List_Iterator *tokens_iterator = list__create_iterator(tokens);
-
-    Token *token = NULL;
     int line = 0;
-    while ((token = list_iterator__next(tokens_iterator)) != NULL) {
+    for (List_Iterator *iterator = list__create_iterator(tokens); list_iterator__has_next(iterator); ) {
+        Token *token = list_iterator__next(iterator);
         if (token->line != line) {
             if (line > 0) {
                 printf("\n");

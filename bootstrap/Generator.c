@@ -192,8 +192,8 @@ Context *context__clone(Context *other) {
 }
 
 IR_Type *context__find_type(Context *self, String *name) {
-    List_Iterator *types = list__create_iterator(self->types);
-    for (IR_Type *type = list_iterator__next(types); type != NULL; type = list_iterator__next(types)) {
+    for (List_Iterator *types = list__create_iterator(self->types); list_iterator__has_next(types); ) {
+        IR_Type *type = list_iterator__next(types);
         if (string__equals(type->name, name->data)) {
             return type;
         }
