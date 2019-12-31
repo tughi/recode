@@ -9,8 +9,7 @@
 char *load_file(String *file_name) {
     FILE *file = fopen(file_name->data, "r");
     if (file == NULL) {
-        ERROR(__FILE__, __LINE__, "Couldn't open file: %s", file_name->data);
-        exit(1);
+        PANIC(__FILE__, __LINE__, "Couldn't open file: %s", file_name->data);
     }
     String *content = string__create("");
     char buffer[1024];

@@ -26,16 +26,6 @@ typedef struct IR_Type {
     String *repr;
 } IR_Type;
 
-typedef struct IR_Types_Item {
-    IR_Type *type;
-    struct IR_Types_Item *next;
-} IR_Types_Item;
-
-typedef struct IR_Types {
-    IR_Types_Item *first;
-    IR_Types_Item *last;
-} IR_Types;
-
 typedef struct IR_Value {
     enum {
         IR_VALUE_CONSTANT,
@@ -84,7 +74,7 @@ typedef struct Counter {
 typedef struct Context {
     struct Context *global_context;
     FILE *file;
-    IR_Types *types;
+    List *types;
     IR_Values *declarations;
     IR_Values *allocas;
     Loop *loop;
@@ -105,52 +95,6 @@ IR_Type *type__create_pointer(IR_Type *type) {
     String *repr = string__create(type->repr->data);
     string__append_char(repr, '*');
     return type__create(IR_TYPE_POINTER, name, repr);
-}
-
-IR_Types *types__create() {
-    IR_Types *self = malloc(sizeof(IR_Types));
-    self->first = NULL;
-    self->last = NULL;
-    return self;
-}
-
-void types__append(IR_Types *self, IR_Type *type) {
-    IR_Types_Item *item = malloc(sizeof(IR_Types_Item));
-    item->type = type;
-    item->next = NULL;
-    if (self->first == NULL) {
-        self->first = item;
-    } else {
-        self->last->next = item;
-    }
-    self->last = item;
-}
-
-IR_Type *types__get_by_name(IR_Types *self, String *name) {
-    if (self == NULL) {
-        return NULL;
-    }
-    IR_Types_Item *item = self->first;
-    while (item != NULL) {
-        if (string__equals(item->type->name, name->data)) {
-            return item->type;
-        }
-        item = item->next;
-    }
-    WARNING(__FILE__, __LINE__, "No such type: %s", name->data);
-    return NULL;
-}
-
-IR_Type *types__get_by_type(IR_Types *self, Type *type) {
-    switch (type->kind) {
-    case TYPE_POINTER:
-        return type__create_pointer(types__get_by_type(self, type->pointer.type));
-    case TYPE_SIMPLE:
-        return types__get_by_name(self, type->simple.name->lexeme);
-    default:
-        ERROR(__FILE__, __LINE__, "Unsupported type: %d", type->kind);
-        exit(1);
-    }
 }
 
 IR_Value *value__create(int kind, IR_Type *type, String *name, String *repr) {
@@ -227,7 +171,7 @@ Context *context__create(FILE *file) {
     Context *self = malloc(sizeof(Context));
     self->global_context = self;
     self->file = file;
-    self->types = types__create();
+    self->types = list__create();
     self->declarations = values__create();
     self->allocas = values__create();
     self->loop = NULL;
@@ -245,6 +189,28 @@ Context *context__clone(Context *other) {
     self->loop = other->loop;
     self->temp_variables = other->temp_variables;
     return self;
+}
+
+IR_Type *context__find_type(Context *self, String *name) {
+    List_Iterator *types = list__create_iterator(self->types);
+    for (IR_Type *type = list_iterator__next(types); type != NULL; type = list_iterator__next(types)) {
+        if (string__equals(type->name, name->data)) {
+            return type;
+        }
+    }
+    WARNING(__FILE__, __LINE__, "No such type: %s", name->data);
+    return NULL;
+}
+
+IR_Type *context__make_type(Context *self, Type *type) {
+    switch (type->kind) {
+    case TYPE_POINTER:
+        return type__create_pointer(context__make_type(self, type->pointer.type));
+    case TYPE_SIMPLE:
+        return context__find_type(self, type->simple.name->lexeme);
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported type: %d", type->kind);
+    }
 }
 
 IR_Value *value__create_function(Context *context, IR_Type *type, String *name) {
@@ -307,17 +273,17 @@ void string__append_byte(String *self, char value) {
 IR_Value *emit_literal(Context *context, Token *token) {
     switch (token->kind) {
         case TOKEN_CHARACTER: {
-            IR_Type *type = types__get_by_name(context->types, string__create("Char"));
+            IR_Type *type = context__find_type(context, string__create("Char"));
             String *repr = string__append_int(string__create_empty(0), token->character.value);
             return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
         }
         case TOKEN_INTEGER: {
-            IR_Type *type = types__get_by_name(context->types, string__create("Int"));
+            IR_Type *type = context__find_type(context, string__create("Int"));
             String *repr = string__append_int(string__create_empty(0), token->integer.value);
             return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
         }
         case TOKEN_STRING: {
-            IR_Type *type = type__create_pointer(types__get_by_name(context->types, string__create("Char")));
+            IR_Type *type = type__create_pointer(context__find_type(context, string__create("Char")));
             IR_Value *value = value__create_temp_variable(context, type);
 
             String *constant_repr = string__create("@.string.");
@@ -343,8 +309,7 @@ IR_Value *emit_literal(Context *context, Token *token) {
             return value;
         }
         default: {
-            ERROR(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
-            exit(1);
+            PANIC(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
         }
     }
 }
@@ -362,7 +327,7 @@ IR_Value *emit_arithmetic_expression(Context *context, Expression *expression, c
 IR_Value *emit_comparison_expression(Context *context, Expression *expression, const char *icmp_operand) {
     IR_Value *left_value = emit_expression(context, expression->binary.left_expression);
     IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
-    IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Bool")));
+    IR_Value *result = value__create_temp_variable(context, context__find_type(context, string__create("Bool")));
     fprintf(context->file, "  %s = icmp %s %s %s, %s\n", VALUE_REPR(result), icmp_operand, VALUE_TYPE(left_value), VALUE_REPR(left_value), VALUE_REPR(right_value));
     return result;
 }
@@ -402,7 +367,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             fprintf(context->file, "%s:\n", VALUE_NAME(and_false_label));
             fprintf(context->file, "  br label %s\n", VALUE_REPR(and_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(and_result_label));
-            IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Bool")));
+            IR_Value *result = value__create_temp_variable(context, context__find_type(context, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 0, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
             return result;
         } else if (string__equals(expression->binary.operator_token->lexeme, "||")) {
@@ -417,20 +382,18 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(or_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(or_result_label));
-            IR_Value *result = value__create_temp_variable(context, types__get_by_name(context->types, string__create("Bool")));
+            IR_Value *result = value__create_temp_variable(context, context__find_type(context, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 1, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(or_false_label), VALUE_REPR(or_true_label));
             return result;
         } else {
-            ERROR(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary.operator_token->lexeme->data);
-            exit(1);
+            PANIC(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary.operator_token->lexeme->data);
         }
     }
     case EXPRESSION_CALL: {
         String *function_name = expression->call.callee->variable.name->lexeme;
         IR_Value *function = values__find(context->declarations, function_name);
         if (function == NULL) {
-            ERROR(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
-            exit(1);
+            PANIC(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
         }
         IR_Values *function_arguments = values__create();
         Argument *argument = expression->call.first_argument;
@@ -460,7 +423,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
     }
     case EXPRESSION_CAST: {
         IR_Value *operand = emit_expression(context, expression->cast.expression);
-        IR_Type *type = types__get_by_type(context->types, expression->cast.type);
+        IR_Type *type = context__make_type(context, expression->cast.type);
         if (string__equals(type->name, "Int")) {
             IR_Value *result = value__create_temp_variable(context, type);
             fprintf(context->file, "  %s = sext %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
@@ -470,8 +433,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             fprintf(context->file, "  %s = trunc %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
             return result;
         } else {
-            ERROR(__FILE__, __LINE__, "Cannot cast to %s", type->name->data);
-            exit(1);
+            PANIC(__FILE__, __LINE__, "Cannot cast to %s", type->name->data);
         }
     }
     case EXPRESSION_LITERAL: {
@@ -484,16 +446,14 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             fprintf(context->file, "  %s = sub %s 0, %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_REPR(right_value));
             return result;
         } else {
-            ERROR(__FILE__, __LINE__, "Unsupported unary expression operator: %s", expression->unary.operator_token->lexeme->data);
-            exit(1);
+            PANIC(__FILE__, __LINE__, "Unsupported unary expression operator: %s", expression->unary.operator_token->lexeme->data);
         }
     }
     case EXPRESSION_VARIABLE: {
         String *variable_name = expression->variable.name->lexeme;
         IR_Value *variable = values__find(context->declarations, variable_name);
         if (variable == NULL) {
-            ERROR(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
-            exit(1);
+            PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
         }
         if (variable->kind == IR_VALUE_POINTER) {
             IR_Value *result = value__create_temp_variable(context, variable->type);
@@ -504,8 +464,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         }
     }
     default:
-        ERROR(__FILE__, __LINE__, "Unsupported expression type: %d", expression->kind);
-        exit(1);
+        PANIC(__FILE__, __LINE__, "Unsupported expression type: %d", expression->kind);
     }
 }
 
@@ -531,8 +490,7 @@ void emit_statement(Context *context, Statement *statement) {
         String *variable_name = statement->assignment.destination->variable.name->lexeme;
         IR_Value *variable = values__find(context->declarations, variable_name);
         if (variable == NULL) {
-            ERROR(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
-            exit(1);
+            PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
         }
         IR_Value *value;
         if (string__equals(statement->assignment.operator_token->lexeme, "=")) {
@@ -552,8 +510,7 @@ void emit_statement(Context *context, Statement *statement) {
             } else if (string__equals(statement->assignment.operator_token->lexeme, "/=")) {
                 value = emit_arithmetic_expression(context, binary_expression, "sdiv");
             } else {
-                ERROR(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment.operator_token->lexeme->data);
-                exit(1);
+                PANIC(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment.operator_token->lexeme->data);
             }
         }
         fprintf(context->file, "  store %s %s, %s* %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
@@ -578,11 +535,11 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_FUNCTION_DECLARATION: {
-        IR_Value *function = value__create_function(context, types__get_by_type(context->types, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
+        IR_Value *function = value__create_function(context, context__make_type(context, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
         fprintf(context->file, "declare %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
         Member *parameter = statement->function_definition.first_parameter;
         while (parameter != NULL) {
-            IR_Type *parameter_type = types__get_by_type(context->types, parameter->type);
+            IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
             values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
@@ -595,14 +552,14 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_FUNCTION_DEFINITION: {
-        IR_Value *function = value__create_function(context, types__get_by_type(context->types, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
+        IR_Value *function = value__create_function(context, context__make_type(context, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
         
         context = create_function_context(context);
 
         fprintf(context->file, "define %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
         Member *parameter = statement->function_definition.first_parameter;
         while (parameter != NULL) {
-            IR_Type *parameter_type = types__get_by_type(context->types, parameter->type);
+            IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
             values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
@@ -686,13 +643,13 @@ void emit_statement(Context *context, Statement *statement) {
         String *repr = string__create("%");
         string__append_string(repr, name);
         IR_Type *type = type__create(IR_TYPE_OPAQUE, name, repr);
-        types__append(context->types, type);
+        list__append(context->types, type);
         fprintf(context->file, "%s = type opaque\n", type->repr->data);
         return;
     }
     case STATEMENT_VARIABLE_DECLARATION: {
         if (statement->variable_declaration.external == TRUE) {
-            IR_Type *variable_type = types__get_by_type(context->types, statement->variable_declaration.type);
+            IR_Type *variable_type = context__make_type(context, statement->variable_declaration.type);
             IR_Value *variable = value__create_global_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
             fprintf(context->file, "%s = external global %s\n", VALUE_REPR(variable), VALUE_TYPE(variable));
         } else {
@@ -704,8 +661,7 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     default:
-        ERROR(__FILE__, __LINE__, "Unsupported statement type: %d", statement->kind);
-        exit(1);
+        PANIC(__FILE__, __LINE__, "Unsupported statement type: %d", statement->kind);
     }
 }
 
@@ -714,10 +670,10 @@ void generate(Statement *first_statement) {
 
     Context *context = context__create(file);
 
-    types__append(context->types, type__create(IR_TYPE_BOOLEAN, string__create("Bool"), string__create("i1")));
-    types__append(context->types, type__create(IR_TYPE_CHARACTER, string__create("Char"), string__create("i8")));
-    types__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
-    types__append(context->types, type__create(IR_TYPE_NOTHING, string__create("Nothing"), string__create("void")));
+    list__append(context->types, type__create(IR_TYPE_BOOLEAN, string__create("Bool"), string__create("i1")));
+    list__append(context->types, type__create(IR_TYPE_CHARACTER, string__create("Char"), string__create("i8")));
+    list__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
+    list__append(context->types, type__create(IR_TYPE_NOTHING, string__create("Nothing"), string__create("void")));
 
     Statement *statement = first_statement;
     while (statement != NULL) {
