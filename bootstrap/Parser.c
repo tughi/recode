@@ -192,7 +192,6 @@ Argument *argument__create(Token *name, Expression *value) {
     Argument *self = malloc(sizeof(Argument));
     self->name = name;
     self->value = value;
-    self->next = NULL;
     return self;
 }
 
@@ -224,11 +223,11 @@ int is_close_bracket(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "]");
 }
 
-Expression *expression__create_call(Expression *callee, Argument *first_argument) {
+Expression *expression__create_call(Expression *callee, List *arguments) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_CALL;
     self->call.callee = callee;
-    self->call.first_argument = first_argument;
+    self->call.arguments = arguments;
     return self;
 }
 
@@ -270,29 +269,24 @@ Expression *parse_call_expression(Context *context) {
         if (matches_two(context, optional(is_space), required(is_open_paren))) {
             consume_space(context, 0);
             consume_one(context, NULL, required(is_open_paren));
-            Argument *first_argument = NULL;
+            List *arguments = list__create();
             if (!matches_two(context, optional(is_space), required(is_close_paren))) {
-                Argument *last_argument = NULL;
+                int space_before_argument = 0;
                 do {
-                    consume_space(context, first_argument == NULL ? 0 : 1);
-                    Argument *argument = parse_argument(context);
-                    if (last_argument != NULL) {
-                        last_argument->next = argument;
-                    } else {
-                        first_argument = argument;
-                    }
-                    last_argument = argument;
+                    consume_space(context, space_before_argument);
+                    list__append(arguments, parse_argument(context));
                     if (matches_two(context, optional(is_space), required(is_comma))) {
                         consume_space(context, 0);
                         consume_one(context, NULL, required(is_comma));
                     } else {
                         break;
                     }
+                    space_before_argument = 1;
                 } while (TRUE);
             }
             consume_space(context, 0);
             consume_one(context, NULL, required(is_close_paren));
-            expression = expression__create_call(expression, first_argument);
+            expression = expression__create_call(expression, arguments);
         } else if (matches_two(context, optional(is_space), required(is_dot))) {
             consume_space(context, 0);
             consume_one(context, NULL, required(is_dot));

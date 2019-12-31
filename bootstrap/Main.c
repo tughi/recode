@@ -163,15 +163,14 @@ void print_expression(Expression *expression) {
     case EXPRESSION_CALL: {
         print_expression(expression->call.callee);
         printf("%s(", SGR_WHITE_BOLD);
-        Argument *argument = expression->call.first_argument;
-        while (argument != NULL) {
+        for (List_Iterator *arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(arguments); ) {
+            Argument *argument = list_iterator__next(arguments);
             if (argument->name != NULL) {
                 print_token(argument->name);
                 printf(" = ");
             }
             print_expression(argument->value);
-            argument = argument->next;
-            if (argument != NULL) {
+            if (list_iterator__has_next(arguments)) {
                 printf("%s, ", SGR_WHITE_BOLD);
             }
         }

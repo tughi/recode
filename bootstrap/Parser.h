@@ -45,7 +45,6 @@ typedef struct Type {
 typedef struct Argument {
     Token *name;
     struct Expression *value;
-    struct Argument *next;
 } Argument;
 
 typedef struct Expression {
@@ -72,7 +71,7 @@ typedef struct Expression {
         } binary;
         struct {
             struct Expression *callee;
-            Argument *first_argument;
+            List *arguments;
         } call;
         struct {
             struct Expression *expression;

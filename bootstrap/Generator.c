@@ -396,11 +396,10 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             PANIC(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
         }
         IR_Values *function_arguments = values__create();
-        Argument *argument = expression->call.first_argument;
-        while (argument != NULL) {
+        for (List_Iterator *arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(arguments); ) {
+            Argument *argument = list_iterator__next(arguments);
             IR_Value *function_argument = emit_expression(context, argument->value);
             values__append(function_arguments, function_argument);
-            argument = argument->next;
         }
         IR_Value *result;
         if (function->type->kind == IR_TYPE_NOTHING) {
