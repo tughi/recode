@@ -43,25 +43,13 @@ typedef struct IR_Value {
     String *repr;
 
     union {
-        struct IR_Values *function_parameters;
+        struct List *function_parameters;
     };
 } IR_Value;
 
 #define VALUE_NAME(value) value->name->data
 #define VALUE_REPR(value) value->repr->data
 #define VALUE_TYPE(value) value->type->repr->data
-
-typedef struct IR_Values_Item {
-    IR_Value *value;
-    struct IR_Values_Item *prev;
-    struct IR_Values_Item *next;
-} IR_Values_Item;
-
-typedef struct IR_Values {
-    IR_Values_Item *first;
-    IR_Values_Item *last;
-    struct IR_Values *parent;
-} IR_Values;
 
 typedef struct Loop {
     IR_Value *loop_end;
@@ -79,7 +67,7 @@ typedef struct Context {
     FILE *file;
     List *types;
     List *locals;
-    IR_Values *allocas;
+    List *allocas;
     Loop *loop;
     Counter *temp_variables;
 } Context;
@@ -107,28 +95,6 @@ IR_Value *value__create(int kind, IR_Type *type, String *name, String *repr) {
     value->name = name;
     value->repr = repr;
     return value;
-}
-
-IR_Values *values__create() {
-    IR_Values *self = malloc(sizeof(IR_Values));
-    self->first = NULL;
-    self->last = NULL;
-    self->parent = NULL;
-    return self;
-}
-
-void values__append(IR_Values *self, IR_Value *value) {
-    IR_Values_Item *item = malloc(sizeof(IR_Values_Item));
-    item->value = value;
-    if (self->first == NULL) {
-        item->prev = NULL;
-        self->first = item;
-    } else {
-        item->prev = self->last;
-        self->last->next = item;
-    }
-    item->next = NULL;
-    self->last = item;
 }
 
 Counter *counter__create() {
@@ -163,7 +129,7 @@ Context *context__create(FILE *file) {
     self->file = file;
     self->types = list__create();
     self->locals = list__create();
-    self->allocas = values__create();
+    self->allocas = list__create();
     self->loop = NULL;
     self->temp_variables = counter__create();
     return self;
@@ -221,7 +187,7 @@ IR_Value *context__create_function(Context *self, IR_Type *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
     IR_Value *value = value__create(IR_VALUE_FUNCTION, type, name, repr);
-    value->function_parameters = values__create();
+    value->function_parameters = list__create();
     list__append(self->global_context->locals, value);
     return value;
 }
@@ -306,7 +272,7 @@ IR_Value *emit_literal(Context *context, Token *token) {
             }
             string__append_string(constant_repr, string__create("\\00\""));
             IR_Value *constant = value__create(IR_VALUE_CONSTANT, NULL, NULL, constant_repr);
-            values__append(context->global_context->allocas, constant);
+            list__append(context->global_context->allocas, constant);
 
             fprintf(context->file, "  %s = getelementptr [%d x i8], [%d x i8]* %s, i64 0, i64 0\n", VALUE_REPR(value), token->string.value->length + 1, token->string.value->length + 1, constant_name->data);
             return value;
@@ -398,11 +364,11 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         if (function == NULL) {
             PANIC(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
         }
-        IR_Values *function_arguments = values__create();
+        List *function_arguments = list__create();
         for (List_Iterator arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(&arguments); ) {
             Argument *argument = list_iterator__next(&arguments);
             IR_Value *function_argument = emit_expression(context, argument->value);
-            values__append(function_arguments, function_argument);
+            list__append(function_arguments, function_argument);
         }
         IR_Value *result;
         if (function->type->kind == IR_TYPE_NOTHING) {
@@ -412,11 +378,10 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             result = value__create_temp_variable(context, function->type);
             fprintf(context->file, "  %s = call %s %s(", VALUE_REPR(result), VALUE_TYPE(function), VALUE_REPR(function));
         }
-        IR_Values_Item *function_argument = function_arguments->first;
-        while (function_argument != NULL) {
-            fprintf(context->file, "%s %s", VALUE_TYPE(function_argument->value), VALUE_REPR(function_argument->value));
-            function_argument = function_argument->next;
-            if (function_argument != NULL) {
+        for (List_Iterator iterator = list__create_iterator(function_arguments); list_iterator__has_next(&iterator); ) {
+            IR_Value *function_argument = list_iterator__next(&iterator);
+            fprintf(context->file, "%s %s", VALUE_TYPE(function_argument), VALUE_REPR(function_argument));
+            if (list_iterator__has_next(&iterator)) {
                 fprintf(context->file, ", ");
             }
         }
@@ -474,7 +439,7 @@ Context *create_function_context(Context *parent_context) {
     Context *context = context__clone(parent_context);
     context->parent_context = parent_context;
     context->locals = list__create();
-    context->allocas = values__create();
+    context->allocas = list__create();
     context->temp_variables = counter__create();
     return context;
 }
@@ -542,7 +507,7 @@ void emit_statement(Context *context, Statement *statement) {
             Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
-            values__append(function->function_parameters, parameter_value);
+            list__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             if (list_iterator__has_next(&parameters)) {
                 fprintf(context->file, ", ");
@@ -560,7 +525,7 @@ void emit_statement(Context *context, Statement *statement) {
             Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
-            values__append(function->function_parameters, parameter_value);
+            list__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             if (list_iterator__has_next(&parameters)) {
                 fprintf(context->file, ", ");
@@ -579,10 +544,9 @@ void emit_statement(Context *context, Statement *statement) {
         }
 
         fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
-        IR_Values_Item *alloca_item = context->allocas->first;
-        while (alloca_item != NULL) {
-            fprintf(context->file, "  %s = alloca %s\n", VALUE_REPR(alloca_item->value), VALUE_TYPE(alloca_item->value));
-            alloca_item = alloca_item->next;
+        for (List_Iterator iterator = list__create_iterator(context->allocas); list_iterator__has_next(&iterator); ) {
+            IR_Value *alloca = list_iterator__next(&iterator);
+            fprintf(context->file, "  %s = alloca %s\n", VALUE_REPR(alloca), VALUE_TYPE(alloca));
         }
         fprintf(context->file, "  br label %s\n", VALUE_REPR(entry_label));
 
@@ -652,7 +616,7 @@ void emit_statement(Context *context, Statement *statement) {
         } else {
             IR_Value *value = emit_expression(context, statement->variable_declaration.value);
             IR_Value *variable = context__create_local_variable(context, value->type, statement->variable_declaration.name->variable.name->lexeme);
-            values__append(context->allocas, variable);
+            list__append(context->allocas, variable);
             fprintf(context->file, "  store %s %s, %s* %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
         }
         return;
@@ -678,11 +642,9 @@ void generate(List *statements) {
         fprintf(context->file, "\n");
     }
 
-    IR_Values_Item *alloca = context->allocas->first;
-    while (alloca != NULL) {
-        fprintf(context->file, "%s\n", VALUE_REPR(alloca->value));
-        alloca = alloca->next;
-        fprintf(context->file, "\n");
+    for (List_Iterator iterator = list__create_iterator(context->allocas); list_iterator__has_next(&iterator); ) {
+        IR_Value *alloca = list_iterator__next(&iterator);
+        fprintf(context->file, "%s\n", VALUE_REPR(alloca));
     }
 
     fclose(context->file);
