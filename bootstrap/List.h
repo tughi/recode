@@ -1,14 +1,32 @@
 #ifndef __recode__list_h__
 #define __recode__list_h__
 
-typedef struct List List;
-typedef struct List_Iterator List_Iterator;
+typedef struct List_Item {
+    void *data;
+    struct List_Item *next;
+    struct List_Item *prev;
+} List_Item;
+
+typedef struct List {
+    List_Item *first;
+    List_Item *last;
+} List;
+
+typedef struct List_Iterator {
+    int reversed;
+    List_Item *current;
+    List_Item *next;
+    List_Item *saved_current;
+    List_Item *saved_next;
+} List_Iterator;
 
 List *list__create();
 
 void list__append(List *self, void *item);
 
-List_Iterator *list__create_iterator(List *self);
+List_Iterator list__create_iterator(List *self);
+
+List_Iterator list__create_reversed_iterator(List *self);
 
 int list_iterator__has_next(List_Iterator *self);
 

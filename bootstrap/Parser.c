@@ -1058,8 +1058,10 @@ Statement *parse_statement(Context *context) {
 }
 
 List *parse(List *tokens) {
+    List_Iterator tokens_iterator = list__create_iterator(tokens);
+
     Context *context = malloc(sizeof(Context));
-    context->tokens = list__create_iterator(tokens);
+    context->tokens = &tokens_iterator;
     list_iterator__next(context->tokens);
     context->alignment = 0;
     return parse_statements(context);

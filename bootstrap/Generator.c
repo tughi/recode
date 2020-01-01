@@ -75,9 +75,10 @@ typedef struct Counter {
 
 typedef struct Context {
     struct Context *global_context;
+    struct Context *parent_context;
     FILE *file;
     List *types;
-    IR_Values *declarations;
+    List *locals;
     IR_Values *allocas;
     Loop *loop;
     Counter *temp_variables;
@@ -130,20 +131,6 @@ void values__append(IR_Values *self, IR_Value *value) {
     self->last = item;
 }
 
-IR_Value *values__find(IR_Values *self, String *name) {
-    if (self == NULL) {
-        return NULL;
-    }
-    IR_Values_Item *item = self->last;
-    while (item != NULL) {
-        if (string__equals(item->value->name, name->data)) {
-            return item->value;
-        }
-        item = item->prev;
-    }
-    return values__find(self->parent, name);
-}
-
 Counter *counter__create() {
     Counter *self = malloc(sizeof(Counter));
     self->count = 0;
@@ -172,9 +159,10 @@ String *counter__get(Counter *self) {
 Context *context__create(FILE *file) {
     Context *self = malloc(sizeof(Context));
     self->global_context = self;
+    self->parent_context = NULL;
     self->file = file;
     self->types = list__create();
-    self->declarations = values__create();
+    self->locals = list__create();
     self->allocas = values__create();
     self->loop = NULL;
     self->temp_variables = counter__create();
@@ -184,9 +172,10 @@ Context *context__create(FILE *file) {
 Context *context__clone(Context *other) {
     Context *self = malloc(sizeof(Context));
     self->global_context = other->global_context;
+    self->parent_context = other->parent_context;
     self->file = other->file;
     self->types = other->types;
-    self->declarations = other->declarations;
+    self->locals = other->locals;
     self->allocas = other->allocas;
     self->loop = other->loop;
     self->temp_variables = other->temp_variables;
@@ -194,8 +183,8 @@ Context *context__clone(Context *other) {
 }
 
 IR_Type *context__find_type(Context *self, String *name) {
-    for (List_Iterator *types = list__create_iterator(self->types); list_iterator__has_next(types); ) {
-        IR_Type *type = list_iterator__next(types);
+    for (List_Iterator types = list__create_iterator(self->types); list_iterator__has_next(&types); ) {
+        IR_Type *type = list_iterator__next(&types);
         if (string__equals(type->name, name->data)) {
             return type;
         }
@@ -215,13 +204,26 @@ IR_Type *context__make_type(Context *self, Type *type) {
     }
 }
 
-IR_Value *value__create_function(Context *context, IR_Type *type, String *name) {
+IR_Value *context__find_local(Context *self, String *name) {
+    if (self == NULL) {
+        return NULL;
+    }
+    for (List_Iterator iterator = list__create_reversed_iterator(self->locals); list_iterator__has_next(&iterator); ) {
+        IR_Value *value = list_iterator__next(&iterator);
+        if (string__equals(value->name, name->data)) {
+            return value;
+        }
+    }
+    return context__find_local(self->parent_context, name);
+}
+
+IR_Value *context__create_function(Context *self, IR_Type *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
-    IR_Value *self = value__create(IR_VALUE_FUNCTION, type, name, repr);
-    self->function_parameters = values__create();
-    values__append(context->declarations, self);
-    return self;
+    IR_Value *value = value__create(IR_VALUE_FUNCTION, type, name, repr);
+    value->function_parameters = values__create();
+    list__append(self->global_context->locals, value);
+    return value;
 }
 
 IR_Value *value__create_label(Context *context, String *name) {
@@ -232,33 +234,32 @@ IR_Value *value__create_label(Context *context, String *name) {
     return value__create(IR_VALUE_LABEL, NULL, name, repr);
 }
 
-IR_Value *value__create_parameter(Context *context, IR_Type *type, String *name) {
+IR_Value *context__create_parameter(Context *self, IR_Type *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
-    IR_Value *self = value__create(IR_VALUE_PARAMETER, type, name, repr);
-    values__append(context->declarations, self);
-    return self;
+    IR_Value *value = value__create(IR_VALUE_PARAMETER, type, name, repr);
+    list__append(self->locals, value);
+    return value;
 }
 
-IR_Value *value__create_global_variable(Context *context, IR_Type *type, String *name) {
+IR_Value *context__create_global_variable(Context *self, IR_Type *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
-    IR_Value *self = value__create(IR_VALUE_POINTER, type, name, repr);
-    values__append(context->global_context->declarations, self);
-    return self;
+    IR_Value *value = value__create(IR_VALUE_POINTER, type, name, repr);
+    list__append(self->global_context->locals, value);
+    return value;
 }
 
-IR_Value *value__create_local_variable(Context *context, IR_Type *type, String *name) {
+IR_Value *context__create_local_variable(Context *self, IR_Type *type, String *name) {
     String *repr = string__create("%");
     string__append_string(repr, name);
-    IR_Value *shadowed_variable = values__find(context->declarations, name);
-    if (shadowed_variable != NULL) {
+    if (context__find_local(self, name) != NULL) {
         string__append_char(repr, '.');
-        string__append_string(repr, counter__get(context->temp_variables));
+        string__append_string(repr, counter__get(self->temp_variables));
     }
-    IR_Value *self = value__create(IR_VALUE_POINTER, type, name, repr);
-    values__append(context->declarations, self);
-    return self;
+    IR_Value *value = value__create(IR_VALUE_POINTER, type, name, repr);
+    list__append(self->locals, value);
+    return value;
 }
 
 IR_Value *value__create_temp_variable(Context *context, IR_Type *type) {
@@ -393,13 +394,13 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
     }
     case EXPRESSION_CALL: {
         String *function_name = expression->call.callee->variable.name->lexeme;
-        IR_Value *function = values__find(context->declarations, function_name);
+        IR_Value *function = context__find_local(context, function_name);
         if (function == NULL) {
             PANIC(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
         }
         IR_Values *function_arguments = values__create();
-        for (List_Iterator *arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(arguments); ) {
-            Argument *argument = list_iterator__next(arguments);
+        for (List_Iterator arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(&arguments); ) {
+            Argument *argument = list_iterator__next(&arguments);
             IR_Value *function_argument = emit_expression(context, argument->value);
             values__append(function_arguments, function_argument);
         }
@@ -452,7 +453,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
     }
     case EXPRESSION_VARIABLE: {
         String *variable_name = expression->variable.name->lexeme;
-        IR_Value *variable = values__find(context->declarations, variable_name);
+        IR_Value *variable = context__find_local(context, variable_name);
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
         }
@@ -469,27 +470,27 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
     }
 }
 
-Context *create_function_context(Context *global_context) {
-    Context *function_context = context__clone(global_context);
-    function_context->declarations = values__create();
-    function_context->declarations->parent = global_context->declarations;
-    function_context->allocas = values__create();
-    function_context->temp_variables = counter__create();
-    return function_context;
+Context *create_function_context(Context *parent_context) {
+    Context *context = context__clone(parent_context);
+    context->parent_context = parent_context;
+    context->locals = list__create();
+    context->allocas = values__create();
+    context->temp_variables = counter__create();
+    return context;
 }
 
-Context *create_block_context(Context *function_context) {
-    Context *block_context = context__clone(function_context);
-    block_context->declarations = values__create();
-    block_context->declarations->parent = function_context->declarations;
-    return block_context;
+Context *create_block_context(Context *parent_context) {
+    Context *context = context__clone(parent_context);
+    context->parent_context = parent_context;
+    context->locals = list__create();
+    return context;
 }
 
 void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
         String *variable_name = statement->assignment.destination->variable.name->lexeme;
-        IR_Value *variable = values__find(context->declarations, variable_name);
+        IR_Value *variable = context__find_local(context, variable_name);
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
         }
@@ -519,8 +520,8 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_BLOCK: {
         context = create_block_context(context);
-        for (List_Iterator *iterator = list__create_iterator(statement->block.statements); list_iterator__has_next(iterator); ) {
-            Statement *block_statement = list_iterator__next(iterator);
+        for (List_Iterator iterator = list__create_iterator(statement->block.statements); list_iterator__has_next(&iterator); ) {
+            Statement *block_statement = list_iterator__next(&iterator);
             emit_statement(context, block_statement);
         }
         return;
@@ -535,15 +536,15 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_FUNCTION_DECLARATION: {
-        IR_Value *function = value__create_function(context, context__make_type(context, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
+        IR_Value *function = context__create_function(context, context__make_type(context, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
         fprintf(context->file, "declare %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        for (List_Iterator *parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(parameters); ) {
-            Parameter *parameter = list_iterator__next(parameters);
+        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters); ) {
+            Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
-            IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
+            IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
             values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
-            if (list_iterator__has_next(parameters)) {
+            if (list_iterator__has_next(&parameters)) {
                 fprintf(context->file, ", ");
             }
         }
@@ -551,17 +552,17 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_FUNCTION_DEFINITION: {
-        IR_Value *function = value__create_function(context, context__make_type(context, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
+        IR_Value *function = context__create_function(context, context__make_type(context, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
         
         context = create_function_context(context);
         fprintf(context->file, "define %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        for (List_Iterator *parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(parameters); ) {
-            Parameter *parameter = list_iterator__next(parameters);
+        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters); ) {
+            Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
-            IR_Value *parameter_value = value__create_parameter(context, parameter_type, parameter->name->lexeme);
+            IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
             values__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
-            if (list_iterator__has_next(parameters)) {
+            if (list_iterator__has_next(&parameters)) {
                 fprintf(context->file, ", ");
             }
         }
@@ -572,8 +573,8 @@ void emit_statement(Context *context, Statement *statement) {
         fprintf(context->file, "  br label %s\n", VALUE_REPR(variables_label));
         fprintf(context->file, "%s:\n", VALUE_NAME(entry_label));
 
-        for (List_Iterator *iterator = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(iterator); ) {
-            Statement *body_statement = list_iterator__next(iterator);
+        for (List_Iterator iterator = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(&iterator); ) {
+            Statement *body_statement = list_iterator__next(&iterator);
             emit_statement(context, body_statement);
         }
 
@@ -646,11 +647,11 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT_VARIABLE_DECLARATION: {
         if (statement->variable_declaration.external == TRUE) {
             IR_Type *variable_type = context__make_type(context, statement->variable_declaration.type);
-            IR_Value *variable = value__create_global_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
+            IR_Value *variable = context__create_global_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
             fprintf(context->file, "%s = external global %s\n", VALUE_REPR(variable), VALUE_TYPE(variable));
         } else {
             IR_Value *value = emit_expression(context, statement->variable_declaration.value);
-            IR_Value *variable = value__create_local_variable(context, value->type, statement->variable_declaration.name->variable.name->lexeme);
+            IR_Value *variable = context__create_local_variable(context, value->type, statement->variable_declaration.name->variable.name->lexeme);
             values__append(context->allocas, variable);
             fprintf(context->file, "  store %s %s, %s* %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
         }
@@ -671,8 +672,8 @@ void generate(List *statements) {
     list__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
     list__append(context->types, type__create(IR_TYPE_NOTHING, string__create("Nothing"), string__create("void")));
 
-    for (List_Iterator *iterator = list__create_iterator(statements); list_iterator__has_next(iterator); ) {
-        Statement *statement = list_iterator__next(iterator);
+    for (List_Iterator iterator = list__create_iterator(statements); list_iterator__has_next(&iterator); ) {
+        Statement *statement = list_iterator__next(&iterator);
         emit_statement(context, statement);
         fprintf(context->file, "\n");
     }
