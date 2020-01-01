@@ -68,6 +68,7 @@ typedef struct Context {
     List *types;
     List *locals;
     List *allocas;
+    List *constants;
     Loop *loop;
     Counter *temp_variables;
 } Context;
@@ -130,6 +131,7 @@ Context *context__create(FILE *file) {
     self->types = list__create();
     self->locals = list__create();
     self->allocas = list__create();
+    self->constants = list__create();
     self->loop = NULL;
     self->temp_variables = counter__create();
     return self;
@@ -143,6 +145,7 @@ Context *context__clone(Context *other) {
     self->types = other->types;
     self->locals = other->locals;
     self->allocas = other->allocas;
+    self->constants = other->constants;
     self->loop = other->loop;
     self->temp_variables = other->temp_variables;
     return self;
@@ -255,24 +258,23 @@ IR_Value *emit_literal(Context *context, Token *token) {
             IR_Type *type = type__create_pointer(context__find_type(context, string__create("Char")));
             IR_Value *value = value__create_temp_variable(context, type);
 
-            String *constant_repr = string__create("@.string.");
-            string__append_string(constant_repr, counter__get(context->global_context->temp_variables));
-            String *constant_name = string__create(constant_repr->data);
-            string__append_string(constant_repr, string__create(" = private constant ["));
-            string__append_int(constant_repr, token->string.value->length + 1);
-            string__append_string(constant_repr, string__create(" x i8] c\""));
+            String *constant = string__create("@.string.");
+            string__append_string(constant, counter__get(context->global_context->temp_variables));
+            String *constant_name = string__create(constant->data);
+            string__append_string(constant, string__create(" = private constant ["));
+            string__append_int(constant, token->string.value->length + 1);
+            string__append_string(constant, string__create(" x i8] c\""));
             for (int i = 0; i < token->string.value->length; i++) {
                 char c = token->string.value->data[i];
                 if (c > 31 && c < 127) {
-                    string__append_char(constant_repr, c);
+                    string__append_char(constant, c);
                 } else {
-                    string__append_char(constant_repr, '\\');
-                    string__append_byte(constant_repr, c);
+                    string__append_char(constant, '\\');
+                    string__append_byte(constant, c);
                 }
             }
-            string__append_string(constant_repr, string__create("\\00\""));
-            IR_Value *constant = value__create(IR_VALUE_CONSTANT, NULL, NULL, constant_repr);
-            list__append(context->global_context->allocas, constant);
+            string__append_string(constant, string__create("\\00\""));
+            list__append(context->global_context->constants, constant);
 
             fprintf(context->file, "  %s = getelementptr [%d x i8], [%d x i8]* %s, i64 0, i64 0\n", VALUE_REPR(value), token->string.value->length + 1, token->string.value->length + 1, constant_name->data);
             return value;
@@ -642,9 +644,9 @@ void generate(List *statements) {
         fprintf(context->file, "\n");
     }
 
-    for (List_Iterator iterator = list__create_iterator(context->allocas); list_iterator__has_next(&iterator); ) {
-        IR_Value *alloca = list_iterator__next(&iterator);
-        fprintf(context->file, "%s\n", VALUE_REPR(alloca));
+    for (List_Iterator iterator = list__create_iterator(context->constants); list_iterator__has_next(&iterator); ) {
+        String *constant = list_iterator__next(&iterator);
+        fprintf(context->file, "%s\n", constant->data);
     }
 
     fclose(context->file);
