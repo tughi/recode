@@ -215,11 +215,10 @@ void print_alignment(int alignment) {
 
 void print_statement(Statement *statement, int alignment) {
     if (statement == NULL) {
-        printf("%sStatement::NULL%s\n", SGR_ERROR, SGR_RESET);
+        printf("%sStatement::NULL%s", SGR_ERROR, SGR_RESET);
         return;
     }
 
-    print_alignment(alignment);
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
         print_expression(statement->assignment.destination);
@@ -227,26 +226,26 @@ void print_statement(Statement *statement, int alignment) {
         print_token(statement->assignment.operator_token);
         printf(" ");
         print_expression(statement->assignment.value);
-        printf("\n");
         return;
     }
     case STATEMENT_BLOCK: {
         printf("%s{\n", SGR_WHITE_BOLD);
         for (List_Iterator *block_statements = list__create_iterator(statement->block.statements); list_iterator__has_next(block_statements); ) {
             Statement *block_statement = list_iterator__next(block_statements);
+            print_alignment(alignment + 1);
             print_statement(block_statement, alignment + 1);
+            printf("\n");
         }
         print_alignment(alignment);
-        printf("%s}\n", SGR_WHITE_BOLD);
+        printf("%s}", SGR_WHITE_BOLD);
         return;
     }
     case STATEMENT_BREAK: {
-        printf("%sbreak\n", SGR_YELLOW);
+        printf("%sbreak", SGR_YELLOW);
         return;
     }
     case STATEMENT_EXPRESSION: {
         print_expression(statement->expression);
-        printf("\n");
         return;
     }
     case STATEMENT_IF: {
@@ -254,17 +253,14 @@ void print_statement(Statement *statement, int alignment) {
         print_expression(statement->if_.condition);
         printf("%s) ", SGR_WHITE_BOLD);
         print_statement(statement->if_.true_block, alignment);
-        print_alignment(alignment);
         if (statement->if_.false_block != NULL) {
-            printf("%selse%s ", SGR_YELLOW, SGR_WHITE_BOLD);
+            printf(" %selse%s ", SGR_YELLOW, SGR_WHITE_BOLD);
             print_statement(statement->if_.false_block, alignment);
-            print_alignment(alignment);
         }
-        printf("\n");
         return;
     }
     case STATEMENT_LOOP: {
-        printf("%sloop%s", SGR_YELLOW, SGR_WHITE_BOLD);
+        printf("%sloop%s ", SGR_YELLOW, SGR_WHITE_BOLD);
         print_statement(statement->loop.block, alignment);
         return;
     }
@@ -285,7 +281,7 @@ void print_statement(Statement *statement, int alignment) {
             printf(" -> ");
             print_type(statement->function_definition.return_type);
         }
-        printf("%s\n", SGR_RESET);
+        printf("%s", SGR_RESET);
         return;
     }
     case STATEMENT_FUNCTION_DEFINITION: {
@@ -307,27 +303,29 @@ void print_statement(Statement *statement, int alignment) {
         }
         printf("%s {\n", SGR_WHITE_BOLD);
         for (List_Iterator *function_statements = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(function_statements); ) {
+            print_alignment(alignment + 1);
             print_statement(list_iterator__next(function_statements), alignment + 1);
+            printf("\n");
         }
         print_alignment(alignment);
-        printf("%s}\n", SGR_WHITE_BOLD);
+        printf("%s}", SGR_WHITE_BOLD);
         return;
     }
     case STATEMENT_RETURN: {
-        printf("%sreturn ", SGR_YELLOW);
+        printf("%sreturn", SGR_YELLOW);
         if (statement->return_expression != NULL) {
+            printf(" ");
             print_expression(statement->return_expression);
         }
-        printf("\n");
         return;
     }
     case STATEMENT_SKIP: {
-        printf("%sskip\n", SGR_YELLOW);
+        printf("%sskip", SGR_YELLOW);
         return;
     }
     case STATEMENT_STRUCT_DECLARATION: {
         print_expression(statement->struct_definition.name);
-        printf("%s :: %sstruct%s\n", SGR_WHITE_BOLD, SGR_YELLOW, SGR_RESET);
+        printf("%s :: %sstruct%s", SGR_WHITE_BOLD, SGR_YELLOW, SGR_RESET);
         return;
     }
     case STATEMENT_STRUCT_DEFINITION: {
@@ -352,7 +350,7 @@ void print_statement(Statement *statement, int alignment) {
             printf("\n");
         }
         print_alignment(alignment);
-        printf("%s}\n", SGR_WHITE_BOLD);
+        printf("%s}", SGR_WHITE_BOLD);
         return;
     }
     case STATEMENT_VARIABLE_DECLARATION: {
@@ -370,11 +368,10 @@ void print_statement(Statement *statement, int alignment) {
         } else {
             print_expression(statement->variable_declaration.value);
         }
-        printf("\n");
         return;
     }
     default:
-        printf("%sStatement::%d%s\n", SGR_ERROR, statement->kind, SGR_RESET);
+        printf("%sStatement::%d%s", SGR_ERROR, statement->kind, SGR_RESET);
         return;
     }
 }
@@ -383,7 +380,7 @@ void dump_statements(List *statements) {
     for (List_Iterator *iterator = list__create_iterator(statements); list_iterator__has_next(iterator); ) {
         Statement *block_statement = list_iterator__next(iterator);
         print_statement(block_statement, 0);
-        printf("\n");
+        printf("\n\n");
     }
 }
 

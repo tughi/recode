@@ -66,6 +66,6 @@ main :: () -> Int {
 			break
 		}
 	}
-	puts("\nGood bye 2019!\n\n")
+	puts("\nHello 2020!\n\n")
 	return -1
 }
