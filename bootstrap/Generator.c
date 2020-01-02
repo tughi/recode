@@ -16,12 +16,16 @@ typedef struct IR_Type {
         IR_TYPE_OPAQUE,
         IR_TYPE_NOTHING,
         IR_TYPE_POINTER,
+        IR_TYPE_STRUCT,
     } kind;
 
     union {
         struct {
-            struct IR_Type *type;
-        } pointer;
+            struct IR_Type *pointed_type;
+        };
+        struct {
+            struct List *struct_members;
+        };
     };
 
     String *name;
@@ -86,7 +90,9 @@ IR_Type *type__create_pointer(IR_Type *type) {
     string__append_string(name, type->name);
     String *repr = string__create(type->repr->data);
     string__append_char(repr, '*');
-    return type__create(IR_TYPE_POINTER, name, repr);
+    IR_Type *self = type__create(IR_TYPE_POINTER, name, repr);
+    self->pointed_type = type;
+    return self;
 }
 
 IR_Value *value__create(int kind, IR_Type *type, String *name, String *repr) {
@@ -408,6 +414,37 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
     case EXPRESSION_LITERAL: {
         return emit_literal(context, expression->literal.value);
     }
+    case EXPRESSION_MEMBER: {
+        IR_Value *object = emit_expression(context, expression->member.object);
+        if (object->type->kind == IR_TYPE_POINTER) {
+            IR_Type *pointed_type = object->type->pointed_type;
+            if (pointed_type->kind == IR_TYPE_STRUCT) {
+                IR_Type *struct_type = pointed_type;
+                String *member_name = expression->member.name->lexeme;
+                IR_Type *member_type = NULL;
+                int member_index = -1;
+                int index = -1;
+                for (List_Iterator iterator = list__create_iterator(struct_type->struct_members); list_iterator__has_next(&iterator); ) {
+                    Member *member = list_iterator__next(&iterator);
+                    index += 1;
+                    if (string__equals(member_name, member->name->lexeme->data)) {
+                        member_type = context__make_type(context, member->type);
+                        member_index = index;
+                        break;
+                    }
+                }
+                if (member_type == NULL) {
+                    PANIC(__FILE__, __LINE__, "No such member: %s.%s", struct_type->name->data, member_name->data);
+                }
+                IR_Value *member_address = value__create_temp_variable(context, type__create_pointer(member_type));
+                fprintf(context->file, "  %s = getelementptr %s, %s %s, i64 0, i32 %d\n", VALUE_REPR(member_address), struct_type->repr->data, VALUE_TYPE(object), VALUE_REPR(object), member_index);
+                IR_Value *result = value__create_temp_variable(context, member_type);
+                fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_TYPE(member_address), VALUE_REPR(member_address));
+                return result;
+            }
+        }
+        PANIC(__FILE__, __LINE__, "Unsupported object type: %s", VALUE_TYPE(object));
+    }
     case EXPRESSION_UNARY: {
         if (string__equals(expression->unary.operator_token->lexeme, "-")) {
             IR_Value *right_value = emit_expression(context, expression->unary.expression);
@@ -608,6 +645,24 @@ void emit_statement(Context *context, Statement *statement) {
         IR_Type *type = type__create(IR_TYPE_OPAQUE, name, repr);
         list__append(context->types, type);
         fprintf(context->file, "%s = type opaque\n", type->repr->data);
+        return;
+    }
+    case STATEMENT_STRUCT_DEFINITION: {
+        String *name = statement->struct_definition.name->variable.name->lexeme;
+        String *repr = string__create("%");
+        string__append_string(repr, name);
+        IR_Type *type = type__create(IR_TYPE_STRUCT, name, repr);
+        type->struct_members = statement->struct_definition.members;
+        list__append(context->types, type);
+        fprintf(context->file, "%s = type { ", type->repr->data);
+        for (List_Iterator iterator = list__create_iterator(statement->struct_definition.members); list_iterator__has_next(&iterator); ) {
+            Member *member = list_iterator__next(&iterator);
+            fprintf(context->file, "%s", context__make_type(context, member->type)->repr->data);
+            if (list_iterator__has_next(&iterator)) {
+                fprintf(context->file, ", ");
+            }
+        }
+        fprintf(context->file, " }\n");
         return;
     }
     case STATEMENT_VARIABLE_DECLARATION: {

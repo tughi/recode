@@ -52,6 +52,11 @@ print_number :: (n: Int) -> Nothing {
 	return
 }
 
+Number :: struct {
+	value: Int
+	next : @Number
+}
+
 main :: () -> Int {
 	i := 0
 	loop {
@@ -59,8 +64,10 @@ main :: () -> Int {
 		print_number(i)
 		puts(" - ")
 		print_number(n)
+		puts(" - ")
+		print_number(n // 10)
 		putc('\n')
-		if (i < 21 && n == rfib(i)) {
+		if (i < 32 && n == rfib(i)) {
 			i += 1
 		} else {
 			break
