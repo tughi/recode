@@ -52,9 +52,9 @@ print_number :: (n: Int) -> Nothing {
 	return
 }
 
-Number :: struct {
-	value: Int
-	next : @Number
+String :: struct {
+	length: Int
+	chars: @[Char]
 }
 
 main :: () -> Int {

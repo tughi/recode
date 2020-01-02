@@ -548,7 +548,7 @@ int is_pointer_operator(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
 }
 
-Type *type__create_array(Type *item_type) {
+static Type *type__create_array(Type *item_type) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_ARRAY;
     self->array.item_type = item_type;

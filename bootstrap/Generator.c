@@ -10,6 +10,7 @@
 
 typedef struct IR_Type {
     enum {
+        IR_TYPE_ARRAY,
         IR_TYPE_BOOLEAN,
         IR_TYPE_CHARACTER,
         IR_TYPE_INTEGER,
@@ -20,6 +21,9 @@ typedef struct IR_Type {
     } kind;
 
     union {
+        struct {
+            struct IR_Type *array_item_type;
+        };
         struct {
             struct IR_Type *pointed_type;
         };
@@ -82,6 +86,18 @@ IR_Type *type__create(int kind, String *name, String *repr) {
     self->kind = kind;
     self->name = name;
     self->repr = repr;
+    return self;
+}
+
+IR_Type *type__create_array(IR_Type *item_type) {
+    String *name = string__create("[");
+    string__append_string(name, item_type->name);
+    string__append_char(name, ']');
+    String *repr = string__create("{ ");
+    string__append_string(repr, item_type->repr);
+    string__append_string(repr, string__create("*, i32 }"));
+    IR_Type *self = type__create(IR_TYPE_ARRAY, name, repr);
+    self->array_item_type = item_type;
     return self;
 }
 
@@ -170,6 +186,8 @@ IR_Type *context__find_type(Context *self, String *name) {
 
 IR_Type *context__make_type(Context *self, Type *type) {
     switch (type->kind) {
+    case TYPE_ARRAY:
+        return type__create_array(context__make_type(self, type->array.item_type));
     case TYPE_POINTER:
         return type__create_pointer(context__make_type(self, type->pointer.type));
     case TYPE_SIMPLE:
