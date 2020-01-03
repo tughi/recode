@@ -690,7 +690,8 @@ void emit_statement(Context *context, Statement *statement) {
             fprintf(context->file, "%s = external global %s\n", VALUE_REPR(variable), VALUE_TYPE(variable));
         } else {
             IR_Value *value = emit_expression(context, statement->variable_declaration.value);
-            IR_Value *variable = context__create_local_variable(context, value->type, statement->variable_declaration.name->variable.name->lexeme);
+            IR_Type *variable_type = statement->variable_declaration.type != NULL ? context__make_type(context, statement->variable_declaration.type) : value->type;
+            IR_Value *variable = context__create_local_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
             list__append(context->allocas, variable);
             fprintf(context->file, "  store %s %s, %s* %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
         }
