@@ -357,6 +357,9 @@ void print_statement(Statement *statement, int alignment) {
         if (statement->variable_declaration.type != NULL) {
             printf("%s: ", SGR_WHITE_BOLD);
             print_type(statement->variable_declaration.type);
+            if (statement->variable_declaration.value == NULL) {
+                return;
+            }
             printf(" ");
         } else {
             printf("%s :", SGR_WHITE_BOLD);

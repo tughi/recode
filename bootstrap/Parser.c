@@ -1026,6 +1026,9 @@ Statement *parse_statement(Context *context) {
         consume_one(context, NULL, required(is_colon));
         consume_space(context, 1);
         Type *type = parse_type(context);
+        if (consume_end_of_line(context, FALSE)) {
+            return statement__create_variable_declaration(expression, type, NULL, FALSE);
+        }
         consume_space(context, 1);
         consume_one(context, NULL, required(is_assign_operator));
         consume_space(context, 1);

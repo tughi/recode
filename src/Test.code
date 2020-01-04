@@ -53,11 +53,19 @@ print_number :: (n: Int) -> Nothing {
 }
 
 String :: struct {
-	length: Int
-	chars: @[Char]
+	chars: @Char
+	length: Int = 0
+}
+
+create_string :: () -> String {
+	result: String
+	return result
 }
 
 main :: () -> Int {
+	message := create_string()
+	puts("Message length: ")
+	\ print_number(message.length)
 	i := 0
 	loop {
 		n := lfib(i)
@@ -76,3 +84,4 @@ main :: () -> Int {
 	puts("\nHello 2020!\n\n")
 	return -1
 }
+
