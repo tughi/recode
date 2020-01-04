@@ -327,6 +327,48 @@ IR_Value *emit_comparison_expression(Context *context, Expression *expression, c
     return result;
 }
 
+IR_Value *emit_member_expression(Context *context, Expression *expression) {
+    switch (expression->kind) {
+    case EXPRESSION_MEMBER: {
+        IR_Value *object_pointer = emit_member_expression(context, expression->member.object);
+        if (object_pointer->type->kind != IR_TYPE_POINTER) {
+            PANIC(__FILE__, __LINE__, "Unsupported type: %s", VALUE_TYPE(object_pointer));
+        }
+        IR_Type *object_type = object_pointer->type->pointed_type;
+        if (object_type->kind != IR_TYPE_STRUCT) {
+            PANIC(__FILE__, __LINE__, "Expected struct type instead of: %s", object_type->name->data);
+        }
+        String *member_name = expression->member.name->lexeme;
+        IR_Type *member_type = NULL;
+        int member_index = -1;
+        for (List_Iterator iterator = list__create_iterator(object_type->struct_members); list_iterator__has_next(&iterator); ) {
+            Member *member = list_iterator__next(&iterator);
+            member_index += 1;
+            if (string__equals(member->name->lexeme, member_name->data)) {
+                member_type = context__make_type(context, member->type);
+                break;
+            }
+        }
+        if (member_type == NULL) {
+            PANIC(__FILE__, __LINE__, "Undefined struct member: %s.%s", object_type->name->data, member_name->data);
+        }
+        IR_Value *result = context__create_computed_value(context, type__create_pointer(member_type));
+        fprintf(context->file, "  %s = getelementptr %s, %s %s, i64 0, i32 %d\n", VALUE_REPR(result), object_type->repr->data, VALUE_TYPE(object_pointer), VALUE_REPR(object_pointer), member_index);
+        return result;
+    }
+    case EXPRESSION_VARIABLE: {
+        String *variable_name = expression->variable.name->lexeme;
+        IR_Value *variable = context__find_local(context, variable_name);
+        if (variable == NULL) {
+            PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
+        }
+        return variable;
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported expression kind: %d", expression->kind);
+    }
+}
+
 IR_Value *emit_expression(Context *context, Expression *expression) {
     switch (expression->kind) {
     case EXPRESSION_BINARY: {
@@ -433,35 +475,10 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         return emit_literal(context, expression->literal.value);
     }
     case EXPRESSION_MEMBER: {
-        IR_Value *object = emit_expression(context, expression->member.object);
-        if (object->type->kind == IR_TYPE_POINTER) {
-            IR_Type *pointed_type = object->type->pointed_type;
-            if (pointed_type->kind == IR_TYPE_STRUCT) {
-                IR_Type *struct_type = pointed_type;
-                String *member_name = expression->member.name->lexeme;
-                IR_Type *member_type = NULL;
-                int member_index = -1;
-                int index = -1;
-                for (List_Iterator iterator = list__create_iterator(struct_type->struct_members); list_iterator__has_next(&iterator); ) {
-                    Member *member = list_iterator__next(&iterator);
-                    index += 1;
-                    if (string__equals(member_name, member->name->lexeme->data)) {
-                        member_type = context__make_type(context, member->type);
-                        member_index = index;
-                        break;
-                    }
-                }
-                if (member_type == NULL) {
-                    PANIC(__FILE__, __LINE__, "No such member: %s.%s", struct_type->name->data, member_name->data);
-                }
-                IR_Value *member_address = context__create_computed_value(context, type__create_pointer(member_type));
-                fprintf(context->file, "  %s = getelementptr %s, %s %s, i64 0, i32 %d\n", VALUE_REPR(member_address), struct_type->repr->data, VALUE_TYPE(object), VALUE_REPR(object), member_index);
-                IR_Value *result = context__create_computed_value(context, member_type);
-                fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_TYPE(member_address), VALUE_REPR(member_address));
-                return result;
-            }
-        }
-        PANIC(__FILE__, __LINE__, "Unsupported object type: %s", VALUE_TYPE(object));
+        IR_Value *pointer = emit_member_expression(context, expression);
+        IR_Value *result = context__create_computed_value(context, pointer->type->pointed_type);
+        fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_TYPE(pointer), VALUE_REPR(pointer));
+        return result;
     }
     case EXPRESSION_UNARY: {
         if (string__equals(expression->unary.operator_token->lexeme, "-")) {
@@ -511,11 +528,7 @@ Context *create_block_context(Context *parent_context) {
 void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
-        String *variable_name = statement->assignment.destination->variable.name->lexeme;
-        IR_Value *variable = context__find_local(context, variable_name);
-        if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
-        }
+        IR_Value *destination = emit_member_expression(context, statement->assignment.destination);
         IR_Value *value;
         if (string__equals(statement->assignment.operator_token->lexeme, "=")) {
             value = emit_expression(context, statement->variable_declaration.value);
@@ -537,7 +550,7 @@ void emit_statement(Context *context, Statement *statement) {
                 PANIC(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment.operator_token->lexeme->data);
             }
         }
-        fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
+        fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(destination), VALUE_REPR(destination));
         return;
     }
     case STATEMENT_BLOCK: {

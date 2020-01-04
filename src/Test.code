@@ -57,15 +57,17 @@ String :: struct {
 	length: Int = 0
 }
 
-create_string :: () -> String {
-	result: String
-	return result
+Source :: struct {
+	content: String
 }
 
 main :: () -> Int {
-	message := create_string()
-	puts("Message length: ")
-	\ print_number(message.length)
+	source: Source
+	source.content.length = 1
+	source.content.length += 1
+	puts("Source content length: ")
+	print_number(source.content.length)
+	puts("\n\n")
 	i := 0
 	loop {
 		n := lfib(i)
