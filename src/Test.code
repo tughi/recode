@@ -57,14 +57,27 @@ String :: struct {
 	length: Int = 0
 }
 
+String :: (chars: @Char) -> String {
+	chars := chars
+	self: String
+	self.chars = chars
+	self.length = 0
+	loop {
+		if (chars[self.length] == 0) {
+			break
+		}
+		self.length += 1
+	}
+	return self
+}
+
 Source :: struct {
 	content: String
 }
 
 main :: () -> Int {
 	source: Source
-	source.content.length = 1
-	source.content.length += 1
+	source.content = String("Hello 2020!")
 	puts("Source content length: ")
 	print_number(source.content.length)
 	puts("\n\n")
@@ -83,7 +96,5 @@ main :: () -> Int {
 			break
 		}
 	}
-	puts("\nHello 2020!\n\n")
 	return -1
 }
-

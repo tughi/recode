@@ -327,10 +327,27 @@ IR_Value *emit_comparison_expression(Context *context, Expression *expression, c
     return result;
 }
 
-IR_Value *emit_member_expression(Context *context, Expression *expression) {
+IR_Value *emit_pointer(Context *context, Expression *expression) {
     switch (expression->kind) {
+    case EXPRESSION_ARRAY_ITEM: {
+        IR_Value *array_pointer = emit_pointer(context, expression->array_item.array);
+        if (array_pointer->type->kind != IR_TYPE_POINTER) {
+            PANIC(__FILE__, __LINE__, "Unsupported type: %s", VALUE_TYPE(array_pointer));
+        }
+        IR_Type *array_type = array_pointer->type->pointed_type;
+        if (array_type->kind != IR_TYPE_POINTER) {
+            PANIC(__FILE__, __LINE__, "Expected pointer type instead of: %s", array_type->name->data);
+        }
+        IR_Type *array_item_type = array_type->pointed_type;
+        IR_Value *array_item_index = emit_expression(context, expression->array_item.index);
+        IR_Value *array = context__create_computed_value(context, array_type);
+        fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(array), VALUE_TYPE(array), VALUE_TYPE(array_pointer), VALUE_REPR(array_pointer));
+        IR_Value *array_item = context__create_computed_value(context, type__create_pointer(array_item_type));
+        fprintf(context->file, "  %s = getelementptr %s, %s %s, %s %s\n", VALUE_REPR(array_item), array_item_type->repr->data, VALUE_TYPE(array), VALUE_REPR(array), VALUE_TYPE(array_item_index), VALUE_REPR(array_item_index));
+        return array_item;
+    }
     case EXPRESSION_MEMBER: {
-        IR_Value *object_pointer = emit_member_expression(context, expression->member.object);
+        IR_Value *object_pointer = emit_pointer(context, expression->member.object);
         if (object_pointer->type->kind != IR_TYPE_POINTER) {
             PANIC(__FILE__, __LINE__, "Unsupported type: %s", VALUE_TYPE(object_pointer));
         }
@@ -371,6 +388,12 @@ IR_Value *emit_member_expression(Context *context, Expression *expression) {
 
 IR_Value *emit_expression(Context *context, Expression *expression) {
     switch (expression->kind) {
+    case EXPRESSION_ARRAY_ITEM: {
+        IR_Value *pointer = emit_pointer(context, expression);
+        IR_Value *result = context__create_computed_value(context, pointer->type->pointed_type);
+        fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_TYPE(pointer), VALUE_REPR(pointer));
+        return result;
+    }
     case EXPRESSION_BINARY: {
         if (string__equals(expression->binary.operator_token->lexeme, "+")) {
             return emit_arithmetic_expression(context, expression, "add");
@@ -475,7 +498,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         return emit_literal(context, expression->literal.value);
     }
     case EXPRESSION_MEMBER: {
-        IR_Value *pointer = emit_member_expression(context, expression);
+        IR_Value *pointer = emit_pointer(context, expression);
         IR_Value *result = context__create_computed_value(context, pointer->type->pointed_type);
         fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_TYPE(pointer), VALUE_REPR(pointer));
         return result;
@@ -528,7 +551,7 @@ Context *create_block_context(Context *parent_context) {
 void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
-        IR_Value *destination = emit_member_expression(context, statement->assignment.destination);
+        IR_Value *destination = emit_pointer(context, statement->assignment.destination);
         IR_Value *value;
         if (string__equals(statement->assignment.operator_token->lexeme, "=")) {
             value = emit_expression(context, statement->variable_declaration.value);
@@ -671,7 +694,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_STRUCT_DECLARATION: {
         String *name = statement->struct_declaration.name->variable.name->lexeme;
-        String *repr = string__create("%");
+        String *repr = string__create("%struct.");
         string__append_string(repr, name);
         IR_Type *type = type__create(IR_TYPE_OPAQUE, name, repr);
         list__append(context->types, type);
@@ -680,7 +703,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_STRUCT_DEFINITION: {
         String *name = statement->struct_definition.name->variable.name->lexeme;
-        String *repr = string__create("%");
+        String *repr = string__create("%struct.");
         string__append_string(repr, name);
         IR_Type *type = type__create(IR_TYPE_STRUCT, name, repr);
         type->struct_members = statement->struct_definition.members;
