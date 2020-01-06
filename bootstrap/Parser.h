@@ -55,6 +55,7 @@ typedef struct Expression {
         EXPRESSION_CAST,
         EXPRESSION_LITERAL,
         EXPRESSION_MEMBER,
+        EXPRESSION_SIZE_OF,
         EXPRESSION_UNARY,
         EXPRESSION_VARIABLE,
     } kind;
@@ -84,6 +85,9 @@ typedef struct Expression {
             struct Expression *object;
             Token *name;
         } member;
+        struct {
+            Type *type;
+        } size_of;
         struct {
             Token *operator_token;
             struct Expression *expression;

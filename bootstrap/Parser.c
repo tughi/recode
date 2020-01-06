@@ -23,9 +23,9 @@ Matcher *matcher__create(int (*matches)(Token *), int required) {
     return self;
 }
 
-#define LOCATION(context) ((Token*)list_iterator__current(context->tokens))->line, ((Token*)list_iterator__current(context->tokens))->column
+#define LOCATION(context) ((Token *)list_iterator__current(context->tokens))->line, ((Token *)list_iterator__current(context->tokens))->column
 
-#define CURRENT_TOKEN(context) ((Token*)list_iterator__current(context->tokens))->lexeme->data
+#define CURRENT_TOKEN(context) ((Token *)list_iterator__current(context->tokens))->lexeme->data
 
 #define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, "(%03d,%03d) -- Token: %s", LOCATION(context), CURRENT_TOKEN(context));
 
@@ -108,6 +108,21 @@ Token *_consume_three_(int source_line, Context *context, const char *expected, 
 #define consume_two(context, expected, first_matcher, second_matcher) _consume_two_(__LINE__, context, expected, first_matcher, second_matcher)
 #define consume_three(context, expected, first_matcher, second_matcher, third_matcher) _consume_three_(__LINE__, context, expected, first_matcher, second_matcher, third_matcher)
 
+int is_space(Token *token) {
+    return token->kind == TOKEN_SPACE;
+}
+
+int consume_space(int source_line, Context *context, int expected_spaces) {
+    Token *token = _consume_one_(source_line, context, NULL, required(is_space));
+    int spaces = token != NULL ? token->space.count : 0;
+    if (expected_spaces >= 0 && spaces != expected_spaces) {
+        WARNING(__FILE__, source_line, "(%03d,%03d) -- Consumed %d spaces where %d are expected", LOCATION(context), spaces, expected_spaces);
+    }
+    return spaces;
+}
+
+#define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
+
 int is_identifier(Token *token) {
     return token->kind == TOKEN_IDENTIFIER;
 }
@@ -144,6 +159,19 @@ Expression *expression__create_variable(Token *name) {
     return self;
 }
 
+int is_size_of_keyword(Token *token) {
+    return is_keyword(token, "size_of");
+}
+
+Type *parse_type(Context *context);
+
+Expression *expression__create_size_of(Type *type) {
+    Expression *self = malloc(sizeof(Expression));
+    self->kind = EXPRESSION_SIZE_OF;
+    self->size_of.type = type;
+    return self;
+}
+
 // primary:
 //      IDENTIFIER
 //      | INTEGER
@@ -152,6 +180,7 @@ Expression *expression__create_variable(Token *name) {
 //      | "true"
 //      | CHARACTER
 //      | "(" expression ")"
+//      | "size_of" IDENTIFIER
 Expression *parse_primary_expression(Context *context) {
     Token *name = consume_one(context, NULL, required(is_identifier));
     if (name != NULL) {
@@ -162,27 +191,19 @@ Expression *parse_primary_expression(Context *context) {
         return expression__create_literal(literal);
     }
     if (consume_one(context, NULL, required(is_open_paren))) {
+        consume_space(context, 0);
         Expression *expression = parse_expression(context);
+        consume_space(context, 0);
         consume_one(context, ")", required(is_close_paren));
         return expression; // TODO: return group
     }
+    if (consume_one(context, NULL, required(is_size_of_keyword))) {
+        consume_space(context, 1);
+        Type *type = parse_type(context);
+        return expression__create_size_of(type);
+    }
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected expression instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
 }
-
-int is_space(Token *token) {
-    return token->kind == TOKEN_SPACE;
-}
-
-int consume_space(int source_line, Context *context, int expected_spaces) {
-    Token *token = _consume_one_(source_line, context, NULL, required(is_space));
-    int spaces = token != NULL ? token->space.count : 0;
-    if (expected_spaces >= 0 && spaces != expected_spaces) {
-        WARNING(__FILE__, source_line, "(%03d,%03d) -- Consumed %d spaces where %d are expected", LOCATION(context), spaces, expected_spaces);
-    }
-    return spaces;
-}
-
-#define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
 
 int is_assign_operator(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "=");

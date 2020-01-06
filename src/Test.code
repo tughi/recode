@@ -71,6 +71,9 @@ String :: (chars: @Char) -> String {
 
 Source :: struct {
 	content: String
+    current_index: Int = 0
+    current_line: Int = 1
+    current_column: Int = 1
 }
 
 main :: () -> Int {
@@ -78,10 +81,14 @@ main :: () -> Int {
 	source.content = String("Hello 2020!")
 	puts("Source content: ")
 	puts(source.content.chars)
-	puts("\n")
+	putc('\n')
 	puts("Source content length: ")
 	print_number(source.content.length)
-	puts("\n\n")
+	putc('\n')
+	puts("Source size: ")
+	print_number(size_of Source)
+	putc('\n')
+	putc('\n')
 	i := 0
 	loop {
 		n := lfib(i)

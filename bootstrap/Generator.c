@@ -506,6 +506,13 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_TYPE(pointer), VALUE_REPR(pointer));
         return result;
     }
+    case EXPRESSION_SIZE_OF: {
+        IR_Value *offset = context__create_computed_value(context, context__make_type(context, expression->size_of.type));
+        fprintf(context->file, "  %s = getelementptr %s, %s* null, i64 1\n", VALUE_REPR(offset), VALUE_TYPE(offset), VALUE_TYPE(offset));
+        IR_Value *size = context__create_computed_value(context, context__find_type(context, string__create("Int")));
+        fprintf(context->file, "  %s = ptrtoint %s* %s to %s\n", VALUE_REPR(size), VALUE_TYPE(offset), VALUE_REPR(offset), VALUE_TYPE(size));
+        return size;
+    }
     case EXPRESSION_UNARY: {
         if (string__equals(expression->unary.operator_token->lexeme, "-")) {
             IR_Value *right_value = emit_expression(context, expression->unary.expression);
