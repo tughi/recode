@@ -9,8 +9,7 @@ fputc :: (char: Int, file: @FILE) -> Int
 fputs :: (string: @Char, file: @FILE) -> Int
 
 putc :: (char: Char) -> Int {
-	char := char as Int
-	return fputc(char, stdout)
+	return fputc(char as Int, stdout)
 }
 
 puts :: (message: @Char) -> Nothing {
@@ -58,7 +57,6 @@ String :: struct {
 }
 
 String :: (chars: @Char) -> String {
-	chars := chars
 	self: String
 	self.chars = chars
 	self.length = 0
@@ -78,6 +76,9 @@ Source :: struct {
 main :: () -> Int {
 	source: Source
 	source.content = String("Hello 2020!")
+	puts("Source content: ")
+	puts(source.content.chars)
+	puts("\n")
 	puts("Source content length: ")
 	print_number(source.content.length)
 	puts("\n\n")

@@ -174,7 +174,7 @@ Context *context__clone(Context *other) {
 }
 
 IR_Type *context__find_type(Context *self, String *name) {
-    for (List_Iterator types = list__create_iterator(self->types); list_iterator__has_next(&types); ) {
+    for (List_Iterator types = list__create_iterator(self->types); list_iterator__has_next(&types);) {
         IR_Type *type = list_iterator__next(&types);
         if (string__equals(type->name, name->data)) {
             return type;
@@ -201,7 +201,7 @@ IR_Value *context__find_local(Context *self, String *name) {
     if (self == NULL) {
         return NULL;
     }
-    for (List_Iterator iterator = list__create_reversed_iterator(self->locals); list_iterator__has_next(&iterator); ) {
+    for (List_Iterator iterator = list__create_reversed_iterator(self->locals); list_iterator__has_next(&iterator);) {
         IR_Value *value = list_iterator__next(&iterator);
         if (string__equals(value->name, name->data)) {
             return value;
@@ -252,6 +252,7 @@ IR_Value *context__create_local_variable(Context *self, IR_Type *type, String *n
     }
     IR_Value *value = value__create(IR_VALUE_VARIABLE, type__create_pointer(type), name, repr);
     list__append(self->locals, value);
+    list__append(self->allocas, value);
     return value;
 }
 
@@ -268,44 +269,43 @@ void string__append_byte(String *self, char value) {
 
 IR_Value *emit_literal(Context *context, Token *token) {
     switch (token->kind) {
-        case TOKEN_CHARACTER: {
-            IR_Type *type = context__find_type(context, string__create("Char"));
-            String *repr = string__append_int(string__create_empty(0), token->character.value);
-            return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
-        }
-        case TOKEN_INTEGER: {
-            IR_Type *type = context__find_type(context, string__create("Int"));
-            String *repr = string__append_int(string__create_empty(0), token->integer.value);
-            return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
-        }
-        case TOKEN_STRING: {
-            IR_Type *type = type__create_pointer(context__find_type(context, string__create("Char")));
-            IR_Value *value = context__create_computed_value(context, type);
+    case TOKEN_CHARACTER: {
+        IR_Type *type = context__find_type(context, string__create("Char"));
+        String *repr = string__append_int(string__create_empty(0), token->character.value);
+        return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
+    }
+    case TOKEN_INTEGER: {
+        IR_Type *type = context__find_type(context, string__create("Int"));
+        String *repr = string__append_int(string__create_empty(0), token->integer.value);
+        return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
+    }
+    case TOKEN_STRING: {
+        IR_Type *type = type__create_pointer(context__find_type(context, string__create("Char")));
+        IR_Value *value = context__create_computed_value(context, type);
 
-            String *constant = string__create("@.string.");
-            string__append_string(constant, counter__get(context->global_context->temp_variables));
-            String *constant_name = string__create(constant->data);
-            string__append_string(constant, string__create(" = private constant ["));
-            string__append_int(constant, token->string.value->length + 1);
-            string__append_string(constant, string__create(" x i8] c\""));
-            for (int i = 0; i < token->string.value->length; i++) {
-                char c = token->string.value->data[i];
-                if (c > 31 && c < 127) {
-                    string__append_char(constant, c);
-                } else {
-                    string__append_char(constant, '\\');
-                    string__append_byte(constant, c);
-                }
+        String *constant = string__create("@.string.");
+        string__append_string(constant, counter__get(context->global_context->temp_variables));
+        String *constant_name = string__create(constant->data);
+        string__append_string(constant, string__create(" = private constant ["));
+        string__append_int(constant, token->string.value->length + 1);
+        string__append_string(constant, string__create(" x i8] c\""));
+        for (int i = 0; i < token->string.value->length; i++) {
+            char c = token->string.value->data[i];
+            if (c > 31 && c < 127) {
+                string__append_char(constant, c);
+            } else {
+                string__append_char(constant, '\\');
+                string__append_byte(constant, c);
             }
-            string__append_string(constant, string__create("\\00\""));
-            list__append(context->global_context->constants, constant);
+        }
+        string__append_string(constant, string__create("\\00\""));
+        list__append(context->global_context->constants, constant);
 
-            fprintf(context->file, "  %s = getelementptr [%d x i8], [%d x i8]* %s, i64 0, i64 0\n", VALUE_REPR(value), token->string.value->length + 1, token->string.value->length + 1, constant_name->data);
-            return value;
-        }
-        default: {
-            PANIC(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
-        }
+        fprintf(context->file, "  %s = getelementptr [%d x i8], [%d x i8]* %s, i64 0, i64 0\n", VALUE_REPR(value), token->string.value->length + 1, token->string.value->length + 1, constant_name->data);
+        return value;
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
     }
 }
 
@@ -358,7 +358,7 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         String *member_name = expression->member.name->lexeme;
         IR_Type *member_type = NULL;
         int member_index = -1;
-        for (List_Iterator iterator = list__create_iterator(object_type->struct_members); list_iterator__has_next(&iterator); ) {
+        for (List_Iterator iterator = list__create_iterator(object_type->struct_members); list_iterator__has_next(&iterator);) {
             Member *member = list_iterator__next(&iterator);
             member_index += 1;
             if (string__equals(member->name->lexeme, member_name->data)) {
@@ -378,6 +378,9 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         IR_Value *variable = context__find_local(context, variable_name);
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
+        }
+        if (variable->kind != IR_VALUE_VARIABLE) {
+            PANIC(__FILE__, __LINE__, "Not a variable: %s", variable_name->data);
         }
         return variable;
     }
@@ -456,7 +459,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             PANIC(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
         }
         List *function_arguments = list__create();
-        for (List_Iterator arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(&arguments); ) {
+        for (List_Iterator arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(&arguments);) {
             Argument *argument = list_iterator__next(&arguments);
             IR_Value *function_argument = emit_expression(context, argument->value);
             list__append(function_arguments, function_argument);
@@ -469,7 +472,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             result = context__create_computed_value(context, function->type);
             fprintf(context->file, "  %s = call %s %s(", VALUE_REPR(result), VALUE_TYPE(function), VALUE_REPR(function));
         }
-        for (List_Iterator iterator = list__create_iterator(function_arguments); list_iterator__has_next(&iterator); ) {
+        for (List_Iterator iterator = list__create_iterator(function_arguments); list_iterator__has_next(&iterator);) {
             IR_Value *function_argument = list_iterator__next(&iterator);
             fprintf(context->file, "%s %s", VALUE_TYPE(function_argument), VALUE_REPR(function_argument));
             if (list_iterator__has_next(&iterator)) {
@@ -578,7 +581,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_BLOCK: {
         context = create_block_context(context);
-        for (List_Iterator iterator = list__create_iterator(statement->block.statements); list_iterator__has_next(&iterator); ) {
+        for (List_Iterator iterator = list__create_iterator(statement->block.statements); list_iterator__has_next(&iterator);) {
             Statement *block_statement = list_iterator__next(&iterator);
             emit_statement(context, block_statement);
         }
@@ -596,7 +599,7 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT_FUNCTION_DECLARATION: {
         IR_Value *function = context__create_function(context, context__make_type(context, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
         fprintf(context->file, "declare %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters); ) {
+        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
@@ -611,10 +614,10 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_FUNCTION_DEFINITION: {
         IR_Value *function = context__create_function(context, context__make_type(context, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
-        
+
         context = create_function_context(context);
         fprintf(context->file, "define %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters); ) {
+        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
@@ -631,13 +634,19 @@ void emit_statement(Context *context, Statement *statement) {
         fprintf(context->file, "  br label %s\n", VALUE_REPR(variables_label));
         fprintf(context->file, "%s:\n", VALUE_NAME(entry_label));
 
-        for (List_Iterator iterator = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(&iterator); ) {
+        for (List_Iterator iterator = list__create_iterator(function->function_parameters); list_iterator__has_next(&iterator);) {
+            IR_Value *parameter = list_iterator__next(&iterator);
+            IR_Value *variable = context__create_local_variable(context, parameter->type, parameter->name);
+            fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(parameter), VALUE_REPR(parameter), VALUE_TYPE(variable), VALUE_REPR(variable));
+        }
+
+        for (List_Iterator iterator = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(&iterator);) {
             Statement *body_statement = list_iterator__next(&iterator);
             emit_statement(context, body_statement);
         }
 
         fprintf(context->file, "%s:\n", VALUE_NAME(variables_label));
-        for (List_Iterator iterator = list__create_iterator(context->allocas); list_iterator__has_next(&iterator); ) {
+        for (List_Iterator iterator = list__create_iterator(context->allocas); list_iterator__has_next(&iterator);) {
             IR_Value *alloca = list_iterator__next(&iterator);
             fprintf(context->file, "  %s = alloca %s\n", VALUE_REPR(alloca), alloca->type->pointed_type->repr->data);
         }
@@ -709,7 +718,7 @@ void emit_statement(Context *context, Statement *statement) {
         type->struct_members = statement->struct_definition.members;
         list__append(context->types, type);
         fprintf(context->file, "%s = type { ", type->repr->data);
-        for (List_Iterator iterator = list__create_iterator(statement->struct_definition.members); list_iterator__has_next(&iterator); ) {
+        for (List_Iterator iterator = list__create_iterator(statement->struct_definition.members); list_iterator__has_next(&iterator);) {
             Member *member = list_iterator__next(&iterator);
             fprintf(context->file, "%s", context__make_type(context, member->type)->repr->data);
             if (list_iterator__has_next(&iterator)) {
@@ -728,7 +737,6 @@ void emit_statement(Context *context, Statement *statement) {
             IR_Value *value = statement->variable_declaration.value != NULL ? emit_expression(context, statement->variable_declaration.value) : NULL;
             IR_Type *variable_type = statement->variable_declaration.type != NULL ? context__make_type(context, statement->variable_declaration.type) : value->type;
             IR_Value *variable = context__create_local_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
-            list__append(context->allocas, variable);
             if (value != NULL) {
                 fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
             }
@@ -750,13 +758,13 @@ void generate(List *statements) {
     list__append(context->types, type__create(IR_TYPE_INTEGER, string__create("Int"), string__create("i32")));
     list__append(context->types, type__create(IR_TYPE_NOTHING, string__create("Nothing"), string__create("void")));
 
-    for (List_Iterator iterator = list__create_iterator(statements); list_iterator__has_next(&iterator); ) {
+    for (List_Iterator iterator = list__create_iterator(statements); list_iterator__has_next(&iterator);) {
         Statement *statement = list_iterator__next(&iterator);
         emit_statement(context, statement);
         fprintf(context->file, "\n");
     }
 
-    for (List_Iterator iterator = list__create_iterator(context->constants); list_iterator__has_next(&iterator); ) {
+    for (List_Iterator iterator = list__create_iterator(context->constants); list_iterator__has_next(&iterator);) {
         String *constant = list_iterator__next(&iterator);
         fprintf(context->file, "%s\n", constant->data);
     }
