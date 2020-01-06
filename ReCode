@@ -6,9 +6,6 @@ import subprocess
 import sys
 from collections import OrderedDict
 
-BUILD_DIR = 'build'
-BIN_FILE = os.path.join(BUILD_DIR, 'bootstrap')
-
 
 def execute(command):
     print(command)
@@ -18,12 +15,14 @@ def execute(command):
 
 
 def clean():
-    execute(f"""rm -fr {BUILD_DIR}""")
+    execute(f"""rm -fr build""")
 
 
 def build():
-    if not os.path.exists(BUILD_DIR):
-        execute(f"""mkdir {BUILD_DIR}""")
+    if not os.path.exists(os.path.join('build', 'bootstrap')):
+        execute(f"""mkdir -p {os.path.join('build', 'bootstrap')}""")
+
+    os.chdir('bootstrap')
 
     obj_files = []
     obj_files_changed = False
@@ -52,7 +51,7 @@ def build():
     c_files = [file for file in os.listdir('.') if file[0] != '.' and file.endswith('.c')]
     c_files.sort()
     for c_file in c_files:
-        obj_file = os.path.join(BUILD_DIR, c_file.replace('.c', '.o'))
+        obj_file = os.path.join('..', 'build', 'bootstrap', c_file.replace('.c', '.o'))
         obj_files.append(obj_file)
 
         if os.path.exists(obj_file):
@@ -74,14 +73,15 @@ def build():
             execute(f"""clang -c -o {obj_file} {c_file}""")
             obj_files_changed = True
 
-    if obj_files_changed or not os.path.exists(BIN_FILE):
-        execute(f"""clang -o {BIN_FILE} {' '.join(obj_files)}""")
+    if obj_files_changed or not os.path.exists(os.path.join('..', 'build', 'ReCode')):
+        execute(f"""clang -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}""")
 
+    os.chdir('..')
 
 def run():
     build()
 
-    execute(f"""./{BIN_FILE}""")
+    execute(f"""{os.path.join('build', 'ReCode')}""")
 
 
 TASKS = OrderedDict(
