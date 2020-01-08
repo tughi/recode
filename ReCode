@@ -15,12 +15,12 @@ def execute(command):
 
 
 def clean():
-    execute(f"""rm -fr build""")
+    execute(f'''rm -fr build''')
 
 
 def build():
     if not os.path.exists(os.path.join('build', 'bootstrap')):
-        execute(f"""mkdir -p {os.path.join('build', 'bootstrap')}""")
+        execute(f'''mkdir -p {os.path.join('build', 'bootstrap')}''')
 
     os.chdir('bootstrap')
 
@@ -38,7 +38,7 @@ def build():
                 if match:
                     source_file_include = match.group(1)
                     if not os.path.exists(source_file_include):
-                        print(f"""File "{source_file}" includes non-existing file: {source_file_include}""")
+                        print(f'''File "{source_file}" includes non-existing file: {source_file_include}''')
                         exit(1)
                     if source_file_include not in source_file_includes:
                         source_file_includes.add(source_file_include)
@@ -70,18 +70,33 @@ def build():
             compile_file = True
 
         if compile_file:
-            execute(f"""clang -c -o {obj_file} {c_file}""")
+            execute(f'''clang -c -o {obj_file} {c_file}''')
             obj_files_changed = True
 
     if obj_files_changed or not os.path.exists(os.path.join('..', 'build', 'ReCode')):
-        execute(f"""clang -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}""")
+        execute(f'''clang -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}''')
 
     os.chdir('..')
+
 
 def run():
     build()
 
-    execute(f"""{os.path.join('build', 'ReCode')}""")
+    execute(f'''{os.path.join('build', 'ReCode')}''')
+
+    os.chdir('build')
+
+    optimize = True
+    if optimize:
+        execute('opt -S -O3 -o code.o.ll code.ll')
+        execute('llc code.o.ll')
+        execute('clang -o code code.o.s')
+    else:
+        execute('opt -S -O0 -o code.g.ll code.ll')
+        execute('llc code.g.ll')
+        execute('clang -o code code.g.s')
+
+    execute('./code')
 
 
 TASKS = OrderedDict(
