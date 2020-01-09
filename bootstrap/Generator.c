@@ -193,7 +193,7 @@ IR_Type *context__make_type(Context *self, Type *type) {
     case TYPE_SIMPLE:
         return context__find_type(self, type->simple.name->lexeme);
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported type: %d", type->kind);
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type: %d", type->location.line, type->location.column, type->kind);
     }
 }
 
@@ -353,7 +353,7 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         }
         IR_Type *object_type = object_pointer->type->pointed_type;
         if (object_type->kind != IR_TYPE_STRUCT) {
-            PANIC(__FILE__, __LINE__, "Expected struct type instead of: %s", object_type->name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected struct type instead of: %s", expression->member.object->location.line, expression->member.object->location.column, object_type->name->data);
         }
         String *member_name = expression->member.name->lexeme;
         IR_Type *member_type = NULL;

@@ -148,6 +148,8 @@ Expression *parse_expression(Context *context);
 Expression *expression__create_literal(Token *value) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_LITERAL;
+    self->location.line = value->line;
+    self->location.column = value->column;
     self->literal.value = value;
     return self;
 }
@@ -155,6 +157,8 @@ Expression *expression__create_literal(Token *value) {
 Expression *expression__create_variable(Token *name) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_VARIABLE;
+    self->location.line = name->line;
+    self->location.column = name->column;
     self->variable.name = name;
     return self;
 }
@@ -165,9 +169,11 @@ int is_size_of_keyword(Token *token) {
 
 Type *parse_type(Context *context);
 
-Expression *expression__create_size_of(Type *type) {
+Expression *expression__create_size_of(Token *frist_token, Type *type) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_SIZE_OF;
+    self->location.line = frist_token->line;
+    self->location.column = frist_token->column;
     self->size_of.type = type;
     return self;
 }
@@ -197,10 +203,11 @@ Expression *parse_primary_expression(Context *context) {
         consume_one(context, ")", required(is_close_paren));
         return expression; // TODO: return group
     }
-    if (consume_one(context, NULL, required(is_size_of_keyword))) {
+    if (matches_one(context, required(is_size_of_keyword))) {
+        Token *first_token = consume_one(context, NULL, required(is_size_of_keyword));
         consume_space(context, 1);
         Type *type = parse_type(context);
-        return expression__create_size_of(type);
+        return expression__create_size_of(first_token, type);
     }
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected expression instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
 }
@@ -247,6 +254,7 @@ int is_close_bracket(Token *token) {
 Expression *expression__create_call(Expression *callee, List *arguments) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_CALL;
+    self->location = callee->location;
     self->call.callee = callee;
     self->call.arguments = arguments;
     return self;
@@ -255,6 +263,7 @@ Expression *expression__create_call(Expression *callee, List *arguments) {
 Expression *expression__create_member(Expression *object, Token *name) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_MEMBER;
+    self->location = object->location;
     self->member.object = object;
     self->member.name = name;
     return self;
@@ -263,6 +272,7 @@ Expression *expression__create_member(Expression *object, Token *name) {
 Expression *expression__create_array_item(Expression *array, Expression *index) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_ARRAY_ITEM;
+    self->location = array->location;
     self->array_item.array = array;
     self->array_item.index = index;
     return self;
@@ -277,6 +287,7 @@ Type *parse_type(Context *context);
 Expression *expression__create_cast(Expression *expression, Type *type) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_CAST;
+    self->location = expression->location;
     self->cast.expression = expression;
     self->cast.type = type;
     return self;
@@ -342,6 +353,8 @@ int is_unary_operator(Token *token) {
 Expression *expression__create_unary(Token *operator_token, Expression *expression) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_UNARY;
+    self->location.line = operator_token->line;
+    self->location.column = operator_token->column;
     self->unary.operator_token = operator_token;
     self->unary.expression = expression;
     return self;
@@ -371,6 +384,7 @@ int is_multiplication_operator(Token *token) {
 Expression *expression__create_binary(Token *operator_token, Expression *left_expression, Expression *right_expression) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_BINARY;
+    self->location = left_expression->location;
     self->binary.operator_token = operator_token;
     self->binary.left_expression = left_expression;
     self->binary.right_expression = right_expression;
@@ -569,63 +583,74 @@ int is_pointer_operator(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
 }
 
-static Type *type__create_array(Type *item_type) {
+static Type *type__create_array(Token *first_token, Type *item_type) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_ARRAY;
+    self->location.line = first_token->line;
+    self->location.column = first_token->column;
     self->array.item_type = item_type;
     return self;
 }
 
-Type *type__create_function(Type *return_type, List *parameters) {
+Type *type__create_function(Token *first_token, Type *return_type, List *parameters) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_FUNCTION;
+    self->location.line = first_token->line;
+    self->location.column = first_token->column;
     self->function.parameters = parameters;
     self->function.return_type = return_type;
     return self;
 }
 
-Type *type__create_tuple(List *members) {
+Type *type__create_tuple(Token *first_token, List *members) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_TUPLE;
+    self->location.line = first_token->line;
+    self->location.column = first_token->column;
     self->tuple.members = members;
     return self;
 }
 
-Type *type__create_simple(Token *name) {
+Type *type__create_simple(Token *first_token, Token *name) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_SIMPLE;
+    self->location.line = first_token->line;
+    self->location.column = first_token->column;
     self->simple.name = name;
     return self;
 }
 
-static Type *type__create_pointer(Type *type) {
+static Type *type__create_pointer(Token *first_token, Type *type) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_POINTER;
+    self->location.line = first_token->line;
+    self->location.column = first_token->column;
     self->pointer.type = type;
     return self;
 }
 
-// type:
-//      "@"? (
-//          IDENTIFIER
-//          | "[" type "]"
-//          | "(" comma_separated_members? ")"
-//      )
+// type
+//      : "@" type
+//      | IDENTIFIER
+//      | "[" type "]"
+//      | "(" comma_separated_members? ")" ("->" type)?
 Type *parse_type(Context *context) {
-    int is_pointer = matches_one(context, required(is_pointer_operator));
-    if (is_pointer) {
-        consume_one(context, NULL, required(is_pointer_operator));
+    if (matches_one(context, required(is_pointer_operator))) {
+        Token *first_token= consume_one(context, NULL, required(is_pointer_operator));
         consume_space(context, 0);
+        return type__create_pointer(first_token, parse_type(context));
     }
-    Type *type = NULL;
-    if (consume_one(context, NULL, required(is_open_bracket))) {
+    if (matches_one(context, required(is_open_bracket))) {
+        Token *first_token = consume_one(context, NULL, required(is_open_bracket));
         consume_space(context, 0);
         Type *item_type = parse_type(context);
         consume_space(context, 0);
         consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
-        type = type__create_array(item_type);
-    } else if (consume_one(context, NULL, required(is_open_paren))) {
+        return type__create_array(first_token, item_type);
+    }
+    if (matches_one(context, required(is_open_paren))) {
+        Token *first_token = consume_one(context, NULL, required(is_open_paren));
         consume_space(context, 0);
         List *members = NULL;
         if (consume_one(context, NULL, required(is_close_paren)) == NULL) {
@@ -637,18 +662,13 @@ Type *parse_type(Context *context) {
             consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
             consume_space(context, 1);
             Type *return_type = parse_type(context);
-            type = type__create_function(return_type, members);
+            return type__create_function(first_token, return_type, members);
         } else {
-            type = type__create_tuple(members);
+            return type__create_tuple(first_token, members);
         }
-    } else {
-        Token *name = consume_one(context, "type name", required(is_identifier));
-        type = type__create_simple(name);
     }
-    if (is_pointer) {
-        type = type__create_pointer(type);
-    }
-    return type;
+    Token *name = consume_one(context, "type name", required(is_identifier));
+    return type__create_simple(name, name);
 }
 
 int is_comment(Token *token) {
