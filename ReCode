@@ -82,10 +82,13 @@ def build():
 def run():
     build()
 
+    os.chdir('build')
+    execute('rm -f code code.ll code.g.ll code.g.s code.o.ll code.o.s')
+    os.chdir('..')
+
     execute(f'''{os.path.join('build', 'ReCode')}''')
 
     os.chdir('build')
-
     optimize = True
     if optimize:
         execute('opt -S -O3 -o code.o.ll code.ll')
