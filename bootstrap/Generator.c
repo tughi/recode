@@ -305,7 +305,7 @@ IR_Value *emit_literal(Context *context, Token *token) {
         return value;
     }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported token type: %d", token->kind);
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported token type: %d", token->line, token->column, token->kind);
     }
 }
 
@@ -456,7 +456,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         String *function_name = expression->call.callee->variable.name->lexeme;
         IR_Value *function = context__find_local(context, function_name);
         if (function == NULL) {
-            PANIC(__FILE__, __LINE__, "Undefined function: %s", function_name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%0d4) -- Undefined function: %s", expression->location.line, expression->location.column, function_name->data);
         }
         List *function_arguments = list__create();
         for (List_Iterator arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(&arguments);) {
