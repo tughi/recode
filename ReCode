@@ -74,7 +74,7 @@ def build():
             obj_files_changed = True
 
     if obj_files_changed or not os.path.exists(os.path.join('..', 'build', 'ReCode')):
-        execute(f'''clang -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}''')
+        execute(f'''clang -rdynamic -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}''')
 
     os.chdir('..')
 
