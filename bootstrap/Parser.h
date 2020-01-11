@@ -111,15 +111,13 @@ typedef struct Statement {
         STATEMENT_BLOCK,
         STATEMENT_BREAK,
         STATEMENT_EXPRESSION,
-        STATEMENT_FUNCTION_DECLARATION,
-        STATEMENT_FUNCTION_DEFINITION,
+        STATEMENT_FUNCTION,
         STATEMENT_IF,
         STATEMENT_LOOP,
         STATEMENT_RETURN,
         STATEMENT_SKIP,
-        STATEMENT_STRUCT_DECLARATION,
-        STATEMENT_STRUCT_DEFINITION,
-        STATEMENT_VARIABLE_DECLARATION,
+        STATEMENT_STRUCT,
+        STATEMENT_VARIABLE,
     } kind;
 
     union {
@@ -136,13 +134,9 @@ typedef struct Statement {
             Expression *name;
             Type *return_type;
             List *parameters;
-        } function_declaration;
-        struct {
-            Expression *name;
-            Type *return_type;
-            List *parameters;
             List *statements;
-        } function_definition;
+            int declaration;
+        } function;
         struct {
             Expression *condition;
             struct Statement *true_block;
@@ -154,18 +148,16 @@ typedef struct Statement {
         Expression *return_expression;
         struct {
             Expression *name;
-        } struct_declaration;
-        struct {
-            Expression *name;
             Token *base;
             List *members;
-        } struct_definition;
+            int declaration;
+        } struct_;
         struct {
             Expression *name;
             Type *type;
             Expression *value;
             int external;
-        } variable_declaration;
+        } variable;
     };
 } Statement;
 

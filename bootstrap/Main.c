@@ -271,10 +271,10 @@ void print_statement(Statement *statement, int alignment) {
         print_statement(statement->loop.block, alignment);
         return;
     }
-    case STATEMENT_FUNCTION_DECLARATION: {
-        print_expression(statement->function_declaration.name);
+    case STATEMENT_FUNCTION: {
+        print_expression(statement->function.name);
         printf("%s :: (", SGR_WHITE_BOLD);
-        for (List_Iterator parameters = list__create_iterator(statement->function_declaration.parameters); list_iterator__has_next(&parameters);) {
+        for (List_Iterator parameters = list__create_iterator(statement->function.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
             print_token(parameter->name);
             printf("%s: ", SGR_WHITE_BOLD);
@@ -284,26 +284,12 @@ void print_statement(Statement *statement, int alignment) {
             }
         }
         printf("%s) -> ", SGR_WHITE_BOLD);
-        print_type(statement->function_declaration.return_type);
-        printf("%s", SGR_RESET);
-        return;
-    }
-    case STATEMENT_FUNCTION_DEFINITION: {
-        print_expression(statement->function_definition.name);
-        printf("%s :: (", SGR_WHITE_BOLD);
-        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters);) {
-            Parameter *parameter = list_iterator__next(&parameters);
-            print_token(parameter->name);
-            printf("%s: ", SGR_WHITE_BOLD);
-            print_type(parameter->type);
-            if (list_iterator__has_next(&parameters)) {
-                printf("%s, ", SGR_WHITE_BOLD);
-            }
+        print_type(statement->function.return_type);
+        if (statement->function.declaration) {
+            return;
         }
-        printf("%s) -> ", SGR_WHITE_BOLD);
-        print_type(statement->function_definition.return_type);
         printf("%s {\n", SGR_WHITE_BOLD);
-        for (List_Iterator function_statements = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(&function_statements);) {
+        for (List_Iterator function_statements = list__create_iterator(statement->function.statements); list_iterator__has_next(&function_statements);) {
             print_alignment(alignment + 1);
             print_statement(list_iterator__next(&function_statements), alignment + 1);
             printf("\n");
@@ -324,20 +310,18 @@ void print_statement(Statement *statement, int alignment) {
         printf("%sskip", SGR_YELLOW);
         return;
     }
-    case STATEMENT_STRUCT_DECLARATION: {
-        print_expression(statement->struct_definition.name);
+    case STATEMENT_STRUCT: {
+        print_expression(statement->struct_.name);
         printf("%s :: %sstruct%s", SGR_WHITE_BOLD, SGR_YELLOW, SGR_RESET);
-        return;
-    }
-    case STATEMENT_STRUCT_DEFINITION: {
-        print_expression(statement->struct_definition.name);
-        printf("%s :: %sstruct", SGR_WHITE_BOLD, SGR_YELLOW);
-        if (statement->struct_definition.base != NULL) {
+        if (statement->struct_.declaration) {
+            return;
+        }
+        if (statement->struct_.base != NULL) {
             printf("%s : ", SGR_WHITE_BOLD);
-            print_token(statement->struct_definition.base);
+            print_token(statement->struct_.base);
         }
         printf("%s {\n", SGR_WHITE_BOLD);
-        for (List_Iterator members = list__create_iterator(statement->struct_definition.members); list_iterator__has_next(&members);) {
+        for (List_Iterator members = list__create_iterator(statement->struct_.members); list_iterator__has_next(&members);) {
             Member *member = list_iterator__next(&members);
             print_alignment(alignment + 1);
             print_token(member->name);
@@ -353,12 +337,12 @@ void print_statement(Statement *statement, int alignment) {
         printf("%s}", SGR_WHITE_BOLD);
         return;
     }
-    case STATEMENT_VARIABLE_DECLARATION: {
-        print_expression(statement->variable_declaration.name);
-        if (statement->variable_declaration.type != NULL) {
+    case STATEMENT_VARIABLE: {
+        print_expression(statement->variable.name);
+        if (statement->variable.type != NULL) {
             printf("%s: ", SGR_WHITE_BOLD);
-            print_type(statement->variable_declaration.type);
-            if (statement->variable_declaration.value == NULL) {
+            print_type(statement->variable.type);
+            if (statement->variable.value == NULL) {
                 return;
             }
             printf(" ");
@@ -366,10 +350,10 @@ void print_statement(Statement *statement, int alignment) {
             printf("%s :", SGR_WHITE_BOLD);
         }
         printf("%s= ", SGR_WHITE_BOLD);
-        if (statement->variable_declaration.external) {
+        if (statement->variable.external) {
             printf("%sexternal", SGR_YELLOW);
         } else {
-            print_expression(statement->variable_declaration.value);
+            print_expression(statement->variable.value);
         }
         return;
     }
@@ -405,9 +389,9 @@ void dump_backtrace_and_exit(int signal) {
 int main(int argc, char *argv[]) {
     signal(SIGSEGV, dump_backtrace_and_exit);
 
-    String *source_file = string__create("src/Source.code");
+    // String *source_file = string__create("src/Source.code");
     // String *source_file = string__create("src/Visitor.code");
-    // String *source_file = string__create("src/Test.code");
+    String *source_file = string__create("src/Test.code");
     Source *source = source__create(load_file(source_file));
 
     List *tokens = scan(source);

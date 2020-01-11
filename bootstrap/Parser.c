@@ -705,19 +705,13 @@ int is_struct_keyword(Token *token) {
     return is_keyword(token, "struct");
 }
 
-Statement *statement__create_struct_declaration(Expression *name) {
+Statement *statement__create_struct(Expression *name, Token *base, List *members) {
     Statement *self = malloc(sizeof(Statement));
-    self->kind = STATEMENT_STRUCT_DECLARATION;
-    self->struct_declaration.name = name;
-    return self;
-}
-
-Statement *statement__create_struct_definition(Expression *name, Token *base, List *members) {
-    Statement *self = malloc(sizeof(Statement));
-    self->kind = STATEMENT_STRUCT_DEFINITION;
-    self->struct_definition.name = name;
-    self->struct_definition.base = base;
-    self->struct_definition.members = members;
+    self->kind = STATEMENT_STRUCT;
+    self->struct_.name = name;
+    self->struct_.base = base;
+    self->struct_.members = members;
+    self->struct_.declaration = members == NULL;
     return self;
 }
 
@@ -726,7 +720,7 @@ Statement *statement__create_struct_definition(Expression *name, Token *base, Li
 Statement *parse_struct(Context *context, Expression *name) {
     consume_one(context, "struct", required(is_struct_keyword));
     if (consume_end_of_line(context, FALSE) == TRUE) {
-        return statement__create_struct_declaration(name);
+        return statement__create_struct(name, NULL, NULL);
     }
     consume_space(context, 1);
     Token *base = NULL;
@@ -746,7 +740,7 @@ Statement *parse_struct(Context *context, Expression *name) {
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_struct_definition(name, base, members);
+    return statement__create_struct(name, base, members);
 }
 
 Statement *parse_statement(Context *context);
@@ -763,22 +757,14 @@ List *parse_statements(Context *context) {
     return statements;
 }
 
-Statement *statement__create_function_declaration(Expression *name, Type *return_type, List *parameters) {
+Statement *statement__create_function(Expression *name, Type *return_type, List *parameters, List *statements) {
     Statement *self = malloc(sizeof(Statement));
-    self->kind = STATEMENT_FUNCTION_DECLARATION;
-    self->function_definition.name = name;
-    self->function_definition.return_type = return_type;
-    self->function_definition.parameters = parameters;
-    return self;
-}
-
-Statement *statement__create_function_definition(Expression *name, Type *return_type, List *parameters, List *statements) {
-    Statement *self = malloc(sizeof(Statement));
-    self->kind = STATEMENT_FUNCTION_DEFINITION;
-    self->function_definition.name = name;
-    self->function_definition.return_type = return_type;
-    self->function_definition.parameters = parameters;
-    self->function_definition.statements = statements;
+    self->kind = STATEMENT_FUNCTION;
+    self->function.name = name;
+    self->function.return_type = return_type;
+    self->function.parameters = parameters;
+    self->function.statements = statements;
+    self->function.declaration = statements == NULL;
     return self;
 }
 
@@ -799,7 +785,7 @@ Statement *parse_function(Context *context, Expression *name) {
     consume_space(context, 1);
     Type *return_type = parse_type(context);
     if (consume_end_of_line(context, FALSE) == TRUE) {
-        return statement__create_function_declaration(name, return_type, parameters);
+        return statement__create_function(name, return_type, parameters, NULL);
     } else {
         consume_space(context, 1);
     }
@@ -811,7 +797,7 @@ Statement *parse_function(Context *context, Expression *name) {
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_function_definition(name, return_type, parameters, statements);
+    return statement__create_function(name, return_type, parameters, statements);
 }
 
 Statement *statement__create_block(List *statements) {
@@ -969,13 +955,13 @@ Statement *statement__create_expression(Expression *expression) {
     return self;
 }
 
-Statement *statement__create_variable_declaration(Expression *name, Type *type, Expression *value, int external) {
+Statement *statement__create_variable(Expression *name, Type *type, Expression *value, int external) {
     Statement *self = malloc(sizeof(Statement));
-    self->kind = STATEMENT_VARIABLE_DECLARATION;
-    self->variable_declaration.name = name;
-    self->variable_declaration.type = type;
-    self->variable_declaration.value = value;
-    self->variable_declaration.external = external;
+    self->kind = STATEMENT_VARIABLE;
+    self->variable.name = name;
+    self->variable.type = type;
+    self->variable.value = value;
+    self->variable.external = external;
     return self;
 }
 
@@ -1057,25 +1043,25 @@ Statement *parse_statement(Context *context) {
             consume_space(context, 1);
             Expression *value = parse_expression(context);
             consume_end_of_line(context, TRUE);
-            return statement__create_variable_declaration(expression, NULL, value, FALSE);
+            return statement__create_variable(expression, NULL, value, FALSE);
         }
         consume_space(context, 0);
         consume_one(context, NULL, required(is_colon));
         consume_space(context, 1);
         Type *type = parse_type(context);
         if (consume_end_of_line(context, FALSE)) {
-            return statement__create_variable_declaration(expression, type, NULL, FALSE);
+            return statement__create_variable(expression, type, NULL, FALSE);
         }
         consume_space(context, 1);
         consume_one(context, NULL, required(is_assign_operator));
         consume_space(context, 1);
         if (consume_one(context, NULL, required(is_external_keyword)) != NULL) {
             consume_end_of_line(context, TRUE);
-            return statement__create_variable_declaration(expression, type, NULL, TRUE);
+            return statement__create_variable(expression, type, NULL, TRUE);
         }
         Expression *value = parse_expression(context);
         consume_end_of_line(context, TRUE);
-        return statement__create_variable_declaration(expression, type, value, FALSE);
+        return statement__create_variable(expression, type, value, FALSE);
     }
 
     if (matches_three(context, optional(is_space), optional(is_assign_variant), required(is_assign_operator))) {

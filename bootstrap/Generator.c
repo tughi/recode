@@ -564,13 +564,13 @@ void emit_statement(Context *context, Statement *statement) {
         IR_Value *destination = emit_pointer(context, statement->assignment.destination);
         IR_Value *value;
         if (string__equals(statement->assignment.operator_token->lexeme, "=")) {
-            value = emit_expression(context, statement->variable_declaration.value);
+            value = emit_expression(context, statement->variable.value);
         } else {
             Expression *binary_expression = malloc(sizeof(Expression));
             binary_expression->kind = EXPRESSION_BINARY;
             binary_expression->binary.operator_token = statement->assignment.operator_token;
             binary_expression->binary.left_expression = statement->assignment.destination;
-            binary_expression->binary.right_expression = statement->variable_declaration.value;
+            binary_expression->binary.right_expression = statement->variable.value;
             if (string__equals(statement->assignment.operator_token->lexeme, "+=")) {
                 value = emit_arithmetic_expression(context, binary_expression, "add");
             } else if (string__equals(statement->assignment.operator_token->lexeme, "-=")) {
@@ -603,10 +603,12 @@ void emit_statement(Context *context, Statement *statement) {
         emit_expression(context, statement->expression);
         return;
     }
-    case STATEMENT_FUNCTION_DECLARATION: {
-        IR_Value *function = context__create_function(context, context__make_type(context, statement->function_declaration.return_type), statement->function_definition.name->literal.value->lexeme);
-        fprintf(context->file, "declare %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters);) {
+    case STATEMENT_FUNCTION: {
+        IR_Value *function = context__create_function(context, context__make_type(context, statement->function.return_type), statement->function.name->literal.value->lexeme);
+
+        context = create_function_context(context);
+        fprintf(context->file, "%s %s %s(", statement->function.declaration ? "declare" : "define", VALUE_TYPE(function), VALUE_REPR(function));
+        for (List_Iterator parameters = list__create_iterator(statement->function.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
             IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
@@ -616,23 +618,9 @@ void emit_statement(Context *context, Statement *statement) {
                 fprintf(context->file, ", ");
             }
         }
-        fprintf(context->file, ")\n");
-        return;
-    }
-    case STATEMENT_FUNCTION_DEFINITION: {
-        IR_Value *function = context__create_function(context, context__make_type(context, statement->function_definition.return_type), statement->function_definition.name->literal.value->lexeme);
-
-        context = create_function_context(context);
-        fprintf(context->file, "define %s %s(", VALUE_TYPE(function), VALUE_REPR(function));
-        for (List_Iterator parameters = list__create_iterator(statement->function_definition.parameters); list_iterator__has_next(&parameters);) {
-            Parameter *parameter = list_iterator__next(&parameters);
-            IR_Type *parameter_type = context__make_type(context, parameter->type);
-            IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
-            list__append(function->function_parameters, parameter_value);
-            fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
-            if (list_iterator__has_next(&parameters)) {
-                fprintf(context->file, ", ");
-            }
+        if (statement->function.declaration) {
+            fprintf(context->file, ")\n");
+            return;
         }
         fprintf(context->file, ") {\n");
 
@@ -647,7 +635,7 @@ void emit_statement(Context *context, Statement *statement) {
             fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(parameter), VALUE_REPR(parameter), VALUE_TYPE(variable), VALUE_REPR(variable));
         }
 
-        for (List_Iterator iterator = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(&iterator);) {
+        for (List_Iterator iterator = list__create_iterator(statement->function.statements); list_iterator__has_next(&iterator);) {
             Statement *body_statement = list_iterator__next(&iterator);
             emit_statement(context, body_statement);
         }
@@ -708,42 +696,37 @@ void emit_statement(Context *context, Statement *statement) {
         }
         return;
     }
-    case STATEMENT_STRUCT_DECLARATION: {
-        String *name = statement->struct_declaration.name->variable.name->lexeme;
-        String *repr = string__create("%struct.");
-        string__append_string(repr, name);
-        IR_Type *type = type__create(IR_TYPE_OPAQUE, name, repr);
-        list__append(context->types, type);
-        fprintf(context->file, "%s = type opaque\n", type->repr->data);
-        return;
-    }
-    case STATEMENT_STRUCT_DEFINITION: {
-        String *name = statement->struct_definition.name->variable.name->lexeme;
+    case STATEMENT_STRUCT: {
+        String *name = statement->struct_.name->variable.name->lexeme;
         String *repr = string__create("%struct.");
         string__append_string(repr, name);
         IR_Type *type = type__create(IR_TYPE_STRUCT, name, repr);
-        type->struct_members = statement->struct_definition.members;
+        type->struct_members = statement->struct_.members;
         list__append(context->types, type);
-        fprintf(context->file, "%s = type { ", type->repr->data);
-        for (List_Iterator iterator = list__create_iterator(statement->struct_definition.members); list_iterator__has_next(&iterator);) {
-            Member *member = list_iterator__next(&iterator);
-            fprintf(context->file, "%s", context__make_type(context, member->type)->repr->data);
-            if (list_iterator__has_next(&iterator)) {
-                fprintf(context->file, ", ");
+        if (statement->struct_.declaration) {
+            fprintf(context->file, "%s = type opaque\n", type->repr->data);
+        } else {
+            fprintf(context->file, "%s = type { ", type->repr->data);
+            for (List_Iterator iterator = list__create_iterator(statement->struct_.members); list_iterator__has_next(&iterator);) {
+                Member *member = list_iterator__next(&iterator);
+                fprintf(context->file, "%s", context__make_type(context, member->type)->repr->data);
+                if (list_iterator__has_next(&iterator)) {
+                    fprintf(context->file, ", ");
+                }
             }
+            fprintf(context->file, " }\n");
         }
-        fprintf(context->file, " }\n");
         return;
     }
-    case STATEMENT_VARIABLE_DECLARATION: {
-        if (statement->variable_declaration.external == TRUE) {
-            IR_Type *variable_type = context__make_type(context, statement->variable_declaration.type);
-            IR_Value *variable = context__create_global_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
+    case STATEMENT_VARIABLE: {
+        if (statement->variable.external == TRUE) {
+            IR_Type *variable_type = context__make_type(context, statement->variable.type);
+            IR_Value *variable = context__create_global_variable(context, variable_type, statement->variable.name->variable.name->lexeme);
             fprintf(context->file, "%s = external global %s\n", VALUE_REPR(variable), variable->type->pointed_type->repr->data);
         } else {
-            IR_Value *value = statement->variable_declaration.value != NULL ? emit_expression(context, statement->variable_declaration.value) : NULL;
-            IR_Type *variable_type = statement->variable_declaration.type != NULL ? context__make_type(context, statement->variable_declaration.type) : value->type;
-            IR_Value *variable = context__create_local_variable(context, variable_type, statement->variable_declaration.name->variable.name->lexeme);
+            IR_Value *value = statement->variable.value != NULL ? emit_expression(context, statement->variable.value) : NULL;
+            IR_Type *variable_type = statement->variable.type != NULL ? context__make_type(context, statement->variable.type) : value->type;
+            IR_Value *variable = context__create_local_variable(context, variable_type, statement->variable.name->variable.name->lexeme);
             if (value != NULL) {
                 fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
             }
