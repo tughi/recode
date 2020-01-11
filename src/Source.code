@@ -31,7 +31,7 @@ consume :: (self: @Source, accepted: (char: Char) -> Bool) -> Char {
 	return 0
 }
 
-main :: () {
+main :: () -> Nothing {
 	source := Source("Hello world!")
 
 	is_valid :: (char: Char) -> Bool {

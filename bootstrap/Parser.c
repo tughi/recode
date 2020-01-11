@@ -636,7 +636,7 @@ static Type *type__create_pointer(Token *first_token, Type *type) {
 //      | "(" comma_separated_members? ")" ("->" type)?
 Type *parse_type(Context *context) {
     if (matches_one(context, required(is_pointer_operator))) {
-        Token *first_token= consume_one(context, NULL, required(is_pointer_operator));
+        Token *first_token = consume_one(context, NULL, required(is_pointer_operator));
         consume_space(context, 0);
         return type__create_pointer(first_token, parse_type(context));
     }
@@ -783,7 +783,7 @@ Statement *statement__create_function_definition(Expression *name, Type *return_
 }
 
 // function:
-//      "(" comma_separated_members? ")" ("->" type)? ("{" EOL statement* "}")? EOL
+//      "(" comma_separated_members? ")" "->" type ("{" EOL statement* "}")? EOL
 Statement *parse_function(Context *context, Expression *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
@@ -795,17 +795,13 @@ Statement *parse_function(Context *context, Expression *name) {
         parameters = list__create();
     }
     consume_space(context, 1);
-    Type *return_type = NULL;
-    if (consume_two(context, NULL, required(is_hyphen), required(is_close_angled_bracket)) != NULL) {
-        consume_space(context, 1);
-        return_type = parse_type(context);
-        if (consume_end_of_line(context, FALSE) == TRUE) {
-            return statement__create_function_declaration(name, return_type, parameters);
-        } else {
-            consume_space(context, 1);
-        }
-    } else if (consume_end_of_line(context, FALSE) == TRUE) {
+    consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
+    consume_space(context, 1);
+    Type *return_type = parse_type(context);
+    if (consume_end_of_line(context, FALSE) == TRUE) {
         return statement__create_function_declaration(name, return_type, parameters);
+    } else {
+        consume_space(context, 1);
     }
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, TRUE);

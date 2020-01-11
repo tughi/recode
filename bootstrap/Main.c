@@ -272,7 +272,7 @@ void print_statement(Statement *statement, int alignment) {
         return;
     }
     case STATEMENT_FUNCTION_DECLARATION: {
-        print_expression(statement->function_definition.name);
+        print_expression(statement->function_declaration.name);
         printf("%s :: (", SGR_WHITE_BOLD);
         for (List_Iterator parameters = list__create_iterator(statement->function_declaration.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
@@ -283,11 +283,8 @@ void print_statement(Statement *statement, int alignment) {
                 printf("%s, ", SGR_WHITE_BOLD);
             }
         }
-        printf("%s)", SGR_WHITE_BOLD);
-        if (statement->function_definition.return_type != NULL) {
-            printf(" -> ");
-            print_type(statement->function_definition.return_type);
-        }
+        printf("%s) -> ", SGR_WHITE_BOLD);
+        print_type(statement->function_declaration.return_type);
         printf("%s", SGR_RESET);
         return;
     }
@@ -303,11 +300,8 @@ void print_statement(Statement *statement, int alignment) {
                 printf("%s, ", SGR_WHITE_BOLD);
             }
         }
-        printf("%s)", SGR_WHITE_BOLD);
-        if (statement->function_definition.return_type != NULL) {
-            printf(" -> ");
-            print_type(statement->function_definition.return_type);
-        }
+        printf("%s) -> ", SGR_WHITE_BOLD);
+        print_type(statement->function_definition.return_type);
         printf("%s {\n", SGR_WHITE_BOLD);
         for (List_Iterator function_statements = list__create_iterator(statement->function_definition.statements); list_iterator__has_next(&function_statements);) {
             print_alignment(alignment + 1);
