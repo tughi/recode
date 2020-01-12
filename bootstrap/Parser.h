@@ -13,6 +13,7 @@ struct Type;
 struct Expression;
 
 typedef struct {
+    int reference;
     Token *name;
     struct Type *type;
     struct Expression *default_value;

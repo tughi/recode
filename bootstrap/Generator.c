@@ -43,6 +43,7 @@ typedef struct IR_Value {
         IR_VALUE_FUNCTION,
         IR_VALUE_LABEL,
         IR_VALUE_PARAMETER,
+        IR_VALUE_REFERENCE,
         IR_VALUE_VARIABLE,
     } kind;
 
@@ -235,6 +236,14 @@ IR_Value *context__create_parameter(Context *self, IR_Type *type, String *name) 
     return value;
 }
 
+IR_Value *context__create_reference(Context *self, IR_Type *type, String *name) {
+    String *repr = string__create("%");
+    string__append_string(repr, name);
+    IR_Value *value = value__create(IR_VALUE_REFERENCE, type__create_pointer(type), name, repr);
+    list__append(self->locals, value);
+    return value;
+}
+
 IR_Value *context__create_global_variable(Context *self, IR_Type *type, String *name) {
     String *repr = string__create("@");
     string__append_string(repr, name);
@@ -391,8 +400,8 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
         }
-        if (variable->kind != IR_VALUE_VARIABLE) {
-            PANIC(__FILE__, __LINE__, "Not a variable: %s", variable_name->data);
+        if (variable->kind != IR_VALUE_VARIABLE && variable->kind != IR_VALUE_REFERENCE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable: %s", expression->location.line, expression->location.column, variable_name->data);
         }
         return variable;
     }
@@ -468,13 +477,24 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         String *function_name = expression->call.callee->variable.name->lexeme;
         IR_Value *function = context__find_local(context, function_name);
         if (function == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%0d4) -- Undefined function: %s", expression->location.line, expression->location.column, function_name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined function: %s", expression->location.line, expression->location.column, function_name->data);
         }
         List *function_arguments = list__create();
-        for (List_Iterator arguments = list__create_iterator(expression->call.arguments); list_iterator__has_next(&arguments);) {
-            Argument *argument = list_iterator__next(&arguments);
-            IR_Value *function_argument = emit_expression(context, argument->value);
-            list__append(function_arguments, function_argument);
+        for (int index = 0; index < list__size(function->function_parameters); ++index) {
+            IR_Value *function_parameter = list__get(function->function_parameters, index);
+            Argument *call_argument = list__get(expression->call.arguments, index);
+            if (call_argument == NULL) {
+                INFO(__FILE__, __LINE__, "(%04d:%04d) -- Function called with %d arguments instead of %d", expression->location.line, expression->location.column, list__size(expression->call.arguments), list__size(function->function_parameters));
+            }
+            if (function_parameter->kind == IR_VALUE_PARAMETER) {
+                IR_Value *function_argument = emit_expression(context, call_argument->value);
+                list__append(function_arguments, function_argument);
+            } else if (function_parameter->kind == IR_VALUE_REFERENCE) {
+                IR_Value *function_argument = emit_pointer(context, call_argument->value);
+                list__append(function_arguments, function_argument);
+            } else {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported parameter kind: %d", call_argument->value->location.line, call_argument->value->location.column, function_parameter->kind);
+            }
         }
         IR_Value *result;
         if (function->type->kind == IR_TYPE_NOTHING) {
@@ -623,7 +643,12 @@ void emit_statement(Context *context, Statement *statement) {
         for (List_Iterator parameters = list__create_iterator(statement->function.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
             IR_Type *parameter_type = context__make_type(context, parameter->type);
-            IR_Value *parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
+            IR_Value *parameter_value;
+            if (parameter->reference) {
+                parameter_value = context__create_reference(context, parameter_type, parameter->name->lexeme);
+            } else {
+                parameter_value = context__create_parameter(context, parameter_type, parameter->name->lexeme);
+            }
             list__append(function->function_parameters, parameter_value);
             fprintf(context->file, "%s %s", VALUE_TYPE(parameter_value), VALUE_REPR(parameter_value));
             if (list_iterator__has_next(&parameters)) {
@@ -643,8 +668,10 @@ void emit_statement(Context *context, Statement *statement) {
 
         for (List_Iterator iterator = list__create_iterator(function->function_parameters); list_iterator__has_next(&iterator);) {
             IR_Value *parameter = list_iterator__next(&iterator);
-            IR_Value *variable = context__create_local_variable(context, parameter->type, parameter->name);
-            fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(parameter), VALUE_REPR(parameter), VALUE_TYPE(variable), VALUE_REPR(variable));
+            if (parameter->kind == IR_VALUE_PARAMETER) {
+                IR_Value *variable = context__create_local_variable(context, parameter->type, parameter->name);
+                fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(parameter), VALUE_REPR(parameter), VALUE_TYPE(variable), VALUE_REPR(variable));
+            }
         }
 
         for (List_Iterator iterator = list__create_iterator(statement->function.statements); list_iterator__has_next(&iterator);) {

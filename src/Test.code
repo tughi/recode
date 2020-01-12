@@ -8,46 +8,20 @@ fputc :: (char: Int, file: @FILE) -> Int
 
 fputs :: (string: @Char, file: @FILE) -> Int
 
-putc :: (char: Char) -> Int {
+print_char :: (char: Char) -> Int {
 	return fputc(char as Int, stdout)
 }
 
-puts :: (message: @Char) -> Nothing {
+print_cstring :: (message: @Char) -> Nothing {
 	fputs(message, stdout)
 	return
-}
-
-rfib :: (n: Int) -> Int {
-	if (n < 2) {
-		return n
-	}
-	return rfib(n - 1) + rfib(n - 2)
-}
-
-lfib :: (n: Int) -> Int {
-	if (n < 2) {
-		return n
-	}
-	v_0 := 0
-	v_1 := 1
-	v_i := v_0 + v_1
-	i := 2
-	loop {
-		if (i == n) {
-			return v_i
-		}
-		v_0 = v_1
-		v_1 = v_i
-		v_i = v_0 + v_1
-		i += 1
-	}
 }
 
 print_number :: (n: Int) -> Nothing {
 	if (n >= 10) {
 		print_number(n / 10)
 	}
-	putc('0' + (n // 10) as Char)
+	print_char('0' + (n // 10) as Char)
 	return
 }
 
@@ -71,38 +45,39 @@ String :: (chars: @Char) -> String {
 
 Source :: struct {
 	content: String
-    current_index: Int = 0
-    current_line: Int = 1
-    current_column: Int = 1
+    current_index: Int
+    current_line: Int
+    current_column: Int
+}
+
+advance :: (@self: Source) -> Bool {
+	if (self.current_index < self.content.length) {
+		self.current_index += 1
+		return true
+	}
+	return false
+}
+
+current :: (@self: Source) -> Char {
+	return self.content.chars[self.current_index]
 }
 
 main :: () -> Int {
 	source: Source
 	source.content = String("Hello 2020!")
-	puts("Source content: ")
-	puts(source.content.chars)
-	putc('\n')
-	puts("Source content length: ")
-	print_number(source.content.length)
-	putc('\n')
-	puts("Source size: ")
-	print_number(size_of Source)
-	putc('\n')
-	putc('\n')
-	i := 0
+	source.current_index = -1
+	source.current_line = 1
+	source.current_column = 1
+
 	loop {
-		n := lfib(i)
-		print_number(i)
-		puts(" - ")
-		print_number(n)
-		puts(" - ")
-		print_number(n // 10)
-		putc('\n')
-		if (i < 32 && n == rfib(i)) {
-			i += 1
+		if (advance(source)) {
+			print_char(current(source))
 		} else {
 			break
 		}
 	}
+
+	print_char('\n')
+
 	return -1
 }

@@ -539,17 +539,29 @@ int is_close_angled_bracket(Token *token) {
 
 Type *parse_type(Context *context);
 
-Member *member__create(Token *name, Type *type, Expression *default_value) {
+Member *member__create(int reference, Token *name, Type *type, Expression *default_value) {
     Member *self = malloc(sizeof(Member));
+    self->reference = reference;
     self->name = name;
     self->type = type;
     self->default_value = default_value;
     return self;
 }
 
+int is_reference_operator(Token *token) {
+    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
+}
+
 // member:
-//      IDENTIFIER ":" type ("=" expression)?
+//      "@"? IDENTIFIER ":" type ("=" expression)?
 Member *parse_member(Context *context) {
+    int reference;
+    if (consume_one(context, NULL, required(is_reference_operator))) {
+        reference = TRUE;
+        consume_space(context, 0);
+    } else {
+        reference = FALSE;
+    }
     Token *name = consume_one(context, "name", required(is_identifier));
     consume_space(context, 0);
     consume_one(context, ":", required(is_colon));
@@ -562,7 +574,7 @@ Member *parse_member(Context *context) {
         consume_space(context, 1);
         default_value = parse_expression(context);
     }
-    return member__create(name, type, default_value);
+    return member__create(reference, name, type, default_value);
 }
 
 // comma_separated_members:
