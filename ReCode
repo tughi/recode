@@ -70,11 +70,11 @@ def build():
             compile_file = True
 
         if compile_file:
-            execute(f'''clang -c -o {obj_file} {c_file}''')
+            execute(f'''clang -g -c -o {obj_file} {c_file}''')
             obj_files_changed = True
 
     if obj_files_changed or not os.path.exists(os.path.join('..', 'build', 'ReCode')):
-        execute(f'''clang -rdynamic -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}''')
+        execute(f'''clang -g -rdynamic -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}''')
 
     os.chdir('..')
 
