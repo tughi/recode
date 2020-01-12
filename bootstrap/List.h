@@ -10,6 +10,7 @@ typedef struct List_Item {
 typedef struct List {
     List_Item *first;
     List_Item *last;
+    int size;
 } List;
 
 typedef struct List_Iterator {
@@ -21,6 +22,10 @@ typedef struct List_Iterator {
 } List_Iterator;
 
 List *list__create();
+
+int list__size(List *list);
+
+void *list__get(List *list, int index);
 
 void list__append(List *self, void *item);
 

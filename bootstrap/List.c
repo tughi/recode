@@ -6,7 +6,22 @@ List *list__create() {
     List *self = malloc(sizeof(List));
     self->first = NULL;
     self->last = NULL;
+    self->size = 0;
     return self;
+}
+
+int list__size(List *self) {
+    return self->size;
+}
+
+void *list__get(List *self, int index) {
+    List_Item *item = self->first;
+    int item_index = 0;
+    while (item_index < index && item != NULL) {
+        item = item->next;
+        item_index += 1;
+    }
+    return item != NULL ? item->data : NULL;
 }
 
 void list__append(List *self, void *data) {
@@ -21,6 +36,7 @@ void list__append(List *self, void *data) {
         self->last->next = item;
     }
     self->last = item;
+    self->size += 1;
 }
 
 List_Iterator list__create_iterator(List *self) {
