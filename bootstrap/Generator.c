@@ -279,6 +279,18 @@ IR_Value *emit_literal(Context *context, Token *token) {
         String *repr = string__append_int(string__create_empty(0), token->integer.value);
         return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
     }
+    case TOKEN_KEYWORD: {
+        if (string__equals(token->lexeme, "true")) {
+            IR_Type *type = context__find_type(context, string__create("Bool"));
+            String *repr = string__create("1");
+            return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
+        } else if (string__equals(token->lexeme, "false")) {
+            IR_Type *type = context__find_type(context, string__create("Bool"));
+            String *repr = string__create("0");
+            return value__create(IR_VALUE_CONSTANT, type, NULL, repr);
+        }
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported literal token: %s", token->line, token->column, token->lexeme->data);
+    }
     case TOKEN_STRING: {
         IR_Type *type = type__create_pointer(context__find_type(context, string__create("Char")));
         IR_Value *value = context__create_computed_value(context, type);
