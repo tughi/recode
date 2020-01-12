@@ -389,9 +389,9 @@ void dump_backtrace_and_exit(int signal) {
 int main(int argc, char *argv[]) {
     signal(SIGSEGV, dump_backtrace_and_exit);
 
-    // String *source_file = string__create("src/Source.code");
+    String *source_file = string__create("src/Source.code");
     // String *source_file = string__create("src/Visitor.code");
-    String *source_file = string__create("src/Test.code");
+    // String *source_file = string__create("src/Test.code");
     Source *source = source__create(load_file(source_file));
 
     List *tokens = scan(source);

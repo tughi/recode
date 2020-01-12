@@ -1,22 +1,40 @@
+String :: struct {
+	chars: @Char
+	length: Int
+}
+
+String :: (chars: @Char) -> String {
+	self: String
+	self.chars = chars
+	self.length = 0
+	loop {
+		if (chars[self.length] == 0) {
+			break
+		}
+		self.length += 1
+	}
+	return self
+}
+
 Source :: struct {
-    data: @[Char]
-    current_index: Int = 0
-    current_line: Int = 1
-    current_column: Int = 1
+    data: String
+    current_index: Int
+    current_line: Int
+    current_column: Int
 }
 
 \ returns the next character that will be consumed
-peek :: (self: @Source) -> Char {
+peek :: (@self: Source) -> Char {
 	if (self.current_index < self.data.length) {
-		return self.data[self.current_index]
+		return self.data.chars[self.current_index]
 	}
-	return 0
+	return 0 as Char
 }
 
 \ consume and return the current character if it's accepted by the provided function
-consume :: (self: @Source, accepted: (char: Char) -> Bool) -> Char {
+consume :: (@self: Source, accepted: (char: Char) -> Bool) -> Char {
 	if (self.current_index < self.data.length) {
-		current := self.data[self.current_index]
+		current := self.data.chars[self.current_index]
 		if (accepted(current)) {
 			self.current_index += 1
 			if (current == '\n') {
@@ -31,12 +49,13 @@ consume :: (self: @Source, accepted: (char: Char) -> Bool) -> Char {
 	return 0
 }
 
-main :: () -> Nothing {
-	source := Source("Hello world!")
+is_valid :: (char: Char) -> Bool {
+	return char > 0 && char < 128
+}
 
-	is_valid :: (char: Char) -> Bool {
-		return char > 0 && char < 128
-	}
+main :: () -> Nothing {
+	source: Source
+	source.data = String("Hello world!")
 
 	loop {
 		consumed := source.consume(is_valid)

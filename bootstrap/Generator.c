@@ -357,7 +357,7 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         }
         IR_Type *array_type = array_pointer->type->pointed_type;
         if (array_type->kind != IR_TYPE_POINTER) {
-            PANIC(__FILE__, __LINE__, "Expected pointer type instead of: %s", array_type->name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected pointer type instead of: %s", expression->array_item.array->location.line, expression->array_item.array->location.column, array_type->name->data);
         }
         IR_Type *array_item_type = array_type->pointed_type;
         IR_Value *array_item_index = emit_expression(context, expression->array_item.index);
@@ -478,6 +478,9 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         IR_Value *function = context__find_local(context, function_name);
         if (function == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined function: %s", expression->location.line, expression->location.column, function_name->data);
+        }
+        if (function->kind != IR_VALUE_FUNCTION) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a function: %s", expression->location.line, expression->location.column, function_name->data);
         }
         List *function_arguments = list__create();
         for (int index = 0; index < list__size(function->function_parameters); ++index) {
