@@ -544,7 +544,9 @@ Member *member__create(int reference, Token *name, Type *type, Expression *defau
     self->reference = reference;
     self->name = name;
     self->type = type;
+#ifdef ENABLE__MEMBER_DEFAULT_VALUE
     self->default_value = default_value;
+#endif
     return self;
 }
 
@@ -568,12 +570,14 @@ Member *parse_member(Context *context) {
     consume_space(context, 1);
     Type *type = parse_type(context);
     Expression *default_value = NULL;
+#ifdef ENABLE__MEMBER_DEFAULT_VALUE
     if (matches_two(context, optional(is_space), required(is_assign_operator))) {
         consume_space(context, 1);
         consume_one(context, "=", required(is_assign_operator));
         consume_space(context, 1);
         default_value = parse_expression(context);
     }
+#endif
     return member__create(reference, name, type, default_value);
 }
 

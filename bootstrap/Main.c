@@ -327,10 +327,12 @@ void print_statement(Statement *statement, int alignment) {
             print_token(member->name);
             printf("%s: ", SGR_WHITE_BOLD);
             print_type(member->type);
+#ifdef ENABLE__MEMBER_DEFAULT_VALUE
             if (member->default_value) {
                 printf("%s = ", SGR_WHITE_BOLD);
                 print_expression(member->default_value);
             }
+#endif
             printf("\n");
         }
         print_alignment(alignment);

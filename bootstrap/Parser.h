@@ -16,7 +16,9 @@ typedef struct {
     int reference;
     Token *name;
     struct Type *type;
+#ifdef ENABLE__MEMBER_DEFAULT_VALUE
     struct Expression *default_value;
+#endif
 } Member, Parameter;
 
 typedef struct Type {
