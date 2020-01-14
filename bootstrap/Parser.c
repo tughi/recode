@@ -608,7 +608,7 @@ static Type *type__create_array(Token *first_token, Type *item_type) {
     return self;
 }
 
-Type *type__create_function(Token *first_token, Type *return_type, List *parameters) {
+static Type *type__create_function(Token *first_token, Type *return_type, List *parameters) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_FUNCTION;
     self->location.line = first_token->line;

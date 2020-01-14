@@ -46,25 +46,24 @@ consume :: (@self: Source, accepted: (char: Char) -> Bool) -> Char {
 			return current
 		}
 	}
-	return 0
+	return 0 as Char
 }
 
 is_valid :: (char: Char) -> Bool {
 	return char > 0 && char < 128
 }
 
-main :: () -> Nothing {
+main :: () -> Int {
 	source: Source
 	source.data = String("Hello world!")
 
 	loop {
-		consumed := source.consume(is_valid)
+		consumed := consume(source, is_valid)
 		if (consumed == 0) {
 			break
 		}
-		if (consumed == '!') {
-			skip
-		}
-		echo(consumed)
+		\ echo(consumed)
 	}
+
+	return 0
 }

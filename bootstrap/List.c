@@ -11,7 +11,7 @@ List *list__create() {
 }
 
 int list__size(List *self) {
-    return self->size;
+    return self != NULL ? self->size : 0;
 }
 
 void *list__get(List *self, int index) {

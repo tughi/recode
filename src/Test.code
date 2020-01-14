@@ -27,7 +27,7 @@ print_number :: (n: Int) -> Nothing {
 
 String :: struct {
 	chars: @Char
-	length: Int = 0
+	length: Int
 }
 
 String :: (chars: @Char) -> String {
