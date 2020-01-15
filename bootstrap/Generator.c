@@ -504,7 +504,21 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         }
     }
     case EXPRESSION_CALL: {
-        String *function_name = expression->call.callee->variable.name->lexeme;
+        String *function_name;
+        Argument *first_argument;
+        Expression *callee = expression->call.callee;
+        if (callee->kind == EXPRESSION_VARIABLE) {
+            function_name = callee->variable.name->lexeme;
+            first_argument = NULL;
+        } else if (callee->kind == EXPRESSION_MEMBER) {
+            function_name = callee->member.name->lexeme;
+            first_argument = malloc(sizeof(Argument));
+            first_argument->name = NULL;
+            first_argument->value = callee->member.object;
+        } else {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported callee expression kind: %d", callee->location.line, callee->location.column, callee->kind);
+        }
+
         IR_Value *function = context__find_local(context, function_name);
         if (function == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined function: %s", expression->location.line, expression->location.column, function_name->data);
@@ -517,7 +531,12 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         for (int index = 0; index < list__size(function_type->function.parameters); ++index) {
             IR_Function_Parameter *parameter = list__get(function_type->function.parameters, index);
             IR_Type *parameter_type = parameter->type;
-            Argument *call_argument = list__get(expression->call.arguments, index);
+            Argument *call_argument;
+            if (first_argument != NULL) {
+                call_argument = index == 0 ? first_argument : list__get(expression->call.arguments, index - 1);
+            } else {
+                call_argument = list__get(expression->call.arguments, index);
+            }
             if (call_argument == NULL) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function called with %d arguments instead of %d", expression->location.line, expression->location.column, list__size(expression->call.arguments), list__size(function_type->function.parameters));
             }

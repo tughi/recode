@@ -1,3 +1,28 @@
+LibC_File :: struct
+
+stdout: @LibC_File = external
+
+fputc :: (char: Int, out: @LibC_File) -> Int
+
+fputs :: (data: @Char, out: @LibC_File) -> Int
+
+print_char :: (char: Char) -> Int {
+	return fputc(char as Int, stdout)
+}
+
+print_cstring :: (message: @Char) -> Nothing {
+	fputs(message, stdout)
+	return
+}
+
+print_number :: (n: Int) -> Nothing {
+	if (n >= 10) {
+		print_number(n / 10)
+	}
+	print_char('0' + (n // 10) as Char)
+	return
+}
+
 String :: struct {
 	chars: @Char
 	length: Int
@@ -32,10 +57,10 @@ peek :: (@self: Source) -> Char {
 }
 
 \ consume and return the current character if it's accepted by the provided function
-consume :: (@self: Source, accepted: (char: Char) -> Bool) -> Char {
+consume :: (@self: Source, is_accepted: (char: Char) -> Bool) -> Char {
 	if (self.current_index < self.data.length) {
 		current := self.data.chars[self.current_index]
-		if (accepted(current)) {
+		if (current.is_accepted()) {
 			self.current_index += 1
 			if (current == '\n') {
 				self.current_line += 1
@@ -50,20 +75,26 @@ consume :: (@self: Source, accepted: (char: Char) -> Bool) -> Char {
 }
 
 is_valid :: (char: Char) -> Bool {
-	return char > 0 && char < 128
+	return char >= ' ' && char < 127 || char == '\n' || char == '\t'
 }
 
 main :: () -> Int {
 	source: Source
 	source.data = String("Hello world!")
+	source.current_index = 0
+	source.current_line = 0
+	source.current_column = 0
 
+	loops := 0
 	loop {
-		consumed := consume(source, is_valid)
+		consumed := source.consume(is_valid)
 		if (consumed == 0) {
 			break
 		}
-		\ echo(consumed)
+		loops += 1
 	}
 
-	return 0
+	print_char('\n')
+
+	return loops
 }
