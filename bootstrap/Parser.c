@@ -178,8 +178,8 @@ Expression *expression__create_size_of(Token *frist_token, Type *type) {
     return self;
 }
 
-// primary:
-//      IDENTIFIER
+// primary
+//      : IDENTIFIER
 //      | INTEGER
 //      | STRING
 //      | "false"
@@ -223,6 +223,8 @@ Argument *argument__create(Token *name, Expression *value) {
     return self;
 }
 
+// argument
+//      : (IDENTIFIER "=")? expression
 Argument *parse_argument(Context *context) {
     Token *name = (Token *)NULL;
     if (matches_three(context, required(is_identifier), optional(is_space), required(is_assign_operator))) {
@@ -293,8 +295,8 @@ Expression *expression__create_cast(Expression *expression, Type *type) {
     return self;
 }
 
-// call:
-//      primary ("(" argument ("," argument)* ")" | "." IDENTIFIER | "[" expression "]" | "as" type)*
+// call
+//      : primary ("(" argument ("," argument)* ")" | "." IDENTIFIER | "[" expression "]" | "as" type)*
 Expression *parse_call_expression(Context *context) {
     Expression *expression = parse_primary_expression(context);
     while (TRUE) {
@@ -360,8 +362,8 @@ Expression *expression__create_unary(Token *operator_token, Expression *expressi
     return self;
 }
 
-// unary:
-//      ("!" | "-") unary
+// unary
+//      : ("!" | "-") unary
 //      | primary
 Expression *parse_unary_expression(Context *context) {
     if (matches_one(context, required(is_unary_operator))) {
@@ -391,8 +393,8 @@ Expression *expression__create_binary(Token *operator_token, Expression *left_ex
     return self;
 }
 
-// multiplication:
-//      unary (("*" | "/" | "//") unary)*
+// multiplication
+//      : unary (("*" | "/" | "//") unary)*
 Expression *parse_multiplication_expression(Context *context) {
     Expression *expression = parse_unary_expression(context);
     while (matches_two(context, optional(is_space), required(is_multiplication_operator)) && !matches_three(context, optional(is_space), required(is_multiplication_operator), required(is_assign_operator))) {
@@ -415,8 +417,8 @@ int is_addition_operator(Token *token) {
     return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "+") || string__equals(token->lexeme, "-"));
 }
 
-// addition:
-//      mutliplication (("+" | "-") multiplication)*
+// addition
+//      : mutliplication (("+" | "-") multiplication)*
 Expression *parse_addition_expression(Context *context) {
     Expression *expression = parse_multiplication_expression(context);
     while (matches_two(context, optional(is_space), required(is_addition_operator)) && !matches_three(context, optional(is_space), required(is_addition_operator), required(is_assign_operator))) {
@@ -433,8 +435,8 @@ int is_comparison_operator(Token *token) {
     return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "<") || string__equals(token->lexeme, ">"));
 }
 
-// comparison:
-//      addition (("<" | ">") "="? addition)?
+// comparison
+//      : addition (("<" | ">") "="? addition)?
 Expression *parse_comparison_expression(Context *context) {
     Expression *expression = parse_addition_expression(context);
     if (matches_two(context, optional(is_space), required(is_comparison_operator))) {
@@ -455,8 +457,8 @@ int is_equality_operator(Token *token) {
     return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "="));
 }
 
-// equality:
-//      comparison (("!" | "=") "=" comparison)?
+// equality
+//      : comparison (("!" | "=") "=" comparison)?
 Expression *parse_equality_expression(Context *context) {
     Expression *expression = parse_comparison_expression(context);
     if (matches_three(context, optional(is_space), required(is_equality_operator), required(is_assign_operator))) {
@@ -475,8 +477,8 @@ int is_and_operator(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "&");
 }
 
-// logic_and:
-//      equality ("&" "&" equality)*
+// logic_and
+//      : equality ("&" "&" equality)*
 Expression *parse_logic_and_expression(Context *context) {
     Expression *expression = parse_equality_expression(context);
     while (matches_three(context, optional(is_space), required(is_and_operator), required(is_and_operator))) {
@@ -495,8 +497,8 @@ int is_or_operator(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "|");
 }
 
-// logic_or:
-//      logic_and ("|" "|" logic_and)*
+// logic_or
+//      : logic_and ("||" logic_and)*
 Expression *parse_logic_or_expression(Context *context) {
     Expression *expression = parse_logic_and_expression(context);
     while (matches_three(context, optional(is_space), required(is_or_operator), required(is_or_operator))) {
@@ -511,8 +513,8 @@ Expression *parse_logic_or_expression(Context *context) {
     return expression;
 }
 
-// expression:
-//      logic_or
+// expression
+//      : logic_or
 Expression *parse_expression(Context *context) {
     return parse_logic_or_expression(context);
 }
@@ -554,8 +556,8 @@ int is_reference_operator(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
 }
 
-// member:
-//      "@"? IDENTIFIER ":" type ("=" expression)?
+// member
+//      : "@"? IDENTIFIER ":" type ("=" expression)?
 Member *parse_member(Context *context) {
     int reference;
     if (consume_one(context, NULL, required(is_reference_operator))) {
@@ -581,8 +583,8 @@ Member *parse_member(Context *context) {
     return member__create(reference, name, type, default_value);
 }
 
-// comma_separated_members:
-//      member ("," member)*
+// comma_separated_members
+//      : member ("," member)*
 List *parse_comma_separated_members(Context *context) {
     List *members = list__create();
     int space_before_next_member = 0;
@@ -731,8 +733,8 @@ Statement *statement__create_struct(Expression *name, Token *base, List *members
     return self;
 }
 
-// struct:
-//      "struct" ("{" EOL (member EOL)* "}")? EOL
+// struct
+//      : "struct" ("{" EOL (member EOL)* "}")? EOL
 Statement *parse_struct(Context *context, Expression *name) {
     consume_one(context, "struct", required(is_struct_keyword));
     if (consume_end_of_line(context, FALSE) == TRUE) {
@@ -784,8 +786,8 @@ Statement *statement__create_function(Expression *name, Type *return_type, List 
     return self;
 }
 
-// function:
-//      "(" comma_separated_members? ")" "->" type ("{" EOL statement* "}")? EOL
+// function
+//      : "(" comma_separated_members? ")" "->" type ("{" EOL statement* "}")? EOL
 Statement *parse_function(Context *context, Expression *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
@@ -823,8 +825,8 @@ Statement *statement__create_block(List *statements) {
     return self;
 }
 
-// block:
-//      "{" EOL statement* "}" EOL
+// block
+//      : "{" EOL statement* "}" EOL
 Statement *parse_block_statement(Context *context, int inlined) {
     consume_one(context, "{", required(is_open_brace));
     consume_end_of_line(context, TRUE);
@@ -856,8 +858,8 @@ Statement *statement__create_if(Expression *condition, Statement *true_block, St
     return self;
 }
 
-// return:
-//      "if" "(" expression ")" block ("else" block)? EOL
+// return
+//      : "if" "(" expression ")" block ("else" block)? EOL
 Statement *parse_if_statement(Context *context) {
     consume_one(context, "if", required(is_if_keyword));
     consume_space(context, 1);
@@ -890,8 +892,8 @@ Statement *statement__create_loop(Statement *block) {
     return self;
 }
 
-// loop:
-//      "loop" block EOL
+// loop
+//      : "loop" block EOL
 Statement *parse_loop_statement(Context *context) {
     consume_one(context, "loop", required(is_loop_keyword));
     consume_space(context, 1);
@@ -910,8 +912,8 @@ Statement *statement__create_break() {
     return self;
 }
 
-// break:
-//      "break" EOL
+// break
+//      : "break" EOL
 Statement *parse_break_statement(Context *context) {
     consume_one(context, "break", required(is_break_keyword));
     consume_end_of_line(context, TRUE);
@@ -928,8 +930,8 @@ Statement *statement__create_skip() {
     return self;
 }
 
-// skip:
-//      "skip" EOL
+// skip
+//      : "skip" EOL
 Statement *parse_skip_statement(Context *context) {
     consume_one(context, "skip", required(is_skip_keyword));
     consume_end_of_line(context, TRUE);
@@ -947,8 +949,8 @@ Statement *statement__create_return(Expression *expression) {
     return self;
 }
 
-// return:
-//      "return" expression? EOL
+// return
+//      : "return" expression? EOL
 Statement *parse_return_statement(Context *context) {
     consume_one(context, "return", required(is_return_keyword));
     if (consume_end_of_line(context, FALSE)) {
@@ -994,8 +996,8 @@ int is_external_keyword(Token *token) {
     return is_keyword(token, "external");
 }
 
-// statement:
-//      break
+// statement
+//      : break
 //      | if
 //      | loop
 //      | return

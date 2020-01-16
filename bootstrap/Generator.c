@@ -266,6 +266,33 @@ IR_Value *context__find_local(Context *self, String *name) {
     return context__find_local(self->parent_context, name);
 }
 
+IR_Value *context__find_function(Context *self, String *name, List *call_argument_types) {
+    if (self == NULL) {
+        return NULL;
+    }
+    for (List_Iterator iterator = list__create_reversed_iterator(self->locals); list_iterator__has_next(&iterator);) {
+        IR_Value *value = list_iterator__next(&iterator);
+        if (string__equals(value->name, name->data) && value->kind == IR_VALUE_FUNCTION) {
+            IR_Type *funtion_type = value->type->pointed_type;
+            if (list__size(call_argument_types) == list__size(funtion_type->function.parameters)) {
+                int found = TRUE;
+                for (int index = 0; index < list__size(call_argument_types); ++index) {
+                    IR_Type *call_argument_type = list__get(call_argument_types, index);
+                    IR_Function_Parameter *function_parameter = list__get(funtion_type->function.parameters, index);
+                    if (!string__equals(call_argument_type->repr, function_parameter->type->repr->data)) {
+                        found = FALSE;
+                        break;
+                    }
+                }
+                if (found == TRUE) {
+                    return value;
+                }
+            }
+        }
+    }
+    return context__find_function(self->parent_context, name, call_argument_types);
+}
+
 IR_Value *value__create_label(Context *context, String *name) {
     string__append_char(name, '.');
     string__append_string(name, counter__get(context->temp_variables));
@@ -428,7 +455,7 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         String *variable_name = expression->variable.name->lexeme;
         IR_Value *variable = context__find_local(context, variable_name);
         if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined variable: %s", expression->location.line, expression->location.column, variable_name->data);
         }
         if (variable->kind != IR_VALUE_VARIABLE && variable->kind != IR_VALUE_REFERENCE) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable: %s", expression->location.line, expression->location.column, variable_name->data);
@@ -437,6 +464,69 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
     }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported expression kind: %d", expression->kind);
+    }
+}
+
+IR_Type *compute_expression_type(Context *context, Expression *expression) {
+    switch (expression->kind) {
+    case EXPRESSION_BINARY: {
+        IR_Type *left_expression_type = compute_expression_type(context, expression->binary.left_expression);
+        IR_Type *right_expression_type = compute_expression_type(context, expression->binary.right_expression);
+        return left_expression_type;
+    }
+    case EXPRESSION_CALL: {
+        switch (expression->call.callee->kind) {
+        case EXPRESSION_VARIABLE: {
+            IR_Value *callee_value = context__find_local(context, expression->call.callee->variable.name->lexeme);
+            return callee_value->type->pointed_type->function.return_type;
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported callee kind: %d", expression->call.callee->location.line, expression->call.callee->location.column, expression->call.callee->kind);
+        }
+    }
+    case EXPRESSION_CAST: {
+        return context__make_type(context, expression->cast.type);
+    }
+    case EXPRESSION_LITERAL: {
+        Token *literal = expression->literal.value;
+        switch (literal->kind) {
+        case TOKEN_CHARACTER: {
+            return context__find_type(context, string__create("Char"));
+        }
+        case TOKEN_INTEGER: {
+            return context__find_type(context, string__create("Int"));
+        }
+        case TOKEN_STRING: {
+            return type__create_pointer(context__find_type(context, string__create("Char")));
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported literal kind: %d", expression->location.line, expression->location.column, literal->kind);
+        }
+    }
+    case EXPRESSION_MEMBER: {
+        IR_Type *object_type = compute_expression_type(context, expression->member.object);
+        if (object_type->kind != IR_TYPE_STRUCT) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a struct type: %s", expression->member.object->location.line, expression->member.object->location.column, object_type->repr->data);
+        }
+        String *member_name = expression->member.name->lexeme;
+        for (List_Iterator iterator = list__create_iterator(object_type->struct_members); list_iterator__has_next(&iterator);) {
+            Member *member = list_iterator__next(&iterator);
+            if (string__equals(member_name, member->name->lexeme->data)) {
+                return context__make_type(context, member->type);
+            }
+        }
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Struct '%s' has no member: %s", expression->member.name->line, expression->member.name->column, object_type->name->data, member_name->data);
+    }
+    case EXPRESSION_VARIABLE: {
+        String *variable_name = expression->variable.name->lexeme;
+        IR_Value *variable_value = context__find_local(context, variable_name);
+        if (variable_value == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined variable: %s", expression->location.line, expression->location.column, variable_name->data);
+        }
+        return variable_value->type->pointed_type;
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %d", expression->location.line, expression->location.column, expression->kind);
     }
 }
 
@@ -519,12 +609,27 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported callee expression kind: %d", callee->location.line, callee->location.column, callee->kind);
         }
 
-        IR_Value *function = context__find_local(context, function_name);
-        if (function == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined function: %s", expression->location.line, expression->location.column, function_name->data);
+        List *call_argument_types = list__create();
+        if (first_argument != NULL) {
+            list__append(call_argument_types, compute_expression_type(context, first_argument->value));
         }
-        if (function->kind != IR_VALUE_FUNCTION) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a function: %s", expression->location.line, expression->location.column, function_name->data);
+        for (List_Iterator iterator = list__create_iterator(expression->call.arguments); list_iterator__has_next(&iterator);) {
+            Argument *argument = list_iterator__next(&iterator);
+            list__append(call_argument_types, compute_expression_type(context, argument->value));
+        }
+
+        IR_Value *function = context__find_function(context, function_name, call_argument_types);
+        if (function == NULL) {
+            String *signature = string__create("(");
+            for (List_Iterator iterator = list__create_iterator(call_argument_types); list_iterator__has_next(&iterator);) {
+                IR_Type *type = list_iterator__next(&iterator);
+                string__append_string(signature, type->name);
+                if (list_iterator__has_next(&iterator)) {
+                    string__append_chars(signature, ", ", 2);
+                }
+            }
+            string__append_char(signature, ')');
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- No matching '%s' function found with arguments: %s", expression->location.line, expression->location.column, function_name->data, signature->data);
         }
         IR_Type *function_type = function->type->pointed_type;
         List *function_arguments = list__create();
@@ -700,6 +805,10 @@ void emit_statement(Context *context, Statement *statement) {
         String *function_name = statement->function.name->literal.value->lexeme;
         String *function_repr = string__create("@");
         string__append_string(function_repr, function_name);
+        if (context__find_local(context->global_context, function_name) != NULL) {
+            string__append_char(function_repr, '.');
+            string__append_string(function_repr, counter__get(context->temp_variables));
+        }
         IR_Value *function_value = value__create(IR_VALUE_FUNCTION, type__create_pointer(function_type), function_name, function_repr);
         list__append(context->global_context->locals, function_value);
 

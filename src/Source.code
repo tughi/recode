@@ -6,20 +6,20 @@ fputc :: (char: Int, out: @LibC_File) -> Int
 
 fputs :: (data: @Char, out: @LibC_File) -> Int
 
-print_char :: (char: Char) -> Int {
+print :: (char: Char) -> Int {
 	return fputc(char as Int, stdout)
 }
 
-print_cstring :: (message: @Char) -> Nothing {
+print :: (message: @Char) -> Nothing {
 	fputs(message, stdout)
 	return
 }
 
-print_number :: (n: Int) -> Nothing {
+print :: (n: Int) -> Nothing {
 	if (n >= 10) {
-		print_number(n / 10)
+		print(n / 10)
 	}
-	print_char('0' + (n // 10) as Char)
+	print('0' + (n // 10) as Char)
 	return
 }
 
@@ -39,6 +39,11 @@ String :: (chars: @Char) -> String {
 		self.length += 1
 	}
 	return self
+}
+
+print :: (@self: String) -> Nothing {
+	print(self.chars)
+	return
 }
 
 Source :: struct {
@@ -85,16 +90,20 @@ main :: () -> Int {
 	source.current_line = 0
 	source.current_column = 0
 
-	loops := 0
+	consumed_count := 0
 	loop {
 		consumed := source.consume(is_valid)
 		if (consumed == 0) {
 			break
 		}
-		loops += 1
+		print(consumed)
+		consumed_count += 1
 	}
+	print('\n')
 
-	print_char('\n')
+	print("Consumed ")
+	print(consumed_count)
+	print(" valid chars.\n")
 
-	return loops
+	return 0
 }

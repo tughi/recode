@@ -392,7 +392,6 @@ int main(int argc, char *argv[]) {
     signal(SIGSEGV, dump_backtrace_and_exit);
 
     String *source_file = string__create("src/Source.code");
-    // String *source_file = string__create("src/Visitor.code");
     Source *source = source__create(load_file(source_file));
 
     List *tokens = scan(source);
@@ -401,7 +400,7 @@ int main(int argc, char *argv[]) {
 
     List *statements = parse(tokens);
 
-    dump_statements(statements);
+    // dump_statements(statements);
 
     generate(statements);
 }
