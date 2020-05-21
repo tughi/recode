@@ -1,5 +1,7 @@
 #include "Token.h"
 
+#include "Logging.h"
+
 #include <stdlib.h>
 
 static Token *token__create(int kind, String *lexeme, int line, int column) {
@@ -61,6 +63,35 @@ Token *token__create_string(String *lexeme, int line, int column, String *value)
     Token *self = token__create(TOKEN_STRING, lexeme, line, column);
     self->string.value = value;
     return self;
+}
+
+char *token__get_kind_name(Token *self) {
+    switch (self->kind) {
+    case TOKEN_CHARACTER:
+        return "CHARACTER";
+    case TOKEN_COMMENT:
+        return "COMMENT";
+    case TOKEN_END_OF_FILE:
+        return "END_OF_FILE";
+    case TOKEN_END_OF_LINE:
+        return "END_OF_LINE";
+    case TOKEN_ERROR:
+        return "ERROR";
+    case TOKEN_IDENTIFIER:
+        return "IDENTIFIER";
+    case TOKEN_INTEGER:
+        return "INTEGER";
+    case TOKEN_KEYWORD:
+        return "KEYWORD";
+    case TOKEN_OTHER:
+        return "OTHER";
+    case TOKEN_SPACE:
+        return "SPACE";
+    case TOKEN_STRING:
+        return "STRING";
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported token kind: %d", self->kind);
+    }
 }
 
 void token__join(Token *self, Token *other) {

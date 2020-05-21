@@ -168,7 +168,9 @@ typedef struct Statement {
     };
 } Statement;
 
-char *get_statement_kind_name(int kind);
+char *expression__get_kind_name(Expression *self);
+
+char *statement__get_kind_name(Statement *self);
 
 List *parse(List *tokens);
 

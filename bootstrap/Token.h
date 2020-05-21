@@ -50,6 +50,7 @@ Token *token__create_other(String *lexeme, int line, int column);
 Token *token__create_space(String *lexeme, int line, int column, int count);
 Token *token__create_string(String *lexeme, int line, int column, String *value);
 
+char *token__get_kind_name(Token *self);
 void token__join(Token *self, Token *other);
 
 #endif

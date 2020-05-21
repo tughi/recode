@@ -5,8 +5,19 @@
 
 #include <stdlib.h>
 
-typedef struct Storage {
-} Storage;
+typedef struct Value_Holder {
+    enum {
+        VALUE_HOLDER_INTEGER
+    } kind;
+
+    String *repr;
+} Value_Holder;
+
+static Value_Holder *value_holder__create(String *repr) {
+    Value_Holder *self = malloc(sizeof(Value_Holder));
+    self->repr = repr;
+    return self;
+}
 
 typedef struct Label {
 } Label;
@@ -33,8 +44,8 @@ typedef struct Context {
     Counter *temp_variables;
 } Context;
 
-#define emit_line(line) fprintf(context->file, line "\n")
-#define emit(format, ...) fprintf(context->file, format "\n", __VA_ARGS__)
+#define emitf(line, ...) fprintf(context->file, line "\n", __VA_ARGS__)
+#define emits(line) fprintf(context->file, line "\n")
 
 static Counter *counter__create() {
     Counter *self = malloc(sizeof(Counter));
@@ -63,10 +74,25 @@ static Type *compute_expression_type(Context *context, Expression *expression) {
     }
 }
 
-static Storage *emit_expression(Context *context, Expression *expression) {
-    switch (expression->kind) {
+static Value_Holder *emit_load_literal(Context *context, Token *token) {
+    switch (token->kind) {
+    case TOKEN_INTEGER: {
+        String *repr = string__create("$");
+        string__append_int(repr, token->integer.value);
+        return value_holder__create(repr);
+    }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported expression type: %d", expression->kind);
+        PANIC(__FILE__, __LINE__, "Unsupported token kind: %s", token__get_kind_name(token));
+    }
+}
+
+static Value_Holder *emit_expression(Context *context, Expression *expression) {
+    switch (expression->kind) {
+    case EXPRESSION_LITERAL: {
+        return emit_load_literal(context, expression->literal_expression_data.value);
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported expression kind: %s", expression__get_kind_name(expression));
     }
 }
 
@@ -74,11 +100,11 @@ static void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
     case STATEMENT_FUNCTION: {
         String *function_name = statement->function_statement_data.name->literal_expression_data.value->lexeme;
-        emit("  .globl %s", function_name->data);
-        emit("  .type %s, @function", function_name->data);
-        emit("%s:", function_name->data);
-        emit_line("  pushq %%rbp");
-        emit_line("  movq %%rsp, %%rbp");
+        emitf("  .globl %s", function_name->data);
+        emitf("  .type %s, @function", function_name->data);
+        emitf("%s:", function_name->data);
+        emits("  pushq %%rbp");
+        emits("  movq %%rsp, %%rbp");
 
         for (List_Iterator iterator = list__create_iterator(statement->function_statement_data.statements); list_iterator__has_next(&iterator);) {
             Statement *body_statement = list_iterator__next(&iterator);
@@ -89,17 +115,18 @@ static void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_RETURN: {
         if (statement->return_statement_data.expression != NULL) {
-            // Storage *result = emit_expression(context, statement->return_statement_data.expression);
-            emit_line("  movq %%rbp, %%rsp");
-            emit_line("  popq %%rbp");
-            emit_line("  ret");
+            Value_Holder *result = emit_expression(context, statement->return_statement_data.expression);
+            emitf("  movq %s, %%rax", result->repr->data);
+            emits("  movq %%rbp, %%rsp");
+            emits("  popq %%rbp");
+            emits("  ret");
         } else {
 
         }
         return;
     }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported statement type: %s", get_statement_kind_name(statement->kind));
+        PANIC(__FILE__, __LINE__, "Unsupported statement kind: %s", statement__get_kind_name(statement));
     }
 }
 
@@ -108,17 +135,17 @@ void generate(List *statements) {
 
     Context *context = context__create(file);
 
-    emit_line("  .text");
+    emits("  .text");
 
     for (List_Iterator iterator = list__create_iterator(statements); list_iterator__has_next(&iterator);) {
         Statement *statement = list_iterator__next(&iterator);
         emit_statement(context, statement);
-        emit_line("");
+        emits("");
     }
 
     for (List_Iterator iterator = list__create_iterator(context->constants); list_iterator__has_next(&iterator);) {
         String *constant = list_iterator__next(&iterator);
-        emit("%s", constant->data);
+        emitf("%s", constant->data);
     }
 
     fclose(context->file);
