@@ -285,7 +285,7 @@ void print_statement(Statement *statement, int alignment) {
         }
         printf("%s) -> ", SGR_WHITE_BOLD);
         print_type(statement->function_statement_data.return_type);
-        if (statement->function_statement_data.declaration) {
+        if (statement->function_statement_data.is_declaration) {
             return;
         }
         printf("%s {\n", SGR_WHITE_BOLD);
@@ -313,7 +313,7 @@ void print_statement(Statement *statement, int alignment) {
     case STATEMENT_STRUCT: {
         print_expression(statement->struct_statement_data.name);
         printf("%s :: %sstruct%s", SGR_WHITE_BOLD, SGR_YELLOW, SGR_RESET);
-        if (statement->struct_statement_data.declaration) {
+        if (statement->struct_statement_data.is_declaration) {
             return;
         }
         if (statement->struct_statement_data.base != NULL) {
@@ -344,7 +344,7 @@ void print_statement(Statement *statement, int alignment) {
         if (statement->variable_statement_data.type != NULL) {
             printf("%s: ", SGR_WHITE_BOLD);
             print_type(statement->variable_statement_data.type);
-            if (statement->variable_statement_data.value == NULL && !statement->variable_statement_data.external) {
+            if (statement->variable_statement_data.value == NULL && !statement->variable_statement_data.is_external) {
                 return;
             }
             printf(" ");
@@ -352,7 +352,7 @@ void print_statement(Statement *statement, int alignment) {
             printf("%s :", SGR_WHITE_BOLD);
         }
         printf("%s= ", SGR_WHITE_BOLD);
-        if (statement->variable_statement_data.external) {
+        if (statement->variable_statement_data.is_external) {
             printf("%sexternal", SGR_YELLOW);
         } else {
             print_expression(statement->variable_statement_data.value);

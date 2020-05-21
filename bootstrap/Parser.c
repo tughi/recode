@@ -541,9 +541,9 @@ int is_close_angled_bracket(Token *token) {
 
 Type *parse_type(Context *context);
 
-Member *member__create(int reference, Token *name, Type *type, Expression *default_value) {
+Member *member__create(int is_reference, Token *name, Type *type, Expression *default_value) {
     Member *self = malloc(sizeof(Member));
-    self->reference = reference;
+    self->is_reference = is_reference;
     self->name = name;
     self->type = type;
 #ifdef ENABLE__MEMBER_DEFAULT_VALUE
@@ -729,7 +729,7 @@ Statement *statement__create_struct(Expression *name, Token *base, List *members
     self->struct_statement_data.name = name;
     self->struct_statement_data.base = base;
     self->struct_statement_data.members = members;
-    self->struct_statement_data.declaration = members == NULL;
+    self->struct_statement_data.is_declaration = members == NULL;
     return self;
 }
 
@@ -782,7 +782,7 @@ Statement *statement__create_function(Expression *name, Type *return_type, List 
     self->function_statement_data.return_type = return_type;
     self->function_statement_data.parameters = parameters;
     self->function_statement_data.statements = statements;
-    self->function_statement_data.declaration = statements == NULL;
+    self->function_statement_data.is_declaration = statements == NULL;
     return self;
 }
 
@@ -973,13 +973,13 @@ Statement *statement__create_expression(Expression *expression) {
     return self;
 }
 
-Statement *statement__create_variable(Expression *name, Type *type, Expression *value, int external) {
+Statement *statement__create_variable(Expression *name, Type *type, Expression *value, int is_external) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_VARIABLE;
     self->variable_statement_data.name = name;
     self->variable_statement_data.type = type;
     self->variable_statement_data.value = value;
-    self->variable_statement_data.external = external;
+    self->variable_statement_data.is_external = is_external;
     return self;
 }
 

@@ -13,7 +13,7 @@ struct Type;
 struct Expression;
 
 typedef struct {
-    int reference;
+    int is_reference;
     Token *name;
     struct Type *type;
 #ifdef ENABLE__MEMBER_DEFAULT_VALUE
@@ -140,7 +140,7 @@ typedef struct Statement {
             Type *return_type;
             List *parameters;
             List *statements;
-            int declaration;
+            int is_declaration;
         } function_statement_data;
         struct {
             Expression *condition;
@@ -157,13 +157,13 @@ typedef struct Statement {
             Expression *name;
             Token *base;
             List *members;
-            int declaration;
+            int is_declaration;
         } struct_statement_data;
         struct {
             Expression *name;
             Type *type;
             Expression *value;
-            int external;
+            int is_external;
         } variable_statement_data;
     };
 } Statement;

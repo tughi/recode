@@ -140,11 +140,11 @@ IR_Type *type__create_function(IR_Type *return_type, List *parameters) {
     return self;
 }
 
-IR_Function_Parameter *function_parameter__create(String *name, IR_Type *type, int reference) {
+IR_Function_Parameter *function_parameter__create(String *name, IR_Type *type, int is_reference) {
     IR_Function_Parameter *self = malloc(sizeof(IR_Function_Parameter));
     self->name = name;
     self->type = type;
-    self->reference = reference;
+    self->reference = is_reference;
     return self;
 }
 
@@ -240,7 +240,7 @@ IR_Type *context__make_type(Context *self, Type *type) {
         List *function_parameters = list__create();
         for (List_Iterator iterator = list__create_iterator(type->function_type_data.parameters); list_iterator__has_next(&iterator);) {
             Parameter *parameter = list_iterator__next(&iterator);
-            list__append(function_parameters, function_parameter__create(parameter->name->lexeme, context__make_type(self, parameter->type), parameter->reference));
+            list__append(function_parameters, function_parameter__create(parameter->name->lexeme, context__make_type(self, parameter->type), parameter->is_reference));
         }
         return type__create_function(function_return_type, function_parameters);
     }
@@ -797,7 +797,7 @@ void emit_statement(Context *context, Statement *statement) {
         List *function_parameters = list__create();
         for (List_Iterator iterator = list__create_iterator(statement->function_statement_data.parameters); list_iterator__has_next(&iterator);) {
             Parameter *parameter = list_iterator__next(&iterator);
-            IR_Function_Parameter *function_parameter = function_parameter__create(parameter->name->lexeme, context__make_type(context, parameter->type), parameter->reference);
+            IR_Function_Parameter *function_parameter = function_parameter__create(parameter->name->lexeme, context__make_type(context, parameter->type), parameter->is_reference);
             list__append(function_parameters, function_parameter);
         }
         IR_Type *function_type = type__create_function(function_return_type, function_parameters);
@@ -813,7 +813,7 @@ void emit_statement(Context *context, Statement *statement) {
         list__append(context->global_context->locals, function_value);
 
         context = create_function_context(context);
-        fprintf(context->file, "%s %s %s(", statement->function_statement_data.declaration ? "declare" : "define", function_type->function.return_type->repr->data, VALUE_REPR(function_value));
+        fprintf(context->file, "%s %s %s(", statement->function_statement_data.is_declaration ? "declare" : "define", function_type->function.return_type->repr->data, VALUE_REPR(function_value));
         for (List_Iterator iterator = list__create_iterator(function_parameters); list_iterator__has_next(&iterator);) {
             IR_Function_Parameter *parameter = list_iterator__next(&iterator);
             String *parameter_name = parameter->name;
@@ -833,7 +833,7 @@ void emit_statement(Context *context, Statement *statement) {
                 fprintf(context->file, ", ");
             }
         }
-        if (statement->function_statement_data.declaration) {
+        if (statement->function_statement_data.is_declaration) {
             fprintf(context->file, ")\n");
             return;
         }
@@ -921,7 +921,7 @@ void emit_statement(Context *context, Statement *statement) {
         IR_Type *type = type__create(IR_TYPE_STRUCT, name, repr);
         type->struct_members = statement->struct_statement_data.members;
         list__append(context->types, type);
-        if (statement->struct_statement_data.declaration) {
+        if (statement->struct_statement_data.is_declaration) {
             fprintf(context->file, "%s = type opaque\n", type->repr->data);
         } else {
             fprintf(context->file, "%s = type { ", type->repr->data);
@@ -937,7 +937,7 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_VARIABLE: {
-        if (statement->variable_statement_data.external == TRUE) {
+        if (statement->variable_statement_data.is_external == TRUE) {
             IR_Type *variable_type = context__make_type(context, statement->variable_statement_data.type);
             IR_Value *variable = context__create_global_variable(context, variable_type, statement->variable_statement_data.name->variable_expression_data.name->lexeme);
             fprintf(context->file, "%s = external global %s\n", VALUE_REPR(variable), variable->type->pointed_type->repr->data);
