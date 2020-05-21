@@ -34,20 +34,20 @@ typedef struct Type {
     union {
         struct {
             struct Type *item_type;
-        } array;
+        } array_type_data;
         struct {
             List *parameters;
             struct Type *return_type;
-        } function;
+        } function_type_data;
         struct {
             struct Type *type;
-        } pointer;
+        } pointer_type_data;
         struct {
             Token *name;
-        } simple;
+        } simple_type_data;
         struct {
             List *members;
-        } tuple;
+        } tuple_type_data;
     };
 } Type;
 
@@ -74,37 +74,37 @@ typedef struct Expression {
         struct {
             struct Expression *array;
             struct Expression *index;
-        } array_item;
+        } array_item_expression_data;
         struct {
             Token *operator_token;
             struct Expression *left_expression;
             struct Expression *right_expression;
-        } binary;
+        } binary_expression_data;
         struct {
             struct Expression *callee;
             List *arguments;
-        } call;
+        } call_expression_data;
         struct {
             struct Expression *expression;
             Type *type;
-        } cast;
+        } cast_expression_data;
         struct {
             Token *value;
-        } literal;
+        } literal_expression_data;
         struct {
             struct Expression *object;
             Token *name;
-        } member;
+        } member_expression_data;
         struct {
             Type *type;
-        } size_of;
+        } size_of_expression_data;
         struct {
             Token *operator_token;
             struct Expression *expression;
-        } unary;
+        } unary_expression_data;
         struct {
             Token *name;
-        } variable;
+        } variable_expression_data;
     };
 } Expression;
 
@@ -128,39 +128,43 @@ typedef struct Statement {
             Expression *destination;
             Token *operator_token;
             Expression *value;
-        } assignment;
+        } assignment_statement_data;
         struct {
             List *statements;
-        } block;
-        Expression *expression;
+        } block_statement_data;
+        struct {
+            Expression *expression;
+        } expression_statement_data;
         struct {
             Expression *name;
             Type *return_type;
             List *parameters;
             List *statements;
             int declaration;
-        } function;
+        } function_statement_data;
         struct {
             Expression *condition;
             struct Statement *true_block;
             struct Statement *false_block;
-        } if_;
+        } if_statement_data;
         struct {
             struct Statement *block;
-        } loop;
-        Expression *return_expression;
+        } loop_statement_data;
+        struct {
+            Expression *expression;
+        } return_statement_data;
         struct {
             Expression *name;
             Token *base;
             List *members;
             int declaration;
-        } struct_;
+        } struct_statement_data;
         struct {
             Expression *name;
             Type *type;
             Expression *value;
             int external;
-        } variable;
+        } variable_statement_data;
     };
 } Statement;
 

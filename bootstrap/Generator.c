@@ -234,20 +234,20 @@ IR_Type *context__find_type(Context *self, String *name) {
 IR_Type *context__make_type(Context *self, Type *type) {
     switch (type->kind) {
     case TYPE_ARRAY:
-        return type__create_array(context__make_type(self, type->array.item_type));
+        return type__create_array(context__make_type(self, type->array_type_data.item_type));
     case TYPE_FUNCTION: {
-        IR_Type *function_return_type = context__make_type(self, type->function.return_type);
+        IR_Type *function_return_type = context__make_type(self, type->function_type_data.return_type);
         List *function_parameters = list__create();
-        for (List_Iterator iterator = list__create_iterator(type->function.parameters); list_iterator__has_next(&iterator);) {
+        for (List_Iterator iterator = list__create_iterator(type->function_type_data.parameters); list_iterator__has_next(&iterator);) {
             Parameter *parameter = list_iterator__next(&iterator);
             list__append(function_parameters, function_parameter__create(parameter->name->lexeme, context__make_type(self, parameter->type), parameter->reference));
         }
         return type__create_function(function_return_type, function_parameters);
     }
     case TYPE_POINTER:
-        return type__create_pointer(context__make_type(self, type->pointer.type));
+        return type__create_pointer(context__make_type(self, type->pointer_type_data.type));
     case TYPE_SIMPLE:
-        return context__find_type(self, type->simple.name->lexeme);
+        return context__find_type(self, type->simple_type_data.name->lexeme);
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type: %d", type->location.line, type->location.column, type->kind);
     }
@@ -390,16 +390,16 @@ IR_Value *emit_literal(Context *context, Token *token) {
 IR_Value *emit_expression(Context *context, Expression *expression);
 
 IR_Value *emit_arithmetic_expression(Context *context, Expression *expression, const char *instruction) {
-    IR_Value *left_value = emit_expression(context, expression->binary.left_expression);
-    IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
+    IR_Value *left_value = emit_expression(context, expression->binary_expression_data.left_expression);
+    IR_Value *right_value = emit_expression(context, expression->binary_expression_data.right_expression);
     IR_Value *result = context__create_computed_value(context, left_value->type);
     fprintf(context->file, "  %s = %s %s %s, %s\n", VALUE_REPR(result), instruction, VALUE_TYPE(result), VALUE_REPR(left_value), VALUE_REPR(right_value));
     return result;
 }
 
 IR_Value *emit_comparison_expression(Context *context, Expression *expression, const char *icmp_operand) {
-    IR_Value *left_value = emit_expression(context, expression->binary.left_expression);
-    IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
+    IR_Value *left_value = emit_expression(context, expression->binary_expression_data.left_expression);
+    IR_Value *right_value = emit_expression(context, expression->binary_expression_data.right_expression);
     IR_Value *result = context__create_computed_value(context, context__find_type(context, string__create("Bool")));
     fprintf(context->file, "  %s = icmp %s %s %s, %s\n", VALUE_REPR(result), icmp_operand, VALUE_TYPE(left_value), VALUE_REPR(left_value), VALUE_REPR(right_value));
     return result;
@@ -408,16 +408,16 @@ IR_Value *emit_comparison_expression(Context *context, Expression *expression, c
 IR_Value *emit_pointer(Context *context, Expression *expression) {
     switch (expression->kind) {
     case EXPRESSION_ARRAY_ITEM: {
-        IR_Value *array_pointer = emit_pointer(context, expression->array_item.array);
+        IR_Value *array_pointer = emit_pointer(context, expression->array_item_expression_data.array);
         if (array_pointer->type->kind != IR_TYPE_POINTER) {
             PANIC(__FILE__, __LINE__, "Unsupported type: %s", VALUE_TYPE(array_pointer));
         }
         IR_Type *array_type = array_pointer->type->pointed_type;
         if (array_type->kind != IR_TYPE_POINTER) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected pointer type instead of: %s", expression->array_item.array->location.line, expression->array_item.array->location.column, array_type->name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected pointer type instead of: %s", expression->array_item_expression_data.array->location.line, expression->array_item_expression_data.array->location.column, array_type->name->data);
         }
         IR_Type *array_item_type = array_type->pointed_type;
-        IR_Value *array_item_index = emit_expression(context, expression->array_item.index);
+        IR_Value *array_item_index = emit_expression(context, expression->array_item_expression_data.index);
         IR_Value *array = context__create_computed_value(context, array_type);
         fprintf(context->file, "  %s = load %s, %s %s\n", VALUE_REPR(array), VALUE_TYPE(array), VALUE_TYPE(array_pointer), VALUE_REPR(array_pointer));
         IR_Value *array_item = context__create_computed_value(context, type__create_pointer(array_item_type));
@@ -425,15 +425,15 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         return array_item;
     }
     case EXPRESSION_MEMBER: {
-        IR_Value *object_pointer = emit_pointer(context, expression->member.object);
+        IR_Value *object_pointer = emit_pointer(context, expression->member_expression_data.object);
         if (object_pointer->type->kind != IR_TYPE_POINTER) {
             PANIC(__FILE__, __LINE__, "Unsupported type: %s", VALUE_TYPE(object_pointer));
         }
         IR_Type *object_type = object_pointer->type->pointed_type;
         if (object_type->kind != IR_TYPE_STRUCT) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected struct type instead of: %s", expression->member.object->location.line, expression->member.object->location.column, object_type->name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected struct type instead of: %s", expression->member_expression_data.object->location.line, expression->member_expression_data.object->location.column, object_type->name->data);
         }
-        String *member_name = expression->member.name->lexeme;
+        String *member_name = expression->member_expression_data.name->lexeme;
         IR_Type *member_type = NULL;
         int member_index = -1;
         for (List_Iterator iterator = list__create_iterator(object_type->struct_members); list_iterator__has_next(&iterator);) {
@@ -452,7 +452,7 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
         return result;
     }
     case EXPRESSION_VARIABLE: {
-        String *variable_name = expression->variable.name->lexeme;
+        String *variable_name = expression->variable_expression_data.name->lexeme;
         IR_Value *variable = context__find_local(context, variable_name);
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined variable: %s", expression->location.line, expression->location.column, variable_name->data);
@@ -470,25 +470,25 @@ IR_Value *emit_pointer(Context *context, Expression *expression) {
 IR_Type *compute_expression_type(Context *context, Expression *expression) {
     switch (expression->kind) {
     case EXPRESSION_BINARY: {
-        IR_Type *left_expression_type = compute_expression_type(context, expression->binary.left_expression);
-        IR_Type *right_expression_type = compute_expression_type(context, expression->binary.right_expression);
+        IR_Type *left_expression_type = compute_expression_type(context, expression->binary_expression_data.left_expression);
+        IR_Type *right_expression_type = compute_expression_type(context, expression->binary_expression_data.right_expression);
         return left_expression_type;
     }
     case EXPRESSION_CALL: {
-        switch (expression->call.callee->kind) {
+        switch (expression->call_expression_data.callee->kind) {
         case EXPRESSION_VARIABLE: {
-            IR_Value *callee_value = context__find_local(context, expression->call.callee->variable.name->lexeme);
+            IR_Value *callee_value = context__find_local(context, expression->call_expression_data.callee->variable_expression_data.name->lexeme);
             return callee_value->type->pointed_type->function.return_type;
         }
         default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported callee kind: %d", expression->call.callee->location.line, expression->call.callee->location.column, expression->call.callee->kind);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported callee kind: %d", expression->call_expression_data.callee->location.line, expression->call_expression_data.callee->location.column, expression->call_expression_data.callee->kind);
         }
     }
     case EXPRESSION_CAST: {
-        return context__make_type(context, expression->cast.type);
+        return context__make_type(context, expression->cast_expression_data.type);
     }
     case EXPRESSION_LITERAL: {
-        Token *literal = expression->literal.value;
+        Token *literal = expression->literal_expression_data.value;
         switch (literal->kind) {
         case TOKEN_CHARACTER: {
             return context__find_type(context, string__create("Char"));
@@ -504,21 +504,21 @@ IR_Type *compute_expression_type(Context *context, Expression *expression) {
         }
     }
     case EXPRESSION_MEMBER: {
-        IR_Type *object_type = compute_expression_type(context, expression->member.object);
+        IR_Type *object_type = compute_expression_type(context, expression->member_expression_data.object);
         if (object_type->kind != IR_TYPE_STRUCT) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a struct type: %s", expression->member.object->location.line, expression->member.object->location.column, object_type->repr->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a struct type: %s", expression->member_expression_data.object->location.line, expression->member_expression_data.object->location.column, object_type->repr->data);
         }
-        String *member_name = expression->member.name->lexeme;
+        String *member_name = expression->member_expression_data.name->lexeme;
         for (List_Iterator iterator = list__create_iterator(object_type->struct_members); list_iterator__has_next(&iterator);) {
             Member *member = list_iterator__next(&iterator);
             if (string__equals(member_name, member->name->lexeme->data)) {
                 return context__make_type(context, member->type);
             }
         }
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Struct '%s' has no member: %s", expression->member.name->line, expression->member.name->column, object_type->name->data, member_name->data);
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Struct '%s' has no member: %s", expression->member_expression_data.name->line, expression->member_expression_data.name->column, object_type->name->data, member_name->data);
     }
     case EXPRESSION_VARIABLE: {
-        String *variable_name = expression->variable.name->lexeme;
+        String *variable_name = expression->variable_expression_data.name->lexeme;
         IR_Value *variable_value = context__find_local(context, variable_name);
         if (variable_value == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undefined variable: %s", expression->location.line, expression->location.column, variable_name->data);
@@ -539,34 +539,34 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         return result;
     }
     case EXPRESSION_BINARY: {
-        if (string__equals(expression->binary.operator_token->lexeme, "+")) {
+        if (string__equals(expression->binary_expression_data.operator_token->lexeme, "+")) {
             return emit_arithmetic_expression(context, expression, "add");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "-")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "-")) {
             return emit_arithmetic_expression(context, expression, "sub");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "*")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "*")) {
             return emit_arithmetic_expression(context, expression, "mul");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "/")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "/")) {
             return emit_arithmetic_expression(context, expression, "sdiv");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "//")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "//")) {
             return emit_arithmetic_expression(context, expression, "srem");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "<")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "<")) {
             return emit_comparison_expression(context, expression, "slt");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "<=")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "<=")) {
             return emit_comparison_expression(context, expression, "sle");
-        } else if (string__equals(expression->binary.operator_token->lexeme, ">")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, ">")) {
             return emit_comparison_expression(context, expression, "sgt");
-        } else if (string__equals(expression->binary.operator_token->lexeme, ">=")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, ">=")) {
             return emit_comparison_expression(context, expression, "sge");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "==")) {
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "==")) {
             return emit_comparison_expression(context, expression, "eq");
-        } else if (string__equals(expression->binary.operator_token->lexeme, "&&")) {
-            IR_Value *left_value = emit_expression(context, expression->binary.left_expression);
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "&&")) {
+            IR_Value *left_value = emit_expression(context, expression->binary_expression_data.left_expression);
             IR_Value *and_true_label = value__create_label(context, string__create("and_true"));
             IR_Value *and_false_label = value__create_label(context, string__create("and_false"));
             IR_Value *and_result_label = value__create_label(context, string__create("and_result"));
             fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE_REPR(left_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(and_true_label));
-            IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
+            IR_Value *right_value = emit_expression(context, expression->binary_expression_data.right_expression);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(and_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(and_false_label));
             fprintf(context->file, "  br label %s\n", VALUE_REPR(and_result_label));
@@ -574,8 +574,8 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             IR_Value *result = context__create_computed_value(context, context__find_type(context, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 0, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(and_true_label), VALUE_REPR(and_false_label));
             return result;
-        } else if (string__equals(expression->binary.operator_token->lexeme, "||")) {
-            IR_Value *left_value = emit_expression(context, expression->binary.left_expression);
+        } else if (string__equals(expression->binary_expression_data.operator_token->lexeme, "||")) {
+            IR_Value *left_value = emit_expression(context, expression->binary_expression_data.left_expression);
             IR_Value *or_true_label = value__create_label(context, string__create("or_true"));
             IR_Value *or_false_label = value__create_label(context, string__create("or_false"));
             IR_Value *or_result_label = value__create_label(context, string__create("or_result"));
@@ -583,28 +583,28 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             fprintf(context->file, "%s:\n", VALUE_NAME(or_true_label));
             fprintf(context->file, "  br label %s\n", VALUE_REPR(or_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(or_false_label));
-            IR_Value *right_value = emit_expression(context, expression->binary.right_expression);
+            IR_Value *right_value = emit_expression(context, expression->binary_expression_data.right_expression);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(or_result_label));
             fprintf(context->file, "%s:\n", VALUE_NAME(or_result_label));
             IR_Value *result = context__create_computed_value(context, context__find_type(context, string__create("Bool")));
             fprintf(context->file, "  %s = phi i1 [ %s, %s ], [ 1, %s ]\n", VALUE_REPR(result), VALUE_REPR(right_value), VALUE_REPR(or_false_label), VALUE_REPR(or_true_label));
             return result;
         } else {
-            PANIC(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary.operator_token->lexeme->data);
+            PANIC(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary_expression_data.operator_token->lexeme->data);
         }
     }
     case EXPRESSION_CALL: {
         String *function_name;
         Argument *first_argument;
-        Expression *callee = expression->call.callee;
+        Expression *callee = expression->call_expression_data.callee;
         if (callee->kind == EXPRESSION_VARIABLE) {
-            function_name = callee->variable.name->lexeme;
+            function_name = callee->variable_expression_data.name->lexeme;
             first_argument = NULL;
         } else if (callee->kind == EXPRESSION_MEMBER) {
-            function_name = callee->member.name->lexeme;
+            function_name = callee->member_expression_data.name->lexeme;
             first_argument = malloc(sizeof(Argument));
             first_argument->name = NULL;
-            first_argument->value = callee->member.object;
+            first_argument->value = callee->member_expression_data.object;
         } else {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported callee expression kind: %d", callee->location.line, callee->location.column, callee->kind);
         }
@@ -613,7 +613,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         if (first_argument != NULL) {
             list__append(call_argument_types, compute_expression_type(context, first_argument->value));
         }
-        for (List_Iterator iterator = list__create_iterator(expression->call.arguments); list_iterator__has_next(&iterator);) {
+        for (List_Iterator iterator = list__create_iterator(expression->call_expression_data.arguments); list_iterator__has_next(&iterator);) {
             Argument *argument = list_iterator__next(&iterator);
             list__append(call_argument_types, compute_expression_type(context, argument->value));
         }
@@ -638,12 +638,12 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
             IR_Type *parameter_type = parameter->type;
             Argument *call_argument;
             if (first_argument != NULL) {
-                call_argument = index == 0 ? first_argument : list__get(expression->call.arguments, index - 1);
+                call_argument = index == 0 ? first_argument : list__get(expression->call_expression_data.arguments, index - 1);
             } else {
-                call_argument = list__get(expression->call.arguments, index);
+                call_argument = list__get(expression->call_expression_data.arguments, index);
             }
             if (call_argument == NULL) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function called with %d arguments instead of %d", expression->location.line, expression->location.column, list__size(expression->call.arguments), list__size(function_type->function.parameters));
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function called with %d arguments instead of %d", expression->location.line, expression->location.column, list__size(expression->call_expression_data.arguments), list__size(function_type->function.parameters));
             }
             if (parameter->reference) {
                 IR_Value *function_argument = emit_pointer(context, call_argument->value);
@@ -672,8 +672,8 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         return result;
     }
     case EXPRESSION_CAST: {
-        IR_Value *operand = emit_expression(context, expression->cast.expression);
-        IR_Type *type = context__make_type(context, expression->cast.type);
+        IR_Value *operand = emit_expression(context, expression->cast_expression_data.expression);
+        IR_Type *type = context__make_type(context, expression->cast_expression_data.type);
         if (string__equals(type->name, "Int")) {
             IR_Value *result = context__create_computed_value(context, type);
             fprintf(context->file, "  %s = sext %s %s to %s\n", VALUE_REPR(result), VALUE_TYPE(operand), VALUE_REPR(operand), VALUE_TYPE(result));
@@ -687,7 +687,7 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         }
     }
     case EXPRESSION_LITERAL: {
-        return emit_literal(context, expression->literal.value);
+        return emit_literal(context, expression->literal_expression_data.value);
     }
     case EXPRESSION_MEMBER: {
         IR_Value *pointer = emit_pointer(context, expression);
@@ -696,24 +696,24 @@ IR_Value *emit_expression(Context *context, Expression *expression) {
         return result;
     }
     case EXPRESSION_SIZE_OF: {
-        IR_Value *offset = context__create_computed_value(context, context__make_type(context, expression->size_of.type));
+        IR_Value *offset = context__create_computed_value(context, context__make_type(context, expression->size_of_expression_data.type));
         fprintf(context->file, "  %s = getelementptr %s, %s* null, i64 1\n", VALUE_REPR(offset), VALUE_TYPE(offset), VALUE_TYPE(offset));
         IR_Value *size = context__create_computed_value(context, context__find_type(context, string__create("Int")));
         fprintf(context->file, "  %s = ptrtoint %s* %s to %s\n", VALUE_REPR(size), VALUE_TYPE(offset), VALUE_REPR(offset), VALUE_TYPE(size));
         return size;
     }
     case EXPRESSION_UNARY: {
-        if (string__equals(expression->unary.operator_token->lexeme, "-")) {
-            IR_Value *right_value = emit_expression(context, expression->unary.expression);
+        if (string__equals(expression->unary_expression_data.operator_token->lexeme, "-")) {
+            IR_Value *right_value = emit_expression(context, expression->unary_expression_data.expression);
             IR_Value *result = context__create_computed_value(context, right_value->type);
             fprintf(context->file, "  %s = sub %s 0, %s\n", VALUE_REPR(result), VALUE_TYPE(result), VALUE_REPR(right_value));
             return result;
         } else {
-            PANIC(__FILE__, __LINE__, "Unsupported unary expression operator: %s", expression->unary.operator_token->lexeme->data);
+            PANIC(__FILE__, __LINE__, "Unsupported unary expression operator: %s", expression->unary_expression_data.operator_token->lexeme->data);
         }
     }
     case EXPRESSION_VARIABLE: {
-        String *variable_name = expression->variable.name->lexeme;
+        String *variable_name = expression->variable_expression_data.name->lexeme;
         IR_Value *variable = context__find_local(context, variable_name);
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "Undefined variable: %s", variable_name->data);
@@ -750,26 +750,26 @@ Context *create_block_context(Context *parent_context) {
 void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
-        IR_Value *destination = emit_pointer(context, statement->assignment.destination);
+        IR_Value *destination = emit_pointer(context, statement->assignment_statement_data.destination);
         IR_Value *value;
-        if (string__equals(statement->assignment.operator_token->lexeme, "=")) {
-            value = emit_expression(context, statement->variable.value);
+        if (string__equals(statement->assignment_statement_data.operator_token->lexeme, "=")) {
+            value = emit_expression(context, statement->variable_statement_data.value);
         } else {
             Expression *binary_expression = malloc(sizeof(Expression));
             binary_expression->kind = EXPRESSION_BINARY;
-            binary_expression->binary.operator_token = statement->assignment.operator_token;
-            binary_expression->binary.left_expression = statement->assignment.destination;
-            binary_expression->binary.right_expression = statement->variable.value;
-            if (string__equals(statement->assignment.operator_token->lexeme, "+=")) {
+            binary_expression->binary_expression_data.operator_token = statement->assignment_statement_data.operator_token;
+            binary_expression->binary_expression_data.left_expression = statement->assignment_statement_data.destination;
+            binary_expression->binary_expression_data.right_expression = statement->variable_statement_data.value;
+            if (string__equals(statement->assignment_statement_data.operator_token->lexeme, "+=")) {
                 value = emit_arithmetic_expression(context, binary_expression, "add");
-            } else if (string__equals(statement->assignment.operator_token->lexeme, "-=")) {
+            } else if (string__equals(statement->assignment_statement_data.operator_token->lexeme, "-=")) {
                 value = emit_arithmetic_expression(context, binary_expression, "sub");
-            } else if (string__equals(statement->assignment.operator_token->lexeme, "*=")) {
+            } else if (string__equals(statement->assignment_statement_data.operator_token->lexeme, "*=")) {
                 value = emit_arithmetic_expression(context, binary_expression, "mul");
-            } else if (string__equals(statement->assignment.operator_token->lexeme, "/=")) {
+            } else if (string__equals(statement->assignment_statement_data.operator_token->lexeme, "/=")) {
                 value = emit_arithmetic_expression(context, binary_expression, "sdiv");
             } else {
-                PANIC(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment.operator_token->lexeme->data);
+                PANIC(__FILE__, __LINE__, "Unsupported assignment operator: %s", statement->assignment_statement_data.operator_token->lexeme->data);
             }
         }
         fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(destination), VALUE_REPR(destination));
@@ -777,7 +777,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT_BLOCK: {
         context = create_block_context(context);
-        for (List_Iterator iterator = list__create_iterator(statement->block.statements); list_iterator__has_next(&iterator);) {
+        for (List_Iterator iterator = list__create_iterator(statement->block_statement_data.statements); list_iterator__has_next(&iterator);) {
             Statement *block_statement = list_iterator__next(&iterator);
             emit_statement(context, block_statement);
         }
@@ -789,20 +789,20 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_EXPRESSION: {
-        emit_expression(context, statement->expression);
+        emit_expression(context, statement->expression_statement_data.expression);
         return;
     }
     case STATEMENT_FUNCTION: {
-        IR_Type *function_return_type = context__make_type(context, statement->function.return_type);
+        IR_Type *function_return_type = context__make_type(context, statement->function_statement_data.return_type);
         List *function_parameters = list__create();
-        for (List_Iterator iterator = list__create_iterator(statement->function.parameters); list_iterator__has_next(&iterator);) {
+        for (List_Iterator iterator = list__create_iterator(statement->function_statement_data.parameters); list_iterator__has_next(&iterator);) {
             Parameter *parameter = list_iterator__next(&iterator);
             IR_Function_Parameter *function_parameter = function_parameter__create(parameter->name->lexeme, context__make_type(context, parameter->type), parameter->reference);
             list__append(function_parameters, function_parameter);
         }
         IR_Type *function_type = type__create_function(function_return_type, function_parameters);
 
-        String *function_name = statement->function.name->literal.value->lexeme;
+        String *function_name = statement->function_statement_data.name->literal_expression_data.value->lexeme;
         String *function_repr = string__create("@");
         string__append_string(function_repr, function_name);
         if (context__find_local(context->global_context, function_name) != NULL) {
@@ -813,7 +813,7 @@ void emit_statement(Context *context, Statement *statement) {
         list__append(context->global_context->locals, function_value);
 
         context = create_function_context(context);
-        fprintf(context->file, "%s %s %s(", statement->function.declaration ? "declare" : "define", function_type->function.return_type->repr->data, VALUE_REPR(function_value));
+        fprintf(context->file, "%s %s %s(", statement->function_statement_data.declaration ? "declare" : "define", function_type->function.return_type->repr->data, VALUE_REPR(function_value));
         for (List_Iterator iterator = list__create_iterator(function_parameters); list_iterator__has_next(&iterator);) {
             IR_Function_Parameter *parameter = list_iterator__next(&iterator);
             String *parameter_name = parameter->name;
@@ -833,7 +833,7 @@ void emit_statement(Context *context, Statement *statement) {
                 fprintf(context->file, ", ");
             }
         }
-        if (statement->function.declaration) {
+        if (statement->function_statement_data.declaration) {
             fprintf(context->file, ")\n");
             return;
         }
@@ -853,7 +853,7 @@ void emit_statement(Context *context, Statement *statement) {
             }
         }
 
-        for (List_Iterator iterator = list__create_iterator(statement->function.statements); list_iterator__has_next(&iterator);) {
+        for (List_Iterator iterator = list__create_iterator(statement->function_statement_data.statements); list_iterator__has_next(&iterator);) {
             Statement *body_statement = list_iterator__next(&iterator);
             emit_statement(context, body_statement);
         }
@@ -870,17 +870,17 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_IF: {
-        IR_Value *if_cond = emit_expression(context, statement->if_.condition);
+        IR_Value *if_cond = emit_expression(context, statement->if_statement_data.condition);
         IR_Value *if_true = value__create_label(context, string__create("if_true"));
         IR_Value *if_false = value__create_label(context, string__create("if_false"));
         IR_Value *if_end = value__create_label(context, string__create("if_end"));
-        fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE_REPR(if_cond), VALUE_REPR(if_true), statement->if_.false_block != NULL ? VALUE_REPR(if_false) : VALUE_REPR(if_end));
+        fprintf(context->file, "  br i1 %s, label %s, label %s\n", VALUE_REPR(if_cond), VALUE_REPR(if_true), statement->if_statement_data.false_block != NULL ? VALUE_REPR(if_false) : VALUE_REPR(if_end));
         fprintf(context->file, "%s:\n", VALUE_NAME(if_true));
-        emit_statement(context, statement->if_.true_block);
+        emit_statement(context, statement->if_statement_data.true_block);
         fprintf(context->file, "  br label %s\n", VALUE_REPR(if_end));
-        if (statement->if_.false_block != NULL) {
+        if (statement->if_statement_data.false_block != NULL) {
             fprintf(context->file, "%s:\n", VALUE_NAME(if_false));
-            emit_statement(context, statement->if_.false_block);
+            emit_statement(context, statement->if_statement_data.false_block);
             fprintf(context->file, "  br label %s\n", VALUE_REPR(if_end));
         }
         fprintf(context->file, "%s:\n", VALUE_NAME(if_end));
@@ -897,7 +897,7 @@ void emit_statement(Context *context, Statement *statement) {
         loop->has_break = FALSE;
         loop->parent = context->loop;
         context->loop = loop;
-        emit_statement(context, statement->loop.block);
+        emit_statement(context, statement->loop_statement_data.block);
         context->loop = loop->parent;
         fprintf(context->file, "  br label %s\n", VALUE_REPR(loop_start));
         if (loop->has_break) {
@@ -906,8 +906,8 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_RETURN: {
-        if (statement->return_expression != NULL) {
-            IR_Value *result = emit_expression(context, statement->return_expression);
+        if (statement->return_statement_data.expression != NULL) {
+            IR_Value *result = emit_expression(context, statement->return_statement_data.expression);
             fprintf(context->file, "  ret %s %s\n", VALUE_TYPE(result), VALUE_REPR(result));
         } else {
             fprintf(context->file, "  ret void\n");
@@ -915,17 +915,17 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_STRUCT: {
-        String *name = statement->struct_.name->variable.name->lexeme;
+        String *name = statement->struct_statement_data.name->variable_expression_data.name->lexeme;
         String *repr = string__create("%struct.");
         string__append_string(repr, name);
         IR_Type *type = type__create(IR_TYPE_STRUCT, name, repr);
-        type->struct_members = statement->struct_.members;
+        type->struct_members = statement->struct_statement_data.members;
         list__append(context->types, type);
-        if (statement->struct_.declaration) {
+        if (statement->struct_statement_data.declaration) {
             fprintf(context->file, "%s = type opaque\n", type->repr->data);
         } else {
             fprintf(context->file, "%s = type { ", type->repr->data);
-            for (List_Iterator iterator = list__create_iterator(statement->struct_.members); list_iterator__has_next(&iterator);) {
+            for (List_Iterator iterator = list__create_iterator(statement->struct_statement_data.members); list_iterator__has_next(&iterator);) {
                 Member *member = list_iterator__next(&iterator);
                 fprintf(context->file, "%s", context__make_type(context, member->type)->repr->data);
                 if (list_iterator__has_next(&iterator)) {
@@ -937,14 +937,14 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_VARIABLE: {
-        if (statement->variable.external == TRUE) {
-            IR_Type *variable_type = context__make_type(context, statement->variable.type);
-            IR_Value *variable = context__create_global_variable(context, variable_type, statement->variable.name->variable.name->lexeme);
+        if (statement->variable_statement_data.external == TRUE) {
+            IR_Type *variable_type = context__make_type(context, statement->variable_statement_data.type);
+            IR_Value *variable = context__create_global_variable(context, variable_type, statement->variable_statement_data.name->variable_expression_data.name->lexeme);
             fprintf(context->file, "%s = external global %s\n", VALUE_REPR(variable), variable->type->pointed_type->repr->data);
         } else {
-            IR_Value *value = statement->variable.value != NULL ? emit_expression(context, statement->variable.value) : NULL;
-            IR_Type *variable_type = statement->variable.type != NULL ? context__make_type(context, statement->variable.type) : value->type;
-            IR_Value *variable = context__create_local_variable(context, variable_type, statement->variable.name->variable.name->lexeme);
+            IR_Value *value = statement->variable_statement_data.value != NULL ? emit_expression(context, statement->variable_statement_data.value) : NULL;
+            IR_Type *variable_type = statement->variable_statement_data.type != NULL ? context__make_type(context, statement->variable_statement_data.type) : value->type;
+            IR_Value *variable = context__create_local_variable(context, variable_type, statement->variable_statement_data.name->variable_expression_data.name->lexeme);
             if (value != NULL) {
                 fprintf(context->file, "  store %s %s, %s %s\n", VALUE_TYPE(value), VALUE_REPR(value), VALUE_TYPE(variable), VALUE_REPR(variable));
             }

@@ -150,7 +150,7 @@ Expression *expression__create_literal(Token *value) {
     self->kind = EXPRESSION_LITERAL;
     self->location.line = value->line;
     self->location.column = value->column;
-    self->literal.value = value;
+    self->literal_expression_data.value = value;
     return self;
 }
 
@@ -159,7 +159,7 @@ Expression *expression__create_variable(Token *name) {
     self->kind = EXPRESSION_VARIABLE;
     self->location.line = name->line;
     self->location.column = name->column;
-    self->variable.name = name;
+    self->variable_expression_data.name = name;
     return self;
 }
 
@@ -174,7 +174,7 @@ Expression *expression__create_size_of(Token *frist_token, Type *type) {
     self->kind = EXPRESSION_SIZE_OF;
     self->location.line = frist_token->line;
     self->location.column = frist_token->column;
-    self->size_of.type = type;
+    self->size_of_expression_data.type = type;
     return self;
 }
 
@@ -257,8 +257,8 @@ Expression *expression__create_call(Expression *callee, List *arguments) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_CALL;
     self->location = callee->location;
-    self->call.callee = callee;
-    self->call.arguments = arguments;
+    self->call_expression_data.callee = callee;
+    self->call_expression_data.arguments = arguments;
     return self;
 }
 
@@ -266,8 +266,8 @@ Expression *expression__create_member(Expression *object, Token *name) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_MEMBER;
     self->location = object->location;
-    self->member.object = object;
-    self->member.name = name;
+    self->member_expression_data.object = object;
+    self->member_expression_data.name = name;
     return self;
 }
 
@@ -275,8 +275,8 @@ Expression *expression__create_array_item(Expression *array, Expression *index) 
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_ARRAY_ITEM;
     self->location = array->location;
-    self->array_item.array = array;
-    self->array_item.index = index;
+    self->array_item_expression_data.array = array;
+    self->array_item_expression_data.index = index;
     return self;
 }
 
@@ -290,8 +290,8 @@ Expression *expression__create_cast(Expression *expression, Type *type) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_CAST;
     self->location = expression->location;
-    self->cast.expression = expression;
-    self->cast.type = type;
+    self->cast_expression_data.expression = expression;
+    self->cast_expression_data.type = type;
     return self;
 }
 
@@ -357,8 +357,8 @@ Expression *expression__create_unary(Token *operator_token, Expression *expressi
     self->kind = EXPRESSION_UNARY;
     self->location.line = operator_token->line;
     self->location.column = operator_token->column;
-    self->unary.operator_token = operator_token;
-    self->unary.expression = expression;
+    self->unary_expression_data.operator_token = operator_token;
+    self->unary_expression_data.expression = expression;
     return self;
 }
 
@@ -387,9 +387,9 @@ Expression *expression__create_binary(Token *operator_token, Expression *left_ex
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_BINARY;
     self->location = left_expression->location;
-    self->binary.operator_token = operator_token;
-    self->binary.left_expression = left_expression;
-    self->binary.right_expression = right_expression;
+    self->binary_expression_data.operator_token = operator_token;
+    self->binary_expression_data.left_expression = left_expression;
+    self->binary_expression_data.right_expression = right_expression;
     return self;
 }
 
@@ -606,7 +606,7 @@ static Type *type__create_array(Token *first_token, Type *item_type) {
     self->kind = TYPE_ARRAY;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->array.item_type = item_type;
+    self->array_type_data.item_type = item_type;
     return self;
 }
 
@@ -615,8 +615,8 @@ static Type *type__create_function(Token *first_token, Type *return_type, List *
     self->kind = TYPE_FUNCTION;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->function.parameters = parameters;
-    self->function.return_type = return_type;
+    self->function_type_data.parameters = parameters;
+    self->function_type_data.return_type = return_type;
     return self;
 }
 
@@ -625,7 +625,7 @@ Type *type__create_tuple(Token *first_token, List *members) {
     self->kind = TYPE_TUPLE;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->tuple.members = members;
+    self->tuple_type_data.members = members;
     return self;
 }
 
@@ -634,7 +634,7 @@ Type *type__create_simple(Token *first_token, Token *name) {
     self->kind = TYPE_SIMPLE;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->simple.name = name;
+    self->simple_type_data.name = name;
     return self;
 }
 
@@ -643,7 +643,7 @@ static Type *type__create_pointer(Token *first_token, Type *type) {
     self->kind = TYPE_POINTER;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->pointer.type = type;
+    self->pointer_type_data.type = type;
     return self;
 }
 
@@ -726,10 +726,10 @@ int is_struct_keyword(Token *token) {
 Statement *statement__create_struct(Expression *name, Token *base, List *members) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_STRUCT;
-    self->struct_.name = name;
-    self->struct_.base = base;
-    self->struct_.members = members;
-    self->struct_.declaration = members == NULL;
+    self->struct_statement_data.name = name;
+    self->struct_statement_data.base = base;
+    self->struct_statement_data.members = members;
+    self->struct_statement_data.declaration = members == NULL;
     return self;
 }
 
@@ -778,11 +778,11 @@ List *parse_statements(Context *context) {
 Statement *statement__create_function(Expression *name, Type *return_type, List *parameters, List *statements) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_FUNCTION;
-    self->function.name = name;
-    self->function.return_type = return_type;
-    self->function.parameters = parameters;
-    self->function.statements = statements;
-    self->function.declaration = statements == NULL;
+    self->function_statement_data.name = name;
+    self->function_statement_data.return_type = return_type;
+    self->function_statement_data.parameters = parameters;
+    self->function_statement_data.statements = statements;
+    self->function_statement_data.declaration = statements == NULL;
     return self;
 }
 
@@ -821,7 +821,7 @@ Statement *parse_function(Context *context, Expression *name) {
 Statement *statement__create_block(List *statements) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_BLOCK;
-    self->block.statements = statements;
+    self->block_statement_data.statements = statements;
     return self;
 }
 
@@ -852,9 +852,9 @@ int is_else_keyword(Token *token) {
 Statement *statement__create_if(Expression *condition, Statement *true_block, Statement *false_block) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_IF;
-    self->if_.condition = condition;
-    self->if_.true_block = true_block;
-    self->if_.false_block = false_block;
+    self->if_statement_data.condition = condition;
+    self->if_statement_data.true_block = true_block;
+    self->if_statement_data.false_block = false_block;
     return self;
 }
 
@@ -888,7 +888,7 @@ int is_loop_keyword(Token *token) {
 Statement *statement__create_loop(Statement *block) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_LOOP;
-    self->loop.block = block;
+    self->loop_statement_data.block = block;
     return self;
 }
 
@@ -945,7 +945,7 @@ int is_return_keyword(Token *token) {
 Statement *statement__create_return(Expression *expression) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_RETURN;
-    self->return_expression = expression;
+    self->return_statement_data.expression = expression;
     return self;
 }
 
@@ -969,26 +969,26 @@ int is_assign_variant(Token *token) {
 Statement *statement__create_expression(Expression *expression) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_EXPRESSION;
-    self->expression = expression;
+    self->expression_statement_data.expression = expression;
     return self;
 }
 
 Statement *statement__create_variable(Expression *name, Type *type, Expression *value, int external) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_VARIABLE;
-    self->variable.name = name;
-    self->variable.type = type;
-    self->variable.value = value;
-    self->variable.external = external;
+    self->variable_statement_data.name = name;
+    self->variable_statement_data.type = type;
+    self->variable_statement_data.value = value;
+    self->variable_statement_data.external = external;
     return self;
 }
 
 Statement *statement__create_assignment(Expression *destination, Token *operator_token, Expression *value) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_ASSIGNMENT;
-    self->assignment.destination = destination;
-    self->assignment.operator_token = operator_token;
-    self->assignment.value = value;
+    self->assignment_statement_data.destination = destination;
+    self->assignment_statement_data.operator_token = operator_token;
+    self->assignment_statement_data.value = value;
     return self;
 }
 
