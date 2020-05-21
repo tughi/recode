@@ -168,6 +168,8 @@ typedef struct Statement {
     };
 } Statement;
 
+char *get_statement_kind_name(int kind);
+
 List *parse(List *tokens);
 
 #endif

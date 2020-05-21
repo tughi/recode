@@ -1110,3 +1110,32 @@ List *parse(List *tokens) {
     context->alignment = 0;
     return parse_statements(context);
 }
+
+char *get_statement_kind_name(int kind) {
+    switch (kind) {
+    case STATEMENT_ASSIGNMENT:
+        return "ASSIGNMENT";
+    case STATEMENT_BLOCK:
+        return "BLOCK";
+    case STATEMENT_BREAK:
+        return "BREAK";
+    case STATEMENT_EXPRESSION:
+        return "EXPRESSION";
+    case STATEMENT_FUNCTION:
+        return "FUNCTION";
+    case STATEMENT_IF:
+        return "IF";
+    case STATEMENT_LOOP:
+        return "LOOP";
+    case STATEMENT_RETURN:
+        return "RETURN";
+    case STATEMENT_SKIP:
+        return "SKIP";
+    case STATEMENT_STRUCT:
+        return "STRUCT";
+    case STATEMENT_VARIABLE:
+        return "VARIABLE";
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported statement kind: %d", kind);
+    }
+}
