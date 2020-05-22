@@ -34,22 +34,24 @@ typedef struct Type {
     union {
         struct {
             struct Type *item_type;
-        } array_type_data;
+        } array_data;
         struct {
             List *parameters;
             struct Type *return_type;
-        } function_type_data;
+        } function_data;
         struct {
             struct Type *type;
-        } pointer_type_data;
+        } pointer_data;
         struct {
             Token *name;
-        } simple_type_data;
+        } simple_data;
         struct {
             List *members;
-        } tuple_type_data;
+        } tuple_data;
     };
 } Type;
+
+char *type__get_kind_name(Type *self);
 
 typedef struct Argument {
     Token *name;
@@ -74,39 +76,41 @@ typedef struct Expression {
         struct {
             struct Expression *array;
             struct Expression *index;
-        } array_item_expression_data;
+        } array_item_data;
         struct {
             Token *operator_token;
             struct Expression *left_expression;
             struct Expression *right_expression;
-        } binary_expression_data;
+        } binary_data;
         struct {
             struct Expression *callee;
             List *arguments;
-        } call_expression_data;
+        } call_data;
         struct {
             struct Expression *expression;
             Type *type;
-        } cast_expression_data;
+        } cast_data;
         struct {
             Token *value;
-        } literal_expression_data;
+        } literal_data;
         struct {
             struct Expression *object;
             Token *name;
-        } member_expression_data;
+        } member_data;
         struct {
             Type *type;
-        } size_of_expression_data;
+        } size_of_data;
         struct {
             Token *operator_token;
             struct Expression *expression;
-        } unary_expression_data;
+        } unary_data;
         struct {
             Token *name;
-        } variable_expression_data;
+        } variable_data;
     };
 } Expression;
+
+char *expression__get_kind_name(Expression *self);
 
 typedef struct Statement {
     enum {
@@ -128,47 +132,45 @@ typedef struct Statement {
             Expression *destination;
             Token *operator_token;
             Expression *value;
-        } assignment_statement_data;
+        } assignment_data;
         struct {
             List *statements;
-        } block_statement_data;
+        } block_data;
         struct {
             Expression *expression;
-        } expression_statement_data;
+        } expression_data;
         struct {
-            Expression *name;
+            Token *name;
             Type *return_type;
             List *parameters;
             List *statements;
             int is_declaration;
-        } function_statement_data;
+        } function_data;
         struct {
             Expression *condition;
             struct Statement *true_block;
             struct Statement *false_block;
-        } if_statement_data;
+        } if_data;
         struct {
             struct Statement *block;
-        } loop_statement_data;
+        } loop_data;
         struct {
             Expression *expression;
-        } return_statement_data;
+        } return_data;
         struct {
-            Expression *name;
+            Token *name;
             Token *base;
             List *members;
             int is_declaration;
-        } struct_statement_data;
+        } struct_data;
         struct {
-            Expression *name;
+            Token *name;
             Type *type;
             Expression *value;
             int is_external;
-        } variable_statement_data;
+        } variable_data;
     };
 } Statement;
-
-char *expression__get_kind_name(Expression *self);
 
 char *statement__get_kind_name(Statement *self);
 

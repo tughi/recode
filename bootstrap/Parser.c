@@ -4,6 +4,23 @@
 
 #include <stdlib.h>
 
+char *type__get_kind_name(Type *self) {
+    switch (self->kind) {
+    case TYPE_ARRAY:
+        return "ARRAY";
+    case TYPE_FUNCTION:
+        return "FUNCTION";
+    case TYPE_POINTER:
+        return "POINTER";
+    case TYPE_SIMPLE:
+        return "SIMPLE";
+    case TYPE_TUPLE:
+        return "TUPLE";
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported type kind: %d", self->kind);
+    }
+}
+
 char *expression__get_kind_name(Expression *self) {
     switch (self->kind) {
     case EXPRESSION_ARRAY_ITEM:
@@ -204,7 +221,7 @@ Expression *expression__create_literal(Token *value) {
     self->kind = EXPRESSION_LITERAL;
     self->location.line = value->line;
     self->location.column = value->column;
-    self->literal_expression_data.value = value;
+    self->literal_data.value = value;
     return self;
 }
 
@@ -213,7 +230,7 @@ Expression *expression__create_variable(Token *name) {
     self->kind = EXPRESSION_VARIABLE;
     self->location.line = name->line;
     self->location.column = name->column;
-    self->variable_expression_data.name = name;
+    self->variable_data.name = name;
     return self;
 }
 
@@ -228,7 +245,7 @@ Expression *expression__create_size_of(Token *frist_token, Type *type) {
     self->kind = EXPRESSION_SIZE_OF;
     self->location.line = frist_token->line;
     self->location.column = frist_token->column;
-    self->size_of_expression_data.type = type;
+    self->size_of_data.type = type;
     return self;
 }
 
@@ -311,8 +328,8 @@ Expression *expression__create_call(Expression *callee, List *arguments) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_CALL;
     self->location = callee->location;
-    self->call_expression_data.callee = callee;
-    self->call_expression_data.arguments = arguments;
+    self->call_data.callee = callee;
+    self->call_data.arguments = arguments;
     return self;
 }
 
@@ -320,8 +337,8 @@ Expression *expression__create_member(Expression *object, Token *name) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_MEMBER;
     self->location = object->location;
-    self->member_expression_data.object = object;
-    self->member_expression_data.name = name;
+    self->member_data.object = object;
+    self->member_data.name = name;
     return self;
 }
 
@@ -329,8 +346,8 @@ Expression *expression__create_array_item(Expression *array, Expression *index) 
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_ARRAY_ITEM;
     self->location = array->location;
-    self->array_item_expression_data.array = array;
-    self->array_item_expression_data.index = index;
+    self->array_item_data.array = array;
+    self->array_item_data.index = index;
     return self;
 }
 
@@ -344,8 +361,8 @@ Expression *expression__create_cast(Expression *expression, Type *type) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_CAST;
     self->location = expression->location;
-    self->cast_expression_data.expression = expression;
-    self->cast_expression_data.type = type;
+    self->cast_data.expression = expression;
+    self->cast_data.type = type;
     return self;
 }
 
@@ -411,8 +428,8 @@ Expression *expression__create_unary(Token *operator_token, Expression *expressi
     self->kind = EXPRESSION_UNARY;
     self->location.line = operator_token->line;
     self->location.column = operator_token->column;
-    self->unary_expression_data.operator_token = operator_token;
-    self->unary_expression_data.expression = expression;
+    self->unary_data.operator_token = operator_token;
+    self->unary_data.expression = expression;
     return self;
 }
 
@@ -441,9 +458,9 @@ Expression *expression__create_binary(Token *operator_token, Expression *left_ex
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_BINARY;
     self->location = left_expression->location;
-    self->binary_expression_data.operator_token = operator_token;
-    self->binary_expression_data.left_expression = left_expression;
-    self->binary_expression_data.right_expression = right_expression;
+    self->binary_data.operator_token = operator_token;
+    self->binary_data.left_expression = left_expression;
+    self->binary_data.right_expression = right_expression;
     return self;
 }
 
@@ -660,7 +677,7 @@ static Type *type__create_array(Token *first_token, Type *item_type) {
     self->kind = TYPE_ARRAY;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->array_type_data.item_type = item_type;
+    self->array_data.item_type = item_type;
     return self;
 }
 
@@ -669,8 +686,8 @@ static Type *type__create_function(Token *first_token, Type *return_type, List *
     self->kind = TYPE_FUNCTION;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->function_type_data.parameters = parameters;
-    self->function_type_data.return_type = return_type;
+    self->function_data.parameters = parameters;
+    self->function_data.return_type = return_type;
     return self;
 }
 
@@ -679,7 +696,7 @@ Type *type__create_tuple(Token *first_token, List *members) {
     self->kind = TYPE_TUPLE;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->tuple_type_data.members = members;
+    self->tuple_data.members = members;
     return self;
 }
 
@@ -688,7 +705,7 @@ Type *type__create_simple(Token *first_token, Token *name) {
     self->kind = TYPE_SIMPLE;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->simple_type_data.name = name;
+    self->simple_data.name = name;
     return self;
 }
 
@@ -697,7 +714,7 @@ static Type *type__create_pointer(Token *first_token, Type *type) {
     self->kind = TYPE_POINTER;
     self->location.line = first_token->line;
     self->location.column = first_token->column;
-    self->pointer_type_data.type = type;
+    self->pointer_data.type = type;
     return self;
 }
 
@@ -777,19 +794,19 @@ int is_struct_keyword(Token *token) {
     return is_keyword(token, "struct");
 }
 
-Statement *statement__create_struct(Expression *name, Token *base, List *members) {
+Statement *statement__create_struct(Token *name, Token *base, List *members) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_STRUCT;
-    self->struct_statement_data.name = name;
-    self->struct_statement_data.base = base;
-    self->struct_statement_data.members = members;
-    self->struct_statement_data.is_declaration = members == NULL;
+    self->struct_data.name = name;
+    self->struct_data.base = base;
+    self->struct_data.members = members;
+    self->struct_data.is_declaration = members == NULL;
     return self;
 }
 
 // struct
 //      : "struct" ("{" EOL (member EOL)* "}")? EOL
-Statement *parse_struct(Context *context, Expression *name) {
+Statement *parse_struct(Context *context, Token *name) {
     consume_one(context, "struct", required(is_struct_keyword));
     if (consume_end_of_line(context, FALSE) == TRUE) {
         return statement__create_struct(name, NULL, NULL);
@@ -829,20 +846,20 @@ List *parse_statements(Context *context) {
     return statements;
 }
 
-Statement *statement__create_function(Expression *name, Type *return_type, List *parameters, List *statements) {
+Statement *statement__create_function(Token *name, Type *return_type, List *parameters, List *statements) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_FUNCTION;
-    self->function_statement_data.name = name;
-    self->function_statement_data.return_type = return_type;
-    self->function_statement_data.parameters = parameters;
-    self->function_statement_data.statements = statements;
-    self->function_statement_data.is_declaration = statements == NULL;
+    self->function_data.name = name;
+    self->function_data.return_type = return_type;
+    self->function_data.parameters = parameters;
+    self->function_data.statements = statements;
+    self->function_data.is_declaration = statements == NULL;
     return self;
 }
 
 // function
 //      : "(" comma_separated_members? ")" "->" type ("{" EOL statement* "}")? EOL
-Statement *parse_function(Context *context, Expression *name) {
+Statement *parse_function(Context *context, Token *name) {
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
     List *parameters = NULL;
@@ -875,7 +892,7 @@ Statement *parse_function(Context *context, Expression *name) {
 Statement *statement__create_block(List *statements) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_BLOCK;
-    self->block_statement_data.statements = statements;
+    self->block_data.statements = statements;
     return self;
 }
 
@@ -906,9 +923,9 @@ int is_else_keyword(Token *token) {
 Statement *statement__create_if(Expression *condition, Statement *true_block, Statement *false_block) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_IF;
-    self->if_statement_data.condition = condition;
-    self->if_statement_data.true_block = true_block;
-    self->if_statement_data.false_block = false_block;
+    self->if_data.condition = condition;
+    self->if_data.true_block = true_block;
+    self->if_data.false_block = false_block;
     return self;
 }
 
@@ -942,7 +959,7 @@ int is_loop_keyword(Token *token) {
 Statement *statement__create_loop(Statement *block) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_LOOP;
-    self->loop_statement_data.block = block;
+    self->loop_data.block = block;
     return self;
 }
 
@@ -999,7 +1016,7 @@ int is_return_keyword(Token *token) {
 Statement *statement__create_return(Expression *expression) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_RETURN;
-    self->return_statement_data.expression = expression;
+    self->return_data.expression = expression;
     return self;
 }
 
@@ -1023,26 +1040,26 @@ int is_assign_variant(Token *token) {
 Statement *statement__create_expression(Expression *expression) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_EXPRESSION;
-    self->expression_statement_data.expression = expression;
+    self->expression_data.expression = expression;
     return self;
 }
 
-Statement *statement__create_variable(Expression *name, Type *type, Expression *value, int is_external) {
+Statement *statement__create_variable(Token *name, Type *type, Expression *value, int is_external) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_VARIABLE;
-    self->variable_statement_data.name = name;
-    self->variable_statement_data.type = type;
-    self->variable_statement_data.value = value;
-    self->variable_statement_data.is_external = is_external;
+    self->variable_data.name = name;
+    self->variable_data.type = type;
+    self->variable_data.value = value;
+    self->variable_data.is_external = is_external;
     return self;
 }
 
 Statement *statement__create_assignment(Expression *destination, Token *operator_token, Expression *value) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = STATEMENT_ASSIGNMENT;
-    self->assignment_statement_data.destination = destination;
-    self->assignment_statement_data.operator_token = operator_token;
-    self->assignment_statement_data.value = value;
+    self->assignment_data.destination = destination;
+    self->assignment_data.operator_token = operator_token;
+    self->assignment_data.value = value;
     return self;
 }
 
@@ -1103,37 +1120,44 @@ Statement *parse_statement(Context *context) {
         consume_two(context, NULL, required(is_colon), required(is_colon));
         consume_space(context, 1);
         if (matches_one(context, required(is_struct_keyword))) {
-            return parse_struct(context, expression);
+            if (expression->kind != EXPRESSION_VARIABLE) {
+                PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as struct name", expression->location.line, expression->location.column);
+            }
+            return parse_struct(context, expression->variable_data.name);
         }
-        return parse_function(context, expression);
+        if (expression->kind != EXPRESSION_VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as function name", expression->location.line, expression->location.column);
+        }
+        return parse_function(context, expression->variable_data.name);
     }
 
     if (matches_two(context, optional(is_space), required(is_colon))) {
+        Token *variable_name = expression->variable_data.name;
         if (matches_three(context, optional(is_space), required(is_colon), required(is_assign_operator))) {
             consume_space(context, 1);
             consume_two(context, NULL, required(is_colon), required(is_assign_operator));
             consume_space(context, 1);
             Expression *value = parse_expression(context);
             consume_end_of_line(context, TRUE);
-            return statement__create_variable(expression, NULL, value, FALSE);
+            return statement__create_variable(variable_name, NULL, value, FALSE);
         }
         consume_space(context, 0);
         consume_one(context, NULL, required(is_colon));
         consume_space(context, 1);
         Type *type = parse_type(context);
         if (consume_end_of_line(context, FALSE)) {
-            return statement__create_variable(expression, type, NULL, FALSE);
+            return statement__create_variable(variable_name, type, NULL, FALSE);
         }
         consume_space(context, 1);
         consume_one(context, NULL, required(is_assign_operator));
         consume_space(context, 1);
         if (consume_one(context, NULL, required(is_external_keyword)) != NULL) {
             consume_end_of_line(context, TRUE);
-            return statement__create_variable(expression, type, NULL, TRUE);
+            return statement__create_variable(variable_name, type, NULL, TRUE);
         }
         Expression *value = parse_expression(context);
         consume_end_of_line(context, TRUE);
-        return statement__create_variable(expression, type, value, FALSE);
+        return statement__create_variable(variable_name, type, value, FALSE);
     }
 
     if (matches_three(context, optional(is_space), optional(is_assign_variant), required(is_assign_operator))) {
