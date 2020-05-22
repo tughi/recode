@@ -96,15 +96,15 @@ static void context__release_register(Context *self, Value_Holder *value_holder)
     registers__release(self->registers, value_holder);
 }
 
-static Symbol_Table_Item *context__find_symbol(Context *self, String *name) {
+Symbol_Table_Item *context__find_symbol(Context *self, String *name) {
     return symbol_table__find_item(self->symbols, name);
 }
 
-static Symbol_Table_Item *context__create_symbol(Context *self, String *name) {
+void context__create_variable(Context *self, String *name) {
     if (context__find_symbol(self, name)) {
-        PANIC(__FILE__, __LINE__, "Trying to create a symbol that already exists: %s", name->data);
+        PANIC(__FILE__, __LINE__, "Trying to create a variable that already exists in the same context: %s", name->data);
     }
-    return symbol_table__find_item(self->symbols, name);
+    symbol_table__add_item(self->symbols, name);
 }
 
 static Type *compute_expression_type(Context *context, Expression *expression) {
@@ -168,13 +168,36 @@ static Value_Holder *emit_expression(Context *context, Expression *expression) {
     case EXPRESSION_LITERAL: {
         return emit_load_literal(context, expression->literal_data.value);
     }
+    case EXPRESSION_VARIABLE: {
+        // TODO: check if variable is declared already
+        Value_Holder *value_holder = context__acquire_register(context);
+        // TODO: check if variable is local or global, and load is respectively
+        emitf("  movq %s(%%rip), %s", expression->variable_data.name->lexeme->data, value_holder->data);
+        return value_holder;
+    }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported expression kind: %s", expression__get_kind_name(expression));
     }
 }
 
-static void emit_statement(Context *context, Statement *statement) {
+void emit_statement(Context *context, Statement *statement) {
+    INFO(__FILE__, __LINE__, "Emit statement: %s", statement__get_kind_name(statement));
     switch (statement->kind) {
+    case STATEMENT_ASSIGNMENT: {
+        Expression *assignment_destination = statement->assignment_data.destination;
+        if (assignment_destination->kind != EXPRESSION_VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Assignment to non-variables are not supported yet.", assignment_destination->location.line, assignment_destination->location.column);
+        }
+        String *variable_name = assignment_destination->variable_data.name->lexeme;
+        Symbol_Table_Item *symbol = context__find_symbol(context, variable_name);
+        if (symbol == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", assignment_destination->location.line, assignment_destination->location.column, variable_name->data);
+        }
+        Value_Holder *value = emit_expression(context, statement->assignment_data.value);
+        emitf("  movq %s, %s(%%rip)", value->data, variable_name->data);
+        context__release_register(context, value);
+        return;
+    }
     case STATEMENT_FUNCTION: {
         String *function_name = statement->function_data.name->lexeme;
         emitf("  .globl %s", function_name->data);
@@ -194,18 +217,25 @@ static void emit_statement(Context *context, Statement *statement) {
         if (statement->return_data.expression != NULL) {
             Value_Holder *value_holder = emit_expression(context, statement->return_data.expression);
             emitf("  movq %s, %%rax", value_holder->data);
-            emits("  movq %%rbp, %%rsp");
-            emits("  popq %%rbp");
-            emits("  ret");
             context__release_register(context, value_holder);
-        } else {
-
         }
+        emits("  movq %%rbp, %%rsp");
+        emits("  popq %%rbp");
+        emits("  ret");
         return;
     }
     case STATEMENT_VARIABLE: {
-        String *variable_name = statement->variable_data.name->lexeme;
-
+        Token *variable_name = statement->variable_data.name;
+        if (statement->variable_data.is_external) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", variable_name->line, variable_name->column);
+        }
+        emitf("  .comm %s,  8, 8", variable_name->lexeme->data);
+        context__create_variable(context, variable_name->lexeme);
+        Expression *variable_value = statement->variable_data.value;
+        if (variable_value) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Variables with assignment are not supported yet.", variable_value->location.line, variable_value->location.column);
+        }
+        return;
     }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported statement kind: %s", statement__get_kind_name(statement));

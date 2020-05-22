@@ -13,6 +13,6 @@ typedef struct Symbol_Table_Item {
 Symbol_Table *symbol_table__create();
 
 Symbol_Table_Item *symbol_table__find_item(Symbol_Table *self, String *name);
-void symbol_table__add_item(Symbol_Table *self, Symbol_Table_Item *item);
+Symbol_Table_Item *symbol_table__add_item(Symbol_Table *self, String *name);
 
 #endif
