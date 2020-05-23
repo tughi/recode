@@ -126,7 +126,18 @@ static Value_Holder *emit_load_literal(Context *context, Token *token) {
     }
 }
 
-static Value_Holder *emit_expression(Context *context, Expression *expression) {
+Value_Holder *emit_expression(Context *context, Expression *expression);
+
+Value_Holder *emit_comparison_expression(Context *context, Expression *expression, Value_Holder *left_value_holder, const char *flag_instruction) {
+    Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
+    emitf("  cmpq %s, %s", right_value_holder->data, left_value_holder->data);
+    emitf("  %s %sb", flag_instruction, right_value_holder->data);
+    emitf("  andq $1, %s", right_value_holder->data);
+    context__release_register(context, left_value_holder);
+    return right_value_holder;
+}
+
+Value_Holder *emit_expression(Context *context, Expression *expression) {
     switch (expression->kind) {
     case EXPRESSION_BINARY: {
         Value_Holder *left_value_holder = emit_expression(context, expression->binary_data.left_expression);
@@ -161,6 +172,18 @@ static Value_Holder *emit_expression(Context *context, Expression *expression) {
             emitf("  movq %%rdx, %s", left_value_holder->data);
             context__release_register(context, right_value_holder);
             return left_value_holder;
+        } else if (string__equals(expression->binary_data.operator_token->lexeme, "<")) {
+            return emit_comparison_expression(context, expression, left_value_holder, "setl");
+        } else if (string__equals(expression->binary_data.operator_token->lexeme, "<=")) {
+            return emit_comparison_expression(context, expression, left_value_holder, "setle");
+        } else if (string__equals(expression->binary_data.operator_token->lexeme, ">")) {
+            return emit_comparison_expression(context, expression, left_value_holder, "setg");
+        } else if (string__equals(expression->binary_data.operator_token->lexeme, ">=")) {
+            return emit_comparison_expression(context, expression, left_value_holder, "setge");
+        } else if (string__equals(expression->binary_data.operator_token->lexeme, "==")) {
+            return emit_comparison_expression(context, expression, left_value_holder, "sete");
+        } else if (string__equals(expression->binary_data.operator_token->lexeme, "!=")) {
+            return emit_comparison_expression(context, expression, left_value_holder, "setne");
         } else {
             PANIC(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary_data.operator_token->lexeme->data);
         }
@@ -225,6 +248,7 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_VARIABLE: {
+        // TODO: distiguish between global and local variables
         Token *variable_name = statement->variable_data.name;
         if (statement->variable_data.is_external) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", variable_name->line, variable_name->column);
