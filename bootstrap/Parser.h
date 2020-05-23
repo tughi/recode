@@ -127,6 +127,7 @@ typedef struct Statement {
         STATEMENT_VARIABLE,
     } kind;
 
+    Location location;
     union {
         struct {
             Expression *destination;

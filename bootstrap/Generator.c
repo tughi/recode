@@ -288,8 +288,7 @@ void emit_statement(Context *context, Statement *statement) {
         context->loop = loop__create(label, context->loop);
         emit_statement(context, statement->loop_data.block);
         if (context->loop->has_break) {
-            WARNING(__FILE__, __LINE__, "Infinite loop detected%c", '.');
-            // TODO: WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Infinite loop detected.", statement->location.line, statement->location.column);
+            WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Infinite loop detected.", statement->location.line, statement->location.column);
         }
         context->loop = context->loop->parent;
         emitf("  jmp loop_%03d_start", label);
