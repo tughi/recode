@@ -27,6 +27,11 @@ static Counter *counter__create() {
     return self;
 }
 
+static int counter__inc(Counter *self) {
+    self->count += 1;
+    return self->count;
+}
+
 #define REGISTERS_COUNT 4
 
 typedef struct Registers {
@@ -73,6 +78,7 @@ typedef struct Context {
     FILE *file;
     Registers *registers;
     Symbol_Table *symbols;
+    Counter *labels_counter;
 } Context;
 
 #define emitf(line, ...) fprintf(context->file, line "\n", __VA_ARGS__)
@@ -85,6 +91,7 @@ static Context *context__create(FILE *file) {
     self->file = file;
     self->registers = registers__create();
     self->symbols = symbol_table__create();
+    self->labels_counter = counter__create();
     return self;
 }
 
@@ -105,6 +112,10 @@ void context__create_variable(Context *self, String *name) {
         PANIC(__FILE__, __LINE__, "Trying to create a variable that already exists in the same context: %s", name->data);
     }
     symbol_table__add_item(self->symbols, name);
+}
+
+int context__new_label(Context *self) {
+    return counter__inc(self->labels_counter);
 }
 
 static Type *compute_expression_type(Context *context, Expression *expression) {
@@ -132,7 +143,7 @@ Value_Holder *emit_comparison_expression(Context *context, Expression *expressio
     Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
     emitf("  cmpq %s, %s", right_value_holder->data, left_value_holder->data);
     emitf("  %s %sb", flag_instruction, right_value_holder->data);
-    emitf("  andq $1, %s", right_value_holder->data);
+    emitf("  movzbq %sb, %s", right_value_holder->data, right_value_holder->data);
     context__release_register(context, left_value_holder);
     return right_value_holder;
 }
@@ -221,6 +232,14 @@ void emit_statement(Context *context, Statement *statement) {
         context__release_register(context, value);
         return;
     }
+    case STATEMENT_BLOCK: {
+        // TODO: create block context
+        for (List_Iterator iterator = list__create_iterator(statement->block_data.statements); list_iterator__has_next(&iterator);) {
+            Statement *block_statement = list_iterator__next(&iterator);
+            emit_statement(context, block_statement);
+        }
+        return;
+    }
     case STATEMENT_FUNCTION: {
         String *function_name = statement->function_data.name->lexeme;
         emitf("  .globl %s", function_name->data);
@@ -235,6 +254,25 @@ void emit_statement(Context *context, Statement *statement) {
         }
 
         return;
+    }
+    case STATEMENT_IF: {
+        int label = context__new_label(context);
+        emitf("if_%d_cond:", label);
+        Value_Holder *condition = emit_expression(context, statement->if_data.condition);
+        emitf("  dec %s", condition->data);
+        context__release_register(context, condition);
+        emitf("  jnz if_%d_false", label);
+        emitf("if_%d_true:", label);
+        emit_statement(context, statement->if_data.true_block);
+        if (statement->if_data.false_block) {
+            emitf("  jmp if_%d_end", label);
+        }
+        emitf("if_%d_false:", label);
+        if (statement->if_data.false_block) {
+            emit_statement(context, statement->if_data.false_block);
+        }
+        emitf("if_%d_end:", label);
+        break;
     }
     case STATEMENT_RETURN: {
         if (statement->return_data.expression != NULL) {
