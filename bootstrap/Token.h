@@ -1,6 +1,7 @@
 #ifndef __recode__token_h__
 #define __recode__token_h__
 
+#include "List.h"
 #include "Source.h"
 #include "String.h"
 
@@ -37,6 +38,8 @@ typedef struct Token {
         } string_data;
     };
 } Token;
+
+typedef List Token_List;
 
 Token *token__create_character(Source_Location *location, String *lexeme, char value);
 Token *token__create_comment(Source_Location *location, String *lexeme);

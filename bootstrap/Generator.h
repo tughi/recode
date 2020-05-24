@@ -1,8 +1,8 @@
 #ifndef __recode__generator_h__
 #define __recode__generator_h__
 
-#include "List.h"
+#include "AST.h"
 
-void generate(char *file, List *statements);
+void generate(char *file, Statement_List *statements);
 
 #endif

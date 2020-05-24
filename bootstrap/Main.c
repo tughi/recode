@@ -416,11 +416,11 @@ int main(int argc, char *argv[]) {
 
     Source *source = source__create(load_file(string__create(input_file)));
 
-    List *tokens = scan(source);
+    Token_List *tokens = scan(source);
 
     // dump_tokens(tokens);
 
-    List *statements = parse(tokens);
+    Statement_List *statements = parse(tokens);
 
     // dump_statements(statements);
 
