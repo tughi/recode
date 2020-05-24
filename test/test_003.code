@@ -1,0 +1,12 @@
+result: Int
+
+main :: () -> Int {
+    result = 9
+
+    loop {
+        if (result == 1) {
+            return 0
+        }
+        result = result / 3
+    }
+}
