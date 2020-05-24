@@ -67,7 +67,7 @@ void print_token(Token *token) {
     }
 }
 
-void dump_tokens(List *tokens) {
+void dump_tokens(Token_List *tokens) {
     int line = 0;
     for (List_Iterator iterator = list__create_iterator(tokens); list_iterator__has_next(&iterator);) {
         Token *token = list_iterator__next(&iterator);
@@ -117,20 +117,6 @@ void print_type(Type *type) {
     }
     case TYPE_SIMPLE: {
         print_token(type->simple_data.name);
-        return;
-    }
-    case TYPE_TUPLE: {
-        printf("%s(", SGR_WHITE_BOLD);
-        for (List_Iterator members = list__create_iterator(type->tuple_data.members); list_iterator__has_next(&members);) {
-            Member *member = list_iterator__next(&members);
-            print_token(member->name);
-            printf("%s: ", SGR_WHITE_BOLD);
-            print_type(member->type);
-            if (list_iterator__has_next(&members)) {
-                printf("%s, ", SGR_WHITE_BOLD);
-            }
-        }
-        printf("%s)", SGR_WHITE_BOLD);
         return;
     }
     default:
@@ -327,12 +313,10 @@ void print_statement(Statement *statement, int alignment) {
             print_token(member->name);
             printf("%s: ", SGR_WHITE_BOLD);
             print_type(member->type);
-#ifdef ENABLE__MEMBER_DEFAULT_VALUE
             if (member->default_value) {
                 printf("%s = ", SGR_WHITE_BOLD);
                 print_expression(member->default_value);
             }
-#endif
             printf("\n");
         }
         print_alignment(alignment);
@@ -365,7 +349,7 @@ void print_statement(Statement *statement, int alignment) {
     }
 }
 
-void dump_statements(List *statements) {
+void dump_statements(Statement_List *statements) {
     for (List_Iterator iterator = list__create_iterator(statements); list_iterator__has_next(&iterator);) {
         Statement *block_statement = list_iterator__next(&iterator);
         print_statement(block_statement, 0);

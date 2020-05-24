@@ -566,21 +566,19 @@ Member *parse_member(Context *context) {
     consume_space(context, 1);
     Type *type = parse_type(context);
     Expression *default_value = NULL;
-#ifdef ENABLE__MEMBER_DEFAULT_VALUE
     if (matches_two(context, optional(is_space), required(is_assign_operator))) {
         consume_space(context, 1);
         consume_one(context, "=", required(is_assign_operator));
         consume_space(context, 1);
         default_value = parse_expression(context);
     }
-#endif
     return member__create(reference, name, type, default_value);
 }
 
 // comma_separated_members
 //      : member ("," member)*
-List *parse_comma_separated_members(Context *context) {
-    List *members = list__create();
+Member_List *parse_comma_separated_members(Context *context) {
+    Member_List *members = list__create();
     int space_before_next_member = 0;
     do {
         consume_space(context, space_before_next_member);
@@ -612,14 +610,6 @@ Type *type__create_function(Source_Location *location, Type *return_type, List *
     return self;
 }
 
-Type *type__create_tuple(Source_Location *location, List *members) {
-    Type *self = malloc(sizeof(Type));
-    self->kind = TYPE_TUPLE;
-    self->location = location;
-    self->tuple_data.members = members;
-    return self;
-}
-
 Type *type__create_simple(Source_Location *location, Token *name) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_SIMPLE;
@@ -640,7 +630,7 @@ Type *type__create_pointer(Source_Location *location, Type *type) {
 //      : "@" type
 //      | IDENTIFIER
 //      | "[" type "]"
-//      | "(" comma_separated_members? ")" ("->" type)?
+//      | "(" comma_separated_members? ")" "->" type
 Type *parse_type(Context *context) {
     if (matches_one(context, required(is_pointer_operator))) {
         Source_Location *location = consume_one(context, NULL, required(is_pointer_operator))->location;
@@ -664,15 +654,11 @@ Type *parse_type(Context *context) {
             members = parse_comma_separated_members(context);
             consume_one(context, ")", required(is_close_paren));
         }
-        if (matches_three(context, optional(is_space), required(is_hyphen), required(is_close_angled_bracket))) {
-            consume_space(context, 1);
-            consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
-            consume_space(context, 1);
-            Type *return_type = parse_type(context);
-            return type__create_function(location, return_type, members);
-        } else {
-            return type__create_tuple(location, members);
-        }
+        consume_space(context, 1);
+        consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
+        consume_space(context, 1);
+        Type *return_type = parse_type(context);
+        return type__create_function(location, return_type, members);
     }
     Token *name = consume_one(context, "type name", required(is_identifier));
     return type__create_simple(name->location, name);

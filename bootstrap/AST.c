@@ -11,8 +11,6 @@ char *type__get_kind_name(Type *self) {
         return "POINTER";
     case TYPE_SIMPLE:
         return "SIMPLE";
-    case TYPE_TUPLE:
-        return "TUPLE";
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %d", self->kind);
     }
