@@ -10,14 +10,14 @@
 
 typedef struct Loop {
     int id;
-    int has_break;
+    int has_exit;
     struct Loop *parent;
 } Loop;
 
 static Loop *loop__create(int id, Loop *parent) {
     Loop *self = malloc(sizeof(Loop));
     self->id = id;
-    self->has_break = 0;
+    self->has_exit = 0;
     self->parent = parent;
     return self;
 }
@@ -244,8 +244,12 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT_BREAK: {
-        emitf("  jmp loop_%03d_end", context->loop->id);
-        context->loop->has_break = 1;
+        Loop *loop = context->loop;
+        if (loop == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- This break is not inside of a loop", statement->location.line, statement->location.column);
+        }
+        emitf("  jmp loop_%03d_end", loop->id);
+        loop->has_exit = 1;
         return;
     }
     case STATEMENT_FUNCTION: {
@@ -287,7 +291,7 @@ void emit_statement(Context *context, Statement *statement) {
         emitf("loop_%03d_start:", label);
         context->loop = loop__create(label, context->loop);
         emit_statement(context, statement->loop_data.block);
-        if (context->loop->has_break) {
+        if (!context->loop->has_exit) {
             WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Infinite loop detected.", statement->location.line, statement->location.column);
         }
         context->loop = context->loop->parent;
@@ -300,6 +304,9 @@ void emit_statement(Context *context, Statement *statement) {
             Value_Holder *value_holder = emit_expression(context, statement->return_data.expression);
             emitf("  movq %s, %%rax", value_holder->data);
             context__release_register(context, value_holder);
+        }
+        if (context->loop) {
+            context->loop->has_exit = 1;
         }
         emits("  movq %%rbp, %%rsp");
         emits("  popq %%rbp");
