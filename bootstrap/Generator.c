@@ -325,10 +325,8 @@ void emit_statement(Context *context, Statement *statement) {
     }
 }
 
-void generate(List *statements) {
-    FILE *file = fopen("build/code.s", "w");
-
-    Context *context = context__create(file);
+void generate(char *file, List *statements) {
+    Context *context = context__create(fopen(file, "w"));
 
     emits("  .text");
     emits(".LC0:");

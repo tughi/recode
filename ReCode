@@ -83,15 +83,29 @@ def run():
     build()
 
     os.chdir('build')
-    execute('rm -f code code.s')
+    execute('rm -f test_*')
     os.chdir('..')
 
-    execute(f'''{os.path.join('build', 'ReCode')}''')
-
     os.chdir('build')
-    execute('clang -o code code.s')
-
-    execute('./code')
+    test_dir = os.path.join('..', 'test')
+    test_files = [file_name for file_name in os.listdir(test_dir) if file_name.startswith('test_') and file_name.endswith('.code')]
+    test_files.sort()
+    for test_file in test_files:
+        test = test_file[:-5]
+        execute(f'''./ReCode {os.path.join(test_dir, test_file)} {test}.s''')
+        execute(f'''clang -o {test} {test}.s''')
+        try:
+            with open(f'{os.path.join(test_dir, test)}.exit') as file:
+                for line in file:
+                    expected_exit = int(line)
+                    break
+        except FileNotFoundError:
+            expected_exit = 0
+        test_exit = subprocess.call([f'./{test}'])
+        if test_exit == expected_exit:
+            print(f"{test}: SUCCESS")
+        else:
+            print(f"{test}: FAILURE")
 
 
 TASKS = OrderedDict(

@@ -391,8 +391,30 @@ void dump_backtrace_and_exit(int signal) {
 int main(int argc, char *argv[]) {
     signal(SIGSEGV, dump_backtrace_and_exit);
 
-    String *source_file = string__create("src/Source.code");
-    Source *source = source__create(load_file(source_file));
+    if (argc != 3) {
+        PANIC(__FILE__, __LINE__, "Usage:\n    %s <INPUT FILE> <OUTPUT FILE>\n", argv[0]);
+    }
+
+    char *input_file = argv[1];
+    int input_file_length = strlen(input_file);
+    if (input_file_length < 5
+        || input_file[input_file_length - 5] != '.'
+        || input_file[input_file_length - 4] != 'c'
+        || input_file[input_file_length - 3] != 'o'
+        || input_file[input_file_length - 2] != 'd'
+        || input_file[input_file_length - 1] != 'e') {
+        PANIC(__FILE__, __LINE__, "'%s' doesn't end with '.code'.\n", input_file);
+    }
+
+    char *output_file = argv[2];
+    int output_file_length = strlen(output_file);
+    if (output_file_length < 2
+        || output_file[output_file_length - 2] != '.'
+        || output_file[output_file_length - 1] != 's') {
+        PANIC(__FILE__, __LINE__, "'%s' doesn't end with '.s'.\n", output_file);
+    }
+
+    Source *source = source__create(load_file(string__create(input_file)));
 
     List *tokens = scan(source);
 
@@ -402,5 +424,5 @@ int main(int argc, char *argv[]) {
 
     // dump_statements(statements);
 
-    generate(statements);
+    generate(output_file, statements);
 }

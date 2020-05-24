@@ -3,6 +3,6 @@
 
 #include "List.h"
 
-void generate(List *statements);
+void generate(char *file, List *statements);
 
 #endif
