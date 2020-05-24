@@ -71,11 +71,11 @@ void dump_tokens(List *tokens) {
     int line = 0;
     for (List_Iterator iterator = list__create_iterator(tokens); list_iterator__has_next(&iterator);) {
         Token *token = list_iterator__next(&iterator);
-        if (token->line != line) {
+        if (token->location->line != line) {
             if (line > 0) {
                 printf("\n");
             }
-            line = token->line;
+            line = token->location->line;
             printf("%03d: ", line);
         }
         print_token(token);

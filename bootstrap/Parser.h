@@ -4,11 +4,6 @@
 #include "List.h"
 #include "Token.h"
 
-typedef struct {
-    int line;
-    int column;
-} Location;
-
 struct Type;
 struct Expression;
 
@@ -30,7 +25,8 @@ typedef struct Type {
         TYPE_TUPLE,
     } kind;
 
-    Location location;
+    Source_Location *location;
+
     union {
         struct {
             struct Type *item_type;
@@ -71,7 +67,8 @@ typedef struct Expression {
         EXPRESSION_VARIABLE,
     } kind;
 
-    Location location;
+    Source_Location *location;
+
     union {
         struct {
             struct Expression *array;
@@ -127,7 +124,8 @@ typedef struct Statement {
         STATEMENT_VARIABLE,
     } kind;
 
-    Location location;
+    Source_Location *location;
+
     union {
         struct {
             Expression *destination;

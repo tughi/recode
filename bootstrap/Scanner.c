@@ -87,9 +87,8 @@ int is_valid(unsigned char c) {
 }
 
 Token *read_character(Source *source) {
+    Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(1);
-    int line = source__current_line(source);
-    int column = source__current_column(source);
 
     char value = 0;
     char consumed;
@@ -109,15 +108,14 @@ Token *read_character(Source *source) {
     }
     if (value && (consumed = source__advance(source, is_single_quote))) {
         string__append_char(lexeme, consumed);
-        return token__create_character(lexeme, line, column, value);
+        return token__create_character(location, lexeme, value);
     }
-    return token__create_error(lexeme, line, column);
+    return token__create_error(location, lexeme);
 }
 
 Token *read_space(Source *source) {
+    Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(2);
-    int line = source__current_line(source);
-    int column = source__current_column(source);
 
     char consumed;
     int count = 0;
@@ -129,25 +127,23 @@ Token *read_space(Source *source) {
         }
         string__append_char(lexeme, consumed);
     }
-    return token__create_space(lexeme, line, column, count);
+    return token__create_space(location, lexeme, count);
 }
 
 Token *read_comment(Source *source) {
+    Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(2);
-    int line = source__current_line(source);
-    int column = source__current_column(source);
 
     char consumed;
     while ((consumed = source__advance(source, is_comment_body))) {
         string__append_char(lexeme, consumed);
     }
-    return token__create_comment(lexeme, line, column);
+    return token__create_comment(location, lexeme);
 }
 
 Token *read_identifier(Source *source) {
+    Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(2);
-    int line = source__current_line(source);
-    int column = source__current_column(source);
 
     char consumed;
     while ((consumed = source__advance(source, is_identifier_body))) {
@@ -155,16 +151,15 @@ Token *read_identifier(Source *source) {
     }
     for (int i = 0; i < KEYWORDS_COUNT; i++) {
         if (string__equals(lexeme, KEYWORDS[i])) {
-            return token__create_keyword(lexeme, line, column);
+            return token__create_keyword(location, lexeme);
         }
     }
-    return token__create_identifier(lexeme, line, column);
+    return token__create_identifier(location, lexeme);
 }
 
 Token *read_integer(Source *source) {
+    Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(2);
-    int line = source__current_line(source);
-    int column = source__current_column(source);
 
     char consumed;
     int value = 0;
@@ -172,28 +167,26 @@ Token *read_integer(Source *source) {
         string__append_char(lexeme, consumed);
         value = value * 10 + (consumed - '0');
     }
-    return token__create_integer(lexeme, line, column, value);
+    return token__create_integer(location, lexeme, value);
 }
 
 Token *read_other(Source *source) {
+    Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(2);
-    int line = source__current_line(source);
-    int column = source__current_column(source);
 
     char consumed = source__advance(source, is_valid);
     if (consumed == '\n') {
         string__append_string(lexeme, string__create("<EOL>"));
-        return token__create_end_of_line(lexeme, line, column);
+        return token__create_end_of_line(location, lexeme);
     }
 
     string__append_char(lexeme, consumed);
-    return token__create_other(lexeme, line, column);
+    return token__create_other(location, lexeme);
 }
 
 Token *read_string(Source *source) {
+    Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(2);
-    int line = source__current_line(source);
-    int column = source__current_column(source);
 
     String *value = string__create_empty(32);
     char consumed;
@@ -206,7 +199,7 @@ Token *read_string(Source *source) {
                     string__append_char(lexeme, consumed);
                     string__append_char(value, get_escape(consumed));
                 } else {
-                    return token__create_error(lexeme, line, column);
+                    return token__create_error(location, lexeme);
                 }
             } else {
                 string__append_char(value, consumed);
@@ -214,10 +207,10 @@ Token *read_string(Source *source) {
         }
         if ((consumed = source__advance(source, is_double_quote))) {
             string__append_char(lexeme, consumed);
-            return token__create_string(lexeme, line, column, value);
+            return token__create_string(location, lexeme, value);
         }
     }
-    return token__create_error(lexeme, line, column);
+    return token__create_error(location, lexeme);
 }
 
 Token *scan_token(Source *source) {
@@ -226,7 +219,7 @@ Token *scan_token(Source *source) {
     int token_column = source__current_column(source);
 
     if (!is_valid(next_char)) {
-        return token__create_end_of_file(string__create("<<EOF>>"), token_line, token_column);
+        return token__create_end_of_file(source_location__create(source), string__create("<<EOF>>"));
     }
 
     Token *token;

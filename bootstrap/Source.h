@@ -20,4 +20,12 @@ int source__current_column(Source *self);
 
 char source__advance(Source *self, int (*accepts)(unsigned char));
 
+typedef struct Source_Location {
+    Source *source;
+    int line;
+    int column;
+} Source_Location;
+
+Source_Location *source_location__create(Source *source);
+
 #endif

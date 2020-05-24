@@ -124,7 +124,7 @@ void context__create_variable(Context *self, String *name) {
 static Type *compute_expression_type(Context *context, Expression *expression) {
     switch (expression->kind) {
     default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %d", expression->location.line, expression->location.column, expression->kind);
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %d", expression->location->line, expression->location->column, expression->kind);
     }
 }
 
@@ -132,7 +132,7 @@ static Value_Holder *emit_load_literal(Context *context, Token *token) {
     switch (token->kind) {
     case TOKEN_INTEGER: {
         Value_Holder *value_holder = context__acquire_register(context);
-        emitf("  movq $%d, %s", token->integer.value, value_holder->data);
+        emitf("  movq $%d, %s", token->integer_data.value, value_holder->data);
         return value_holder;
     }
     default:
@@ -218,17 +218,17 @@ Value_Holder *emit_expression(Context *context, Expression *expression) {
 }
 
 void emit_statement(Context *context, Statement *statement) {
-    // INFO(__FILE__, __LINE__, "(%04d:%04d) -- %s", statement->location.line, statement->location.column, statement__get_kind_name(statement));
+    // INFO(__FILE__, __LINE__, "(%04d:%04d) -- %s", statement->location->line, statement->location->column, statement__get_kind_name(statement));
     switch (statement->kind) {
     case STATEMENT_ASSIGNMENT: {
         Expression *assignment_destination = statement->assignment_data.destination;
         if (assignment_destination->kind != EXPRESSION_VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Assignment to non-variables are not supported yet.", statement->location.line, statement->location.column);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Assignment to non-variables are not supported yet.", statement->location->line, statement->location->column);
         }
         String *variable_name = assignment_destination->variable_data.name->lexeme;
         Symbol_Table_Item *symbol = context__find_symbol(context, variable_name);
         if (symbol == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location.line, statement->location.column, variable_name->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
         }
         Value_Holder *value = emit_expression(context, statement->assignment_data.value);
         emitf("  movq %s, %s(%%rip)", value->data, variable_name->data);
@@ -246,7 +246,7 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT_BREAK: {
         Loop *loop = context->loop;
         if (loop == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- This break is not inside of a loop", statement->location.line, statement->location.column);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- This break is not inside of a loop", statement->location->line, statement->location->column);
         }
         emitf("  jmp loop_%03d_end", loop->id);
         loop->has_exit = 1;
@@ -292,7 +292,7 @@ void emit_statement(Context *context, Statement *statement) {
         context->loop = loop__create(label, context->loop);
         emit_statement(context, statement->loop_data.block);
         if (!context->loop->has_exit) {
-            WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Infinite loop detected.", statement->location.line, statement->location.column);
+            WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Infinite loop detected.", statement->location->line, statement->location->column);
         }
         context->loop = context->loop->parent;
         emitf("  jmp loop_%03d_start", label);
@@ -317,13 +317,13 @@ void emit_statement(Context *context, Statement *statement) {
         // TODO: distiguish between global and local variables
         Token *variable_name = statement->variable_data.name;
         if (statement->variable_data.is_external) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location.line, statement->location.column);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
         }
         emitf("  .comm %s,  8, 8", variable_name->lexeme->data);
         context__create_variable(context, variable_name->lexeme);
         Expression *variable_value = statement->variable_data.value;
         if (variable_value) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Variables with assignment are not supported yet.", statement->location.line, statement->location.column);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Variables with assignment are not supported yet.", statement->location->line, statement->location->column);
         }
         return;
     }

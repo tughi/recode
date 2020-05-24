@@ -94,7 +94,7 @@ Matcher *matcher__create(int (*matches)(Token *), int required) {
     return self;
 }
 
-#define LOCATION(context) ((Token *)list_iterator__current(context->tokens))->line, ((Token *)list_iterator__current(context->tokens))->column
+#define LOCATION(context) ((Token *)list_iterator__current(context->tokens))->location->line, ((Token *)list_iterator__current(context->tokens))->location->column
 
 #define CURRENT_TOKEN(context) ((Token *)list_iterator__current(context->tokens))->lexeme->data
 
@@ -185,7 +185,7 @@ int is_space(Token *token) {
 
 int consume_space(int source_line, Context *context, int expected_spaces) {
     Token *token = _consume_one_(source_line, context, NULL, required(is_space));
-    int spaces = token != NULL ? token->space.count : 0;
+    int spaces = token != NULL ? token->space_data.count : 0;
     if (expected_spaces >= 0 && spaces != expected_spaces) {
         WARNING(__FILE__, source_line, "(%03d,%03d) -- Consumed %d spaces where %d are expected", LOCATION(context), spaces, expected_spaces);
     }
@@ -219,8 +219,7 @@ Expression *parse_expression(Context *context);
 Expression *expression__create_literal(Token *value) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_LITERAL;
-    self->location.line = value->line;
-    self->location.column = value->column;
+    self->location = value->location;
     self->literal_data.value = value;
     return self;
 }
@@ -228,8 +227,7 @@ Expression *expression__create_literal(Token *value) {
 Expression *expression__create_variable(Token *name) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_VARIABLE;
-    self->location.line = name->line;
-    self->location.column = name->column;
+    self->location = name->location;
     self->variable_data.name = name;
     return self;
 }
@@ -240,11 +238,10 @@ int is_size_of_keyword(Token *token) {
 
 Type *parse_type(Context *context);
 
-Expression *expression__create_size_of(Token *frist_token, Type *type) {
+Expression *expression__create_size_of(Source_Location *location, Type *type) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_SIZE_OF;
-    self->location.line = frist_token->line;
-    self->location.column = frist_token->column;
+    self->location = location;
     self->size_of_data.type = type;
     return self;
 }
@@ -275,10 +272,10 @@ Expression *parse_primary_expression(Context *context) {
         return expression; // TODO: return group
     }
     if (matches_one(context, required(is_size_of_keyword))) {
-        Token *first_token = consume_one(context, NULL, required(is_size_of_keyword));
+        Source_Location *location = consume_one(context, NULL, required(is_size_of_keyword))->location;
         consume_space(context, 1);
         Type *type = parse_type(context);
-        return expression__create_size_of(first_token, type);
+        return expression__create_size_of(location, type);
     }
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected expression instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
 }
@@ -426,8 +423,7 @@ int is_unary_operator(Token *token) {
 Expression *expression__create_unary(Token *operator_token, Expression *expression) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION_UNARY;
-    self->location.line = operator_token->line;
-    self->location.column = operator_token->column;
+    self->location = operator_token->location;
     self->unary_data.operator_token = operator_token;
     self->unary_data.expression = expression;
     return self;
@@ -672,48 +668,43 @@ int is_pointer_operator(Token *token) {
     return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
 }
 
-static Type *type__create_array(Token *first_token, Type *item_type) {
+static Type *type__create_array(Source_Location *location, Type *item_type) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_ARRAY;
-    self->location.line = first_token->line;
-    self->location.column = first_token->column;
+    self->location = location;
     self->array_data.item_type = item_type;
     return self;
 }
 
-static Type *type__create_function(Token *first_token, Type *return_type, List *parameters) {
+Type *type__create_function(Source_Location *location, Type *return_type, List *parameters) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_FUNCTION;
-    self->location.line = first_token->line;
-    self->location.column = first_token->column;
+    self->location = location;
     self->function_data.parameters = parameters;
     self->function_data.return_type = return_type;
     return self;
 }
 
-Type *type__create_tuple(Token *first_token, List *members) {
+Type *type__create_tuple(Source_Location *location, List *members) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_TUPLE;
-    self->location.line = first_token->line;
-    self->location.column = first_token->column;
+    self->location = location;
     self->tuple_data.members = members;
     return self;
 }
 
-Type *type__create_simple(Token *first_token, Token *name) {
+Type *type__create_simple(Source_Location *location, Token *name) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_SIMPLE;
-    self->location.line = first_token->line;
-    self->location.column = first_token->column;
+    self->location = location;
     self->simple_data.name = name;
     return self;
 }
 
-static Type *type__create_pointer(Token *first_token, Type *type) {
+Type *type__create_pointer(Source_Location *location, Type *type) {
     Type *self = malloc(sizeof(Type));
     self->kind = TYPE_POINTER;
-    self->location.line = first_token->line;
-    self->location.column = first_token->column;
+    self->location = location;
     self->pointer_data.type = type;
     return self;
 }
@@ -725,21 +716,21 @@ static Type *type__create_pointer(Token *first_token, Type *type) {
 //      | "(" comma_separated_members? ")" ("->" type)?
 Type *parse_type(Context *context) {
     if (matches_one(context, required(is_pointer_operator))) {
-        Token *first_token = consume_one(context, NULL, required(is_pointer_operator));
+        Source_Location *location = consume_one(context, NULL, required(is_pointer_operator))->location;
         consume_space(context, 0);
-        return type__create_pointer(first_token, parse_type(context));
+        return type__create_pointer(location, parse_type(context));
     }
     if (matches_one(context, required(is_open_bracket))) {
-        Token *first_token = consume_one(context, NULL, required(is_open_bracket));
+        Source_Location *location = consume_one(context, NULL, required(is_open_bracket))->location;
         consume_space(context, 0);
         Type *item_type = parse_type(context);
         consume_space(context, 0);
         consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
-        return type__create_array(first_token, item_type);
+        return type__create_array(location, item_type);
     }
     if (matches_one(context, required(is_open_paren))) {
-        Token *first_token = consume_one(context, NULL, required(is_open_paren));
+        Source_Location *location = consume_one(context, NULL, required(is_open_paren))->location;
         consume_space(context, 0);
         List *members = NULL;
         if (consume_one(context, NULL, required(is_close_paren)) == NULL) {
@@ -751,13 +742,13 @@ Type *parse_type(Context *context) {
             consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
             consume_space(context, 1);
             Type *return_type = parse_type(context);
-            return type__create_function(first_token, return_type, members);
+            return type__create_function(location, return_type, members);
         } else {
-            return type__create_tuple(first_token, members);
+            return type__create_tuple(location, members);
         }
     }
     Token *name = consume_one(context, "type name", required(is_identifier));
-    return type__create_simple(name, name);
+    return type__create_simple(name->location, name);
 }
 
 int is_comment(Token *token) {
@@ -794,16 +785,15 @@ int is_struct_keyword(Token *token) {
     return is_keyword(token, "struct");
 }
 
-static Statement *statement__create(int kind, int location_line, int location_column) {
+static Statement *statement__create(int kind, Source_Location *location) {
     Statement *self = malloc(sizeof(Statement));
     self->kind = kind;
-    self->location.line = location_line;
-    self->location.column = location_column;
+    self->location = location;
     return self;
 }
 
-Statement *statement__create_struct(int location_line, int location_column, Token *name, Token *base, List *members) {
-    Statement *self = statement__create(STATEMENT_STRUCT, location_line, location_column);
+Statement *statement__create_struct(Source_Location *location, Token *name, Token *base, List *members) {
+    Statement *self = statement__create(STATEMENT_STRUCT, location);
     self->struct_data.name = name;
     self->struct_data.base = base;
     self->struct_data.members = members;
@@ -814,9 +804,9 @@ Statement *statement__create_struct(int location_line, int location_column, Toke
 // struct
 //      : "struct" ("{" EOL (member EOL)* "}")? EOL
 Statement *parse_struct(Context *context, Token *name) {
-    Token *token = consume_one(context, "struct", required(is_struct_keyword));
+    Source_Location *location = consume_one(context, "struct", required(is_struct_keyword))->location;
     if (consume_end_of_line(context, FALSE) == TRUE) {
-        return statement__create_struct(token->line, token->column, name, NULL, NULL);
+        return statement__create_struct(location, name, NULL, NULL);
     }
     consume_space(context, 1);
     Token *base = NULL;
@@ -836,7 +826,7 @@ Statement *parse_struct(Context *context, Token *name) {
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_struct(token->line, token->column, name, base, members);
+    return statement__create_struct(location, name, base, members);
 }
 
 Statement *parse_statement(Context *context);
@@ -853,8 +843,8 @@ List *parse_statements(Context *context) {
     return statements;
 }
 
-Statement *statement__create_function(int location_line, int location_column, Token *name, Type *return_type, List *parameters, List *statements) {
-    Statement *self = statement__create(STATEMENT_FUNCTION, location_line, location_column);
+Statement *statement__create_function(Source_Location *location, Token *name, Type *return_type, List *parameters, List *statements) {
+    Statement *self = statement__create(STATEMENT_FUNCTION, location);
     self->function_data.name = name;
     self->function_data.return_type = return_type;
     self->function_data.parameters = parameters;
@@ -866,7 +856,7 @@ Statement *statement__create_function(int location_line, int location_column, To
 // function
 //      : "(" comma_separated_members? ")" "->" type ("{" EOL statement* "}")? EOL
 Statement *parse_function(Context *context, Token *name) {
-    Token *token = consume_one(context, "(", required(is_open_paren));
+    Source_Location *location = consume_one(context, "(", required(is_open_paren))->location;
     consume_space(context, 0);
     List *parameters = NULL;
     if (consume_one(context, NULL, required(is_close_paren)) == NULL) {
@@ -880,7 +870,7 @@ Statement *parse_function(Context *context, Token *name) {
     consume_space(context, 1);
     Type *return_type = parse_type(context);
     if (consume_end_of_line(context, FALSE) == TRUE) {
-        return statement__create_function(token->line, token->column, name, return_type, parameters, NULL);
+        return statement__create_function(location, name, return_type, parameters, NULL);
     } else {
         consume_space(context, 1);
     }
@@ -892,11 +882,11 @@ Statement *parse_function(Context *context, Token *name) {
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_function(token->line, token->column, name, return_type, parameters, statements);
+    return statement__create_function(location, name, return_type, parameters, statements);
 }
 
-Statement *statement__create_block(int location_line, int location_column, List *statements) {
-    Statement *self = statement__create(STATEMENT_BLOCK, location_line, location_column);
+Statement *statement__create_block(Source_Location *location, List *statements) {
+    Statement *self = statement__create(STATEMENT_BLOCK, location);
     self->block_data.statements = statements;
     return self;
 }
@@ -904,7 +894,7 @@ Statement *statement__create_block(int location_line, int location_column, List 
 // block
 //      : "{" EOL statement* "}" EOL
 Statement *parse_block_statement(Context *context, int inlined) {
-    Token *token = consume_one(context, "{", required(is_open_brace));
+    Source_Location *location = consume_one(context, "{", required(is_open_brace))->location;
     consume_end_of_line(context, TRUE);
     context->alignment += 1;
     List *statements = parse_statements(context);
@@ -914,7 +904,7 @@ Statement *parse_block_statement(Context *context, int inlined) {
     if (!inlined) {
         consume_end_of_line(context, TRUE);
     }
-    return statement__create_block(token->line, token->column, statements);
+    return statement__create_block(location, statements);
 }
 
 int is_if_keyword(Token *token) {
@@ -925,8 +915,8 @@ int is_else_keyword(Token *token) {
     return is_keyword(token, "else");
 }
 
-Statement *statement__create_if(int location_line, int location_column, Expression *condition, Statement *true_block, Statement *false_block) {
-    Statement *self = statement__create(STATEMENT_IF, location_line, location_column);
+Statement *statement__create_if(Source_Location *location, Expression *condition, Statement *true_block, Statement *false_block) {
+    Statement *self = statement__create(STATEMENT_IF, location);
     self->if_data.condition = condition;
     self->if_data.true_block = true_block;
     self->if_data.false_block = false_block;
@@ -936,7 +926,7 @@ Statement *statement__create_if(int location_line, int location_column, Expressi
 // return
 //      : "if" "(" expression ")" block ("else" block)? EOL
 Statement *parse_if_statement(Context *context) {
-    Token *token = consume_one(context, "if", required(is_if_keyword));
+    Source_Location *location = consume_one(context, "if", required(is_if_keyword))->location;
     consume_space(context, 1);
     consume_one(context, "(", required(is_open_paren));
     consume_space(context, 0);
@@ -953,15 +943,15 @@ Statement *parse_if_statement(Context *context) {
         false_block = parse_block_statement(context, TRUE);
     }
     consume_end_of_line(context, TRUE);
-    return statement__create_if(token->line, token->column, condition, true_block, false_block);
+    return statement__create_if(location, condition, true_block, false_block);
 }
 
 int is_loop_keyword(Token *token) {
     return is_keyword(token, "loop");
 }
 
-Statement *statement__create_loop(int location_line, int location_column, Statement *block) {
-    Statement *self = statement__create(STATEMENT_LOOP, location_line, location_column);
+Statement *statement__create_loop(Source_Location *location, Statement *block) {
+    Statement *self = statement__create(STATEMENT_LOOP, location);
     self->loop_data.block = block;
     return self;
 }
@@ -969,53 +959,53 @@ Statement *statement__create_loop(int location_line, int location_column, Statem
 // loop
 //      : "loop" block EOL
 Statement *parse_loop_statement(Context *context) {
-    Token *token = consume_one(context, "loop", required(is_loop_keyword));
+    Source_Location *location = consume_one(context, "loop", required(is_loop_keyword))->location;
     consume_space(context, 1);
     Statement *block = parse_block_statement(context, TRUE);
     consume_end_of_line(context, TRUE);
-    return statement__create_loop(token->line, token->column, block);
+    return statement__create_loop(location, block);
 }
 
 int is_break_keyword(Token *token) {
     return is_keyword(token, "break");
 }
 
-Statement *statement__create_break(int location_line, int location_column) {
-    Statement *self = statement__create(STATEMENT_BREAK, location_line, location_column);
+Statement *statement__create_break(Source_Location *location) {
+    Statement *self = statement__create(STATEMENT_BREAK, location);
     return self;
 }
 
 // break
 //      : "break" EOL
 Statement *parse_break_statement(Context *context) {
-    Token *token = consume_one(context, "break", required(is_break_keyword));
+    Source_Location *location = consume_one(context, "break", required(is_break_keyword))->location;
     consume_end_of_line(context, TRUE);
-    return statement__create_break(token->line, token->column);
+    return statement__create_break(location);
 }
 
 int is_skip_keyword(Token *token) {
     return is_keyword(token, "skip");
 }
 
-Statement *statement__create_skip(int location_line, int location_column) {
-    Statement *self = statement__create(STATEMENT_SKIP, location_line, location_column);
+Statement *statement__create_skip(Source_Location *location) {
+    Statement *self = statement__create(STATEMENT_SKIP, location);
     return self;
 }
 
 // skip
 //      : "skip" EOL
 Statement *parse_skip_statement(Context *context) {
-    Token *token = consume_one(context, "skip", required(is_skip_keyword));
+    Source_Location *location = consume_one(context, "skip", required(is_skip_keyword))->location;
     consume_end_of_line(context, TRUE);
-    return statement__create_skip(token->line, token->column);
+    return statement__create_skip(location);
 }
 
 int is_return_keyword(Token *token) {
     return is_keyword(token, "return");
 }
 
-Statement *statement__create_return(int location_line, int location_column, Expression *expression) {
-    Statement *self = statement__create(STATEMENT_RETURN, location_line, location_column);
+Statement *statement__create_return(Source_Location *location, Expression *expression) {
+    Statement *self = statement__create(STATEMENT_RETURN, location);
     self->return_data.expression = expression;
     return self;
 }
@@ -1023,28 +1013,28 @@ Statement *statement__create_return(int location_line, int location_column, Expr
 // return
 //      : "return" expression? EOL
 Statement *parse_return_statement(Context *context) {
-    Token *token = consume_one(context, "return", required(is_return_keyword));
+    Source_Location *location = consume_one(context, "return", required(is_return_keyword))->location;
     if (consume_end_of_line(context, FALSE)) {
-        return statement__create_return(token->line, token->column, NULL);
+        return statement__create_return(location, NULL);
     }
     consume_space(context, 1);
     Expression *expression = parse_expression(context);
     consume_end_of_line(context, TRUE);
-    return statement__create_return(token->line, token->column, expression);
+    return statement__create_return(location, expression);
 }
 
 int is_assign_variant(Token *token) {
     return is_addition_operator(token) || is_multiplication_operator(token);
 }
 
-Statement *statement__create_expression(int location_line, int location_column, Expression *expression) {
-    Statement *self = statement__create(STATEMENT_EXPRESSION, location_line, location_column);
+Statement *statement__create_expression(Source_Location *location, Expression *expression) {
+    Statement *self = statement__create(STATEMENT_EXPRESSION, location);
     self->expression_data.expression = expression;
     return self;
 }
 
-Statement *statement__create_variable(int location_line, int location_column, Token *name, Type *type, Expression *value, int is_external) {
-    Statement *self = statement__create(STATEMENT_VARIABLE, location_line, location_column);
+Statement *statement__create_variable(Source_Location *location, Token *name, Type *type, Expression *value, int is_external) {
+    Statement *self = statement__create(STATEMENT_VARIABLE, location);
     self->variable_data.name = name;
     self->variable_data.type = type;
     self->variable_data.value = value;
@@ -1052,8 +1042,8 @@ Statement *statement__create_variable(int location_line, int location_column, To
     return self;
 }
 
-Statement *statement__create_assignment(int location_line, int location_column, Expression *destination, Token *operator_token, Expression *value) {
-    Statement *self = statement__create(STATEMENT_ASSIGNMENT, location_line, location_column);
+Statement *statement__create_assignment(Source_Location *location, Expression *destination, Token *operator_token, Expression *value) {
+    Statement *self = statement__create(STATEMENT_ASSIGNMENT, location);
     self->assignment_data.destination = destination;
     self->assignment_data.operator_token = operator_token;
     self->assignment_data.value = value;
@@ -1109,7 +1099,7 @@ Statement *parse_statement(Context *context) {
 
     Expression *expression = parse_expression(context);
     if (consume_end_of_line(context, FALSE)) {
-        return statement__create_expression(expression->location.line, expression->location.column, expression);
+        return statement__create_expression(expression->location, expression);
     }
 
     if (matches_three(context, optional(is_space), required(is_colon), required(is_colon))) {
@@ -1118,12 +1108,12 @@ Statement *parse_statement(Context *context) {
         consume_space(context, 1);
         if (matches_one(context, required(is_struct_keyword))) {
             if (expression->kind != EXPRESSION_VARIABLE) {
-                PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as struct name", expression->location.line, expression->location.column);
+                PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as struct name", expression->location->line, expression->location->column);
             }
             return parse_struct(context, expression->variable_data.name);
         }
         if (expression->kind != EXPRESSION_VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as function name", expression->location.line, expression->location.column);
+            PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as function name", expression->location->line, expression->location->column);
         }
         return parse_function(context, expression->variable_data.name);
     }
@@ -1136,25 +1126,25 @@ Statement *parse_statement(Context *context) {
             consume_space(context, 1);
             Expression *value = parse_expression(context);
             consume_end_of_line(context, TRUE);
-            return statement__create_variable(variable_name->line, variable_name->column, variable_name, NULL, value, FALSE);
+            return statement__create_variable(variable_name->location, variable_name, NULL, value, FALSE);
         }
         consume_space(context, 0);
         consume_one(context, NULL, required(is_colon));
         consume_space(context, 1);
         Type *type = parse_type(context);
         if (consume_end_of_line(context, FALSE)) {
-            return statement__create_variable(variable_name->line, variable_name->column, variable_name, type, NULL, FALSE);
+            return statement__create_variable(variable_name->location, variable_name, type, NULL, FALSE);
         }
         consume_space(context, 1);
         consume_one(context, NULL, required(is_assign_operator));
         consume_space(context, 1);
         if (consume_one(context, NULL, required(is_external_keyword)) != NULL) {
             consume_end_of_line(context, TRUE);
-            return statement__create_variable(variable_name->line, variable_name->column, variable_name, type, NULL, TRUE);
+            return statement__create_variable(variable_name->location, variable_name, type, NULL, TRUE);
         }
         Expression *value = parse_expression(context);
         consume_end_of_line(context, TRUE);
-        return statement__create_variable(variable_name->line, variable_name->column, variable_name, type, value, FALSE);
+        return statement__create_variable(variable_name->location, variable_name, type, value, FALSE);
     }
 
     if (matches_three(context, optional(is_space), optional(is_assign_variant), required(is_assign_operator))) {
@@ -1169,7 +1159,7 @@ Statement *parse_statement(Context *context) {
         consume_space(context, 1);
         Expression *value = parse_expression(context);
         consume_end_of_line(context, TRUE);
-        return statement__create_assignment(expression->location.line, expression->location.column, expression, operator_token, value);
+        return statement__create_assignment(expression->location, expression, operator_token, value);
     }
 
     consume_space(context, 0);

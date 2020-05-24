@@ -1,6 +1,7 @@
 #ifndef __recode__token_h__
 #define __recode__token_h__
 
+#include "Source.h"
 #include "String.h"
 
 typedef struct Token {
@@ -18,37 +19,36 @@ typedef struct Token {
         TOKEN_STRING,
     } kind;
 
+    Source_Location *location;
     String *lexeme;
-    int line;
-    int column;
 
     union {
         struct {
             char value;
-        } character;
+        } character_data;
         struct {
             int value;
-        } integer;
+        } integer_data;
         struct {
             int count;
-        } space;
+        } space_data;
         struct {
             String *value;
-        } string;
+        } string_data;
     };
 } Token;
 
-Token *token__create_character(String *lexeme, int line, int column, char value);
-Token *token__create_comment(String *lexeme, int line, int column);
-Token *token__create_end_of_file(String *lexeme, int line, int column);
-Token *token__create_end_of_line(String *lexeme, int line, int column);
-Token *token__create_error(String *lexeme, int line, int column);
-Token *token__create_identifier(String *lexeme, int line, int column);
-Token *token__create_integer(String *lexeme, int line, int column, int value);
-Token *token__create_keyword(String *lexeme, int line, int column);
-Token *token__create_other(String *lexeme, int line, int column);
-Token *token__create_space(String *lexeme, int line, int column, int count);
-Token *token__create_string(String *lexeme, int line, int column, String *value);
+Token *token__create_character(Source_Location *location, String *lexeme, char value);
+Token *token__create_comment(Source_Location *location, String *lexeme);
+Token *token__create_end_of_file(Source_Location *location, String *lexeme);
+Token *token__create_end_of_line(Source_Location *location, String *lexeme);
+Token *token__create_error(Source_Location *location, String *lexeme);
+Token *token__create_identifier(Source_Location *location, String *lexeme);
+Token *token__create_integer(Source_Location *location, String *lexeme, int value);
+Token *token__create_keyword(Source_Location *location, String *lexeme);
+Token *token__create_other(Source_Location *location, String *lexeme);
+Token *token__create_space(Source_Location *location, String *lexeme, int count);
+Token *token__create_string(Source_Location *location, String *lexeme, String *value);
 
 char *token__get_kind_name(Token *self);
 void token__join(Token *self, Token *other);

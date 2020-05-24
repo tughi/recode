@@ -39,3 +39,11 @@ char source__advance(Source *self, int (*accepts)(unsigned char)) {
     }
     return 0;
 }
+
+Source_Location *source_location__create(Source *source) {
+    Source_Location *self = malloc(sizeof(Source_Location));
+    self->source = source;
+    self->line = source->line;
+    self->column = source->column;
+    return self;
+}
