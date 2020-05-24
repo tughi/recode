@@ -1,14 +1,13 @@
-result: Int
-
 main :: () -> Int {
+    result: Int
     result = 9
 
     loop {
-        if (result == 1) {
+        if (result == 0) {
             break
         }
         result = result / 3
     }
 
-    return 0
+    return result
 }
