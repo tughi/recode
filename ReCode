@@ -7,8 +7,9 @@ import sys
 from collections import OrderedDict
 
 
-def execute(command):
-    print(command)
+def execute(command, echo=True):
+    if echo:
+        print(command)
     return_code = subprocess.call(command.split(' '))
     if return_code != 0:
         exit(return_code)
@@ -83,7 +84,7 @@ def run():
     build()
 
     os.chdir('build')
-    execute('rm -f test_*')
+    execute('rm -f test_*', echo=False)
     os.chdir('..')
 
     os.chdir('build')
@@ -92,8 +93,9 @@ def run():
     test_files.sort()
     for test_file in test_files:
         test = test_file[:-5]
-        execute(f'''./ReCode {os.path.join(test_dir, test_file)} {test}.s''')
-        execute(f'''clang -o {test} {test}.s''')
+        print(f"Checking {test}")
+        execute(f'''./ReCode {os.path.join(test_dir, test_file)} {test}.s''', echo=False)
+        execute(f'''clang -o {test} {test}.s''', echo=False)
         try:
             with open(f'{os.path.join(test_dir, test)}.exit') as file:
                 for line in file:
@@ -102,10 +104,8 @@ def run():
         except FileNotFoundError:
             expected_exit = 0
         test_exit = subprocess.call([f'./{test}'])
-        if test_exit == expected_exit:
-            print(f"{test}: SUCCESS")
-        else:
-            print(f"{test}: FAILURE")
+        if test_exit != expected_exit:
+            print(f'ERROR: exited with {test_exit} instead of {expected_exit}')
 
 
 TASKS = OrderedDict(
