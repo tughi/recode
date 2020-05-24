@@ -610,11 +610,11 @@ Type *type__create_function(Source_Location *location, Type *return_type, List *
     return self;
 }
 
-Type *type__create_simple(Source_Location *location, Token *name) {
+Type *type__create_named(Source_Location *location, Token *name) {
     Type *self = malloc(sizeof(Type));
-    self->kind = TYPE_SIMPLE;
+    self->kind = TYPE_NAMED;
     self->location = location;
-    self->simple_data.name = name;
+    self->named_data.name = name;
     return self;
 }
 
@@ -661,7 +661,7 @@ Type *parse_type(Context *context) {
         return type__create_function(location, return_type, members);
     }
     Token *name = consume_one(context, "type name", required(is_identifier));
-    return type__create_simple(name->location, name);
+    return type__create_named(name->location, name);
 }
 
 int is_comment(Token *token) {

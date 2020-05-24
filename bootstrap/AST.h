@@ -22,7 +22,7 @@ typedef struct Type {
         TYPE_ARRAY,
         TYPE_FUNCTION,
         TYPE_POINTER,
-        TYPE_SIMPLE,
+        TYPE_NAMED,
     } kind;
 
     Source_Location *location;
@@ -40,10 +40,7 @@ typedef struct Type {
         } pointer_data;
         struct {
             Token *name;
-        } simple_data;
-        struct {
-            Member_List *members;
-        } tuple_data;
+        } named_data;
     };
 } Type;
 

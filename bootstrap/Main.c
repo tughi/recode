@@ -115,8 +115,8 @@ void print_type(Type *type) {
         print_type(type->pointer_data.type);
         return;
     }
-    case TYPE_SIMPLE: {
-        print_token(type->simple_data.name);
+    case TYPE_NAMED: {
+        print_token(type->named_data.name);
         return;
     }
     default:
