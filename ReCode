@@ -7,12 +7,13 @@ import sys
 from collections import OrderedDict
 
 
-def execute(command, echo=True):
+def execute(command, echo=True, exit_on_error=True):
     if echo:
         print(command)
     return_code = subprocess.call(command.split(' '))
-    if return_code != 0:
+    if return_code != 0 and exit_on_error:
         exit(return_code)
+    return return_code
 
 
 def clean():
@@ -94,18 +95,18 @@ def run():
     for test_file in test_files:
         test = test_file[:-5]
         print(f"Checking {test}")
-        execute(f'''./ReCode {os.path.join(test_dir, test_file)} {test}.s''', echo=False)
-        execute(f'''clang -o {test} {test}.s''', echo=False)
-        try:
-            with open(f'{os.path.join(test_dir, test)}.exit') as file:
-                for line in file:
-                    expected_exit = int(line)
-                    break
-        except FileNotFoundError:
-            expected_exit = 0
-        test_exit = subprocess.call([f'./{test}'])
-        if test_exit != expected_exit:
-            print(f'ERROR: exited with {test_exit} instead of {expected_exit}')
+        if execute(f'''./ReCode {os.path.join(test_dir, test_file)} {test}.s''', echo=False, exit_on_error=False) == 0:
+            if execute(f'''clang -o {test} {test}.s''', echo=False, exit_on_error=False) == 0:
+                try:
+                    with open(f'''{os.path.join(test_dir, test)}.exit''') as file:
+                        for line in file:
+                            expected_exit = int(line)
+                            break
+                except FileNotFoundError:
+                    expected_exit = 0
+                test_exit = execute(f'''./{test}''', echo=False, exit_on_error=False)
+                if test_exit != expected_exit:
+                    print(f"ERROR: exited with {test_exit} instead of {expected_exit}")
 
 
 TASKS = OrderedDict(
