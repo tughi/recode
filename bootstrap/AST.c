@@ -78,12 +78,27 @@ Named_Type *named_type__create(int kind, String *name, Source_Location *location
     return self;
 }
 
-void named_type_list__add(Named_Type_List *self, Named_Type *new_type) {
+char *named_type__get_kind_name(Named_Type *self) {
+    switch (self->kind) {
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported type kind: %d", self->kind);
+    }
+}
+
+Named_Type *named_type_list__find(Named_Type_List *self, String *name) {
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
-        Named_Type *old_type = list_iterator__next(&iterator);
-        if (string__equals(old_type->name, new_type->name->data)) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Another \"%s\" type declared already here: (%04d:%04d)", new_type->location->line, new_type->location->column, new_type->name->data, old_type->location->line, old_type->location->column);
+        Named_Type *type = list_iterator__next(&iterator);
+        if (string__equals(type->name, name->data)) {
+            return type;
         }
+    }
+    return NULL;
+}
+
+void named_type_list__add(Named_Type_List *self, Named_Type *new_type) {
+    Named_Type *old_type = named_type_list__find(self, new_type->name);
+    if (old_type != NULL) {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Another \"%s\" type declared already here: (%04d:%04d)", new_type->location->line, new_type->location->column, new_type->name->data, old_type->location->line, old_type->location->column);
     }
     list__append(self, new_type);
 }

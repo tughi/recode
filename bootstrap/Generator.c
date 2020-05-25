@@ -78,6 +78,7 @@ typedef struct Context {
     struct Context *parent_context;
     FILE *file;
     Registers *registers;
+    Named_Type_List *named_types;
     Symbol_Table *symbols;
     Counter *counter;
     Loop *loop;
@@ -86,12 +87,13 @@ typedef struct Context {
 #define emitf(line, ...) fprintf(context->file, line "\n", __VA_ARGS__)
 #define emits(line) fprintf(context->file, line "\n")
 
-static Context *context__create(FILE *file) {
+static Context *context__create(FILE *file, Named_Type_List *named_types) {
     Context *self = malloc(sizeof(Context));
     self->global_context = self;
     self->parent_context = NULL;
     self->file = file;
     self->registers = registers__create();
+    self->named_types = named_types;
     self->symbols = symbol_table__create();
     self->counter = counter__create();
     self->loop = NULL;
@@ -110,17 +112,39 @@ Symbol_Table_Item *context__find_symbol(Context *self, String *name) {
     return symbol_table__find_item(self->symbols, name);
 }
 
-void context__create_variable(Context *self, String *name) {
+void context__create_variable(Context *self, String *name, Composite_Type *type) {
     if (context__find_symbol(self, name)) {
         PANIC(__FILE__, __LINE__, "Trying to create a variable that already exists in the same context: %s", name->data);
     }
-    symbol_table__add_item(self->symbols, name);
+    symbol_table__add_item(self->symbols, name, type);
 }
 
 static Composite_Type *compute_expression_type(Context *context, Expression *expression) {
     switch (expression->kind) {
     default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %d", expression->location->line, expression->location->column, expression->kind);
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
+    }
+}
+
+static int compute_named_type_size(Context *context, Named_Type *type) {
+    switch (type->kind) {
+    case NAMED_TYPE__BOOLEAN:
+        return 1;
+    case NAMED_TYPE__INTEGER:
+        return 8;
+    default:
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, named_type__get_kind_name(type));
+    }
+}
+
+static int compute_composite_type_size(Context *context, Composite_Type *type) {
+    switch (type->kind) {
+    case COMPOSITE_TYPE__NAMED: {
+        Named_Type *named_type = named_type_list__find(context->named_types, type->named_data.name->lexeme);
+        return compute_named_type_size(context, named_type);
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, composite_type__get_kind_name(type));
     }
 }
 
@@ -133,6 +157,39 @@ static Value_Holder *emit_load_literal(Context *context, Token *token) {
     }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported token kind: %s", token__get_kind_name(token));
+    }
+}
+
+static Value_Holder *emit_load_variable(Context *context, Token *variable_name) {
+    Symbol_Table_Item *symbol = context__find_symbol(context, variable_name->lexeme);
+    if (symbol == NULL) {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
+    }
+
+    Composite_Type *variable_type = symbol->type;
+
+    if (variable_type->kind != COMPOSITE_TYPE__NAMED) {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, composite_type__get_kind_name(variable_type));
+    }
+    Named_Type *named_type = named_type_list__find(context->named_types, variable_type->named_data.name->lexeme);
+    if (named_type == NULL) {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown type: %s", variable_name->location->line, variable_name->location->line, variable_type->named_data.name->lexeme->data);
+    }
+
+    // TODO: check if variable is local or global, and load it respectively
+
+    Value_Holder *value_holder = context__acquire_register(context);
+    switch (named_type->kind) {
+    case NAMED_TYPE__BOOLEAN: {
+        emitf("  movzbq %s(%%rip), %s", variable_name->lexeme->data, value_holder->data);
+        return value_holder;
+    }
+    case NAMED_TYPE__INTEGER: {
+        emitf("  movq %s(%%rip), %s", variable_name->lexeme->data, value_holder->data);
+        return value_holder;
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported named type: %s", named_type->name->data);
     }
 }
 
@@ -202,11 +259,7 @@ Value_Holder *emit_expression(Context *context, Expression *expression) {
         return emit_load_literal(context, expression->literal_data.value);
     }
     case EXPRESSION__VARIABLE: {
-        // TODO: check if variable is declared already
-        Value_Holder *value_holder = context__acquire_register(context);
-        // TODO: check if variable is local or global, and load is respectively
-        emitf("  movq %s(%%rip), %s", expression->variable_data.name->lexeme->data, value_holder->data);
-        return value_holder;
+        return emit_load_variable(context, expression->variable_data.name);
     }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported expression kind: %s", expression__get_kind_name(expression));
@@ -315,8 +368,10 @@ void emit_statement(Context *context, Statement *statement) {
         if (statement->variable_data.is_external) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
         }
-        emitf("  .comm %s,  8, 8", variable_name->lexeme->data);
-        context__create_variable(context, variable_name->lexeme);
+        context__create_variable(context, variable_name->lexeme, statement->variable_data.type);
+        Composite_Type *variable_type = statement->variable_data.type;
+        int variable_type_size = compute_composite_type_size(context, variable_type);
+        emitf("  .comm %s,  %d, 8", variable_name->lexeme->data, variable_type_size);
         Expression *variable_value = statement->variable_data.value;
         if (variable_value) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Variables with assignment are not supported yet.", statement->location->line, statement->location->column);
@@ -329,7 +384,7 @@ void emit_statement(Context *context, Statement *statement) {
 }
 
 void generate(char *file, Compilation_Unit *compilation_unit) {
-    Context *context = context__create(fopen(file, "w"));
+    Context *context = context__create(fopen(file, "w"), compilation_unit->named_types);
 
     emits("  .text");
     emits(".LC0:");

@@ -176,6 +176,7 @@ char *statement__get_kind_name(Statement *self);
 
 typedef struct Named_Type {
     enum {
+        NAMED_TYPE__BOOLEAN,
         NAMED_TYPE__INTEGER,
         NAMED_TYPE__CUSTOM,
     } kind;
@@ -185,19 +186,18 @@ typedef struct Named_Type {
 
     union {
         struct {
-            int bits;
-        } integer_data;
-        struct {
             Statement *statement;
         } custom_data;
     };
 } Named_Type;
 
 Named_Type *named_type__create(int kind, String *name, Source_Location *location);
+char *named_type__get_kind_name(Named_Type *self);
 
 typedef List Named_Type_List;
 
 void named_type_list__add(Named_Type_List *self, Named_Type *item);
+Named_Type *named_type_list__find(Named_Type_List *self, String *name);
 
 typedef struct Compilation_Unit {
     Named_Type_List *named_types;

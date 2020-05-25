@@ -23,20 +23,10 @@ static Context *context__create(List_Iterator *tokens) {
     location->column = 0;
 
     Named_Type *integer_type = named_type__create(NAMED_TYPE__INTEGER, string__create("Int"), location);
-    integer_type->integer_data.bits = 64;
     named_type_list__add(self->named_types, integer_type);
 
-    Named_Type *boolean_type = named_type__create(NAMED_TYPE__INTEGER, string__create("Boolean"), location);
-    boolean_type->integer_data.bits = 8;
+    Named_Type *boolean_type = named_type__create(NAMED_TYPE__BOOLEAN, string__create("Boolean"), location);
     named_type_list__add(self->named_types, boolean_type);
-
-    for (int bits = 8; bits <= 64; bits *= 2) {
-        String *integer_type_name = string__create("Int");
-        string__append_int(integer_type_name, bits);
-        integer_type = named_type__create(NAMED_TYPE__INTEGER, integer_type_name, location);
-        integer_type->integer_data.bits = bits;
-        named_type_list__add(self->named_types, integer_type);
-    }
 
     return self;
 }

@@ -1,0 +1,13 @@
+main :: () -> Int {
+    test: Boolean
+    noise: Int
+
+    test = (1 > 0)
+    noise = 256
+
+    if (test == 1) {
+        return 0
+    }
+
+    return 1
+}
