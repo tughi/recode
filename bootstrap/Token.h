@@ -7,17 +7,17 @@
 
 typedef struct Token {
     enum {
-        TOKEN_CHARACTER,
-        TOKEN_COMMENT,
-        TOKEN_END_OF_FILE,
-        TOKEN_END_OF_LINE,
-        TOKEN_ERROR,
-        TOKEN_IDENTIFIER,
-        TOKEN_INTEGER,
-        TOKEN_KEYWORD,
-        TOKEN_OTHER,
-        TOKEN_SPACE,
-        TOKEN_STRING,
+        TOKEN__CHARACTER,
+        TOKEN__COMMENT,
+        TOKEN__END_OF_FILE,
+        TOKEN__END_OF_LINE,
+        TOKEN__ERROR,
+        TOKEN__IDENTIFIER,
+        TOKEN__INTEGER,
+        TOKEN__KEYWORD,
+        TOKEN__OTHER,
+        TOKEN__SPACE,
+        TOKEN__STRING,
     } kind;
 
     Source_Location *location;

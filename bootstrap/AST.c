@@ -1,15 +1,15 @@
 #include "AST.h"
 #include "Logging.h"
 
-char *type__get_kind_name(Type *self) {
+char *composite_type__get_kind_name(Composite_Type *self) {
     switch (self->kind) {
-    case TYPE_ARRAY:
+    case COMPOSITE_TYPE__ARRAY:
         return "ARRAY";
-    case TYPE_FUNCTION:
+    case COMPOSITE_TYPE__FUNCTION:
         return "FUNCTION";
-    case TYPE_POINTER:
+    case COMPOSITE_TYPE__POINTER:
         return "POINTER";
-    case TYPE_NAMED:
+    case COMPOSITE_TYPE__NAMED:
         return "NAMED";
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %d", self->kind);
@@ -18,23 +18,23 @@ char *type__get_kind_name(Type *self) {
 
 char *expression__get_kind_name(Expression *self) {
     switch (self->kind) {
-    case EXPRESSION_ARRAY_ITEM:
+    case EXPRESSION__ARRAY_ITEM:
         return "ARRAY_ITEM";
-    case EXPRESSION_BINARY:
+    case EXPRESSION__BINARY:
         return "BINARY";
-    case EXPRESSION_CALL:
+    case EXPRESSION__CALL:
         return "CALL";
-    case EXPRESSION_CAST:
+    case EXPRESSION__CAST:
         return "CAST";
-    case EXPRESSION_LITERAL:
+    case EXPRESSION__LITERAL:
         return "LITERAL";
-    case EXPRESSION_MEMBER:
+    case EXPRESSION__MEMBER:
         return "MEMBER";
-    case EXPRESSION_SIZE_OF:
+    case EXPRESSION__SIZE_OF:
         return "SIZE_OF";
-    case EXPRESSION_UNARY:
+    case EXPRESSION__UNARY:
         return "UNARY";
-    case EXPRESSION_VARIABLE:
+    case EXPRESSION__VARIABLE:
         return "VARIABLE";
     default:
         PANIC(__FILE__, __LINE__, "Unsupported statement kind: %d", self->kind);
@@ -43,29 +43,54 @@ char *expression__get_kind_name(Expression *self) {
 
 char *statement__get_kind_name(Statement *self) {
     switch (self->kind) {
-    case STATEMENT_ASSIGNMENT:
+    case STATEMENT__ASSIGNMENT:
         return "ASSIGNMENT";
-    case STATEMENT_BLOCK:
+    case STATEMENT__BLOCK:
         return "BLOCK";
-    case STATEMENT_BREAK:
+    case STATEMENT__BREAK:
         return "BREAK";
-    case STATEMENT_EXPRESSION:
+    case STATEMENT__EXPRESSION:
         return "EXPRESSION";
-    case STATEMENT_FUNCTION:
+    case STATEMENT__FUNCTION:
         return "FUNCTION";
-    case STATEMENT_IF:
+    case STATEMENT__IF:
         return "IF";
-    case STATEMENT_LOOP:
+    case STATEMENT__LOOP:
         return "LOOP";
-    case STATEMENT_RETURN:
+    case STATEMENT__RETURN:
         return "RETURN";
-    case STATEMENT_SKIP:
+    case STATEMENT__SKIP:
         return "SKIP";
-    case STATEMENT_STRUCT:
+    case STATEMENT__STRUCT:
         return "STRUCT";
-    case STATEMENT_VARIABLE:
+    case STATEMENT__VARIABLE:
         return "VARIABLE";
     default:
         PANIC(__FILE__, __LINE__, "Unsupported statement kind: %d", self->kind);
     }
+}
+
+Named_Type *named_type__create(int kind, String *name, Source_Location *location) {
+    Named_Type *self = malloc(sizeof(Named_Type));
+    self->kind = kind;
+    self->name = name;
+    self->location = location;
+    return self;
+}
+
+void named_type_list__add(Named_Type_List *self, Named_Type *new_type) {
+    for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
+        Named_Type *old_type = list_iterator__next(&iterator);
+        if (string__equals(old_type->name, new_type->name->data)) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Another \"%s\" type declared already here: (%04d:%04d)", new_type->location->line, new_type->location->column, new_type->name->data, old_type->location->line, old_type->location->column);
+        }
+    }
+    list__append(self, new_type);
+}
+
+Compilation_Unit *compilation_unit__create(Named_Type_List *named_types, Statement_List *statements) {
+    Compilation_Unit *self = malloc(sizeof(Compilation_Unit));
+    self->named_types = named_types;
+    self->statements = statements;
+    return self;
 }

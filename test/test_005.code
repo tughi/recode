@@ -1,0 +1,6 @@
+Empty :: struct {
+}
+
+main :: () -> Int {
+    return 0
+}

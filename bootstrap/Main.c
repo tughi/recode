@@ -29,37 +29,37 @@ void print_token(Token *token) {
     }
 
     switch (token->kind) {
-    case TOKEN_CHARACTER:
+    case TOKEN__CHARACTER:
         printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_COMMENT:
+    case TOKEN__COMMENT:
         printf("%s%s%s", SGR_DEFAULT, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_END_OF_FILE:
+    case TOKEN__END_OF_FILE:
         printf("%s%s%s\n", SGR_BLACK, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_END_OF_LINE:
+    case TOKEN__END_OF_LINE:
         printf("%s%s%s", SGR_BLACK, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_ERROR:
+    case TOKEN__ERROR:
         printf("%s%s%s", SGR_ERROR, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_IDENTIFIER:
+    case TOKEN__IDENTIFIER:
         printf("%s%s%s", token->lexeme->data[0] <= 'Z' ? SGR_FAINT_YELLOW : SGR_RESET, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_INTEGER:
+    case TOKEN__INTEGER:
         printf("%s%s%s", SGR_CYAN, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_KEYWORD:
+    case TOKEN__KEYWORD:
         printf("%s%s%s", SGR_YELLOW, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_OTHER:
+    case TOKEN__OTHER:
         printf("%s%s%s", SGR_WHITE_BOLD, token->lexeme->data, SGR_RESET);
         return;
-    case TOKEN_SPACE:
+    case TOKEN__SPACE:
         printf("%s%s", SGR_RESET, token->lexeme->data);
         return;
-    case TOKEN_STRING:
+    case TOKEN__STRING:
         printf("%s%s%s", SGR_GREEN, token->lexeme->data, SGR_RESET);
         return;
     default:
@@ -82,45 +82,45 @@ void dump_tokens(Token_List *tokens) {
     }
 }
 
-void print_type(Type *type) {
+void print_composite_type(Composite_Type *type) {
     if (type == NULL) {
         printf("%sType::NULL%s", SGR_ERROR, SGR_RESET);
         return;
     }
 
     switch (type->kind) {
-    case TYPE_ARRAY: {
+    case COMPOSITE_TYPE__ARRAY: {
         printf("%s[", SGR_WHITE_BOLD);
-        print_type(type->array_data.item_type);
+        print_composite_type(type->array_data.item_type);
         printf("%s]", SGR_WHITE_BOLD);
         return;
     }
-    case TYPE_FUNCTION: {
+    case COMPOSITE_TYPE__FUNCTION: {
         printf("%s(", SGR_WHITE_BOLD);
         for (List_Iterator parameters = list__create_iterator(type->function_data.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
             print_token(parameter->name);
             printf("%s: ", SGR_WHITE_BOLD);
-            print_type(parameter->type);
+            print_composite_type(parameter->type);
             if (list_iterator__has_next(&parameters)) {
                 printf("%s, ", SGR_WHITE_BOLD);
             }
         }
         printf("%s) -> ", SGR_WHITE_BOLD);
-        print_type(type->function_data.return_type);
+        print_composite_type(type->function_data.return_type);
         return;
     }
-    case TYPE_POINTER: {
+    case COMPOSITE_TYPE__POINTER: {
         printf("%s@", SGR_WHITE_BOLD);
-        print_type(type->pointer_data.type);
+        print_composite_type(type->pointer_data.type);
         return;
     }
-    case TYPE_NAMED: {
+    case COMPOSITE_TYPE__NAMED: {
         print_token(type->named_data.name);
         return;
     }
     default:
-        printf("%sType::%s%s", SGR_ERROR, type__get_kind_name(type), SGR_RESET);
+        printf("%sType::%s%s", SGR_ERROR, composite_type__get_kind_name(type), SGR_RESET);
         return;
     }
 }
@@ -132,13 +132,13 @@ void print_expression(Expression *expression) {
     }
 
     switch (expression->kind) {
-    case EXPRESSION_ARRAY_ITEM:
+    case EXPRESSION__ARRAY_ITEM:
         print_expression(expression->array_item_data.array);
         printf("[");
         print_expression(expression->array_item_data.index);
         printf("]");
         return;
-    case EXPRESSION_BINARY: {
+    case EXPRESSION__BINARY: {
         printf("%s(", SGR_BLACK);
         print_expression(expression->binary_data.left_expression);
         printf(" ");
@@ -148,7 +148,7 @@ void print_expression(Expression *expression) {
         printf("%s)%s", SGR_BLACK, SGR_RESET);
         return;
     }
-    case EXPRESSION_CALL: {
+    case EXPRESSION__CALL: {
         print_expression(expression->call_data.callee);
         printf("%s(", SGR_WHITE_BOLD);
         for (List_Iterator arguments = list__create_iterator(expression->call_data.arguments); list_iterator__has_next(&arguments);) {
@@ -165,34 +165,34 @@ void print_expression(Expression *expression) {
         printf("%s)%s", SGR_WHITE_BOLD, SGR_RESET);
         return;
     }
-    case EXPRESSION_CAST: {
+    case EXPRESSION__CAST: {
         printf("%s(", SGR_BLACK);
         print_expression(expression->cast_data.expression);
         printf("%s as ", SGR_YELLOW);
-        print_type(expression->cast_data.type);
+        print_composite_type(expression->cast_data.type);
         printf("%s)%s", SGR_BLACK, SGR_RESET);
         return;
     }
-    case EXPRESSION_LITERAL:
+    case EXPRESSION__LITERAL:
         print_token(expression->literal_data.value);
         return;
-    case EXPRESSION_MEMBER:
+    case EXPRESSION__MEMBER:
         print_expression(expression->member_data.object);
         printf(".");
         print_token(expression->member_data.name);
         return;
-    case EXPRESSION_SIZE_OF: {
+    case EXPRESSION__SIZE_OF: {
         printf("%ssize_of ", SGR_YELLOW);
-        print_type(expression->size_of_data.type);
+        print_composite_type(expression->size_of_data.type);
         return;
     }
-    case EXPRESSION_UNARY:
+    case EXPRESSION__UNARY:
         printf("%s(", SGR_BLACK);
         print_token(expression->unary_data.operator_token);
         print_expression(expression->unary_data.expression);
         printf("%s)%s", SGR_BLACK, SGR_RESET);
         return;
-    case EXPRESSION_VARIABLE:
+    case EXPRESSION__VARIABLE:
         print_token(expression->variable_data.name);
         return;
     default:
@@ -213,7 +213,7 @@ void print_statement(Statement *statement, int alignment) {
     }
 
     switch (statement->kind) {
-    case STATEMENT_ASSIGNMENT: {
+    case STATEMENT__ASSIGNMENT: {
         print_expression(statement->assignment_data.destination);
         printf(" ");
         print_token(statement->assignment_data.operator_token);
@@ -221,7 +221,7 @@ void print_statement(Statement *statement, int alignment) {
         print_expression(statement->assignment_data.value);
         return;
     }
-    case STATEMENT_BLOCK: {
+    case STATEMENT__BLOCK: {
         printf("%s{\n", SGR_WHITE_BOLD);
         for (List_Iterator block_statements = list__create_iterator(statement->block_data.statements); list_iterator__has_next(&block_statements);) {
             Statement *block_statement = list_iterator__next(&block_statements);
@@ -233,15 +233,15 @@ void print_statement(Statement *statement, int alignment) {
         printf("%s}", SGR_WHITE_BOLD);
         return;
     }
-    case STATEMENT_BREAK: {
+    case STATEMENT__BREAK: {
         printf("%sbreak", SGR_YELLOW);
         return;
     }
-    case STATEMENT_EXPRESSION: {
+    case STATEMENT__EXPRESSION: {
         print_expression(statement->expression_data.expression);
         return;
     }
-    case STATEMENT_IF: {
+    case STATEMENT__IF: {
         printf("%sif%s (", SGR_YELLOW, SGR_WHITE_BOLD);
         print_expression(statement->if_data.condition);
         printf("%s) ", SGR_WHITE_BOLD);
@@ -252,25 +252,25 @@ void print_statement(Statement *statement, int alignment) {
         }
         return;
     }
-    case STATEMENT_LOOP: {
+    case STATEMENT__LOOP: {
         printf("%sloop%s ", SGR_YELLOW, SGR_WHITE_BOLD);
         print_statement(statement->loop_data.block, alignment);
         return;
     }
-    case STATEMENT_FUNCTION: {
+    case STATEMENT__FUNCTION: {
         print_token(statement->function_data.name);
         printf("%s :: (", SGR_WHITE_BOLD);
         for (List_Iterator parameters = list__create_iterator(statement->function_data.parameters); list_iterator__has_next(&parameters);) {
             Parameter *parameter = list_iterator__next(&parameters);
             print_token(parameter->name);
             printf("%s: ", SGR_WHITE_BOLD);
-            print_type(parameter->type);
+            print_composite_type(parameter->type);
             if (list_iterator__has_next(&parameters)) {
                 printf("%s, ", SGR_WHITE_BOLD);
             }
         }
         printf("%s) -> ", SGR_WHITE_BOLD);
-        print_type(statement->function_data.return_type);
+        print_composite_type(statement->function_data.return_type);
         if (statement->function_data.is_declaration) {
             return;
         }
@@ -284,7 +284,7 @@ void print_statement(Statement *statement, int alignment) {
         printf("%s}", SGR_WHITE_BOLD);
         return;
     }
-    case STATEMENT_RETURN: {
+    case STATEMENT__RETURN: {
         printf("%sreturn", SGR_YELLOW);
         if (statement->return_data.expression != NULL) {
             printf(" ");
@@ -292,11 +292,11 @@ void print_statement(Statement *statement, int alignment) {
         }
         return;
     }
-    case STATEMENT_SKIP: {
+    case STATEMENT__SKIP: {
         printf("%sskip", SGR_YELLOW);
         return;
     }
-    case STATEMENT_STRUCT: {
+    case STATEMENT__STRUCT: {
         print_token(statement->struct_data.name);
         printf("%s :: %sstruct%s", SGR_WHITE_BOLD, SGR_YELLOW, SGR_RESET);
         if (statement->struct_data.is_declaration) {
@@ -312,7 +312,7 @@ void print_statement(Statement *statement, int alignment) {
             print_alignment(alignment + 1);
             print_token(member->name);
             printf("%s: ", SGR_WHITE_BOLD);
-            print_type(member->type);
+            print_composite_type(member->type);
             if (member->default_value) {
                 printf("%s = ", SGR_WHITE_BOLD);
                 print_expression(member->default_value);
@@ -323,11 +323,11 @@ void print_statement(Statement *statement, int alignment) {
         printf("%s}", SGR_WHITE_BOLD);
         return;
     }
-    case STATEMENT_VARIABLE: {
+    case STATEMENT__VARIABLE: {
         print_token(statement->variable_data.name);
         if (statement->variable_data.type != NULL) {
             printf("%s: ", SGR_WHITE_BOLD);
-            print_type(statement->variable_data.type);
+            print_composite_type(statement->variable_data.type);
             if (statement->variable_data.value == NULL && !statement->variable_data.is_external) {
                 return;
             }
@@ -354,6 +354,13 @@ void dump_statements(Statement_List *statements) {
         Statement *block_statement = list_iterator__next(&iterator);
         print_statement(block_statement, 0);
         printf("%s\n\n", SGR_RESET);
+    }
+}
+
+void dump_named_types(Named_Type_List *types) {
+    for (List_Iterator iterator = list__create_iterator(types); list_iterator__has_next(&iterator);) {
+        Named_Type *type = list_iterator__next(&iterator);
+        printf("(%04d:%04d) -- %s%s%s\n", type->location->line, type->location->column, SGR_FAINT_YELLOW, type->name->data, SGR_RESET);
     }
 }
 
@@ -404,9 +411,11 @@ int main(int argc, char *argv[]) {
 
     // dump_tokens(tokens);
 
-    Statement_List *statements = parse(tokens);
+    Compilation_Unit *compilation_unit = parse(tokens);
 
-    // dump_statements(statements);
+    // dump_statements(compilation_unit->statements);
 
-    generate(output_file, statements);
+    // dump_named_types(compilation_unit->named_types);
+
+    generate(output_file, compilation_unit);
 }

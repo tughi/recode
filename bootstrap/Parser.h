@@ -3,6 +3,6 @@
 
 #include "AST.h"
 
-Statement_List *parse(Token_List *tokens);
+Compilation_Unit *parse(Token_List *tokens);
 
 #endif

@@ -3,6 +3,6 @@
 
 #include "AST.h"
 
-void generate(char *file, Statement_List *statements);
+void generate(char *file, Compilation_Unit *compilation_unit);
 
 #endif

@@ -117,7 +117,7 @@ void context__create_variable(Context *self, String *name) {
     symbol_table__add_item(self->symbols, name);
 }
 
-static Type *compute_expression_type(Context *context, Expression *expression) {
+static Composite_Type *compute_expression_type(Context *context, Expression *expression) {
     switch (expression->kind) {
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %d", expression->location->line, expression->location->column, expression->kind);
@@ -126,7 +126,7 @@ static Type *compute_expression_type(Context *context, Expression *expression) {
 
 static Value_Holder *emit_load_literal(Context *context, Token *token) {
     switch (token->kind) {
-    case TOKEN_INTEGER: {
+    case TOKEN__INTEGER: {
         Value_Holder *value_holder = context__acquire_register(context);
         emitf("  movq $%d, %s", token->integer_data.value, value_holder->data);
         return value_holder;
@@ -149,7 +149,7 @@ Value_Holder *emit_comparison_expression(Context *context, Expression *expressio
 
 Value_Holder *emit_expression(Context *context, Expression *expression) {
     switch (expression->kind) {
-    case EXPRESSION_BINARY: {
+    case EXPRESSION__BINARY: {
         Value_Holder *left_value_holder = emit_expression(context, expression->binary_data.left_expression);
         if (string__equals(expression->binary_data.operator_token->lexeme, "+")) {
             Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
@@ -198,10 +198,10 @@ Value_Holder *emit_expression(Context *context, Expression *expression) {
             PANIC(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary_data.operator_token->lexeme->data);
         }
     }
-    case EXPRESSION_LITERAL: {
+    case EXPRESSION__LITERAL: {
         return emit_load_literal(context, expression->literal_data.value);
     }
-    case EXPRESSION_VARIABLE: {
+    case EXPRESSION__VARIABLE: {
         // TODO: check if variable is declared already
         Value_Holder *value_holder = context__acquire_register(context);
         // TODO: check if variable is local or global, and load is respectively
@@ -216,9 +216,9 @@ Value_Holder *emit_expression(Context *context, Expression *expression) {
 void emit_statement(Context *context, Statement *statement) {
     // INFO(__FILE__, __LINE__, "(%04d:%04d) -- %s", statement->location->line, statement->location->column, statement__get_kind_name(statement));
     switch (statement->kind) {
-    case STATEMENT_ASSIGNMENT: {
+    case STATEMENT__ASSIGNMENT: {
         Expression *assignment_destination = statement->assignment_data.destination;
-        if (assignment_destination->kind != EXPRESSION_VARIABLE) {
+        if (assignment_destination->kind != EXPRESSION__VARIABLE) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Assignment to non-variables are not supported yet.", statement->location->line, statement->location->column);
         }
         String *variable_name = assignment_destination->variable_data.name->lexeme;
@@ -231,7 +231,7 @@ void emit_statement(Context *context, Statement *statement) {
         context__release_register(context, value);
         return;
     }
-    case STATEMENT_BLOCK: {
+    case STATEMENT__BLOCK: {
         // TODO: create block context
         for (List_Iterator iterator = list__create_iterator(statement->block_data.statements); list_iterator__has_next(&iterator);) {
             Statement *block_statement = list_iterator__next(&iterator);
@@ -239,7 +239,7 @@ void emit_statement(Context *context, Statement *statement) {
         }
         return;
     }
-    case STATEMENT_BREAK: {
+    case STATEMENT__BREAK: {
         Loop *loop = context->loop;
         if (loop == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- This break is not inside of a loop", statement->location->line, statement->location->column);
@@ -248,7 +248,7 @@ void emit_statement(Context *context, Statement *statement) {
         loop->has_exit = 1;
         return;
     }
-    case STATEMENT_FUNCTION: {
+    case STATEMENT__FUNCTION: {
         String *function_name = statement->function_data.name->lexeme;
         emitf("  .globl %s", function_name->data);
         emitf("  .type %s, @function", function_name->data);
@@ -263,7 +263,7 @@ void emit_statement(Context *context, Statement *statement) {
 
         return;
     }
-    case STATEMENT_IF: {
+    case STATEMENT__IF: {
         int label = counter__inc(context->counter);
         emitf("if_%03d_cond:", label);
         Value_Holder *condition = emit_expression(context, statement->if_data.condition);
@@ -282,7 +282,7 @@ void emit_statement(Context *context, Statement *statement) {
         emitf("if_%03d_end:", label);
         break;
     }
-    case STATEMENT_LOOP: {
+    case STATEMENT__LOOP: {
         int label = counter__inc(context->counter);
         emitf("loop_%03d_start:", label);
         context->loop = loop__create(label, context->loop);
@@ -295,7 +295,7 @@ void emit_statement(Context *context, Statement *statement) {
         emitf("loop_%03d_end:", label);
         break;
     }
-    case STATEMENT_RETURN: {
+    case STATEMENT__RETURN: {
         if (statement->return_data.expression != NULL) {
             Value_Holder *value_holder = emit_expression(context, statement->return_data.expression);
             emitf("  movq %s, %%rax", value_holder->data);
@@ -309,7 +309,7 @@ void emit_statement(Context *context, Statement *statement) {
         emits("  ret");
         return;
     }
-    case STATEMENT_VARIABLE: {
+    case STATEMENT__VARIABLE: {
         // TODO: distiguish between global and local variables
         Token *variable_name = statement->variable_data.name;
         if (statement->variable_data.is_external) {
@@ -328,7 +328,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
 }
 
-void generate(char *file, List *statements) {
+void generate(char *file, Compilation_Unit *compilation_unit) {
     Context *context = context__create(fopen(file, "w"));
 
     emits("  .text");
@@ -349,7 +349,7 @@ void generate(char *file, List *statements) {
     emits("  ret");
     emits("");
 
-    for (List_Iterator iterator = list__create_iterator(statements); list_iterator__has_next(&iterator);) {
+    for (List_Iterator iterator = list__create_iterator(compilation_unit->statements); list_iterator__has_next(&iterator);) {
         Statement *statement = list_iterator__next(&iterator);
         emit_statement(context, statement);
         emits("");

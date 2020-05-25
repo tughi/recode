@@ -252,7 +252,7 @@ List *scan(Source *source) {
     for (;;) {
         Token *token = scan_token(source);
         list__append(tokens, token);
-        if (token->kind == TOKEN_END_OF_FILE) {
+        if (token->kind == TOKEN__END_OF_FILE) {
             return tokens;
         }
     }

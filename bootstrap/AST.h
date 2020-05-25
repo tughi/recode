@@ -4,47 +4,47 @@
 #include "List.h"
 #include "Token.h"
 
-struct Type;
+struct Composite_Type;
 struct Expression;
 
 typedef struct {
     int is_reference;
     Token *name;
-    struct Type *type;
+    struct Composite_Type *type;
     struct Expression *default_value;
 } Member, Parameter;
 
 typedef List Member_List;
 typedef List Parameter_List;
 
-typedef struct Type {
+typedef struct Composite_Type {
     enum {
-        TYPE_ARRAY,
-        TYPE_FUNCTION,
-        TYPE_POINTER,
-        TYPE_NAMED,
+        COMPOSITE_TYPE__ARRAY,
+        COMPOSITE_TYPE__FUNCTION,
+        COMPOSITE_TYPE__POINTER,
+        COMPOSITE_TYPE__NAMED,
     } kind;
 
     Source_Location *location;
 
     union {
         struct {
-            struct Type *item_type;
+            struct Composite_Type *item_type;
         } array_data;
         struct {
             Parameter_List *parameters;
-            struct Type *return_type;
+            struct Composite_Type *return_type;
         } function_data;
         struct {
-            struct Type *type;
+            struct Composite_Type *type;
         } pointer_data;
         struct {
             Token *name;
         } named_data;
     };
-} Type;
+} Composite_Type;
 
-char *type__get_kind_name(Type *self);
+char *composite_type__get_kind_name(Composite_Type *self);
 
 typedef struct Argument {
     Token *name;
@@ -55,15 +55,15 @@ typedef List Argument_List;
 
 typedef struct Expression {
     enum {
-        EXPRESSION_ARRAY_ITEM,
-        EXPRESSION_BINARY,
-        EXPRESSION_CALL,
-        EXPRESSION_CAST,
-        EXPRESSION_LITERAL,
-        EXPRESSION_MEMBER,
-        EXPRESSION_SIZE_OF,
-        EXPRESSION_UNARY,
-        EXPRESSION_VARIABLE,
+        EXPRESSION__ARRAY_ITEM,
+        EXPRESSION__BINARY,
+        EXPRESSION__CALL,
+        EXPRESSION__CAST,
+        EXPRESSION__LITERAL,
+        EXPRESSION__MEMBER,
+        EXPRESSION__SIZE_OF,
+        EXPRESSION__UNARY,
+        EXPRESSION__VARIABLE,
     } kind;
 
     Source_Location *location;
@@ -84,7 +84,7 @@ typedef struct Expression {
         } call_data;
         struct {
             struct Expression *expression;
-            Type *type;
+            Composite_Type *type;
         } cast_data;
         struct {
             Token *value;
@@ -94,7 +94,7 @@ typedef struct Expression {
             Token *name;
         } member_data;
         struct {
-            Type *type;
+            Composite_Type *type;
         } size_of_data;
         struct {
             Token *operator_token;
@@ -112,17 +112,17 @@ typedef List Statement_List;
 
 typedef struct Statement {
     enum {
-        STATEMENT_ASSIGNMENT,
-        STATEMENT_BLOCK,
-        STATEMENT_BREAK,
-        STATEMENT_EXPRESSION,
-        STATEMENT_FUNCTION,
-        STATEMENT_IF,
-        STATEMENT_LOOP,
-        STATEMENT_RETURN,
-        STATEMENT_SKIP,
-        STATEMENT_STRUCT,
-        STATEMENT_VARIABLE,
+        STATEMENT__ASSIGNMENT,
+        STATEMENT__BLOCK,
+        STATEMENT__BREAK,
+        STATEMENT__EXPRESSION,
+        STATEMENT__FUNCTION,
+        STATEMENT__IF,
+        STATEMENT__LOOP,
+        STATEMENT__RETURN,
+        STATEMENT__SKIP,
+        STATEMENT__STRUCT,
+        STATEMENT__VARIABLE,
     } kind;
 
     Source_Location *location;
@@ -141,7 +141,7 @@ typedef struct Statement {
         } expression_data;
         struct {
             Token *name;
-            Type *return_type;
+            Composite_Type *return_type;
             Parameter_List *parameters;
             Statement_List *statements;
             int is_declaration;
@@ -165,7 +165,7 @@ typedef struct Statement {
         } struct_data;
         struct {
             Token *name;
-            Type *type;
+            Composite_Type *type;
             Expression *value;
             int is_external;
         } variable_data;
@@ -173,5 +173,37 @@ typedef struct Statement {
 } Statement;
 
 char *statement__get_kind_name(Statement *self);
+
+typedef struct Named_Type {
+    enum {
+        NAMED_TYPE__INTEGER,
+        NAMED_TYPE__CUSTOM,
+    } kind;
+
+    String *name;
+    Source_Location *location;
+
+    union {
+        struct {
+            int bits;
+        } integer_data;
+        struct {
+            Statement *statement;
+        } custom_data;
+    };
+} Named_Type;
+
+Named_Type *named_type__create(int kind, String *name, Source_Location *location);
+
+typedef List Named_Type_List;
+
+void named_type_list__add(Named_Type_List *self, Named_Type *item);
+
+typedef struct Compilation_Unit {
+    Named_Type_List *named_types;
+    Statement_List *statements;
+} Compilation_Unit;
+
+Compilation_Unit *compilation_unit__create();
 
 #endif

@@ -5,9 +5,47 @@
 typedef struct Context {
     List_Iterator *tokens;
     int alignment;
+    Named_Type_List *named_types;
 } Context;
 
 #define ALIGNMENT_SIZE TAB_SIZE
+
+static Context *context__create(List_Iterator *tokens) {
+    Context *self = malloc(sizeof(Context));
+    self->tokens = tokens;
+    self->named_types = list__create();
+    self->alignment = 0;
+
+    Token *token = list_iterator__next(self->tokens);
+
+    Source_Location *location = source_location__create(token->location->source);
+    location->line = 0;
+    location->column = 0;
+
+    Named_Type *integer_type = named_type__create(NAMED_TYPE__INTEGER, string__create("Int"), location);
+    integer_type->integer_data.bits = 64;
+    named_type_list__add(self->named_types, integer_type);
+
+    Named_Type *boolean_type = named_type__create(NAMED_TYPE__INTEGER, string__create("Boolean"), location);
+    boolean_type->integer_data.bits = 8;
+    named_type_list__add(self->named_types, boolean_type);
+
+    for (int bits = 8; bits <= 64; bits *= 2) {
+        String *integer_type_name = string__create("Int");
+        string__append_int(integer_type_name, bits);
+        integer_type = named_type__create(NAMED_TYPE__INTEGER, integer_type_name, location);
+        integer_type->integer_data.bits = bits;
+        named_type_list__add(self->named_types, integer_type);
+    }
+
+    return self;
+}
+
+static void context__add_custom_type(Context *self, String *name, Statement *statement) {
+    Named_Type *named_type = named_type__create(NAMED_TYPE__CUSTOM, name, statement->location);
+    named_type->custom_data.statement = statement;
+    named_type_list__add(self->named_types, named_type);
+}
 
 typedef struct Matcher {
     int (*matches)(Token *);
@@ -107,7 +145,7 @@ Token *_consume_three_(int source_line, Context *context, const char *expected, 
 #define consume_three(context, expected, first_matcher, second_matcher, third_matcher) _consume_three_(__LINE__, context, expected, first_matcher, second_matcher, third_matcher)
 
 int is_space(Token *token) {
-    return token->kind == TOKEN_SPACE;
+    return token->kind == TOKEN__SPACE;
 }
 
 int consume_space(int source_line, Context *context, int expected_spaces) {
@@ -122,30 +160,30 @@ int consume_space(int source_line, Context *context, int expected_spaces) {
 #define consume_space(context, expected_spaces) consume_space(__LINE__, context, expected_spaces)
 
 int is_identifier(Token *token) {
-    return token->kind == TOKEN_IDENTIFIER;
+    return token->kind == TOKEN__IDENTIFIER;
 }
 
 int is_keyword(Token *token, const char *lexeme) {
-    return token->kind == TOKEN_KEYWORD && string__equals(token->lexeme, lexeme);
+    return token->kind == TOKEN__KEYWORD && string__equals(token->lexeme, lexeme);
 }
 
 int is_literal(Token *token) {
-    return token->kind == TOKEN_INTEGER || token->kind == TOKEN_STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->kind == TOKEN_CHARACTER;
+    return token->kind == TOKEN__INTEGER || token->kind == TOKEN__STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->kind == TOKEN__CHARACTER;
 }
 
 int is_open_paren(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "(");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "(");
 }
 
 int is_close_paren(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ")");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ")");
 }
 
 Expression *parse_expression(Context *context);
 
 Expression *expression__create_literal(Token *value) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_LITERAL;
+    self->kind = EXPRESSION__LITERAL;
     self->location = value->location;
     self->literal_data.value = value;
     return self;
@@ -153,7 +191,7 @@ Expression *expression__create_literal(Token *value) {
 
 Expression *expression__create_variable(Token *name) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_VARIABLE;
+    self->kind = EXPRESSION__VARIABLE;
     self->location = name->location;
     self->variable_data.name = name;
     return self;
@@ -163,11 +201,11 @@ int is_size_of_keyword(Token *token) {
     return is_keyword(token, "size_of");
 }
 
-Type *parse_type(Context *context);
+Composite_Type *parse_composite_type(Context *context);
 
-Expression *expression__create_size_of(Source_Location *location, Type *type) {
+Expression *expression__create_size_of(Source_Location *location, Composite_Type *type) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_SIZE_OF;
+    self->kind = EXPRESSION__SIZE_OF;
     self->location = location;
     self->size_of_data.type = type;
     return self;
@@ -201,14 +239,14 @@ Expression *parse_primary_expression(Context *context) {
     if (matches_one(context, required(is_size_of_keyword))) {
         Source_Location *location = consume_one(context, NULL, required(is_size_of_keyword))->location;
         consume_space(context, 1);
-        Type *type = parse_type(context);
+        Composite_Type *type = parse_composite_type(context);
         return expression__create_size_of(location, type);
     }
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected expression instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
 }
 
 int is_assign_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "=");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "=");
 }
 
 Argument *argument__create(Token *name, Expression *value) {
@@ -233,24 +271,24 @@ Argument *parse_argument(Context *context) {
 }
 
 int is_comma(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ",");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ",");
 }
 
 int is_dot(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ".");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ".");
 }
 
 int is_open_bracket(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "[");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "[");
 }
 
 int is_close_bracket(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "]");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "]");
 }
 
 Expression *expression__create_call(Expression *callee, List *arguments) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_CALL;
+    self->kind = EXPRESSION__CALL;
     self->location = callee->location;
     self->call_data.callee = callee;
     self->call_data.arguments = arguments;
@@ -259,7 +297,7 @@ Expression *expression__create_call(Expression *callee, List *arguments) {
 
 Expression *expression__create_member(Expression *object, Token *name) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_MEMBER;
+    self->kind = EXPRESSION__MEMBER;
     self->location = object->location;
     self->member_data.object = object;
     self->member_data.name = name;
@@ -268,7 +306,7 @@ Expression *expression__create_member(Expression *object, Token *name) {
 
 Expression *expression__create_array_item(Expression *array, Expression *index) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_ARRAY_ITEM;
+    self->kind = EXPRESSION__ARRAY_ITEM;
     self->location = array->location;
     self->array_item_data.array = array;
     self->array_item_data.index = index;
@@ -279,11 +317,9 @@ int is_as_keyword(Token *token) {
     return is_keyword(token, "as");
 }
 
-Type *parse_type(Context *context);
-
-Expression *expression__create_cast(Expression *expression, Type *type) {
+Expression *expression__create_cast(Expression *expression, Composite_Type *type) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_CAST;
+    self->kind = EXPRESSION__CAST;
     self->location = expression->location;
     self->cast_data.expression = expression;
     self->cast_data.type = type;
@@ -334,7 +370,7 @@ Expression *parse_call_expression(Context *context) {
             consume_space(context, 1);
             consume_one(context, NULL, required(is_as_keyword));
             consume_space(context, 1);
-            Type *type = parse_type(context);
+            Composite_Type *type = parse_composite_type(context);
             expression = expression__create_cast(expression, type);
         } else {
             break;
@@ -344,12 +380,12 @@ Expression *parse_call_expression(Context *context) {
 }
 
 int is_unary_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "-"));
+    return token->kind == TOKEN__OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "-"));
 }
 
 Expression *expression__create_unary(Token *operator_token, Expression *expression) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_UNARY;
+    self->kind = EXPRESSION__UNARY;
     self->location = operator_token->location;
     self->unary_data.operator_token = operator_token;
     self->unary_data.expression = expression;
@@ -370,16 +406,16 @@ Expression *parse_unary_expression(Context *context) {
 }
 
 int is_division_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "/");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "/");
 }
 
 int is_multiplication_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "*") || string__equals(token->lexeme, "/"));
+    return token->kind == TOKEN__OTHER && (string__equals(token->lexeme, "*") || string__equals(token->lexeme, "/"));
 }
 
 Expression *expression__create_binary(Token *operator_token, Expression *left_expression, Expression *right_expression) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION_BINARY;
+    self->kind = EXPRESSION__BINARY;
     self->location = left_expression->location;
     self->binary_data.operator_token = operator_token;
     self->binary_data.left_expression = left_expression;
@@ -408,7 +444,7 @@ Expression *parse_multiplication_expression(Context *context) {
 }
 
 int is_addition_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "+") || string__equals(token->lexeme, "-"));
+    return token->kind == TOKEN__OTHER && (string__equals(token->lexeme, "+") || string__equals(token->lexeme, "-"));
 }
 
 // addition
@@ -426,7 +462,7 @@ Expression *parse_addition_expression(Context *context) {
 }
 
 int is_comparison_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "<") || string__equals(token->lexeme, ">"));
+    return token->kind == TOKEN__OTHER && (string__equals(token->lexeme, "<") || string__equals(token->lexeme, ">"));
 }
 
 // comparison
@@ -448,7 +484,7 @@ Expression *parse_comparison_expression(Context *context) {
 }
 
 int is_equality_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "="));
+    return token->kind == TOKEN__OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "="));
 }
 
 // equality
@@ -468,7 +504,7 @@ Expression *parse_equality_expression(Context *context) {
 }
 
 int is_and_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "&");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "&");
 }
 
 // logic_and
@@ -488,7 +524,7 @@ Expression *parse_logic_and_expression(Context *context) {
 }
 
 int is_or_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "|");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "|");
 }
 
 // logic_or
@@ -514,40 +550,36 @@ Expression *parse_expression(Context *context) {
 }
 
 int is_colon(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ":");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ":");
 }
 
 int is_open_brace(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "{");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "{");
 }
 
 int is_close_brace(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "}");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "}");
 }
 
 int is_hyphen(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "-");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "-");
 }
 
 int is_close_angled_bracket(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, ">");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ">");
 }
 
-Type *parse_type(Context *context);
-
-Member *member__create(int is_reference, Token *name, Type *type, Expression *default_value) {
+Member *member__create(int is_reference, Token *name, Composite_Type *type, Expression *default_value) {
     Member *self = malloc(sizeof(Member));
     self->is_reference = is_reference;
     self->name = name;
     self->type = type;
-#ifdef ENABLE__MEMBER_DEFAULT_VALUE
     self->default_value = default_value;
-#endif
     return self;
 }
 
 int is_reference_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "@");
 }
 
 // member
@@ -564,7 +596,7 @@ Member *parse_member(Context *context) {
     consume_space(context, 0);
     consume_one(context, ":", required(is_colon));
     consume_space(context, 1);
-    Type *type = parse_type(context);
+    Composite_Type *type = parse_composite_type(context);
     Expression *default_value = NULL;
     if (matches_two(context, optional(is_space), required(is_assign_operator))) {
         consume_space(context, 1);
@@ -590,57 +622,57 @@ Member_List *parse_comma_separated_members(Context *context) {
 }
 
 int is_pointer_operator(Token *token) {
-    return token->kind == TOKEN_OTHER && string__equals(token->lexeme, "@");
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "@");
 }
 
-static Type *type__create_array(Source_Location *location, Type *item_type) {
-    Type *self = malloc(sizeof(Type));
-    self->kind = TYPE_ARRAY;
+static Composite_Type *type__create_array(Source_Location *location, Composite_Type *item_type) {
+    Composite_Type *self = malloc(sizeof(Composite_Type));
+    self->kind = COMPOSITE_TYPE__ARRAY;
     self->location = location;
     self->array_data.item_type = item_type;
     return self;
 }
 
-Type *type__create_function(Source_Location *location, Type *return_type, List *parameters) {
-    Type *self = malloc(sizeof(Type));
-    self->kind = TYPE_FUNCTION;
+Composite_Type *type__create_function(Source_Location *location, Composite_Type *return_type, List *parameters) {
+    Composite_Type *self = malloc(sizeof(Composite_Type));
+    self->kind = COMPOSITE_TYPE__FUNCTION;
     self->location = location;
     self->function_data.parameters = parameters;
     self->function_data.return_type = return_type;
     return self;
 }
 
-Type *type__create_named(Source_Location *location, Token *name) {
-    Type *self = malloc(sizeof(Type));
-    self->kind = TYPE_NAMED;
+Composite_Type *type__create_named(Source_Location *location, Token *name) {
+    Composite_Type *self = malloc(sizeof(Composite_Type));
+    self->kind = COMPOSITE_TYPE__NAMED;
     self->location = location;
     self->named_data.name = name;
     return self;
 }
 
-Type *type__create_pointer(Source_Location *location, Type *type) {
-    Type *self = malloc(sizeof(Type));
-    self->kind = TYPE_POINTER;
+Composite_Type *type__create_pointer(Source_Location *location, Composite_Type *type) {
+    Composite_Type *self = malloc(sizeof(Composite_Type));
+    self->kind = COMPOSITE_TYPE__POINTER;
     self->location = location;
     self->pointer_data.type = type;
     return self;
 }
 
-// type
-//      : "@" type
+// composite_type
+//      : "@" composite_type
 //      | IDENTIFIER
-//      | "[" type "]"
-//      | "(" comma_separated_members? ")" "->" type
-Type *parse_type(Context *context) {
+//      | "[" composite_type "]"
+//      | "(" comma_separated_members? ")" "->" composite_type
+Composite_Type *parse_composite_type(Context *context) {
     if (matches_one(context, required(is_pointer_operator))) {
         Source_Location *location = consume_one(context, NULL, required(is_pointer_operator))->location;
         consume_space(context, 0);
-        return type__create_pointer(location, parse_type(context));
+        return type__create_pointer(location, parse_composite_type(context));
     }
     if (matches_one(context, required(is_open_bracket))) {
         Source_Location *location = consume_one(context, NULL, required(is_open_bracket))->location;
         consume_space(context, 0);
-        Type *item_type = parse_type(context);
+        Composite_Type *item_type = parse_composite_type(context);
         consume_space(context, 0);
         consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
@@ -657,7 +689,7 @@ Type *parse_type(Context *context) {
         consume_space(context, 1);
         consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
         consume_space(context, 1);
-        Type *return_type = parse_type(context);
+        Composite_Type *return_type = parse_composite_type(context);
         return type__create_function(location, return_type, members);
     }
     Token *name = consume_one(context, "type name", required(is_identifier));
@@ -665,15 +697,15 @@ Type *parse_type(Context *context) {
 }
 
 int is_comment(Token *token) {
-    return token->kind == TOKEN_COMMENT;
+    return token->kind == TOKEN__COMMENT;
 }
 
 int is_end_of_line(Token *token) {
-    return token->kind == TOKEN_END_OF_LINE;
+    return token->kind == TOKEN__END_OF_LINE;
 }
 
 int is_end_of_file(Token *token) {
-    return token->kind == TOKEN_END_OF_FILE;
+    return token->kind == TOKEN__END_OF_FILE;
 }
 
 int _consume_end_of_line_(int source_line, Context *context, int required) {
@@ -706,7 +738,7 @@ static Statement *statement__create(int kind, Source_Location *location) {
 }
 
 Statement *statement__create_struct(Source_Location *location, Token *name, Token *base, List *members) {
-    Statement *self = statement__create(STATEMENT_STRUCT, location);
+    Statement *self = statement__create(STATEMENT__STRUCT, location);
     self->struct_data.name = name;
     self->struct_data.base = base;
     self->struct_data.members = members;
@@ -717,7 +749,8 @@ Statement *statement__create_struct(Source_Location *location, Token *name, Toke
 // struct
 //      : "struct" ("{" EOL (member EOL)* "}")? EOL
 Statement *parse_struct(Context *context, Token *name) {
-    Source_Location *location = consume_one(context, "struct", required(is_struct_keyword))->location;
+    Source_Location *location = name->location;
+    consume_one(context, "struct", required(is_struct_keyword));
     if (consume_end_of_line(context, FALSE) == TRUE) {
         return statement__create_struct(location, name, NULL, NULL);
     }
@@ -756,8 +789,8 @@ Statement_List *parse_statements(Context *context) {
     return statements;
 }
 
-Statement *statement__create_function(Source_Location *location, Token *name, Type *return_type, List *parameters, List *statements) {
-    Statement *self = statement__create(STATEMENT_FUNCTION, location);
+Statement *statement__create_function(Source_Location *location, Token *name, Composite_Type *return_type, List *parameters, List *statements) {
+    Statement *self = statement__create(STATEMENT__FUNCTION, location);
     self->function_data.name = name;
     self->function_data.return_type = return_type;
     self->function_data.parameters = parameters;
@@ -781,7 +814,7 @@ Statement *parse_function(Context *context, Token *name) {
     consume_space(context, 1);
     consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
     consume_space(context, 1);
-    Type *return_type = parse_type(context);
+    Composite_Type *return_type = parse_composite_type(context);
     if (consume_end_of_line(context, FALSE) == TRUE) {
         return statement__create_function(location, name, return_type, parameters, NULL);
     } else {
@@ -799,7 +832,7 @@ Statement *parse_function(Context *context, Token *name) {
 }
 
 Statement *statement__create_block(Source_Location *location, List *statements) {
-    Statement *self = statement__create(STATEMENT_BLOCK, location);
+    Statement *self = statement__create(STATEMENT__BLOCK, location);
     self->block_data.statements = statements;
     return self;
 }
@@ -829,7 +862,7 @@ int is_else_keyword(Token *token) {
 }
 
 Statement *statement__create_if(Source_Location *location, Expression *condition, Statement *true_block, Statement *false_block) {
-    Statement *self = statement__create(STATEMENT_IF, location);
+    Statement *self = statement__create(STATEMENT__IF, location);
     self->if_data.condition = condition;
     self->if_data.true_block = true_block;
     self->if_data.false_block = false_block;
@@ -864,7 +897,7 @@ int is_loop_keyword(Token *token) {
 }
 
 Statement *statement__create_loop(Source_Location *location, Statement *block) {
-    Statement *self = statement__create(STATEMENT_LOOP, location);
+    Statement *self = statement__create(STATEMENT__LOOP, location);
     self->loop_data.block = block;
     return self;
 }
@@ -884,7 +917,7 @@ int is_break_keyword(Token *token) {
 }
 
 Statement *statement__create_break(Source_Location *location) {
-    Statement *self = statement__create(STATEMENT_BREAK, location);
+    Statement *self = statement__create(STATEMENT__BREAK, location);
     return self;
 }
 
@@ -901,7 +934,7 @@ int is_skip_keyword(Token *token) {
 }
 
 Statement *statement__create_skip(Source_Location *location) {
-    Statement *self = statement__create(STATEMENT_SKIP, location);
+    Statement *self = statement__create(STATEMENT__SKIP, location);
     return self;
 }
 
@@ -918,7 +951,7 @@ int is_return_keyword(Token *token) {
 }
 
 Statement *statement__create_return(Source_Location *location, Expression *expression) {
-    Statement *self = statement__create(STATEMENT_RETURN, location);
+    Statement *self = statement__create(STATEMENT__RETURN, location);
     self->return_data.expression = expression;
     return self;
 }
@@ -941,13 +974,13 @@ int is_assign_variant(Token *token) {
 }
 
 Statement *statement__create_expression(Source_Location *location, Expression *expression) {
-    Statement *self = statement__create(STATEMENT_EXPRESSION, location);
+    Statement *self = statement__create(STATEMENT__EXPRESSION, location);
     self->expression_data.expression = expression;
     return self;
 }
 
-Statement *statement__create_variable(Source_Location *location, Token *name, Type *type, Expression *value, int is_external) {
-    Statement *self = statement__create(STATEMENT_VARIABLE, location);
+Statement *statement__create_variable(Source_Location *location, Token *name, Composite_Type *type, Expression *value, int is_external) {
+    Statement *self = statement__create(STATEMENT__VARIABLE, location);
     self->variable_data.name = name;
     self->variable_data.type = type;
     self->variable_data.value = value;
@@ -956,7 +989,7 @@ Statement *statement__create_variable(Source_Location *location, Token *name, Ty
 }
 
 Statement *statement__create_assignment(Source_Location *location, Expression *destination, Token *operator_token, Expression *value) {
-    Statement *self = statement__create(STATEMENT_ASSIGNMENT, location);
+    Statement *self = statement__create(STATEMENT__ASSIGNMENT, location);
     self->assignment_data.destination = destination;
     self->assignment_data.operator_token = operator_token;
     self->assignment_data.value = value;
@@ -1020,12 +1053,14 @@ Statement *parse_statement(Context *context) {
         consume_two(context, NULL, required(is_colon), required(is_colon));
         consume_space(context, 1);
         if (matches_one(context, required(is_struct_keyword))) {
-            if (expression->kind != EXPRESSION_VARIABLE) {
+            if (expression->kind != EXPRESSION__VARIABLE) {
                 PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as struct name", expression->location->line, expression->location->column);
             }
-            return parse_struct(context, expression->variable_data.name);
+            Statement *struct_statement = parse_struct(context, expression->variable_data.name);
+            context__add_custom_type(context, expression->variable_data.name->lexeme, struct_statement);
+            return struct_statement;
         }
-        if (expression->kind != EXPRESSION_VARIABLE) {
+        if (expression->kind != EXPRESSION__VARIABLE) {
             PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as function name", expression->location->line, expression->location->column);
         }
         return parse_function(context, expression->variable_data.name);
@@ -1044,7 +1079,7 @@ Statement *parse_statement(Context *context) {
         consume_space(context, 0);
         consume_one(context, NULL, required(is_colon));
         consume_space(context, 1);
-        Type *type = parse_type(context);
+        Composite_Type *type = parse_composite_type(context);
         if (consume_end_of_line(context, FALSE)) {
             return statement__create_variable(variable_name->location, variable_name, type, NULL, FALSE);
         }
@@ -1079,12 +1114,11 @@ Statement *parse_statement(Context *context) {
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Unxpected token: %s", LOCATION(context), CURRENT_TOKEN(context));
 }
 
-Statement_List *parse(Token_List *tokens) {
+Compilation_Unit *parse(Token_List *tokens) {
     List_Iterator tokens_iterator = list__create_iterator(tokens);
+    Context *context = context__create(&tokens_iterator);
 
-    Context *context = malloc(sizeof(Context));
-    context->tokens = &tokens_iterator;
-    list_iterator__next(context->tokens);
-    context->alignment = 0;
-    return parse_statements(context);
+    Statement_List *statements = parse_statements(context);
+
+    return compilation_unit__create(context->named_types, statements);
 }
