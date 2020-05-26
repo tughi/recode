@@ -1,3 +1,5 @@
+\ Test loop break
+
 main :: () -> Int {
     result: Int
     result = 9

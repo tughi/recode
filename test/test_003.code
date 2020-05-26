@@ -1,3 +1,5 @@
+\ Test loop with global variable
+
 result: Int
 
 main :: () -> Int {

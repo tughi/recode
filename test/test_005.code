@@ -1,6 +1,15 @@
-Empty :: struct {
-}
+\ Test mixing int and boolean expressions
 
 main :: () -> Int {
-    return 0
+    test: Boolean
+    noise: Int
+
+    test = (1 > 0)
+    noise = 256
+
+    if (test == 1) {
+        return 0
+    }
+
+    return 1
 }

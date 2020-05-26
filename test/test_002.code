@@ -1,3 +1,5 @@
+\ Test if and comparison expressions
+
 main :: () -> Int {
     if (0 == 1) {
         return 1
