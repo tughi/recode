@@ -2,7 +2,7 @@
 #include "Logging.h"
 #include "Symbol_Table.h"
 
-#define Value_Holder String
+typedef String Value_Holder;
 
 typedef struct Loop {
     int id;
@@ -78,7 +78,7 @@ typedef struct Context {
     struct Context *parent_context;
     FILE *file;
     Registers *registers;
-    Named_Type_List *named_types;
+    Named_Types *named_types;
     Symbol_Table *symbols;
     Counter *counter;
     Loop *loop;
@@ -87,7 +87,7 @@ typedef struct Context {
 #define emitf(line, ...) fprintf(context->file, line "\n", __VA_ARGS__)
 #define emits(line) fprintf(context->file, line "\n")
 
-static Context *context__create(FILE *file, Named_Type_List *named_types) {
+static Context *context__create(FILE *file, Named_Types *named_types) {
     Context *self = malloc(sizeof(Context));
     self->global_context = self;
     self->parent_context = NULL;
@@ -112,39 +112,42 @@ Symbol_Table_Item *context__find_symbol(Context *self, String *name) {
     return symbol_table__find_item(self->symbols, name);
 }
 
-void context__create_variable(Context *self, String *name, Composite_Type *type) {
+void context__create_variable(Context *self, String *name, Type *type) {
     if (context__find_symbol(self, name)) {
         PANIC(__FILE__, __LINE__, "Trying to create a variable that already exists in the same context: %s", name->data);
     }
     symbol_table__add_item(self->symbols, name, type);
 }
 
-static Composite_Type *compute_expression_type(Context *context, Expression *expression) {
-    switch (expression->kind) {
-    default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
-    }
-}
-
-static int compute_named_type_size(Context *context, Named_Type *type) {
+int context__is_primitive_type(Context *self, Type *type) {
     switch (type->kind) {
-    case NAMED_TYPE__BOOLEAN:
+    case TYPE__BOOLEAN:
+    case TYPE__INTEGER: {
         return 1;
-    case NAMED_TYPE__INTEGER:
-        return 8;
+    }
+    case TYPE__NAMED: {
+        Type *named_type = named_types__get(self->named_types, type->named_data.name->lexeme);
+        return context__is_primitive_type(self, named_type);
+    }
     default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, named_type__get_kind_name(type));
+        return 0;
     }
 }
 
-static int compute_composite_type_size(Context *context, Composite_Type *type) {
+static int context__compute_type_size(Context *self, Type *type) {
     switch (type->kind) {
-    case COMPOSITE_TYPE__NAMED: {
-        Named_Type *named_type = named_type_list__find(context->named_types, type->named_data.name->lexeme);
-        return compute_named_type_size(context, named_type);
+    case TYPE__BOOLEAN: {
+        return 1;
+    }
+    case TYPE__INTEGER: {
+        return 8;
+    }
+    case TYPE__NAMED: {
+        Type *named_type = named_types__get(self->named_types, type->named_data.name->lexeme);
+        return context__compute_type_size(self, named_type);
     }
     default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, composite_type__get_kind_name(type));
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, type__get_kind_name(type));
     }
 }
 
@@ -166,30 +169,26 @@ static Value_Holder *emit_load_variable(Context *context, Token *variable_name) 
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
     }
 
-    Composite_Type *variable_type = symbol->type;
+    Type *variable_type = symbol->type;
 
-    if (variable_type->kind != COMPOSITE_TYPE__NAMED) {
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, composite_type__get_kind_name(variable_type));
-    }
-    Named_Type *named_type = named_type_list__find(context->named_types, variable_type->named_data.name->lexeme);
-    if (named_type == NULL) {
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown type: %s", variable_name->location->line, variable_name->location->line, variable_type->named_data.name->lexeme->data);
+    if (!context__is_primitive_type(context, variable_type)) {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, type__get_kind_name(variable_type));
     }
 
     // TODO: check if variable is local or global, and load it respectively
 
     Value_Holder *value_holder = context__acquire_register(context);
-    switch (named_type->kind) {
-    case NAMED_TYPE__BOOLEAN: {
+    switch (context__compute_type_size(context, variable_type)) {
+    case 1: {
         emitf("  movzbq %s(%%rip), %s", variable_name->lexeme->data, value_holder->data);
         return value_holder;
     }
-    case NAMED_TYPE__INTEGER: {
+    case 8: {
         emitf("  movq %s(%%rip), %s", variable_name->lexeme->data, value_holder->data);
         return value_holder;
     }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported named type: %s", named_type->name->data);
+        PANIC(__FILE__, __LINE__, "Unsupported type: %s", type__get_kind_name(variable_type));
     }
 }
 
@@ -369,8 +368,8 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
         }
         context__create_variable(context, variable_name->lexeme, statement->variable_data.type);
-        Composite_Type *variable_type = statement->variable_data.type;
-        int variable_type_size = compute_composite_type_size(context, variable_type);
+        Type *variable_type = statement->variable_data.type;
+        int variable_type_size = context__compute_type_size(context, variable_type);
         emitf("  .comm %s,  %d, 8", variable_name->lexeme->data, variable_type_size);
         Expression *variable_value = statement->variable_data.value;
         if (variable_value) {

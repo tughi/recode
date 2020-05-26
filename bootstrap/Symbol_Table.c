@@ -16,14 +16,14 @@ Symbol_Table_Item *symbol_table__find_item(Symbol_Table *self, String *name) {
     return NULL;
 }
 
-static Symbol_Table_Item *symbol_table_item__create(String *name, Composite_Type *type) {
+static Symbol_Table_Item *symbol_table_item__create(String *name, Type *type) {
     Symbol_Table_Item *self = malloc(sizeof(Symbol_Table_Item));
     self->name = name;
     self->type = type;
     return self;
 }
 
-Symbol_Table_Item *symbol_table__add_item(Symbol_Table *self, String *name, Composite_Type *type) {
+Symbol_Table_Item *symbol_table__add_item(Symbol_Table *self, String *name, Type *type) {
     Symbol_Table_Item *item = symbol_table_item__create(name, type);
     list__append(self, item);
     return item;

@@ -4,47 +4,60 @@
 #include "List.h"
 #include "Token.h"
 
-struct Composite_Type;
+struct Type;
 struct Expression;
 
 typedef struct {
     int is_reference;
     Token *name;
-    struct Composite_Type *type;
+    struct Type *type;
     struct Expression *default_value;
 } Member, Parameter;
 
 typedef List Member_List;
 typedef List Parameter_List;
 
-typedef struct Composite_Type {
+typedef struct Statement Statement;
+
+typedef struct Type {
     enum {
-        COMPOSITE_TYPE__ARRAY,
-        COMPOSITE_TYPE__FUNCTION,
-        COMPOSITE_TYPE__POINTER,
-        COMPOSITE_TYPE__NAMED,
+        TYPE__ARRAY,
+        TYPE__BOOLEAN,
+        TYPE__FUNCTION,
+        TYPE__INTEGER,
+        TYPE__POINTER,
+        TYPE__NAMED,
+        TYPE__STRUCT,
     } kind;
 
     Source_Location *location;
 
     union {
         struct {
-            struct Composite_Type *item_type;
+            struct Type *item_type;
         } array_data;
         struct {
             Parameter_List *parameters;
-            struct Composite_Type *return_type;
+            struct Type *return_type;
         } function_data;
         struct {
-            struct Composite_Type *type;
+            struct Type *type;
         } pointer_data;
         struct {
             Token *name;
         } named_data;
+        struct {
+            Statement *statement;
+        } struct_data;
     };
-} Composite_Type;
+} Type;
 
-char *composite_type__get_kind_name(Composite_Type *self);
+Type *type__create_array(Source_Location *location, Type *item_type);
+Type *type__create_function(Source_Location *location, Type *return_type, List *parameters);
+Type *type__create_named(Source_Location *location, Token *name);
+Type *type__create_pointer(Source_Location *location, Type *type);
+Type *type__create_struct(Source_Location *location, Statement *statement);
+char *type__get_kind_name(Type *self);
 
 typedef struct Argument {
     Token *name;
@@ -84,7 +97,7 @@ typedef struct Expression {
         } call_data;
         struct {
             struct Expression *expression;
-            Composite_Type *type;
+            Type *type;
         } cast_data;
         struct {
             Token *value;
@@ -94,7 +107,7 @@ typedef struct Expression {
             Token *name;
         } member_data;
         struct {
-            Composite_Type *type;
+            Type *type;
         } size_of_data;
         struct {
             Token *operator_token;
@@ -141,7 +154,7 @@ typedef struct Statement {
         } expression_data;
         struct {
             Token *name;
-            Composite_Type *return_type;
+            Type *return_type;
             Parameter_List *parameters;
             Statement_List *statements;
             int is_declaration;
@@ -165,7 +178,7 @@ typedef struct Statement {
         } struct_data;
         struct {
             Token *name;
-            Composite_Type *type;
+            Type *type;
             Expression *value;
             int is_external;
         } variable_data;
@@ -174,33 +187,14 @@ typedef struct Statement {
 
 char *statement__get_kind_name(Statement *self);
 
-typedef struct Named_Type {
-    enum {
-        NAMED_TYPE__BOOLEAN,
-        NAMED_TYPE__INTEGER,
-        NAMED_TYPE__CUSTOM,
-    } kind;
+typedef List Named_Types;
 
-    String *name;
-    Source_Location *location;
-
-    union {
-        struct {
-            Statement *statement;
-        } custom_data;
-    };
-} Named_Type;
-
-Named_Type *named_type__create(int kind, String *name, Source_Location *location);
-char *named_type__get_kind_name(Named_Type *self);
-
-typedef List Named_Type_List;
-
-void named_type_list__add(Named_Type_List *self, Named_Type *item);
-Named_Type *named_type_list__find(Named_Type_List *self, String *name);
+Named_Types *named_types__create();
+void named_types__add(Named_Types *self, String *name, Type *type);
+Type *named_types__get(Named_Types *self, String *name);
 
 typedef struct Compilation_Unit {
-    Named_Type_List *named_types;
+    Named_Types *named_types;
     Statement_List *statements;
 } Compilation_Unit;
 

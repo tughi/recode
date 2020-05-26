@@ -5,7 +5,7 @@
 typedef struct Context {
     List_Iterator *tokens;
     int alignment;
-    Named_Type_List *named_types;
+    Named_Types *named_types;
 } Context;
 
 #define ALIGNMENT_SIZE TAB_SIZE
@@ -13,28 +13,10 @@ typedef struct Context {
 static Context *context__create(List_Iterator *tokens) {
     Context *self = malloc(sizeof(Context));
     self->tokens = tokens;
-    self->named_types = list__create();
+    self->named_types = named_types__create();
     self->alignment = 0;
-
-    Token *token = list_iterator__next(self->tokens);
-
-    Source_Location *location = source_location__create(token->location->source);
-    location->line = 0;
-    location->column = 0;
-
-    Named_Type *integer_type = named_type__create(NAMED_TYPE__INTEGER, string__create("Int"), location);
-    named_type_list__add(self->named_types, integer_type);
-
-    Named_Type *boolean_type = named_type__create(NAMED_TYPE__BOOLEAN, string__create("Boolean"), location);
-    named_type_list__add(self->named_types, boolean_type);
-
+    list_iterator__next(self->tokens);
     return self;
-}
-
-static void context__add_custom_type(Context *self, String *name, Statement *statement) {
-    Named_Type *named_type = named_type__create(NAMED_TYPE__CUSTOM, name, statement->location);
-    named_type->custom_data.statement = statement;
-    named_type_list__add(self->named_types, named_type);
 }
 
 typedef struct Matcher {
@@ -191,9 +173,9 @@ int is_size_of_keyword(Token *token) {
     return is_keyword(token, "size_of");
 }
 
-Composite_Type *parse_composite_type(Context *context);
+Type *parse_type(Context *context);
 
-Expression *expression__create_size_of(Source_Location *location, Composite_Type *type) {
+Expression *expression__create_size_of(Source_Location *location, Type *type) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION__SIZE_OF;
     self->location = location;
@@ -229,7 +211,7 @@ Expression *parse_primary_expression(Context *context) {
     if (matches_one(context, required(is_size_of_keyword))) {
         Source_Location *location = consume_one(context, NULL, required(is_size_of_keyword))->location;
         consume_space(context, 1);
-        Composite_Type *type = parse_composite_type(context);
+        Type *type = parse_type(context);
         return expression__create_size_of(location, type);
     }
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected expression instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
@@ -307,7 +289,7 @@ int is_as_keyword(Token *token) {
     return is_keyword(token, "as");
 }
 
-Expression *expression__create_cast(Expression *expression, Composite_Type *type) {
+Expression *expression__create_cast(Expression *expression, Type *type) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = EXPRESSION__CAST;
     self->location = expression->location;
@@ -360,7 +342,7 @@ Expression *parse_call_expression(Context *context) {
             consume_space(context, 1);
             consume_one(context, NULL, required(is_as_keyword));
             consume_space(context, 1);
-            Composite_Type *type = parse_composite_type(context);
+            Type *type = parse_type(context);
             expression = expression__create_cast(expression, type);
         } else {
             break;
@@ -559,7 +541,7 @@ int is_close_angled_bracket(Token *token) {
     return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ">");
 }
 
-Member *member__create(int is_reference, Token *name, Composite_Type *type, Expression *default_value) {
+Member *member__create(int is_reference, Token *name, Type *type, Expression *default_value) {
     Member *self = malloc(sizeof(Member));
     self->is_reference = is_reference;
     self->name = name;
@@ -586,7 +568,7 @@ Member *parse_member(Context *context) {
     consume_space(context, 0);
     consume_one(context, ":", required(is_colon));
     consume_space(context, 1);
-    Composite_Type *type = parse_composite_type(context);
+    Type *type = parse_type(context);
     Expression *default_value = NULL;
     if (matches_two(context, optional(is_space), required(is_assign_operator))) {
         consume_space(context, 1);
@@ -615,54 +597,21 @@ int is_pointer_operator(Token *token) {
     return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "@");
 }
 
-static Composite_Type *type__create_array(Source_Location *location, Composite_Type *item_type) {
-    Composite_Type *self = malloc(sizeof(Composite_Type));
-    self->kind = COMPOSITE_TYPE__ARRAY;
-    self->location = location;
-    self->array_data.item_type = item_type;
-    return self;
-}
-
-Composite_Type *type__create_function(Source_Location *location, Composite_Type *return_type, List *parameters) {
-    Composite_Type *self = malloc(sizeof(Composite_Type));
-    self->kind = COMPOSITE_TYPE__FUNCTION;
-    self->location = location;
-    self->function_data.parameters = parameters;
-    self->function_data.return_type = return_type;
-    return self;
-}
-
-Composite_Type *type__create_named(Source_Location *location, Token *name) {
-    Composite_Type *self = malloc(sizeof(Composite_Type));
-    self->kind = COMPOSITE_TYPE__NAMED;
-    self->location = location;
-    self->named_data.name = name;
-    return self;
-}
-
-Composite_Type *type__create_pointer(Source_Location *location, Composite_Type *type) {
-    Composite_Type *self = malloc(sizeof(Composite_Type));
-    self->kind = COMPOSITE_TYPE__POINTER;
-    self->location = location;
-    self->pointer_data.type = type;
-    return self;
-}
-
-// composite_type
-//      : "@" composite_type
+// type
+//      : "@" type
 //      | IDENTIFIER
-//      | "[" composite_type "]"
-//      | "(" comma_separated_members? ")" "->" composite_type
-Composite_Type *parse_composite_type(Context *context) {
+//      | "[" type "]"
+//      | "(" comma_separated_members? ")" "->" type
+Type *parse_type(Context *context) {
     if (matches_one(context, required(is_pointer_operator))) {
         Source_Location *location = consume_one(context, NULL, required(is_pointer_operator))->location;
         consume_space(context, 0);
-        return type__create_pointer(location, parse_composite_type(context));
+        return type__create_pointer(location, parse_type(context));
     }
     if (matches_one(context, required(is_open_bracket))) {
         Source_Location *location = consume_one(context, NULL, required(is_open_bracket))->location;
         consume_space(context, 0);
-        Composite_Type *item_type = parse_composite_type(context);
+        Type *item_type = parse_type(context);
         consume_space(context, 0);
         consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
@@ -679,7 +628,7 @@ Composite_Type *parse_composite_type(Context *context) {
         consume_space(context, 1);
         consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
         consume_space(context, 1);
-        Composite_Type *return_type = parse_composite_type(context);
+        Type *return_type = parse_type(context);
         return type__create_function(location, return_type, members);
     }
     Token *name = consume_one(context, "type name", required(is_identifier));
@@ -779,7 +728,7 @@ Statement_List *parse_statements(Context *context) {
     return statements;
 }
 
-Statement *statement__create_function(Source_Location *location, Token *name, Composite_Type *return_type, List *parameters, List *statements) {
+Statement *statement__create_function(Source_Location *location, Token *name, Type *return_type, List *parameters, List *statements) {
     Statement *self = statement__create(STATEMENT__FUNCTION, location);
     self->function_data.name = name;
     self->function_data.return_type = return_type;
@@ -804,7 +753,7 @@ Statement *parse_function(Context *context, Token *name) {
     consume_space(context, 1);
     consume_two(context, "->", required(is_hyphen), required(is_close_angled_bracket));
     consume_space(context, 1);
-    Composite_Type *return_type = parse_composite_type(context);
+    Type *return_type = parse_type(context);
     if (consume_end_of_line(context, FALSE) == TRUE) {
         return statement__create_function(location, name, return_type, parameters, NULL);
     } else {
@@ -969,7 +918,7 @@ Statement *statement__create_expression(Source_Location *location, Expression *e
     return self;
 }
 
-Statement *statement__create_variable(Source_Location *location, Token *name, Composite_Type *type, Expression *value, int is_external) {
+Statement *statement__create_variable(Source_Location *location, Token *name, Type *type, Expression *value, int is_external) {
     Statement *self = statement__create(STATEMENT__VARIABLE, location);
     self->variable_data.name = name;
     self->variable_data.type = type;
@@ -1046,8 +995,10 @@ Statement *parse_statement(Context *context) {
             if (expression->kind != EXPRESSION__VARIABLE) {
                 PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as struct name", expression->location->line, expression->location->column);
             }
-            Statement *struct_statement = parse_struct(context, expression->variable_data.name);
-            context__add_custom_type(context, expression->variable_data.name->lexeme, struct_statement);
+            Token *struct_name = expression->variable_data.name;
+            Statement *struct_statement = parse_struct(context, struct_name);
+            Type *struct_type = type__create_struct(struct_name->location, struct_statement);
+            named_types__add(context->named_types, struct_name->lexeme, struct_type);
             return struct_statement;
         }
         if (expression->kind != EXPRESSION__VARIABLE) {
@@ -1069,7 +1020,7 @@ Statement *parse_statement(Context *context) {
         consume_space(context, 0);
         consume_one(context, NULL, required(is_colon));
         consume_space(context, 1);
-        Composite_Type *type = parse_composite_type(context);
+        Type *type = parse_type(context);
         if (consume_end_of_line(context, FALSE)) {
             return statement__create_variable(variable_name->location, variable_name, type, NULL, FALSE);
         }
