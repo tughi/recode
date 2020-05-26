@@ -108,15 +108,15 @@ static void context__release_register(Context *self, Value_Holder *value_holder)
     registers__release(self->registers, value_holder);
 }
 
-Symbol_Table_Item *context__find_symbol(Context *self, String *name) {
-    return symbol_table__find_item(self->symbols, name);
+Symbol *context__find_symbol(Context *self, String *name) {
+    return symbol_table__find(self->symbols, name);
 }
 
 void context__create_variable(Context *self, String *name, Type *type) {
     if (context__find_symbol(self, name)) {
         PANIC(__FILE__, __LINE__, "Trying to create a variable that already exists in the same context: %s", name->data);
     }
-    symbol_table__add_item(self->symbols, name, type);
+    symbol_table__add(self->symbols, name, type);
 }
 
 int context__is_primitive_type(Context *self, Type *type) {
@@ -164,7 +164,7 @@ static Value_Holder *emit_load_literal(Context *context, Token *token) {
 }
 
 static Value_Holder *emit_load_variable(Context *context, Token *variable_name) {
-    Symbol_Table_Item *symbol = context__find_symbol(context, variable_name->lexeme);
+    Symbol *symbol = context__find_symbol(context, variable_name->lexeme);
     if (symbol == NULL) {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
     }
@@ -274,7 +274,7 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Assignment to non-variables are not supported yet.", statement->location->line, statement->location->column);
         }
         String *variable_name = assignment_destination->variable_data.name->lexeme;
-        Symbol_Table_Item *symbol = context__find_symbol(context, variable_name);
+        Symbol *symbol = context__find_symbol(context, variable_name);
         if (symbol == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
         }

@@ -5,14 +5,14 @@
 
 typedef List Symbol_Table;
 
-typedef struct Symbol_Table_Item {
+typedef struct Symbol {
     String *name;
     Type *type;
-} Symbol_Table_Item;
+} Symbol;
 
 Symbol_Table *symbol_table__create();
 
-Symbol_Table_Item *symbol_table__find_item(Symbol_Table *self, String *name);
-Symbol_Table_Item *symbol_table__add_item(Symbol_Table *self, String *name, Type *type);
+Symbol *symbol_table__find(Symbol_Table *self, String *name);
+Symbol *symbol_table__add(Symbol_Table *self, String *name, Type *type);
 
 #endif
