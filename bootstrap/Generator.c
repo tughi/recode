@@ -2,7 +2,68 @@
 #include "Logging.h"
 #include "Symbol_Table.h"
 
-typedef String Value_Holder;
+enum {
+    REGISTER_RCX,
+    REGISTER_R08,
+    REGISTER_R09,
+    REGISTER_R10,
+    REGISTER_R11,
+    REGISTERS_COUNT,
+};
+
+typedef struct Register {
+    int id;
+    int is_used;
+    int size;
+} Register;
+
+char *register__name(Register *self) {
+    static char *names_64bit[REGISTERS_COUNT] = { "%rcx", "%r8", "%r9", "%r10", "%r11" };
+    static char *names_32bit[REGISTERS_COUNT] = { "%ecx", "%r8d", "%r9d", "%r10d", "%r11d" };
+    static char *names_16bit[REGISTERS_COUNT] = { "%cx", "%r8w", "%r9w", "%r10w", "%r11w" };
+    static char *names_8bit[REGISTERS_COUNT] = { "%cl", "%r8b", "%r9b", "%r10b", "%r11b" };
+
+    switch (self->size) {
+    case 8: return names_64bit[self->id];
+    case 4: return names_32bit[self->id];
+    case 2: return names_16bit[self->id];
+    case 1: return names_8bit[self->id];
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported register: %d", self->id);
+    }
+}
+
+void register__release(Register *self) {
+    if (self->is_used != 1) {
+        PANIC(__FILE__, __LINE__, "Trying to release an unused register: %s", register__name(self));
+    }
+    self->is_used = 0;
+}
+
+Register registers[REGISTERS_COUNT] = {
+    { .id = REGISTER_RCX, .is_used = 0, .size = 0 },
+    { .id = REGISTER_R08, .is_used = 0, .size = 0 },
+    { .id = REGISTER_R09, .is_used = 0, .size = 0 },
+    { .id = REGISTER_R10, .is_used = 0, .size = 0 },
+    { .id = REGISTER_R11, .is_used = 0, .size = 0 },
+};
+
+Register *registers__acquire(int size) {
+    for (int i = 0; i < REGISTERS_COUNT; i++) {
+        if (registers[i].is_used == 0) {
+            registers[i].is_used = 1;
+            registers[i].size = size;
+            return registers + i;
+        }
+    }
+    PANIC(__FILE__, __LINE__, "All registers are used already%c", 0);
+}
+
+void registers__release_all() {
+    for (int i = 0; i < REGISTERS_COUNT; i++) {
+        registers[i].is_used = 0;
+    }
+}
 
 typedef struct Loop {
     int id;
@@ -10,7 +71,7 @@ typedef struct Loop {
     struct Loop *parent;
 } Loop;
 
-static Loop *loop__create(int id, Loop *parent) {
+Loop *loop__create(int id, Loop *parent) {
     Loop *self = malloc(sizeof(Loop));
     self->id = id;
     self->has_exit = 0;
@@ -33,51 +94,10 @@ static int counter__inc(Counter *self) {
     return self->count;
 }
 
-#define REGISTERS_COUNT 4
-
-typedef struct Registers {
-    int used[REGISTERS_COUNT];
-    Value_Holder *names[REGISTERS_COUNT];
-} Registers;
-
-static Registers *registers__create() {
-    Registers *self = malloc(sizeof(Registers));
-    for (int i = 0; i < REGISTERS_COUNT; i++) {
-        self->names[i] = string__create("%r");
-        string__append_int(self->names[i], 8 + i);
-        self->used[i] = 0;
-    }
-    return self;
-}
-
-static Value_Holder *registers__acquire(Registers *self) {
-    for (int i = 0; i < REGISTERS_COUNT; i++) {
-        if (self->used[i] == 0) {
-            self->used[i] = 1;
-            return self->names[i];
-        }
-    }
-    PANIC(__FILE__, __LINE__, "All registers are used already%c", 0);
-}
-
-static void registers__release(Registers *self, Value_Holder *name) {
-    for (int i = 0; i < REGISTERS_COUNT; i++) {
-        if (self->names[i] == name) {
-            if (self->used[i] != 1) {
-                PANIC(__FILE__, __LINE__, "Trying to release an unused register: %s", name->data);
-            }
-            self->used[i] = 0;
-            return;
-        }
-    }
-    PANIC(__FILE__, __LINE__, "Trying to release an invalid register: %s", name->data);
-}
-
 typedef struct Context {
     struct Context *global_context;
     struct Context *parent_context;
     FILE *file;
-    Registers *registers;
     Named_Types *named_types;
     Symbol_Table *symbols;
     Counter *counter;
@@ -92,20 +112,11 @@ static Context *context__create(FILE *file, Named_Types *named_types) {
     self->global_context = self;
     self->parent_context = NULL;
     self->file = file;
-    self->registers = registers__create();
     self->named_types = named_types;
     self->symbols = symbol_table__create();
     self->counter = counter__create();
     self->loop = NULL;
     return self;
-}
-
-static Value_Holder *context__acquire_register(Context *self) {
-    return registers__acquire(self->registers);
-}
-
-static void context__release_register(Context *self, Value_Holder *value_holder) {
-    registers__release(self->registers, value_holder);
 }
 
 Symbol *context__find_symbol(Context *self, String *name) {
@@ -151,11 +162,11 @@ static int context__compute_type_size(Context *self, Type *type) {
     }
 }
 
-static Value_Holder *emit_load_literal(Context *context, Token *token) {
+static Register *emit_load_literal(Context *context, Token *token) {
     switch (token->kind) {
     case TOKEN__INTEGER: {
-        Value_Holder *value_holder = context__acquire_register(context);
-        emitf("  movq $%d, %s", token->integer_data.value, value_holder->data);
+        Register *value_holder = registers__acquire(8);
+        emitf("  movq $%d, %s", token->integer_data.value, register__name(value_holder));
         return value_holder;
     }
     default:
@@ -163,7 +174,7 @@ static Value_Holder *emit_load_literal(Context *context, Token *token) {
     }
 }
 
-static Value_Holder *emit_load_variable(Context *context, Token *variable_name) {
+static Register *emit_load_variable(Context *context, Token *variable_name) {
     Symbol *symbol = context__find_symbol(context, variable_name->lexeme);
     if (symbol == NULL) {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
@@ -177,14 +188,14 @@ static Value_Holder *emit_load_variable(Context *context, Token *variable_name) 
 
     // TODO: check if variable is local or global, and load it respectively
 
-    Value_Holder *value_holder = context__acquire_register(context);
-    switch (context__compute_type_size(context, variable_type)) {
+    Register *value_holder = registers__acquire(context__compute_type_size(context, variable_type));
+    switch (value_holder->size) {
     case 1: {
-        emitf("  movzbq %s(%%rip), %s", variable_name->lexeme->data, value_holder->data);
+        emitf("  movb %s(%%rip), %s", variable_name->lexeme->data, register__name(value_holder));
         return value_holder;
     }
     case 8: {
-        emitf("  movq %s(%%rip), %s", variable_name->lexeme->data, value_holder->data);
+        emitf("  movq %s(%%rip), %s", variable_name->lexeme->data, register__name(value_holder));
         return value_holder;
     }
     default:
@@ -192,51 +203,66 @@ static Value_Holder *emit_load_variable(Context *context, Token *variable_name) 
     }
 }
 
-Value_Holder *emit_expression(Context *context, Expression *expression);
+Register *emit_expression(Context *context, Expression *expression);
 
-Value_Holder *emit_comparison_expression(Context *context, Expression *expression, Value_Holder *left_value_holder, const char *flag_instruction) {
-    Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-    emitf("  cmpq %s, %s", right_value_holder->data, left_value_holder->data);
-    emitf("  %s %sb", flag_instruction, right_value_holder->data);
-    emitf("  movzbq %sb, %s", right_value_holder->data, right_value_holder->data);
-    context__release_register(context, left_value_holder);
-    return right_value_holder;
+Register *emit_comparison_expression(Context *context, Expression *expression, Register *left_value_holder, const char *flag_instruction) {
+    Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
+    if (left_value_holder->size != right_value_holder->size) {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Cannot compare values of different type.", expression->location->line, expression->location->column);
+    }
+    switch (left_value_holder->size) {
+    case 1: {
+        emitf("  cmpb %s, %s", register__name(right_value_holder), register__name(left_value_holder));
+        break;
+    }
+    case 8: {
+        emitf("  cmpq %s, %s", register__name(right_value_holder), register__name(left_value_holder));
+        break;
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value size: %d.", expression->location->line, expression->location->column, left_value_holder->size);
+    }
+    register__release(left_value_holder);
+    register__release(right_value_holder);
+    Register *result_value_holder = registers__acquire(1);
+    emitf("  %s %s", flag_instruction, register__name(result_value_holder));
+    return result_value_holder;
 }
 
-Value_Holder *emit_expression(Context *context, Expression *expression) {
+Register *emit_expression(Context *context, Expression *expression) {
     switch (expression->kind) {
     case EXPRESSION__BINARY: {
-        Value_Holder *left_value_holder = emit_expression(context, expression->binary_data.left_expression);
+        Register *left_value_holder = emit_expression(context, expression->binary_data.left_expression);
         if (string__equals(expression->binary_data.operator_token->lexeme, "+")) {
-            Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  addq %s, %s", left_value_holder->data, right_value_holder->data);
-            context__release_register(context, left_value_holder);
+            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
+            emitf("  addq %s, %s", register__name(left_value_holder), register__name(right_value_holder));
+            register__release(left_value_holder);
             return right_value_holder;
         } else if (string__equals(expression->binary_data.operator_token->lexeme, "-")) {
-            Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  subq %s, %s", right_value_holder->data, left_value_holder->data);
-            context__release_register(context, right_value_holder);
+            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
+            emitf("  subq %s, %s", register__name(right_value_holder), register__name(left_value_holder));
+            register__release(right_value_holder);
             return left_value_holder;
         } else if (string__equals(expression->binary_data.operator_token->lexeme, "*")) {
-            Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  imulq %s, %s", left_value_holder->data, right_value_holder->data);
-            context__release_register(context, left_value_holder);
+            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
+            emitf("  imulq %s, %s", register__name(left_value_holder), register__name(right_value_holder));
+            register__release(left_value_holder);
             return right_value_holder;
         } else if (string__equals(expression->binary_data.operator_token->lexeme, "/")) {            
-            Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  movq %s, %%rax", left_value_holder->data);
+            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
+            emitf("  movq %s, %%rax", register__name(left_value_holder));
             emits("  cqto");
-            emitf("  idivq %s", right_value_holder->data);
-            emitf("  movq %%rax, %s", left_value_holder->data);
-            context__release_register(context, right_value_holder);
+            emitf("  idivq %s", register__name(right_value_holder));
+            emitf("  movq %%rax, %s", register__name(left_value_holder));
+            register__release(right_value_holder);
             return left_value_holder;
         } else if (string__equals(expression->binary_data.operator_token->lexeme, "//")) {            
-            Value_Holder *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  movq %s, %%rax", left_value_holder->data);
+            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
+            emitf("  movq %s, %%rax", register__name(left_value_holder));
             emits("  cqto");
-            emitf("  idivq %s", right_value_holder->data);
-            emitf("  movq %%rdx, %s", left_value_holder->data);
-            context__release_register(context, right_value_holder);
+            emitf("  idivq %s", register__name(right_value_holder));
+            emitf("  movq %%rdx, %s", register__name(left_value_holder));
+            register__release(right_value_holder);
             return left_value_holder;
         } else if (string__equals(expression->binary_data.operator_token->lexeme, "<")) {
             return emit_comparison_expression(context, expression, left_value_holder, "setl");
@@ -278,9 +304,21 @@ void emit_statement(Context *context, Statement *statement) {
         if (symbol == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
         }
-        Value_Holder *value = emit_expression(context, statement->assignment_data.value);
-        emitf("  movq %s, %s(%%rip)", value->data, variable_name->data);
-        context__release_register(context, value);
+        Register *value_holder = emit_expression(context, statement->assignment_data.value);
+        if (context__compute_type_size(context, symbol->type) != value_holder->size) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression type differs from variable type.", statement->location->line, statement->location->column);
+        }
+        switch (value_holder->size) {
+        case 1:
+            emitf("  movb %s, %s(%%rip)", register__name(value_holder), variable_name->data);
+            break;
+        case 8:
+            emitf("  movq %s, %s(%%rip)", register__name(value_holder), variable_name->data);
+            break;
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value size: %d.", statement->location->line, statement->location->column, value_holder->size);
+        }
+        register__release(value_holder);
         return;
     }
     case STATEMENT__BLOCK: {
@@ -318,9 +356,9 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT__IF: {
         int label = counter__inc(context->counter);
         emitf("if_%03d_cond:", label);
-        Value_Holder *condition = emit_expression(context, statement->if_data.condition);
-        emitf("  dec %s", condition->data);
-        context__release_register(context, condition);
+        Register *condition_value_holder = emit_expression(context, statement->if_data.condition);
+        emitf("  dec %s", register__name(condition_value_holder));
+        register__release(condition_value_holder);
         emitf("  jnz if_%03d_false", label);
         emitf("if_%03d_true:", label);
         emit_statement(context, statement->if_data.true_block);
@@ -349,9 +387,9 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__RETURN: {
         if (statement->return_data.expression != NULL) {
-            Value_Holder *value_holder = emit_expression(context, statement->return_data.expression);
-            emitf("  movq %s, %%rax", value_holder->data);
-            context__release_register(context, value_holder);
+            Register *value_holder = emit_expression(context, statement->return_data.expression);
+            emitf("  movq %s, %%rax", register__name(value_holder));
+            register__release(value_holder);
         }
         if (context->loop) {
             context->loop->has_exit = 1;
