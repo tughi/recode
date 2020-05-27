@@ -169,6 +169,19 @@ static Register *emit_load_literal(Context *context, Token *token) {
         emitf("  movq $%d, %s", token->integer_data.value, register__name(value_holder));
         return value_holder;
     }
+    case TOKEN__KEYWORD: {
+        if (string__equals(token->lexeme, "false")) {
+            Register *value_holder = registers__acquire(1);
+            emitf("  movb $0, %s", register__name(value_holder));
+            return value_holder;
+        } else if (string__equals(token->lexeme, "true")) {
+            Register *value_holder = registers__acquire(1);
+            emitf("  movb $1, %s", register__name(value_holder));
+            return value_holder;
+        } else {
+            PANIC(__FILE__, __LINE__, "Unsupported keyword: %s", token->lexeme->data);
+        }
+    }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported token kind: %s", token__get_kind_name(token));
     }

@@ -7,7 +7,11 @@ main :: () -> Int {
     test = (1 > 0)
     noise = 256
 
-    if (test == (1 > 0)) {
+    if (true == false) {
+        return 2
+    }
+
+    if (test == true) {
         return 0
     }
 
