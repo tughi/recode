@@ -108,6 +108,37 @@ char *statement__get_kind_name(Statement *self) {
     }
 }
 
+typedef struct Named_Functions_Item {
+    String *name;
+    Statement *statement;
+} Named_Functions_Item;
+
+static Named_Functions_Item *named_functions__create_item(String *name, Statement *statement) {
+    Named_Functions_Item *self = malloc(sizeof(Named_Functions_Item));
+    self->name = name;
+    self->statement = statement;
+    return self;
+}
+
+Named_Functions *named_functions__create() {
+    return list__create();
+}
+
+void named_functions__add(Named_Functions *self, String *name, Statement *statement) {
+    // TODO: Check if there is another function declared with the same name and parameters
+    list__append(self, named_functions__create_item(name, statement));
+}
+
+Statement *named_functions__get(Named_Functions *self, String *name/*, TODO: List* parameters*/) { 
+    for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
+        Named_Functions_Item *item = list_iterator__next(&iterator);
+        if (string__equals(item->name, name->data)) {
+            return item->statement;
+        }
+    }
+    return NULL;
+}
+
 typedef struct Named_Types_Item {
     String *name;
     Type *type;
@@ -139,16 +170,17 @@ void named_types__add(Named_Types *self, String *name, Type *type) {
 
 Type *named_types__get(Named_Types *self, String *name) {
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
-        Named_Types_Item *named_type = list_iterator__next(&iterator);
-        if (string__equals(named_type->name, name->data)) {
-            return named_type->type;
+        Named_Types_Item *item = list_iterator__next(&iterator);
+        if (string__equals(item->name, name->data)) {
+            return item->type;
         }
     }
     return NULL;
 }
 
-Compilation_Unit *compilation_unit__create(Named_Types *named_types, Statement_List *statements) {
+Compilation_Unit *compilation_unit__create(Named_Functions *named_functions, Named_Types *named_types, Statement_List *statements) {
     Compilation_Unit *self = malloc(sizeof(Compilation_Unit));
+    self->named_functions = named_functions;
     self->named_types = named_types;
     self->statements = statements;
     return self;

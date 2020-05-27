@@ -5,6 +5,7 @@
 typedef struct Context {
     List_Iterator *tokens;
     int alignment;
+    Named_Functions *named_functions;
     Named_Types *named_types;
 } Context;
 
@@ -13,6 +14,7 @@ typedef struct Context {
 static Context *context__create(List_Iterator *tokens) {
     Context *self = malloc(sizeof(Context));
     self->tokens = tokens;
+    self->named_functions = named_functions__create();
     self->named_types = named_types__create();
     self->alignment = 0;
     list_iterator__next(self->tokens);
@@ -1004,7 +1006,10 @@ Statement *parse_statement(Context *context) {
         if (expression->kind != EXPRESSION__VARIABLE) {
             PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Cannot use expression as function name", expression->location->line, expression->location->column);
         }
-        return parse_function(context, expression->variable_data.name);
+        Token *function_name = expression->variable_data.name;
+        Statement *function_statement = parse_function(context, function_name);
+        named_functions__add(context->named_types, function_name->lexeme, function_statement);
+        return function_statement;
     }
 
     if (matches_two(context, optional(is_space), required(is_colon))) {
@@ -1061,5 +1066,5 @@ Compilation_Unit *parse(Token_List *tokens) {
 
     Statement_List *statements = parse_statements(context);
 
-    return compilation_unit__create(context->named_types, statements);
+    return compilation_unit__create(context->named_functions, context->named_types, statements);
 }

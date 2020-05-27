@@ -187,6 +187,12 @@ typedef struct Statement {
 
 char *statement__get_kind_name(Statement *self);
 
+typedef List Named_Functions;
+
+Named_Functions *named_functions__create();
+void named_functions__add(Named_Functions *self, String *name, Statement *statement);
+Statement *named_functions__get(Named_Functions *self, String *name);
+
 typedef List Named_Types;
 
 Named_Types *named_types__create();
@@ -194,10 +200,11 @@ void named_types__add(Named_Types *self, String *name, Type *type);
 Type *named_types__get(Named_Types *self, String *name);
 
 typedef struct Compilation_Unit {
+    Named_Functions *named_functions;
     Named_Types *named_types;
     Statement_List *statements;
 } Compilation_Unit;
 
-Compilation_Unit *compilation_unit__create();
+Compilation_Unit *compilation_unit__create(Named_Functions *named_functions, Named_Types *named_types, Statement_List *statements);
 
 #endif
