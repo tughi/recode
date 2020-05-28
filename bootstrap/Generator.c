@@ -577,8 +577,8 @@ void emit_statement(Context *context, Statement *statement) {
         if (function == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Found return statement outside of a function.", statement->location->line, statement->location->column);
         }
+        Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
         if (statement->return_data.expression != NULL) {
-            Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
             Expression *return_expression = statement->return_data.expression;
             Type *return_expression_type = compute_expression_type(context, return_expression);
             if (!type__equals(function_return_type, return_expression_type)) {
@@ -587,6 +587,8 @@ void emit_statement(Context *context, Statement *statement) {
             Register *value_holder = emit_expression(context, return_expression);
             emitf("  movq %s, %%rax", register__name(value_holder));
             register__release(value_holder);
+        } else if (function_return_type->kind != TYPE__NOTHING) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected return expression", statement->location->line, statement->location->column);
         }
         if (context->current_loop) {
             context->current_loop->has_exit = 1;

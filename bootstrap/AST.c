@@ -66,6 +66,9 @@ int type__equals(Type *self, Type *other) {
     case TYPE__INTEGER: {
         return other->kind == TYPE__INTEGER;
     }
+    case TYPE__NOTHING: {
+        return other->kind == TYPE__NOTHING;
+    }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(self));
     }
