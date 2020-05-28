@@ -65,6 +65,7 @@ void registers__release_all() {
 }
 
 typedef struct Variable {
+    int id;
     String *name;
     Source_Location *location;
     Type *type;
@@ -87,8 +88,9 @@ Variable *variables__find(Variables *self, String *name) {
     return NULL;
 }
 
-Variable *variables__add(Variables *self, String *name, Source_Location *location, Type *type, int is_global) {
+Variable *variables__add(Variables *self, int id, String *name, Source_Location *location, Type *type, int is_global) {
     Variable *variable = malloc(sizeof(Variable));
+    variable->id = id;
     variable->name = name;
     variable->location = location;
     variable->type = type;
@@ -160,7 +162,7 @@ Variable *context__find_variable(Context *self, String *name) {
 }
 
 Variable *context__create_variable(Context *self, String *name, Source_Location *location, Type *type) {
-    return variables__add(self->variables, name, location, type, self->current_function == NULL);
+    return variables__add(self->variables, counter__inc(self->counter), name, location, type, self->current_function == NULL);
 }
 
 static Type *context__resolve_type(Context *self, Type *type) {
@@ -219,12 +221,12 @@ Register *emit_load_variable(Context *context, Token *variable_name) {
     switch (variable_type->kind) {
     case TYPE__BOOLEAN: {
         Register *value_holder = registers__acquire(1);
-        emitf("  movb %s(%%rip), %s", variable_name->lexeme->data, register__name(value_holder));
+        emitf("  movb %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
         return value_holder;
     }
     case TYPE__INTEGER: {
         Register *value_holder = registers__acquire(8);
-        emitf("  movq %s(%%rip), %s", variable_name->lexeme->data, register__name(value_holder));
+        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
         return value_holder;
     }
     default:
@@ -371,14 +373,14 @@ void emit_statement(Context *context, Statement *statement) {
             if (value_holder->size != 1) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 1 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movb %s, %s(%%rip)", register__name(value_holder), variable_name->data);
+            emitf("  movb %s, %s_%03d(%%rip)", register__name(value_holder), variable_name->data, variable->id);
             break;
         }
         case TYPE__INTEGER:
             if (value_holder->size != 8) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movq %s, %s(%%rip)", register__name(value_holder), variable_name->data);
+            emitf("  movq %s, %s_%03d(%%rip)", register__name(value_holder), variable_name->data, variable->id);
             break;
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
@@ -484,11 +486,11 @@ void emit_statement(Context *context, Statement *statement) {
         Type *variable_type = context__resolve_type(context, statement->variable_data.type);
         switch (variable_type->kind) {
         case TYPE__BOOLEAN: {
-            emitf("  .comm %s, 1, 1", variable_name->lexeme->data);
+            emitf("  .comm %s_%03d, 1, 1", variable_name->lexeme->data, variable->id);
             break;
         }
         case TYPE__INTEGER: {
-            emitf("  .comm %s, 8, 8", variable_name->lexeme->data);
+            emitf("  .comm %s_%03d, 8, 8", variable_name->lexeme->data, variable->id);
             break;
         }
         default:

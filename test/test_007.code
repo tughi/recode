@@ -1,4 +1,4 @@
-\ Test symbol overloading
+\ Test variable shadowing
 
 x: Boolean
 x: Int
