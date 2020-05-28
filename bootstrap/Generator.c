@@ -102,7 +102,8 @@ typedef struct Context {
     Named_Types *named_types;
     Symbol_Table *symbols;
     Counter *counter;
-    Loop *loop;
+    Statement *current_function;
+    Loop *current_loop;
 } Context;
 
 #define emitf(line, ...) fprintf(context->file, line "\n", __VA_ARGS__)
@@ -117,7 +118,8 @@ static Context *context__create(FILE *file, Named_Functions *named_functions, Na
     self->named_types = named_types;
     self->symbols = symbol_table__create();
     self->counter = counter__create();
-    self->loop = NULL;
+    self->current_function = NULL;
+    self->current_loop = NULL;
     return self;
 }
 
@@ -364,7 +366,7 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT__BREAK: {
-        Loop *loop = context->loop;
+        Loop *loop = context->current_loop;
         if (loop == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- This break is not inside of a loop", statement->location->line, statement->location->column);
         }
@@ -380,11 +382,17 @@ void emit_statement(Context *context, Statement *statement) {
         emits("  pushq %%rbp");
         emits("  movq %%rsp, %%rbp");
 
+        context->current_function = statement;
         for (List_Iterator iterator = list__create_iterator(statement->function_data.statements); list_iterator__has_next(&iterator);) {
             Statement *body_statement = list_iterator__next(&iterator);
             emit_statement(context, body_statement);
         }
+        context->current_function = NULL;
 
+        emitf("%s_end:", function_name->data);
+        emits("  movq %%rbp, %%rsp");
+        emits("  popq %%rbp");
+        emits("  ret");
         return;
     }
     case STATEMENT__IF: {
@@ -409,28 +417,30 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT__LOOP: {
         int label = counter__inc(context->counter);
         emitf("loop_%03d_start:", label);
-        context->loop = loop__create(label, context->loop);
+        context->current_loop = loop__create(label, context->current_loop);
         emit_statement(context, statement->loop_data.block);
-        if (!context->loop->has_exit) {
+        if (!context->current_loop->has_exit) {
             WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Infinite loop detected.", statement->location->line, statement->location->column);
         }
-        context->loop = context->loop->parent;
+        context->current_loop = context->current_loop->parent;
         emitf("  jmp loop_%03d_start", label);
         emitf("loop_%03d_end:", label);
         break;
     }
     case STATEMENT__RETURN: {
+        Statement *function = context->current_function;
+        if (function == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Found return statement outside of a function.", statement->location->line, statement->location->column);
+        }
         if (statement->return_data.expression != NULL) {
             Register *value_holder = emit_expression(context, statement->return_data.expression);
             emitf("  movq %s, %%rax", register__name(value_holder));
             register__release(value_holder);
         }
-        if (context->loop) {
-            context->loop->has_exit = 1;
+        if (context->current_loop) {
+            context->current_loop->has_exit = 1;
         }
-        emits("  movq %%rbp, %%rsp");
-        emits("  popq %%rbp");
-        emits("  ret");
+        emitf("  jmp %s_end", function->function_data.name->lexeme->data);
         return;
     }
     case STATEMENT__VARIABLE: {
@@ -468,27 +478,11 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
     Context *context = context__create(fopen(file, "w"), compilation_unit->named_functions, compilation_unit->named_types);
 
     emits("  .text");
-    emits(".LC0:");
-    emits("  .string \"%%d\\n\"");
-    emits("printint:");
-    emits("  pushq %%rbp");
-    emits("  movq %%rsp, %%rbp");
-    emits("  subq $16, %%rsp");
-    emits("  movl %%edi, -4(%%rbp)");
-    emits("  movl -4(%%rbp), %%eax");
-    emits("  movl %%eax, %%esi");
-    emits("  leaq .LC0(%%rip), %%rdi");
-    emits("  movl $0, %%eax");
-    emits("  call printf@PLT");
-    emits("  nop");
-    emits("  leave");
-    emits("  ret");
-    emits("");
 
     for (List_Iterator iterator = list__create_iterator(compilation_unit->statements); list_iterator__has_next(&iterator);) {
         Statement *statement = list_iterator__next(&iterator);
-        emit_statement(context, statement);
         emits("");
+        emit_statement(context, statement);
     }
 
     fclose(context->file);
