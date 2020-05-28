@@ -45,6 +45,8 @@ char *type__get_kind_name(Type *self) {
         return "ARRAY";
     case TYPE__FUNCTION:
         return "FUNCTION";
+    case TYPE__INTEGER:
+        return "INTEGER";
     case TYPE__POINTER:
         return "POINTER";
     case TYPE__NAMED:
@@ -129,10 +131,11 @@ void named_functions__add(Named_Functions *self, String *name, Statement *statem
     list__append(self, named_functions__create_item(name, statement));
 }
 
-Statement *named_functions__get(Named_Functions *self, String *name/*, TODO: List* parameters*/) { 
+Statement *named_functions__get(Named_Functions *self, String *name, Argument_List *arguments) {
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
         Named_Functions_Item *item = list_iterator__next(&iterator);
         if (string__equals(item->name, name->data)) {
+            // TODO: check if arguments mach with function parameters
             return item->statement;
         }
     }

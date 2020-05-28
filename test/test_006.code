@@ -1,0 +1,13 @@
+\ Test function simple call
+
+main :: () -> Int {
+    return 42 - forty_two()
+}
+
+zero :: () -> Int {
+    return 0
+}
+
+forty_two :: () -> Int {
+    return 1 * (21 + 21) / 1
+}

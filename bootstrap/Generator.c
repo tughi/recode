@@ -98,6 +98,7 @@ typedef struct Context {
     struct Context *global_context;
     struct Context *parent_context;
     FILE *file;
+    Named_Functions *named_functions;
     Named_Types *named_types;
     Symbol_Table *symbols;
     Counter *counter;
@@ -107,11 +108,12 @@ typedef struct Context {
 #define emitf(line, ...) fprintf(context->file, line "\n", __VA_ARGS__)
 #define emits(line) fprintf(context->file, line "\n")
 
-static Context *context__create(FILE *file, Named_Types *named_types) {
+static Context *context__create(FILE *file, Named_Functions *named_functions, Named_Types *named_types) {
     Context *self = malloc(sizeof(Context));
     self->global_context = self;
     self->parent_context = NULL;
     self->file = file;
+    self->named_functions = named_functions;
     self->named_types = named_types;
     self->symbols = symbol_table__create();
     self->counter = counter__create();
@@ -130,39 +132,26 @@ void context__create_variable(Context *self, String *name, Type *type) {
     symbol_table__add(self->symbols, name, type);
 }
 
-int context__is_primitive_type(Context *self, Type *type) {
+static Type *context__resolve_type(Context *self, Type *type) {
     switch (type->kind) {
     case TYPE__BOOLEAN:
-    case TYPE__INTEGER: {
-        return 1;
-    }
+    case TYPE__INTEGER:
+        return type;
     case TYPE__NAMED: {
         Type *named_type = named_types__get(self->named_types, type->named_data.name->lexeme);
-        return context__is_primitive_type(self, named_type);
-    }
-    default:
-        return 0;
-    }
-}
-
-static int context__compute_type_size(Context *self, Type *type) {
-    switch (type->kind) {
-    case TYPE__BOOLEAN: {
-        return 1;
-    }
-    case TYPE__INTEGER: {
-        return 8;
-    }
-    case TYPE__NAMED: {
-        Type *named_type = named_types__get(self->named_types, type->named_data.name->lexeme);
-        return context__compute_type_size(self, named_type);
+        return context__resolve_type(self, named_type);
     }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, type__get_kind_name(type));
     }
 }
 
-static Register *emit_load_literal(Context *context, Token *token) {
+int context__is_primitive_type(Context *self, Type *type) {
+    Type *resolved_type = context__resolve_type(self, type);
+    return resolved_type->kind == TYPE__INTEGER || resolved_type->kind == TYPE__BOOLEAN;
+}
+
+Register *emit_load_literal(Context *context, Token *token) {
     switch (token->kind) {
     case TOKEN__INTEGER: {
         Register *value_holder = registers__acquire(8);
@@ -187,32 +176,28 @@ static Register *emit_load_literal(Context *context, Token *token) {
     }
 }
 
-static Register *emit_load_variable(Context *context, Token *variable_name) {
+Register *emit_load_variable(Context *context, Token *variable_name) {
     Symbol *symbol = context__find_symbol(context, variable_name->lexeme);
     if (symbol == NULL) {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
     }
 
-    Type *variable_type = symbol->type;
-
-    if (!context__is_primitive_type(context, variable_type)) {
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, type__get_kind_name(variable_type));
-    }
-
     // TODO: check if variable is local or global, and load it respectively
 
-    Register *value_holder = registers__acquire(context__compute_type_size(context, variable_type));
-    switch (value_holder->size) {
-    case 1: {
+    Type *variable_type = context__resolve_type(context, symbol->type);
+    switch (variable_type->kind) {
+    case TYPE__BOOLEAN: {
+        Register *value_holder = registers__acquire(1);
         emitf("  movb %s(%%rip), %s", variable_name->lexeme->data, register__name(value_holder));
         return value_holder;
     }
-    case 8: {
+    case TYPE__INTEGER: {
+        Register *value_holder = registers__acquire(8);
         emitf("  movq %s(%%rip), %s", variable_name->lexeme->data, register__name(value_holder));
         return value_holder;
     }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported type: %s", type__get_kind_name(variable_type));
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, type__get_kind_name(variable_type));
     }
 }
 
@@ -293,6 +278,36 @@ Register *emit_expression(Context *context, Expression *expression) {
             PANIC(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary_data.operator_token->lexeme->data);
         }
     }
+    case EXPRESSION__CALL: {
+        Expression *callee = expression->call_data.callee;
+        Argument_List *arguments = expression->call_data.arguments;
+        if (callee->kind != EXPRESSION__VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only simple function calls like \"example()\" are supported", expression->location->line, expression->location->column);
+        }
+        String *function_name = callee->variable_data.name->lexeme;
+        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
+        if (function == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
+        }
+        if (list__size(arguments) > 0) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only function calls without arguments are supported", expression->location->line, expression->location->column);
+        }
+        
+        emitf("  call %s", function_name->data);
+
+        Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
+        switch (function_return_type->kind) {
+        case TYPE__INTEGER: {
+            Register *value_holder = registers__acquire(8);
+            emitf("  movq %%rax, %s", register__name(value_holder));
+            return value_holder;
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported return type: %s", expression->location->line, expression->location->column, type__get_kind_name(function_return_type));
+        }
+
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression calls are not implemented yet", expression->location->line, expression->location->column);
+    }
     case EXPRESSION__LITERAL: {
         return emit_load_literal(context, expression->literal_data.value);
     }
@@ -300,7 +315,7 @@ Register *emit_expression(Context *context, Expression *expression) {
         return emit_load_variable(context, expression->variable_data.name);
     }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported expression kind: %s", expression__get_kind_name(expression));
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
     }
 }
 
@@ -317,19 +332,25 @@ void emit_statement(Context *context, Statement *statement) {
         if (symbol == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
         }
+        Type *variable_type = context__resolve_type(context, symbol->type);
+        // TODO: make sure value expression has the same type as the variable
         Register *value_holder = emit_expression(context, statement->assignment_data.value);
-        if (context__compute_type_size(context, symbol->type) != value_holder->size) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression type differs from variable type.", statement->location->line, statement->location->column);
-        }
-        switch (value_holder->size) {
-        case 1:
+        switch (variable_type->kind) {
+        case TYPE__BOOLEAN: {
+            if (value_holder->size != 1) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 1 byte register.", statement->location->line, statement->location->column);
+            }
             emitf("  movb %s, %s(%%rip)", register__name(value_holder), variable_name->data);
             break;
-        case 8:
+        }
+        case TYPE__INTEGER:
+            if (value_holder->size != 8) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
+            }
             emitf("  movq %s, %s(%%rip)", register__name(value_holder), variable_name->data);
             break;
         default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value size: %d.", statement->location->line, statement->location->column, value_holder->size);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
         }
         register__release(value_holder);
         return;
@@ -419,9 +440,19 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
         }
         context__create_variable(context, variable_name->lexeme, statement->variable_data.type);
-        Type *variable_type = statement->variable_data.type;
-        int variable_type_size = context__compute_type_size(context, variable_type);
-        emitf("  .comm %s,  %d, 8", variable_name->lexeme->data, variable_type_size);
+        Type *variable_type = context__resolve_type(context, statement->variable_data.type);
+        switch (variable_type->kind) {
+        case TYPE__BOOLEAN: {
+            emitf("  .comm %s, 1, 1", variable_name->lexeme->data);
+            break;
+        }
+        case TYPE__INTEGER: {
+            emitf("  .comm %s, 8, 8", variable_name->lexeme->data);
+            break;
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
+        }
         Expression *variable_value = statement->variable_data.value;
         if (variable_value) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Variables with assignment are not supported yet.", statement->location->line, statement->location->column);
@@ -434,7 +465,7 @@ void emit_statement(Context *context, Statement *statement) {
 }
 
 void generate(char *file, Compilation_Unit *compilation_unit) {
-    Context *context = context__create(fopen(file, "w"), compilation_unit->named_types);
+    Context *context = context__create(fopen(file, "w"), compilation_unit->named_functions, compilation_unit->named_types);
 
     emits("  .text");
     emits(".LC0:");
