@@ -27,6 +27,7 @@ typedef struct Type {
         TYPE__INTEGER,
         TYPE__POINTER,
         TYPE__NAMED,
+        TYPE__NOTHING,
         TYPE__STRUCT,
     } kind;
 

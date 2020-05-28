@@ -165,13 +165,18 @@ Variable *context__create_variable(Context *self, String *name, Source_Location 
     return variables__add(self->variables, counter__inc(self->counter), name, location, type, self->current_function == NULL);
 }
 
-static Type *context__resolve_type(Context *self, Type *type) {
+Type *context__resolve_type(Context *self, Type *type) {
     switch (type->kind) {
     case TYPE__BOOLEAN:
     case TYPE__INTEGER:
+    case TYPE__NOTHING:
         return type;
     case TYPE__NAMED: {
-        Type *named_type = named_types__get(self->named_types, type->named_data.name->lexeme);
+        String *type_name = type->named_data.name->lexeme;
+        Type *named_type = named_types__get(self->named_types, type_name);
+        if (named_type == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown type: %s", type->location->line, type->location->column, type_name->data);
+        }
         return context__resolve_type(self, named_type);
     }
     default:
@@ -335,6 +340,9 @@ Register *emit_expression(Context *context, Expression *expression) {
             emitf("  movq %%rax, %s", register__name(value_holder));
             return value_holder;
         }
+        case TYPE__NOTHING: {
+            return NULL;
+        }
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported return type: %s", expression->location->line, expression->location->column, type__get_kind_name(function_return_type));
         }
@@ -403,6 +411,15 @@ void emit_statement(Context *context, Statement *statement) {
         }
         emitf("  jmp loop_%03d_end", loop->id);
         loop->has_exit = 1;
+        return;
+    }
+    case STATEMENT__EXPRESSION: {
+        Expression *expression = statement->expression_data.expression;
+        Register *value_holder = emit_expression(context, expression);
+        if (value_holder != NULL) {
+            WARNING(__FILE__, __LINE__, "(%04d:%04d) -- The result of this expression is ignored", statement->location->line, statement->location->column);
+            register__release(value_holder);
+        }
         return;
     }
     case STATEMENT__FUNCTION: {
