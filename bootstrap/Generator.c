@@ -483,6 +483,12 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
         Statement *statement = list_iterator__next(&iterator);
         emits("");
         emit_statement(context, statement);
+
+        for (int i = 0; i < REGISTERS_COUNT; i++) {
+            if (registers[i].is_used) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unrelease register found: %s", statement->location->line, statement->location->column, register__name(registers + i));
+            }
+        }
     }
 
     fclose(context->file);
