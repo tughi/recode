@@ -58,6 +58,19 @@ char *type__get_kind_name(Type *self) {
     }
 }
 
+int type__equals(Type *self, Type *other) {
+    switch (self->kind) {
+    case TYPE__BOOLEAN: {
+        return other->kind == TYPE__BOOLEAN;
+    }
+    case TYPE__INTEGER: {
+        return other->kind == TYPE__INTEGER;
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(self));
+    }
+}
+
 char *expression__get_kind_name(Expression *self) {
     switch (self->kind) {
     case EXPRESSION__ARRAY_ITEM:

@@ -59,6 +59,7 @@ Type *type__create_named(Source_Location *location, Token *name);
 Type *type__create_pointer(Source_Location *location, Type *type);
 Type *type__create_struct(Source_Location *location, Statement *statement);
 char *type__get_kind_name(Type *self);
+int type__equals(Type *self, Type *other);
 
 typedef struct Argument {
     Token *name;

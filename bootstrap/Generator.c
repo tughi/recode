@@ -165,6 +165,10 @@ Variable *context__create_variable(Context *self, String *name, Source_Location 
     return variables__add(self->variables, counter__inc(self->counter), name, location, type, self->current_function == NULL);
 }
 
+Type *context__find_type(Context *self, String *name) {
+    return named_types__get(self->named_types, name);
+}
+
 Type *context__resolve_type(Context *self, Type *type) {
     switch (type->kind) {
     case TYPE__BOOLEAN:
@@ -173,7 +177,7 @@ Type *context__resolve_type(Context *self, Type *type) {
         return type;
     case TYPE__NAMED: {
         String *type_name = type->named_data.name->lexeme;
-        Type *named_type = named_types__get(self->named_types, type_name);
+        Type *named_type = context__find_type(self, type_name);
         if (named_type == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown type: %s", type->location->line, type->location->column, type_name->data);
         }
@@ -187,6 +191,90 @@ Type *context__resolve_type(Context *self, Type *type) {
 int context__is_primitive_type(Context *self, Type *type) {
     Type *resolved_type = context__resolve_type(self, type);
     return resolved_type->kind == TYPE__INTEGER || resolved_type->kind == TYPE__BOOLEAN;
+}
+
+Type *context__get_boolean_type(Context *self) {
+    static String *type_name = NULL;
+    if (type_name == NULL) {
+        type_name = string__create("Boolean");
+    }
+    return context__find_type(self, type_name);
+}
+
+Type *context__get_integer_type(Context *self) {
+    static String *type_name = NULL;
+    if (type_name == NULL) {
+        type_name = string__create("Int");
+    }
+    return context__find_type(self, type_name);
+}
+
+Type *compute_expression_type(Context *context, Expression *expression) {
+    switch (expression->kind) {
+    case EXPRESSION__BINARY: {
+        Type *left_expression_type = compute_expression_type(context, expression->binary_data.left_expression);
+        Type *right_expression_type = compute_expression_type(context, expression->binary_data.right_expression);
+        Token *operator_token = expression->binary_data.operator_token;
+        String *operator = operator_token->lexeme;
+        if (string__equals(operator, "+") || string__equals(operator, "-") || string__equals(operator, "*") || string__equals(operator, "/") || string__equals(operator, "//")) {
+            if (left_expression_type->kind != TYPE__INTEGER || right_expression_type->kind != TYPE__INTEGER) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" only integers", operator_token->location->line, operator_token->location->column, operator->data);
+            }
+        } else if (string__equals(operator, "<") || string__equals(operator, "<=") || string__equals(operator, ">") || string__equals(operator, ">=")) {
+            if (left_expression_type->kind != TYPE__INTEGER || right_expression_type->kind != TYPE__INTEGER) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" only integers", operator_token->location->line, operator_token->location->column, operator->data);
+            }
+            return context__get_boolean_type(context);
+        } else if (string__equals(operator, "==") || string__equals(operator, "!=")) {
+            if (!type__equals(left_expression_type, right_expression_type)) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" same type only", operator_token->location->line, operator_token->location->column, operator->data);
+            }
+            return context__get_boolean_type(context);
+        } else {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported operator: %s", operator_token->location->line, operator_token->location->column, operator->data);
+        }
+        return left_expression_type;
+    }
+    case EXPRESSION__CALL: {
+        Expression *callee = expression->call_data.callee;
+        Argument_List *arguments = expression->call_data.arguments;
+        if (callee->kind != EXPRESSION__VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only simple function calls like \"example()\" are supported", expression->location->line, expression->location->column);
+        }
+        String *function_name = callee->variable_data.name->lexeme;
+        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
+        if (function == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
+        }
+        return context__resolve_type(context, function->function_data.return_type);
+    }
+    case EXPRESSION__LITERAL: {
+        Token *literal = expression->literal_data.value;
+        switch (literal->kind) {
+        case TOKEN__INTEGER: {
+            return context__get_integer_type(context);
+        }
+        case TOKEN__KEYWORD: {
+            if (string__equals(literal->lexeme, "true") || string__equals(literal->lexeme, "false")) {
+                return context__get_boolean_type(context);
+            }
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported literal keyword: %s", literal->location->line, literal->location->column, literal->lexeme->data);
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported literal expression kind: %s", literal->location->line, literal->location->column, token__get_kind_name(literal));
+        }
+    }
+    case EXPRESSION__VARIABLE: {
+        String *variable_name = expression->variable_data.name->lexeme;
+        Variable *variable = context__find_variable(context, variable_name);
+        if (variable == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
+        }
+        return context__resolve_type(context, variable->type);
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
+    }
 }
 
 Register *emit_load_literal(Context *context, Token *token) {
@@ -374,7 +462,10 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
         }
         Type *variable_type = context__resolve_type(context, variable->type);
-        // TODO: make sure value expression has the same type as the variable
+        Type *value_type = compute_expression_type(context, statement->assignment_data.value);
+        if (!type__equals(variable_type, value_type)) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Destination type differs from value type. Expected %s but got %s instead.", statement->location->line, statement->location->column, type__get_kind_name(variable_type), type__get_kind_name(value_type));
+        }
         Register *value_holder = emit_expression(context, statement->assignment_data.value);
         switch (variable_type->kind) {
         case TYPE__BOOLEAN: {
@@ -415,6 +506,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__EXPRESSION: {
         Expression *expression = statement->expression_data.expression;
+        compute_expression_type(context, expression);
         Register *value_holder = emit_expression(context, expression);
         if (value_holder != NULL) {
             WARNING(__FILE__, __LINE__, "(%04d:%04d) -- The result of this expression is ignored", statement->location->line, statement->location->column);
@@ -446,6 +538,11 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT__IF: {
         int label = counter__inc(context->counter);
         emitf("if_%03d_cond:", label);
+        Expression *condition_expression = statement->if_data.condition;
+        Type *condition_expression_type = compute_expression_type(context, condition_expression);
+        if (condition_expression_type->kind != TYPE__BOOLEAN) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a boolean expression", condition_expression->location->line, condition_expression->location->column);
+        }
         Register *condition_value_holder = emit_expression(context, statement->if_data.condition);
         emitf("  dec %s", register__name(condition_value_holder));
         register__release(condition_value_holder);
@@ -481,7 +578,13 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Found return statement outside of a function.", statement->location->line, statement->location->column);
         }
         if (statement->return_data.expression != NULL) {
-            Register *value_holder = emit_expression(context, statement->return_data.expression);
+            Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
+            Expression *return_expression = statement->return_data.expression;
+            Type *return_expression_type = compute_expression_type(context, return_expression);
+            if (!type__equals(function_return_type, return_expression_type)) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression type doesn't match the return type", return_expression->location->line, return_expression->location->column);
+            }
+            Register *value_holder = emit_expression(context, return_expression);
             emitf("  movq %s, %%rax", register__name(value_holder));
             register__release(value_holder);
         }
