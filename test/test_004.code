@@ -1,7 +1,8 @@
 \ Test loop break
 
+result: Int
+
 main :: () -> Int {
-    result: Int
     result = 9
 
     loop {

@@ -1,6 +1,5 @@
 #include "Generator.h"
 #include "Logging.h"
-#include "Symbol_Table.h"
 
 enum {
     REGISTER_RCX,
@@ -65,6 +64,39 @@ void registers__release_all() {
     }
 }
 
+typedef struct Variable {
+    String *name;
+    Source_Location *location;
+    Type *type;
+    int is_global;
+} Variable;
+
+typedef List Variables;
+
+Variables *variables__create() {
+    return list__create();
+}
+
+Variable *variables__find(Variables *self, String *name) {
+    for (List_Iterator iterator = list__create_reversed_iterator(self); list_iterator__has_next(&iterator);) {
+        Variable *variable = list_iterator__next(&iterator);
+        if (string__equals(name, variable->name->data)) {
+            return variable;
+        }
+    }
+    return NULL;
+}
+
+Variable *variables__add(Variables *self, String *name, Source_Location *location, Type *type, int is_global) {
+    Variable *variable = malloc(sizeof(Variable));
+    variable->name = name;
+    variable->location = location;
+    variable->type = type;
+    variable->is_global = is_global;
+    list__append(self, variable);
+    return variable;
+}
+
 typedef struct Loop {
     int id;
     int has_exit;
@@ -100,7 +132,7 @@ typedef struct Context {
     FILE *file;
     Named_Functions *named_functions;
     Named_Types *named_types;
-    Symbol_Table *symbols;
+    Variables *variables;
     Counter *counter;
     Statement *current_function;
     Loop *current_loop;
@@ -116,22 +148,19 @@ static Context *context__create(FILE *file, Named_Functions *named_functions, Na
     self->file = file;
     self->named_functions = named_functions;
     self->named_types = named_types;
-    self->symbols = symbol_table__create();
+    self->variables = variables__create();
     self->counter = counter__create();
     self->current_function = NULL;
     self->current_loop = NULL;
     return self;
 }
 
-Symbol *context__find_symbol(Context *self, String *name) {
-    return symbol_table__find(self->symbols, name);
+Variable *context__find_variable(Context *self, String *name) {
+    return variables__find(self->variables, name);
 }
 
-void context__create_variable(Context *self, String *name, Type *type) {
-    if (context__find_symbol(self, name)) {
-        PANIC(__FILE__, __LINE__, "Trying to create a variable that already exists in the same context: %s", name->data);
-    }
-    symbol_table__add(self->symbols, name, type);
+Variable *context__create_variable(Context *self, String *name, Source_Location *location, Type *type) {
+    return variables__add(self->variables, name, location, type, self->current_function == NULL);
 }
 
 static Type *context__resolve_type(Context *self, Type *type) {
@@ -179,14 +208,14 @@ Register *emit_load_literal(Context *context, Token *token) {
 }
 
 Register *emit_load_variable(Context *context, Token *variable_name) {
-    Symbol *symbol = context__find_symbol(context, variable_name->lexeme);
-    if (symbol == NULL) {
+    Variable *variable = context__find_variable(context, variable_name->lexeme);
+    if (variable == NULL) {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
     }
 
     // TODO: check if variable is local or global, and load it respectively
 
-    Type *variable_type = context__resolve_type(context, symbol->type);
+    Type *variable_type = context__resolve_type(context, variable->type);
     switch (variable_type->kind) {
     case TYPE__BOOLEAN: {
         Register *value_holder = registers__acquire(1);
@@ -330,11 +359,11 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Assignment to non-variables are not supported yet.", statement->location->line, statement->location->column);
         }
         String *variable_name = assignment_destination->variable_data.name->lexeme;
-        Symbol *symbol = context__find_symbol(context, variable_name);
-        if (symbol == NULL) {
+        Variable *variable = context__find_variable(context, variable_name);
+        if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
         }
-        Type *variable_type = context__resolve_type(context, symbol->type);
+        Type *variable_type = context__resolve_type(context, variable->type);
         // TODO: make sure value expression has the same type as the variable
         Register *value_holder = emit_expression(context, statement->assignment_data.value);
         switch (variable_type->kind) {
@@ -444,12 +473,14 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT__VARIABLE: {
-        // TODO: distiguish between global and local variables
         Token *variable_name = statement->variable_data.name;
         if (statement->variable_data.is_external) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
         }
-        context__create_variable(context, variable_name->lexeme, statement->variable_data.type);
+        Variable *variable = context__create_variable(context, variable_name->lexeme, statement->variable_data.name->location, statement->variable_data.type);
+        if (!variable->is_global) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local variables are not supported yet", statement->location->line, statement->location->column);
+        }
         Type *variable_type = context__resolve_type(context, statement->variable_data.type);
         switch (variable_type->kind) {
         case TYPE__BOOLEAN: {

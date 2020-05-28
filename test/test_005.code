@@ -1,9 +1,9 @@
 \ Test mixing int and boolean expressions
 
-main :: () -> Int {
-    test: Boolean
-    noise: Int
+test: Boolean
+noise: Int
 
+main :: () -> Int {
     test = (1 > 0)
     noise = 256
 

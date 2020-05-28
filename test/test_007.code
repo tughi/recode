@@ -1,0 +1,13 @@
+\ Test symbol overloading
+
+x: Boolean
+x: Int
+
+main :: () -> Int {
+    return x() - x
+}
+
+x :: () -> Int {
+    x = 42
+    return x
+}
