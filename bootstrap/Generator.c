@@ -174,6 +174,7 @@ Type *context__resolve_type(Context *self, Type *type) {
     case TYPE__BOOLEAN:
     case TYPE__INTEGER:
     case TYPE__NOTHING:
+    case TYPE__POINTER:
         return type;
     case TYPE__NAMED: {
         String *type_name = type->named_data.name->lexeme;
@@ -264,6 +265,35 @@ Type *compute_expression_type(Context *context, Expression *expression) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported literal expression kind: %s", literal->location->line, literal->location->column, token__get_kind_name(literal));
         }
     }
+    case EXPRESSION__POINTED_VALUE: {
+        Expression *pointer_expression = expression->pointed_value_data.expression;
+        if (pointer_expression->kind != EXPRESSION__VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable expression", pointer_expression->location->line, pointer_expression->location->column);
+        }
+        String *variable_name = pointer_expression->variable_data.name->lexeme;
+        Variable *variable = context__find_variable(context, variable_name);
+        if (variable == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
+        }
+        Type *variable_type = variable->type;
+        if (variable_type->kind != TYPE__POINTER) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a pointer variable", pointer_expression->location->line, pointer_expression->location->column);
+        }
+        return context__resolve_type(context, variable_type->pointer_data.type);
+    }
+    case EXPRESSION__POINTER_TO: {
+        Expression *variable_expression = expression->pointer_to_data.expression;
+        if (variable_expression->kind != EXPRESSION__VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable", variable_expression->location->line, variable_expression->location->column);
+        }
+        String *variable_name = variable_expression->variable_data.name->lexeme;
+        Variable *variable = context__find_variable(context, variable_name);
+        if (variable == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
+        }
+        Type *variable_type = variable->type; // context__resolve_type(context, variable->type);
+        return type__create_pointer(expression->location, variable_type);
+    }
     case EXPRESSION__VARIABLE: {
         String *variable_name = expression->variable_data.name->lexeme;
         Variable *variable = context__find_variable(context, variable_name);
@@ -318,6 +348,11 @@ Register *emit_load_variable(Context *context, Token *variable_name) {
         return value_holder;
     }
     case TYPE__INTEGER: {
+        Register *value_holder = registers__acquire(8);
+        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
+        return value_holder;
+    }
+    case TYPE__POINTER: {
         Register *value_holder = registers__acquire(8);
         emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
         return value_holder;
@@ -440,6 +475,57 @@ Register *emit_expression(Context *context, Expression *expression) {
     case EXPRESSION__LITERAL: {
         return emit_load_literal(context, expression->literal_data.value);
     }
+    case EXPRESSION__POINTED_VALUE: {
+        Expression *pointer_expression = expression->pointed_value_data.expression;
+        if (pointer_expression->kind != EXPRESSION__VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable expression", pointer_expression->location->line, pointer_expression->location->column);
+        }
+        String *variable_name = pointer_expression->variable_data.name->lexeme;
+        Variable *variable = context__find_variable(context, variable_name);
+        if (variable == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
+        }
+        Type *variable_type = variable->type;
+        if (variable_type->kind != TYPE__POINTER) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a pointer variable", pointer_expression->location->line, pointer_expression->location->column);
+        }
+        Register *pointer_holder = emit_load_variable(context, pointer_expression->variable_data.name);
+        Type *value_type = context__resolve_type(context, variable_type->pointer_data.type);
+        switch (value_type->kind) {
+        case TYPE__BOOLEAN: {
+            Register *value_holder = registers__acquire(1);
+            emitf("  movb (%s), %s", register__name(pointer_holder), register__name(value_holder));
+            register__release(pointer_holder);
+            return value_holder;
+        }
+        case TYPE__INTEGER: {
+            Register *value_holder = registers__acquire(8);
+            emitf("  movq (%s), %s", register__name(pointer_holder), register__name(value_holder));
+            register__release(pointer_holder);
+            return value_holder;
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", pointer_expression->location->line, pointer_expression->location->column, type__get_kind_name(value_type));
+        }
+    }
+    case EXPRESSION__POINTER_TO: {
+        Expression *variable_expression = expression->pointer_to_data.expression;
+        if (variable_expression->kind != EXPRESSION__VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable", variable_expression->location->line, variable_expression->location->column);
+        }
+        String *variable_name = variable_expression->variable_data.name->lexeme;
+        Variable *variable = context__find_variable(context, variable_name);
+        if (variable == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
+        }
+        Register *value_holder = registers__acquire(8);
+        if (variable->is_global) {
+            emitf("  leaq %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
+        } else {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local varaibles are not supported yet", variable_expression->location->line, variable_expression->location->column);
+        }
+        return value_holder;
+    }
     case EXPRESSION__VARIABLE: {
         return emit_load_variable(context, expression->variable_data.name);
     }
@@ -476,6 +562,12 @@ void emit_statement(Context *context, Statement *statement) {
             break;
         }
         case TYPE__INTEGER:
+            if (value_holder->size != 8) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
+            }
+            emitf("  movq %s, %s_%03d(%%rip)", register__name(value_holder), variable_name->data, variable->id);
+            break;
+        case TYPE__POINTER:
             if (value_holder->size != 8) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
             }
@@ -612,6 +704,10 @@ void emit_statement(Context *context, Statement *statement) {
             break;
         }
         case TYPE__INTEGER: {
+            emitf("  .comm %s_%03d, 8, 8", variable_name->lexeme->data, variable->id);
+            break;
+        }
+        case TYPE__POINTER: {
             emitf("  .comm %s_%03d, 8, 8", variable_name->lexeme->data, variable->id);
             break;
         }

@@ -76,6 +76,8 @@ typedef struct Expression {
         EXPRESSION__CAST,
         EXPRESSION__LITERAL,
         EXPRESSION__MEMBER,
+        EXPRESSION__POINTED_VALUE,
+        EXPRESSION__POINTER_TO,
         EXPRESSION__SIZE_OF,
         EXPRESSION__UNARY,
         EXPRESSION__VARIABLE,
@@ -108,6 +110,12 @@ typedef struct Expression {
             struct Expression *object;
             Token *name;
         } member_data;
+        struct {
+            struct Expression *expression;
+        } pointed_value_data;
+        struct {
+            struct Expression *expression;
+        } pointer_to_data;
         struct {
             Type *type;
         } size_of_data;

@@ -185,6 +185,34 @@ Expression *expression__create_size_of(Source_Location *location, Type *type) {
     return self;
 }
 
+int is_pointer_operator(Token *token) {
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "@");
+}
+
+Expression *expression__create_pointer_to(Source_Location *location, Expression *expression) {
+    Expression *self = malloc(sizeof(Expression));
+    self->kind = EXPRESSION__POINTER_TO;
+    self->location = location;
+    self->pointer_to_data.expression = expression;
+    return self;
+}
+
+int is_open_bracket(Token *token) {
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "[");
+}
+
+int is_close_bracket(Token *token) {
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "]");
+}
+
+Expression *expression__create_pointed_value(Source_Location *location, Expression *expression) {
+    Expression *self = malloc(sizeof(Expression));
+    self->kind = EXPRESSION__POINTED_VALUE;
+    self->location = location;
+    self->pointed_value_data.expression = expression;
+    return self;
+}
+
 // primary
 //      : IDENTIFIER
 //      | INTEGER
@@ -193,7 +221,9 @@ Expression *expression__create_size_of(Source_Location *location, Type *type) {
 //      | "true"
 //      | CHARACTER
 //      | "(" expression ")"
-//      | "size_of" IDENTIFIER
+//      | "size_of" type
+//      | "@" expression
+//      | "[" expression "]"
 Expression *parse_primary_expression(Context *context) {
     Token *name = consume_one(context, NULL, required(is_identifier));
     if (name != NULL) {
@@ -215,6 +245,20 @@ Expression *parse_primary_expression(Context *context) {
         consume_space(context, 1);
         Type *type = parse_type(context);
         return expression__create_size_of(location, type);
+    }
+    if (matches_one(context, required(is_pointer_operator))) {
+        Source_Location *location = consume_one(context, NULL, required(is_pointer_operator))->location;
+        consume_space(context, 0);
+        Expression *expression = parse_expression(context);
+        return expression__create_pointer_to(location, expression);
+    }
+    if (matches_one(context, required(is_open_bracket))) {
+        Source_Location *location = consume_one(context, NULL, required(is_open_bracket))->location;
+        consume_space(context, 0);
+        Expression *expression = parse_expression(context);
+        consume_space(context, 0);
+        consume_one(context, "]", required(is_close_bracket));
+        return expression__create_pointed_value(location, expression);
     }
     PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected expression instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
 }
@@ -250,14 +294,6 @@ int is_comma(Token *token) {
 
 int is_dot(Token *token) {
     return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ".");
-}
-
-int is_open_bracket(Token *token) {
-    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "[");
-}
-
-int is_close_bracket(Token *token) {
-    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "]");
 }
 
 Expression *expression__create_call(Expression *callee, List *arguments) {
@@ -593,10 +629,6 @@ Member_List *parse_comma_separated_members(Context *context) {
         space_before_next_member = 1;
     } while (consume_one(context, NULL, required(is_comma)));
     return members;
-}
-
-int is_pointer_operator(Token *token) {
-    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, "@");
 }
 
 // type

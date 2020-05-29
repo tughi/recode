@@ -1,0 +1,10 @@
+\ Test referencing and dereferencing variables
+
+x: Int
+y: @Int
+
+main :: () -> Int {
+    y = @x
+    x = 123456789
+    return [y] - 123456789
+}

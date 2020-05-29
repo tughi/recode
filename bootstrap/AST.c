@@ -66,8 +66,14 @@ int type__equals(Type *self, Type *other) {
     case TYPE__INTEGER: {
         return other->kind == TYPE__INTEGER;
     }
+    case TYPE__NAMED: {
+        return other->kind == TYPE__NAMED && string__equals(self->named_data.name->lexeme, other->named_data.name->lexeme->data);
+    }
     case TYPE__NOTHING: {
         return other->kind == TYPE__NOTHING;
+    }
+    case TYPE__POINTER: {
+        return other->kind == TYPE__POINTER && type__equals(self->pointer_data.type, other->pointer_data.type);
     }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(self));
@@ -88,6 +94,10 @@ char *expression__get_kind_name(Expression *self) {
         return "LITERAL";
     case EXPRESSION__MEMBER:
         return "MEMBER";
+    case EXPRESSION__POINTED_VALUE:
+        return "POINTED_VALUE";
+    case EXPRESSION__POINTER_TO:
+        return "POINTER_TO";
     case EXPRESSION__SIZE_OF:
         return "SIZE_OF";
     case EXPRESSION__UNARY:
@@ -95,7 +105,7 @@ char *expression__get_kind_name(Expression *self) {
     case EXPRESSION__VARIABLE:
         return "VARIABLE";
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported statement kind: %d", self->kind);
+        PANIC(__FILE__, __LINE__, "Unsupported expression kind: %d", self->kind);
     }
 }
 
