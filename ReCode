@@ -72,11 +72,11 @@ def build():
             compile_file = True
 
         if compile_file:
-            execute(f'''clang -g -c -o {obj_file} {c_file}''')
+            execute(f'''gcc -g -c -o {obj_file} {c_file}''')
             obj_files_changed = True
 
     if obj_files_changed or not os.path.exists(os.path.join('..', 'build', 'ReCode')):
-        execute(f'''clang -g -rdynamic -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}''')
+        execute(f'''gcc -g -rdynamic -o {os.path.join('..', 'build', 'ReCode')} {' '.join(obj_files)}''')
 
     os.chdir('..')
 
@@ -96,7 +96,7 @@ def run():
         test = test_file[:-5]
         print(f"Checking {test}")
         if execute(f'''./ReCode {os.path.join(test_dir, test_file)} {test}.s''', echo=False, exit_on_error=False) == 0:
-            if execute(f'''clang -o {test} {test}.s''', echo=False, exit_on_error=False) == 0:
+            if execute(f'''gcc -o {test} {test}.s''', echo=False, exit_on_error=False) == 0:
                 try:
                     with open(f'''{os.path.join(test_dir, test)}.exit''') as file:
                         for line in file:
