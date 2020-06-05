@@ -368,6 +368,22 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
     }
     case EXPRESSION__CALL: {
+        for (int id = 0; id < REGISTERS_COUNT; id++) {
+            Value_Holder *value_holder = registers[id];
+            if (value_holder != NULL) {
+                switch (value_holder->size) {
+                case 1:
+                    emitf("  pushb %s", value_holder__register_name(value_holder));
+                    break;
+                case 8:
+                    emitf("  pushq %s", value_holder__register_name(value_holder));
+                    break;
+                default:
+                    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported register size: %d", expression->location->line, expression->location->column, value_holder->size);
+                }
+            }
+        }
+
         Expression *callee = expression->call_data.callee;
         Argument_List *arguments = expression->call_data.arguments;
         if (callee->kind != EXPRESSION__VARIABLE) {
@@ -384,21 +400,37 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         
         emitf("  call %s", function_name->data);
 
+        for (int id = REGISTERS_COUNT - 1; id >= 0; id--) {
+            Value_Holder *value_holder = registers[id];
+            if (value_holder != NULL) {
+                switch (value_holder->size) {
+                case 1:
+                    emitf("  popb %s", value_holder__register_name(value_holder));
+                    break;
+                case 8:
+                    emitf("  popq %s", value_holder__register_name(value_holder));
+                    break;
+                default:
+                    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported register size: %d", expression->location->line, expression->location->column, value_holder->size);
+                }
+            }
+        }
+
         Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
         switch (function_return_type->kind) {
         case TYPE__INTEGER: {
             value_holder__acquire_register(result_value_holder, context__get_integer_type(context), 8);
             emitf("  movq %%rax, %s", value_holder__register_name(result_value_holder));
-            return;
+            break;
         }
         case TYPE__NOTHING: {
-            return;
+            break;
         }
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported return type: %s", expression->location->line, expression->location->column, type__get_kind_name(function_return_type));
         }
 
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression calls are not implemented yet", expression->location->line, expression->location->column);
+        return;
     }
     case EXPRESSION__LITERAL: {
         emit_load_literal(context, expression->literal_data.value, result_value_holder);
