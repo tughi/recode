@@ -2,65 +2,73 @@
 #include "Logging.h"
 
 enum {
-    REGISTER_RCX,
-    REGISTER_R08,
-    REGISTER_R09,
-    REGISTER_R10,
-    REGISTER_R11,
+    REGISTER__RCX,
+    REGISTER__R08,
+    REGISTER__R09,
+    REGISTER__R10,
+    REGISTER__R11,
     REGISTERS_COUNT,
 };
 
-typedef struct Register {
-    int id;
-    int is_used;
+typedef struct Value_Holder {
+    enum {
+        VALUE_HOLDER__NEW = 0,
+        VALUE_HOLDER__REGISTER,
+    } kind;
+
     int size;
-} Register;
+    Type *type;
+    union {
+        struct {
+            int id;
+        } register_data;
+    };
+} Value_Holder;
 
-char *register__name(Register *self) {
-    static char *names_64bit[REGISTERS_COUNT] = { "%rcx", "%r8", "%r9", "%r10", "%r11" };
-    static char *names_32bit[REGISTERS_COUNT] = { "%ecx", "%r8d", "%r9d", "%r10d", "%r11d" };
-    static char *names_16bit[REGISTERS_COUNT] = { "%cx", "%r8w", "%r9w", "%r10w", "%r11w" };
-    static char *names_8bit[REGISTERS_COUNT] = { "%cl", "%r8b", "%r9b", "%r10b", "%r11b" };
+Value_Holder *registers[REGISTERS_COUNT];
 
-    switch (self->size) {
-    case 8: return names_64bit[self->id];
-    case 4: return names_32bit[self->id];
-    case 2: return names_16bit[self->id];
-    case 1: return names_8bit[self->id];
-    default:
-        PANIC(__FILE__, __LINE__, "Unsupported register: %d", self->id);
+void value_holder__acquire_register(Value_Holder *self, Type *type, int size) {
+    if (self->kind != VALUE_HOLDER__NEW) {
+        PANIC(__FILE__, __LINE__, "Trying to acquire register for an invalid value holder kind: %d", self->kind);
     }
-}
-
-void register__release(Register *self) {
-    if (self->is_used != 1) {
-        PANIC(__FILE__, __LINE__, "Trying to release an unused register: %s", register__name(self));
-    }
-    self->is_used = 0;
-}
-
-Register registers[REGISTERS_COUNT] = {
-    { .id = REGISTER_RCX, .is_used = 0, .size = 0 },
-    { .id = REGISTER_R08, .is_used = 0, .size = 0 },
-    { .id = REGISTER_R09, .is_used = 0, .size = 0 },
-    { .id = REGISTER_R10, .is_used = 0, .size = 0 },
-    { .id = REGISTER_R11, .is_used = 0, .size = 0 },
-};
-
-Register *registers__acquire(int size) {
-    for (int i = 0; i < REGISTERS_COUNT; i++) {
-        if (registers[i].is_used == 0) {
-            registers[i].is_used = 1;
-            registers[i].size = size;
-            return registers + i;
+    for (int id = 0; id < REGISTERS_COUNT; id++) {
+        if (registers[id] == NULL) {
+            self->kind = VALUE_HOLDER__REGISTER;
+            self->type = type;
+            self->size = size;
+            self->register_data.id = id;
+            registers[id] = self;
+            return;
         }
     }
     PANIC(__FILE__, __LINE__, "All registers are used already%c", 0);
 }
 
-void registers__release_all() {
-    for (int i = 0; i < REGISTERS_COUNT; i++) {
-        registers[i].is_used = 0;
+void value_holder__release_register(Value_Holder *self) {
+    if (self->kind != VALUE_HOLDER__REGISTER) {
+        PANIC(__FILE__, __LINE__, "Trying to release an invalid value holder%c", 0);
+    }
+    registers[self->register_data.id] = NULL;
+    self->kind = VALUE_HOLDER__NEW;
+}
+
+char *value_holder__register_name(Value_Holder *self) {
+    static char *names_64bit[REGISTERS_COUNT] = { "%rcx", "%r8", "%r9", "%r10", "%r11" };
+    static char *names_32bit[REGISTERS_COUNT] = { "%ecx", "%r8d", "%r9d", "%r10d", "%r11d" };
+    static char *names_16bit[REGISTERS_COUNT] = { "%cx", "%r8w", "%r9w", "%r10w", "%r11w" };
+    static char *names_8bit[REGISTERS_COUNT] = { "%cl", "%r8b", "%r9b", "%r10b", "%r11b" };
+
+    if (self->kind != VALUE_HOLDER__REGISTER) {
+        PANIC(__FILE__, __LINE__, "This is not a register%c", 0);
+    }
+
+    switch (self->size) {
+    case 8: return names_64bit[self->register_data.id];
+    case 4: return names_32bit[self->register_data.id];
+    case 2: return names_16bit[self->register_data.id];
+    case 1: return names_8bit[self->register_data.id];
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported value size: %d", self->size);
     }
 }
 
@@ -210,129 +218,32 @@ Type *context__get_integer_type(Context *self) {
     return context__find_type(self, type_name);
 }
 
-Type *compute_expression_type(Context *context, Expression *expression) {
-    switch (expression->kind) {
-    case EXPRESSION__BINARY: {
-        Type *left_expression_type = compute_expression_type(context, expression->binary_data.left_expression);
-        Type *right_expression_type = compute_expression_type(context, expression->binary_data.right_expression);
-        Token *operator_token = expression->binary_data.operator_token;
-        String *operator = operator_token->lexeme;
-        if (string__equals(operator, "+") || string__equals(operator, "-") || string__equals(operator, "*") || string__equals(operator, "/") || string__equals(operator, "//")) {
-            if (left_expression_type->kind != TYPE__INTEGER || right_expression_type->kind != TYPE__INTEGER) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" only integers", operator_token->location->line, operator_token->location->column, operator->data);
-            }
-        } else if (string__equals(operator, "<") || string__equals(operator, "<=") || string__equals(operator, ">") || string__equals(operator, ">=")) {
-            if (left_expression_type->kind != TYPE__INTEGER || right_expression_type->kind != TYPE__INTEGER) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" only integers", operator_token->location->line, operator_token->location->column, operator->data);
-            }
-            return context__get_boolean_type(context);
-        } else if (string__equals(operator, "==") || string__equals(operator, "!=")) {
-            if (!type__equals(left_expression_type, right_expression_type)) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" same type only", operator_token->location->line, operator_token->location->column, operator->data);
-            }
-            return context__get_boolean_type(context);
-        } else {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported operator: %s", operator_token->location->line, operator_token->location->column, operator->data);
-        }
-        return left_expression_type;
-    }
-    case EXPRESSION__CALL: {
-        Expression *callee = expression->call_data.callee;
-        Argument_List *arguments = expression->call_data.arguments;
-        if (callee->kind != EXPRESSION__VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only simple function calls like \"example()\" are supported", expression->location->line, expression->location->column);
-        }
-        String *function_name = callee->variable_data.name->lexeme;
-        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
-        if (function == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
-        }
-        return context__resolve_type(context, function->function_data.return_type);
-    }
-    case EXPRESSION__LITERAL: {
-        Token *literal = expression->literal_data.value;
-        switch (literal->kind) {
-        case TOKEN__INTEGER: {
-            return context__get_integer_type(context);
-        }
-        case TOKEN__KEYWORD: {
-            if (string__equals(literal->lexeme, "true") || string__equals(literal->lexeme, "false")) {
-                return context__get_boolean_type(context);
-            }
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported literal keyword: %s", literal->location->line, literal->location->column, literal->lexeme->data);
-        }
-        default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported literal expression kind: %s", literal->location->line, literal->location->column, token__get_kind_name(literal));
-        }
-    }
-    case EXPRESSION__POINTED_VALUE: {
-        Expression *pointer_expression = expression->pointed_value_data.expression;
-        if (pointer_expression->kind != EXPRESSION__VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable expression", pointer_expression->location->line, pointer_expression->location->column);
-        }
-        String *variable_name = pointer_expression->variable_data.name->lexeme;
-        Variable *variable = context__find_variable(context, variable_name);
-        if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
-        }
-        Type *variable_type = variable->type;
-        if (variable_type->kind != TYPE__POINTER) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a pointer variable", pointer_expression->location->line, pointer_expression->location->column);
-        }
-        return context__resolve_type(context, variable_type->pointer_data.type);
-    }
-    case EXPRESSION__POINTER_TO: {
-        Expression *variable_expression = expression->pointer_to_data.expression;
-        if (variable_expression->kind != EXPRESSION__VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable", variable_expression->location->line, variable_expression->location->column);
-        }
-        String *variable_name = variable_expression->variable_data.name->lexeme;
-        Variable *variable = context__find_variable(context, variable_name);
-        if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
-        }
-        Type *variable_type = variable->type; // context__resolve_type(context, variable->type);
-        return type__create_pointer(expression->location, variable_type);
-    }
-    case EXPRESSION__VARIABLE: {
-        String *variable_name = expression->variable_data.name->lexeme;
-        Variable *variable = context__find_variable(context, variable_name);
-        if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
-        }
-        return context__resolve_type(context, variable->type);
-    }
-    default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
-    }
-}
-
-Register *emit_load_literal(Context *context, Token *token) {
+void emit_load_literal(Context *context, Token *token, Value_Holder *value_holder) {
     switch (token->kind) {
     case TOKEN__INTEGER: {
-        Register *value_holder = registers__acquire(8);
-        emitf("  movq $%d, %s", token->integer_data.value, register__name(value_holder));
-        return value_holder;
+        value_holder__acquire_register(value_holder, context__get_integer_type(context), 8);
+        emitf("  movq $%d, %s", token->integer_data.value, value_holder__register_name(value_holder));
+        return;
     }
     case TOKEN__KEYWORD: {
         if (string__equals(token->lexeme, "false")) {
-            Register *value_holder = registers__acquire(1);
-            emitf("  movb $0, %s", register__name(value_holder));
-            return value_holder;
-        } else if (string__equals(token->lexeme, "true")) {
-            Register *value_holder = registers__acquire(1);
-            emitf("  movb $1, %s", register__name(value_holder));
-            return value_holder;
-        } else {
-            PANIC(__FILE__, __LINE__, "Unsupported keyword: %s", token->lexeme->data);
-        }
+            value_holder__acquire_register(value_holder, context__get_boolean_type(context), 1);
+            emitf("  movb $0, %s", value_holder__register_name(value_holder));
+            return;
+        } 
+        if (string__equals(token->lexeme, "true")) {
+            value_holder__acquire_register(value_holder, context__get_boolean_type(context), 1);
+            emitf("  movb $1, %s", value_holder__register_name(value_holder));
+            return;
+        } 
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported keyword: %s", token->location->line, token->location->line, token->lexeme->data);
     }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported token kind: %s", token__get_kind_name(token));
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported token kind: %s", token->location->line, token->location->line, token__get_kind_name(token));
     }
 }
 
-Register *emit_load_variable(Context *context, Token *variable_name) {
+void emit_load_variable(Context *context, Token *variable_name, Value_Holder *value_holder) {
     Variable *variable = context__find_variable(context, variable_name->lexeme);
     if (variable == NULL) {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
@@ -343,100 +254,117 @@ Register *emit_load_variable(Context *context, Token *variable_name) {
     Type *variable_type = context__resolve_type(context, variable->type);
     switch (variable_type->kind) {
     case TYPE__BOOLEAN: {
-        Register *value_holder = registers__acquire(1);
-        emitf("  movb %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
-        return value_holder;
+        value_holder__acquire_register(value_holder, variable_type, 1);
+        emitf("  movb %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
+        return;
     }
     case TYPE__INTEGER: {
-        Register *value_holder = registers__acquire(8);
-        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
-        return value_holder;
+        value_holder__acquire_register(value_holder, variable_type, 8);
+        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
+        return;
     }
     case TYPE__POINTER: {
-        Register *value_holder = registers__acquire(8);
-        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
-        return value_holder;
+        value_holder__acquire_register(value_holder, variable_type, 8);
+        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
+        return;
     }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, type__get_kind_name(variable_type));
     }
 }
 
-Register *emit_expression(Context *context, Expression *expression);
+void emit_expression(Context *context, Expression *expression, Value_Holder *result_value_holder);
 
-Register *emit_comparison_expression(Context *context, Expression *expression, Register *left_value_holder, const char *flag_instruction) {
-    Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-    if (left_value_holder->size != right_value_holder->size) {
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Cannot compare values of different type.", expression->location->line, expression->location->column);
+void emit_arithmetic_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
+    emit_expression(context, expression->binary_data.left_expression, result_value_holder);
+    Value_Holder right_value_holder = { .kind = VALUE_HOLDER__NEW };
+    emit_expression(context, expression->binary_data.right_expression, &right_value_holder);
+    Token *operator_token = expression->binary_data.operator_token;
+    String *operator = operator_token->lexeme;
+    if (result_value_holder->type->kind != TYPE__INTEGER || right_value_holder.type->kind != TYPE__INTEGER) {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" only integer values", operator_token->location->line, operator_token->location->column, operator->data);
     }
-    switch (left_value_holder->size) {
-    case 1: {
-        emitf("  cmpb %s, %s", register__name(right_value_holder), register__name(left_value_holder));
+    if (string__equals(operator, "+")) {
+        emitf("  addq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, "-")) {
+        emitf("  subq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, "*")) {
+        emitf("  imulq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, "/")) {
+        emitf("  movq %s, %%rax", value_holder__register_name(result_value_holder));
+        emits("  cqto");
+        emitf("  idivq %s", value_holder__register_name(&right_value_holder));
+        emitf("  movq %%rax, %s", value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, "//")) {
+        emitf("  movq %s, %%rax", value_holder__register_name(result_value_holder));
+        emits("  cqto");
+        emitf("  idivq %s", value_holder__register_name(&right_value_holder));
+        emitf("  movq %%rdx, %s", value_holder__register_name(result_value_holder));
+    } else {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported arithmetic expression operator: %s", operator_token->location->line, operator_token->location->column, operator->data);
+    }
+    value_holder__release_register(&right_value_holder);
+}
+
+void emit_comparison_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
+    emit_expression(context, expression->binary_data.left_expression, result_value_holder);
+    Value_Holder right_value_holder = { .kind = VALUE_HOLDER__NEW };
+    emit_expression(context, expression->binary_data.right_expression, &right_value_holder);
+    Token *operator_token = expression->binary_data.operator_token;
+    String *operator = operator_token->lexeme;
+    if (string__equals(operator, "<") || string__equals(operator, "<=") || string__equals(operator, ">") || string__equals(operator, ">=")) {
+        if (result_value_holder->type->kind != TYPE__INTEGER || right_value_holder.type->kind != TYPE__INTEGER) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can use \"%s\" only for integer values", operator_token->location->line, operator_token->location->column, operator->data);
+        }
+    } else if (string__equals(operator, "==") || string__equals(operator, "!=")) {
+        if (!type__equals(result_value_holder->type, right_value_holder.type)) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can use \"%s\" only for same type values", operator_token->location->line, operator_token->location->column, operator->data);
+        }
+    }
+    switch (result_value_holder->type->kind) {
+    case TYPE__BOOLEAN: {
+        emitf("  cmpb %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
         break;
     }
-    case 8: {
-        emitf("  cmpq %s, %s", register__name(right_value_holder), register__name(left_value_holder));
+    case TYPE__INTEGER: {
+        emitf("  cmpq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
         break;
     }
     default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value size: %d.", expression->location->line, expression->location->column, left_value_holder->size);
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", expression->location->line, expression->location->column, type__get_kind_name(result_value_holder->type));
     }
-    register__release(left_value_holder);
-    register__release(right_value_holder);
-    Register *result_value_holder = registers__acquire(1);
-    emitf("  %s %s", flag_instruction, register__name(result_value_holder));
-    return result_value_holder;
+    value_holder__release_register(result_value_holder);
+    value_holder__release_register(&right_value_holder);
+    value_holder__acquire_register(result_value_holder, context__get_boolean_type(context), 1);
+    if (string__equals(operator, "<")) {
+        emitf("  setl %s", value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, "<=")) {
+        emitf("  setle %s", value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, ">")) {
+        emitf("  setg %s", value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, ">=")) {
+        emitf("  setge %s", value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, "==")) {
+        emitf("  sete %s", value_holder__register_name(result_value_holder));
+    } else if (string__equals(operator, "!=")) {
+        emitf("  setne %s", value_holder__register_name(result_value_holder));
+    } else {
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported comparison expression operator: %s", operator_token->location->line, operator_token->location->column, operator->data);
+    }
 }
 
-Register *emit_expression(Context *context, Expression *expression) {
+void emit_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
     switch (expression->kind) {
     case EXPRESSION__BINARY: {
-        Register *left_value_holder = emit_expression(context, expression->binary_data.left_expression);
-        if (string__equals(expression->binary_data.operator_token->lexeme, "+")) {
-            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  addq %s, %s", register__name(left_value_holder), register__name(right_value_holder));
-            register__release(left_value_holder);
-            return right_value_holder;
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "-")) {
-            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  subq %s, %s", register__name(right_value_holder), register__name(left_value_holder));
-            register__release(right_value_holder);
-            return left_value_holder;
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "*")) {
-            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  imulq %s, %s", register__name(left_value_holder), register__name(right_value_holder));
-            register__release(left_value_holder);
-            return right_value_holder;
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "/")) {            
-            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  movq %s, %%rax", register__name(left_value_holder));
-            emits("  cqto");
-            emitf("  idivq %s", register__name(right_value_holder));
-            emitf("  movq %%rax, %s", register__name(left_value_holder));
-            register__release(right_value_holder);
-            return left_value_holder;
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "//")) {            
-            Register *right_value_holder = emit_expression(context, expression->binary_data.right_expression);
-            emitf("  movq %s, %%rax", register__name(left_value_holder));
-            emits("  cqto");
-            emitf("  idivq %s", register__name(right_value_holder));
-            emitf("  movq %%rdx, %s", register__name(left_value_holder));
-            register__release(right_value_holder);
-            return left_value_holder;
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "<")) {
-            return emit_comparison_expression(context, expression, left_value_holder, "setl");
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "<=")) {
-            return emit_comparison_expression(context, expression, left_value_holder, "setle");
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, ">")) {
-            return emit_comparison_expression(context, expression, left_value_holder, "setg");
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, ">=")) {
-            return emit_comparison_expression(context, expression, left_value_holder, "setge");
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "==")) {
-            return emit_comparison_expression(context, expression, left_value_holder, "sete");
-        } else if (string__equals(expression->binary_data.operator_token->lexeme, "!=")) {
-            return emit_comparison_expression(context, expression, left_value_holder, "setne");
+        Token *operator_token = expression->binary_data.operator_token;
+        String *operator = operator_token->lexeme;
+        if (string__equals(operator, "+") || string__equals(operator, "-") || string__equals(operator, "*") || string__equals(operator, "/") || string__equals(operator, "//")) {
+            emit_arithmetic_expression(context, expression, result_value_holder);
+            return;
+        } else if (string__equals(operator, "<") || string__equals(operator, "<=") || string__equals(operator, ">") || string__equals(operator, ">=") || string__equals(operator, "==") || string__equals(operator, "!=")) {
+            return emit_comparison_expression(context, expression, result_value_holder);
         } else {
-            PANIC(__FILE__, __LINE__, "Unsupported binary expression operator: %s", expression->binary_data.operator_token->lexeme->data);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported binary expression operator: %s", operator_token->location->line, operator_token->location->column, operator->data);
         }
     }
     case EXPRESSION__CALL: {
@@ -459,12 +387,12 @@ Register *emit_expression(Context *context, Expression *expression) {
         Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
         switch (function_return_type->kind) {
         case TYPE__INTEGER: {
-            Register *value_holder = registers__acquire(8);
-            emitf("  movq %%rax, %s", register__name(value_holder));
-            return value_holder;
+            value_holder__acquire_register(result_value_holder, context__get_integer_type(context), 8);
+            emitf("  movq %%rax, %s", value_holder__register_name(result_value_holder));
+            return;
         }
         case TYPE__NOTHING: {
-            return NULL;
+            return;
         }
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported return type: %s", expression->location->line, expression->location->column, type__get_kind_name(function_return_type));
@@ -473,7 +401,8 @@ Register *emit_expression(Context *context, Expression *expression) {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression calls are not implemented yet", expression->location->line, expression->location->column);
     }
     case EXPRESSION__LITERAL: {
-        return emit_load_literal(context, expression->literal_data.value);
+        emit_load_literal(context, expression->literal_data.value, result_value_holder);
+        return;
     }
     case EXPRESSION__POINTED_VALUE: {
         Expression *pointer_expression = expression->pointed_value_data.expression;
@@ -489,20 +418,21 @@ Register *emit_expression(Context *context, Expression *expression) {
         if (variable_type->kind != TYPE__POINTER) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a pointer variable", pointer_expression->location->line, pointer_expression->location->column);
         }
-        Register *pointer_holder = emit_load_variable(context, pointer_expression->variable_data.name);
+        Value_Holder pointer_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_load_variable(context, pointer_expression->variable_data.name, &pointer_holder);
         Type *value_type = context__resolve_type(context, variable_type->pointer_data.type);
         switch (value_type->kind) {
         case TYPE__BOOLEAN: {
-            Register *value_holder = registers__acquire(1);
-            emitf("  movb (%s), %s", register__name(pointer_holder), register__name(value_holder));
-            register__release(pointer_holder);
-            return value_holder;
+            value_holder__acquire_register(result_value_holder, value_type, 1);
+            emitf("  movb (%s), %s", value_holder__register_name(&pointer_holder), value_holder__register_name(result_value_holder));
+            value_holder__release_register(&pointer_holder);
+            return;
         }
         case TYPE__INTEGER: {
-            Register *value_holder = registers__acquire(8);
-            emitf("  movq (%s), %s", register__name(pointer_holder), register__name(value_holder));
-            register__release(pointer_holder);
-            return value_holder;
+            value_holder__acquire_register(result_value_holder, value_type, 8);
+            emitf("  movq (%s), %s", value_holder__register_name(&pointer_holder), value_holder__register_name(result_value_holder));
+            value_holder__release_register(&pointer_holder);
+            return;
         }
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", pointer_expression->location->line, pointer_expression->location->column, type__get_kind_name(value_type));
@@ -518,16 +448,17 @@ Register *emit_expression(Context *context, Expression *expression) {
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
         }
-        Register *value_holder = registers__acquire(8);
+        value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, variable->type), 8);
         if (variable->is_global) {
-            emitf("  leaq %s_%03d(%%rip), %s", variable->name->data, variable->id, register__name(value_holder));
+            emitf("  leaq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(result_value_holder));
         } else {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local varaibles are not supported yet", variable_expression->location->line, variable_expression->location->column);
         }
-        return value_holder;
+        return;
     }
     case EXPRESSION__VARIABLE: {
-        return emit_load_variable(context, expression->variable_data.name);
+        emit_load_variable(context, expression->variable_data.name, result_value_holder);
+        return;
     }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
@@ -548,35 +479,36 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
         }
         Type *variable_type = context__resolve_type(context, variable->type);
-        Type *value_type = compute_expression_type(context, statement->assignment_data.value);
+        Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, statement->assignment_data.value, &value_holder);
+        Type *value_type = value_holder.type;
         if (!type__equals(variable_type, value_type)) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Destination type differs from value type. Expected %s but got %s instead.", statement->location->line, statement->location->column, type__get_kind_name(variable_type), type__get_kind_name(value_type));
         }
-        Register *value_holder = emit_expression(context, statement->assignment_data.value);
         switch (variable_type->kind) {
         case TYPE__BOOLEAN: {
-            if (value_holder->size != 1) {
+            if (value_holder.size != 1) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 1 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movb %s, %s_%03d(%%rip)", register__name(value_holder), variable_name->data, variable->id);
+            emitf("  movb %s, %s_%03d(%%rip)", value_holder__register_name(&value_holder), variable_name->data, variable->id);
             break;
         }
         case TYPE__INTEGER:
-            if (value_holder->size != 8) {
+            if (value_holder.size != 8) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movq %s, %s_%03d(%%rip)", register__name(value_holder), variable_name->data, variable->id);
+            emitf("  movq %s, %s_%03d(%%rip)", value_holder__register_name(&value_holder), variable_name->data, variable->id);
             break;
         case TYPE__POINTER:
-            if (value_holder->size != 8) {
+            if (value_holder.size != 8) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movq %s, %s_%03d(%%rip)", register__name(value_holder), variable_name->data, variable->id);
+            emitf("  movq %s, %s_%03d(%%rip)", value_holder__register_name(&value_holder), variable_name->data, variable->id);
             break;
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
         }
-        register__release(value_holder);
+        value_holder__release_register(&value_holder);
         return;
     }
     case STATEMENT__BLOCK: {
@@ -598,11 +530,11 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__EXPRESSION: {
         Expression *expression = statement->expression_data.expression;
-        compute_expression_type(context, expression);
-        Register *value_holder = emit_expression(context, expression);
-        if (value_holder != NULL) {
+        Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, expression, &value_holder);
+        if (value_holder.kind != VALUE_HOLDER__NEW) {
             WARNING(__FILE__, __LINE__, "(%04d:%04d) -- The result of this expression is ignored", statement->location->line, statement->location->column);
-            register__release(value_holder);
+            value_holder__release_register(&value_holder);
         }
         return;
     }
@@ -631,13 +563,14 @@ void emit_statement(Context *context, Statement *statement) {
         int label = counter__inc(context->counter);
         emitf("if_%03d_cond:", label);
         Expression *condition_expression = statement->if_data.condition;
-        Type *condition_expression_type = compute_expression_type(context, condition_expression);
+        Value_Holder condition_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, statement->if_data.condition, &condition_value_holder);
+        Type *condition_expression_type = condition_value_holder.type;
         if (condition_expression_type->kind != TYPE__BOOLEAN) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a boolean expression", condition_expression->location->line, condition_expression->location->column);
         }
-        Register *condition_value_holder = emit_expression(context, statement->if_data.condition);
-        emitf("  dec %s", register__name(condition_value_holder));
-        register__release(condition_value_holder);
+        emitf("  dec %s", value_holder__register_name(&condition_value_holder));
+        value_holder__release_register(&condition_value_holder);
         emitf("  jnz if_%03d_false", label);
         emitf("if_%03d_true:", label);
         emit_statement(context, statement->if_data.true_block);
@@ -672,13 +605,14 @@ void emit_statement(Context *context, Statement *statement) {
         Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
         if (statement->return_data.expression != NULL) {
             Expression *return_expression = statement->return_data.expression;
-            Type *return_expression_type = compute_expression_type(context, return_expression);
+            Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
+            emit_expression(context, return_expression, &value_holder);
+            Type *return_expression_type = value_holder.type;
             if (!type__equals(function_return_type, return_expression_type)) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression type doesn't match the return type", return_expression->location->line, return_expression->location->column);
             }
-            Register *value_holder = emit_expression(context, return_expression);
-            emitf("  movq %s, %%rax", register__name(value_holder));
-            register__release(value_holder);
+            emitf("  movq %s, %%rax", value_holder__register_name(&value_holder));
+            value_holder__release_register(&value_holder);
         } else if (function_return_type->kind != TYPE__NOTHING) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected return expression", statement->location->line, statement->location->column);
         }
@@ -721,7 +655,7 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported statement kind: %s", statement__get_kind_name(statement));
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported statement kind: %s", statement->location->line, statement->location->column, statement__get_kind_name(statement));
     }
 }
 
@@ -735,9 +669,9 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
         emits("");
         emit_statement(context, statement);
 
-        for (int i = 0; i < REGISTERS_COUNT; i++) {
-            if (registers[i].is_used) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unrelease register found: %s", statement->location->line, statement->location->column, register__name(registers + i));
+        for (int id = 0; id < REGISTERS_COUNT; id++) {
+            if (registers[id] != NULL) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unrelease register found: %s", statement->location->line, statement->location->column, value_holder__register_name(registers[id]));
             }
         }
     }
