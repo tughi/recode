@@ -1,77 +1,6 @@
 #include "Generator.h"
 #include "Logging.h"
 
-enum {
-    REGISTER__RCX,
-    REGISTER__R08,
-    REGISTER__R09,
-    REGISTER__R10,
-    REGISTER__R11,
-    REGISTERS_COUNT,
-};
-
-typedef struct Value_Holder {
-    enum {
-        VALUE_HOLDER__NEW = 0,
-        VALUE_HOLDER__REGISTER,
-    } kind;
-
-    int size;
-    Type *type;
-    union {
-        struct {
-            int id;
-        } register_data;
-    };
-} Value_Holder;
-
-Value_Holder *registers[REGISTERS_COUNT];
-
-void value_holder__acquire_register(Value_Holder *self, Type *type, int size) {
-    if (self->kind != VALUE_HOLDER__NEW) {
-        PANIC(__FILE__, __LINE__, "Trying to acquire register for an invalid value holder kind: %d", self->kind);
-    }
-    for (int id = 0; id < REGISTERS_COUNT; id++) {
-        if (registers[id] == NULL) {
-            self->kind = VALUE_HOLDER__REGISTER;
-            self->type = type;
-            self->size = size;
-            self->register_data.id = id;
-            registers[id] = self;
-            return;
-        }
-    }
-    PANIC(__FILE__, __LINE__, "All registers are used already%c", 0);
-}
-
-void value_holder__release_register(Value_Holder *self) {
-    if (self->kind != VALUE_HOLDER__REGISTER) {
-        PANIC(__FILE__, __LINE__, "Trying to release an invalid value holder%c", 0);
-    }
-    registers[self->register_data.id] = NULL;
-    self->kind = VALUE_HOLDER__NEW;
-}
-
-char *value_holder__register_name(Value_Holder *self) {
-    static char *names_64bit[REGISTERS_COUNT] = { "%rcx", "%r8", "%r9", "%r10", "%r11" };
-    static char *names_32bit[REGISTERS_COUNT] = { "%ecx", "%r8d", "%r9d", "%r10d", "%r11d" };
-    static char *names_16bit[REGISTERS_COUNT] = { "%cx", "%r8w", "%r9w", "%r10w", "%r11w" };
-    static char *names_8bit[REGISTERS_COUNT] = { "%cl", "%r8b", "%r9b", "%r10b", "%r11b" };
-
-    if (self->kind != VALUE_HOLDER__REGISTER) {
-        PANIC(__FILE__, __LINE__, "This is not a register%c", 0);
-    }
-
-    switch (self->size) {
-    case 8: return names_64bit[self->register_data.id];
-    case 4: return names_32bit[self->register_data.id];
-    case 2: return names_16bit[self->register_data.id];
-    case 1: return names_8bit[self->register_data.id];
-    default:
-        PANIC(__FILE__, __LINE__, "Unsupported value size: %d", self->size);
-    }
-}
-
 typedef struct Variable {
     int id;
     String *name;
@@ -199,7 +128,14 @@ Type *context__resolve_type(Context *self, Type *type) {
 
 int context__is_primitive_type(Context *self, Type *type) {
     Type *resolved_type = context__resolve_type(self, type);
-    return resolved_type->kind == TYPE__INTEGER || resolved_type->kind == TYPE__BOOLEAN;
+    switch (resolved_type->kind) {
+    case TYPE__BOOLEAN:
+    case TYPE__INTEGER:
+    case TYPE__POINTER:
+        return 1;
+    default:
+        return 0;
+    }
 }
 
 Type *context__get_boolean_type(Context *self) {
@@ -218,21 +154,118 @@ Type *context__get_integer_type(Context *self) {
     return context__find_type(self, type_name);
 }
 
+int context__compute_type_size(Context *self, Type *type) {
+    switch (type->kind) {
+    case TYPE__BOOLEAN:
+        return 1;
+    case TYPE__INTEGER:
+        return 8;
+    case TYPE__NOTHING:
+        return 0;
+    case TYPE__POINTER:
+        return 8;
+    case TYPE__NAMED: {
+        String *type_name = type->named_data.name->lexeme;
+        Type *named_type = context__find_type(self, type_name);
+        if (named_type == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown type: %s", type->location->line, type->location->column, type_name->data);
+        }
+        return context__compute_type_size(self, named_type);
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, type__get_kind_name(type));
+    }
+}
+
+enum {
+    REGISTER__RCX,
+    REGISTER__R08,
+    REGISTER__R09,
+    REGISTER__R10,
+    REGISTER__R11,
+    REGISTERS_COUNT,
+};
+
+typedef struct Value_Holder {
+    enum {
+        VALUE_HOLDER__NEW = 0,
+        VALUE_HOLDER__REGISTER,
+    } kind;
+
+    int size;
+    Type *type;
+    union {
+        struct {
+            int id;
+        } register_data;
+    };
+} Value_Holder;
+
+Value_Holder *registers[REGISTERS_COUNT];
+
+void value_holder__acquire_register(Value_Holder *self, Type *type, Context *context) {
+    if (self->kind != VALUE_HOLDER__NEW) {
+        PANIC(__FILE__, __LINE__, "Trying to acquire register for an invalid value holder kind: %d", self->kind);
+    }
+    if (!context__is_primitive_type(context, type)) {
+        PANIC(__FILE__, __LINE__, "Trying to acquire register for a non-primitive type: %s", type__get_kind_name(type));
+    }
+    for (int id = 0; id < REGISTERS_COUNT; id++) {
+        if (registers[id] == NULL) {
+            self->kind = VALUE_HOLDER__REGISTER;
+            self->type = type;
+            self->size = context__compute_type_size(context, type);
+            self->register_data.id = id;
+            registers[id] = self;
+            return;
+        }
+    }
+    PANIC(__FILE__, __LINE__, "All registers are used already%c", 0);
+}
+
+void value_holder__release_register(Value_Holder *self) {
+    if (self->kind != VALUE_HOLDER__REGISTER) {
+        PANIC(__FILE__, __LINE__, "Trying to release an invalid value holder%c", 0);
+    }
+    registers[self->register_data.id] = NULL;
+    self->kind = VALUE_HOLDER__NEW;
+}
+
+char *value_holder__register_name(Value_Holder *self) {
+    static char *names_8[REGISTERS_COUNT] = { "%rcx", "%r8", "%r9", "%r10", "%r11" };
+    static char *names_4[REGISTERS_COUNT] = { "%ecx", "%r8d", "%r9d", "%r10d", "%r11d" };
+    static char *names_2[REGISTERS_COUNT] = { "%cx", "%r8w", "%r9w", "%r10w", "%r11w" };
+    static char *names_1[REGISTERS_COUNT] = { "%cl", "%r8b", "%r9b", "%r10b", "%r11b" };
+
+    if (self->kind != VALUE_HOLDER__REGISTER) {
+        PANIC(__FILE__, __LINE__, "This is not a register%c", 0);
+    }
+
+    switch (self->size) {
+    case 8: return names_8[self->register_data.id];
+    case 4: return names_4[self->register_data.id];
+    case 2: return names_2[self->register_data.id];
+    case 1: return names_1[self->register_data.id];
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported value size: %d", self->size);
+    }
+}
+
 void emit_load_literal(Context *context, Token *token, Value_Holder *value_holder) {
     switch (token->kind) {
     case TOKEN__INTEGER: {
-        value_holder__acquire_register(value_holder, context__get_integer_type(context), 8);
+        value_holder__acquire_register(value_holder, context__get_integer_type(context), context);
         emitf("  movq $%d, %s", token->integer_data.value, value_holder__register_name(value_holder));
         return;
     }
     case TOKEN__KEYWORD: {
         if (string__equals(token->lexeme, "false")) {
-            value_holder__acquire_register(value_holder, context__get_boolean_type(context), 1);
+            value_holder__acquire_register(value_holder, context__get_boolean_type(context), context);
             emitf("  movb $0, %s", value_holder__register_name(value_holder));
             return;
         } 
         if (string__equals(token->lexeme, "true")) {
-            value_holder__acquire_register(value_holder, context__get_boolean_type(context), 1);
+            value_holder__acquire_register(value_holder, context__get_boolean_type(context), context);
             emitf("  movb $1, %s", value_holder__register_name(value_holder));
             return;
         } 
@@ -252,19 +285,17 @@ void emit_load_variable(Context *context, Token *variable_name, Value_Holder *va
     // TODO: check if variable is local or global, and load it respectively
 
     Type *variable_type = context__resolve_type(context, variable->type);
+    value_holder__acquire_register(value_holder, variable_type, context);
     switch (variable_type->kind) {
     case TYPE__BOOLEAN: {
-        value_holder__acquire_register(value_holder, variable_type, 1);
         emitf("  movb %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
         return;
     }
     case TYPE__INTEGER: {
-        value_holder__acquire_register(value_holder, variable_type, 8);
         emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
         return;
     }
     case TYPE__POINTER: {
-        value_holder__acquire_register(value_holder, variable_type, 8);
         emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
         return;
     }
@@ -335,7 +366,7 @@ void emit_comparison_expression(Context *context, Expression *expression, Value_
     }
     value_holder__release_register(result_value_holder);
     value_holder__release_register(&right_value_holder);
-    value_holder__acquire_register(result_value_holder, context__get_boolean_type(context), 1);
+    value_holder__acquire_register(result_value_holder, context__get_boolean_type(context), context);
     if (string__equals(operator, "<")) {
         emitf("  setl %s", value_holder__register_name(result_value_holder));
     } else if (string__equals(operator, "<=")) {
@@ -419,7 +450,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
         switch (function_return_type->kind) {
         case TYPE__INTEGER: {
-            value_holder__acquire_register(result_value_holder, context__get_integer_type(context), 8);
+            value_holder__acquire_register(result_value_holder, context__get_integer_type(context), context);
             emitf("  movq %%rax, %s", value_holder__register_name(result_value_holder));
             break;
         }
@@ -453,15 +484,14 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         Value_Holder pointer_holder = { .kind = VALUE_HOLDER__NEW };
         emit_load_variable(context, pointer_expression->variable_data.name, &pointer_holder);
         Type *value_type = context__resolve_type(context, variable_type->pointer_data.type);
+        value_holder__acquire_register(result_value_holder, value_type, context);
         switch (value_type->kind) {
         case TYPE__BOOLEAN: {
-            value_holder__acquire_register(result_value_holder, value_type, 1);
             emitf("  movb (%s), %s", value_holder__register_name(&pointer_holder), value_holder__register_name(result_value_holder));
             value_holder__release_register(&pointer_holder);
             return;
         }
         case TYPE__INTEGER: {
-            value_holder__acquire_register(result_value_holder, value_type, 8);
             emitf("  movq (%s), %s", value_holder__register_name(&pointer_holder), value_holder__register_name(result_value_holder));
             value_holder__release_register(&pointer_holder);
             return;
@@ -480,7 +510,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
         }
-        value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, variable->type), 8);
+        value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, variable->type), context);
         if (variable->is_global) {
             emitf("  leaq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(result_value_holder));
         } else {
