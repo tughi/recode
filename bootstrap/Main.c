@@ -3,10 +3,7 @@
 #include "Parser.h"
 #include "Scanner.h"
 
-#include <execinfo.h>
-#include <signal.h>
 #include <string.h>
-#include <unistd.h>
 
 char *load_file(String *file_name) {
     FILE *file = fopen(file_name->data, "r");
@@ -357,24 +354,7 @@ void dump_statements(Statement_List *statements) {
     }
 }
 
-void dump_backtrace_and_exit(int signal) {
-    void *stack[20];
-    int stack_size;
-
-    stack_size = backtrace(stack, 20);
-
-    fprintf(stderr, "\n%sSignal: %d\n\n", SGR_ERROR, signal);
-    backtrace_symbols_fd(stack, stack_size, STDERR_FILENO);
-    fprintf(stderr, "%s", SGR_RESET);
-
-    fprintf(stdout, "\n");
-
-    exit(-signal);
-}
-
 int main(int argc, char *argv[]) {
-    signal(SIGSEGV, dump_backtrace_and_exit);
-
     if (argc != 3) {
         PANIC(__FILE__, __LINE__, "Usage:\n    %s <INPUT FILE> <OUTPUT FILE>\n", argv[0]);
     }

@@ -107,6 +107,8 @@ def run():
                 test_exit = execute(f'''./{test}''', echo=False, exit_on_error=False)
                 if test_exit != expected_exit:
                     print(f"ERROR: exited with {test_exit} instead of {expected_exit}")
+        else:
+            subprocess.call(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {os.path.join(test_dir, test_file)} {test}.s &> /dev/null' -ex=bt -ex=quit --args ./ReCode''', shell=True)
 
 
 TASKS = OrderedDict(

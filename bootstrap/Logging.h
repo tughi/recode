@@ -1,6 +1,7 @@
 #ifndef __recode__logging_h__
 #define __recode__logging_h__
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -28,6 +29,6 @@
 
 #define INFO(source_file, source_line, format, ...) LOG(SGR_INFO, source_file, source_line, format, __VA_ARGS__)
 
-#define PANIC(source_file, source_line, format, ...) ERROR(source_file, source_line, format, __VA_ARGS__); exit(1)
+#define PANIC(source_file, source_line, format, ...) ERROR(source_file, source_line, format, __VA_ARGS__); raise(SIGABRT)
 
 #endif
