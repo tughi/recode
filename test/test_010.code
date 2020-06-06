@@ -1,0 +1,15 @@
+\ Change variable value using a pointer
+
+x: Int
+y: @Int
+
+main :: () -> Int {
+    x = 0
+    y = @x
+    [y] = 42
+    return 63 - x() - 21
+}
+
+x :: () -> Int {
+    return x
+}

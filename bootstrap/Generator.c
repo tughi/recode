@@ -527,50 +527,78 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
     }
 }
 
+void emit_expression_address(Context *context, Expression *expression, Value_Holder *destination_value_holder) {
+    switch (expression->kind) {
+    case EXPRESSION__POINTED_VALUE: {
+        Expression *pointer_expression = expression->pointed_value_data.expression;
+        Value_Holder pointer_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression_address(context, pointer_expression, &pointer_value_holder);
+        if (pointer_value_holder.type->kind != TYPE__POINTER || pointer_value_holder.type->pointer_data.type->kind != TYPE__POINTER) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a pointer expression", pointer_expression->location->line, pointer_expression->location->column);
+        }
+        Type *pointed_type = context__resolve_type(context, pointer_value_holder.type->pointer_data.type->pointer_data.type);
+        value_holder__acquire_register(destination_value_holder, type__create_pointer(pointer_expression->location, pointed_type), context);
+        emitf("  movq (%s), %s", value_holder__register_name(&pointer_value_holder), value_holder__register_name(destination_value_holder));
+        value_holder__release_register(&pointer_value_holder);
+        return;
+    }
+    case EXPRESSION__VARIABLE: {
+        String *variable_name = expression->variable_data.name->lexeme;
+        Variable *variable = context__find_variable(context, variable_name);
+        if (variable == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
+        }
+        if (!variable->is_global) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only global variables are supported for now", expression->location->line, expression->location->column);
+        }
+        Type *variable_type = context__resolve_type(context, variable->type);
+        value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable_type), context);
+        emitf("  leaq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(destination_value_holder));
+        return;
+    }
+    default:
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
+    }
+}
+
 void emit_statement(Context *context, Statement *statement) {
     // INFO(__FILE__, __LINE__, "(%04d:%04d) -- %s", statement->location->line, statement->location->column, statement__get_kind_name(statement));
     switch (statement->kind) {
     case STATEMENT__ASSIGNMENT: {
-        Expression *assignment_destination = statement->assignment_data.destination;
-        if (assignment_destination->kind != EXPRESSION__VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Assignment to non-variables are not supported yet.", statement->location->line, statement->location->column);
-        }
-        String *variable_name = assignment_destination->variable_data.name->lexeme;
-        Variable *variable = context__find_variable(context, variable_name);
-        if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", statement->location->line, statement->location->column, variable_name->data);
-        }
-        Type *variable_type = context__resolve_type(context, variable->type);
+        Value_Holder destination_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression_address(context, statement->assignment_data.destination, &destination_value_holder);
+        Type *destination_type = destination_value_holder.type->pointer_data.type;
         Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression(context, statement->assignment_data.value, &value_holder);
         Type *value_type = value_holder.type;
-        if (!type__equals(variable_type, value_type)) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Destination type differs from value type. Expected %s but got %s instead.", statement->location->line, statement->location->column, type__get_kind_name(variable_type), type__get_kind_name(value_type));
+        if (!type__equals(destination_type, value_type)) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Destination type differs from value type. Expected %s but got %s instead.", statement->location->line, statement->location->column, type__get_kind_name(destination_type), type__get_kind_name(value_type));
         }
-        switch (variable_type->kind) {
+        switch (destination_type->kind) {
         case TYPE__BOOLEAN: {
             if (value_holder.size != 1) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 1 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movb %s, %s_%03d(%%rip)", value_holder__register_name(&value_holder), variable_name->data, variable->id);
+            emitf("  movb %s, (%s)", value_holder__register_name(&value_holder), value_holder__register_name(&destination_value_holder));
             break;
         }
         case TYPE__INTEGER:
             if (value_holder.size != 8) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movq %s, %s_%03d(%%rip)", value_holder__register_name(&value_holder), variable_name->data, variable->id);
+            emitf("  movq %s, (%s)", value_holder__register_name(&value_holder), value_holder__register_name(&destination_value_holder));
             break;
         case TYPE__POINTER:
             if (value_holder.size != 8) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
             }
-            emitf("  movq %s, %s_%03d(%%rip)", value_holder__register_name(&value_holder), variable_name->data, variable->id);
+            emitf("  movq %s, (%s)", value_holder__register_name(&value_holder), value_holder__register_name(&destination_value_holder));
             break;
         default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, type__get_kind_name(destination_type));
         }
         value_holder__release_register(&value_holder);
+        value_holder__release_register(&destination_value_holder);
         return;
     }
     case STATEMENT__BLOCK: {
