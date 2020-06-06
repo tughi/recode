@@ -602,6 +602,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__FUNCTION: {
         String *function_name = statement->function_data.name->lexeme;
+        emits("  .text");
         emitf("  .globl %s", function_name->data);
         emitf("  .type %s, @function", function_name->data);
         emitf("%s:", function_name->data);
@@ -693,18 +694,19 @@ void emit_statement(Context *context, Statement *statement) {
         if (!variable->is_global) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local variables are not supported yet", statement->location->line, statement->location->column);
         }
+        emits("  .bss");
         Type *variable_type = context__resolve_type(context, statement->variable_data.type);
         switch (variable_type->kind) {
         case TYPE__BOOLEAN: {
-            emitf("  .comm %s_%03d, 1, 1", variable_name->lexeme->data, variable->id);
+            emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
             break;
         }
         case TYPE__INTEGER: {
-            emitf("  .comm %s_%03d, 8, 8", variable_name->lexeme->data, variable->id);
+            emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
             break;
         }
         case TYPE__POINTER: {
-            emitf("  .comm %s_%03d, 8, 8", variable_name->lexeme->data, variable->id);
+            emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
             break;
         }
         default:
@@ -723,8 +725,6 @@ void emit_statement(Context *context, Statement *statement) {
 
 void generate(char *file, Compilation_Unit *compilation_unit) {
     Context *context = context__create(fopen(file, "w"), compilation_unit->named_functions, compilation_unit->named_types);
-
-    emits("  .text");
 
     for (List_Iterator iterator = list__create_iterator(compilation_unit->statements); list_iterator__has_next(&iterator);) {
         Statement *statement = list_iterator__next(&iterator);
