@@ -237,10 +237,10 @@ void value_holder__release_register(Value_Holder *self) {
 }
 
 char *value_holder__register_name(Value_Holder *self) {
-    static char *names_8[REGISTERS_COUNT] = { "%rcx", "%rsi", "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15" };
-    static char *names_4[REGISTERS_COUNT] = { "%ecx", "%esi", "%r8d", "%r9d", "%r10d", "%r11d", "%r12d", "%r13d", "%r14d", "%r15d" };
-    static char *names_2[REGISTERS_COUNT] = { "%cx", "%si", "%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w" };
-    static char *names_1[REGISTERS_COUNT] = { "%cl", "%sil", "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b" };
+    static char *names_8[REGISTERS_COUNT] = { "rcx", "rsi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15" };
+    static char *names_4[REGISTERS_COUNT] = { "ecx", "esi", "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d" };
+    static char *names_2[REGISTERS_COUNT] = { "cx", "si", "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w" };
+    static char *names_1[REGISTERS_COUNT] = { "cl", "sil", "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b" };
 
     if (self->kind != VALUE_HOLDER__REGISTER) {
         PANIC(__FILE__, __LINE__, "This is not a register%c", 0);
@@ -260,18 +260,18 @@ void emit_load_literal(Context *context, Token *token, Value_Holder *value_holde
     switch (token->kind) {
     case TOKEN__INTEGER: {
         value_holder__acquire_register(value_holder, context__get_integer_type(context), context);
-        emitf("  movq $%d, %s", token->integer_data.value, value_holder__register_name(value_holder));
+        emitf("  mov %s, %d", value_holder__register_name(value_holder), token->integer_data.value);
         return;
     }
     case TOKEN__KEYWORD: {
         if (string__equals(token->lexeme, "false")) {
             value_holder__acquire_register(value_holder, context__get_boolean_type(context), context);
-            emitf("  movb $0, %s", value_holder__register_name(value_holder));
+            emitf("  mov %s, 0", value_holder__register_name(value_holder));
             return;
         } 
         if (string__equals(token->lexeme, "true")) {
             value_holder__acquire_register(value_holder, context__get_boolean_type(context), context);
-            emitf("  movb $1, %s", value_holder__register_name(value_holder));
+            emitf("  mov %s, 1", value_holder__register_name(value_holder));
             return;
         } 
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported keyword: %s", token->location->line, token->location->line, token->lexeme->data);
@@ -292,18 +292,11 @@ void emit_load_variable(Context *context, Token *variable_name, Value_Holder *va
     Type *variable_type = context__resolve_type(context, variable->type);
     value_holder__acquire_register(value_holder, variable_type, context);
     switch (variable_type->kind) {
-    case TYPE__BOOLEAN: {
-        emitf("  movb %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
+    case TYPE__BOOLEAN:
+    case TYPE__INTEGER:
+    case TYPE__POINTER:
+        emitf("  mov %s, %s_%03d[rip]", value_holder__register_name(value_holder), variable->name->data, variable->id);
         return;
-    }
-    case TYPE__INTEGER: {
-        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
-        return;
-    }
-    case TYPE__POINTER: {
-        emitf("  movq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(value_holder));
-        return;
-    }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, type__get_kind_name(variable_type));
     }
@@ -321,21 +314,21 @@ void emit_arithmetic_expression(Context *context, Expression *expression, Value_
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" only integer values", operator_token->location->line, operator_token->location->column, operator->data);
     }
     if (string__equals(operator, "+")) {
-        emitf("  addq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
+        emitf("  add %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&right_value_holder));
     } else if (string__equals(operator, "-")) {
-        emitf("  subq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
+        emitf("  sub %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&right_value_holder));
     } else if (string__equals(operator, "*")) {
-        emitf("  imulq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
+        emitf("  imul %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&right_value_holder));
     } else if (string__equals(operator, "/")) {
-        emitf("  movq %s, %%rax", value_holder__register_name(result_value_holder));
+        emitf("  mov rax, %s", value_holder__register_name(result_value_holder));
         emits("  cqto");
-        emitf("  idivq %s", value_holder__register_name(&right_value_holder));
-        emitf("  movq %%rax, %s", value_holder__register_name(result_value_holder));
+        emitf("  idiv %s", value_holder__register_name(&right_value_holder));
+        emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
     } else if (string__equals(operator, "//")) {
-        emitf("  movq %s, %%rax", value_holder__register_name(result_value_holder));
+        emitf("  mov rax, %s", value_holder__register_name(result_value_holder));
         emits("  cqto");
-        emitf("  idivq %s", value_holder__register_name(&right_value_holder));
-        emitf("  movq %%rdx, %s", value_holder__register_name(result_value_holder));
+        emitf("  idiv %s", value_holder__register_name(&right_value_holder));
+        emitf("  mov %s, rdx", value_holder__register_name(result_value_holder));
     } else {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported arithmetic expression operator: %s", operator_token->location->line, operator_token->location->column, operator->data);
     }
@@ -357,18 +350,7 @@ void emit_comparison_expression(Context *context, Expression *expression, Value_
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can use \"%s\" only for same type values", operator_token->location->line, operator_token->location->column, operator->data);
         }
     }
-    switch (result_value_holder->type->kind) {
-    case TYPE__BOOLEAN: {
-        emitf("  cmpb %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
-        break;
-    }
-    case TYPE__INTEGER: {
-        emitf("  cmpq %s, %s", value_holder__register_name(&right_value_holder), value_holder__register_name(result_value_holder));
-        break;
-    }
-    default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", expression->location->line, expression->location->column, type__get_kind_name(result_value_holder->type));
-    }
+    emitf("  cmp %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&right_value_holder));
     value_holder__release_register(result_value_holder);
     value_holder__release_register(&right_value_holder);
     value_holder__acquire_register(result_value_holder, context__get_boolean_type(context), context);
@@ -423,7 +405,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             Argument *argument = list__get(arguments, 0);
             Value_Holder argument_value_holder = { .kind = VALUE_HOLDER__NEW };
             emit_expression(context, argument->value, &argument_value_holder);
-            emitf("  movq %s, %%rdi", value_holder__register_name(&argument_value_holder));
+            emitf("  mov rdi, %s", value_holder__register_name(&argument_value_holder));
             value_holder__release_register(&argument_value_holder);
         }
 
@@ -431,16 +413,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         for (int id = 0; id < REGISTERS_COUNT; id++) {
             Value_Holder *value_holder = registers[id];
             if (value_holder != NULL) {
-                switch (value_holder->size) {
-                case 1:
-                    emitf("  pushb %s", value_holder__register_name(value_holder));
-                    break;
-                case 8:
-                    emitf("  pushq %s", value_holder__register_name(value_holder));
-                    break;
-                default:
-                    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported register size: %d", expression->location->line, expression->location->column, value_holder->size);
-                }
+                emitf("  push %s", value_holder__register_name(value_holder));
             }
         }
 
@@ -449,16 +422,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         for (int id = REGISTERS_COUNT - 1; id >= 0; id--) {
             Value_Holder *value_holder = registers[id];
             if (value_holder != NULL) {
-                switch (value_holder->size) {
-                case 1:
-                    emitf("  popb %s", value_holder__register_name(value_holder));
-                    break;
-                case 8:
-                    emitf("  popq %s", value_holder__register_name(value_holder));
-                    break;
-                default:
-                    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported register size: %d", expression->location->line, expression->location->column, value_holder->size);
-                }
+                emitf("  pop %s", value_holder__register_name(value_holder));
             }
         }
 
@@ -466,7 +430,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         switch (function_return_type->kind) {
         case TYPE__INTEGER: {
             value_holder__acquire_register(result_value_holder, context__get_integer_type(context), context);
-            emitf("  movq %%rax, %s", value_holder__register_name(result_value_holder));
+            emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
             break;
         }
         case TYPE__NOTHING: {
@@ -501,16 +465,11 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         Type *value_type = context__resolve_type(context, variable_type->pointer_data.type);
         value_holder__acquire_register(result_value_holder, value_type, context);
         switch (value_type->kind) {
-        case TYPE__BOOLEAN: {
-            emitf("  movb (%s), %s", value_holder__register_name(&pointer_holder), value_holder__register_name(result_value_holder));
+        case TYPE__BOOLEAN:
+        case TYPE__INTEGER:
+            emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&pointer_holder));
             value_holder__release_register(&pointer_holder);
             return;
-        }
-        case TYPE__INTEGER: {
-            emitf("  movq (%s), %s", value_holder__register_name(&pointer_holder), value_holder__register_name(result_value_holder));
-            value_holder__release_register(&pointer_holder);
-            return;
-        }
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", pointer_expression->location->line, pointer_expression->location->column, type__get_kind_name(value_type));
         }
@@ -527,7 +486,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
         value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, variable->type), context);
         if (variable->is_global) {
-            emitf("  leaq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(result_value_holder));
+            emitf("  lea %s, %s_%03d[rip]", value_holder__register_name(result_value_holder), variable->name->data, variable->id);
         } else {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local varaibles are not supported yet", variable_expression->location->line, variable_expression->location->column);
         }
@@ -553,7 +512,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         }
         Type *pointed_type = context__resolve_type(context, pointer_value_holder.type->pointer_data.type->pointer_data.type);
         value_holder__acquire_register(destination_value_holder, type__create_pointer(pointer_expression->location, pointed_type), context);
-        emitf("  movq (%s), %s", value_holder__register_name(&pointer_value_holder), value_holder__register_name(destination_value_holder));
+        emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&pointer_value_holder));
         value_holder__release_register(&pointer_value_holder);
         return;
     }
@@ -568,7 +527,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         }
         Type *variable_type = context__resolve_type(context, variable->type);
         value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable_type), context);
-        emitf("  leaq %s_%03d(%%rip), %s", variable->name->data, variable->id, value_holder__register_name(destination_value_holder));
+        emitf("  lea %s, %s_%03d[rip]", value_holder__register_name(destination_value_holder), variable->name->data, variable->id);
         return;
     }
     default:
@@ -590,24 +549,10 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Destination type differs from value type. Expected %s but got %s instead.", statement->location->line, statement->location->column, type__get_kind_name(destination_type), type__get_kind_name(value_type));
         }
         switch (destination_type->kind) {
-        case TYPE__BOOLEAN: {
-            if (value_holder.size != 1) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 1 byte register.", statement->location->line, statement->location->column);
-            }
-            emitf("  movb %s, (%s)", value_holder__register_name(&value_holder), value_holder__register_name(&destination_value_holder));
-            break;
-        }
+        case TYPE__BOOLEAN:
         case TYPE__INTEGER:
-            if (value_holder.size != 8) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
-            }
-            emitf("  movq %s, (%s)", value_holder__register_name(&value_holder), value_holder__register_name(&destination_value_holder));
-            break;
         case TYPE__POINTER:
-            if (value_holder.size != 8) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected expression result in a 8 byte register.", statement->location->line, statement->location->column);
-            }
-            emitf("  movq %s, (%s)", value_holder__register_name(&value_holder), value_holder__register_name(&destination_value_holder));
+            emitf("  mov [%s], %s", value_holder__register_name(&destination_value_holder), value_holder__register_name(&value_holder));
             break;
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, type__get_kind_name(destination_type));
@@ -650,8 +595,8 @@ void emit_statement(Context *context, Statement *statement) {
             emitf("  .globl %s", function_name->data);
             emitf("  .type %s, @function", function_name->data);
             emitf("%s:", function_name->data);
-            emits("  pushq %%rbp");
-            emits("  movq %%rsp, %%rbp");
+            emits("  push rbp");
+            emits("  mov rbp, rsp");
 
             context->current_function = statement;
             for (List_Iterator iterator = list__create_iterator(statement->function_data.statements); list_iterator__has_next(&iterator);) {
@@ -661,8 +606,8 @@ void emit_statement(Context *context, Statement *statement) {
             context->current_function = NULL;
 
             emitf("%s_end:", function_name->data);
-            emits("  movq %%rbp, %%rsp");
-            emits("  popq %%rbp");
+            emits("  mov rsp, rbp");
+            emits("  pop rbp");
             emits("  ret");
         }
         return;
@@ -719,7 +664,7 @@ void emit_statement(Context *context, Statement *statement) {
             if (!type__equals(function_return_type, return_expression_type)) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression type doesn't match the return type", return_expression->location->line, return_expression->location->column);
             }
-            emitf("  movq %s, %%rax", value_holder__register_name(&value_holder));
+            emitf("  mov rax, %s", value_holder__register_name(&value_holder));
             value_holder__release_register(&value_holder);
         } else if (function_return_type->kind != TYPE__NOTHING) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected return expression", statement->location->line, statement->location->column);
@@ -770,6 +715,7 @@ void emit_statement(Context *context, Statement *statement) {
 
 void generate(char *file, Compilation_Unit *compilation_unit) {
     Context *context = context__create(fopen(file, "w"), compilation_unit->named_functions, compilation_unit->named_types);
+    emits("  .intel_syntax noprefix");
 
     for (List_Iterator iterator = list__create_iterator(compilation_unit->statements); list_iterator__has_next(&iterator);) {
         Statement *statement = list_iterator__next(&iterator);
