@@ -179,10 +179,15 @@ int context__compute_type_size(Context *self, Type *type) {
 
 enum {
     REGISTER__RCX,
+    REGISTER__RSI,
     REGISTER__R08,
     REGISTER__R09,
     REGISTER__R10,
     REGISTER__R11,
+    REGISTER__R12,
+    REGISTER__R13,
+    REGISTER__R14,
+    REGISTER__R15,
     REGISTERS_COUNT,
 };
 
@@ -232,10 +237,10 @@ void value_holder__release_register(Value_Holder *self) {
 }
 
 char *value_holder__register_name(Value_Holder *self) {
-    static char *names_8[REGISTERS_COUNT] = { "%rcx", "%r8", "%r9", "%r10", "%r11" };
-    static char *names_4[REGISTERS_COUNT] = { "%ecx", "%r8d", "%r9d", "%r10d", "%r11d" };
-    static char *names_2[REGISTERS_COUNT] = { "%cx", "%r8w", "%r9w", "%r10w", "%r11w" };
-    static char *names_1[REGISTERS_COUNT] = { "%cl", "%r8b", "%r9b", "%r10b", "%r11b" };
+    static char *names_8[REGISTERS_COUNT] = { "%rcx", "%rsi", "%r8", "%r9", "%r10", "%r11", "%r12", "%r13", "%r14", "%r15" };
+    static char *names_4[REGISTERS_COUNT] = { "%ecx", "%esi", "%r8d", "%r9d", "%r10d", "%r11d", "%r12d", "%r13d", "%r14d", "%r15d" };
+    static char *names_2[REGISTERS_COUNT] = { "%cx", "%si", "%r8w", "%r9w", "%r10w", "%r11w", "%r12w", "%r13w", "%r14w", "%r15w" };
+    static char *names_1[REGISTERS_COUNT] = { "%cl", "%sil", "%r8b", "%r9b", "%r10b", "%r11b", "%r12b", "%r13b", "%r14b", "%r15b" };
 
     if (self->kind != VALUE_HOLDER__REGISTER) {
         PANIC(__FILE__, __LINE__, "This is not a register%c", 0);
@@ -399,6 +404,30 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
     }
     case EXPRESSION__CALL: {
+        Expression *callee = expression->call_data.callee;
+        Argument_List *arguments = expression->call_data.arguments;
+        if (callee->kind != EXPRESSION__VARIABLE) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only simple function calls like \"example()\" are supported", expression->location->line, expression->location->column);
+        }
+        String *function_name = callee->variable_data.name->lexeme;
+        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
+        if (function == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
+        }
+        const int arguments_size = list__size(arguments);
+        if (arguments_size > 1) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function calls with %d arguments are not supported yet", expression->location->line, expression->location->column, arguments_size);
+        }
+
+        if (arguments_size > 0) {
+            Argument *argument = list__get(arguments, 0);
+            Value_Holder argument_value_holder = { .kind = VALUE_HOLDER__NEW };
+            emit_expression(context, argument->value, &argument_value_holder);
+            emitf("  movq %s, %%rdi", value_holder__register_name(&argument_value_holder));
+            value_holder__release_register(&argument_value_holder);
+        }
+
+        // TODO: Save used registers in the function frame
         for (int id = 0; id < REGISTERS_COUNT; id++) {
             Value_Holder *value_holder = registers[id];
             if (value_holder != NULL) {
@@ -415,20 +444,6 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
         }
 
-        Expression *callee = expression->call_data.callee;
-        Argument_List *arguments = expression->call_data.arguments;
-        if (callee->kind != EXPRESSION__VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only simple function calls like \"example()\" are supported", expression->location->line, expression->location->column);
-        }
-        String *function_name = callee->variable_data.name->lexeme;
-        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
-        if (function == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
-        }
-        if (list__size(arguments) > 0) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only function calls without arguments are supported", expression->location->line, expression->location->column);
-        }
-        
         emitf("  call %s", function_name->data);
 
         for (int id = REGISTERS_COUNT - 1; id >= 0; id--) {
@@ -629,25 +644,27 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT__FUNCTION: {
-        String *function_name = statement->function_data.name->lexeme;
-        emits("  .text");
-        emitf("  .globl %s", function_name->data);
-        emitf("  .type %s, @function", function_name->data);
-        emitf("%s:", function_name->data);
-        emits("  pushq %%rbp");
-        emits("  movq %%rsp, %%rbp");
+        if (!statement->function_data.is_declaration) {
+            String *function_name = statement->function_data.name->lexeme;
+            emits("  .text");
+            emitf("  .globl %s", function_name->data);
+            emitf("  .type %s, @function", function_name->data);
+            emitf("%s:", function_name->data);
+            emits("  pushq %%rbp");
+            emits("  movq %%rsp, %%rbp");
 
-        context->current_function = statement;
-        for (List_Iterator iterator = list__create_iterator(statement->function_data.statements); list_iterator__has_next(&iterator);) {
-            Statement *body_statement = list_iterator__next(&iterator);
-            emit_statement(context, body_statement);
+            context->current_function = statement;
+            for (List_Iterator iterator = list__create_iterator(statement->function_data.statements); list_iterator__has_next(&iterator);) {
+                Statement *body_statement = list_iterator__next(&iterator);
+                emit_statement(context, body_statement);
+            }
+            context->current_function = NULL;
+
+            emitf("%s_end:", function_name->data);
+            emits("  movq %%rbp, %%rsp");
+            emits("  popq %%rbp");
+            emits("  ret");
         }
-        context->current_function = NULL;
-
-        emitf("%s_end:", function_name->data);
-        emits("  movq %%rbp, %%rsp");
-        emits("  popq %%rbp");
-        emits("  ret");
         return;
     }
     case STATEMENT__IF: {
