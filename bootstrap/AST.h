@@ -36,6 +36,7 @@ typedef struct Type {
     union {
         struct {
             struct Type *item_type;
+            int size;
         } array_data;
         struct {
             Parameter_List *parameters;
@@ -53,7 +54,7 @@ typedef struct Type {
     };
 } Type;
 
-Type *type__create_array(Source_Location *location, Type *item_type);
+Type *type__create_array(Source_Location *location, Type *item_type, int size);
 Type *type__create_function(Source_Location *location, Type *return_type, List *parameters);
 Type *type__create_named(Source_Location *location, Token *name);
 Type *type__create_pointer(Source_Location *location, Type *type);

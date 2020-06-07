@@ -8,9 +8,10 @@ static Type *type__create(int kind, Source_Location *location) {
     return self;
 }
 
-Type *type__create_array(Source_Location *location, Type *item_type) {
+Type *type__create_array(Source_Location *location, Type *item_type, int size) {
     Type *self = type__create(TYPE__ARRAY, location);
     self->array_data.item_type = item_type;
+    self->array_data.size = size;
     return self;
 }
 

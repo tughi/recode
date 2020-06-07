@@ -141,6 +141,10 @@ int is_keyword(Token *token, const char *lexeme) {
     return token->kind == TOKEN__KEYWORD && string__equals(token->lexeme, lexeme);
 }
 
+int is_integer(Token *token) {
+    return token->kind == TOKEN__INTEGER;
+}
+
 int is_literal(Token *token) {
     return token->kind == TOKEN__INTEGER || token->kind == TOKEN__STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->kind == TOKEN__CHARACTER;
 }
@@ -631,10 +635,14 @@ Member_List *parse_comma_separated_members(Context *context) {
     return members;
 }
 
+int is_semicolon(Token *token) {
+    return token->kind == TOKEN__OTHER && string__equals(token->lexeme, ";");
+}
+
 // type
 //      : "@" type
 //      | IDENTIFIER
-//      | "[" type "]"
+//      | "[" type (";" INTEGER)? "]"
 //      | "(" comma_separated_members? ")" "->" type
 Type *parse_type(Context *context) {
     if (matches_one(context, required(is_pointer_operator))) {
@@ -647,9 +655,19 @@ Type *parse_type(Context *context) {
         consume_space(context, 0);
         Type *item_type = parse_type(context);
         consume_space(context, 0);
+        int array_size = 0;
+        if (consume_one(context, NULL, required(is_semicolon))) {
+            consume_space(context, 1);
+            Token *array_size_token = consume_one(context, "array size", required(is_integer));
+            array_size = array_size_token->integer_data.value;
+            if (array_size <= 0) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Invalid array size: %d", array_size_token->location->line, array_size_token->location->column, array_size);
+            }
+            consume_space(context, 0);
+        }
         consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
-        return type__create_array(location, item_type);
+        return type__create_array(location, item_type, array_size);
     }
     if (matches_one(context, required(is_open_paren))) {
         Source_Location *location = consume_one(context, NULL, required(is_open_paren))->location;
