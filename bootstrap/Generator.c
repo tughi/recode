@@ -286,27 +286,6 @@ void emit_load_literal(Context *context, Token *token, Value_Holder *value_holde
     }
 }
 
-void emit_load_variable(Context *context, Token *variable_name, Value_Holder *value_holder) {
-    Variable *variable = context__find_variable(context, variable_name->lexeme);
-    if (variable == NULL) {
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", variable_name->location->line, variable_name->location->line, variable_name->lexeme->data);
-    }
-
-    // TODO: check if variable is local or global, and load it respectively
-
-    Type *variable_type = context__resolve_type(context, variable->type);
-    value_holder__acquire_register(value_holder, variable_type, context);
-    switch (variable_type->kind) {
-    case TYPE__BOOLEAN:
-    case TYPE__INTEGER:
-    case TYPE__POINTER:
-        emitf("  mov %s, %s_%03d[rip]", value_holder__register_name(value_holder), variable->name->data, variable->id);
-        return;
-    default:
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", variable_name->location->line, variable_name->location->line, type__get_kind_name(variable_type));
-    }
-}
-
 void emit_expression(Context *context, Expression *expression, Value_Holder *result_value_holder);
 
 void emit_arithmetic_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
@@ -521,31 +500,18 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         return;
     }
     case EXPRESSION__POINTED_VALUE: {
-        Expression *pointer_expression = expression->pointed_value_data.expression;
-        if (pointer_expression->kind != EXPRESSION__VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable expression", pointer_expression->location->line, pointer_expression->location->column);
-        }
-        String *variable_name = pointer_expression->variable_data.name->lexeme;
-        Variable *variable = context__find_variable(context, variable_name);
-        if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
-        }
-        Type *variable_type = variable->type;
-        if (variable_type->kind != TYPE__POINTER) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a pointer variable", pointer_expression->location->line, pointer_expression->location->column);
-        }
-        Value_Holder pointer_holder = { .kind = VALUE_HOLDER__NEW };
-        emit_load_variable(context, pointer_expression->variable_data.name, &pointer_holder);
-        Type *value_type = context__resolve_type(context, variable_type->pointer_data.type);
+        Value_Holder pointer_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression_address(context, expression, &pointer_value_holder);
+        Type *value_type = pointer_value_holder.type->pointer_data.type;
         value_holder__acquire_register(result_value_holder, value_type, context);
         switch (value_type->kind) {
         case TYPE__BOOLEAN:
         case TYPE__INTEGER:
-            emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&pointer_holder));
-            value_holder__release_register(&pointer_holder);
+            emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&pointer_value_holder));
+            value_holder__release_register(&pointer_value_holder);
             return;
         default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", pointer_expression->location->line, pointer_expression->location->column, type__get_kind_name(value_type));
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", expression->pointed_value_data.expression->location->line, expression->pointed_value_data.expression->location->column, type__get_kind_name(value_type));
         }
     }
     case EXPRESSION__POINTER_TO: {
@@ -567,8 +533,20 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         return;
     }
     case EXPRESSION__VARIABLE: {
-        emit_load_variable(context, expression->variable_data.name, result_value_holder);
-        return;
+        Value_Holder variable_address_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression_address(context, expression, &variable_address_value_holder);
+        Type *variable_type = context__resolve_type(context, variable_address_value_holder.type->pointer_data.type);
+        value_holder__acquire_register(result_value_holder, variable_type, context);
+        switch (variable_type->kind) {
+        case TYPE__BOOLEAN:
+        case TYPE__INTEGER:
+        case TYPE__POINTER:
+            emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&variable_address_value_holder));
+            value_holder__release_register(&variable_address_value_holder);
+            return;
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type: %s", expression->variable_data.name->location->line, expression->variable_data.name->location->line, type__get_kind_name(variable_type));
+        }
     }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported expression kind: %s", expression->location->line, expression->location->column, expression__get_kind_name(expression));
