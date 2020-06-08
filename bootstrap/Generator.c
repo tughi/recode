@@ -152,7 +152,7 @@ void context__resolve_type(Context *self, Type *type) {
 int context__is_primitive_type(Context *self, Type *type) {
     switch (type->kind) {
     case TYPE__BOOLEAN:
-    case TYPE__INTEGER:
+    case TYPE__INT:
     case TYPE__POINTER:
         return 1;
     default:
@@ -184,7 +184,7 @@ int context__compute_type_size(Context *self, Type *type) {
     }
     case TYPE__BOOLEAN:
         return 1;
-    case TYPE__INTEGER:
+    case TYPE__INT:
         return 8;
     case TYPE__NOTHING:
         return 0;
@@ -315,7 +315,7 @@ void emit_arithmetic_expression(Context *context, Expression *expression, Value_
     emit_expression(context, expression->binary_data.right_expression, &right_value_holder);
     Token *operator_token = expression->binary_data.operator_token;
     String *operator = operator_token->lexeme;
-    if (result_value_holder->type->kind != TYPE__INTEGER || right_value_holder.type->kind != TYPE__INTEGER) {
+    if (result_value_holder->type->kind != TYPE__INT || right_value_holder.type->kind != TYPE__INT) {
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can \"%s\" only integer values", operator_token->location->line, operator_token->location->column, operator->data);
     }
     if (string__equals(operator, "+")) {
@@ -347,7 +347,7 @@ void emit_comparison_expression(Context *context, Expression *expression, Value_
     Token *operator_token = expression->binary_data.operator_token;
     String *operator = operator_token->lexeme;
     if (string__equals(operator, "<") || string__equals(operator, "<=") || string__equals(operator, ">") || string__equals(operator, ">=")) {
-        if (result_value_holder->type->kind != TYPE__INTEGER || right_value_holder.type->kind != TYPE__INTEGER) {
+        if (result_value_holder->type->kind != TYPE__INT || right_value_holder.type->kind != TYPE__INT) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- You can use \"%s\" only for integer values", operator_token->location->line, operator_token->location->column, operator->data);
         }
     } else if (string__equals(operator, "==") || string__equals(operator, "!=")) {
@@ -388,7 +388,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         Expression *index_expression = expression->array_item_data.index;
         Value_Holder index_value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression(context, index_expression, &index_value_holder);
-        if (index_value_holder.type->kind != TYPE__INTEGER) {
+        if (index_value_holder.type->kind != TYPE__INT) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not an integer expression", index_expression->location->line, index_expression->location->column);
         }
         Type *array_type = array_value_holder.type->pointer_data.type;
@@ -501,7 +501,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
 
         Type *function_return_type = function->function_data.return_type;
         switch (function_return_type->kind) {
-        case TYPE__INTEGER: {
+        case TYPE__INT: {
             value_holder__acquire_register(result_value_holder, context__get_integer_type(context), context);
             emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
             break;
@@ -526,7 +526,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         value_holder__acquire_register(result_value_holder, value_type, context);
         switch (value_type->kind) {
         case TYPE__BOOLEAN:
-        case TYPE__INTEGER:
+        case TYPE__INT:
             emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&pointer_value_holder));
             value_holder__release_register(&pointer_value_holder);
             return;
@@ -545,7 +545,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         value_holder__acquire_register(result_value_holder, variable_type, context);
         switch (variable_type->kind) {
         case TYPE__BOOLEAN:
-        case TYPE__INTEGER:
+        case TYPE__INT:
         case TYPE__POINTER:
             emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&variable_address_value_holder));
             value_holder__release_register(&variable_address_value_holder);
@@ -574,7 +574,7 @@ void emit_statement(Context *context, Statement *statement) {
         }
         switch (destination_type->kind) {
         case TYPE__BOOLEAN:
-        case TYPE__INTEGER:
+        case TYPE__INT:
         case TYPE__POINTER:
             emitf("  mov [%s], %s", value_holder__register_name(&destination_value_holder), value_holder__register_name(&value_holder));
             break;
@@ -723,7 +723,7 @@ void emit_statement(Context *context, Statement *statement) {
             emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
             break;
         }
-        case TYPE__INTEGER: {
+        case TYPE__INT: {
             emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
             break;
         }

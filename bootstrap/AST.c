@@ -44,11 +44,11 @@ void type__convert(Type *self, Type *other) {
     self->kind = other->kind;
     switch (other->kind) {
     case TYPE__BOOLEAN:
-        self->name = other->name;
-        break;
-    case TYPE__INTEGER:
-        self->name = other->name;
-        break;
+    case TYPE__INT:
+    case TYPE__INT8:
+    case TYPE__INT16:
+    case TYPE__INT32:
+    case TYPE__INT64:
     case TYPE__NOTHING:
         self->name = other->name;
         break;
@@ -65,8 +65,16 @@ char *type__get_kind_name(Type *self) {
         return "BOOLEAN";
     case TYPE__FUNCTION:
         return "FUNCTION";
-    case TYPE__INTEGER:
-        return "INTEGER";
+    case TYPE__INT:
+        return "INT";
+    case TYPE__INT8:
+        return "INT8";
+    case TYPE__INT16:
+        return "INT16";
+    case TYPE__INT32:
+        return "INT32";
+    case TYPE__INT64:
+        return "INT64";
     case TYPE__POINTER:
         return "POINTER";
     case TYPE__NAMED:
@@ -80,21 +88,18 @@ char *type__get_kind_name(Type *self) {
 
 int type__equals(Type *self, Type *other) {
     switch (self->kind) {
-    case TYPE__BOOLEAN: {
-        return other->kind == TYPE__BOOLEAN;
-    }
-    case TYPE__INTEGER: {
-        return other->kind == TYPE__INTEGER;
-    }
-    case TYPE__NAMED: {
+    case TYPE__BOOLEAN:
+    case TYPE__INT:
+    case TYPE__INT8:
+    case TYPE__INT16:
+    case TYPE__INT32:
+    case TYPE__INT64:
+    case TYPE__NOTHING:
+        return other->kind == self->kind;
+    case TYPE__NAMED:
         return other->kind == TYPE__NAMED && string__equals(self->named_data.name->lexeme, other->named_data.name->lexeme->data);
-    }
-    case TYPE__NOTHING: {
-        return other->kind == TYPE__NOTHING;
-    }
-    case TYPE__POINTER: {
+    case TYPE__POINTER:
         return other->kind == TYPE__POINTER && type__equals(self->pointer_data.type, other->pointer_data.type);
-    }
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(self));
     }
@@ -207,7 +212,11 @@ Named_Types *named_types__create() {
     static Source_Location unkown_location;
     Named_Types *self = list__create();
     list__append(self, named_types__create_item(string__create("Boolean"), type__create(TYPE__BOOLEAN, &unkown_location)));
-    list__append(self, named_types__create_item(string__create("Int"), type__create(TYPE__INTEGER, &unkown_location)));
+    list__append(self, named_types__create_item(string__create("Int"), type__create(TYPE__INT, &unkown_location)));
+    list__append(self, named_types__create_item(string__create("Int8"), type__create(TYPE__INT8, &unkown_location)));
+    list__append(self, named_types__create_item(string__create("Int16"), type__create(TYPE__INT16, &unkown_location)));
+    list__append(self, named_types__create_item(string__create("Int32"), type__create(TYPE__INT32, &unkown_location)));
+    list__append(self, named_types__create_item(string__create("Int64"), type__create(TYPE__INT64, &unkown_location)));
     list__append(self, named_types__create_item(string__create("Nothing"), type__create(TYPE__NOTHING, &unkown_location)));
     return self;
 }
