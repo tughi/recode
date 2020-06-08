@@ -1,0 +1,19 @@
+\ String operations
+
+putchar :: (char: Int) -> Nothing
+
+message: @Int8
+index: Int
+
+main :: () -> Int {
+    message = "HEllo world!\n"
+    message[1] = 'e'
+    index = 0
+    loop {
+        if (index >= 13) {
+            return 0
+        }
+        putchar(message[index] as Int)
+        index = index + 1
+    }
+}

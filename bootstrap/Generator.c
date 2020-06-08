@@ -71,6 +71,7 @@ typedef struct Context {
     FILE *file;
     Named_Functions *named_functions;
     Named_Types *named_types;
+    Token_List *string_constants;
     Variables *variables;
     Counter *counter;
     Statement *current_function;
@@ -87,6 +88,7 @@ static Context *context__create(FILE *file, Named_Functions *named_functions, Na
     self->file = file;
     self->named_functions = named_functions;
     self->named_types = named_types;
+    self->string_constants = list__create();
     self->variables = variables__create();
     self->counter = counter__create();
     self->current_function = NULL;
@@ -319,6 +321,13 @@ void emit_load_literal(Context *context, Token *token, Value_Holder *value_holde
         } 
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported keyword: %s", token->location->line, token->location->line, token->lexeme->data);
     }
+    case TOKEN__STRING: {
+        int index = list__size(context->string_constants);
+        list__append(context->string_constants, token);
+        value_holder__acquire_register(value_holder, type__create_pointer(token->location, context__get_int8_type(context)), context);
+        emitf("  lea %s, __data__%d__string__[rip]", value_holder__register_name(value_holder), index);
+        return;
+    }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported token kind: %s", token->location->line, token->location->line, token__get_kind_name(token));
     }
@@ -396,11 +405,11 @@ void emit_comparison_expression(Context *context, Expression *expression, Value_
 void emit_expression_address(Context *context, Expression *expression, Value_Holder *destination_value_holder) {
     switch (expression->kind) {
     case EXPRESSION__ARRAY_ITEM: {
-        Expression *array_expression = expression->array_item_data.array;
-        Value_Holder array_value_holder = { .kind = VALUE_HOLDER__NEW };
-        emit_expression_address(context, array_expression, &array_value_holder);
-        if (array_value_holder.type->kind != TYPE__POINTER || array_value_holder.type->pointer_data.type->kind != TYPE__ARRAY) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not an array expression", array_expression->location->line, array_expression->location->column);
+        Expression *address_expression = expression->array_item_data.array;
+        Value_Holder address_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression_address(context, address_expression, &address_value_holder);
+        if (!(address_value_holder.type->kind == TYPE__POINTER && (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY || address_value_holder.type->pointer_data.type->kind == TYPE__POINTER))) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not an array expression", address_expression->location->line, address_expression->location->column);
         }
         Expression *index_expression = expression->array_item_data.index;
         Value_Holder index_value_holder = { .kind = VALUE_HOLDER__NEW };
@@ -408,17 +417,27 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         if (index_value_holder.type->kind != TYPE__INT) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not an integer expression", index_expression->location->line, index_expression->location->column);
         }
-        Type *array_type = array_value_holder.type->pointer_data.type;
-        Type *array_item_type = array_type->array_data.item_type;
-        int array_item_type_size = context__compute_type_size(context, array_item_type);
-        emitf("  mov rax, %d", array_item_type_size);
-        emitf("  mul %s", value_holder__register_name(&index_value_holder));
-        emitf("  mov %s, rax", value_holder__register_name(&index_value_holder));
-        value_holder__acquire_register(destination_value_holder, type__create_pointer(array_expression->location, array_item_type), context);
-        emitf("  mov %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&array_value_holder));
+        Type *item_type;
+        if (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY) {
+            item_type = address_value_holder.type->pointer_data.type->array_data.item_type;
+        } else {
+            item_type = address_value_holder.type->pointer_data.type->pointer_data.type;
+        }
+        int item_type_size = context__compute_type_size(context, item_type);
+        if (item_type_size > 1) {
+            emitf("  mov rax, %d", item_type_size);
+            emitf("  mul %s", value_holder__register_name(&index_value_holder));
+            emitf("  mov %s, rax", value_holder__register_name(&index_value_holder));
+        }
+        value_holder__acquire_register(destination_value_holder, type__create_pointer(address_expression->location, item_type), context);
+        if (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY) {
+            emitf("  mov %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&address_value_holder));
+        } else {
+            emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&address_value_holder));
+        }
         emitf("  add %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&index_value_holder));
         value_holder__release_register(&index_value_holder);
-        value_holder__release_register(&array_value_holder);
+        value_holder__release_register(&address_value_holder);
         return;
     }
     case EXPRESSION__POINTED_VALUE: {
@@ -496,7 +515,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             Value_Holder argument_value_holder = { .kind = VALUE_HOLDER__NEW };
             emit_expression(context, argument->value, &argument_value_holder);
             if (!type__equals(argument_value_holder.type, context__get_int_type(context))) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected argument type is %s, got %s instead.", expression->location->line, expression->location->column, context__type_name(context, context__get_int_type(context))->data, context__type_name(context, argument_value_holder.type)->data);
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected argument type is %s, got %s instead.", argument->value->location->line, argument->value->location->column, context__type_name(context, context__get_int_type(context))->data, context__type_name(context, argument_value_holder.type)->data);
             }
             emitf("  mov rdi, %s", value_holder__register_name(&argument_value_holder));
             value_holder__release_register(&argument_value_holder);
@@ -584,11 +603,12 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         switch (value_type->kind) {
         case TYPE__BOOLEAN:
         case TYPE__INT:
+        case TYPE__INT8:
             emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&pointer_value_holder));
             value_holder__release_register(&pointer_value_holder);
             return;
         default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", expression->pointed_value_data.expression->location->line, expression->pointed_value_data.expression->location->column, type__get_kind_name(value_type));
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", expression->pointed_value_data.expression->location->line, expression->pointed_value_data.expression->location->column, context__type_name(context, value_type)->data);
         }
     }
     case EXPRESSION__POINTER_TO: {
@@ -826,6 +846,13 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unrelease register found: %s", statement->location->line, statement->location->column, value_holder__register_name(registers[id]));
             }
         }
+    }
+
+    for (int index = 0; index < list__size(context->string_constants); index++) {
+        Token *string_constant = list__get(context->string_constants, index);
+        emits("");
+        emits("  .data");
+        emitf("__data__%d__string__: .string %s", index, string_constant->lexeme->data);
     }
 
     fclose(context->file);
