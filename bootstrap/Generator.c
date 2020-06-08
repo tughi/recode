@@ -153,6 +153,10 @@ int context__is_primitive_type(Context *self, Type *type) {
     switch (type->kind) {
     case TYPE__BOOLEAN:
     case TYPE__INT:
+    case TYPE__INT8:
+    case TYPE__INT16:
+    case TYPE__INT32:
+    case TYPE__INT64:
     case TYPE__POINTER:
         return 1;
     default:
@@ -168,10 +172,18 @@ Type *context__get_boolean_type(Context *self) {
     return context__find_type(self, type_name);
 }
 
-Type *context__get_integer_type(Context *self) {
+Type *context__get_int_type(Context *self) {
     static String *type_name = NULL;
     if (type_name == NULL) {
         type_name = string__create("Int");
+    }
+    return context__find_type(self, type_name);
+}
+
+Type *context__get_int8_type(Context *self) {
+    static String *type_name = NULL;
+    if (type_name == NULL) {
+        type_name = string__create("Int8");
     }
     return context__find_type(self, type_name);
 }
@@ -183,13 +195,13 @@ int context__compute_type_size(Context *self, Type *type) {
         return item_type_size * type->array_data.size;
     }
     case TYPE__BOOLEAN:
+    case TYPE__INT8:
         return 1;
     case TYPE__INT:
+    case TYPE__POINTER:
         return 8;
     case TYPE__NOTHING:
         return 0;
-    case TYPE__POINTER:
-        return 8;
     case TYPE__NAMED: {
         String *type_name = type->named_data.name->lexeme;
         Type *named_type = context__find_type(self, type_name);
@@ -239,7 +251,7 @@ void value_holder__acquire_register(Value_Holder *self, Type *type, Context *con
         PANIC(__FILE__, __LINE__, "Trying to acquire register for an invalid value holder kind: %d", self->kind);
     }
     if (!context__is_primitive_type(context, type)) {
-        PANIC(__FILE__, __LINE__, "Trying to acquire register for a non-primitive type: %s", type__get_kind_name(type));
+        PANIC(__FILE__, __LINE__, "Trying to acquire register for a non-primitive type: %s", context__type_name(context, type)->data);
     }
     for (int id = 0; id < REGISTERS_COUNT; id++) {
         if (registers[id] == NULL) {
@@ -284,8 +296,13 @@ char *value_holder__register_name(Value_Holder *self) {
 
 void emit_load_literal(Context *context, Token *token, Value_Holder *value_holder) {
     switch (token->kind) {
+    case TOKEN__CHARACTER: {
+        value_holder__acquire_register(value_holder, context__get_int8_type(context), context);
+        emitf("  mov %s, %d", value_holder__register_name(value_holder), token->integer_data.value);
+        return;
+    }
     case TOKEN__INTEGER: {
-        value_holder__acquire_register(value_holder, context__get_integer_type(context), context);
+        value_holder__acquire_register(value_holder, context__get_int_type(context), context);
         emitf("  mov %s, %d", value_holder__register_name(value_holder), token->integer_data.value);
         return;
     }
@@ -478,6 +495,9 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             Argument *argument = list__get(arguments, 0);
             Value_Holder argument_value_holder = { .kind = VALUE_HOLDER__NEW };
             emit_expression(context, argument->value, &argument_value_holder);
+            if (!type__equals(argument_value_holder.type, context__get_int_type(context))) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected argument type is %s, got %s instead.", expression->location->line, expression->location->column, context__type_name(context, context__get_int_type(context))->data, context__type_name(context, argument_value_holder.type)->data);
+            }
             emitf("  mov rdi, %s", value_holder__register_name(&argument_value_holder));
             value_holder__release_register(&argument_value_holder);
         }
@@ -502,7 +522,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         Type *function_return_type = function->function_data.return_type;
         switch (function_return_type->kind) {
         case TYPE__INT: {
-            value_holder__acquire_register(result_value_holder, context__get_integer_type(context), context);
+            value_holder__acquire_register(result_value_holder, context__get_int_type(context), context);
             emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
             break;
         }
@@ -514,6 +534,43 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
 
         return;
+    }
+    case EXPRESSION__CAST: {
+        Type *cast_type = expression->cast_data.type;
+        context__resolve_type(context, cast_type);
+        value_holder__acquire_register(result_value_holder, cast_type, context);
+        Expression *cast_expression = expression->cast_data.expression;
+        Value_Holder cast_expression_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, cast_expression, &cast_expression_value_holder);
+        Type *cast_expression_type = cast_expression_value_holder.type;
+        switch (cast_expression_type->kind) {
+        case TYPE__INT8:
+            switch (cast_type->kind) {
+            case TYPE__INT8:
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Redundand cast detected.", cast_type->location->line, cast_type->location->column);
+                return;
+            case TYPE__INT:
+            case TYPE__INT16:
+            case TYPE__INT32:
+            case TYPE__INT64:
+                emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                return;
+            }
+            break;
+        case TYPE__INT:
+            switch (cast_type->kind) {
+            case TYPE__INT:
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Redundand cast detected.", cast_type->location->line, cast_type->location->column);
+                return;
+            }
+            break;
+        }
+        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Casting %s to %s is not supported.", cast_expression->location->line, cast_expression->location->column, context__type_name(context, cast_expression_type)->data, context__type_name(context, cast_type)->data);
     }
     case EXPRESSION__LITERAL: {
         emit_load_literal(context, expression->literal_data.value, result_value_holder);
@@ -546,12 +603,13 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         switch (variable_type->kind) {
         case TYPE__BOOLEAN:
         case TYPE__INT:
+        case TYPE__INT8:
         case TYPE__POINTER:
             emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&variable_address_value_holder));
             value_holder__release_register(&variable_address_value_holder);
             return;
         default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type: %s", expression->variable_data.name->location->line, expression->variable_data.name->location->line, type__get_kind_name(variable_type));
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type: %s", expression->variable_data.name->location->line, expression->variable_data.name->location->line, context__type_name(context, variable_type)->data);
         }
     }
     default:
@@ -575,11 +633,12 @@ void emit_statement(Context *context, Statement *statement) {
         switch (destination_type->kind) {
         case TYPE__BOOLEAN:
         case TYPE__INT:
+        case TYPE__INT8:
         case TYPE__POINTER:
             emitf("  mov [%s], %s", value_holder__register_name(&destination_value_holder), value_holder__register_name(&value_holder));
             break;
         default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, type__get_kind_name(destination_type));
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s.", statement->location->line, statement->location->column, context__type_name(context, destination_type)->data);
         }
         value_holder__release_register(&value_holder);
         value_holder__release_register(&destination_value_holder);
@@ -719,18 +778,14 @@ void emit_statement(Context *context, Statement *statement) {
             emitf("%s_%03d: .zero %d", variable_name->lexeme->data, variable->id, variable_size);
             break;
         }
-        case TYPE__BOOLEAN: {
+        case TYPE__BOOLEAN:
+        case TYPE__INT8:
             emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
             break;
-        }
-        case TYPE__INT: {
+        case TYPE__INT:
+        case TYPE__POINTER:
             emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
             break;
-        }
-        case TYPE__POINTER: {
-            emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
-            break;
-        }
         default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
         }
