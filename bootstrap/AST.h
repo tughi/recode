@@ -32,6 +32,7 @@ typedef struct Type {
     } kind;
 
     Source_Location *location;
+    String *name;
 
     union {
         struct {
@@ -59,6 +60,7 @@ Type *type__create_function(Source_Location *location, Type *return_type, List *
 Type *type__create_named(Source_Location *location, Token *name);
 Type *type__create_pointer(Source_Location *location, Type *type);
 Type *type__create_struct(Source_Location *location, Statement *statement);
+void type__convert(Type *self, Type *other);
 char *type__get_kind_name(Type *self);
 int type__equals(Type *self, Type *other);
 

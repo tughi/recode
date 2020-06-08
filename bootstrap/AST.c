@@ -40,10 +40,29 @@ Type *type__create_struct(Source_Location *location, Statement *statement) {
     return self;
 }
 
+void type__convert(Type *self, Type *other) {
+    self->kind = other->kind;
+    switch (other->kind) {
+    case TYPE__BOOLEAN:
+        self->name = other->name;
+        break;
+    case TYPE__INTEGER:
+        self->name = other->name;
+        break;
+    case TYPE__NOTHING:
+        self->name = other->name;
+        break;
+    default:
+        PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(other));
+    }
+}
+
 char *type__get_kind_name(Type *self) {
     switch (self->kind) {
     case TYPE__ARRAY:
         return "ARRAY";
+    case TYPE__BOOLEAN:
+        return "BOOLEAN";
     case TYPE__FUNCTION:
         return "FUNCTION";
     case TYPE__INTEGER:
@@ -180,6 +199,7 @@ static Named_Types_Item *named_types__create_item(String *name, Type *type) {
     Named_Types_Item *self = malloc(sizeof(Named_Types_Item));
     self->name = name;
     self->type = type;
+    type->name = name;
     return self;
 }
 

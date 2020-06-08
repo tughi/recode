@@ -106,21 +106,43 @@ Type *context__find_type(Context *self, String *name) {
     return named_types__get(self->named_types, name);
 }
 
-Type *context__resolve_type(Context *self, Type *type) {
+String *context__type_name(Context *self, Type *type) {
+    if (type->name == NULL) {
+        switch (type->kind) {
+        case TYPE__NAMED: {
+            type->name = type->named_data.name->lexeme;
+            break;
+        }
+        case TYPE__POINTER: {
+            type->name = string__create("@");
+            string__append_string(type->name, context__type_name(self, type->pointer_data.type));
+            break;
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, type__get_kind_name(type));
+        }
+    }
+    return type->name;
+}
+
+void context__resolve_type(Context *self, Type *type) {
     switch (type->kind) {
-    case TYPE__ARRAY:
-    case TYPE__BOOLEAN:
-    case TYPE__INTEGER:
-    case TYPE__NOTHING:
-    case TYPE__POINTER:
-        return type;
+    case TYPE__ARRAY: {
+        context__resolve_type(self, type->array_data.item_type);
+        return;
+    }
     case TYPE__NAMED: {
         String *type_name = type->named_data.name->lexeme;
         Type *named_type = context__find_type(self, type_name);
         if (named_type == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown type: %s", type->location->line, type->location->column, type_name->data);
         }
-        return context__resolve_type(self, named_type);
+        type__convert(type, named_type);
+        return;
+    }
+    case TYPE__POINTER: {
+        context__resolve_type(self, type->pointer_data.type);
+        return;
     }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, type__get_kind_name(type));
@@ -128,8 +150,7 @@ Type *context__resolve_type(Context *self, Type *type) {
 }
 
 int context__is_primitive_type(Context *self, Type *type) {
-    Type *resolved_type = context__resolve_type(self, type);
-    switch (resolved_type->kind) {
+    switch (type->kind) {
     case TYPE__BOOLEAN:
     case TYPE__INTEGER:
     case TYPE__POINTER:
@@ -371,7 +392,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not an integer expression", index_expression->location->line, index_expression->location->column);
         }
         Type *array_type = array_value_holder.type->pointer_data.type;
-        Type *array_item_type = context__resolve_type(context, array_type->array_data.item_type);
+        Type *array_item_type = array_type->array_data.item_type;
         int array_item_type_size = context__compute_type_size(context, array_item_type);
         emitf("  mov rax, %d", array_item_type_size);
         emitf("  mul %s", value_holder__register_name(&index_value_holder));
@@ -390,7 +411,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         if (pointer_value_holder.type->kind != TYPE__POINTER || pointer_value_holder.type->pointer_data.type->kind != TYPE__POINTER) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a pointer expression", pointer_expression->location->line, pointer_expression->location->column);
         }
-        Type *pointed_type = context__resolve_type(context, pointer_value_holder.type->pointer_data.type->pointer_data.type);
+        Type *pointed_type = pointer_value_holder.type->pointer_data.type->pointer_data.type;
         value_holder__acquire_register(destination_value_holder, type__create_pointer(pointer_expression->location, pointed_type), context);
         emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&pointer_value_holder));
         value_holder__release_register(&pointer_value_holder);
@@ -405,8 +426,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         if (!variable->is_global) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only global variables are supported for now", expression->location->line, expression->location->column);
         }
-        Type *variable_type = context__resolve_type(context, variable->type);
-        value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable_type), context);
+        value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable->type), context);
         emitf("  lea %s, %s_%03d[rip]", value_holder__register_name(destination_value_holder), variable->name->data, variable->id);
         return;
     }
@@ -479,7 +499,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
         }
 
-        Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
+        Type *function_return_type = function->function_data.return_type;
         switch (function_return_type->kind) {
         case TYPE__INTEGER: {
             value_holder__acquire_register(result_value_holder, context__get_integer_type(context), context);
@@ -515,27 +535,13 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
     }
     case EXPRESSION__POINTER_TO: {
-        Expression *variable_expression = expression->pointer_to_data.expression;
-        if (variable_expression->kind != EXPRESSION__VARIABLE) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a variable", variable_expression->location->line, variable_expression->location->column);
-        }
-        String *variable_name = variable_expression->variable_data.name->lexeme;
-        Variable *variable = context__find_variable(context, variable_name);
-        if (variable == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
-        }
-        value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, variable->type), context);
-        if (variable->is_global) {
-            emitf("  lea %s, %s_%03d[rip]", value_holder__register_name(result_value_holder), variable->name->data, variable->id);
-        } else {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local varaibles are not supported yet", variable_expression->location->line, variable_expression->location->column);
-        }
+        emit_expression_address(context, expression->pointer_to_data.expression, result_value_holder);
         return;
     }
     case EXPRESSION__VARIABLE: {
         Value_Holder variable_address_value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression_address(context, expression, &variable_address_value_holder);
-        Type *variable_type = context__resolve_type(context, variable_address_value_holder.type->pointer_data.type);
+        Type *variable_type = variable_address_value_holder.type->pointer_data.type;
         value_holder__acquire_register(result_value_holder, variable_type, context);
         switch (variable_type->kind) {
         case TYPE__BOOLEAN:
@@ -564,7 +570,7 @@ void emit_statement(Context *context, Statement *statement) {
         emit_expression(context, statement->assignment_data.value, &value_holder);
         Type *value_type = value_holder.type;
         if (!type__equals(destination_type, value_type)) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Destination type differs from value type. Expected %s but got %s instead.", statement->location->line, statement->location->column, type__get_kind_name(destination_type), type__get_kind_name(value_type));
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Destination type differs from value type. Expected %s but got %s instead.", statement->location->line, statement->location->column, context__type_name(context, destination_type)->data, context__type_name(context, value_type)->data);
         }
         switch (destination_type->kind) {
         case TYPE__BOOLEAN:
@@ -673,14 +679,14 @@ void emit_statement(Context *context, Statement *statement) {
         if (function == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Found return statement outside of a function.", statement->location->line, statement->location->column);
         }
-        Type *function_return_type = context__resolve_type(context, function->function_data.return_type);
+        Type *function_return_type = function->function_data.return_type;
         if (statement->return_data.expression != NULL) {
             Expression *return_expression = statement->return_data.expression;
             Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
             emit_expression(context, return_expression, &value_holder);
             Type *return_expression_type = value_holder.type;
             if (!type__equals(function_return_type, return_expression_type)) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expression type doesn't match the return type", return_expression->location->line, return_expression->location->column);
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- The return expression must be of type %s, got %s instead.", return_expression->location->line, return_expression->location->column, context__type_name(context, function_return_type)->data, context__type_name(context, return_expression_type)->data);
             }
             emitf("  mov rax, %s", value_holder__register_name(&value_holder));
             value_holder__release_register(&value_holder);
@@ -703,7 +709,7 @@ void emit_statement(Context *context, Statement *statement) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local variables are not supported yet", statement->location->line, statement->location->column);
         }
         emits("  .bss");
-        Type *variable_type = context__resolve_type(context, statement->variable_data.type);
+        Type *variable_type = statement->variable_data.type;
         switch (variable_type->kind) {
         case TYPE__ARRAY: {
             int variable_size = context__compute_type_size(context, variable_type);
@@ -742,6 +748,18 @@ void emit_statement(Context *context, Statement *statement) {
 void generate(char *file, Compilation_Unit *compilation_unit) {
     Context *context = context__create(fopen(file, "w"), compilation_unit->named_functions, compilation_unit->named_types);
     emits("  .intel_syntax noprefix");
+
+    for (List_Iterator iterator = list__create_iterator(compilation_unit->statements); list_iterator__has_next(&iterator);) {
+        Statement *statement = list_iterator__next(&iterator);
+        switch (statement->kind) {
+        case STATEMENT__FUNCTION:
+            context__resolve_type(context, statement->function_data.return_type);
+            break;
+        case STATEMENT__VARIABLE:
+            context__resolve_type(context, statement->variable_data.type);
+            break;
+        }
+    }
 
     for (List_Iterator iterator = list__create_iterator(compilation_unit->statements); list_iterator__has_next(&iterator);) {
         Statement *statement = list_iterator__next(&iterator);
