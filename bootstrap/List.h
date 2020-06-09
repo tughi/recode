@@ -27,6 +27,8 @@ int list__size(List *list);
 
 void *list__get(List *list, int index);
 
+void *list__last(List *self);
+
 void list__append(List *self, void *item);
 
 List_Iterator list__create_iterator(List *self);

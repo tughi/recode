@@ -24,6 +24,11 @@ void *list__get(List *self, int index) {
     return item != NULL ? item->data : NULL;
 }
 
+void *list__last(List *self) {
+    List_Item *item = self->last;
+    return item != NULL ? item->data : NULL;
+}
+
 void list__append(List *self, void *data) {
     List_Item *item = malloc(sizeof(List_Item));
     item->data = data;

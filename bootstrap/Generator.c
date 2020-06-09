@@ -7,33 +7,13 @@ typedef struct Variable {
     Source_Location *location;
     Type *type;
     int is_global;
+    int locals_offset;
 } Variable;
 
 typedef List Variables;
 
 Variables *variables__create() {
     return list__create();
-}
-
-Variable *variables__find(Variables *self, String *name) {
-    for (List_Iterator iterator = list__create_reversed_iterator(self); list_iterator__has_next(&iterator);) {
-        Variable *variable = list_iterator__next(&iterator);
-        if (string__equals(name, variable->name->data)) {
-            return variable;
-        }
-    }
-    return NULL;
-}
-
-Variable *variables__add(Variables *self, int id, String *name, Source_Location *location, Type *type, int is_global) {
-    Variable *variable = malloc(sizeof(Variable));
-    variable->id = id;
-    variable->name = name;
-    variable->location = location;
-    variable->type = type;
-    variable->is_global = is_global;
-    list__append(self, variable);
-    return variable;
 }
 
 typedef struct Loop {
@@ -96,12 +76,61 @@ static Context *context__create(FILE *file, Named_Functions *named_functions, Na
     return self;
 }
 
-Variable *context__find_variable(Context *self, String *name) {
-    return variables__find(self->variables, name);
+Context *context__clone(Context *other) {
+    Context *self = malloc(sizeof(Context));
+    self->global_context = other->global_context;
+    self->parent_context = other->parent_context;
+    self->file = other->file;
+    self->named_functions = other->named_functions;
+    self->named_types = other->named_types;
+    self->string_constants = other->string_constants;
+    self->variables = other->variables;
+    self->counter = other->counter;
+    self->current_function = other->current_function;
+    self->current_loop = other->current_loop;
+    return self;
 }
 
-Variable *context__create_variable(Context *self, String *name, Source_Location *location, Type *type) {
-    return variables__add(self->variables, counter__inc(self->counter), name, location, type, self->current_function == NULL);
+Variable *context__find_variable(Context *self, String *name) {
+    for (List_Iterator iterator = list__create_reversed_iterator(self->variables); list_iterator__has_next(&iterator);) {
+        Variable *variable = list_iterator__next(&iterator);
+        if (string__equals(name, variable->name->data)) {
+            return variable;
+        }
+    }
+    if (self == self->global_context) {
+        return NULL;
+    }
+    return context__find_variable(self->parent_context, name);
+}
+
+int context__compute_type_size(Context *self, Type *type);
+
+Variable *context__last_local_variable(Context *self) {
+    if (self->global_context == self) {
+        return NULL;
+    }
+    Variable *variable = list__last(self->variables);
+    if (variable != NULL) {
+        return variable;
+    }
+    return context__last_local_variable(self->parent_context);
+}
+
+Variable *context__create_variable(Context *self, Statement *variable_statement) {
+    Variable *variable = malloc(sizeof(Variable));
+    variable->id = counter__inc(self->counter);
+    variable->name = variable_statement->variable_data.name->lexeme;
+    variable->location = variable_statement->variable_data.name->location;
+    variable->type = variable_statement->variable_data.type;
+    variable->is_global = self->current_function == NULL;
+
+    Variable *previous_variable = context__last_local_variable(self);
+    variable->locals_offset = (previous_variable != NULL ? previous_variable->locals_offset : 0) + context__compute_type_size(self, variable->type);
+
+    list__append(self->variables, variable);
+
+    return variable;
 }
 
 Type *context__find_type(Context *self, String *name) {
@@ -459,11 +488,13 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         if (variable == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Undeclared variable: %s", expression->location->line, expression->location->column, variable_name->data);
         }
-        if (!variable->is_global) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only global variables are supported for now", expression->location->line, expression->location->column);
-        }
         value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable->type), context);
-        emitf("  lea %s, %s_%03d[rip]", value_holder__register_name(destination_value_holder), variable->name->data, variable->id);
+        if (variable->is_global) {
+            emitf("  lea %s, %s_%03d[rip]", value_holder__register_name(destination_value_holder), variable->name->data, variable->id);
+        } else {
+            emitf("  mov %s, rbp", value_holder__register_name(destination_value_holder));
+            emitf("  sub %s, %d", value_holder__register_name(destination_value_holder), variable->locals_offset);
+        }
         return;
     }
     default:
@@ -637,8 +668,79 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
     }
 }
 
+int compute_locals_size(Context *context, Statement_List *statements);
+
+void update_locals_size(Context *context, int locals_size_min, int *locals_size_max, Statement *block_statement) {
+    if (block_statement->kind == STATEMENT__BLOCK) {
+        int block_locals_size = compute_locals_size(context, block_statement->block_data.statements);
+        if (locals_size_min + block_locals_size > *locals_size_max) {
+            *locals_size_max = locals_size_min + block_locals_size;
+        }
+    }
+}
+
+int compute_locals_size(Context *context, Statement_List *statements) {
+    int locals_size_min = 0;
+    int locals_size_max = 0;
+
+    for (List_Iterator iterator = list__create_iterator(statements); list_iterator__has_next(&iterator);) {
+        Statement *statement = list_iterator__next(&iterator);
+        switch(statement->kind) {
+        case STATEMENT__ASSIGNMENT:
+        case STATEMENT__BREAK:
+        case STATEMENT__EXPRESSION:
+        case STATEMENT__RETURN:
+            break;
+        case STATEMENT__BLOCK: {
+            update_locals_size(context, locals_size_min, &locals_size_max, statement);
+            break;
+        }
+        case STATEMENT__IF: {
+            update_locals_size(context, locals_size_min, &locals_size_max, statement->if_data.true_block);
+            if (statement->if_data.false_block != NULL) {
+                update_locals_size(context, locals_size_min, &locals_size_max, statement->if_data.false_block);
+            }
+            break;
+        }
+        case STATEMENT__LOOP: {
+            update_locals_size(context, locals_size_min, &locals_size_max, statement->loop_data.block);
+            break;
+        }
+        case STATEMENT__VARIABLE: {
+            Type *variable_type = statement->variable_data.type;
+            if (variable_type == NULL) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Type inference is not supported yet.", statement->location->line, statement->location->column);
+            }
+            context__resolve_type(context, variable_type);
+            locals_size_min += context__compute_type_size(context, variable_type);
+            if (locals_size_min > locals_size_max) {
+                locals_size_max = locals_size_min;
+            }
+            break;
+        }
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported statement kind: %s", statement->location->line, statement->location->column, statement__get_kind_name(statement));
+        }
+    }
+
+    return locals_size_max;
+}
+
+Context *create_function_context(Context *parent_context) {
+    Context *context = context__clone(parent_context);
+    context->parent_context = parent_context;
+    context->variables = variables__create();
+    return context;
+}
+
+Context *create_block_context(Context *parent_context) {
+    Context *context = context__clone(parent_context);
+    context->parent_context = parent_context;
+    context->variables = variables__create();
+    return context;
+}
+
 void emit_statement(Context *context, Statement *statement) {
-    // INFO(__FILE__, __LINE__, "(%04d:%04d) -- %s", statement->location->line, statement->location->column, statement__get_kind_name(statement));
     switch (statement->kind) {
     case STATEMENT__ASSIGNMENT: {
         Value_Holder destination_value_holder = { .kind = VALUE_HOLDER__NEW };
@@ -665,7 +767,8 @@ void emit_statement(Context *context, Statement *statement) {
         return;
     }
     case STATEMENT__BLOCK: {
-        // TODO: create block context
+        context = create_block_context(context);
+
         for (List_Iterator iterator = list__create_iterator(statement->block_data.statements); list_iterator__has_next(&iterator);) {
             Statement *block_statement = list_iterator__next(&iterator);
             emit_statement(context, block_statement);
@@ -693,6 +796,11 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__FUNCTION: {
         if (!statement->function_data.is_declaration) {
+            int locals_size = compute_locals_size(context, statement->function_data.statements);
+
+            context = create_function_context(context);
+            context->current_function = statement;
+
             String *function_name = statement->function_data.name->lexeme;
             emits("  .text");
             emitf("  .globl %s", function_name->data);
@@ -700,13 +808,14 @@ void emit_statement(Context *context, Statement *statement) {
             emitf("%s:", function_name->data);
             emits("  push rbp");
             emits("  mov rbp, rsp");
+            if (locals_size > 0) {
+                emitf("  sub rsp, %d", locals_size);
+            }
 
-            context->current_function = statement;
             for (List_Iterator iterator = list__create_iterator(statement->function_data.statements); list_iterator__has_next(&iterator);) {
                 Statement *body_statement = list_iterator__next(&iterator);
                 emit_statement(context, body_statement);
             }
-            context->current_function = NULL;
 
             emitf("%s_end:", function_name->data);
             emits("  mov rsp, rbp");
@@ -783,31 +892,33 @@ void emit_statement(Context *context, Statement *statement) {
         if (statement->variable_data.is_external) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
         }
-        Variable *variable = context__create_variable(context, variable_name->lexeme, statement->variable_data.name->location, statement->variable_data.type);
-        if (!variable->is_global) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Local variables are not supported yet", statement->location->line, statement->location->column);
-        }
-        emits("  .bss");
-        Type *variable_type = statement->variable_data.type;
-        switch (variable_type->kind) {
-        case TYPE__ARRAY: {
-            int variable_size = context__compute_type_size(context, variable_type);
-            if (variable_size == 0) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Missing array size", variable_type->location->line, variable_type->location->column);
+        Variable *variable = context__create_variable(context, statement);
+        if (variable->is_global) {
+            emits("  .bss");
+            Type *variable_type = statement->variable_data.type;
+            if (variable_type == NULL) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Type inference is not supported yet", statement->location->line, statement->location->column);
             }
-            emitf("%s_%03d: .zero %d", variable_name->lexeme->data, variable->id, variable_size);
-            break;
-        }
-        case TYPE__BOOLEAN:
-        case TYPE__INT8:
-            emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
-            break;
-        case TYPE__INT:
-        case TYPE__POINTER:
-            emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
-            break;
-        default:
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
+            switch (variable_type->kind) {
+            case TYPE__ARRAY: {
+                int variable_size = context__compute_type_size(context, variable_type);
+                if (variable_size == 0) {
+                    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Missing array size", variable_type->location->line, variable_type->location->column);
+                }
+                emitf("%s_%03d: .zero %d", variable_name->lexeme->data, variable->id, variable_size);
+                break;
+            }
+            case TYPE__BOOLEAN:
+            case TYPE__INT8:
+                emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
+                break;
+            case TYPE__INT:
+            case TYPE__POINTER:
+                emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
+                break;
+            default:
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
+            }
         }
         Expression *variable_value = statement->variable_data.value;
         if (variable_value) {
