@@ -809,7 +809,7 @@ void emit_statement(Context *context, Statement *statement) {
             emits("  push rbp");
             emits("  mov rbp, rsp");
             if (locals_size > 0) {
-                emitf("  sub rsp, %d", locals_size);
+                emitf("  sub rsp, %d", (locals_size + 15) & ~15);
             }
 
             for (List_Iterator iterator = list__create_iterator(statement->function_data.statements); list_iterator__has_next(&iterator);) {
