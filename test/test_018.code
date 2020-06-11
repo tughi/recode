@@ -1,0 +1,27 @@
+\ Test recursivity of a function with no parameters
+
+putchar :: (char: Int) -> Nothing
+
+print__number: Int
+print :: () -> Nothing {
+    number: Int
+    number = print__number
+    if (number < 0) {
+        putchar('-' as Int)
+        print__number = number * (0 - 1)
+        print()
+    } else {
+        if (number >= 10) {
+            print__number = number / 10
+            print()
+        }
+        putchar(number // 10 + '0' as Int)
+    }
+}
+
+main :: () -> Int {
+    print__number = 1234567890
+    print()
+    putchar('\n' as Int)
+    return 0
+}
