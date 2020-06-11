@@ -455,10 +455,23 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
             item_type = address_value_holder.type->pointer_data.type->pointer_data.type;
         }
         int item_type_size = context__compute_type_size(context, item_type);
-        if (item_type_size > 1) {
+        switch (item_type_size) {
+        case  1:
+            break;
+        case 2:
+            emitf("  shl %s, 1", value_holder__register_name(&index_value_holder));
+            break;
+        case 4:
+            emitf("  shl %s, 2", value_holder__register_name(&index_value_holder));
+            break;
+        case 8:
+            emitf("  shl %s, 3", value_holder__register_name(&index_value_holder));
+            break;
+        default:
             emitf("  mov rax, %d", item_type_size);
             emitf("  mul %s", value_holder__register_name(&index_value_holder));
             emitf("  mov %s, rax", value_holder__register_name(&index_value_holder));
+            break;
         }
         value_holder__acquire_register(destination_value_holder, type__create_pointer(address_expression->location, item_type), context);
         if (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY) {
