@@ -117,12 +117,12 @@ Variable *context__last_local_variable(Context *self) {
     return context__last_local_variable(self->parent_context);
 }
 
-Variable *context__create_variable(Context *self, Statement *variable_statement) {
+Variable *context__create_variable(Context *self, Source_Location *location, String *name, Type *type) {
     Variable *variable = malloc(sizeof(Variable));
     variable->id = counter__inc(self->counter);
-    variable->name = variable_statement->variable_data.name->lexeme;
-    variable->location = variable_statement->variable_data.name->location;
-    variable->type = variable_statement->variable_data.type;
+    variable->name = name;
+    variable->location = location;
+    variable->type = type;
     variable->is_global = self->current_function == NULL;
 
     Variable *previous_variable = context__last_local_variable(self);
@@ -325,6 +325,30 @@ char *value_holder__register_name(Value_Holder *self) {
     default:
         PANIC(__FILE__, __LINE__, "Unsupported value size: %d", self->size);
     }
+}
+
+void value_holder__move_to_register(Value_Holder *self, int register_id, Context *context) {
+    Value_Holder *other_value_holder = registers[register_id];
+    if (other_value_holder != NULL) {
+        for (int id = register_id - 1; id >= 0; id--) {
+            if (registers[id] == NULL) {
+                PANIC(__FILE__, __LINE__, "The specified register (%d) is already in use, but there is at least one that can be used instead.", register_id);
+            }
+        }
+    }
+    if (other_value_holder == NULL) {
+        Value_Holder clone;
+        clone.kind = self->kind;
+        clone.type = self->type;
+        clone.size = self->size;
+        clone.register_data.id = self->register_data.id;
+        registers[clone.register_data.id] = NULL;
+        self->register_data.id = register_id;
+        registers[register_id] = self;
+        emitf("  mov %s, %s", value_holder__register_name(self), value_holder__register_name(&clone));
+        return;
+    }
+    PANIC(__FILE__, __LINE__, "The specified register (%d) is already in use, and the are no other free registers either.", register_id);
 }
 
 void emit_load_literal(Context *context, Token *token, Value_Holder *value_holder) {
@@ -551,24 +575,40 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         if (function == NULL) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
         }
+
         const int arguments_size = list__size(arguments);
-        if (arguments_size > 1) {
+        if (list__size(function->function_data.parameters) != arguments_size) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function called with %d arguments instead of %d.", expression->location->line, expression->location->column, arguments_size, list__size(function->function_data.parameters));
+        }
+        if (arguments_size > 4) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function calls with %d arguments are not supported yet", expression->location->line, expression->location->column, arguments_size);
         }
-
-        if (arguments_size > 0) {
-            Argument *argument = list__get(arguments, 0);
-            Value_Holder argument_value_holder = { .kind = VALUE_HOLDER__NEW };
-            emit_expression(context, argument->value, &argument_value_holder);
-            if (!type__equals(argument_value_holder.type, context__get_int_type(context))) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected argument type is %s, got %s instead.", argument->value->location->line, argument->value->location->column, context__type_name(context, context__get_int_type(context))->data, context__type_name(context, argument_value_holder.type)->data);
+        Value_Holder argument_value_holders[4] = {
+            { .kind = VALUE_HOLDER__NEW },
+            { .kind = VALUE_HOLDER__NEW },
+            { .kind = VALUE_HOLDER__NEW },
+            { .kind = VALUE_HOLDER__NEW },
+        };
+        int argument_register_ids[4] = {
+            REGISTER__RDI,
+            REGISTER__RSI,
+            REGISTER__RDX,
+            REGISTER__RCX,
+        };
+        int last_argument_register_id = REGISTERS_COUNT;
+        for (int argument_index = 0; argument_index < arguments_size; argument_index++) {
+            Argument *argument = list__get(arguments, argument_index);
+            Value_Holder *argument_value_holder = &argument_value_holders[argument_index];
+            emit_expression(context, argument->value, argument_value_holder);
+            Parameter *parameter = list__get(function->function_data.parameters, argument_index);
+            if (!type__equals(argument_value_holder->type, parameter->type)) {
+                WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Expected argument type is %s, got %s instead.", argument->value->location->line, argument->value->location->column, context__type_name(context, parameter->type)->data, context__type_name(context, argument_value_holder->type)->data);
             }
-            emitf("  mov rdi, %s", value_holder__register_name(&argument_value_holder));
-            value_holder__release_register(&argument_value_holder);
+            value_holder__move_to_register(argument_value_holder, last_argument_register_id = argument_register_ids[argument_index], context);
         }
 
         // TODO: Save used registers in the function frame
-        for (int id = 0; id < REGISTERS_COUNT; id++) {
+        for (int id = 0; id < last_argument_register_id; id++) {
             Value_Holder *value_holder = registers[id];
             if (value_holder != NULL) {
                 emitf("  push %s", value_holder__register_name(value_holder));
@@ -577,11 +617,15 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
 
         emitf("  call %s", function_name->data);
 
-        for (int id = REGISTERS_COUNT - 1; id >= 0; id--) {
+        for (int id = last_argument_register_id - 1; id >= 0; id--) {
             Value_Holder *value_holder = registers[id];
             if (value_holder != NULL) {
                 emitf("  pop %s", value_holder__register_name(value_holder));
             }
+        }
+
+        for (int argument_index = arguments_size - 1; argument_index >= 0; argument_index--) {
+            value_holder__release_register(&argument_value_holders[argument_index]);
         }
 
         Type *function_return_type = function->function_data.return_type;
@@ -811,8 +855,6 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__FUNCTION: {
         if (!statement->function_data.is_declaration) {
-            int locals_size = compute_locals_size(context, statement->function_data.statements);
-
             context = create_function_context(context);
             context->current_function = statement;
 
@@ -823,6 +865,33 @@ void emit_statement(Context *context, Statement *statement) {
             emitf("%s:", function_name->data);
             emits("  push rbp");
             emits("  mov rbp, rsp");
+
+            int parameter_register_ids[4] = {
+                REGISTER__RDI,
+                REGISTER__RSI,
+                REGISTER__RDX,
+                REGISTER__RCX,
+            };
+            Parameter_List *function_parameters = statement->function_data.parameters;
+            int function_parameters_size = list__size(function_parameters);
+            for (int parameter_index = 0; parameter_index < function_parameters_size; parameter_index++) {
+                Parameter *parameter = list__get(function_parameters, parameter_index);
+                Variable *variable = context__create_variable(context, parameter->name->location, parameter->name->lexeme, parameter->type);
+
+                Value_Holder parameter_value_holder = { .kind = VALUE_HOLDER__NEW };
+                value_holder__acquire_register(&parameter_value_holder, parameter->type, context);
+                int register_id = parameter_value_holder.register_data.id;
+                parameter_value_holder.register_data.id = parameter_register_ids[parameter_index];
+                emitf("  mov [rbp-%d], %s", variable->locals_offset, value_holder__register_name(&parameter_value_holder));
+                parameter_value_holder.register_data.id = register_id;
+                value_holder__release_register(&parameter_value_holder);
+            }
+
+            int locals_size = compute_locals_size(context, statement->function_data.statements);
+            if (function_parameters_size > 0) {
+                Variable *variable = list__last(context->variables);
+                locals_size += variable->locals_offset;
+            }
             if (locals_size > 0) {
                 emitf("  sub rsp, %d", (locals_size + 15) & ~15);
             }
@@ -907,10 +976,10 @@ void emit_statement(Context *context, Statement *statement) {
         if (statement->variable_data.is_external) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
         }
-        Variable *variable = context__create_variable(context, statement);
+        Type *variable_type = statement->variable_data.type;
+        Variable *variable = context__create_variable(context, variable_name->location, variable_name->lexeme, variable_type);
         if (variable->is_global) {
             emits("  .bss");
-            Type *variable_type = statement->variable_data.type;
             if (variable_type == NULL) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Type inference is not supported yet", statement->location->line, statement->location->column);
             }
@@ -955,6 +1024,10 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
         switch (statement->kind) {
         case STATEMENT__FUNCTION:
             context__resolve_type(context, statement->function_data.return_type);
+            for (List_Iterator parameters = list__create_iterator(statement->function_data.parameters); list_iterator__has_next(&parameters);) {
+                Parameter *parameter = list_iterator__next(&parameters);
+                context__resolve_type(context, parameter->type);
+            }
             break;
         case STATEMENT__VARIABLE:
             context__resolve_type(context, statement->variable_data.type);

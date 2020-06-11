@@ -1,0 +1,31 @@
+\ Functions can have up to 4 parameters
+
+main :: () -> Int {
+    print1('H')
+    print2('e', 'l')
+    print3('l', 'o', ' ')
+    print4('w', 'o', 'r', 'l')
+    print3('d', '!', '\n')
+    return 0
+}
+
+print1 :: (c1: Int8) -> Nothing {
+    putchar(c1 as Int)
+}
+
+print2 :: (c1: Int8, c2: Int8) -> Nothing {
+    print1(c1)
+    print1(c2)
+}
+
+print3 :: (c1: Int8, c2: Int8, c3: Int8) -> Nothing {
+    print1(c1)
+    print2(c2, c3)
+}
+
+print4 :: (c1: Int8, c2: Int8, c3: Int8, c4: Int8) -> Nothing {
+    print1(c1)
+    print3(c2, c3, c4)
+}
+
+putchar :: (char: Int) -> Nothing
