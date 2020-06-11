@@ -247,16 +247,18 @@ int context__compute_type_size(Context *self, Type *type) {
 }
 
 enum {
-    REGISTER__RCX,
-    REGISTER__RSI,
-    REGISTER__R08,
-    REGISTER__R09,
-    REGISTER__R10,
-    REGISTER__R11,
-    REGISTER__R12,
-    REGISTER__R13,
-    REGISTER__R14,
     REGISTER__R15,
+    REGISTER__R14,
+    REGISTER__R13,
+    REGISTER__R12,
+    REGISTER__R11,
+    REGISTER__R10,
+    REGISTER__R09,
+    REGISTER__R08,
+    REGISTER__RCX,
+    REGISTER__RDX,
+    REGISTER__RSI,
+    REGISTER__RDI,
     REGISTERS_COUNT,
 };
 
@@ -306,10 +308,10 @@ void value_holder__release_register(Value_Holder *self) {
 }
 
 char *value_holder__register_name(Value_Holder *self) {
-    static char *names_8[REGISTERS_COUNT] = { "rcx", "rsi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15" };
-    static char *names_4[REGISTERS_COUNT] = { "ecx", "esi", "r8d", "r9d", "r10d", "r11d", "r12d", "r13d", "r14d", "r15d" };
-    static char *names_2[REGISTERS_COUNT] = { "cx", "si", "r8w", "r9w", "r10w", "r11w", "r12w", "r13w", "r14w", "r15w" };
-    static char *names_1[REGISTERS_COUNT] = { "cl", "sil", "r8b", "r9b", "r10b", "r11b", "r12b", "r13b", "r14b", "r15b" };
+    static char *names_8[REGISTERS_COUNT] = { "r15", "r14", "r13", "r12", "r11", "r10", "r9", "r8", "rcx", "rdx", "rsi", "rdi" };
+    static char *names_4[REGISTERS_COUNT] = { "r15d", "r14d", "r13d", "r12d", "r11d", "r10d", "r9d", "r8d", "ecx", "edx", "esi", "edi" };
+    static char *names_2[REGISTERS_COUNT] = { "r15w", "r14w", "r13w", "r12w", "r11w", "r10w", "r9w", "r8w", "cx", "dx", "si", "di" };
+    static char *names_1[REGISTERS_COUNT] = { "r15b", "r14b", "r13b", "r12b", "r11b", "r10b", "r9b", "r8b", "cl", "dl", "sil", "dil" };
 
     if (self->kind != VALUE_HOLDER__REGISTER) {
         PANIC(__FILE__, __LINE__, "This is not a register%c", 0);
