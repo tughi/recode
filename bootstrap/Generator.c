@@ -570,16 +570,8 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         if (callee->kind != EXPRESSION__VARIABLE) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only simple function calls like \"example()\" are supported", expression->location->line, expression->location->column);
         }
-        String *function_name = callee->variable_data.name->lexeme;
-        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
-        if (function == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
-        }
 
         const int arguments_size = list__size(arguments);
-        if (list__size(function->function_data.parameters) != arguments_size) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function called with %d arguments instead of %d.", expression->location->line, expression->location->column, arguments_size, list__size(function->function_data.parameters));
-        }
         if (arguments_size > 4) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function calls with %d arguments are not supported yet", expression->location->line, expression->location->column, arguments_size);
         }
@@ -600,11 +592,14 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             Argument *argument = list__get(arguments, argument_index);
             Value_Holder *argument_value_holder = &argument_value_holders[argument_index];
             emit_expression(context, argument->value, argument_value_holder);
-            Parameter *parameter = list__get(function->function_data.parameters, argument_index);
-            if (!type__equals(argument_value_holder->type, parameter->type)) {
-                WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Expected argument type is %s, got %s instead.", argument->value->location->line, argument->value->location->column, context__type_name(context, parameter->type)->data, context__type_name(context, argument_value_holder->type)->data);
-            }
+            argument->inferred_type = argument_value_holder->type;
             value_holder__move_to_register(argument_value_holder, last_argument_register_id = argument_register_ids[argument_index], context);
+        }
+
+        String *function_name = callee->variable_data.name->lexeme;
+        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
+        if (function == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
         }
 
         // TODO: Save used registers in the function frame

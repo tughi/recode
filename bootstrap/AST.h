@@ -71,6 +71,7 @@ int type__equals(Type *self, Type *other);
 typedef struct Argument {
     Token *name;
     struct Expression *value;
+    Type *inferred_type;
 } Argument;
 
 typedef List Argument_List;

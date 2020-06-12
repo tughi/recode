@@ -188,8 +188,23 @@ Statement *named_functions__get(Named_Functions *self, String *name, Argument_Li
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
         Named_Functions_Item *item = list_iterator__next(&iterator);
         if (string__equals(item->name, name->data)) {
-            // TODO: check if arguments mach with function parameters
-            return item->statement;
+            int signature_matches = 0;
+            Parameter_List *function_parameters = item->statement->function_data.parameters;
+            int function_parameters_size = list__size(function_parameters);
+            if (list__size(arguments) == function_parameters_size) {
+                signature_matches = 1;
+                for (int index = 0; index < function_parameters_size; index++) {
+                    Argument *argument = list__get(arguments, index);
+                    Parameter *parameter = list__get(function_parameters, index);
+                    if (!type__equals(argument->inferred_type, parameter->type)) {
+                        signature_matches = 0;
+                        break;
+                    }
+                }
+            }
+            if (signature_matches == 1) {
+                return item->statement;
+            } 
         }
     }
     return NULL;

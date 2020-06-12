@@ -275,6 +275,7 @@ Argument *argument__create(Token *name, Expression *value) {
     Argument *self = malloc(sizeof(Argument));
     self->name = name;
     self->value = value;
+    self->inferred_type = NULL;
     return self;
 }
 
