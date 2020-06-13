@@ -175,11 +175,23 @@ Expression *expression__create_variable(Token *name) {
     return self;
 }
 
+int is_new_keyword(Token *token) {
+    return is_keyword(token, "new");
+}
+
 int is_size_of_keyword(Token *token) {
     return is_keyword(token, "size_of");
 }
 
 Type *parse_type(Context *context);
+
+Expression *expression__create_new(Source_Location *location, Type *type) {
+    Expression *self = malloc(sizeof(Expression));
+    self->kind = EXPRESSION__NEW;
+    self->location = location;
+    self->new_data.type = type;
+    return self;
+}
 
 Expression *expression__create_size_of(Source_Location *location, Type *type) {
     Expression *self = malloc(sizeof(Expression));
@@ -225,6 +237,7 @@ Expression *expression__create_pointed_value(Source_Location *location, Expressi
 //      | "true"
 //      | CHARACTER
 //      | "(" expression ")"
+//      | "new" type
 //      | "size_of" type
 //      | "@" expression
 //      | "[" expression "]"
@@ -243,6 +256,12 @@ Expression *parse_primary_expression(Context *context) {
         consume_space(context, 0);
         consume_one(context, ")", required(is_close_paren));
         return expression; // TODO: return group
+    }
+    if (matches_one(context, required(is_new_keyword))) {
+        Source_Location *location = consume_one(context, NULL, required(is_new_keyword))->location;
+        consume_space(context, 1);
+        Type *type = parse_type(context);
+        return expression__create_new(location, type);
     }
     if (matches_one(context, required(is_size_of_keyword))) {
         Source_Location *location = consume_one(context, NULL, required(is_size_of_keyword))->location;
@@ -590,6 +609,7 @@ Member *member__create(int is_reference, Token *name, Type *type, Expression *de
     self->name = name;
     self->type = type;
     self->default_value = default_value;
+    self->struct_offset = 0;
     return self;
 }
 

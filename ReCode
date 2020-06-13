@@ -108,11 +108,11 @@ def run():
                     with open(f'''{os.path.join(test_dir, test)}.output''', 'rb') as file:
                         expected_output = file.read()
                 except FileNotFoundError:
-                    expected_output = ''
+                    expected_output = b''
                 result = subprocess.run(f'''./{test}''', shell=True, capture_output=True)
                 if result.returncode != expected_exit:
                     print(f"ERROR: exited with {result.returncode} instead of {expected_exit}")
-                elif expected_output and result.stdout != expected_output:
+                elif result.stdout != expected_output:
                     print(f"ERROR: wrong output")
                     print(f"captured: {result.stdout!r}")
                     print(f"expected: {expected_output!r}")

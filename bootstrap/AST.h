@@ -12,9 +12,18 @@ typedef struct {
     Token *name;
     struct Type *type;
     struct Expression *default_value;
-} Member, Parameter;
+    int struct_offset;
+} Member;
 
 typedef List Member_List;
+
+typedef struct {
+    int is_reference;
+    Token *name;
+    struct Type *type;
+    struct Expression *default_value;
+} Parameter;
+
 typedef List Parameter_List;
 
 typedef struct Statement Statement;
@@ -84,6 +93,7 @@ typedef struct Expression {
         EXPRESSION__CAST,
         EXPRESSION__LITERAL,
         EXPRESSION__MEMBER,
+        EXPRESSION__NEW,
         EXPRESSION__POINTED_VALUE,
         EXPRESSION__POINTER_TO,
         EXPRESSION__SIZE_OF,
@@ -118,6 +128,9 @@ typedef struct Expression {
             struct Expression *object;
             Token *name;
         } member_data;
+        struct {
+            Type *type;
+        } new_data;
         struct {
             struct Expression *expression;
         } pointed_value_data;
@@ -194,6 +207,7 @@ typedef struct Statement {
             Token *base;
             Member_List *members;
             int is_declaration;
+            int size;
         } struct_data;
         struct {
             Token *name;

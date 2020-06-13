@@ -241,6 +241,18 @@ int context__compute_type_size(Context *self, Type *type) {
         }
         return context__compute_type_size(self, named_type);
     }
+    case TYPE__STRUCT: {
+        int struct_size = type->struct_data.statement->struct_data.size;
+        if (struct_size == 0) {
+            for (List_Iterator members = list__create_iterator(type->struct_data.statement->struct_data.members); list_iterator__has_next(&members);) {
+                Member *member = list_iterator__next(&members);
+                member->struct_offset = struct_size;
+                struct_size += context__compute_type_size(self, member->type);
+            }
+            type->struct_data.statement->struct_data.size = struct_size;
+        }
+        return struct_size;
+    }
     default:
         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind: %s", type->location->line, type->location->column, type__get_kind_name(type));
     }
@@ -508,6 +520,34 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         value_holder__release_register(&address_value_holder);
         return;
     }
+    case EXPRESSION__MEMBER: {
+        Expression *object_expression = expression->member_data.object;
+        Value_Holder object_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression_address(context, object_expression, &object_value_holder);
+        if (object_value_holder.type->kind != TYPE__POINTER || object_value_holder.type->pointer_data.type->kind != TYPE__POINTER || object_value_holder.type->pointer_data.type->pointer_data.type->kind != TYPE__STRUCT) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Not a struct pointer expression", object_expression->location->line, object_expression->location->column);
+        }
+        Statement *struct_statement = object_value_holder.type->pointer_data.type->pointer_data.type->struct_data.statement;
+        Token *member_name = expression->member_data.name;
+        Member *member = NULL;
+        for (List_Iterator struct_members = list__create_iterator(struct_statement->struct_data.members); list_iterator__has_next(&struct_members);) {
+            Member *struct_member = list_iterator__next(&struct_members);
+            if (string__equals(struct_member->name->lexeme, member_name->lexeme->data)) {
+                member = struct_member;
+                break;
+            }
+        }
+        if (member == NULL) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- There is no such struct member: %s.%s", expression->location->line, expression->location->column, context__type_name(context, object_value_holder.type->pointer_data.type->pointer_data.type)->data, member_name->lexeme->data);
+        }
+        value_holder__acquire_register(destination_value_holder, type__create_pointer(object_expression->location, member->type), context);
+        emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&object_value_holder));
+        if (member->struct_offset > 0) {
+            emitf("  add %s, %d", value_holder__register_name(destination_value_holder), member->struct_offset);
+        }
+        value_holder__release_register(&object_value_holder);
+        return;
+    }
     case EXPRESSION__POINTED_VALUE: {
         Expression *pointer_expression = expression->pointed_value_data.expression;
         Value_Holder pointer_value_holder = { .kind = VALUE_HOLDER__NEW };
@@ -626,11 +666,16 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         Type *function_return_type = function->function_data.return_type;
         switch (function_return_type->kind) {
         case TYPE__INT: {
-            value_holder__acquire_register(result_value_holder, context__get_int_type(context), context);
+            value_holder__acquire_register(result_value_holder, function_return_type, context);
             emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
             break;
         }
         case TYPE__NOTHING: {
+            break;
+        }
+        case TYPE__POINTER: {
+            value_holder__acquire_register(result_value_holder, function_return_type, context);
+            emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
             break;
         }
         default:
@@ -678,6 +723,35 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
     }
     case EXPRESSION__LITERAL: {
         emit_load_literal(context, expression->literal_data.value, result_value_holder);
+        return;
+    }
+    case EXPRESSION__MEMBER: {
+        Value_Holder member_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression_address(context, expression, &member_value_holder);
+        Type *value_type = member_value_holder.type->pointer_data.type;
+        value_holder__acquire_register(result_value_holder, value_type, context);
+        switch (value_type->kind) {
+        case TYPE__BOOLEAN:
+        case TYPE__INT:
+        case TYPE__INT8:
+            emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&member_value_holder));
+            value_holder__release_register(&member_value_holder);
+            return;
+        default:
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported value type: %s", expression->pointed_value_data.expression->location->line, expression->pointed_value_data.expression->location->column, context__type_name(context, value_type)->data);
+        }
+    }
+    case EXPRESSION__NEW: {
+        Type *type = expression->new_data.type;
+        context__resolve_type(context, type);
+        Value_Holder type_size_value_holder = { .kind = VALUE_HOLDER__NEW };
+        value_holder__acquire_register(&type_size_value_holder, context__get_int_type(context), context);
+        emitf("  mov %s, %d", value_holder__register_name(&type_size_value_holder), context__compute_type_size(context, type));
+        value_holder__move_to_register(&type_size_value_holder, REGISTER__RDI, context);
+        emits("  call malloc");
+        value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, type), context);
+        emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
+        value_holder__release_register(&type_size_value_holder);
         return;
     }
     case EXPRESSION__POINTED_VALUE: {
@@ -966,6 +1040,8 @@ void emit_statement(Context *context, Statement *statement) {
         emitf("  jmp %s__end", function->function_data.unique_name->data);
         return;
     }
+    case STATEMENT__STRUCT:
+        return;
     case STATEMENT__VARIABLE: {
         Token *variable_name = statement->variable_data.name;
         if (statement->variable_data.is_external) {
@@ -1024,6 +1100,13 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
                 context__resolve_type(context, parameter->type);
             }
             break;
+        case STATEMENT__STRUCT: {
+            for (List_Iterator members = list__create_iterator(statement->struct_data.members); list_iterator__has_next(&members);) {
+                Member *member = list_iterator__next(&members);
+                context__resolve_type(context, member->type);
+            }
+            break;
+        }
         case STATEMENT__VARIABLE:
             context__resolve_type(context, statement->variable_data.type);
             break;

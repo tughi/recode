@@ -52,6 +52,11 @@ void type__convert(Type *self, Type *other) {
     case TYPE__NOTHING:
         self->name = other->name;
         break;
+    case TYPE__STRUCT:
+        self->location = other->location;
+        self->name = other->name;
+        self->struct_data.statement = other->struct_data.statement;
+        break;
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(other));
     }
@@ -81,6 +86,8 @@ char *type__get_kind_name(Type *self) {
         return "NAMED";
     case TYPE__NOTHING:
         return "NOTHING";
+    case TYPE__STRUCT:
+        return "STRUCT";
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %d", self->kind);
     }
@@ -100,6 +107,8 @@ int type__equals(Type *self, Type *other) {
         return other->kind == TYPE__NAMED && string__equals(self->named_data.name->lexeme, other->named_data.name->lexeme->data);
     case TYPE__POINTER:
         return other->kind == TYPE__POINTER && type__equals(self->pointer_data.type, other->pointer_data.type);
+    case TYPE__STRUCT:
+        return other->kind == TYPE__STRUCT && self->struct_data.statement == other->struct_data.statement;
     default:
         PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(self));
     }
@@ -119,6 +128,8 @@ char *expression__get_kind_name(Expression *self) {
         return "LITERAL";
     case EXPRESSION__MEMBER:
         return "MEMBER";
+    case EXPRESSION__NEW:
+        return "NEW";
     case EXPRESSION__POINTED_VALUE:
         return "POINTED_VALUE";
     case EXPRESSION__POINTER_TO:

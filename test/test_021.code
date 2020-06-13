@@ -1,0 +1,59 @@
+\ Struct support
+
+String :: struct {
+    data: @Int8
+    size: Int
+}
+
+String :: (data: @Int8) -> @String {
+    self: @String
+    self = new String
+    self.data = data
+    size: Int
+    size = 0
+    loop {
+        if (data[size] != '\0') {
+            size = size + 1
+        } else {
+            break
+        }
+    }
+    self.size = size
+    return self
+}
+
+main :: () -> Int {
+    message: @String
+    message = String("Hello world!")
+    print(message)
+    print('\n')
+    print(6 + message.size * 3)
+    print('\n')
+    return 0
+}
+
+print :: (char: Int8) -> Nothing {
+    putchar(char as Int)
+}
+
+print :: (number: Int) -> Nothing {
+    if (number >= 10) {
+        print(number / 10)
+    }
+    putchar(number // 10 + '0' as Int)
+}
+
+print :: (self: @String) -> Nothing {
+    index: Int
+    index = 0
+    loop {
+        if (index < self.size) {
+            print(self.data[index])
+            index = index + 1
+        } else {
+            break
+        }
+    }
+}
+
+putchar :: (char: Int) -> Nothing
