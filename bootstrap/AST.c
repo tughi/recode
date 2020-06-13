@@ -180,7 +180,13 @@ Named_Functions *named_functions__create() {
 }
 
 void named_functions__add(Named_Functions *self, String *name, Statement *statement) {
-    // TODO: Check if there is another function declared with the same name and parameters
+    for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
+        Named_Functions_Item *item = list_iterator__next(&iterator);
+        if (string__equals(item->statement->function_data.unique_name, statement->function_data.unique_name->data)) {
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function with the same signature was declared already here: (%04d:%04d)", statement->location->line, statement->location->column, item->statement->location->line, item->statement->location->column);
+        }
+    }
+
     list__append(self, named_functions__create_item(name, statement));
 }
 

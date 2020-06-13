@@ -35,7 +35,7 @@ int is_double_quote(unsigned char c) {
 }
 
 int is_escape(unsigned char c) {
-    return c == 'n' || c == 't' || c == '\"' || c == '\'' || c == '\\';
+    return c == 'n' || c == 't' || c == '\"' || c == '\'' || c == '\\' | c == '0';
 }
 
 char get_escape(unsigned char c) {
@@ -50,8 +50,10 @@ char get_escape(unsigned char c) {
         return '\n';
     case 't':
         return '\t';
+    case '0':
+        return 0;
     }
-    return 0;
+    return -1;
 }
 
 int is_identifier_start(unsigned char c) {
@@ -90,7 +92,7 @@ Token *read_character(Source *source) {
     Source_Location *location = source_location__create(source);
     String *lexeme = string__create_empty(1);
 
-    char value = 0;
+    char value = -1;
     char consumed;
     if ((consumed = source__advance(source, is_single_quote))) {
         string__append_char(lexeme, consumed);
@@ -106,7 +108,7 @@ Token *read_character(Source *source) {
             }
         }
     }
-    if (value && (consumed = source__advance(source, is_single_quote))) {
+    if (value >= 0 && (consumed = source__advance(source, is_single_quote))) {
         string__append_char(lexeme, consumed);
         return token__create_character(location, lexeme, value);
     }

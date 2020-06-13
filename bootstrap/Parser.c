@@ -781,6 +781,19 @@ Statement_List *parse_statements(Context *context) {
     return statements;
 }
 
+void string__append_type_name(String *self, Type *type) {
+    switch (type->kind) {
+    case TYPE__NAMED:
+        string__append_string(self, type->named_data.name->lexeme);
+        return;
+    case TYPE__POINTER:
+        string__append_char(self, 'p');
+        string__append_type_name(self, type->pointer_data.type);
+        return;
+    }
+    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind %s", type->location->line, type->location->column, type__get_kind_name(type));
+}
+
 Statement *statement__create_function(Source_Location *location, Token *name, Type *return_type, List *parameters, List *statements) {
     Statement *self = statement__create(STATEMENT__FUNCTION, location);
     self->function_data.name = name;
@@ -788,6 +801,24 @@ Statement *statement__create_function(Source_Location *location, Token *name, Ty
     self->function_data.parameters = parameters;
     self->function_data.statements = statements;
     self->function_data.is_declaration = statements == NULL;
+
+    String *unique_name = string__create(name->lexeme->data);
+    if (!string__equals(name->lexeme, "main") && statements != NULL) {
+        string__append_chars(unique_name, "__", 2);
+        string__append_type_name(unique_name, return_type);
+        if (list__size(parameters) > 0) {
+            string__append_chars(unique_name, "__", 2);
+            for (List_Iterator iterator = list__create_iterator(parameters); list_iterator__has_next(&iterator);) {
+                Parameter *parameter = list_iterator__next(&iterator);
+                string__append_type_name(unique_name, parameter->type);
+                if (list_iterator__has_next(&iterator)) {
+                    string__append_char(unique_name, '_');
+                }
+            }
+        }
+    }
+    self->function_data.unique_name = unique_name;
+
     return self;
 }
 

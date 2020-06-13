@@ -176,6 +176,7 @@ typedef struct Statement {
             Parameter_List *parameters;
             Statement_List *statements;
             int is_declaration;
+            String *unique_name;
         } function_data;
         struct {
             Expression *condition;

@@ -1,0 +1,29 @@
+\ Function overloading
+
+main :: () -> Int {
+    print("Hello")
+    print(' ')
+    print("world!\n")
+    return 0
+}
+
+print :: (text: @Int8) -> Nothing {
+    index: Int
+    index = 0
+    loop {
+        char: Int8
+        char = text[index]
+        if (text[index] != '\0') {
+            print(char)
+            index = index + 1
+        } else {
+            return
+        }
+    }
+}
+
+print :: (char: Int8) -> Nothing {
+    putchar(char as Int)
+}
+
+putchar :: (char: Int) -> Nothing

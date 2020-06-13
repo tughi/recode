@@ -610,7 +610,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
         }
 
-        emitf("  call %s", function_name->data);
+        emitf("  call %s", function->function_data.unique_name->data);
 
         for (int id = last_argument_register_id - 1; id >= 0; id--) {
             Value_Holder *value_holder = registers[id];
@@ -853,11 +853,11 @@ void emit_statement(Context *context, Statement *statement) {
             context = create_function_context(context);
             context->current_function = statement;
 
-            String *function_name = statement->function_data.name->lexeme;
+            String *function_unique_name = statement->function_data.unique_name;
             emits("  .text");
-            emitf("  .globl %s", function_name->data);
-            emitf("  .type %s, @function", function_name->data);
-            emitf("%s:", function_name->data);
+            emitf("  .globl %s", function_unique_name->data);
+            emitf("  .type %s, @function", function_unique_name->data);
+            emitf("%s:", function_unique_name->data);
             emits("  push rbp");
             emits("  mov rbp, rsp");
 
@@ -896,7 +896,7 @@ void emit_statement(Context *context, Statement *statement) {
                 emit_statement(context, body_statement);
             }
 
-            emitf("%s_end:", function_name->data);
+            emitf("%s__end:", function_unique_name->data);
             emits("  mov rsp, rbp");
             emits("  pop rbp");
             emits("  ret");
@@ -963,7 +963,7 @@ void emit_statement(Context *context, Statement *statement) {
         if (context->current_loop) {
             context->current_loop->has_exit = 1;
         }
-        emitf("  jmp %s_end", function->function_data.name->lexeme->data);
+        emitf("  jmp %s__end", function->function_data.unique_name->data);
         return;
     }
     case STATEMENT__VARIABLE: {
