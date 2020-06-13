@@ -1,0 +1,31 @@
+\ Arguments
+
+main :: (arguments_count: Int, arguments: @@Int8) -> Int {
+    if (arguments_count == 1) {
+        print(arguments[0])
+        print('\n')
+        return 0
+    }
+    return 1
+}
+
+print :: (text: @Int8) -> Nothing {
+    index: Int
+    index = 0
+    loop {
+        char: Int8
+        char = text[index]
+        if (char != '\0') {
+            print(char)
+            index = index + 1
+        } else {
+            break
+        }
+    }
+}
+
+print :: (char: Int8) -> Nothing {
+    putchar(char as Int)
+}
+
+putchar :: (char: Int) -> Nothing
