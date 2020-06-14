@@ -228,7 +228,12 @@ int context__compute_type_size(Context *self, Type *type) {
     case TYPE__BOOLEAN:
     case TYPE__INT8:
         return 1;
+    case TYPE__INT16:
+        return 2;
+    case TYPE__INT32:
+        return 4;
     case TYPE__INT:
+    case TYPE__INT64:
     case TYPE__POINTER:
         return 8;
     case TYPE__NOTHING:
@@ -665,17 +670,29 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
 
         Type *function_return_type = function->function_data.return_type;
         switch (function_return_type->kind) {
-        case TYPE__INT: {
-            value_holder__acquire_register(result_value_holder, function_return_type, context);
-            emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
-            break;
-        }
-        case TYPE__NOTHING: {
-            break;
-        }
+        case TYPE__INT:
+        case TYPE__INT64:
         case TYPE__POINTER: {
             value_holder__acquire_register(result_value_holder, function_return_type, context);
             emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
+            break;
+        }
+        case TYPE__INT32: {
+            value_holder__acquire_register(result_value_holder, function_return_type, context);
+            emitf("  mov %s, eax", value_holder__register_name(result_value_holder));
+            break;
+        }
+        case TYPE__INT16: {
+            value_holder__acquire_register(result_value_holder, function_return_type, context);
+            emitf("  mov %s, ax", value_holder__register_name(result_value_holder));
+            break;
+        }
+        case TYPE__INT8: {
+            value_holder__acquire_register(result_value_holder, function_return_type, context);
+            emitf("  mov %s, al", value_holder__register_name(result_value_holder));
+            break;
+        }
+        case TYPE__NOTHING: {
             break;
         }
         default:
@@ -703,6 +720,20 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             case TYPE__INT:
             case TYPE__INT16:
             case TYPE__INT32:
+            case TYPE__INT64:
+                emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                return;
+            }
+            break;
+        case TYPE__INT32:
+            switch (cast_type->kind) {
+            case TYPE__INT32:
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                WARNING(__FILE__, __LINE__, "(%04d:%04d) -- Redundand cast detected.", cast_type->location->line, cast_type->location->column);
+                return;
+            case TYPE__INT:
             case TYPE__INT64:
                 emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
                 value_holder__release_register(&cast_expression_value_holder);
@@ -783,6 +814,9 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         case TYPE__BOOLEAN:
         case TYPE__INT:
         case TYPE__INT8:
+        case TYPE__INT16:
+        case TYPE__INT32:
+        case TYPE__INT64:
         case TYPE__POINTER:
             emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&variable_address_value_holder));
             value_holder__release_register(&variable_address_value_holder);
@@ -868,6 +902,10 @@ Context *create_block_context(Context *parent_context) {
     return context;
 }
 
+Statement *statement__create_assignment(Source_Location *location, Expression *destination, Token *operator_token, Expression *value);
+
+Expression *expression__create_variable(Token *name);
+
 void emit_statement(Context *context, Statement *statement) {
     switch (statement->kind) {
     case STATEMENT__ASSIGNMENT: {
@@ -884,6 +922,9 @@ void emit_statement(Context *context, Statement *statement) {
         case TYPE__BOOLEAN:
         case TYPE__INT:
         case TYPE__INT8:
+        case TYPE__INT16:
+        case TYPE__INT32:
+        case TYPE__INT64:
         case TYPE__POINTER:
             emitf("  mov [%s], %s", value_holder__register_name(&destination_value_holder), value_holder__register_name(&value_holder));
             break;
@@ -930,7 +971,6 @@ void emit_statement(Context *context, Statement *statement) {
             String *function_unique_name = statement->function_data.unique_name;
             emits("  .text");
             emitf("  .globl %s", function_unique_name->data);
-            emitf("  .type %s, @function", function_unique_name->data);
             emitf("%s:", function_unique_name->data);
             emits("  push rbp");
             emits("  mov rbp, rsp");
@@ -1045,39 +1085,59 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT__VARIABLE: {
         Token *variable_name = statement->variable_data.name;
         if (statement->variable_data.is_external) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables are not supported yet.", statement->location->line, statement->location->column);
-        }
-        Type *variable_type = statement->variable_data.type;
-        Variable *variable = context__create_variable(context, variable_name->location, variable_name->lexeme, variable_type);
-        if (variable->is_global) {
-            emits("  .bss");
+            Type *variable_type = statement->variable_data.type;
             if (variable_type == NULL) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Type inference is not supported yet", statement->location->line, statement->location->column);
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables must have an explicit type.", statement->location->line, statement->location->column);
             }
-            switch (variable_type->kind) {
-            case TYPE__ARRAY: {
-                int variable_size = context__compute_type_size(context, variable_type);
-                if (variable_size == 0) {
-                    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Missing array size", variable_type->location->line, variable_type->location->column);
+            context__create_variable(context, variable_name->location, variable_name->lexeme, variable_type);
+        } else {
+            Type *variable_type = statement->variable_data.type;
+            if (variable_type == NULL) {
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Type inference for global variables is not supported yet", statement->location->line, statement->location->column);
+            }
+            Variable *variable = context__create_variable(context, variable_name->location, variable_name->lexeme, variable_type);
+            if (variable->is_global) {
+                emits("  .bss");
+                switch (variable_type->kind) {
+                case TYPE__ARRAY: {
+                    int variable_size = context__compute_type_size(context, variable_type);
+                    if (variable_size == 0) {
+                        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Missing array size", variable_type->location->line, variable_type->location->column);
+                    }
+                    emitf("%s_%03d: .zero %d", variable_name->lexeme->data, variable->id, variable_size);
+                    break;
                 }
-                emitf("%s_%03d: .zero %d", variable_name->lexeme->data, variable->id, variable_size);
-                break;
+                case TYPE__BOOLEAN:
+                case TYPE__INT8:
+                    emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
+                    break;
+                case TYPE__INT:
+                case TYPE__POINTER:
+                    emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
+                    break;
+                default:
+                    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
+                }
+            } else {
+                Expression *variable_value = statement->variable_data.value;
+                if (variable_value) {
+                    static Statement *assignment_statement = NULL;
+                    if (assignment_statement == NULL) {
+                        Source_Location *location = source_location__create(variable_name->location->source);
+                        Token *operator_token = token__create_other(location, string__create("="));
+                        assignment_statement = statement__create_assignment(location, NULL, operator_token, NULL);
+                    }
+                    static Expression *assignment_destination = NULL;
+                    if (assignment_destination == NULL) {
+                        assignment_destination = expression__create_variable(variable_name);
+                        assignment_statement->assignment_data.destination = assignment_destination;
+                    } else {
+                        assignment_destination->variable_data.name = variable_name;
+                    }
+                    assignment_statement->assignment_data.value = variable_value;
+                    emit_statement(context, assignment_statement);
+                }
             }
-            case TYPE__BOOLEAN:
-            case TYPE__INT8:
-                emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
-                break;
-            case TYPE__INT:
-            case TYPE__POINTER:
-                emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
-                break;
-            default:
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", statement->location->line, statement->location->column, type__get_kind_name(variable_type));
-            }
-        }
-        Expression *variable_value = statement->variable_data.value;
-        if (variable_value) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Variables with assignment are not supported yet.", statement->location->line, statement->location->column);
         }
         return;
     }
@@ -1101,9 +1161,11 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
             }
             break;
         case STATEMENT__STRUCT: {
-            for (List_Iterator members = list__create_iterator(statement->struct_data.members); list_iterator__has_next(&members);) {
-                Member *member = list_iterator__next(&members);
-                context__resolve_type(context, member->type);
+            if (statement->struct_data.members) {
+                for (List_Iterator members = list__create_iterator(statement->struct_data.members); list_iterator__has_next(&members);) {
+                    Member *member = list_iterator__next(&members);
+                    context__resolve_type(context, member->type);
+                }
             }
             break;
         }
