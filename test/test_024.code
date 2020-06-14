@@ -11,7 +11,7 @@ fgetc :: (file: @FILE) -> Int32
 fputc :: (char: Int32, file: @FILE) -> Nothing
 
 main :: () -> Int {
-    file: @FILE = fopen("../test/test_024.code", "r")
+    file: @FILE = fopen("../../test/test_024.code", "r")
     loop {
         char: Int32 = fgetc(file)
         if (char as Int < 0) {
