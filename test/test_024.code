@@ -1,0 +1,23 @@
+\ Output to stdout
+
+FILE :: struct
+
+stdout: @FILE = external
+
+fopen :: (file: @Int8, mode: @Int8) -> @FILE
+
+fgetc :: (file: @FILE) -> Int32
+
+fputc :: (char: Int32, file: @FILE) -> Nothing
+
+main :: () -> Int {
+    file: @FILE = fopen("../test/test_024.code", "r")
+    loop {
+        char: Int32 = fgetc(file)
+        if (char as Int < 0) {
+            break
+        }
+        fputc(char, stdout)
+    }
+    return 0
+}

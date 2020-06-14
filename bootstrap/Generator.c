@@ -2,8 +2,8 @@
 #include "Logging.h"
 
 typedef struct Variable {
-    int id;
     String *name;
+    String *unique_name;
     Source_Location *location;
     Type *type;
     int is_global;
@@ -119,8 +119,13 @@ Variable *context__last_local_variable(Context *self) {
 
 Variable *context__create_variable(Context *self, Source_Location *location, String *name, Type *type) {
     Variable *variable = malloc(sizeof(Variable));
-    variable->id = counter__inc(self->counter);
     variable->name = name;
+    variable->unique_name = string__create(name->data);
+    string__append_char(variable->unique_name, '_');
+    int count = counter__inc(self->counter);
+    if (count < 1000) string__append_char(variable->unique_name, '0');
+    if (count < 100) string__append_char(variable->unique_name, '0');
+    string__append_int(variable->unique_name, count);
     variable->location = location;
     variable->type = type;
     variable->is_global = self->current_function == NULL;
@@ -574,7 +579,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         }
         value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable->type), context);
         if (variable->is_global) {
-            emitf("  lea %s, %s_%03d[rip]", value_holder__register_name(destination_value_holder), variable->name->data, variable->id);
+            emitf("  lea %s, %s[rip]", value_holder__register_name(destination_value_holder), variable->unique_name->data);
         } else {
             emitf("  mov %s, rbp", value_holder__register_name(destination_value_holder));
             emitf("  sub %s, %d", value_holder__register_name(destination_value_holder), variable->locals_offset);
@@ -1089,7 +1094,8 @@ void emit_statement(Context *context, Statement *statement) {
             if (variable_type == NULL) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- External variables must have an explicit type.", statement->location->line, statement->location->column);
             }
-            context__create_variable(context, variable_name->location, variable_name->lexeme, variable_type);
+            Variable *variable = context__create_variable(context, variable_name->location, variable_name->lexeme, variable_type);
+            variable->unique_name = variable->name;
         } else {
             Type *variable_type = statement->variable_data.type;
             if (variable_type == NULL) {
@@ -1104,16 +1110,16 @@ void emit_statement(Context *context, Statement *statement) {
                     if (variable_size == 0) {
                         PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Missing array size", variable_type->location->line, variable_type->location->column);
                     }
-                    emitf("%s_%03d: .zero %d", variable_name->lexeme->data, variable->id, variable_size);
+                    emitf("%s: .zero %d", variable->unique_name->data, variable_size);
                     break;
                 }
                 case TYPE__BOOLEAN:
                 case TYPE__INT8:
-                    emitf("%s_%03d: .byte 0", variable_name->lexeme->data, variable->id);
+                    emitf("%s: .byte 0", variable->unique_name->data);
                     break;
                 case TYPE__INT:
                 case TYPE__POINTER:
-                    emitf("%s_%03d: .quad 0", variable_name->lexeme->data, variable->id);
+                    emitf("%s: .quad 0", variable->unique_name->data);
                     break;
                 default:
                     PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported variable type: %s", statement->location->line, statement->location->column, type__get_kind_name(variable_type));

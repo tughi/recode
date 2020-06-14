@@ -1049,7 +1049,7 @@ int is_external_keyword(Token *token) {
 //      | loop
 //      | return
 //      | skip
-//      | expression ((":" ":" definition) | (":" declaration) | ("=" assignment))?
+//      | expression ((":" ":" definition) | (":" declaration) | ("=" ("external" | assignment)))?
 Statement *parse_statement(Context *context) {
     while (consume_end_of_line(context, FALSE)) {
         // do nothing
