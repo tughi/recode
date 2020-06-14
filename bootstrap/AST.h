@@ -233,11 +233,12 @@ void named_types__add(Named_Types *self, String *name, Type *type);
 Type *named_types__get(Named_Types *self, String *name);
 
 typedef struct Compilation_Unit {
+    Source *source;
     Named_Functions *named_functions;
     Named_Types *named_types;
     Statement_List *statements;
 } Compilation_Unit;
 
-Compilation_Unit *compilation_unit__create(Named_Functions *named_functions, Named_Types *named_types, Statement_List *statements);
+Compilation_Unit *compilation_unit__create(Source *source, Named_Functions *named_functions, Named_Types *named_types, Statement_List *statements);
 
 #endif

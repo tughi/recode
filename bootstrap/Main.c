@@ -378,7 +378,7 @@ int main(int argc, char *argv[]) {
         PANIC(__FILE__, __LINE__, "'%s' doesn't end with '.s'.\n", output_file);
     }
 
-    Source *source = source__create(load_file(string__create(input_file)));
+    Source *source = source__create(input_file, load_file(string__create(input_file)));
 
     Token_List *tokens = scan(source);
 

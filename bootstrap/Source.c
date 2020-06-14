@@ -2,8 +2,9 @@
 
 #include <stdlib.h>
 
-Source *source__create(char *data) {
+Source *source__create(char *filen_name, char *data) {
     Source *self = malloc(sizeof(Source));
+    self->file_name = filen_name;
     self->data = data;
     self->index = 0;
     self->line = 1;

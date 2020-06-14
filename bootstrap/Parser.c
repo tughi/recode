@@ -1168,5 +1168,6 @@ Compilation_Unit *parse(Token_List *tokens) {
 
     Statement_List *statements = parse_statements(context);
 
-    return compilation_unit__create(context->named_functions, context->named_types, statements);
+    Token *last_token = list__last(tokens);
+    return compilation_unit__create(last_token->location->source, context->named_functions, context->named_types, statements);
 }

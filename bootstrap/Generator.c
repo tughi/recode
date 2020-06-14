@@ -954,6 +954,7 @@ Statement *statement__create_assignment(Source_Location *location, Expression *d
 Expression *expression__create_variable(Token *name);
 
 void emit_statement(Context *context, Statement *statement) {
+    emitf("  .loc 1 %d %d", statement->location->line, statement->location->column);
     switch (statement->kind) {
     case STATEMENT__ASSIGNMENT: {
         Value_Holder destination_value_holder = { .kind = VALUE_HOLDER__NEW };
@@ -1182,6 +1183,8 @@ void emit_statement(Context *context, Statement *statement) {
                     } else {
                         assignment_destination->variable_data.name = variable_name;
                     }
+                    assignment_statement->location->line = variable_value->location->line;
+                    assignment_statement->location->column = variable_value->location->column;
                     assignment_statement->assignment_data.value = variable_value;
                     emit_statement(context, assignment_statement);
                 }
@@ -1196,6 +1199,8 @@ void emit_statement(Context *context, Statement *statement) {
 
 void generate(char *file, Compilation_Unit *compilation_unit) {
     Context *context = context__create(fopen(file, "w"), compilation_unit->named_functions, compilation_unit->named_types);
+
+    emitf("  .file 1 \"%s\"", compilation_unit->source->file_name);
     emits("  .intel_syntax noprefix");
 
     for (List_Iterator iterator = list__create_iterator(compilation_unit->statements); list_iterator__has_next(&iterator);) {

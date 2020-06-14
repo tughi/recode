@@ -266,8 +266,9 @@ Type *named_types__get(Named_Types *self, String *name) {
     return NULL;
 }
 
-Compilation_Unit *compilation_unit__create(Named_Functions *named_functions, Named_Types *named_types, Statement_List *statements) {
+Compilation_Unit *compilation_unit__create(Source *source, Named_Functions *named_functions, Named_Types *named_types, Statement_List *statements) {
     Compilation_Unit *self = malloc(sizeof(Compilation_Unit));
+    self->source = source;
     self->named_functions = named_functions;
     self->named_types = named_types;
     self->statements = statements;

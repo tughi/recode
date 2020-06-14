@@ -4,13 +4,14 @@
 #define TAB_SIZE 4
 
 typedef struct Source {
+    char *file_name;
     char *data;
     int index;
     int line;
     int column;
 } Source;
 
-Source *source__create(char *data);
+Source *source__create(char *file_name, char *data);
 
 char source__peek(Source *self);
 

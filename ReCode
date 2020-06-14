@@ -96,7 +96,7 @@ def run():
         test = test_file[:-5]
         print(f"Checking {test}")
         if execute(f'''./ReCode {os.path.join(test_dir, test_file)} {test}.s''', echo=False, exit_on_error=False) == 0:
-            if execute(f'''gcc -o {test} {test}.s''', echo=False, exit_on_error=False) == 0:
+            if execute(f'''gcc -g -o {test} {test}.s''', echo=False, exit_on_error=False) == 0:
                 try:
                     with open(f'''{os.path.join(test_dir, test)}.exit''') as file:
                         for line in file:
