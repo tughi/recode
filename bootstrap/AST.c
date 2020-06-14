@@ -94,6 +94,9 @@ char *type__get_kind_name(Type *self) {
 }
 
 int type__equals(Type *self, Type *other) {
+    if (self == NULL) {
+        return other == NULL;
+    }
     switch (self->kind) {
     case TYPE__BOOLEAN:
     case TYPE__INT:
