@@ -1006,7 +1006,7 @@ void emit_statement(Context *context, Statement *statement) {
         Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression(context, expression, &value_holder);
         if (value_holder.kind != VALUE_HOLDER__NEW) {
-            WARNING(__FILE__, __LINE__, "(%04d:%04d) -- The result of this expression is ignored", statement->location->line, statement->location->column);
+            // TODO: WARNING(__FILE__, __LINE__, "(%04d:%04d) -- The result of this expression is ignored", statement->location->line, statement->location->column);
             value_holder__release_register(&value_holder);
         }
         return;
