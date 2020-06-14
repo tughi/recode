@@ -214,6 +214,9 @@ typedef struct Statement {
             Type *type;
             Expression *value;
             int is_external;
+            int is_global;
+            String *unique_name;
+            int locals_offset;
         } variable_data;
     };
 } Statement;
