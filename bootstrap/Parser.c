@@ -1110,7 +1110,7 @@ Statement *parse_statement(Context *context) {
         }
         Token *function_name = expression->variable_data.name;
         Statement *function_statement = parse_function(context, function_name);
-        named_functions__add(context->named_functions, function_name->lexeme, function_statement);
+        named_functions__add(context->named_functions, function_statement);
         return function_statement;
     }
 

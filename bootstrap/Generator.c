@@ -591,6 +591,8 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
     }
 }
 
+Argument *argument__create(Token *name, Expression *value);
+
 void emit_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
     switch (expression->kind) {
     case EXPRESSION__ARRAY_ITEM: {
@@ -615,14 +617,26 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
     }
     case EXPRESSION__CALL: {
+        String *function_name;
+        Argument *first_argument;
+
         Expression *callee = expression->call_data.callee;
-        Argument_List *arguments = expression->call_data.arguments;
-        if (callee->kind != EXPRESSION__VARIABLE) {
+        switch (callee->kind) {
+        case EXPRESSION__MEMBER:
+            function_name = callee->member_data.name->lexeme;
+            first_argument = argument__create(NULL, callee->member_data.object);
+            break;
+        case EXPRESSION__VARIABLE:
+            function_name = callee->variable_data.name->lexeme;
+            first_argument = NULL;
+            break;
+        default:
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Only simple function calls like \"example()\" are supported", expression->location->line, expression->location->column);
         }
 
+        Argument_List *arguments = expression->call_data.arguments;
         const int arguments_size = list__size(arguments);
-        if (arguments_size > 4) {
+        if (arguments_size + (first_argument ? 1 : 0) > 4) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function calls with %d arguments are not supported yet", expression->location->line, expression->location->column, arguments_size);
         }
         Value_Holder argument_value_holders[4] = {
@@ -638,18 +652,46 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             REGISTER__RCX,
         };
         int last_argument_register_id = REGISTERS_COUNT;
+        if (first_argument) {
+            Value_Holder *argument_value_holder = &argument_value_holders[0];
+            emit_expression(context, first_argument->value, argument_value_holder);
+            first_argument->inferred_type = argument_value_holder->type;
+            value_holder__move_to_register(argument_value_holder, last_argument_register_id = argument_register_ids[0], context);
+        }
         for (int argument_index = 0; argument_index < arguments_size; argument_index++) {
             Argument *argument = list__get(arguments, argument_index);
-            Value_Holder *argument_value_holder = &argument_value_holders[argument_index];
+            Value_Holder *argument_value_holder = &argument_value_holders[argument_index + (first_argument ? 1 : 0)];
             emit_expression(context, argument->value, argument_value_holder);
             argument->inferred_type = argument_value_holder->type;
-            value_holder__move_to_register(argument_value_holder, last_argument_register_id = argument_register_ids[argument_index], context);
+            value_holder__move_to_register(argument_value_holder, last_argument_register_id = argument_register_ids[argument_index + (first_argument ? 1 : 0)], context);
         }
 
-        String *function_name = callee->variable_data.name->lexeme;
-        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
+        Statement *function = named_functions__get(context->named_functions, function_name, first_argument, arguments);
         if (function == NULL) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_name->data);
+            for (List_Iterator functions = list__create_iterator(context->named_functions); list_iterator__has_next(&functions);) {
+                Statement *statement = list_iterator__next(&functions);
+                if (string__equals(function_name, statement->function_data.name->lexeme->data)) {
+                    String *function_signature = string__create(statement->function_data.name->lexeme->data);
+                    string__append_chars(function_signature, " :: (", 5);
+                    for (List_Iterator parameters = list__create_iterator(statement->function_data.parameters); list_iterator__has_next(&parameters);) {
+                        Parameter *parameter = list_iterator__next(&parameters);
+                        string__append_string(function_signature, parameter->name->lexeme);
+                        string__append_chars(function_signature, ": ", 2);
+                        string__append_string(function_signature, context__type_name(context, parameter->type));
+                    }
+                    string__append_chars(function_signature, ") -> ", 5);
+                    string__append_string(function_signature, context__type_name(context, statement->function_data.return_type));
+                    WARNING(__FILE__, __LINE__, "(%04d:%04d) -- %s", statement->location->line, statement->location->column, function_signature->data);
+                }
+            }
+            String *function_signature = string__create(function_name->data);
+            string__append_chars(function_signature, " :: (", 5);
+            for (int index = 0; index < arguments_size + (first_argument ? 1 : 0); index++) {
+                string__append_chars(function_signature, "_: ", 3);
+                string__append_string(function_signature, context__type_name(context, argument_value_holders[index].type));
+            }
+            string__append_chars(function_signature, ") -> Any", 8);
+            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_signature->data);
         }
 
         // TODO: Save used registers in the function frame
@@ -669,7 +711,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
         }
 
-        for (int argument_index = arguments_size - 1; argument_index >= 0; argument_index--) {
+        for (int argument_index = list__size(function->function_data.parameters) - 1; argument_index >= 0; argument_index--) {
             value_holder__release_register(&argument_value_holders[argument_index]);
         }
 

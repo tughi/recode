@@ -1,0 +1,10 @@
+\ Uniform Function Call support
+
+multiply :: (number: Int, factor: Int) -> Int {
+    return number * factor
+}
+
+main :: () -> Int {
+    value: Int = 2
+    return value.multiply(2) - 2.multiply(1) - 2
+}
