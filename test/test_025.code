@@ -1,10 +1,39 @@
-\ Uniform Function Call support
+\ Uniform Function Call Syntax support
+
+String :: struct {
+    data: @Int8
+}
+
+char_at :: (self: @String, index: Int) -> Int8 {
+    return self.data.char_at(index)
+}
+
+char_at :: (data: @Int8, index: Int) -> Int8 {
+    return data[index]
+}
+
+scale :: (number: Int8) -> Int16 {
+    return number as Int16
+}
+
+scale :: (number: Int16) -> Int32 {
+    return number as Int32
+}
+
+scale :: (number: Int32) -> Int64 {
+    return number as Int64
+}
 
 multiply :: (number: Int, factor: Int) -> Int {
     return number * factor
 }
 
 main :: () -> Int {
-    value: Int = 2
-    return value.multiply(2) - 2.multiply(1) - 2
+    message: String
+    message_pointer: @String = @message
+    message_pointer.data = "*"
+    if (@message.char_at(0).scale().scale().scale() != 42 as Int64) {
+        return 1
+    }
+    return 42.multiply(0)
 }

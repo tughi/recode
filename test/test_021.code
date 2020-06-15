@@ -1,59 +1,44 @@
 \ Struct support
 
-String :: struct {
-    data: @Int8
-    size: Int
+Char :: struct {
+    as_string: @Int8
+    as_int8: Int8
+    as_int16: Int16
+    as_int32: Int32
+    as_int64: Int64
+    as_int: Int
 }
 
-String :: (data: @Int8) -> @String {
-    self: @String
-    self = new String
-    self.data = data
-    size: Int
-    size = 0
-    loop {
-        if (data[size] != '\0') {
-            size = size + 1
-        } else {
-            break
-        }
-    }
-    self.size = size
-    return self
+Char :: (value: Int8) -> @Char {
+    char: @Char
+    char = new Char
+    char.as_int8 = value
+    char.as_int16 = value as Int16
+    char.as_int32 = value as Int32
+    char.as_int64 = value as Int64
+    char.as_int = value as Int
+    char.as_string = new Int8
+    [char.as_string] = value
+    return char
 }
 
 main :: () -> Int {
-    message: @String
-    message = String("Hello world!")
-    print(message)
-    print('\n')
-    print(6 + message.size * 3)
-    print('\n')
+    char: @Char
+    char = Char('*')
+    if (char.as_int8 != '*') {
+        return 1
+    }
+    if (char.as_int16 as Int != 42) {
+        return 2
+    }
+    if (char.as_int32 as Int != 42) {
+        return 3
+    }
+    if (char.as_int64 as Int != 42) {
+        return 4
+    }
+    if (char.as_string[0] != '*') {
+        return 5
+    }
     return 0
 }
-
-print :: (char: Int8) -> Nothing {
-    putchar(char as Int)
-}
-
-print :: (number: Int) -> Nothing {
-    if (number >= 10) {
-        print(number / 10)
-    }
-    putchar(number // 10 + '0' as Int)
-}
-
-print :: (self: @String) -> Nothing {
-    index: Int
-    index = 0
-    loop {
-        if (index < self.size) {
-            print(self.data[index])
-            index = index + 1
-        } else {
-            break
-        }
-    }
-}
-
-putchar :: (char: Int) -> Nothing

@@ -443,7 +443,7 @@ void emit_comparison_expression(Context *context, Expression *expression, Value_
         }
     } else if (string__equals(operator, "==") || string__equals(operator, "!=")) {
         if (!type__equals(result_value_holder->type, right_value_holder.type)) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "You can use \"%s\" only for same type values", SOURCE(operator_token->location), operator->data);
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "You cannot use \"%s\" to compare %s with %s values", SOURCE(operator_token->location), operator->data, context__type_name(context, result_value_holder->type)->data, context__type_name(context, right_value_holder.type)->data);
         }
     }
     emitf("  cmp %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&right_value_holder));
@@ -768,6 +768,21 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
                 return;
             }
             break;
+        case TYPE__INT16:
+            switch (cast_type->kind) {
+            case TYPE__INT16:
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                return;
+            case TYPE__INT:
+            case TYPE__INT32:
+            case TYPE__INT64:
+                emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                return;
+            }
+            break;
         case TYPE__INT32:
             switch (cast_type->kind) {
             case TYPE__INT32:
@@ -782,12 +797,29 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
                 return;
             }
             break;
+        case TYPE__INT64:
+            switch (cast_type->kind) {
+            case TYPE__INT:
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                return;
+            case TYPE__INT64:
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                return;
+            }
+            break;
         case TYPE__INT:
             switch (cast_type->kind) {
             case TYPE__INT:
                 emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
                 value_holder__release_register(&cast_expression_value_holder);
                 WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                return;
+            case TYPE__INT64:
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
                 return;
             }
             break;
@@ -802,11 +834,15 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         Value_Holder member_value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression_address(context, expression, &member_value_holder);
         Type *value_type = member_value_holder.type->pointer_data.type;
-        value_holder__acquire_register(result_value_holder, value_type, context);
         switch (value_type->kind) {
         case TYPE__BOOLEAN:
         case TYPE__INT:
         case TYPE__INT8:
+        case TYPE__INT16:
+        case TYPE__INT32:
+        case TYPE__INT64:
+        case TYPE__POINTER:
+            value_holder__acquire_register(result_value_holder, value_type, context);
             emitf("  mov %s, [%s]", value_holder__register_name(result_value_holder), value_holder__register_name(&member_value_holder));
             value_holder__release_register(&member_value_holder);
             return;
