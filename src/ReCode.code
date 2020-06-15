@@ -1,41 +1,97 @@
 main :: (argc: Int, argv: @@Int8) -> Int {
-	if (argc != 3) {
-		stdout.write("Usage:\n\t").write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>\n")
-		exit(1)
-	}
+    if (argc != 3) {
+        stdout.write("Usage:\n\t").write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>\n")
+        exit(1)
+    }
 
-	\ TODO: validate arguments
+    source_file_name: String
+    @source_file_name.init(argv[1])
+    if (@source_file_name.ends_with(".code") == false) {
+        stdout.write("'").write(@source_file_name).write("' doesn't end with '.code'.\n")
+        exit(1)
+    }
 
-	output_file: @LibC_FILE = fopen(argv[2], "w")
-	output_file.write("  .file 1 \"").write(argv[1]).write("\"\n")
+    output_file_name: String
+    @output_file_name.init(argv[2])
 
-	return 0
+    if (@output_file_name.ends_with(".s") == false) {
+        stdout.write("'").write(@output_file_name).write("' doesn't end with '.s'.\n")
+        exit(1)
+    }
+
+    output_file: @LibC_FILE = fopen(argv[2], "w")
+    output_file.write("  .file 1 \"").write(argv[1]).write("\"\n")
+
+    return 0
+}
+
+String :: struct {
+    length: Int
+    data: @Int8
+}
+
+init :: (self: @String, data: @Int8) -> Nothing {
+    self.length = data.length()
+    self.data = data
+}
+
+ends_with :: (self: @String, suffix: @Int8) -> Boolean {
+    suffix_length: Int = suffix.length()
+    if (suffix_length > self.length) {
+        return false
+    }
+    index: Int = 0
+    loop {
+        if (index >= suffix_length) {
+            break
+        }
+        if (self.data[self.length - suffix_length + index] != suffix[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+length :: (string: @Int8) -> Int {
+    length: Int = 0
+    loop {
+        char: Int8 = string[length]
+        if (char == '\0') {
+            return length
+        }
+        length = length + 1
+    }
+}
+
+write :: (self: @LibC_FILE, string: @String) -> @LibC_FILE {
+    return self.write(string.data)
 }
 
 write :: (self: @LibC_FILE, string: @Int8) -> @LibC_FILE {
-	index: Int = 0
-	loop {
-		char: Int8 = string[index]
-		if (char == '\0') {
-			break
-		}
-		self.write(char)
-		index = index + 1
-	}
-	return self
+    index: Int = 0
+    loop {
+        char: Int8 = string[index]
+        if (char == '\0') {
+            break
+        }
+        self.write(char)
+        index = index + 1
+    }
+    return self
 }
 
 write :: (self: @LibC_FILE, char: Int8) -> @LibC_FILE {
-	c: Int32 = char as Int32
-	if (fputc(c, self) != c) {
-		panic("Hmmm...")
-	}
-	return self
+    c: Int32 = char as Int32
+    if (fputc(c, self) != c) {
+        panic("Hmmm...")
+    }
+    return self
 }
 
 panic :: (message: @Int8) -> Nothing {
-	stdout.write(message).write('\n')
-	raise(6) 	\ abort
+    stdout.write(message).write('\n')
+    raise(6) 	\ abort
 }
 
 exit :: (code: Int) -> Nothing
