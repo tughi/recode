@@ -666,6 +666,9 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
                         string__append_string(function_signature, parameter->name->lexeme);
                         string__append_chars(function_signature, ": ", 2);
                         string__append_string(function_signature, context__type_name(context, parameter->type));
+                        if (list_iterator__has_next(&parameters)) {
+                            string__append_chars(function_signature, ", ", 2);
+                        }
                     }
                     string__append_chars(function_signature, ") -> ", 5);
                     string__append_string(function_signature, context__type_name(context, statement->function_data.return_type));
@@ -677,6 +680,9 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             for (int index = 0; index < arguments_size + (first_argument ? 1 : 0); index++) {
                 string__append_chars(function_signature, "_: ", 3);
                 string__append_string(function_signature, context__type_name(context, argument_value_holders[index].type));
+                if (index + 1 < arguments_size + (first_argument ? 1 : 0)) {
+                    string__append_chars(function_signature, ", ", 2);
+                }
             }
             string__append_chars(function_signature, ") -> Any", 8);
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unknown function: %s", expression->location->line, expression->location->column, function_signature->data);
@@ -705,16 +711,10 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
 
         Type *function_return_type = function->function_data.return_type;
         switch (function_return_type->kind) {
-        case TYPE__INT:
-        case TYPE__INT64:
-        case TYPE__POINTER: {
+        case TYPE__BOOLEAN:
+        case TYPE__INT8: {
             value_holder__acquire_register(result_value_holder, function_return_type, context);
-            emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
-            break;
-        }
-        case TYPE__INT32: {
-            value_holder__acquire_register(result_value_holder, function_return_type, context);
-            emitf("  mov %s, eax", value_holder__register_name(result_value_holder));
+            emitf("  mov %s, al", value_holder__register_name(result_value_holder));
             break;
         }
         case TYPE__INT16: {
@@ -722,9 +722,16 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             emitf("  mov %s, ax", value_holder__register_name(result_value_holder));
             break;
         }
-        case TYPE__INT8: {
+        case TYPE__INT32: {
             value_holder__acquire_register(result_value_holder, function_return_type, context);
-            emitf("  mov %s, al", value_holder__register_name(result_value_holder));
+            emitf("  mov %s, eax", value_holder__register_name(result_value_holder));
+            break;
+        }
+        case TYPE__INT:
+        case TYPE__INT64:
+        case TYPE__POINTER: {
+            value_holder__acquire_register(result_value_holder, function_return_type, context);
+            emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
             break;
         }
         case TYPE__NOTHING: {
@@ -1108,7 +1115,29 @@ void emit_statement(Context *context, Statement *statement) {
             if (!type__equals(function_return_type, return_expression_type)) {
                 PANIC(__FILE__, __LINE__, "(%04d:%04d) -- The return expression must be of type %s, got %s instead.", return_expression->location->line, return_expression->location->column, context__type_name(context, function_return_type)->data, context__type_name(context, return_expression_type)->data);
             }
-            emitf("  mov rax, %s", value_holder__register_name(&value_holder));
+            switch (return_expression_type->kind) {
+            case TYPE__BOOLEAN:
+            case TYPE__INT8: {
+                emitf("  mov al, %s", value_holder__register_name(&value_holder));
+                break;
+            }
+            case TYPE__INT16: {
+                emitf("  mov ax, %s", value_holder__register_name(&value_holder));
+                break;
+            }
+            case TYPE__INT32: {
+                emitf("  mov eax, %s", value_holder__register_name(&value_holder));
+                break;
+            }
+            case TYPE__INT:
+            case TYPE__INT64:
+            case TYPE__POINTER: {
+                emitf("  mov rax, %s", value_holder__register_name(&value_holder));
+                break;
+            }
+            default:
+                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported return type: %s", return_expression->location->line, return_expression->location->column, context__type_name(context, return_expression_type)->data);
+            }
             value_holder__release_register(&value_holder);
         } else if (function_return_type->kind != TYPE__NOTHING) {
             PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Expected return expression", statement->location->line, statement->location->column);

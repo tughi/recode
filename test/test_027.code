@@ -1,0 +1,12 @@
+\ Boolean as return type
+
+main :: () -> Int {
+    if (success()) {
+        return 0
+    }
+    return 1
+}
+
+success :: () -> Boolean {
+    return true
+}
