@@ -1093,6 +1093,9 @@ void emit_statement(Context *context, Statement *statement) {
             }
 
             emitf("%s__end:", function_unique_name->data);
+            if (string__equals(function_unique_name, "main") && statement->function_data.return_type->kind == TYPE__NOTHING) {
+                emits("  xor rax, rax");
+            }
             emits("  mov rsp, rbp");
             emits("  pop rbp");
             emits("  ret");
