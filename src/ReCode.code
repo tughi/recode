@@ -1,13 +1,15 @@
-main :: (argc: Int, argv: @@Int8) -> Int {
+\ TODO: change main to: program :: (arguments: @String) -> Nothing
+main :: (argc: Int, argv: @@Int8) -> Nothing {
     if (argc != 3) {
-        stdout.write("Usage:\n\t").write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>\n")
+        stdout.write("Usage:").new_line()
+        stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").new_line()
         exit(1)
     }
 
     source_file_name: String
     @source_file_name.init(argv[1])
     if (@source_file_name.ends_with(".code") == false) {
-        stdout.write("'").write(@source_file_name).write("' doesn't end with '.code'.\n")
+        stdout.write("'").write(@source_file_name).write("' doesn't end with '.code'.").new_line()
         exit(1)
     }
 
@@ -15,14 +17,25 @@ main :: (argc: Int, argv: @@Int8) -> Int {
     @output_file_name.init(argv[2])
 
     if (@output_file_name.ends_with(".s") == false) {
-        stdout.write("'").write(@output_file_name).write("' doesn't end with '.s'.\n")
+        stdout.write("'").write(@output_file_name).write("' doesn't end with '.s'.").new_line()
         exit(1)
     }
 
     output_file: @LibC_FILE = fopen(argv[2], "w")
-    output_file.write("  .file 1 \"").write(argv[1]).write("\"\n")
-
-    return 0
+    output_file.write("  .file 1 \"").write(argv[1]).write("\"").new_line()
+    output_file.write("  .intel_syntax noprefix").new_line()
+    output_file.new_line()
+    output_file.write("  .text").new_line()
+    output_file.write("  .globl main").new_line()
+    output_file.write("main:").new_line()
+    output_file.write("  push rbp").new_line()
+    output_file.write("  mov rbp, rsp").new_line()
+    \ TODO: call program function
+    output_file.write("main__end:").new_line()
+    output_file.write("  xor rax, rax").new_line()
+    output_file.write("  mov rsp, rbp").new_line()
+    output_file.write("  pop rbp").new_line()
+    output_file.write("  ret").new_line()
 }
 
 String :: struct {
@@ -87,6 +100,10 @@ write :: (self: @LibC_FILE, char: Int8) -> @LibC_FILE {
         panic("Hmmm...")
     }
     return self
+}
+
+new_line :: (self: @LibC_FILE) -> @LibC_FILE {
+    return self.write('\n')
 }
 
 panic :: (message: @Int8) -> Nothing {
