@@ -81,7 +81,9 @@ def bootstrap():
     if obj_files_changed or not os.path.exists(os.path.join('..', 'build', 'bootstrap', 'ReCode')):
         execute(f'''gcc -g -o {os.path.join('..', 'build', 'bootstrap', 'ReCode')} {' '.join(obj_files)}''')
 
-        test(os.path.join('build', 'bootstrap', 'ReCode'))
+        if not test(os.path.join('build', 'bootstrap', 'ReCode')):
+            execute(f'''rm {os.path.join(workspace, 'build', 'bootstrap', 'ReCode')}''')
+            exit(1)
 
 
 def test(compiler):
@@ -116,12 +118,19 @@ def test(compiler):
                 if result.returncode != expected_exit:
                     print(f"ERROR: exited with {result.returncode} instead of {expected_exit}")
                     subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run &> /dev/null' -ex=bt -ex=quit --args ./{test}''', shell=True)
+                    return False
                 elif result.stdout != expected_output:
                     print(f"ERROR: wrong output")
                     print(f"captured: {result.stdout!r}")
                     print(f"expected: {expected_output!r}")
+                    return False
+            else:
+                return False
         else:
             subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {os.path.join(test_dir, test_file)} {test}.s &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
+            return False
+    
+    return True
 
 
 def build():
