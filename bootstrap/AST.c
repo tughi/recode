@@ -185,7 +185,7 @@ void named_functions__add(Named_Functions *self, Statement *statement) {
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
         Statement *item = list_iterator__next(&iterator);
         if (string__equals(item->function_data.unique_name, statement->function_data.unique_name->data)) {
-            PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Function with the same signature was declared already here: (%04d:%04d)", statement->location->line, statement->location->column, item->location->line, item->location->column);
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Function with the same signature was declared already here: " SOURCE_LOCATION, SOURCE(statement->location), SOURCE(item->location));
         }
     }
 
@@ -253,7 +253,7 @@ Named_Types *named_types__create() {
 void named_types__add(Named_Types *self, String *name, Type *type) {
     Type *other_type = named_types__get(self, name);
     if (other_type != NULL) {
-        PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Another \"%s\" type is declared already here: (%04d:%04d)", type->location->line, type->location->column, name->data, other_type->location->line, other_type->location->column);
+        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Another \"%s\" type is declared already here: " SOURCE_LOCATION, SOURCE(type->location), name->data, SOURCE(other_type->location));
     }
 
     list__append(self, named_types__create_item(name, type));

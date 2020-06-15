@@ -31,4 +31,7 @@
 
 #define PANIC(source_file, source_line, format, ...) ERROR(source_file, source_line, format, __VA_ARGS__); raise(SIGABRT)
 
+#define SOURCE_LOCATION "%s:%d:%d -- "
+#define SOURCE(location) location->source->file_name, location->line, location->column
+
 #endif

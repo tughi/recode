@@ -682,7 +682,7 @@ Type *parse_type(Context *context) {
             Token *array_size_token = consume_one(context, "array size", required(is_integer));
             array_size = array_size_token->integer_data.value;
             if (array_size <= 0) {
-                PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Invalid array size: %d", array_size_token->location->line, array_size_token->location->column, array_size);
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Invalid array size: %d", SOURCE(array_size_token->location), array_size);
             }
             consume_space(context, 0);
         }
@@ -811,7 +811,7 @@ void string__append_type_name(String *self, Type *type) {
         string__append_type_name(self, type->pointer_data.type);
         return;
     }
-    PANIC(__FILE__, __LINE__, "(%04d:%04d) -- Unsupported type kind %s", type->location->line, type->location->column, type__get_kind_name(type));
+    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported type kind %s", SOURCE(type->location), type__get_kind_name(type));
 }
 
 Statement *statement__create_function(Source_Location *location, Token *name, Type *return_type, List *parameters, List *statements) {
