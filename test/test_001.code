@@ -1,5 +1,0 @@
-\ Test arithmetic expressions
-
-main :: () -> Int {
-    return ((5 + 7 / 3) * 256 - 50) // 100
-}

@@ -7,9 +7,6 @@ import sys
 from collections import OrderedDict
 
 
-workspace = os.getcwd()
-
-
 def execute(command, echo=True, exit_on_error=True):
     if echo:
         print(command)
@@ -20,14 +17,12 @@ def execute(command, echo=True, exit_on_error=True):
 
 
 def clean():
-    execute(f'''rm -fr {os.path.join(workspace, 'build')}''')
+    execute(f'''rm -fr build''')
 
 
-def bootstrap():
-    if not os.path.exists(os.path.join(workspace, 'build', 'bootstrap')):
-        execute(f'''mkdir -p {os.path.join(workspace, 'build', 'bootstrap')}''')
-
-    os.chdir(os.path.join(workspace, 'bootstrap'))
+def build():
+    if not os.path.exists(os.path.join('build', 'bootstrap')):
+        execute(f'''mkdir -p {os.path.join('build', 'bootstrap')}''')
 
     obj_files = []
     obj_files_changed = False
@@ -41,7 +36,7 @@ def bootstrap():
             for source_line in source_file_text.readlines():
                 match = include_re.search(source_line)
                 if match:
-                    source_file_include = match.group(1)
+                    source_file_include = os.path.join('bootstrap', match.group(1))
                     if not os.path.exists(source_file_include):
                         print(f'''File "{source_file}" includes non-existing file: {source_file_include}''')
                         exit(1)
@@ -53,10 +48,10 @@ def bootstrap():
                         source_file_includes.update(loaded_includes[source_file_include])
         return source_file_includes
 
-    c_files = [file for file in os.listdir('.') if file[0] != '.' and file.endswith('.c')]
+    c_files = [os.path.join('bootstrap', file) for file in os.listdir('bootstrap') if file[0] != '.' and file.endswith('.c')]
     c_files.sort()
     for c_file in c_files:
-        obj_file = os.path.join('..', 'build', 'bootstrap', c_file.replace('.c', '.o'))
+        obj_file = os.path.join('build', c_file.replace('.c', '.o'))
         obj_files.append(obj_file)
 
         if os.path.exists(obj_file):
@@ -78,81 +73,32 @@ def bootstrap():
             execute(f'''gcc -g -c -o {obj_file} {c_file}''')
             obj_files_changed = True
 
-    if obj_files_changed or not os.path.exists(os.path.join('..', 'build', 'bootstrap', 'ReCode')):
-        execute(f'''gcc -g -o {os.path.join('..', 'build', 'bootstrap', 'ReCode')} {' '.join(obj_files)}''')
+    if obj_files_changed or not os.path.exists(os.path.join('build', 'ReCode')):
+        execute(f'''gcc -g -o {os.path.join('build', 'ReCode')} {' '.join(obj_files)}''')
 
-        if not test(os.path.join('build', 'bootstrap', 'ReCode')):
-            execute(f'''rm {os.path.join(workspace, 'build', 'bootstrap', 'ReCode')}''')
+
+def test():
+    build()
+
+    def compile(old_stage, new_stage):
+        compiler = os.path.join('build', old_stage)
+        compiler_args = f'''{os.path.join(os.getcwd(), 'src', 'ReCode.code')} {os.path.join('build', f'{new_stage}')}.s'''
+        if execute(f'''{compiler} {compiler_args}''', exit_on_error=False) == 0:
+            execute(f'''gcc -g -o {os.path.join('build', new_stage)} {os.path.join('build', f'{new_stage}.s')}''', echo=False)
+        else:
+            subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {compiler_args} &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
             exit(1)
 
-
-def test(compiler):
-    execute(f'''mkdir -p {os.path.join(workspace, 'build', 'test')}''', echo=False)
-
-    os.chdir(os.path.join(workspace, 'build', 'test'))
-    subprocess.run('rm -f test_*', shell=True)
-
-    compiler = os.path.join('..', '..', compiler)
-
-    test_dir = os.path.join(workspace, 'test')
-    test_files = [file_name for file_name in os.listdir(test_dir) if file_name.startswith('test_') and file_name.endswith('.code')]
-    test_files.sort()
-    for test_file in test_files:
-        test = test_file[:-5]
-        print(f"Checking {test}")
-        if execute(f'''{compiler} {os.path.join(test_dir, test_file)} {test}.s''', echo=False, exit_on_error=False) == 0:
-            if execute(f'''gcc -g -o {test} {test}.s''', echo=False, exit_on_error=False) == 0:
-                try:
-                    with open(f'''{os.path.join(test_dir, test)}.exit''') as file:
-                        for line in file:
-                            expected_exit = int(line)
-                            break
-                except FileNotFoundError:
-                    expected_exit = 0
-                try:
-                    with open(f'''{os.path.join(test_dir, test)}.output''', 'rb') as file:
-                        expected_output = file.read()
-                except FileNotFoundError:
-                    expected_output = b''
-                result = subprocess.run(f'''./{test}''', shell=True, capture_output=True)
-                if result.returncode != expected_exit:
-                    print(f"ERROR: exited with {result.returncode} instead of {expected_exit}")
-                    subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run &> /dev/null' -ex=bt -ex=quit --args ./{test}''', shell=True)
-                    return False
-                elif result.stdout != expected_output:
-                    print(f"ERROR: wrong output")
-                    print(f"captured: {result.stdout!r}")
-                    print(f"expected: {expected_output!r}")
-                    return False
-            else:
-                return False
-        else:
-            subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {os.path.join(test_dir, test_file)} {test}.s &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
-            return False
-    
-    return True
-
-
-def build():
-    bootstrap()
-
-    os.chdir(os.path.join(workspace))
-    bootstrap_compiler = os.path.join('.', 'build', 'bootstrap', 'ReCode')
-    if execute(f'''{bootstrap_compiler} {os.path.join(workspace, 'src', 'ReCode.code')} {os.path.join('build', 'ReCode.s')}''', exit_on_error=False) == 0:
-        if execute(f'''gcc -g -o {os.path.join('build', 'ReCode')} {os.path.join('build', 'ReCode.s')}''', echo=False, exit_on_error=False) == 0:
-            test(os.path.join('build', 'ReCode'))
-    else:
-        subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {os.path.join(workspace, 'src', 'ReCode.code')} {os.path.join('build', 'ReCode.s')} &> /dev/null' -ex=bt -ex=quit --args {bootstrap_compiler}''', shell=True)
-
-
-def run():
-    build()
+    compile('ReCode', 'Stage1')
+    compile('Stage1', 'Stage2')
+    # TODO: compile('Stage2', 'Stage3')
+    # TODO: Report success if Stage2.s and Stage3.s are equal.
 
 
 TASKS = OrderedDict(
     clean=clean,
     build=build,
-    run=run,
+    test=test,
 )
 
 if len(sys.argv) > 1:

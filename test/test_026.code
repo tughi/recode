@@ -1,8 +1,0 @@
-\ Global variables can be used before declaration
-
-main :: () -> Int {
-    result = 0
-    return result
-}
-
-result: Int
