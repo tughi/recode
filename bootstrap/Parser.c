@@ -239,7 +239,7 @@ Expression *expression__create_pointed_value(Source_Location *location, Expressi
 //      | "(" expression ")"
 //      | "new" type
 //      | "size_of" type
-//      | "@" expression
+//      | "@" primary
 //      | "[" expression "]"
 Expression *parse_primary_expression(Context *context) {
     Token *name = consume_one(context, NULL, required(is_identifier));
@@ -272,7 +272,7 @@ Expression *parse_primary_expression(Context *context) {
     if (matches_one(context, required(is_pointer_operator))) {
         Source_Location *location = consume_one(context, NULL, required(is_pointer_operator))->location;
         consume_space(context, 0);
-        Expression *expression = parse_expression(context);
+        Expression *expression = parse_primary_expression(context);
         return expression__create_pointer_to(location, expression);
     }
     if (matches_one(context, required(is_open_bracket))) {

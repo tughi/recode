@@ -5,6 +5,6 @@ digit: @Int
 
 main :: () -> Int {
     digits[5] = 42
-    digit = @digits[5]
+    digit = @(digits[5])
     return [digit]
 }
