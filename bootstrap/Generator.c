@@ -82,6 +82,18 @@ Context *context__clone(Context *other) {
     return self;
 }
 
+int context__add_string_constant(Context *self, Token *string_token) {
+    int index = 0;
+    for (List_Iterator iterator = list__create_reversed_iterator(self->string_constants); list_iterator__has_next(&iterator); index++) {
+        Token *other_string_token = list_iterator__next(&iterator);
+        if (string__equals(other_string_token->string_data.value, string_token->string_data.value->data)) {
+            return index;
+        }
+    }
+    list__append(self->string_constants, string_token);
+    return index;
+}
+
 Statement *context__find_variable(Context *self, String *name) {
     for (List_Iterator iterator = list__create_reversed_iterator(self->variables); list_iterator__has_next(&iterator);) {
         Statement *variable_statement = list_iterator__next(&iterator);
@@ -395,8 +407,7 @@ void emit_load_literal(Context *context, Token *token, Value_Holder *value_holde
         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported keyword: %s", SOURCE(token->location), token->lexeme->data);
     }
     case TOKEN__STRING: {
-        int index = list__size(context->string_constants);
-        list__append(context->string_constants, token);
+        int index = context__add_string_constant(context, token);
         value_holder__acquire_register(value_holder, type__create_pointer(token->location, context__get_string_type(context)), context);
         emitf("  lea %s, __data__%d__string__[rip]", value_holder__register_name(value_holder), index);
         return;
@@ -529,8 +540,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
     case EXPRESSION__LITERAL: {
         Token *value_token = expression->literal_data.value;
         if (value_token->kind == TOKEN__STRING) {
-            int index = list__size(context->string_constants);
-            list__append(context->string_constants, value_token);
+            int index = context__add_string_constant(context, value_token);
             value_holder__acquire_register(destination_value_holder, type__create_pointer(value_token->location, type__create_pointer(value_token->location, context__get_string_type(context))), context);
             emitf("  lea %s, __data__%d__string__address__[rip]", value_holder__register_name(destination_value_holder), index);
             return;
