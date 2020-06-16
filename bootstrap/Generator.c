@@ -212,6 +212,14 @@ Type *context__get_int8_type(Context *self) {
     return context__find_type(self, type_name);
 }
 
+Type *context__get_string_type(Context *self) {
+    static String *type_name = NULL;
+    if (type_name == NULL) {
+        type_name = string__create("String");
+    }
+    return context__find_type(self, type_name);
+}
+
 int context__compute_type_size(Context *self, Type *type) {
     switch (type->kind) {
     case TYPE__ARRAY: {
@@ -389,7 +397,7 @@ void emit_load_literal(Context *context, Token *token, Value_Holder *value_holde
     case TOKEN__STRING: {
         int index = list__size(context->string_constants);
         list__append(context->string_constants, token);
-        value_holder__acquire_register(value_holder, type__create_pointer(token->location, context__get_int8_type(context)), context);
+        value_holder__acquire_register(value_holder, type__create_pointer(token->location, context__get_string_type(context)), context);
         emitf("  lea %s, __data__%d__string__[rip]", value_holder__register_name(value_holder), index);
         return;
     }
@@ -518,6 +526,17 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         value_holder__release_register(&address_value_holder);
         return;
     }
+    case EXPRESSION__LITERAL: {
+        Token *value_token = expression->literal_data.value;
+        if (value_token->kind == TOKEN__STRING) {
+            int index = list__size(context->string_constants);
+            list__append(context->string_constants, value_token);
+            value_holder__acquire_register(destination_value_holder, type__create_pointer(value_token->location, type__create_pointer(value_token->location, context__get_string_type(context))), context);
+            emitf("  lea %s, __data__%d__string__address__[rip]", value_holder__register_name(destination_value_holder), index);
+            return;
+        }
+        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported literal kind: %s", SOURCE(value_token->location), token__get_kind_name(value_token));
+    }
     case EXPRESSION__MEMBER: {
         Expression *object_expression = expression->member_data.object;
         Value_Holder object_value_holder = { .kind = VALUE_HOLDER__NEW };
@@ -639,19 +658,25 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             REGISTER__RDX,
             REGISTER__RCX,
         };
-        int last_argument_register_id = REGISTERS_COUNT;
         if (first_argument) {
             Value_Holder *argument_value_holder = &argument_value_holders[0];
             emit_expression(context, first_argument->value, argument_value_holder);
             first_argument->inferred_type = argument_value_holder->type;
-            value_holder__move_to_register(argument_value_holder, last_argument_register_id = argument_register_ids[0], context);
         }
         for (int argument_index = 0; argument_index < arguments_size; argument_index++) {
             Argument *argument = list__get(arguments, argument_index);
             Value_Holder *argument_value_holder = &argument_value_holders[argument_index + (first_argument ? 1 : 0)];
             emit_expression(context, argument->value, argument_value_holder);
             argument->inferred_type = argument_value_holder->type;
-            value_holder__move_to_register(argument_value_holder, last_argument_register_id = argument_register_ids[argument_index + (first_argument ? 1 : 0)], context);
+        }
+
+        int last_argument_register_id = REGISTERS_COUNT;
+        for (int index = 0; index < 4; index++) {
+            Value_Holder *argument_value_holder = &argument_value_holders[index];
+            if (argument_value_holder->kind != VALUE_HOLDER__NEW) {
+                value_holder__move_to_register(argument_value_holder, argument_register_ids[index], context);
+                last_argument_register_id = argument_value_holder->register_data.id;
+            }
         }
 
         Statement *function = named_functions__get(context->named_functions, function_name, first_argument, arguments);
@@ -705,8 +730,10 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
         }
 
-        for (int argument_index = list__size(function->function_data.parameters) - 1; argument_index >= 0; argument_index--) {
-            value_holder__release_register(&argument_value_holders[argument_index]);
+        for (int index = 0; index < 4; index++) {
+            if (argument_value_holders[index].kind != VALUE_HOLDER__NEW) {
+                value_holder__release_register(&argument_value_holders[index]);
+            }
         }
 
         Type *function_return_type = function->function_data.return_type;
@@ -1307,8 +1334,13 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
     for (int index = 0; index < list__size(context->string_constants); index++) {
         Token *string_constant = list__get(context->string_constants, index);
         emits("");
-        emits("  .data");
-        emitf("__data__%d__string__: .string %s", index, string_constant->lexeme->data);
+        emits("  .section .rodata");
+        emits("  .align 8");
+        emitf("__data__%d__string__address__: .quad __data__%d__string__", index, index);
+        emitf("__data__%d__string__:", index);
+        emitf("  .quad %d", string_constant->string_data.value->length);
+        emitf("  .quad __data__%d__string__data__", index);
+        emitf("__data__%d__string__data__: .string %s", index, string_constant->lexeme->data);
     }
 
     fclose(context->file);

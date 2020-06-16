@@ -15,13 +15,12 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 
     output_file_name: String
     @output_file_name.init(argv[2])
-
     if (@output_file_name.ends_with(".s") == false) {
         stdout.write("'").write(@output_file_name).write("' doesn't end with '.s'.").new_line()
         exit(1)
     }
 
-    output_file: @LibC_FILE = fopen(argv[2], "w")
+    output_file: @LibC_FILE = fopen(argv[2], "w".data)
     output_file.write("  .file 1 \"").write(argv[1]).write("\"").new_line()
     output_file.write("  .intel_syntax noprefix").new_line()
     output_file.new_line()
@@ -48,17 +47,13 @@ init :: (self: @String, data: @Int8) -> Nothing {
     self.data = data
 }
 
-ends_with :: (self: @String, suffix: @Int8) -> Boolean {
-    suffix_length: Int = suffix.length()
-    if (suffix_length > self.length) {
-        return false
-    }
+ends_with :: (self: @String, suffix: @String) -> Boolean {
     index: Int = 0
     loop {
-        if (index >= suffix_length) {
+        if (index >= suffix.length) {
             break
         }
-        if (self.data[self.length - suffix_length + index] != suffix[index]) {
+        if (self.data[self.length - suffix.length + index] != suffix.data[index]) {
             return false
         }
         index = index + 1
@@ -97,7 +92,8 @@ write :: (self: @LibC_FILE, string: @Int8) -> @LibC_FILE {
 write :: (self: @LibC_FILE, char: Int8) -> @LibC_FILE {
     c: Int32 = char as Int32
     if (fputc(c, self) != c) {
-        panic("Hmmm...")
+        stderr.write("Error: Failed to write character")
+        raise(6)
     }
     return self
 }
@@ -105,13 +101,6 @@ write :: (self: @LibC_FILE, char: Int8) -> @LibC_FILE {
 new_line :: (self: @LibC_FILE) -> @LibC_FILE {
     return self.write('\n')
 }
-
-panic :: (message: @Int8) -> Nothing {
-    stdout.write(message).write('\n')
-    raise(6) 	\ abort
-}
-
-exit :: (code: Int) -> Nothing
 
 LibC_FILE :: struct
 
@@ -121,5 +110,7 @@ stderr: @LibC_FILE = external
 fopen :: (file: @Int8, mode: @Int8) -> @LibC_FILE
 
 fputc :: (c: Int32, file: @LibC_FILE) -> Int32
+
+exit :: (code: Int) -> Nothing
 
 raise :: (signal: Int) -> Nothing
