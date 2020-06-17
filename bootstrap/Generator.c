@@ -822,6 +822,11 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             break;
         case TYPE__INT32:
             switch (cast_type->kind) {
+            case TYPE__INT8:
+                cast_expression_value_holder.size = 1;
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                return;
             case TYPE__INT32:
                 emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
                 value_holder__release_register(&cast_expression_value_holder);
@@ -853,6 +858,16 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
                 emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
                 value_holder__release_register(&cast_expression_value_holder);
                 WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                return;
+            case TYPE__INT8:
+                cast_expression_value_holder.size = 1;
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
+                return;
+            case TYPE__INT32:
+                cast_expression_value_holder.size = 4;
+                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                value_holder__release_register(&cast_expression_value_holder);
                 return;
             case TYPE__INT64:
                 emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
