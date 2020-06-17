@@ -49,10 +49,7 @@ init :: (self: @String, data: @Int8) -> Nothing {
 
 ends_with :: (self: @String, suffix: @String) -> Boolean {
     index: Int = 0
-    loop {
-        if (index >= suffix.length) {
-            break
-        }
+    while (index < suffix.length) {
         if (self.data[self.length - suffix.length + index] != suffix.data[index]) {
             return false
         }

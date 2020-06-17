@@ -172,8 +172,10 @@ char *statement__get_kind_name(Statement *self) {
         return "STRUCT";
     case STATEMENT__VARIABLE:
         return "VARIABLE";
+    case STATEMENT__WHILE:
+        return "WHILE";
     default:
-        PANIC(__FILE__, __LINE__, "Unsupported statement kind: %d", self->kind);
+        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported statement kind: %d", SOURCE(self->location), self->kind);
     }
 }
 

@@ -4,7 +4,7 @@
 #include "String.h"
 #include "Token.h"
 
-#define KEYWORDS_COUNT 14
+#define KEYWORDS_COUNT 15
 
 const char *KEYWORDS[] = {
     "as",
@@ -21,6 +21,7 @@ const char *KEYWORDS[] = {
     "skip",
     "struct",
     "true",
+    "while",
 };
 
 int is_character(unsigned char c) {

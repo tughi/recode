@@ -995,6 +995,10 @@ int compute_locals_size(Context *context, Statement_List *statements) {
             }
             break;
         }
+        case STATEMENT__WHILE: {
+            update_locals_size(context, locals_size_min, &locals_size_max, statement->while_data.block);
+            break;
+        }
         default:
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported statement kind: %s", SOURCE(statement->location), statement__get_kind_name(statement));
         }
@@ -1144,7 +1148,7 @@ void emit_statement(Context *context, Statement *statement) {
         emitf("if_%03d_cond:", label);
         Expression *condition_expression = statement->if_data.condition;
         Value_Holder condition_value_holder = { .kind = VALUE_HOLDER__NEW };
-        emit_expression(context, statement->if_data.condition, &condition_value_holder);
+        emit_expression(context, condition_expression, &condition_value_holder);
         Type *condition_expression_type = condition_value_holder.type;
         if (condition_expression_type->kind != TYPE__BOOLEAN) {
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not a boolean expression", SOURCE(condition_expression->location));
@@ -1288,6 +1292,27 @@ void emit_statement(Context *context, Statement *statement) {
             }
         }
         return;
+    }
+    case STATEMENT__WHILE: {
+        int label = counter__inc(context->counter);
+        emitf("while_%03d_start:", label);
+        context->current_loop = loop__create(label, context->current_loop);
+        Expression *condition_expression = statement->while_data.condition;
+        Value_Holder condition_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, condition_expression, &condition_value_holder);
+        Type *condition_expression_type = condition_value_holder.type;
+        if (condition_expression_type->kind != TYPE__BOOLEAN) {
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not a boolean expression", SOURCE(condition_expression->location));
+        }
+        emitf("  dec %s", value_holder__register_name(&condition_value_holder));
+        value_holder__release_register(&condition_value_holder);
+        emitf("  jnz while_%03d_end", label);
+        emit_statement(context, statement->while_data.block);
+        context->current_loop = context->current_loop->parent;
+        emitf("  jmp while_%03d_start", label);
+        emitf("loop_%03d_end:", label);
+        emitf("while_%03d_end:", label);
+        break;
     }
     default:
         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported statement kind: %s", SOURCE(statement->location), statement__get_kind_name(statement));

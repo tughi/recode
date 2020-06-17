@@ -167,6 +167,7 @@ typedef struct Statement {
         STATEMENT__SKIP,
         STATEMENT__STRUCT,
         STATEMENT__VARIABLE,
+        STATEMENT__WHILE,
     } kind;
 
     Source_Location *location;
@@ -218,6 +219,10 @@ typedef struct Statement {
             String *unique_name;
             int locals_offset;
         } variable_data;
+        struct {
+            Expression *condition;
+            struct Statement *block;
+        } while_data;
     };
 } Statement;
 

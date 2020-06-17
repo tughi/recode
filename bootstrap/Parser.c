@@ -33,11 +33,9 @@ Matcher *matcher__create(int (*matches)(Token *), int required) {
     return self;
 }
 
-#define LOCATION(context) ((Token *)list_iterator__current(context->tokens))->location->line, ((Token *)list_iterator__current(context->tokens))->location->column
+#define CURRENT_TOKEN(context) ((Token *)list_iterator__current(context->tokens))
 
-#define CURRENT_TOKEN(context) ((Token *)list_iterator__current(context->tokens))->lexeme->data
-
-#define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, "(%03d,%03d) -- Token: %s", LOCATION(context), CURRENT_TOKEN(context));
+#define DUMP_CONTEXT(context) INFO(__FILE__, __LINE__, SOURCE_LOCATION "Token: %s", SOURCE(CURRENT_TOKEN(context)->location), CURRENT_TOKEN(context)->lexeme->data);
 
 #define FALSE 0
 #define TRUE 1
@@ -87,7 +85,7 @@ Token *_consume_(int source_line, Context *context, const char *expected, Matche
             token = list_iterator__next(context->tokens);
         } else if (matchers[index]->required) {
             if (expected != NULL) {
-                PANIC(__FILE__, source_line, "(%03d,%03d) -- Expected %s instead of: %s", LOCATION(context), expected, CURRENT_TOKEN(context));
+                PANIC(__FILE__, source_line, SOURCE_LOCATION "Expected %s instead of: %s", SOURCE(CURRENT_TOKEN(context)->location), expected, CURRENT_TOKEN(context)->lexeme->data);
             }
             return NULL;
         }
@@ -126,7 +124,7 @@ int consume_space(int source_line, Context *context, int expected_spaces) {
     Token *token = _consume_one_(source_line, context, NULL, required(is_space));
     int spaces = token != NULL ? token->space_data.count : 0;
     if (expected_spaces >= 0 && spaces != expected_spaces) {
-        WARNING(__FILE__, source_line, "(%03d,%03d) -- Consumed %d spaces where %d are expected", LOCATION(context), spaces, expected_spaces);
+        WARNING(__FILE__, source_line, SOURCE_LOCATION "Consumed %d spaces where %d are expected", SOURCE(CURRENT_TOKEN(context)->location), spaces, expected_spaces);
     }
     return spaces;
 }
@@ -283,7 +281,7 @@ Expression *parse_primary_expression(Context *context) {
         consume_one(context, "]", required(is_close_bracket));
         return expression__create_pointed_value(location, expression);
     }
-    PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected expression instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
+    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Expected expression instead of: %s", SOURCE(CURRENT_TOKEN(context)->location), CURRENT_TOKEN(context)->lexeme->data);
 }
 
 int is_assign_operator(Token *token) {
@@ -731,7 +729,7 @@ int _consume_end_of_line_(int source_line, Context *context, int required) {
         return consume_one(context, NULL, required(is_end_of_line)) != NULL;
     }
     if (required) {
-        PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Expected <EOL> instead of: %s", LOCATION(context), CURRENT_TOKEN(context));
+        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Expected <EOL> instead of: %s", SOURCE(CURRENT_TOKEN(context)->location), CURRENT_TOKEN(context)->lexeme->data);
     }
     return FALSE;
 }
@@ -955,6 +953,33 @@ Statement *parse_loop_statement(Context *context) {
     return statement__create_loop(location, block);
 }
 
+int is_while_keyword(Token *token) {
+    return is_keyword(token, "while");
+}
+
+Statement *statement__create_while(Source_Location *location, Expression *condition, Statement *block) {
+    Statement *self = statement__create(STATEMENT__WHILE, location);
+    self->while_data.condition = condition;
+    self->while_data.block = block;
+    return self;
+}
+
+// return
+//      : "while" "(" expression ")" block EOL
+Statement *parse_while_statement(Context *context) {
+    Source_Location *location = consume_one(context, "while", required(is_while_keyword))->location;
+    consume_space(context, 1);
+    consume_one(context, "(", required(is_open_paren));
+    consume_space(context, 0);
+    Expression *condition = parse_expression(context);
+    consume_space(context, 0);
+    consume_one(context, ")", required(is_close_paren));
+    consume_space(context, 1);
+    Statement *block = parse_block_statement(context, TRUE);
+    consume_end_of_line(context, TRUE);
+    return statement__create_while(location, condition, block);
+}
+
 int is_break_keyword(Token *token) {
     return is_keyword(token, "break");
 }
@@ -1047,6 +1072,7 @@ int is_external_keyword(Token *token) {
 //      : break
 //      | if
 //      | loop
+//      | while
 //      | return
 //      | skip
 //      | expression ((":" ":" definition) | (":" declaration) | ("=" ("external" | assignment)))?
@@ -1070,6 +1096,10 @@ Statement *parse_statement(Context *context) {
 
     if (matches_one(context, required(is_loop_keyword))) {
         return parse_loop_statement(context);
+    }
+
+    if (matches_one(context, required(is_while_keyword))) {
+        return parse_while_statement(context);
     }
 
     if (matches_one(context, required(is_return_keyword))) {
@@ -1159,7 +1189,7 @@ Statement *parse_statement(Context *context) {
     }
 
     consume_space(context, 0);
-    PANIC(__FILE__, __LINE__, "(%03d,%03d) -- Unxpected token: %s", LOCATION(context), CURRENT_TOKEN(context));
+    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unxpected token: %s", SOURCE(CURRENT_TOKEN(context)->location), CURRENT_TOKEN(context)->lexeme->data);
 }
 
 Compilation_Unit *parse(Token_List *tokens) {
