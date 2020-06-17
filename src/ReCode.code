@@ -20,7 +20,11 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    output_file: @LibC_FILE = fopen(argv[2], "w".data)
+    source: @Source = new Source
+    source.load(@source_file_name)
+    stdout.write(source.content)
+
+    output_file: @FILE = fopen(argv[2], "w".data)
     output_file.write("  .file 1 \"").write(argv[1]).write("\"").new_line()
     output_file.write("  .intel_syntax noprefix").new_line()
     output_file.new_line()
@@ -35,6 +39,34 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
     output_file.write("  mov rsp, rbp").new_line()
     output_file.write("  pop rbp").new_line()
     output_file.write("  ret").new_line()
+}
+
+Source :: struct {
+    file_name: @String
+    content: @Int8
+}
+
+load :: (self: @Source, file_name: @String) -> Nothing {
+    file: @FILE = fopen(file_name.data, "r".data)
+
+    content_size: Int = 1024
+    content: @Int8 = malloc(content_size)
+    content_length: Int = 0
+    loop {
+        char: Int32 = fgetc(file)
+        if (feof(file) as Int != 0) {
+            break
+        }
+        if (content_length + 1 > content_size - 1) {
+            content_size = content_size + 1024
+            content = realloc(content, content_size)
+        }
+        content[content_length] = char as Int8
+        content_length = content_length + 1
+    }
+
+    self.file_name = file_name
+    self.content = content
 }
 
 String :: struct {
@@ -69,11 +101,19 @@ length :: (string: @Int8) -> Int {
     }
 }
 
-write :: (self: @LibC_FILE, string: @String) -> @LibC_FILE {
+write :: (self: @FILE, number: Int) -> @FILE {
+    if (number >= 10) {
+        self.write(number / 10)
+    }
+    fputc((number // 10 + '0' as Int) as Int32, self)
+    return self
+}
+
+write :: (self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
-write :: (self: @LibC_FILE, string: @Int8) -> @LibC_FILE {
+write :: (self: @FILE, string: @Int8) -> @FILE {
     index: Int = 0
     loop {
         char: Int8 = string[index]
@@ -86,28 +126,41 @@ write :: (self: @LibC_FILE, string: @Int8) -> @LibC_FILE {
     return self
 }
 
-write :: (self: @LibC_FILE, char: Int8) -> @LibC_FILE {
+write :: (self: @FILE, char: Int8) -> @FILE {
     c: Int32 = char as Int32
     if (fputc(c, self) != c) {
         stderr.write("Error: Failed to write character")
-        raise(6)
+        abort()
     }
     return self
 }
 
-new_line :: (self: @LibC_FILE) -> @LibC_FILE {
+new_line :: (self: @FILE) -> @FILE {
     return self.write('\n')
 }
 
-LibC_FILE :: struct
+\ --------------------------------------------------------------------------------------------------------
+\       LibC stuff
+\ --------------------------------------------------------------------------------------------------------
 
-stdout: @LibC_FILE = external
-stderr: @LibC_FILE = external
+\ ----- stdio.h ------------------------------------------------------------------------------------------
 
-fopen :: (file: @Int8, mode: @Int8) -> @LibC_FILE
+FILE :: struct
 
-fputc :: (c: Int32, file: @LibC_FILE) -> Int32
+stdout: @FILE = external
+stderr: @FILE = external
 
+fclose :: (file: @FILE) -> Int32
+feof :: (file: @FILE) -> Int32
+fflush :: (file: @FILE) -> Int32
+fgetc :: (file: @FILE) -> Int32
+fopen :: (file: @Int8, mode: @Int8) -> @FILE
+fputc :: (char: Int32, file: @FILE) -> Int32
+
+\ ----- stdlib.h -----------------------------------------------------------------------------------------
+
+abort :: () -> Nothing
 exit :: (code: Int) -> Nothing
-
-raise :: (signal: Int) -> Nothing
+free :: (block: @Int8) -> Nothing
+malloc :: (size: Int) -> @Int8
+realloc :: (block: @Int8, size: Int) -> @Int8
