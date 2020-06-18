@@ -25,20 +25,26 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
     stdout.write(source.content)
 
     output_file: @FILE = fopen(argv[2], "w".data)
-    output_file.write("  .file 1 \"").write(argv[1]).write("\"").new_line()
-    output_file.write("  .intel_syntax noprefix").new_line()
-    output_file.new_line()
-    output_file.write("  .text").new_line()
-    output_file.write("  .globl main").new_line()
-    output_file.write("main:").new_line()
-    output_file.write("  push rbp").new_line()
-    output_file.write("  mov rbp, rsp").new_line()
+
+    output_file.write("  .file 1 \"").write(@source_file_name).write("\"")
+    output_file.write_line("  .intel_syntax noprefix")
+    output_file.write_line("")
+    output_file.write_line("  .text")
+    output_file.write_line("  .globl main")
+    output_file.write_line("main:")
+    output_file.write_line("  push rbp")
+    output_file.write_line("  mov rbp, rsp")
     \ TODO: call program function
-    output_file.write("main__end:").new_line()
-    output_file.write("  xor rax, rax").new_line()
-    output_file.write("  mov rsp, rbp").new_line()
-    output_file.write("  pop rbp").new_line()
-    output_file.write("  ret").new_line()
+    output_file.write_line("main__end:")
+    output_file.write_line("  xor rax, rax")
+    output_file.write_line("  mov rsp, rbp")
+    output_file.write_line("  pop rbp")
+    output_file.write_line("  ret")
+    output_file.write_line("")
+}
+
+write_line :: (file: @FILE, string: @String) -> @FILE {
+    return file.new_line().write(string)
 }
 
 Source :: struct {
@@ -113,10 +119,10 @@ write :: (self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
-write :: (self: @FILE, string: @Int8) -> @FILE {
+write :: (self: @FILE, chars: @Int8) -> @FILE {
     index: Int = 0
     loop {
-        char: Int8 = string[index]
+        char: Int8 = chars[index]
         if (char == '\0') {
             break
         }

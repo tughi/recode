@@ -84,7 +84,7 @@ Context *context__clone(Context *other) {
 
 int context__add_string_constant(Context *self, Token *string_token) {
     int index = 0;
-    for (List_Iterator iterator = list__create_reversed_iterator(self->string_constants); list_iterator__has_next(&iterator); index++) {
+    for (List_Iterator iterator = list__create_iterator(self->string_constants); list_iterator__has_next(&iterator); index++) {
         Token *other_string_token = list_iterator__next(&iterator);
         if (string__equals(other_string_token->string_data.value, string_token->string_data.value->data)) {
             return index;
