@@ -157,18 +157,21 @@ int is_close_paren(Token *token) {
 
 Expression *parse_expression(Context *context);
 
-Expression *expression__create_literal(Token *value) {
+Expression *expression__create(int kind, Source_Location *location) {
     Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__LITERAL;
-    self->location = value->location;
+    self->kind = kind;
+    self->location = location;
+    return self;
+}
+
+Expression *expression__create_literal(Token *value) {
+    Expression *self = expression__create(EXPRESSION__LITERAL, value->location);
     self->literal_data.value = value;
     return self;
 }
 
 Expression *expression__create_variable(Token *name) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__VARIABLE;
-    self->location = name->location;
+    Expression *self = expression__create(EXPRESSION__VARIABLE, name->location);
     self->variable_data.name = name;
     return self;
 }
@@ -184,17 +187,13 @@ int is_size_of_keyword(Token *token) {
 Type *parse_type(Context *context);
 
 Expression *expression__create_new(Source_Location *location, Type *type) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__NEW;
-    self->location = location;
+    Expression *self = expression__create(EXPRESSION__NEW, location);
     self->new_data.type = type;
     return self;
 }
 
 Expression *expression__create_size_of(Source_Location *location, Type *type) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__SIZE_OF;
-    self->location = location;
+    Expression *self = expression__create(EXPRESSION__SIZE_OF, location);
     self->size_of_data.type = type;
     return self;
 }
@@ -204,9 +203,7 @@ int is_pointer_operator(Token *token) {
 }
 
 Expression *expression__create_pointer_to(Source_Location *location, Expression *expression) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__POINTER_TO;
-    self->location = location;
+    Expression *self = expression__create(EXPRESSION__POINTER_TO, location);
     self->pointer_to_data.expression = expression;
     return self;
 }
@@ -220,9 +217,7 @@ int is_close_bracket(Token *token) {
 }
 
 Expression *expression__create_pointed_value(Source_Location *location, Expression *expression) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__POINTED_VALUE;
-    self->location = location;
+    Expression *self = expression__create(EXPRESSION__POINTED_VALUE, location);
     self->pointed_value_data.expression = expression;
     return self;
 }
@@ -319,27 +314,21 @@ int is_dot(Token *token) {
 }
 
 Expression *expression__create_call(Expression *callee, List *arguments) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__CALL;
-    self->location = callee->location;
+    Expression *self = expression__create(EXPRESSION__CALL, callee->location);
     self->call_data.callee = callee;
     self->call_data.arguments = arguments;
     return self;
 }
 
 Expression *expression__create_member(Expression *object, Token *name) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__MEMBER;
-    self->location = object->location;
+    Expression *self = expression__create(EXPRESSION__MEMBER, object->location);
     self->member_data.object = object;
     self->member_data.name = name;
     return self;
 }
 
 Expression *expression__create_array_item(Expression *array, Expression *index) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__ARRAY_ITEM;
-    self->location = array->location;
+    Expression *self = expression__create(EXPRESSION__ARRAY_ITEM, array->location);
     self->array_item_data.array = array;
     self->array_item_data.index = index;
     return self;
@@ -350,9 +339,7 @@ int is_as_keyword(Token *token) {
 }
 
 Expression *expression__create_cast(Expression *expression, Type *type) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__CAST;
-    self->location = expression->location;
+    Expression *self = expression__create(EXPRESSION__CAST, expression->location);
     self->cast_data.expression = expression;
     self->cast_data.type = type;
     return self;
@@ -416,9 +403,7 @@ int is_unary_operator(Token *token) {
 }
 
 Expression *expression__create_unary(Token *operator_token, Expression *expression) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__UNARY;
-    self->location = operator_token->location;
+    Expression *self = expression__create(EXPRESSION__UNARY, operator_token->location);
     self->unary_data.operator_token = operator_token;
     self->unary_data.expression = expression;
     return self;
@@ -446,9 +431,7 @@ int is_multiplication_operator(Token *token) {
 }
 
 Expression *expression__create_binary(Token *operator_token, Expression *left_expression, Expression *right_expression) {
-    Expression *self = malloc(sizeof(Expression));
-    self->kind = EXPRESSION__BINARY;
-    self->location = left_expression->location;
+    Expression *self = expression__create(EXPRESSION__BINARY, left_expression->location);
     self->binary_data.operator_token = operator_token;
     self->binary_data.left_expression = left_expression;
     self->binary_data.right_expression = right_expression;
