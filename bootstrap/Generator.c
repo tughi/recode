@@ -608,8 +608,6 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
     }
 }
 
-Argument *argument__create(Token *name, Expression *value);
-
 void emit_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
     switch (expression->kind) {
     case EXPRESSION__ARRAY_ITEM: {
@@ -635,17 +633,11 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
     }
     case EXPRESSION__CALL: {
         String *function_name;
-        Argument *first_argument;
 
         Expression *callee = expression->call_data.callee;
         switch (callee->kind) {
-        case EXPRESSION__MEMBER:
-            function_name = callee->member_data.name->lexeme;
-            first_argument = argument__create(NULL, callee->member_data.object);
-            break;
         case EXPRESSION__VARIABLE:
             function_name = callee->variable_data.name->lexeme;
-            first_argument = NULL;
             break;
         default:
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Only simple function calls like \"example()\" are supported", SOURCE(expression->location));
@@ -653,7 +645,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
 
         Argument_List *arguments = expression->call_data.arguments;
         const int arguments_size = list__size(arguments);
-        if (arguments_size + (first_argument ? 1 : 0) > 4) {
+        if (arguments_size > 4) {
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Function calls with %d arguments are not supported yet", SOURCE(expression->location), arguments_size);
         }
         Value_Holder argument_value_holders[4] = {
@@ -668,14 +660,9 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             REGISTER__RDX,
             REGISTER__RCX,
         };
-        if (first_argument) {
-            Value_Holder *argument_value_holder = &argument_value_holders[0];
-            emit_expression(context, first_argument->value, argument_value_holder);
-            first_argument->inferred_type = argument_value_holder->type;
-        }
         for (int argument_index = 0; argument_index < arguments_size; argument_index++) {
             Argument *argument = list__get(arguments, argument_index);
-            Value_Holder *argument_value_holder = &argument_value_holders[argument_index + (first_argument ? 1 : 0)];
+            Value_Holder *argument_value_holder = &argument_value_holders[argument_index];
             emit_expression(context, argument->value, argument_value_holder);
             argument->inferred_type = argument_value_holder->type;
         }
@@ -689,7 +676,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
         }
 
-        Statement *function = named_functions__get(context->named_functions, function_name, first_argument, arguments);
+        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
         if (function == NULL) {
             for (List_Iterator functions = list__create_iterator(context->named_functions); list_iterator__has_next(&functions);) {
                 Statement *statement = list_iterator__next(&functions);
@@ -712,10 +699,10 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
             String *function_signature = string__create(function_name->data);
             string__append_chars(function_signature, " :: (", 5);
-            for (int index = 0; index < arguments_size + (first_argument ? 1 : 0); index++) {
+            for (int index = 0; index < arguments_size; index++) {
                 string__append_chars(function_signature, "_: ", 3);
                 string__append_string(function_signature, context__type_name(context, argument_value_holders[index].type));
-                if (index + 1 < arguments_size + (first_argument ? 1 : 0)) {
+                if (index + 1 < arguments_size) {
                     string__append_chars(function_signature, ", ", 2);
                 }
             }

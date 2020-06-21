@@ -44,6 +44,21 @@ void list__append(List *self, void *data) {
     self->size += 1;
 }
 
+void list__prepend(List *self, void *data) {
+    List_Item *item = malloc(sizeof(List_Item));
+    item->data = data;
+    item->prev = NULL;
+    if (self->first == NULL) {
+        item->prev = NULL;
+        self->last = item;
+    } else {
+        item->next = self->first;
+        self->first->prev = item;
+    }
+    self->first = item;
+    self->size += 1;
+}
+
 List_Iterator list__create_iterator(List *self) {
     List_Iterator iterator;
     iterator.reversed = 0;

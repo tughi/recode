@@ -370,7 +370,20 @@ Expression *parse_call_expression(Context *context) {
             }
             consume_space(context, 0);
             consume_one(context, NULL, required(is_close_paren));
-            expression = expression__create_call(expression, arguments);
+            switch (expression->kind) {
+                case EXPRESSION__MEMBER: {
+                    list__prepend(arguments, argument__create(NULL, expression->member_data.object));
+                    expression = expression__create_call(expression__create_variable(expression->member_data.name), arguments);
+                    break;
+                }
+                case EXPRESSION__VARIABLE: {
+                    expression = expression__create_call(expression, arguments);
+                    break;
+                }
+                default: {
+                    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported callee expression kind: %s", SOURCE(expression->location), expression__get_kind_name(expression));
+                }
+            }
         } else if (matches_two(context, optional(is_space), required(is_dot))) {
             consume_space(context, 0);
             consume_one(context, NULL, required(is_dot));

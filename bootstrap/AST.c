@@ -194,23 +194,17 @@ void named_functions__add(Named_Functions *self, Statement *statement) {
     list__append(self, statement);
 }
 
-Statement *named_functions__get(Named_Functions *self, String *name, Argument *first_argument, Argument_List *arguments) {
+Statement *named_functions__get(Named_Functions *self, String *name, Argument_List *arguments) {
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
         Statement *item = list_iterator__next(&iterator);
         if (string__equals(item->function_data.name->lexeme, name->data)) {
             int signature_matches = 0;
             Parameter_List *function_parameters = item->function_data.parameters;
             int function_parameters_size = list__size(function_parameters);
-            if (list__size(arguments) + (first_argument ? 1 : 0) == function_parameters_size) {
+            if (list__size(arguments) == function_parameters_size) {
                 signature_matches = 1;
-                if (first_argument) {
-                    Parameter *first_parameter = list__get(function_parameters, 0);
-                    if (!type__equals(first_argument->inferred_type, first_parameter->type)) {
-                        signature_matches = 0;
-                    }
-                }
-                for (int index = first_argument ? 1 : 0; index < function_parameters_size; index++) {
-                    Argument *argument = list__get(arguments, index - (first_argument ? 1 : 0));
+                for (int index = 0; index < function_parameters_size; index++) {
+                    Argument *argument = list__get(arguments, index);
                     Parameter *parameter = list__get(function_parameters, index);
                     if (!type__equals(argument->inferred_type, parameter->type)) {
                         signature_matches = 0;

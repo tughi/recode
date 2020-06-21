@@ -232,7 +232,7 @@ typedef List Named_Functions;
 
 Named_Functions *named_functions__create();
 void named_functions__add(Named_Functions *self, Statement *statement);
-Statement *named_functions__get(Named_Functions *self, String *name, Argument *first_argument, Argument_List *arguments);
+Statement *named_functions__get(Named_Functions *self, String *name, Argument_List *arguments);
 
 typedef List Named_Types;
 

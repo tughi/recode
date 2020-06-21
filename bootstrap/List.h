@@ -31,6 +31,8 @@ void *list__last(List *self);
 
 void list__append(List *self, void *item);
 
+void list__prepend(List *self, void *item);
+
 List_Iterator list__create_iterator(List *self);
 
 List_Iterator list__create_reversed_iterator(List *self);
