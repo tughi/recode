@@ -743,10 +743,10 @@ static Statement *statement__create(int kind, Source_Location *location) {
     return self;
 }
 
-Statement *statement__create_struct(Source_Location *location, Token *name, Token *base, List *members) {
+Statement *statement__create_struct(Source_Location *location, Token *name, Type *base_type, List *members) {
     Statement *self = statement__create(STATEMENT__STRUCT, location);
     self->struct_data.name = name;
-    self->struct_data.base = base;
+    self->struct_data.base_type = base_type;
     self->struct_data.members = members;
     self->struct_data.is_declaration = members == NULL;
     return self;
@@ -761,10 +761,10 @@ Statement *parse_struct(Context *context, Token *name) {
         return statement__create_struct(location, name, NULL, NULL);
     }
     consume_space(context, 1);
-    Token *base = NULL;
+    Type *base_type = NULL;
     if (consume_one(context, NULL, required(is_colon))) {
         consume_space(context, 1);
-        base = consume_one(context, "base struct", required(is_identifier));
+        base_type = parse_type(context);
         consume_space(context, 1);
     }
     consume_one(context, "{", required(is_open_brace));
@@ -778,7 +778,7 @@ Statement *parse_struct(Context *context, Token *name) {
     consume_space(context, context->alignment * ALIGNMENT_SIZE);
     consume_one(context, "}", required(is_close_brace));
     consume_end_of_line(context, TRUE);
-    return statement__create_struct(location, name, base, members);
+    return statement__create_struct(location, name, base_type, members);
 }
 
 Statement *parse_statement(Context *context);

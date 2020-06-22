@@ -299,9 +299,9 @@ void print_statement(Statement *statement, int alignment) {
         if (statement->struct_data.is_declaration) {
             return;
         }
-        if (statement->struct_data.base != NULL) {
+        if (statement->struct_data.base_type != NULL) {
             printf("%s : ", SGR_WHITE_BOLD);
-            print_token(statement->struct_data.base);
+            print_type(statement->struct_data.base_type);
         }
         printf("%s {\n", SGR_WHITE_BOLD);
         for (List_Iterator members = list__create_iterator(statement->struct_data.members); list_iterator__has_next(&members);) {

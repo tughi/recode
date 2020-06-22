@@ -50,6 +50,7 @@ typedef struct Context {
 } Context;
 
 #define emitf(line, ...) fprintf(context->file, line "\n", __VA_ARGS__)
+// #define emitf(line, ...) fprintf(context->file, line " ;# %s:%d" "\n", __VA_ARGS__, __FILE__, __LINE__)
 #define emits(line) fprintf(context->file, line "\n")
 
 static Context *context__create(FILE *file, Named_Functions *named_functions, Named_Types *named_types) {
@@ -257,7 +258,6 @@ int context__compute_type_size(Context *self, Type *type) {
         return 4;
     case TYPE__INT:
     case TYPE__INT64:
-    case TYPE__POINTER:
         return 8;
     case TYPE__NOTHING:
         return 0;
@@ -269,15 +269,26 @@ int context__compute_type_size(Context *self, Type *type) {
         }
         return context__compute_type_size(self, named_type);
     }
+    case TYPE__POINTER: {
+        context__compute_type_size(self, type->pointer_data.type);
+        return 8;
+    }
     case TYPE__STRUCT: {
-        int struct_size = type->struct_data.statement->struct_data.size;
-        if (struct_size == 0) {
-            for (List_Iterator members = list__create_iterator(type->struct_data.statement->struct_data.members); list_iterator__has_next(&members);) {
-                Member *member = list_iterator__next(&members);
-                member->struct_offset = struct_size;
-                struct_size += context__compute_type_size(self, member->type);
+        Statement *struct_statement = type->struct_data.statement;
+        int struct_size = struct_statement->struct_data.size;
+        if (struct_statement->struct_data.has_computed_size == 0) {
+            if (struct_statement->struct_data.base_type != NULL) {
+                struct_size = context__compute_type_size(self, struct_statement->struct_data.base_type);
+            }
+            if (struct_statement->struct_data.members != NULL) {
+                for (List_Iterator members = list__create_iterator(struct_statement->struct_data.members); list_iterator__has_next(&members);) {
+                    Member *struct_member = list_iterator__next(&members);
+                    struct_member->struct_offset = struct_size;
+                    struct_size += context__compute_type_size(self, struct_member->type);
+                }
             }
             type->struct_data.statement->struct_data.size = struct_size;
+            type->struct_data.statement->struct_data.has_computed_size = 1;
         }
         return struct_size;
     }
@@ -973,92 +984,101 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         emit_expression(context, cast_expression, &cast_expression_value_holder);
         Type *cast_expression_type = cast_expression_value_holder.type;
         switch (cast_expression_type->kind) {
-        case TYPE__INT8:
-            switch (cast_type->kind) {
-            case TYPE__INT8:
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
-                return;
             case TYPE__INT:
+                switch (cast_type->kind) {
+                case TYPE__INT:
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                    return;
+                case TYPE__INT8:
+                    cast_expression_value_holder.size = 1;
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                case TYPE__INT32:
+                    cast_expression_value_holder.size = 4;
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                case TYPE__INT64:
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                }
+                break;
+            case TYPE__INT8:
+                switch (cast_type->kind) {
+                case TYPE__INT8:
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                    return;
+                case TYPE__INT:
+                case TYPE__INT16:
+                case TYPE__INT32:
+                case TYPE__INT64:
+                    emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                }
+                break;
             case TYPE__INT16:
+                switch (cast_type->kind) {
+                case TYPE__INT16:
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                    return;
+                case TYPE__INT:
+                case TYPE__INT32:
+                case TYPE__INT64:
+                    emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                }
+                break;
             case TYPE__INT32:
+                switch (cast_type->kind) {
+                case TYPE__INT8:
+                    cast_expression_value_holder.size = 1;
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                case TYPE__INT32:
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                    return;
+                case TYPE__INT:
+                case TYPE__INT64:
+                    emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                }
+                break;
             case TYPE__INT64:
-                emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
+                switch (cast_type->kind) {
+                case TYPE__INT:
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                case TYPE__INT64:
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
+                    return;
+                }
+                break;
+            case TYPE__POINTER: {
+                if (cast_type->kind == TYPE__POINTER) {
+                    // TODO: make sure pointed type are compatible
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                }
+                break;
             }
-            break;
-        case TYPE__INT16:
-            switch (cast_type->kind) {
-            case TYPE__INT16:
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
-                return;
-            case TYPE__INT:
-            case TYPE__INT32:
-            case TYPE__INT64:
-                emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
-            }
-            break;
-        case TYPE__INT32:
-            switch (cast_type->kind) {
-            case TYPE__INT8:
-                cast_expression_value_holder.size = 1;
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
-            case TYPE__INT32:
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
-                return;
-            case TYPE__INT:
-            case TYPE__INT64:
-                emitf("  movsx %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
-            }
-            break;
-        case TYPE__INT64:
-            switch (cast_type->kind) {
-            case TYPE__INT:
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
-            case TYPE__INT64:
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
-                return;
-            }
-            break;
-        case TYPE__INT:
-            switch (cast_type->kind) {
-            case TYPE__INT:
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Redundand cast detected.", SOURCE(cast_type->location));
-                return;
-            case TYPE__INT8:
-                cast_expression_value_holder.size = 1;
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
-            case TYPE__INT32:
-                cast_expression_value_holder.size = 4;
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
-            case TYPE__INT64:
-                emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
-                value_holder__release_register(&cast_expression_value_holder);
-                return;
-            }
-            break;
         }
         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Casting %s to %s is not supported.", SOURCE(cast_expression->location), context__type_name(context, cast_expression_type)->data, context__type_name(context, cast_type)->data);
     }
@@ -1535,6 +1555,9 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
             }
             break;
         case STATEMENT__STRUCT: {
+            if (statement->struct_data.base_type != NULL) {
+                context__resolve_type(context, statement->struct_data.base_type);
+            }
             if (statement->struct_data.members) {
                 for (List_Iterator members = list__create_iterator(statement->struct_data.members); list_iterator__has_next(&members);) {
                     Member *member = list_iterator__next(&members);

@@ -207,9 +207,10 @@ typedef struct Statement {
         } return_data;
         struct {
             Token *name;
-            Token *base;
+            Type *base_type;
             Member_List *members;
             int is_declaration;
+            int has_computed_size;
             int size;
         } struct_data;
         struct {
