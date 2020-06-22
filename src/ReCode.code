@@ -49,7 +49,7 @@ scan :: (file_name: @String) -> Nothing {
     scanner.init(source)
 
     while (scanner.peek_char() != '\0') {
-        stdout.write(scanner.current_line).write(':').write(scanner.current_column).write(": ").write(scanner.next_char()).new_line()
+        scanner.next_token()
     }
 }
 
@@ -85,8 +85,28 @@ next_char :: (self: @Scanner) -> Int8 {
     return next_char
 }
 
-next_token :: (scanner: @Scanner) -> @Token {
+is_digit :: (char: Int8) -> Boolean {
+    return char as Int >= '0' as Int && char as Int <= '9' as Int
+}
 
+is_letter :: (char: Int8) -> Boolean {
+    return (char as Int >= 'a' as Int && char as Int <= 'z' as Int) || (char as Int >= 'A' as Int && char as Int <= 'Z' as Int)
+}
+
+next_token :: (scanner: @Scanner) -> @Token {
+    token_location: @Source_Location = new Source_Location
+    token_location.source = scanner.source
+    token_location.line = scanner.current_line
+    token_location.column = scanner.current_column
+
+    char: Int8 = scanner.next_char()
+    if (char.is_letter()) {
+        stdout.write_line("Found letter: ").write(char)
+    } else {
+        if (char.is_digit()) {
+            stdout.write_line("Found digit: ").write(char)
+        }
+    }
 }
 
 Token :: struct {
@@ -95,6 +115,9 @@ Token :: struct {
 }
 
 Identifier_Token :: struct : Token {
+}
+
+Other_Token :: struct : Token {
 }
 
 Source_Location :: struct {

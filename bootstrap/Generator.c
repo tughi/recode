@@ -661,6 +661,49 @@ void emit_comparison_expression(Context *context, Expression *expression, Value_
     }
 }
 
+void emit_logical_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
+    int count = counter__inc(context->counter);
+    Token *operator_token = expression->binary_data.operator_token;
+    emit_expression(context, expression->binary_data.left_expression, result_value_holder);
+    if (result_value_holder->type->kind != TYPE__BOOLEAN) {
+        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Left expression of \"%s\" is not a boolean expression.", SOURCE(operator_token->location), operator_token->lexeme->data);
+    }
+    emitf("  dec %s", value_holder__register_name(result_value_holder));
+    if (string__equals(operator_token->lexeme, "&&")) {
+        emitf("  jnz and_%03d_false", count);
+
+        Value_Holder right_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, expression->binary_data.right_expression, &right_value_holder);
+        emitf("  dec %s", value_holder__register_name(&right_value_holder));
+        value_holder__release_register(&right_value_holder);
+        emitf("  jz and_%03d_true", count);
+
+        emitf("and_%03d_false:", count);
+        emitf("  mov %s, 0", value_holder__register_name(result_value_holder));
+        emitf("  jmp and_%03d_end", count);
+        emitf("and_%03d_true:", count);
+        emitf("  mov %s, 1", value_holder__register_name(result_value_holder));
+        emitf("and_%03d_end:", count);
+    } else if (string__equals(operator_token->lexeme, "||")) {
+        emitf("  jz or_%03d_true", count);
+
+        Value_Holder right_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, expression->binary_data.right_expression, &right_value_holder);
+        emitf("  dec %s", value_holder__register_name(&right_value_holder));
+        value_holder__release_register(&right_value_holder);
+        emitf("  jz or_%03d_true", count);
+
+        emitf("or_%03d_false:", count);
+        emitf("  mov %s, 0", value_holder__register_name(result_value_holder));
+        emitf("  jmp or_%03d_end", count);
+        emitf("or_%03d_true:", count);
+        emitf("  mov %s, 1", value_holder__register_name(result_value_holder));
+        emitf("or_%03d_end:", count);
+    } else {
+        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported logical expression operator: %s", SOURCE(operator_token->location), operator_token->lexeme->data);
+    }
+}
+
 void emit_expression_address(Context *context, Expression *expression, Value_Holder *destination_value_holder) {
     switch (expression->kind) {
     case EXPRESSION__ARRAY_ITEM: {
@@ -802,6 +845,8 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             return;
         } else if (string__equals(operator, "<") || string__equals(operator, "<=") || string__equals(operator, ">") || string__equals(operator, ">=") || string__equals(operator, "==") || string__equals(operator, "!=")) {
             return emit_comparison_expression(context, expression, result_value_holder);
+        } else if (string__equals(operator, "&&") || string__equals(operator, "||")) {
+            return emit_logical_expression(context, expression, result_value_holder);
         } else {
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported binary expression operator: %s", SOURCE(operator_token->location), operator->data);
         }
