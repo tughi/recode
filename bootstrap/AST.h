@@ -77,10 +77,11 @@ void type__convert(Type *self, Type *other);
 char *type__get_kind_name(Type *self);
 int type__equals(Type *self, Type *other);
 
+typedef List Type_List;
+
 typedef struct Argument {
     Token *name;
     struct Expression *value;
-    Type *inferred_type;
 } Argument;
 
 typedef List Argument_List;
@@ -102,6 +103,7 @@ typedef struct Expression {
     } kind;
 
     Source_Location *location;
+    Type *inferred_type;
 
     union {
         struct {
@@ -232,7 +234,7 @@ typedef List Named_Functions;
 
 Named_Functions *named_functions__create();
 void named_functions__add(Named_Functions *self, Statement *statement);
-Statement *named_functions__get(Named_Functions *self, String *name, Argument_List *arguments);
+Statement *named_functions__get(Named_Functions *self, Token *name, Type_List *argument_types);
 
 typedef List Named_Types;
 

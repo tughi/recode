@@ -194,26 +194,29 @@ void named_functions__add(Named_Functions *self, Statement *statement) {
     list__append(self, statement);
 }
 
-Statement *named_functions__get(Named_Functions *self, String *name, Argument_List *arguments) {
+Statement *named_functions__get(Named_Functions *self, Token *name, Type_List *argument_types) {
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
-        Statement *item = list_iterator__next(&iterator);
-        if (string__equals(item->function_data.name->lexeme, name->data)) {
+        Statement *function_statement = list_iterator__next(&iterator);
+        if (string__equals(function_statement->function_data.name->lexeme, name->lexeme->data)) {
             int signature_matches = 0;
-            Parameter_List *function_parameters = item->function_data.parameters;
+            Parameter_List *function_parameters = function_statement->function_data.parameters;
             int function_parameters_size = list__size(function_parameters);
-            if (list__size(arguments) == function_parameters_size) {
+            if (list__size(argument_types) == function_parameters_size) {
                 signature_matches = 1;
                 for (int index = 0; index < function_parameters_size; index++) {
-                    Argument *argument = list__get(arguments, index);
+                    Type *argument_type = list__get(argument_types, index);
+                    if (argument_type == NULL) {
+                        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Argument %d has not inferred type", SOURCE(name->location), index);
+                    }
                     Parameter *parameter = list__get(function_parameters, index);
-                    if (!type__equals(argument->inferred_type, parameter->type)) {
+                    if (!type__equals(argument_type, parameter->type)) {
                         signature_matches = 0;
                         break;
                     }
                 }
             }
             if (signature_matches == 1) {
-                return item;
+                return function_statement;
             } 
         }
     }

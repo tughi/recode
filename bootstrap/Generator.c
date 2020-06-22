@@ -163,25 +163,35 @@ String *context__type_name(Context *self, Type *type) {
 
 void context__resolve_type(Context *self, Type *type) {
     switch (type->kind) {
-    case TYPE__ARRAY: {
-        context__resolve_type(self, type->array_data.item_type);
-        return;
-    }
-    case TYPE__NAMED: {
-        String *type_name = type->named_data.name->lexeme;
-        Type *named_type = context__find_type(self, type_name);
-        if (named_type == NULL) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unknown type: %s", SOURCE(type->location), type_name->data);
+        case TYPE__ARRAY: {
+            context__resolve_type(self, type->array_data.item_type);
+            return;
         }
-        type__convert(type, named_type);
-        return;
-    }
-    case TYPE__POINTER: {
-        context__resolve_type(self, type->pointer_data.type);
-        return;
-    }
-    default:
-        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported type kind: %s", SOURCE(type->location), type__get_kind_name(type));
+        case TYPE__INT:
+        case TYPE__INT8:
+        case TYPE__INT16:
+        case TYPE__INT32:
+        case TYPE__INT64: {
+            return;
+        }
+        case TYPE__NAMED: {
+            String *type_name = type->named_data.name->lexeme;
+            Type *named_type = context__find_type(self, type_name);
+            if (named_type == NULL) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unknown type: %s", SOURCE(type->location), type_name->data);
+            }
+            type__convert(type, named_type);
+            return;
+        }
+        case TYPE__POINTER: {
+            context__resolve_type(self, type->pointer_data.type);
+            return;
+        }
+        case TYPE__STRUCT: {
+            return;
+        }
+        default:
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported type kind: %s", SOURCE(type->location), type__get_kind_name(type));
     }
 }
 
@@ -379,6 +389,171 @@ void value_holder__move_to_register(Value_Holder *self, int register_id, Context
         return;
     }
     PANIC(__FILE__, __LINE__, "The specified register (%d) is already in use, and the are no other free registers either.", register_id);
+}
+
+void panic__unknown_function(Context *context, Token *function_name, Type_List *argument_types) {
+    for (List_Iterator functions = list__create_iterator(context->named_functions); list_iterator__has_next(&functions);) {
+        Statement *statement = list_iterator__next(&functions);
+        if (string__equals(function_name->lexeme, statement->function_data.name->lexeme->data)) {
+            String *function_signature = string__create(statement->function_data.name->lexeme->data);
+            string__append_chars(function_signature, " :: (", 5);
+            for (List_Iterator parameters = list__create_iterator(statement->function_data.parameters); list_iterator__has_next(&parameters);) {
+                Parameter *parameter = list_iterator__next(&parameters);
+                string__append_string(function_signature, parameter->name->lexeme);
+                string__append_chars(function_signature, ": ", 2);
+                string__append_string(function_signature, context__type_name(context, parameter->type));
+                if (list_iterator__has_next(&parameters)) {
+                    string__append_chars(function_signature, ", ", 2);
+                }
+            }
+            string__append_chars(function_signature, ") -> ", 5);
+            string__append_string(function_signature, context__type_name(context, statement->function_data.return_type));
+            WARNING(__FILE__, __LINE__, SOURCE_LOCATION "%s", SOURCE(statement->location), function_signature->data);
+        }
+    }
+    String *function_signature = string__create(function_name->lexeme->data);
+    string__append_chars(function_signature, " :: (", 5);
+    for (List_Iterator iterator = list__create_iterator(argument_types); list_iterator__has_next(&iterator);) {
+        Type *argument_type = list_iterator__next(&iterator);
+        string__append_chars(function_signature, "_: ", 3);
+        string__append_string(function_signature, context__type_name(context, argument_type));
+        if (list_iterator__has_next(&iterator)) {
+            string__append_chars(function_signature, ", ", 2);
+        }
+    }
+    string__append_chars(function_signature, ") -> Any", 8);
+    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unknown function: %s", SOURCE(function_name->location), function_signature->data);
+}
+
+void infer_expression_type(Context *context, Expression *expression) {
+    if (expression->inferred_type != NULL) {
+        return;
+    }
+    switch (expression->kind) {
+        case EXPRESSION__ARRAY_ITEM: {
+            Expression *array = expression->array_item_data.array;
+            infer_expression_type(context, array);
+            switch (array->inferred_type->kind) {
+                case TYPE__POINTER: {
+                    expression->inferred_type = array->inferred_type->pointer_data.type;
+                    return;
+                }
+                default:
+                    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer item type from type kind: %s.", SOURCE(expression->location), type__get_kind_name(array->inferred_type));
+            }
+        }
+        case EXPRESSION__BINARY: {
+            infer_expression_type(context, expression->binary_data.left_expression);
+            infer_expression_type(context, expression->binary_data.right_expression);
+            Type *left_expression_type = expression->binary_data.left_expression->inferred_type;
+            Type *right_expression_type = expression->binary_data.right_expression->inferred_type;
+            if (!type__equals(left_expression_type, right_expression_type)) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Left expression type %s doesn't match the right expression type %s.", SOURCE(expression->binary_data.operator_token->location), context__type_name(context, left_expression_type)->data, context__type_name(context, right_expression_type)->data);
+            }
+            String *operator = expression->binary_data.operator_token->lexeme;
+            if (string__equals(operator, "+") || string__equals(operator, "-") || string__equals(operator, "*") || string__equals(operator, "/") || string__equals(operator, "//")) {
+                expression->inferred_type = left_expression_type;
+                return;
+            }
+            if (string__equals(operator, "==")) {
+                expression->inferred_type = context__get_boolean_type(context);
+                return;
+            }
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer type from \"%s\" expression.", SOURCE(expression->binary_data.operator_token->location), operator->data);
+        }
+        case EXPRESSION__CALL: {
+            Argument_List *arguments = expression->call_data.arguments;
+            Type_List *argument_types = list__create();
+            for (List_Iterator iterator = list__create_iterator(arguments); list_iterator__has_next(&iterator);) {
+                Argument *argument = list_iterator__next(&iterator);
+                infer_expression_type(context, argument->value);
+                Type *argument_type = argument->value->inferred_type;
+                if (argument_type->kind == TYPE__STRUCT) {
+                    argument_type = type__create_pointer(argument->value->location, argument_type);
+                }
+                list__append(argument_types, argument_type);
+            }
+            Expression *callee = expression->call_data.callee;
+            switch (callee->kind) {
+                case EXPRESSION__VARIABLE: {
+                    Token *function_name = callee->variable_data.name;
+                    Statement *function = named_functions__get(context->named_functions, function_name, argument_types);
+                    if (function == NULL) {
+                        panic__unknown_function(context, function_name, argument_types);
+                    }
+                    expression->inferred_type = function->function_data.return_type;
+                    return;
+                }
+                default:
+                    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported callee expression kind: %s", SOURCE(callee->location), expression__get_kind_name(callee));
+            }
+        }
+        case EXPRESSION__CAST: {
+            infer_expression_type(context, expression->cast_data.expression);
+            context__resolve_type(context, expression->cast_data.type);
+            expression->inferred_type = expression->cast_data.type;
+            return;
+        }
+        case EXPRESSION__LITERAL: {
+            switch (expression->literal_data.value->kind) {
+                case TOKEN__CHARACTER:
+                    expression->inferred_type = context__get_int8_type(context);
+                    return;
+                case TOKEN__INTEGER:
+                    expression->inferred_type = context__get_int_type(context);
+                    return;
+                case TOKEN__STRING:
+                    expression->inferred_type = type__create_pointer(expression->literal_data.value->location, context__get_string_type(context));
+                    return;
+            }
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer type of %s literals yet.", SOURCE(expression->location), token__get_kind_name(expression->literal_data.value));
+        }
+        case EXPRESSION__MEMBER: {
+            Expression *object = expression->member_data.object;
+            infer_expression_type(context, object);
+            Type *object_type = object->inferred_type;
+            switch (object_type->kind) {
+                case TYPE__POINTER: {
+                    Type *pointed_type = object_type->pointer_data.type;
+                    if (pointed_type->kind == TYPE__STRUCT) {
+                        Token *member_name = expression->member_data.name; 
+                        for (List_Iterator members = list__create_iterator(pointed_type->struct_data.statement->struct_data.members); list_iterator__has_next(&members);) {
+                            Member *member = list_iterator__next(&members);
+                            if (string__equals(member->name->lexeme, member_name->lexeme->data)) {
+                                expression->inferred_type = member->type;
+                                return;
+                            }
+                        }
+                        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Type %s has no '%s' member.", SOURCE(member_name->location), context__type_name(context, pointed_type)->data, member_name->lexeme->data);
+                    }
+                    break;
+                }
+                case TYPE__STRUCT: {
+                    Token *member_name = expression->member_data.name; 
+                    for (List_Iterator members = list__create_iterator(object_type->struct_data.statement->struct_data.members); list_iterator__has_next(&members);) {
+                        Member *member = list_iterator__next(&members);
+                        if (string__equals(member->name->lexeme, member_name->lexeme->data)) {
+                            expression->inferred_type = member->type;
+                            return;
+                        }
+                    }
+                    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Type %s has no '%s' member.", SOURCE(member_name->location), context__type_name(context, object_type)->data, member_name->lexeme->data);
+                }
+            }
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer member type from type kind: %s.", SOURCE(object->location), type__get_kind_name(object_type));
+        }
+        case EXPRESSION__VARIABLE: {
+            String *variable_name = expression->variable_data.name->lexeme;
+            Statement *variable_statement = context__find_variable(context, variable_name);
+            if (variable_statement == NULL) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Undeclared variable: %s", SOURCE(expression->location), variable_name->data);
+            }
+            expression->inferred_type = variable_statement->variable_data.type;
+            context__resolve_type(context, expression->inferred_type);
+            return;
+        }
+    }
+    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer type of %s expressions yet.", SOURCE(expression->location), expression__get_kind_name(expression));
 }
 
 void emit_load_literal(Context *context, Token *token, Value_Holder *value_holder) {
@@ -632,12 +807,12 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
     }
     case EXPRESSION__CALL: {
-        String *function_name;
+        Token *function_name;
 
         Expression *callee = expression->call_data.callee;
         switch (callee->kind) {
         case EXPRESSION__VARIABLE:
-            function_name = callee->variable_data.name->lexeme;
+            function_name = callee->variable_data.name;
             break;
         default:
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Only simple function calls like \"example()\" are supported", SOURCE(expression->location));
@@ -660,11 +835,17 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             REGISTER__RDX,
             REGISTER__RCX,
         };
+        Type_List *argument_types = list__create();
         for (int argument_index = 0; argument_index < arguments_size; argument_index++) {
             Argument *argument = list__get(arguments, argument_index);
+            infer_expression_type(context, argument->value);
             Value_Holder *argument_value_holder = &argument_value_holders[argument_index];
-            emit_expression(context, argument->value, argument_value_holder);
-            argument->inferred_type = argument_value_holder->type;
+            if (argument->value->inferred_type->kind == TYPE__STRUCT) {
+                emit_expression_address(context, argument->value, argument_value_holder);
+            } else {
+                emit_expression(context, argument->value, argument_value_holder);
+            }
+            list__append(argument_types, argument_value_holder->type);
         }
 
         int last_argument_register_id = REGISTERS_COUNT;
@@ -676,38 +857,9 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
         }
 
-        Statement *function = named_functions__get(context->named_functions, function_name, arguments);
+        Statement *function = named_functions__get(context->named_functions, function_name, argument_types);
         if (function == NULL) {
-            for (List_Iterator functions = list__create_iterator(context->named_functions); list_iterator__has_next(&functions);) {
-                Statement *statement = list_iterator__next(&functions);
-                if (string__equals(function_name, statement->function_data.name->lexeme->data)) {
-                    String *function_signature = string__create(statement->function_data.name->lexeme->data);
-                    string__append_chars(function_signature, " :: (", 5);
-                    for (List_Iterator parameters = list__create_iterator(statement->function_data.parameters); list_iterator__has_next(&parameters);) {
-                        Parameter *parameter = list_iterator__next(&parameters);
-                        string__append_string(function_signature, parameter->name->lexeme);
-                        string__append_chars(function_signature, ": ", 2);
-                        string__append_string(function_signature, context__type_name(context, parameter->type));
-                        if (list_iterator__has_next(&parameters)) {
-                            string__append_chars(function_signature, ", ", 2);
-                        }
-                    }
-                    string__append_chars(function_signature, ") -> ", 5);
-                    string__append_string(function_signature, context__type_name(context, statement->function_data.return_type));
-                    WARNING(__FILE__, __LINE__, SOURCE_LOCATION "%s", SOURCE(statement->location), function_signature->data);
-                }
-            }
-            String *function_signature = string__create(function_name->data);
-            string__append_chars(function_signature, " :: (", 5);
-            for (int index = 0; index < arguments_size; index++) {
-                string__append_chars(function_signature, "_: ", 3);
-                string__append_string(function_signature, context__type_name(context, argument_value_holders[index].type));
-                if (index + 1 < arguments_size) {
-                    string__append_chars(function_signature, ", ", 2);
-                }
-            }
-            string__append_chars(function_signature, ") -> Any", 8);
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unknown function: %s", SOURCE(expression->location), function_signature->data);
+            panic__unknown_function(context, function_name, argument_types);
         }
 
         // TODO: Save used registers in the function frame
@@ -1245,7 +1397,7 @@ void emit_statement(Context *context, Statement *statement) {
         } else {
             Type *variable_type = statement->variable_data.type;
             if (variable_type == NULL) {
-                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Type inference for global variables is not supported yet", SOURCE(statement->location));
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Type inference is not supported yet", SOURCE(statement->location));
             }
             if (statement->variable_data.is_global) {
                 emits("  .bss");

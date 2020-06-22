@@ -161,6 +161,7 @@ Expression *expression__create(int kind, Source_Location *location) {
     Expression *self = malloc(sizeof(Expression));
     self->kind = kind;
     self->location = location;
+    self->inferred_type = NULL;
     return self;
 }
 
@@ -287,7 +288,6 @@ Argument *argument__create(Token *name, Expression *value) {
     Argument *self = malloc(sizeof(Argument));
     self->name = name;
     self->value = value;
-    self->inferred_type = NULL;
     return self;
 }
 
