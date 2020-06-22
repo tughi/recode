@@ -20,9 +20,7 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    source: @Source = new Source
-    source.load(source_file_name)
-    stdout.write(source.content)
+    scan(source_file_name)
 
     output_file: @FILE = fopen(argv[2], "w".data)
 
@@ -43,9 +41,60 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
     output_file.write_line("")
 }
 
+scan :: (file_name: @String) -> Nothing {
+    source: @Source = new Source
+    source.init(file_name)
+
+    scanner: @Scanner = new Scanner
+    scanner.init(source)
+
+    while (scanner.peek_char() != '\0') {
+        stdout.write(scanner.current_line).write(':').write(scanner.current_column).write(": ").write(scanner.next_char()).new_line()
+    }
+}
+
+Scanner :: struct {
+    source: @Source
+    current_char_index: Int
+    current_line: Int
+    current_column: Int
+}
+
+init :: (self: @Scanner, source: @Source) -> Nothing {
+    self.source = source
+    self.current_char_index = 0
+    self.current_line = 1
+    self.current_column = 1
+}
+
+peek_char :: (self: @Scanner) -> Int8 {
+    return self.source.content[self.current_char_index]
+}
+
+next_char :: (self: @Scanner) -> Int8 {
+    next_char: Int8 = self.source.content[self.current_char_index]
+    if (next_char != '\0') {
+        self.current_char_index = self.current_char_index + 1
+        if (next_char == '\n') {
+            self.current_line = self.current_line + 1
+            self.current_column = 1
+        } else {
+            self.current_column = self.current_column + 1
+        }
+    }
+    return next_char
+}
+
+next_token :: (scanner: @Scanner) -> @Token {
+
+}
+
 Token :: struct {
     location: @Source_Location
     lexeme: @String
+}
+
+Identifier_Token :: struct : Token {
 }
 
 Source_Location :: struct {
@@ -59,7 +108,7 @@ Source :: struct {
     content: @Int8
 }
 
-load :: (self: @Source, file_name: @String) -> Nothing {
+init :: (self: @Source, file_name: @String) -> Nothing {
     file: @FILE = fopen(file_name.data, "r".data)
 
     content_size: Int = 1024
