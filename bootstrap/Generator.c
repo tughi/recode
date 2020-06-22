@@ -1572,8 +1572,9 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
         emits("  .align 8");
         emitf("__data__%d__string__address__: .quad __data__%d__string__", index, index);
         emitf("__data__%d__string__:", index);
-        emitf("  .quad %d", string_constant->string_data.value->length);
         emitf("  .quad __data__%d__string__data__", index);
+        emitf("  .quad %d", string_constant->string_data.value->length + 1);
+        emitf("  .quad %d", string_constant->string_data.value->length);
         emitf("__data__%d__string__data__: .string %s", index, string_constant->lexeme->data);
     }
 

@@ -99,6 +99,9 @@ next_token :: (scanner: @Scanner) -> @Token {
     token_location.line = scanner.current_line
     token_location.column = scanner.current_column
 
+    token_lexeme: @String = new String
+    token_lexeme.init()
+
     char: Int8 = scanner.next_char()
     if (char.is_letter()) {
         stdout.write_line("Found letter: ").write(char)
@@ -155,13 +158,20 @@ init :: (self: @Source, file_name: @String) -> Nothing {
 }
 
 String :: struct {
-    length: Int
     data: @Int8
+    data_size: Int
+    length: Int
+}
+
+init :: (self: @String) -> Nothing {
+    self.data_size = 16
+    self.data = malloc(self.data_size)
+    self.length = 0
 }
 
 init :: (self: @String, data: @Int8) -> Nothing {
-    self.length = data.length()
     self.data = data
+    self.length = data.length()
 }
 
 ends_with :: (self: @String, suffix: @String) -> Boolean {
