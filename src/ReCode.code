@@ -48,9 +48,14 @@ scan :: (file_name: @String) -> Nothing {
     scanner: @Scanner = new Scanner
     scanner.init(source)
 
-    while (scanner.peek_char() != '\0') {
+    loop {
         token: @Token = scanner.next_token()
         stdout.write(token.location).write(": ").write(token.lexeme).end_line()
+        if (scanner.peek_char() == '\0') {
+            token: @Token = scanner.next_token()
+            stdout.write(token.location).write(": ").write(token.lexeme).end_line()
+            break
+        }
     }
 }
 
@@ -86,12 +91,48 @@ next_char :: (self: @Scanner) -> Int8 {
     return next_char
 }
 
-is_digit :: (char: Int8) -> Boolean {
-    return char as Int >= '0' as Int && char as Int <= '9' as Int
+next_token :: (self: @Scanner) -> @Token {
+    token_lexeme: @String = new String
+    token_lexeme.init()
+
+    token_location: @Source_Location = new Source_Location
+    token_location.source = self.source
+    token_location.line = self.current_line
+    token_location.column = self.current_column
+
+    next_char: Int8 = self.peek_char()
+    if (next_char.is_identifier_start()) {
+        return self.scan_identifier_token(token_lexeme, token_location)
+    }
+    if (next_char.is_digit()) {
+        return self.scan_integer_token(token_lexeme, token_location)
+    }
+    if (next_char == '\'') {
+        return self.scan_character_token(token_lexeme, token_location)
+    }
+    if (next_char == '"') {
+        return self.scan_string_token(token_lexeme, token_location)
+    }
+    if (next_char == '\\') {
+        return self.scan_comment_token(token_lexeme, token_location)
+    }
+    if (next_char.is_space()) {
+        return self.scan_space_token(token_lexeme, token_location)
+    }
+    if (next_char == '\n') {
+        self.next_char()
+        return create_end_of_line_token(token_lexeme, token_location)
+    }
+    if (next_char == '\0') {
+        self.next_char()
+        return create_end_of_file_token(token_lexeme, token_location)
+    }
+    token_lexeme.append(self.next_char())
+    return create_other_token(token_lexeme, token_location)
 }
 
-is_letter :: (char: Int8) -> Boolean {
-    return (char as Int >= 'a' as Int && char as Int <= 'z' as Int) || (char as Int >= 'A' as Int && char as Int <= 'Z' as Int)
+is_digit :: (char: Int8) -> Boolean {
+    return char as Int >= '0' as Int && char as Int <= '9' as Int
 }
 
 is_identifier_start :: (char: Int8) -> Boolean {
@@ -105,40 +146,150 @@ is_identifier_body :: (char: Int8) -> Boolean {
     return char.is_digit()
 }
 
-next_token :: (scanner: @Scanner) -> @Token {
-    token_lexeme: @String = new String
-    token_lexeme.init()
+is_letter :: (char: Int8) -> Boolean {
+    return (char as Int >= 'a' as Int && char as Int <= 'z' as Int) || (char as Int >= 'A' as Int && char as Int <= 'Z' as Int)
+}
 
-    token_location: @Source_Location = new Source_Location
-    token_location.source = scanner.source
-    token_location.line = scanner.current_line
-    token_location.column = scanner.current_column
+is_space :: (char: Int8) -> Boolean {
+    return char == ' '
+}
 
-    char: Int8 = scanner.next_char()
-    if (char.is_identifier_start()) {
-        while (char.is_identifier_body()) {
-            token_lexeme.append(char)
-            char = scanner.next_char()
+scan_character_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+    if (self.peek_char() == '\'') {
+        token_lexeme.append(self.next_char())
+        char: Int8 = self.next_char()
+        token_lexeme.append(char)
+        if (char == '\'') {
+            return create_error_token(token_lexeme, token_location)
         }
-        token: @Identifier_Token = new Identifier_Token
-        token.init(token_lexeme, token_location)
-        return token as @Token
-    }
-    if (char.is_digit()) {
-        value: Int = 0
-        while (char.is_digit()) {
+        if (char == '\\') {
+            char = self.next_char()
             token_lexeme.append(char)
-            value = value * 10 + (char as Int - '0' as Int)
-            char = scanner.next_char()
+            if (char.is_escape() == false) {
+                return create_error_token(token_lexeme, token_location)
+            }
+            char = self.next_char()
+            token_lexeme.append(char)
+            if (char != '\'') {
+                return create_error_token(token_lexeme, token_location)
+            }
+        } else {
+            if (char == '\0' || char == '\n' || char == '\t') {
+                return create_error_token(token_lexeme, token_location)
+            }
+            char = self.next_char()
+            token_lexeme.append(char)
+            if (char != '\'') {
+                return create_error_token(token_lexeme, token_location)
+            }
         }
-        token: @Integer_Token = new Integer_Token
-        token.init(token_lexeme, token_location, value)
-        return token as @Token
     }
-    token_lexeme.append(char)
-    token: @Other_Token = new Other_Token
-    token.init(token_lexeme, token_location)
-    return token as @Token
+    return create_character_token(token_lexeme, token_location)
+}
+
+is_escape :: (char: Int8) -> Boolean {
+    return char == 'n' || char == 't' || char == '\"' || char == '\'' || char == '\\' || char == '0'
+}
+
+scan_comment_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+    while (self.peek_char() != '\n') {
+        token_lexeme.append(self.next_char())
+    }
+    return create_comment_token(token_lexeme, token_location)
+}
+
+scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+    while (self.peek_char().is_identifier_body()) {
+        token_lexeme.append(self.next_char())
+    }
+    if (token_lexeme.equals("as")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("break")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("else")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("external")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("false")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("if")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("loop")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("new")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("return")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("struct")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("true")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("while")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    return create_identifier_token(token_lexeme, token_location)
+}
+
+scan_integer_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+    value: Int = 0
+    while (self.peek_char().is_digit()) {
+        char: Int8 = self.next_char()
+        value = value * 10 + (char as Int - '0' as Int)
+        token_lexeme.append(char)
+    }
+    return create_integer_token(token_lexeme, token_location, value)
+}
+
+scan_space_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+    count: Int = 0
+    while (self.peek_char() == ' ') {
+        char: Int8 = self.next_char()
+        count = count + 1
+        token_lexeme.append(char)
+    }
+    return create_space_token(token_lexeme, token_location, count)
+}
+
+scan_string_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+    if (self.peek_char() == '"') {
+        value: @String = new String
+        value.init()
+
+        token_lexeme.append(self.next_char())
+        loop {
+            char: Int8 = self.peek_char()
+            if (char == '\0' || char == '\n') {
+                return create_error_token(token_lexeme, token_location)
+            }
+            char = self.next_char()
+            token_lexeme.append(char)
+            if (char == '"') {
+                return create_string_token(token_lexeme, token_location, value)
+            }
+            if (char == '\\') {
+                char = self.peek_char()
+                if (char == '\0' || char == '\n') {
+                    return create_error_token(token_lexeme, token_location)
+                }
+                char = self.next_char()
+                token_lexeme.append(char)
+                if (char.is_escape() == false) {
+                    return create_error_token(token_lexeme, token_location)
+                }
+            }
+        }
+    }
 }
 
 Token :: struct {
@@ -151,27 +302,109 @@ init :: (self: @Token, lexeme: @String, location: @Source_Location) -> Nothing {
     self.lexeme = lexeme
 }
 
+Character_Token :: struct : Token {
+}
+
+create_character_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @Character_Token = new Character_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
+}
+
+Comment_Token :: struct : Token {
+}
+
+create_comment_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @Comment_Token = new Comment_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
+}
+
+End_Of_File_Token :: struct : Token {
+}
+
+create_end_of_file_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @End_Of_File_Token = new End_Of_File_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
+}
+
+End_Of_Line_Token :: struct : Token {
+}
+
+create_end_of_line_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @End_Of_Line_Token = new End_Of_Line_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
+}
+
+Error_Token :: struct : Token {
+}
+
+create_error_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @Error_Token = new Error_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
+}
+
 Identifier_Token :: struct : Token {
 }
 
-init :: (self: @Identifier_Token, lexeme: @String, location: @Source_Location) -> Nothing {
-    (self as @Token).init(lexeme, location)
+create_identifier_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @Identifier_Token = new Identifier_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
 }
 
 Integer_Token :: struct : Token {
     value: Int
 }
 
-init :: (self: @Integer_Token, lexeme: @String, location: @Source_Location, value: Int) -> Nothing {
-    (self as @Token).init(lexeme, location)
-    self.value = value
+create_integer_token :: (lexeme: @String, location: @Source_Location, value: Int) -> @Token {
+    token: @Integer_Token = new Integer_Token
+    (token as @Token).init(lexeme, location)
+    token.value = value
+    return token as @Token
+}
+
+Keyword_Token :: struct : Token {
+}
+
+create_keyword_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @Integer_Token = new Integer_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
 }
 
 Other_Token :: struct : Token {
 }
 
-init :: (self: @Other_Token, lexeme: @String, location: @Source_Location) -> Nothing {
-    (self as @Token).init(lexeme, location)
+create_other_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+    token: @Other_Token = new Other_Token
+    (token as @Token).init(lexeme, location)
+    return token as @Token
+}
+
+Space_Token :: struct : Token {
+    count: Int
+}
+
+create_space_token :: (lexeme: @String, location: @Source_Location, count: Int) -> @Token {
+    token: @Space_Token = new Space_Token
+    (token as @Token).init(lexeme, location)
+    token.count = count
+    return token as @Token
+}
+
+String_Token :: struct : Token {
+    value: @String
+}
+
+create_string_token :: (lexeme: @String, location: @Source_Location, value: @String) -> @Token {
+    token: @String_Token = new String_Token
+    (token as @Token).init(lexeme, location)
+    token.value = value
+    return token as @Token
 }
 
 Source_Location :: struct {
@@ -231,11 +464,13 @@ init :: (self: @String, data: @Int8) -> Nothing {
 }
 
 append :: (self: @String, char: Int8) -> @String {
-    if (self.length < self.data_size - 1) {
-        self.data[self.length] = char
-        self.length = self.length + 1
+    if (self.length + 1 >= self.data_size) {
+        self.data_size = self.data_size + 16
+        self.data = realloc(self.data, self.data_size)
     }
-    \ TODO: resize string
+    self.data[self.length] = char
+    self.length = self.length + 1
+    self.data[self.length] = '\0'
     return self
 }
 
@@ -248,6 +483,20 @@ ends_with :: (self: @String, suffix: @String) -> Boolean {
         index = index + 1
     }
     return true
+}
+
+equals :: (self: @String, other: @String) -> Boolean {
+    if (self.length == other.length) {
+        index: Int = 0
+        while (index < self.length) {
+            if (self.data[index] != other.data[index]) {
+                return false
+            }
+            index = index + 1
+        }
+        return true
+    }
+    return false
 }
 
 length :: (string: @Int8) -> Int {
