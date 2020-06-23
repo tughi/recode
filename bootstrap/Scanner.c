@@ -37,7 +37,7 @@ int is_double_quote(unsigned char c) {
 }
 
 int is_escape(unsigned char c) {
-    return c == 'n' || c == 't' || c == '\"' || c == '\'' || c == '\\' | c == '0';
+    return c == 'n' || c == 't' || c == '\"' || c == '\'' || c == '\\' || c == '0';
 }
 
 char get_escape(unsigned char c) {
