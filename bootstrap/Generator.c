@@ -211,6 +211,20 @@ int context__is_primitive_type(Context *self, Type *type) {
     }
 }
 
+int context__is_object_type(Context *self, Type *type) {
+    if (type->kind != TYPE__STRUCT) {
+        return 0;
+    }
+    Type *struct_base_type = type->struct_data.statement->struct_data.base_type;
+    if (struct_base_type == NULL) {
+        return 0;
+    }
+    if (string__equals(context__type_name(self, struct_base_type), "Object")) {
+        return 1;
+    }
+    return context__is_object_type(self, struct_base_type);
+}
+
 Type *context__get_boolean_type(Context *self) {
     static String *type_name = NULL;
     if (type_name == NULL) {
@@ -436,6 +450,20 @@ void panic__unknown_function(Context *context, Token *function_name, Type_List *
     PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unknown function: %s", SOURCE(function_name->location), function_signature->data);
 }
 
+Member *context__get_struct_type_member(Context *self, Type *struct_type, Token *member_name) {
+    Type *type = struct_type;
+    while (type != NULL) {
+        for (List_Iterator members = list__create_iterator(type->struct_data.statement->struct_data.members); list_iterator__has_next(&members);) {
+            Member *member = list_iterator__next(&members);
+            if (string__equals(member->name->lexeme, member_name->lexeme->data)) {
+                return member;
+            }
+        }
+        type = type->struct_data.statement->struct_data.base_type;
+    }
+    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Type '%s' has no '%s' member.", SOURCE(member_name->location), context__type_name(self, struct_type)->data, member_name->lexeme->data);
+}
+
 void infer_expression_type(Context *context, Expression *expression) {
     if (expression->inferred_type != NULL) {
         return;
@@ -527,15 +555,10 @@ void infer_expression_type(Context *context, Expression *expression) {
                 case TYPE__POINTER: {
                     Type *pointed_type = object_type->pointer_data.type;
                     if (pointed_type->kind == TYPE__STRUCT) {
-                        Token *member_name = expression->member_data.name; 
-                        for (List_Iterator members = list__create_iterator(pointed_type->struct_data.statement->struct_data.members); list_iterator__has_next(&members);) {
-                            Member *member = list_iterator__next(&members);
-                            if (string__equals(member->name->lexeme, member_name->lexeme->data)) {
-                                expression->inferred_type = member->type;
-                                return;
-                            }
-                        }
-                        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Type %s has no '%s' member.", SOURCE(member_name->location), context__type_name(context, pointed_type)->data, member_name->lexeme->data);
+                        Token *member_name = expression->member_data.name;
+                        Member *member = context__get_struct_type_member(context, pointed_type, member_name);
+                        expression->inferred_type = member->type;
+                        return;
                     }
                     break;
                 }
@@ -595,7 +618,7 @@ void emit_load_literal(Context *context, Token *token, Value_Holder *value_holde
     case TOKEN__STRING: {
         int index = context__add_string_constant(context, token);
         value_holder__acquire_register(value_holder, type__create_pointer(token->location, context__get_string_type(context)), context);
-        emitf("  lea %s, __data__%d__string__[rip]", value_holder__register_name(value_holder), index);
+        emitf("  lea %s, L%03d_STRING[rip]", value_holder__register_name(value_holder), index);
         return;
     }
     default:
@@ -771,7 +794,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         if (value_token->kind == TOKEN__STRING) {
             int index = context__add_string_constant(context, value_token);
             value_holder__acquire_register(destination_value_holder, type__create_pointer(value_token->location, type__create_pointer(value_token->location, context__get_string_type(context))), context);
-            emitf("  lea %s, __data__%d__string__address__[rip]", value_holder__register_name(destination_value_holder), index);
+            emitf("  lea %s, L%03d_STRING_PTR[rip]", value_holder__register_name(destination_value_holder), index);
             return;
         }
         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported literal kind: %s", SOURCE(value_token->location), token__get_kind_name(value_token));
@@ -785,17 +808,7 @@ void emit_expression_address(Context *context, Expression *expression, Value_Hol
         }
         Statement *struct_statement = object_value_holder.type->pointer_data.type->pointer_data.type->struct_data.statement;
         Token *member_name = expression->member_data.name;
-        Member *member = NULL;
-        for (List_Iterator struct_members = list__create_iterator(struct_statement->struct_data.members); list_iterator__has_next(&struct_members);) {
-            Member *struct_member = list_iterator__next(&struct_members);
-            if (string__equals(struct_member->name->lexeme, member_name->lexeme->data)) {
-                member = struct_member;
-                break;
-            }
-        }
-        if (member == NULL) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "There is no such struct member: %s.%s", SOURCE(expression->location), context__type_name(context, object_value_holder.type->pointer_data.type->pointer_data.type)->data, member_name->lexeme->data);
-        }
+        Member *member = context__get_struct_type_member(context, object_value_holder.type->pointer_data.type->pointer_data.type, member_name);
         value_holder__acquire_register(destination_value_holder, type__create_pointer(object_expression->location, member->type), context);
         emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&object_value_holder));
         if (member->struct_offset > 0) {
@@ -1117,6 +1130,11 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, type), context);
         emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
         value_holder__release_register(&type_size_value_holder);
+        if (type->kind == TYPE__STRUCT && context__is_object_type(context, type)) {
+            int object_type_id = type->struct_data.statement->struct_data.object_type_id;
+            emitf("  lea rax, L%03d_TYPE[rip]", object_type_id);
+            emitf("  mov [%s], rax", value_holder__register_name(result_value_holder));
+        }
         return;
     }
     case EXPRESSION__POINTED_VALUE: {
@@ -1447,8 +1465,18 @@ void emit_statement(Context *context, Statement *statement) {
         emitf("  jmp %s__end", function->function_data.unique_name->data);
         return;
     }
-    case STATEMENT__STRUCT:
+    case STATEMENT__STRUCT: {
+        Type *struct_type = context__find_type(context, statement->struct_data.name->lexeme);
+        if (context__is_object_type(context, struct_type)) {
+            int object_type_id = statement->struct_data.object_type_id;
+            emits("  .section .rodata");
+            emits("  .align 8");
+            emitf("L%03d_TYPE_PTR: .quad L%03d_TYPE", object_type_id, object_type_id);
+            emitf("L%03d_TYPE: # %s", object_type_id, statement->struct_data.name->lexeme->data);
+            emitf("  .quad %d", object_type_id);
+        }
         return;
+    }
     case STATEMENT__VARIABLE: {
         Token *variable_name = statement->variable_data.name;
         if (statement->variable_data.is_external) {
@@ -1555,14 +1583,21 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
             }
             break;
         case STATEMENT__STRUCT: {
-            if (statement->struct_data.base_type != NULL) {
-                context__resolve_type(context, statement->struct_data.base_type);
+            Type *struct_base_type = statement->struct_data.base_type;
+            if (struct_base_type != NULL) {
+                context__resolve_type(context, struct_base_type);
+                if (struct_base_type->kind != TYPE__STRUCT) {
+                    PANIC(__FILE__, __LINE__, "'%s' is not a struct type.", context__type_name(context, struct_base_type)->data);
+                }
             }
             if (statement->struct_data.members) {
                 for (List_Iterator members = list__create_iterator(statement->struct_data.members); list_iterator__has_next(&members);) {
                     Member *member = list_iterator__next(&members);
                     context__resolve_type(context, member->type);
                 }
+            }
+            if (struct_base_type != NULL && context__is_object_type(context, context__find_type(context, statement->struct_data.name->lexeme))) {
+                statement->struct_data.object_type_id = counter__inc(context->counter);
             }
             break;
         }
@@ -1593,12 +1628,12 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
         emits("");
         emits("  .section .rodata");
         emits("  .align 8");
-        emitf("__data__%d__string__address__: .quad __data__%d__string__", index, index);
-        emitf("__data__%d__string__:", index);
-        emitf("  .quad __data__%d__string__data__", index);
+        emitf("L%03d_STRING_PTR: .quad L%03d_STRING", index, index);
+        emitf("L%03d_STRING:", index);
+        emitf("  .quad L%03d_STRING_DATA", index);
         emitf("  .quad %d", string_constant->string_data.value->length + 1);
         emitf("  .quad %d", string_constant->string_data.value->length);
-        emitf("__data__%d__string__data__: .string %s", index, string_constant->lexeme->data);
+        emitf("L%03d_STRING_DATA: .string %s", index, string_constant->lexeme->data);
     }
 
     fclose(context->file);

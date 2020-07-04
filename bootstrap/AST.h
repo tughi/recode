@@ -210,6 +210,7 @@ typedef struct Statement {
             Type *base_type;
             Member_List *members;
             int is_declaration;
+            int object_type_id;
             int has_computed_size;
             int size;
         } struct_data;

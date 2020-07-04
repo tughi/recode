@@ -50,10 +50,10 @@ scan :: (file_name: @String) -> Nothing {
 
     loop {
         token: @Token = scanner.next_token()
-        stdout.write(token.location).write(": ").write(token.lexeme).end_line()
+        stdout.write(token.location).write(": ").write(token.type.id).write(" :: ").write(token.lexeme).end_line()
         if (scanner.peek_char() == '\0') {
             token: @Token = scanner.next_token()
-            stdout.write(token.location).write(": ").write(token.lexeme).end_line()
+            stdout.write(token.location).write(": ").write(token.type.id).write(" :: ").write(token.lexeme).end_line()
             break
         }
     }
