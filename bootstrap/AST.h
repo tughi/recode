@@ -92,6 +92,7 @@ typedef struct Expression {
         EXPRESSION__BINARY,
         EXPRESSION__CALL,
         EXPRESSION__CAST,
+        EXPRESSION__IS,
         EXPRESSION__LITERAL,
         EXPRESSION__MEMBER,
         EXPRESSION__NEW,
@@ -123,6 +124,10 @@ typedef struct Expression {
             struct Expression *expression;
             Type *type;
         } cast_data;
+        struct {
+            struct Expression *expression;
+            Type *type;
+        } is_data;
         struct {
             Token *value;
         } literal_data;

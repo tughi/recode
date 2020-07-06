@@ -121,6 +121,7 @@ The `Type` structure looks like this:
 ```
 Type :: struct {
     id: Int
+    base_type: @Type
 }
 ```
 

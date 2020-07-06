@@ -215,12 +215,12 @@ int context__is_object_type(Context *self, Type *type) {
     if (type->kind != TYPE__STRUCT) {
         return 0;
     }
+    if (string__equals(context__type_name(self, type), "Object")) {
+        return 1;
+    }
     Type *struct_base_type = type->struct_data.statement->struct_data.base_type;
     if (struct_base_type == NULL) {
         return 0;
-    }
-    if (string__equals(context__type_name(self, struct_base_type), "Object")) {
-        return 1;
     }
     return context__is_object_type(self, struct_base_type);
 }
@@ -253,6 +253,14 @@ Type *context__get_string_type(Context *self) {
     static String *type_name = NULL;
     if (type_name == NULL) {
         type_name = string__create("String");
+    }
+    return context__find_type(self, type_name);
+}
+
+Type *context__get_type_type(Context *self) {
+    static String *type_name = NULL;
+    if (type_name == NULL) {
+        type_name = string__create("Type");
     }
     return context__find_type(self, type_name);
 }
@@ -291,6 +299,7 @@ int context__compute_type_size(Context *self, Type *type) {
         Statement *struct_statement = type->struct_data.statement;
         int struct_size = struct_statement->struct_data.size;
         if (struct_statement->struct_data.has_computed_size == 0) {
+            type->struct_data.statement->struct_data.has_computed_size = 1;
             if (struct_statement->struct_data.base_type != NULL) {
                 struct_size = context__compute_type_size(self, struct_statement->struct_data.base_type);
             }
@@ -302,7 +311,6 @@ int context__compute_type_size(Context *self, Type *type) {
                 }
             }
             type->struct_data.statement->struct_data.size = struct_size;
-            type->struct_data.statement->struct_data.has_computed_size = 1;
         }
         return struct_size;
     }
@@ -1095,6 +1103,47 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Casting %s to %s is not supported.", SOURCE(cast_expression->location), context__type_name(context, cast_expression_type)->data, context__type_name(context, cast_type)->data);
     }
+    case EXPRESSION__IS: {
+        Expression *is_expression = expression->is_data.expression;
+        Value_Holder is_expression_value_holder = { .kind = VALUE_HOLDER__NEW };
+        emit_expression(context, is_expression, &is_expression_value_holder);
+        Type *is_expression_type = is_expression_value_holder.type;
+        if (is_expression_type->kind != TYPE__POINTER || !context__is_object_type(context, is_expression_type->pointer_data.type)) {
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "The checked value is not a pointer to an object type.", SOURCE(is_expression->location));
+        }
+        Type *is_type = expression->is_data.type;
+        context__resolve_type(context, is_type);
+        if (!context__is_object_type(context, is_type)) {
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "'%s' is not an object type.", SOURCE(is_type->location), context__type_name(context, is_type)->data);
+        }
+        Type *base_type = is_expression_type->pointer_data.type;
+        Type *type = is_type;
+        while (type != NULL && !type__equals(type, base_type)) {
+            type = type->struct_data.statement->struct_data.base_type;
+        }
+        if (type == NULL) {
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "'%s' is not a sub-type of '%s'.", SOURCE(is_type->location), context__type_name(context, is_type)->data, context__type_name(context, base_type)->data);
+        }
+        int is_count = counter__inc(context->counter);
+        value_holder__acquire_register(result_value_holder, context__get_boolean_type(context), context);
+        emitf("is_%03d:", is_count);
+        emitf("  xor %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(result_value_holder));
+        emitf("is_%03d_loop:", is_count);
+        emitf("  mov rax, %s[rip]", context__find_variable(context, is_type->name)->variable_data.unique_name->data);
+        emitf("  cmp rax, [%s]", value_holder__register_name(&is_expression_value_holder));
+        emitf("  jz is_%03d_true", is_count);
+        emitf("  mov %s, [%s]", value_holder__register_name(&is_expression_value_holder), value_holder__register_name(&is_expression_value_holder));
+        emitf("  add %s, 8", value_holder__register_name(&is_expression_value_holder));
+        emitf("  mov rax, [%s]", value_holder__register_name(&is_expression_value_holder));
+        emits("  test rax, rax");
+        emitf("  jz is_%03d_end", is_count);
+        emitf("  jmp is_%03d_loop", is_count);
+        emitf("is_%03d_true:", is_count);
+        emitf("  inc %s", value_holder__register_name(result_value_holder));
+        emitf("is_%03d_end:", is_count);
+        value_holder__release_register(&is_expression_value_holder);
+        return;
+    }
     case EXPRESSION__LITERAL: {
         emit_load_literal(context, expression->literal_data.value, result_value_holder);
         return;
@@ -1131,8 +1180,8 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
         value_holder__release_register(&type_size_value_holder);
         if (type->kind == TYPE__STRUCT && context__is_object_type(context, type)) {
-            int object_type_id = type->struct_data.statement->struct_data.object_type_id;
-            emitf("  lea rax, L%03d_TYPE[rip]", object_type_id);
+            Statement *variable_statement = context__find_variable(context, context__type_name(context, type));
+            emitf("  lea rax, %s_TYPE[rip]", variable_statement->variable_data.unique_name->data);
             emitf("  mov [%s], rax", value_holder__register_name(result_value_holder));
         }
         return;
@@ -1468,12 +1517,19 @@ void emit_statement(Context *context, Statement *statement) {
     case STATEMENT__STRUCT: {
         Type *struct_type = context__find_type(context, statement->struct_data.name->lexeme);
         if (context__is_object_type(context, struct_type)) {
-            int object_type_id = statement->struct_data.object_type_id;
+            Statement *variable_statement = context__find_variable(context, context__type_name(context, struct_type));
             emits("  .section .rodata");
             emits("  .align 8");
-            emitf("L%03d_TYPE_PTR: .quad L%03d_TYPE", object_type_id, object_type_id);
-            emitf("L%03d_TYPE: # %s", object_type_id, statement->struct_data.name->lexeme->data);
-            emitf("  .quad %d", object_type_id);
+            emitf("%s: .quad %s_TYPE", variable_statement->variable_data.unique_name->data, variable_statement->variable_data.unique_name->data);
+            emitf("%s_TYPE:", variable_statement->variable_data.unique_name->data);
+            emitf("  .quad %d", statement->struct_data.object_type_id);
+            Type *struct_base_type = struct_type->struct_data.statement->struct_data.base_type;
+            if (struct_base_type != NULL) {
+                Statement *variable_statement = context__find_variable(context, context__type_name(context, struct_base_type));
+                emitf("  .quad %s_TYPE", variable_statement->variable_data.unique_name->data);
+            } else {
+                emits("  .quad 0");
+            }            
         }
         return;
     }
@@ -1596,8 +1652,11 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
                     context__resolve_type(context, member->type);
                 }
             }
-            if (struct_base_type != NULL && context__is_object_type(context, context__find_type(context, statement->struct_data.name->lexeme))) {
+            if (context__is_object_type(context, context__find_type(context, statement->struct_data.name->lexeme))) {
                 statement->struct_data.object_type_id = counter__inc(context->counter);
+                Token *struct_name = statement->struct_data.name;
+                Statement *variable_statement = statement__create_variable(struct_name->location, struct_name, type__create_pointer(struct_name->location, context__get_type_type(context)), NULL, 0);
+                context__add_variable(context, variable_statement);
             }
             break;
         }

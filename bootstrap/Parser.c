@@ -515,8 +515,19 @@ int is_equality_operator(Token *token) {
     return token->kind == TOKEN__OTHER && (string__equals(token->lexeme, "!") || string__equals(token->lexeme, "="));
 }
 
+int is_is_keyword(Token *token) {
+    return is_keyword(token, "is");
+}
+
+Expression *expression__create_is(Expression *expression, Type *type) {
+    Expression *self = expression__create(EXPRESSION__IS, expression->location);
+    self->is_data.expression = expression;
+    self->is_data.type = type;
+    return self;
+}
+
 // equality
-//      : comparison (("!" | "=") "=" comparison)?
+//      : comparison ((("!" | "=") "=" equality) | ("is" type))?
 Expression *parse_equality_expression(Context *context) {
     Expression *expression = parse_comparison_expression(context);
     if (matches_three(context, optional(is_space), required(is_equality_operator), required(is_assign_operator))) {
@@ -525,8 +536,15 @@ Expression *parse_equality_expression(Context *context) {
         Token *operator_other_token = consume_one(context, NULL, required(is_assign_operator));
         token__join(operator_token, operator_other_token);
         consume_space(context, 1);
-        Expression *right_expression = parse_comparison_expression(context);
+        Expression *right_expression = parse_equality_expression(context);
         return expression__create_binary(operator_token, expression, right_expression);
+    }
+    if (matches_two(context, optional(is_space), required(is_is_keyword))) {
+        consume_space(context, 1);
+        consume_one(context, NULL, required(is_is_keyword));
+        consume_space(context, 1);
+        Type *type = parse_type(context);
+        return expression__create_is(expression, type);
     }
     return expression;
 }
