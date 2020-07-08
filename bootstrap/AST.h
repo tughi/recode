@@ -41,6 +41,7 @@ typedef struct Type {
         TYPE__POINTER,
         TYPE__NAMED,
         TYPE__NOTHING,
+        TYPE__NULL,
         TYPE__STRUCT,
     } kind;
 

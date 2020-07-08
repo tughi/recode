@@ -86,6 +86,8 @@ char *type__get_kind_name(Type *self) {
         return "NAMED";
     case TYPE__NOTHING:
         return "NOTHING";
+    case TYPE__NULL:
+        return "NULL";
     case TYPE__STRUCT:
         return "STRUCT";
     default:
@@ -248,6 +250,7 @@ Named_Types *named_types__create() {
     list__append(self, named_types__create_item(string__create("Int32"), type__create(TYPE__INT32, &unkown_location)));
     list__append(self, named_types__create_item(string__create("Int64"), type__create(TYPE__INT64, &unkown_location)));
     list__append(self, named_types__create_item(string__create("Nothing"), type__create(TYPE__NOTHING, &unkown_location)));
+    list__append(self, named_types__create_item(string__create("null"), type__create(TYPE__NULL, &unkown_location)));
     return self;
 }
 

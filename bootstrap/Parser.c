@@ -144,7 +144,7 @@ int is_integer(Token *token) {
 }
 
 int is_literal(Token *token) {
-    return token->kind == TOKEN__INTEGER || token->kind == TOKEN__STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->kind == TOKEN__CHARACTER;
+    return token->kind == TOKEN__INTEGER || token->kind == TOKEN__STRING || is_keyword(token, "true") || is_keyword(token, "false") || token->kind == TOKEN__CHARACTER || is_keyword(token, "null");
 }
 
 int is_open_paren(Token *token) {
@@ -225,6 +225,7 @@ Expression *expression__create_pointed_value(Source_Location *location, Expressi
 
 // primary
 //      : IDENTIFIER
+//      | "null"
 //      | INTEGER
 //      | STRING
 //      | "false"

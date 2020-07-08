@@ -204,6 +204,7 @@ int context__is_primitive_type(Context *self, Type *type) {
     case TYPE__INT16:
     case TYPE__INT32:
     case TYPE__INT64:
+    case TYPE__NULL:
     case TYPE__POINTER:
         return 1;
     default:
@@ -249,6 +250,14 @@ Type *context__get_int8_type(Context *self) {
     return context__find_type(self, type_name);
 }
 
+Type *context__get_null_type(Context *self) {
+    static String *type_name = NULL;
+    if (type_name == NULL) {
+        type_name = string__create("null");
+    }
+    return context__find_type(self, type_name);
+}
+
 Type *context__get_string_type(Context *self) {
     static String *type_name = NULL;
     if (type_name == NULL) {
@@ -283,6 +292,8 @@ int context__compute_type_size(Context *self, Type *type) {
         return 8;
     case TYPE__NOTHING:
         return 0;
+    case TYPE__NULL:
+        return 8;
     case TYPE__NAMED: {
         String *type_name = type->named_data.name->lexeme;
         Type *named_type = context__find_type(self, type_name);
@@ -549,6 +560,12 @@ void infer_expression_type(Context *context, Expression *expression) {
                 case TOKEN__INTEGER:
                     expression->inferred_type = context__get_int_type(context);
                     return;
+                case TOKEN__KEYWORD:
+                    if (string__equals(expression->literal_data.value->lexeme, "true") || string__equals(expression->literal_data.value->lexeme, "false")) {
+                        expression->inferred_type = context__get_boolean_type(context);
+                        return;
+                    }
+                    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer type of '%s' yet.", SOURCE(expression->location), expression->literal_data.value->lexeme->data);
                 case TOKEN__STRING:
                     expression->inferred_type = type__create_pointer(expression->literal_data.value->location, context__get_string_type(context));
                     return;
@@ -621,6 +638,11 @@ void emit_load_literal(Context *context, Token *token, Value_Holder *value_holde
             emitf("  mov %s, 1", value_holder__register_name(value_holder));
             return;
         } 
+        if (string__equals(token->lexeme, "null")) {
+            value_holder__acquire_register(value_holder, context__get_null_type(context), context);
+            emitf("  xor %s, %s", value_holder__register_name(value_holder), value_holder__register_name(value_holder));
+            return;
+        } 
         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported keyword: %s", SOURCE(token->location), token->lexeme->data);
     }
     case TOKEN__STRING: {
@@ -678,7 +700,7 @@ void emit_comparison_expression(Context *context, Expression *expression, Value_
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "You can use \"%s\" only for integer values", SOURCE(operator_token->location), operator->data);
         }
     } else if (string__equals(operator, "==") || string__equals(operator, "!=")) {
-        if (!type__equals(result_value_holder->type, right_value_holder.type)) {
+        if (!type__equals(result_value_holder->type, right_value_holder.type) && result_value_holder->type->kind != TYPE__POINTER && right_value_holder.type->kind != TYPE__NULL) {
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "You cannot use \"%s\" to compare %s with %s values", SOURCE(operator_token->location), operator->data, context__type_name(context, result_value_holder->type)->data, context__type_name(context, right_value_holder.type)->data);
         }
     }
@@ -1323,7 +1345,7 @@ void emit_statement(Context *context, Statement *statement) {
         Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression(context, statement->assignment_data.value, &value_holder);
         Type *value_type = value_holder.type;
-        if (!type__equals(destination_type, value_type)) {
+        if (!type__equals(destination_type, value_type) && destination_type->kind != TYPE__POINTER && value_type->kind != TYPE__NULL) {
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Destination type differs from value type. Expected %s but got %s instead.", SOURCE(statement->location), context__type_name(context, destination_type)->data, context__type_name(context, value_type)->data);
         }
         switch (destination_type->kind) {
@@ -1478,7 +1500,7 @@ void emit_statement(Context *context, Statement *statement) {
             Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
             emit_expression(context, return_expression, &value_holder);
             Type *return_expression_type = value_holder.type;
-            if (!type__equals(function_return_type, return_expression_type)) {
+            if (!type__equals(function_return_type, return_expression_type) && function_return_type->kind != TYPE__POINTER && return_expression_type->kind != TYPE__NULL) {
                 PANIC(__FILE__, __LINE__, SOURCE_LOCATION "The return expression must be of type %s, got %s instead.", SOURCE(return_expression->location), context__type_name(context, function_return_type)->data, context__type_name(context, return_expression_type)->data);
             }
             switch (return_expression_type->kind) {
@@ -1497,6 +1519,7 @@ void emit_statement(Context *context, Statement *statement) {
             }
             case TYPE__INT:
             case TYPE__INT64:
+            case TYPE__NULL:
             case TYPE__POINTER: {
                 emitf("  mov rax, %s", value_holder__register_name(&value_holder));
                 break;
