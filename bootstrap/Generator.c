@@ -1594,26 +1594,41 @@ void emit_statement(Context *context, Statement *statement) {
                     PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported variable type: %s", SOURCE(statement->location), type__get_kind_name(variable_type));
                 }
             } else {
-                context__add_variable(context, statement);
                 Expression *variable_value = statement->variable_data.value;
                 if (variable_value) {
-                    static Statement *assignment_statement = NULL;
-                    if (assignment_statement == NULL) {
-                        Source_Location *location = source_location__create(variable_name->location->source);
-                        Token *operator_token = token__create_other(location, string__create("="));
-                        assignment_statement = statement__create_assignment(location, NULL, operator_token, NULL);
-                    }
+                    Value_Holder variable_value_holder = { .kind = VALUE_HOLDER__NEW };
+                    emit_expression(context, variable_value, &variable_value_holder);
+                    Type *variable_value_type = variable_value_holder.type;
+                    context__add_variable(context, statement);
                     static Expression *assignment_destination = NULL;
                     if (assignment_destination == NULL) {
                         assignment_destination = expression__create_variable(variable_name);
-                        assignment_statement->assignment_data.destination = assignment_destination;
                     } else {
                         assignment_destination->variable_data.name = variable_name;
                     }
-                    assignment_statement->location->line = variable_value->location->line;
-                    assignment_statement->location->column = variable_value->location->column;
-                    assignment_statement->assignment_data.value = variable_value;
-                    emit_statement(context, assignment_statement);
+                    Value_Holder variable_address_holder = { .kind = VALUE_HOLDER__NEW };
+                    emit_expression_address(context, assignment_destination, &variable_address_holder);
+                    Type *variable_type = variable_address_holder.type->pointer_data.type;
+                    if (!type__equals(variable_type, variable_value_type) && variable_type->kind != TYPE__POINTER && variable_value_type->kind != TYPE__NULL) {
+                        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Destination type differs from value type. Expected %s but got %s instead.", SOURCE(statement->location), context__type_name(context, variable_type)->data, context__type_name(context, variable_value_type)->data);
+                    }
+                    switch (variable_type->kind) {
+                    case TYPE__BOOLEAN:
+                    case TYPE__INT:
+                    case TYPE__INT8:
+                    case TYPE__INT16:
+                    case TYPE__INT32:
+                    case TYPE__INT64:
+                    case TYPE__POINTER:
+                        emitf("  mov [%s], %s", value_holder__register_name(&variable_address_holder), value_holder__register_name(&variable_value_holder));
+                        break;
+                    default:
+                        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported variable type: %s.", SOURCE(statement->location), context__type_name(context, variable_type)->data);
+                    }
+                    value_holder__release_register(&variable_value_holder);
+                    value_holder__release_register(&variable_address_holder);
+                } else {
+                    context__add_variable(context, statement);
                 }
             }
         }
