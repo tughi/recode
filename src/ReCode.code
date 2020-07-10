@@ -1,3 +1,5 @@
+\ Copyright (c) 2020, Stefan Selariu
+
 \ TODO: change main to: program :: (arguments: @String) -> Nothing
 main :: (argc: Int, argv: @@Int8) -> Nothing {
     if (argc != 3) {
@@ -20,7 +22,9 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    scan(source_file_name)
+    tokens: @List = scan(source_file_name)
+
+    parse(tokens)
 
     output_file: @FILE = fopen(argv[2], "w".data)
 
@@ -41,13 +45,644 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
     output_file.write_line("")
 }
 
-scan :: (file_name: @String) -> Nothing {
-    source: @Source = new Source
-    source.init(file_name)
+\ -------------------------------------------------------------------------------------------------
+\       Parser
+\ -------------------------------------------------------------------------------------------------
 
-    scanner: @Scanner = new Scanner
-    scanner.init(source)
+Parser :: struct {
+    tokens: @List_Iterator
+    current_alignment: Int
+    required_at: @Matcher
+    required_close_brace: @Matcher
+    required_close_bracket: @Matcher
+    required_close_paren: @Matcher
+    required_colon: @Matcher
+    required_comma: @Matcher
+    required_comment: @Matcher
+    required_end_of_file: @Matcher
+    required_end_of_line: @Matcher
+    required_greater_than: @Matcher
+    required_hyphen: @Matcher
+    required_identifier: @Matcher
+    required_less_than: @Matcher
+    required_literal: @Matcher
+    required_open_brace: @Matcher
+    required_open_bracket: @Matcher
+    required_open_paren: @Matcher
+    required_struct: @Matcher
+    optional_comment: @Matcher
+    optional_space: @Matcher
+}
 
+create_parser :: (tokens: @List) -> @Parser {
+    parser: @Parser = new Parser
+    parser.tokens = tokens.create_iterator()
+    parser.tokens.next()
+    parser.current_alignment = 0
+
+    parser.required_at = create_other_matcher(true, "@")
+    parser.required_close_brace = create_other_matcher(true, "}")
+    parser.required_close_bracket = create_other_matcher(true, "]")
+    parser.required_close_paren = create_other_matcher(true, ")")
+    parser.required_colon = create_other_matcher(true, ":")
+    parser.required_comma = create_other_matcher(true, ",")
+    parser.required_comment = create_comment_matcher(true)
+    parser.required_end_of_file = create_end_of_file_matcher(true)
+    parser.required_end_of_line = create_end_of_line_matcher(true)
+    parser.required_greater_than = create_other_matcher(true, ">")
+    parser.required_hyphen = create_other_matcher(true, "-")
+    parser.required_identifier = create_identifier_matcher(true)
+    parser.required_less_than = create_other_matcher(true, "<")
+    parser.required_literal = create_literal_matcher(true)
+    parser.required_open_brace = create_other_matcher(true, "{")
+    parser.required_open_bracket = create_other_matcher(true, "[")
+    parser.required_open_paren = create_other_matcher(true, "(")
+    parser.required_struct = create_keyword_matcher(true, "struct")
+
+    parser.optional_comment = create_comment_matcher(false)
+    parser.optional_space = create_space_matcher(false)
+
+    return parser
+}
+
+parse :: (tokens: @List) -> Nothing {
+    parser: @Parser = create_parser(tokens)
+    statements: @List = parser.parse_statements()
+}
+
+parse_statements :: (self: @Parser) -> @List {
+    statements: @List = create_list()
+
+    loop {
+        statement: @Statement = self.parse_statement()
+        if (statement == null) {
+            break
+        }
+        self.consume_end_of_line()
+        statements.append(statement as @Object)
+    }
+
+    return statements
+}
+
+parse_statement :: (self: @Parser) -> @Statement {
+    while (self.consume_empty_line()) {
+    }
+
+    if (self.matches(self.optional_space, self.required_close_brace)) {
+        return null
+    }
+    if (self.matches(self.required_end_of_file)) {
+        return null
+    }
+
+    self.consume_space(self.current_alignment * 4)
+
+    expression: @Expression = self.parse_expression()
+
+    if (self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)) {
+        self.consume_end_of_line()
+        return create_expression_statement(expression)
+    }
+
+    if (self.matches(self.optional_space, self.required_colon, self.required_colon)) {
+        self.consume_space(1)
+        self.consume(self.required_colon, self.required_colon)
+        self.consume_space(1)
+        if (self.matches(self.required_struct)) {
+            return self.parse_struct(expression)
+        }
+        return self.parse_function(expression)
+    }
+
+    return null
+}
+
+parse_struct :: (self: @Parser, name: @Expression) -> @Statement {
+    if ((name is Variable_Expression) == false) {
+        stderr.write(name.location).write(": Cannot use expression as struct name").end_line()
+        abort()
+    }
+    abort()
+}
+
+\ function
+\   : "(" function_parameters? ")" "->" value_type block?
+parse_function :: (self: @Parser, name_expression: @Expression) -> @Statement {
+    if (name_expression is Variable_Expression) {
+        function_name: @Identifier_Token = (name_expression as @Variable_Expression).name
+        self.consume(self.required_open_paren)
+        function_parameters: @List
+        if (self.matches(self.optional_space, self.required_close_paren)) {
+            function_parameters = create_list()
+        } else {
+            function_parameters: @List = self.parse_function_parameters()
+        }
+        self.consume_space(0)
+        self.consume(self.required_close_paren)
+        self.consume_space(1)
+        self.consume(self.required_hyphen, self.required_greater_than)
+        self.consume_space(1)
+        function_return_type: @Value_Type = self.parse_value_type()
+        function_body: @Block_Statement
+        if (self.matches(self.optional_space, self.required_open_brace)) {
+            self.consume_space(1)
+            function_body = self.parse_block()
+        } else {
+            function_body = null
+        }
+        return create_function_statement(function_name, function_parameters, function_return_type, function_body)
+    } else {
+        stderr.write(name_expression.location).write(": Cannot use expression as function name").end_line()
+        abort()
+    }
+}
+
+\ function_parameters
+\   : function_parameter ( "," function_parameter )*
+parse_function_parameters :: (self: @Parser) -> @List {
+    function_parameters: @List = create_list()
+    expected_space: Int = 0
+    loop {
+        self.consume_space(expected_space)
+        function_parameters.append(self.parse_function_parameter() as @Object)
+        if (self.matches(self.optional_space, self.required_comma)) {
+            self.consume_space(0)
+            self.consume(self.required_comma)
+            expected_space = 1
+        } else {
+            break
+        }
+    }
+    return function_parameters
+}
+
+\ function_parameter
+\   : IDENTIFIER ":" value_type
+parse_function_parameter :: (self: @Parser) -> @Function_Parameter {
+    parameter_name: @Identifier_Token = self.consume(self.required_identifier)
+    self.consume_space(0)
+    self.consume(self.required_colon)
+    self.consume_space(1)
+    parameter_type: @Value_Type = self.parse_value_type()
+    return create_function_parameter(parameter_name, parameter_type)
+}
+
+\ block
+\   : "{" ( statement <EOL> )* "}"
+parse_block :: (self: @Parser) -> @Statement {
+    token: @Token = self.consume(self.required_open_brace)
+    self.consume_end_of_line()
+    self.current_alignment = self.current_alignment + 1
+    statements: @List = self.parse_statements()
+    self.current_alignment = self.current_alignment - 1
+    self.consume_space(self.current_alignment * 4)
+    self.consume(self.required_close_brace)
+    return create_block_statement(token, statements)
+}
+
+\ value_type
+\   : "@" value_type
+\   | IDENTIFIER
+\   | "[" value_type ( ";" INTEGER )? "]"
+\   | "(" comma_separated_members? ")" "->" value_type
+parse_value_type :: (self: @Parser) -> @Value_Type {
+    if (self.matches(self.required_at)) {
+        token: @Token = self.consume(self.required_at)
+        self.consume_space(0)
+        value_type: @Value_Type = self.parse_value_type()
+        return create_pointer_type(token.location, value_type)
+    }
+    return create_named_type(self.consume(self.required_identifier) as @Identifier_Token)
+}
+
+parse_expression :: (self: @Parser) -> @Expression {
+    return self.parse_logic_or_expression()
+}
+
+parse_logic_or_expression :: (self: @Parser) -> @Expression {
+    return self.parse_logic_and_expression()
+}
+
+parse_logic_and_expression :: (self: @Parser) -> @Expression {
+    return self.parse_equality_expression()
+}
+
+parse_equality_expression :: (self: @Parser) -> @Expression {
+    return self.parse_is_expression()
+}
+
+parse_is_expression :: (self: @Parser) -> @Expression {
+    return self.parse_comparison_expression()
+}
+
+parse_comparison_expression :: (self: @Parser) -> @Expression {
+    return self.parse_addition_expression()
+}
+
+parse_addition_expression :: (self: @Parser) -> @Expression {
+    return self.parse_multiplication_expression()
+}
+
+parse_multiplication_expression :: (self: @Parser) -> @Expression {
+    return self.parse_unary_expression()
+}
+
+parse_unary_expression :: (self: @Parser) -> @Expression {
+    return self.parse_call_expression()
+}
+
+parse_call_expression :: (self: @Parser) -> @Expression {
+    return self.parse_primary_expression()
+}
+
+\ primary_expression
+\   : IDENTIFIER
+\   | INTEGER
+\   | STRING
+\   | CHARACTER
+\   | "null"
+\   | "false"
+\   | "true"
+\   | "(" expression ")"
+parse_primary_expression :: (self: @Parser) -> @Expression {
+    if (self.matches(self.required_identifier)) {
+        return create_variable_expression(self.consume(self.required_identifier) as @Identifier_Token)
+    }
+    if (self.matches(self.required_literal)) {
+        return create_literal_expression(self.consume(self.required_literal) as @Literal_Token)
+    }
+    if (self.matches(self.required_open_paren)) {
+        self.consume(self.required_open_paren)
+        expression: @Expression = self.parse_expression()
+        self.consume(self.required_close_paren)
+        return expression
+    }
+    return null
+}
+
+abort :: (self: @Parser, unexpected_token: @Token) -> Nothing {
+    stderr.write(unexpected_token.location).write(": Unexpected token: ").write(unexpected_token).end_line()
+    abort()
+}
+
+consume_end_of_line :: (self: @Parser) -> Nothing {
+    if (self.matches(self.optional_space, self.required_comment)) {
+        self.consume_space(1)
+        self.consume(self.required_comment)
+    } else {
+        self.consume_space(0)
+    }
+    self.consume(self.required_end_of_line)
+}
+
+consume_empty_line :: (self: @Parser) -> Boolean {
+    if (self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)) {
+        if (self.matches(self.optional_space, self.required_comment)) {
+            self.consume_space(self.current_alignment * 4)
+            self.consume(self.required_comment)
+        } else {
+            self.consume_space(0)
+        }
+        self.consume(self.required_end_of_line)
+        return true
+    }
+    return false
+}
+
+consume_space :: (self: @Parser, expected_space_count: Int) -> Nothing {
+    space_count: Int
+    token: @Token = self.tokens.current()
+    if (token is Space_Token) {
+        self.tokens.next()
+        space: @Space_Token = token
+        space_count = space.count
+    } else {
+        space_count = 0
+    }
+    if (space_count != expected_space_count) {
+        stderr.write(token.location).write(": Consumed ").write(space_count).write(" spaces where ").write(expected_space_count).write(" are expected").end_line()
+    }
+}
+
+consume :: (self: @Parser, first_matcher: @Matcher) -> @Token {
+    return self.consume(first_matcher, null as @Matcher)
+}
+
+consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) -> @Token {
+    return self.consume(first_matcher, second_matcher, null as @Matcher)
+}
+
+consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> @Token {
+    token: @Token = self.tokens.current()
+    first_token: @Token = token
+    if (first_matcher.accepts(token)) {
+        token = self.tokens.next()
+    } else {
+        if (first_matcher.is_required) {
+            self.abort(token)
+        }
+    }
+    if (second_matcher != null) {
+        if (second_matcher.accepts(token)) {
+            token = self.tokens.next()
+        } else {
+            if (second_matcher.is_required) {
+                self.abort(token)
+            }
+        }
+    }
+    if (third_matcher != null) {
+        if (third_matcher.accepts(token)) {
+            token = self.tokens.next()
+        } else {
+            if (third_matcher.is_required) {
+                self.abort(token)
+            }
+        }
+    }
+    return first_token
+}
+
+matches :: (self: @Parser, first_matcher: @Matcher) -> Boolean {
+    return self.matches(first_matcher, null as @Matcher)
+}
+
+matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) -> Boolean {
+    return self.matches(first_matcher, second_matcher, null as @Matcher)
+}
+
+matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> Boolean {
+    self.tokens.save_state()
+    token: @Token = self.tokens.current()
+    if (first_matcher.accepts(token)) {
+        token = self.tokens.next()
+    } else {
+        if (first_matcher.is_required) {
+            self.tokens.restore_state()
+            return false
+        }
+    }
+    if (second_matcher != null) {
+        if (second_matcher.accepts(token)) {
+            token = self.tokens.next()
+        } else {
+            if (second_matcher.is_required) {
+                self.tokens.restore_state()
+                return false
+            }
+        }
+    }
+    if (third_matcher != null) {
+        if (third_matcher.accepts(token)) {
+            token = self.tokens.next()
+        } else {
+            if (third_matcher.is_required) {
+                self.tokens.restore_state()
+                return false
+            }
+        }
+    }
+    self.tokens.restore_state()
+    return true
+}
+
+Matcher :: struct : Object {
+    is_required: Boolean
+}
+
+Comment_Matcher :: struct : Matcher {
+}
+
+create_comment_matcher :: (required: Boolean) -> @Matcher {
+    matcher: @Comment_Matcher = new Comment_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+End_Of_File_Matcher :: struct : Matcher {
+}
+
+create_end_of_file_matcher :: (required: Boolean) -> @Matcher {
+    matcher: @End_Of_File_Matcher = new End_Of_File_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+End_Of_Line_Matcher :: struct : Matcher {
+}
+
+create_end_of_line_matcher :: (required: Boolean) -> @Matcher {
+    matcher: @End_Of_Line_Matcher = new End_Of_Line_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+Identifier_Matcher :: struct : Matcher {
+}
+
+create_identifier_matcher :: (required: Boolean) -> @Matcher {
+    matcher: @Identifier_Matcher = new Identifier_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+Keyword_Matcher :: struct : Matcher {
+    lexeme: @String
+}
+
+create_keyword_matcher :: (required: Boolean, lexeme: @String) -> @Matcher {
+    matcher: @Keyword_Matcher = new Keyword_Matcher
+    matcher.is_required = required
+    matcher.lexeme = lexeme
+    return matcher
+}
+
+Literal_Matcher :: struct : Matcher {
+}
+
+create_literal_matcher :: (required: Boolean) -> @Matcher {
+    matcher: @Literal_Matcher = new Literal_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+Other_Matcher :: struct : Matcher {
+    lexeme: @String
+}
+
+create_other_matcher :: (required: Boolean, lexeme: @String) -> @Matcher {
+    matcher: @Other_Matcher = new Other_Matcher
+    matcher.is_required = required
+    matcher.lexeme = lexeme
+    return matcher
+}
+
+Space_Matcher :: struct : Matcher {
+}
+
+create_space_matcher :: (required: Boolean) -> @Matcher {
+    matcher: @Space_Matcher = new Space_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+accepts :: (self: @Matcher, token: @Token) -> Boolean {
+    if (self is Other_Matcher) {
+        self: @Other_Matcher = self
+        if (token is Other_Token) {
+            return token.lexeme.equals(self.lexeme)
+        }
+        return false
+    }
+    if (self is Space_Matcher) {
+        return token is Space_Token
+    }
+    if (self is Identifier_Matcher) {
+        return token is Identifier_Token
+    }
+    if (self is Keyword_Matcher) {
+        self: @Keyword_Matcher = self
+        if (token is Keyword_Token) {
+            return token.lexeme.equals(self.lexeme)
+        }
+        return false
+    }
+    if (self is Literal_Matcher) {
+        return token is Integer_Token || token is String_Token || token is Character_Token || token is Boolean_Token || token is Null_Token
+    }
+    if (self is End_Of_Line_Matcher) {
+        return token is End_Of_Line_Token || token is End_Of_File_Token
+    }
+    if (self is Comment_Matcher) {
+        return token is Comment_Token
+    }
+    if (self is End_Of_File_Matcher) {
+        return token is End_Of_File_Token
+    }
+    stderr.write("Unsupported token matcher").end_line()
+    abort()
+}
+
+\ -------------------------------------------------------------------------------------------------
+\       AST
+\ -------------------------------------------------------------------------------------------------
+
+Statement :: struct : Object {
+    location: @Source_Location
+}
+
+Function_Statement :: struct : Statement {
+    name: @Identifier_Token
+    parameters: @List
+    return_type: @Value_Type
+    body: @Block_Statement
+}
+
+create_function_statement :: (name: @Identifier_Token, parameters: @List, return_type: @Value_Type, body: @Block_Statement) -> @Statement {
+    function_statement: @Function_Statement = new Function_Statement
+    function_statement.location = name.location
+    function_statement.name = name
+    function_statement.parameters = parameters
+    function_statement.return_type = return_type
+    function_statement.body = body
+    return function_statement
+}
+
+Function_Parameter :: struct {
+    location: @Source_Location
+    name: @Identifier_Token
+    value_type: @Value_Type
+}
+
+create_function_parameter :: (name: @Identifier_Token, value_type: @Value_Type) -> @Function_Parameter {
+    function_parameter: @Function_Parameter = new Function_Parameter
+    function_parameter.location = name.location
+    function_parameter.name = name
+    function_parameter.value_type = value_type
+    return function_parameter
+}
+
+Block_Statement :: struct : Statement {
+    statements: @List
+}
+
+create_block_statement :: (open_brace: @Token, statements: @List) -> @Statement {
+    block_statement: @Block_Statement = new Block_Statement
+    block_statement.location = open_brace.location
+    block_statement.statements = statements
+    return block_statement
+}
+
+Expression_Statement :: struct : Statement {
+    expression: @Expression
+}
+
+create_expression_statement :: (expression: @Expression) -> @Statement {
+    statement: @Expression_Statement = new Expression_Statement
+    statement.location = expression.location
+    statement.expression = expression
+    return statement
+}
+
+Value_Type :: struct : Object {
+    location: @Source_Location
+}
+
+Named_Type :: struct : Value_Type {
+    name: @Identifier_Token
+}
+
+create_named_type :: (name: @Identifier_Token) -> @Value_Type {
+    named_type: @Named_Type = new Named_Type
+    named_type.location = name.location
+    named_type.name = name
+    return named_type
+}
+
+Pointer_Type :: struct : Value_Type {
+    value_type: @Value_Type
+}
+
+create_pointer_type :: (location: @Source_Location, value_type: @Value_Type) -> @Value_Type {
+    pointer_type: @Pointer_Type = new Pointer_Type
+    pointer_type.location = location
+    pointer_type.value_type = value_type
+    return pointer_type
+}
+
+Expression :: struct : Object {
+    location: @Source_Location
+}
+
+Literal_Expression :: struct : Expression {
+    literal: @Literal_Token
+}
+
+create_literal_expression :: (literal: @Literal_Token) -> @Expression {
+    expression: @Literal_Expression = new Literal_Expression
+    expression.location = literal.location
+    expression.literal = literal
+    return expression
+}
+
+Variable_Expression :: struct : Expression {
+    name: @Identifier_Token
+}
+
+create_variable_expression :: (name: @Identifier_Token) -> @Expression {
+    expression: @Variable_Expression = new Variable_Expression
+    expression.location = name.location
+    expression.name = name
+    return expression
+}
+
+\ -------------------------------------------------------------------------------------------------
+\       Scanner
+\ -------------------------------------------------------------------------------------------------
+
+scan :: (file_name: @String) -> @List {
+    scanner: @Scanner = create_scanner(create_source(file_name))
     tokens: @List = create_list()
 
     loop {
@@ -58,15 +693,17 @@ scan :: (file_name: @String) -> Nothing {
         }
     }
 
-    tokens_iterator: @List_Iterator = tokens.create_iterator()
-    while (tokens_iterator.has_next()) {
-        token: @Token = tokens_iterator.next() as @Token
-        if (token is End_Of_Line_Token) {
-            stdout.end_line()
-        } else {
-            stdout.write(token)
-        }
-    }
+    \ tokens: @List_Iterator = tokens.create_iterator()
+    \ while (tokens.has_next()) {
+    \     token: @Token = tokens.next() as @Token
+    \     if (token is End_Of_Line_Token) {
+    \         stdout.end_line()
+    \     } else {
+    \         stdout.write(token)
+    \     }
+    \ }
+
+    return tokens
 }
 
 Scanner :: struct {
@@ -76,11 +713,13 @@ Scanner :: struct {
     current_column: Int
 }
 
-init :: (self: @Scanner, source: @Source) -> Nothing {
-    self.source = source
-    self.current_char_index = 0
-    self.current_line = 1
-    self.current_column = 1
+create_scanner :: (source: @Source) -> @Scanner {
+    scanner: @Scanner = new Scanner
+    scanner.source = source
+    scanner.current_char_index = 0
+    scanner.current_line = 1
+    scanner.current_column = 1
+    return scanner
 }
 
 peek_char :: (self: @Scanner) -> Int8 {
@@ -305,6 +944,10 @@ scan_string_token :: (self: @Scanner, token_lexeme: @String, token_location: @So
     }
 }
 
+\ -------------------------------------------------------------------------------------------------
+\       Token
+\ -------------------------------------------------------------------------------------------------
+
 Token :: struct : Object {
     lexeme: @String
     location: @Source_Location
@@ -460,6 +1103,10 @@ create_string_token :: (lexeme: @String, location: @Source_Location, value: @Str
     return token as @Token
 }
 
+\ -------------------------------------------------------------------------------------------------
+\       Source_Location
+\ -------------------------------------------------------------------------------------------------
+
 Source_Location :: struct {
     source: @Source
     line: Int
@@ -470,12 +1117,18 @@ write :: (self: @FILE, location: @Source_Location) -> @FILE {
     return self.write(location.source.file_name).write(':').write(location.line).write(':').write(location.column)
 }
 
+\ -------------------------------------------------------------------------------------------------
+\       Source
+\ -------------------------------------------------------------------------------------------------
+
 Source :: struct {
     file_name: @String
     content: @Int8
 }
 
-init :: (self: @Source, file_name: @String) -> Nothing {
+create_source :: (file_name: @String) -> @Source {
+    source: @Source = new Source
+
     file: @FILE = fopen(file_name.data, "r".data)
 
     content_size: Int = 1024
@@ -494,8 +1147,10 @@ init :: (self: @Source, file_name: @String) -> Nothing {
         content_length = content_length + 1
     }
 
-    self.file_name = file_name
-    self.content = content
+    source.file_name = file_name
+    source.content = content
+
+    return source
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -549,6 +1204,8 @@ List_Item :: struct {
 List_Iterator :: struct {
     current_item: @List_Item
     next_item: @List_Item
+    saved_current_item: @List_Item
+    saved_next_item: @List_Item
 }
 
 create_iterator :: (list: @List) -> @List_Iterator {
@@ -556,6 +1213,13 @@ create_iterator :: (list: @List) -> @List_Iterator {
     iterator.current_item = null
     iterator.next_item = list.first_item
     return iterator
+}
+
+current :: (self: @List_Iterator) -> @Object {
+    if (self.current_item != null) {
+        return self.current_item.data
+    }
+    return null
 }
 
 has_next :: (self: @List_Iterator) -> Boolean {
@@ -569,6 +1233,16 @@ next :: (self: @List_Iterator) -> @Object {
     self.current_item = self.next_item
     self.next_item = self.next_item.next_item
     return self.current_item.data
+}
+
+save_state :: (self: @List_Iterator) -> Nothing {
+    self.saved_current_item = self.current_item
+    self.saved_next_item = self.next_item
+}
+
+restore_state :: (self: @List_Iterator) -> Nothing {
+    self.current_item = self.saved_current_item
+    self.next_item = self.saved_next_item
 }
 
 \ -------------------------------------------------------------------------------------------------
