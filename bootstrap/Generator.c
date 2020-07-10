@@ -565,6 +565,10 @@ void infer_expression_type(Context *context, Expression *expression) {
                         expression->inferred_type = context__get_boolean_type(context);
                         return;
                     }
+                    if (string__equals(expression->literal_data.value->lexeme, "null")) {
+                        expression->inferred_type = context__get_null_type(context);
+                        return;
+                    }
                     PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer type of '%s' yet.", SOURCE(expression->location), expression->literal_data.value->lexeme->data);
                 case TOKEN__STRING:
                     expression->inferred_type = type__create_pointer(expression->literal_data.value->location, context__get_string_type(context));
@@ -734,35 +738,35 @@ void emit_logical_expression(Context *context, Expression *expression, Value_Hol
     }
     emitf("  dec %s", value_holder__register_name(result_value_holder));
     if (string__equals(operator_token->lexeme, "&&")) {
-        emitf("  jnz and_%03d_false", count);
+        emitf("  jnz .L_and_%03d_false", count);
 
         Value_Holder right_value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression(context, expression->binary_data.right_expression, &right_value_holder);
         emitf("  dec %s", value_holder__register_name(&right_value_holder));
         value_holder__release_register(&right_value_holder);
-        emitf("  jz and_%03d_true", count);
+        emitf("  jz .L_and_%03d_true", count);
 
-        emitf("and_%03d_false:", count);
+        emitf(".L_and_%03d_false:", count);
         emitf("  mov %s, 0", value_holder__register_name(result_value_holder));
-        emitf("  jmp and_%03d_end", count);
-        emitf("and_%03d_true:", count);
+        emitf("  jmp .L_and_%03d_end", count);
+        emitf(".L_and_%03d_true:", count);
         emitf("  mov %s, 1", value_holder__register_name(result_value_holder));
-        emitf("and_%03d_end:", count);
+        emitf(".L_and_%03d_end:", count);
     } else if (string__equals(operator_token->lexeme, "||")) {
-        emitf("  jz or_%03d_true", count);
+        emitf("  jz .L_or_%03d_true", count);
 
         Value_Holder right_value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression(context, expression->binary_data.right_expression, &right_value_holder);
         emitf("  dec %s", value_holder__register_name(&right_value_holder));
         value_holder__release_register(&right_value_holder);
-        emitf("  jz or_%03d_true", count);
+        emitf("  jz .L_or_%03d_true", count);
 
-        emitf("or_%03d_false:", count);
+        emitf(".L_or_%03d_false:", count);
         emitf("  mov %s, 0", value_holder__register_name(result_value_holder));
-        emitf("  jmp or_%03d_end", count);
-        emitf("or_%03d_true:", count);
+        emitf("  jmp .L_or_%03d_end", count);
+        emitf(".L_or_%03d_true:", count);
         emitf("  mov %s, 1", value_holder__register_name(result_value_holder));
-        emitf("or_%03d_end:", count);
+        emitf(".L_or_%03d_end:", count);
     } else {
         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported logical expression operator: %s", SOURCE(operator_token->location), operator_token->lexeme->data);
     }
@@ -1113,6 +1117,14 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
                     return;
                 }
                 break;
+            case TYPE__NULL: {
+                if (cast_type->kind == TYPE__POINTER) {
+                    emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
+                    value_holder__release_register(&cast_expression_value_holder);
+                    return;
+                }
+                break;
+            }
             case TYPE__POINTER: {
                 if (cast_type->kind == TYPE__POINTER) {
                     // TODO: make sure pointed type are compatible
@@ -1148,21 +1160,21 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
         int is_count = counter__inc(context->counter);
         value_holder__acquire_register(result_value_holder, context__get_boolean_type(context), context);
-        emitf("is_%03d:", is_count);
+        emitf(".L_is_%03d:", is_count);
         emitf("  xor %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(result_value_holder));
-        emitf("is_%03d_loop:", is_count);
+        emitf(".L_is_%03d_loop:", is_count);
         emitf("  mov rax, %s[rip]", context__find_variable(context, is_type->name)->variable_data.unique_name->data);
         emitf("  cmp rax, [%s]", value_holder__register_name(&is_expression_value_holder));
-        emitf("  jz is_%03d_true", is_count);
+        emitf("  jz .L_is_%03d_true", is_count);
         emitf("  mov %s, [%s]", value_holder__register_name(&is_expression_value_holder), value_holder__register_name(&is_expression_value_holder));
         emitf("  add %s, 8", value_holder__register_name(&is_expression_value_holder));
         emitf("  mov rax, [%s]", value_holder__register_name(&is_expression_value_holder));
         emits("  test rax, rax");
-        emitf("  jz is_%03d_end", is_count);
-        emitf("  jmp is_%03d_loop", is_count);
-        emitf("is_%03d_true:", is_count);
+        emitf("  jz .L_is_%03d_end", is_count);
+        emitf("  jmp .L_is_%03d_loop", is_count);
+        emitf(".L_is_%03d_true:", is_count);
         emitf("  inc %s", value_holder__register_name(result_value_holder));
-        emitf("is_%03d_end:", is_count);
+        emitf(".L_is_%03d_end:", is_count);
         value_holder__release_register(&is_expression_value_holder);
         return;
     }
@@ -1379,7 +1391,7 @@ void emit_statement(Context *context, Statement *statement) {
         if (loop == NULL) {
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "This break is not inside of a loop", SOURCE(statement->location));
         }
-        emitf("  jmp loop_%03d_end", loop->id);
+        emitf("  jmp .L_loop_%03d_end", loop->id);
         loop->has_exit = 1;
         return;
     }
@@ -1441,7 +1453,7 @@ void emit_statement(Context *context, Statement *statement) {
                 emit_statement(context, body_statement);
             }
 
-            emitf("%s__end:", function_unique_name->data);
+            emitf(".L_%s__end:", function_unique_name->data);
             if (string__equals(function_unique_name, "main") && statement->function_data.return_type->kind == TYPE__NOTHING) {
                 emits("  xor rax, rax");
             }
@@ -1453,7 +1465,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__IF: {
         int label = counter__inc(context->counter);
-        emitf("if_%03d_cond:", label);
+        emitf(".L_if_%03d_cond:", label);
         Expression *condition_expression = statement->if_data.condition;
         Value_Holder condition_value_holder = { .kind = VALUE_HOLDER__NEW };
         emit_expression(context, condition_expression, &condition_value_holder);
@@ -1463,30 +1475,30 @@ void emit_statement(Context *context, Statement *statement) {
         }
         emitf("  dec %s", value_holder__register_name(&condition_value_holder));
         value_holder__release_register(&condition_value_holder);
-        emitf("  jnz if_%03d_false", label);
-        emitf("if_%03d_true:", label);
+        emitf("  jnz .L_if_%03d_false", label);
+        emitf(".L_if_%03d_true:", label);
         emit_statement(context, statement->if_data.true_block);
         if (statement->if_data.false_block) {
-            emitf("  jmp if_%03d_end", label);
+            emitf("  jmp .L_if_%03d_end", label);
         }
-        emitf("if_%03d_false:", label);
+        emitf(".L_if_%03d_false:", label);
         if (statement->if_data.false_block) {
             emit_statement(context, statement->if_data.false_block);
         }
-        emitf("if_%03d_end:", label);
+        emitf(".L_if_%03d_end:", label);
         break;
     }
     case STATEMENT__LOOP: {
         int label = counter__inc(context->counter);
-        emitf("loop_%03d_start:", label);
+        emitf(".L_loop_%03d_start:", label);
         context->current_loop = loop__create(label, context->current_loop);
         emit_statement(context, statement->loop_data.block);
         if (!context->current_loop->has_exit) {
             WARNING(__FILE__, __LINE__, SOURCE_LOCATION "Infinite loop detected.", SOURCE(statement->location));
         }
         context->current_loop = context->current_loop->parent;
-        emitf("  jmp loop_%03d_start", label);
-        emitf("loop_%03d_end:", label);
+        emitf("  jmp .L_loop_%03d_start", label);
+        emitf(".L_loop_%03d_end:", label);
         break;
     }
     case STATEMENT__RETURN: {
@@ -1534,7 +1546,7 @@ void emit_statement(Context *context, Statement *statement) {
         if (context->current_loop) {
             context->current_loop->has_exit = 1;
         }
-        emitf("  jmp %s__end", function->function_data.unique_name->data);
+        emitf("  jmp .L_%s__end", function->function_data.unique_name->data);
         return;
     }
     case STATEMENT__STRUCT: {
@@ -1636,7 +1648,7 @@ void emit_statement(Context *context, Statement *statement) {
     }
     case STATEMENT__WHILE: {
         int label = counter__inc(context->counter);
-        emitf("while_%03d_start:", label);
+        emitf(".L_while_%03d_start:", label);
         context->current_loop = loop__create(label, context->current_loop);
         Expression *condition_expression = statement->while_data.condition;
         Value_Holder condition_value_holder = { .kind = VALUE_HOLDER__NEW };
@@ -1647,12 +1659,12 @@ void emit_statement(Context *context, Statement *statement) {
         }
         emitf("  dec %s", value_holder__register_name(&condition_value_holder));
         value_holder__release_register(&condition_value_holder);
-        emitf("  jnz while_%03d_end", label);
+        emitf("  jnz .L_while_%03d_end", label);
         emit_statement(context, statement->while_data.block);
         context->current_loop = context->current_loop->parent;
-        emitf("  jmp while_%03d_start", label);
-        emitf("loop_%03d_end:", label);
-        emitf("while_%03d_end:", label);
+        emitf("  jmp .L_while_%03d_start", label);
+        emitf(".L_loop_%03d_end:", label);
+        emitf(".L_while_%03d_end:", label);
         break;
     }
     default:
