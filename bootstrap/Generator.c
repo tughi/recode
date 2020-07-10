@@ -774,114 +774,124 @@ void emit_logical_expression(Context *context, Expression *expression, Value_Hol
 
 void emit_expression_address(Context *context, Expression *expression, Value_Holder *destination_value_holder) {
     switch (expression->kind) {
-    case EXPRESSION__ARRAY_ITEM: {
-        Expression *address_expression = expression->array_item_data.array;
-        Value_Holder address_value_holder = { .kind = VALUE_HOLDER__NEW };
-        emit_expression_address(context, address_expression, &address_value_holder);
-        if (!(address_value_holder.type->kind == TYPE__POINTER && (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY || address_value_holder.type->pointer_data.type->kind == TYPE__POINTER))) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not an array expression", SOURCE(address_expression->location));
-        }
-        Expression *index_expression = expression->array_item_data.index;
-        Value_Holder index_value_holder = { .kind = VALUE_HOLDER__NEW };
-        emit_expression(context, index_expression, &index_value_holder);
-        if (index_value_holder.type->kind != TYPE__INT) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not an integer expression", SOURCE(index_expression->location));
-        }
-        Type *item_type;
-        if (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY) {
-            item_type = address_value_holder.type->pointer_data.type->array_data.item_type;
-        } else {
-            item_type = address_value_holder.type->pointer_data.type->pointer_data.type;
-        }
-        int item_type_size = context__compute_type_size(context, item_type);
-        switch (item_type_size) {
-        case  1:
-            break;
-        case 2:
-            emitf("  shl %s, 1", value_holder__register_name(&index_value_holder));
-            break;
-        case 4:
-            emitf("  shl %s, 2", value_holder__register_name(&index_value_holder));
-            break;
-        case 8:
-            emitf("  shl %s, 3", value_holder__register_name(&index_value_holder));
-            break;
-        default:
-            emitf("  mov rax, %d", item_type_size);
-            emitf("  mul %s", value_holder__register_name(&index_value_holder));
-            emitf("  mov %s, rax", value_holder__register_name(&index_value_holder));
-            break;
-        }
-        value_holder__acquire_register(destination_value_holder, type__create_pointer(address_expression->location, item_type), context);
-        if (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY) {
-            emitf("  mov %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&address_value_holder));
-        } else {
-            emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&address_value_holder));
-        }
-        emitf("  add %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&index_value_holder));
-        value_holder__release_register(&index_value_holder);
-        value_holder__release_register(&address_value_holder);
-        return;
-    }
-    case EXPRESSION__LITERAL: {
-        Token *value_token = expression->literal_data.value;
-        if (value_token->kind == TOKEN__STRING) {
-            int index = context__add_string_constant(context, value_token);
-            value_holder__acquire_register(destination_value_holder, type__create_pointer(value_token->location, type__create_pointer(value_token->location, context__get_string_type(context))), context);
-            emitf("  lea %s, L%03d_STRING_PTR[rip]", value_holder__register_name(destination_value_holder), index);
+        case EXPRESSION__ARRAY_ITEM: {
+            Expression *address_expression = expression->array_item_data.array;
+            Value_Holder address_value_holder = { .kind = VALUE_HOLDER__NEW };
+            emit_expression_address(context, address_expression, &address_value_holder);
+            if (!(address_value_holder.type->kind == TYPE__POINTER && (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY || address_value_holder.type->pointer_data.type->kind == TYPE__POINTER))) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not an array expression", SOURCE(address_expression->location));
+            }
+            Expression *index_expression = expression->array_item_data.index;
+            Value_Holder index_value_holder = { .kind = VALUE_HOLDER__NEW };
+            emit_expression(context, index_expression, &index_value_holder);
+            if (index_value_holder.type->kind != TYPE__INT) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not an integer expression", SOURCE(index_expression->location));
+            }
+            Type *item_type;
+            if (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY) {
+                item_type = address_value_holder.type->pointer_data.type->array_data.item_type;
+            } else {
+                item_type = address_value_holder.type->pointer_data.type->pointer_data.type;
+            }
+            int item_type_size = context__compute_type_size(context, item_type);
+            switch (item_type_size) {
+                case  1:
+                    break;
+                case 2:
+                    emitf("  shl %s, 1", value_holder__register_name(&index_value_holder));
+                    break;
+                case 4:
+                    emitf("  shl %s, 2", value_holder__register_name(&index_value_holder));
+                    break;
+                case 8:
+                    emitf("  shl %s, 3", value_holder__register_name(&index_value_holder));
+                    break;
+                default:
+                    emitf("  mov rax, %d", item_type_size);
+                    emitf("  mul %s", value_holder__register_name(&index_value_holder));
+                    emitf("  mov %s, rax", value_holder__register_name(&index_value_holder));
+                    break;
+            }
+            value_holder__acquire_register(destination_value_holder, type__create_pointer(address_expression->location, item_type), context);
+            if (address_value_holder.type->pointer_data.type->kind == TYPE__ARRAY) {
+                emitf("  mov %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&address_value_holder));
+            } else {
+                emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&address_value_holder));
+            }
+            emitf("  add %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&index_value_holder));
+            value_holder__release_register(&index_value_holder);
+            value_holder__release_register(&address_value_holder);
             return;
         }
-        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported literal kind: %s", SOURCE(value_token->location), token__get_kind_name(value_token));
-    }
-    case EXPRESSION__MEMBER: {
-        Expression *object_expression = expression->member_data.object;
-        Value_Holder object_value_holder = { .kind = VALUE_HOLDER__NEW };
-        emit_expression_address(context, object_expression, &object_value_holder);
-        if (object_value_holder.type->kind != TYPE__POINTER || object_value_holder.type->pointer_data.type->kind != TYPE__POINTER || object_value_holder.type->pointer_data.type->pointer_data.type->kind != TYPE__STRUCT) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not a struct pointer expression", SOURCE(object_expression->location));
+        case EXPRESSION__CAST: {
+            Expression *cast_expression = expression->cast_data.expression;
+            Value_Holder cast_expression_address_holder = { .kind = VALUE_HOLDER__NEW };
+            emit_expression_address(context, cast_expression, &cast_expression_address_holder);
+            Type *cast_type = expression->cast_data.type;
+            context__resolve_type(context, cast_type);
+            value_holder__acquire_register(destination_value_holder, type__create_pointer(cast_type->location, cast_type), context);
+            emitf("  mov %s, %s", value_holder__register_name(destination_value_holder), value_holder__register_name(&cast_expression_address_holder));
+            value_holder__release_register(&cast_expression_address_holder);
+            return;
         }
-        Statement *struct_statement = object_value_holder.type->pointer_data.type->pointer_data.type->struct_data.statement;
-        Token *member_name = expression->member_data.name;
-        Member *member = context__get_struct_type_member(context, object_value_holder.type->pointer_data.type->pointer_data.type, member_name);
-        value_holder__acquire_register(destination_value_holder, type__create_pointer(object_expression->location, member->type), context);
-        emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&object_value_holder));
-        if (member->struct_offset > 0) {
-            emitf("  add %s, %d", value_holder__register_name(destination_value_holder), member->struct_offset);
+        case EXPRESSION__LITERAL: {
+            Token *value_token = expression->literal_data.value;
+            if (value_token->kind == TOKEN__STRING) {
+                int index = context__add_string_constant(context, value_token);
+                value_holder__acquire_register(destination_value_holder, type__create_pointer(value_token->location, type__create_pointer(value_token->location, context__get_string_type(context))), context);
+                emitf("  lea %s, L%03d_STRING_PTR[rip]", value_holder__register_name(destination_value_holder), index);
+                return;
+            }
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported literal kind: %s", SOURCE(value_token->location), token__get_kind_name(value_token));
         }
-        value_holder__release_register(&object_value_holder);
-        return;
-    }
-    case EXPRESSION__POINTED_VALUE: {
-        Expression *pointer_expression = expression->pointed_value_data.expression;
-        Value_Holder pointer_value_holder = { .kind = VALUE_HOLDER__NEW };
-        emit_expression_address(context, pointer_expression, &pointer_value_holder);
-        if (pointer_value_holder.type->kind != TYPE__POINTER || pointer_value_holder.type->pointer_data.type->kind != TYPE__POINTER) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not a pointer expression", SOURCE(pointer_expression->location));
+        case EXPRESSION__MEMBER: {
+            Expression *object_expression = expression->member_data.object;
+            Value_Holder object_value_holder = { .kind = VALUE_HOLDER__NEW };
+            emit_expression_address(context, object_expression, &object_value_holder);
+            if (object_value_holder.type->kind != TYPE__POINTER || object_value_holder.type->pointer_data.type->kind != TYPE__POINTER || object_value_holder.type->pointer_data.type->pointer_data.type->kind != TYPE__STRUCT) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not a struct pointer expression", SOURCE(object_expression->location));
+            }
+            Statement *struct_statement = object_value_holder.type->pointer_data.type->pointer_data.type->struct_data.statement;
+            Token *member_name = expression->member_data.name;
+            Member *member = context__get_struct_type_member(context, object_value_holder.type->pointer_data.type->pointer_data.type, member_name);
+            value_holder__acquire_register(destination_value_holder, type__create_pointer(object_expression->location, member->type), context);
+            emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&object_value_holder));
+            if (member->struct_offset > 0) {
+                emitf("  add %s, %d", value_holder__register_name(destination_value_holder), member->struct_offset);
+            }
+            value_holder__release_register(&object_value_holder);
+            return;
         }
-        Type *pointed_type = pointer_value_holder.type->pointer_data.type->pointer_data.type;
-        value_holder__acquire_register(destination_value_holder, type__create_pointer(pointer_expression->location, pointed_type), context);
-        emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&pointer_value_holder));
-        value_holder__release_register(&pointer_value_holder);
-        return;
-    }
-    case EXPRESSION__VARIABLE: {
-        String *variable_name = expression->variable_data.name->lexeme;
-        Statement *variable_statement = context__find_variable(context, variable_name);
-        if (variable_statement == NULL) {
-            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Undeclared variable: %s", SOURCE(expression->location), variable_name->data);
+        case EXPRESSION__POINTED_VALUE: {
+            Expression *pointer_expression = expression->pointed_value_data.expression;
+            Value_Holder pointer_value_holder = { .kind = VALUE_HOLDER__NEW };
+            emit_expression_address(context, pointer_expression, &pointer_value_holder);
+            if (pointer_value_holder.type->kind != TYPE__POINTER || pointer_value_holder.type->pointer_data.type->kind != TYPE__POINTER) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Not a pointer expression", SOURCE(pointer_expression->location));
+            }
+            Type *pointed_type = pointer_value_holder.type->pointer_data.type->pointer_data.type;
+            value_holder__acquire_register(destination_value_holder, type__create_pointer(pointer_expression->location, pointed_type), context);
+            emitf("  mov %s, [%s]", value_holder__register_name(destination_value_holder), value_holder__register_name(&pointer_value_holder));
+            value_holder__release_register(&pointer_value_holder);
+            return;
         }
-        value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable_statement->variable_data.type), context);
-        if (variable_statement->variable_data.is_global) {
-            emitf("  lea %s, %s[rip]", value_holder__register_name(destination_value_holder), variable_statement->variable_data.unique_name->data);
-        } else {
-            emitf("  mov %s, rbp", value_holder__register_name(destination_value_holder));
-            emitf("  sub %s, %d", value_holder__register_name(destination_value_holder), variable_statement->variable_data.locals_offset);
+        case EXPRESSION__VARIABLE: {
+            String *variable_name = expression->variable_data.name->lexeme;
+            Statement *variable_statement = context__find_variable(context, variable_name);
+            if (variable_statement == NULL) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Undeclared variable: %s", SOURCE(expression->location), variable_name->data);
+            }
+            value_holder__acquire_register(destination_value_holder, type__create_pointer(expression->location, variable_statement->variable_data.type), context);
+            if (variable_statement->variable_data.is_global) {
+                emitf("  lea %s, %s[rip]", value_holder__register_name(destination_value_holder), variable_statement->variable_data.unique_name->data);
+            } else {
+                emitf("  mov %s, rbp", value_holder__register_name(destination_value_holder));
+                emitf("  sub %s, %d", value_holder__register_name(destination_value_holder), variable_statement->variable_data.locals_offset);
+            }
+            return;
         }
-        return;
     }
-    default:
-        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported expression kind: %s", SOURCE(expression->location), expression__get_kind_name(expression));
-    }
+    PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported expression kind: %s", SOURCE(expression->location), expression__get_kind_name(expression));
 }
 
 void emit_expression(Context *context, Expression *expression, Value_Holder *result_value_holder) {
