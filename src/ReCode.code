@@ -199,6 +199,14 @@ parse_statement :: (self: @Parser) -> @Statement {
         abort()
     }
 
+    if (self.matches(self.optional_space, self.required_equals)) {
+        self.consume_space(1)
+        self.consume(self.required_equals)
+        self.consume_space(1)
+        value_expression: @Expression = self.parse_expression()
+        return create_assignment_statement(expression, value_expression)
+    }
+
     return null
 }
 
@@ -858,6 +866,19 @@ create_struct_member :: (name: @Identifier_Token, value_type: @Value_Type) -> @S
     struct_member.name = name
     struct_member.value_type = value_type
     return struct_member
+}
+
+Assignment_Statement :: struct : Statement {
+    destination: @Expression
+    value_expression: @Expression
+}
+
+create_assignment_statement :: (destination: @Expression, value_expression: @Expression) -> @Statement {
+    statement: @Assignment_Statement = new Assignment_Statement
+    statement.location = destination.location
+    statement.destination = destination
+    statement.value_expression = value_expression
+    return statement
 }
 
 Value_Type :: struct : Object {
