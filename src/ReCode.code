@@ -71,6 +71,7 @@ Parser :: struct {
     required_if: @Matcher
     required_less_than: @Matcher
     required_literal: @Matcher
+    required_new: @Matcher
     required_open_brace: @Matcher
     required_open_bracket: @Matcher
     required_open_paren: @Matcher
@@ -104,6 +105,7 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_if = create_keyword_matcher(true, "if")
     parser.required_less_than = create_other_matcher(true, "<")
     parser.required_literal = create_literal_matcher(true)
+    parser.required_new = create_keyword_matcher(true, "new")
     parser.required_open_brace = create_other_matcher(true, "{")
     parser.required_open_bracket = create_other_matcher(true, "[")
     parser.required_open_paren = create_other_matcher(true, "(")
@@ -200,12 +202,49 @@ parse_statement :: (self: @Parser) -> @Statement {
     return null
 }
 
-parse_struct :: (self: @Parser, name: @Expression) -> @Statement {
-    if ((name is Variable_Expression) == false) {
-        stderr.write(name.location).write(": Cannot use expression as struct name").end_line()
+\ struct
+\   : "struct" ( ":" IDENTIFIER )? ( "{" <EOL> struct_members "}" )?
+parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
+    if (name_expression is Variable_Expression) {
+        struct_name: @Identifier_Token = (name_expression as @Variable_Expression).name
+        self.consume(self.required_struct)
+        if (self.matches(self.optional_space, self.required_open_brace)) {
+            self.consume_space(1)
+            self.consume(self.required_open_brace)
+            self.consume_end_of_line()
+            self.current_alignment = self.current_alignment + 1
+            struct_members: @List = create_list()
+            self.parse_struct_members(struct_members)
+            self.current_alignment = self.current_alignment - 1
+            self.consume_space(self.current_alignment * 4)
+            self.consume(self.required_close_brace)
+            return create_struct_statement(struct_name, null as @Value_Type, struct_members)
+        }
+    } else {
+        stderr.write(name_expression.location).write(": Cannot use expression as struct name").end_line()
         abort()
     }
-    abort()
+}
+
+\ struct_members
+\   : ( IDENTIFIER ":" value_type <EOL> )*
+parse_struct_members :: (self: @Parser, struct_members: @List) -> Nothing {
+    loop {
+        while (self.consume_empty_line()) {
+        }
+
+        if (self.matches(self.optional_space, self.required_identifier)) {
+            self.consume_space(self.current_alignment * 4)
+            member_name: @Identifier_Token = self.consume(self.required_identifier)
+            self.consume_space(0)
+            self.consume(self.required_colon)
+            self.consume_space(1)
+            member_value_type: @Value_Type = self.parse_value_type()
+            struct_members.append(create_struct_member(member_name, member_value_type) as @Object)
+        } else {
+            break
+        }
+    }
 }
 
 \ function
@@ -433,6 +472,7 @@ parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
 \   | "false"
 \   | "true"
 \   | "(" expression ")"
+\   | "new" value_type
 parse_primary_expression :: (self: @Parser) -> @Expression {
     if (self.matches(self.required_identifier)) {
         return create_variable_expression(self.consume(self.required_identifier) as @Identifier_Token)
@@ -442,9 +482,17 @@ parse_primary_expression :: (self: @Parser) -> @Expression {
     }
     if (self.matches(self.required_open_paren)) {
         self.consume(self.required_open_paren)
+        self.consume_space(0)
         expression: @Expression = self.parse_expression()
+        self.consume_space(0)
         self.consume(self.required_close_paren)
         return expression
+    }
+    if (self.matches(self.required_new)) {
+        token: @Token = self.consume(self.required_new)
+        self.consume_space(1)
+        value_type: @Value_Type = self.parse_value_type()
+        return create_new_expression(token.location, value_type)
     }
     return null
 }
@@ -783,6 +831,35 @@ create_variable_statement :: (name: @Identifier_Token, value_type: @Value_Type, 
     return statement
 }
 
+Struct_Statement :: struct : Statement {
+    name: @Identifier_Token
+    base_type: @Value_Type
+    members: @List
+}
+
+create_struct_statement :: (name: @Identifier_Token, base_type: @Value_Type, members: @List) -> @Statement {
+    statement: @Struct_Statement = new Struct_Statement
+    statement.location = name.location
+    statement.name = name
+    statement.base_type = base_type
+    statement.members = members
+    return statement
+}
+
+Struct_Member :: struct {
+    location: @Source_Location
+    name: @Identifier_Token
+    value_type: @Value_Type
+}
+
+create_struct_member :: (name: @Identifier_Token, value_type: @Value_Type) -> @Struct_Member {
+    struct_member: @Struct_Member = new Struct_Member
+    struct_member.location = name.location
+    struct_member.name = name
+    struct_member.value_type = value_type
+    return struct_member
+}
+
 Value_Type :: struct : Object {
     location: @Source_Location
 }
@@ -847,6 +924,17 @@ create_binary_expression :: (left_expression: @Expression, operator: @Other_Toke
     expression.left_expression = left_expression
     expression.operator = operator
     expression.right_expression = right_expression
+    return expression
+}
+
+New_Expression :: struct : Expression {
+    value_type: @Value_Type
+}
+
+create_new_expression :: (location: @Source_Location, value_type: @Value_Type) -> @Expression {
+    expression: @New_Expression = new New_Expression
+    expression.location = location
+    expression.value_type = value_type
     return expression
 }
 
