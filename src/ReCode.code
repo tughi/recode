@@ -59,11 +59,16 @@ Parser :: struct {
     required_colon: @Matcher
     required_comma: @Matcher
     required_comment: @Matcher
+    required_dot: @Matcher
+    required_else: @Matcher
     required_end_of_file: @Matcher
     required_end_of_line: @Matcher
+    required_equals: @Matcher
+    required_exclamation_mark: @Matcher
     required_greater_than: @Matcher
     required_hyphen: @Matcher
     required_identifier: @Matcher
+    required_if: @Matcher
     required_less_than: @Matcher
     required_literal: @Matcher
     required_open_brace: @Matcher
@@ -87,11 +92,16 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_colon = create_other_matcher(true, ":")
     parser.required_comma = create_other_matcher(true, ",")
     parser.required_comment = create_comment_matcher(true)
+    parser.required_dot = create_other_matcher(true, ".")
+    parser.required_else = create_keyword_matcher(true, "else")
     parser.required_end_of_file = create_end_of_file_matcher(true)
     parser.required_end_of_line = create_end_of_line_matcher(true)
+    parser.required_equals = create_other_matcher(true, "=")
+    parser.required_exclamation_mark = create_other_matcher(true, "!")
     parser.required_greater_than = create_other_matcher(true, ">")
     parser.required_hyphen = create_other_matcher(true, "-")
     parser.required_identifier = create_identifier_matcher(true)
+    parser.required_if = create_keyword_matcher(true, "if")
     parser.required_less_than = create_other_matcher(true, "<")
     parser.required_literal = create_literal_matcher(true)
     parser.required_open_brace = create_other_matcher(true, "{")
@@ -138,10 +148,13 @@ parse_statement :: (self: @Parser) -> @Statement {
 
     self.consume_space(self.current_alignment * 4)
 
+    if (self.matches(self.required_if)) {
+        return self.parse_if()
+    }
+
     expression: @Expression = self.parse_expression()
 
     if (self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)) {
-        self.consume_end_of_line()
         return create_expression_statement(expression)
     }
 
@@ -229,7 +242,7 @@ parse_function_parameter :: (self: @Parser) -> @Function_Parameter {
 }
 
 \ block
-\   : "{" ( statement <EOL> )* "}"
+\   : "{" statements "}"
 parse_block :: (self: @Parser) -> @Statement {
     token: @Token = self.consume(self.required_open_brace)
     self.consume_end_of_line()
@@ -239,6 +252,28 @@ parse_block :: (self: @Parser) -> @Statement {
     self.consume_space(self.current_alignment * 4)
     self.consume(self.required_close_brace)
     return create_block_statement(token, statements)
+}
+
+\ if
+\   : "if" "(" expression ")" block ( "else" block )?
+parse_if :: (self: @Parser) -> @Statement {
+    token: @Token = self.consume(self.required_if)
+    self.consume_space(1)
+    self.consume(self.required_open_paren)
+    self.consume_space(0)
+    condition: @Expression = self.parse_expression()
+    self.consume_space(0)
+    self.consume(self.required_close_paren)
+    self.consume_space(1)
+    true_block: @Block_Statement = self.parse_block()
+    false_block: @Block_Statement = null
+    if (self.matches(self.optional_space, self.required_else)) {
+        self.consume_space(1)
+        self.consume(self.required_else)
+        self.consume_space(1)
+        false_block = self.parse_block()
+    }
+    return create_if_statement(token.location, condition, true_block, false_block)
 }
 
 \ value_type
@@ -268,8 +303,24 @@ parse_logic_and_expression :: (self: @Parser) -> @Expression {
     return self.parse_equality_expression()
 }
 
+\ equality_expression
+\   : is_expression ( ( "==" | "!=" ) equality_expression )?
 parse_equality_expression :: (self: @Parser) -> @Expression {
-    return self.parse_is_expression()
+    expression: @Expression = self.parse_is_expression()
+    if (self.matches(self.optional_space, self.required_equals, self.required_equals) || self.matches(self.optional_space, self.required_exclamation_mark, self.required_equals)) {
+        self.consume_space(1)
+        operator: @Other_Token
+        if (self.matches(self.required_equals)) {
+            operator = self.consume(self.required_equals)
+        } else {
+            operator = self.consume(self.required_exclamation_mark)
+        }
+        self.consume(self.required_equals)
+        operator.lexeme.append("=")
+        self.consume_space(1)
+        return create_binary_expression(expression, operator, self.parse_equality_expression())
+    }
+    return expression
 }
 
 parse_is_expression :: (self: @Parser) -> @Expression {
@@ -289,11 +340,53 @@ parse_multiplication_expression :: (self: @Parser) -> @Expression {
 }
 
 parse_unary_expression :: (self: @Parser) -> @Expression {
-    return self.parse_call_expression()
+    return self.parse_access_expression()
 }
 
-parse_call_expression :: (self: @Parser) -> @Expression {
-    return self.parse_primary_expression()
+\ access_expression
+\   : primary_expression ( "." IDENTIFIER | "(" call_arguments? ")" | "[" expression "]" )*
+parse_access_expression :: (self: @Parser) -> @Expression {
+    expression: @Expression = self.parse_primary_expression()
+    loop {
+        old_expression: @Expression = expression
+        if (self.matches(self.optional_space, self.required_dot)) {
+            self.consume_space(0)
+            self.consume(self.required_dot)
+            self.consume_space(0)
+            expression = create_member_access_expression(expression, self.consume(self.required_identifier) as @Identifier_Token)
+        }
+        if (self.matches(self.optional_space, self.required_open_paren)) {
+            self.consume_space(0)
+            self.consume(self.required_open_paren)
+            self.consume_space(0)
+            call_arguments: @List = create_list()
+            if (self.matches(self.optional_space, self.required_close_paren) == false) {
+                self.parse_call_arguments(call_arguments)
+            }
+            self.consume_space(0)
+            self.consume(self.required_close_paren)
+            expression = create_call_expression(expression, call_arguments)
+        }
+        if (self.matches(self.optional_space, self.required_open_bracket)) {
+            self.consume_space(0)
+            self.consume(self.required_open_bracket)
+            self.consume_space(0)
+            index_expression: @Expression = self.parse_expression()
+            self.consume_space(0)
+            self.consume(self.required_close_bracket)
+            expression = create_array_access_expression(expression, index_expression)
+        }
+        if (expression == old_expression) {
+            break
+        }
+    }
+    return expression
+}
+
+\ call_arguments
+\   : expression ( "," expression )*
+parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
+    call_arguments.append(self.parse_expression() as @Object)
 }
 
 \ primary_expression
@@ -625,6 +718,21 @@ create_expression_statement :: (expression: @Expression) -> @Statement {
     return statement
 }
 
+If_Statement :: struct : Statement {
+    condition: @Expression
+    true_block: @Block_Statement
+    false_block: @Block_Statement
+}
+
+create_if_statement :: (location: @Source_Location, condition: @Expression, true_block: @Block_Statement, false_block: @Block_Statement) -> @Statement {
+    statement: @If_Statement = new If_Statement
+    statement.location = location
+    statement.condition = condition
+    statement.true_block = true_block
+    statement.false_block = false_block
+    return statement
+}
+
 Value_Type :: struct : Object {
     location: @Source_Location
 }
@@ -674,6 +782,63 @@ create_variable_expression :: (name: @Identifier_Token) -> @Expression {
     expression: @Variable_Expression = new Variable_Expression
     expression.location = name.location
     expression.name = name
+    return expression
+}
+
+Binary_Expression :: struct : Expression {
+    left_expression: @Expression
+    operator: @Other_Token
+    right_expression: @Expression
+}
+
+create_binary_expression :: (left_expression: @Expression, operator: @Other_Token, right_expression: @Expression) -> @Expression {
+    expression: @Binary_Expression = new Binary_Expression
+    expression.location = left_expression.location
+    expression.left_expression = left_expression
+    expression.operator = operator
+    expression.right_expression = right_expression
+    return expression
+}
+
+Call_Expression :: struct : Expression {
+    callee: @Expression
+    call_arguments: @List
+}
+
+create_call_expression :: (callee: @Expression, call_arguments: @List) -> @Expression {
+    expression: @Call_Expression = new Call_Expression
+    expression.location = callee.location
+    expression.callee = callee
+    expression.call_arguments = call_arguments
+    return expression
+}
+
+Access_Expression :: struct : Expression {
+}
+
+Member_Access_Expression :: struct : Access_Expression {
+    object: @Expression
+    member_name: @Identifier_Token
+}
+
+create_member_access_expression :: (object: @Expression, member_name: @Identifier_Token) -> @Expression {
+    expression: @Member_Access_Expression = new Member_Access_Expression
+    expression.location = object.location
+    expression.object = object
+    expression.member_name = member_name
+    return expression
+}
+
+Array_Access_Expression :: struct : Access_Expression {
+    object: @Expression
+    index_expression: @Expression
+}
+
+create_array_access_expression :: (object: @Expression, index_expression: @Expression) -> @Expression {
+    expression: @Array_Access_Expression = new Array_Access_Expression
+    expression.location = object.location
+    expression.object = object
+    expression.index_expression = index_expression
     return expression
 }
 
@@ -1292,6 +1457,28 @@ append :: (self: @String, char: Int8) -> @String {
     self.data[self.length] = char
     self.length = self.length + 1
     self.data[self.length] = '\0'
+    return self
+}
+
+append :: (self: @String, other: @String) -> @String {
+    if (self.length + other.length >= self.data_size) {
+        self.data_size = self.length + other.length + 1
+        self.data = realloc(self.data, self.data_size)
+    }
+    index: Int = 0
+    other_data: @Int8 = other.data
+    self_data: @Int8 = self.data
+    self_length: Int = self.length
+    loop {
+        char: Int8 = other_data[index]
+        if (char == '\0') {
+            break
+        }
+        self_data[self_length] = char
+        self_length = self_length + 1
+        index = index + 1
+    }
+    self.length = self_length
     return self
 }
 
