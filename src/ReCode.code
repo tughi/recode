@@ -258,6 +258,13 @@ parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
     if (name_expression is Variable_Expression) {
         struct_name: @Identifier_Token = (name_expression as @Variable_Expression).name
         self.consume(self.required_struct)
+        base_type: @Value_Type = null
+        if (self.matches(self.optional_space, self.required_colon)) {
+            self.consume_space(1)
+            self.consume(self.required_colon)
+            self.consume_space(1)
+            base_type = self.parse_value_type()
+        }
         if (self.matches(self.optional_space, self.required_open_brace)) {
             self.consume_space(1)
             self.consume(self.required_open_brace)
@@ -268,7 +275,7 @@ parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
             self.current_alignment = self.current_alignment - 1
             self.consume_space(self.current_alignment * 4)
             self.consume(self.required_close_brace)
-            return create_struct_statement(struct_name, null as @Value_Type, struct_members)
+            return create_struct_statement(struct_name, base_type, struct_members)
         }
     } else {
         stderr.write(name_expression.location).write(": Cannot use expression as struct name").end_line()
