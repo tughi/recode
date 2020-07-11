@@ -458,8 +458,18 @@ parse_logic_or_expression :: (self: @Parser) -> @Expression {
     return expression
 }
 
+\ parse_logic_and_expression
+\   : parse_equality_expression ( "&&" parse_logic_and_expression )?
 parse_logic_and_expression :: (self: @Parser) -> @Expression {
-    return self.parse_equality_expression()
+    expression: @Expression = self.parse_equality_expression()
+    if (self.matches(self.optional_space, self.required_ampersand, self.required_ampersand)) {
+        self.consume_space(1)
+        operator: @Other_Token = self.consume(self.required_ampersand, self.required_ampersand)
+        operator.lexeme.append("&")
+        self.consume_space(1)
+        return create_binary_expression(expression, operator, self.parse_logic_and_expression())
+    }
+    return expression
 }
 
 \ equality_expression
@@ -495,8 +505,30 @@ parse_is_expression :: (self: @Parser) -> @Expression {
     return expression
 }
 
+\ parse_comparison_expression
+\   : parse_addition_expression ( ( "<" | "<=" | ">" | ">=" ) parse_comparison_expression )?
 parse_comparison_expression :: (self: @Parser) -> @Expression {
-    return self.parse_addition_expression()
+    expression: @Expression = self.parse_addition_expression()
+    if (self.matches(self.optional_space, self.required_less_than) || self.matches(self.optional_space, self.required_greater_than)) {
+        self.consume_space(1)
+        operator: @Other_Token
+        if (self.matches(self.required_less_than)) {
+            operator = self.consume(self.required_less_than)
+            if (self.matches(self.required_equals)) {
+                operator = self.consume(self.required_equals)
+                operator.lexeme.append("=")
+            }
+        } else {
+            operator = self.consume(self.required_greater_than)
+            if (self.matches(self.required_equals)) {
+                operator = self.consume(self.required_equals)
+                operator.lexeme.append("=")
+            }
+        }
+        self.consume_space(1)
+        return create_binary_expression(expression, operator, self.parse_comparison_expression())
+    }
+    return expression
 }
 
 \ parse_addition_expression
@@ -528,7 +560,7 @@ parse_multiplication_expression :: (self: @Parser) -> @Expression {
             operator = self.consume(self.required_slash)
             if (self.matches(self.required_slash)) {
                 operator = self.consume(self.required_slash)
-                operator.lexeme.append("|")
+                operator.lexeme.append("/")
             }
         } else {
             operator = self.consume(self.required_asterisk)
