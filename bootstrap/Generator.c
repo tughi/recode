@@ -435,6 +435,16 @@ void value_holder__move_to_register(Value_Holder *self, int register_id, Context
     PANIC(__FILE__, __LINE__, "The specified register (%d) is already in use, and the are no other free registers either.", register_id);
 }
 
+void value_holder__push_to_stack(Value_Holder *self, Context *context) {
+    static char *names_8[REGISTERS_COUNT] = { "r15", "r14", "r13", "r12", "r11", "r10", "r9", "r8", "rcx", "rdx", "rsi", "rdi" };
+    emitf("  push %s", names_8[self->register_data.id]);
+}
+
+void value_holder__pop_from_stack(Value_Holder *self, Context *context) {
+    static char *names_8[REGISTERS_COUNT] = { "r15", "r14", "r13", "r12", "r11", "r10", "r9", "r8", "rcx", "rdx", "rsi", "rdi" };
+    emitf("  pop %s", names_8[self->register_data.id]);
+}
+
 void panic__unknown_function(Context *context, Token *function_name, Type_List *argument_types) {
     for (List_Iterator functions = list__create_iterator(context->named_functions); list_iterator__has_next(&functions);) {
         Statement *statement = list_iterator__next(&functions);
@@ -979,7 +989,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         for (int id = 0; id < last_argument_register_id; id++) {
             Value_Holder *value_holder = registers[id];
             if (value_holder != NULL) {
-                emitf("  push %s", value_holder__register_name(value_holder));
+                value_holder__push_to_stack(value_holder, context);
             }
         }
 
@@ -988,7 +998,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         for (int id = last_argument_register_id - 1; id >= 0; id--) {
             Value_Holder *value_holder = registers[id];
             if (value_holder != NULL) {
-                emitf("  pop %s", value_holder__register_name(value_holder));
+                value_holder__pop_from_stack(value_holder, context);
             }
         }
 
