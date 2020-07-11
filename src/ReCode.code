@@ -54,7 +54,9 @@ Parser :: struct {
     current_alignment: Int
     optional_comment: @Matcher
     optional_space: @Matcher
+    required_ampersand: @Matcher
     required_as: @Matcher
+    required_asterisk: @Matcher
     required_at: @Matcher
     required_break: @Matcher
     required_close_brace: @Matcher
@@ -73,6 +75,7 @@ Parser :: struct {
     required_hyphen: @Matcher
     required_identifier: @Matcher
     required_if: @Matcher
+    required_is: @Matcher
     required_less_than: @Matcher
     required_literal: @Matcher
     required_loop: @Matcher
@@ -80,8 +83,11 @@ Parser :: struct {
     required_open_brace: @Matcher
     required_open_bracket: @Matcher
     required_open_paren: @Matcher
+    required_plus: @Matcher
     required_return: @Matcher
+    required_slash: @Matcher
     required_struct: @Matcher
+    required_vertical_bar: @Matcher
     required_while: @Matcher
 }
 
@@ -94,7 +100,9 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.optional_comment = create_comment_matcher(false)
     parser.optional_space = create_space_matcher(false)
 
+    parser.required_ampersand = create_other_matcher(true, "&")
     parser.required_as = create_keyword_matcher(true, "as")
+    parser.required_asterisk = create_other_matcher(true, "*")
     parser.required_at = create_other_matcher(true, "@")
     parser.required_break = create_keyword_matcher(true, "break")
     parser.required_close_brace = create_other_matcher(true, "}")
@@ -113,6 +121,7 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_hyphen = create_other_matcher(true, "-")
     parser.required_identifier = create_identifier_matcher(true)
     parser.required_if = create_keyword_matcher(true, "if")
+    parser.required_is = create_keyword_matcher(true, "is")
     parser.required_less_than = create_other_matcher(true, "<")
     parser.required_literal = create_literal_matcher(true)
     parser.required_loop = create_keyword_matcher(true, "loop")
@@ -120,8 +129,11 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_open_brace = create_other_matcher(true, "{")
     parser.required_open_bracket = create_other_matcher(true, "[")
     parser.required_open_paren = create_other_matcher(true, "(")
+    parser.required_plus = create_other_matcher(true, "+")
     parser.required_return = create_keyword_matcher(true, "return")
+    parser.required_slash = create_other_matcher(true, "/")
     parser.required_struct = create_keyword_matcher(true, "struct")
+    parser.required_vertical_bar = create_other_matcher(true, "|")
     parser.required_while = create_keyword_matcher(true, "while")
 
     return parser
@@ -425,8 +437,18 @@ parse_expression :: (self: @Parser) -> @Expression {
     return self.parse_logic_or_expression()
 }
 
+\ logic_or_expression
+\   : logic_and_expression ( "||" logic_or_expression )?
 parse_logic_or_expression :: (self: @Parser) -> @Expression {
-    return self.parse_logic_and_expression()
+    expression: @Expression = self.parse_logic_and_expression()
+    if (self.matches(self.optional_space, self.required_vertical_bar, self.required_vertical_bar)) {
+        self.consume_space(1)
+        operator: @Other_Token = self.consume(self.required_vertical_bar, self.required_vertical_bar)
+        operator.lexeme.append("|")
+        self.consume_space(1)
+        return create_binary_expression(expression, operator, self.parse_logic_or_expression())
+    }
+    return expression
 }
 
 parse_logic_and_expression :: (self: @Parser) -> @Expression {
@@ -453,20 +475,61 @@ parse_equality_expression :: (self: @Parser) -> @Expression {
     return expression
 }
 
+\ is_expression
+\   : comparison_expression ( "is" value_type )?
 parse_is_expression :: (self: @Parser) -> @Expression {
-    return self.parse_comparison_expression()
+    expression: @Expression = self.parse_comparison_expression()
+    if (self.matches(self.optional_space, self.required_is)) {
+        self.consume_space(1)
+        self.consume(self.required_is)
+        self.consume_space(1)
+        return create_is_expression(expression, self.parse_value_type())
+    }
+    return expression
 }
 
 parse_comparison_expression :: (self: @Parser) -> @Expression {
     return self.parse_addition_expression()
 }
 
+\ parse_addition_expression
+\   : parse_multiplication_expression ( ( "+" | "-" ) parse_addition_expression )?
 parse_addition_expression :: (self: @Parser) -> @Expression {
-    return self.parse_multiplication_expression()
+    expression: @Expression = self.parse_multiplication_expression()
+    if (self.matches(self.optional_space, self.required_plus) || self.matches(self.optional_space, self.required_hyphen)) {
+        self.consume_space(1)
+        operator: @Other_Token
+        if (self.matches(self.required_plus)) {
+            operator = self.consume(self.required_plus)
+        } else {
+            operator = self.consume(self.required_hyphen)
+        }
+        self.consume_space(1)
+        return create_binary_expression(expression, operator, self.parse_addition_expression())
+    }
+    return expression
 }
 
+\ parse_multiplication_expression
+\   : parse_unary_expression ( ( "*" | "/" | "//" ) parse_multiplication_expression )?
 parse_multiplication_expression :: (self: @Parser) -> @Expression {
-    return self.parse_unary_expression()
+    expression: @Expression = self.parse_unary_expression()
+    if (self.matches(self.optional_space, self.required_asterisk) || self.matches(self.optional_space, self.required_slash)) {
+        self.consume_space(1)
+        operator: @Other_Token
+        if (self.matches(self.required_slash)) {
+            operator = self.consume(self.required_slash)
+            if (self.matches(self.required_slash)) {
+                operator = self.consume(self.required_slash)
+                operator.lexeme.append("|")
+            }
+        } else {
+            operator = self.consume(self.required_asterisk)
+        }
+        self.consume_space(1)
+        return create_binary_expression(expression, operator, self.parse_multiplication_expression())
+    }
+    return expression
 }
 
 parse_unary_expression :: (self: @Parser) -> @Expression {
@@ -1073,6 +1136,19 @@ create_cast_expression :: (value_expression: @Expression, value_type: @Value_Typ
     return expression
 }
 
+Is_Expression :: struct : Expression {
+    value_expression: @Expression
+    value_type: @Value_Type
+}
+
+create_is_expression :: (value_expression: @Expression, value_type: @Value_Type) -> @Expression {
+    expression: @Is_Expression = new Is_Expression
+    expression.location = value_expression.location
+    expression.value_expression = value_expression
+    expression.value_type = value_type
+    return expression
+}
+
 New_Expression :: struct : Expression {
     value_type: @Value_Type
 }
@@ -1316,6 +1392,9 @@ scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location:
         return create_boolean_token(token_lexeme, token_location, false)
     }
     if (token_lexeme.equals("if")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
+    if (token_lexeme.equals("is")) {
         return create_keyword_token(token_lexeme, token_location)
     }
     if (token_lexeme.equals("loop")) {
