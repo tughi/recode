@@ -52,6 +52,8 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 Parser :: struct {
     tokens: @List_Iterator
     current_alignment: Int
+    optional_comment: @Matcher
+    optional_space: @Matcher
     required_as: @Matcher
     required_at: @Matcher
     required_break: @Matcher
@@ -80,8 +82,7 @@ Parser :: struct {
     required_open_paren: @Matcher
     required_return: @Matcher
     required_struct: @Matcher
-    optional_comment: @Matcher
-    optional_space: @Matcher
+    required_while: @Matcher
 }
 
 create_parser :: (tokens: @List) -> @Parser {
@@ -89,6 +90,9 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.tokens = tokens.create_iterator()
     parser.tokens.next()
     parser.current_alignment = 0
+
+    parser.optional_comment = create_comment_matcher(false)
+    parser.optional_space = create_space_matcher(false)
 
     parser.required_as = create_keyword_matcher(true, "as")
     parser.required_at = create_other_matcher(true, "@")
@@ -118,9 +122,7 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_open_paren = create_other_matcher(true, "(")
     parser.required_return = create_keyword_matcher(true, "return")
     parser.required_struct = create_keyword_matcher(true, "struct")
-
-    parser.optional_comment = create_comment_matcher(false)
-    parser.optional_space = create_space_matcher(false)
+    parser.required_while = create_keyword_matcher(true, "while")
 
     return parser
 }
@@ -151,6 +153,7 @@ parse_statements :: (self: @Parser) -> @List {
 \   : if
 \   | "return" expression?
 \   | loop
+\   | while
 \   | "break"
 \   | expression ( "::" ( struct | function ) | ":" value_type? ( "=" expression )? )?
 parse_statement :: (self: @Parser) -> @Statement {
@@ -174,6 +177,9 @@ parse_statement :: (self: @Parser) -> @Statement {
     }
     if (self.matches(self.required_loop)) {
         return self.parse_loop()
+    }
+    if (self.matches(self.required_while)) {
+        return self.parse_while()
     }
     if (self.matches(self.required_break)) {
         token: @Token = self.consume(self.required_break)
@@ -383,6 +389,21 @@ parse_loop :: (self: @Parser) -> @Statement {
     self.consume_space(1)
     loop_block: @Block_Statement = self.parse_block()
     return create_loop_statement(token.location, loop_block)
+}
+
+\ while
+\   : "while" "(" expression ")" block
+parse_while :: (self: @Parser) -> @Statement {
+    token: @Token = self.consume(self.required_while)
+    self.consume_space(1)
+    self.consume(self.required_open_paren)
+    self.consume_space(0)
+    condition: @Expression = self.parse_expression()
+    self.consume_space(0)
+    self.consume(self.required_close_paren)
+    self.consume_space(1)
+    loop_block: @Block_Statement = self.parse_block()
+    return create_while_statement(token.location, condition, loop_block)
 }
 
 \ value_type
@@ -878,6 +899,19 @@ Loop_Statement :: struct : Statement {
 create_loop_statement :: (location: @Source_Location, block: @Block_Statement) -> @Statement {
     statement: @Loop_Statement = new Loop_Statement
     statement.location = location
+    statement.block = block
+    return statement
+}
+
+While_Statement :: struct : Statement {
+    condition: @Expression
+    block: @Block_Statement
+}
+
+create_while_statement :: (location: @Source_Location, condition: @Expression, block: @Block_Statement) -> @Statement {
+    statement: @While_Statement = new While_Statement
+    statement.location = location
+    statement.condition = condition
     statement.block = block
     return statement
 }
