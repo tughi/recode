@@ -53,6 +53,7 @@ Parser :: struct {
     tokens: @List_Iterator
     current_alignment: Int
     required_at: @Matcher
+    required_break: @Matcher
     required_close_brace: @Matcher
     required_close_bracket: @Matcher
     required_close_paren: @Matcher
@@ -71,10 +72,12 @@ Parser :: struct {
     required_if: @Matcher
     required_less_than: @Matcher
     required_literal: @Matcher
+    required_loop: @Matcher
     required_new: @Matcher
     required_open_brace: @Matcher
     required_open_bracket: @Matcher
     required_open_paren: @Matcher
+    required_return: @Matcher
     required_struct: @Matcher
     optional_comment: @Matcher
     optional_space: @Matcher
@@ -87,6 +90,7 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.current_alignment = 0
 
     parser.required_at = create_other_matcher(true, "@")
+    parser.required_break = create_keyword_matcher(true, "break")
     parser.required_close_brace = create_other_matcher(true, "}")
     parser.required_close_bracket = create_other_matcher(true, "]")
     parser.required_close_paren = create_other_matcher(true, ")")
@@ -105,10 +109,12 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_if = create_keyword_matcher(true, "if")
     parser.required_less_than = create_other_matcher(true, "<")
     parser.required_literal = create_literal_matcher(true)
+    parser.required_loop = create_keyword_matcher(true, "loop")
     parser.required_new = create_keyword_matcher(true, "new")
     parser.required_open_brace = create_other_matcher(true, "{")
     parser.required_open_bracket = create_other_matcher(true, "[")
     parser.required_open_paren = create_other_matcher(true, "(")
+    parser.required_return = create_keyword_matcher(true, "return")
     parser.required_struct = create_keyword_matcher(true, "struct")
 
     parser.optional_comment = create_comment_matcher(false)
@@ -141,6 +147,9 @@ parse_statements :: (self: @Parser) -> @List {
 
 \ statement
 \   : if
+\   | "return" expression?
+\   | loop
+\   | "break"
 \   | expression ( "::" ( struct | function ) | ":" value_type? ( "=" expression )? )?
 parse_statement :: (self: @Parser) -> @Statement {
     while (self.consume_empty_line()) {
@@ -154,6 +163,19 @@ parse_statement :: (self: @Parser) -> @Statement {
 
     if (self.matches(self.required_if)) {
         return self.parse_if()
+    }
+    if (self.matches(self.required_return)) {
+        token: @Token = self.consume(self.required_return)
+        self.consume_space(1)
+        value_expression: @Expression = self.parse_expression()
+        return create_return_statement(token.location, value_expression)
+    }
+    if (self.matches(self.required_loop)) {
+        return self.parse_loop()
+    }
+    if (self.matches(self.required_break)) {
+        token: @Token = self.consume(self.required_break)
+        return create_break_statement(token.location)
     }
 
     expression: @Expression = self.parse_expression()
@@ -350,6 +372,15 @@ parse_if :: (self: @Parser) -> @Statement {
         false_block = self.parse_block()
     }
     return create_if_statement(token.location, condition, true_block, false_block)
+}
+
+\ loop
+\   : "loop" block
+parse_loop :: (self: @Parser) -> @Statement {
+    token: @Token = self.consume(self.required_loop)
+    self.consume_space(1)
+    loop_block: @Block_Statement = self.parse_block()
+    return create_loop_statement(token.location, loop_block)
 }
 
 \ value_type
@@ -821,6 +852,37 @@ create_if_statement :: (location: @Source_Location, condition: @Expression, true
     statement.condition = condition
     statement.true_block = true_block
     statement.false_block = false_block
+    return statement
+}
+
+Loop_Statement :: struct : Statement {
+    block: @Block_Statement
+}
+
+create_loop_statement :: (location: @Source_Location, block: @Block_Statement) -> @Statement {
+    statement: @Loop_Statement = new Loop_Statement
+    statement.location = location
+    statement.block = block
+    return statement
+}
+
+Break_Statement :: struct : Statement {
+}
+
+create_break_statement :: (location: @Source_Location) -> @Statement {
+    statement: @Break_Statement = new Break_Statement
+    statement.location = location
+    return statement
+}
+
+Return_Statement :: struct : Statement {
+    value_expression: @Expression
+}
+
+create_return_statement :: (location: @Source_Location, value_expression: @Expression) -> @Statement {
+    statement: @Return_Statement = new Return_Statement
+    statement.location = location
+    statement.value_expression = value_expression
     return statement
 }
 
