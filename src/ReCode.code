@@ -120,6 +120,8 @@ parse :: (tokens: @List) -> Nothing {
     statements: @List = parser.parse_statements()
 }
 
+\ statements
+\   : ( statement <EOL> )*
 parse_statements :: (self: @Parser) -> @List {
     statements: @List = create_list()
 
@@ -135,14 +137,14 @@ parse_statements :: (self: @Parser) -> @List {
     return statements
 }
 
+\ statement
+\   : if
+\   | expression ( "::" ( struct | function ) | ":" value_type? ( "=" expression )? )?
 parse_statement :: (self: @Parser) -> @Statement {
     while (self.consume_empty_line()) {
     }
 
-    if (self.matches(self.optional_space, self.required_close_brace)) {
-        return null
-    }
-    if (self.matches(self.required_end_of_file)) {
+    if (self.matches(self.optional_space, self.required_close_brace) || self.matches(self.required_end_of_file)) {
         return null
     }
 
@@ -166,6 +168,33 @@ parse_statement :: (self: @Parser) -> @Statement {
             return self.parse_struct(expression)
         }
         return self.parse_function(expression)
+    }
+
+    if (self.matches(self.optional_space, self.required_colon)) {
+        if (expression is Variable_Expression) {
+            expression: @Variable_Expression = expression
+            if (self.matches(self.optional_space, self.required_colon, self.required_equals)) {
+                self.consume_space(1)
+                self.consume(self.required_colon, self.required_equals)
+                self.consume_space(1)
+                value_expression: @Expression = self.parse_expression()
+                return create_variable_statement(expression.name, null as @Value_Type, value_expression)
+            }
+            self.consume_space(0)
+            self.consume(self.required_colon)
+            self.consume_space(1)
+            value_type: @Value_Type = self.parse_value_type()
+            if (self.matches(self.optional_space, self.required_equals)) {
+                self.consume_space(1)
+                self.consume(self.required_equals)
+                self.consume_space(1)
+                value_expression: @Expression = self.parse_expression()
+                return create_variable_statement(expression.name, value_type, value_expression)
+            }
+            return create_variable_statement(expression.name, value_type, null as @Expression)
+        }
+        stderr.write(expression.location).write(": Cannot use expression as variable name").end_line()
+        abort()
     }
 
     return null
@@ -387,6 +416,12 @@ parse_access_expression :: (self: @Parser) -> @Expression {
 \   : expression ( "," expression )*
 parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
     call_arguments.append(self.parse_expression() as @Object)
+    while (self.matches(self.optional_space, self.required_comma)) {
+        self.consume_space(0)
+        self.consume(self.required_comma)
+        self.consume_space(1)
+        call_arguments.append(self.parse_expression() as @Object)
+    }
 }
 
 \ primary_expression
@@ -730,6 +765,21 @@ create_if_statement :: (location: @Source_Location, condition: @Expression, true
     statement.condition = condition
     statement.true_block = true_block
     statement.false_block = false_block
+    return statement
+}
+
+Variable_Statement :: struct : Statement {
+    name: @Identifier_Token
+    value_type: @Value_Type
+    value_expression: @Expression
+}
+
+create_variable_statement :: (name: @Identifier_Token, value_type: @Value_Type, value_expression: @Expression) -> @Statement {
+    statement: @Variable_Statement = new Variable_Statement
+    statement.location = name.location
+    statement.name = name
+    statement.value_type = value_type
+    statement.value_expression = value_expression
     return statement
 }
 
