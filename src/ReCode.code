@@ -52,6 +52,7 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 Parser :: struct {
     tokens: @List_Iterator
     current_alignment: Int
+    required_as: @Matcher
     required_at: @Matcher
     required_break: @Matcher
     required_close_brace: @Matcher
@@ -89,6 +90,7 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.tokens.next()
     parser.current_alignment = 0
 
+    parser.required_as = create_keyword_matcher(true, "as")
     parser.required_at = create_other_matcher(true, "@")
     parser.required_break = create_keyword_matcher(true, "break")
     parser.required_close_brace = create_other_matcher(true, "}")
@@ -447,7 +449,21 @@ parse_multiplication_expression :: (self: @Parser) -> @Expression {
 }
 
 parse_unary_expression :: (self: @Parser) -> @Expression {
-    return self.parse_access_expression()
+    return self.parse_cast_expression()
+}
+
+\ cast_expression
+\   : access_expression ( "as" value_type )?
+parse_cast_expression :: (self: @Parser) -> @Expression {
+    expression: @Expression = self.parse_access_expression()
+    if (self.matches(self.optional_space, self.required_as)) {
+        self.consume_space(1)
+        self.consume(self.required_as)
+        self.consume_space(1)
+        value_type: @Value_Type = self.parse_value_type()
+        return create_cast_expression(expression, value_type)
+    }
+    return expression
 }
 
 \ access_expression
@@ -1007,6 +1023,19 @@ create_binary_expression :: (left_expression: @Expression, operator: @Other_Toke
     expression.left_expression = left_expression
     expression.operator = operator
     expression.right_expression = right_expression
+    return expression
+}
+
+Cast_Expression :: struct : Expression {
+    value_expression: @Expression
+    value_type: @Value_Type
+}
+
+create_cast_expression :: (value_expression: @Expression, value_type: @Value_Type) -> @Expression {
+    expression: @Cast_Expression = new Cast_Expression
+    expression.location = value_expression.location
+    expression.value_expression = value_expression
+    expression.value_type = value_type
     return expression
 }
 
