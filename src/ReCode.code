@@ -24,7 +24,8 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 
     tokens: @List = scan(source_file_name)
 
-    parse(tokens)
+    compilation_unit: @Compilation_Unit = parse(tokens)
+    stdout.write(compilation_unit).end_line()
 
     output_file: @FILE = fopen(argv[2], "w".data)
 
@@ -139,9 +140,10 @@ create_parser :: (tokens: @List) -> @Parser {
     return parser
 }
 
-parse :: (tokens: @List) -> Nothing {
+parse :: (tokens: @List) -> @Compilation_Unit {
     parser: @Parser = create_parser(tokens)
     statements: @List = parser.parse_statements()
+    return create_compilation_unit(statements)
 }
 
 \ statements
@@ -183,8 +185,11 @@ parse_statement :: (self: @Parser) -> @Statement {
     }
     if (self.matches(self.required_return)) {
         token: @Token = self.consume(self.required_return)
-        self.consume_space(1)
-        value_expression: @Expression = self.parse_expression()
+        value_expression: @Expression = null
+        if (self.matches_end_of_line() == false) {
+            self.consume_space(1)
+            value_expression = self.parse_expression()
+        }
         return create_return_statement(token.location, value_expression)
     }
     if (self.matches(self.required_loop)) {
@@ -243,10 +248,10 @@ parse_statement :: (self: @Parser) -> @Statement {
 
     if (self.matches(self.optional_space, self.required_equals)) {
         self.consume_space(1)
-        self.consume(self.required_equals)
+        operator: @Other_Token = self.consume(self.required_equals)
         self.consume_space(1)
         value_expression: @Expression = self.parse_expression()
-        return create_assignment_statement(expression, value_expression)
+        return create_assignment_statement(expression, operator, value_expression)
     }
 
     return null
@@ -314,7 +319,7 @@ parse_function :: (self: @Parser, name_expression: @Expression) -> @Statement {
         if (self.matches(self.optional_space, self.required_close_paren)) {
             function_parameters = create_list()
         } else {
-            function_parameters: @List = self.parse_function_parameters()
+            function_parameters = self.parse_function_parameters()
         }
         self.consume_space(0)
         self.consume(self.required_close_paren)
@@ -758,6 +763,10 @@ consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, th
     return first_token
 }
 
+matches_end_of_line :: (self: @Parser) -> Boolean {
+    return self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)
+}
+
 matches :: (self: @Parser, first_matcher: @Matcher) -> Boolean {
     return self.matches(first_matcher, null as @Matcher)
 }
@@ -922,6 +931,16 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
 \       AST
 \ -------------------------------------------------------------------------------------------------
 
+Compilation_Unit :: struct {
+    statements: @List
+}
+
+create_compilation_unit :: (statements: @List) -> @Compilation_Unit {
+    compilation_unit: @Compilation_Unit = new Compilation_Unit
+    compilation_unit.statements = statements
+    return compilation_unit
+}
+
 Statement :: struct : Object {
     location: @Source_Location
 }
@@ -1084,13 +1103,15 @@ create_struct_member :: (name: @Identifier_Token, value_type: @Value_Type) -> @S
 
 Assignment_Statement :: struct : Statement {
     destination: @Expression
+    operator: @Other_Token
     value_expression: @Expression
 }
 
-create_assignment_statement :: (destination: @Expression, value_expression: @Expression) -> @Statement {
+create_assignment_statement :: (destination: @Expression, operator: @Other_Token, value_expression: @Expression) -> @Statement {
     statement: @Assignment_Statement = new Assignment_Statement
     statement.location = destination.location
     statement.destination = destination
+    statement.operator = operator
     statement.value_expression = value_expression
     return statement
 }
@@ -1201,14 +1222,14 @@ create_new_expression :: (location: @Source_Location, value_type: @Value_Type) -
 
 Call_Expression :: struct : Expression {
     callee: @Expression
-    call_arguments: @List
+    arguments: @List
 }
 
-create_call_expression :: (callee: @Expression, call_arguments: @List) -> @Expression {
+create_call_expression :: (callee: @Expression, arguments: @List) -> @Expression {
     expression: @Call_Expression = new Call_Expression
     expression.location = callee.location
     expression.callee = callee
-    expression.call_arguments = call_arguments
+    expression.arguments = arguments
     return expression
 }
 
@@ -1239,6 +1260,212 @@ create_array_access_expression :: (object: @Expression, index_expression: @Expre
     expression.object = object
     expression.index_expression = index_expression
     return expression
+}
+
+write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
+    statements: @List_Iterator = compilation_unit.statements.create_iterator()
+    while (statements.has_next()) {
+        statement: @Statement = statements.next()
+        file.write_source_line(statement.location, 0).write(statement, 0).end_line()
+    }
+    return file
+}
+
+write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
+    if (statement is Assignment_Statement) {
+        statement: @Assignment_Statement = statement
+        return file.write(statement.destination).write(statement.operator as @Token).write(statement.value_expression)
+    }
+
+    if (statement is Block_Statement) {
+        file.write('{').end_line()
+        block_statements: @List_Iterator = (statement as @Block_Statement).statements.create_iterator()
+        while (block_statements.has_next()) {
+            block_statement: @Statement = block_statements.next()
+            file.write_source_line(block_statement.location, alignment + 1).write(block_statement, alignment + 1).end_line()
+        }
+        return file.write_source_line(statement.location, alignment).write('}')
+    }
+
+    if (statement is Break_Statement) {
+        return file.write("break")
+    }
+
+    if (statement is Expression_Statement) {
+        return file.write((statement as @Expression_Statement).expression)
+    }
+
+    if (statement is Function_Statement) {
+        statement: @Function_Statement = statement
+        file.write(statement.name as @Token).write(" :: (")
+        function_parameters: @List_Iterator = statement.parameters.create_iterator()
+        if (function_parameters.has_next()) {
+            loop {
+                file.write(function_parameters.next() as @Function_Parameter)
+                if (function_parameters.has_next()) {
+                    file.write(", ")
+                } else {
+                    break
+                }
+            }
+        }
+        return file.write(") -> ").write(statement.return_type).write(" ").write(statement.body as @Statement, alignment)
+    }
+
+    if (statement is If_Statement) {
+        statement: @If_Statement = statement
+        file.write("if (").write(statement.condition).write(") ").write(statement.true_block as @Statement, alignment)
+        if (statement.false_block != null) {
+            file.write(" else ").write(statement.false_block as @Statement, alignment + 1)
+        }
+        return file
+    }
+
+    if (statement is Loop_Statement) {
+        statement: @Loop_Statement = statement
+        return file.write("loop ").write(statement.block as @Statement, alignment)
+    }
+
+    if (statement is Return_Statement) {
+        statement: @Return_Statement = statement
+        file.write("return")
+        if (statement.value_expression != null) {
+            file.write(" ").write(statement.value_expression)
+        }
+        return file
+    }
+
+    if (statement is Struct_Statement) {
+        statement: @Struct_Statement = statement
+        file.write(statement.name as @Token).write(" :: struct")
+        if (statement.base_type != null) {
+            file.write(" : ").write(statement.base_type)
+        }
+        if (statement.members != null) {
+            file.write(" {").end_line()
+            members: @List_Iterator = statement.members.create_iterator()
+            while (members.has_next()) {
+                member: @Struct_Member = members.next()
+                file.write_source_line(member.location, alignment + 1).write(member.name as @Token).write(": ").write(member.value_type).end_line()
+            }
+        }
+        return file.write_source_line(statement.location, alignment).write('}')
+    }
+
+    if (statement is Variable_Statement) {
+        statement: @Variable_Statement = statement
+        file.write((statement as @Variable_Statement).name as @Token)
+        if (statement.value_type != null) {
+            file.write(": ").write(statement.value_type)
+            if (statement.value_expression != null) {
+                file.write(" = ").write(statement.value_expression)
+            }
+        } else {
+            file.write(" := ").write(statement.value_expression)
+        }
+        return file
+    }
+
+    if (statement is While_Statement) {
+        statement: @While_Statement = statement
+        return file.write("while (").write(statement.condition).write(") ").write(statement.block as @Statement, alignment)
+    }
+
+    file.fflush()
+    stderr.end_line().end_line().write("Unsupported Statement type: ").write(statement.type.id).end_line()
+    abort()
+}
+
+write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
+    file.write(location.source.file_name).write(':')
+    line: Int = location.line
+    if (line < 100) {
+        file.write('0')
+    }
+    if (line < 10) {
+        file.write('0')
+    }
+    file.write(line).write(": ")
+
+    space_count: Int = alignment * 2
+    while (space_count > 0) {
+        file.write(' ')
+        space_count = space_count - 1
+    }
+
+    return file
+}
+
+write :: (file: @FILE, parameter: @Function_Parameter) -> @FILE {
+    return file.write(parameter.name as @Token).write(": ").write(parameter.value_type)
+}
+
+write :: (file: @FILE, value_type: @Value_Type) -> @FILE {
+    if (value_type is Named_Type) {
+        return file.write((value_type as @Named_Type).name as @Token)
+    }
+
+    if (value_type is Pointer_Type) {
+        return file.write('@').write((value_type as @Pointer_Type).value_type)
+    }
+
+    file.fflush()
+    stderr.end_line().end_line().write("Unsupported Value_Type type: ").write(value_type.type.id).end_line()
+    abort()
+}
+
+write :: (file: @FILE, expression: @Expression) -> @FILE {
+    if (expression is Array_Access_Expression) {
+        return file.write((expression as @Array_Access_Expression).object).write('[').write((expression as @Array_Access_Expression).index_expression).write(']')
+    }
+
+    if (expression is Binary_Expression) {
+        return file.write((expression as @Binary_Expression).left_expression).write(' ').write((expression as @Binary_Expression).operator as @Token).write(' ').write((expression as @Binary_Expression).right_expression)
+    }
+
+    if (expression is Call_Expression) {
+        file.write((expression as @Call_Expression).callee).write('(')
+        call_arguments: @List_Iterator = (expression as @Call_Expression).arguments.create_iterator()
+        if (call_arguments.has_next()) {
+            loop {
+                file.write(call_arguments.next() as @Expression)
+                if (call_arguments.has_next()) {
+                    file.write(", ")
+                } else {
+                    break
+                }
+            }
+        }
+        return file.write(')')
+    }
+
+    if (expression is Cast_Expression) {
+        return file.write((expression as @Cast_Expression).value_expression).write(" as ").write((expression as @Cast_Expression).value_type)
+    }
+
+    if (expression is Is_Expression) {
+        return file.write((expression as @Is_Expression).value_expression).write(" is ").write((expression as @Is_Expression).value_type)
+    }
+
+    if (expression is Literal_Expression) {
+        return file.write((expression as @Literal_Expression).literal as @Token)
+    }
+
+    if (expression is New_Expression) {
+        return file.write("new ").write((expression as @New_Expression).value_type)
+    }
+
+    if (expression is Member_Access_Expression) {
+        return file.write((expression as @Member_Access_Expression).object).write('.').write((expression as @Member_Access_Expression).member_name as @Token)
+    }
+
+    if (expression is Variable_Expression) {
+        return file.write((expression as @Variable_Expression).name as @Token)
+    }
+
+    file.fflush()
+    stderr.end_line().end_line().write("Unsupported Expression type: ").write(expression.type.id).end_line()
+    abort()
 }
 
 \ -------------------------------------------------------------------------------------------------
