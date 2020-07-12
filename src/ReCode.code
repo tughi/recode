@@ -72,6 +72,7 @@ Parser :: struct {
     required_end_of_line: @Matcher
     required_equals: @Matcher
     required_exclamation_mark: @Matcher
+    required_external: @Matcher
     required_greater_than: @Matcher
     required_hyphen: @Matcher
     required_identifier: @Matcher
@@ -118,6 +119,7 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_end_of_line = create_end_of_line_matcher(true)
     parser.required_equals = create_other_matcher(true, "=")
     parser.required_exclamation_mark = create_other_matcher(true, "!")
+    parser.required_external = create_keyword_matcher(true, "external")
     parser.required_greater_than = create_other_matcher(true, ">")
     parser.required_hyphen = create_other_matcher(true, "-")
     parser.required_identifier = create_identifier_matcher(true)
@@ -226,8 +228,7 @@ parse_statement :: (self: @Parser) -> @Statement {
                 self.consume_space(1)
                 self.consume(self.required_colon, self.required_equals)
                 self.consume_space(1)
-                value_expression: @Expression = self.parse_expression()
-                return create_variable_statement(expression.name, null as @Value_Type, value_expression)
+                return create_variable_statement(expression.name, null as @Value_Type, self.parse_expression(), false)
             }
             self.consume_space(0)
             self.consume(self.required_colon)
@@ -237,10 +238,13 @@ parse_statement :: (self: @Parser) -> @Statement {
                 self.consume_space(1)
                 self.consume(self.required_equals)
                 self.consume_space(1)
-                value_expression: @Expression = self.parse_expression()
-                return create_variable_statement(expression.name, value_type, value_expression)
+                if (self.matches(self.required_external)) {
+                    self.consume(self.required_external)
+                    return create_variable_statement(expression.name, value_type, null as @Expression, true)
+                }
+                return create_variable_statement(expression.name, value_type, self.parse_expression(), false)
             }
-            return create_variable_statement(expression.name, value_type, null as @Expression)
+            return create_variable_statement(expression.name, value_type, null as @Expression, false)
         }
         stderr.write(expression.location).write(": Cannot use expression as variable name").end_line()
         abort()
@@ -250,8 +254,7 @@ parse_statement :: (self: @Parser) -> @Statement {
         self.consume_space(1)
         operator: @Other_Token = self.consume(self.required_equals)
         self.consume_space(1)
-        value_expression: @Expression = self.parse_expression()
-        return create_assignment_statement(expression, operator, value_expression)
+        return create_assignment_statement(expression, operator, self.parse_expression())
     }
 
     return null
@@ -282,6 +285,7 @@ parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
             self.consume(self.required_close_brace)
             return create_struct_statement(struct_name, base_type, struct_members)
         }
+        return create_struct_statement(struct_name, base_type, null as @List)
     } else {
         stderr.write(name_expression.location).write(": Cannot use expression as struct name").end_line()
         abort()
@@ -915,7 +919,7 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
         return token is Integer_Token || token is String_Token || token is Character_Token || token is Boolean_Token || token is Null_Token
     }
     if (self is End_Of_Line_Matcher) {
-        return token is End_Of_Line_Token || token is End_Of_File_Token
+        return token is End_Of_Line_Token
     }
     if (self is Comment_Matcher) {
         return token is Comment_Token
@@ -1061,14 +1065,16 @@ Variable_Statement :: struct : Statement {
     name: @Identifier_Token
     value_type: @Value_Type
     value_expression: @Expression
+    is_external: Boolean
 }
 
-create_variable_statement :: (name: @Identifier_Token, value_type: @Value_Type, value_expression: @Expression) -> @Statement {
+create_variable_statement :: (name: @Identifier_Token, value_type: @Value_Type, value_expression: @Expression, is_external: Boolean) -> @Statement {
     statement: @Variable_Statement = new Variable_Statement
     statement.location = name.location
     statement.name = name
     statement.value_type = value_type
     statement.value_expression = value_expression
+    statement.is_external = is_external
     return statement
 }
 
@@ -1309,7 +1315,11 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
                 }
             }
         }
-        return file.write(") -> ").write(statement.return_type).write(" ").write(statement.body as @Statement, alignment)
+        file.write(") -> ").write(statement.return_type)
+        if (statement.body == null) {
+            return file
+        }
+        return file.write(" ").write(statement.body as @Statement, alignment)
     }
 
     if (statement is If_Statement) {
@@ -1341,13 +1351,14 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         if (statement.base_type != null) {
             file.write(" : ").write(statement.base_type)
         }
-        if (statement.members != null) {
-            file.write(" {").end_line()
-            members: @List_Iterator = statement.members.create_iterator()
-            while (members.has_next()) {
-                member: @Struct_Member = members.next()
-                file.write_source_line(member.location, alignment + 1).write(member.name as @Token).write(": ").write(member.value_type).end_line()
-            }
+        if (statement.members == null) {
+            return file
+        }
+        file.write(" {").end_line()
+        members: @List_Iterator = statement.members.create_iterator()
+        while (members.has_next()) {
+            member: @Struct_Member = members.next()
+            file.write_source_line(member.location, alignment + 1).write(member.name as @Token).write(": ").write(member.value_type).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
     }
