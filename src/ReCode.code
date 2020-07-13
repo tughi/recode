@@ -524,13 +524,13 @@ parse_comparison_expression :: (self: @Parser) -> @Expression {
         if (self.matches(self.required_less_than)) {
             operator = self.consume(self.required_less_than)
             if (self.matches(self.required_equals)) {
-                operator = self.consume(self.required_equals)
+                self.consume(self.required_equals)
                 operator.lexeme.append("=")
             }
         } else {
             operator = self.consume(self.required_greater_than)
             if (self.matches(self.required_equals)) {
-                operator = self.consume(self.required_equals)
+                self.consume(self.required_equals)
                 operator.lexeme.append("=")
             }
         }
@@ -1280,7 +1280,7 @@ write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
 write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     if (statement is Assignment_Statement) {
         statement: @Assignment_Statement = statement
-        return file.write(statement.destination).write(statement.operator as @Token).write(statement.value_expression)
+        return file.write(statement.destination).write(' ').write(statement.operator as @Token).write(' ').write(statement.value_expression)
     }
 
     if (statement is Block_Statement) {
@@ -1326,7 +1326,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         statement: @If_Statement = statement
         file.write("if (").write(statement.condition).write(") ").write(statement.true_block as @Statement, alignment)
         if (statement.false_block != null) {
-            file.write(" else ").write(statement.false_block as @Statement, alignment + 1)
+            file.write(" else ").write(statement.false_block as @Statement, alignment)
         }
         return file
     }
@@ -1371,6 +1371,9 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
             if (statement.value_expression != null) {
                 file.write(" = ").write(statement.value_expression)
             }
+            if (statement.is_external) {
+                file.write(" = external")
+            }
         } else {
             file.write(" := ").write(statement.value_expression)
         }
@@ -1390,6 +1393,9 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
 write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
     file.write(location.source.file_name).write(':')
     line: Int = location.line
+    if (line < 1000) {
+        file.write('0')
+    }
     if (line < 100) {
         file.write('0')
     }
