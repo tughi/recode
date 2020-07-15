@@ -203,7 +203,20 @@ void named_functions__add(Named_Functions *self, Statement *statement) {
 }
 
 int type__accepts(Type *self, Type *other) {
-    return (self->kind == TYPE__POINTER && self->pointer_data.type->kind == TYPE__ANY && other->kind == TYPE__POINTER) || type__equals(self, other);
+    if (self->kind == TYPE__POINTER && other->kind == TYPE__POINTER) {
+        if (self->pointer_data.type->kind == TYPE__STRUCT && other->pointer_data.type->kind == TYPE__STRUCT) {
+            Type *base_type = self->pointer_data.type;
+            Type *type = other->pointer_data.type;
+            do {
+                if (type__equals(base_type, type)) {
+                    return 1;
+                }
+                type = type->struct_data.statement->struct_data.base_type;
+            } while (type != NULL);
+        }
+        return self->pointer_data.type->kind == TYPE__ANY || type__equals(self->pointer_data.type, other->pointer_data.type);
+    }
+    return type__equals(self, other);
 }
 
 Statement *named_functions__get(Named_Functions *self, Token *name, Type_List *argument_types) {
