@@ -30,6 +30,7 @@ typedef struct Statement Statement;
 
 typedef struct Type {
     enum {
+        TYPE__ANY,
         TYPE__ARRAY,
         TYPE__BOOLEAN,
         TYPE__FUNCTION,

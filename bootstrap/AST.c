@@ -43,55 +43,58 @@ Type *type__create_struct(Source_Location *location, Statement *statement) {
 void type__convert(Type *self, Type *other) {
     self->kind = other->kind;
     switch (other->kind) {
-    case TYPE__BOOLEAN:
-    case TYPE__INT:
-    case TYPE__INT8:
-    case TYPE__INT16:
-    case TYPE__INT32:
-    case TYPE__INT64:
-    case TYPE__NOTHING:
-        self->name = other->name;
-        break;
-    case TYPE__STRUCT:
-        self->location = other->location;
-        self->name = other->name;
-        self->struct_data.statement = other->struct_data.statement;
-        break;
-    default:
-        PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(other));
+        case TYPE__ANY:
+        case TYPE__BOOLEAN:
+        case TYPE__INT:
+        case TYPE__INT8:
+        case TYPE__INT16:
+        case TYPE__INT32:
+        case TYPE__INT64:
+        case TYPE__NOTHING:
+            self->name = other->name;
+            break;
+        case TYPE__STRUCT:
+            self->location = other->location;
+            self->name = other->name;
+            self->struct_data.statement = other->struct_data.statement;
+            break;
+        default:
+            PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(other));
     }
 }
 
 char *type__get_kind_name(Type *self) {
     switch (self->kind) {
-    case TYPE__ARRAY:
-        return "ARRAY";
-    case TYPE__BOOLEAN:
-        return "BOOLEAN";
-    case TYPE__FUNCTION:
-        return "FUNCTION";
-    case TYPE__INT:
-        return "INT";
-    case TYPE__INT8:
-        return "INT8";
-    case TYPE__INT16:
-        return "INT16";
-    case TYPE__INT32:
-        return "INT32";
-    case TYPE__INT64:
-        return "INT64";
-    case TYPE__POINTER:
-        return "POINTER";
-    case TYPE__NAMED:
-        return "NAMED";
-    case TYPE__NOTHING:
-        return "NOTHING";
-    case TYPE__NULL:
-        return "NULL";
-    case TYPE__STRUCT:
-        return "STRUCT";
-    default:
-        PANIC(__FILE__, __LINE__, "Unsupported type kind: %d", self->kind);
+        case TYPE__ANY:
+            return "ANY";
+        case TYPE__ARRAY:
+            return "ARRAY";
+        case TYPE__BOOLEAN:
+            return "BOOLEAN";
+        case TYPE__FUNCTION:
+            return "FUNCTION";
+        case TYPE__INT:
+            return "INT";
+        case TYPE__INT8:
+            return "INT8";
+        case TYPE__INT16:
+            return "INT16";
+        case TYPE__INT32:
+            return "INT32";
+        case TYPE__INT64:
+            return "INT64";
+        case TYPE__POINTER:
+            return "POINTER";
+        case TYPE__NAMED:
+            return "NAMED";
+        case TYPE__NOTHING:
+            return "NOTHING";
+        case TYPE__NULL:
+            return "NULL";
+        case TYPE__STRUCT:
+            return "STRUCT";
+        default:
+            PANIC(__FILE__, __LINE__, "Unsupported type kind: %d", self->kind);
     }
 }
 
@@ -100,86 +103,87 @@ int type__equals(Type *self, Type *other) {
         return other == NULL;
     }
     switch (self->kind) {
-    case TYPE__BOOLEAN:
-    case TYPE__INT:
-    case TYPE__INT8:
-    case TYPE__INT16:
-    case TYPE__INT32:
-    case TYPE__INT64:
-    case TYPE__NOTHING:
-        return other->kind == self->kind;
-    case TYPE__NAMED:
-        return other->kind == TYPE__NAMED && string__equals(self->named_data.name->lexeme, other->named_data.name->lexeme->data);
-    case TYPE__POINTER:
-        return other->kind == TYPE__POINTER && type__equals(self->pointer_data.type, other->pointer_data.type);
-    case TYPE__STRUCT:
-        return other->kind == TYPE__STRUCT && self->struct_data.statement == other->struct_data.statement;
-    default:
-        PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(self));
+        case TYPE__ANY:
+        case TYPE__BOOLEAN:
+        case TYPE__INT:
+        case TYPE__INT8:
+        case TYPE__INT16:
+        case TYPE__INT32:
+        case TYPE__INT64:
+        case TYPE__NOTHING:
+            return other->kind == self->kind;
+        case TYPE__NAMED:
+            return other->kind == TYPE__NAMED && string__equals(self->named_data.name->lexeme, other->named_data.name->lexeme->data);
+        case TYPE__POINTER:
+            return other->kind == TYPE__POINTER && type__equals(self->pointer_data.type, other->pointer_data.type);
+        case TYPE__STRUCT:
+            return other->kind == TYPE__STRUCT && self->struct_data.statement == other->struct_data.statement;
+        default:
+            PANIC(__FILE__, __LINE__, "Unsupported type kind: %s", type__get_kind_name(self));
     }
 }
 
 char *expression__get_kind_name(Expression *self) {
     switch (self->kind) {
-    case EXPRESSION__ARRAY_ITEM:
-        return "ARRAY_ITEM";
-    case EXPRESSION__BINARY:
-        return "BINARY";
-    case EXPRESSION__CALL:
-        return "CALL";
-    case EXPRESSION__CAST:
-        return "CAST";
-    case EXPRESSION__IS:
-        return "IS";
-    case EXPRESSION__LITERAL:
-        return "LITERAL";
-    case EXPRESSION__MEMBER:
-        return "MEMBER";
-    case EXPRESSION__NEW:
-        return "NEW";
-    case EXPRESSION__POINTED_VALUE:
-        return "POINTED_VALUE";
-    case EXPRESSION__POINTER_TO:
-        return "POINTER_TO";
-    case EXPRESSION__SIZE_OF:
-        return "SIZE_OF";
-    case EXPRESSION__UNARY:
-        return "UNARY";
-    case EXPRESSION__VARIABLE:
-        return "VARIABLE";
-    default:
-        PANIC(__FILE__, __LINE__, "Unsupported expression kind: %d", self->kind);
+        case EXPRESSION__ARRAY_ITEM:
+            return "ARRAY_ITEM";
+        case EXPRESSION__BINARY:
+            return "BINARY";
+        case EXPRESSION__CALL:
+            return "CALL";
+        case EXPRESSION__CAST:
+            return "CAST";
+        case EXPRESSION__IS:
+            return "IS";
+        case EXPRESSION__LITERAL:
+            return "LITERAL";
+        case EXPRESSION__MEMBER:
+            return "MEMBER";
+        case EXPRESSION__NEW:
+            return "NEW";
+        case EXPRESSION__POINTED_VALUE:
+            return "POINTED_VALUE";
+        case EXPRESSION__POINTER_TO:
+            return "POINTER_TO";
+        case EXPRESSION__SIZE_OF:
+            return "SIZE_OF";
+        case EXPRESSION__UNARY:
+            return "UNARY";
+        case EXPRESSION__VARIABLE:
+            return "VARIABLE";
+        default:
+            PANIC(__FILE__, __LINE__, "Unsupported expression kind: %d", self->kind);
     }
 }
 
 char *statement__get_kind_name(Statement *self) {
     switch (self->kind) {
-    case STATEMENT__ASSIGNMENT:
-        return "ASSIGNMENT";
-    case STATEMENT__BLOCK:
-        return "BLOCK";
-    case STATEMENT__BREAK:
-        return "BREAK";
-    case STATEMENT__EXPRESSION:
-        return "EXPRESSION";
-    case STATEMENT__FUNCTION:
-        return "FUNCTION";
-    case STATEMENT__IF:
-        return "IF";
-    case STATEMENT__LOOP:
-        return "LOOP";
-    case STATEMENT__RETURN:
-        return "RETURN";
-    case STATEMENT__SKIP:
-        return "SKIP";
-    case STATEMENT__STRUCT:
-        return "STRUCT";
-    case STATEMENT__VARIABLE:
-        return "VARIABLE";
-    case STATEMENT__WHILE:
-        return "WHILE";
-    default:
-        PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported statement kind: %d", SOURCE(self->location), self->kind);
+        case STATEMENT__ASSIGNMENT:
+            return "ASSIGNMENT";
+        case STATEMENT__BLOCK:
+            return "BLOCK";
+        case STATEMENT__BREAK:
+            return "BREAK";
+        case STATEMENT__EXPRESSION:
+            return "EXPRESSION";
+        case STATEMENT__FUNCTION:
+            return "FUNCTION";
+        case STATEMENT__IF:
+            return "IF";
+        case STATEMENT__LOOP:
+            return "LOOP";
+        case STATEMENT__RETURN:
+            return "RETURN";
+        case STATEMENT__SKIP:
+            return "SKIP";
+        case STATEMENT__STRUCT:
+            return "STRUCT";
+        case STATEMENT__VARIABLE:
+            return "VARIABLE";
+        case STATEMENT__WHILE:
+            return "WHILE";
+        default:
+            PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Unsupported statement kind: %d", SOURCE(self->location), self->kind);
     }
 }
 
@@ -198,6 +202,10 @@ void named_functions__add(Named_Functions *self, Statement *statement) {
     list__append(self, statement);
 }
 
+int type__accepts(Type *self, Type *other) {
+    return (self->kind == TYPE__POINTER && self->pointer_data.type->kind == TYPE__ANY && other->kind == TYPE__POINTER) || type__equals(self, other);
+}
+
 Statement *named_functions__get(Named_Functions *self, Token *name, Type_List *argument_types) {
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
         Statement *function_statement = list_iterator__next(&iterator);
@@ -213,7 +221,7 @@ Statement *named_functions__get(Named_Functions *self, Token *name, Type_List *a
                         PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Argument %d has not inferred type", SOURCE(name->location), index);
                     }
                     Parameter *parameter = list__get(function_parameters, index);
-                    if (!type__equals(argument_type, parameter->type)) {
+                    if (!type__accepts(parameter->type, argument_type)) {
                         signature_matches = 0;
                         break;
                     }
@@ -243,6 +251,7 @@ static Named_Types_Item *named_types__create_item(String *name, Type *type) {
 Named_Types *named_types__create() {
     static Source_Location unkown_location;
     Named_Types *self = list__create();
+    list__append(self, named_types__create_item(string__create("Any"), type__create(TYPE__ANY, &unkown_location)));
     list__append(self, named_types__create_item(string__create("Boolean"), type__create(TYPE__BOOLEAN, &unkown_location)));
     list__append(self, named_types__create_item(string__create("Int"), type__create(TYPE__INT, &unkown_location)));
     list__append(self, named_types__create_item(string__create("Int8"), type__create(TYPE__INT8, &unkown_location)));
