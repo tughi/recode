@@ -1319,21 +1319,21 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         if (statement.body == null) {
             return file
         }
-        return file.write(" ").write(statement.body as @Statement, alignment)
+        return file.write(" ").write(statement.body, alignment)
     }
 
     if (statement is If_Statement) {
         statement: @If_Statement = statement
-        file.write("if (").write(statement.condition).write(") ").write(statement.true_block as @Statement, alignment)
+        file.write("if (").write(statement.condition).write(") ").write(statement.true_block, alignment)
         if (statement.false_block != null) {
-            file.write(" else ").write(statement.false_block as @Statement, alignment)
+            file.write(" else ").write(statement.false_block, alignment)
         }
         return file
     }
 
     if (statement is Loop_Statement) {
         statement: @Loop_Statement = statement
-        return file.write("loop ").write(statement.block as @Statement, alignment)
+        return file.write("loop ").write(statement.block, alignment)
     }
 
     if (statement is Return_Statement) {
@@ -1382,7 +1382,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
 
     if (statement is While_Statement) {
         statement: @While_Statement = statement
-        return file.write("while (").write(statement.condition).write(") ").write(statement.block as @Statement, alignment)
+        return file.write("while (").write(statement.condition).write(") ").write(statement.block, alignment)
     }
 
     file.fflush()
