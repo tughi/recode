@@ -1534,7 +1534,7 @@ void emit_statement(Context *context, Statement *statement) {
                 Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
                 emit_expression(context, return_expression, &value_holder);
                 Type *return_expression_type = value_holder.type;
-                if (!type__equals(function_return_type, return_expression_type) && function_return_type->kind != TYPE__POINTER && return_expression_type->kind != TYPE__NULL) {
+                if (!type__accepts(function_return_type, return_expression_type)) {
                     PANIC(__FILE__, __LINE__, SOURCE_LOCATION "The return expression must be of type %s, got %s instead.", SOURCE(return_expression->location), context__type_name(context, function_return_type)->data, context__type_name(context, return_expression_type)->data);
                 }
                 switch (return_expression_type->kind) {

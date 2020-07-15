@@ -78,6 +78,7 @@ Type *type__create_struct(Source_Location *location, Statement *statement);
 void type__convert(Type *self, Type *other);
 char *type__get_kind_name(Type *self);
 int type__equals(Type *self, Type *other);
+int type__accepts(Type *self, Type *other);
 
 typedef List Type_List;
 

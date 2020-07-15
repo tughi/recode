@@ -203,23 +203,27 @@ void named_functions__add(Named_Functions *self, Statement *statement) {
 }
 
 int type__accepts(Type *self, Type *other) {
-    if (self->kind == TYPE__POINTER && other->kind == TYPE__POINTER) {
-        if (self->pointer_data.type->kind == TYPE__STRUCT && other->pointer_data.type->kind == TYPE__STRUCT) {
-            Type *base_type = self->pointer_data.type;
-            Type *type = other->pointer_data.type;
-            do {
-                if (type__equals(base_type, type)) {
-                    return 1;
-                }
-                type = type->struct_data.statement->struct_data.base_type;
-            } while (type != NULL);
+    if (self->kind == TYPE__POINTER) {
+        if (other->kind == TYPE__POINTER) {
+            if (self->pointer_data.type->kind == TYPE__STRUCT && other->pointer_data.type->kind == TYPE__STRUCT) {
+                Type *base_type = self->pointer_data.type;
+                Type *type = other->pointer_data.type;
+                do {
+                    if (type__equals(base_type, type)) {
+                        return 1;
+                    }
+                    type = type->struct_data.statement->struct_data.base_type;
+                } while (type != NULL);
+            }
+            return self->pointer_data.type->kind == TYPE__ANY || type__equals(self->pointer_data.type, other->pointer_data.type);
         }
-        return self->pointer_data.type->kind == TYPE__ANY || type__equals(self->pointer_data.type, other->pointer_data.type);
+        return other->kind == TYPE__NULL;
     }
     return type__equals(self, other);
 }
 
 Statement *named_functions__get(Named_Functions *self, Token *name, Type_List *argument_types) {
+    Statement *matching_function_statement = NULL;
     for (List_Iterator iterator = list__create_iterator(self); list_iterator__has_next(&iterator);) {
         Statement *function_statement = list_iterator__next(&iterator);
         if (string__equals(function_statement->function_data.name->lexeme, name->lexeme->data)) {
@@ -241,11 +245,15 @@ Statement *named_functions__get(Named_Functions *self, Token *name, Type_List *a
                 }
             }
             if (signature_matches == 1) {
-                return function_statement;
+                if (matching_function_statement != NULL) {
+                    // more than one function found
+                    return NULL;
+                }
+                matching_function_statement = function_statement;
             } 
         }
     }
-    return NULL;
+    return matching_function_statement;
 }
 
 typedef struct Named_Types_Item {

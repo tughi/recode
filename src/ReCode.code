@@ -228,7 +228,7 @@ parse_statement :: (self: @Parser) -> @Statement {
                 self.consume_space(1)
                 self.consume(self.required_colon, self.required_equals)
                 self.consume_space(1)
-                return create_variable_statement(expression.name, null as @Value_Type, self.parse_expression(), false)
+                return create_variable_statement(expression.name, null, self.parse_expression(), false)
             }
             self.consume_space(0)
             self.consume(self.required_colon)
@@ -240,11 +240,11 @@ parse_statement :: (self: @Parser) -> @Statement {
                 self.consume_space(1)
                 if (self.matches(self.required_external)) {
                     self.consume(self.required_external)
-                    return create_variable_statement(expression.name, value_type, null as @Expression, true)
+                    return create_variable_statement(expression.name, value_type, null, true)
                 }
                 return create_variable_statement(expression.name, value_type, self.parse_expression(), false)
             }
-            return create_variable_statement(expression.name, value_type, null as @Expression, false)
+            return create_variable_statement(expression.name, value_type, null, false)
         }
         stderr.write(expression.location).write(": Cannot use expression as variable name").end_line()
         abort()
@@ -285,7 +285,7 @@ parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
             self.consume(self.required_close_brace)
             return create_struct_statement(struct_name, base_type, struct_members)
         }
-        return create_struct_statement(struct_name, base_type, null as @List)
+        return create_struct_statement(struct_name, base_type, null)
     } else {
         stderr.write(name_expression.location).write(": Cannot use expression as struct name").end_line()
         abort()
@@ -729,11 +729,11 @@ consume_space :: (self: @Parser, expected_space_count: Int) -> Nothing {
 }
 
 consume :: (self: @Parser, first_matcher: @Matcher) -> @Token {
-    return self.consume(first_matcher, null as @Matcher)
+    return self.consume(first_matcher, null)
 }
 
 consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) -> @Token {
-    return self.consume(first_matcher, second_matcher, null as @Matcher)
+    return self.consume(first_matcher, second_matcher, null)
 }
 
 consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> @Token {
@@ -772,11 +772,11 @@ matches_end_of_line :: (self: @Parser) -> Boolean {
 }
 
 matches :: (self: @Parser, first_matcher: @Matcher) -> Boolean {
-    return self.matches(first_matcher, null as @Matcher)
+    return self.matches(first_matcher, null)
 }
 
 matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) -> Boolean {
-    return self.matches(first_matcher, second_matcher, null as @Matcher)
+    return self.matches(first_matcher, second_matcher, null)
 }
 
 matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> Boolean {
@@ -821,7 +821,7 @@ Matcher :: struct : Object {
 Comment_Matcher :: struct : Matcher {
 }
 
-create_comment_matcher :: (required: Boolean) -> @Matcher {
+create_comment_matcher :: (required: Boolean) -> @Comment_Matcher {
     matcher: @Comment_Matcher = new Comment_Matcher
     matcher.is_required = required
     return matcher
@@ -830,7 +830,7 @@ create_comment_matcher :: (required: Boolean) -> @Matcher {
 End_Of_File_Matcher :: struct : Matcher {
 }
 
-create_end_of_file_matcher :: (required: Boolean) -> @Matcher {
+create_end_of_file_matcher :: (required: Boolean) -> @End_Of_File_Matcher {
     matcher: @End_Of_File_Matcher = new End_Of_File_Matcher
     matcher.is_required = required
     return matcher
@@ -839,7 +839,7 @@ create_end_of_file_matcher :: (required: Boolean) -> @Matcher {
 End_Of_Line_Matcher :: struct : Matcher {
 }
 
-create_end_of_line_matcher :: (required: Boolean) -> @Matcher {
+create_end_of_line_matcher :: (required: Boolean) -> @End_Of_Line_Matcher {
     matcher: @End_Of_Line_Matcher = new End_Of_Line_Matcher
     matcher.is_required = required
     return matcher
@@ -848,7 +848,7 @@ create_end_of_line_matcher :: (required: Boolean) -> @Matcher {
 Identifier_Matcher :: struct : Matcher {
 }
 
-create_identifier_matcher :: (required: Boolean) -> @Matcher {
+create_identifier_matcher :: (required: Boolean) -> @Identifier_Matcher {
     matcher: @Identifier_Matcher = new Identifier_Matcher
     matcher.is_required = required
     return matcher
@@ -858,7 +858,7 @@ Keyword_Matcher :: struct : Matcher {
     lexeme: @String
 }
 
-create_keyword_matcher :: (required: Boolean, lexeme: @String) -> @Matcher {
+create_keyword_matcher :: (required: Boolean, lexeme: @String) -> @Keyword_Matcher {
     matcher: @Keyword_Matcher = new Keyword_Matcher
     matcher.is_required = required
     matcher.lexeme = lexeme
@@ -868,7 +868,7 @@ create_keyword_matcher :: (required: Boolean, lexeme: @String) -> @Matcher {
 Literal_Matcher :: struct : Matcher {
 }
 
-create_literal_matcher :: (required: Boolean) -> @Matcher {
+create_literal_matcher :: (required: Boolean) -> @Literal_Matcher {
     matcher: @Literal_Matcher = new Literal_Matcher
     matcher.is_required = required
     return matcher
@@ -878,7 +878,7 @@ Other_Matcher :: struct : Matcher {
     lexeme: @String
 }
 
-create_other_matcher :: (required: Boolean, lexeme: @String) -> @Matcher {
+create_other_matcher :: (required: Boolean, lexeme: @String) -> @Other_Matcher {
     matcher: @Other_Matcher = new Other_Matcher
     matcher.is_required = required
     matcher.lexeme = lexeme
@@ -888,7 +888,7 @@ create_other_matcher :: (required: Boolean, lexeme: @String) -> @Matcher {
 Space_Matcher :: struct : Matcher {
 }
 
-create_space_matcher :: (required: Boolean) -> @Matcher {
+create_space_matcher :: (required: Boolean) -> @Space_Matcher {
     matcher: @Space_Matcher = new Space_Matcher
     matcher.is_required = required
     return matcher
@@ -956,7 +956,7 @@ Function_Statement :: struct : Statement {
     body: @Block_Statement
 }
 
-create_function_statement :: (name: @Identifier_Token, parameters: @List, return_type: @Value_Type, body: @Block_Statement) -> @Statement {
+create_function_statement :: (name: @Identifier_Token, parameters: @List, return_type: @Value_Type, body: @Block_Statement) -> @Function_Statement {
     function_statement: @Function_Statement = new Function_Statement
     function_statement.location = name.location
     function_statement.name = name
@@ -984,7 +984,7 @@ Block_Statement :: struct : Statement {
     statements: @List
 }
 
-create_block_statement :: (open_brace: @Token, statements: @List) -> @Statement {
+create_block_statement :: (open_brace: @Token, statements: @List) -> @Block_Statement {
     block_statement: @Block_Statement = new Block_Statement
     block_statement.location = open_brace.location
     block_statement.statements = statements
@@ -995,7 +995,7 @@ Expression_Statement :: struct : Statement {
     expression: @Expression
 }
 
-create_expression_statement :: (expression: @Expression) -> @Statement {
+create_expression_statement :: (expression: @Expression) -> @Expression_Statement {
     statement: @Expression_Statement = new Expression_Statement
     statement.location = expression.location
     statement.expression = expression
@@ -1008,7 +1008,7 @@ If_Statement :: struct : Statement {
     false_block: @Block_Statement
 }
 
-create_if_statement :: (location: @Source_Location, condition: @Expression, true_block: @Block_Statement, false_block: @Block_Statement) -> @Statement {
+create_if_statement :: (location: @Source_Location, condition: @Expression, true_block: @Block_Statement, false_block: @Block_Statement) -> @If_Statement {
     statement: @If_Statement = new If_Statement
     statement.location = location
     statement.condition = condition
@@ -1021,7 +1021,7 @@ Loop_Statement :: struct : Statement {
     block: @Block_Statement
 }
 
-create_loop_statement :: (location: @Source_Location, block: @Block_Statement) -> @Statement {
+create_loop_statement :: (location: @Source_Location, block: @Block_Statement) -> @Loop_Statement {
     statement: @Loop_Statement = new Loop_Statement
     statement.location = location
     statement.block = block
@@ -1033,7 +1033,7 @@ While_Statement :: struct : Statement {
     block: @Block_Statement
 }
 
-create_while_statement :: (location: @Source_Location, condition: @Expression, block: @Block_Statement) -> @Statement {
+create_while_statement :: (location: @Source_Location, condition: @Expression, block: @Block_Statement) -> @While_Statement {
     statement: @While_Statement = new While_Statement
     statement.location = location
     statement.condition = condition
@@ -1044,7 +1044,7 @@ create_while_statement :: (location: @Source_Location, condition: @Expression, b
 Break_Statement :: struct : Statement {
 }
 
-create_break_statement :: (location: @Source_Location) -> @Statement {
+create_break_statement :: (location: @Source_Location) -> @Break_Statement {
     statement: @Break_Statement = new Break_Statement
     statement.location = location
     return statement
@@ -1054,7 +1054,7 @@ Return_Statement :: struct : Statement {
     value_expression: @Expression
 }
 
-create_return_statement :: (location: @Source_Location, value_expression: @Expression) -> @Statement {
+create_return_statement :: (location: @Source_Location, value_expression: @Expression) -> @Return_Statement {
     statement: @Return_Statement = new Return_Statement
     statement.location = location
     statement.value_expression = value_expression
@@ -1068,7 +1068,7 @@ Variable_Statement :: struct : Statement {
     is_external: Boolean
 }
 
-create_variable_statement :: (name: @Identifier_Token, value_type: @Value_Type, value_expression: @Expression, is_external: Boolean) -> @Statement {
+create_variable_statement :: (name: @Identifier_Token, value_type: @Value_Type, value_expression: @Expression, is_external: Boolean) -> @Variable_Statement {
     statement: @Variable_Statement = new Variable_Statement
     statement.location = name.location
     statement.name = name
@@ -1084,7 +1084,7 @@ Struct_Statement :: struct : Statement {
     members: @List
 }
 
-create_struct_statement :: (name: @Identifier_Token, base_type: @Value_Type, members: @List) -> @Statement {
+create_struct_statement :: (name: @Identifier_Token, base_type: @Value_Type, members: @List) -> @Struct_Statement {
     statement: @Struct_Statement = new Struct_Statement
     statement.location = name.location
     statement.name = name
@@ -1113,7 +1113,7 @@ Assignment_Statement :: struct : Statement {
     value_expression: @Expression
 }
 
-create_assignment_statement :: (destination: @Expression, operator: @Other_Token, value_expression: @Expression) -> @Statement {
+create_assignment_statement :: (destination: @Expression, operator: @Other_Token, value_expression: @Expression) -> @Assignment_Statement {
     statement: @Assignment_Statement = new Assignment_Statement
     statement.location = destination.location
     statement.destination = destination
@@ -1141,7 +1141,7 @@ Pointer_Type :: struct : Value_Type {
     value_type: @Value_Type
 }
 
-create_pointer_type :: (location: @Source_Location, value_type: @Value_Type) -> @Value_Type {
+create_pointer_type :: (location: @Source_Location, value_type: @Value_Type) -> @Pointer_Type {
     pointer_type: @Pointer_Type = new Pointer_Type
     pointer_type.location = location
     pointer_type.value_type = value_type
@@ -1156,7 +1156,7 @@ Literal_Expression :: struct : Expression {
     literal: @Literal_Token
 }
 
-create_literal_expression :: (literal: @Literal_Token) -> @Expression {
+create_literal_expression :: (literal: @Literal_Token) -> @Literal_Expression {
     expression: @Literal_Expression = new Literal_Expression
     expression.location = literal.location
     expression.literal = literal
@@ -1167,7 +1167,7 @@ Variable_Expression :: struct : Expression {
     name: @Identifier_Token
 }
 
-create_variable_expression :: (name: @Identifier_Token) -> @Expression {
+create_variable_expression :: (name: @Identifier_Token) -> @Variable_Expression {
     expression: @Variable_Expression = new Variable_Expression
     expression.location = name.location
     expression.name = name
@@ -1180,7 +1180,7 @@ Binary_Expression :: struct : Expression {
     right_expression: @Expression
 }
 
-create_binary_expression :: (left_expression: @Expression, operator: @Other_Token, right_expression: @Expression) -> @Expression {
+create_binary_expression :: (left_expression: @Expression, operator: @Other_Token, right_expression: @Expression) -> @Binary_Expression {
     expression: @Binary_Expression = new Binary_Expression
     expression.location = left_expression.location
     expression.left_expression = left_expression
@@ -1194,7 +1194,7 @@ Cast_Expression :: struct : Expression {
     value_type: @Value_Type
 }
 
-create_cast_expression :: (value_expression: @Expression, value_type: @Value_Type) -> @Expression {
+create_cast_expression :: (value_expression: @Expression, value_type: @Value_Type) -> @Cast_Expression {
     expression: @Cast_Expression = new Cast_Expression
     expression.location = value_expression.location
     expression.value_expression = value_expression
@@ -1207,7 +1207,7 @@ Is_Expression :: struct : Expression {
     value_type: @Value_Type
 }
 
-create_is_expression :: (value_expression: @Expression, value_type: @Value_Type) -> @Expression {
+create_is_expression :: (value_expression: @Expression, value_type: @Value_Type) -> @Is_Expression {
     expression: @Is_Expression = new Is_Expression
     expression.location = value_expression.location
     expression.value_expression = value_expression
@@ -1219,7 +1219,7 @@ New_Expression :: struct : Expression {
     value_type: @Value_Type
 }
 
-create_new_expression :: (location: @Source_Location, value_type: @Value_Type) -> @Expression {
+create_new_expression :: (location: @Source_Location, value_type: @Value_Type) -> @New_Expression {
     expression: @New_Expression = new New_Expression
     expression.location = location
     expression.value_type = value_type
@@ -1231,7 +1231,7 @@ Call_Expression :: struct : Expression {
     arguments: @List
 }
 
-create_call_expression :: (callee: @Expression, arguments: @List) -> @Expression {
+create_call_expression :: (callee: @Expression, arguments: @List) -> @Call_Expression {
     expression: @Call_Expression = new Call_Expression
     expression.location = callee.location
     expression.callee = callee
@@ -1247,7 +1247,7 @@ Member_Access_Expression :: struct : Access_Expression {
     member_name: @Identifier_Token
 }
 
-create_member_access_expression :: (object: @Expression, member_name: @Identifier_Token) -> @Expression {
+create_member_access_expression :: (object: @Expression, member_name: @Identifier_Token) -> @Member_Access_Expression {
     expression: @Member_Access_Expression = new Member_Access_Expression
     expression.location = object.location
     expression.object = object
@@ -1260,7 +1260,7 @@ Array_Access_Expression :: struct : Access_Expression {
     index_expression: @Expression
 }
 
-create_array_access_expression :: (object: @Expression, index_expression: @Expression) -> @Expression {
+create_array_access_expression :: (object: @Expression, index_expression: @Expression) -> @Array_Access_Expression {
     expression: @Array_Access_Expression = new Array_Access_Expression
     expression.location = object.location
     expression.object = object
