@@ -1378,7 +1378,7 @@ void emit_statement(Context *context, Statement *statement) {
             Value_Holder value_holder = { .kind = VALUE_HOLDER__NEW };
             emit_expression(context, statement->assignment_data.value, &value_holder);
             Type *value_type = value_holder.type;
-            if (!type__equals(destination_type, value_type) && destination_type->kind != TYPE__POINTER && value_type->kind != TYPE__NULL) {
+            if (!type__accepts(destination_type, value_type)) {
                 PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Destination type differs from value type. Expected %s but got %s instead.", SOURCE(statement->location), context__type_name(context, destination_type)->data, context__type_name(context, value_type)->data);
             }
             switch (destination_type->kind) {
