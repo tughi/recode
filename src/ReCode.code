@@ -159,7 +159,7 @@ parse_statements :: (self: @Parser) -> @List {
             break
         }
         self.consume_end_of_line()
-        statements.append(statement as @Object)
+        statements.append(statement)
     }
 
     return statements
@@ -306,7 +306,7 @@ parse_struct_members :: (self: @Parser, struct_members: @List) -> Nothing {
             self.consume(self.required_colon)
             self.consume_space(1)
             member_value_type: @Value_Type = self.parse_value_type()
-            struct_members.append(create_struct_member(member_name, member_value_type) as @Object)
+            struct_members.append(create_struct_member(member_name, member_value_type))
         } else {
             break
         }
@@ -352,7 +352,7 @@ parse_function_parameters :: (self: @Parser) -> @List {
     expected_space: Int = 0
     loop {
         self.consume_space(expected_space)
-        function_parameters.append(self.parse_function_parameter() as @Object)
+        function_parameters.append(self.parse_function_parameter())
         if (self.matches(self.optional_space, self.required_comma)) {
             self.consume_space(0)
             self.consume(self.required_comma)
@@ -641,12 +641,12 @@ parse_access_expression :: (self: @Parser) -> @Expression {
 \ call_arguments
 \   : expression ( "," expression )*
 parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
-    call_arguments.append(self.parse_expression() as @Object)
+    call_arguments.append(self.parse_expression())
     while (self.matches(self.optional_space, self.required_comma)) {
         self.consume_space(0)
         self.consume(self.required_comma)
         self.consume_space(1)
-        call_arguments.append(self.parse_expression() as @Object)
+        call_arguments.append(self.parse_expression())
     }
 }
 
@@ -1280,7 +1280,7 @@ write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
 write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     if (statement is Assignment_Statement) {
         statement: @Assignment_Statement = statement
-        return file.write(statement.destination).write(' ').write(statement.operator as @Token).write(' ').write(statement.value_expression)
+        return file.write(statement.destination).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
     }
 
     if (statement is Block_Statement) {
@@ -1303,7 +1303,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
 
     if (statement is Function_Statement) {
         statement: @Function_Statement = statement
-        file.write(statement.name as @Token).write(" :: (")
+        file.write(statement.name).write(" :: (")
         function_parameters: @List_Iterator = statement.parameters.create_iterator()
         if (function_parameters.has_next()) {
             loop {
@@ -1347,7 +1347,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
 
     if (statement is Struct_Statement) {
         statement: @Struct_Statement = statement
-        file.write(statement.name as @Token).write(" :: struct")
+        file.write(statement.name).write(" :: struct")
         if (statement.base_type != null) {
             file.write(" : ").write(statement.base_type)
         }
@@ -1358,14 +1358,14 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         members: @List_Iterator = statement.members.create_iterator()
         while (members.has_next()) {
             member: @Struct_Member = members.next()
-            file.write_source_line(member.location, alignment + 1).write(member.name as @Token).write(": ").write(member.value_type).end_line()
+            file.write_source_line(member.location, alignment + 1).write(member.name).write(": ").write(member.value_type).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
     }
 
     if (statement is Variable_Statement) {
         statement: @Variable_Statement = statement
-        file.write((statement as @Variable_Statement).name as @Token)
+        file.write((statement as @Variable_Statement).name)
         if (statement.value_type != null) {
             file.write(": ").write(statement.value_type)
             if (statement.value_expression != null) {
@@ -1414,12 +1414,12 @@ write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -
 }
 
 write :: (file: @FILE, parameter: @Function_Parameter) -> @FILE {
-    return file.write(parameter.name as @Token).write(": ").write(parameter.value_type)
+    return file.write(parameter.name).write(": ").write(parameter.value_type)
 }
 
 write :: (file: @FILE, value_type: @Value_Type) -> @FILE {
     if (value_type is Named_Type) {
-        return file.write((value_type as @Named_Type).name as @Token)
+        return file.write((value_type as @Named_Type).name)
     }
 
     if (value_type is Pointer_Type) {
@@ -1437,7 +1437,7 @@ write :: (file: @FILE, expression: @Expression) -> @FILE {
     }
 
     if (expression is Binary_Expression) {
-        return file.write((expression as @Binary_Expression).left_expression).write(' ').write((expression as @Binary_Expression).operator as @Token).write(' ').write((expression as @Binary_Expression).right_expression)
+        return file.write((expression as @Binary_Expression).left_expression).write(' ').write((expression as @Binary_Expression).operator).write(' ').write((expression as @Binary_Expression).right_expression)
     }
 
     if (expression is Call_Expression) {
@@ -1465,7 +1465,7 @@ write :: (file: @FILE, expression: @Expression) -> @FILE {
     }
 
     if (expression is Literal_Expression) {
-        return file.write((expression as @Literal_Expression).literal as @Token)
+        return file.write((expression as @Literal_Expression).literal)
     }
 
     if (expression is New_Expression) {
@@ -1473,11 +1473,11 @@ write :: (file: @FILE, expression: @Expression) -> @FILE {
     }
 
     if (expression is Member_Access_Expression) {
-        return file.write((expression as @Member_Access_Expression).object).write('.').write((expression as @Member_Access_Expression).member_name as @Token)
+        return file.write((expression as @Member_Access_Expression).object).write('.').write((expression as @Member_Access_Expression).member_name)
     }
 
     if (expression is Variable_Expression) {
-        return file.write((expression as @Variable_Expression).name as @Token)
+        return file.write((expression as @Variable_Expression).name)
     }
 
     file.fflush()
@@ -1495,7 +1495,7 @@ scan :: (file_name: @String) -> @List {
 
     loop {
         token: @Token = scanner.next_token()
-        tokens.append(token as @Object)
+        tokens.append(token)
         if (token is End_Of_File_Token) {
             break
         }
@@ -1792,126 +1792,126 @@ Literal_Token :: struct : Token {
 Character_Token :: struct : Literal_Token {
 }
 
-create_character_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_character_token :: (lexeme: @String, location: @Source_Location) -> @Character_Token {
     token: @Character_Token = new Character_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 Boolean_Token :: struct : Literal_Token {
     value: Boolean
 }
 
-create_boolean_token :: (lexeme: @String, location: @Source_Location, value: Boolean) -> @Token {
+create_boolean_token :: (lexeme: @String, location: @Source_Location, value: Boolean) -> @Boolean_Token {
     token: @Boolean_Token = new Boolean_Token
-    (token as @Token).init(lexeme, location)
+    token.init(lexeme, location)
     token.value = value
-    return token as @Token
+    return token
 }
 
 Comment_Token :: struct : Token {
 }
 
-create_comment_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_comment_token :: (lexeme: @String, location: @Source_Location) -> @Comment_Token {
     token: @Comment_Token = new Comment_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 End_Of_File_Token :: struct : Token {
 }
 
-create_end_of_file_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_end_of_file_token :: (lexeme: @String, location: @Source_Location) -> @End_Of_File_Token {
     token: @End_Of_File_Token = new End_Of_File_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 End_Of_Line_Token :: struct : Token {
 }
 
-create_end_of_line_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_end_of_line_token :: (lexeme: @String, location: @Source_Location) -> @End_Of_Line_Token {
     token: @End_Of_Line_Token = new End_Of_Line_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 Error_Token :: struct : Token {
 }
 
-create_error_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_error_token :: (lexeme: @String, location: @Source_Location) -> @Error_Token {
     token: @Error_Token = new Error_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 Identifier_Token :: struct : Token {
 }
 
-create_identifier_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_identifier_token :: (lexeme: @String, location: @Source_Location) -> @Identifier_Token {
     token: @Identifier_Token = new Identifier_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 Integer_Token :: struct : Literal_Token {
     value: Int
 }
 
-create_integer_token :: (lexeme: @String, location: @Source_Location, value: Int) -> @Token {
+create_integer_token :: (lexeme: @String, location: @Source_Location, value: Int) -> @Integer_Token {
     token: @Integer_Token = new Integer_Token
-    (token as @Token).init(lexeme, location)
+    token.init(lexeme, location)
     token.value = value
-    return token as @Token
+    return token
 }
 
 Keyword_Token :: struct : Token {
 }
 
-create_keyword_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_keyword_token :: (lexeme: @String, location: @Source_Location) -> @Keyword_Token {
     token: @Keyword_Token = new Keyword_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 Null_Token :: struct : Literal_Token {
 }
 
-create_null_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_null_token :: (lexeme: @String, location: @Source_Location) -> @Null_Token {
     token: @Null_Token = new Null_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 Other_Token :: struct : Token {
 }
 
-create_other_token :: (lexeme: @String, location: @Source_Location) -> @Token {
+create_other_token :: (lexeme: @String, location: @Source_Location) -> @Other_Token {
     token: @Other_Token = new Other_Token
-    (token as @Token).init(lexeme, location)
-    return token as @Token
+    token.init(lexeme, location)
+    return token
 }
 
 Space_Token :: struct : Token {
     count: Int
 }
 
-create_space_token :: (lexeme: @String, location: @Source_Location, count: Int) -> @Token {
+create_space_token :: (lexeme: @String, location: @Source_Location, count: Int) -> @Space_Token {
     token: @Space_Token = new Space_Token
-    (token as @Token).init(lexeme, location)
+    token.init(lexeme, location)
     token.count = count
-    return token as @Token
+    return token
 }
 
 String_Token :: struct : Literal_Token {
     value: @String
 }
 
-create_string_token :: (lexeme: @String, location: @Source_Location, value: @String) -> @Token {
+create_string_token :: (lexeme: @String, location: @Source_Location, value: @String) -> @String_Token {
     token: @String_Token = new String_Token
-    (token as @Token).init(lexeme, location)
+    token.init(lexeme, location)
     token.value = value
-    return token as @Token
+    return token
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -1980,7 +1980,7 @@ create_list :: () -> @List {
     return list
 }
 
-append :: (self: @List, data: @Object) -> Nothing {
+append :: (self: @List, data: @Any) -> Nothing {
     item: @List_Item = new List_Item
     item.data = data
     item.prev_item = self.last_item
@@ -1993,7 +1993,7 @@ append :: (self: @List, data: @Object) -> Nothing {
     self.last_item = item
 }
 
-prepend :: (self: @List, data: @Object) -> Nothing {
+prepend :: (self: @List, data: @Any) -> Nothing {
     item: @List_Item = new List_Item
     item.data = data
     item.prev_item = null
@@ -2009,7 +2009,7 @@ prepend :: (self: @List, data: @Object) -> Nothing {
 List_Item :: struct {
     prev_item: @List_Item
     next_item: @List_Item
-    data: @Object
+    data: @Any
 }
 
 List_Iterator :: struct {
@@ -2026,7 +2026,7 @@ create_iterator :: (list: @List) -> @List_Iterator {
     return iterator
 }
 
-current :: (self: @List_Iterator) -> @Object {
+current :: (self: @List_Iterator) -> @Any {
     if (self.current_item != null) {
         return self.current_item.data
     }
@@ -2037,7 +2037,7 @@ has_next :: (self: @List_Iterator) -> Boolean {
     return self.next_item != null
 }
 
-next :: (self: @List_Iterator) -> @Object {
+next :: (self: @List_Iterator) -> @Any {
     if (self.next_item == null) {
         return null
     }
@@ -2228,6 +2228,6 @@ fputc :: (char: Int32, file: @FILE) -> Int32
 
 abort :: () -> Nothing
 exit :: (code: Int) -> Nothing
-free :: (block: @Int8) -> Nothing
-malloc :: (size: Int) -> @Int8
-realloc :: (block: @Int8, size: Int) -> @Int8
+free :: (block: @Any) -> Nothing
+malloc :: (size: Int) -> @Any
+realloc :: (block: @Int8, size: Int) -> @Any
