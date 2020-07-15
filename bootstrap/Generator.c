@@ -1148,8 +1148,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
                     break;
                 }
                 case TYPE__POINTER: {
-                    if (cast_type->kind == TYPE__POINTER) {
-                        // TODO: make sure pointed type are compatible
+                    if (cast_type->kind == TYPE__POINTER && type__accepts(cast_expression_type, cast_type)) {
                         emitf("  mov %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(&cast_expression_value_holder));
                         value_holder__release_register(&cast_expression_value_holder);
                         return;
