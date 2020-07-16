@@ -1386,7 +1386,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     }
 
     file.fflush()
-    stderr.end_line().end_line().write("Unsupported Statement type: ").write(statement.type.id).end_line()
+    stderr.end_line().end_line().write("Unsupported Statement type: ").write(statement.object_type.id).end_line()
     abort()
 }
 
@@ -1427,7 +1427,7 @@ write :: (file: @FILE, value_type: @Value_Type) -> @FILE {
     }
 
     file.fflush()
-    stderr.end_line().end_line().write("Unsupported Value_Type type: ").write(value_type.type.id).end_line()
+    stderr.end_line().end_line().write("Unsupported Value_Type type: ").write(value_type.object_type.id).end_line()
     abort()
 }
 
@@ -1481,7 +1481,7 @@ write :: (file: @FILE, expression: @Expression) -> @FILE {
     }
 
     file.fflush()
-    stderr.end_line().end_line().write("Unsupported Expression type: ").write(expression.type.id).end_line()
+    stderr.end_line().end_line().write("Unsupported Expression type: ").write(expression.object_type.id).end_line()
     abort()
 }
 
@@ -2061,16 +2061,16 @@ restore_state :: (self: @List_Iterator) -> Nothing {
 \ -------------------------------------------------------------------------------------------------
 
 Object :: struct {
-    type: @Type
+    object_type: @Object_Type
 }
 
 \ -------------------------------------------------------------------------------------------------
 \       Type
 \ -------------------------------------------------------------------------------------------------
 
-Type :: struct {
+Object_Type :: struct {
     id: Int
-    base_type: @Type
+    base_type: @Object_Type
 }
 
 \ -------------------------------------------------------------------------------------------------

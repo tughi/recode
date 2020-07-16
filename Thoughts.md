@@ -100,28 +100,29 @@ Extended_Node :: struct : Node {
 
 ## Objects
 
-The `Object` type is a special base type that holds `Type` information.
+The `Object` type is a special base type that holds `Object_Type` information.
 
-The compiler assignes the associated `Type` when an `Object` is allocated.
+The compiler assignes the associated `Object_Type` when an `Object` is allocated.
 
 The `Object` structure looks like this:
 
 ```
 Object :: struct {
-    type: @Type
+    object_type: @Object_Type
 }
 ```
 
-## Types
+## Object types
 
-For each declared type, the compiler generates a `Type` global variable, named after the type.
+For each declared `Object` type, the compiler generates a `Object_Type` global variable, named after
+the type.
 
-The `Type` structure looks like this:
+The `Object_Type` structure looks like this:
 
 ```
-Type :: struct {
+Object_Type :: struct {
     id: Int
-    base_type: @Type
+    base_type: @Object_Type
 }
 ```
 

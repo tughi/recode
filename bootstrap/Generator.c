@@ -266,10 +266,10 @@ Type *context__get_string_type(Context *self) {
     return context__find_type(self, type_name);
 }
 
-Type *context__get_type_type(Context *self) {
+Type *context__get_object_type_type(Context *self) {
     static String *type_name = NULL;
     if (type_name == NULL) {
-        type_name = string__create("Type");
+        type_name = string__create("Object_Type");
     }
     return context__find_type(self, type_name);
 }
@@ -1726,7 +1726,7 @@ void generate(char *file, Compilation_Unit *compilation_unit) {
                 if (context__is_object_type(context, context__find_type(context, statement->struct_data.name->lexeme))) {
                     statement->struct_data.object_type_id = counter__inc(context->counter);
                     Token *struct_name = statement->struct_data.name;
-                    Statement *variable_statement = statement__create_variable(struct_name->location, struct_name, type__create_pointer(struct_name->location, context__get_type_type(context)), NULL, 0);
+                    Statement *variable_statement = statement__create_variable(struct_name->location, struct_name, type__create_pointer(struct_name->location, context__get_object_type_type(context)), NULL, 0);
                     context__add_variable(context, variable_statement);
                 }
                 break;
