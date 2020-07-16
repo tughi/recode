@@ -389,7 +389,7 @@ Expression *parse_call_expression(Context *context) {
             consume_space(context, 0);
             consume_one(context, NULL, required(is_dot));
             consume_space(context, 0);
-            Token *name = consume_one(context, NULL, required(is_identifier));
+            Token *name = consume_one(context, "member name", required(is_identifier));
             expression = expression__create_member(expression, name);
         } else if (matches_two(context, optional(is_space), required(is_open_bracket))) {
             consume_space(context, 0);
