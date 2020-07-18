@@ -617,6 +617,11 @@ void infer_expression_type(Context *context, Expression *expression) {
             }
             PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot infer member type from type kind: %s.", SOURCE(object->location), type__get_kind_name(object_type));
         }
+        case EXPRESSION__NEW: {
+            expression->inferred_type = type__create_pointer(expression->location, expression->new_data.type);
+            context__resolve_type(context, expression->inferred_type);
+            return;
+        }
         case EXPRESSION__VARIABLE: {
             String *variable_name = expression->variable_data.name->lexeme;
             Statement *variable_statement = context__find_variable(context, variable_name);
