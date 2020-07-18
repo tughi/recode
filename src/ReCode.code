@@ -25,11 +25,22 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
     tokens: @List = scan(source_file_name)
 
     compilation_unit: @Compilation_Unit = parse(tokens)
-    stdout.write(compilation_unit).end_line()
+    \ stdout.write(compilation_unit).end_line()
 
-    output_file: @FILE = fopen(argv[2], "w".data)
+    generate(compilation_unit, output_file_name)
+}
 
-    output_file.write("  .file 1 \"").write(source_file_name).write("\"")
+\ -------------------------------------------------------------------------------------------------
+\       Generator
+\ -------------------------------------------------------------------------------------------------
+
+generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> Nothing {
+    builder: @IR_Builder = create_ir_builder()
+    builder.build(compilation_unit)
+
+    output_file: @FILE = fopen(output_file_name.data, "w".data)
+
+    output_file.write("  .file 1 \"").write(compilation_unit.source.file_name).write("\"")
     output_file.write_line("  .intel_syntax noprefix")
     output_file.write_line("")
     output_file.write_line("  .text")
@@ -44,6 +55,191 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
     output_file.write_line("  pop rbp")
     output_file.write_line("  ret")
     output_file.write_line("")
+}
+
+\ -------------------------------------------------------------------------------------------------
+\       IR_Builder
+\ -------------------------------------------------------------------------------------------------
+
+IR_Builder :: struct {
+    functions: @List
+    current_block: @IR_Block
+}
+
+create_ir_builder :: () -> @IR_Builder {
+    builder: @IR_Builder = new IR_Builder
+    builder.functions = create_list()
+    builder.current_block = null
+    return builder
+}
+
+build :: (self: @IR_Builder, compilation_unit: @Compilation_Unit) -> Nothing {
+    statements: @List_Iterator = compilation_unit.statements.create_iterator()
+    while (statements.has_next()) {
+        statement: @Statement = statements.next()
+        self.build_statement(statement)
+    }
+}
+
+build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
+    if (statement is Function_Statement) {
+        self.build(statement as @Function_Statement)
+        return
+    }
+
+    \ if (statement is Struct_Statement) {
+    \     stderr.write("Skipping struct statement: ").write((statement as @Function_Statement).name as @Token).end_line()
+    \     return
+    \ }
+
+    \ if (statement is Variable_Statement) {
+    \     stderr.write("Skipping struct statement: ").write((statement as @Function_Statement).name as @Token).end_line()
+    \     return
+    \ }
+
+    if (self.current_block == null) {
+        abort(statement.location, "This statement requires a basic block: ".clone().append(statement.object_type.id))
+    }
+
+    if (statement is Block_Statement) {
+        self.build(statement as @Block_Statement)
+        return
+    }
+
+    if (statement is Expression_Statement) {
+        self.build(statement as @Expression_Statement)
+        return
+    }
+
+    if (statement is If_Statement) {
+        self.build(statement as @If_Statement)
+        return
+    }
+
+    abort(statement.location, "Unsupported Statement type: ".clone().append(statement.object_type.id))
+}
+
+build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
+    stderr.write("Building IR_Function: ").write(statement.name).end_line()
+
+    function: @IR_Function = new IR_Function
+    function.location = statement.location
+    function.name = statement.name.lexeme
+    function.parameters = create_list()
+    function.return_type = null
+
+    function.entry_block = create_ir_block(function)
+
+    self.current_block = function.entry_block
+    self.build(statement.body)
+    self.current_block = null
+
+    self.functions.append(function)
+}
+
+create_ir_block :: (function: @IR_Function) -> @IR_Block {
+    block: @IR_Block = new @IR_Block
+    block.function = function
+    block.predecessors = create_list()
+    block.instructions = create_list()
+    return block
+}
+
+build :: (self: @IR_Builder, statement: @Block_Statement) -> Nothing {
+    block_statements: @List_Iterator = statement.statements.create_iterator()
+    while (block_statements.has_next()) {
+        block_statement: @Statement = block_statements.next()
+        self.build_statement(block_statement)
+    }
+}
+
+build :: (self: @IR_Builder, statement: @Expression_Statement) -> Nothing {
+    self.build_expression(statement.expression)
+}
+
+build :: (self: @IR_Builder, statement: @If_Statement) -> Nothing {
+    end_block: @IR_Block = create_ir_block(self.current_block.function)
+
+    self.build_expression(statement.condition)
+    abort(statement.condition.location, "TODO: get expression value/variable")
+
+    self.build_statement(statement.true_block)
+    abort(statement.true_block.location, "TODO: jump to end_block")
+
+    if (statement.false_block != null) {
+        self.build_statement(statement.false_block)
+        abort(statement.false_block.location, "TODO: jump to end_block")
+    }
+
+    self.current_block = end_block
+}
+
+build_expression :: (self: @IR_Builder, expression: @Expression) -> Nothing {
+    if (expression is Literal_Expression) {
+        self.build(expression as @Literal_Expression)
+        return
+    }
+    if (expression is Not_Equals_Expression) {
+        self.build(expression as @Not_Equals_Expression)
+        return
+    }
+    if (expression is Variable_Expression) {
+        self.build(expression as @Variable_Expression)
+        return
+    }
+
+    abort(expression.location, "Unsupported Expression type: ".clone().append(expression.object_type.id))
+}
+
+build :: (self: @IR_Builder, expression: @Literal_Expression) -> Nothing {
+    abort(expression.location, "TODO: emit literak load")
+}
+
+build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> Nothing {
+    self.build_expression(expression.left_expression)
+    self.build_expression(expression.right_expression)
+    abort(expression.location, "TODO: emit comparison expression")
+}
+
+build :: (self: @IR_Builder, expression: @Variable_Expression) -> Nothing {
+    abort(expression.location, "TODO: emit variable load")
+}
+
+\ -------------------------------------------------------------------------------------------------
+\       IR
+\ -------------------------------------------------------------------------------------------------
+
+IR :: struct {
+}
+
+IR_Type :: struct : Object {
+}
+
+IR_Node :: struct : Object {
+}
+
+IR_Value :: struct : IR_Node {
+    type: @IR_Type
+}
+
+IR_Temp_Value :: struct : IR_Value {
+}
+
+IR_Block :: struct : IR_Node {
+    function: @IR_Function
+    predecessors: @List
+    instructions: @List
+}
+
+IR_Function :: struct : Object {
+    location: @Source_Location
+    name: @String
+    parameters: @List
+    return_type: @IR_Type
+    entry_block: @IR_Block
+}
+
+IR_Instruction :: struct : Object {
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -250,8 +446,7 @@ parse_statement :: (self: @Parser) -> @Statement {
             }
             return create_variable_statement(expression.name, value_type, null, false)
         }
-        stderr.write(expression.location).write(": Cannot use expression as variable name").end_line()
-        abort()
+        abort(expression.location, "Cannot use expression as variable name")
     }
 
     if (self.matches(self.optional_space, self.required_equals)) {
@@ -291,8 +486,7 @@ parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
         }
         return create_struct_statement(struct_name, base_type, null)
     } else {
-        stderr.write(name_expression.location).write(": Cannot use expression as struct name").end_line()
-        abort()
+        abort(name_expression.location, "Cannot use expression as struct name")
     }
 }
 
@@ -344,8 +538,7 @@ parse_function :: (self: @Parser, name_expression: @Expression) -> @Statement {
         }
         return create_function_statement(function_name, function_parameters, function_return_type, function_body)
     } else {
-        stderr.write(name_expression.location).write(": Cannot use expression as function name").end_line()
-        abort()
+        abort(name_expression.location, "Cannot use expression as function name")
     }
 }
 
@@ -1436,8 +1629,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     }
 
     file.fflush()
-    stderr.end_line().end_line().write("Unsupported Statement type: ").write(statement.object_type.id).end_line()
-    abort()
+    abort(statement.location, "Unsupported Statement type: ".clone().append(statement.object_type.id))
 }
 
 write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
@@ -1477,8 +1669,7 @@ write :: (file: @FILE, value_type: @Value_Type) -> @FILE {
     }
 
     file.fflush()
-    stderr.end_line().end_line().write("Unsupported Value_Type type: ").write(value_type.object_type.id).end_line()
-    abort()
+    abort(value_type.location, "Unsupported Value_Type type: ".clone().append(value_type.object_type.id))
 }
 
 write :: (file: @FILE, expression: @Expression) -> @FILE {
@@ -1570,7 +1761,11 @@ write :: (file: @FILE, expression: @Expression) -> @FILE {
     }
 
     file.fflush()
-    stderr.end_line().end_line().write(expression.location).write(": Unsupported Expression type: ").write(expression.object_type.id).end_line()
+    abort(expression.location, "Unsupported Expression type: ".clone().append(expression.object_type.id))
+}
+
+abort :: (location: @Source_Location, message: @String) -> Nothing {
+    stderr.end_line().write(location).write(": ").write(message).end_line()
     abort()
 }
 
@@ -2173,8 +2368,12 @@ String :: struct {
 }
 
 init :: (self: @String) -> Nothing {
-    self.data_size = 16
-    self.data = malloc(self.data_size) as @Int8
+    self.init(16)
+}
+
+init :: (self: @String, data_size: Int) -> Nothing {
+    self.data_size = data_size
+    self.data = malloc(data_size) as @Int8
     self.length = 0
 }
 
@@ -2182,6 +2381,13 @@ init :: (self: @String, data: @Int8) -> Nothing {
     self.length = data.length()
     self.data_size = self.length + 1
     self.data = data
+}
+
+clone :: (self: @String) -> @String {
+    clone: @String = new String
+    clone.init(self.data_size)
+    clone.append(self)
+    return clone
 }
 
 append :: (self: @String, char: Int8) -> @String {
@@ -2193,6 +2399,13 @@ append :: (self: @String, char: Int8) -> @String {
     self.length = self.length + 1
     self.data[self.length] = '\0'
     return self
+}
+
+append :: (self: @String, number: Int) -> @String {
+    if (number >= 10) {
+        self.append(number / 10)
+    }
+    return self.append((number // 10 + '0' as Int) as Int8)
 }
 
 append :: (self: @String, other: @String) -> @String {
