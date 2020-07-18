@@ -1272,7 +1272,7 @@ write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
     statements: @List_Iterator = compilation_unit.statements.create_iterator()
     while (statements.has_next()) {
         statement: @Statement = statements.next()
-        file.write_source_line(statement.location, 0).write(statement, 0).end_line()
+        file.write_source_line(statement.location).write_alignment(0).write(statement, 0).end_line()
     }
     return file
 }
@@ -1288,9 +1288,9 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         block_statements: @List_Iterator = (statement as @Block_Statement).statements.create_iterator()
         while (block_statements.has_next()) {
             block_statement: @Statement = block_statements.next()
-            file.write_source_line(block_statement.location, alignment + 1).write(block_statement, alignment + 1).end_line()
+            file.write_source_line(block_statement.location).write_alignment(alignment + 1).write(block_statement, alignment + 1).end_line()
         }
-        return file.write_source_line(statement.location, alignment).write('}')
+        return file.write_source_line(statement.location).write_alignment(alignment).write('}')
     }
 
     if (statement is Break_Statement) {
@@ -1358,9 +1358,9 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         members: @List_Iterator = statement.members.create_iterator()
         while (members.has_next()) {
             member: @Struct_Member = members.next()
-            file.write_source_line(member.location, alignment + 1).write(member.name).write(": ").write(member.value_type).end_line()
+            file.write_source_line(member.location).write_alignment(alignment + 1).write(member.name).write(": ").write(member.value_type).end_line()
         }
-        return file.write_source_line(statement.location, alignment).write('}')
+        return file.write_source_line(statement.location).write_alignment(alignment).write('}')
     }
 
     if (statement is Variable_Statement) {
@@ -1390,7 +1390,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     abort()
 }
 
-write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
+write_source_line :: (file: @FILE, location: @Source_Location) -> @FILE {
     file.write(location.source.file_name).write(':')
     line: Int = location.line
     if (line < 1000) {
@@ -1403,13 +1403,15 @@ write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -
         file.write('0')
     }
     file.write(line).write(": ")
+    return file
+}
 
+write_alignment :: (file: @FILE, alignment: Int) -> @FILE {
     space_count: Int = alignment * 2
     while (space_count > 0) {
         file.write(' ')
         space_count = space_count - 1
     }
-
     return file
 }
 
