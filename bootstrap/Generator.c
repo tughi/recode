@@ -492,6 +492,7 @@ Member *context__get_struct_type_member(Context *self, Type *struct_type, Token 
         }
         type = type->struct_data.statement->struct_data.base_type;
     }
+    INFO(__FILE__, __LINE__, SOURCE_LOCATION "struct type: %s", SOURCE(struct_type->location), context__type_name(self, struct_type)->data);
     PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Type '%s' has no '%s' member.", SOURCE(member_name->location), context__type_name(self, struct_type)->data, member_name->lexeme->data);
 }
 
