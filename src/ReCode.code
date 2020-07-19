@@ -93,11 +93,21 @@ create_ir_builder_context :: (parent: @IR_Builder_Context) -> @IR_Builder_Contex
 }
 
 build :: (self: @IR_Builder, compilation_unit: @Compilation_Unit) -> Nothing {
-    statements: @List_Iterator = compilation_unit.statements.create_iterator()
+    statements: @List_Iterator = compilation_unit.types.create_iterator()
+    while (statements.has_next()) {
+        statement: @Statement = statements.next()
+        self.build_type(statement)
+    }
+
+    statements: @List_Iterator = compilation_unit.functions.create_iterator()
     while (statements.has_next()) {
         statement: @Statement = statements.next()
         self.build_statement(statement)
     }
+}
+
+build_type :: (self: @IR_Builder, statement: @Statement) -> @IR_Type {
+    abort(statement.location, statement.object_type)
 }
 
 build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
@@ -135,7 +145,7 @@ build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
         return
     }
 
-    abort(statement.location, clone("Unexpected type: ").append(statement.object_type.name))
+    abort(statement.location, statement.object_type)
 }
 
 build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
@@ -203,7 +213,7 @@ build_type :: (self: @IR_Builder, type: @Value_Type) -> @IR_Type {
     if (type is Pointer_Type) {
         return self.build(type as @Pointer_Type)
     }
-    abort(type.location, clone("Unexpected type: ").append(type.object_type.name))
+    abort(type.location, type.object_type)
 }
 
 build :: (self: @IR_Builder, type: @Named_Type) -> @IR_Type {
@@ -231,6 +241,9 @@ get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
 }
 
 build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
+    if (expression is Call_Expression) {
+        return self.build(expression as @Call_Expression)
+    }
     if (expression is Literal_Expression) {
         return self.build(expression as @Literal_Expression)
     }
@@ -240,14 +253,48 @@ build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
     if (expression is Variable_Expression) {
         return self.build(expression as @Variable_Expression)
     }
-    abort(expression.location, clone("Unexpected type: ").append(expression.object_type.name))
+    abort(expression.location, expression.object_type)
 }
 
 build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
     if (expression.literal is Integer_Token) {
         return create_is_constant(self.get_named_type("Int"), expression.literal)
     }
-    abort(expression.location, clone("Unexpected type: ").append(expression.literal.object_type.name))
+    abort(expression.location, expression.literal.object_type)
+}
+
+build :: (self: @IR_Builder, expression: @Call_Expression) -> @IR_Value {
+    if (expression.callee is Member_Access_Expression) {
+        callee: @Member_Access_Expression = expression.callee
+        object_type: @IR_Type = self.determine_expression_type(callee.object)
+    }
+    abort(expression.location, expression.callee.object_type)
+}
+
+determine_expression_type :: (self: @IR_Builder, expression: @Expression) -> @IR_Type {
+    if (expression is Call_Expression) {
+        return self.determine_call_expression_type(expression as @Call_Expression)
+    }
+    if (expression is Variable_Expression) {
+        return self.determine_variable_expression_type(expression as @Variable_Expression)
+    }
+    abort(expression.location, expression.object_type)
+}
+
+determine_call_expression_type :: (self: @IR_Builder, expression: @Call_Expression) -> @IR_Type {
+    if (expression.callee is Member_Access_Expression) {
+        callee: @Member_Access_Expression = expression.callee
+        object_type: @IR_Type = self.determine_expression_type(callee.object)
+    }
+    abort(expression.location, expression.callee.object_type)
+}
+
+determine_variable_expression_type :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Type {
+    value: @IR_Value = self.get_named_value(expression.name.lexeme)
+    if (value == null) {
+        abort(expression.location, clone("Unknown variable: ").append(expression.name.lexeme))
+    }
+    return value.type
 }
 
 build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
@@ -264,7 +311,7 @@ build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
 build :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Value {
     value: @IR_Value = self.get_named_value(expression.name.lexeme)
     if (value == null) {
-        abort(expression.location, "Undeclared identifier: ".clone().append(expression.name.lexeme))
+        abort(expression.location, clone("Undeclared identifier: ").append(expression.name.lexeme))
     }
     return value
 }
@@ -292,6 +339,11 @@ get_named_value :: (self: @IR_Builder, name: @String) -> @IR_Named_Value {
             return null
         }
     }
+}
+
+abort :: (location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
+    stderr.end_line().end_line().write(location).write(": Unexpected type: ").write(unexpected_type.name).end_line()
+    abort()
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -440,6 +492,7 @@ IR_Not_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
 
 Parser :: struct {
     tokens: @List_Iterator
+    compilation_unit: @Compilation_Unit
     current_alignment: Int
     optional_comment: @Matcher
     optional_space: @Matcher
@@ -484,7 +537,8 @@ Parser :: struct {
 create_parser :: (tokens: @List) -> @Parser {
     parser: @Parser = new Parser
     parser.tokens = tokens.create_iterator()
-    parser.tokens.next()
+    token: @Token = parser.tokens.next()
+    parser.compilation_unit = create_compilation_unit(token.location.source)
     parser.current_alignment = 0
 
     parser.optional_comment = create_comment_matcher(false)
@@ -532,12 +586,12 @@ create_parser :: (tokens: @List) -> @Parser {
 
 parse :: (tokens: @List) -> @Compilation_Unit {
     parser: @Parser = create_parser(tokens)
-    statements: @List = parser.parse_statements()
+    parser.compilation_unit.statements = parser.parse_statements()
     token: @Token = parser.tokens.current()
     if ((token is End_Of_File_Token) == false) {
-        abort()
+        abort(parser, token)
     }
-    return create_compilation_unit(token.location.source, statements)
+    return parser.compilation_unit
 }
 
 \ statements
@@ -616,27 +670,35 @@ parse_statement :: (self: @Parser) -> @Statement {
     if (self.matches(self.optional_space, self.required_colon)) {
         if (expression is Variable_Expression) {
             expression: @Variable_Expression = expression
+            variable_statement: @Variable_Statement
             if (self.matches(self.optional_space, self.required_colon, self.required_equals)) {
                 self.consume_space(1)
                 self.consume(self.required_colon, self.required_equals)
                 self.consume_space(1)
-                return create_variable_statement(expression.name, null, self.parse_expression(), false)
-            }
-            self.consume_space(0)
-            self.consume(self.required_colon)
-            self.consume_space(1)
-            value_type: @Value_Type = self.parse_value_type()
-            if (self.matches(self.optional_space, self.required_equals)) {
+                variable_statement = create_variable_statement(expression.name, null, self.parse_expression(), false)
+            } else {
+                self.consume_space(0)
+                self.consume(self.required_colon)
                 self.consume_space(1)
-                self.consume(self.required_equals)
-                self.consume_space(1)
-                if (self.matches(self.required_external)) {
-                    self.consume(self.required_external)
-                    return create_variable_statement(expression.name, value_type, null, true)
+                value_type: @Value_Type = self.parse_value_type()
+                if (self.matches(self.optional_space, self.required_equals)) {
+                    self.consume_space(1)
+                    self.consume(self.required_equals)
+                    self.consume_space(1)
+                    if (self.matches(self.required_external)) {
+                        self.consume(self.required_external)
+                        variable_statement = create_variable_statement(expression.name, value_type, null, true)
+                    } else {
+                        variable_statement = create_variable_statement(expression.name, value_type, self.parse_expression(), false)
+                    }
+                } else {
+                    variable_statement = create_variable_statement(expression.name, value_type, null, false)
                 }
-                return create_variable_statement(expression.name, value_type, self.parse_expression(), false)
             }
-            return create_variable_statement(expression.name, value_type, null, false)
+            if (self.current_alignment == 0) {
+                self.compilation_unit.global_variables.append(variable_statement)
+            }
+            return variable_statement
         }
         abort(expression.location, "Cannot use expression as variable name")
     }
@@ -657,26 +719,32 @@ parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
     if (name_expression is Variable_Expression) {
         struct_name: @Identifier_Token = (name_expression as @Variable_Expression).name
         self.consume(self.required_struct)
-        base_type: @Value_Type = null
+        base_type: @Value_Type
         if (self.matches(self.optional_space, self.required_colon)) {
             self.consume_space(1)
             self.consume(self.required_colon)
             self.consume_space(1)
             base_type = self.parse_value_type()
+        } else {
+            base_type = null
         }
+        struct_members: @List
         if (self.matches(self.optional_space, self.required_open_brace)) {
+            struct_members = create_list()
             self.consume_space(1)
             self.consume(self.required_open_brace)
             self.consume_end_of_line()
             self.current_alignment = self.current_alignment + 1
-            struct_members: @List = create_list()
             self.parse_struct_members(struct_members)
             self.current_alignment = self.current_alignment - 1
             self.consume_space(self.current_alignment * 4)
             self.consume(self.required_close_brace)
-            return create_struct_statement(struct_name, base_type, struct_members)
+        } else {
+            struct_members = null
         }
-        return create_struct_statement(struct_name, base_type, null)
+        struct_statement: @Struct_Statement = create_struct_statement(struct_name, base_type, struct_members)
+        self.compilation_unit.types.append(struct_statement)
+        return struct_statement
     } else {
         abort(name_expression.location, "Cannot use expression as struct name")
     }
@@ -728,7 +796,9 @@ parse_function :: (self: @Parser, name_expression: @Expression) -> @Statement {
         } else {
             function_body = null
         }
-        return create_function_statement(function_name, function_parameters, function_return_type, function_body)
+        function_statement: @Function_Statement = create_function_statement(function_name, function_parameters, function_return_type, function_body)
+        self.compilation_unit.functions.append(function_statement)
+        return function_statement
     } else {
         abort(name_expression.location, "Cannot use expression as function name")
     }
@@ -1334,13 +1404,19 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
 
 Compilation_Unit :: struct {
     source: @Source
+    types: @List
+    global_variables: @List
+    functions: @List
     statements: @List
 }
 
-create_compilation_unit :: (source: @Source, statements: @List) -> @Compilation_Unit {
+create_compilation_unit :: (source: @Source) -> @Compilation_Unit {
     compilation_unit: @Compilation_Unit = new Compilation_Unit
     compilation_unit.source = source
-    compilation_unit.statements = statements
+    compilation_unit.types = create_list()
+    compilation_unit.global_variables = create_list()
+    compilation_unit.functions = create_list()
+    compilation_unit.statements = null
     return compilation_unit
 }
 
