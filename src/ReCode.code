@@ -183,8 +183,7 @@ build :: (self: @IR_Builder, statement: @Expression_Statement) -> Nothing {
 build :: (self: @IR_Builder, statement: @If_Statement) -> Nothing {
     end_block: @IR_Block = create_ir_block(self.current_block.function)
 
-    self.build_expression(statement.condition)
-    abort(statement.condition.location, "TODO: get expression value/variable")
+    condition: @IR_Value = self.build_expression(statement.condition)
 
     self.build_statement(statement.true_block)
     abort(statement.true_block.location, "TODO: jump to end_block")
@@ -254,7 +253,12 @@ build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
 build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
     left_value: @IR_Value = self.build_expression(expression.left_expression)
     right_value: @IR_Value = self.build_expression(expression.right_expression)
-    abort(expression.location, "TODO: emit comparison expression")
+    if (left_value is IR_Constant && right_value is IR_Constant) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    result_value: @IR_Value = create_ir_temp_value(self.get_named_type("Boolean"))
+    self.current_block.append(new IR_Not_Equals_Comparison_Instruction.init(result_value, left_value, right_value))
+    return result_value
 }
 
 build :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Value {
@@ -333,17 +337,19 @@ IR_Value :: struct : IR_Node {
     type: @IR_Type
 }
 
-init :: (self: @IR_Value, type: @IR_Type) -> Nothing {
+init :: (self: @IR_Value, type: @IR_Type) -> @IR_Value {
     self.type = type
+    return self
 }
 
 IR_Named_Value :: struct : IR_Value {
     name: @String
 }
 
-init :: (self: @IR_Named_Value, type: @IR_Type, name: @String) -> Nothing {
+init :: (self: @IR_Named_Value, type: @IR_Type, name: @String) -> @IR_Named_Value {
     self.init(type)
     self.name = name
+    return self
 }
 
 IR_Constant :: struct : IR_Value {
@@ -357,7 +363,13 @@ create_is_constant :: (type: @IR_Type, literal: @Literal_Token) -> @IR_Constant 
     return value
 }
 
-IR_Temp_Value :: struct : IR_Value {
+IR_Temp_Value :: struct : IR_Named_Value {
+}
+
+create_ir_temp_value :: (type: @IR_Type) -> @IR_Temp_Value {
+    value: @IR_Temp_Value = new IR_Temp_Value
+    value.init(type, "%")
+    return value
 }
 
 IR_Block :: struct : IR_Node {
@@ -372,6 +384,10 @@ create_ir_block :: (function: @IR_Function) -> @IR_Block {
     block.predecessors = create_list()
     block.instructions = create_list()
     return block
+}
+
+append :: (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
+    self.instructions.append(instruction)
 }
 
 IR_Function :: struct : Object {
@@ -392,6 +408,30 @@ create_ir_function_parameter :: (type: @IR_Type, name: @String) -> @IR_Function_
 }
 
 IR_Instruction :: struct : Object {
+    result_value: @IR_Value
+}
+
+init :: (self: @IR_Instruction, result_value: @IR_Value) -> @IR_Instruction {
+    self.result_value = result_value
+    return self
+}
+
+IR_Binary_Instruction :: struct : IR_Instruction {
+    left_value: @IR_Value
+    right_value: @IR_Value
+}
+
+init :: (self: @IR_Binary_Instruction, result_value: @IR_Value, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
+    self.init(result_value)
+    self.left_value = left_value
+    self.right_value = right_value
+    return self
+}
+
+IR_Comparison_Instruction :: struct : IR_Binary_Instruction {
+}
+
+IR_Not_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
 }
 
 \ -------------------------------------------------------------------------------------------------
