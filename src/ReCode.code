@@ -112,7 +112,7 @@ build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
     \ }
 
     if (self.current_block == null) {
-        abort(statement.location, "This statement requires a basic block: ".clone().append(statement.object_type.id))
+        abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
     }
 
     if (statement is Block_Statement) {
@@ -130,7 +130,7 @@ build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
         return
     }
 
-    abort(statement.location, "Unsupported Statement type: ".clone().append(statement.object_type.id))
+    abort(statement.location, clone("Unexpected type: ").append(statement.object_type.name))
 }
 
 build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
@@ -200,14 +200,14 @@ build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
     if (expression is Variable_Expression) {
         return self.build(expression as @Variable_Expression)
     }
-    abort(expression.location, "Unexpected Expression type: ".clone().append(expression.object_type.id))
+    abort(expression.location, clone("Unexpected type: ").append(expression.object_type.name))
 }
 
 build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
     if (expression.literal is Integer_Token) {
 
     }
-    abort(expression.location, "Unexpected Literal_Token type: ".clone().append(expression.literal.object_type.id))
+    abort(expression.location, clone("Unexpected type: ").append(expression.literal.object_type.name))
 }
 
 build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
@@ -2432,6 +2432,7 @@ Object :: struct {
 
 Object_Type :: struct {
     id: Int
+    name: String
     base_type: @Object_Type
 }
 
@@ -2445,20 +2446,23 @@ String :: struct {
     length: Int
 }
 
-init :: (self: @String) -> Nothing {
+init :: (self: @String) -> @String {
     self.init(16)
+    return self
 }
 
-init :: (self: @String, data_size: Int) -> Nothing {
+init :: (self: @String, data_size: Int) -> @String {
     self.data_size = data_size
     self.data = malloc(data_size) as @Int8
     self.length = 0
+    return self
 }
 
-init :: (self: @String, data: @Int8) -> Nothing {
+init :: (self: @String, data: @Int8) -> @String {
     self.length = data.length()
     self.data_size = self.length + 1
     self.data = data
+    return self
 }
 
 clone :: (self: @String) -> @String {

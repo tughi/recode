@@ -122,6 +122,7 @@ The `Object_Type` structure looks like this:
 ```
 Object_Type :: struct {
     id: Int
+    name: String
     base_type: @Object_Type
 }
 ```

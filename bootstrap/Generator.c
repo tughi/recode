@@ -1190,11 +1190,11 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             emitf(".L_is_%03d:", is_count);
             emitf("  xor %s, %s", value_holder__register_name(result_value_holder), value_holder__register_name(result_value_holder));
             emitf(".L_is_%03d_loop:", is_count);
-            emitf("  mov rax, %s[rip]", context__find_variable(context, is_type->name)->variable_data.unique_name->data);
+            emitf("  mov rax, .L_%s[rip]", context__find_variable(context, is_type->name)->variable_data.unique_name->data);
             emitf("  cmp rax, [%s]", value_holder__register_name(&is_expression_value_holder));
             emitf("  jz .L_is_%03d_true", is_count);
             emitf("  mov %s, [%s]", value_holder__register_name(&is_expression_value_holder), value_holder__register_name(&is_expression_value_holder));
-            emitf("  add %s, 8", value_holder__register_name(&is_expression_value_holder));
+            emitf("  add %s, 32", value_holder__register_name(&is_expression_value_holder));
             emitf("  mov rax, [%s]", value_holder__register_name(&is_expression_value_holder));
             emits("  test rax, rax");
             emitf("  jz .L_is_%03d_end", is_count);
@@ -1242,7 +1242,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             value_holder__release_register(&type_size_value_holder);
             if (type->kind == TYPE__STRUCT && context__is_object_type(context, type)) {
                 Statement *variable_statement = context__find_variable(context, context__type_name(context, type));
-                emitf("  lea rax, %s_TYPE[rip]", variable_statement->variable_data.unique_name->data);
+                emitf("  lea rax, .L_%s_TYPE[rip]", variable_statement->variable_data.unique_name->data);
                 emitf("  mov [%s], rax", value_holder__register_name(result_value_holder));
             }
             return;
@@ -1582,16 +1582,20 @@ void emit_statement(Context *context, Statement *statement) {
                 Statement *variable_statement = context__find_variable(context, context__type_name(context, struct_type));
                 emits("  .section .rodata");
                 emits("  .align 8");
-                emitf("%s: .quad %s_TYPE", variable_statement->variable_data.unique_name->data, variable_statement->variable_data.unique_name->data);
-                emitf("%s_TYPE:", variable_statement->variable_data.unique_name->data);
+                emitf(".L_%s: .quad .L_%s_TYPE", variable_statement->variable_data.unique_name->data, variable_statement->variable_data.unique_name->data);
+                emitf(".L_%s_TYPE:", variable_statement->variable_data.unique_name->data);
                 emitf("  .quad %d", statement->struct_data.object_type_id);
+                emitf("  .quad .L_%s_TYPE_NAME_DATA", variable_statement->variable_data.unique_name->data);
+                emitf("  .quad %d", variable_statement->variable_data.name->lexeme->length + 1);
+                emitf("  .quad %d", variable_statement->variable_data.name->lexeme->length);
                 Type *struct_base_type = struct_type->struct_data.statement->struct_data.base_type;
                 if (struct_base_type != NULL) {
                     Statement *variable_statement = context__find_variable(context, context__type_name(context, struct_base_type));
-                    emitf("  .quad %s_TYPE", variable_statement->variable_data.unique_name->data);
+                    emitf("  .quad .L_%s_TYPE", variable_statement->variable_data.unique_name->data);
                 } else {
                     emits("  .quad 0");
-                }            
+                }
+                emitf(".L_%s_TYPE_NAME_DATA: .string \"%s\"", variable_statement->variable_data.unique_name->data, variable_statement->variable_data.name->lexeme->data);
             }
             return;
         }
