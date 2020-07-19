@@ -62,15 +62,29 @@ generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> 
 \ -------------------------------------------------------------------------------------------------
 
 IR_Builder :: struct {
+    context: @IR_Builder_Context
     functions: @List
     current_block: @IR_Block
 }
 
+IR_Builder_Context :: struct {
+    parent: @IR_Builder_Context
+    named_values: @List
+}
+
 create_ir_builder :: () -> @IR_Builder {
     builder: @IR_Builder = new IR_Builder
+    builder.context = create_ir_builder_context(null)
     builder.functions = create_list()
     builder.current_block = null
     return builder
+}
+
+create_ir_builder_context :: (parent: @IR_Builder_Context) -> @IR_Builder_Context {
+    context: @IR_Builder_Context = new IR_Builder_Context
+    context.parent = parent
+    context.named_values = create_list()
+    return context
 }
 
 build :: (self: @IR_Builder, compilation_unit: @Compilation_Unit) -> Nothing {
@@ -128,6 +142,14 @@ build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
     function.parameters = create_list()
     function.return_type = null
 
+    self.context = create_ir_builder_context(self.context)
+
+    parameters: @List_Iterator = statement.parameters.create_iterator()
+    while (parameters.has_next()) {
+        parameter: @Function_Parameter = parameters.next()
+        self.add_named_value(create_ir_function_parameter(null, parameter.name.lexeme))
+    }
+
     function.entry_block = create_ir_block(function)
 
     self.current_block = function.entry_block
@@ -135,14 +157,8 @@ build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
     self.current_block = null
 
     self.functions.append(function)
-}
 
-create_ir_block :: (function: @IR_Function) -> @IR_Block {
-    block: @IR_Block = new @IR_Block
-    block.function = function
-    block.predecessors = create_list()
-    block.instructions = create_list()
-    return block
+    self.context = self.context.parent
 }
 
 build :: (self: @IR_Builder, statement: @Block_Statement) -> Nothing {
@@ -174,35 +190,63 @@ build :: (self: @IR_Builder, statement: @If_Statement) -> Nothing {
     self.current_block = end_block
 }
 
-build_expression :: (self: @IR_Builder, expression: @Expression) -> Nothing {
+build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
     if (expression is Literal_Expression) {
-        self.build(expression as @Literal_Expression)
-        return
+        return self.build(expression as @Literal_Expression)
     }
     if (expression is Not_Equals_Expression) {
-        self.build(expression as @Not_Equals_Expression)
-        return
+        return self.build(expression as @Not_Equals_Expression)
     }
     if (expression is Variable_Expression) {
-        self.build(expression as @Variable_Expression)
-        return
+        return self.build(expression as @Variable_Expression)
     }
-
-    abort(expression.location, "Unsupported Expression type: ".clone().append(expression.object_type.id))
+    abort(expression.location, "Unexpected Expression type: ".clone().append(expression.object_type.id))
 }
 
-build :: (self: @IR_Builder, expression: @Literal_Expression) -> Nothing {
-    abort(expression.location, "TODO: emit literak load")
+build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
+    if (expression.literal is Integer_Token) {
+
+    }
+    abort(expression.location, "Unexpected Literal_Token type: ".clone().append(expression.literal.object_type.id))
 }
 
-build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> Nothing {
-    self.build_expression(expression.left_expression)
-    self.build_expression(expression.right_expression)
+build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
+    left_value: @IR_Value = self.build_expression(expression.left_expression)
+    right_value: @IR_Value = self.build_expression(expression.right_expression)
     abort(expression.location, "TODO: emit comparison expression")
 }
 
-build :: (self: @IR_Builder, expression: @Variable_Expression) -> Nothing {
-    abort(expression.location, "TODO: emit variable load")
+build :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Value {
+    value: @IR_Value = self.get_named_value(expression.name.lexeme)
+    if (value == null) {
+        abort(expression.location, "Undeclared identifier: ".clone().append(expression.name.lexeme))
+    }
+    return value
+}
+
+add_named_value :: (self: @IR_Builder, value: @IR_Named_Value) -> Nothing {
+    other_value: @IR_Value = self.get_named_value(value.name)
+    if (other_value != null) {
+        abort()
+    }
+    self.context.named_values.prepend(value)
+}
+
+get_named_value :: (self: @IR_Builder, name: @String) -> @IR_Named_Value {
+    context: @IR_Builder_Context = self.context
+    loop {
+        values: @List_Iterator = context.named_values.create_iterator()
+        while (values.has_next()) {
+            value: @IR_Named_Value = values.next()
+            if (name.equals(value.name)) {
+                return value
+            }
+        }
+        context = context.parent
+        if (context == null) {
+            return null
+        }
+    }
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -222,6 +266,23 @@ IR_Value :: struct : IR_Node {
     type: @IR_Type
 }
 
+init :: (self: @IR_Value, type: @IR_Type) -> Nothing {
+    self.type = type
+}
+
+IR_Named_Value :: struct : IR_Value {
+    name: @String
+}
+
+init :: (self: @IR_Named_Value, type: @IR_Type, name: @String) -> Nothing {
+    self.init(type)
+    self.name = name
+}
+
+IR_Constant :: struct : IR_Value {
+    literal: @Literal_Token
+}
+
 IR_Temp_Value :: struct : IR_Value {
 }
 
@@ -231,12 +292,29 @@ IR_Block :: struct : IR_Node {
     instructions: @List
 }
 
+create_ir_block :: (function: @IR_Function) -> @IR_Block {
+    block: @IR_Block = new @IR_Block
+    block.function = function
+    block.predecessors = create_list()
+    block.instructions = create_list()
+    return block
+}
+
 IR_Function :: struct : Object {
     location: @Source_Location
     name: @String
     parameters: @List
     return_type: @IR_Type
     entry_block: @IR_Block
+}
+
+IR_Function_Parameter :: struct : IR_Named_Value {
+}
+
+create_ir_function_parameter :: (type: @IR_Type, name: @String) -> @IR_Function_Parameter {
+    parameter: @IR_Function_Parameter = new IR_Function_Parameter
+    parameter.init(type, name)
+    return parameter
 }
 
 IR_Instruction :: struct : Object {
@@ -2419,10 +2497,10 @@ append :: (self: @String, other: @String) -> @String {
     self_length: Int = self.length
     loop {
         char: Int8 = other_data[index]
+        self_data[self_length] = char
         if (char == '\0') {
             break
         }
-        self_data[self_length] = char
         self_length = self_length + 1
         index = index + 1
     }
@@ -2498,7 +2576,7 @@ write :: (self: @FILE, chars: @Int8) -> @FILE {
 write :: (self: @FILE, char: Int8) -> @FILE {
     c: Int32 = char as Int32
     if (fputc(c, self) != c) {
-        stderr.write("Error: Failed to write character")
+        stderr.end_line().end_line().write("Failed to write character: ").write(c as Int).end_line()
         abort()
     }
     return self
