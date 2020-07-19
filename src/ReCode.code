@@ -63,6 +63,7 @@ generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> 
 
 IR_Builder :: struct {
     context: @IR_Builder_Context
+    types: @List
     functions: @List
     current_block: @IR_Block
 }
@@ -75,6 +76,10 @@ IR_Builder_Context :: struct {
 create_ir_builder :: () -> @IR_Builder {
     builder: @IR_Builder = new IR_Builder
     builder.context = create_ir_builder_context(null)
+    builder.types = create_list()
+    builder.types.append(new IR_Int_Type.init("Int"))
+    builder.types.append(new IR_Int8_Type.init("Int8"))
+    builder.types.append(new IR_Nothing_Type.init("Nothing"))
     builder.functions = create_list()
     builder.current_block = null
     return builder
@@ -140,14 +145,16 @@ build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
     function.location = statement.location
     function.name = statement.name.lexeme
     function.parameters = create_list()
-    function.return_type = null
+    function.return_type = self.build_type(statement.return_type)
 
     self.context = create_ir_builder_context(self.context)
 
     parameters: @List_Iterator = statement.parameters.create_iterator()
     while (parameters.has_next()) {
         parameter: @Function_Parameter = parameters.next()
-        self.add_named_value(create_ir_function_parameter(null, parameter.name.lexeme))
+        parameter_type: @IR_Type = self.build_type(parameter.value_type)
+        parameter_name: @String = parameter.name.lexeme
+        self.add_named_value(create_ir_function_parameter(parameter_type, parameter_name))
     }
 
     function.entry_block = create_ir_block(function)
@@ -190,6 +197,40 @@ build :: (self: @IR_Builder, statement: @If_Statement) -> Nothing {
     self.current_block = end_block
 }
 
+build_type :: (self: @IR_Builder, type: @Value_Type) -> @IR_Type {
+    if (type is Named_Type) {
+        return self.build(type as @Named_Type)
+    }
+    if (type is Pointer_Type) {
+        return self.build(type as @Pointer_Type)
+    }
+    abort(type.location, clone("Unexpected type: ").append(type.object_type.name))
+}
+
+build :: (self: @IR_Builder, type: @Named_Type) -> @IR_Type {
+    type_name: @Identifier_Token = type.name
+    type: @IR_Type = self.get_named_type(type_name.lexeme)
+    if (type == null) {
+        abort(type_name.location, clone("Unknown type: ").append(type_name.lexeme))
+    }
+    return type
+}
+
+build :: (self: @IR_Builder, type: @Pointer_Type) -> @IR_Type {
+    return create_ir_pointer_type(self.build_type(type.value_type))
+}
+
+get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
+    types: @List_Iterator = self.types.create_iterator()
+    while (types.has_next()) {
+        type: @IR_Type = types.next()
+        if (name.equals(type.name)) {
+            return type
+        }
+    }
+    return null
+}
+
 build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
     if (expression is Literal_Expression) {
         return self.build(expression as @Literal_Expression)
@@ -205,7 +246,7 @@ build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
 
 build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
     if (expression.literal is Integer_Token) {
-
+        return create_is_constant(self.get_named_type("Int"), expression.literal)
     }
     abort(expression.location, clone("Unexpected type: ").append(expression.literal.object_type.name))
 }
@@ -257,6 +298,32 @@ IR :: struct {
 }
 
 IR_Type :: struct : Object {
+    name: @String
+}
+
+init :: (self: @IR_Type, name: @String) -> @IR_Type {
+    self.name = name
+    return self
+}
+
+IR_Int_Type :: struct : IR_Type {
+}
+
+IR_Int8_Type :: struct : IR_Type {
+}
+
+IR_Nothing_Type :: struct : IR_Type {
+}
+
+IR_Pointer_Type :: struct : IR_Type {
+    pointed_type: @IR_Type
+}
+
+create_ir_pointer_type :: (pointed_type: @IR_Type) -> @IR_Pointer_Type {
+    type: @IR_Pointer_Type = new IR_Pointer_Type
+    type.init(clone("@").append(pointed_type.name))
+    type.pointed_type = pointed_type
+    return type
 }
 
 IR_Node :: struct : Object {
@@ -281,6 +348,13 @@ init :: (self: @IR_Named_Value, type: @IR_Type, name: @String) -> Nothing {
 
 IR_Constant :: struct : IR_Value {
     literal: @Literal_Token
+}
+
+create_is_constant :: (type: @IR_Type, literal: @Literal_Token) -> @IR_Constant {
+    value: @IR_Constant = new IR_Constant
+    value.init(type)
+    value.literal = literal
+    return value
 }
 
 IR_Temp_Value :: struct : IR_Value {
