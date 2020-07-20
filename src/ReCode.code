@@ -35,8 +35,8 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 \ -------------------------------------------------------------------------------------------------
 
 generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> Nothing {
-    builder: @IR_Builder = create_ir_builder()
-    builder.build(compilation_unit)
+    builder: @IR_Builder = create_ir_builder(compilation_unit)
+    builder.build()
 
     output_file: @FILE = fopen(output_file_name.data, "w".data)
 
@@ -63,6 +63,7 @@ generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> 
 
 IR_Builder :: struct {
     context: @IR_Builder_Context
+    compilation_unit: @Compilation_Unit
     types: @List
     functions: @List
     current_block: @IR_Block
@@ -73,8 +74,9 @@ IR_Builder_Context :: struct {
     named_values: @List
 }
 
-create_ir_builder :: () -> @IR_Builder {
+create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
     builder: @IR_Builder = new IR_Builder
+    builder.compilation_unit = compilation_unit
     builder.context = create_ir_builder_context(null)
     builder.types = create_list()
     builder.types.append(new IR_Int_Type.init("Int"))
@@ -92,22 +94,60 @@ create_ir_builder_context :: (parent: @IR_Builder_Context) -> @IR_Builder_Contex
     return context
 }
 
-build :: (self: @IR_Builder, compilation_unit: @Compilation_Unit) -> Nothing {
-    statements: @List_Iterator = compilation_unit.types.create_iterator()
-    while (statements.has_next()) {
-        statement: @Statement = statements.next()
+build :: (self: @IR_Builder) -> Nothing {
+    types: @List_Iterator = self.compilation_unit.types.create_iterator()
+    while (types.has_next()) {
+        statement: @Statement = types.next()
         self.build_type(statement)
     }
 
-    statements: @List_Iterator = compilation_unit.functions.create_iterator()
-    while (statements.has_next()) {
-        statement: @Statement = statements.next()
+    global_variables: @List_Iterator = self.compilation_unit.global_variables.create_iterator()
+    while (global_variables.has_next()) {
+        statement: @Statement = global_variables.next()
+        self.build_variable(statement as @Variable_Statement)
+    }
+
+    functions: @List_Iterator = self.compilation_unit.functions.create_iterator()
+    while (functions.has_next()) {
+        statement: @Statement = functions.next()
         self.build_statement(statement)
     }
 }
 
 build_type :: (self: @IR_Builder, statement: @Statement) -> @IR_Type {
+    if (statement is Struct_Statement) {
+        return self.build_struct_type(statement as @Struct_Statement)
+    }
     abort(statement.location, statement.object_type)
+}
+
+build_struct_type :: (self: @IR_Builder, struct_statement: @Struct_Statement) -> @IR_Type {
+    struct_name: @String = struct_statement.name.lexeme
+    type: @IR_Type = self.get_named_type(struct_name)
+    if (type != null) {
+        if (type is IR_Struct_Type && (type as @IR_Struct_Type).statement == struct_statement) {
+            return type
+        }
+        abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
+    }
+    type: @IR_Struct_Type = create_ir_struct_type(struct_name, struct_statement)
+    self.types.append(type)
+    if (struct_statement.base_type != null) {
+        base_type: @IR_Type = self.build_type(struct_statement.base_type)
+        if ((base_type is IR_Struct_Type) == false) {
+            abort(struct_statement.base_type.location, "Not a struct type.")
+        }
+        type.base_type = base_type as @IR_Struct_Type
+    }
+    if (struct_statement.members != null) {
+        struct_members: @List_Iterator = struct_statement.members.create_iterator()
+        while (struct_members.has_next()) {
+            struct_member: @Struct_Member = struct_members.next()
+            struct_member_name: @String = struct_member.name
+            struct_member_type: @IR_Type = self.build_type(struct_member.value_type)
+        }
+    }
+    return type
 }
 
 build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
@@ -121,10 +161,10 @@ build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
     \     return
     \ }
 
-    \ if (statement is Variable_Statement) {
-    \     stderr.write("Skipping struct statement: ").write((statement as @Function_Statement).name as @Token).end_line()
-    \     return
-    \ }
+    if (statement is Variable_Statement) {
+        self.build_variable(statement as @Variable_Statement)
+        return
+    }
 
     if (self.current_block == null) {
         abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
@@ -178,6 +218,26 @@ build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
     self.context = self.context.parent
 }
 
+build_variable :: (self: @IR_Builder, variable_statement: @Variable_Statement) -> Nothing {
+    variable_name: @String = variable_statement.name.lexeme
+    variable_type: @IR_Type
+    if (variable_statement.value_type != null) {
+        variable_type = self.build_type(variable_statement.value_type)
+    } else {
+        abort(variable_statement.location, "Type inference is not supported yet.")
+    }
+    variable: @IR_Variable
+    if (variable_statement.is_global) {
+        variable = create_ir_global_variable(variable_type, variable_name)
+    } else {
+        variable = create_ir_variable(variable_type, variable_name)
+    }
+    if (variable_statement.value_expression != null) {
+        abort(variable_statement.location, "Initial variable values are not supported yet.")
+    }
+    self.add_named_value(variable)
+}
+
 build :: (self: @IR_Builder, statement: @Block_Statement) -> Nothing {
     block_statements: @List_Iterator = statement.statements.create_iterator()
     while (block_statements.has_next()) {
@@ -208,24 +268,33 @@ build :: (self: @IR_Builder, statement: @If_Statement) -> Nothing {
 
 build_type :: (self: @IR_Builder, type: @Value_Type) -> @IR_Type {
     if (type is Named_Type) {
-        return self.build(type as @Named_Type)
+        return self.build_named_type(type as @Named_Type)
     }
     if (type is Pointer_Type) {
-        return self.build(type as @Pointer_Type)
+        return self.build_pointer_type(type as @Pointer_Type)
     }
     abort(type.location, type.object_type)
 }
 
-build :: (self: @IR_Builder, type: @Named_Type) -> @IR_Type {
+build_named_type :: (self: @IR_Builder, type: @Named_Type) -> @IR_Type {
     type_name: @Identifier_Token = type.name
     type: @IR_Type = self.get_named_type(type_name.lexeme)
     if (type == null) {
+        types: @List_Iterator = self.compilation_unit.types.create_iterator()
+        while (types.has_next()) {
+            statement: @Statement = types.next()
+            if (statement is Struct_Statement) {
+                statement: @Struct_Statement = statement
+                return self.build_struct_type(statement)
+            }
+            abort(statement.location, statement.object_type)
+        }
         abort(type_name.location, clone("Unknown type: ").append(type_name.lexeme))
     }
     return type
 }
 
-build :: (self: @IR_Builder, type: @Pointer_Type) -> @IR_Type {
+build_pointer_type :: (self: @IR_Builder, type: @Pointer_Type) -> @IR_Type {
     return create_ir_pointer_type(self.build_type(type.value_type))
 }
 
@@ -382,6 +451,33 @@ create_ir_pointer_type :: (pointed_type: @IR_Type) -> @IR_Pointer_Type {
     return type
 }
 
+IR_Struct_Type :: struct : IR_Type {
+    base_type: @IR_Struct_Type
+    members: @List
+    statement: @Struct_Statement
+}
+
+create_ir_struct_type :: (name: @String, statement: @Struct_Statement) -> @IR_Struct_Type {
+    type: @IR_Struct_Type = new IR_Struct_Type
+    type.init(name)
+    type.members = create_list()
+    type.statement = statement
+    return type
+}
+
+add_member :: (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
+    member: @IR_Struct_Type_Member = new IR_Struct_Type_Member
+    member.name = name
+    member.type = type
+    self.members.append(member)
+    return member
+}
+
+IR_Struct_Type_Member :: struct : Object {
+    name: @String
+    type: @IR_Type
+}
+
 IR_Node :: struct : Object {
 }
 
@@ -457,6 +553,24 @@ create_ir_function_parameter :: (type: @IR_Type, name: @String) -> @IR_Function_
     parameter: @IR_Function_Parameter = new IR_Function_Parameter
     parameter.init(type, name)
     return parameter
+}
+
+IR_Variable :: struct : IR_Named_Value {
+}
+
+create_ir_variable :: (type: @IR_Type, name: @String) -> @IR_Variable {
+    variable: @IR_Variable = new IR_Variable
+    variable.init(type, name)
+    return variable
+}
+
+IR_Global_Variable :: struct : IR_Variable {
+}
+
+create_ir_global_variable :: (type: @IR_Type, name: @String) -> @IR_Global_Variable {
+    variable: @IR_Global_Variable = new IR_Global_Variable
+    variable.init(type, name)
+    return variable
 }
 
 IR_Instruction :: struct : Object {
@@ -670,32 +784,35 @@ parse_statement :: (self: @Parser) -> @Statement {
     if (self.matches(self.optional_space, self.required_colon)) {
         if (expression is Variable_Expression) {
             expression: @Variable_Expression = expression
-            variable_statement: @Variable_Statement
+            variable_name: @Identifier_Token = expression.name
+            variable_value_type: @Value_Type = null
+            variable_value_expression: @Expression = null
+            variable_is_external: Boolean = false
             if (self.matches(self.optional_space, self.required_colon, self.required_equals)) {
                 self.consume_space(1)
                 self.consume(self.required_colon, self.required_equals)
                 self.consume_space(1)
-                variable_statement = create_variable_statement(expression.name, null, self.parse_expression(), false)
+                variable_value_expression = self.parse_expression()
             } else {
                 self.consume_space(0)
                 self.consume(self.required_colon)
                 self.consume_space(1)
-                value_type: @Value_Type = self.parse_value_type()
+                variable_value_type = self.parse_value_type()
                 if (self.matches(self.optional_space, self.required_equals)) {
                     self.consume_space(1)
                     self.consume(self.required_equals)
                     self.consume_space(1)
                     if (self.matches(self.required_external)) {
                         self.consume(self.required_external)
-                        variable_statement = create_variable_statement(expression.name, value_type, null, true)
+                        variable_is_external = true
                     } else {
-                        variable_statement = create_variable_statement(expression.name, value_type, self.parse_expression(), false)
+                        variable_value_expression = self.parse_expression()
                     }
-                } else {
-                    variable_statement = create_variable_statement(expression.name, value_type, null, false)
                 }
             }
+            variable_statement: @Variable_Statement = create_variable_statement(variable_name, variable_value_type, variable_value_expression, variable_is_external)
             if (self.current_alignment == 0) {
+                variable_statement.is_global = true
                 self.compilation_unit.global_variables.append(variable_statement)
             }
             return variable_statement
@@ -1540,6 +1657,7 @@ Variable_Statement :: struct : Statement {
     name: @Identifier_Token
     value_type: @Value_Type
     value_expression: @Expression
+    is_global: Boolean
     is_external: Boolean
 }
 
@@ -1549,6 +1667,7 @@ create_variable_statement :: (name: @Identifier_Token, value_type: @Value_Type, 
     statement.name = name
     statement.value_type = value_type
     statement.value_expression = value_expression
+    statement.is_global = false
     statement.is_external = is_external
     return statement
 }
