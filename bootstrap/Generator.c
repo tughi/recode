@@ -168,6 +168,7 @@ void context__resolve_type(Context *self, Type *type) {
             context__resolve_type(self, type->array_data.item_type);
             return;
         }
+        case TYPE__BOOLEAN:
         case TYPE__INT:
         case TYPE__INT8:
         case TYPE__INT16:
