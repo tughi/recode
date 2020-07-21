@@ -64,8 +64,8 @@ generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> 
 IR_Builder :: struct {
     context: @IR_Builder_Context
     compilation_unit: @Compilation_Unit
-    types: @List
-    functions: @List
+    named_types: @List
+    named_functions: @List
     current_block: @IR_Block
 }
 
@@ -78,11 +78,11 @@ create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
     builder: @IR_Builder = new IR_Builder
     builder.compilation_unit = compilation_unit
     builder.context = create_ir_builder_context(null)
-    builder.types = create_list()
-    builder.types.append(new IR_Int_Type.init("Int"))
-    builder.types.append(new IR_Int8_Type.init("Int8"))
-    builder.types.append(new IR_Nothing_Type.init("Nothing"))
-    builder.functions = create_list()
+    builder.named_types = create_list()
+    builder.named_types.append(new IR_Int_Type.init("Int"))
+    builder.named_types.append(new IR_Int8_Type.init("Int8"))
+    builder.named_types.append(new IR_Nothing_Type.init("Nothing"))
+    builder.named_functions = create_list()
     builder.current_block = null
     return builder
 }
@@ -110,6 +110,12 @@ build :: (self: @IR_Builder) -> Nothing {
     functions: @List_Iterator = self.compilation_unit.functions.create_iterator()
     while (functions.has_next()) {
         statement: @Statement = functions.next()
+        self.build_function_declaration(statement as @Function_Statement)
+    }
+
+    functions: @List_Iterator = self.compilation_unit.functions.create_iterator()
+    while (functions.has_next()) {
+        statement: @Statement = functions.next()
         self.build_statement(statement)
     }
 }
@@ -131,7 +137,7 @@ build_struct_type :: (self: @IR_Builder, struct_statement: @Struct_Statement) ->
         abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
     }
     type: @IR_Struct_Type = create_ir_struct_type(struct_name, struct_statement)
-    self.types.append(type)
+    self.named_types.append(type)
     if (struct_statement.base_type != null) {
         base_type: @IR_Type = self.build_type(struct_statement.base_type)
         if ((base_type is IR_Struct_Type) == false) {
@@ -152,7 +158,7 @@ build_struct_type :: (self: @IR_Builder, struct_statement: @Struct_Statement) ->
 
 build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
     if (statement is Function_Statement) {
-        self.build(statement as @Function_Statement)
+        self.build_function(statement as @Function_Statement)
         return
     }
 
@@ -188,32 +194,49 @@ build_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
     abort(statement.location, statement.object_type)
 }
 
-build :: (self: @IR_Builder, statement: @Function_Statement) -> Nothing {
-    stderr.write("Building IR_Function: ").write(statement.name).end_line()
-
+build_function_declaration :: (self: @IR_Builder, function_statement: @Function_Statement) -> @IR_Function {
     function: @IR_Function = new IR_Function
-    function.location = statement.location
-    function.name = statement.name.lexeme
+    function.location = function_statement.location
+    function.name = function_statement.name.lexeme
     function.parameters = create_list()
-    function.return_type = self.build_type(statement.return_type)
+    function.return_type = self.build_type(function_statement.return_type)
 
     self.context = create_ir_builder_context(self.context)
 
-    parameters: @List_Iterator = statement.parameters.create_iterator()
+    parameters: @List_Iterator = function_statement.parameters.create_iterator()
     while (parameters.has_next()) {
         parameter: @Function_Parameter = parameters.next()
         parameter_type: @IR_Type = self.build_type(parameter.value_type)
         parameter_name: @String = parameter.name.lexeme
-        self.add_named_value(create_ir_function_parameter(parameter_type, parameter_name))
+        function.parameters.append(create_ir_function_parameter(parameter_type, parameter_name))
+    }
+
+    function_statement.ir_function = function
+    self.named_functions.append(function)
+
+    return function
+}
+
+build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -> Nothing {
+    stderr.write("Building IR_Function: ").write(function_statement.name).end_line()
+
+    function: @IR_Function = function_statement.ir_function
+
+    self.context = create_ir_builder_context(self.context)
+
+    function_parameters: @List_Iterator = function.parameters.create_iterator()
+    while (function_parameters.has_next()) {
+        function_parameter: @IR_Function_Parameter = function_parameters.next()
+        self.add_named_value(function_parameter)
     }
 
     function.entry_block = create_ir_block(function)
 
     self.current_block = function.entry_block
-    self.build(statement.body)
+    self.build(function_statement.body)
     self.current_block = null
 
-    self.functions.append(function)
+    self.named_functions.append(function)
 
     self.context = self.context.parent
 }
@@ -299,11 +322,11 @@ build_pointer_type :: (self: @IR_Builder, type: @Pointer_Type) -> @IR_Type {
 }
 
 get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
-    types: @List_Iterator = self.types.create_iterator()
-    while (types.has_next()) {
-        type: @IR_Type = types.next()
-        if (name.equals(type.name)) {
-            return type
+    named_types: @List_Iterator = self.named_types.create_iterator()
+    while (named_types.has_next()) {
+        named_type: @IR_Type = named_types.next()
+        if (name.equals(named_type.name)) {
+            return named_type
         }
     }
     return null
@@ -311,7 +334,7 @@ get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
 
 build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
     if (expression is Call_Expression) {
-        return self.build(expression as @Call_Expression)
+        return self.build_call_expression(expression as @Call_Expression)
     }
     if (expression is Literal_Expression) {
         return self.build(expression as @Literal_Expression)
@@ -320,45 +343,142 @@ build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
         return self.build(expression as @Not_Equals_Expression)
     }
     if (expression is Variable_Expression) {
-        return self.build(expression as @Variable_Expression)
+        return self.build_variable_expression(expression as @Variable_Expression)
     }
     abort(expression.location, expression.object_type)
 }
 
 build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
     if (expression.literal is Integer_Token) {
-        return create_is_constant(self.get_named_type("Int"), expression.literal)
+        return create_ir_constant(self.get_named_type("Int"), expression.literal)
+    }
+    if (expression.literal is String_Token) {
+        return create_ir_constant(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
+    }
+    if (expression.literal is Character_Token) {
+        return create_ir_constant(self.get_named_type("Int8"), expression.literal)
     }
     abort(expression.location, expression.literal.object_type)
 }
 
-build :: (self: @IR_Builder, expression: @Call_Expression) -> @IR_Value {
-    if (expression.callee is Member_Access_Expression) {
-        callee: @Member_Access_Expression = expression.callee
-        object_type: @IR_Type = self.determine_expression_type(callee.object)
+build_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression) -> @IR_Value {
+    if (call_expression.callee is Member_Access_Expression) {
+        callee: @Member_Access_Expression = call_expression.callee
+        call_arguments: @List = create_list()
+        call_argument_types: @List = create_list()
+        first_argument: @IR_Value = self.build_expression(callee.object)
+        call_arguments.append(first_argument)
+        call_argument_types.append(first_argument.type)
+        call_expression_arguments: @List_Iterator = call_expression.arguments.create_iterator()
+        while (call_expression_arguments.has_next()) {
+            call_expression_argument: @Expression = call_expression_arguments.next()
+            call_argument: @IR_Value = self.build_expression(call_expression_argument)
+            call_arguments.append(call_argument)
+            call_argument_types.append(call_argument.type)
+        }
+        call_function: @IR_Function = self.get_named_function(callee.member_name.lexeme, call_argument_types)
+        result_value: @IR_Value = create_ir_temp_value(call_function.return_type)
+        self.current_block.append(create_ir_call_instruction(result_value, call_function, call_arguments))
+        return result_value
     }
-    abort(expression.location, expression.callee.object_type)
+    abort(call_expression.location, call_expression.callee.object_type)
 }
 
-determine_expression_type :: (self: @IR_Builder, expression: @Expression) -> @IR_Type {
+deduce_expression_type :: (self: @IR_Builder, expression: @Expression) -> @IR_Type {
     if (expression is Call_Expression) {
-        return self.determine_call_expression_type(expression as @Call_Expression)
+        return self.deduce_call_expression_type(expression as @Call_Expression)
     }
     if (expression is Variable_Expression) {
-        return self.determine_variable_expression_type(expression as @Variable_Expression)
+        return self.deduce_variable_expression_type(expression as @Variable_Expression)
+    }
+    if (expression is Literal_Expression) {
+        return self.deduce_literal_expression_type(expression as @Literal_Expression)
     }
     abort(expression.location, expression.object_type)
 }
 
-determine_call_expression_type :: (self: @IR_Builder, expression: @Call_Expression) -> @IR_Type {
+deduce_call_expression_type :: (self: @IR_Builder, expression: @Call_Expression) -> @IR_Type {
+    argument_types: @List = create_list()
+    arguments: @List_Iterator = expression.arguments.create_iterator()
+    while (arguments.has_next()) {
+        argument: @Expression = arguments.next()
+        argument_type: @IR_Type = self.deduce_expression_type(argument)
+        argument_types.append(argument_type)
+    }
     if (expression.callee is Member_Access_Expression) {
         callee: @Member_Access_Expression = expression.callee
-        object_type: @IR_Type = self.determine_expression_type(callee.object)
+        object_type: @IR_Type = self.deduce_expression_type(callee.object)
+        if (object_type is IR_Struct_Type) {
+            argument_types.prepend(create_ir_pointer_type(object_type))
+        } else {
+            argument_types.prepend(object_type)
+        }
+        function: @IR_Function = self.get_named_function(callee.member_name.lexeme, argument_types)
+        if (function == null) {
+            abort(callee.member_name.location, clone("Unknown function: ").append(callee.member_name.lexeme))
+        }
+        return function.return_type
     }
     abort(expression.location, expression.callee.object_type)
 }
 
-determine_variable_expression_type :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Type {
+get_named_function :: (self: @IR_Builder, name: @String, argument_types: @List) -> @IR_Function {
+    function: @IR_Function = null
+    named_functions: @List_Iterator = self.named_functions.create_iterator()
+    while (named_functions.has_next()) {
+        named_function: @IR_Function = named_functions.next()
+        if (name.equals(named_function.name)) {
+            is_match: Boolean = true
+            argument_types: @List_Iterator = argument_types.create_iterator()
+            named_function_parameters: @List_Iterator = named_function.parameters.create_iterator()
+            while (argument_types.has_next() && named_function_parameters.has_next()) {
+                argument_type: @IR_Type = argument_types.next()
+                named_function_parameter: @IR_Function_Parameter = named_function_parameters.next()
+                if (named_function_parameter.type.accepts(argument_type) == false) {
+                    is_match = false
+                    break
+                }
+            }
+            if (is_match && argument_types.has_next() == false && named_function_parameters.has_next() == false) {
+                if (function != null) {
+                    abort(name)
+                }
+                function = named_function
+            }
+        }
+    }
+    return function
+}
+
+accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
+    if (self == other) {
+        return true
+    }
+    if (self is IR_Pointer_Type) {
+        self: @IR_Pointer_Type = self
+        if (other is IR_Pointer_Type) {
+            other: @IR_Pointer_Type = other
+            if (self.pointed_type == other.pointed_type) {
+                return true
+            }
+            if (self.pointed_type is IR_Struct_Type && other.pointed_type is IR_Struct_Type) {
+                \ TODO
+            }
+        }
+        return false
+    }
+    return false
+}
+
+deduce_literal_expression_type :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Type {
+    literal: @Literal_Token = expression.literal
+    if (literal is String_Token) {
+        return create_ir_pointer_type(self.get_named_type("String"))
+    }
+    abort(literal.location, literal.object_type)
+}
+
+deduce_variable_expression_type :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Type {
     value: @IR_Value = self.get_named_value(expression.name.lexeme)
     if (value == null) {
         abort(expression.location, clone("Unknown variable: ").append(expression.name.lexeme))
@@ -377,7 +497,7 @@ build :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
     return result_value
 }
 
-build :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Value {
+build_variable_expression :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Value {
     value: @IR_Value = self.get_named_value(expression.name.lexeme)
     if (value == null) {
         abort(expression.location, clone("Undeclared identifier: ").append(expression.name.lexeme))
@@ -388,7 +508,7 @@ build :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Value {
 add_named_value :: (self: @IR_Builder, value: @IR_Named_Value) -> Nothing {
     other_value: @IR_Value = self.get_named_value(value.name)
     if (other_value != null) {
-        abort()
+        abort(value.name)
     }
     self.context.named_values.prepend(value)
 }
@@ -504,7 +624,7 @@ IR_Constant :: struct : IR_Value {
     literal: @Literal_Token
 }
 
-create_is_constant :: (type: @IR_Type, literal: @Literal_Token) -> @IR_Constant {
+create_ir_constant :: (type: @IR_Type, literal: @Literal_Token) -> @IR_Constant {
     value: @IR_Constant = new IR_Constant
     value.init(type)
     value.literal = literal
@@ -580,6 +700,19 @@ IR_Instruction :: struct : Object {
 init :: (self: @IR_Instruction, result_value: @IR_Value) -> @IR_Instruction {
     self.result_value = result_value
     return self
+}
+
+IR_Call_Instruction :: struct : IR_Instruction {
+    function: @IR_Function
+    arguments: @List
+}
+
+create_ir_call_instruction :: (result_value: @IR_Value, function: @IR_Function, arguments: @List) -> @IR_Call_Instruction {
+    instruction: @IR_Call_Instruction = new IR_Call_Instruction
+    instruction.init(result_value)
+    instruction.function = function
+    instruction.arguments = arguments
+    return instruction
 }
 
 IR_Binary_Instruction :: struct : IR_Instruction {
@@ -1546,6 +1679,7 @@ Function_Statement :: struct : Statement {
     parameters: @List
     return_type: @Value_Type
     body: @Block_Statement
+    ir_function: @IR_Function
 }
 
 create_function_statement :: (name: @Identifier_Token, parameters: @List, return_type: @Value_Type, body: @Block_Statement) -> @Function_Statement {
@@ -1555,6 +1689,7 @@ create_function_statement :: (name: @Identifier_Token, parameters: @List, return
     function_statement.parameters = parameters
     function_statement.return_type = return_type
     function_statement.body = body
+    function_statement.ir_function = null
     return function_statement
 }
 
@@ -2897,6 +3032,11 @@ write :: (self: @FILE, char: Int8) -> @FILE {
 
 end_line :: (self: @FILE) -> @FILE {
     return self.write('\n')
+}
+
+abort :: (message: @String) -> Nothing {
+    stderr.end_line().end_line().write(message).end_line()
+    abort()
 }
 
 \ -------------------------------------------------------------------------------------------------
