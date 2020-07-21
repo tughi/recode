@@ -333,6 +333,9 @@ get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
 }
 
 build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
+    if (expression is Array_Access_Expression) {
+        return self.build_array_access_expression(expression as @Array_Access_Expression)
+    }
     if (expression is Call_Expression) {
         return self.build_call_expression(expression as @Call_Expression)
     }
@@ -348,17 +351,17 @@ build_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
     abort(expression.location, expression.object_type)
 }
 
-build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
-    if (expression.literal is Integer_Token) {
-        return create_ir_constant(self.get_named_type("Int"), expression.literal)
+build_array_access_expression :: (self: @IR_Builder, array_access_expression: @Array_Access_Expression) -> @IR_Value {
+    index_value: @IR_Value = self.build_expression(array_access_expression.index_expression)
+    object_value: @IR_Value = self.build_expression(array_access_expression.object)
+    object_value_type: @IR_Type = object_value.type
+    if ((object_value_type is IR_Pointer_Type) == false) {
+        abort("Not an IR_Pointer_Type value")
     }
-    if (expression.literal is String_Token) {
-        return create_ir_constant(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
-    }
-    if (expression.literal is Character_Token) {
-        return create_ir_constant(self.get_named_type("Int8"), expression.literal)
-    }
-    abort(expression.location, expression.literal.object_type)
+    object_value_type: @IR_Pointer_Type = object_value_type
+    result_value: @IR_Value = create_ir_temp_value(object_value_type.pointed_type)
+    self.current_block.append(create_ir_load_instruction(result_value, object_value, index_value))
+    return result_value
 }
 
 build_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression) -> @IR_Value {
@@ -381,7 +384,36 @@ build_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression) 
         self.current_block.append(create_ir_call_instruction(result_value, call_function, call_arguments))
         return result_value
     }
+    if (call_expression.callee is Variable_Expression) {
+        callee: @Variable_Expression = call_expression.callee
+        call_arguments: @List = create_list()
+        call_argument_types: @List = create_list()
+        call_expression_arguments: @List_Iterator = call_expression.arguments.create_iterator()
+        while (call_expression_arguments.has_next()) {
+            call_expression_argument: @Expression = call_expression_arguments.next()
+            call_argument: @IR_Value = self.build_expression(call_expression_argument)
+            call_arguments.append(call_argument)
+            call_argument_types.append(call_argument.type)
+        }
+        call_function: @IR_Function = self.get_named_function(callee.name.lexeme, call_argument_types)
+        result_value: @IR_Value = create_ir_temp_value(call_function.return_type)
+        self.current_block.append(create_ir_call_instruction(result_value, call_function, call_arguments))
+        return result_value
+    }
     abort(call_expression.location, call_expression.callee.object_type)
+}
+
+build :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
+    if (expression.literal is Integer_Token) {
+        return create_ir_constant(self.get_named_type("Int"), expression.literal)
+    }
+    if (expression.literal is String_Token) {
+        return create_ir_constant(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
+    }
+    if (expression.literal is Character_Token) {
+        return create_ir_constant(self.get_named_type("Int8"), expression.literal)
+    }
+    abort(expression.location, expression.literal.object_type)
 }
 
 deduce_expression_type :: (self: @IR_Builder, expression: @Expression) -> @IR_Type {
@@ -712,6 +744,19 @@ create_ir_call_instruction :: (result_value: @IR_Value, function: @IR_Function, 
     instruction.init(result_value)
     instruction.function = function
     instruction.arguments = arguments
+    return instruction
+}
+
+IR_Load_Instruction :: struct : IR_Instruction {
+    object_value: @IR_Value
+    offset_value: @IR_Value
+}
+
+create_ir_load_instruction :: (result_value: @IR_Value, object_value: @IR_Value, offset_value: @IR_Value) -> @IR_Load_Instruction {
+    instruction: @IR_Load_Instruction = new IR_Load_Instruction
+    instruction.init(result_value)
+    instruction.object_value = object_value
+    instruction.offset_value = offset_value
     return instruction
 }
 
