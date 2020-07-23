@@ -14,7 +14,8 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    output_file_name: @String = new String.init(argv[2])
+    output_file_name: @String
+    output_file_name = new String.init(argv[2])
     if (output_file_name.ends_with(".s") == false) {
         stdout.write("'").write(output_file_name).write("' doesn't end with '.s'.").end_line()
         exit(1)
@@ -60,7 +61,7 @@ write :: (file: @FILE, function: @IR_Function) -> @FILE {
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
         function_parameter: @IR_Function_Parameter = function_parameters.next()
-        file.write(function_parameter.name).write('.').write(function_parameter.version).write(": ").write(function_parameter.type.name)
+        file.write(function_parameter.name).write(": ").write(function_parameter.type.name)
         if (function_parameters.has_next()) {
             file.write(", ")
         }
@@ -119,6 +120,9 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     if (instruction is IR_Not_Equals_Comparison_Instruction) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("NOT_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
+    if (instruction is IR_Set_Instruction) {
+        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Set_Instruction).value).end_line()
+    }
     if (instruction is IR_Store_Instruction) {
         instruction: @IR_Store_Instruction = instruction
         return file.write("store").write('(').write(instruction.pointer_value).write(", ").write(instruction.stored_value).write(')').end_line()
@@ -132,6 +136,9 @@ write :: (file: @FILE, value: @IR_Value) -> @FILE {
     }
     if (value is IR_Named_Value) {
         return file.write((value as @IR_Named_Value).name).write('.').write((value as @IR_Named_Value).version)
+    }
+    if (value is IR_Undefined_Value) {
+        return file.write("undefined")
     }
     abort(clone("Unsupported type: ").append(value.object_type.name))
 }
@@ -150,6 +157,7 @@ IR_Builder :: struct {
 
 IR_Builder_Context :: struct {
     parent: @IR_Builder_Context
+    variables: @List
     named_values: @List
 }
 
@@ -170,6 +178,7 @@ create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
 create_ir_builder_context :: (parent: @IR_Builder_Context) -> @IR_Builder_Context {
     context: @IR_Builder_Context = new IR_Builder_Context
     context.parent = parent
+    context.variables = create_list()
     context.named_values = create_list()
     return context
 }
@@ -183,6 +192,44 @@ get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
         }
     }
     return null
+}
+
+add_variable :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable {
+    self.context.variables.prepend(variable)
+}
+
+get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
+    context: @IR_Builder_Context = self.context
+    loop {
+        variables: @List_Iterator = context.variables.create_iterator()
+        while (variables.has_next()) {
+            variable: @IR_Variable = variables.next()
+            if (name.equals(variable.name)) {
+                return variable
+            }
+        }
+        context = context.parent
+        if (context == null) {
+            return null
+        }
+    }
+}
+
+get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
+    context: @IR_Builder_Context = self.context
+    loop {
+        values: @List_Iterator = context.named_values.create_iterator()
+        while (values.has_next()) {
+            value: @IR_Named_Value = values.next()
+            if (value is IR_Variable_Value && (value as @IR_Variable_Value).variable == variable) {
+                return value
+            }
+        }
+        context = context.parent
+        if (context == null) {
+            return null
+        }
+    }
 }
 
 add_named_value :: (self: @IR_Builder, value: @IR_Named_Value) -> @IR_Value {
@@ -365,11 +412,12 @@ create_global_variable :: (self: @IR_Builder, variable_statement: @Variable_Stat
     } else {
         abort(variable_statement.location, "Type inference is not supported yet.")
     }
-    variable: @IR_Variable = create_ir_global_variable(variable_type, variable_name)
+    variable: @IR_Variable = create_ir_global_variable(variable_name, variable_type)
     if (variable_statement.value_expression != null) {
         abort(variable_statement.value_expression.location, "Initialized global variables are not supported yet.")
     }
-    self.add_named_value(variable)
+    self.add_variable(variable)
+    self.add_named_value(create_ir_variable_value(variable))
 }
 
 create_function :: (self: @IR_Builder, function_statement: @Function_Statement) -> @IR_Function {
@@ -380,14 +428,13 @@ create_function :: (self: @IR_Builder, function_statement: @Function_Statement) 
     function.parameters = create_list()
     function.return_type = self.convert_value_type(function_statement.return_type)
 
-    self.context = create_ir_builder_context(self.context)
-
     parameters: @List_Iterator = function_statement.parameters.create_iterator()
     while (parameters.has_next()) {
         parameter: @Function_Parameter = parameters.next()
         parameter_type: @IR_Type = self.convert_value_type(parameter.value_type)
         parameter_name: @String = parameter.name.lexeme
-        function.parameters.append(create_ir_function_parameter(parameter_type, parameter_name))
+        function_parameter: @IR_Function_Parameter = new IR_Function_Parameter.init(parameter_name, parameter_type)
+        function.parameters.append(function_parameter)
     }
 
     function_statement.ir_function = function
@@ -404,12 +451,13 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
         function_parameter: @IR_Function_Parameter = function_parameters.next()
-        self.add_named_value(function_parameter)
+        self.add_variable(function_parameter)
+        self.add_named_value(create_ir_variable_value(function_parameter))
     }
 
     self.current_block = function.create_block()
     self.convert_block_statement(function_statement.body)
-    stdout.end_line().write("----------------------------------------- CURRENT FUNCTION -----------------------------------------").end_line().end_line().write(self.current_block.function).end_line().write("----------------------------------------------------------------------------------------------------").fflush()
+    stdout.write("----------------------------------------- CURRENT FUNCTION -----------------------------------------").end_line().write(self.current_block.function).write("----------------------------------------------------------------------------------------------------").end_line().fflush()
     self.current_block = null
 
     self.named_functions.append(function)
@@ -418,50 +466,45 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
 }
 
 convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
+    if (statement is Assignment_Statement) {
+        self.convert_assignment_statement(statement as @Assignment_Statement)
+        return
+    }
     if (statement is Variable_Statement) {
         self.convert_variable_statement(statement as @Variable_Statement)
         return
     }
-
     if (self.current_block == null) {
         abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
     }
-
     if (statement is Block_Statement) {
         self.convert_block_statement(statement as @Block_Statement)
         return
     }
-
     if (statement is Expression_Statement) {
         self.convert_expression_statement(statement as @Expression_Statement)
         return
     }
-
     if (statement is If_Statement) {
         self.convert_if_statement(statement as @If_Statement)
         return
     }
-
     abort(statement.location, statement.object_type)
 }
 
-convert_variable_statement :: (self: @IR_Builder, variable_statement: @Variable_Statement) -> Nothing {
-    variable_name: @String = variable_statement.name.lexeme
-    variable_type: @IR_Type
-    if (variable_statement.value_type != null) {
-        variable_type = self.convert_value_type(variable_statement.value_type)
-    } else {
-        abort(variable_statement.location, "Type inference is not supported yet.")
+convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assignment_Statement) -> Nothing {
+    value: @IR_Value = self.convert_expression(assignment_statement.value_expression)
+    if (assignment_statement.destination is Variable_Expression) {
+        variable_expression: @Variable_Expression = assignment_statement.destination
+        variable_name: @String = variable_expression.name.lexeme
+        variable: @IR_Variable = self.get_variable(variable_name)
+        if (variable == null) {
+            abort(variable_expression.location, clone("Undeclared variable: ").append(variable_name))
+        }
+        self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), value))
+        return
     }
-    variable: @IR_Variable = create_ir_variable(variable_type, variable_name)
-    if (variable_statement.value_expression != null) {
-        variable_value: @IR_Value = self.convert_expression(variable_statement.value_expression)
-        self.add_named_value(variable)
-        self.current_block.append(create_ir_store_instruction(variable, variable_value))
-    } else {
-        self.add_named_value(variable)
-        \ TODO: set variable value to undefined
-    }
+    abort(assignment_statement.location, assignment_statement.destination.object_type)
 }
 
 convert_block_statement :: (self: @IR_Builder, statement: @Block_Statement) -> Nothing {
@@ -493,6 +536,25 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
     self.convert_block_statement(statement.true_block)
     self.current_block.append(create_ir_jump_instruction(end_block))
     self.current_block = end_block
+}
+
+convert_variable_statement :: (self: @IR_Builder, variable_statement: @Variable_Statement) -> Nothing {
+    variable_name: @String = variable_statement.name.lexeme
+    variable_type: @IR_Type
+    if (variable_statement.value_type != null) {
+        variable_type = self.convert_value_type(variable_statement.value_type)
+    } else {
+        abort(variable_statement.location, "Type inference is not supported yet.")
+    }
+    variable: @IR_Variable = new IR_Variable.init(variable_name, variable_type)
+    if (variable_statement.value_expression != null) {
+        variable_value: @IR_Value = self.convert_expression(variable_statement.value_expression)
+        self.add_variable(variable)
+        self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), variable_value))
+    } else {
+        self.add_variable(variable)
+        self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), new IR_Undefined_Value.init(variable.type)))
+    }
 }
 
 convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
@@ -624,9 +686,13 @@ convert_not_equals_expression :: (self: @IR_Builder, expression: @Not_Equals_Exp
 }
 
 convert_variable_expression :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Value {
-    value: @IR_Value = self.get_named_value(expression.name.lexeme)
+    variable: @IR_Variable = self.get_variable(expression.name.lexeme)
+    if (variable == null) {
+        abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))
+    }
+    value: @IR_Value = self.get_variable_value(variable)
     if (value == null) {
-        abort(expression.location, clone("Undeclared identifier: ").append(expression.name.lexeme))
+        abort(expression.location, clone("Undeclared variable value: ").append(expression.name.lexeme))
     }
     return value
 }
@@ -768,16 +834,7 @@ init :: (self: @IR_Value, type: @IR_Type) -> @IR_Value {
     return self
 }
 
-IR_Named_Value :: struct : IR_Value {
-    name: @String
-    version: Int
-}
-
-init :: (self: @IR_Named_Value, type: @IR_Type, name: @String) -> @IR_Named_Value {
-    self.init(type)
-    self.name = name
-    self.version = 0
-    return self
+IR_Undefined_Value :: struct : IR_Value {
 }
 
 IR_Constant_Value :: struct : IR_Value {
@@ -789,6 +846,18 @@ create_ir_constant_value :: (type: @IR_Type, literal: @Literal_Token) -> @IR_Con
     value.init(type)
     value.literal = literal
     return value
+}
+
+IR_Named_Value :: struct : IR_Value {
+    name: @String
+    version: Int
+}
+
+init :: (self: @IR_Named_Value, type: @IR_Type, name: @String) -> @IR_Named_Value {
+    self.init(type)
+    self.name = name
+    self.version = 0
+    return self
 }
 
 IR_Temp_Value :: struct : IR_Named_Value {
@@ -823,31 +892,38 @@ create_block :: (self: @IR_Function) -> @IR_Block {
     return block
 }
 
-IR_Function_Parameter :: struct : IR_Named_Value {
+IR_Variable :: struct : Object {
+    name: @String
+    type: @IR_Type
 }
 
-create_ir_function_parameter :: (type: @IR_Type, name: @String) -> @IR_Function_Parameter {
-    parameter: @IR_Function_Parameter = new IR_Function_Parameter
-    parameter.init(type, name)
-    return parameter
+init :: (self: @IR_Variable, name: @String, type: @IR_Type) -> @IR_Variable {
+    self.name = name
+    self.type = type
+    return self
 }
 
-IR_Variable :: struct : IR_Named_Value {
+IR_Variable_Value :: struct : IR_Named_Value {
+    variable: @IR_Variable
 }
 
-create_ir_variable :: (type: @IR_Type, name: @String) -> @IR_Variable {
-    variable: @IR_Variable = new IR_Variable
-    variable.init(type, name)
-    return variable
+create_ir_variable_value :: (variable: @IR_Variable) -> @IR_Variable_Value {
+    value: @IR_Variable_Value = new IR_Variable_Value
+    value.init(variable.type, variable.name)
+    value.variable = variable
+    return value
 }
 
 IR_Global_Variable :: struct : IR_Variable {
 }
 
-create_ir_global_variable :: (type: @IR_Type, name: @String) -> @IR_Global_Variable {
+create_ir_global_variable :: (name: @String, type: @IR_Type) -> @IR_Global_Variable {
     variable: @IR_Global_Variable = new IR_Global_Variable
-    variable.init(type, name)
+    variable.init(name, type)
     return variable
+}
+
+IR_Function_Parameter :: struct : IR_Variable {
 }
 
 IR_Instruction :: struct : Object {
@@ -922,6 +998,17 @@ create_ir_new_instruction :: (result_value: @IR_Value, type: @IR_Type) -> @IR_Ne
     instruction: @IR_New_Instruction = new IR_New_Instruction
     instruction.init(result_value)
     instruction.type = type
+    return instruction
+}
+
+IR_Set_Instruction :: struct : IR_Instruction {
+    value: @IR_Value
+}
+
+create_ir_set_instruction :: (result_value: @IR_Value, value: @IR_Value) -> @IR_Set_Instruction {
+    instruction: @IR_Set_Instruction = new IR_Set_Instruction
+    instruction.init(result_value)
+    instruction.value = value
     return instruction
 }
 
