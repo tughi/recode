@@ -310,7 +310,7 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
                 return true
             }
             if (self.pointed_type.is(IR_Struct_Type) && other.pointed_type.is(IR_Struct_Type)) {
-                \ TODO
+                return (self.pointed_type as @IR_Struct_Type).is_base_type(other.pointed_type as @IR_Struct_Type)
             }
         }
         return false
@@ -381,6 +381,9 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @Struct_Statem
             struct_member_type: @IR_Type = self.convert_value_type(struct_member.value_type)
             type.add_member(struct_member_name, struct_member_type)
         }
+    }
+    if (type.is_object_type()) {
+        self.create_global_variable(create_variable_statement(struct_statement.name, create_pointer_type(null, create_named_type(create_identifier_token("Object_Type", null))), null, false))
     }
     return type
 }
@@ -934,6 +937,11 @@ IR_Struct_Type :: struct : IR_Type {
     statement: @Struct_Statement
 }
 
+IR_Struct_Type_Member :: struct : Object {
+    name: @String
+    type: @IR_Type
+}
+
 create_ir_struct_type :: (name: @String, statement: @Struct_Statement) -> @IR_Struct_Type {
     type: @IR_Struct_Type = new IR_Struct_Type
     type.init(name)
@@ -967,9 +975,30 @@ get_member :: (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
     }
 }
 
-IR_Struct_Type_Member :: struct : Object {
-    name: @String
-    type: @IR_Type
+is_base_type :: (self: @IR_Struct_Type, other: @IR_Struct_Type) -> Boolean {
+    struct_type: @IR_Struct_Type = other
+    loop {
+        if (self == struct_type.base_type) {
+            return true
+        }
+        struct_type = struct_type.base_type
+        if (struct_type == null) {
+            return false
+        }
+    }
+}
+
+is_object_type :: (self: @IR_Struct_Type) -> Boolean {
+    struct_type: @IR_Struct_Type = self
+    loop {
+        if (struct_type.name.equals("Object")) {
+            return true
+        }
+        struct_type = struct_type.base_type
+        if (struct_type == null) {
+            return false
+        }
+    }
 }
 
 IR_Node :: struct : Object {
@@ -3343,6 +3372,12 @@ Object :: struct {
     object_type: @Object_Type
 }
 
+Object_Type :: struct {
+    id: Int
+    name: String
+    base_type: @Object_Type
+}
+
 is :: (self: @Object, object_type: @Object_Type) -> Boolean {
     self_type: @Object_Type = self.object_type
     loop {
@@ -3354,17 +3389,6 @@ is :: (self: @Object, object_type: @Object_Type) -> Boolean {
             return false
         }
     }
-}
-
-
-\ -------------------------------------------------------------------------------------------------
-\       Type
-\ -------------------------------------------------------------------------------------------------
-
-Object_Type :: struct {
-    id: Int
-    name: String
-    base_type: @Object_Type
 }
 
 \ -------------------------------------------------------------------------------------------------
