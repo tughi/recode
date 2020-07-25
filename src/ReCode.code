@@ -123,6 +123,10 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     if (instruction is IR_Not_Equals_Comparison_Instruction) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("NOT_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
+    if (instruction is IR_Return_Instruction) {
+        instruction: @IR_Return_Instruction = instruction
+        return file.write("return").write('(').write(instruction.return_value).write(')').end_line()
+    }
     if (instruction is IR_Set_Instruction) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Set_Instruction).value).end_line()
     }
@@ -477,16 +481,12 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
 }
 
 convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
+    if (self.current_block == null) {
+        abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
+    }
     if (statement is Assignment_Statement) {
         self.convert_assignment_statement(statement as @Assignment_Statement)
         return
-    }
-    if (statement is Variable_Statement) {
-        self.convert_variable_statement(statement as @Variable_Statement)
-        return
-    }
-    if (self.current_block == null) {
-        abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
     }
     if (statement is Block_Statement) {
         self.convert_block_statement(statement as @Block_Statement)
@@ -498,6 +498,18 @@ convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
     }
     if (statement is If_Statement) {
         self.convert_if_statement(statement as @If_Statement)
+        return
+    }
+    if (statement is Return_Statement) {
+        self.convert_return_statement(statement as @Return_Statement)
+        return
+    }
+    if (statement is Variable_Statement) {
+        self.convert_variable_statement(statement as @Variable_Statement)
+        return
+    }
+    if (statement is While_Statement) {
+        self.convert_while_statement(statement as @While_Statement)
         return
     }
     abort(statement.location, statement.object_type)
@@ -549,6 +561,12 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
     self.current_block = end_block
 }
 
+convert_return_statement :: (self: @IR_Builder, statement: @Return_Statement) -> Nothing {
+    return_value: @IR_Value = self.convert_expression(statement.value_expression)
+    \ TODO: validate return value type
+    self.current_block.append(create_ir_return_instruction(return_value))
+}
+
 convert_variable_statement :: (self: @IR_Builder, variable_statement: @Variable_Statement) -> Nothing {
     variable_name: @String = variable_statement.name.lexeme
     variable_type: @IR_Type
@@ -566,6 +584,20 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @Variable_
         self.add_variable(variable)
         self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), new IR_Undefined_Value.init(variable.type)))
     }
+}
+
+convert_while_statement :: (self: @IR_Builder, statement: @While_Statement) -> Nothing {
+    condition_block: @IR_Block = self.current_block.function.create_block()
+    loop_block: @IR_Block = self.current_block.function.create_block()
+    end_block: @IR_Block = self.current_block.function.create_block()
+    self.current_block.append(create_ir_jump_instruction(condition_block))
+    self.current_block = condition_block
+    condition_value: @IR_Value = self.convert_expression(statement.condition)
+    self.current_block.append(create_ir_jump_instruction(condition_value, loop_block, end_block))
+    self.current_block = loop_block
+    self.convert_block_statement(statement.block)
+    self.current_block.append(create_ir_jump_instruction(condition_block))
+    self.current_block = end_block
 }
 
 convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
@@ -1095,6 +1127,17 @@ create_ir_new_instruction :: (result_value: @IR_Value, type: @IR_Type) -> @IR_Ne
     instruction: @IR_New_Instruction = new IR_New_Instruction
     instruction.init(result_value)
     instruction.type = type
+    return instruction
+}
+
+IR_Return_Instruction :: struct : IR_Instruction {
+    return_value: @IR_Value
+}
+
+create_ir_return_instruction :: (return_value: @IR_Value) -> @IR_Return_Instruction {
+    instruction: @IR_Return_Instruction = new IR_Return_Instruction
+    instruction.init(null)
+    instruction.return_value = return_value
     return instruction
 }
 
