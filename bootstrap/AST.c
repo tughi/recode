@@ -133,8 +133,6 @@ char *expression__get_kind_name(Expression *self) {
             return "CALL";
         case EXPRESSION__CAST:
             return "CAST";
-        case EXPRESSION__IS:
-            return "IS";
         case EXPRESSION__LITERAL:
             return "LITERAL";
         case EXPRESSION__MEMBER:

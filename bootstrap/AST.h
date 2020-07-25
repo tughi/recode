@@ -95,7 +95,6 @@ typedef struct Expression {
         EXPRESSION__BINARY,
         EXPRESSION__CALL,
         EXPRESSION__CAST,
-        EXPRESSION__IS,
         EXPRESSION__LITERAL,
         EXPRESSION__MEMBER,
         EXPRESSION__NEW,

@@ -88,7 +88,7 @@ write :: (file: @FILE, block: @IR_Block) -> @FILE {
 
 write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     file.write("   ")
-    if (instruction is IR_Call_Instruction) {
+    if (instruction.is(IR_Call_Instruction)) {
         file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write((instruction as @IR_Call_Instruction).function.name).write(", ")
         call_arguments: @List_Iterator = (instruction as @IR_Call_Instruction).arguments.create_iterator()
         while (call_arguments.has_next()) {
@@ -100,37 +100,37 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         }
         return file.write(')').end_line()
     }
-    if (instruction is IR_Conditional_Jump_Instruction) {
+    if (instruction.is(IR_Conditional_Jump_Instruction)) {
         instruction: @IR_Conditional_Jump_Instruction = instruction
         return file.write("jump").write('(').write(instruction.condition_value).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
     }
-    if (instruction is IR_Direct_Jump_Instruction) {
+    if (instruction.is(IR_Direct_Jump_Instruction)) {
         instruction: @IR_Direct_Jump_Instruction = instruction
         return file.write("jump").write('(').write("block.").write(instruction.block.id).write(')').end_line()
     }
-    if (instruction is IR_Equals_Comparison_Instruction) {
+    if (instruction.is(IR_Equals_Comparison_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
-    if (instruction is IR_Load_Array_Item_Instruction) {
+    if (instruction.is(IR_Load_Array_Item_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_array_item").write('(').write((instruction as @IR_Load_Array_Item_Instruction).array_value).write(", ").write((instruction as @IR_Load_Array_Item_Instruction).index_value).write(')').end_line()
     }
-    if (instruction is IR_Load_Struct_Member_Instruction) {
+    if (instruction.is(IR_Load_Struct_Member_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_struct_member").write('(').write((instruction as @IR_Load_Struct_Member_Instruction).struct_pointer_value).write(", ").write((instruction as @IR_Load_Struct_Member_Instruction).struct_type_member.name).write(')').end_line()
     }
-    if (instruction is IR_New_Instruction) {
+    if (instruction.is(IR_New_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("new").write('(').write((instruction as @IR_New_Instruction).type.name).write(')').end_line()
     }
-    if (instruction is IR_Not_Equals_Comparison_Instruction) {
+    if (instruction.is(IR_Not_Equals_Comparison_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("NOT_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
-    if (instruction is IR_Return_Instruction) {
+    if (instruction.is(IR_Return_Instruction)) {
         instruction: @IR_Return_Instruction = instruction
         return file.write("return").write('(').write(instruction.return_value).write(')').end_line()
     }
-    if (instruction is IR_Set_Instruction) {
+    if (instruction.is(IR_Set_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Set_Instruction).value).end_line()
     }
-    if (instruction is IR_Store_Instruction) {
+    if (instruction.is(IR_Store_Instruction)) {
         instruction: @IR_Store_Instruction = instruction
         return file.write("store").write('(').write(instruction.pointer_value).write(", ").write(instruction.stored_value).write(')').end_line()
     }
@@ -138,13 +138,13 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
 }
 
 write :: (file: @FILE, value: @IR_Value) -> @FILE {
-    if (value is IR_Constant_Value) {
+    if (value.is(IR_Constant_Value)) {
         return file.write((value as @IR_Constant_Value).literal)
     }
-    if (value is IR_Named_Value) {
+    if (value.is(IR_Named_Value)) {
         return file.write((value as @IR_Named_Value).name).write('.').write((value as @IR_Named_Value).version)
     }
-    if (value is IR_Undefined_Value) {
+    if (value.is(IR_Undefined_Value)) {
         return file.write("undefined")
     }
     abort(clone("Unsupported type: ").append(value.object_type.name))
@@ -181,6 +181,7 @@ create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
     builder.named_types.append(new IR_Int32_Type.init("Int32"))
     builder.named_types.append(new IR_Int64_Type.init("Int64"))
     builder.named_types.append(new IR_Nothing_Type.init("Nothing"))
+    builder.named_types.append(new IR_Null_Type.init("Null"))
     builder.named_functions = create_list()
     builder.current_block = null
     return builder
@@ -232,7 +233,7 @@ get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
         values: @List_Iterator = context.named_values.create_iterator()
         while (values.has_next()) {
             value: @IR_Named_Value = values.next()
-            if (value is IR_Variable_Value && (value as @IR_Variable_Value).variable == variable) {
+            if (value.is(IR_Variable_Value) && (value as @IR_Variable_Value).variable == variable) {
                 return value
             }
         }
@@ -301,14 +302,14 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
     if (self == other) {
         return true
     }
-    if (self is IR_Pointer_Type) {
+    if (self.is(IR_Pointer_Type)) {
         self: @IR_Pointer_Type = self
-        if (other is IR_Pointer_Type) {
+        if (other.is(IR_Pointer_Type)) {
             other: @IR_Pointer_Type = other
             if (self.pointed_type == other.pointed_type) {
                 return true
             }
-            if (self.pointed_type is IR_Struct_Type && other.pointed_type is IR_Struct_Type) {
+            if (self.pointed_type.is(IR_Struct_Type) && other.pointed_type.is(IR_Struct_Type)) {
                 \ TODO
             }
         }
@@ -348,7 +349,7 @@ build :: (self: @IR_Builder) -> Nothing {
 }
 
 convert_type_statement :: (self: @IR_Builder, statement: @Statement) -> @IR_Type {
-    if (statement is Struct_Statement) {
+    if (statement.is(Struct_Statement)) {
         return self.convert_struct_statement(statement as @Struct_Statement)
     }
     abort(statement.location, statement.object_type)
@@ -358,7 +359,7 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @Struct_Statem
     struct_name: @String = struct_statement.name.lexeme
     type: @IR_Type = self.get_named_type(struct_name)
     if (type != null) {
-        if (type is IR_Struct_Type && (type as @IR_Struct_Type).statement == struct_statement) {
+        if (type.is(IR_Struct_Type) && (type as @IR_Struct_Type).statement == struct_statement) {
             return type
         }
         abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
@@ -367,7 +368,7 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @Struct_Statem
     self.named_types.append(type)
     if (struct_statement.base_type != null) {
         base_type: @IR_Type = self.convert_value_type(struct_statement.base_type)
-        if ((base_type is IR_Struct_Type) == false) {
+        if ((base_type.is(IR_Struct_Type)) == false) {
             abort(struct_statement.base_type.location, "Not a struct type.")
         }
         type.base_type = base_type as @IR_Struct_Type
@@ -385,10 +386,10 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @Struct_Statem
 }
 
 convert_value_type :: (self: @IR_Builder, type: @Value_Type) -> @IR_Type {
-    if (type is Named_Type) {
+    if (type.is(Named_Type)) {
         return self.convert_named_type(type as @Named_Type)
     }
-    if (type is Pointer_Type) {
+    if (type.is(Pointer_Type)) {
         return self.convert_pointer_type(type as @Pointer_Type)
     }
     abort(type.location, type.object_type)
@@ -401,7 +402,7 @@ convert_named_type :: (self: @IR_Builder, type: @Named_Type) -> @IR_Type {
         types: @List_Iterator = self.compilation_unit.types.create_iterator()
         while (types.has_next()) {
             statement: @Statement = types.next()
-            if (statement is Struct_Statement) {
+            if (statement.is(Struct_Statement)) {
                 statement: @Struct_Statement = statement
                 if (statement.name.lexeme.equals(type_name.lexeme)) {
                     return self.convert_struct_statement(statement)
@@ -484,31 +485,35 @@ convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
     if (self.current_block == null) {
         abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
     }
-    if (statement is Assignment_Statement) {
+    if (statement.is(Assignment_Statement)) {
         self.convert_assignment_statement(statement as @Assignment_Statement)
         return
     }
-    if (statement is Block_Statement) {
+    if (statement.is(Block_Statement)) {
         self.convert_block_statement(statement as @Block_Statement)
         return
     }
-    if (statement is Expression_Statement) {
+    if (statement.is(Expression_Statement)) {
         self.convert_expression_statement(statement as @Expression_Statement)
         return
     }
-    if (statement is If_Statement) {
+    if (statement.is(If_Statement)) {
         self.convert_if_statement(statement as @If_Statement)
         return
     }
-    if (statement is Return_Statement) {
+    if (statement.is(Loop_Statement)) {
+        self.convert_loop_statement(statement as @Loop_Statement)
+        return
+    }
+    if (statement.is(Return_Statement)) {
         self.convert_return_statement(statement as @Return_Statement)
         return
     }
-    if (statement is Variable_Statement) {
+    if (statement.is(Variable_Statement)) {
         self.convert_variable_statement(statement as @Variable_Statement)
         return
     }
-    if (statement is While_Statement) {
+    if (statement.is(While_Statement)) {
         self.convert_while_statement(statement as @While_Statement)
         return
     }
@@ -517,7 +522,7 @@ convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
 
 convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assignment_Statement) -> Nothing {
     value: @IR_Value = self.convert_expression(assignment_statement.value_expression)
-    if (assignment_statement.destination is Variable_Expression) {
+    if (assignment_statement.destination.is(Variable_Expression)) {
         variable_expression: @Variable_Expression = assignment_statement.destination
         variable_name: @String = variable_expression.name.lexeme
         variable: @IR_Variable = self.get_variable(variable_name)
@@ -561,6 +566,16 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
     self.current_block = end_block
 }
 
+convert_loop_statement :: (self: @IR_Builder, statement: @Loop_Statement) -> Nothing {
+    loop_block: @IR_Block = self.current_block.function.create_block()
+    end_block: @IR_Block = self.current_block.function.create_block()
+    self.current_block.append(create_ir_jump_instruction(loop_block))
+    self.current_block = loop_block
+    self.convert_block_statement(statement.block)
+    self.current_block.append(create_ir_jump_instruction(loop_block))
+    self.current_block = end_block
+}
+
 convert_return_statement :: (self: @IR_Builder, statement: @Return_Statement) -> Nothing {
     return_value: @IR_Value = self.convert_expression(statement.value_expression)
     \ TODO: validate return value type
@@ -601,35 +616,35 @@ convert_while_statement :: (self: @IR_Builder, statement: @While_Statement) -> N
 }
 
 convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
-    if (expression is Array_Access_Expression) {
+    if (expression.is(Array_Access_Expression)) {
         return self.convert_array_access_expression(expression as @Array_Access_Expression)
     }
-    if (expression is Call_Expression) {
+    if (expression.is(Call_Expression)) {
         return self.convert_call_expression(expression as @Call_Expression)
     }
-    if (expression is Equals_Expression) {
+    if (expression.is(Equals_Expression)) {
         return self.convert_equals_expression(expression as @Equals_Expression)
     }
-    if (expression is Literal_Expression) {
+    if (expression.is(Literal_Expression)) {
         return self.convert_literal_expression(expression as @Literal_Expression)
     }
-    if (expression is Member_Access_Expression) {
+    if (expression.is(Member_Access_Expression)) {
         return self.convert_member_access_expression(expression as @Member_Access_Expression)
     }
-    if (expression is New_Expression) {
+    if (expression.is(New_Expression)) {
         return self.convert_new_expression(expression as @New_Expression)
     }
-    if (expression is Not_Equals_Expression) {
+    if (expression.is(Not_Equals_Expression)) {
         return self.convert_not_equals_expression(expression as @Not_Equals_Expression)
     }
-    if (expression is Variable_Expression) {
+    if (expression.is(Variable_Expression)) {
         return self.convert_variable_expression(expression as @Variable_Expression)
     }
     abort(expression.location, expression.object_type)
 }
 
 convert_expression_address :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
-    if (expression is Variable_Expression) {
+    if (expression.is(Variable_Expression)) {
         return self.convert_variable_expression_address(expression as @Variable_Expression)
     }
     abort(expression.location, expression.object_type)
@@ -639,7 +654,7 @@ convert_array_access_expression :: (self: @IR_Builder, array_access_expression: 
     index_value: @IR_Value = self.convert_expression(array_access_expression.index_expression)
     object_value: @IR_Value = self.convert_expression(array_access_expression.object)
     object_value_type: @IR_Type = object_value.type
-    if ((object_value_type is IR_Pointer_Type) == false) {
+    if ((object_value_type.is(IR_Pointer_Type)) == false) {
         abort(array_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
     object_value_type: @IR_Pointer_Type = object_value_type
@@ -649,7 +664,7 @@ convert_array_access_expression :: (self: @IR_Builder, array_access_expression: 
 }
 
 convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression) -> @IR_Value {
-    if (call_expression.callee is Member_Access_Expression) {
+    if (call_expression.callee.is(Member_Access_Expression)) {
         callee: @Member_Access_Expression = call_expression.callee
         call_arguments: @List = create_list()
         call_argument_types: @List = create_list()
@@ -671,7 +686,7 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
         self.current_block.append(create_ir_call_instruction(result_value, call_function, call_arguments))
         return result_value
     }
-    if (call_expression.callee is Variable_Expression) {
+    if (call_expression.callee.is(Variable_Expression)) {
         callee: @Variable_Expression = call_expression.callee
         call_arguments: @List = create_list()
         call_argument_types: @List = create_list()
@@ -696,7 +711,10 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
 convert_equals_expression :: (self: @IR_Builder, expression: @Equals_Expression) -> @IR_Value {
     left_value: @IR_Value = self.convert_expression(expression.left_expression)
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
+    if (left_value.type.equals(right_value.type) == false && (left_value.type.is(IR_Pointer_Type) && right_value.type.is(IR_Null_Type) == false)) {
+        abort(expression.location, "Operands are not the same type")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
     result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
@@ -705,16 +723,19 @@ convert_equals_expression :: (self: @IR_Builder, expression: @Equals_Expression)
 }
 
 convert_literal_expression :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Value {
-    if (expression.literal is Boolean_Token) {
+    if (expression.literal.is(Boolean_Token)) {
         return create_ir_constant_value(self.get_named_type("Boolean"), expression.literal)
     }
-    if (expression.literal is Character_Token) {
+    if (expression.literal.is(Character_Token)) {
         return create_ir_constant_value(self.get_named_type("Int8"), expression.literal)
     }
-    if (expression.literal is Integer_Token) {
+    if (expression.literal.is(Integer_Token)) {
         return create_ir_constant_value(self.get_named_type("Int"), expression.literal)
     }
-    if (expression.literal is String_Token) {
+    if (expression.literal.is(Null_Token)) {
+        return create_ir_constant_value(self.get_named_type("Null"), expression.literal)
+    }
+    if (expression.literal.is(String_Token)) {
         return create_ir_constant_value(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
     }
     abort(expression.location, expression.literal.object_type)
@@ -723,11 +744,11 @@ convert_literal_expression :: (self: @IR_Builder, expression: @Literal_Expressio
 convert_member_access_expression :: (self: @IR_Builder, member_access_expression: @Member_Access_Expression) -> @IR_Value {
     object_value: @IR_Value = self.convert_expression(member_access_expression.object)
     object_value_type: @IR_Type = object_value.type
-    if ((object_value_type is IR_Pointer_Type) == false) {
+    if ((object_value_type.is(IR_Pointer_Type)) == false) {
         abort(member_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
     object_value_type: @IR_Pointer_Type = object_value_type
-    if ((object_value_type.pointed_type is IR_Struct_Type) == false) {
+    if ((object_value_type.pointed_type.is(IR_Struct_Type)) == false) {
         abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
     }
     struct_type: @IR_Struct_Type = object_value_type.pointed_type
@@ -751,7 +772,10 @@ convert_new_expression :: (self: @IR_Builder, expression: @New_Expression) -> @I
 convert_not_equals_expression :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
     left_value: @IR_Value = self.convert_expression(expression.left_expression)
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
+    if (left_value.type.equals(right_value.type) == false && (left_value.type.is(IR_Pointer_Type) && right_value.type.is(IR_Null_Type) == false)) {
+        abort(expression.location, "Operands are not the same type")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
     result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
@@ -776,20 +800,20 @@ convert_variable_expression_address :: (self: @IR_Builder, expression: @Variable
     if (variable == null) {
         abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))
     }
-    if (variable.type is IR_Pointer_Type) {
+    if (variable.type.is(IR_Pointer_Type)) {
         return self.get_variable_value(variable)
     }
     abort(expression.location, clone("Variable type without address: ").append(variable.type.name))
 }
 
 deduce_expression_type :: (self: @IR_Builder, expression: @Expression) -> @IR_Type {
-    if (expression is Call_Expression) {
+    if (expression.is(Call_Expression)) {
         return self.deduce_call_expression_type(expression as @Call_Expression)
     }
-    if (expression is Variable_Expression) {
+    if (expression.is(Variable_Expression)) {
         return self.deduce_variable_expression_type(expression as @Variable_Expression)
     }
-    if (expression is Literal_Expression) {
+    if (expression.is(Literal_Expression)) {
         return self.deduce_literal_expression_type(expression as @Literal_Expression)
     }
     abort(expression.location, expression.object_type)
@@ -803,10 +827,10 @@ deduce_call_expression_type :: (self: @IR_Builder, expression: @Call_Expression)
         argument_type: @IR_Type = self.deduce_expression_type(argument)
         argument_types.append(argument_type)
     }
-    if (expression.callee is Member_Access_Expression) {
+    if (expression.callee.is(Member_Access_Expression)) {
         callee: @Member_Access_Expression = expression.callee
         object_type: @IR_Type = self.deduce_expression_type(callee.object)
-        if (object_type is IR_Struct_Type) {
+        if (object_type.is(IR_Struct_Type)) {
             argument_types.prepend(create_ir_pointer_type(object_type))
         } else {
             argument_types.prepend(object_type)
@@ -822,7 +846,7 @@ deduce_call_expression_type :: (self: @IR_Builder, expression: @Call_Expression)
 
 deduce_literal_expression_type :: (self: @IR_Builder, expression: @Literal_Expression) -> @IR_Type {
     literal: @Literal_Token = expression.literal
-    if (literal is String_Token) {
+    if (literal.is(String_Token)) {
         return create_ir_pointer_type(self.get_named_type("String"))
     }
     abort(literal.location, literal.object_type)
@@ -881,8 +905,20 @@ IR_Int64_Type :: struct : IR_Type {
 IR_Nothing_Type :: struct : IR_Type {
 }
 
+IR_Null_Type :: struct : IR_Type {
+}
+
 IR_Pointer_Type :: struct : IR_Type {
     pointed_type: @IR_Type
+}
+
+equals :: (self: @IR_Type, other: @IR_Type) -> Boolean {
+    if (self.is(IR_Pointer_Type) && other.is(IR_Pointer_Type)) {
+        self: @IR_Pointer_Type = self
+        other: @IR_Pointer_Type = other
+        return self.pointed_type.equals(other.pointed_type)
+    }
+    return self == other
 }
 
 create_ir_pointer_type :: (pointed_type: @IR_Type) -> @IR_Pointer_Type {
@@ -1266,7 +1302,6 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_hyphen = create_other_matcher(true, "-")
     parser.required_identifier = create_identifier_matcher(true)
     parser.required_if = create_keyword_matcher(true, "if")
-    parser.required_is = create_keyword_matcher(true, "is")
     parser.required_less_than = create_other_matcher(true, "<")
     parser.required_literal = create_literal_matcher(true)
     parser.required_loop = create_keyword_matcher(true, "loop")
@@ -1288,7 +1323,7 @@ parse :: (tokens: @List) -> @Compilation_Unit {
     parser: @Parser = create_parser(tokens)
     parser.compilation_unit.statements = parser.parse_statements()
     token: @Token = parser.tokens.current()
-    if ((token is End_Of_File_Token) == false) {
+    if ((token.is(End_Of_File_Token)) == false) {
         abort(parser, token)
     }
     return parser.compilation_unit
@@ -1368,7 +1403,7 @@ parse_statement :: (self: @Parser) -> @Statement {
     }
 
     if (self.matches(self.optional_space, self.required_colon)) {
-        if (expression is Variable_Expression) {
+        if (expression.is(Variable_Expression)) {
             expression: @Variable_Expression = expression
             variable_name: @Identifier_Token = expression.name
             variable_value_type: @Value_Type = null
@@ -1418,7 +1453,7 @@ parse_statement :: (self: @Parser) -> @Statement {
 \ struct
 \   : "struct" ( ":" IDENTIFIER )? ( "{" <EOL> struct_members "}" )?
 parse_struct :: (self: @Parser, name_expression: @Expression) -> @Statement {
-    if (name_expression is Variable_Expression) {
+    if (name_expression.is(Variable_Expression)) {
         struct_name: @Identifier_Token = (name_expression as @Variable_Expression).name
         self.consume(self.required_struct)
         base_type: @Value_Type
@@ -1476,7 +1511,7 @@ parse_struct_members :: (self: @Parser, struct_members: @List) -> Nothing {
 \ function
 \   : "(" function_parameters? ")" "->" value_type block?
 parse_function :: (self: @Parser, name_expression: @Expression) -> @Statement {
-    if (name_expression is Variable_Expression) {
+    if (name_expression.is(Variable_Expression)) {
         function_name: @Identifier_Token = (name_expression as @Variable_Expression).name
         self.consume(self.required_open_paren)
         function_parameters: @List
@@ -1627,8 +1662,8 @@ parse_logic_or_expression :: (self: @Parser) -> @Expression {
     return expression
 }
 
-\ parse_logic_and_expression
-\   : parse_equality_expression ( "&&" parse_logic_and_expression )?
+\ logic_and_expression
+\   : equality_expression ( "&&" logic_and_expression )?
 parse_logic_and_expression :: (self: @Parser) -> @Expression {
     expression: @Expression = self.parse_equality_expression()
     if (self.matches(self.optional_space, self.required_ampersand, self.required_ampersand)) {
@@ -1641,9 +1676,9 @@ parse_logic_and_expression :: (self: @Parser) -> @Expression {
 }
 
 \ equality_expression
-\   : is_expression ( ( "==" | "!=" ) equality_expression )?
+\   : comparison_expression ( ( "==" | "!=" ) equality_expression )?
 parse_equality_expression :: (self: @Parser) -> @Expression {
-    expression: @Expression = self.parse_is_expression()
+    expression: @Expression = self.parse_comparison_expression()
     if (self.matches(self.optional_space, self.required_equals, self.required_equals) || self.matches(self.optional_space, self.required_exclamation_mark, self.required_equals)) {
         self.consume_space(1)
         binary_expression: @Binary_Expression
@@ -1661,21 +1696,8 @@ parse_equality_expression :: (self: @Parser) -> @Expression {
     return expression
 }
 
-\ is_expression
-\   : comparison_expression ( "is" value_type )?
-parse_is_expression :: (self: @Parser) -> @Expression {
-    expression: @Expression = self.parse_comparison_expression()
-    if (self.matches(self.optional_space, self.required_is)) {
-        self.consume_space(1)
-        self.consume(self.required_is)
-        self.consume_space(1)
-        return create_is_expression(expression, self.parse_value_type())
-    }
-    return expression
-}
-
-\ parse_comparison_expression
-\   : parse_addition_expression ( ( "<" | "<=" | ">" | ">=" ) parse_comparison_expression )?
+\ comparison_expression
+\   : addition_expression ( ( "<" | "<=" | ">" | ">=" ) comparison_expression )?
 parse_comparison_expression :: (self: @Parser) -> @Expression {
     expression: @Expression = self.parse_addition_expression()
     if (self.matches(self.optional_space, self.required_less_than) || self.matches(self.optional_space, self.required_greater_than)) {
@@ -1704,8 +1726,8 @@ parse_comparison_expression :: (self: @Parser) -> @Expression {
     return expression
 }
 
-\ parse_addition_expression
-\   : parse_multiplication_expression ( ( "+" | "-" ) parse_addition_expression )?
+\ addition_expression
+\   : multiplication_expression ( ( "+" | "-" ) addition_expression )?
 parse_addition_expression :: (self: @Parser) -> @Expression {
     expression: @Expression = self.parse_multiplication_expression()
     if (self.matches(self.optional_space, self.required_plus) || self.matches(self.optional_space, self.required_hyphen)) {
@@ -1724,8 +1746,8 @@ parse_addition_expression :: (self: @Parser) -> @Expression {
     return expression
 }
 
-\ parse_multiplication_expression
-\   : parse_unary_expression ( ( "*" | "/" | "//" ) parse_multiplication_expression )?
+\ multiplication_expression
+\   : unary_expression ( ( "*" | "/" | "//" ) multiplication_expression )?
 parse_multiplication_expression :: (self: @Parser) -> @Expression {
     expression: @Expression = self.parse_unary_expression()
     if (self.matches(self.optional_space, self.required_asterisk) || self.matches(self.optional_space, self.required_slash)) {
@@ -1885,7 +1907,7 @@ consume_empty_line :: (self: @Parser) -> Boolean {
 consume_space :: (self: @Parser, expected_space_count: Int) -> Nothing {
     space_count: Int
     token: @Token = self.tokens.current()
-    if (token is Space_Token) {
+    if (token.is(Space_Token)) {
         self.tokens.next()
         space: @Space_Token = token
         space_count = space.count
@@ -2064,37 +2086,37 @@ create_space_matcher :: (required: Boolean) -> @Space_Matcher {
 }
 
 accepts :: (self: @Matcher, token: @Token) -> Boolean {
-    if (self is Other_Matcher) {
+    if (self.is(Other_Matcher)) {
         self: @Other_Matcher = self
-        if (token is Other_Token) {
+        if (token.is(Other_Token)) {
             return token.lexeme.equals(self.lexeme)
         }
         return false
     }
-    if (self is Space_Matcher) {
-        return token is Space_Token
+    if (self.is(Space_Matcher)) {
+        return token.is(Space_Token)
     }
-    if (self is Identifier_Matcher) {
-        return token is Identifier_Token
+    if (self.is(Identifier_Matcher)) {
+        return token.is(Identifier_Token)
     }
-    if (self is Keyword_Matcher) {
+    if (self.is(Keyword_Matcher)) {
         self: @Keyword_Matcher = self
-        if (token is Keyword_Token) {
+        if (token.is(Keyword_Token)) {
             return token.lexeme.equals(self.lexeme)
         }
         return false
     }
-    if (self is Literal_Matcher) {
-        return token is Integer_Token || token is String_Token || token is Character_Token || token is Boolean_Token || token is Null_Token
+    if (self.is(Literal_Matcher)) {
+        return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token)
     }
-    if (self is End_Of_Line_Matcher) {
-        return token is End_Of_Line_Token
+    if (self.is(End_Of_Line_Matcher)) {
+        return token.is(End_Of_Line_Token)
     }
-    if (self is Comment_Matcher) {
-        return token is Comment_Token
+    if (self.is(Comment_Matcher)) {
+        return token.is(Comment_Token)
     }
-    if (self is End_Of_File_Matcher) {
-        return token is End_Of_File_Token
+    if (self.is(End_Of_File_Matcher)) {
+        return token.is(End_Of_File_Token)
     }
     stderr.write("Unsupported token matcher").end_line()
     abort()
@@ -2493,12 +2515,12 @@ write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
 }
 
 write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
-    if (statement is Assignment_Statement) {
+    if (statement.is(Assignment_Statement)) {
         statement: @Assignment_Statement = statement
         return file.write(statement.destination).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
     }
 
-    if (statement is Block_Statement) {
+    if (statement.is(Block_Statement)) {
         file.write('{').end_line()
         block_statements: @List_Iterator = (statement as @Block_Statement).statements.create_iterator()
         while (block_statements.has_next()) {
@@ -2508,15 +2530,15 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         return file.write_source_line(statement.location, alignment).write('}')
     }
 
-    if (statement is Break_Statement) {
+    if (statement.is(Break_Statement)) {
         return file.write("break")
     }
 
-    if (statement is Expression_Statement) {
+    if (statement.is(Expression_Statement)) {
         return file.write((statement as @Expression_Statement).expression)
     }
 
-    if (statement is Function_Statement) {
+    if (statement.is(Function_Statement)) {
         statement: @Function_Statement = statement
         file.write(statement.name).write(" :: (")
         function_parameters: @List_Iterator = statement.parameters.create_iterator()
@@ -2537,7 +2559,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         return file.write(" ").write(statement.body, alignment)
     }
 
-    if (statement is If_Statement) {
+    if (statement.is(If_Statement)) {
         statement: @If_Statement = statement
         file.write("if (").write(statement.condition).write(") ").write(statement.true_block, alignment)
         if (statement.false_block != null) {
@@ -2546,12 +2568,12 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         return file
     }
 
-    if (statement is Loop_Statement) {
+    if (statement.is(Loop_Statement)) {
         statement: @Loop_Statement = statement
         return file.write("loop ").write(statement.block, alignment)
     }
 
-    if (statement is Return_Statement) {
+    if (statement.is(Return_Statement)) {
         statement: @Return_Statement = statement
         file.write("return")
         if (statement.value_expression != null) {
@@ -2560,7 +2582,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         return file
     }
 
-    if (statement is Struct_Statement) {
+    if (statement.is(Struct_Statement)) {
         statement: @Struct_Statement = statement
         file.write(statement.name).write(" :: struct")
         if (statement.base_type != null) {
@@ -2578,7 +2600,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         return file.write_source_line(statement.location, alignment).write('}')
     }
 
-    if (statement is Variable_Statement) {
+    if (statement.is(Variable_Statement)) {
         statement: @Variable_Statement = statement
         file.write((statement as @Variable_Statement).name)
         if (statement.value_type != null) {
@@ -2595,7 +2617,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         return file
     }
 
-    if (statement is While_Statement) {
+    if (statement.is(While_Statement)) {
         statement: @While_Statement = statement
         return file.write("while (").write(statement.condition).write(") ").write(statement.block, alignment)
     }
@@ -2632,11 +2654,11 @@ write :: (file: @FILE, parameter: @Function_Parameter) -> @FILE {
 }
 
 write :: (file: @FILE, value_type: @Value_Type) -> @FILE {
-    if (value_type is Named_Type) {
+    if (value_type.is(Named_Type)) {
         return file.write((value_type as @Named_Type).name)
     }
 
-    if (value_type is Pointer_Type) {
+    if (value_type.is(Pointer_Type)) {
         return file.write('@').write((value_type as @Pointer_Type).value_type)
     }
 
@@ -2645,54 +2667,54 @@ write :: (file: @FILE, value_type: @Value_Type) -> @FILE {
 }
 
 write :: (file: @FILE, expression: @Expression) -> @FILE {
-    if (expression is Array_Access_Expression) {
+    if (expression.is(Array_Access_Expression)) {
         return file.write((expression as @Array_Access_Expression).object).write('[').write((expression as @Array_Access_Expression).index_expression).write(']')
     }
 
-    if (expression is Binary_Expression) {
+    if (expression.is(Binary_Expression)) {
         file.write((expression as @Binary_Expression).left_expression)
-        if (expression is Add_Expression) {
+        if (expression.is(Add_Expression)) {
             return file.write(" + ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Divide_Expression) {
+        if (expression.is(Divide_Expression)) {
             return file.write(" / ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Equals_Expression) {
+        if (expression.is(Equals_Expression)) {
             return file.write(" == ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Greater_Than_Expression) {
+        if (expression.is(Greater_Than_Expression)) {
             return file.write(" > ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Greater_Than_Or_Equals_Expression) {
+        if (expression.is(Greater_Than_Or_Equals_Expression)) {
             return file.write(" >= ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Less_Than_Expression) {
+        if (expression.is(Less_Than_Expression)) {
             return file.write(" < ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Less_Than_Or_Equals_Expression) {
+        if (expression.is(Less_Than_Or_Equals_Expression)) {
             return file.write(" <= ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Logic_And_Expression) {
+        if (expression.is(Logic_And_Expression)) {
             return file.write(" && ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Logic_Or_Expression) {
+        if (expression.is(Logic_Or_Expression)) {
             return file.write(" || ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Modulo_Expression) {
+        if (expression.is(Modulo_Expression)) {
             return file.write(" // ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Multiply_Expression) {
+        if (expression.is(Multiply_Expression)) {
             return file.write(" * ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Not_Equals_Expression) {
+        if (expression.is(Not_Equals_Expression)) {
             return file.write(" != ").write((expression as @Binary_Expression).right_expression)
         }
-        if (expression is Substract_Expression) {
+        if (expression.is(Substract_Expression)) {
             return file.write(" - ").write((expression as @Binary_Expression).right_expression)
         }
     }
 
-    if (expression is Call_Expression) {
+    if (expression.is(Call_Expression)) {
         file.write((expression as @Call_Expression).callee).write('(')
         call_arguments: @List_Iterator = (expression as @Call_Expression).arguments.create_iterator()
         if (call_arguments.has_next()) {
@@ -2708,27 +2730,27 @@ write :: (file: @FILE, expression: @Expression) -> @FILE {
         return file.write(')')
     }
 
-    if (expression is Cast_Expression) {
+    if (expression.is(Cast_Expression)) {
         return file.write((expression as @Cast_Expression).value_expression).write(" as ").write((expression as @Cast_Expression).value_type)
     }
 
-    if (expression is Is_Expression) {
+    if (expression.is(Is_Expression)) {
         return file.write((expression as @Is_Expression).value_expression).write(" is ").write((expression as @Is_Expression).value_type)
     }
 
-    if (expression is Literal_Expression) {
+    if (expression.is(Literal_Expression)) {
         return file.write((expression as @Literal_Expression).literal)
     }
 
-    if (expression is New_Expression) {
+    if (expression.is(New_Expression)) {
         return file.write("new ").write((expression as @New_Expression).value_type)
     }
 
-    if (expression is Member_Access_Expression) {
+    if (expression.is(Member_Access_Expression)) {
         return file.write((expression as @Member_Access_Expression).object).write('.').write((expression as @Member_Access_Expression).member_name)
     }
 
-    if (expression is Variable_Expression) {
+    if (expression.is(Variable_Expression)) {
         return file.write((expression as @Variable_Expression).name)
     }
 
@@ -2752,7 +2774,7 @@ scan :: (file_name: @String) -> @List {
     loop {
         token: @Token = scanner.next_token()
         tokens.append(token)
-        if (token is End_Of_File_Token) {
+        if (token.is(End_Of_File_Token)) {
             break
         }
     }
@@ -2760,7 +2782,7 @@ scan :: (file_name: @String) -> @List {
     \ tokens: @List_Iterator = tokens.create_iterator()
     \ while (tokens.has_next()) {
     \     token: @Token = tokens.next() as @Token
-    \     if (token is End_Of_Line_Token) {
+    \     if (token.is(End_Of_Line_Token)) {
     \         stdout.end_line()
     \     } else {
     \         stdout.write(token)
@@ -2933,9 +2955,6 @@ scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location:
     if (token_lexeme.equals("if")) {
         return create_keyword_token(token_lexeme, token_location)
     }
-    if (token_lexeme.equals("is")) {
-        return create_keyword_token(token_lexeme, token_location)
-    }
     if (token_lexeme.equals("loop")) {
         return create_keyword_token(token_lexeme, token_location)
     }
@@ -3026,13 +3045,13 @@ init :: (self: @Token, lexeme: @String, location: @Source_Location) -> Nothing {
 }
 
 write :: (file: @FILE, token: @Token) -> @FILE {
-    if (token is Other_Token || token is Keyword_Token) {
+    if (token.is(Other_Token) || token.is(Keyword_Token)) {
         file.write(27 as Int8).write("[2;37m")
     } else {
-        if (token is Literal_Token) {
+        if (token.is(Literal_Token)) {
             file.write(27 as Int8).write("[1;33m")
         } else {
-            if (token is Comment_Token) {
+            if (token.is(Comment_Token)) {
                 file.write(27 as Int8).write("[2;33m")
             }
         }
@@ -3323,6 +3342,20 @@ restore_state :: (self: @List_Iterator) -> Nothing {
 Object :: struct {
     object_type: @Object_Type
 }
+
+is :: (self: @Object, object_type: @Object_Type) -> Boolean {
+    self_type: @Object_Type = self.object_type
+    loop {
+        if (self_type == object_type) {
+            return true
+        }
+        self_type = self_type.base_type
+        if (self_type == null) {
+            return false
+        }
+    }
+}
+
 
 \ -------------------------------------------------------------------------------------------------
 \       Type

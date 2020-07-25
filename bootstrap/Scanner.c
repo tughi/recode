@@ -4,7 +4,7 @@
 #include "String.h"
 #include "Token.h"
 
-#define KEYWORDS_COUNT 17
+#define KEYWORDS_COUNT 16
 
 const char *KEYWORDS[] = {
     "as",
@@ -14,7 +14,6 @@ const char *KEYWORDS[] = {
     "external",
     "false",
     "if",
-    "is",
     "loop",
     "new",
     "null",
