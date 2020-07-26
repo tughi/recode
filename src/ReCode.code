@@ -101,7 +101,7 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         return file.write(')').end_line()
     }
     if (instruction.is(IR_Conditional_Jump_Instruction)) {
-        instruction: @IR_Conditional_Jump_Instruction = instruction
+        instruction: @IR_Conditional_Jump_Instruction = instruction as @IR_Conditional_Jump_Instruction
         return file.write("jump").write('(').write(instruction.condition_value).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
     }
     if (instruction.is(IR_Direct_Jump_Instruction)) {
@@ -198,7 +198,7 @@ create_ir_builder_context :: (parent: @IR_Builder_Context) -> @IR_Builder_Contex
 get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
     named_types: @List_Iterator = self.named_types.create_iterator()
     while (named_types.has_next()) {
-        named_type: @IR_Type = named_types.next()
+        named_type: @IR_Type = named_types.next() as @IR_Type
         if (name.equals(named_type.name)) {
             return named_type
         }
@@ -215,7 +215,7 @@ get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
     loop {
         variables: @List_Iterator = context.variables.create_iterator()
         while (variables.has_next()) {
-            variable: @IR_Variable = variables.next()
+            variable: @IR_Variable = variables.next() as @IR_Variable
             if (name.equals(variable.name)) {
                 return variable
             }
@@ -232,7 +232,7 @@ get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
     loop {
         values: @List_Iterator = context.named_values.create_iterator()
         while (values.has_next()) {
-            value: @IR_Named_Value = values.next()
+            value: @IR_Named_Value = values.next() as @IR_Named_Value
             if (value.is(IR_Variable_Value) && (value as @IR_Variable_Value).variable == variable) {
                 return value
             }
@@ -643,7 +643,7 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @Variable_
     variable: @IR_Variable = new IR_Variable.init(variable_name, variable_type)
     if (variable_statement.value_expression != null) {
         variable_value: @IR_Value = self.convert_expression(variable_statement.value_expression)
-        if (variable_value.type.accepts(variable.type) == false) {
+        if (variable.type.accepts(variable_value.type) == false) {
             abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
         }
         self.add_variable(variable)
@@ -683,6 +683,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
     }
     if (expression.is(Literal_Expression)) {
         return self.convert_literal_expression(expression as @Literal_Expression)
+    }
+    if (expression.is(Logic_And_Expression)) {
+        return self.convert_logic_and_expression(expression as @Logic_And_Expression)
     }
     if (expression.is(Member_Access_Expression)) {
         return self.convert_member_access_expression(expression as @Member_Access_Expression)
@@ -806,6 +809,26 @@ convert_literal_expression :: (self: @IR_Builder, expression: @Literal_Expressio
         return create_ir_constant_value(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
     }
     abort(expression.location, expression.literal.object_type)
+}
+
+convert_logic_and_expression :: (self: @IR_Builder, expression: @Logic_And_Expression) -> @IR_Value {
+    next_block: @IR_Block = self.current_block.function.create_block()
+    end_block: @IR_Block = self.current_block.function.create_block()
+    left_value: @IR_Value = self.convert_expression(expression.left_expression)
+    if (left_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.left_expression.location, "Must be a boolean expression")
+    }
+    self.current_block.append(create_ir_jump_instruction(left_value, next_block, end_block))
+    self.current_block = next_block
+    right_value: @IR_Value = self.convert_expression(expression.right_expression)
+    if (right_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.right_expression.location, "Must be a boolean expression")
+    }
+    self.current_block.append(create_ir_jump_instruction(end_block))
+    self.current_block = end_block
+    result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
+    \ TODO: self.current_block.append(new IR_Phi_Instruction.init(result_value, left_value, right_value))
+    return result_value
 }
 
 convert_member_access_expression :: (self: @IR_Builder, member_access_expression: @Member_Access_Expression) -> @IR_Value {
@@ -1318,6 +1341,9 @@ IR_Comparison_Instruction :: struct : IR_Binary_Instruction {
 }
 
 IR_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Logic_And_Instruction :: struct : IR_Binary_Instruction {
 }
 
 IR_Not_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
