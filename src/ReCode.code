@@ -625,6 +625,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
     if (expression.is(Call_Expression)) {
         return self.convert_call_expression(expression as @Call_Expression)
     }
+    if (expression.is(Cast_Expression)) {
+        return self.convert_cast_expression(expression as @Cast_Expression)
+    }
     if (expression.is(Equals_Expression)) {
         return self.convert_equals_expression(expression as @Equals_Expression)
     }
@@ -711,6 +714,17 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
     abort(call_expression.location, call_expression.callee.object_type)
 }
 
+convert_cast_expression :: (self: @IR_Builder, cast_expression: @Cast_Expression) -> @IR_Value {
+    value: @IR_Value = self.convert_expression(cast_expression.value_expression)
+    result_value: @IR_Value = self.create_temp_value(self.convert_value_type(cast_expression.value_type))
+    if (value.type.is(IR_Pointer_Type) && result_value.type.is(IR_Pointer_Type)) {
+        self.current_block.append(create_ir_set_instruction(result_value, value))
+    } else {
+        abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
+    }
+    return result_value
+}
+
 convert_equals_expression :: (self: @IR_Builder, expression: @Equals_Expression) -> @IR_Value {
     left_value: @IR_Value = self.convert_expression(expression.left_expression)
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
@@ -759,10 +773,14 @@ convert_member_access_expression :: (self: @IR_Builder, member_access_expression
     if (struct_type_member == null) {
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
     }
+    if (struct_type_member.type.is(IR_Struct_Type)) {
+        result_value: @IR_Temp_Value = self.create_temp_value(create_ir_pointer_type(struct_type_member.type))
+        self.current_block.append(create_ir_load_struct_member_instruction(result_value, object_value, struct_type_member, true))
+        return result_value
+    }
     result_value: @IR_Temp_Value = self.create_temp_value(struct_type_member.type)
-    self.current_block.append(create_ir_load_struct_member_instruction(result_value, object_value, struct_type_member))
+    self.current_block.append(create_ir_load_struct_member_instruction(result_value, object_value, struct_type_member, false))
     return result_value
-    abort(member_access_expression.location, member_access_expression.object_type)
 }
 
 convert_new_expression :: (self: @IR_Builder, expression: @New_Expression) -> @IR_Value {
@@ -1174,13 +1192,15 @@ create_ir_load_array_item_instruction :: (result_value: @IR_Value, array_value: 
 IR_Load_Struct_Member_Instruction :: struct : IR_Instruction {
     struct_pointer_value: @IR_Value
     struct_type_member: @IR_Struct_Type_Member
+    load_address: Boolean
 }
 
-create_ir_load_struct_member_instruction :: (result_value: @IR_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Load_Struct_Member_Instruction {
+create_ir_load_struct_member_instruction :: (result_value: @IR_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
     instruction: @IR_Load_Struct_Member_Instruction = new IR_Load_Struct_Member_Instruction
     instruction.init(result_value)
     instruction.struct_pointer_value = struct_pointer_value
     instruction.struct_type_member = struct_type_member
+    instruction.load_address = load_address
     return instruction
 }
 
