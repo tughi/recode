@@ -60,7 +60,7 @@ write :: (file: @FILE, function: @IR_Function) -> @FILE {
     file.write(function.name).write(" :: (")
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
-        function_parameter: @IR_Function_Parameter = function_parameters.next()
+        function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
         file.write(function_parameter.name).write(": ").write(function_parameter.type.name)
         if (function_parameters.has_next()) {
             file.write(", ")
@@ -69,7 +69,7 @@ write :: (file: @FILE, function: @IR_Function) -> @FILE {
     file.write(") -> ").write(function.return_type.name).write(" {").end_line()
     function_blocks: @List_Iterator = function.blocks.create_iterator()
     while (function_blocks.has_next()) {
-        function_block: @IR_Block = function_blocks.next()
+        function_block: @IR_Block = function_blocks.next() as @IR_Block
         file.write(function_block)
     }
     file.write('}').end_line()
@@ -80,7 +80,7 @@ write :: (file: @FILE, block: @IR_Block) -> @FILE {
     file.write("block.").write(block.id).write(':').end_line()
     block_instructions: @List_Iterator = block.instructions.create_iterator()
     while (block_instructions.has_next()) {
-        block_instruction: @IR_Instruction = block_instructions.next()
+        block_instruction: @IR_Instruction = block_instructions.next() as @IR_Instruction
         file.write(block_instruction)
     }
     return file
@@ -92,7 +92,7 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write((instruction as @IR_Call_Instruction).function.name).write(", ")
         call_arguments: @List_Iterator = (instruction as @IR_Call_Instruction).arguments.create_iterator()
         while (call_arguments.has_next()) {
-            call_argument: @IR_Value = call_arguments.next()
+            call_argument: @IR_Value = call_arguments.next() as @IR_Value
             file.write(call_argument)
             if (call_arguments.has_next()) {
                 file.write(", ")
@@ -105,7 +105,7 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         return file.write("jump").write('(').write(instruction.condition_value).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
     }
     if (instruction.is(IR_Direct_Jump_Instruction)) {
-        instruction: @IR_Direct_Jump_Instruction = instruction
+        instruction: @IR_Direct_Jump_Instruction = instruction as @IR_Direct_Jump_Instruction
         return file.write("jump").write('(').write("block.").write(instruction.block.id).write(')').end_line()
     }
     if (instruction.is(IR_Equals_Comparison_Instruction)) {
@@ -124,15 +124,15 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("NOT_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
     if (instruction.is(IR_Return_Instruction)) {
-        instruction: @IR_Return_Instruction = instruction
+        instruction: @IR_Return_Instruction = instruction as @IR_Return_Instruction
         return file.write("return").write('(').write(instruction.return_value).write(')').end_line()
     }
     if (instruction.is(IR_Set_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Set_Instruction).value).end_line()
     }
-    if (instruction.is(IR_Store_Instruction)) {
-        instruction: @IR_Store_Instruction = instruction
-        return file.write("store").write('(').write(instruction.pointer_value).write(", ").write(instruction.stored_value).write(')').end_line()
+    if (instruction.is(IR_Store_Struct_Member_Instruction)) {
+        instruction: @IR_Store_Struct_Member_Instruction = instruction as @IR_Store_Struct_Member_Instruction
+        return file.write("store_struct_member").write('(').write(instruction.struct_pointer_value).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.value).write(')').end_line()
     }
     abort(clone("Unsupported type: ").append(instruction.object_type.name))
 }
@@ -270,6 +270,24 @@ get_named_value :: (self: @IR_Builder, name: @String) -> @IR_Named_Value {
     }
 }
 
+get_named_function :: (self: @IR_Builder, name: @Identifier_Token, argument_types: @List) -> @IR_Function {
+    function: @IR_Function = self.get_named_function(name.lexeme, argument_types)
+    if (function == null) {
+        message: @String = clone("Undefined function: ").append(name.lexeme).append(" :: (")
+        argument_types: @List_Iterator = argument_types.create_iterator()
+        while (argument_types.has_next()) {
+            argument_type: @IR_Type = argument_types.next() as @IR_Type
+            message.append(argument_type.name)
+            if (argument_types.has_next()) {
+                message.append(", ")
+            }
+        }
+        message.append(")")
+        abort(name.location, message)
+    }
+    return function
+}
+
 get_named_function :: (self: @IR_Builder, name: @String, argument_types: @List) -> @IR_Function {
     function: @IR_Function = null
     named_functions: @List_Iterator = self.named_functions.create_iterator()
@@ -309,9 +327,15 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
             if (self.pointed_type == other.pointed_type) {
                 return true
             }
+            if (self.pointed_type.is(IR_Any_Type)) {
+                return true
+            }
             if (self.pointed_type.is(IR_Struct_Type) && other.pointed_type.is(IR_Struct_Type)) {
                 return (self.pointed_type as @IR_Struct_Type).is_base_type(other.pointed_type as @IR_Struct_Type)
             }
+        }
+        if (other.is(IR_Null_Type)) {
+            return true
         }
         return false
     }
@@ -532,7 +556,30 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assig
         if (variable == null) {
             abort(variable_expression.location, clone("Undeclared variable: ").append(variable_name))
         }
+        if (variable.type.accepts(value.type) == false) {
+            abort(variable_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
+        }
         self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), value))
+        return
+    }
+    if (assignment_statement.destination.is(Member_Access_Expression)) {
+        member_access_expression: @Member_Access_Expression = assignment_statement.destination as @Member_Access_Expression
+        object_address_value: @IR_Value = self.convert_expression_address(member_access_expression.object)
+        if (object_address_value.type.is(IR_Pointer_Type) == false) {
+            abort(assignment_statement.location, clone("Not a '").append(IR_Pointer_Type.name).append("' value"))
+        }
+        object_type: @IR_Type = (object_address_value.type as @IR_Pointer_Type).pointed_type
+        if (object_type.is(IR_Struct_Type) == false) {
+            abort(assignment_statement.location, clone("Not a '").append(IR_Struct_Type.name).append("' value"))
+        }
+        struct_type_member: @IR_Struct_Type_Member = (object_type as @IR_Struct_Type).get_member(member_access_expression.member_name.lexeme)
+        if (struct_type_member == null) {
+            abort(member_access_expression.member_name.location, clone(object_type.name).append(" doesn't have a '").append(member_access_expression.member_name.lexeme).append("' member"))
+        }
+        if (struct_type_member.type.accepts(value.type) == false) {
+            abort(assignment_statement.value_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(struct_type_member.type.name).append("' struct member"))
+        }
+        self.current_block.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, value))
         return
     }
     abort(assignment_statement.location, assignment_statement.destination.object_type)
@@ -596,6 +643,9 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @Variable_
     variable: @IR_Variable = new IR_Variable.init(variable_name, variable_type)
     if (variable_statement.value_expression != null) {
         variable_value: @IR_Value = self.convert_expression(variable_statement.value_expression)
+        if (variable_value.type.accepts(variable.type) == false) {
+            abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
+        }
         self.add_variable(variable)
         self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), variable_value))
     } else {
@@ -684,7 +734,7 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
             call_arguments.append(call_argument)
             call_argument_types.append(call_argument.type)
         }
-        call_function: @IR_Function = self.get_named_function(callee.member_name.lexeme, call_argument_types)
+        call_function: @IR_Function = self.get_named_function(callee.member_name, call_argument_types)
         if (call_function == null) {
             abort(callee.member_name.location, clone("No such function: ").append(callee.member_name.lexeme))
         }
@@ -703,9 +753,9 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
             call_arguments.append(call_argument)
             call_argument_types.append(call_argument.type)
         }
-        call_function: @IR_Function = self.get_named_function(callee.name.lexeme, call_argument_types)
+        call_function: @IR_Function = self.get_named_function(callee.name, call_argument_types)
         if (call_function == null) {
-            abort()
+            abort(callee.name.location, clone("No such function: ").append(callee.name.lexeme))
         }
         result_value: @IR_Temp_Value = self.create_temp_value(call_function.return_type)
         self.current_block.append(create_ir_call_instruction(result_value, call_function, call_arguments))
@@ -1237,16 +1287,18 @@ create_ir_set_instruction :: (result_value: @IR_Value, value: @IR_Value) -> @IR_
     return instruction
 }
 
-IR_Store_Instruction :: struct : IR_Instruction {
-    pointer_value: @IR_Value
-    stored_value: @IR_Value
+IR_Store_Struct_Member_Instruction :: struct : IR_Instruction {
+    struct_pointer_value: @IR_Value
+    struct_type_member: @IR_Struct_Type_Member
+    value: @IR_Value
 }
 
-create_ir_store_instruction :: (pointer_value: @IR_Value, stored_value: @IR_Value) -> @IR_Store_Instruction {
-    instruction: @IR_Store_Instruction = new IR_Store_Instruction
+create_ir_store_struct_member_instruction :: (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
+    instruction: @IR_Store_Struct_Member_Instruction = new IR_Store_Struct_Member_Instruction
     instruction.init(null)
-    instruction.pointer_value = pointer_value
-    instruction.stored_value = stored_value
+    instruction.struct_pointer_value = struct_pointer_value
+    instruction.struct_type_member = struct_type_member
+    instruction.value = value
     return instruction
 }
 
