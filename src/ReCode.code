@@ -88,6 +88,9 @@ write :: (file: @FILE, block: @IR_Block) -> @FILE {
 
 write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     file.write("   ")
+    if (instruction.is(IR_Add_Instruction)) {
+        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("add").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+    }
     if (instruction.is(IR_Call_Instruction)) {
         file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write((instruction as @IR_Call_Instruction).function.name).write(", ")
         call_arguments: @List_Iterator = (instruction as @IR_Call_Instruction).arguments.create_iterator()
@@ -258,7 +261,7 @@ get_named_value :: (self: @IR_Builder, name: @String) -> @IR_Named_Value {
     loop {
         values: @List_Iterator = context.named_values.create_iterator()
         while (values.has_next()) {
-            value: @IR_Named_Value = values.next()
+            value: @IR_Named_Value = values.next() as @IR_Named_Value
             if (name.equals(value.name)) {
                 return value
             }
@@ -292,14 +295,14 @@ get_named_function :: (self: @IR_Builder, name: @String, argument_types: @List) 
     function: @IR_Function = null
     named_functions: @List_Iterator = self.named_functions.create_iterator()
     while (named_functions.has_next()) {
-        named_function: @IR_Function = named_functions.next()
+        named_function: @IR_Function = named_functions.next() as @IR_Function
         if (name.equals(named_function.name)) {
             is_match: Boolean = true
             argument_types: @List_Iterator = argument_types.create_iterator()
             named_function_parameters: @List_Iterator = named_function.parameters.create_iterator()
             while (argument_types.has_next() && named_function_parameters.has_next()) {
-                argument_type: @IR_Type = argument_types.next()
-                named_function_parameter: @IR_Function_Parameter = named_function_parameters.next()
+                argument_type: @IR_Type = argument_types.next() as @IR_Type
+                named_function_parameter: @IR_Function_Parameter = named_function_parameters.next() as @IR_Function_Parameter
                 if (named_function_parameter.type.accepts(argument_type) == false) {
                     is_match = false
                     break
@@ -669,6 +672,9 @@ convert_while_statement :: (self: @IR_Builder, statement: @While_Statement) -> N
 }
 
 convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
+    if (expression.is(Add_Expression)) {
+        return self.convert_add_expression(expression as @Add_Expression)
+    }
     if (expression.is(Array_Access_Expression)) {
         return self.convert_array_access_expression(expression as @Array_Access_Expression)
     }
@@ -707,6 +713,23 @@ convert_expression_address :: (self: @IR_Builder, expression: @Expression) -> @I
         return self.convert_variable_expression_address(expression as @Variable_Expression)
     }
     abort(expression.location, expression.object_type)
+}
+
+convert_add_expression :: (self: @IR_Builder, expression: @Add_Expression) -> @IR_Value {
+    left_value: @IR_Value = self.convert_expression(expression.left_expression)
+    right_value: @IR_Value = self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    result_value: @IR_Value = self.create_temp_value(left_value.type)
+    self.current_block.append(new IR_Add_Instruction.init(result_value, left_value, right_value))
+    return result_value
 }
 
 convert_array_access_expression :: (self: @IR_Builder, array_access_expression: @Array_Access_Expression) -> @IR_Value {
@@ -1335,6 +1358,9 @@ init :: (self: @IR_Binary_Instruction, result_value: @IR_Value, left_value: @IR_
     self.left_value = left_value
     self.right_value = right_value
     return self
+}
+
+IR_Add_Instruction :: struct : IR_Binary_Instruction {
 }
 
 IR_Comparison_Instruction :: struct : IR_Binary_Instruction {
