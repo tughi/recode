@@ -128,6 +128,9 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     }
     if (instruction.is(IR_Return_Instruction)) {
         instruction: @IR_Return_Instruction = instruction as @IR_Return_Instruction
+        if (instruction.return_value == null) {
+            return file.write("return").write('(').write(')').end_line()
+        }
         return file.write("return").write('(').write(instruction.return_value).write(')').end_line()
     }
     if (instruction.is(IR_Set_Instruction)) {
@@ -163,12 +166,18 @@ IR_Builder :: struct {
     named_types: @List
     named_functions: @List
     current_block: @IR_Block
+    current_loop: @IR_Loop
 }
 
 IR_Builder_Context :: struct {
     parent: @IR_Builder_Context
     variables: @List
     named_values: @List
+}
+
+IR_Loop :: struct {
+    parent: @IR_Loop
+    end_block: @IR_Block
 }
 
 create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
@@ -187,6 +196,7 @@ create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
     builder.named_types.append(new IR_Null_Type.init("Null"))
     builder.named_functions = create_list()
     builder.current_block = null
+    builder.current_loop = null
     return builder
 }
 
@@ -196,6 +206,13 @@ create_ir_builder_context :: (parent: @IR_Builder_Context) -> @IR_Builder_Contex
     context.variables = create_list()
     context.named_values = create_list()
     return context
+}
+
+create_ir_loop :: (parent: @IR_Loop, end_block: @IR_Block) -> @IR_Loop {
+    new_loop: @IR_Loop = new IR_Loop
+    new_loop.parent = parent
+    new_loop.end_block = end_block
+    return new_loop
 }
 
 get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
@@ -324,9 +341,9 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
         return true
     }
     if (self.is(IR_Pointer_Type)) {
-        self: @IR_Pointer_Type = self
+        self: @IR_Pointer_Type = self as @IR_Pointer_Type
         if (other.is(IR_Pointer_Type)) {
-            other: @IR_Pointer_Type = other
+            other: @IR_Pointer_Type = other as @IR_Pointer_Type
             if (self.pointed_type == other.pointed_type) {
                 return true
             }
@@ -345,32 +362,32 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
     return false
 }
 
-create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Value {
-    return self.add_named_value(new IR_Temp_Value.init(type, "$"))
+create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Temp_Value {
+    return self.add_named_value(new IR_Temp_Value.init(type, "$")) as @IR_Temp_Value
 }
 
 build :: (self: @IR_Builder) -> Nothing {
     types: @List_Iterator = self.compilation_unit.types.create_iterator()
     while (types.has_next()) {
-        statement: @Statement = types.next()
+        statement: @Statement = types.next() as @Statement
         self.convert_type_statement(statement)
     }
 
     global_variables: @List_Iterator = self.compilation_unit.global_variables.create_iterator()
     while (global_variables.has_next()) {
-        variable_statement: @Variable_Statement = global_variables.next()
+        variable_statement: @Variable_Statement = global_variables.next() as @Variable_Statement
         self.create_global_variable(variable_statement)
     }
 
     functions: @List_Iterator = self.compilation_unit.functions.create_iterator()
     while (functions.has_next()) {
-        function_statement: @Function_Statement = functions.next()
+        function_statement: @Function_Statement = functions.next() as @Function_Statement
         self.create_function(function_statement)
     }
 
     functions: @List_Iterator = self.compilation_unit.functions.create_iterator()
     while (functions.has_next()) {
-        function_statement: @Function_Statement = functions.next()
+        function_statement: @Function_Statement = functions.next() as @Function_Statement
         self.build_function(function_statement)
     }
 }
@@ -403,7 +420,7 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @Struct_Statem
     if (struct_statement.members != null) {
         struct_members: @List_Iterator = struct_statement.members.create_iterator()
         while (struct_members.has_next()) {
-            struct_member: @Struct_Member = struct_members.next()
+            struct_member: @Struct_Member = struct_members.next() as @Struct_Member
             struct_member_name: @String = struct_member.name.lexeme
             struct_member_type: @IR_Type = self.convert_value_type(struct_member.value_type)
             type.add_member(struct_member_name, struct_member_type)
@@ -431,9 +448,9 @@ convert_named_type :: (self: @IR_Builder, type: @Named_Type) -> @IR_Type {
     if (type == null) {
         types: @List_Iterator = self.compilation_unit.types.create_iterator()
         while (types.has_next()) {
-            statement: @Statement = types.next()
+            statement: @Statement = types.next() as @Statement
             if (statement.is(Struct_Statement)) {
-                statement: @Struct_Statement = statement
+                statement: @Struct_Statement = statement as @Struct_Statement
                 if (statement.name.lexeme.equals(type_name.lexeme)) {
                     return self.convert_struct_statement(statement)
                 }
@@ -476,10 +493,10 @@ create_function :: (self: @IR_Builder, function_statement: @Function_Statement) 
 
     parameters: @List_Iterator = function_statement.parameters.create_iterator()
     while (parameters.has_next()) {
-        parameter: @Function_Parameter = parameters.next()
+        parameter: @Function_Parameter = parameters.next() as @Function_Parameter
         parameter_type: @IR_Type = self.convert_value_type(parameter.value_type)
         parameter_name: @String = parameter.name.lexeme
-        function_parameter: @IR_Function_Parameter = new IR_Function_Parameter.init(parameter_name, parameter_type)
+        function_parameter: @IR_Function_Parameter = new IR_Function_Parameter.init(parameter_name, parameter_type) as @IR_Function_Parameter
         function.parameters.append(function_parameter)
     }
 
@@ -496,7 +513,7 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
 
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
-        function_parameter: @IR_Function_Parameter = function_parameters.next()
+        function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
         self.add_variable(function_parameter)
         self.add_named_value(create_ir_variable_value(function_parameter))
     }
@@ -505,8 +522,6 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
     self.convert_block_statement(function_statement.body)
     stdout.write("----------------------------------------- CURRENT FUNCTION -----------------------------------------").end_line().write(self.current_block.function).write("----------------------------------------------------------------------------------------------------").end_line().fflush()
     self.current_block = null
-
-    self.named_functions.append(function)
 
     self.context = self.context.parent
 }
@@ -521,6 +536,10 @@ convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
     }
     if (statement.is(Block_Statement)) {
         self.convert_block_statement(statement as @Block_Statement)
+        return
+    }
+    if (statement.is(Break_Statement)) {
+        self.convert_break_statement(statement as @Break_Statement)
         return
     }
     if (statement.is(Expression_Statement)) {
@@ -553,7 +572,7 @@ convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
 convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assignment_Statement) -> Nothing {
     value: @IR_Value = self.convert_expression(assignment_statement.value_expression)
     if (assignment_statement.destination.is(Variable_Expression)) {
-        variable_expression: @Variable_Expression = assignment_statement.destination
+        variable_expression: @Variable_Expression = assignment_statement.destination as @Variable_Expression
         variable_name: @String = variable_expression.name.lexeme
         variable: @IR_Variable = self.get_variable(variable_name)
         if (variable == null) {
@@ -591,9 +610,16 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assig
 convert_block_statement :: (self: @IR_Builder, statement: @Block_Statement) -> Nothing {
     block_statements: @List_Iterator = statement.statements.create_iterator()
     while (block_statements.has_next()) {
-        block_statement: @Statement = block_statements.next()
+        block_statement: @Statement = block_statements.next() as @Statement
         self.convert_statement(block_statement)
     }
+}
+
+convert_break_statement :: (self: @IR_Builder, statement: @Break_Statement) -> Nothing {
+    if (self.current_loop == null) {
+        abort(statement.location, "Break outside of a loop?")
+    }
+    self.current_block.append(create_ir_jump_instruction(self.current_loop.end_block))
 }
 
 convert_expression_statement :: (self: @IR_Builder, statement: @Expression_Statement) -> Nothing {
@@ -630,9 +656,15 @@ convert_loop_statement :: (self: @IR_Builder, statement: @Loop_Statement) -> Not
 }
 
 convert_return_statement :: (self: @IR_Builder, statement: @Return_Statement) -> Nothing {
-    return_value: @IR_Value = self.convert_expression(statement.value_expression)
-    \ TODO: validate return value type
-    self.current_block.append(create_ir_return_instruction(return_value))
+    if (statement.value_expression != null) {
+        return_value: @IR_Value = self.convert_expression(statement.value_expression)
+        if (self.current_block.function.return_type.accepts(return_value.type) == false) {
+            abort(statement.location, clone("Unexpected returned expression type: ").append(return_value.type.name))
+        }
+        self.current_block.append(create_ir_return_instruction(return_value))
+    } else {
+        self.current_block.append(create_ir_return_instruction(null))
+    }
 }
 
 convert_variable_statement :: (self: @IR_Builder, variable_statement: @Variable_Statement) -> Nothing {
@@ -666,9 +698,11 @@ convert_while_statement :: (self: @IR_Builder, statement: @While_Statement) -> N
     condition_value: @IR_Value = self.convert_expression(statement.condition)
     self.current_block.append(create_ir_jump_instruction(condition_value, loop_block, end_block))
     self.current_block = loop_block
+    self.current_loop = create_ir_loop(self.current_loop, end_block)
     self.convert_block_statement(statement.block)
     self.current_block.append(create_ir_jump_instruction(condition_block))
     self.current_block = end_block
+    self.current_loop = self.current_loop.parent
 }
 
 convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
@@ -739,7 +773,7 @@ convert_array_access_expression :: (self: @IR_Builder, array_access_expression: 
     if ((object_value_type.is(IR_Pointer_Type)) == false) {
         abort(array_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
-    object_value_type: @IR_Pointer_Type = object_value_type
+    object_value_type: @IR_Pointer_Type = object_value_type as @IR_Pointer_Type
     result_value: @IR_Temp_Value = self.create_temp_value(object_value_type.pointed_type)
     self.current_block.append(create_ir_load_array_item_instruction(result_value, object_value, index_value))
     return result_value
@@ -747,7 +781,7 @@ convert_array_access_expression :: (self: @IR_Builder, array_access_expression: 
 
 convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression) -> @IR_Value {
     if (call_expression.callee.is(Member_Access_Expression)) {
-        callee: @Member_Access_Expression = call_expression.callee
+        callee: @Member_Access_Expression = call_expression.callee as @Member_Access_Expression
         call_arguments: @List = create_list()
         call_argument_types: @List = create_list()
         first_argument: @IR_Value = self.convert_expression(callee.object)
@@ -755,7 +789,7 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
         call_argument_types.append(first_argument.type)
         call_expression_arguments: @List_Iterator = call_expression.arguments.create_iterator()
         while (call_expression_arguments.has_next()) {
-            call_expression_argument: @Expression = call_expression_arguments.next()
+            call_expression_argument: @Expression = call_expression_arguments.next() as @Expression
             call_argument: @IR_Value = self.convert_expression(call_expression_argument)
             call_arguments.append(call_argument)
             call_argument_types.append(call_argument.type)
@@ -769,12 +803,12 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
         return result_value
     }
     if (call_expression.callee.is(Variable_Expression)) {
-        callee: @Variable_Expression = call_expression.callee
+        callee: @Variable_Expression = call_expression.callee as @Variable_Expression
         call_arguments: @List = create_list()
         call_argument_types: @List = create_list()
         call_expression_arguments: @List_Iterator = call_expression.arguments.create_iterator()
         while (call_expression_arguments.has_next()) {
-            call_expression_argument: @Expression = call_expression_arguments.next()
+            call_expression_argument: @Expression = call_expression_arguments.next() as @Expression
             call_argument: @IR_Value = self.convert_expression(call_expression_argument)
             call_arguments.append(call_argument)
             call_argument_types.append(call_argument.type)
@@ -860,11 +894,11 @@ convert_member_access_expression :: (self: @IR_Builder, member_access_expression
     if ((object_value_type.is(IR_Pointer_Type)) == false) {
         abort(member_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
-    object_value_type: @IR_Pointer_Type = object_value_type
+    object_value_type: @IR_Pointer_Type = object_value_type as @IR_Pointer_Type
     if ((object_value_type.pointed_type.is(IR_Struct_Type)) == false) {
         abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
     }
-    struct_type: @IR_Struct_Type = object_value_type.pointed_type
+    struct_type: @IR_Struct_Type = object_value_type.pointed_type as @IR_Struct_Type
     struct_type_member: @IR_Struct_Type_Member = struct_type.get_member(member_access_expression.member_name.lexeme)
     if (struct_type_member == null) {
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
@@ -940,12 +974,12 @@ deduce_call_expression_type :: (self: @IR_Builder, expression: @Call_Expression)
     argument_types: @List = create_list()
     arguments: @List_Iterator = expression.arguments.create_iterator()
     while (arguments.has_next()) {
-        argument: @Expression = arguments.next()
+        argument: @Expression = arguments.next() as @Expression
         argument_type: @IR_Type = self.deduce_expression_type(argument)
         argument_types.append(argument_type)
     }
     if (expression.callee.is(Member_Access_Expression)) {
-        callee: @Member_Access_Expression = expression.callee
+        callee: @Member_Access_Expression = expression.callee as @Member_Access_Expression
         object_type: @IR_Type = self.deduce_expression_type(callee.object)
         if (object_type.is(IR_Struct_Type)) {
             argument_types.prepend(create_ir_pointer_type(object_type))
@@ -1031,8 +1065,8 @@ IR_Pointer_Type :: struct : IR_Type {
 
 equals :: (self: @IR_Type, other: @IR_Type) -> Boolean {
     if (self.is(IR_Pointer_Type) && other.is(IR_Pointer_Type)) {
-        self: @IR_Pointer_Type = self
-        other: @IR_Pointer_Type = other
+        self: @IR_Pointer_Type = self as @IR_Pointer_Type
+        other: @IR_Pointer_Type = other as @IR_Pointer_Type
         return self.pointed_type.equals(other.pointed_type)
     }
     return self == other
@@ -1077,7 +1111,7 @@ get_member :: (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
     loop {
         members: @List_Iterator = struct_type.members.create_iterator()
         while (members.has_next()) {
-            member: @IR_Struct_Type_Member = members.next()
+            member: @IR_Struct_Type_Member = members.next() as @IR_Struct_Type_Member
             if (member.name.equals(name)) {
                 return member
             }
@@ -1176,7 +1210,7 @@ IR_Function :: struct : Object {
 }
 
 create_block :: (self: @IR_Function) -> @IR_Block {
-    block: @IR_Block = new @IR_Block
+    block: @IR_Block = new IR_Block
     block.id = self.blocks.size
     block.function = self
     block.predecessors = create_list()
@@ -1426,7 +1460,7 @@ Parser :: struct {
 create_parser :: (tokens: @List) -> @Parser {
     parser: @Parser = new Parser
     parser.tokens = tokens.create_iterator()
-    token: @Token = parser.tokens.next()
+    token: @Token = parser.tokens.next() as @Token
     parser.compilation_unit = create_compilation_unit(token.location.source)
     parser.current_alignment = 0
 
