@@ -126,6 +126,9 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("LESS_THAN, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
+    if (instruction.is(IR_Less_Than_Or_Equals_Comparison_Instruction)) {
+        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("LESS_OR_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+    }
     if (instruction.is(IR_Load_Array_Item_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_array_item").write('(').write((instruction as @IR_Load_Array_Item_Instruction).array_value).write(", ").write((instruction as @IR_Load_Array_Item_Instruction).index_value).write(')').end_line()
     }
@@ -756,6 +759,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
     if (expression.is(Less_Than_Expression)) {
         return self.convert_less_than_expression(expression as @Less_Than_Expression)
     }
+    if (expression.is(Less_Than_Or_Equals_Expression)) {
+        return self.convert_less_than_or_equals_expression(expression as @Less_Than_Or_Equals_Expression)
+    }
     if (expression.is(Literal_Expression)) {
         return self.convert_literal_expression(expression as @Literal_Expression)
     }
@@ -949,6 +955,23 @@ convert_less_than_expression :: (self: @IR_Builder, expression: @Less_Than_Expre
     }
     result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
     self.current_block.append(new IR_Less_Than_Comparison_Instruction.init(result_value, left_value, right_value))
+    return result_value
+}
+
+convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @Less_Than_Or_Equals_Expression) -> @IR_Value {
+    left_value: @IR_Value = self.convert_expression(expression.left_expression)
+    right_value: @IR_Value = self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
+    self.current_block.append(new IR_Less_Than_Or_Equals_Comparison_Instruction.init(result_value, left_value, right_value))
     return result_value
 }
 
@@ -1609,6 +1632,9 @@ IR_Greater_Than_Or_Equals_Comparison_Instruction :: struct : IR_Comparison_Instr
 }
 
 IR_Less_Than_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Less_Than_Or_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
 }
 
 IR_Multiply_Instruction :: struct : IR_Binary_Instruction {
