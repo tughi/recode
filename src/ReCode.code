@@ -650,9 +650,11 @@ convert_loop_statement :: (self: @IR_Builder, statement: @Loop_Statement) -> Not
     end_block: @IR_Block = self.current_block.function.create_block()
     self.current_block.append(create_ir_jump_instruction(loop_block))
     self.current_block = loop_block
+    self.current_loop = create_ir_loop(self.current_loop, end_block)
     self.convert_block_statement(statement.block)
     self.current_block.append(create_ir_jump_instruction(loop_block))
     self.current_block = end_block
+    self.current_loop = self.current_loop.parent
 }
 
 convert_return_statement :: (self: @IR_Builder, statement: @Return_Statement) -> Nothing {
@@ -743,6 +745,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
 }
 
 convert_expression_address :: (self: @IR_Builder, expression: @Expression) -> @IR_Value {
+    if (expression.is(Member_Access_Expression)) {
+        return self.convert_member_access_expression_address(expression as @Member_Access_Expression)
+    }
     if (expression.is(Variable_Expression)) {
         return self.convert_variable_expression_address(expression as @Variable_Expression)
     }
@@ -913,6 +918,14 @@ convert_member_access_expression :: (self: @IR_Builder, member_access_expression
     return result_value
 }
 
+convert_member_access_expression_address :: (self: @IR_Builder, member_access_expression: @Member_Access_Expression) -> @IR_Value {
+    result_type: @IR_Type = self.deduce_expression_type(member_access_expression)
+    if (result_type.is(IR_Pointer_Type)) {
+        return self.convert_member_access_expression(member_access_expression)
+    }
+    abort(member_access_expression.location, result_type.object_type)
+}
+
 convert_new_expression :: (self: @IR_Builder, expression: @New_Expression) -> @IR_Value {
     type: @IR_Type = self.convert_value_type(expression.value_type)
     result_value: @IR_Temp_Value = self.create_temp_value(create_ir_pointer_type(type))
@@ -961,11 +974,14 @@ deduce_expression_type :: (self: @IR_Builder, expression: @Expression) -> @IR_Ty
     if (expression.is(Call_Expression)) {
         return self.deduce_call_expression_type(expression as @Call_Expression)
     }
-    if (expression.is(Variable_Expression)) {
-        return self.deduce_variable_expression_type(expression as @Variable_Expression)
-    }
     if (expression.is(Literal_Expression)) {
         return self.deduce_literal_expression_type(expression as @Literal_Expression)
+    }
+    if (expression.is(Member_Access_Expression)) {
+        return self.deduce_member_access_expression_type(expression as @Member_Access_Expression)
+    }
+    if (expression.is(Variable_Expression)) {
+        return self.deduce_variable_expression_type(expression as @Variable_Expression)
     }
     abort(expression.location, expression.object_type)
 }
@@ -1001,6 +1017,26 @@ deduce_literal_expression_type :: (self: @IR_Builder, expression: @Literal_Expre
         return create_ir_pointer_type(self.get_named_type("String"))
     }
     abort(literal.location, literal.object_type)
+}
+
+deduce_member_access_expression_type :: (self: @IR_Builder, expression: @Member_Access_Expression) -> @IR_Type {
+    object_type: @IR_Type = self.deduce_expression_type(expression.object)
+    if (object_type.is(IR_Pointer_Type) == false) {
+        abort(expression.location, object_type.object_type)
+    }
+    object_type: @IR_Type = (object_type as @IR_Pointer_Type).pointed_type
+    if (object_type.is(IR_Struct_Type) == false) {
+        abort(expression.location, object_type.object_type)
+    }
+    object_type: @IR_Struct_Type = object_type as @IR_Struct_Type
+    member: @IR_Struct_Type_Member = object_type.get_member(expression.member_name.lexeme)
+    if (member == null) {
+        abort(expression.member_name.location, clone(object_type.name).append(" has no such member: ").append(expression.member_name.lexeme))
+    }
+    if (member.type.is(IR_Struct_Type)) {
+        return create_ir_pointer_type(member.type)
+    }
+    return member.type
 }
 
 deduce_variable_expression_type :: (self: @IR_Builder, expression: @Variable_Expression) -> @IR_Type {
@@ -1509,7 +1545,7 @@ create_parser :: (tokens: @List) -> @Parser {
 parse :: (tokens: @List) -> @Compilation_Unit {
     parser: @Parser = create_parser(tokens)
     parser.compilation_unit.statements = parser.parse_statements()
-    token: @Token = parser.tokens.current()
+    token: @Token = parser.tokens.current() as @Token
     if ((token.is(End_Of_File_Token)) == false) {
         abort(parser, token)
     }
