@@ -114,6 +114,9 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         instruction: @IR_Direct_Jump_Instruction = instruction as @IR_Direct_Jump_Instruction
         return file.write("jump").write('(').write("block.").write(instruction.block.id).write(')').end_line()
     }
+    if (instruction.is(IR_Divide_Instruction)) {
+        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("div").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+    }
     if (instruction.is(IR_Equals_Comparison_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
@@ -134,6 +137,9 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     }
     if (instruction.is(IR_Load_Struct_Member_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_struct_member").write('(').write((instruction as @IR_Load_Struct_Member_Instruction).struct_pointer_value).write(", ").write((instruction as @IR_Load_Struct_Member_Instruction).struct_type_member.name).write(')').end_line()
+    }
+    if (instruction.is(IR_Modulo_Instruction)) {
+        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("mul").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
     }
     if (instruction.is(IR_Multiply_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("mul").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
@@ -766,6 +772,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
     if (expression.is(Cast_Expression)) {
         return self.convert_cast_expression(expression as @Cast_Expression)
     }
+    if (expression.is(Divide_Expression)) {
+        return self.convert_divide_expression(expression as @Divide_Expression)
+    }
     if (expression.is(Equals_Expression)) {
         return self.convert_equals_expression(expression as @Equals_Expression)
     }
@@ -792,6 +801,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
     }
     if (expression.is(Member_Access_Expression)) {
         return self.convert_member_access_expression(expression as @Member_Access_Expression)
+    }
+    if (expression.is(Modulo_Expression)) {
+        return self.convert_modulo_expression(expression as @Modulo_Expression)
     }
     if (expression.is(Multiply_Expression)) {
         return self.convert_multiply_expression(expression as @Multiply_Expression)
@@ -925,6 +937,23 @@ convert_cast_expression :: (self: @IR_Builder, cast_expression: @Cast_Expression
         abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
     }
     abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
+}
+
+convert_divide_expression :: (self: @IR_Builder, expression: @Divide_Expression) -> @IR_Value {
+    left_value: @IR_Value = self.convert_expression(expression.left_expression)
+    right_value: @IR_Value = self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    result_value: @IR_Value = self.create_temp_value(left_value.type)
+    self.current_block.append(new IR_Divide_Instruction.init(result_value, left_value, right_value))
+    return result_value
 }
 
 convert_equals_expression :: (self: @IR_Builder, expression: @Equals_Expression) -> @IR_Value {
@@ -1099,6 +1128,23 @@ convert_member_access_expression_address :: (self: @IR_Builder, member_access_ex
         return self.convert_member_access_expression(member_access_expression)
     }
     abort(member_access_expression.location, result_type.object_type)
+}
+
+convert_modulo_expression :: (self: @IR_Builder, expression: @Modulo_Expression) -> @IR_Value {
+    left_value: @IR_Value = self.convert_expression(expression.left_expression)
+    right_value: @IR_Value = self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    result_value: @IR_Value = self.create_temp_value(left_value.type)
+    self.current_block.append(new IR_Modulo_Instruction.init(result_value, left_value, right_value))
+    return result_value
 }
 
 convert_multiply_expression :: (self: @IR_Builder, expression: @Multiply_Expression) -> @IR_Value {
@@ -1671,6 +1717,9 @@ IR_Add_Instruction :: struct : IR_Binary_Instruction {
 IR_Comparison_Instruction :: struct : IR_Binary_Instruction {
 }
 
+IR_Divide_Instruction :: struct : IR_Binary_Instruction {
+}
+
 IR_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
 }
 
@@ -1684,6 +1733,9 @@ IR_Less_Than_Comparison_Instruction :: struct : IR_Comparison_Instruction {
 }
 
 IR_Less_Than_Or_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Modulo_Instruction :: struct : IR_Binary_Instruction {
 }
 
 IR_Multiply_Instruction :: struct : IR_Binary_Instruction {
