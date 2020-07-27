@@ -729,6 +729,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
     if (expression.is(Logic_And_Expression)) {
         return self.convert_logic_and_expression(expression as @Logic_And_Expression)
     }
+    if (expression.is(Logic_Or_Expression)) {
+        return self.convert_logic_or_expression(expression as @Logic_Or_Expression)
+    }
     if (expression.is(Member_Access_Expression)) {
         return self.convert_member_access_expression(expression as @Member_Access_Expression)
     }
@@ -881,6 +884,26 @@ convert_logic_and_expression :: (self: @IR_Builder, expression: @Logic_And_Expre
         abort(expression.left_expression.location, "Must be a boolean expression")
     }
     self.current_block.append(create_ir_jump_instruction(left_value, next_block, end_block))
+    self.current_block = next_block
+    right_value: @IR_Value = self.convert_expression(expression.right_expression)
+    if (right_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.right_expression.location, "Must be a boolean expression")
+    }
+    self.current_block.append(create_ir_jump_instruction(end_block))
+    self.current_block = end_block
+    result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
+    \ TODO: self.current_block.append(new IR_Phi_Instruction.init(result_value, left_value, right_value))
+    return result_value
+}
+
+convert_logic_or_expression :: (self: @IR_Builder, expression: @Logic_Or_Expression) -> @IR_Value {
+    next_block: @IR_Block = self.current_block.function.create_block()
+    end_block: @IR_Block = self.current_block.function.create_block()
+    left_value: @IR_Value = self.convert_expression(expression.left_expression)
+    if (left_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.left_expression.location, "Must be a boolean expression")
+    }
+    self.current_block.append(create_ir_jump_instruction(left_value, end_block, next_block))
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
