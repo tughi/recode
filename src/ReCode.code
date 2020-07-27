@@ -154,6 +154,10 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     if (instruction.is(IR_Set_Instruction)) {
         return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Set_Instruction).value).end_line()
     }
+    if (instruction.is(IR_Store_Array_Item_Instruction)) {
+        instruction: @IR_Store_Array_Item_Instruction = instruction as @IR_Store_Array_Item_Instruction
+        return file.write("store_array_item").write('(').write(instruction.array_value).write(", ").write(instruction.index_value).write(", ").write(instruction.value).write(')').end_line()
+    }
     if (instruction.is(IR_Store_Struct_Member_Instruction)) {
         instruction: @IR_Store_Struct_Member_Instruction = instruction as @IR_Store_Struct_Member_Instruction
         return file.write("store_struct_member").write('(').write(instruction.struct_pointer_value).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.value).write(')').end_line()
@@ -595,20 +599,22 @@ convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
 }
 
 convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assignment_Statement) -> Nothing {
-    value: @IR_Value = self.convert_expression(assignment_statement.value_expression)
-    if (assignment_statement.destination.is(Variable_Expression)) {
-        variable_expression: @Variable_Expression = assignment_statement.destination as @Variable_Expression
-        variable_name: @String = variable_expression.name.lexeme
-        variable: @IR_Variable = self.get_variable(variable_name)
-        if (variable == null) {
-            abort(variable_expression.location, clone("Undeclared variable: ").append(variable_name))
+    if (assignment_statement.destination.is(Array_Access_Expression)) {
+        array_access_expression: @Array_Access_Expression = assignment_statement.destination as @Array_Access_Expression
+        array_item_index_value: @IR_Value = self.convert_expression(array_access_expression.index_expression)
+        value: @IR_Value = self.convert_expression(assignment_statement.value_expression)
+        array_address: @IR_Value = self.convert_expression_address(array_access_expression.object)
+        if (array_address.type.is(IR_Pointer_Type) == false) {
+            abort(assignment_statement.location, clone("Not an array pointer"))
         }
-        if (variable.type.accepts(value.type) == false) {
-            abort(variable_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
+        array_item_type: @IR_Type = (array_address.type as @IR_Pointer_Type).pointed_type
+        if (array_item_type.accepts(value.type) == false) {
+            abort(assignment_statement.value_expression.location, "Invalid expression type")
         }
-        self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), value))
+        self.current_block.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value))
         return
     }
+    value: @IR_Value = self.convert_expression(assignment_statement.value_expression)
     if (assignment_statement.destination.is(Member_Access_Expression)) {
         member_access_expression: @Member_Access_Expression = assignment_statement.destination as @Member_Access_Expression
         object_address_value: @IR_Value = self.convert_expression_address(member_access_expression.object)
@@ -627,6 +633,19 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assig
             abort(assignment_statement.value_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(struct_type_member.type.name).append("' struct member"))
         }
         self.current_block.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, value))
+        return
+    }
+    if (assignment_statement.destination.is(Variable_Expression)) {
+        variable_expression: @Variable_Expression = assignment_statement.destination as @Variable_Expression
+        variable_name: @String = variable_expression.name.lexeme
+        variable: @IR_Variable = self.get_variable(variable_name)
+        if (variable == null) {
+            abort(variable_expression.location, clone("Undeclared variable: ").append(variable_name))
+        }
+        if (variable.type.accepts(value.type) == false) {
+            abort(variable_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
+        }
+        self.current_block.append(create_ir_set_instruction(self.add_named_value(create_ir_variable_value(variable)), value))
         return
     }
     abort(assignment_statement.location, assignment_statement.destination.object_type)
@@ -1568,6 +1587,21 @@ create_ir_load_struct_member_instruction :: (result_value: @IR_Value, struct_poi
     instruction.struct_pointer_value = struct_pointer_value
     instruction.struct_type_member = struct_type_member
     instruction.load_address = load_address
+    return instruction
+}
+
+IR_Store_Array_Item_Instruction :: struct : IR_Instruction {
+    array_value: @IR_Value
+    index_value: @IR_Value
+    value: @IR_Value
+}
+
+create_ir_store_array_item_instruction :: (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
+    instruction: @IR_Store_Array_Item_Instruction = new IR_Store_Array_Item_Instruction
+    instruction.init(null)
+    instruction.array_value = array_value
+    instruction.index_value = index_value
+    instruction.value = value
     return instruction
 }
 
