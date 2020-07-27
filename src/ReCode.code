@@ -189,7 +189,7 @@ IR_Loop :: struct {
 create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
     builder: @IR_Builder = new IR_Builder
     builder.compilation_unit = compilation_unit
-    builder.context = create_ir_builder_context(null)
+    builder.context = create_ir_builder_context(null, false)
     builder.named_types = create_list()
     builder.named_types.append(new IR_Any_Type.init("Any"))
     builder.named_types.append(new IR_Boolean_Type.init("Boolean"))
@@ -206,11 +206,15 @@ create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
     return builder
 }
 
-create_ir_builder_context :: (parent: @IR_Builder_Context) -> @IR_Builder_Context {
+create_ir_builder_context :: (parent: @IR_Builder_Context, reuse_named_values: Boolean) -> @IR_Builder_Context {
     context: @IR_Builder_Context = new IR_Builder_Context
     context.parent = parent
     context.variables = create_list()
-    context.named_values = create_list()
+    if (reuse_named_values) {
+        context.named_values = parent.named_values
+    } else {
+        context.named_values = create_list()
+    }
     return context
 }
 
@@ -515,7 +519,7 @@ create_function :: (self: @IR_Builder, function_statement: @Function_Statement) 
 build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -> Nothing {
     function: @IR_Function = function_statement.ir_function
 
-    self.context = create_ir_builder_context(self.context)
+    self.context = create_ir_builder_context(self.context, false)
 
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
@@ -614,11 +618,13 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @Assig
 }
 
 convert_block_statement :: (self: @IR_Builder, statement: @Block_Statement) -> Nothing {
+    self.context = create_ir_builder_context(self.context, true)
     block_statements: @List_Iterator = statement.statements.create_iterator()
     while (block_statements.has_next()) {
         block_statement: @Statement = block_statements.next() as @Statement
         self.convert_statement(block_statement)
     }
+    self.context = self.context.parent
 }
 
 convert_break_statement :: (self: @IR_Builder, statement: @Break_Statement) -> Nothing {
@@ -2855,7 +2861,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     }
 
     if (statement.is(If_Statement)) {
-        statement: @If_Statement = statement
+        statement: @If_Statement = statement as @If_Statement
         file.write("if (").write(statement.condition).write(") ").write(statement.true_block, alignment)
         if (statement.false_block != null) {
             file.write(" else ").write(statement.false_block, alignment)
@@ -2864,12 +2870,12 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     }
 
     if (statement.is(Loop_Statement)) {
-        statement: @Loop_Statement = statement
+        statement: @Loop_Statement = statement as @Loop_Statement
         return file.write("loop ").write(statement.block, alignment)
     }
 
     if (statement.is(Return_Statement)) {
-        statement: @Return_Statement = statement
+        statement: @Return_Statement = statement as @Return_Statement
         file.write("return")
         if (statement.value_expression != null) {
             file.write(" ").write(statement.value_expression)
@@ -2878,7 +2884,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     }
 
     if (statement.is(Struct_Statement)) {
-        statement: @Struct_Statement = statement
+        statement: @Struct_Statement = statement as @Struct_Statement
         file.write(statement.name).write(" :: struct")
         if (statement.base_type != null) {
             file.write(" : ").write(statement.base_type)
@@ -2889,14 +2895,14 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         file.write(" {").end_line()
         members: @List_Iterator = statement.members.create_iterator()
         while (members.has_next()) {
-            member: @Struct_Member = members.next()
+            member: @Struct_Member = members.next() as @Struct_Member
             file.write_source_line(member.location, alignment + 1).write(member.name).write(": ").write(member.value_type).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
     }
 
     if (statement.is(Variable_Statement)) {
-        statement: @Variable_Statement = statement
+        statement: @Variable_Statement = statement as @Variable_Statement
         file.write((statement as @Variable_Statement).name)
         if (statement.value_type != null) {
             file.write(": ").write(statement.value_type)
@@ -2913,7 +2919,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     }
 
     if (statement.is(While_Statement)) {
-        statement: @While_Statement = statement
+        statement: @While_Statement = statement as @While_Statement
         return file.write("while (").write(statement.condition).write(") ").write(statement.block, alignment)
     }
 
