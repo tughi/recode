@@ -891,6 +891,13 @@ convert_cast_expression :: (self: @IR_Builder, cast_expression: @Cast_Expression
         }
         abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
     }
+    if (value.type.is(IR_Int32_Type)) {
+        if (result_value.type.is(IR_Int_Type) || result_value.type.is(IR_Int8_Type)) {
+            self.current_block.append(create_ir_cast_instruction(result_value, value))
+            return result_value
+        }
+        abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
+    }
     if (value.type.is(IR_Int8_Type)) {
         if (result_value.type.is(IR_Int_Type)) {
             self.current_block.append(create_ir_cast_instruction(result_value, value))
