@@ -884,11 +884,19 @@ convert_cast_expression :: (self: @IR_Builder, cast_expression: @Cast_Expression
         self.current_block.append(create_ir_set_instruction(result_value, value))
         return result_value
     }
+    if (value.type.is(IR_Int_Type)) {
+        if (result_value.type.is(IR_Int8_Type)) {
+            self.current_block.append(create_ir_cast_instruction(result_value, value))
+            return result_value
+        }
+        abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
+    }
     if (value.type.is(IR_Int8_Type)) {
         if (result_value.type.is(IR_Int_Type)) {
             self.current_block.append(create_ir_cast_instruction(result_value, value))
             return result_value
         }
+        abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
     }
     abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
 }
@@ -3642,7 +3650,7 @@ create_source :: (file_name: @String) -> @Source {
     file: @FILE = fopen(file_name.data, "r".data)
 
     content_size: Int = 1024
-    content: @Int8 = malloc(content_size)
+    content: @Int8 = malloc(content_size) as @Int8
     content_length: Int = 0
     loop {
         char: Int32 = fgetc(file)
