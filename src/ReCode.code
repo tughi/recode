@@ -143,6 +143,9 @@ write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         instruction: @IR_Store_Struct_Member_Instruction = instruction as @IR_Store_Struct_Member_Instruction
         return file.write("store_struct_member").write('(').write(instruction.struct_pointer_value).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.value).write(')').end_line()
     }
+    if (instruction.is(IR_Substract_Instruction)) {
+        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("sub").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+    }
     abort(clone("Unsupported type: ").append(instruction.object_type.name))
 }
 
@@ -747,6 +750,9 @@ convert_expression :: (self: @IR_Builder, expression: @Expression) -> @IR_Value 
     if (expression.is(Not_Equals_Expression)) {
         return self.convert_not_equals_expression(expression as @Not_Equals_Expression)
     }
+    if (expression.is(Substract_Expression)) {
+        return self.convert_substract_expression(expression as @Substract_Expression)
+    }
     if (expression.is(Variable_Expression)) {
         return self.convert_variable_expression(expression as @Variable_Expression)
     }
@@ -990,6 +996,23 @@ convert_not_equals_expression :: (self: @IR_Builder, expression: @Not_Equals_Exp
     }
     result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
     self.current_block.append(new IR_Not_Equals_Comparison_Instruction.init(result_value, left_value, right_value))
+    return result_value
+}
+
+convert_substract_expression :: (self: @IR_Builder, expression: @Substract_Expression) -> @IR_Value {
+    left_value: @IR_Value = self.convert_expression(expression.left_expression)
+    right_value: @IR_Value = self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    result_value: @IR_Value = self.create_temp_value(left_value.type)
+    self.current_block.append(new IR_Substract_Instruction.init(result_value, left_value, right_value))
     return result_value
 }
 
@@ -1491,6 +1514,9 @@ IR_Multiply_Instruction :: struct : IR_Binary_Instruction {
 IR_Not_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
 }
 
+IR_Substract_Instruction :: struct : IR_Binary_Instruction {
+}
+
 \ -------------------------------------------------------------------------------------------------
 \       Parser
 \ -------------------------------------------------------------------------------------------------
@@ -1765,7 +1791,7 @@ parse_struct_members :: (self: @Parser, struct_members: @List) -> Nothing {
 
         if (self.matches(self.optional_space, self.required_identifier)) {
             self.consume_space(self.current_alignment * 4)
-            member_name: @Identifier_Token = self.consume(self.required_identifier)
+            member_name: @Identifier_Token = self.consume(self.required_identifier) as @Identifier_Token
             self.consume_space(0)
             self.consume(self.required_colon)
             self.consume_space(1)
@@ -1832,7 +1858,7 @@ parse_function_parameters :: (self: @Parser) -> @List {
 \ function_parameter
 \   : IDENTIFIER ":" value_type
 parse_function_parameter :: (self: @Parser) -> @Function_Parameter {
-    parameter_name: @Identifier_Token = self.consume(self.required_identifier)
+    parameter_name: @Identifier_Token = self.consume(self.required_identifier) as @Identifier_Token
     self.consume_space(0)
     self.consume(self.required_colon)
     self.consume_space(1)
@@ -2175,10 +2201,10 @@ consume_empty_line :: (self: @Parser) -> Boolean {
 
 consume_space :: (self: @Parser, expected_space_count: Int) -> Nothing {
     space_count: Int
-    token: @Token = self.tokens.current()
+    token: @Token = self.tokens.current() as @Token
     if (token.is(Space_Token)) {
         self.tokens.next()
-        space: @Space_Token = token
+        space: @Space_Token = token as @Space_Token
         space_count = space.count
     } else {
         space_count = 0
@@ -2197,7 +2223,7 @@ consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) ->
 }
 
 consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> @Token {
-    token: @Token = self.tokens.current()
+    token: @Token = self.tokens.current() as @Token
     first_token: @Token = token
     if (first_matcher.accepts(token)) {
         token = self.tokens.next() as @Token
@@ -2241,7 +2267,7 @@ matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) ->
 
 matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> Boolean {
     self.tokens.save_state()
-    token: @Token = self.tokens.current()
+    token: @Token = self.tokens.current() as @Token
     if (first_matcher.accepts(token)) {
         token = self.tokens.next() as @Token
     } else {
@@ -2356,7 +2382,7 @@ create_space_matcher :: (required: Boolean) -> @Space_Matcher {
 
 accepts :: (self: @Matcher, token: @Token) -> Boolean {
     if (self.is(Other_Matcher)) {
-        self: @Other_Matcher = self
+        self: @Other_Matcher = self as @Other_Matcher
         if (token.is(Other_Token)) {
             return token.lexeme.equals(self.lexeme)
         }
@@ -2369,7 +2395,7 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
         return token.is(Identifier_Token)
     }
     if (self.is(Keyword_Matcher)) {
-        self: @Keyword_Matcher = self
+        self: @Keyword_Matcher = self as @Keyword_Matcher
         if (token.is(Keyword_Token)) {
             return token.lexeme.equals(self.lexeme)
         }
@@ -2777,7 +2803,7 @@ create_array_access_expression :: (object: @Expression, index_expression: @Expre
 write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
     statements: @List_Iterator = compilation_unit.statements.create_iterator()
     while (statements.has_next()) {
-        statement: @Statement = statements.next()
+        statement: @Statement = statements.next() as @Statement
         file.write_source_line(statement.location, 0).write(statement, 0).end_line()
     }
     return file
@@ -2785,7 +2811,7 @@ write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
 
 write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     if (statement.is(Assignment_Statement)) {
-        statement: @Assignment_Statement = statement
+        statement: @Assignment_Statement = statement as @Assignment_Statement
         return file.write(statement.destination).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
     }
 
@@ -2793,7 +2819,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
         file.write('{').end_line()
         block_statements: @List_Iterator = (statement as @Block_Statement).statements.create_iterator()
         while (block_statements.has_next()) {
-            block_statement: @Statement = block_statements.next()
+            block_statement: @Statement = block_statements.next() as @Statement
             file.write_source_line(block_statement.location, alignment + 1).write(block_statement, alignment + 1).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
@@ -2808,7 +2834,7 @@ write :: (file: @FILE, statement: @Statement, alignment: Int) -> @FILE {
     }
 
     if (statement.is(Function_Statement)) {
-        statement: @Function_Statement = statement
+        statement: @Function_Statement = statement as @Function_Statement
         file.write(statement.name).write(" :: (")
         function_parameters: @List_Iterator = statement.parameters.create_iterator()
         if (function_parameters.has_next()) {
