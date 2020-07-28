@@ -285,6 +285,7 @@ get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
 
 add_variable :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable {
     self.context.variables.prepend(variable)
+    return variable
 }
 
 get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
@@ -581,6 +582,13 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
 
     self.current_block = function.create_block()
     self.convert_block_statement(function_statement.body)
+    if (self.current_block.instructions.size > 0 && (self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
+        if (function.return_type.is(IR_Nothing_Type)) {
+            self.current_block.append(create_ir_return_instruction(null))
+        } else {
+            abort(function_statement.location, "Missing return statement")
+        }
+    }
     self.current_block = null
 
     self.context = self.context.parent
@@ -712,13 +720,17 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
         self.current_block.append(create_ir_jump_instruction(condition_value, true_block, false_block))
         self.current_block = false_block
         self.convert_block_statement(statement.false_block)
-        self.current_block.append(create_ir_jump_instruction(end_block))
+        if ((self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
+            self.current_block.append(create_ir_jump_instruction(end_block))
+        }
     } else {
         self.current_block.append(create_ir_jump_instruction(condition_value, true_block, end_block))
     }
     self.current_block = true_block
     self.convert_block_statement(statement.true_block)
-    self.current_block.append(create_ir_jump_instruction(end_block))
+    if ((self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
+        self.current_block.append(create_ir_jump_instruction(end_block))
+    }
     self.current_block = end_block
 }
 
@@ -1577,6 +1589,29 @@ init :: (self: @IR_Instruction, result_value: @IR_Value) -> @IR_Instruction {
     return self
 }
 
+is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
+    if (self == null) {
+        return false
+    }
+    if (self.is(IR_Jump_Instruction) || self.is(IR_Return_Instruction)) {
+        return true
+    }
+    if (self.is(IR_Call_Instruction)) {
+        self: @IR_Call_Instruction = self as @IR_Call_Instruction
+        function: @IR_Function = self.function
+        if (function.name.equals("abort")) {
+            return true
+        }
+        if (function.name.equals("exit") && function.parameters.size == 1) {
+            function_parameter: @IR_Function_Parameter = function.parameters.get(0) as @IR_Function_Parameter
+            if (function_parameter.type.is(IR_Int_Type)) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
 IR_Call_Instruction :: struct : IR_Instruction {
     function: @IR_Function
     arguments: @List
@@ -1604,7 +1639,7 @@ create_ir_cast_instruction :: (result_value: @IR_Value, value: @IR_Value) -> @IR
 IR_Jump_Instruction :: struct : IR_Instruction {
 }
 
-IR_Conditional_Jump_Instruction :: struct : IR_Instruction {
+IR_Conditional_Jump_Instruction :: struct : IR_Jump_Instruction {
     condition_value: @IR_Value
     true_block: @IR_Block
     false_block: @IR_Block
@@ -1619,7 +1654,7 @@ create_ir_jump_instruction :: (condition_value: @IR_Value, true_block: @IR_Block
     return instruction
 }
 
-IR_Direct_Jump_Instruction :: struct : IR_Instruction {
+IR_Direct_Jump_Instruction :: struct : IR_Jump_Instruction {
     block: @IR_Block
 }
 
@@ -3830,6 +3865,25 @@ prepend :: (self: @List, data: @Any) -> Nothing {
     }
     self.first_item = item
     self.size = self.size + 1
+}
+
+get :: (self: @List, index: Int) -> @Any {
+    if (index >= self.size || index < 0) {
+        return null
+    }
+    item: @List_Item = self.first_item
+    while (index > 0) {
+        item = item.next_item
+        index = index - 1
+    }
+    return item.data
+}
+
+last :: (self: @List) -> @Any {
+    if (self.last_item == null) {
+        return null
+    }
+    return self.last_item.data
 }
 
 List_Item :: struct {
