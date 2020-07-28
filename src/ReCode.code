@@ -97,7 +97,22 @@ dump :: (file: @FILE, function: @IR_Function) -> Nothing {
 }
 
 dump :: (file: @FILE, block: @IR_Block) -> @FILE {
-    file.write("block.").write(block.id).write(':').end_line()
+    file.write("block.").write(block.id)
+    block_predecessors: @List_Iterator = block.predecessors.create_iterator()
+    if (block_predecessors.has_next()) {
+        file.write('(')
+        loop {
+            block_predecessor: @IR_Block = block_predecessors.next() as @IR_Block
+            file.write("block.").write(block_predecessor.id)
+            if (block_predecessors.has_next()) {
+                file.write(", ")
+            } else {
+                break
+            }
+        }
+        file.write(')')
+    }
+    file.write(':').end_line()
     block_instructions: @List_Iterator = block.instructions.create_iterator()
     while (block_instructions.has_next()) {
         block_instruction: @IR_Instruction = block_instructions.next() as @IR_Instruction
@@ -704,7 +719,7 @@ convert_break_statement :: (self: @IR_Builder, statement: @Break_Statement) -> N
     if (self.current_loop == null) {
         abort(statement.location, "Break outside of a loop?")
     }
-    self.current_block.append(create_ir_jump_instruction(self.current_loop.end_block))
+    self.current_block.append_jump(self.current_loop.end_block)
 }
 
 convert_expression_statement :: (self: @IR_Builder, statement: @Expression_Statement) -> Nothing {
@@ -717,19 +732,19 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
     end_block: @IR_Block = self.current_block.function.create_block()
     if (statement.false_block != null) {
         false_block: @IR_Block = self.current_block.function.create_block()
-        self.current_block.append(create_ir_jump_instruction(condition_value, true_block, false_block))
+        self.current_block.append_jump(condition_value, true_block, false_block)
         self.current_block = false_block
         self.convert_block_statement(statement.false_block)
         if ((self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
-            self.current_block.append(create_ir_jump_instruction(end_block))
+            self.current_block.append_jump(end_block)
         }
     } else {
-        self.current_block.append(create_ir_jump_instruction(condition_value, true_block, end_block))
+        self.current_block.append_jump(condition_value, true_block, end_block)
     }
     self.current_block = true_block
     self.convert_block_statement(statement.true_block)
     if ((self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
-        self.current_block.append(create_ir_jump_instruction(end_block))
+        self.current_block.append_jump(end_block)
     }
     self.current_block = end_block
 }
@@ -737,11 +752,11 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
 convert_loop_statement :: (self: @IR_Builder, statement: @Loop_Statement) -> Nothing {
     loop_block: @IR_Block = self.current_block.function.create_block()
     end_block: @IR_Block = self.current_block.function.create_block()
-    self.current_block.append(create_ir_jump_instruction(loop_block))
+    self.current_block.append_jump(loop_block)
     self.current_block = loop_block
     self.current_loop = create_ir_loop(self.current_loop, end_block)
     self.convert_block_statement(statement.block)
-    self.current_block.append(create_ir_jump_instruction(loop_block))
+    self.current_block.append_jump(loop_block)
     self.current_block = end_block
     self.current_loop = self.current_loop.parent
 }
@@ -784,14 +799,14 @@ convert_while_statement :: (self: @IR_Builder, statement: @While_Statement) -> N
     condition_block: @IR_Block = self.current_block.function.create_block()
     loop_block: @IR_Block = self.current_block.function.create_block()
     end_block: @IR_Block = self.current_block.function.create_block()
-    self.current_block.append(create_ir_jump_instruction(condition_block))
+    self.current_block.append_jump(condition_block)
     self.current_block = condition_block
     condition_value: @IR_Value = self.convert_expression(statement.condition)
-    self.current_block.append(create_ir_jump_instruction(condition_value, loop_block, end_block))
+    self.current_block.append_jump(condition_value, loop_block, end_block)
     self.current_block = loop_block
     self.current_loop = create_ir_loop(self.current_loop, end_block)
     self.convert_block_statement(statement.block)
-    self.current_block.append(create_ir_jump_instruction(condition_block))
+    self.current_block.append_jump(condition_block)
     self.current_block = end_block
     self.current_loop = self.current_loop.parent
 }
@@ -1098,13 +1113,13 @@ convert_logic_and_expression :: (self: @IR_Builder, expression: @Logic_And_Expre
     if (left_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.left_expression.location, "Must be a boolean expression")
     }
-    self.current_block.append(create_ir_jump_instruction(left_value, next_block, end_block))
+    self.current_block.append_jump(left_value, next_block, end_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.right_expression.location, "Must be a boolean expression")
     }
-    self.current_block.append(create_ir_jump_instruction(end_block))
+    self.current_block.append_jump(end_block)
     self.current_block = end_block
     result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
     \ TODO: self.current_block.append(new IR_Phi_Instruction.init(result_value, left_value, right_value))
@@ -1118,13 +1133,13 @@ convert_logic_or_expression :: (self: @IR_Builder, expression: @Logic_Or_Express
     if (left_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.left_expression.location, "Must be a boolean expression")
     }
-    self.current_block.append(create_ir_jump_instruction(left_value, end_block, next_block))
+    self.current_block.append_jump(left_value, end_block, next_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.right_expression.location, "Must be a boolean expression")
     }
-    self.current_block.append(create_ir_jump_instruction(end_block))
+    self.current_block.append_jump(end_block)
     self.current_block = end_block
     result_value: @IR_Value = self.create_temp_value(self.get_named_type("Boolean"))
     \ TODO: self.current_block.append(new IR_Phi_Instruction.init(result_value, left_value, right_value))
@@ -1526,6 +1541,27 @@ append :: (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
     self.instructions.append(instruction)
 }
 
+append_jump :: (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instruction {
+    instruction: @IR_Direct_Jump_Instruction = new IR_Direct_Jump_Instruction
+    instruction.init(null)
+    instruction.block = block
+    block.predecessors.append(self)
+    self.instructions.append(instruction)
+    return instruction
+}
+
+append_jump :: (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
+    instruction: @IR_Conditional_Jump_Instruction = new IR_Conditional_Jump_Instruction
+    instruction.init(null)
+    instruction.condition_value = condition_value
+    instruction.true_block = true_block
+    true_block.predecessors.append(self)
+    instruction.false_block = false_block
+    false_block.predecessors.append(self)
+    self.instructions.append(instruction)
+    return instruction
+}
+
 IR_Function :: struct : Object {
     location: @Source_Location
     name: @String
@@ -1645,24 +1681,8 @@ IR_Conditional_Jump_Instruction :: struct : IR_Jump_Instruction {
     false_block: @IR_Block
 }
 
-create_ir_jump_instruction :: (condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
-    instruction: @IR_Conditional_Jump_Instruction = new IR_Conditional_Jump_Instruction
-    instruction.init(null)
-    instruction.condition_value = condition_value
-    instruction.true_block = true_block
-    instruction.false_block = false_block
-    return instruction
-}
-
 IR_Direct_Jump_Instruction :: struct : IR_Jump_Instruction {
     block: @IR_Block
-}
-
-create_ir_jump_instruction :: (block: @IR_Block) -> @IR_Direct_Jump_Instruction {
-    instruction: @IR_Direct_Jump_Instruction = new IR_Direct_Jump_Instruction
-    instruction.init(null)
-    instruction.block = block
-    return instruction
 }
 
 IR_Load_Array_Item_Instruction :: struct : IR_Instruction {
