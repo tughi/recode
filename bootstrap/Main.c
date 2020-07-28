@@ -355,7 +355,7 @@ void dump_statements(Statement_List *statements) {
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 3) {
+    if (argc < 3) {
         PANIC(__FILE__, __LINE__, "Usage:\n    %s <INPUT FILE> <OUTPUT FILE>\n", argv[0]);
     }
 

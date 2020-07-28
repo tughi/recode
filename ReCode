@@ -82,7 +82,7 @@ def test():
 
     def compile(old_stage, new_stage):
         compiler = os.path.join('build', old_stage)
-        compiler_args = f'''{os.path.join(os.getcwd(), 'src', 'ReCode.code')} {os.path.join('build', f'{new_stage}')}.s'''
+        compiler_args = f'''{os.path.join(os.getcwd(), 'src', 'ReCode.code')} {os.path.join('build', f'{new_stage}')}.s {os.path.join('build', f'{new_stage}')}.ir'''
         if execute(f'''{compiler} {compiler_args}''', exit_on_error=False) == 0:
             execute(f'''gcc -g -o {os.path.join('build', new_stage)} {os.path.join('build', f'{new_stage}.s')}''', echo=False)
         else:

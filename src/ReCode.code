@@ -2,7 +2,7 @@
 
 \ TODO: change main to: program :: (arguments: @String) -> Nothing
 main :: (argc: Int, argv: @@Int8) -> Nothing {
-    if (argc != 3) {
+    if (argc < 3) {
         stdout.write("Usage:").end_line()
         stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").end_line()
         exit(1)
@@ -14,11 +14,19 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    output_file_name: @String
-    output_file_name = new String.init(argv[2])
+    output_file_name: @String = new String.init(argv[2])
     if (output_file_name.ends_with(".s") == false) {
         stdout.write("'").write(output_file_name).write("' doesn't end with '.s'.").end_line()
         exit(1)
+    }
+
+    dump_file_name: @String = null
+    if (argc >= 4) {
+        dump_file_name = new String.init(argv[3])
+        if (dump_file_name.ends_with(".ir") == false) {
+            stdout.write("'").write(dump_file_name).write("' doesn't end with '.ir'.").end_line()
+            exit(1)
+        }
     }
 
     tokens: @List = scan(source_file_name)
@@ -26,16 +34,29 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
     compilation_unit: @Compilation_Unit = parse(tokens)
     \ stdout.write(compilation_unit).end_line()
 
-    generate(compilation_unit, output_file_name)
+    generate(compilation_unit, output_file_name, dump_file_name)
 }
 
 \ -------------------------------------------------------------------------------------------------
 \       Generator
 \ -------------------------------------------------------------------------------------------------
 
-generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> Nothing {
+generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String, dump_file_name: @String) -> Nothing {
     builder: @IR_Builder = create_ir_builder(compilation_unit)
     builder.build()
+
+    if (dump_file_name != null) {
+        dump_file: @FILE = fopen(dump_file_name.data, "w".data)
+        functions: @List_Iterator = builder.named_functions.create_iterator()
+        while (functions.has_next()) {
+            function: @IR_Function = functions.next() as @IR_Function
+            if (function.blocks.size > 0) {
+                dump_file.dump(function)
+                dump_file.end_line()
+            }
+        }
+        dump_file.fclose()
+    }
 
     output_file: @FILE = fopen(output_file_name.data, "w".data)
 
@@ -56,7 +77,7 @@ generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String) -> 
     output_file.write_line("")
 }
 
-write :: (file: @FILE, function: @IR_Function) -> @FILE {
+dump :: (file: @FILE, function: @IR_Function) -> Nothing {
     file.write(function.name).write(" :: (")
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
@@ -70,113 +91,114 @@ write :: (file: @FILE, function: @IR_Function) -> @FILE {
     function_blocks: @List_Iterator = function.blocks.create_iterator()
     while (function_blocks.has_next()) {
         function_block: @IR_Block = function_blocks.next() as @IR_Block
-        file.write(function_block)
+        file.dump(function_block)
     }
     file.write('}').end_line()
-    return file
 }
 
-write :: (file: @FILE, block: @IR_Block) -> @FILE {
+dump :: (file: @FILE, block: @IR_Block) -> @FILE {
     file.write("block.").write(block.id).write(':').end_line()
     block_instructions: @List_Iterator = block.instructions.create_iterator()
     while (block_instructions.has_next()) {
         block_instruction: @IR_Instruction = block_instructions.next() as @IR_Instruction
-        file.write(block_instruction)
+        file.dump(block_instruction)
     }
     return file
 }
 
-write :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
+dump :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     file.write("   ")
     if (instruction.is(IR_Add_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("add").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" + ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Call_Instruction)) {
-        file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write((instruction as @IR_Call_Instruction).function.name).write(", ")
+        if (instruction.result_value == null) {
+            file.write("call").write('(').write((instruction as @IR_Call_Instruction).function.name)
+        } else {
+            file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write((instruction as @IR_Call_Instruction).function.name)
+        }
         call_arguments: @List_Iterator = (instruction as @IR_Call_Instruction).arguments.create_iterator()
         while (call_arguments.has_next()) {
+            file.write(", ")
             call_argument: @IR_Value = call_arguments.next() as @IR_Value
-            file.write(call_argument)
-            if (call_arguments.has_next()) {
-                file.write(", ")
-            }
+            file.dump(call_argument)
         }
         return file.write(')').end_line()
     }
     if (instruction.is(IR_Cast_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cast").write('(').write((instruction as @IR_Cast_Instruction).value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cast").write('(').dump((instruction as @IR_Cast_Instruction).value).write(')').end_line()
     }
     if (instruction.is(IR_Conditional_Jump_Instruction)) {
         instruction: @IR_Conditional_Jump_Instruction = instruction as @IR_Conditional_Jump_Instruction
-        return file.write("jump").write('(').write(instruction.condition_value).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
+        return file.write("jump").write('(').dump(instruction.condition_value).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
     }
     if (instruction.is(IR_Direct_Jump_Instruction)) {
         instruction: @IR_Direct_Jump_Instruction = instruction as @IR_Direct_Jump_Instruction
         return file.write("jump").write('(').write("block.").write(instruction.block.id).write(')').end_line()
     }
     if (instruction.is(IR_Divide_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("div").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" / ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" == ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Greater_Than_Comparison_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("GREATER_THAN, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" > ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Greater_Than_Or_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("GREATER_OR_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" >= ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("LESS_THAN, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" < ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Less_Than_Or_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("LESS_OR_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" <= ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Load_Array_Item_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_array_item").write('(').write((instruction as @IR_Load_Array_Item_Instruction).array_value).write(", ").write((instruction as @IR_Load_Array_Item_Instruction).index_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_array_item").write('(').dump((instruction as @IR_Load_Array_Item_Instruction).array_value).write(", ").dump((instruction as @IR_Load_Array_Item_Instruction).index_value).write(')').end_line()
     }
     if (instruction.is(IR_Load_Struct_Member_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_struct_member").write('(').write((instruction as @IR_Load_Struct_Member_Instruction).struct_pointer_value).write(", ").write((instruction as @IR_Load_Struct_Member_Instruction).struct_type_member.name).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_struct_member").write('(').dump((instruction as @IR_Load_Struct_Member_Instruction).struct_pointer_value).write(", ").write((instruction as @IR_Load_Struct_Member_Instruction).struct_type_member.name).write(')').end_line()
     }
     if (instruction.is(IR_Modulo_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("mul").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" // ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Multiply_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("mul").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" * ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_New_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("new").write('(').write((instruction as @IR_New_Instruction).type.name).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("new").write('(').write((instruction as @IR_New_Instruction).type.name).write(')').end_line()
     }
     if (instruction.is(IR_Not_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("cmp").write('(').write("NOT_EQUALS, ").write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" != ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     if (instruction.is(IR_Return_Instruction)) {
         instruction: @IR_Return_Instruction = instruction as @IR_Return_Instruction
         if (instruction.return_value == null) {
             return file.write("return").write('(').write(')').end_line()
         }
-        return file.write("return").write('(').write(instruction.return_value).write(')').end_line()
+        return file.write("return").write('(').dump(instruction.return_value).write(')').end_line()
     }
     if (instruction.is(IR_Set_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Set_Instruction).value).end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Set_Instruction).value).end_line()
     }
     if (instruction.is(IR_Store_Array_Item_Instruction)) {
         instruction: @IR_Store_Array_Item_Instruction = instruction as @IR_Store_Array_Item_Instruction
-        return file.write("store_array_item").write('(').write(instruction.array_value).write(", ").write(instruction.index_value).write(", ").write(instruction.value).write(')').end_line()
+        return file.write("store_array_item").write('(').dump(instruction.array_value).write(", ").dump(instruction.index_value).write(", ").dump(instruction.value).write(')').end_line()
     }
     if (instruction.is(IR_Store_Struct_Member_Instruction)) {
         instruction: @IR_Store_Struct_Member_Instruction = instruction as @IR_Store_Struct_Member_Instruction
-        return file.write("store_struct_member").write('(').write(instruction.struct_pointer_value).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.value).write(')').end_line()
+        return file.write("store_struct_member").write('(').dump(instruction.struct_pointer_value).write(", ").write(instruction.struct_type_member.name).write(", ").dump(instruction.value).write(')').end_line()
     }
     if (instruction.is(IR_Substract_Instruction)) {
-        return file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("sub").write('(').write((instruction as @IR_Binary_Instruction).left_value).write(", ").write((instruction as @IR_Binary_Instruction).right_value).write(')').end_line()
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" - ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
     abort(clone("Unsupported type: ").append(instruction.object_type.name))
 }
 
-write :: (file: @FILE, value: @IR_Value) -> @FILE {
+dump :: (file: @FILE, value: @IR_Value) -> @FILE {
     if (value.is(IR_Constant_Value)) {
-        return file.write((value as @IR_Constant_Value).literal)
+        return file.write((value as @IR_Constant_Value).literal.lexeme)
     }
     if (value.is(IR_Named_Value)) {
         return file.write((value as @IR_Named_Value).name).write('.').write((value as @IR_Named_Value).version)
@@ -559,7 +581,6 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
 
     self.current_block = function.create_block()
     self.convert_block_statement(function_statement.body)
-    stdout.write("----------------------------------------- CURRENT FUNCTION -----------------------------------------").end_line().write(self.current_block.function).write("----------------------------------------------------------------------------------------------------").end_line().fflush()
     self.current_block = null
 
     self.context = self.context.parent
@@ -886,7 +907,10 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
         if (call_function == null) {
             abort(callee.member_name.location, clone("No such function: ").append(callee.member_name.lexeme))
         }
-        result_value: @IR_Temp_Value = self.create_temp_value(call_function.return_type)
+        result_value: @IR_Temp_Value = null
+        if (call_function.return_type.is(IR_Nothing_Type) == false) {
+            result_value = self.create_temp_value(call_function.return_type)
+        }
         self.current_block.append(create_ir_call_instruction(result_value, call_function, call_arguments))
         return result_value
     }
@@ -905,7 +929,10 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @Call_Expression
         if (call_function == null) {
             abort(callee.name.location, clone("No such function: ").append(callee.name.lexeme))
         }
-        result_value: @IR_Temp_Value = self.create_temp_value(call_function.return_type)
+        result_value: @IR_Temp_Value = null
+        if (call_function.return_type.is(IR_Nothing_Type) == false) {
+            result_value = self.create_temp_value(call_function.return_type)
+        }
         self.current_block.append(create_ir_call_instruction(result_value, call_function, call_arguments))
         return result_value
     }
