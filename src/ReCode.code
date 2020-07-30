@@ -113,10 +113,10 @@ dump :: (file: @FILE, block: @IR_Block) -> @FILE {
         file.write(')')
     }
     file.write(':').end_line()
-    block_instructions: @List_Iterator = block.instructions.create_iterator()
-    while (block_instructions.has_next()) {
-        block_instruction: @IR_Instruction = block_instructions.next() as @IR_Instruction
+    block_instruction: @IR_Instruction = block.first_instruction
+    while (block_instruction != null) {
         file.dump(block_instruction)
+        block_instruction = block_instruction.next_instruction
     }
     return file
 }
@@ -189,7 +189,9 @@ dump :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     }
     if (instruction.is(IR_Phi_Instruction)) {
         instruction: @IR_Phi_Instruction = instruction as @IR_Phi_Instruction
-        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("phi").write('(').dump(instruction.value1).write(", ").dump(instruction.value2).write(')').end_line()
+        file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("phi").write('(')
+        \ TODO: append phi values
+        return file.write(')').end_line()
     }
     if (instruction.is(IR_Return_Instruction)) {
         instruction: @IR_Return_Instruction = instruction as @IR_Return_Instruction
@@ -327,20 +329,16 @@ get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
 }
 
 get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
-    context: @IR_Builder_Context = self.context
-    loop {
-        values: @List_Iterator = context.named_values.create_iterator()
-        while (values.has_next()) {
-            value: @IR_Named_Value = values.next() as @IR_Named_Value
-            if (value.is(IR_Variable_Value) && (value as @IR_Variable_Value).variable == variable) {
-                return value
-            }
+    current_block_instruction: @IR_Instruction = self.current_block.last_instruction
+    while (current_block_instruction != null) {
+        if (current_block_instruction.result_variable == variable) {
+            return current_block_instruction.result_value
         }
-        context = context.parent
-        if (context == null) {
-            return null
-        }
+        current_block_instruction = current_block_instruction.prev_instruction
     }
+    instruction: @IR_Instruction = self.current_block.preppend(create_ir_phi_instruction(variable))
+    instruction.result_value = self.create_variable_value(variable)
+    return instruction.result_value
 }
 
 create_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
@@ -452,7 +450,7 @@ create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Value {
 
 append :: (self: @IR_Builder, instruction: @IR_Instruction) -> @IR_Value {
     result_variable: @IR_Variable = instruction.result_variable
-    self.current_block.instructions.append(instruction)
+    self.current_block.append(instruction)
     if (result_variable == null) {
         return null
     }
@@ -620,7 +618,7 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
 
     self.current_block = function.create_block()
     self.convert_block_statement(function_statement.body)
-    if (self.current_block.instructions.size > 0 && (self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
+    if (self.current_block.last_instruction != null && self.current_block.last_instruction.is_exit_instruction() == false) {
         if (function.return_type.is(IR_Nothing_Type)) {
             self.append(create_ir_return_instruction(null))
         } else {
@@ -758,7 +756,7 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
         self.current_block.append_jump(condition_value, true_block, false_block)
         self.current_block = false_block
         self.convert_block_statement(statement.false_block)
-        if ((self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
+        if (self.current_block.last_instruction.is_exit_instruction() == false) {
             self.current_block.append_jump(end_block)
         }
     } else {
@@ -766,7 +764,7 @@ convert_if_statement :: (self: @IR_Builder, statement: @If_Statement) -> Nothing
     }
     self.current_block = true_block
     self.convert_block_statement(statement.true_block)
-    if ((self.current_block.instructions.last() as @IR_Instruction).is_exit_instruction() == false) {
+    if (self.current_block.last_instruction.is_exit_instruction() == false) {
         self.current_block.append_jump(end_block)
     }
     self.current_block = end_block
@@ -1114,15 +1112,18 @@ convert_logic_and_expression :: (self: @IR_Builder, expression: @Logic_And_Expre
     if (left_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.left_expression.location, "Must be a boolean expression")
     }
+    result_variable: @IR_Variable = self.create_temp_variable(self.get_named_type("Boolean"))
+    self.append(create_ir_set_instruction(result_variable, left_value))
     self.current_block.append_jump(left_value, next_block, end_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.right_expression.location, "Must be a boolean expression")
     }
+    self.append(create_ir_set_instruction(result_variable, right_value))
     self.current_block.append_jump(end_block)
     self.current_block = end_block
-    return self.append(new IR_Phi_Instruction.init(self.create_temp_variable(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(create_ir_phi_instruction(result_variable))
 }
 
 convert_logic_or_expression :: (self: @IR_Builder, expression: @Logic_Or_Expression) -> @IR_Value {
@@ -1132,15 +1133,18 @@ convert_logic_or_expression :: (self: @IR_Builder, expression: @Logic_Or_Express
     if (left_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.left_expression.location, "Must be a boolean expression")
     }
+    result_variable: @IR_Variable = self.create_temp_variable(self.get_named_type("Boolean"))
+    self.append(create_ir_set_instruction(result_variable, left_value))
     self.current_block.append_jump(left_value, end_block, next_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.right_expression.location, "Must be a boolean expression")
     }
+    self.append(create_ir_set_instruction(result_variable, right_value))
     self.current_block.append_jump(end_block)
     self.current_block = end_block
-    return self.append(new IR_Phi_Instruction.init(self.create_temp_variable(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(create_ir_phi_instruction(result_variable))
 }
 
 convert_member_access_expression :: (self: @IR_Builder, member_access_expression: @Member_Access_Expression) -> @IR_Value {
@@ -1495,10 +1499,7 @@ is_object_type :: (self: @IR_Struct_Type) -> Boolean {
     }
 }
 
-IR_Node :: struct : Object {
-}
-
-IR_Value :: struct : IR_Node {
+IR_Value :: struct : Object {
     type: @IR_Type
 }
 
@@ -1533,11 +1534,42 @@ init :: (self: @IR_Named_Value, type: @IR_Type, name: @String) -> @IR_Named_Valu
     return self
 }
 
-IR_Block :: struct : IR_Node {
+IR_Block :: struct : Object {
     id: Int
     function: @IR_Function
     predecessors: @List
-    instructions: @List
+    first_instruction: @IR_Instruction
+    last_instruction: @IR_Instruction
+}
+
+has_instructions :: (self: @IR_Block) -> Boolean {
+    return self.first_instruction != null
+}
+
+preppend :: (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
+    instruction.parent_block = self
+    instruction.prev_instruction = null
+    instruction.next_instruction = self.first_instruction
+    if (self.first_instruction == null) {
+        self.last_instruction = instruction
+    } else {
+        self.first_instruction.prev_instruction = instruction
+    }
+    self.first_instruction = instruction
+    return instruction
+}
+
+append :: (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
+    instruction.parent_block = self
+    instruction.prev_instruction = self.last_instruction
+    instruction.next_instruction = null
+    if (self.last_instruction == null) {
+        self.first_instruction = instruction
+    } else {
+        self.last_instruction.next_instruction = instruction
+    }
+    self.last_instruction = instruction
+    return instruction
 }
 
 append_jump :: (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instruction {
@@ -1545,7 +1577,7 @@ append_jump :: (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instructio
     instruction.init(null)
     instruction.block = block
     block.predecessors.append(self)
-    self.instructions.append(instruction)
+    self.append(instruction)
     return instruction
 }
 
@@ -1557,7 +1589,7 @@ append_jump :: (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Blo
     true_block.predecessors.append(self)
     instruction.false_block = false_block
     false_block.predecessors.append(self)
-    self.instructions.append(instruction)
+    self.append(instruction)
     return instruction
 }
 
@@ -1574,7 +1606,8 @@ create_block :: (self: @IR_Function) -> @IR_Block {
     block.id = self.blocks.size
     block.function = self
     block.predecessors = create_list()
-    block.instructions = create_list()
+    block.first_instruction = null
+    block.last_instruction = null
     self.blocks.append(block)
     return block
 }
@@ -1618,11 +1651,17 @@ IR_Function_Parameter :: struct : IR_Variable {
 IR_Instruction :: struct : Object {
     result_value: @IR_Value
     result_variable: @IR_Variable
+    parent_block: @IR_Block
+    prev_instruction: @IR_Instruction
+    next_instruction: @IR_Instruction
 }
 
 init :: (self: @IR_Instruction, result_variable: @IR_Variable) -> @IR_Instruction {
     self.result_value = null
     self.result_variable = result_variable
+    self.parent_block = null
+    self.prev_instruction = null
+    self.next_instruction = null
     return self
 }
 
@@ -1826,15 +1865,12 @@ IR_Substract_Instruction :: struct : IR_Binary_Instruction {
 }
 
 IR_Phi_Instruction :: struct : IR_Instruction {
-    value1: @IR_Value
-    value2: @IR_Value
 }
 
-init :: (self: @IR_Phi_Instruction, result_variable: @IR_Variable, value1: @IR_Value, value2: @IR_Value) -> @IR_Phi_Instruction {
-    self.init(result_variable)
-    self.value1 = value1
-    self.value2 = value2
-    return self
+create_ir_phi_instruction :: (result_variable: @IR_Variable) -> @IR_Phi_Instruction {
+    instruction: @IR_Phi_Instruction = new IR_Phi_Instruction
+    instruction.init(result_variable)
+    return instruction
 }
 
 \ -------------------------------------------------------------------------------------------------
