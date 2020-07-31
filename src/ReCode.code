@@ -618,16 +618,60 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
 
     self.current_block = function.create_block()
     self.convert_block_statement(function_statement.body)
-    if (self.current_block.last_instruction != null && self.current_block.last_instruction.is_exit_instruction() == false) {
-        if (function.return_type.is(IR_Nothing_Type)) {
-            self.append(create_ir_return_instruction(null))
+    if (self.current_block.last_instruction == null || self.current_block.last_instruction.is_exit_instruction() == false) {
+        if (self.current_block.predecessors.size == 0) {
+            \ this block is unreachable
+            function.blocks.remove(self.current_block)
         } else {
-            abort(function_statement.location, "Missing return statement")
+            if (function.return_type.is(IR_Nothing_Type)) {
+                self.append(create_ir_return_instruction(null))
+            } else {
+                abort(function_statement.location, "Missing return statement")
+            }
         }
     }
     self.current_block = null
 
     self.context = self.context.parent
+
+    function.remove_redunand_blocks()
+    \ TODO: add predecessor values to all phi instructions
+}
+
+remove_redunand_blocks :: (self: @IR_Function) -> @IR_Function {
+    redo: Boolean = true
+    while (redo) {
+        redo = false
+
+        blocks: @List_Iterator = self.blocks.prune().create_iterator()
+
+        \ skip entry block
+        blocks.next()
+
+        while (blocks.has_next()) {
+            block: @IR_Block = blocks.next() as @IR_Block
+            if (block.predecessors.size == 0) {
+                \ found unreachable block
+                if (block.last_instruction == null) {
+                    blocks.remove_current()
+                } else {
+                    if (block.last_instruction == block.first_instruction && block.last_instruction.is(IR_Direct_Jump_Instruction)) {
+                        instruction: @IR_Direct_Jump_Instruction = block.last_instruction as @IR_Direct_Jump_Instruction
+                        instruction.block.predecessors.remove(block)
+                        instruction.block.predecessors.prune()
+                        blocks.remove_current()
+                        redo = true
+                        break
+                    } else {
+                        abort(self.location, clone("Found non-empty unreachable block: block.").append(block.id))
+                    }
+                }
+            }
+            \ TODO: reduce intermediary jump blocks; the blocks that only have a direct jump instruction
+        }
+    }
+
+    return self
 }
 
 convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
@@ -3679,6 +3723,7 @@ scan_string_token :: (self: @Scanner, token_lexeme: @String, token_location: @So
             }
         }
     }
+    abort(token_location, "Unexpected state")
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -3910,6 +3955,7 @@ create_list :: () -> @List {
 
 append :: (self: @List, data: @Any) -> Nothing {
     item: @List_Item = new List_Item
+    item.is_removed = false
     item.data = data
     item.prev_item = self.last_item
     item.next_item = null
@@ -3924,6 +3970,7 @@ append :: (self: @List, data: @Any) -> Nothing {
 
 prepend :: (self: @List, data: @Any) -> Nothing {
     item: @List_Item = new List_Item
+    item.is_removed = false
     item.data = data
     item.prev_item = null
     item.next_item = self.first_item
@@ -3934,6 +3981,41 @@ prepend :: (self: @List, data: @Any) -> Nothing {
     }
     self.first_item = item
     self.size = self.size + 1
+}
+
+remove :: (self: @List, data: @Any) -> Nothing {
+    item: @List_Item = self.first_item
+    while (item != null) {
+        if (item.data == data) {
+            item.is_removed = true
+            return
+        }
+        item = item.next_item
+    }
+    abort()
+}
+
+prune :: (self: @List) -> @List {
+    item: @List_Item = self.first_item
+    while (item != null) {
+        if (item.is_removed) {
+            if (item.prev_item != null) {
+                item.prev_item.next_item = item.next_item
+            }
+            if (item.next_item != null) {
+                item.next_item.prev_item = item.prev_item
+            }
+            if (self.first_item == item) {
+                self.first_item = item.next_item
+            }
+            if (self.last_item == item) {
+                self.last_item = item.prev_item
+            }
+            self.size = self.size - 1
+        }
+        item = item.next_item
+    }
+    return self
 }
 
 get :: (self: @List, index: Int) -> @Any {
@@ -3959,6 +4041,7 @@ List_Item :: struct {
     prev_item: @List_Item
     next_item: @List_Item
     data: @Any
+    is_removed: Boolean
 }
 
 List_Iterator :: struct {
@@ -3980,6 +4063,10 @@ current :: (self: @List_Iterator) -> @Any {
         return self.current_item.data
     }
     return null
+}
+
+remove_current :: (self: @List_Iterator) -> Nothing {
+    self.current_item.is_removed = true
 }
 
 has_next :: (self: @List_Iterator) -> Boolean {
