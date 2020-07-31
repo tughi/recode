@@ -656,9 +656,9 @@ remove_redunand_blocks :: (self: @IR_Function) -> @IR_Function {
                     blocks.remove_current()
                 } else {
                     if (block.last_instruction == block.first_instruction && block.last_instruction.is(IR_Direct_Jump_Instruction)) {
-                        instruction: @IR_Direct_Jump_Instruction = block.last_instruction as @IR_Direct_Jump_Instruction
-                        instruction.block.predecessors.remove(block)
-                        instruction.block.predecessors.prune()
+                        block_instruction: @IR_Direct_Jump_Instruction = block.last_instruction as @IR_Direct_Jump_Instruction
+                        block_instruction.block.predecessors.remove(block)
+                        block_instruction.block.predecessors.prune()
                         blocks.remove_current()
                         redo = true
                         break
@@ -667,7 +667,31 @@ remove_redunand_blocks :: (self: @IR_Function) -> @IR_Function {
                     }
                 }
             }
-            \ TODO: reduce intermediary jump blocks; the blocks that only have a direct jump instruction
+            if (block.first_instruction == block.last_instruction && block.first_instruction.is(IR_Direct_Jump_Instruction)) {
+                \ found jump block
+                block_predecessor: @IR_Block = block.predecessors.last() as @IR_Block
+                block_successor: @IR_Block = (block.first_instruction as @IR_Direct_Jump_Instruction).block
+                if (block_predecessor.last_instruction.is(IR_Conditional_Jump_Instruction)) {
+                    block.predecessors.remove(block_predecessor).prune()
+                    block_predecessor_instruction: @IR_Conditional_Jump_Instruction = block_predecessor.last_instruction as @IR_Conditional_Jump_Instruction
+                    if (block_predecessor_instruction.false_block == block) {
+                        block_predecessor_instruction.false_block = block_successor
+                    } else {
+                        block_predecessor_instruction.true_block = block_successor
+                    }
+                    block_successor.predecessors.remove(block).prune().append(block_predecessor)
+                    redo = true
+                    break
+                }
+                if (block_predecessor.last_instruction.is(IR_Direct_Jump_Instruction)) {
+                    block.predecessors.remove(block_predecessor).prune()
+                    block_predecessor_instruction: @IR_Direct_Jump_Instruction = block_predecessor.last_instruction as @IR_Direct_Jump_Instruction
+                    block_predecessor_instruction.block = block_successor
+                    block_successor.predecessors.remove(block).prune().append(block_predecessor)
+                    redo = true
+                    break
+                }
+            }
         }
     }
 
@@ -3983,16 +4007,16 @@ prepend :: (self: @List, data: @Any) -> Nothing {
     self.size = self.size + 1
 }
 
-remove :: (self: @List, data: @Any) -> Nothing {
+remove :: (self: @List, data: @Any) -> @List {
     item: @List_Item = self.first_item
     while (item != null) {
         if (item.data == data) {
             item.is_removed = true
-            return
+            break
         }
         item = item.next_item
     }
-    abort()
+    return self
 }
 
 prune :: (self: @List) -> @List {
