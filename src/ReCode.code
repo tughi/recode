@@ -175,6 +175,9 @@ dump :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     if (instruction.is(IR_Load_Struct_Member_Instruction)) {
         return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_struct_member").write('(').dump((instruction as @IR_Load_Struct_Member_Instruction).struct_pointer_value).write(", ").write((instruction as @IR_Load_Struct_Member_Instruction).struct_type_member.name).write(')').end_line()
     }
+    if (instruction.is(IR_Load_Variable_Instruction)) {
+        return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_variable").write('(').write((instruction as @IR_Load_Variable_Instruction).variable.name).write(')').end_line()
+    }
     if (instruction.is(IR_Modulo_Instruction)) {
         return file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value).write(" // ").dump((instruction as @IR_Binary_Instruction).right_value).end_line()
     }
@@ -609,14 +612,15 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
     self.context = create_ir_builder_context(self.context, false)
     self.counter.reset()
 
+    self.current_block = function.create_block()
+
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
         function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
         self.add_variable(function_parameter)
-        self.create_variable_value(function_parameter)
+        self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(function_parameter), function_parameter))
     }
 
-    self.current_block = function.create_block()
     self.convert_block_statement(function_statement.body)
     if (self.current_block.last_instruction == null || self.current_block.last_instruction.is_exit_instruction() == false) {
         if (self.current_block.predecessors.size == 0) {
@@ -635,6 +639,7 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
     self.context = self.context.parent
 
     function.remove_redunand_blocks()
+
     \ TODO: add predecessor values to all phi instructions
 }
 
@@ -1821,18 +1826,15 @@ create_ir_load_struct_member_instruction :: (result_variable: @IR_Variable, stru
     return instruction
 }
 
-IR_Store_Array_Item_Instruction :: struct : IR_Instruction {
-    array_value: @IR_Value
-    index_value: @IR_Value
-    value: @IR_Value
+IR_Load_Variable_Instruction :: struct : IR_Instruction {
+    variable: @IR_Variable
 }
 
-create_ir_store_array_item_instruction :: (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
-    instruction: @IR_Store_Array_Item_Instruction = new IR_Store_Array_Item_Instruction
-    instruction.init(null)
-    instruction.array_value = array_value
-    instruction.index_value = index_value
-    instruction.value = value
+create_ir_load_variable_instruction :: (result_value: @IR_Value, variable: @IR_Variable) -> @IR_Load_Variable_Instruction {
+    instruction: @IR_Load_Variable_Instruction = new IR_Load_Variable_Instruction
+    instruction.init(variable)
+    instruction.result_value = result_value
+    instruction.variable = variable
     return instruction
 }
 
@@ -1865,6 +1867,21 @@ IR_Set_Instruction :: struct : IR_Instruction {
 create_ir_set_instruction :: (result_variable: @IR_Variable, value: @IR_Value) -> @IR_Set_Instruction {
     instruction: @IR_Set_Instruction = new IR_Set_Instruction
     instruction.init(result_variable)
+    instruction.value = value
+    return instruction
+}
+
+IR_Store_Array_Item_Instruction :: struct : IR_Instruction {
+    array_value: @IR_Value
+    index_value: @IR_Value
+    value: @IR_Value
+}
+
+create_ir_store_array_item_instruction :: (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
+    instruction: @IR_Store_Array_Item_Instruction = new IR_Store_Array_Item_Instruction
+    instruction.init(null)
+    instruction.array_value = array_value
+    instruction.index_value = index_value
     instruction.value = value
     return instruction
 }
@@ -1933,11 +1950,13 @@ IR_Substract_Instruction :: struct : IR_Binary_Instruction {
 }
 
 IR_Phi_Instruction :: struct : IR_Instruction {
+    values: @List
 }
 
 create_ir_phi_instruction :: (result_variable: @IR_Variable) -> @IR_Phi_Instruction {
     instruction: @IR_Phi_Instruction = new IR_Phi_Instruction
     instruction.init(result_variable)
+    instruction.values = create_list()
     return instruction
 }
 
