@@ -193,7 +193,18 @@ dump :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
     if (instruction.is(IR_Phi_Instruction)) {
         instruction: @IR_Phi_Instruction = instruction as @IR_Phi_Instruction
         file.dump(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ").write("phi").write('(')
-        \ TODO: append phi values
+        values: @List_Iterator = instruction.values.create_iterator()
+        if (values.has_next()) {
+            loop {
+                value: @IR_Value = values.next() as @IR_Value
+                file.dump(value)
+                if (values.has_next()) {
+                    file.write(", ")
+                } else {
+                    break
+                }
+            }
+        }
         return file.write(')').end_line()
     }
     if (instruction.is(IR_Return_Instruction)) {
@@ -332,6 +343,9 @@ get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
 }
 
 get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
+    if (variable.is(IR_Global_Variable)) {
+        return self.append(create_ir_load_variable_instruction(null, variable))
+    }
     current_block_instruction: @IR_Instruction = self.current_block.last_instruction
     while (current_block_instruction != null) {
         if (current_block_instruction.result_variable == variable) {
@@ -339,7 +353,7 @@ get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
         }
         current_block_instruction = current_block_instruction.prev_instruction
     }
-    instruction: @IR_Instruction = self.current_block.preppend(create_ir_phi_instruction(variable))
+    instruction: @IR_Instruction = self.current_block.prepend(create_ir_phi_instruction(variable))
     instruction.result_value = self.create_variable_value(variable)
     return instruction.result_value
 }
@@ -636,19 +650,19 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
     }
     self.current_block = null
 
+    self.remove_redunand_blocks(function)
+
+    self.populate_phi_instructions(function)
+
     self.context = self.context.parent
-
-    function.remove_redunand_blocks()
-
-    \ TODO: add predecessor values to all phi instructions
 }
 
-remove_redunand_blocks :: (self: @IR_Function) -> @IR_Function {
+remove_redunand_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
     redo: Boolean = true
     while (redo) {
         redo = false
 
-        blocks: @List_Iterator = self.blocks.prune().create_iterator()
+        blocks: @List_Iterator = function.blocks.prune().create_iterator()
 
         \ skip entry block
         blocks.next()
@@ -668,7 +682,7 @@ remove_redunand_blocks :: (self: @IR_Function) -> @IR_Function {
                         redo = true
                         break
                     } else {
-                        abort(self.location, clone("Found non-empty unreachable block: block.").append(block.id))
+                        abort(function.location, clone("Found non-empty unreachable block: block.").append(block.id))
                     }
                 }
             }
@@ -699,8 +713,42 @@ remove_redunand_blocks :: (self: @IR_Function) -> @IR_Function {
             }
         }
     }
+}
 
-    return self
+populate_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
+    blocks: @List_Iterator = function.blocks.create_iterator()
+    while (blocks.has_next()) {
+        block: @IR_Block = blocks.next() as @IR_Block
+        block_instruction: @IR_Instruction = block.first_instruction
+        while (block_instruction != null && block_instruction.is(IR_Phi_Instruction)) {
+            instruction: @IR_Phi_Instruction = block_instruction as @IR_Phi_Instruction
+            block_predecessors: @List_Iterator = block.predecessors.create_iterator()
+            while (block_predecessors.has_next()) {
+                block_predecessor: @IR_Block = block_predecessors.next() as @IR_Block
+                instruction.values.append(self.get_block_variable_value(block_predecessor, instruction.result_variable))
+            }
+            block_instruction = block_instruction.next_instruction
+        }
+    }
+}
+
+get_block_variable_value :: (self: @IR_Builder, block: @IR_Block, variable: @IR_Variable) -> @IR_Value {
+    block_instruction: @IR_Instruction = block.last_instruction
+    while (block_instruction != null) {
+        if (block_instruction.result_variable == variable) {
+            return block_instruction.result_value
+        }
+        block_instruction = block_instruction.prev_instruction
+    }
+    instruction: @IR_Phi_Instruction = create_ir_phi_instruction(variable)
+    instruction.result_value = self.create_variable_value(variable)
+    block.prepend(instruction)
+    block_predecessors: @List_Iterator = block.predecessors.create_iterator()
+    while (block_predecessors.has_next()) {
+        block_predecessor: @IR_Block = block_predecessors.next() as @IR_Block
+        instruction.values.append(self.get_block_variable_value(block_predecessor, variable))
+    }
+    return instruction.result_value
 }
 
 convert_statement :: (self: @IR_Builder, statement: @Statement) -> Nothing {
@@ -1619,7 +1667,7 @@ has_instructions :: (self: @IR_Block) -> Boolean {
     return self.first_instruction != null
 }
 
-preppend :: (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
+prepend :: (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.parent_block = self
     instruction.prev_instruction = null
     instruction.next_instruction = self.first_instruction
