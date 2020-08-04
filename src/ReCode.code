@@ -692,10 +692,12 @@ populate_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -> Noth
         block_instruction: @IR_Instruction = block.first_instruction
         while (block_instruction != null && block_instruction.is(IR_Phi_Instruction)) {
             instruction: @IR_Phi_Instruction = block_instruction as @IR_Phi_Instruction
-            block_predecessors: @List_Iterator = block.predecessors.create_iterator()
-            while (block_predecessors.has_next()) {
-                block_predecessor: @IR_Block = block_predecessors.next() as @IR_Block
-                instruction.values.append(self.get_block_variable_value(block_predecessor, instruction.result_value.variable))
+            if (instruction.values.size == 0) {
+                block_predecessors: @List_Iterator = block.predecessors.create_iterator()
+                while (block_predecessors.has_next()) {
+                    block_predecessor: @IR_Block = block_predecessors.next() as @IR_Block
+                    instruction.values.append(self.get_block_variable_value(block_predecessor, instruction.result_value.variable))
+                }
             }
             block_instruction = block_instruction.next_instruction
         }
