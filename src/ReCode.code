@@ -712,6 +712,9 @@ get_block_variable_value :: (self: @IR_Builder, block: @IR_Block, variable: @IR_
         }
         block_instruction = block_instruction.prev_instruction
     }
+    if (block.predecessors.size == 1) {
+        return self.get_block_variable_value(block.predecessors.last() as @IR_Block, variable)
+    }
     instruction: @IR_Phi_Instruction = create_ir_phi_instruction(self.create_variable_value(variable))
     block.prepend(instruction)
     block_predecessors: @List_Iterator = block.predecessors.create_iterator()
