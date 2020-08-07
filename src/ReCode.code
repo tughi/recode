@@ -629,17 +629,17 @@ build_function :: (self: @IR_Builder, function_statement: @Function_Statement) -
     }
     self.current_block = null
 
-    self.remove_redunand_blocks(function)
+    self.remove_redundant_blocks(function)
     self.populate_phi_instructions(function)
     self.remove_trivial_phi_instructions(function)
+    self.remove_redundant_set_instructions(function)
 
     self.context = self.context.parent
 }
 
-remove_redunand_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
-    redo: Boolean = true
-    while (redo) {
-        redo = false
+remove_redundant_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        repeat: Boolean = false
 
         blocks: @List_Iterator = function.blocks.prune().create_iterator()
 
@@ -658,7 +658,7 @@ remove_redunand_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothing
                         block_instruction.block.predecessors.remove(block)
                         block_instruction.block.predecessors.prune()
                         blocks.remove_current()
-                        redo = true
+                        repeat = true
                         break
                     } else {
                         abort(function.location, clone("Found non-empty unreachable block: block.").append(block.id))
@@ -678,7 +678,7 @@ remove_redunand_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothing
                         block_predecessor_instruction.true_block = block_successor
                     }
                     block_successor.predecessors.remove(block).prune().append(block_predecessor)
-                    redo = true
+                    repeat = true
                     break
                 }
                 if (block_predecessor.last_instruction.is(IR_Direct_Jump_Instruction)) {
@@ -686,10 +686,14 @@ remove_redunand_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothing
                     block_predecessor_instruction: @IR_Direct_Jump_Instruction = block_predecessor.last_instruction as @IR_Direct_Jump_Instruction
                     block_predecessor_instruction.block = block_successor
                     block_successor.predecessors.remove(block).prune().append(block_predecessor)
-                    redo = true
+                    repeat = true
                     break
                 }
             }
+        }
+
+        if (repeat == false) {
+            break
         }
     }
 }
@@ -736,7 +740,7 @@ get_block_variable_value :: (self: @IR_Builder, block: @IR_Block, variable: @IR_
 
 remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
     loop {
-        redo: Boolean = false
+        repeat: Boolean = false
 
         blocks: @List_Iterator = function.blocks.prune().create_iterator()
 
@@ -760,13 +764,42 @@ remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -
                         user_instruction.replace_value(instruction.result_value, instruction.values.last() as @IR_Value)
                     }
                     block.remove(instruction)
-                    redo = true
+                    repeat = true
                 }
                 block_instruction = block_instruction.next_instruction
             }
         }
 
-        if (redo == false) {
+        if (repeat == false) {
+            break
+        }
+    }
+}
+
+remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        repeat: Boolean = false
+
+        blocks: @List_Iterator = function.blocks.prune().create_iterator()
+        while (blocks.has_next()) {
+            block: @IR_Block = blocks.next() as @IR_Block
+
+            block_instruction: @IR_Instruction = block.first_instruction
+            while (block_instruction != null) {
+                if (block_instruction.is(IR_Set_Instruction)) {
+                    instruction: @IR_Set_Instruction = block_instruction as @IR_Set_Instruction
+                    if (instruction.prev_instruction != null && instruction.value.user_instructions.size == 1) {
+                        instruction.prev_instruction.result_value = instruction.result_value
+                        block.remove(instruction)
+                        repeat = true
+                        break
+                    }
+                }
+                block_instruction = block_instruction.next_instruction
+            }
+        }
+
+        if (repeat == false) {
             break
         }
     }
@@ -1355,8 +1388,9 @@ convert_logic_and_expression :: (self: @IR_Builder, expression: @Logic_And_Expre
         abort(expression.left_expression.location, "Must be a boolean expression")
     }
     result_variable: @IR_Variable = self.create_temp_variable(self.get_named_type("Boolean"))
-    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), left_value))
-    self.current_block.append_jump(left_value, next_block, end_block)
+    result_value_left: @IR_Variable_Value = self.create_variable_value(result_variable)
+    self.append(create_ir_set_instruction(result_value_left, left_value))
+    self.current_block.append_jump(result_value_left, next_block, end_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
@@ -1376,8 +1410,9 @@ convert_logic_or_expression :: (self: @IR_Builder, expression: @Logic_Or_Express
         abort(expression.left_expression.location, "Must be a boolean expression")
     }
     result_variable: @IR_Variable = self.create_temp_variable(self.get_named_type("Boolean"))
-    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), left_value))
-    self.current_block.append_jump(left_value, end_block, next_block)
+    result_value_left: @IR_Variable_Value = self.create_variable_value(result_variable)
+    self.append(create_ir_set_instruction(result_value_left, left_value))
+    self.current_block.append_jump(result_value_left, end_block, next_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
