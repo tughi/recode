@@ -77,6 +77,10 @@ generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String, dum
     output_file.write_line("")
 }
 
+\ -------------------------------------------------------------------------------------------------
+\       IR dump
+\ -------------------------------------------------------------------------------------------------
+
 dump :: (file: @FILE, function: @IR_Function) -> Nothing {
     file.write(function.name).write(" :: (")
     function_parameters: @List_Iterator = function.parameters.create_iterator()
@@ -88,15 +92,16 @@ dump :: (file: @FILE, function: @IR_Function) -> Nothing {
         }
     }
     file.write(") -> ").write(function.return_type.name).write(" {").end_line()
-    function_blocks: @List_Iterator = function.blocks.create_iterator()
-    while (function_blocks.has_next()) {
-        function_block: @IR_Block = function_blocks.next() as @IR_Block
-        file.dump(function_block)
-    }
+    dumped_blocks: @@IR_Block = new [@IR_Block; function.blocks.size]
+    file.dump(function.blocks.first() as @IR_Block, dumped_blocks)
     file.write('}').end_line()
 }
 
-dump :: (file: @FILE, block: @IR_Block) -> @FILE {
+dump :: (file: @FILE, block: @IR_Block, dumped_blocks: @@IR_Block) -> @FILE {
+    if (dumped_blocks[block.id - 1] == block) {
+        return file
+    }
+    dumped_blocks[block.id - 1] = block
     file.write("block.").write(block.id)
     block_predecessors: @List_Iterator = block.predecessors.create_iterator()
     if (block_predecessors.has_next()) {
@@ -117,6 +122,15 @@ dump :: (file: @FILE, block: @IR_Block) -> @FILE {
     while (block_instruction != null) {
         file.dump(block_instruction)
         block_instruction = block_instruction.next_instruction
+    }
+    if (block.last_instruction.is(IR_Direct_Jump_Instruction)) {
+        instruction: @IR_Direct_Jump_Instruction = block.last_instruction as @IR_Direct_Jump_Instruction
+        file.dump(instruction.block, dumped_blocks)
+    }
+    if (block.last_instruction.is(IR_Conditional_Jump_Instruction)) {
+        instruction: @IR_Conditional_Jump_Instruction = block.last_instruction as @IR_Conditional_Jump_Instruction
+        file.dump(instruction.true_block, dumped_blocks)
+        file.dump(instruction.false_block, dumped_blocks)
     }
     return file
 }
@@ -185,7 +199,12 @@ dump :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         return file.dump(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value, true).write(" * ").dump((instruction as @IR_Binary_Instruction).right_value, true).end_line()
     }
     if (instruction.is(IR_New_Instruction)) {
-        return file.dump(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("new").write('(').write((instruction as @IR_New_Instruction).type.name).write(')').end_line()
+        instruction: @IR_New_Instruction = instruction as @IR_New_Instruction
+        file.dump(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("new").write('(').write(instruction.type.name)
+        if (instruction.size_value != null) {
+            file.write(", ").dump(instruction.size_value, true)
+        }
+        return file.write(')').end_line()
     }
     if (instruction.is(IR_Not_Equals_Comparison_Instruction)) {
         return file.dump(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value, true).write(" != ").dump((instruction as @IR_Binary_Instruction).right_value, true).end_line()
@@ -422,6 +441,9 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
     }
     if (self.is(IR_Pointer_Type)) {
         self: @IR_Pointer_Type = self as @IR_Pointer_Type
+        if (self.pointed_type.is(IR_Pointer_Type)) {
+            stop: Boolean = true
+        }
         if (other.is(IR_Pointer_Type)) {
             other: @IR_Pointer_Type = other as @IR_Pointer_Type
             if (self.pointed_type == other.pointed_type) {
@@ -433,6 +455,7 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
             if (self.pointed_type.is(IR_Struct_Type) && other.pointed_type.is(IR_Struct_Type)) {
                 return (self.pointed_type as @IR_Struct_Type).is_base_type(other.pointed_type as @IR_Struct_Type)
             }
+            return self.pointed_type.accepts(other.pointed_type)
         }
         if (other.is(IR_Null_Type)) {
             return true
@@ -522,6 +545,9 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @Struct_Statem
 }
 
 convert_value_type :: (self: @IR_Builder, type: @Value_Type) -> @IR_Type {
+    if (type.is(Array_Type)) {
+        return self.convert_array_type(type as @Array_Type)
+    }
     if (type.is(Named_Type)) {
         return self.convert_named_type(type as @Named_Type)
     }
@@ -529,6 +555,10 @@ convert_value_type :: (self: @IR_Builder, type: @Value_Type) -> @IR_Type {
         return self.convert_pointer_type(type as @Pointer_Type)
     }
     abort(type.location, type.object_type)
+}
+
+convert_array_type :: (self: @IR_Builder, type: @Array_Type) -> @IR_Type {
+    return create_ir_array_type(self.convert_value_type(type.item_type), type.size_expression)
 }
 
 convert_named_type :: (self: @IR_Builder, type: @Named_Type) -> @IR_Type {
@@ -1485,7 +1515,12 @@ convert_multiply_expression :: (self: @IR_Builder, expression: @Multiply_Express
 
 convert_new_expression :: (self: @IR_Builder, expression: @New_Expression) -> @IR_Value {
     type: @IR_Type = self.convert_value_type(expression.value_type)
-    return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type))
+    if (type.is(IR_Array_Type)) {
+        type: @IR_Array_Type = type as @IR_Array_Type
+        size_value: @IR_Value = self.convert_expression(type.size_expression)
+        return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type.pointed_type)), type.pointed_type, size_value))
+    }
+    return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null))
 }
 
 convert_not_equals_expression :: (self: @IR_Builder, expression: @Not_Equals_Expression) -> @IR_Value {
@@ -1703,6 +1738,18 @@ create_ir_pointer_type :: (pointed_type: @IR_Type) -> @IR_Pointer_Type {
     type: @IR_Pointer_Type = new IR_Pointer_Type
     type.init(clone("@").append(pointed_type.name))
     type.pointed_type = pointed_type
+    return type
+}
+
+IR_Array_Type :: struct : IR_Pointer_Type {
+    size_expression: @Expression
+}
+
+create_ir_array_type :: (item_type: @IR_Type, size_expression: @Expression) -> @IR_Type {
+    type: @IR_Array_Type = new IR_Array_Type
+    type.init(clone("[").append(item_type.name).append("]"))
+    type.pointed_type = item_type
+    type.size_expression = size_expression
     return type
 }
 
@@ -2065,12 +2112,17 @@ create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR
 
 IR_New_Instruction :: struct : IR_Instruction {
     type: @IR_Type
+    size_value: @IR_Value
 }
 
-create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type) -> @IR_New_Instruction {
+create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, size_value: @IR_Value) -> @IR_New_Instruction {
     instruction: @IR_New_Instruction = new IR_New_Instruction
     instruction.init(result_value)
     instruction.type = type
+    instruction.size_value = size_value
+    if (size_value != null) {
+        size_value.user_instructions.append(instruction)
+    }
     return instruction
 }
 
@@ -2256,6 +2308,7 @@ Parser :: struct {
     required_close_bracket: @Matcher
     required_close_paren: @Matcher
     required_colon: @Matcher
+    required_column: @Matcher
     required_comma: @Matcher
     required_comment: @Matcher
     required_dot: @Matcher
@@ -2304,6 +2357,7 @@ create_parser :: (tokens: @List) -> @Parser {
     parser.required_close_bracket = create_other_matcher(true, "]")
     parser.required_close_paren = create_other_matcher(true, ")")
     parser.required_colon = create_other_matcher(true, ":")
+    parser.required_column = create_other_matcher(true, ";")
     parser.required_comma = create_other_matcher(true, ",")
     parser.required_comment = create_comment_matcher(true)
     parser.required_dot = create_other_matcher(true, ".")
@@ -2648,7 +2702,7 @@ parse_while :: (self: @Parser) -> @Statement {
 \ value_type
 \   : "@" value_type
 \   | IDENTIFIER
-\   | "[" value_type ( ";" INTEGER )? "]"
+\   | "[" value_type ( ";" expression )? "]"
 \   | "(" comma_separated_members? ")" "->" value_type
 parse_value_type :: (self: @Parser) -> @Value_Type {
     if (self.matches(self.required_at)) {
@@ -2656,6 +2710,20 @@ parse_value_type :: (self: @Parser) -> @Value_Type {
         self.consume_space(0)
         value_type: @Value_Type = self.parse_value_type()
         return create_pointer_type(token.location, value_type)
+    }
+    if (self.matches(self.required_open_bracket)) {
+        token: @Token = self.consume(self.required_open_bracket)
+        array_item_type: @Value_Type = self.parse_value_type()
+        if (self.matches(self.optional_space, self.required_column)) {
+            self.consume_space(0)
+            self.consume(self.required_column)
+            self.consume_space(1)
+            array_size_expression: @Expression = self.parse_expression()
+            self.consume_space(0)
+            self.consume(self.required_close_bracket)
+            return create_array_type(token.location, array_item_type, array_size_expression)
+        }
+        return create_array_type(token.location, array_item_type, null)
     }
     return create_named_type(self.consume(self.required_identifier) as @Identifier_Token)
 }
@@ -3347,10 +3415,10 @@ Named_Type :: struct : Value_Type {
 }
 
 create_named_type :: (name: @Identifier_Token) -> @Value_Type {
-    named_type: @Named_Type = new Named_Type
-    named_type.location = name.location
-    named_type.name = name
-    return named_type
+    type: @Named_Type = new Named_Type
+    type.location = name.location
+    type.name = name
+    return type
 }
 
 Pointer_Type :: struct : Value_Type {
@@ -3358,10 +3426,23 @@ Pointer_Type :: struct : Value_Type {
 }
 
 create_pointer_type :: (location: @Source_Location, value_type: @Value_Type) -> @Pointer_Type {
-    pointer_type: @Pointer_Type = new Pointer_Type
-    pointer_type.location = location
-    pointer_type.value_type = value_type
-    return pointer_type
+    type: @Pointer_Type = new Pointer_Type
+    type.location = location
+    type.value_type = value_type
+    return type
+}
+
+Array_Type :: struct : Value_Type {
+    item_type: @Value_Type
+    size_expression: @Expression
+}
+
+create_array_type :: (location: @Source_Location, item_type: @Value_Type, size_expression: @Expression) -> @Array_Type {
+    type: @Array_Type = new Array_Type
+    type.location = location
+    type.item_type = item_type
+    type.size_expression = size_expression
+    return type
 }
 
 Expression :: struct : Object {
@@ -4359,6 +4440,13 @@ get :: (self: @List, index: Int) -> @Any {
         index = index - 1
     }
     return item.data
+}
+
+first :: (self: @List) -> @Any {
+    if (self.first_item == null) {
+        return null
+    }
+    return self.first_item.data
 }
 
 last :: (self: @List) -> @Any {
