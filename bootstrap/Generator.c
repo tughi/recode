@@ -281,7 +281,10 @@ int context__compute_type_size(Context *self, Type *type) {
             return 0;
         case TYPE__ARRAY: {
             int item_type_size = context__compute_type_size(self, type->array_data.item_type);
-            return item_type_size * type->array_data.size;
+            if (type->array_data.size_expression->kind != EXPRESSION__LITERAL && type->array_data.size_expression->literal_data.value->kind != TOKEN__INTEGER) {
+                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Cannot compute size of dynamic arrays", SOURCE(type->location));
+            }
+            return item_type_size * type->array_data.size_expression->literal_data.value->integer_data.value;
         }
         case TYPE__BOOLEAN:
         case TYPE__INT8:
@@ -622,6 +625,10 @@ void infer_expression_type(Context *context, Expression *expression) {
         case EXPRESSION__NEW: {
             expression->inferred_type = type__create_pointer(expression->location, expression->new_data.type);
             context__resolve_type(context, expression->inferred_type);
+            return;
+        }
+        case EXPRESSION__SIZE_OF: {
+            expression->inferred_type = context__get_int_type(context);
             return;
         }
         case EXPRESSION__VARIABLE: {
@@ -1194,10 +1201,22 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             context__resolve_type(context, type);
             Value_Holder type_size_value_holder = { .kind = VALUE_HOLDER__NEW };
             value_holder__acquire_register(&type_size_value_holder, context__get_int_type(context), context);
-            emitf("  mov %s, %d", value_holder__register_name(&type_size_value_holder), context__compute_type_size(context, type));
+            if (type->kind == TYPE__ARRAY) {
+                emitf("  mov %s, %d", value_holder__register_name(&type_size_value_holder), context__compute_type_size(context, type->array_data.item_type));
+                Value_Holder array_size_value_holder = { .kind = VALUE_HOLDER__NEW };
+                emit_expression(context, type->array_data.size_expression, &array_size_value_holder);
+                emitf("  imul %s, %s", value_holder__register_name(&type_size_value_holder), value_holder__register_name(&array_size_value_holder));
+                value_holder__release_register(&array_size_value_holder);
+            } else {
+                emitf("  mov %s, %d", value_holder__register_name(&type_size_value_holder), context__compute_type_size(context, type));
+            }
             value_holder__move_to_register(&type_size_value_holder, REGISTER__RDI, context);
             emits("  call malloc");
-            value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, type), context);
+            if (type->kind == TYPE__ARRAY) {
+                value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, type->array_data.item_type), context);
+            } else {
+                value_holder__acquire_register(result_value_holder, type__create_pointer(expression->location, type), context);
+            }        
             emitf("  mov %s, rax", value_holder__register_name(result_value_holder));
             value_holder__release_register(&type_size_value_holder);
             if (type->kind == TYPE__STRUCT && context__is_object_type(context, type)) {
@@ -1225,6 +1244,11 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
         }
         case EXPRESSION__POINTER_TO: {
             emit_expression_address(context, expression->pointer_to_data.expression, result_value_holder);
+            return;
+        }
+        case EXPRESSION__SIZE_OF: {
+            value_holder__acquire_register(result_value_holder, context__get_int_type(context), context);
+            emitf("  mov %s, %d", value_holder__register_name(result_value_holder), context__compute_type_size(context, expression->size_of_data.type));
             return;
         }
         case EXPRESSION__VARIABLE: {

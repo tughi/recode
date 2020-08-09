@@ -4,14 +4,14 @@
 #include "List.h"
 #include "Token.h"
 
-struct Type;
-struct Expression;
+typedef struct Type Type;
+typedef struct Expression Expression;
 
 typedef struct {
     int is_reference;
     Token *name;
-    struct Type *type;
-    struct Expression *default_value;
+    Type *type;
+    Expression *default_value;
     int struct_offset;
 } Member;
 
@@ -20,8 +20,8 @@ typedef List Member_List;
 typedef struct {
     int is_reference;
     Token *name;
-    struct Type *type;
-    struct Expression *default_value;
+    Type *type;
+    Expression *default_value;
 } Parameter;
 
 typedef List Parameter_List;
@@ -51,15 +51,15 @@ typedef struct Type {
 
     union {
         struct {
-            struct Type *item_type;
-            int size;
+            Type *item_type;
+            struct Expression *size_expression;
         } array_data;
         struct {
             Parameter_List *parameters;
-            struct Type *return_type;
+            Type *return_type;
         } function_data;
         struct {
-            struct Type *type;
+            Type *type;
         } pointer_data;
         struct {
             Token *name;
@@ -70,7 +70,7 @@ typedef struct Type {
     };
 } Type;
 
-Type *type__create_array(Source_Location *location, Type *item_type, int size);
+Type *type__create_array(Source_Location *location, Type *item_type, Expression *size_expression);
 Type *type__create_function(Source_Location *location, Type *return_type, List *parameters);
 Type *type__create_named(Source_Location *location, Token *name);
 Type *type__create_pointer(Source_Location *location, Type *type);
@@ -84,7 +84,7 @@ typedef List Type_List;
 
 typedef struct Argument {
     Token *name;
-    struct Expression *value;
+    Expression *value;
 } Argument;
 
 typedef List Argument_List;
@@ -110,48 +110,48 @@ typedef struct Expression {
 
     union {
         struct {
-            struct Expression *array;
-            struct Expression *index;
+            Expression *array;
+            Expression *index;
         } array_item_data;
         struct {
             Token *operator_token;
-            struct Expression *left_expression;
-            struct Expression *right_expression;
+            Expression *left_expression;
+            Expression *right_expression;
         } binary_data;
         struct {
-            struct Expression *callee;
+            Expression *callee;
             Argument_List *arguments;
         } call_data;
         struct {
-            struct Expression *expression;
+            Expression *expression;
             Type *type;
         } cast_data;
         struct {
-            struct Expression *expression;
+            Expression *expression;
             Type *type;
         } is_data;
         struct {
             Token *value;
         } literal_data;
         struct {
-            struct Expression *object;
+            Expression *object;
             Token *name;
         } member_data;
         struct {
             Type *type;
         } new_data;
         struct {
-            struct Expression *expression;
+            Expression *expression;
         } pointed_value_data;
         struct {
-            struct Expression *expression;
+            Expression *expression;
         } pointer_to_data;
         struct {
             Type *type;
         } size_of_data;
         struct {
             Token *operator_token;
-            struct Expression *expression;
+            Expression *expression;
         } unary_data;
         struct {
             Token *name;

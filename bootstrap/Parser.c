@@ -671,19 +671,15 @@ Type *parse_type(Context *context) {
         consume_space(context, 0);
         Type *item_type = parse_type(context);
         consume_space(context, 0);
-        int array_size = 0;
+        Expression *array_size_expression = NULL;
         if (consume_one(context, NULL, required(is_semicolon))) {
             consume_space(context, 1);
-            Token *array_size_token = consume_one(context, "array size", required(is_integer));
-            array_size = array_size_token->integer_data.value;
-            if (array_size <= 0) {
-                PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Invalid array size: %d", SOURCE(array_size_token->location), array_size);
-            }
+            array_size_expression = parse_expression(context);
             consume_space(context, 0);
         }
         consume_one(context, "]", required(is_close_bracket));
         consume_space(context, 0);
-        return type__create_array(location, item_type, array_size);
+        return type__create_array(location, item_type, array_size_expression);
     }
     if (matches_one(context, required(is_open_paren))) {
         Source_Location *location = consume_one(context, NULL, required(is_open_paren))->location;
