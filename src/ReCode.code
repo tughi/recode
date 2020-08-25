@@ -58,6 +58,40 @@ generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String, dum
     }
 
     output_file: @FILE = fopen(output_file_name.data, "w".data)
+
+    output_file.write("  .file 1 \"").write(compilation_unit.source.file_name).write("\"")
+    output_file.write_line("  .intel_syntax noprefix").end_line()
+
+    functions: @List_Iterator = builder.named_functions.create_iterator()
+    while (functions.has_next()) {
+        function: @IR_Function = functions.next() as @IR_Function
+        if (function.blocks.size > 0) {
+            function.generate(output_file)
+        }
+    }
+
+    output_file.fclose()
+}
+
+generate :: (function: @IR_Function, output_file: @FILE) -> Nothing {
+    output_file.end_line()
+    output_file.write("  .loc 1 ").write(function.location.line).write(' ').write(function.location.column).end_line()
+    output_file.write("  .text").end_line()
+    if (function.name.equals("main")) {
+        output_file.write("  .globl main").end_line()
+        output_file.write(function.name).write(':').end_line()
+    } else {
+        output_file.write(function.name).write('_').write(function.id).write(':').end_line()
+    }
+    output_file.write("  push rbp").end_line()
+    output_file.write("  mov rbp, rsp").end_line()
+
+    \ TODO: generate function body
+
+    output_file.write(".L_").write(function.name).write('_').write(function.id).write("_end:").end_line()
+    output_file.write("  mov rsp, rbp").end_line()
+    output_file.write("  pop rbp").end_line()
+    output_file.write("  ret").end_line()
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -392,6 +426,7 @@ create_global_variable :: (self: @IR_Builder, variable_statement: @AST_Variable_
 
 create_function :: (self: @IR_Builder, function_statement: @AST_Function_Statement) -> @IR_Function {
     function: @IR_Function = new IR_Function
+    function.id = self.named_functions.size + 1
     function.location = function_statement.location
     function.blocks = create_list()
     function.name = function_statement.name.lexeme
@@ -1730,6 +1765,7 @@ remove :: (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
 }
 
 IR_Function :: struct : Object {
+    id: Int
     location: @Source_Location
     name: @String
     parameters: @List
