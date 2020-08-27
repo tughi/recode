@@ -40,6 +40,99 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 \       Generator
 \ -------------------------------------------------------------------------------------------------
 
+MC_Generator :: struct {
+    registers: @List
+}
+
+create_mc_generator :: () -> @MC_Generator {
+    generator: @MC_Generator = new MC_Generator
+    generator.registers = create_list()
+    generator.registers.append(new MC_RAX_Register.init("rax", "eax", "ax", "al"))
+    generator.registers.append(new MC_RCX_Register.init("rcx", "ecx", "cx", "cl"))
+    generator.registers.append(new MC_RDX_Register.init("rdx", "edx", "dx", "dl"))
+    generator.registers.append(new MC_RBX_Register.init("rbx", "ebx", "bx", "bl"))
+    generator.registers.append(new MC_RSI_Register.init("rsi", "esi", "si", "sil"))
+    generator.registers.append(new MC_RDI_Register.init("rdi", "edi", "di", "dil"))
+    generator.registers.append(new MC_R8_Register.init("r8", "r8d", "r8w", "r8b"))
+    generator.registers.append(new MC_R9_Register.init("r9", "r9d", "r9w", "r9b"))
+    generator.registers.append(new MC_R10_Register.init("r10", "r10d", "r10w", "r10b"))
+    generator.registers.append(new MC_R11_Register.init("r11", "r11d", "r11w", "r11b"))
+    generator.registers.append(new MC_R12_Register.init("r12", "r12d", "r12w", "r12b"))
+    generator.registers.append(new MC_R13_Register.init("r13", "r13d", "r13w", "r13b"))
+    generator.registers.append(new MC_R14_Register.init("r14", "r14d", "r14w", "r14b"))
+    generator.registers.append(new MC_R15_Register.init("r15", "r15d", "r15w", "r15b"))
+    return generator
+}
+
+MC_Value_Holder :: struct {
+    variable: @IR_Variable
+    register: @MC_Register
+    address: @MC_Address
+}
+
+MC_Register :: struct : Object {
+    name_q: @String
+    name_d: @String
+    name_w: @String
+    name_b: @String
+}
+
+init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, name_b: @String) -> @MC_Register {
+    self.name_q = name_q
+    self.name_d = name_d
+    self.name_w = name_w
+    self.name_b = name_b
+    return self
+}
+
+MC_RAX_Register :: struct : MC_Register {
+}
+
+MC_RCX_Register :: struct : MC_Register {
+}
+
+MC_RDX_Register :: struct : MC_Register {
+}
+
+MC_RBX_Register :: struct : MC_Register {
+}
+
+MC_RSI_Register :: struct : MC_Register {
+}
+
+MC_RDI_Register :: struct : MC_Register {
+}
+
+MC_R8_Register :: struct : MC_Register {
+}
+
+MC_R9_Register :: struct : MC_Register {
+}
+
+MC_R10_Register :: struct : MC_Register {
+}
+
+MC_R11_Register :: struct : MC_Register {
+}
+
+MC_R12_Register :: struct : MC_Register {
+}
+
+MC_R13_Register :: struct : MC_Register {
+}
+
+MC_R14_Register :: struct : MC_Register {
+}
+
+MC_R15_Register :: struct : MC_Register {
+}
+
+MC_Address :: struct : Object {
+}
+
+MC_Stack_Frame_Address :: struct : MC_Address {
+}
+
 generate :: (compilation_unit: @Compilation_Unit, output_file_name: @String, dump_file_name: @String) -> Nothing {
     builder: @IR_Builder = create_ir_builder(compilation_unit)
     builder.build()
@@ -85,13 +178,20 @@ generate :: (function: @IR_Function, output_file: @FILE) -> Nothing {
     }
     output_file.write("  push rbp").end_line()
     output_file.write("  mov rbp, rsp").end_line()
+    output_file.write("  sub rsp, .S_").write(function.name).write('_').write(function.id).end_line()
 
-    \ TODO: generate function body
+    entry_block: @IR_Block = function.blocks.first() as @IR_Block
+    entry_block.generate(output_file)
 
+    output_file.write("  .set .S_").write(function.name).write('_').write(function.id).write(", ").write(48).end_line()
     output_file.write(".L_").write(function.name).write('_').write(function.id).write("_end:").end_line()
     output_file.write("  mov rsp, rbp").end_line()
     output_file.write("  pop rbp").end_line()
     output_file.write("  ret").end_line()
+}
+
+generate :: (block: @IR_Block, output_file: @FILE) -> Nothing {
+    \ TODO:
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -2114,7 +2214,7 @@ is_trivial :: (self: @IR_Phi_Instruction) -> Boolean {
 }
 
 dump :: (file: @FILE, function: @IR_Function) -> Nothing {
-    file.write(function.name).write(" :: (")
+    file.write(function.name).write('.').write(function.id).write(" :: (")
     function_parameters: @List_Iterator = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
         function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
@@ -2173,10 +2273,11 @@ dump :: (file: @FILE, instruction: @IR_Instruction) -> @FILE {
         return file.dump(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").dump((instruction as @IR_Binary_Instruction).left_value, true).write(" + ").dump((instruction as @IR_Binary_Instruction).right_value, true).end_line()
     }
     if (instruction.is(IR_Call_Instruction)) {
+        instruction: @IR_Call_Instruction = instruction as @IR_Call_Instruction
         if (instruction.result_value == null) {
-            file.write("call").write('(').write((instruction as @IR_Call_Instruction).function.name)
+            file.write("call").write('(').write(instruction.function.name).write('.').write(instruction.function.id)
         } else {
-            file.dump(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write((instruction as @IR_Call_Instruction).function.name)
+            file.dump(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write(instruction.function.name).write('.').write(instruction.function.id)
         }
         call_arguments: @List_Iterator = (instruction as @IR_Call_Instruction).arguments.create_iterator()
         while (call_arguments.has_next()) {
