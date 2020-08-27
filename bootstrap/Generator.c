@@ -959,20 +959,24 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
 
             Argument_List *arguments = expression->call_data.arguments;
             const int arguments_size = list__size(arguments);
-            if (arguments_size > 4) {
+            if (arguments_size > 6) {
                 PANIC(__FILE__, __LINE__, SOURCE_LOCATION "Function calls with %d arguments are not supported yet", SOURCE(expression->location), arguments_size);
             }
-            Value_Holder argument_value_holders[4] = {
+            Value_Holder argument_value_holders[6] = {
+                { .kind = VALUE_HOLDER__NEW },
+                { .kind = VALUE_HOLDER__NEW },
                 { .kind = VALUE_HOLDER__NEW },
                 { .kind = VALUE_HOLDER__NEW },
                 { .kind = VALUE_HOLDER__NEW },
                 { .kind = VALUE_HOLDER__NEW },
             };
-            int argument_register_ids[4] = {
+            int argument_register_ids[6] = {
                 REGISTER__RDI,
                 REGISTER__RSI,
                 REGISTER__RDX,
                 REGISTER__RCX,
+                REGISTER__R08,
+                REGISTER__R09,
             };
             Type_List *argument_types = list__create();
             for (int argument_index = 0; argument_index < arguments_size; argument_index++) {
@@ -988,7 +992,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
             }
 
             int last_argument_register_id = REGISTERS_COUNT;
-            for (int index = 0; index < 4; index++) {
+            for (int index = 0; index < 6; index++) {
                 Value_Holder *argument_value_holder = &argument_value_holders[index];
                 if (argument_value_holder->kind != VALUE_HOLDER__NEW) {
                     value_holder__move_to_register(argument_value_holder, argument_register_ids[index], context);
@@ -1018,7 +1022,7 @@ void emit_expression(Context *context, Expression *expression, Value_Holder *res
                 }
             }
 
-            for (int index = 0; index < 4; index++) {
+            for (int index = 0; index < 6; index++) {
                 if (argument_value_holders[index].kind != VALUE_HOLDER__NEW) {
                     value_holder__release_register(&argument_value_holders[index]);
                 }
@@ -1428,11 +1432,13 @@ void emit_statement(Context *context, Statement *statement) {
                 emits("  push rbp");
                 emits("  mov rbp, rsp");
 
-                int parameter_register_ids[4] = {
+                int parameter_register_ids[6] = {
                     REGISTER__RDI,
                     REGISTER__RSI,
                     REGISTER__RDX,
                     REGISTER__RCX,
+                    REGISTER__R08,
+                    REGISTER__R09,
                 };
                 Parameter_List *function_parameters = statement->function_data.parameters;
                 int function_parameters_size = list__size(function_parameters);
