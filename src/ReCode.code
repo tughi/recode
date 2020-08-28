@@ -48,118 +48,24 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 \ -------------------------------------------------------------------------------------------------
 
 generate :: (build: @IR_Build, output_file_name: @String) -> Nothing {
-    output_file: @FILE = fopen(output_file_name.data, "w".data)
+    generator: @MC_Generator = create_mc_generator(output_file_name)
 
-    output_file.write("  .file 1 \"").write(build.source.file_name).write("\"")
-    output_file.write_line("  .intel_syntax noprefix").end_line()
+    generator.output_file.write("  .file 1 \"").write(build.source.file_name).write("\"")
+    generator.output_file.write_line("  .intel_syntax noprefix").end_line()
 
     functions: @List_Iterator = build.named_functions.create_iterator()
     while (functions.has_next()) {
         function: @IR_Function = functions.next() as @IR_Function
         if (function.blocks.size > 0) {
-            function.generate(output_file)
+            generator.generate(function)
         }
     }
 
-    output_file.fclose()
+    generator.output_file.fclose()
 }
 
-MC_Generator :: struct {
-    registers: @List
-    output_file_name: @String
-    output_file: @FILE
-}
-
-create_mc_generator :: () -> @MC_Generator {
-    generator: @MC_Generator = new MC_Generator
-    generator.registers = create_list()
-    generator.registers.append(new MC_RAX_Register.init("rax", "eax", "ax", "al"))
-    generator.registers.append(new MC_RCX_Register.init("rcx", "ecx", "cx", "cl"))
-    generator.registers.append(new MC_RDX_Register.init("rdx", "edx", "dx", "dl"))
-    generator.registers.append(new MC_RBX_Register.init("rbx", "ebx", "bx", "bl"))
-    generator.registers.append(new MC_RSI_Register.init("rsi", "esi", "si", "sil"))
-    generator.registers.append(new MC_RDI_Register.init("rdi", "edi", "di", "dil"))
-    generator.registers.append(new MC_R8_Register.init("r8", "r8d", "r8w", "r8b"))
-    generator.registers.append(new MC_R9_Register.init("r9", "r9d", "r9w", "r9b"))
-    generator.registers.append(new MC_R10_Register.init("r10", "r10d", "r10w", "r10b"))
-    generator.registers.append(new MC_R11_Register.init("r11", "r11d", "r11w", "r11b"))
-    generator.registers.append(new MC_R12_Register.init("r12", "r12d", "r12w", "r12b"))
-    generator.registers.append(new MC_R13_Register.init("r13", "r13d", "r13w", "r13b"))
-    generator.registers.append(new MC_R14_Register.init("r14", "r14d", "r14w", "r14b"))
-    generator.registers.append(new MC_R15_Register.init("r15", "r15d", "r15w", "r15b"))
-    return generator
-}
-
-MC_Value_Holder :: struct {
-    variable: @IR_Variable
-    register: @MC_Register
-    address: @MC_Address
-}
-
-MC_Register :: struct : Object {
-    name_q: @String
-    name_d: @String
-    name_w: @String
-    name_b: @String
-}
-
-init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, name_b: @String) -> @MC_Register {
-    self.name_q = name_q
-    self.name_d = name_d
-    self.name_w = name_w
-    self.name_b = name_b
-    return self
-}
-
-MC_RAX_Register :: struct : MC_Register {
-}
-
-MC_RCX_Register :: struct : MC_Register {
-}
-
-MC_RDX_Register :: struct : MC_Register {
-}
-
-MC_RBX_Register :: struct : MC_Register {
-}
-
-MC_RSI_Register :: struct : MC_Register {
-}
-
-MC_RDI_Register :: struct : MC_Register {
-}
-
-MC_R8_Register :: struct : MC_Register {
-}
-
-MC_R9_Register :: struct : MC_Register {
-}
-
-MC_R10_Register :: struct : MC_Register {
-}
-
-MC_R11_Register :: struct : MC_Register {
-}
-
-MC_R12_Register :: struct : MC_Register {
-}
-
-MC_R13_Register :: struct : MC_Register {
-}
-
-MC_R14_Register :: struct : MC_Register {
-}
-
-MC_R15_Register :: struct : MC_Register {
-}
-
-MC_Address :: struct : Object {
-}
-
-MC_Stack_Frame_Address :: struct : MC_Address {
-}
-
-generate :: (function: @IR_Function, output_file: @FILE) -> Nothing {
+generate :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
+    output_file: @FILE = self.output_file
     output_file.end_line()
     output_file.write("  .loc 1 ").write(function.location.line).write(' ').write(function.location.column).end_line()
     output_file.write("  .text").end_line()
@@ -171,12 +77,38 @@ generate :: (function: @IR_Function, output_file: @FILE) -> Nothing {
     }
     output_file.write("  push rbp").end_line()
     output_file.write("  mov rbp, rsp").end_line()
-    output_file.write("  sub rsp, .S_").write(function.name).write('_').write(function.id).end_line()
+    output_file.write("  sub rsp, .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).end_line()
+
+    function_parameters: @List_Iterator = function.parameters.create_iterator()
+    if (function_parameters.has_next()) {
+        function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
+        self.map_variable(function_parameter, self.register_rdi)
+        if (function_parameters.has_next()) {
+            function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
+            self.map_variable(function_parameter, self.register_rsi)
+            if (function_parameters.has_next()) {
+                function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
+                self.map_variable(function_parameter, self.register_rdx)
+                if (function_parameters.has_next()) {
+                    function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
+                    self.map_variable(function_parameter, self.register_rcx)
+                    if (function_parameters.has_next()) {
+                        function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
+                        self.map_variable(function_parameter, self.register_r8)
+                        if (function_parameters.has_next()) {
+                            function_parameter: @IR_Function_Parameter = function_parameters.next() as @IR_Function_Parameter
+                            self.map_variable(function_parameter, self.register_r9)
+                        }
+                    }
+                }
+            }
+        }
+    }
 
     entry_block: @IR_Block = function.blocks.first() as @IR_Block
     entry_block.generate(output_file)
 
-    output_file.write("  .set .S_").write(function.name).write('_').write(function.id).write(", ").write(48).end_line()
+    output_file.write("  .set .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).write(", ").write(128).end_line()
     output_file.write(".L_").write(function.name).write('_').write(function.id).write("_end:").end_line()
     output_file.write("  mov rsp, rbp").end_line()
     output_file.write("  pop rbp").end_line()
@@ -185,6 +117,149 @@ generate :: (function: @IR_Function, output_file: @FILE) -> Nothing {
 
 generate :: (block: @IR_Block, output_file: @FILE) -> Nothing {
     \ TODO:
+}
+
+MC_Generator :: struct {
+    output_file_name: @String
+    output_file: @FILE
+    registers: @List
+    register_rax: @MC_Register
+    register_rcx: @MC_Register
+    register_rdx: @MC_Register
+    register_rbx: @MC_Register
+    register_rsi: @MC_Register
+    register_rdi: @MC_Register
+    register_r8: @MC_Register
+    register_r9: @MC_Register
+    register_r10: @MC_Register
+    register_r11: @MC_Register
+    register_r12: @MC_Register
+    register_r13: @MC_Register
+    register_r14: @MC_Register
+    register_r15: @MC_Register
+    first_variable: @MC_Variable
+    last_variable: @MC_Variable
+}
+
+create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
+    generator: @MC_Generator = new MC_Generator
+    generator.output_file_name = output_file_name
+    generator.output_file = fopen(output_file_name.data, "w".data)
+    generator.register_rax = new MC_Register_RAX.init("rax", "eax", "ax", "al")
+    generator.register_rcx = new MC_Register_RCX.init("rcx", "ecx", "cx", "cl")
+    generator.register_rdx = new MC_Register_RDX.init("rdx", "edx", "dx", "dl")
+    generator.register_rbx = new MC_Register_RBX.init("rbx", "ebx", "bx", "bl")
+    generator.register_rsi = new MC_Register_RSI.init("rsi", "esi", "si", "sil")
+    generator.register_rdi = new MC_Register_RDI.init("rdi", "edi", "di", "dil")
+    generator.register_r8 = new MC_Register_R8.init("r8", "r8d", "r8w", "r8b")
+    generator.register_r9 = new MC_Register_R9.init("r9", "r9d", "r9w", "r9b")
+    generator.register_r10 = new MC_Register_R10.init("r10", "r10d", "r10w", "r10b")
+    generator.register_r11 = new MC_Register_R11.init("r11", "r11d", "r11w", "r11b")
+    generator.register_r12 = new MC_Register_R12.init("r12", "r12d", "r12w", "r12b")
+    generator.register_r13 = new MC_Register_R13.init("r13", "r13d", "r13w", "r13b")
+    generator.register_r14 = new MC_Register_R14.init("r14", "r14d", "r14w", "r14b")
+    generator.register_r15 = new MC_Register_R15.init("r15", "r15d", "r15w", "r15b")
+    generator.first_variable = null
+    generator.last_variable = null
+    return generator
+}
+
+map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_Register) -> @MC_Variable {
+    if (register.variable != null) {
+        self.output_file.fflush()
+        abort(clone("Register already mapped to variable: ").append(register.variable.ir_variable.name))
+    }
+    variable: @MC_Variable = self.last_variable
+    while (variable != null && variable.ir_variable != ir_variable) {
+        variable = variable.prev_variable
+    }
+    if (variable == null) {
+        variable = new MC_Variable
+        variable.prev_variable = self.last_variable
+        variable.next_variable = null
+        variable.ir_variable = ir_variable
+        variable.address = null
+        self.last_variable = variable
+        if (self.first_variable == null) {
+            self.first_variable = variable
+        }
+    }
+    variable.register = register
+    register.variable = variable
+    return variable
+}
+
+MC_Variable :: struct {
+    prev_variable: @MC_Variable
+    next_variable: @MC_Variable
+    ir_variable: @IR_Variable
+    register: @MC_Register
+    address: @MC_Address
+}
+
+MC_Register :: struct : Object {
+    name_q: @String
+    name_d: @String
+    name_w: @String
+    name_b: @String
+    variable: @MC_Variable
+}
+
+init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, name_b: @String) -> @MC_Register {
+    self.name_q = name_q
+    self.name_d = name_d
+    self.name_w = name_w
+    self.name_b = name_b
+    self.variable = null
+    return self
+}
+
+MC_Register_RAX :: struct : MC_Register {
+}
+
+MC_Register_RCX :: struct : MC_Register {
+}
+
+MC_Register_RDX :: struct : MC_Register {
+}
+
+MC_Register_RBX :: struct : MC_Register {
+}
+
+MC_Register_RSI :: struct : MC_Register {
+}
+
+MC_Register_RDI :: struct : MC_Register {
+}
+
+MC_Register_R8 :: struct : MC_Register {
+}
+
+MC_Register_R9 :: struct : MC_Register {
+}
+
+MC_Register_R10 :: struct : MC_Register {
+}
+
+MC_Register_R11 :: struct : MC_Register {
+}
+
+MC_Register_R12 :: struct : MC_Register {
+}
+
+MC_Register_R13 :: struct : MC_Register {
+}
+
+MC_Register_R14 :: struct : MC_Register {
+}
+
+MC_Register_R15 :: struct : MC_Register {
+}
+
+MC_Address :: struct : Object {
+}
+
+MC_Stack_Frame_Address :: struct : MC_Address {
 }
 
 \ -------------------------------------------------------------------------------------------------
