@@ -139,6 +139,12 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
 
 generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
     self.output_file.write("  cmp ").write_operand(self, instruction.left_value).write(", ").write_operand(self, instruction.right_value).end_line()
+    \ TODO: remove out-of-scope variables
+    variable: @MC_Variable = self.map_variable(instruction.result_value.variable, self.find_unused_register())
+    if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
+        self.output_file.write("  setl ").write(variable.register.name_b).end_line()
+        return
+    }
     self.abort("Not implemented!")
 }
 
@@ -219,6 +225,28 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator.first_variable = null
     generator.last_variable = null
     return generator
+}
+
+find_unused_register :: (self: @MC_Generator) -> @MC_Register {
+    if (self.register_r15.variable == null) {
+        return self.register_r15
+    }
+    if (self.register_r14.variable == null) {
+        return self.register_r14
+    }
+    if (self.register_r13.variable == null) {
+        return self.register_r13
+    }
+    if (self.register_r12.variable == null) {
+        return self.register_r12
+    }
+    if (self.register_r11.variable == null) {
+        return self.register_r11
+    }
+    if (self.register_r10.variable == null) {
+        return self.register_r10
+    }
+    self.abort("All registered are used")
 }
 
 map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_Register) -> @MC_Variable {
