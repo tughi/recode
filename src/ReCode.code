@@ -57,14 +57,16 @@ generate :: (build: @IR_Build, output_file_name: @String) -> Nothing {
     while (functions.has_next()) {
         function: @IR_Function = functions.next() as @IR_Function
         if (function.blocks.size > 0) {
-            generator.generate(function)
+            generator.generate_function(function)
         }
+        \ TODO: remove this break as soon as the first function is correctly generated
+        break
     }
 
     generator.output_file.fclose()
 }
 
-generate :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
+generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     output_file: @FILE = self.output_file
     output_file.end_line()
     output_file.write("  .loc 1 ").write(function.location.line).write(' ').write(function.location.column).end_line()
@@ -105,8 +107,7 @@ generate :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
         }
     }
 
-    entry_block: @IR_Block = function.blocks.first() as @IR_Block
-    entry_block.generate(output_file)
+    self.generate_block(function.blocks.first() as @IR_Block)
 
     output_file.write("  .set .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).write(", ").write(128).end_line()
     output_file.write(".L_").write(function.name).write('_').write(function.id).write("_end:").end_line()
@@ -115,8 +116,64 @@ generate :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     output_file.write("  ret").end_line()
 }
 
-generate :: (block: @IR_Block, output_file: @FILE) -> Nothing {
-    \ TODO:
+generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
+    output_file: @FILE = self.output_file
+    block_instruction: @IR_Instruction = block.first_instruction
+    while (block_instruction != null) {
+        self.generate_instruction(block_instruction)
+        block_instruction = block_instruction.next_instruction
+    }
+}
+
+generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
+    if (instruction.is(IR_Load_Variable_Instruction)) {
+        self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
+        return
+    }
+    if (instruction.is(IR_Comparison_Instruction)) {
+        self.generate_comparison_instruction(instruction as @IR_Comparison_Instruction)
+        return
+    }
+    self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
+}
+
+generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
+    self.output_file.write("  cmp ").write_operand(self, instruction.left_value).write(", ").write_operand(self, instruction.right_value).end_line()
+    self.abort("Not implemented!")
+}
+
+generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
+    if (instruction.variable.is(IR_Function_Parameter) == false) {
+        stdout.write("Load variable: ").write(instruction.variable.name).end_line()
+        self.abort("Not implemented!")
+    }
+}
+
+write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
+    if (ir_value.is(IR_Constant_Value)) {
+        ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
+        if (ir_value.literal.is(Integer_Token)) {
+            return file.write((ir_value.literal as @Integer_Token).value)
+        }
+        generator.abort(clone("Unsupported constant literal: ").append(ir_value.literal.object_type.name))
+    }
+    if (ir_value.is(IR_Variable_Value)) {
+        ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
+        mc_variable: @MC_Variable = generator.get_variable(ir_value.variable)
+        if (mc_variable == null) {
+            generator.abort("Invalid state")
+        }
+        if (mc_variable.register != null) {
+            return file.write(mc_variable.register.name_q)
+        }
+        generator.abort("Not implemented!")
+    }
+    generator.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
+}
+
+abort :: (self: @MC_Generator, message: @String) -> Nothing {
+    self.output_file.fflush()
+    abort(clone("[Generator] ").append(message))
 }
 
 MC_Generator :: struct {
@@ -186,6 +243,14 @@ map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_R
     }
     variable.register = register
     register.variable = variable
+    return variable
+}
+
+get_variable :: (self: @MC_Generator, ir_variable: @IR_Variable) -> @MC_Variable {
+    variable: @MC_Variable = self.first_variable
+    while (variable != null && variable.ir_variable != ir_variable) {
+        variable = variable.next_variable
+    }
     return variable
 }
 
