@@ -138,7 +138,7 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
 }
 
 generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
-    self.output_file.write("  cmp ").write_operand(self, instruction.left_value).write(", ").write_operand(self, instruction.right_value).end_line()
+    self.output_file.write("  cmp ").write_operand(self, instruction.get_left_value()).write(", ").write_operand(self, instruction.get_right_value()).end_line()
     \ TODO: remove out-of-scope variables
     variable: @MC_Variable = self.map_variable(instruction.result_value.variable, self.find_unused_register())
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
@@ -916,7 +916,8 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
             while (block_instruction != null) {
                 if (block_instruction.is(IR_Set_Instruction)) {
                     instruction: @IR_Set_Instruction = block_instruction as @IR_Set_Instruction
-                    if (instruction.prev_instruction != null && instruction.value.user_instructions.size == 1) {
+                    instruction_value: @IR_Value = instruction.get_value()
+                    if (instruction.prev_instruction != null && instruction_value.user_instructions.size == 1) {
                         instruction.prev_instruction.result_value = instruction.result_value
                         block.remove(instruction)
                         repeat = true
@@ -936,51 +937,6 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
 replace_value :: (instruction: @IR_Instruction, value: @IR_Value, new_value: @IR_Value) -> Nothing {
     value.user_instructions.remove(instruction).prune()
     new_value.user_instructions.append(instruction)
-    if (instruction.is(IR_Binary_Instruction)) {
-        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
-        if (instruction.left_value == value) {
-            instruction.left_value = new_value
-        }
-        if (instruction.right_value == value) {
-            instruction.right_value = new_value
-        }
-        return
-    }
-    if (instruction.is(IR_Call_Instruction)) {
-        instruction: @IR_Call_Instruction = instruction as @IR_Call_Instruction
-        arguments: @List_Iterator = instruction.arguments.create_iterator()
-        while (arguments.has_next()) {
-            argument: @IR_Value = arguments.next() as @IR_Value
-            if (argument == value) {
-                arguments.change(new_value)
-            }
-        }
-        return
-    }
-    if (instruction.is(IR_Cast_Instruction)) {
-        instruction: @IR_Cast_Instruction = instruction as @IR_Cast_Instruction
-        if (instruction.value == value) {
-            instruction.value = new_value
-        }
-        return
-    }
-    if (instruction.is(IR_Load_Array_Item_Instruction)) {
-        instruction: @IR_Load_Array_Item_Instruction = instruction as @IR_Load_Array_Item_Instruction
-        if (instruction.array_value == value) {
-            instruction.array_value = new_value
-        }
-        if (instruction.index_value == value) {
-            instruction.index_value = new_value
-        }
-        return
-    }
-    if (instruction.is(IR_Load_Struct_Member_Instruction)) {
-        instruction: @IR_Load_Struct_Member_Instruction = instruction as @IR_Load_Struct_Member_Instruction
-        if (instruction.struct_pointer_value == value) {
-            instruction.struct_pointer_value = new_value
-        }
-        return
-    }
     if (instruction.is(IR_Phi_Instruction)) {
         instruction: @IR_Phi_Instruction = instruction as @IR_Phi_Instruction
         instruction_values: @List_Iterator = instruction.values.create_iterator()
@@ -992,45 +948,7 @@ replace_value :: (instruction: @IR_Instruction, value: @IR_Value, new_value: @IR
         }
         return
     }
-    if (instruction.is(IR_Return_Instruction)) {
-        instruction: @IR_Return_Instruction = instruction as @IR_Return_Instruction
-        if (instruction.return_value == value) {
-            instruction.return_value = new_value
-        }
-        return
-    }
-    if (instruction.is(IR_Set_Instruction)) {
-        instruction: @IR_Set_Instruction = instruction as @IR_Set_Instruction
-        if (instruction.value == value) {
-            instruction.value = new_value
-        }
-        return
-    }
-    if (instruction.is(IR_Store_Array_Item_Instruction)) {
-        instruction: @IR_Store_Array_Item_Instruction = instruction as @IR_Store_Array_Item_Instruction
-        if (instruction.array_value == value) {
-            instruction.array_value = new_value
-        }
-        if (instruction.index_value == value) {
-            instruction.index_value = new_value
-        }
-        if (instruction.value == value) {
-            instruction.value = new_value
-        }
-        return
-    }
-    if (instruction.is(IR_Store_Struct_Member_Instruction)) {
-        instruction: @IR_Store_Struct_Member_Instruction = instruction as @IR_Store_Struct_Member_Instruction
-        if (instruction.struct_pointer_value == value) {
-            instruction.struct_pointer_value = new_value
-        }
-        if (instruction.value == value) {
-            instruction.value = new_value
-        }
-        return
-    }
-    stderr.end_line().write("Unsupported type: ").write(instruction.object_type.name).end_line()
-    abort()
+    instruction.operand_values.replace(value, new_value)
 }
 
 convert_statement :: (self: @IR_Builder, statement: @AST_Statement) -> Nothing {
@@ -2008,7 +1926,7 @@ append_jump :: (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instructio
 append_jump :: (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
     instruction: @IR_Conditional_Jump_Instruction = new IR_Conditional_Jump_Instruction
     instruction.init(null)
-    instruction.condition_value = condition_value
+    instruction.operand_values.append(condition_value)
     instruction.true_block = true_block
     true_block.predecessors.append(self)
     instruction.false_block = false_block
@@ -2088,6 +2006,7 @@ IR_Function_Parameter :: struct : IR_Variable {
 
 IR_Instruction :: struct : Object {
     result_value: @IR_Variable_Value
+    operand_values: @List
     parent_block: @IR_Block
     prev_instruction: @IR_Instruction
     next_instruction: @IR_Instruction
@@ -2095,6 +2014,7 @@ IR_Instruction :: struct : Object {
 
 init :: (self: @IR_Instruction, result_value: @IR_Variable_Value) -> @IR_Instruction {
     self.result_value = result_value
+    self.operand_values = create_list()
     self.parent_block = null
     self.prev_instruction = null
     self.next_instruction = null
@@ -2133,34 +2053,41 @@ create_ir_call_instruction :: (result_value: @IR_Variable_Value, function: @IR_F
     instruction: @IR_Call_Instruction = new IR_Call_Instruction
     instruction.init(result_value)
     instruction.function = function
-    instruction.arguments = arguments
+    instruction.arguments = instruction.operand_values
     arguments: @List_Iterator = arguments.create_iterator()
     while (arguments.has_next()) {
         value: @IR_Value = arguments.next() as @IR_Value
+        instruction.operand_values.append(value)
         value.user_instructions.append(instruction)
     }
     return instruction
 }
 
 IR_Cast_Instruction :: struct : IR_Instruction {
-    value: @IR_Value
 }
 
 create_ir_cast_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
     instruction: @IR_Cast_Instruction = new IR_Cast_Instruction
     instruction.init(result_value)
-    instruction.value = value
+    instruction.operand_values.append(value)
     value.user_instructions.append(instruction)
     return instruction
+}
+
+get_value :: (self: @IR_Cast_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
 }
 
 IR_Jump_Instruction :: struct : IR_Instruction {
 }
 
 IR_Conditional_Jump_Instruction :: struct : IR_Jump_Instruction {
-    condition_value: @IR_Value
     true_block: @IR_Block
     false_block: @IR_Block
+}
+
+get_condition_value :: (self: @IR_Conditional_Jump_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
 }
 
 IR_Direct_Jump_Instruction :: struct : IR_Jump_Instruction {
@@ -2168,22 +2095,27 @@ IR_Direct_Jump_Instruction :: struct : IR_Jump_Instruction {
 }
 
 IR_Load_Array_Item_Instruction :: struct : IR_Instruction {
-    array_value: @IR_Value
-    index_value: @IR_Value
 }
 
 create_ir_load_array_item_instruction :: (result_value: @IR_Variable_Value, array_value: @IR_Value, index_value: @IR_Value) -> @IR_Load_Array_Item_Instruction {
     instruction: @IR_Load_Array_Item_Instruction = new IR_Load_Array_Item_Instruction
     instruction.init(result_value)
-    instruction.array_value = array_value
-    instruction.index_value = index_value
+    instruction.operand_values.append(array_value)
+    instruction.operand_values.append(index_value)
     array_value.user_instructions.append(instruction)
     index_value.user_instructions.append(instruction)
     return instruction
 }
 
+get_array_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_index_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
+}
+
 IR_Load_Struct_Member_Instruction :: struct : IR_Instruction {
-    struct_pointer_value: @IR_Value
     struct_type_member: @IR_Struct_Type_Member
     load_address: Boolean
 }
@@ -2191,11 +2123,15 @@ IR_Load_Struct_Member_Instruction :: struct : IR_Instruction {
 create_ir_load_struct_member_instruction :: (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
     instruction: @IR_Load_Struct_Member_Instruction = new IR_Load_Struct_Member_Instruction
     instruction.init(result_value)
-    instruction.struct_pointer_value = struct_pointer_value
+    instruction.operand_values.append(struct_pointer_value)
     instruction.struct_type_member = struct_type_member
     instruction.load_address = load_address
     struct_pointer_value.user_instructions.append(instruction)
     return instruction
+}
+
+get_struct_pointer_value :: (self: @IR_Load_Struct_Member_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
 }
 
 IR_Load_Variable_Instruction :: struct : IR_Instruction {
@@ -2211,93 +2147,123 @@ create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR
 
 IR_New_Instruction :: struct : IR_Instruction {
     type: @IR_Type
-    size_value: @IR_Value
 }
 
 create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, size_value: @IR_Value) -> @IR_New_Instruction {
     instruction: @IR_New_Instruction = new IR_New_Instruction
     instruction.init(result_value)
     instruction.type = type
-    instruction.size_value = size_value
+    instruction.operand_values.append(size_value)
     if (size_value != null) {
         size_value.user_instructions.append(instruction)
     }
     return instruction
 }
 
+get_size_value :: (self: @IR_New_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
 IR_Return_Instruction :: struct : IR_Instruction {
-    return_value: @IR_Value
 }
 
 create_ir_return_instruction :: (return_value: @IR_Value) -> @IR_Return_Instruction {
     instruction: @IR_Return_Instruction = new IR_Return_Instruction
     instruction.init(null)
-    instruction.return_value = return_value
+    instruction.operand_values.append(return_value)
     if (return_value != null) {
         return_value.user_instructions.append(instruction)
     }
     return instruction
 }
 
+get_return_value :: (self: @IR_Return_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
 IR_Set_Instruction :: struct : IR_Instruction {
-    value: @IR_Value
 }
 
 create_ir_set_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
     instruction: @IR_Set_Instruction = new IR_Set_Instruction
     instruction.init(result_value)
-    instruction.value = value
+    instruction.operand_values.append(value)
     value.user_instructions.append(instruction)
     return instruction
 }
 
+get_value :: (self: @IR_Set_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
 IR_Store_Array_Item_Instruction :: struct : IR_Instruction {
-    array_value: @IR_Value
-    index_value: @IR_Value
-    value: @IR_Value
 }
 
 create_ir_store_array_item_instruction :: (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
     instruction: @IR_Store_Array_Item_Instruction = new IR_Store_Array_Item_Instruction
     instruction.init(null)
-    instruction.array_value = array_value
-    instruction.index_value = index_value
-    instruction.value = value
+    instruction.operand_values.append(array_value)
+    instruction.operand_values.append(index_value)
+    instruction.operand_values.append(value)
     array_value.user_instructions.append(instruction)
     index_value.user_instructions.append(instruction)
     value.user_instructions.append(instruction)
     return instruction
 }
 
+get_array_value :: (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_index_value :: (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.get(1) as @IR_Value
+}
+
+get_value :: (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
+}
+
 IR_Store_Struct_Member_Instruction :: struct : IR_Instruction {
-    struct_pointer_value: @IR_Value
     struct_type_member: @IR_Struct_Type_Member
-    value: @IR_Value
 }
 
 create_ir_store_struct_member_instruction :: (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
     instruction: @IR_Store_Struct_Member_Instruction = new IR_Store_Struct_Member_Instruction
     instruction.init(null)
-    instruction.struct_pointer_value = struct_pointer_value
+    instruction.operand_values.append(struct_pointer_value)
     instruction.struct_type_member = struct_type_member
-    instruction.value = value
+    instruction.operand_values.append(value)
     struct_pointer_value.user_instructions.append(instruction)
     value.user_instructions.append(instruction)
     return instruction
 }
 
+get_struct_pointer_value :: (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_value :: (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
+}
+
 IR_Binary_Instruction :: struct : IR_Instruction {
-    left_value: @IR_Value
-    right_value: @IR_Value
 }
 
 init :: (self: @IR_Binary_Instruction, result_value: @IR_Variable_Value, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
     self.init(result_value)
-    self.left_value = left_value
-    self.right_value = right_value
+    self.operand_values.append(left_value)
+    self.operand_values.append(right_value)
     left_value.user_instructions.append(self)
     right_value.user_instructions.append(self)
     return self
+}
+
+get_left_value :: (self: @IR_Binary_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_right_value :: (self: @IR_Binary_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
 }
 
 IR_Add_Instruction :: struct : IR_Binary_Instruction {
@@ -2343,7 +2309,7 @@ IR_Phi_Instruction :: struct : IR_Instruction {
 create_ir_phi_instruction :: (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
     instruction: @IR_Phi_Instruction = new IR_Phi_Instruction
     instruction.init(result_value)
-    instruction.values = create_list()
+    instruction.values = instruction.operand_values
     return instruction
 }
 
@@ -2456,7 +2422,8 @@ dump :: (block: @IR_Block, file: @FILE, dumped_blocks: @@IR_Block) -> @FILE {
 dump :: (instruction: @IR_Instruction, file: @FILE) -> @FILE {
     file.write("   ")
     if (instruction.is(IR_Add_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" + ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Add_Instruction = instruction as @IR_Add_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" + ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Call_Instruction)) {
         instruction: @IR_Call_Instruction = instruction as @IR_Call_Instruction
@@ -2474,59 +2441,71 @@ dump :: (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         return file.write(')').end_line()
     }
     if (instruction.is(IR_Cast_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("cast").write('(').write((instruction as @IR_Cast_Instruction).value, true).write(')').end_line()
+        instruction: @IR_Cast_Instruction = instruction as @IR_Cast_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("cast").write('(').write(instruction.get_value(), true).write(')').end_line()
     }
     if (instruction.is(IR_Conditional_Jump_Instruction)) {
         instruction: @IR_Conditional_Jump_Instruction = instruction as @IR_Conditional_Jump_Instruction
-        return file.write("jump").write('(').write(instruction.condition_value, true).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
+        return file.write("jump").write('(').write(instruction.get_condition_value(), true).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
     }
     if (instruction.is(IR_Direct_Jump_Instruction)) {
         instruction: @IR_Direct_Jump_Instruction = instruction as @IR_Direct_Jump_Instruction
         return file.write("jump").write('(').write("block.").write(instruction.block.id).write(')').end_line()
     }
     if (instruction.is(IR_Divide_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" / ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" / ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" == ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" == ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Greater_Than_Comparison_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" > ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" > ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Greater_Than_Or_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" >= ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" >= ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" < ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" < ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Less_Than_Or_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" <= ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" <= ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Load_Array_Item_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_array_item").write('(').write((instruction as @IR_Load_Array_Item_Instruction).array_value, true).write(", ").write((instruction as @IR_Load_Array_Item_Instruction).index_value, true).write(')').end_line()
+        instruction: @IR_Load_Array_Item_Instruction = instruction as @IR_Load_Array_Item_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(')').end_line()
     }
     if (instruction.is(IR_Load_Struct_Member_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_struct_member").write('(').write((instruction as @IR_Load_Struct_Member_Instruction).struct_pointer_value, true).write(", ").write((instruction as @IR_Load_Struct_Member_Instruction).struct_type_member.name).write(')').end_line()
+        instruction: @IR_Load_Struct_Member_Instruction = instruction as @IR_Load_Struct_Member_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(')').end_line()
     }
     if (instruction.is(IR_Load_Variable_Instruction)) {
         return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_variable").write('(').write((instruction as @IR_Load_Variable_Instruction).variable.name).write(')').end_line()
     }
     if (instruction.is(IR_Modulo_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" // ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" // ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Multiply_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" * ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" * ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_New_Instruction)) {
         instruction: @IR_New_Instruction = instruction as @IR_New_Instruction
         file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("new").write('(').write(instruction.type.name)
-        if (instruction.size_value != null) {
-            file.write(", ").write(instruction.size_value, true)
+        if (instruction.get_size_value() != null) {
+            file.write(", ").write(instruction.get_size_value(), true)
         }
         return file.write(')').end_line()
     }
     if (instruction.is(IR_Not_Equals_Comparison_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" != ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" != ").write(instruction.get_right_value(), true).end_line()
     }
     if (instruction.is(IR_Phi_Instruction)) {
         instruction: @IR_Phi_Instruction = instruction as @IR_Phi_Instruction
@@ -2547,24 +2526,26 @@ dump :: (instruction: @IR_Instruction, file: @FILE) -> @FILE {
     }
     if (instruction.is(IR_Return_Instruction)) {
         instruction: @IR_Return_Instruction = instruction as @IR_Return_Instruction
-        if (instruction.return_value == null) {
+        if (instruction.get_return_value() == null) {
             return file.write("return").write('(').write(')').end_line()
         }
-        return file.write("return").write('(').write(instruction.return_value, true).write(')').end_line()
+        return file.write("return").write('(').write(instruction.get_return_value(), true).write(')').end_line()
     }
     if (instruction.is(IR_Set_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Set_Instruction).value, true).end_line()
+        instruction: @IR_Set_Instruction = instruction as @IR_Set_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_value(), true).end_line()
     }
     if (instruction.is(IR_Store_Array_Item_Instruction)) {
         instruction: @IR_Store_Array_Item_Instruction = instruction as @IR_Store_Array_Item_Instruction
-        return file.write("store_array_item").write('(').write(instruction.array_value, true).write(", ").write(instruction.index_value, true).write(", ").write(instruction.value, true).write(')').end_line()
+        return file.write("store_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(", ").write(instruction.get_value(), true).write(')').end_line()
     }
     if (instruction.is(IR_Store_Struct_Member_Instruction)) {
         instruction: @IR_Store_Struct_Member_Instruction = instruction as @IR_Store_Struct_Member_Instruction
-        return file.write("store_struct_member").write('(').write(instruction.struct_pointer_value, true).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.value, true).write(')').end_line()
+        return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
     }
     if (instruction.is(IR_Substract_Instruction)) {
-        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write((instruction as @IR_Binary_Instruction).left_value, true).write(" - ").write((instruction as @IR_Binary_Instruction).right_value, true).end_line()
+        instruction: @IR_Binary_Instruction = instruction as @IR_Binary_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" - ").write(instruction.get_right_value(), true).end_line()
     }
     abort(clone("Unsupported type: ").append(instruction.object_type.name))
 }
@@ -4711,6 +4692,16 @@ prune :: (self: @List) -> @List {
         item = item.next_item
     }
     return self
+}
+
+replace :: (self: @List, data: @Any, new_data: @Any) -> Nothing {
+    item: @List_Item = self.first_item
+    while (item != null) {
+        if (item.data == data) {
+            item.data = new_data
+        }
+        item = item.next_item
+    }
 }
 
 get :: (self: @List, index: Int) -> @Any {
