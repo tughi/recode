@@ -118,6 +118,7 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
 
 generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
     output_file: @FILE = self.output_file
+    self.output_file.write_block_label(block).write(':').end_line()
     block_instruction: @IR_Instruction = block.first_instruction
     while (block_instruction != null) {
         self.generate_instruction(block_instruction)
@@ -125,16 +126,42 @@ generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
     }
 }
 
+write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
+    return file.write(".LABEL__").write(block.function.name).write('_').write(block.function.id).write("__").write(block.id)
+}
+
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
-    if (instruction.is(IR_Load_Variable_Instruction)) {
-        self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
+    if (instruction.is(IR_Conditional_Jump_Instruction)) {
+        self.generate_conditional_jump_instruction(instruction as @IR_Conditional_Jump_Instruction)
         return
     }
     if (instruction.is(IR_Comparison_Instruction)) {
         self.generate_comparison_instruction(instruction as @IR_Comparison_Instruction)
         return
     }
+    if (instruction.is(IR_Load_Variable_Instruction)) {
+        self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
+        return
+    }
     self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
+}
+
+generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
+    condition_value: @IR_Value = instruction.get_condition_value()
+    if (condition_value.is(IR_Variable_Value) == false) {
+        self.abort("Unsupported value type")
+    }
+    condition_value: @IR_Variable_Value = condition_value as @IR_Variable_Value
+    mc_variable: @MC_Variable = self.get_variable(condition_value.variable)
+    if (mc_variable == null) {
+        self.abort("Invalid state")
+    }
+    self.output_file.write("  dec ").write(mc_variable.register.name_b).end_line()
+    \ TODO: release condition variable if possible
+    \ TODO: spill all variables
+    self.output_file.write("  jnz ").write_block_label(instruction.false_block).end_line()
+    self.generate_block(instruction.true_block)
+    self.generate_block(instruction.false_block)
 }
 
 generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
@@ -260,14 +287,16 @@ map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_R
     }
     if (variable == null) {
         variable = new MC_Variable
-        variable.prev_variable = self.last_variable
-        variable.next_variable = null
         variable.ir_variable = ir_variable
         variable.address = null
-        self.last_variable = variable
-        if (self.first_variable == null) {
+        variable.next_variable = null
+        variable.prev_variable = self.last_variable
+        if (self.last_variable == null) {
             self.first_variable = variable
+        } else {
+            self.last_variable.next_variable = variable
         }
+        self.last_variable = variable
     }
     variable.register = register
     register.variable = variable
