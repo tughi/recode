@@ -176,10 +176,21 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
 }
 
 generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
-    if (instruction.variable.is(IR_Function_Parameter) == false) {
-        stdout.write("Load variable: ").write(instruction.variable.name).end_line()
-        self.abort("Not implemented!")
+    if (instruction.variable.is(IR_Function_Parameter)) {
+        \ parameters are taken care of in generate_function
+        return
     }
+    if (instruction.variable.is(IR_Global_Variable)) {
+        stdout.write("Load variable: ").write(instruction.variable.name).end_line()
+        ir_variable: @IR_Global_Variable = instruction.variable as @IR_Global_Variable
+        if (ir_variable.is_external) {
+            \ map external variable to global variable address
+            self.map_variable(ir_variable, null, create_mc_global_variable_address(ir_variable))
+            return
+        }
+        self.abort("Unsupported non-external variable")
+    }
+    self.abort(clone("Unsupported variable type: ").append(instruction.variable.object_type.name))
 }
 
 write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
@@ -277,10 +288,14 @@ find_unused_register :: (self: @MC_Generator) -> @MC_Register {
 }
 
 map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_Register) -> @MC_Variable {
-    if (register.variable != null) {
-        self.output_file.fflush()
-        abort(clone("Register already mapped to variable: ").append(register.variable.ir_variable.name))
-    }
+    return self.map_variable(ir_variable, register, null)
+}
+
+map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, address: @MC_Address) -> @MC_Variable {
+    return self.map_variable(ir_variable, null, address)
+}
+
+map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_Register, address: @MC_Address) -> @MC_Variable {
     variable: @MC_Variable = self.last_variable
     while (variable != null && variable.ir_variable != ir_variable) {
         variable = variable.prev_variable
@@ -288,7 +303,6 @@ map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_R
     if (variable == null) {
         variable = new MC_Variable
         variable.ir_variable = ir_variable
-        variable.address = null
         variable.next_variable = null
         variable.prev_variable = self.last_variable
         if (self.last_variable == null) {
@@ -298,8 +312,15 @@ map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_R
         }
         self.last_variable = variable
     }
+    variable.address = address
     variable.register = register
-    register.variable = variable
+    if (register != null) {
+        if (register.variable != null) {
+            self.output_file.fflush()
+            abort(clone("Register already mapped to variable: ").append(register.variable.ir_variable.name))
+        }
+        register.variable = variable
+    }
     return variable
 }
 
@@ -382,6 +403,16 @@ MC_Address :: struct : Object {
 }
 
 MC_Stack_Frame_Address :: struct : MC_Address {
+}
+
+MC_Global_Variable_Address :: struct : MC_Address {
+    ir_variable: @IR_Variable
+}
+
+create_mc_global_variable_address :: (ir_variable: @IR_Variable) -> @MC_Global_Variable_Address {
+    address: @MC_Global_Variable_Address = new MC_Global_Variable_Address
+    address.ir_variable = ir_variable
+    return address
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -720,7 +751,7 @@ create_global_variable :: (self: @IR_Builder, variable_statement: @AST_Variable_
     } else {
         abort(variable_statement.location, "Type inference is not supported yet.")
     }
-    variable: @IR_Variable = create_ir_global_variable(variable_name, variable_type)
+    variable: @IR_Variable = create_ir_global_variable(variable_name, variable_type, variable_statement.is_external)
     if (variable_statement.value_expression != null) {
         abort(variable_statement.value_expression.location, "Initialized global variables are not supported yet.")
     }
@@ -2022,11 +2053,13 @@ init :: (self: @IR_Variable, name: @String, type: @IR_Type) -> @IR_Variable {
 }
 
 IR_Global_Variable :: struct : IR_Variable {
+    is_external: Boolean
 }
 
-create_ir_global_variable :: (name: @String, type: @IR_Type) -> @IR_Global_Variable {
+create_ir_global_variable :: (name: @String, type: @IR_Type, is_external: Boolean) -> @IR_Global_Variable {
     variable: @IR_Global_Variable = new IR_Global_Variable
     variable.init(name, type)
+    variable.is_external = is_external
     return variable
 }
 
