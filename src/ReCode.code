@@ -131,6 +131,10 @@ write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
 }
 
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
+    if (instruction.is(IR_Call_Instruction)) {
+        self.generate_call_instruction(instruction as @IR_Call_Instruction)
+        return
+    }
     if (instruction.is(IR_Conditional_Jump_Instruction)) {
         self.generate_conditional_jump_instruction(instruction as @IR_Conditional_Jump_Instruction)
         return
@@ -144,6 +148,56 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         return
     }
     self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
+}
+
+generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
+    if (instruction.arguments.size > 0) {
+        self.generate_load_value(self.register_rdi, instruction.arguments.first() as @IR_Value)
+        if (instruction.arguments.size > 1) {
+            self.generate_load_value(self.register_rsi, instruction.arguments.get(1) as @IR_Value)
+            if (instruction.arguments.size > 2) {
+                self.generate_load_value(self.register_rdx, instruction.arguments.get(2) as @IR_Value)
+                if (instruction.arguments.size > 3) {
+                    self.generate_load_value(self.register_rcx, instruction.arguments.get(3) as @IR_Value)
+                    if (instruction.arguments.size > 4) {
+                        self.generate_load_value(self.register_r8, instruction.arguments.get(4) as @IR_Value)
+                        if (instruction.arguments.size > 5) {
+                            self.generate_load_value(self.register_r9, instruction.arguments.get(5) as @IR_Value)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    \ TODO: spill all variables
+    self.output_file.write("  call ").write(instruction.function.name).write('_').write(instruction.function.id).end_line()
+    self.map_variable(instruction.result_value.variable, self.register_rax)
+}
+
+generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
+    \ TODO: make sure register is free
+    if (ir_value.is(IR_Constant_Value)) {
+        ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
+        if (ir_value.literal.is(String_Token)) {
+            self.output_file.write("  lea ").write(register.name_q).write(", ").write(".STRING_42").write("[rip]").end_line()
+            return
+        }
+        self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
+    }
+    if (ir_value.is(IR_Variable_Value)) {
+        ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
+        variable: @MC_Variable = self.get_variable(ir_value.variable)
+        if (variable == null) {
+            self.abort("Invalid state")
+        }
+        if (variable.register != null) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable.register.name_q).end_line()
+            return
+        }
+        self.output_file.write("  mov ").write(register.name_q).write(", ").write("???").end_line()
+        return
+    }
+    self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
 }
 
 generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
@@ -181,7 +235,6 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
         return
     }
     if (instruction.variable.is(IR_Global_Variable)) {
-        stdout.write("Load variable: ").write(instruction.variable.name).end_line()
         ir_variable: @IR_Global_Variable = instruction.variable as @IR_Global_Variable
         if (ir_variable.is_external) {
             \ map external variable to global variable address
@@ -317,7 +370,7 @@ map_variable :: (self: @MC_Generator, ir_variable: @IR_Variable, register: @MC_R
     if (register != null) {
         if (register.variable != null) {
             self.output_file.fflush()
-            abort(clone("Register already mapped to variable: ").append(register.variable.ir_variable.name))
+            abort(clone("Register ").append(register.name_q).append(" already mapped to variable: ").append(register.variable.ir_variable.name))
         }
         register.variable = variable
     }
