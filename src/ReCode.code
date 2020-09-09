@@ -106,6 +106,7 @@ write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
 }
 
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
+    instruction.is_generated = true
     if (instruction.is(IR_Call_Instruction)) {
         self.generate_call_instruction(instruction as @IR_Call_Instruction)
         return
@@ -449,9 +450,41 @@ release_all_registers :: (self: @MC_Generator) -> Nothing {
 }
 
 release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
-    if (register.variable != null) {
-        self.abort(clone("TODO: Release register ").append(register.name_q))
+    variable: @MC_Variable = register.variable
+    if (variable != null) {
+        if (variable.is_still_needed()) {
+            self.abort(clone("TODO: Release register ").append(register.name_q))
+        } else {
+            if (variable.prev_variable != null) {
+                variable.prev_variable.next_variable = variable.next_variable
+            } else {
+                self.first_variable = variable.next_variable
+            }
+            if (variable.next_variable != null) {
+                variable.next_variable.prev_variable = variable.prev_variable
+            } else {
+                self.last_variable = variable.prev_variable
+            }
+            register.variable = null
+        }
     }
+}
+
+is_still_needed :: (variable: @MC_Variable) -> Boolean {
+    ir_values_item: @List_Item = variable.ir_variable.values.first_item
+    while (ir_values_item != null) {
+        ir_value: @IR_Value = ir_values_item.data as @IR_Value
+        user_instructions_item: @List_Item = ir_value.user_instructions.first_item
+        while (user_instructions_item != null) {
+            user_instruction: @IR_Instruction = user_instructions_item.data as @IR_Instruction
+            if (user_instruction.is_generated == false) {
+                return true
+            }
+            user_instructions_item = user_instructions_item.next_item
+        }
+        ir_values_item = ir_values_item.next_item
+    }
+    return false
 }
 
 MC_Variable :: struct {
@@ -2226,6 +2259,7 @@ IR_Instruction :: struct : Object {
     parent_block: @IR_Block
     prev_instruction: @IR_Instruction
     next_instruction: @IR_Instruction
+    is_generated: Boolean
 }
 
 init :: (self: @IR_Instruction, result_value: @IR_Variable_Value) -> @IR_Instruction {
@@ -2234,6 +2268,7 @@ init :: (self: @IR_Instruction, result_value: @IR_Variable_Value) -> @IR_Instruc
     self.parent_block = null
     self.prev_instruction = null
     self.next_instruction = null
+    self.is_generated = false
     return self
 }
 
