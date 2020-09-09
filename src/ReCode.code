@@ -166,6 +166,17 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
     }
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
+        if (ir_value.literal.is(Character_Token)) {
+            self.output_file.write("  mov ").write(register.name_b).write(", ")
+            lexeme: @String = ir_value.literal.lexeme
+            index: Int = 0
+            while (index < lexeme.length - 1) {
+                self.output_file.write(lexeme.data[index])
+                index = index + 1
+            }
+            self.output_file.end_line()
+            return
+        }
         if (ir_value.literal.is(String_Token)) {
             self.output_file.write("  lea ").write(register.name_q).write(", ").write(".STRING_42").write("[rip]").end_line()
             return
