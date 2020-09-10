@@ -94,7 +94,7 @@ generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
     block_instruction: @IR_Instruction = block.first_instruction
     while (block_instruction != null) {
         self.generate_instruction(block_instruction)
-        if (block_instruction.is(IR_Load_Variable_Instruction) == false && block_instruction.result_value.variable.is(IR_Global_Variable)) {
+        if (block_instruction.is(IR_Load_Variable_Instruction) == false && block_instruction.result_value != null && block_instruction.result_value.variable.is(IR_Global_Variable)) {
             self.spill_global_variable(self.get_variable(block_instruction.result_value.variable))
         }
         block_instruction = block_instruction.next_instruction
@@ -117,6 +117,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
     }
     if (instruction.is(IR_Comparison_Instruction)) {
         self.generate_comparison_instruction(instruction as @IR_Comparison_Instruction)
+        return
+    }
+    if (instruction.is(IR_Load_Array_Item_Instruction)) {
+        self.generate_load_array_item_instruction(instruction as @IR_Load_Array_Item_Instruction)
         return
     }
     if (instruction.is(IR_Load_Variable_Instruction)) {
@@ -147,7 +151,9 @@ generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruc
     }
     self.release_all_registers()
     self.output_file.write("  call ").write(instruction.function.name).write('_').write(instruction.function.id).end_line()
-    self.map_variable(instruction.result_value, self.register_rax)
+    if (instruction.result_value != null) {
+        self.map_variable(instruction.result_value, self.register_rax)
+    }
 }
 
 generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
@@ -175,6 +181,15 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
                 index = index + 1
             }
             self.output_file.end_line()
+            return
+        }
+        if (ir_value.literal.is(Integer_Token)) {
+            literal: @Integer_Token = ir_value.literal as @Integer_Token
+            if (literal.value == 0) {
+                self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
+            } else {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(literal.value).end_line()
+            }
             return
         }
         if (ir_value.literal.is(String_Token)) {
@@ -226,6 +241,29 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
         return
     }
     self.abort("Not implemented!")
+}
+
+generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_Load_Array_Item_Instruction) -> Nothing {
+    result_register: @MC_Register = self.find_unused_register()
+    self.generate_load_value(result_register, instruction.get_array_value())
+    self.map_variable(instruction.result_value, result_register)
+    index_value: @IR_Value = instruction.get_index_value()
+    if (index_value.is(IR_Constant_Value)) {
+        index_value: @IR_Constant_Value = index_value as @IR_Constant_Value
+        if (index_value.literal.is(Integer_Token) == false) {
+            self.abort("Invalid state")
+        }
+        index_value: Int = (index_value.literal as @Integer_Token).value
+        if (index_value != 0) {
+            self.abort("TODO: add constant offset")
+        }
+        return
+    }
+    self.abort(clone("Unsupported index type: ").append(index_value.object_type.name))
+    \ index_register: @MC_Register = self.find_unused_register()
+    \ self.generate_load_value(index_register, instruction.get_index_value())
+    \ self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(16).end_line()
+    \ self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_register.name_q).end_line()
 }
 
 generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
