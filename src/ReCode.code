@@ -127,6 +127,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
         return
     }
+    if (instruction.is(IR_New_Instruction)) {
+        self.generate_new_instruction(instruction as @IR_New_Instruction)
+        return
+    }
     self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
 }
 
@@ -311,6 +315,16 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
     self.abort(clone("Unsupported variable type: ").append(instruction.variable.object_type.name))
 }
 
+generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
+    self.release_all_registers()
+    self.output_file.write("  mov ").write(self.register_rdi.name_q).write(", ").write(self.get_type_size(instruction.type)).end_line()
+    if (instruction.get_size_value() != null) {
+        self.abort("TODO: compute array size")
+    }
+    self.output_file.write("  call ").write("malloc").end_line()
+    self.map_variable(instruction.result_value, self.register_rax)
+}
+
 write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
@@ -471,7 +485,7 @@ spill_local_variable :: (self: @MC_Generator, variable: @MC_Variable) -> Nothing
             }
             other_variable = other_variable.next_variable
         }
-        offset = offset + self.get_type_size(variable)
+        offset = offset + self.get_type_size(variable.ir_variable.type)
         variable.address = create_mc_local_variable_address(offset)
     }
     self.output_file.write("  mov ").write(variable.address).write(", ").write(variable.register.name_q).end_line()
@@ -639,13 +653,25 @@ create_mc_local_variable_address :: (offset: Int) -> @MC_Local_Variable_Address 
     return address
 }
 
-get_type_size :: (self: @MC_Generator, variable: @MC_Variable) -> Int {
-    ir_type: @IR_Type = variable.ir_variable.type
+get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
     if (ir_type.is(IR_Int_Type)) {
         return 8
     }
     if (ir_type.is(IR_Pointer_Type)) {
         return 8
+    }
+    if (ir_type.is(IR_Struct_Type)) {
+        ir_type: @IR_Struct_Type = ir_type as @IR_Struct_Type
+        size: Int = 0
+        if (ir_type.base_type != null) {
+            size = size + self.get_type_size(ir_type.base_type)
+        }
+        struct_type_members: @List_Iterator = ir_type.members.create_iterator()
+        while (struct_type_members.has_next()) {
+            struct_type_member: @IR_Struct_Type_Member = struct_type_members.next() as @IR_Struct_Type_Member
+            size = size + self.get_type_size(struct_type_member.type)
+        }
+        return size
     }
     self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))
 }
