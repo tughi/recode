@@ -80,7 +80,19 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  mov rbp, rsp").end_line()
     self.output_file.write("  sub rsp, .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).end_line()
 
-    self.generate_block(function.blocks.first() as @IR_Block)
+    block: @IR_Block = function.blocks.first() as @IR_Block
+    loop {
+        if (block.is_generated) {
+            self.abort("Invalid state")
+        }
+        block.is_generated = true
+        self.generate_block(block)
+        block = self.blocks_stack.last() as @IR_Block
+        if (block == null) {
+            break
+        }
+        self.blocks_stack.remove(block).prune()
+    }
 
     self.output_file.write("  .set .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).write(", ").write(128).end_line()
     self.output_file.write_function_end_label(function).write(":").end_line()
@@ -197,8 +209,15 @@ generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_
     self.output_file.write("  dec ").write(mc_variable.register.name_b).end_line()
     self.release_all_registers()
     self.output_file.write("  jnz ").write_block_label(instruction.false_block).end_line()
-    self.generate_block(instruction.true_block)
-    self.generate_block(instruction.false_block)
+    if (instruction.false_block.is_generated == false && self.blocks_stack.contains(instruction.false_block) == false) {
+        self.blocks_stack.append(instruction.false_block)
+    }
+    if (instruction.true_block.is_generated == false && self.blocks_stack.contains(instruction.true_block) == false) {
+        self.blocks_stack.append(instruction.true_block)
+    }
+    if (instruction.true_block.is_generated || (self.blocks_stack.last() as @IR_Block) != instruction.true_block) {
+        self.output_file.write("  jmp ").write_block_label(instruction.true_block).end_line()
+    }
 }
 
 generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
@@ -226,8 +245,12 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
 
 generate_direct_jump_instruction :: (self: @MC_Generator, instruction: @IR_Direct_Jump_Instruction) -> Nothing {
     self.release_all_registers()
-    self.output_file.write("  jmp ").write_block_label(instruction.block).end_line()
-    self.generate_block(instruction.block)
+    if (instruction.block.is_generated == false && self.blocks_stack.contains(instruction.block) == false) {
+        self.blocks_stack.append(instruction.block)
+    }
+    if (instruction.block.is_generated || (self.blocks_stack.last() as @IR_Block) != instruction.block) {
+        self.output_file.write("  jmp ").write_block_label(instruction.block).end_line()
+    }
 }
 
 generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_Load_Array_Item_Instruction) -> Nothing {
@@ -483,6 +506,7 @@ MC_Generator :: struct {
     register_r15: @MC_Register
     first_variable: @MC_Variable
     last_variable: @MC_Variable
+    blocks_stack: @List
 }
 
 create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
@@ -505,6 +529,7 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator.register_r15 = new MC_Register_R15.init("r15", "r15d", "r15w", "r15b")
     generator.first_variable = null
     generator.last_variable = null
+    generator.blocks_stack = create_list()
     return generator
 }
 
@@ -2321,6 +2346,7 @@ IR_Block :: struct : Object {
     predecessors: @List
     first_instruction: @IR_Instruction
     last_instruction: @IR_Instruction
+    is_generated: Boolean
 }
 
 has_instructions :: (self: @IR_Block) -> Boolean {
@@ -2412,6 +2438,7 @@ create_block :: (self: @IR_Function) -> @IR_Block {
     block.predecessors = create_list()
     block.first_instruction = null
     block.last_instruction = null
+    block.is_generated = false
     self.blocks.append(block)
     return block
 }
@@ -5145,6 +5172,17 @@ replace :: (self: @List, data: @Any, new_data: @Any) -> Nothing {
         }
         item = item.next_item
     }
+}
+
+contains :: (self: @List, data: @Any) -> Boolean {
+    item: @List_Item = self.first_item
+    while (item != null) {
+        if (item.data == data) {
+            return true
+        }
+        item = item.next_item
+    }
+    return false
 }
 
 index_of :: (self: @List, data: @Any) -> Int {
