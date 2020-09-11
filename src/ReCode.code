@@ -197,7 +197,7 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             return
         }
         if (ir_value.literal.is(String_Token)) {
-            self.output_file.write("  lea ").write(register.name_q).write(", ").write(".STRING_42").write("[rip]").end_line()
+            self.output_file.write("  lea ").write(register.name_q).write(", ").write(".STRING_42").write("[rip]").write(" # ").write(ir_value.literal.lexeme).end_line()
             return
         }
         self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
@@ -259,7 +259,10 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
         }
         index_value: Int = (index_value.literal as @Integer_Token).value
         if (index_value != 0) {
-            self.abort("TODO: add constant offset")
+            if (index_value < 0) {
+                self.abort("Invalid state")
+            }
+            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * self.get_type_size(instruction.result_value.type)).end_line()
         }
         return
     }
