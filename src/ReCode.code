@@ -123,6 +123,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_load_array_item_instruction(instruction as @IR_Load_Array_Item_Instruction)
         return
     }
+    if (instruction.is(IR_Load_Struct_Member_Instruction)) {
+        self.generate_load_struct_member_instruction(instruction as @IR_Load_Struct_Member_Instruction)
+        return
+    }
     if (instruction.is(IR_Load_Variable_Instruction)) {
         self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
         return
@@ -278,6 +282,35 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
         self.abort("Unsupported non-external variable")
     }
     self.abort(clone("Unsupported variable type: ").append(instruction.variable.object_type.name))
+}
+
+generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @IR_Load_Struct_Member_Instruction) -> Nothing {
+    result_register: @MC_Register = self.find_unused_register()
+    self.generate_load_value(result_register, instruction.get_struct_pointer_value())
+    self.map_variable(instruction.result_value, result_register)
+    if (instruction.load_address) {
+        self.abort("Not implemented")
+    }
+    struct_type: @IR_Struct_Type = instruction.struct_type_member.struct_type
+    offset: Int = 0
+    if (struct_type.base_type != null) {
+        offset = self.get_type_size(struct_type.base_type)
+        self.abort(clone("Start offset: ").append(offset))
+    }
+    struct_type_member_item: @List_Item = struct_type.members.first_item
+    while (struct_type_member_item != null) {
+        struct_type_member: @IR_Struct_Type_Member = struct_type_member_item.data as @IR_Struct_Type_Member
+        if (struct_type_member == instruction.struct_type_member) {
+            if (offset > 0) {
+                self.abort(clone("Offset: ").append(offset))
+            }
+            return
+        } else {
+            offset = offset + self.get_type_size(struct_type_member.type)
+        }
+        struct_type_member_item = struct_type_member_item.next_item
+    }
+    self.abort("Invalid state")
 }
 
 generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
@@ -2153,6 +2186,7 @@ IR_Struct_Type :: struct : IR_Type {
 }
 
 IR_Struct_Type_Member :: struct : Object {
+    struct_type: @IR_Struct_Type
     name: @String
     type: @IR_Type
 }
@@ -2167,6 +2201,7 @@ create_ir_struct_type :: (name: @String, statement: @AST_Struct_Statement) -> @I
 
 add_member :: (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
     member: @IR_Struct_Type_Member = new IR_Struct_Type_Member
+    member.struct_type = self
     member.name = name
     member.type = type
     self.members.append(member)
