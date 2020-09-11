@@ -83,10 +83,14 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.generate_block(function.blocks.first() as @IR_Block)
 
     self.output_file.write("  .set .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).write(", ").write(128).end_line()
-    self.output_file.write(".L_").write(function.name).write('_').write(function.id).write("_end:").end_line()
+    self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
     self.output_file.write("  ret").end_line()
+}
+
+write_function_end_label :: (file: @FILE, function: @IR_Function) -> @FILE {
+    return file.write(".LABEL__").write(function.name).write('_').write(function.id).write("__").write("end")
 }
 
 generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
@@ -141,6 +145,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
     }
     if (instruction.is(IR_New_Instruction)) {
         self.generate_new_instruction(instruction as @IR_New_Instruction)
+        return
+    }
+    if (instruction.is(IR_Return_Instruction)) {
+        self.generate_return_instruction(instruction as @IR_Return_Instruction)
         return
     }
     if (instruction.is(IR_Set_Instruction)) {
@@ -330,6 +338,15 @@ generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instructi
     }
     self.output_file.write("  call ").write("malloc").end_line()
     self.map_variable(instruction.result_value, self.register_rax)
+}
+
+generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Instruction) -> Nothing {
+    return_value: @IR_Value = instruction.get_return_value()
+    if (return_value != null) {
+        self.generate_load_value(self.register_rax, return_value)
+    }
+    self.release_all_registers()
+    self.output_file.write("  jmp ").write_function_end_label(instruction.parent_block.function).end_line()
 }
 
 generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
