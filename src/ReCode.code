@@ -131,6 +131,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_new_instruction(instruction as @IR_New_Instruction)
         return
     }
+    if (instruction.is(IR_Set_Instruction)) {
+        self.generate_set_instruction(instruction as @IR_Set_Instruction)
+        return
+    }
     self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
 }
 
@@ -160,64 +164,6 @@ generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruc
     }
 }
 
-generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
-    if (register.variable != null) {
-        if (ir_value.is(IR_Variable_Value)) {
-            ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
-            if (register.variable.ir_value == ir_value) {
-                return
-            }
-        }
-        if (register.variable.ir_variable.is(IR_Global_Variable) == false) {
-            self.spill_local_variable(register.variable)
-        }
-        register.variable.register = null
-        register.variable = null
-    }
-    if (ir_value.is(IR_Constant_Value)) {
-        ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
-        if (ir_value.literal.is(Character_Token)) {
-            self.output_file.write("  mov ").write(register.name_b).write(", ")
-            lexeme: @String = ir_value.literal.lexeme
-            index: Int = 0
-            while (index < lexeme.length - 1) {
-                self.output_file.write(lexeme.data[index])
-                index = index + 1
-            }
-            self.output_file.end_line()
-            return
-        }
-        if (ir_value.literal.is(Integer_Token)) {
-            literal: @Integer_Token = ir_value.literal as @Integer_Token
-            if (literal.value == 0) {
-                self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
-            } else {
-                self.output_file.write("  mov ").write(register.name_q).write(", ").write(literal.value).end_line()
-            }
-            return
-        }
-        if (ir_value.literal.is(String_Token)) {
-            self.output_file.write("  lea ").write(register.name_q).write(", ").write(".STRING_42").write("[rip]").write(" # ").write(ir_value.literal.lexeme).end_line()
-            return
-        }
-        self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
-    }
-    if (ir_value.is(IR_Variable_Value)) {
-        ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
-        variable: @MC_Variable = self.get_variable(ir_value.variable)
-        if (variable == null) {
-            self.abort("Invalid state")
-        }
-        if (variable.register != null) {
-            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable.register.name_q).end_line()
-            return
-        }
-        self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable.address).end_line()
-        return
-    }
-    self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
-}
-
 generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
     condition_value: @IR_Value = instruction.get_condition_value()
     if (condition_value.is(IR_Variable_Value) == false) {
@@ -242,6 +188,10 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
     variable: @MC_Variable = self.map_variable(instruction.result_value, self.find_unused_register())
     if (instruction.is(IR_Equals_Comparison_Instruction)) {
         self.output_file.write("  sete ").write(variable.register.name_b).end_line()
+        return
+    }
+    if (instruction.is(IR_Greater_Than_Or_Equals_Comparison_Instruction)) {
+        self.output_file.write("  setge ").write(variable.register.name_b).end_line()
         return
     }
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
@@ -332,6 +282,74 @@ generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instructi
     self.map_variable(instruction.result_value, self.register_rax)
 }
 
+generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
+    result_register: @MC_Register = self.find_unused_register()
+    self.generate_load_value(result_register, instruction.get_value())
+    self.map_variable(instruction.result_value, result_register)
+}
+
+generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
+    if (register.variable != null) {
+        if (ir_value.is(IR_Variable_Value)) {
+            ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
+            if (register.variable.ir_value == ir_value) {
+                return
+            }
+        }
+        if (register.variable.ir_variable.is(IR_Global_Variable) == false) {
+            self.spill_local_variable(register.variable)
+        }
+        register.variable.register = null
+        register.variable = null
+    }
+    if (ir_value.is(IR_Constant_Value)) {
+        ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
+        if (ir_value.literal.is(Character_Token)) {
+            self.output_file.write("  mov ").write(register.name_b).write(", ")
+            lexeme: @String = ir_value.literal.lexeme
+            index: Int = 0
+            while (index < lexeme.length - 1) {
+                self.output_file.write(lexeme.data[index])
+                index = index + 1
+            }
+            self.output_file.end_line()
+            return
+        }
+        if (ir_value.literal.is(Integer_Token)) {
+            literal: @Integer_Token = ir_value.literal as @Integer_Token
+            if (literal.value == 0) {
+                self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
+            } else {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(literal.value).end_line()
+            }
+            return
+        }
+        if (ir_value.literal.is(Null_Token)) {
+            self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
+            return
+        }
+        if (ir_value.literal.is(String_Token)) {
+            self.output_file.write("  lea ").write(register.name_q).write(", ").write(".STRING_42").write("[rip]").write(" # ").write(ir_value.literal.lexeme).end_line()
+            return
+        }
+        self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
+    }
+    if (ir_value.is(IR_Variable_Value)) {
+        ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
+        variable: @MC_Variable = self.get_variable(ir_value.variable)
+        if (variable == null) {
+            self.abort("Invalid state")
+        }
+        if (variable.register != null) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable.register.name_q).end_line()
+            return
+        }
+        self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable.address).end_line()
+        return
+    }
+    self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
+}
+
 write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
@@ -362,7 +380,10 @@ write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) ->
             }
             generator.abort(clone("Unsupported type size: ").append(value_type_size))
         }
-        generator.abort("Not implemented")
+        if (mc_variable.address != null) {
+            return file.write(mc_variable.address)
+        }
+        generator.abort("Invalid state")
     }
     generator.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
 }
