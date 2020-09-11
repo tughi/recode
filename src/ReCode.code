@@ -119,6 +119,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_comparison_instruction(instruction as @IR_Comparison_Instruction)
         return
     }
+    if (instruction.is(IR_Direct_Jump_Instruction)) {
+        self.generate_direct_jump_instruction(instruction as @IR_Direct_Jump_Instruction)
+        return
+    }
     if (instruction.is(IR_Load_Array_Item_Instruction)) {
         self.generate_load_array_item_instruction(instruction as @IR_Load_Array_Item_Instruction)
         return
@@ -183,7 +187,6 @@ generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_
         self.abort("Invalid state")
     }
     self.output_file.write("  dec ").write(mc_variable.register.name_b).end_line()
-    \ TODO: release condition variable if possible
     self.release_all_registers()
     self.output_file.write("  jnz ").write_block_label(instruction.false_block).end_line()
     self.generate_block(instruction.true_block)
@@ -211,6 +214,12 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
         return
     }
     self.abort(clone("Unsupported comparison instruction type: ").append(instruction.object_type.name))
+}
+
+generate_direct_jump_instruction :: (self: @MC_Generator, instruction: @IR_Direct_Jump_Instruction) -> Nothing {
+    self.release_all_registers()
+    self.output_file.write("  jmp ").write_block_label(instruction.block).end_line()
+    self.generate_block(instruction.block)
 }
 
 generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_Load_Array_Item_Instruction) -> Nothing {
