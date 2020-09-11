@@ -240,11 +240,15 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
     self.output_file.write("  cmp ").write_operand(self, instruction.get_left_value()).write(", ").write_operand(self, instruction.get_right_value()).end_line()
     \ TODO: remove out-of-scope variables
     variable: @MC_Variable = self.map_variable(instruction.result_value, self.find_unused_register())
+    if (instruction.is(IR_Equals_Comparison_Instruction)) {
+        self.output_file.write("  sete ").write(variable.register.name_b).end_line()
+        return
+    }
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
         self.output_file.write("  setl ").write(variable.register.name_b).end_line()
         return
     }
-    self.abort("Not implemented!")
+    self.abort(clone("Unsupported comparison instruction type: ").append(instruction.object_type.name))
 }
 
 generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_Load_Array_Item_Instruction) -> Nothing {
@@ -334,6 +338,12 @@ write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) ->
         if (ir_value.literal.is(Integer_Token)) {
             return file.write((ir_value.literal as @Integer_Token).value)
         }
+        if (ir_value.literal.is(Boolean_Token)) {
+            if ((ir_value.literal as @Boolean_Token).value) {
+                return file.write(1)
+            }
+            return file.write(0)
+        }
         generator.abort(clone("Unsupported constant literal: ").append(ir_value.literal.object_type.name))
     }
     if (ir_value.is(IR_Variable_Value)) {
@@ -343,9 +353,16 @@ write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) ->
             generator.abort("Invalid state")
         }
         if (mc_variable.register != null) {
-            return file.write(mc_variable.register.name_q)
+            value_type_size: Int = generator.get_type_size(ir_value.type)
+            if (value_type_size == 8) {
+                return file.write(mc_variable.register.name_q)
+            }
+            if (value_type_size == 1) {
+                return file.write(mc_variable.register.name_b)
+            }
+            generator.abort(clone("Unsupported type size: ").append(value_type_size))
         }
-        generator.abort("Not implemented!")
+        generator.abort("Not implemented")
     }
     generator.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
 }
@@ -519,7 +536,7 @@ release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
     variable: @MC_Variable = register.variable
     if (variable != null) {
         if (variable.is_still_needed()) {
-            self.abort(clone("TODO: Release register ").append(register.name_q))
+            self.spill_local_variable(variable)
         } else {
             if (variable.prev_variable != null) {
                 variable.prev_variable.next_variable = variable.next_variable
@@ -531,8 +548,9 @@ release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
             } else {
                 self.last_variable = variable.prev_variable
             }
-            register.variable = null
         }
+        variable.register = null
+        register.variable = null
     }
 }
 
@@ -657,6 +675,9 @@ create_mc_local_variable_address :: (offset: Int) -> @MC_Local_Variable_Address 
 }
 
 get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
+    if (ir_type.is(IR_Boolean_Type)) {
+        return 1
+    }
     if (ir_type.is(IR_Int_Type)) {
         return 8
     }
