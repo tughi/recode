@@ -127,6 +127,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
         return
     }
+    if (instruction.is(IR_Phi_Instruction)) {
+        \ nothing to do
+        return
+    }
     if (instruction.is(IR_New_Instruction)) {
         self.generate_new_instruction(instruction as @IR_New_Instruction)
         return
@@ -176,7 +180,7 @@ generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_
     }
     self.output_file.write("  dec ").write(mc_variable.register.name_b).end_line()
     \ TODO: release condition variable if possible
-    \ TODO: spill all variables
+    self.release_all_registers()
     self.output_file.write("  jnz ").write_block_label(instruction.false_block).end_line()
     self.generate_block(instruction.true_block)
     self.generate_block(instruction.false_block)
@@ -196,6 +200,10 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
     }
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
         self.output_file.write("  setl ").write(variable.register.name_b).end_line()
+        return
+    }
+    if (instruction.is(IR_Not_Equals_Comparison_Instruction)) {
+        self.output_file.write("  setne ").write(variable.register.name_b).end_line()
         return
     }
     self.abort(clone("Unsupported comparison instruction type: ").append(instruction.object_type.name))
@@ -353,13 +361,16 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
 write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
-        if (ir_value.literal.is(Integer_Token)) {
-            return file.write((ir_value.literal as @Integer_Token).value)
-        }
         if (ir_value.literal.is(Boolean_Token)) {
             if ((ir_value.literal as @Boolean_Token).value) {
                 return file.write(1)
             }
+            return file.write(0)
+        }
+        if (ir_value.literal.is(Integer_Token)) {
+            return file.write((ir_value.literal as @Integer_Token).value)
+        }
+        if (ir_value.literal.is(Null_Token)) {
             return file.write(0)
         }
         generator.abort(clone("Unsupported constant literal: ").append(ir_value.literal.object_type.name))
