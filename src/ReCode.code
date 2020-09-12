@@ -96,7 +96,7 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
-    self.output_file.write("  ret").end_line()
+    self.output_file.write("  ret").end_line().end_line()
     self.output_file.write(function.name).write('_').write(function.id).write("__stack_frame_size").write(":").end_line()
     self.output_file.write("  .word ").write(self.stack_frame_size).end_line()
 
@@ -1252,7 +1252,7 @@ build_function :: (self: @IR_Builder, function_statement: @AST_Function_Statemen
     self.remove_redundant_blocks(function)
     self.populate_phi_instructions(function)
     self.remove_trivial_phi_instructions(function)
-    self.remove_redundant_set_instructions(function)
+    \ TODO: self.remove_redundant_set_instructions(function)
 
     self.context = self.context.parent
 }
