@@ -59,8 +59,6 @@ generate :: (build: @IR_Build, output_file_name: @String) -> Nothing {
         if (function.blocks.size > 0) {
             generator.generate_function(function)
         }
-        \ TODO: remove this break as soon as the first function is correctly generated
-        break
     }
 
     generator.output_file.fclose()
@@ -99,6 +97,8 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
     self.output_file.write("  ret").end_line()
+
+    self.reset()
 }
 
 write_function_end_label :: (file: @FILE, function: @IR_Function) -> @FILE {
@@ -539,6 +539,20 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator.blocks_stack = create_list()
     generator.stack_frame_size = 0
     return generator
+}
+
+reset :: (self: @MC_Generator) -> Nothing {
+    while (self.first_variable != null) {
+        variable: @MC_Variable = self.first_variable
+        self.first_variable = variable.next_variable
+        variable.prev_variable = null
+        variable.next_variable = null
+        if (variable.register != null) {
+            self.abort("Invalid state")
+        }
+    }
+    self.last_variable = null
+    self.stack_frame_size = 0
 }
 
 find_unused_register :: (self: @MC_Generator) -> @MC_Register {
