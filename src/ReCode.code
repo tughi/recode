@@ -76,7 +76,8 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     }
     self.output_file.write("  push rbp").end_line()
     self.output_file.write("  mov rbp, rsp").end_line()
-    self.output_file.write("  sub rsp, .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).end_line()
+    self.output_file.write("  movsx rax, WORD PTR ").write(function.name).write('_').write(function.id).write("__stack_frame_size").write("[rip]").end_line()
+    self.output_file.write("  sub rsp, rax").end_line()
 
     block: @IR_Block = function.blocks.first() as @IR_Block
     loop {
@@ -92,11 +93,12 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
         self.blocks_stack.remove(block).prune()
     }
 
-    self.output_file.write("  .set .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).write(", ").write(self.stack_frame_size).end_line()
     self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
     self.output_file.write("  ret").end_line()
+    self.output_file.write(function.name).write('_').write(function.id).write("__stack_frame_size").write(":").end_line()
+    self.output_file.write("  .word ").write(self.stack_frame_size).end_line()
 
     self.reset()
 }
@@ -228,6 +230,10 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
         self.output_file.write("  sete ").write(variable.register.name_b).end_line()
         return
     }
+    if (instruction.is(IR_Greater_Than_Comparison_Instruction)) {
+        self.output_file.write("  setg ").write(variable.register.name_b).end_line()
+        return
+    }
     if (instruction.is(IR_Greater_Than_Or_Equals_Comparison_Instruction)) {
         self.output_file.write("  setge ").write(variable.register.name_b).end_line()
         return
@@ -335,15 +341,15 @@ generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @I
     offset: Int = 0
     if (struct_type.base_type != null) {
         offset = self.get_type_size(struct_type.base_type)
-        self.abort(clone("Start offset: ").append(offset))
     }
     struct_type_member_item: @List_Item = struct_type.members.first_item
     while (struct_type_member_item != null) {
         struct_type_member: @IR_Struct_Type_Member = struct_type_member_item.data as @IR_Struct_Type_Member
         if (struct_type_member == instruction.struct_type_member) {
             if (offset > 0) {
-                self.abort(clone("Offset: ").append(offset))
+                self.output_file.write("  add ").write(result_register.name_q).write(", ").write(offset).end_line()
             }
+            \ self.output_file.write("  mov ").write(result_register.name_q).write(", ").write('[').write(result_register.name_q).write(']').end_line()
             return
         } else {
             offset = offset + self.get_type_size(struct_type_member.type)
