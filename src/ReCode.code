@@ -349,7 +349,7 @@ generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @I
             if (offset > 0) {
                 self.output_file.write("  add ").write(result_register.name_q).write(", ").write(offset).end_line()
             }
-            \ self.output_file.write("  mov ").write(result_register.name_q).write(", ").write('[').write(result_register.name_q).write(']').end_line()
+            self.output_file.write("  mov ").write(result_register.name_q).write(", ").write('[').write(result_register.name_q).write(']').end_line()
             return
         } else {
             offset = offset + self.get_type_size(struct_type_member.type)
