@@ -7,11 +7,11 @@ import sys
 from collections import OrderedDict
 
 
-def execute(command, echo=True, exit_on_error=True):
+def execute(command, echo=True, exit_on_error=True, expected_return_code=0):
     if echo:
         print(command)
     return_code = subprocess.call(command.split(' '))
-    if return_code != 0 and exit_on_error:
+    if return_code != expected_return_code and exit_on_error:
         exit(return_code)
     return return_code
 
@@ -80,17 +80,25 @@ def build():
 def test():
     build()
 
-    def compile(old_stage, new_stage):
-        compiler = os.path.join('build', old_stage)
-        compiler_args = f'''{os.path.join(os.getcwd(), 'src', 'ReCode.code')} {os.path.join('build', f'{new_stage}')}.s {os.path.join('build', f'{new_stage}')}.ir'''
+    def compile(compiler, code, binary):
+        compiler = os.path.join('build', compiler)
+        compiler_args = f'''{os.path.join(os.getcwd(), 'src', code)} {os.path.join('build', f'{binary}')}.s {os.path.join('build', f'{binary}')}.ir'''
         if execute(f'''{compiler} {compiler_args}''', exit_on_error=False) == 0:
-            execute(f'''gcc -g -o {os.path.join('build', new_stage)} {os.path.join('build', f'{new_stage}.s')}''', echo=False)
+            execute(f'''gcc -g -o {os.path.join('build', binary)} {os.path.join('build', f'{binary}.s')}''', echo=False)
         else:
             subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {compiler_args} &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
             exit(1)
 
-    compile('ReCode', 'Stage1')
-    compile('Stage1', 'Stage2')
+    run_test_code = os.path.exists(os.path.join(os.getcwd(), 'src', 'Test.code'))
+
+    if run_test_code:
+        compile('ReCode', 'Test.code', 'Test-Stage0')
+        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage0'))
+    compile('ReCode', 'ReCode.code', 'Stage1')
+    if run_test_code:
+        compile('Stage1', 'Test.code', 'Test-Stage1')
+        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage1'))
+    compile('Stage1', 'ReCode.code', 'Stage2')
     # TODO: compile('Stage2', 'Stage3')
     # TODO: Report success if Stage2.s and Stage3.s are equal.
 
