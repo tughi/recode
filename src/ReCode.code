@@ -94,7 +94,7 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
         self.blocks_stack.remove(block).prune()
     }
 
-    self.output_file.write("  .set .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).write(", ").write(128).end_line()
+    self.output_file.write("  .set .STACK_FRAME_SIZE_").write(function.name).write('_').write(function.id).write(", ").write(self.stack_frame_size).end_line()
     self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
@@ -463,8 +463,8 @@ write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) ->
         if (mc_variable == null) {
             generator.abort("Invalid state")
         }
+        value_type_size: Int = generator.get_type_size(ir_value.type)
         if (mc_variable.register != null) {
-            value_type_size: Int = generator.get_type_size(ir_value.type)
             if (value_type_size == 8) {
                 return file.write(mc_variable.register.name_q)
             }
@@ -474,7 +474,13 @@ write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) ->
             generator.abort(clone("Unsupported type size: ").append(value_type_size))
         }
         if (mc_variable.address != null) {
-            return file.write(mc_variable.address)
+            if (value_type_size == 8) {
+                return file.write("QWORD PTR ").write(mc_variable.address)
+            }
+            if (value_type_size == 1) {
+                return file.write("BYTE PTR ").write(mc_variable.address)
+            }
+            generator.abort(clone("Unsupported type size: ").append(value_type_size))
         }
         generator.abort("Invalid state")
     }
@@ -507,6 +513,7 @@ MC_Generator :: struct {
     first_variable: @MC_Variable
     last_variable: @MC_Variable
     blocks_stack: @List
+    stack_frame_size: Int
 }
 
 create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
@@ -530,6 +537,7 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator.first_variable = null
     generator.last_variable = null
     generator.blocks_stack = create_list()
+    generator.stack_frame_size = 0
     return generator
 }
 
@@ -622,6 +630,9 @@ spill_local_variable :: (self: @MC_Generator, variable: @MC_Variable) -> Nothing
             other_variable = other_variable.next_variable
         }
         offset = offset + self.get_type_size(variable.ir_variable.type)
+        if (offset > self.stack_frame_size) {
+            self.stack_frame_size = offset
+        }
         variable.address = create_mc_local_variable_address(offset)
     }
     self.output_file.write("  mov ").write(variable.address).write(", ").write(variable.register.name_q).end_line()
