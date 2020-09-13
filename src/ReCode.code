@@ -97,8 +97,13 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
     self.output_file.write("  ret").end_line().end_line()
+
     self.output_file.write(function.name).write('_').write(function.id).write("__stack_frame_size").write(":").end_line()
-    self.output_file.write("  .word ").write(self.stack_frame_size).end_line()
+    stack_frame_size: Int = self.stack_frame_size
+    if (stack_frame_size // 16 != 0) {
+        stack_frame_size = stack_frame_size + 16 - stack_frame_size // 16
+    }
+    self.output_file.write("  .word ").write(stack_frame_size).end_line()
 
     self.reset()
 }
@@ -196,7 +201,11 @@ generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruc
         }
     }
     self.release_all_registers()
-    self.output_file.write("  call ").write(instruction.function.name).write('_').write(instruction.function.id).end_line()
+    self.output_file.write("  call ").write(instruction.function.name)
+    if (instruction.function.is_external == false) {
+        self.output_file.write('_').write(instruction.function.id)
+    }
+    self.output_file.end_line()
     if (instruction.result_value != null) {
         self.map_variable(instruction.result_value, self.register_rax)
     }
@@ -677,6 +686,7 @@ spill_local_variable :: (self: @MC_Generator, variable: @MC_Variable) -> Nothing
         \ global variables are spilled after each instruction
         self.abort("Invalid state")
     }
+    variable_type_size: Int = self.get_type_size(variable.ir_variable.type)
     if (variable.address == null) {
         offset: Int = 0
         other_variable: @MC_Variable = self.first_variable
@@ -690,13 +700,28 @@ spill_local_variable :: (self: @MC_Generator, variable: @MC_Variable) -> Nothing
             }
             other_variable = other_variable.next_variable
         }
-        offset = offset + self.get_type_size(variable.ir_variable.type)
+        offset = offset + variable_type_size
         if (offset > self.stack_frame_size) {
             self.stack_frame_size = offset
         }
         variable.address = create_mc_local_variable_address(offset)
     }
-    self.output_file.write("  mov ").write(variable.address).write(", ").write(variable.register.name_q).end_line()
+    if (variable_type_size == 8) {
+        self.output_file.write("  mov ").write(variable.address).write(", ").write(variable.register.name_q).end_line()
+        return
+    }
+    if (variable_type_size == 4) {
+        self.output_file.write("  mov ").write(variable.address).write(", ").write(variable.register.name_d).end_line()
+        return
+    }
+    if (variable_type_size == 2) {
+        self.output_file.write("  mov ").write(variable.address).write(", ").write(variable.register.name_w).end_line()
+        return
+    }
+    if (variable_type_size == 1) {
+        self.output_file.write("  mov ").write(variable.address).write(", ").write(variable.register.name_b).end_line()
+        return
+    }
 }
 
 spill_global_variable :: (self: @MC_Generator, variable: @MC_Variable) -> Nothing {
@@ -1249,6 +1274,7 @@ create_function :: (self: @IR_Builder, function_statement: @AST_Function_Stateme
     function.name = function_statement.name.lexeme
     function.parameters = create_list()
     function.return_type = self.convert_value_type(function_statement.return_type)
+    function.is_external = function_statement.body == null
 
     parameters: @List_Iterator = function_statement.parameters.create_iterator()
     while (parameters.has_next()) {
@@ -2509,6 +2535,7 @@ IR_Function :: struct : Object {
     name: @String
     parameters: @List
     return_type: @IR_Type
+    is_external: Boolean
     blocks: @List
 }
 
