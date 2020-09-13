@@ -1358,7 +1358,7 @@ build_function :: (self: @IR_Builder, function_statement: @AST_Function_Statemen
     self.remove_redundant_blocks(function)
     self.populate_phi_instructions(function)
     self.remove_trivial_phi_instructions(function)
-    \ TODO: self.remove_redundant_set_instructions(function)
+    self.remove_redundant_set_instructions(function)
 
     self.context = self.context.parent
 }
@@ -1512,11 +1512,10 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
 
             block_instruction: @IR_Instruction = block.first_instruction
             while (block_instruction != null) {
-                if (block_instruction.is(IR_Set_Instruction)) {
-                    instruction: @IR_Set_Instruction = block_instruction as @IR_Set_Instruction
-                    instruction_value: @IR_Value = instruction.get_value()
-                    if (instruction.prev_instruction != null && instruction_value.user_instructions.size == 1) {
-                        instruction.prev_instruction.result_value = instruction.result_value
+                if (block_instruction.result_value != null && block_instruction.result_value.user_instructions.size == 1) {
+                    instruction: @IR_Instruction = block_instruction.result_value.user_instructions.first() as @IR_Instruction
+                    if (instruction.is(IR_Set_Instruction)) {
+                        block_instruction.result_value = instruction.result_value
                         block.remove(instruction)
                         repeat = true
                         break
