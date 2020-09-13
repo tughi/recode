@@ -1647,6 +1647,7 @@ convert_break_statement :: (self: @IR_Builder, statement: @AST_Break_Statement) 
         abort(statement.location, "Break outside of a loop?")
     }
     self.current_block.append_jump(self.current_loop.end_block)
+    self.current_block = self.current_block.function.create_block()
 }
 
 convert_expression_statement :: (self: @IR_Builder, statement: @AST_Expression_Statement) -> Nothing {
@@ -1698,6 +1699,7 @@ convert_return_statement :: (self: @IR_Builder, statement: @AST_Return_Statement
     } else {
         self.append(create_ir_return_instruction(null))
     }
+    self.current_block = self.current_block.function.create_block()
 }
 
 convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
@@ -2971,16 +2973,15 @@ dump :: (function: @IR_Function, file: @FILE) -> Nothing {
         }
     }
     file.write(") -> ").write(function.return_type.name).write(" {").end_line()
-    dumped_blocks: @@IR_Block = new [@IR_Block; function.blocks.size]
-    (function.blocks.first() as @IR_Block).dump(file, dumped_blocks)
+    block_item: @List_Item = function.blocks.first_item
+    while (block_item != null) {
+        (block_item.data as @IR_Block).dump(file)
+        block_item = block_item.next_item
+    }
     file.write('}').end_line()
 }
 
-dump :: (block: @IR_Block, file: @FILE, dumped_blocks: @@IR_Block) -> @FILE {
-    if (dumped_blocks[block.id - 1] == block) {
-        return file
-    }
-    dumped_blocks[block.id - 1] = block
+dump :: (block: @IR_Block, file: @FILE) -> @FILE {
     file.write("block.").write(block.id)
     block_predecessors: @List_Iterator = block.predecessors.create_iterator()
     if (block_predecessors.has_next()) {
@@ -3001,15 +3002,6 @@ dump :: (block: @IR_Block, file: @FILE, dumped_blocks: @@IR_Block) -> @FILE {
     while (block_instruction != null) {
         block_instruction.dump(file)
         block_instruction = block_instruction.next_instruction
-    }
-    if (block.last_instruction.is(IR_Direct_Jump_Instruction)) {
-        instruction: @IR_Direct_Jump_Instruction = block.last_instruction as @IR_Direct_Jump_Instruction
-        instruction.block.dump(file, dumped_blocks)
-    }
-    if (block.last_instruction.is(IR_Conditional_Jump_Instruction)) {
-        instruction: @IR_Conditional_Jump_Instruction = block.last_instruction as @IR_Conditional_Jump_Instruction
-        instruction.true_block.dump(file, dumped_blocks)
-        instruction.false_block.dump(file, dumped_blocks)
     }
     return file
 }
@@ -3429,9 +3421,8 @@ parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statem
         struct_statement: @AST_Struct_Statement = create_ast_struct_statement(struct_name, base_type, struct_members)
         self.compilation_unit.types.append(struct_statement)
         return struct_statement
-    } else {
-        abort(name_expression.location, "Cannot use expression as struct name")
     }
+    abort(name_expression.location, "Cannot use expression as struct name")
 }
 
 \ struct_members
@@ -3483,9 +3474,8 @@ parse_function :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Stat
         function_statement: @AST_Function_Statement = create_ast_function_statement(function_name, function_parameters, function_return_type, function_body)
         self.compilation_unit.functions.append(function_statement)
         return function_statement
-    } else {
-        abort(name_expression.location, "Cannot use expression as function name")
     }
+    abort(name_expression.location, "Cannot use expression as function name")
 }
 
 \ function_parameters
