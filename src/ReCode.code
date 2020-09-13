@@ -303,13 +303,28 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
             }
             self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * self.get_type_size(instruction.result_value.type)).end_line()
         }
+    } else {
+        index_register: @MC_Register = self.find_unused_register()
+        self.generate_load_value(index_register, instruction.get_index_value())
+        self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(16).end_line()
+        self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_register.name_q).end_line()
+    }
+
+    result_value_type_size: Int = self.get_type_size(instruction.result_value.type)
+    if (result_value_type_size == 8) {
+        self.output_file.write("  mov ").write(result_register.name_q).write(", [").write(result_register.name_q).write(']').end_line()
         return
     }
-    self.abort(clone("Unsupported index type: ").append(index_value.object_type.name))
-    \ index_register: @MC_Register = self.find_unused_register()
-    \ self.generate_load_value(index_register, instruction.get_index_value())
-    \ self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(16).end_line()
-    \ self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_register.name_q).end_line()
+    if (result_value_type_size == 4) {
+        self.output_file.write("  mov ").write(result_register.name_d).write(", [").write(result_register.name_q).write(']').end_line()
+        return
+    }
+    if (result_value_type_size == 2) {
+        self.output_file.write("  mov ").write(result_register.name_w).write(", [").write(result_register.name_q).write(']').end_line()
+        return
+    }
+    self.output_file.write("  mov ").write(result_register.name_b).write(", [").write(result_register.name_q).write(']').end_line()
+    \ TODO: check why is the compiler crashing without this line
 }
 
 generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
@@ -454,7 +469,7 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
     }
     if (ir_value.is(IR_Variable_Value)) {
         ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
-        ir_value_type: @IR_Value = ir_value.type
+        ir_value_type: @IR_Type = ir_value.type
         mc_variable: @MC_Variable = self.get_variable(ir_value.variable)
         if (mc_variable == null) {
             self.abort("Invalid state")
