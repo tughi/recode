@@ -402,7 +402,9 @@ generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Ins
         self.generate_load_value(self.register_rax, return_value)
     }
     self.release_all_registers()
-    self.output_file.write("  jmp ").write_function_end_label(instruction.parent_block.function).end_line()
+    if (self.blocks_stack.size != 0) {
+        self.output_file.write("  jmp ").write_function_end_label(instruction.parent_block.function).end_line()
+    }
 }
 
 generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
@@ -428,14 +430,7 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
         if (ir_value.literal.is(Character_Token)) {
-            self.output_file.write("  mov ").write(register.name_b).write(", ")
-            lexeme: @String = ir_value.literal.lexeme
-            index: Int = 0
-            while (index < lexeme.length - 1) {
-                self.output_file.write(lexeme.data[index])
-                index = index + 1
-            }
-            self.output_file.end_line()
+            self.output_file.write("  mov ").write(register.name_b).write(", ").write((ir_value.literal as @Character_Token).value as Int).end_line()
             return
         }
         if (ir_value.literal.is(Integer_Token)) {
@@ -487,6 +482,10 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             self.output_file.write("  mov ").write(register.name_q).write(", QWORD PTR ").write(mc_variable.address).end_line()
             return
         }
+        if (ir_value_type.is(IR_Int8_Type)) {
+            self.output_file.write("  mov ").write(register.name_b).write(", BYTE PTR ").write(mc_variable.address).end_line()
+            return
+        }
         if (ir_value_type.is(IR_Pointer_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", QWORD PTR ").write(mc_variable.address).end_line()
             return
@@ -504,6 +503,9 @@ write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) ->
                 return file.write(1)
             }
             return file.write(0)
+        }
+        if (ir_value.literal.is(Character_Token)) {
+            return file.write((ir_value.literal as @Character_Token).value as Int)
         }
         if (ir_value.literal.is(Integer_Token)) {
             return file.write((ir_value.literal as @Integer_Token).value)
@@ -4828,9 +4830,11 @@ is_space :: (char: Int8) -> Boolean {
 }
 
 scan_character_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+    value: Int8
     if (self.peek_char() == '\'') {
         token_lexeme.append(self.next_char())
         char: Int8 = self.next_char()
+        value = char
         token_lexeme.append(char)
         if (char == '\'') {
             return create_error_token(token_lexeme, token_location)
@@ -4840,6 +4844,17 @@ scan_character_token :: (self: @Scanner, token_lexeme: @String, token_location: 
             token_lexeme.append(char)
             if (char.is_escape() == false) {
                 return create_error_token(token_lexeme, token_location)
+            }
+            if (char == 'n') {
+                value = '\n'
+            } else {
+                if (char == 't') {
+                    value = '\t'
+                } else {
+                    if (char == '0') {
+                        value = '\0'
+                    }
+                }
             }
             char = self.next_char()
             token_lexeme.append(char)
@@ -4857,7 +4872,7 @@ scan_character_token :: (self: @Scanner, token_lexeme: @String, token_location: 
             }
         }
     }
-    return create_character_token(token_lexeme, token_location)
+    return create_character_token(token_lexeme, token_location, value)
 }
 
 is_escape :: (char: Int8) -> Boolean {
@@ -5004,11 +5019,13 @@ Literal_Token :: struct : Token {
 }
 
 Character_Token :: struct : Literal_Token {
+    value: Int8
 }
 
-create_character_token :: (lexeme: @String, location: @Source_Location) -> @Character_Token {
+create_character_token :: (lexeme: @String, location: @Source_Location, value: Int8) -> @Character_Token {
     token: @Character_Token = new Character_Token
     token.init(lexeme, location)
+    token.value = value
     return token
 }
 
