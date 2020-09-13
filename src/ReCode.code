@@ -132,6 +132,10 @@ write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
 
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
     instruction.is_generated = true
+    if (instruction.is(IR_Add_Instruction)) {
+        self.generate_add_instruction(instruction as @IR_Add_Instruction)
+        return
+    }
     if (instruction.is(IR_Call_Instruction)) {
         self.generate_call_instruction(instruction as @IR_Call_Instruction)
         return
@@ -181,6 +185,13 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         return
     }
     self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
+}
+
+generate_add_instruction :: (self: @MC_Generator, instruction: @IR_Add_Instruction) -> Nothing {
+    result_register: @MC_Register = self.find_unused_register()
+    self.generate_load_value(result_register, instruction.get_left_value())
+    self.map_variable(instruction.result_value, result_register)
+    self.output_file.write("  add ").write(result_register.name_q).write(", ").write_operand(self, instruction.get_right_value()).end_line()
 }
 
 generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
