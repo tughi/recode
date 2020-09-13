@@ -56,7 +56,7 @@ generate :: (build: @IR_Build, output_file_name: @String) -> Nothing {
     functions: @List_Iterator = build.named_functions.create_iterator()
     while (functions.has_next()) {
         function: @IR_Function = functions.next() as @IR_Function
-        if (function.blocks.size > 0) {
+        if (function.is_external == false) {
             generator.generate_function(function)
         }
     }
@@ -80,17 +80,19 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  sub rsp, rax").end_line()
 
     block: @IR_Block = function.blocks.first() as @IR_Block
-    loop {
-        if (block.is_generated) {
-            self.abort("Invalid state")
+    if (block != null) {
+        loop {
+            if (block.is_generated) {
+                self.abort("Invalid state")
+            }
+            block.is_generated = true
+            self.generate_block(block)
+            block = self.blocks_stack.last() as @IR_Block
+            if (block == null) {
+                break
+            }
+            self.blocks_stack.remove(block).prune()
         }
-        block.is_generated = true
-        self.generate_block(block)
-        block = self.blocks_stack.last() as @IR_Block
-        if (block == null) {
-            break
-        }
-        self.blocks_stack.remove(block).prune()
     }
 
     self.output_file.write_function_end_label(function).write(":").end_line()
@@ -2955,7 +2957,7 @@ dump :: (build: @IR_Build, file: @FILE) -> Nothing {
     functions: @List_Iterator = build.named_functions.create_iterator()
     while (functions.has_next()) {
         function: @IR_Function = functions.next() as @IR_Function
-        if (function.blocks.size > 0) {
+        if (function.is_external == false) {
             function.dump(file)
             file.end_line()
         }
