@@ -129,6 +129,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_call_instruction(instruction as @IR_Call_Instruction)
         return
     }
+    if (instruction.is(IR_Cast_Instruction)) {
+        self.generate_cast_instruction(instruction as @IR_Cast_Instruction)
+        return
+    }
     if (instruction.is(IR_Conditional_Jump_Instruction)) {
         self.generate_conditional_jump_instruction(instruction as @IR_Conditional_Jump_Instruction)
         return
@@ -196,6 +200,20 @@ generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruc
     if (instruction.result_value != null) {
         self.map_variable(instruction.result_value, self.register_rax)
     }
+}
+
+generate_cast_instruction :: (self: @MC_Generator, instruction: @IR_Cast_Instruction) -> Nothing {
+    ir_value: @IR_Value = instruction.get_value()
+    result_register: @MC_Register = self.find_unused_register()
+    self.generate_load_value(result_register, ir_value)
+    self.map_variable(instruction.result_value, result_register)
+    if (instruction.result_value.type.is(IR_Int32_Type)) {
+        if (ir_value.type.is(IR_Int8_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
+            return
+        }
+    }
+    self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
 }
 
 generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
@@ -432,16 +450,39 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
     }
     if (ir_value.is(IR_Variable_Value)) {
         ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
-        variable: @MC_Variable = self.get_variable(ir_value.variable)
-        if (variable == null) {
+        ir_value_type: @IR_Value = ir_value.type
+        mc_variable: @MC_Variable = self.get_variable(ir_value.variable)
+        if (mc_variable == null) {
             self.abort("Invalid state")
         }
-        if (variable.register != null) {
-            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable.register.name_q).end_line()
+        if (mc_variable.register != null) {
+            if (ir_value_type.is(IR_Int_Type)) {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_variable.register.name_q).end_line()
+                return
+            }
+            if (ir_value_type.is(IR_Int32_Type)) {
+                self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_variable.register.name_d).end_line()
+                return
+            }
+            if (ir_value_type.is(IR_Int8_Type)) {
+                self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_variable.register.name_b).end_line()
+                return
+            }
+            if (ir_value_type.is(IR_Pointer_Type)) {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_variable.register.name_q).end_line()
+                return
+            }
+            self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
+        }
+        if (ir_value_type.is(IR_Int_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", QWORD PTR ").write(mc_variable.address).end_line()
             return
         }
-        self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable.address).end_line()
-        return
+        if (ir_value_type.is(IR_Pointer_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", QWORD PTR ").write(mc_variable.address).end_line()
+            return
+        }
+        self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
     }
     self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
 }
@@ -827,6 +868,15 @@ get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
     }
     if (ir_type.is(IR_Int_Type)) {
         return 8
+    }
+    if (ir_type.is(IR_Int16_Type)) {
+        return 2
+    }
+    if (ir_type.is(IR_Int32_Type)) {
+        return 4
+    }
+    if (ir_type.is(IR_Int8_Type)) {
+        return 1
     }
     if (ir_type.is(IR_Pointer_Type)) {
         return 8
