@@ -303,6 +303,8 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
     result_register: @MC_Register = self.find_unused_register()
     self.generate_load_value(result_register, instruction.get_array_value())
     self.map_variable(instruction.result_value, result_register)
+    result_value_type_size: Int = self.get_type_size(instruction.result_value.type)
+
     index_value: @IR_Value = instruction.get_index_value()
     if (index_value.is(IR_Constant_Value)) {
         index_value: @IR_Constant_Value = index_value as @IR_Constant_Value
@@ -314,16 +316,17 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
             if (index_value < 0) {
                 self.abort("Invalid state")
             }
-            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * self.get_type_size(instruction.result_value.type)).end_line()
+            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * result_value_type_size).end_line()
         }
     } else {
         index_register: @MC_Register = self.find_unused_register()
         self.generate_load_value(index_register, instruction.get_index_value())
-        self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(16).end_line()
+        if (result_value_type_size > 1) {
+            self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(result_value_type_size).end_line()
+        }
         self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_register.name_q).end_line()
     }
 
-    result_value_type_size: Int = self.get_type_size(instruction.result_value.type)
     if (result_value_type_size == 8) {
         self.output_file.write("  mov ").write(result_register.name_q).write(", [").write(result_register.name_q).write(']').end_line()
         return
@@ -337,7 +340,6 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
         return
     }
     self.output_file.write("  mov ").write(result_register.name_b).write(", [").write(result_register.name_q).write(']').end_line()
-    \ TODO: check why is the compiler crashing without this line
 }
 
 generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
@@ -574,7 +576,7 @@ write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) ->
 }
 
 abort :: (self: @MC_Generator, message: @String) -> Nothing {
-    self.output_file.fflush()
+    self.output_file.flush()
     abort(clone("[Generator] ").append(message))
 }
 
@@ -690,11 +692,15 @@ map_variable :: (self: @MC_Generator, ir_variable_value: @IR_Variable_Value, reg
         self.last_variable = variable
     }
     variable.ir_value = ir_variable_value
-    variable.address = address
-    variable.register = register
+    if (address != null) {
+        variable.address = address
+    }
+    if (register != null) {
+        variable.register = register
+    }
     if (register != null) {
         if (register.variable != null) {
-            self.output_file.fflush()
+            self.output_file.flush()
             abort(clone("Register ").append(register.name_q).append(" already mapped to variable: ").append(register.variable.ir_variable.name))
         }
         register.variable = variable
@@ -2585,14 +2591,12 @@ create_block :: (self: @IR_Function) -> @IR_Block {
 IR_Variable :: struct : Object {
     name: @String
     type: @IR_Type
-    address_value: @IR_Value
     values: @List
 }
 
 init :: (self: @IR_Variable, name: @String, type: @IR_Type) -> @IR_Variable {
     self.name = name
     self.type = type
-    self.address_value = null
     self.values = create_list()
     return self
 }
@@ -3151,7 +3155,7 @@ dump :: (instruction: @IR_Instruction, file: @FILE) -> @FILE {
 
 write :: (file: @FILE, value: @IR_Value, check_users: Boolean) -> @FILE {
     if (check_users && value.user_instructions.size == 0) {
-        file.fflush()
+        file.flush()
         if (value.is(IR_Variable_Value)) {
             value: @IR_Variable_Value = value as @IR_Variable_Value
             value_version: Int = value.version
@@ -4585,7 +4589,7 @@ write :: (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
         return file.write("while (").write(statement.condition_expression).write(") ").write(statement.block, alignment)
     }
 
-    file.fflush()
+    file.flush()
     abort(statement.location, "Unsupported AST_Statement type: ".clone().append(statement.object_type.id))
 }
 
@@ -4633,7 +4637,7 @@ write :: (file: @FILE, type: @AST_Type) -> @FILE {
         return file.write('@').write((type as @AST_Pointer_Type).pointed_type)
     }
 
-    file.fflush()
+    file.flush()
     abort(type.location, "Unsupported AST_Type type: ".clone().append(type.object_type.id))
 }
 
@@ -4721,7 +4725,7 @@ write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
         return file.write((expression as @AST_Variable_Expression).name)
     }
 
-    file.fflush()
+    file.flush()
     abort(expression.location, "Unsupported AST_Expression type: ".clone().append(expression.object_type.id))
 }
 
@@ -5605,7 +5609,12 @@ write :: (self: @FILE, char: Int8) -> @FILE {
 }
 
 end_line :: (self: @FILE) -> @FILE {
-    return self.write('\n')
+    return self.write('\n').flush()
+}
+
+flush :: (file: @FILE) -> @FILE {
+    file.fflush()
+    return file
 }
 
 abort :: (message: @String) -> Nothing {
