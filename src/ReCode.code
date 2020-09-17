@@ -158,7 +158,8 @@ generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
             self.spill_global_variable(self.get_variable(block_instruction.result_value))
         }
         self.discard_used_variables()
-        self.output_variables()
+        self.output_live_values()
+        self.output_used_registers()
         block_instruction = block_instruction.next_instruction
     }
 }
@@ -502,7 +503,11 @@ generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instructi
 
 generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
     if (register.variable != null) {
-        self.abort("Register is mapped to another variable")
+        if (ir_value.is(IR_Variable_Value)) {
+            self.release_register(register)
+        } else {
+            self.abort("Register holds another value")
+        }
     }
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
@@ -656,7 +661,7 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator: @MC_Generator = new MC_Generator
     generator.output_file_name = output_file_name
     generator.output_file = fopen(output_file_name.data, "w".data)
-    generator.output_debug_comments = false
+    generator.output_debug_comments = true
     generator.register_rax = new MC_Register_RAX.init("rax", "eax", "ax", "al")
     generator.register_rcx = new MC_Register_RCX.init("rcx", "ecx", "cx", "cl")
     generator.register_rdx = new MC_Register_RDX.init("rdx", "edx", "dx", "dl")
@@ -907,7 +912,7 @@ discard_used_variables :: (self: @MC_Generator) -> Nothing {
     }
 }
 
-output_variables :: (self: @MC_Generator) -> Nothing {
+output_live_values :: (self: @MC_Generator) -> Nothing {
     if (self.output_debug_comments == false) {
         return
     }
@@ -927,6 +932,34 @@ output_variables :: (self: @MC_Generator) -> Nothing {
         mc_variable = mc_variable.next_variable
     }
     self.output_file.end_line()
+}
+
+output_used_registers :: (self: @MC_Generator) -> Nothing {
+    if (true) {
+        return
+    }
+    self.output_file.write("  # [used registers]: ")
+    self.output_used_register(self.register_rax)
+    self.output_used_register(self.register_rcx)
+    self.output_used_register(self.register_rdx)
+    self.output_used_register(self.register_rbx)
+    self.output_used_register(self.register_rsi)
+    self.output_used_register(self.register_rdi)
+    self.output_used_register(self.register_r8)
+    self.output_used_register(self.register_r9)
+    self.output_used_register(self.register_r10)
+    self.output_used_register(self.register_r11)
+    self.output_used_register(self.register_r12)
+    self.output_used_register(self.register_r13)
+    self.output_used_register(self.register_r14)
+    self.output_used_register(self.register_r15)
+    self.output_file.end_line()
+}
+
+output_used_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
+    if (register.variable != null) {
+        self.output_file.write(register.name_q).write(':').write(register.variable.ir_variable_value.variable.name).write('.').write(register.variable.ir_variable_value.version).write(' ')
+    }
 }
 
 MC_Variable :: struct {
