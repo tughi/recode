@@ -417,6 +417,22 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
         self.abort(clone("Invalid state"))
     }
     if (instruction.variable.is(IR_Global_Variable)) {
+        ir_variable_value: @IR_Variable_Value = instruction.result_value
+        mc_variable: @MC_Variable = self.get_variable(ir_variable_value)
+        if (mc_variable == null) {
+            self.abort("Invalid state")
+        }
+        address: @MC_Address = mc_variable.address
+        if (address != null) {
+            if (address.is(MC_Global_Variable_Address) == false) {
+                self.abort("Invalid state")
+            }
+            address: @MC_Global_Variable_Address = address as @MC_Global_Variable_Address
+            if (address.ir_variable != ir_variable_value.variable) {
+                self.abort("Damn")
+            }
+            return
+        }
         ir_variable: @IR_Global_Variable = instruction.variable as @IR_Global_Variable
         if (ir_variable.is_external) {
             \ map external variable to global variable address
