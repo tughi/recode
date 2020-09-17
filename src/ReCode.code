@@ -107,6 +107,8 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
         }
     }
 
+    self.output_unreached_ir_instructions()
+
     self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
@@ -126,15 +128,37 @@ write_function_end_label :: (file: @FILE, function: @IR_Function) -> @FILE {
     return file.write(".LABEL__").write(function.name).write('_').write(function.id).write("__").write("end")
 }
 
+output_unreached_ir_instructions :: (self: @MC_Generator) -> Nothing {
+    if (self.output_debug_comments == false) {
+        return
+    }
+    mc_variable: @MC_Variable = self.first_variable
+    while (mc_variable != null) {
+        ir_instruction_item: @List_Item = mc_variable.ir_variable_value.user_instructions.first_item
+        while (ir_instruction_item != null) {
+            ir_instruction: @IR_Instruction = ir_instruction_item.data as @IR_Instruction
+            if (ir_instruction.is_generated == false) {
+                ir_instruction.dump(self.output_file, "  # [unreached instruction]: ")
+            }
+            ir_instruction_item = ir_instruction_item.next_item
+        }
+        mc_variable = mc_variable.next_variable
+    }
+}
+
 generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
     self.output_file.write_block_label(block).write(':').end_line()
     block_instruction: @IR_Instruction = block.first_instruction
     while (block_instruction != null) {
+        if (self.output_debug_comments) {
+            block_instruction.dump(self.output_file, "  # ")
+        }
         self.generate_instruction(block_instruction)
         if (block_instruction.is(IR_Load_Variable_Instruction) == false && block_instruction.result_value != null && block_instruction.result_value.variable.is(IR_Global_Variable)) {
             self.spill_global_variable(self.get_variable(block_instruction.result_value))
         }
         self.discard_used_variables()
+        self.output_variables()
         block_instruction = block_instruction.next_instruction
     }
 }
@@ -590,6 +614,7 @@ abort :: (self: @MC_Generator, message: @String) -> Nothing {
 MC_Generator :: struct {
     output_file_name: @String
     output_file: @FILE
+    output_debug_comments: Boolean
     registers: @List
     register_rax: @MC_Register
     register_rcx: @MC_Register
@@ -615,6 +640,7 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator: @MC_Generator = new MC_Generator
     generator.output_file_name = output_file_name
     generator.output_file = fopen(output_file_name.data, "w".data)
+    generator.output_debug_comments = false
     generator.register_rax = new MC_Register_RAX.init("rax", "eax", "ax", "al")
     generator.register_rcx = new MC_Register_RCX.init("rcx", "ecx", "cx", "cl")
     generator.register_rdx = new MC_Register_RDX.init("rdx", "edx", "dx", "dl")
@@ -855,11 +881,36 @@ discard_used_variables :: (self: @MC_Generator) -> Nothing {
                 } else {
                     self.last_variable = mc_variable.prev_variable
                 }
+                if (self.output_debug_comments) {
+                    self.output_file.write("  # [discarded value]: ").write(mc_variable.ir_variable_value.variable.name).write('.').write(mc_variable.ir_variable_value.version).end_line()
+                }
             }
         }
 
         mc_variable = mc_variable.next_variable
     }
+}
+
+output_variables :: (self: @MC_Generator) -> Nothing {
+    if (self.output_debug_comments == false) {
+        return
+    }
+    self.output_file.write("  # [live values]: ")
+    mc_variable: @MC_Variable = self.first_variable
+    while (mc_variable != null) {
+        if (mc_variable.ir_instruction.is_generated) {
+            self.output_file.write(mc_variable.ir_variable_value.variable.name).write('.').write(mc_variable.ir_variable_value.version).write(':')
+            if (mc_variable.register != null) {
+                self.output_file.write(mc_variable.register.name_q)
+            }
+            if (mc_variable.address != null) {
+                self.output_file.write(mc_variable.address)
+            }
+            self.output_file.write(' ')
+        }
+        mc_variable = mc_variable.next_variable
+    }
+    self.output_file.end_line()
 }
 
 MC_Variable :: struct {
@@ -1532,11 +1583,14 @@ remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -
                 }
                 if (instruction.is_redundant()) {
                     \ found redundant phi instruction
-                    user_instructions: @List_Iterator = instruction.result_value.user_instructions.create_iterator()
+                    old_value: @IR_Value = instruction.result_value
+                    new_value: @IR_Value = instruction.values.first() as @IR_Value
+                    user_instructions: @List_Iterator = old_value.user_instructions.create_iterator()
                     while (user_instructions.has_next()) {
                         user_instruction: @IR_Instruction = user_instructions.next() as @IR_Instruction
-                        user_instruction.replace_value(instruction.result_value, instruction.values.last() as @IR_Value)
+                        user_instruction.replace_value(old_value, new_value)
                     }
+                    new_value.user_instructions.remove_all(instruction).prune()
                     block.remove(instruction)
                     repeat = true
                 }
@@ -2974,37 +3028,47 @@ append :: (self: @IR_Phi_Instruction, value: @IR_Value) -> Nothing {
 }
 
 is_redundant :: (self: @IR_Phi_Instruction) -> Boolean {
-    values: @List_Iterator = self.values.create_iterator()
-    if (values.has_next() == false) {
+    \ redundant phi instruction:
+    \   v.1 = phi(v.2)
+
+    value_item: @List_Item = self.values.first_item
+    if (value_item == null) {
         abort()
     }
-    other: @IR_Value = values.next() as @IR_Value
-    while (values.has_next()) {
-        value: @IR_Value = values.next() as @IR_Value
-        if (value != other) {
+    other_value: @IR_Value = value_item.data as @IR_Value
+    value_item = value_item.next_item
+    while (value_item != null) {
+        value: @IR_Value = value_item.data as @IR_Value
+        if (value != other_value) {
             return false
         }
+        value_item = value_item.next_item
     }
     return true
 }
 
 is_trivial :: (self: @IR_Phi_Instruction) -> Boolean {
-    values: @List_Iterator = self.values.create_iterator()
-    if (values.has_next() == false) {
+    \ trivial phi instructions:
+    \   v.1 = phi(v.1)
+    \   v.1 = phi(v.1, v.2)
+
+    value_item: @List_Item = self.values.first_item
+    if (value_item == null) {
         abort()
     }
-    self_value: @IR_Value = self.result_value
-    other: @IR_Value = null
-    while (values.has_next()) {
-        value: @IR_Value = values.next() as @IR_Value
-        if (value != self_value) {
-            if (value != other) {
-                if (other != null) {
+    result_value: @IR_Value = self.result_value
+    other_value: @IR_Value = null
+    while (value_item != null) {
+        value: @IR_Value = value_item.data as @IR_Value
+        if (value != result_value) {
+            if (value != other_value) {
+                if (other_value != null) {
                     return false
                 }
-                other = value
+                other_value = value
             }
         }
+        value_item = value_item.next_item
     }
     return true
 }
@@ -3058,14 +3122,14 @@ dump :: (block: @IR_Block, file: @FILE) -> @FILE {
     file.write(':').end_line()
     block_instruction: @IR_Instruction = block.first_instruction
     while (block_instruction != null) {
-        block_instruction.dump(file)
+        block_instruction.dump(file, "   ")
         block_instruction = block_instruction.next_instruction
     }
     return file
 }
 
-dump :: (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-    file.write("   ")
+dump :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    file.write(prefix)
     if (instruction.is(IR_Add_Instruction)) {
         instruction: @IR_Add_Instruction = instruction as @IR_Add_Instruction
         return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write(instruction.get_left_value(), true).write(" + ").write(instruction.get_right_value(), true).end_line()
