@@ -442,7 +442,7 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
             }
             address: @MC_Global_Variable_Address = address as @MC_Global_Variable_Address
             if (address.ir_variable != ir_variable_value.variable) {
-                self.abort("Damn")
+                self.abort("Invalid state")
             }
             return
         }
@@ -451,6 +451,15 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
             \ map external variable to global variable address
             self.map_variable(instruction.result_value, create_mc_global_variable_address(ir_variable))
             return
+        }
+        if (ir_variable.type.is(IR_Pointer_Type)) {
+            pointed_type: @IR_Type = (ir_variable.type as @IR_Pointer_Type).pointed_type
+            if (pointed_type.name.equals("Object_Type")) {
+                result_register: @MC_Register = self.find_unused_register()
+                self.output_file.write("  lea ").write(result_register.name_q).write(", ").write(ir_variable.name).write("[rip]").end_line()
+                self.map_variable(instruction.result_value, result_register)
+                return
+            }
         }
         self.abort("Unsupported non-external variable")
     }
