@@ -215,7 +215,7 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         return
     }
     if (instruction.is(IR_Phi_Instruction)) {
-        \ nothing to do
+        self.generate_phi_instruction(instruction as @IR_Phi_Instruction)
         return
     }
     if (instruction.is(IR_Return_Instruction)) {
@@ -521,6 +521,21 @@ generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instructi
     self.map_variable(instruction.result_value, self.register_rax)
 }
 
+generate_phi_instruction :: (self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
+    result_variable: @IR_Variable = instruction.result_value.variable
+    instruction_value_item: @List_Item = instruction.values.first_item
+    while (instruction_value_item != null) {
+        instruction_value: @IR_Variable_Value = instruction_value_item.data as @IR_Variable_Value
+        if (result_variable != instruction_value.variable) {
+            result_register: @MC_Register = self.find_unused_register()
+            self.generate_load_value(result_register, instruction_value)
+            self.map_variable(instruction.result_value, result_register)
+            return
+        }
+        instruction_value_item = instruction_value_item.next_item
+    }
+}
+
 generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Instruction) -> Nothing {
     return_value: @IR_Value = instruction.get_return_value()
     if (return_value != null) {
@@ -637,6 +652,10 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
                 return
             }
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
+        }
+        if (ir_value_type.is(IR_Boolean_Type)) {
+            self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_variable.address).end_line()
+            return
         }
         if (ir_value_type.is(IR_Int_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_variable.address).end_line()
