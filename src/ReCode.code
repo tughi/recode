@@ -230,6 +230,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_store_struct_member_instruction(instruction as @IR_Store_Struct_Member_Instruction)
         return
     }
+    if (instruction.is(IR_Substract_Instruction)) {
+        self.generate_substract_instruction(instruction as @IR_Substract_Instruction)
+        return
+    }
     self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
 }
 
@@ -555,6 +559,13 @@ generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @
     }
     self.output_file.write('[').write(address_register.name_q).write(']').write(", ").write_operand(self, ir_value).end_line()
     address_register.is_reserved = false
+}
+
+generate_substract_instruction :: (self: @MC_Generator, instruction: @IR_Substract_Instruction) -> Nothing {
+    result_register: @MC_Register = self.find_unused_register()
+    self.generate_load_value(result_register, instruction.get_left_value())
+    self.map_variable(instruction.result_value, result_register)
+    self.output_file.write("  sub ").write(result_register.name_q).write(", ").write_operand(self, instruction.get_right_value()).end_line()
 }
 
 generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
