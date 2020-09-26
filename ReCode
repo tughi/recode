@@ -90,14 +90,15 @@ def test():
             exit(1)
 
     run_test_code = os.path.exists(os.path.join(os.getcwd(), 'src', 'Test.code'))
+    run_test_return_code = 0
 
     if run_test_code:
         compile('ReCode', 'Test.code', 'Test-Stage0')
-        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage0'))
+        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage0'), expected_return_code=run_test_return_code)
     compile('ReCode', 'ReCode.code', 'Stage1')
     if run_test_code:
         compile('Stage1', 'Test.code', 'Test-Stage1')
-        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage1'))
+        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage1'), expected_return_code=run_test_return_code)
     compile('Stage1', 'ReCode.code', 'Stage2')
     # TODO: compile('Stage2', 'Stage3')
     # TODO: Report success if Stage2.s and Stage3.s are equal.

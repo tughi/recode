@@ -206,12 +206,16 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
         return
     }
-    if (instruction.is(IR_Phi_Instruction)) {
-        \ nothing to do
+    if (instruction.is(IR_Modulo_Instruction)) {
+        self.generate_modulo_instruction(instruction as @IR_Modulo_Instruction)
         return
     }
     if (instruction.is(IR_New_Instruction)) {
         self.generate_new_instruction(instruction as @IR_New_Instruction)
+        return
+    }
+    if (instruction.is(IR_Phi_Instruction)) {
+        \ nothing to do
         return
     }
     if (instruction.is(IR_Return_Instruction)) {
@@ -482,6 +486,18 @@ generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @I
     self.output_file.write(", ").write('[').write(result_register.name_q).write(']').end_line()
 }
 
+generate_modulo_instruction :: (self: @MC_Generator, instruction: @IR_Modulo_Instruction) -> Nothing {
+    self.generate_load_value(self.register_rax, instruction.get_left_value())
+    self.register_rax.is_reserved = true
+    self.release_register(self.register_rdx)
+    self.register_rdx.is_reserved = true
+    self.output_file.write("  cqto").end_line()
+    self.output_file.write("  idiv ").write_operand(self, instruction.get_right_value()).end_line()
+    self.register_rdx.is_reserved = false
+    self.register_rax.is_reserved = false
+    self.map_variable(instruction.result_value, self.register_rdx)
+}
+
 generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
     self.release_all_registers()
     self.output_file.write("  mov ").write(self.register_rdi.name_q).write(", ").write(self.get_type_size(instruction.type)).end_line()
@@ -511,7 +527,7 @@ generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instructi
 
 generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @IR_Store_Struct_Member_Instruction) -> Nothing {
     address_register: @MC_Register = self.find_unused_register()
-    address_register.is_locked = true
+    address_register.is_reserved = true
     self.generate_load_value(address_register, instruction.get_struct_pointer_value())
     struct_type_member_offset: Int = self.get_offset(instruction.struct_type_member)
     if (struct_type_member_offset > 0) {
@@ -538,7 +554,7 @@ generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @
         }
     }
     self.output_file.write('[').write(address_register.name_q).write(']').write(", ").write_operand(self, ir_value).end_line()
-    address_register.is_locked = false
+    address_register.is_reserved = false
 }
 
 generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
@@ -756,22 +772,22 @@ reset :: (self: @MC_Generator) -> Nothing {
 }
 
 find_unused_register :: (self: @MC_Generator) -> @MC_Register {
-    if (self.register_r15.is_locked == false && self.register_r15.variable == null) {
+    if (self.register_r15.is_reserved == false && self.register_r15.variable == null) {
         return self.register_r15
     }
-    if (self.register_r14.is_locked == false && self.register_r14.variable == null) {
+    if (self.register_r14.is_reserved == false && self.register_r14.variable == null) {
         return self.register_r14
     }
-    if (self.register_r13.is_locked == false && self.register_r13.variable == null) {
+    if (self.register_r13.is_reserved == false && self.register_r13.variable == null) {
         return self.register_r13
     }
-    if (self.register_r12.is_locked == false && self.register_r12.variable == null) {
+    if (self.register_r12.is_reserved == false && self.register_r12.variable == null) {
         return self.register_r12
     }
-    if (self.register_r11.is_locked == false && self.register_r11.variable == null) {
+    if (self.register_r11.is_reserved == false && self.register_r11.variable == null) {
         return self.register_r11
     }
-    if (self.register_r10.is_locked == false && self.register_r10.variable == null) {
+    if (self.register_r10.is_reserved == false && self.register_r10.variable == null) {
         return self.register_r10
     }
     self.abort("All registered are used")
@@ -1034,7 +1050,7 @@ MC_Register :: struct : Object {
     name_d: @String
     name_w: @String
     name_b: @String
-    is_locked: Boolean
+    is_reserved: Boolean
     variable: @MC_Variable
 }
 
@@ -1043,7 +1059,7 @@ init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, 
     self.name_d = name_d
     self.name_w = name_w
     self.name_b = name_b
-    self.is_locked = false
+    self.is_reserved = false
     self.variable = null
     return self
 }
