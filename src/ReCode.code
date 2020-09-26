@@ -222,6 +222,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_set_instruction(instruction as @IR_Set_Instruction)
         return
     }
+    if (instruction.is(IR_Store_Struct_Member_Instruction)) {
+        self.generate_store_struct_member_instruction(instruction as @IR_Store_Struct_Member_Instruction)
+        return
+    }
     self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
 }
 
@@ -452,26 +456,30 @@ generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @I
     if (instruction.load_address) {
         self.abort("Not implemented")
     }
-    struct_type: @IR_Struct_Type = instruction.struct_type_member.struct_type
-    offset: Int = 0
-    if (struct_type.base_type != null) {
-        offset = self.get_type_size(struct_type.base_type)
+    struct_type_member_offset: Int = self.get_offset(instruction.struct_type_member)
+    if (struct_type_member_offset > 0) {
+        self.output_file.write("  add ").write(result_register.name_q).write(", ").write(struct_type_member_offset).end_line()
     }
-    struct_type_member_item: @List_Item = struct_type.members.first_item
-    while (struct_type_member_item != null) {
-        struct_type_member: @IR_Struct_Type_Member = struct_type_member_item.data as @IR_Struct_Type_Member
-        if (struct_type_member == instruction.struct_type_member) {
-            if (offset > 0) {
-                self.output_file.write("  add ").write(result_register.name_q).write(", ").write(offset).end_line()
-            }
-            self.output_file.write("  mov ").write(result_register.name_q).write(", ").write('[').write(result_register.name_q).write(']').end_line()
-            return
+    result_value_type_size: Int = self.get_type_size(instruction.result_value.type)
+    self.output_file.write("  mov ")
+    if (result_value_type_size == 8) {
+        self.output_file.write(result_register.name_q)
+    } else {
+        if (result_value_type_size == 4) {
+            self.output_file.write(result_register.name_d)
         } else {
-            offset = offset + self.get_type_size(struct_type_member.type)
+            if (result_value_type_size == 2) {
+                self.output_file.write(result_register.name_w)
+            } else {
+                if (result_value_type_size == 1) {
+                    self.output_file.write(result_register.name_b)
+                } else {
+                    self.abort("Invalid state")
+                }
+            }
         }
-        struct_type_member_item = struct_type_member_item.next_item
     }
-    self.abort("Invalid state")
+    self.output_file.write(", ").write('[').write(result_register.name_q).write(']').end_line()
 }
 
 generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
@@ -499,6 +507,38 @@ generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instructi
     result_register: @MC_Register = self.find_unused_register()
     self.generate_load_value(result_register, instruction.get_value())
     self.map_variable(instruction.result_value, result_register)
+}
+
+generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @IR_Store_Struct_Member_Instruction) -> Nothing {
+    address_register: @MC_Register = self.find_unused_register()
+    address_register.is_locked = true
+    self.generate_load_value(address_register, instruction.get_struct_pointer_value())
+    struct_type_member_offset: Int = self.get_offset(instruction.struct_type_member)
+    if (struct_type_member_offset > 0) {
+        self.output_file.write("  add ").write(address_register.name_q).write(", ").write(struct_type_member_offset).end_line()
+    }
+    ir_value: @IR_Value = instruction.get_value()
+    ir_value_type_size: Int = self.get_type_size(ir_value.type)
+    self.output_file.write("  mov ")
+    if (ir_value_type_size == 8) {
+        self.output_file.write("QWORD PTR ")
+    } else {
+        if (ir_value_type_size == 4) {
+            self.output_file.write("DWORD PTR ")
+        } else {
+            if (ir_value_type_size == 2) {
+                self.output_file.write("WORD PTR ")
+            } else {
+                if (ir_value_type_size == 1) {
+                    self.output_file.write("BYTE PTR ")
+                } else {
+                    self.abort("Invalid state")
+                }
+            }
+        }
+    }
+    self.output_file.write('[').write(address_register.name_q).write(']').write(", ").write_operand(self, ir_value).end_line()
+    address_register.is_locked = false
 }
 
 generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
@@ -575,6 +615,24 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
     }
     self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
+}
+
+get_offset :: (self: @MC_Generator, struct_type_member: @IR_Struct_Type_Member) -> Int {
+    offset: Int = 0
+    struct_type: @IR_Struct_Type = struct_type_member.struct_type
+    if (struct_type.base_type != null) {
+        offset = self.get_type_size(struct_type.base_type)
+    }
+    current_struct_type_member_item: @List_Item = struct_type.members.first_item
+    while (current_struct_type_member_item != null) {
+        current_struct_type_member: @IR_Struct_Type_Member = current_struct_type_member_item.data as @IR_Struct_Type_Member
+        if (current_struct_type_member == struct_type_member) {
+            return offset
+        }
+        offset = offset + self.get_type_size(current_struct_type_member.type)
+        current_struct_type_member_item = current_struct_type_member_item.next_item
+    }
+    self.abort("Invalid state")
 }
 
 write_operand :: (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
@@ -698,22 +756,22 @@ reset :: (self: @MC_Generator) -> Nothing {
 }
 
 find_unused_register :: (self: @MC_Generator) -> @MC_Register {
-    if (self.register_r15.variable == null) {
+    if (self.register_r15.is_locked == false && self.register_r15.variable == null) {
         return self.register_r15
     }
-    if (self.register_r14.variable == null) {
+    if (self.register_r14.is_locked == false && self.register_r14.variable == null) {
         return self.register_r14
     }
-    if (self.register_r13.variable == null) {
+    if (self.register_r13.is_locked == false && self.register_r13.variable == null) {
         return self.register_r13
     }
-    if (self.register_r12.variable == null) {
+    if (self.register_r12.is_locked == false && self.register_r12.variable == null) {
         return self.register_r12
     }
-    if (self.register_r11.variable == null) {
+    if (self.register_r11.is_locked == false && self.register_r11.variable == null) {
         return self.register_r11
     }
-    if (self.register_r10.variable == null) {
+    if (self.register_r10.is_locked == false && self.register_r10.variable == null) {
         return self.register_r10
     }
     self.abort("All registered are used")
@@ -976,6 +1034,7 @@ MC_Register :: struct : Object {
     name_d: @String
     name_w: @String
     name_b: @String
+    is_locked: Boolean
     variable: @MC_Variable
 }
 
@@ -984,6 +1043,7 @@ init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, 
     self.name_d = name_d
     self.name_w = name_w
     self.name_b = name_b
+    self.is_locked = false
     self.variable = null
     return self
 }
