@@ -571,10 +571,12 @@ generate_substract_instruction :: (self: @MC_Generator, instruction: @IR_Substra
 generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
     if (register.variable != null) {
         if (ir_value.is(IR_Variable_Value)) {
-            self.release_register(register)
-        } else {
-            self.abort("Register holds another value")
+            ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
+            if (ir_value == register.variable.ir_variable_value) {
+                return
+            }
         }
+        self.release_register(register)
     }
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
@@ -628,15 +630,15 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
         if (ir_value_type.is(IR_Int_Type)) {
-            self.output_file.write("  mov ").write(register.name_q).write(", QWORD PTR ").write(mc_variable.address).end_line()
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_variable.address).end_line()
             return
         }
         if (ir_value_type.is(IR_Int8_Type)) {
-            self.output_file.write("  mov ").write(register.name_b).write(", BYTE PTR ").write(mc_variable.address).end_line()
+            self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_variable.address).end_line()
             return
         }
         if (ir_value_type.is(IR_Pointer_Type)) {
-            self.output_file.write("  mov ").write(register.name_q).write(", QWORD PTR ").write(mc_variable.address).end_line()
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_variable.address).end_line()
             return
         }
         self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
