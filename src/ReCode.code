@@ -298,7 +298,12 @@ generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_
     if (mc_variable == null) {
         self.abort("Invalid state")
     }
-    self.output_file.write("  dec ").write(mc_variable.register.name_b).end_line()
+    condition_register: @MC_Register = mc_variable.register
+    if (condition_register == null) {
+        condition_register = self.find_unused_register()
+        self.generate_load_value(condition_register, condition_value)
+    }
+    self.output_file.write("  dec ").write(condition_register.name_b).end_line()
     self.release_all_registers()
     self.output_file.write("  jnz ").write_block_label(instruction.false_block).end_line()
     if (instruction.false_block.is_generated == false && self.blocks_stack.contains(instruction.false_block) == false) {
@@ -1781,10 +1786,10 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
             block_instruction: @IR_Instruction = block.first_instruction
             while (block_instruction != null) {
                 if (block_instruction.result_value != null && block_instruction.result_value.user_instructions.size == 1) {
-                    instruction: @IR_Instruction = block_instruction.result_value.user_instructions.first() as @IR_Instruction
-                    if (instruction.is(IR_Set_Instruction)) {
-                        block_instruction.result_value = instruction.result_value
-                        block.remove(instruction)
+                    user_instruction: @IR_Instruction = block_instruction.result_value.user_instructions.first() as @IR_Instruction
+                    if (user_instruction.is(IR_Set_Instruction) && user_instruction.parent_block == block) {
+                        block.remove(user_instruction)
+                        block_instruction.result_value = user_instruction.result_value
                         repeat = true
                         break
                     }
@@ -2809,7 +2814,7 @@ append_jump :: (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Blo
 
 remove :: (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
     if (instruction.parent_block != self) {
-        abort()
+        abort("Tried to remove instruction belonging to another block")
     }
     if (instruction.prev_instruction != null) {
         instruction.prev_instruction.next_instruction = instruction.next_instruction
