@@ -357,7 +357,20 @@ generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_
 }
 
 generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
-    self.output_file.write("  cmp ").write_operand(self, instruction.get_left_value()).write(", ").write_operand(self, instruction.get_right_value()).end_line()
+    left_value: @IR_Value = instruction.get_left_value()
+    right_value: @IR_Value = instruction.get_right_value()
+    if (left_value.is(IR_Variable_Value) && right_value.is(IR_Variable_Value)) {
+        mc_left_variable: @MC_Variable = self.get_variable(left_value as @IR_Variable_Value)
+        if (mc_left_variable.register == null) {
+            mc_right_variable: @MC_Variable = self.get_variable(right_value as @IR_Variable_Value)
+            if (mc_right_variable.register == null) {
+                register: @MC_Register = self.find_unused_register()
+                self.generate_load_value(register, left_value)
+                self.map_variable(left_value as @IR_Variable_Value, register)
+            }
+        }
+    }
+    self.output_file.write("  cmp ").write_operand(self, left_value).write(", ").write_operand(self, right_value).end_line()
     register: @MC_Register = self.find_unused_register()
     if (instruction.is(IR_Equals_Comparison_Instruction)) {
         self.output_file.write("  sete ").write(register.name_b).end_line()
@@ -673,6 +686,16 @@ generate_store_array_item_instruction :: (self: @MC_Generator, instruction: @IR_
         }
         self.output_file.write("  add ").write(address_register.name_q).write(", ").write(index_register.name_q).end_line()
         index_register.is_reserved = false
+    }
+
+    if (ir_value.is(IR_Variable_Value)) {
+        ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
+        mc_variable: @MC_Variable = self.get_variable(ir_value)
+        if (mc_variable.register == null) {
+            register: @MC_Register = self.find_unused_register()
+            self.generate_load_value(register, ir_value)
+            self.map_variable(ir_value, register)
+        }
     }
 
     self.output_file.write("  mov ")
