@@ -300,22 +300,28 @@ generate_cast_instruction :: (self: @MC_Generator, instruction: @IR_Cast_Instruc
 
 generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
     condition_value: @IR_Value = instruction.get_condition_value()
-    if (condition_value.is(IR_Variable_Value) == false) {
+    if (condition_value.type.is(IR_Boolean_Type) == false) {
         self.abort("Unsupported value type")
     }
-    condition_value: @IR_Variable_Value = condition_value as @IR_Variable_Value
-    mc_variable: @MC_Variable = self.get_variable(condition_value)
-    if (mc_variable == null) {
-        self.abort("Invalid state")
-    }
-    condition_register: @MC_Register = mc_variable.register
-    if (condition_register == null) {
+    condition_register: @MC_Register
+    if (condition_value.is(IR_Variable_Value)) {
+        condition_value: @IR_Variable_Value = condition_value as @IR_Variable_Value
+        mc_variable: @MC_Variable = self.get_variable(condition_value)
+        if (mc_variable == null) {
+            self.abort("Invalid state")
+        }
+        condition_register = mc_variable.register
+        if (condition_register == null) {
+            condition_register = self.find_unused_register()
+            self.generate_load_value(condition_register, condition_value)
+        }
+    } else {
         condition_register = self.find_unused_register()
         self.generate_load_value(condition_register, condition_value)
     }
-    self.output_file.write("  dec ").write(condition_register.name_b).end_line()
+    self.output_file.write("  test ").write(condition_register.name_b).write(", ").write(condition_register.name_b).end_line()
     self.release_all_registers()
-    self.output_file.write("  jnz ").write_block_label(instruction.false_block).end_line()
+    self.output_file.write("  jz ").write_block_label(instruction.false_block).end_line()
     if (instruction.false_block.is_generated == false && self.blocks_stack.contains(instruction.false_block) == false) {
         self.blocks_stack.append(instruction.false_block)
     }
