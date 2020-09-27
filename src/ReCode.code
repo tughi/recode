@@ -230,6 +230,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_set_instruction(instruction as @IR_Set_Instruction)
         return
     }
+    if (instruction.is(IR_Store_Array_Item_Instruction)) {
+        self.generate_store_array_item_instruction(instruction as @IR_Store_Array_Item_Instruction)
+        return
+    }
     if (instruction.is(IR_Store_Struct_Member_Instruction)) {
         self.generate_store_struct_member_instruction(instruction as @IR_Store_Struct_Member_Instruction)
         return
@@ -600,6 +604,60 @@ generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instructi
     }
     self.generate_load_value(result_register, result_value)
     self.map_variable(instruction.result_value, result_register)
+}
+
+generate_store_array_item_instruction :: (self: @MC_Generator, instruction: @IR_Store_Array_Item_Instruction) -> Nothing {
+    address_register: @MC_Register = self.find_unused_register()
+    address_register.is_reserved = true
+    self.generate_load_value(address_register, instruction.get_array_value())
+
+    ir_value: @IR_Value = instruction.get_value()
+    ir_value_type_size: Int = self.get_type_size(ir_value.type)
+
+    index_value: @IR_Value = instruction.get_index_value()
+    if (index_value.is(IR_Constant_Value)) {
+        index_value: @IR_Constant_Value = index_value as @IR_Constant_Value
+        if (index_value.literal.is(Integer_Token) == false) {
+            self.abort("Invalid state")
+        }
+        index_value: Int = (index_value.literal as @Integer_Token).value
+        if (index_value != 0) {
+            if (index_value < 0) {
+                self.abort("Invalid state")
+            }
+            self.output_file.write("  add ").write(address_register.name_q).write(", ").write(index_value * ir_value_type_size).end_line()
+        }
+    } else {
+        index_register: @MC_Register = self.find_unused_register()
+        index_register.is_reserved = true
+        self.generate_load_value(index_register, instruction.get_index_value())
+        if (ir_value_type_size > 1) {
+            self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(ir_value_type_size).end_line()
+        }
+        self.output_file.write("  add ").write(address_register.name_q).write(", ").write(index_register.name_q).end_line()
+        index_register.is_reserved = false
+    }
+
+    self.output_file.write("  mov ")
+    if (ir_value_type_size == 8) {
+        self.output_file.write("QWORD PTR ")
+    } else {
+        if (ir_value_type_size == 4) {
+            self.output_file.write("DWORD PTR ")
+        } else {
+            if (ir_value_type_size == 2) {
+                self.output_file.write("WORD PTR ")
+            } else {
+                if (ir_value_type_size == 1) {
+                    self.output_file.write("BYTE PTR ")
+                } else {
+                    self.abort("Invalid state")
+                }
+            }
+        }
+    }
+    self.output_file.write('[').write(address_register.name_q).write(']').write(", ").write_operand(self, ir_value).end_line()
+    address_register.is_reserved = false
 }
 
 generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @IR_Store_Struct_Member_Instruction) -> Nothing {
