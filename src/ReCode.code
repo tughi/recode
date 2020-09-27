@@ -567,6 +567,15 @@ generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @
         self.output_file.write("  add ").write(address_register.name_q).write(", ").write(struct_type_member_offset).end_line()
     }
     ir_value: @IR_Value = instruction.get_value()
+    if (ir_value.is(IR_Variable_Value)) {
+        ir_value: @IR_Variable_Value = ir_value as @IR_Variable_Value
+        mc_variable: @MC_Variable = self.get_variable(ir_value)
+        if (mc_variable.register == null) {
+            register: @MC_Register = self.find_unused_register()
+            self.generate_load_value(register, ir_value)
+            self.map_variable(ir_value, register)
+        }
+    }
     ir_value_type_size: Int = self.get_type_size(ir_value.type)
     self.output_file.write("  mov ")
     if (ir_value_type_size == 8) {
