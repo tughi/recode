@@ -635,6 +635,15 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
     }
     if (ir_value.is(IR_Constant_Value)) {
         ir_value: @IR_Constant_Value = ir_value as @IR_Constant_Value
+        if (ir_value.literal.is(Boolean_Token)) {
+            literal: @Boolean_Token = ir_value.literal as @Boolean_Token
+            if (literal.value) {
+                self.output_file.write("  mov ").write(register.name_b).write(", ").write(1).end_line()
+            } else {
+                self.output_file.write("  mov ").write(register.name_b).write(", ").write(0).end_line()
+            }
+            return
+        }
         if (ir_value.literal.is(Character_Token)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write((ir_value.literal as @Character_Token).value as Int).end_line()
             return
@@ -1228,6 +1237,9 @@ get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
     }
     if (ir_type.is(IR_Int8_Type)) {
         return 1
+    }
+    if (ir_type.is(IR_Null_Type)) {
+        return 8
     }
     if (ir_type.is(IR_Pointer_Type)) {
         return 8
