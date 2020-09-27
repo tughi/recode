@@ -577,7 +577,11 @@ generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Ins
 
 generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
     result_register: @MC_Register = self.find_unused_register()
-    self.generate_load_value(result_register, instruction.get_value())
+    result_value: @IR_Value = instruction.get_value()
+    if (result_value.is(IR_Undefined_Value)) {
+        self.abort(clone("Looks like ").append(instruction.result_value.variable.name).append(" is not properly initialized"))
+    }
+    self.generate_load_value(result_register, result_value)
     self.map_variable(instruction.result_value, result_register)
 }
 
@@ -1828,6 +1832,14 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
 
             block_instruction: @IR_Instruction = block.first_instruction
             while (block_instruction != null) {
+                if (block_instruction.is(IR_Set_Instruction)) {
+                    block_instruction: @IR_Set_Instruction = block_instruction as @IR_Set_Instruction
+                    if (block_instruction.get_value().is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0) {
+                        block.remove(block_instruction)
+                        repeat = true
+                        break
+                    }
+                }
                 if (block_instruction.result_value != null && block_instruction.result_value.user_instructions.size == 1) {
                     user_instruction: @IR_Instruction = block_instruction.result_value.user_instructions.first() as @IR_Instruction
                     if (user_instruction.is(IR_Set_Instruction) && user_instruction.parent_block == block) {
