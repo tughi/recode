@@ -685,6 +685,10 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             self.abort("Invalid state")
         }
         if (mc_variable.register != null) {
+            if (ir_value_type.is(IR_Boolean_Type)) {
+                self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_variable.register.name_b).end_line()
+                return
+            }
             if (ir_value_type.is(IR_Int_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_variable.register.name_q).end_line()
                 return
@@ -863,6 +867,12 @@ reset :: (self: @MC_Generator) -> Nothing {
 }
 
 find_unused_register :: (self: @MC_Generator) -> @MC_Register {
+    if (self.register_rax.is_reserved == false && self.register_rax.variable == null) {
+        return self.register_rax
+    }
+    if (self.register_rbx.is_reserved == false && self.register_rbx.variable == null) {
+        return self.register_rbx
+    }
     if (self.register_r15.is_reserved == false && self.register_r15.variable == null) {
         return self.register_r15
     }
@@ -880,6 +890,24 @@ find_unused_register :: (self: @MC_Generator) -> @MC_Register {
     }
     if (self.register_r10.is_reserved == false && self.register_r10.variable == null) {
         return self.register_r10
+    }
+    if (self.register_r9.is_reserved == false && self.register_r9.variable == null) {
+        return self.register_r9
+    }
+    if (self.register_r8.is_reserved == false && self.register_r8.variable == null) {
+        return self.register_r8
+    }
+    if (self.register_rcx.is_reserved == false && self.register_rcx.variable == null) {
+        return self.register_rcx
+    }
+    if (self.register_rdx.is_reserved == false && self.register_rdx.variable == null) {
+        return self.register_rdx
+    }
+    if (self.register_rsi.is_reserved == false && self.register_rsi.variable == null) {
+        return self.register_rsi
+    }
+    if (self.register_rdi.is_reserved == false && self.register_rdi.variable == null) {
+        return self.register_rdi
     }
     self.abort("All registered are used")
 }
