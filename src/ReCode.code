@@ -284,6 +284,10 @@ generate_cast_instruction :: (self: @MC_Generator, instruction: @IR_Cast_Instruc
     self.generate_load_value(result_register, ir_value)
     self.map_variable(instruction.result_value, result_register)
     if (instruction.result_value.type.is(IR_Int_Type)) {
+        if (ir_value.type.is(IR_Int32_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
+            return
+        }
         if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
             return
@@ -292,6 +296,14 @@ generate_cast_instruction :: (self: @MC_Generator, instruction: @IR_Cast_Instruc
     if (instruction.result_value.type.is(IR_Int32_Type)) {
         if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
+            return
+        }
+    }
+    if (instruction.result_value.type.is(IR_Int8_Type)) {
+        if (ir_value.type.is(IR_Int_Type)) {
+            return
+        }
+        if (ir_value.type.is(IR_Int32_Type)) {
             return
         }
     }
@@ -353,6 +365,11 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
     }
     if (instruction.is(IR_Less_Than_Comparison_Instruction)) {
         self.output_file.write("  setl ").write(register.name_b).end_line()
+        self.map_variable(instruction.result_value, register)
+        return
+    }
+    if (instruction.is(IR_Less_Than_Or_Equals_Comparison_Instruction)) {
+        self.output_file.write("  setle ").write(register.name_b).end_line()
         self.map_variable(instruction.result_value, register)
         return
     }
@@ -713,6 +730,10 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         }
         if (ir_value_type.is(IR_Int_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_variable.address).end_line()
+            return
+        }
+        if (ir_value_type.is(IR_Int32_Type)) {
+            self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_variable.address).end_line()
             return
         }
         if (ir_value_type.is(IR_Int8_Type)) {
@@ -5211,7 +5232,7 @@ is_space :: (char: Int8) -> Boolean {
 }
 
 scan_character_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
-    value: Int8
+    value: Int8 = '\0'
     if (self.peek_char() == '\'') {
         token_lexeme.append(self.next_char())
         char: Int8 = self.next_char()
