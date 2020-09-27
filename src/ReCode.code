@@ -210,6 +210,10 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_modulo_instruction(instruction as @IR_Modulo_Instruction)
         return
     }
+    if (instruction.is(IR_Multiply_Instruction)) {
+        self.generate_multiply_instruction(instruction as @IR_Multiply_Instruction)
+        return
+    }
     if (instruction.is(IR_New_Instruction)) {
         self.generate_new_instruction(instruction as @IR_New_Instruction)
         return
@@ -514,6 +518,13 @@ generate_modulo_instruction :: (self: @MC_Generator, instruction: @IR_Modulo_Ins
     self.register_rdx.is_reserved = false
     self.register_rax.is_reserved = false
     self.map_variable(instruction.result_value, self.register_rdx)
+}
+
+generate_multiply_instruction :: (self: @MC_Generator, instruction: @IR_Multiply_Instruction) -> Nothing {
+    result_register: @MC_Register = self.find_unused_register()
+    self.generate_load_value(result_register, instruction.get_left_value())
+    self.map_variable(instruction.result_value, result_register)
+    self.output_file.write("  imul ").write(result_register.name_q).write(", ").write_operand(self, instruction.get_right_value()).end_line()
 }
 
 generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
