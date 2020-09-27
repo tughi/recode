@@ -1632,9 +1632,9 @@ build_function :: (self: @IR_Builder, function_statement: @AST_Function_Statemen
 
     self.convert_block_statement(function_statement.body)
     if (self.current_block.last_instruction == null || self.current_block.last_instruction.is_exit_instruction() == false) {
-        if (self.current_block.predecessors.size == 0) {
+        if (self.current_block.predecessors.size == 0 && self.current_block.id != 1) {
             \ this block is unreachable
-            function.blocks.remove(self.current_block)
+            function.blocks.remove(self.current_block).prune()
         } else {
             if (function.return_type.is(IR_Nothing_Type)) {
                 self.append(create_ir_return_instruction(null))
@@ -1659,51 +1659,50 @@ remove_redundant_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothin
 
         blocks: @List_Iterator = function.blocks.prune().create_iterator()
 
-        \ skip entry block
-        blocks.next()
-
         while (blocks.has_next()) {
             block: @IR_Block = blocks.next() as @IR_Block
-            if (block.predecessors.size == 0) {
-                \ found unreachable block
-                if (block.last_instruction == null) {
-                    blocks.remove_current()
-                } else {
-                    if (block.last_instruction == block.first_instruction && block.last_instruction.is(IR_Direct_Jump_Instruction)) {
-                        block_instruction: @IR_Direct_Jump_Instruction = block.last_instruction as @IR_Direct_Jump_Instruction
-                        block_instruction.block.predecessors.remove(block)
-                        block_instruction.block.predecessors.prune()
+            if (block.id != 1) {
+                if (block.predecessors.size == 0) {
+                    \ found unreachable block
+                    if (block.last_instruction == null) {
                         blocks.remove_current()
+                    } else {
+                        if (block.last_instruction == block.first_instruction && block.last_instruction.is(IR_Direct_Jump_Instruction)) {
+                            block_instruction: @IR_Direct_Jump_Instruction = block.last_instruction as @IR_Direct_Jump_Instruction
+                            block_instruction.block.predecessors.remove(block)
+                            block_instruction.block.predecessors.prune()
+                            blocks.remove_current()
+                            repeat = true
+                            break
+                        } else {
+                            abort(function.location, clone("Found non-empty unreachable block: block.").append(block.id))
+                        }
+                    }
+                }
+                if (block.first_instruction == block.last_instruction && block.first_instruction.is(IR_Direct_Jump_Instruction)) {
+                    \ found jump block
+                    block_predecessor: @IR_Block = block.predecessors.last() as @IR_Block
+                    block_successor: @IR_Block = (block.first_instruction as @IR_Direct_Jump_Instruction).block
+                    if (block_predecessor.last_instruction.is(IR_Conditional_Jump_Instruction)) {
+                        block.predecessors.remove(block_predecessor).prune()
+                        block_predecessor_instruction: @IR_Conditional_Jump_Instruction = block_predecessor.last_instruction as @IR_Conditional_Jump_Instruction
+                        if (block_predecessor_instruction.false_block == block) {
+                            block_predecessor_instruction.false_block = block_successor
+                        } else {
+                            block_predecessor_instruction.true_block = block_successor
+                        }
+                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
                         repeat = true
                         break
-                    } else {
-                        abort(function.location, clone("Found non-empty unreachable block: block.").append(block.id))
                     }
-                }
-            }
-            if (block.first_instruction == block.last_instruction && block.first_instruction.is(IR_Direct_Jump_Instruction)) {
-                \ found jump block
-                block_predecessor: @IR_Block = block.predecessors.last() as @IR_Block
-                block_successor: @IR_Block = (block.first_instruction as @IR_Direct_Jump_Instruction).block
-                if (block_predecessor.last_instruction.is(IR_Conditional_Jump_Instruction)) {
-                    block.predecessors.remove(block_predecessor).prune()
-                    block_predecessor_instruction: @IR_Conditional_Jump_Instruction = block_predecessor.last_instruction as @IR_Conditional_Jump_Instruction
-                    if (block_predecessor_instruction.false_block == block) {
-                        block_predecessor_instruction.false_block = block_successor
-                    } else {
-                        block_predecessor_instruction.true_block = block_successor
+                    if (block_predecessor.last_instruction.is(IR_Direct_Jump_Instruction)) {
+                        block.predecessors.remove(block_predecessor).prune()
+                        block_predecessor_instruction: @IR_Direct_Jump_Instruction = block_predecessor.last_instruction as @IR_Direct_Jump_Instruction
+                        block_predecessor_instruction.block = block_successor
+                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
+                        repeat = true
+                        break
                     }
-                    block_successor.predecessors.remove(block).prune().append(block_predecessor)
-                    repeat = true
-                    break
-                }
-                if (block_predecessor.last_instruction.is(IR_Direct_Jump_Instruction)) {
-                    block.predecessors.remove(block_predecessor).prune()
-                    block_predecessor_instruction: @IR_Direct_Jump_Instruction = block_predecessor.last_instruction as @IR_Direct_Jump_Instruction
-                    block_predecessor_instruction.block = block_successor
-                    block_successor.predecessors.remove(block).prune().append(block_predecessor)
-                    repeat = true
-                    break
                 }
             }
         }
