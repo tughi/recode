@@ -61,6 +61,8 @@ generate :: (build: @IR_Build, output_file_name: @String) -> Nothing {
         }
     }
 
+    generator.generate_strings()
+
     generator.output_file.fclose()
 }
 
@@ -807,7 +809,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             return
         }
         if (ir_value.literal.is(String_Token)) {
-            self.output_file.write("  lea ").write(register.name_q).write(", ").write(".STRING_42").write("[rip]").write(" # ").write(ir_value.literal.lexeme).end_line()
+            mc_string: @MC_String = self.convert_string(ir_value.literal as @String_Token)
+            self.output_file.write("  lea ").write(register.name_q).write(", ").write_string_label(mc_string).write("[rip]").write(" # ").write(mc_string.literal.lexeme).end_line()
             return
         }
         self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
@@ -975,6 +978,7 @@ MC_Generator :: struct {
     last_variable: @MC_Variable
     blocks_stack: @List
     stack_frame_size: Int
+    strings: @List
 }
 
 create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
@@ -1000,6 +1004,7 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator.last_variable = null
     generator.blocks_stack = create_list()
     generator.stack_frame_size = 0
+    generator.strings = create_list()
     return generator
 }
 
@@ -1447,6 +1452,49 @@ get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
         return size
     }
     self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))
+}
+
+MC_String :: struct {
+    id: Int
+    literal: @String_Token
+}
+
+convert_string :: (self: @MC_Generator, literal: @String_Token) -> @MC_String {
+    string_item: @List_Item = self.strings.first_item
+    while (string_item != null) {
+        string: @MC_String = string_item.data as @MC_String
+        if (string.literal.lexeme.equals(literal.lexeme)) {
+            return string
+        }
+        string_item = string_item.next_item
+    }
+    string: @MC_String = new MC_String
+    string.id = self.strings.size
+    string.literal = literal
+    self.strings.append(string)
+    return string
+}
+
+generate_strings :: (self: @MC_Generator) -> Nothing {
+    self.output_file.end_line().write("  .section .rodata").end_line()
+    string_item: @List_Item = self.strings.first_item
+    while (string_item != null) {
+        string: @MC_String = string_item.data as @MC_String
+
+        self.output_file.end_line()
+        self.output_file.write("  .align 8").end_line()
+        self.output_file.write_string_label(string).write(':').end_line()
+        self.output_file.write("  .quad ").write_string_label(string).write("__data").end_line()
+        self.output_file.write("  .quad ").write(string.literal.value.length + 1).end_line()
+        self.output_file.write("  .quad ").write(string.literal.value.length).end_line()
+        self.output_file.write_string_label(string).write("__data: .string ").write(string.literal.lexeme).end_line()
+
+        string_item = string_item.next_item
+    }
+}
+
+write_string_label :: (file: @FILE, string: @MC_String) -> @FILE {
+    return file.write(".LABEL__string_").write(string.id)
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -5510,6 +5558,27 @@ scan_string_token :: (self: @Scanner, token_lexeme: @String, token_location: @So
                 if (char.is_escape() == false) {
                     return create_error_token(token_lexeme, token_location)
                 }
+                if (char == 'n') {
+                    value.append('\n')
+                } else {
+                    if (char == '\"') {
+                        value.append(char)
+                    } else {
+                        if (char == '\'') {
+                            value.append(char)
+                        } else {
+                            if (char == 't') {
+                                value.append('\t')
+                            } else {
+                                if (char == '0') {
+                                    value.append('\0')
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                value.append(char)
             }
         }
     }
