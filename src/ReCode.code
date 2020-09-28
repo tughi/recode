@@ -63,6 +63,8 @@ generate :: (build: @IR_Build, output_file_name: @String) -> Nothing {
 
     generator.generate_strings()
 
+    generator.generate_object_types(build.named_types)
+
     generator.output_file.fclose()
 }
 
@@ -1497,6 +1499,37 @@ write_string_label :: (file: @FILE, string: @MC_String) -> @FILE {
     return file.write(".LABEL__string_").write(string.id)
 }
 
+generate_object_types :: (self: @MC_Generator, types: @List) -> Nothing {
+    self.output_file.end_line().write("  .section .rodata").end_line()
+    type_item: @List_Item = types.first_item
+    while (type_item != null) {
+        type: @IR_Type = type_item.data as @IR_Type
+        if (type.is(IR_Struct_Type)) {
+            type: @IR_Struct_Type = type as @IR_Struct_Type
+            if (type.is_object_type()) {
+                self.output_file.end_line()
+                self.output_file.write("  .align 8").end_line()
+                self.output_file.write_type_label(type).write(':').end_line()
+                self.output_file.write("  .quad ").write(0).end_line() \ CHECK: Why isn't there a type.id? Isn't it needed anymore?
+                self.output_file.write("  .quad .LABEL__").write(type.name).write("__type_name__data").end_line()
+                self.output_file.write("  .quad ").write(type.name.length + 1).end_line()
+                self.output_file.write("  .quad ").write(type.name.length).end_line()
+                if (type.base_type != null) {
+                    self.output_file.write("  .quad ").write(type.base_type.name).end_line()
+                } else {
+                    self.output_file.write("  .quad 0").end_line()
+                }
+                self.output_file.write(".LABEL__").write(type.name).write("__type_name__data: .string \"").write(type.name).write('"').end_line()
+            }
+        }
+        type_item = type_item.next_item
+    }
+}
+
+write_type_label :: (file: @FILE, type: @IR_Type) -> @FILE {
+    return file.write(type.name)
+}
+
 \ -------------------------------------------------------------------------------------------------
 \       IR_Builder
 \ -------------------------------------------------------------------------------------------------
@@ -1507,12 +1540,14 @@ build :: (compilation_unit: @Compilation_Unit) -> @IR_Build {
     build: @IR_Build = new IR_Build
     build.source = compilation_unit.source
     build.named_functions = builder.named_functions
+    build.named_types = builder.named_types
     return build
 }
 
 IR_Build :: struct {
     source: @Source
     named_functions: @List
+    named_types: @List
 }
 
 IR_Builder :: struct {
@@ -5149,7 +5184,7 @@ write :: (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
     }
 
     file.flush()
-    abort(statement.location, "Unsupported AST_Statement type: ".clone().append(statement.object_type.id))
+    abort(statement.location, "Unsupported AST_Statement type: ".clone().append(statement.object_type.name))
 }
 
 write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
@@ -5197,7 +5232,7 @@ write :: (file: @FILE, type: @AST_Type) -> @FILE {
     }
 
     file.flush()
-    abort(type.location, "Unsupported AST_Type type: ".clone().append(type.object_type.id))
+    abort(type.location, "Unsupported AST_Type type: ".clone().append(type.object_type.name))
 }
 
 write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
@@ -5285,7 +5320,7 @@ write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
     }
 
     file.flush()
-    abort(expression.location, "Unsupported AST_Expression type: ".clone().append(expression.object_type.id))
+    abort(expression.location, "Unsupported AST_Expression type: ".clone().append(expression.object_type.name))
 }
 
 abort :: (location: @Source_Location, message: @String) -> Nothing {
