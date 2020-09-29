@@ -4217,33 +4217,33 @@ parse_expression :: (self: @Parser) -> @AST_Expression {
 }
 
 \ logic_or_expression
-\   : logic_and_expression ( "||" logic_or_expression )?
+\   : logic_and_expression ( "||" logic_and_expression )*
 parse_logic_or_expression :: (self: @Parser) -> @AST_Expression {
     expression: @AST_Expression = self.parse_logic_and_expression()
-    if (self.matches(self.optional_space, self.required_vertical_bar, self.required_vertical_bar)) {
+    while (self.matches(self.optional_space, self.required_vertical_bar, self.required_vertical_bar)) {
         self.consume_space(1)
         self.consume(self.required_vertical_bar, self.required_vertical_bar)
         self.consume_space(1)
-        return new AST_Logic_Or_Expression.init(expression, self.parse_logic_or_expression())
+        expression = new AST_Logic_Or_Expression.init(expression, self.parse_logic_and_expression())
     }
     return expression
 }
 
 \ logic_and_expression
-\   : equality_expression ( "&&" logic_and_expression )?
+\   : equality_expression ( "&&" equality_expression )*
 parse_logic_and_expression :: (self: @Parser) -> @AST_Expression {
     expression: @AST_Expression = self.parse_equality_expression()
-    if (self.matches(self.optional_space, self.required_ampersand, self.required_ampersand)) {
+    while (self.matches(self.optional_space, self.required_ampersand, self.required_ampersand)) {
         self.consume_space(1)
         self.consume(self.required_ampersand, self.required_ampersand)
         self.consume_space(1)
-        return new AST_Logic_And_Expression.init(expression, self.parse_logic_and_expression())
+        expression = new AST_Logic_And_Expression.init(expression, self.parse_equality_expression())
     }
     return expression
 }
 
 \ equality_expression
-\   : comparison_expression ( ( "==" | "!=" ) equality_expression )?
+\   : comparison_expression ( ( "==" | "!=" ) comparison_expression )?
 parse_equality_expression :: (self: @Parser) -> @AST_Expression {
     expression: @AST_Expression = self.parse_comparison_expression()
     if (self.matches(self.optional_space, self.required_equals, self.required_equals) || self.matches(self.optional_space, self.required_exclamation_mark, self.required_equals)) {
@@ -4258,13 +4258,13 @@ parse_equality_expression :: (self: @Parser) -> @AST_Expression {
         }
         self.consume(self.required_equals)
         self.consume_space(1)
-        return binary_expression.init(expression, self.parse_equality_expression())
+        expression = binary_expression.init(expression, self.parse_comparison_expression())
     }
     return expression
 }
 
 \ comparison_expression
-\   : addition_expression ( ( "<" | "<=" | ">" | ">=" ) comparison_expression )?
+\   : addition_expression ( ( "<" | "<=" | ">" | ">=" ) addition_expression )?
 parse_comparison_expression :: (self: @Parser) -> @AST_Expression {
     expression: @AST_Expression = self.parse_addition_expression()
     if (self.matches(self.optional_space, self.required_less_than) || self.matches(self.optional_space, self.required_greater_than)) {
@@ -4288,16 +4288,16 @@ parse_comparison_expression :: (self: @Parser) -> @AST_Expression {
             }
         }
         self.consume_space(1)
-        return binary_expression.init(expression, self.parse_comparison_expression())
+        expression = binary_expression.init(expression, self.parse_addition_expression())
     }
     return expression
 }
 
 \ addition_expression
-\   : multiplication_expression ( ( "+" | "-" ) addition_expression )?
+\   : multiplication_expression ( ( "+" | "-" ) multiplication_expression )*
 parse_addition_expression :: (self: @Parser) -> @AST_Expression {
     expression: @AST_Expression = self.parse_multiplication_expression()
-    if (self.matches(self.optional_space, self.required_plus) || self.matches(self.optional_space, self.required_hyphen)) {
+    while (self.matches(self.optional_space, self.required_plus) || self.matches(self.optional_space, self.required_hyphen)) {
         self.consume_space(1)
         binary_expression: @AST_Binary_Expression
         if (self.matches(self.required_plus)) {
@@ -4308,16 +4308,16 @@ parse_addition_expression :: (self: @Parser) -> @AST_Expression {
             binary_expression = new AST_Substract_Expression
         }
         self.consume_space(1)
-        return binary_expression.init(expression, self.parse_addition_expression())
+        expression = binary_expression.init(expression, self.parse_multiplication_expression())
     }
     return expression
 }
 
 \ multiplication_expression
-\   : unary_expression ( ( "*" | "/" | "//" ) multiplication_expression )?
+\   : unary_expression ( ( "*" | "/" | "//" ) unary_expression )*
 parse_multiplication_expression :: (self: @Parser) -> @AST_Expression {
     expression: @AST_Expression = self.parse_unary_expression()
-    if (self.matches(self.optional_space, self.required_asterisk) || self.matches(self.optional_space, self.required_slash)) {
+    while (self.matches(self.optional_space, self.required_asterisk) || self.matches(self.optional_space, self.required_slash)) {
         self.consume_space(1)
         binary_expression: @AST_Binary_Expression
         if (self.matches(self.required_slash)) {
@@ -4333,7 +4333,7 @@ parse_multiplication_expression :: (self: @Parser) -> @AST_Expression {
             binary_expression = new AST_Multiply_Expression
         }
         self.consume_space(1)
-        return binary_expression.init(expression, self.parse_multiplication_expression())
+        expression = binary_expression.init(expression, self.parse_unary_expression())
     }
     return expression
 }
@@ -5247,45 +5247,45 @@ write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
     }
 
     if (expression.is(AST_Binary_Expression)) {
-        file.write((expression as @AST_Binary_Expression).left_expression)
+        file.write('(').write((expression as @AST_Binary_Expression).left_expression)
         if (expression.is(AST_Add_Expression)) {
-            return file.write(" + ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" + ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Divide_Expression)) {
-            return file.write(" / ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" / ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Equals_Expression)) {
-            return file.write(" == ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" == ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Greater_Than_Expression)) {
-            return file.write(" > ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" > ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Greater_Than_Or_Equals_Expression)) {
-            return file.write(" >= ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" >= ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Less_Than_Expression)) {
-            return file.write(" < ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" < ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Less_Than_Or_Equals_Expression)) {
-            return file.write(" <= ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" <= ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Logic_And_Expression)) {
-            return file.write(" && ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" && ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Logic_Or_Expression)) {
-            return file.write(" || ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" || ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Modulo_Expression)) {
-            return file.write(" // ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" // ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Multiply_Expression)) {
-            return file.write(" * ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" * ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Not_Equals_Expression)) {
-            return file.write(" != ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" != ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
         if (expression.is(AST_Substract_Expression)) {
-            return file.write(" - ").write((expression as @AST_Binary_Expression).right_expression)
+            return file.write(" - ").write((expression as @AST_Binary_Expression).right_expression).write(')')
         }
     }
 
