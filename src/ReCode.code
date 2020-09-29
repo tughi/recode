@@ -625,6 +625,12 @@ generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instructi
     }
     self.output_file.write("  call ").write("malloc").end_line()
     self.map_variable(instruction.result_value, self.register_rax)
+
+    if (instruction.type.is(IR_Struct_Type) && (instruction.type as @IR_Struct_Type).is_object_type()) {
+        register: @MC_Register = self.find_unused_register()
+        self.output_file.write("  lea ").write(register.name_q).write(", ").write_type_label(instruction.type).write("[rip]").end_line()
+        self.output_file.write("  mov ").write('[').write(self.register_rax.name_q).write(']').write(", ").write(register.name_q).end_line()
+    }
 }
 
 generate_phi_instruction :: (self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
