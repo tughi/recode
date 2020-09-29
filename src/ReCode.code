@@ -174,6 +174,9 @@ write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
 
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
     instruction.is_generated = true
+    if (instruction.location != null) {
+        self.output_file.write("  .loc 1 ").write(instruction.location.line).write(' ').write(instruction.location.column).end_line()
+    }
     if (instruction.is(IR_Add_Instruction)) {
         self.generate_add_instruction(instruction as @IR_Add_Instruction)
         return
@@ -1646,7 +1649,7 @@ get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
 
 get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
     if (variable.is(IR_Global_Variable)) {
-        return self.append(create_ir_load_variable_instruction(self.create_variable_value(variable))) as @IR_Variable_Value
+        return self.append(create_ir_load_variable_instruction(self.create_variable_value(variable)), null) as @IR_Variable_Value
     }
     current_block_instruction: @IR_Instruction = self.current_block.last_instruction
     while (current_block_instruction != null) {
@@ -1747,7 +1750,8 @@ create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable_Value {
     return self.create_variable_value(self.create_temp_variable(type))
 }
 
-append :: (self: @IR_Builder, instruction: @IR_Instruction) -> @IR_Variable_Value {
+append :: (self: @IR_Builder, instruction: @IR_Instruction, location: @Source_Location) -> @IR_Variable_Value {
+    instruction.location = location
     self.current_block.append(instruction)
     return instruction.result_value
 }
@@ -1927,7 +1931,7 @@ build_function :: (self: @IR_Builder, function_statement: @AST_Function_Statemen
             function.blocks.remove(self.current_block).prune()
         } else {
             if (function.return_type.is(IR_Nothing_Type)) {
-                self.append(create_ir_return_instruction(null))
+                self.append(create_ir_return_instruction(null), null)
             } else {
                 abort(function_statement.location, "Missing return statement")
             }
@@ -2194,7 +2198,7 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @AST_A
         if (array_item_type.accepts(value.type) == false) {
             abort(assignment_statement.value_expression.location, "Invalid expression type")
         }
-        self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value))
+        self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
         return
     }
     value: @IR_Value = self.convert_expression(assignment_statement.value_expression)
@@ -2215,7 +2219,7 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @AST_A
         if (struct_type_member.type.accepts(value.type) == false) {
             abort(assignment_statement.value_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(struct_type_member.type.name).append("' struct member"))
         }
-        self.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, value))
+        self.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, value), assignment_statement.location)
         return
     }
     if (assignment_statement.storage_expression.is(AST_Variable_Expression)) {
@@ -2228,7 +2232,7 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @AST_A
         if (variable.type.accepts(value.type) == false) {
             abort(variable_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
         }
-        self.append(create_ir_set_instruction(self.create_variable_value(variable), value))
+        self.append(create_ir_set_instruction(self.create_variable_value(variable), value), assignment_statement.location)
         return
     }
     abort(assignment_statement.location, assignment_statement.storage_expression.object_type)
@@ -2297,9 +2301,9 @@ convert_return_statement :: (self: @IR_Builder, statement: @AST_Return_Statement
         if (self.current_block.function.return_type.accepts(return_value.type) == false) {
             abort(statement.location, clone("Unexpected returned expression type: ").append(return_value.type.name))
         }
-        self.append(create_ir_return_instruction(return_value))
+        self.append(create_ir_return_instruction(return_value), statement.location)
     } else {
-        self.append(create_ir_return_instruction(null))
+        self.append(create_ir_return_instruction(null), statement.location)
     }
     self.current_block = self.current_block.function.create_block()
 }
@@ -2319,10 +2323,10 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Varia
             abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
         }
         self.add_variable(variable)
-        self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value))
+        self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
     } else {
         self.add_variable(variable)
-        self.append(create_ir_set_instruction(self.create_variable_value(variable), new IR_Undefined_Value.init(variable.type)))
+        self.append(create_ir_set_instruction(self.create_variable_value(variable), new IR_Undefined_Value.init(variable.type)), variable_statement.location)
     }
 }
 
@@ -2428,7 +2432,7 @@ convert_add_expression :: (self: @IR_Builder, expression: @AST_Add_Expression) -
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Add_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value))
+    return self.append(new IR_Add_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
 }
 
 convert_array_access_expression :: (self: @IR_Builder, array_access_expression: @AST_Array_Access_Expression) -> @IR_Value {
@@ -2439,7 +2443,7 @@ convert_array_access_expression :: (self: @IR_Builder, array_access_expression: 
         abort(array_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
     object_value_type: @IR_Pointer_Type = object_value_type as @IR_Pointer_Type
-    return self.append(create_ir_load_array_item_instruction(self.create_temp_value(object_value_type.pointed_type), object_value, index_value))
+    return self.append(create_ir_load_array_item_instruction(self.create_temp_value(object_value_type.pointed_type), object_value, index_value), array_access_expression.location)
 }
 
 convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression) -> @IR_Value {
@@ -2465,7 +2469,7 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expres
         if (call_function.return_type.is(IR_Nothing_Type) == false) {
             result_value = self.create_temp_value(call_function.return_type)
         }
-        return self.append(create_ir_call_instruction(result_value, call_function, call_arguments))
+        return self.append(create_ir_call_instruction(result_value, call_function, call_arguments), call_expression.location)
     }
     if (call_expression.callee.is(AST_Variable_Expression)) {
         callee: @AST_Variable_Expression = call_expression.callee as @AST_Variable_Expression
@@ -2486,7 +2490,7 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expres
         if (call_function.return_type.is(IR_Nothing_Type) == false) {
             result_value = self.create_temp_value(call_function.return_type)
         }
-        return self.append(create_ir_call_instruction(result_value, call_function, call_arguments))
+        return self.append(create_ir_call_instruction(result_value, call_function, call_arguments), call_expression.location)
     }
     abort(call_expression.location, call_expression.callee.object_type)
 }
@@ -2495,16 +2499,16 @@ convert_cast_expression :: (self: @IR_Builder, cast_expression: @AST_Cast_Expres
     value: @IR_Value = self.convert_expression(cast_expression.value_expression)
     result_value: @IR_Variable_Value = self.create_temp_value(self.convert_value_type(cast_expression.type))
     if (value.type.is(IR_Pointer_Type) && result_value.type.is(IR_Pointer_Type)) {
-        return self.append(create_ir_set_instruction(result_value, value))
+        return self.append(create_ir_set_instruction(result_value, value), cast_expression.location)
     }
     if (value.type.is(IR_Int_Type) && (result_value.type.is(IR_Int32_Type) || result_value.type.is(IR_Int8_Type))) {
-        return self.append(create_ir_cast_instruction(result_value, value))
+        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
     }
     if (value.type.is(IR_Int32_Type) && (result_value.type.is(IR_Int_Type) || result_value.type.is(IR_Int8_Type))) {
-        return self.append(create_ir_cast_instruction(result_value, value))
+        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
     }
     if (value.type.is(IR_Int8_Type) && (result_value.type.is(IR_Int_Type) || result_value.type.is(IR_Int32_Type))) {
-        return self.append(create_ir_cast_instruction(result_value, value))
+        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
     }
     abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
 }
@@ -2521,7 +2525,7 @@ convert_divide_expression :: (self: @IR_Builder, expression: @AST_Divide_Express
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Divide_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value))
+    return self.append(new IR_Divide_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
 }
 
 convert_equals_expression :: (self: @IR_Builder, expression: @AST_Equals_Expression) -> @IR_Value {
@@ -2533,7 +2537,7 @@ convert_equals_expression :: (self: @IR_Builder, expression: @AST_Equals_Express
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(new IR_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
 }
 
 convert_greater_than_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Expression) -> @IR_Value {
@@ -2548,7 +2552,7 @@ convert_greater_than_expression :: (self: @IR_Builder, expression: @AST_Greater_
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(new IR_Greater_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
 }
 
 convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Or_Equals_Expression) -> @IR_Value {
@@ -2563,7 +2567,7 @@ convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AS
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(new IR_Greater_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
 }
 
 convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Expression) -> @IR_Value {
@@ -2578,7 +2582,7 @@ convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_E
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(new IR_Less_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
 }
 
 convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Or_Equals_Expression) -> @IR_Value {
@@ -2593,7 +2597,7 @@ convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_L
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(new IR_Less_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
 }
 
 convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Value {
@@ -2624,17 +2628,17 @@ convert_logic_and_expression :: (self: @IR_Builder, expression: @AST_Logic_And_E
     }
     result_variable: @IR_Variable = self.create_temp_variable(self.get_named_type("Boolean"))
     result_value_left: @IR_Variable_Value = self.create_variable_value(result_variable)
-    self.append(create_ir_set_instruction(result_value_left, left_value))
+    self.append(create_ir_set_instruction(result_value_left, left_value), expression.location)
     self.current_block.append_jump(result_value_left, next_block, end_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.right_expression.location, "Must be a boolean expression")
     }
-    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value))
+    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), expression.location)
     self.current_block.append_jump(end_block)
     self.current_block = end_block
-    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)))
+    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)), expression.location)
 }
 
 convert_logic_or_expression :: (self: @IR_Builder, expression: @AST_Logic_Or_Expression) -> @IR_Value {
@@ -2646,17 +2650,17 @@ convert_logic_or_expression :: (self: @IR_Builder, expression: @AST_Logic_Or_Exp
     }
     result_variable: @IR_Variable = self.create_temp_variable(self.get_named_type("Boolean"))
     result_value_left: @IR_Variable_Value = self.create_variable_value(result_variable)
-    self.append(create_ir_set_instruction(result_value_left, left_value))
+    self.append(create_ir_set_instruction(result_value_left, left_value), expression.location)
     self.current_block.append_jump(result_value_left, end_block, next_block)
     self.current_block = next_block
     right_value: @IR_Value = self.convert_expression(expression.right_expression)
     if (right_value.type.is(IR_Boolean_Type) == false) {
         abort(expression.right_expression.location, "Must be a boolean expression")
     }
-    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value))
+    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), expression.location)
     self.current_block.append_jump(end_block)
     self.current_block = end_block
-    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)))
+    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)), expression.location)
 }
 
 convert_member_access_expression :: (self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
@@ -2675,9 +2679,9 @@ convert_member_access_expression :: (self: @IR_Builder, member_access_expression
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
     }
     if (struct_type_member.type.is(IR_Struct_Type)) {
-        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true))
+        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true), member_access_expression.location)
     }
-    return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), object_value, struct_type_member, false))
+    return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), object_value, struct_type_member, false), member_access_expression.location)
 }
 
 convert_member_access_expression_address :: (self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
@@ -2700,7 +2704,7 @@ convert_modulo_expression :: (self: @IR_Builder, expression: @AST_Modulo_Express
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Modulo_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value))
+    return self.append(new IR_Modulo_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
 }
 
 convert_multiply_expression :: (self: @IR_Builder, expression: @AST_Multiply_Expression) -> @IR_Value {
@@ -2715,7 +2719,7 @@ convert_multiply_expression :: (self: @IR_Builder, expression: @AST_Multiply_Exp
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Multiply_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value))
+    return self.append(new IR_Multiply_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
 }
 
 convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -> @IR_Value {
@@ -2723,9 +2727,9 @@ convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -
     if (type.is(IR_Array_Type)) {
         type: @IR_Array_Type = type as @IR_Array_Type
         size_value: @IR_Value = self.convert_expression(type.size_expression)
-        return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type.pointed_type)), type.pointed_type, size_value))
+        return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type.pointed_type)), type.pointed_type, size_value), expression.location)
     }
-    return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null))
+    return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null), expression.location)
 }
 
 convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {
@@ -2737,7 +2741,7 @@ convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Not_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value))
+    return self.append(new IR_Not_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
 }
 
 convert_substract_expression :: (self: @IR_Builder, expression: @AST_Substract_Expression) -> @IR_Value {
@@ -2752,7 +2756,7 @@ convert_substract_expression :: (self: @IR_Builder, expression: @AST_Substract_E
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Substract_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value))
+    return self.append(new IR_Substract_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
 }
 
 convert_variable_expression :: (self: @IR_Builder, expression: @AST_Variable_Expression) -> @IR_Value {
@@ -3200,6 +3204,7 @@ IR_Function_Parameter :: struct : IR_Variable {
 }
 
 IR_Instruction :: struct : Object {
+    location: @Source_Location
     result_value: @IR_Variable_Value
     operand_values: @List
     parent_block: @IR_Block
@@ -3209,6 +3214,7 @@ IR_Instruction :: struct : Object {
 }
 
 init :: (self: @IR_Instruction, result_value: @IR_Variable_Value) -> @IR_Instruction {
+    self.location = null
     self.result_value = result_value
     self.operand_values = create_list()
     self.parent_block = null
