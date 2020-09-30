@@ -1224,6 +1224,11 @@ release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
 }
 
 discard_used_variables :: (self: @MC_Generator) -> Nothing {
+    if (true) {
+        return
+    }
+
+    \ FIXME: this code discards variables that are used in a loop and allowes values to be overwritten
     mc_variable: @MC_Variable = self.first_variable
     while (mc_variable != null) {
         if (mc_variable.ir_instruction.is_generated) {
