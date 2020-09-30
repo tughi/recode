@@ -100,8 +100,14 @@ def test():
         compile('Stage1', 'Test.code', 'Test-Stage1')
         execute(os.path.join(os.getcwd(), 'build', 'Test-Stage1'), expected_return_code=run_test_return_code)
     compile('Stage1', 'ReCode.code', 'Stage2')
-    # TODO: compile('Stage2', 'Stage3')
-    # TODO: Report success if Stage2.s and Stage3.s are equal.
+    compile('Stage2', 'ReCode.code', 'Stage3')
+
+    with open(os.path.join('build', 'Stage2.s')) as stage2, open(os.path.join('build', 'Stage3.s')) as stage3:
+        for stage2_line, stage3_line in zip(stage2, stage3):
+            if stage2_line != stage3_line:
+                exit(1)
+
+    print("Success!")
 
 
 TASKS = OrderedDict(
