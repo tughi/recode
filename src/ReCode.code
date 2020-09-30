@@ -6240,14 +6240,9 @@ write :: (self: @FILE, string: @String) -> @FILE {
 }
 
 write :: (self: @FILE, chars: @Int8) -> @FILE {
-    index: Int = 0
-    loop {
-        char: Int8 = chars[index]
-        if (char == '\0') {
-            break
-        }
-        self.write(char)
-        index = index + 1
+    if (fputs(chars, self) as Int < 0) {
+        stderr.end_line().end_line().write("Failed to write text").end_line()
+        abort()
     }
     return self
 }
@@ -6292,6 +6287,7 @@ fflush :: (file: @FILE) -> Int32
 fgetc :: (file: @FILE) -> Int32
 fopen :: (file: @Int8, mode: @Int8) -> @FILE
 fputc :: (char: Int32, file: @FILE) -> Int32
+fputs :: (chars: @Int8, file: @FILE) -> Int32
 
 \ ----- stdlib.h ----------------------------------------------------------------------------------
 
