@@ -1,4 +1,4 @@
 /.vscode
 /build
 /stuff
-/src/Test.code
+/src/Test*.code

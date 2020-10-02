@@ -101,6 +101,9 @@ def test():
         compile('Stage1', 'Test.code', 'Test-Stage1')
         execute(os.path.join(os.getcwd(), 'build', 'Test-Stage1'), expected_return_code=run_test_return_code)
     compile('Stage1', 'ReCode.code', 'Stage2')
+    if run_test_code:
+        compile('Stage2', 'Test.code', 'Test-Stage2')
+        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage2'), expected_return_code=run_test_return_code)
     compile('Stage2', 'ReCode.code', 'Stage3')
 
     with open(os.path.join('build', 'Stage2.s')) as stage2, open(os.path.join('build', 'Stage3.s')) as stage3:

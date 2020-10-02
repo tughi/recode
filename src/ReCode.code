@@ -104,12 +104,11 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  pop rbp").end_line()
     self.output_file.write("  ret").end_line().end_line()
 
-    self.output_file.write(function.name).write('_').write(function.id).write("__stack_frame_size").write(":").end_line()
     stack_frame_size: Int = self.stack_frame_size
     if (stack_frame_size // 16 != 0) {
         stack_frame_size = stack_frame_size + 16 - stack_frame_size // 16
     }
-    self.output_file.write("  .word ").write(stack_frame_size).end_line()
+    self.output_file.write(function.name).write('_').write(function.id).write("__stack_frame_size").write(": .word ").write(stack_frame_size).end_line()
 
     self.reset()
 }
@@ -154,6 +153,10 @@ generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
         block_instruction = block_instruction.next_instruction
     }
     block.is_generated = true
+    if (self.discard_used_variables() > 0) {
+        self.output_live_values()
+        self.output_used_registers()
+    }
 }
 
 write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
@@ -413,6 +416,7 @@ generate_direct_jump_instruction :: (self: @MC_Generator, instruction: @IR_Direc
 }
 
 generate_divide_instruction :: (self: @MC_Generator, instruction: @IR_Divide_Instruction) -> Nothing {
+    self.release_register(self.register_rax)
     self.generate_load_value(self.register_rax, instruction.get_left_value())
     self.register_rax.is_reserved = true
     self.release_register(self.register_rdx)
@@ -580,6 +584,7 @@ generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @I
 }
 
 generate_modulo_instruction :: (self: @MC_Generator, instruction: @IR_Modulo_Instruction) -> Nothing {
+    self.release_register(self.register_rax)
     self.generate_load_value(self.register_rax, instruction.get_left_value())
     self.register_rax.is_reserved = true
     self.release_register(self.register_rdx)
@@ -1212,25 +1217,19 @@ release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
     }
 }
 
-discard_used_variables :: (self: @MC_Generator) -> Nothing {
-    if (true) {
-        return
-    }
+discard_used_variables :: (self: @MC_Generator) -> Int {
+    removed_variables: Int = 0
 
-    \ FIXME: this code discards variables that are used in a loop and allowes values to be overwritten
     mc_variable: @MC_Variable = self.first_variable
     while (mc_variable != null) {
-        if (mc_variable.ir_instruction.is_generated) {
-            persist_variable: Boolean = false
+        if (mc_variable.ir_instruction.is_generated && mc_variable.ir_instruction.parent_block.is_being_generated) {
             discard_variable: Boolean = true
 
             user_instruction_item: @List_Item = mc_variable.ir_variable_value.user_instructions.first_item
             while (user_instruction_item != null) {
                 user_instruction: @IR_Instruction = user_instruction_item.data as @IR_Instruction
-                if (user_instruction.is(IR_Phi_Instruction)) {
-                    persist_variable = true
-                }
                 if (user_instruction.is_generated == false) {
+                    \ there is at least one more user instruction that requires this value
                     discard_variable = false
                     break
                 }
@@ -1238,14 +1237,25 @@ discard_used_variables :: (self: @MC_Generator) -> Nothing {
             }
 
             if (discard_variable) {
-                if (mc_variable.register != null) {
-                    if (persist_variable) {
-                        self.spill_local_variable(mc_variable)
+                user_instruction_item = mc_variable.ir_variable_value.user_instructions.first_item
+                while (user_instruction_item != null) {
+                    user_instruction: @IR_Instruction = user_instruction_item.data as @IR_Instruction
+                    if (user_instruction.parent_block != mc_variable.ir_instruction.parent_block && mc_variable.ir_instruction.parent_block.is_generated == false) {
+                        \ there is at least one user instruction in another block that requires this value and the value's parent block hasn't been generated yet
+                        discard_variable = false
+                        break
                     }
+                    user_instruction_item = user_instruction_item.next_item
+                }
+            }
+
+            if (discard_variable) {
+                if (mc_variable.register != null) {
                     mc_variable.register.variable = null
                     mc_variable.register = null
                 }
 
+                \ remove
                 if (mc_variable.prev_variable != null) {
                     mc_variable.prev_variable.next_variable = mc_variable.next_variable
                 } else {
@@ -1256,6 +1266,8 @@ discard_used_variables :: (self: @MC_Generator) -> Nothing {
                 } else {
                     self.last_variable = mc_variable.prev_variable
                 }
+                removed_variables = removed_variables + 1
+
                 if (self.output_debug_comments) {
                     self.output_file.write("  # [discarded value]: ").write(mc_variable.ir_variable_value.variable.name).write('.').write(mc_variable.ir_variable_value.version).end_line()
                 }
@@ -1264,6 +1276,8 @@ discard_used_variables :: (self: @MC_Generator) -> Nothing {
 
         mc_variable = mc_variable.next_variable
     }
+
+    return removed_variables
 }
 
 output_live_values :: (self: @MC_Generator) -> Nothing {
