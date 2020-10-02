@@ -1,0 +1,36 @@
+main :: (argc: Int, argv: @@Int8) -> Int {
+    stdout.write("Hello Code!\n")
+    return 0
+}
+
+String :: struct {
+    data: @Int8
+    data_size: Int
+    length: Int
+}
+
+write :: (self: @FILE, string: @String) -> @FILE {
+    return self.write(string.data)
+}
+
+write :: (file: @FILE, chars: @Int8) -> @FILE {
+    index: Int = 0
+    loop {
+        char: Int8 = chars[index]
+        if (char == '\0') {
+            return file
+        }
+        file.write(char)
+        index = 1 + index
+    }
+}
+
+write :: (file: @FILE, char: Int8) -> @FILE {
+    fputc(char as Int32, file)
+    return file
+}
+
+FILE :: struct
+stdout: @FILE = external
+
+fputc :: (char: Int32, file: @FILE) -> Int32
