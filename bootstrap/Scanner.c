@@ -1,3 +1,5 @@
+// Copyright (c) 2020, Stefan Selariu
+
 #include "Scanner.h"
 
 #include "Logging.h"

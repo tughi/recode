@@ -1,3 +1,5 @@
+// Copyright (c) 2020, Stefan Selariu
+
 #ifndef __recode__ast_h__
 #define __recode__ast_h__
 

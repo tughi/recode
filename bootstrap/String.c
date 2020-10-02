@@ -1,3 +1,5 @@
+// Copyright (c) 2020, Stefan Selariu
+
 #include "String.h"
 
 #include <stdlib.h>

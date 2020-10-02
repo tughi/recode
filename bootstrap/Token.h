@@ -1,3 +1,5 @@
+// Copyright (c) 2020, Stefan Selariu
+
 #ifndef __recode__token_h__
 #define __recode__token_h__
 

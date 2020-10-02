@@ -1,3 +1,5 @@
+// Copyright (c) 2020, Stefan Selariu
+
 #ifndef __recode__string_h__
 #define __recode__string_h__
 

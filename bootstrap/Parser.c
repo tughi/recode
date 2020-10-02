@@ -1,3 +1,5 @@
+// Copyright (c) 2020, Stefan Selariu
+
 #include "Logging.h"
 #include "Parser.h"
 #include "Source.h"

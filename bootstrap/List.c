@@ -1,3 +1,5 @@
+// Copyright (c) 2020, Stefan Selariu
+
 #include "List.h"
 
 #include <stdlib.h>
