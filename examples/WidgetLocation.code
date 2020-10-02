@@ -1,0 +1,49 @@
+main :: (argc: Int, argv: @@Int8) -> Int {
+    window: @Widget = new Widget
+    window.set_location(42, 42)
+    return window.bounds.location.x - 42
+}
+
+Widget :: struct : Object {
+    bounds: Rectangle
+}
+
+set_location :: (self: @Widget, x: Int, y: Int) -> Nothing {
+    self.bounds.location.set(x, y)
+}
+
+Rectangle :: struct {
+    location: Point
+    width: Int
+    height: Int
+}
+
+size :: (self: @Rectangle) -> Int {
+    return self.width * self.height
+}
+
+Point :: struct {
+    x: Int
+    y: Int
+}
+
+set :: (self: @Point, x: Int, y: Int) -> Nothing {
+    self.x = x
+    self.y = y
+}
+
+Object :: struct {
+    object_type: @Object_Type
+}
+
+Object_Type :: struct {
+    id: Int
+    name: String
+    base_type: @Object_Type
+}
+
+String :: struct {
+    data: @Int8
+    data_size: Int
+    length: Int
+}
