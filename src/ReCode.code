@@ -95,21 +95,7 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
         }
     }
 
-    block: @IR_Block = function.blocks.first() as @IR_Block
-    if (block != null) {
-        loop {
-            if (block.is_generated) {
-                self.abort("Invalid state")
-            }
-            block.is_generated = true
-            self.generate_block(block)
-            block = self.blocks_stack.last() as @IR_Block
-            if (block == null) {
-                break
-            }
-            self.blocks_stack.remove(block).prune()
-        }
-    }
+    self.generate_block(function.blocks.first() as @IR_Block)
 
     self.output_unreached_ir_instructions()
 
@@ -142,7 +128,7 @@ output_unreached_ir_instructions :: (self: @MC_Generator) -> Nothing {
         while (ir_instruction_item != null) {
             ir_instruction: @IR_Instruction = ir_instruction_item.data as @IR_Instruction
             if (ir_instruction.is_generated == false) {
-                ir_instruction.dump(self.output_file, "  # [unreached instruction]: ")
+                ir_instruction.dump(self.output_file, "  # [unreachable instruction]: ")
             }
             ir_instruction_item = ir_instruction_item.next_item
         }
@@ -151,6 +137,7 @@ output_unreached_ir_instructions :: (self: @MC_Generator) -> Nothing {
 }
 
 generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
+    block.is_being_generated = true
     self.output_file.write_block_label(block).write(':').end_line()
     block_instruction: @IR_Instruction = block.first_instruction
     while (block_instruction != null) {
@@ -166,6 +153,7 @@ generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
         self.output_used_registers()
         block_instruction = block_instruction.next_instruction
     }
+    block.is_generated = true
 }
 
 write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
@@ -351,15 +339,18 @@ generate_conditional_jump_instruction :: (self: @MC_Generator, instruction: @IR_
     }
     self.output_file.write("  test ").write(condition_register.name_b).write(", ").write(condition_register.name_b).end_line()
     self.release_all_registers()
-    self.output_file.write("  jz ").write_block_label(instruction.false_block).end_line()
-    if (instruction.false_block.is_generated == false && self.blocks_stack.contains(instruction.false_block) == false) {
-        self.blocks_stack.append(instruction.false_block)
-    }
-    if (instruction.true_block.is_generated == false && self.blocks_stack.contains(instruction.true_block) == false) {
-        self.blocks_stack.append(instruction.true_block)
-    }
-    if (instruction.true_block.is_generated || (self.blocks_stack.last() as @IR_Block) != instruction.true_block) {
-        self.output_file.write("  jmp ").write_block_label(instruction.true_block).end_line()
+    if (instruction.true_block.is_being_generated) {
+        self.output_file.write("  jnz ").write_block_label(instruction.true_block).end_line()
+        if (instruction.false_block.is_being_generated) {
+            self.abort("Invalid state")
+        }
+        self.generate_block(instruction.false_block)
+    } else {
+        self.output_file.write("  jz ").write_block_label(instruction.false_block).end_line()
+        self.generate_block(instruction.true_block)
+        if (instruction.false_block.is_being_generated == false) {
+            self.generate_block(instruction.false_block)
+        }
     }
 }
 
@@ -414,11 +405,10 @@ generate_comparison_instruction :: (self: @MC_Generator, instruction: @IR_Compar
 
 generate_direct_jump_instruction :: (self: @MC_Generator, instruction: @IR_Direct_Jump_Instruction) -> Nothing {
     self.release_all_registers()
-    if (instruction.block.is_generated == false && self.blocks_stack.contains(instruction.block) == false) {
-        self.blocks_stack.append(instruction.block)
-    }
-    if (instruction.block.is_generated || (self.blocks_stack.last() as @IR_Block) != instruction.block) {
+    if (instruction.block.is_being_generated) {
         self.output_file.write("  jmp ").write_block_label(instruction.block).end_line()
+    } else {
+        self.generate_block(instruction.block)
     }
 }
 
@@ -654,7 +644,8 @@ generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Ins
         self.generate_load_value(self.register_rax, return_value)
     }
     self.release_all_registers()
-    if (self.blocks_stack.size != 0) {
+    if (true) {
+        \ TODO: don't add jump if all other blocks are generated already
         self.output_file.write("  jmp ").write_function_end_label(instruction.parent_block.function).end_line()
     }
 }
@@ -987,7 +978,6 @@ MC_Generator :: struct {
     register_r15: @MC_Register
     first_variable: @MC_Variable
     last_variable: @MC_Variable
-    blocks_stack: @List
     stack_frame_size: Int
     strings: @List
 }
@@ -1013,7 +1003,6 @@ create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
     generator.register_r15 = new MC_Register_R15.init("r15", "r15d", "r15w", "r15b")
     generator.first_variable = null
     generator.last_variable = null
-    generator.blocks_stack = create_list()
     generator.stack_frame_size = 0
     generator.strings = create_list()
     return generator
@@ -3089,6 +3078,7 @@ IR_Block :: struct : Object {
     predecessors: @List
     first_instruction: @IR_Instruction
     last_instruction: @IR_Instruction
+    is_being_generated: Boolean
     is_generated: Boolean
 }
 
@@ -3182,6 +3172,7 @@ create_block :: (self: @IR_Function) -> @IR_Block {
     block.predecessors = create_list()
     block.first_instruction = null
     block.last_instruction = null
+    block.is_being_generated = false
     block.is_generated = false
     self.blocks.append(block)
     return block
