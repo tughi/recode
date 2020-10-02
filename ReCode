@@ -18,106 +18,46 @@ def execute(command, echo=True, exit_on_error=True, expected_return_code=0):
 
 
 def clean():
-    execute(f'''rm -fr build''')
+    execute('rm -fr build')
 
 
-def build():
-    if not os.path.exists(os.path.join('build', 'bootstrap')):
-        execute(f'''mkdir -p {os.path.join('build', 'bootstrap')}''')
+def bootstrap():
+    if not os.path.exists('build/stage0'):
+        execute(f'mkdir -p build/stage0')
 
-    obj_files = []
-    obj_files_changed = False
-
-    loaded_includes = {}
-    include_re = re.compile(r'#include\s+"\s*([^"]+)\s*"')
-
-    def load_includes(source_file):
-        source_file_includes = set()
-        with open(source_file, 'r') as source_file_text:
-            for source_line in source_file_text.readlines():
-                match = include_re.search(source_line)
-                if match:
-                    source_file_include = os.path.join('bootstrap', match.group(1))
-                    if not os.path.exists(source_file_include):
-                        print(f'''File "{source_file}" includes non-existing file: {source_file_include}''')
-                        exit(1)
-                    if source_file_include not in source_file_includes:
-                        source_file_includes.add(source_file_include)
-                        if source_file_include not in loaded_includes:
-                            loaded_includes[source_file_include] = set()  # avoids recursive loads
-                            loaded_includes[source_file_include] = load_includes(source_file_include)
-                        source_file_includes.update(loaded_includes[source_file_include])
-        return source_file_includes
-
-    c_files = [os.path.join('bootstrap', file) for file in os.listdir('bootstrap') if file[0] != '.' and file.endswith('.c')]
-    c_files.sort()
-    for c_file in c_files:
-        obj_file = os.path.join('build', c_file.replace('.c', '.o'))
-        obj_files.append(obj_file)
-
-        if os.path.exists(obj_file):
-            obj_file_timestamp = os.path.getmtime(obj_file)
-
-            obj_file_dependencies = set()
-            obj_file_dependencies.add(c_file)
-            obj_file_dependencies.update(load_includes(c_file))
-
-            compile_file = False
-            for obj_file_dependency in obj_file_dependencies:
-                if os.path.getmtime(obj_file_dependency) > obj_file_timestamp:
-                    compile_file = True
-                    break
-        else:
-            compile_file = True
-
-        if compile_file:
-            execute(f'''gcc -g -c -o {obj_file} {c_file}''')
-            obj_files_changed = True
-
-    if obj_files_changed or not os.path.exists(os.path.join('build', 'ReCode')):
-        execute(f'''gcc -g -o {os.path.join('build', 'ReCode')} {' '.join(obj_files)}''')
+    bootstrap_compiler = 'build/stage0/ReCode'
+    if not os.path.exists(bootstrap_compiler) or os.path.getmtime('bootstrap/ReCode.s') > os.path.getmtime(bootstrap_compiler):
+        execute(f'gcc -g -o {bootstrap_compiler} bootstrap/ReCode.s')
 
 
-def test():
-    build()
+def build_stage(n):
+    if not os.path.exists(f'build/stage{n}'):
+        execute(f'mkdir build/stage{n}')
 
-    def compile(compiler, code, binary):
-        compiler = os.path.join('build', compiler)
-        compiler_args = f'''{os.path.join(os.getcwd(), 'src', code)} {os.path.join('build', f'{binary}')}.s {os.path.join('build', f'{binary}')}.ir'''
-        if execute(f'''{compiler} {compiler_args}''', exit_on_error=False) == 0:
-            execute(f'''gcc -g -o {os.path.join('build', binary)} {os.path.join('build', f'{binary}.s')}''', echo=True)
-        else:
+    compiler = f'build/stage{n - 1}/ReCode'
+    source_file = f'compiler/ReCode.code'
+    output_file = f'build/stage{n}/ReCode.s'
+    compiler_args = f'{source_file} {output_file}'
+    if not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(source_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler):
+        if execute(f'{compiler} {compiler_args}', exit_on_error=False) != 0:
             subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {compiler_args} &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
             exit(1)
+        execute(f'gcc -g -o build/stage{n}/ReCode {output_file}', echo=True)
 
-    run_test_code = os.path.exists(os.path.join(os.getcwd(), 'src', 'Test.code'))
-    run_test_return_code = 0
+def build():
+    bootstrap()
+    build_stage(1)
+    build_stage(2)
 
-    if run_test_code:
-        compile('ReCode', 'Test.code', 'Test-Stage0')
-        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage0'), expected_return_code=run_test_return_code)
-    compile('ReCode', 'ReCode.code', 'Stage1')
-    if run_test_code:
-        compile('Stage1', 'Test.code', 'Test-Stage1')
-        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage1'), expected_return_code=run_test_return_code)
-    compile('Stage1', 'ReCode.code', 'Stage2')
-    if run_test_code:
-        compile('Stage2', 'Test.code', 'Test-Stage2')
-        execute(os.path.join(os.getcwd(), 'build', 'Test-Stage2'), expected_return_code=run_test_return_code)
-    compile('Stage2', 'ReCode.code', 'Stage3')
-
-    with open(os.path.join('build', 'Stage2.s')) as stage2, open(os.path.join('build', 'Stage3.s')) as stage3:
-        for stage2_line, stage3_line in zip(stage2, stage3):
-            if stage2_line != stage3_line:
+    with open('build/stage1/ReCode.s') as stage1, open('build/stage2/ReCode.s') as stage2:
+        for stage1_line, stage2_line in zip(stage1, stage2):
+            if stage1_line != stage2_line:
                 exit(1)
-
-    print("We have a self-hosting compiler!")
 
 
 TASKS = OrderedDict(
     clean=clean,
     build=build,
-    test=test,
 )
 
 if len(sys.argv) > 1:

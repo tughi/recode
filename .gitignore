@@ -1,4 +1,3 @@
 /.vscode
 /build
-/stuff
-/src/Test*.code
+/examples
