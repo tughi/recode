@@ -1,0 +1,6 @@
+main :: () -> Int {
+    one: Int = 1
+    two: Int = 2
+    three: Int = one + two
+    return 3 - three
+}
