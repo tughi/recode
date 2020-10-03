@@ -66,17 +66,20 @@ def build():
 
     examples()
 
+def stage():
+    bootstrap()
+    build_stage(1)
     build_stage(2)
-
-    with open('build/stage1/ReCode.s') as stage1, open('build/stage2/ReCode.s') as stage2:
-        for stage1_line, stage2_line in zip(stage1, stage2):
-            if stage1_line != stage2_line:
-                exit(1)
+    execute('diff -q build/stage1/ReCode.s build/stage2/ReCode.s')
+    execute('cp compiler/ReCode.code bootstrap/ReCode.code')
+    execute('build/stage2/ReCode bootstrap/ReCode.code bootstrap/ReCode.s')
+    bootstrap()
 
 
 TASKS = OrderedDict(
     clean=clean,
     build=build,
+    stage=stage,
 )
 
 if len(sys.argv) > 1:
