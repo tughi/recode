@@ -14,9 +14,9 @@ write :: (self: @FILE, string: @String) -> @FILE {
 }
 
 write :: (file: @FILE, chars: @Int8) -> @FILE {
-    index: Int = 0
+    index := 0
     loop {
-        char: Int8 = chars[index]
+        char := chars[index]
         if (char == '\0') {
             return file
         }

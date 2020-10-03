@@ -2324,24 +2324,41 @@ convert_return_statement :: (self: @IR_Builder, statement: @AST_Return_Statement
 
 convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
     variable_name: @String = variable_statement.name.lexeme
+    variable_value: @IR_Value
+    if (variable_statement.value_expression != null) {
+        variable_value = self.convert_expression(variable_statement.value_expression)
+    } else {
+        variable_value = null
+    }
     variable_type: @IR_Type
     if (variable_statement.type != null) {
         variable_type = self.convert_value_type(variable_statement.type)
+        if (variable_value != null) {
+            if (variable_type.accepts(variable_value.type) == false) {
+                abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
+            }
+            if (variable_type.equals(variable_value.type)) {
+                stderr.write(variable_statement.type.location).write(": Redundant type declaration").end_line()
+            }
+        }
     } else {
-        abort(variable_statement.location, "Type inference is not supported yet.")
+        if (variable_value == null) {
+            abort(variable_statement.location, "Invalid state")
+        }
+        if (variable_value.type.is(IR_Null_Type)) {
+            abort(variable_statement.value_expression.location, "Cannot infer type from null value")
+        }
+        variable_type = variable_value.type
+    }
+    if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type)) {
+        abort(variable_statement.location, clone("Invalid variable type: ").append(variable_type.name))
     }
     variable: @IR_Variable = new IR_Variable.init(variable_name, variable_type)
-    if (variable_statement.value_expression != null) {
-        variable_value: @IR_Value = self.convert_expression(variable_statement.value_expression)
-        if (variable.type.accepts(variable_value.type) == false) {
-            abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
-        }
-        self.add_variable(variable)
-        self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
-    } else {
-        self.add_variable(variable)
-        self.append(create_ir_set_instruction(self.create_variable_value(variable), new IR_Undefined_Value.init(variable.type)), variable_statement.location)
+    self.add_variable(variable)
+    if (variable_value == null) {
+        variable_value = new IR_Undefined_Value.init(variable_type)
     }
+    self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
 }
 
 convert_while_statement :: (self: @IR_Builder, statement: @AST_While_Statement) -> Nothing {
