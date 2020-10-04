@@ -50,21 +50,32 @@ def examples():
         execute(f'mkdir build/examples')
 
     for example in os.listdir('examples'):
-        if example.endswith('.code'):
-            args = f'examples/{example} build/examples/{example[:-5]}.s'
-            if execute(f'build/stage1/ReCode {args}', exit_on_error=False) != 0:
-                subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args} &> /dev/null' -ex=bt -ex=quit --args build/stage1/ReCode''', shell=True)
-                print()
-                exit(1)
-            execute(f'gcc -g -o build/examples/{example[:-5]} build/examples/{example[:-5]}.s', echo=True)
-            execute(f'build/examples/{example[:-5]}', echo=True)
+        if not example.endswith('.code'):
+            continue
+
+        with open(f'examples/{example}') as example_file:
+            is_program = False
+            for line in example_file:
+                if line.startswith('main :: ('):
+                    is_program = True
+                    break
+            if not is_program:
+                continue
+
+        args = f'examples/{example} build/examples/{example[:-5]}.s'
+        if execute(f'build/stage1/ReCode {args}', exit_on_error=False) != 0:
+            subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args} &> /dev/null' -ex=bt -ex=quit --args build/stage1/ReCode''', shell=True)
+            print()
+            exit(1)
+        execute(f'gcc -g -o build/examples/{example[:-5]} build/examples/{example[:-5]}.s', echo=True)
+        execute(f'build/examples/{example[:-5]}', echo=True)
 
 
 def build():
     bootstrap()
     build_stage(1)
-
     examples()
+    build_stage(2)
 
 def stage():
     bootstrap()
