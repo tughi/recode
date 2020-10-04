@@ -583,10 +583,7 @@ generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Ins
         self.generate_load_value(self.register_rax, return_value)
     }
     self.release_all_registers()
-    if (true) {
-        \ TODO: don't add jump if all other blocks are generated already
-        self.output_file.write("  jmp ").write_function_end_label(instruction.parent_block.function).end_line()
-    }
+    self.output_file.write("  jmp ").write_function_end_label(instruction.parent_block.function).end_line()
 }
 
 generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
@@ -6128,7 +6125,7 @@ write :: (self: @FILE, char: Int8) -> @FILE {
 }
 
 end_line :: (self: @FILE) -> @FILE {
-    return self.write('\n').flush()
+    return self.write('\n')
 }
 
 flush :: (file: @FILE) -> @FILE {
