@@ -28,9 +28,7 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         }
     }
 
-    tokens := scan(source_file_path)
-
-    compilation_unit := parse(tokens)
+    compilation_unit := parse(create_source(source_file_path))
     \ stdout.write(compilation_unit).end_line()
 
     build := build(compilation_unit)
@@ -50,7 +48,13 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 generate :: (build: @IR_Build, output_file_path: @String) -> Nothing {
     generator := create_mc_generator(output_file_path)
 
-    generator.output_file.write("  .file 1 \"").write(build.source.file_path).write("\"")
+    build_sources_item := build.sources.first_item
+    while (build_sources_item != null) {
+        build_source := build_sources_item.data as @Source
+        generator.output_file.write("  .file 1 \"").write(build_source.file_path).write("\"")
+        build_sources_item = build_sources_item.next_item
+    }
+
     generator.output_file.write_line("  .intel_syntax noprefix").end_line()
 
     functions := build.named_functions.create_iterator()
@@ -1442,14 +1446,14 @@ build :: (compilation_unit: @Compilation_Unit) -> @IR_Build {
     builder := create_ir_builder(compilation_unit)
     builder.build()
     build := new IR_Build
-    build.source = compilation_unit.source
+    build.sources = compilation_unit.sources
     build.named_functions = builder.named_functions
     build.named_types = builder.named_types
     return build
 }
 
 IR_Build :: struct {
-    source: @Source
+    sources: @List
     named_functions: @List
     named_types: @List
 }
@@ -3677,7 +3681,7 @@ write :: (file: @FILE, value: @IR_Value, check_users: Boolean) -> @FILE {
 \ -------------------------------------------------------------------------------------------------
 
 Parser :: struct {
-    tokens: @List_Iterator
+    scanner: @Scanner
     compilation_unit: @Compilation_Unit
     current_alignment: Int
     optional_comment: @Matcher
@@ -3721,11 +3725,10 @@ Parser :: struct {
     required_while: @Matcher
 }
 
-create_parser :: (tokens: @List) -> @Parser {
+create_parser :: () -> @Parser {
     parser := new Parser
-    parser.tokens = tokens.create_iterator()
-    token := parser.tokens.next() as @Token
-    parser.compilation_unit = create_compilation_unit(token.location.source)
+    parser.scanner = null
+    parser.compilation_unit = create_compilation_unit()
     parser.current_alignment = 0
 
     parser.optional_comment = create_comment_matcher(false)
@@ -3771,21 +3774,26 @@ create_parser :: (tokens: @List) -> @Parser {
     return parser
 }
 
-parse :: (tokens: @List) -> @Compilation_Unit {
-    parser := create_parser(tokens)
-    parser.compilation_unit.statements = parser.parse_statements()
-    token := parser.tokens.current() as @Token
-    if ((token.is(End_Of_File_Token)) == false) {
-        abort(parser, token)
-    }
+parse :: (source: @Source) -> @Compilation_Unit {
+    parser := create_parser()
+    parser.parse(source)
     return parser.compilation_unit
+}
+
+parse :: (self: @Parser, source: @Source) -> Nothing {
+    other_scanner := self.scanner
+    self.compilation_unit.sources.append(source)
+    self.scanner = create_scanner(source)
+    self.parse_statements(self.compilation_unit.statements)
+    if (self.scanner.current_token.is(End_Of_File_Token) == false) {
+        abort(self, self.scanner.current_token)
+    }
+    self.scanner = other_scanner
 }
 
 \ statements
 \   : ( statement <EOL> )*
-parse_statements :: (self: @Parser) -> @List {
-    statements := create_list()
-
+parse_statements :: (self: @Parser, statements: @List) -> Nothing {
     loop {
         statement := self.parse_statement()
         if (statement == null) {
@@ -3794,8 +3802,6 @@ parse_statements :: (self: @Parser) -> @List {
         self.consume_end_of_line()
         statements.append(statement)
     }
-
-    return statements
 }
 
 \ statement
@@ -4027,7 +4033,8 @@ parse_block :: (self: @Parser) -> @AST_Block_Statement {
     token := self.consume(self.required_open_brace)
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
-    statements := self.parse_statements()
+    statements := create_list()
+    self.parse_statements(statements)
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(self.required_close_brace)
@@ -4374,9 +4381,9 @@ consume_empty_line :: (self: @Parser) -> Boolean {
 
 consume_space :: (self: @Parser, expected_space_count: Int) -> Nothing {
     space_count: Int
-    token := self.tokens.current() as @Token
+    token := self.scanner.current_token
     if (token.is(Space_Token)) {
-        self.tokens.next()
+        self.scanner.next_token()
         space := token as @Space_Token
         space_count = space.count
     } else {
@@ -4396,10 +4403,10 @@ consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) ->
 }
 
 consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> @Token {
-    token := self.tokens.current() as @Token
+    token := self.scanner.current_token
     first_token := token
     if (first_matcher.accepts(token)) {
-        token = self.tokens.next() as @Token
+        token = self.scanner.next_token()
     } else {
         if (first_matcher.is_required) {
             self.abort(token)
@@ -4407,7 +4414,7 @@ consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, th
     }
     if (second_matcher != null) {
         if (second_matcher.accepts(token)) {
-            token = self.tokens.next() as @Token
+            token = self.scanner.next_token()
         } else {
             if (second_matcher.is_required) {
                 self.abort(token)
@@ -4416,7 +4423,7 @@ consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, th
     }
     if (third_matcher != null) {
         if (third_matcher.accepts(token)) {
-            token = self.tokens.next() as @Token
+            token = self.scanner.next_token()
         } else {
             if (third_matcher.is_required) {
                 self.abort(token)
@@ -4439,17 +4446,17 @@ matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) ->
 }
 
 matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> Boolean {
-    token := self.tokens.current() as @Token
+    token := self.scanner.current_token
     peek_offset := 0
     if (first_matcher.accepts(token)) {
-        token = self.tokens.peek(peek_offset) as @Token
+        token = self.scanner.peek_token(peek_offset)
         peek_offset = peek_offset + 1
     } else if (first_matcher.is_required) {
         return false
     }
     if (second_matcher != null) {
         if (second_matcher.accepts(token)) {
-            token = self.tokens.peek(peek_offset) as @Token
+            token = self.scanner.peek_token(peek_offset)
             peek_offset = peek_offset + 1
         } else if (second_matcher.is_required) {
             return false
@@ -4457,7 +4464,7 @@ matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, th
     }
     if (third_matcher != null) {
         if (third_matcher.accepts(token)) {
-            token = self.tokens.peek(peek_offset) as @Token
+            token = self.scanner.peek_token(peek_offset)
             peek_offset = peek_offset + 1
         } else if (third_matcher.is_required) {
             return false
@@ -4588,20 +4595,20 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
 \ -------------------------------------------------------------------------------------------------
 
 Compilation_Unit :: struct {
-    source: @Source
+    sources: @List
     types: @List
     global_variables: @List
     functions: @List
     statements: @List
 }
 
-create_compilation_unit :: (source: @Source) -> @Compilation_Unit {
+create_compilation_unit :: () -> @Compilation_Unit {
     compilation_unit := new Compilation_Unit
-    compilation_unit.source = source
+    compilation_unit.sources = create_list()
     compilation_unit.types = create_list()
     compilation_unit.global_variables = create_list()
     compilation_unit.functions = create_list()
-    compilation_unit.statements = null
+    compilation_unit.statements = create_list()
     return compilation_unit
 }
 
@@ -5232,26 +5239,12 @@ abort :: (location: @Source_Location, message: @String) -> Nothing {
 \       Scanner
 \ -------------------------------------------------------------------------------------------------
 
-scan :: (file_path: @String) -> @List {
-    scanner := create_scanner(create_source(file_path))
-    tokens := create_list()
-
-    loop {
-        token := scanner.next_token()
-        tokens.append(token)
-        if (token.is(End_Of_File_Token)) {
-            break
-        }
-    }
-
-    return tokens
-}
-
 Scanner :: struct {
     source: @Source
     current_char_index: Int
     current_line: Int
     current_column: Int
+    current_token: @Token
 }
 
 create_scanner :: (source: @Source) -> @Scanner {
@@ -5260,7 +5253,33 @@ create_scanner :: (source: @Source) -> @Scanner {
     scanner.current_char_index = 0
     scanner.current_line = 1
     scanner.current_column = 1
+    scanner.current_token = scanner.scan_token()
     return scanner
+}
+
+peek_token :: (self: @Scanner, offset: Int) -> @Token {
+    if (offset < 0) {
+        abort("Invalid state")
+    }
+    token := self.current_token
+    loop {
+        if (token.next_token == null) {
+            token.next_token = self.scan_token()
+        }
+        token = token.next_token
+        if (offset == 0) {
+            return token
+        }
+        offset = offset - 1
+    }
+}
+
+next_token :: (self: @Scanner) -> @Token {
+    if (self.current_token.next_token == null) {
+        self.current_token.next_token = self.scan_token()
+    }
+    self.current_token = self.current_token.next_token
+    return self.current_token
 }
 
 peek_char :: (self: @Scanner) -> Int8 {
@@ -5281,7 +5300,7 @@ next_char :: (self: @Scanner) -> Int8 {
     return next_char
 }
 
-next_token :: (self: @Scanner) -> @Token {
+scan_token :: (self: @Scanner) -> @Token {
     token_lexeme := new String
     token_lexeme.init()
 
@@ -5530,11 +5549,13 @@ scan_string_token :: (self: @Scanner, token_lexeme: @String, token_location: @So
 Token :: struct : Object {
     lexeme: @String
     location: @Source_Location
+    next_token: @Token
 }
 
 init :: (self: @Token, lexeme: @String, location: @Source_Location) -> Nothing {
     self.location = location
     self.lexeme = lexeme
+    self.next_token = null
 }
 
 write :: (file: @FILE, token: @Token) -> @FILE {
@@ -5590,6 +5611,7 @@ End_Of_File_Token :: struct : Token {
 create_end_of_file_token :: (lexeme: @String, location: @Source_Location) -> @End_Of_File_Token {
     token := new End_Of_File_Token
     token.init(lexeme, location)
+    token.next_token = token
     return token
 }
 
@@ -5925,18 +5947,6 @@ next :: (self: @List_Iterator) -> @Any {
     self.current_item = self.next_item
     self.next_item = self.next_item.next_item
     return self.current_item.data
-}
-
-peek :: (self: @List_Iterator, offset: Int) -> @Any {
-    list_item := self.next_item
-    while (offset > 0 && list_item != null) {
-        list_item = list_item.next_item
-        offset = offset - 1
-    }
-    if (list_item == null) {
-        return null
-    }
-    return list_item.data
 }
 
 change :: (self: @List_Iterator, data: @Any) -> Nothing {
