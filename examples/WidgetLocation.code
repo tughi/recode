@@ -1,3 +1,5 @@
+include "examples/Object.code"
+
 main :: (argc: Int, argv: @@Int8) -> Int {
     window := new Widget
     window.set_location(42, 42)
@@ -30,20 +32,4 @@ Point :: struct {
 set :: (self: @Point, x: Int, y: Int) -> Nothing {
     self.x = x
     self.y = y
-}
-
-Object :: struct {
-    object_type: @Object_Type
-}
-
-Object_Type :: struct {
-    id: Int
-    name: String
-    base_type: @Object_Type
-}
-
-String :: struct {
-    data: @Int8
-    data_size: Int
-    length: Int
 }

@@ -28,7 +28,7 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         }
     }
 
-    compilation_unit := parse(create_source(source_file_path))
+    compilation_unit := parse(source_file_path)
     \ stdout.write(compilation_unit).end_line()
 
     build := build(compilation_unit)
@@ -51,7 +51,7 @@ generate :: (build: @IR_Build, output_file_path: @String) -> Nothing {
     build_sources_item := build.sources.first_item
     while (build_sources_item != null) {
         build_source := build_sources_item.data as @Source
-        generator.output_file.write("  .file 1 \"").write(build_source.file_path).write("\"")
+        generator.output_file.write("  .file ").write(build_source.id).write(" \"").write(build_source.file_path).write("\"").end_line()
         build_sources_item = build_sources_item.next_item
     }
 
@@ -74,7 +74,7 @@ generate :: (build: @IR_Build, output_file_path: @String) -> Nothing {
 
 generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.end_line()
-    self.output_file.write("  .loc 1 ").write(function.location.line).write(' ').write(function.location.column).end_line()
+    self.output_file.write("  .loc ").write(function.location.source.id).write(' ').write(function.location.line).write(' ').write(function.location.column).end_line()
     self.output_file.write("  .text").end_line()
     if (function.name.equals("main")) {
         self.output_file.write("  .globl main").end_line()
@@ -170,7 +170,7 @@ write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
     instruction.is_generated = true
     if (instruction.location != null) {
-        self.output_file.write("  .loc 1 ").write(instruction.location.line).write(' ').write(instruction.location.column).end_line()
+        self.output_file.write("  .loc ").write(instruction.location.source.id).write(' ').write(instruction.location.line).write(' ').write(instruction.location.column).end_line()
     }
     if (instruction.is(IR_Add_Instruction)) {
         self.generate_add_instruction(instruction as @IR_Add_Instruction)
@@ -3709,7 +3709,7 @@ Parser :: struct {
     required_hyphen: @Matcher
     required_identifier: @Matcher
     required_if: @Matcher
-    required_is: @Matcher
+    required_include: @Matcher
     required_less_than: @Matcher
     required_literal: @Matcher
     required_loop: @Matcher
@@ -3720,6 +3720,7 @@ Parser :: struct {
     required_plus: @Matcher
     required_return: @Matcher
     required_slash: @Matcher
+    required_string_literal: @Matcher
     required_struct: @Matcher
     required_vertical_bar: @Matcher
     required_while: @Matcher
@@ -3757,6 +3758,7 @@ create_parser :: () -> @Parser {
     parser.required_hyphen = create_other_matcher(true, "-")
     parser.required_identifier = create_identifier_matcher(true)
     parser.required_if = create_keyword_matcher(true, "if")
+    parser.required_include = create_keyword_matcher(true, "include")
     parser.required_less_than = create_other_matcher(true, "<")
     parser.required_literal = create_literal_matcher(true)
     parser.required_loop = create_keyword_matcher(true, "loop")
@@ -3767,6 +3769,7 @@ create_parser :: () -> @Parser {
     parser.required_plus = create_other_matcher(true, "+")
     parser.required_return = create_keyword_matcher(true, "return")
     parser.required_slash = create_other_matcher(true, "/")
+    parser.required_string_literal = create_string_literal_matcher(true)
     parser.required_struct = create_keyword_matcher(true, "struct")
     parser.required_vertical_bar = create_other_matcher(true, "|")
     parser.required_while = create_keyword_matcher(true, "while")
@@ -3774,20 +3777,24 @@ create_parser :: () -> @Parser {
     return parser
 }
 
-parse :: (source: @Source) -> @Compilation_Unit {
+parse :: (file_path: @String) -> @Compilation_Unit {
     parser := create_parser()
-    parser.parse(source)
+    parser.parse(file_path)
     return parser.compilation_unit
 }
 
-parse :: (self: @Parser, source: @Source) -> Nothing {
-    other_scanner := self.scanner
+parse :: (self: @Parser, file_path: @String) -> Nothing {
+    source := create_source(file_path)
     self.compilation_unit.sources.append(source)
+    source.id = self.compilation_unit.sources.size
+
+    other_scanner := self.scanner
     self.scanner = create_scanner(source)
     self.parse_statements(self.compilation_unit.statements)
     if (self.scanner.current_token.is(End_Of_File_Token) == false) {
         abort(self, self.scanner.current_token)
     }
+
     self.scanner = other_scanner
 }
 
@@ -3800,7 +3807,23 @@ parse_statements :: (self: @Parser, statements: @List) -> Nothing {
             break
         }
         self.consume_end_of_line()
-        statements.append(statement)
+        if (statement.is(AST_Include_Statement)) {
+            statement := statement as @AST_Include_Statement
+
+            compilation_unit_sources_item := self.compilation_unit.sources.first_item
+            while (compilation_unit_sources_item != null) {
+                if ((compilation_unit_sources_item.data as @Source).file_path.equals(statement.file_path)) {
+                    break
+                }
+                compilation_unit_sources_item = compilation_unit_sources_item.next_item
+            }
+
+            if (compilation_unit_sources_item == null) {
+                self.parse(statement.file_path)
+            }
+        } else {
+            statements.append(statement)
+        }
     }
 }
 
@@ -3842,6 +3865,9 @@ parse_statement :: (self: @Parser) -> @AST_Statement {
     if (self.matches(self.required_break)) {
         token := self.consume(self.required_break)
         return create_ast_break_statement(token.location)
+    }
+    if (self.matches(self.required_include)) {
+        return self.parse_include()
     }
 
     expression := self.parse_expression()
@@ -3906,6 +3932,16 @@ parse_statement :: (self: @Parser) -> @AST_Statement {
     }
 
     return null
+}
+
+\ include
+\   : "include" STRING
+parse_include :: (self: @Parser) -> @AST_Include_Statement {
+    self.consume(self.required_include)
+    self.consume_space(1)
+    statement := new AST_Include_Statement
+    statement.file_path = (self.consume(self.required_string_literal) as @String_Token).value
+    return statement
 }
 
 \ struct
@@ -4533,6 +4569,15 @@ create_literal_matcher :: (required: Boolean) -> @Literal_Matcher {
     return matcher
 }
 
+String_Literal_Matcher :: struct : Matcher {
+}
+
+create_string_literal_matcher :: (required: Boolean) -> @String_Literal_Matcher {
+    matcher := new String_Literal_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
 Other_Matcher :: struct : Matcher {
     lexeme: @String
 }
@@ -4574,6 +4619,9 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
         }
         return false
     }
+    if (self.is(String_Literal_Matcher)) {
+        return token.is(String_Token)
+    }
     if (self.is(Literal_Matcher)) {
         return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token)
     }
@@ -4614,6 +4662,10 @@ create_compilation_unit :: () -> @Compilation_Unit {
 
 AST_Statement :: struct : Object {
     location: @Source_Location
+}
+
+AST_Include_Statement :: struct : AST_Statement {
+    file_path: @String
 }
 
 AST_Function_Statement :: struct : AST_Statement {
@@ -5448,6 +5500,9 @@ scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location:
     if (token_lexeme.equals("if")) {
         return create_keyword_token(token_lexeme, token_location)
     }
+    if (token_lexeme.equals("include")) {
+        return create_keyword_token(token_lexeme, token_location)
+    }
     if (token_lexeme.equals("loop")) {
         return create_keyword_token(token_lexeme, token_location)
     }
@@ -5721,6 +5776,7 @@ write :: (self: @FILE, location: @Source_Location) -> @FILE {
 \ -------------------------------------------------------------------------------------------------
 
 Source :: struct {
+    id: Int
     file_path: @String
     content: @Int8
 }
@@ -5729,6 +5785,9 @@ create_source :: (file_path: @String) -> @Source {
     source := new Source
 
     file := fopen(file_path.data, "r".data)
+    if (file == null) {
+        abort(clone("Failed to open file: ").append(file_path))
+    }
 
     content_size := 1024
     content := malloc(content_size) as @Int8

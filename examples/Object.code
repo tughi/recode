@@ -1,0 +1,11 @@
+include "examples/String.code"
+
+Object :: struct {
+    object_type: @Object_Type
+}
+
+Object_Type :: struct {
+    id: Int
+    name: String
+    base_type: @Object_Type
+}
