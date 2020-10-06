@@ -7,50 +7,50 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    source_file_name := new String.init(argv[1])
-    if (source_file_name.ends_with(".code") == false) {
-        stdout.write("'").write(source_file_name).write("' doesn't end with '.code'.").end_line()
+    source_file_path := new String.init(argv[1])
+    if (source_file_path.ends_with(".code") == false) {
+        stdout.write("'").write(source_file_path).write("' doesn't end with '.code'.").end_line()
         exit(1)
     }
 
-    output_file_name := new String.init(argv[2])
-    if (output_file_name.ends_with(".s") == false) {
-        stdout.write("'").write(output_file_name).write("' doesn't end with '.s'.").end_line()
+    output_file_path := new String.init(argv[2])
+    if (output_file_path.ends_with(".s") == false) {
+        stdout.write("'").write(output_file_path).write("' doesn't end with '.s'.").end_line()
         exit(1)
     }
 
-    dump_file_name: @String = null
+    dump_file_path: @String = null
     if (argc >= 4) {
-        dump_file_name = new String.init(argv[3])
-        if (dump_file_name.ends_with(".ir") == false) {
-            stdout.write("'").write(dump_file_name).write("' doesn't end with '.ir'.").end_line()
+        dump_file_path = new String.init(argv[3])
+        if (dump_file_path.ends_with(".ir") == false) {
+            stdout.write("'").write(dump_file_path).write("' doesn't end with '.ir'.").end_line()
             exit(1)
         }
     }
 
-    tokens := scan(source_file_name)
+    tokens := scan(source_file_path)
 
     compilation_unit := parse(tokens)
     \ stdout.write(compilation_unit).end_line()
 
     build := build(compilation_unit)
-    if (dump_file_name != null) {
-        dump_file := fopen(dump_file_name.data, "w".data)
+    if (dump_file_path != null) {
+        dump_file := fopen(dump_file_path.data, "w".data)
         build.dump(dump_file)
         dump_file.fclose()
     }
 
-    generate(build, output_file_name)
+    generate(build, output_file_path)
 }
 
 \ -------------------------------------------------------------------------------------------------
 \       Generator
 \ -------------------------------------------------------------------------------------------------
 
-generate :: (build: @IR_Build, output_file_name: @String) -> Nothing {
-    generator := create_mc_generator(output_file_name)
+generate :: (build: @IR_Build, output_file_path: @String) -> Nothing {
+    generator := create_mc_generator(output_file_path)
 
-    generator.output_file.write("  .file 1 \"").write(build.source.file_name).write("\"")
+    generator.output_file.write("  .file 1 \"").write(build.source.file_path).write("\"")
     generator.output_file.write_line("  .intel_syntax noprefix").end_line()
 
     functions := build.named_functions.create_iterator()
@@ -857,7 +857,7 @@ abort :: (self: @MC_Generator, message: @String) -> Nothing {
 }
 
 MC_Generator :: struct {
-    output_file_name: @String
+    output_file_path: @String
     output_file: @FILE
     output_debug_comments: Boolean
     registers: @List
@@ -881,10 +881,10 @@ MC_Generator :: struct {
     strings: @List
 }
 
-create_mc_generator :: (output_file_name: @String) -> @MC_Generator {
+create_mc_generator :: (output_file_path: @String) -> @MC_Generator {
     generator := new MC_Generator
-    generator.output_file_name = output_file_name
-    generator.output_file = fopen(output_file_name.data, "w".data)
+    generator.output_file_path = output_file_path
+    generator.output_file = fopen(output_file_path.data, "w".data)
     generator.output_debug_comments = true
     generator.register_rax = new MC_Register_RAX.init("rax", "eax", "ax", "al")
     generator.register_rcx = new MC_Register_RCX.init("rcx", "ecx", "cx", "cl")
@@ -5095,7 +5095,7 @@ write :: (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
 }
 
 write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
-    file.write(location.source.file_name).write(':')
+    file.write(location.source.file_path).write(':')
     line := location.line
     if (line < 1000) {
         file.write('0')
@@ -5239,8 +5239,8 @@ abort :: (location: @Source_Location, message: @String) -> Nothing {
 \       Scanner
 \ -------------------------------------------------------------------------------------------------
 
-scan :: (file_name: @String) -> @List {
-    scanner := create_scanner(create_source(file_name))
+scan :: (file_path: @String) -> @List {
+    scanner := create_scanner(create_source(file_path))
     tokens := create_list()
 
     loop {
@@ -5698,7 +5698,7 @@ Source_Location :: struct {
 }
 
 write :: (self: @FILE, location: @Source_Location) -> @FILE {
-    return self.write(location.source.file_name).write(':').write(location.line).write(':').write(location.column)
+    return self.write(location.source.file_path).write(':').write(location.line).write(':').write(location.column)
 }
 
 \ -------------------------------------------------------------------------------------------------
@@ -5706,14 +5706,14 @@ write :: (self: @FILE, location: @Source_Location) -> @FILE {
 \ -------------------------------------------------------------------------------------------------
 
 Source :: struct {
-    file_name: @String
+    file_path: @String
     content: @Int8
 }
 
-create_source :: (file_name: @String) -> @Source {
+create_source :: (file_path: @String) -> @Source {
     source := new Source
 
-    file := fopen(file_name.data, "r".data)
+    file := fopen(file_path.data, "r".data)
 
     content_size := 1024
     content := malloc(content_size) as @Int8
@@ -5731,7 +5731,7 @@ create_source :: (file_name: @String) -> @Source {
         content_length = content_length + 1
     }
 
-    source.file_name = file_name
+    source.file_path = file_path
     source.content = content
 
     return source
