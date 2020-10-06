@@ -4439,37 +4439,30 @@ matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) ->
 }
 
 matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> Boolean {
-    self.tokens.save_state()
     token := self.tokens.current() as @Token
+    peek_offset := 0
     if (first_matcher.accepts(token)) {
-        token = self.tokens.next() as @Token
-    } else {
-        if (first_matcher.is_required) {
-            self.tokens.restore_state()
-            return false
-        }
+        token = self.tokens.peek(peek_offset) as @Token
+        peek_offset = peek_offset + 1
+    } else if (first_matcher.is_required) {
+        return false
     }
     if (second_matcher != null) {
         if (second_matcher.accepts(token)) {
-            token = self.tokens.next() as @Token
-        } else {
-            if (second_matcher.is_required) {
-                self.tokens.restore_state()
-                return false
-            }
+            token = self.tokens.peek(peek_offset) as @Token
+            peek_offset = peek_offset + 1
+        } else if (second_matcher.is_required) {
+            return false
         }
     }
     if (third_matcher != null) {
         if (third_matcher.accepts(token)) {
-            token = self.tokens.next() as @Token
-        } else {
-            if (third_matcher.is_required) {
-                self.tokens.restore_state()
-                return false
-            }
+            token = self.tokens.peek(peek_offset) as @Token
+            peek_offset = peek_offset + 1
+        } else if (third_matcher.is_required) {
+            return false
         }
     }
-    self.tokens.restore_state()
     return true
 }
 
@@ -5901,8 +5894,6 @@ List_Item :: struct {
 List_Iterator :: struct {
     current_item: @List_Item
     next_item: @List_Item
-    saved_current_item: @List_Item
-    saved_next_item: @List_Item
 }
 
 create_iterator :: (list: @List) -> @List_Iterator {
@@ -5936,20 +5927,22 @@ next :: (self: @List_Iterator) -> @Any {
     return self.current_item.data
 }
 
+peek :: (self: @List_Iterator, offset: Int) -> @Any {
+    list_item := self.next_item
+    while (offset > 0 && list_item != null) {
+        list_item = list_item.next_item
+        offset = offset - 1
+    }
+    if (list_item == null) {
+        return null
+    }
+    return list_item.data
+}
+
 change :: (self: @List_Iterator, data: @Any) -> Nothing {
     if (self.current_item != null) {
         self.current_item.data = data
     }
-}
-
-save_state :: (self: @List_Iterator) -> Nothing {
-    self.saved_current_item = self.current_item
-    self.saved_next_item = self.next_item
-}
-
-restore_state :: (self: @List_Iterator) -> Nothing {
-    self.current_item = self.saved_current_item
-    self.next_item = self.saved_next_item
 }
 
 \ -------------------------------------------------------------------------------------------------
