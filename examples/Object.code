@@ -1,4 +1,4 @@
-include "examples/String.code"
+include "./String.code"
 
 Object :: struct {
     object_type: @Object_Type

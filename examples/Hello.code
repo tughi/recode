@@ -1,5 +1,5 @@
-include "examples/IO.code"
-include "examples/String.code"
+include "./IO.code"
+include "./String.code"
 
 main :: (argc: Int, argv: @@Int8) -> Int {
     stdout.write("Hello Code!\n")

@@ -1,4 +1,4 @@
-include "examples/Object.code"
+include "./Object.code"
 
 main :: (argc: Int, argv: @@Int8) -> Int {
     window := new Widget

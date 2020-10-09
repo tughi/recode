@@ -3810,21 +3810,52 @@ parse_statements :: (self: @Parser, statements: @List) -> Nothing {
         if (statement.is(AST_Include_Statement)) {
             statement := statement as @AST_Include_Statement
 
+            statement_file_path := statement.file_path.make_relative_path(statement.location.source.file_path)
+
             compilation_unit_sources_item := self.compilation_unit.sources.first_item
             while (compilation_unit_sources_item != null) {
-                if ((compilation_unit_sources_item.data as @Source).file_path.equals(statement.file_path)) {
+                if ((compilation_unit_sources_item.data as @Source).file_path.equals(statement_file_path)) {
                     break
                 }
                 compilation_unit_sources_item = compilation_unit_sources_item.next_item
             }
 
             if (compilation_unit_sources_item == null) {
-                self.parse(statement.file_path)
+                self.parse(statement_file_path)
             }
         } else {
             statements.append(statement)
         }
     }
+}
+
+make_parent_path :: (file_path: @String) -> @String {
+    end_index := file_path.length - 1
+    while (end_index > 0 && file_path.data[end_index] != '/') {
+        end_index = end_index - 1
+    }
+    parent_path := new String.init()
+    if (end_index > 0) {
+        index := 0
+        while (index < end_index) {
+            parent_path.append(file_path.data[index])
+            index = index + 1
+        }
+    }
+    return parent_path
+}
+
+make_relative_path :: (file_path: @String, base_file_path: @String) -> @String {
+    if (file_path.starts_with("./")) {
+        relative_path := make_parent_path(base_file_path)
+        index := 1
+        while (index < file_path.length) {
+            relative_path.append(file_path.data[index])
+            index = index + 1
+        }
+        return relative_path
+    }
+    abort(clone("Unsupported file path: ").append(file_path))
 }
 
 \ statement
@@ -3937,9 +3968,9 @@ parse_statement :: (self: @Parser) -> @AST_Statement {
 \ include
 \   : "include" STRING
 parse_include :: (self: @Parser) -> @AST_Include_Statement {
-    self.consume(self.required_include)
-    self.consume_space(1)
     statement := new AST_Include_Statement
+    statement.location = self.consume(self.required_include).location
+    self.consume_space(1)
     statement.file_path = (self.consume(self.required_string_literal) as @String_Token).value
     return statement
 }
@@ -5768,6 +5799,9 @@ Source_Location :: struct {
 }
 
 write :: (self: @FILE, location: @Source_Location) -> @FILE {
+    if (location == null) {
+        return self.write("null")
+    }
     return self.write(location.source.file_path).write(':').write(location.line).write(':').write(location.column)
 }
 
@@ -6118,7 +6152,24 @@ append :: (self: @String, other: @String) -> @String {
     return self
 }
 
+starts_with :: (self: @String, prefix: @String) -> Boolean {
+    if (self.length < prefix.length) {
+        return false
+    }
+    index := 0
+    while (index < prefix.length) {
+        if (self.data[index] != prefix.data[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
 ends_with :: (self: @String, suffix: @String) -> Boolean {
+    if (self.length < suffix.length) {
+        return false
+    }
     index := 0
     while (index < suffix.length) {
         if (self.data[self.length - suffix.length + index] != suffix.data[index]) {
