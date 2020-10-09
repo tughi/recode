@@ -1,0 +1,127 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+String :: struct {
+    data: @Int8
+    data_size: Int
+    length: Int
+}
+
+init :: (self: @String) -> @String {
+    self.init(16)
+    return self
+}
+
+init :: (self: @String, data_size: Int) -> @String {
+    self.data_size = data_size
+    self.data = malloc(data_size) as @Int8
+    self.length = 0
+    return self
+}
+
+init :: (self: @String, data: @Int8) -> @String {
+    self.length = data.length()
+    self.data_size = self.length + 1
+    self.data = data
+    return self
+}
+
+clone :: (self: @String) -> @String {
+    clone := new String
+    clone.init(self.data_size)
+    clone.append(self)
+    return clone
+}
+
+append :: (self: @String, char: Int8) -> @String {
+    if (self.length + 1 >= self.data_size) {
+        self.data_size = self.data_size + 16
+        self.data = realloc(self.data, self.data_size) as @Int8
+    }
+    self.data[self.length] = char
+    self.length = self.length + 1
+    self.data[self.length] = '\0'
+    return self
+}
+
+append :: (self: @String, number: Int) -> @String {
+    if (number >= 10) {
+        self.append(number / 10)
+    }
+    return self.append((number // 10 + '0' as Int) as Int8)
+}
+
+append :: (self: @String, other: @String) -> @String {
+    if (self.length + other.length >= self.data_size) {
+        self.data_size = self.length + other.length + 1
+        self.data = realloc(self.data, self.data_size) as @Int8
+    }
+    index := 0
+    other_data := other.data
+    self_data := self.data
+    self_length := self.length
+    loop {
+        char := other_data[index]
+        self_data[self_length] = char
+        if (char == '\0') {
+            break
+        }
+        self_length = self_length + 1
+        index = index + 1
+    }
+    self.length = self_length
+    return self
+}
+
+starts_with :: (self: @String, prefix: @String) -> Boolean {
+    if (self.length < prefix.length) {
+        return false
+    }
+    index := 0
+    while (index < prefix.length) {
+        if (self.data[index] != prefix.data[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+ends_with :: (self: @String, suffix: @String) -> Boolean {
+    if (self.length < suffix.length) {
+        return false
+    }
+    index := 0
+    while (index < suffix.length) {
+        if (self.data[self.length - suffix.length + index] != suffix.data[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+equals :: (self: @String, other: @String) -> Boolean {
+    if (self.length == other.length) {
+        index := 0
+        while (index < self.length) {
+            if (self.data[index] != other.data[index]) {
+                return false
+            }
+            index = index + 1
+        }
+        return true
+    }
+    return false
+}
+
+length :: (string: @Int8) -> Int {
+    length := 0
+    loop {
+        char := string[length]
+        if (char == '\0') {
+            return length
+        }
+        length = length + 1
+    }
+}
+

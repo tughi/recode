@@ -1,0 +1,679 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+IR :: struct {
+}
+
+IR_Type :: struct : Object {
+    name: @String
+}
+
+init :: (self: @IR_Type, name: @String) -> @IR_Type {
+    self.name = name
+    return self
+}
+
+IR_Any_Type :: struct : IR_Type {
+}
+
+IR_Boolean_Type :: struct : IR_Type {
+}
+
+IR_Int_Type :: struct : IR_Type {
+}
+
+IR_Int8_Type :: struct : IR_Type {
+}
+
+IR_Int16_Type :: struct : IR_Type {
+}
+
+IR_Int32_Type :: struct : IR_Type {
+}
+
+IR_Int64_Type :: struct : IR_Type {
+}
+
+IR_Nothing_Type :: struct : IR_Type {
+}
+
+IR_Null_Type :: struct : IR_Type {
+}
+
+IR_Pointer_Type :: struct : IR_Type {
+    pointed_type: @IR_Type
+}
+
+equals :: (self: @IR_Type, other: @IR_Type) -> Boolean {
+    if (self.is(IR_Pointer_Type) && other.is(IR_Pointer_Type)) {
+        self := self as @IR_Pointer_Type
+        other := other as @IR_Pointer_Type
+        return self.pointed_type.equals(other.pointed_type)
+    }
+    return self == other
+}
+
+create_ir_pointer_type :: (pointed_type: @IR_Type) -> @IR_Pointer_Type {
+    type := new IR_Pointer_Type
+    type.init(clone("@").append(pointed_type.name))
+    type.pointed_type = pointed_type
+    return type
+}
+
+IR_Array_Type :: struct : IR_Pointer_Type {
+    size_expression: @AST_Expression
+}
+
+create_ir_array_type :: (item_type: @IR_Type, size_expression: @AST_Expression) -> @IR_Type {
+    type := new IR_Array_Type
+    type.init(clone("[").append(item_type.name).append("]"))
+    type.pointed_type = item_type
+    type.size_expression = size_expression
+    return type
+}
+
+IR_Struct_Type :: struct : IR_Type {
+    base_type: @IR_Struct_Type
+    members: @List
+    statement: @AST_Struct_Statement
+}
+
+IR_Struct_Type_Member :: struct : Object {
+    struct_type: @IR_Struct_Type
+    name: @String
+    type: @IR_Type
+}
+
+create_ir_struct_type :: (name: @String, statement: @AST_Struct_Statement) -> @IR_Struct_Type {
+    type := new IR_Struct_Type
+    type.init(name)
+    type.members = create_list()
+    type.statement = statement
+    return type
+}
+
+add_member :: (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
+    member := new IR_Struct_Type_Member
+    member.struct_type = self
+    member.name = name
+    member.type = type
+    self.members.append(member)
+    return member
+}
+
+get_member :: (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
+    struct_type := self
+    loop {
+        members := struct_type.members.create_iterator()
+        while (members.has_next()) {
+            member := members.next() as @IR_Struct_Type_Member
+            if (member.name.equals(name)) {
+                return member
+            }
+        }
+        struct_type = struct_type.base_type
+        if (struct_type == null) {
+            return null
+        }
+    }
+}
+
+is_base_type :: (self: @IR_Struct_Type, other: @IR_Struct_Type) -> Boolean {
+    struct_type := other
+    loop {
+        if (self == struct_type.base_type) {
+            return true
+        }
+        struct_type = struct_type.base_type
+        if (struct_type == null) {
+            return false
+        }
+    }
+}
+
+is_object_type :: (self: @IR_Struct_Type) -> Boolean {
+    struct_type := self
+    loop {
+        if (struct_type.name.equals("Object")) {
+            return true
+        }
+        struct_type = struct_type.base_type
+        if (struct_type == null) {
+            return false
+        }
+    }
+}
+
+IR_Value :: struct : Object {
+    type: @IR_Type
+    user_instructions: @List
+}
+
+init :: (self: @IR_Value, type: @IR_Type) -> @IR_Value {
+    self.type = type
+    self.user_instructions = create_list()
+    return self
+}
+
+IR_Undefined_Value :: struct : IR_Value {
+}
+
+IR_Constant_Value :: struct : IR_Value {
+    literal: @Literal_Token
+}
+
+create_ir_constant_value :: (type: @IR_Type, literal: @Literal_Token) -> @IR_Constant_Value {
+    value := new IR_Constant_Value
+    value.init(type)
+    value.literal = literal
+    return value
+}
+
+IR_Variable_Value :: struct : IR_Value {
+    variable: @IR_Variable
+    version: Int
+}
+
+init :: (self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value {
+    self.init(variable.type)
+    self.variable = variable
+    self.version = variable.values.size + 1
+    variable.values.append(self)
+    return self
+}
+
+IR_Block :: struct : Object {
+    id: Int
+    function: @IR_Function
+    predecessors: @List
+    first_instruction: @IR_Instruction
+    last_instruction: @IR_Instruction
+    is_being_generated: Boolean
+    is_generated: Boolean
+}
+
+has_instructions :: (self: @IR_Block) -> Boolean {
+    return self.first_instruction != null
+}
+
+prepend :: (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
+    instruction.parent_block = self
+    instruction.prev_instruction = null
+    instruction.next_instruction = self.first_instruction
+    if (self.first_instruction == null) {
+        self.last_instruction = instruction
+    } else {
+        self.first_instruction.prev_instruction = instruction
+    }
+    self.first_instruction = instruction
+    return instruction
+}
+
+append :: (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
+    instruction.parent_block = self
+    instruction.prev_instruction = self.last_instruction
+    instruction.next_instruction = null
+    if (self.last_instruction == null) {
+        self.first_instruction = instruction
+    } else {
+        self.last_instruction.next_instruction = instruction
+    }
+    self.last_instruction = instruction
+    return instruction
+}
+
+append_jump :: (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instruction {
+    instruction := new IR_Direct_Jump_Instruction
+    instruction.init(null)
+    instruction.block = block
+    block.predecessors.append(self)
+    self.append(instruction)
+    return instruction
+}
+
+append_jump :: (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
+    instruction := new IR_Conditional_Jump_Instruction
+    instruction.init(null)
+    instruction.operand_values.append(condition_value)
+    instruction.true_block = true_block
+    true_block.predecessors.append(self)
+    instruction.false_block = false_block
+    false_block.predecessors.append(self)
+    condition_value.user_instructions.append(instruction)
+    self.append(instruction)
+    return instruction
+}
+
+remove :: (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
+    if (instruction.parent_block != self) {
+        abort("Tried to remove instruction belonging to another block")
+    }
+    if (instruction.prev_instruction != null) {
+        instruction.prev_instruction.next_instruction = instruction.next_instruction
+    }
+    if (instruction.next_instruction != null) {
+        instruction.next_instruction.prev_instruction = instruction.prev_instruction
+    }
+    if (self.first_instruction == instruction) {
+        self.first_instruction = instruction.next_instruction
+    }
+    if (self.last_instruction == instruction) {
+        self.last_instruction = instruction.prev_instruction
+    }
+    instruction.parent_block = null
+    instruction.prev_instruction = null
+    instruction.next_instruction = null
+}
+
+IR_Function :: struct : Object {
+    id: Int
+    location: @Source_Location
+    name: @String
+    parameters: @List
+    return_type: @IR_Type
+    is_external: Boolean
+    blocks: @List
+}
+
+create_block :: (self: @IR_Function) -> @IR_Block {
+    block := new IR_Block
+    block.id = self.blocks.size + 1
+    block.function = self
+    block.predecessors = create_list()
+    block.first_instruction = null
+    block.last_instruction = null
+    block.is_being_generated = false
+    block.is_generated = false
+    self.blocks.append(block)
+    return block
+}
+
+IR_Variable :: struct : Object {
+    name: @String
+    type: @IR_Type
+    values: @List
+}
+
+init :: (self: @IR_Variable, name: @String, type: @IR_Type) -> @IR_Variable {
+    self.name = name
+    self.type = type
+    self.values = create_list()
+    return self
+}
+
+IR_Global_Variable :: struct : IR_Variable {
+    is_external: Boolean
+}
+
+create_ir_global_variable :: (name: @String, type: @IR_Type, is_external: Boolean) -> @IR_Global_Variable {
+    variable := new IR_Global_Variable
+    variable.init(name, type)
+    variable.is_external = is_external
+    return variable
+}
+
+IR_Function_Parameter :: struct : IR_Variable {
+}
+
+IR_Instruction :: struct : Object {
+    location: @Source_Location
+    result_value: @IR_Variable_Value
+    operand_values: @List
+    parent_block: @IR_Block
+    prev_instruction: @IR_Instruction
+    next_instruction: @IR_Instruction
+    is_generated: Boolean
+}
+
+init :: (self: @IR_Instruction, result_value: @IR_Variable_Value) -> @IR_Instruction {
+    self.location = null
+    self.result_value = result_value
+    self.operand_values = create_list()
+    self.parent_block = null
+    self.prev_instruction = null
+    self.next_instruction = null
+    self.is_generated = false
+    return self
+}
+
+is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
+    if (self == null) {
+        return false
+    }
+    if (self.is(IR_Jump_Instruction) || self.is(IR_Return_Instruction)) {
+        return true
+    }
+    if (self.is(IR_Call_Instruction)) {
+        self := self as @IR_Call_Instruction
+        function := self.function
+        if (function.name.equals("abort")) {
+            return true
+        }
+        if (function.name.equals("exit") && function.parameters.size == 1) {
+            function_parameter := function.parameters.get(0) as @IR_Function_Parameter
+            if (function_parameter.type.is(IR_Int_Type)) {
+                return true
+            }
+        }
+    }
+    return false
+}
+
+IR_Call_Instruction :: struct : IR_Instruction {
+    function: @IR_Function
+    arguments: @List
+}
+
+create_ir_call_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function, arguments: @List) -> @IR_Call_Instruction {
+    instruction := new IR_Call_Instruction
+    instruction.init(result_value)
+    instruction.function = function
+    instruction.arguments = instruction.operand_values
+    arguments := arguments.create_iterator()
+    while (arguments.has_next()) {
+        value := arguments.next() as @IR_Value
+        instruction.operand_values.append(value)
+        value.user_instructions.append(instruction)
+    }
+    return instruction
+}
+
+IR_Cast_Instruction :: struct : IR_Instruction {
+}
+
+create_ir_cast_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
+    instruction := new IR_Cast_Instruction
+    instruction.init(result_value)
+    instruction.operand_values.append(value)
+    value.user_instructions.append(instruction)
+    return instruction
+}
+
+get_value :: (self: @IR_Cast_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+IR_Jump_Instruction :: struct : IR_Instruction {
+}
+
+IR_Conditional_Jump_Instruction :: struct : IR_Jump_Instruction {
+    true_block: @IR_Block
+    false_block: @IR_Block
+}
+
+get_condition_value :: (self: @IR_Conditional_Jump_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+IR_Direct_Jump_Instruction :: struct : IR_Jump_Instruction {
+    block: @IR_Block
+}
+
+IR_Load_Array_Item_Instruction :: struct : IR_Instruction {
+}
+
+create_ir_load_array_item_instruction :: (result_value: @IR_Variable_Value, array_value: @IR_Value, index_value: @IR_Value) -> @IR_Load_Array_Item_Instruction {
+    instruction := new IR_Load_Array_Item_Instruction
+    instruction.init(result_value)
+    instruction.operand_values.append(array_value)
+    instruction.operand_values.append(index_value)
+    array_value.user_instructions.append(instruction)
+    index_value.user_instructions.append(instruction)
+    return instruction
+}
+
+get_array_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_index_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
+}
+
+IR_Load_Struct_Member_Instruction :: struct : IR_Instruction {
+    struct_type_member: @IR_Struct_Type_Member
+    load_address: Boolean
+}
+
+create_ir_load_struct_member_instruction :: (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
+    instruction := new IR_Load_Struct_Member_Instruction
+    instruction.init(result_value)
+    instruction.operand_values.append(struct_pointer_value)
+    instruction.struct_type_member = struct_type_member
+    instruction.load_address = load_address
+    struct_pointer_value.user_instructions.append(instruction)
+    return instruction
+}
+
+get_struct_pointer_value :: (self: @IR_Load_Struct_Member_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+IR_Load_Variable_Instruction :: struct : IR_Instruction {
+    variable: @IR_Variable
+}
+
+create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
+    instruction := new IR_Load_Variable_Instruction
+    instruction.init(result_value)
+    instruction.variable = result_value.variable
+    return instruction
+}
+
+IR_New_Instruction :: struct : IR_Instruction {
+    type: @IR_Type
+}
+
+create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, size_value: @IR_Value) -> @IR_New_Instruction {
+    instruction := new IR_New_Instruction
+    instruction.init(result_value)
+    instruction.type = type
+    instruction.operand_values.append(size_value)
+    if (size_value != null) {
+        size_value.user_instructions.append(instruction)
+    }
+    return instruction
+}
+
+get_size_value :: (self: @IR_New_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+IR_Return_Instruction :: struct : IR_Instruction {
+}
+
+create_ir_return_instruction :: (return_value: @IR_Value) -> @IR_Return_Instruction {
+    instruction := new IR_Return_Instruction
+    instruction.init(null)
+    instruction.operand_values.append(return_value)
+    if (return_value != null) {
+        return_value.user_instructions.append(instruction)
+    }
+    return instruction
+}
+
+get_return_value :: (self: @IR_Return_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+IR_Set_Instruction :: struct : IR_Instruction {
+}
+
+create_ir_set_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
+    instruction := new IR_Set_Instruction
+    instruction.init(result_value)
+    instruction.operand_values.append(value)
+    value.user_instructions.append(instruction)
+    return instruction
+}
+
+get_value :: (self: @IR_Set_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+IR_Store_Array_Item_Instruction :: struct : IR_Instruction {
+}
+
+create_ir_store_array_item_instruction :: (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
+    instruction := new IR_Store_Array_Item_Instruction
+    instruction.init(null)
+    instruction.operand_values.append(array_value)
+    instruction.operand_values.append(index_value)
+    instruction.operand_values.append(value)
+    array_value.user_instructions.append(instruction)
+    index_value.user_instructions.append(instruction)
+    value.user_instructions.append(instruction)
+    return instruction
+}
+
+get_array_value :: (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_index_value :: (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.get(1) as @IR_Value
+}
+
+get_value :: (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
+}
+
+IR_Store_Struct_Member_Instruction :: struct : IR_Instruction {
+    struct_type_member: @IR_Struct_Type_Member
+}
+
+create_ir_store_struct_member_instruction :: (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
+    instruction := new IR_Store_Struct_Member_Instruction
+    instruction.init(null)
+    instruction.operand_values.append(struct_pointer_value)
+    instruction.struct_type_member = struct_type_member
+    instruction.operand_values.append(value)
+    struct_pointer_value.user_instructions.append(instruction)
+    value.user_instructions.append(instruction)
+    return instruction
+}
+
+get_struct_pointer_value :: (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_value :: (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
+}
+
+IR_Binary_Instruction :: struct : IR_Instruction {
+}
+
+init :: (self: @IR_Binary_Instruction, result_value: @IR_Variable_Value, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
+    self.init(result_value)
+    self.operand_values.append(left_value)
+    self.operand_values.append(right_value)
+    left_value.user_instructions.append(self)
+    right_value.user_instructions.append(self)
+    return self
+}
+
+get_left_value :: (self: @IR_Binary_Instruction) -> @IR_Value {
+    return self.operand_values.first() as @IR_Value
+}
+
+get_right_value :: (self: @IR_Binary_Instruction) -> @IR_Value {
+    return self.operand_values.last() as @IR_Value
+}
+
+IR_Add_Instruction :: struct : IR_Binary_Instruction {
+}
+
+IR_Comparison_Instruction :: struct : IR_Binary_Instruction {
+}
+
+IR_Divide_Instruction :: struct : IR_Binary_Instruction {
+}
+
+IR_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Greater_Than_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Greater_Than_Or_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Less_Than_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Less_Than_Or_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Modulo_Instruction :: struct : IR_Binary_Instruction {
+}
+
+IR_Multiply_Instruction :: struct : IR_Binary_Instruction {
+}
+
+IR_Not_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+}
+
+IR_Substract_Instruction :: struct : IR_Binary_Instruction {
+}
+
+IR_Phi_Instruction :: struct : IR_Instruction {
+    values: @List
+}
+
+create_ir_phi_instruction :: (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
+    instruction := new IR_Phi_Instruction
+    instruction.init(result_value)
+    instruction.values = instruction.operand_values
+    return instruction
+}
+
+append :: (self: @IR_Phi_Instruction, value: @IR_Value) -> Nothing {
+    self.values.remove_all(value).prune().append(value)
+    value.user_instructions.append(self)
+}
+
+is_redundant :: (self: @IR_Phi_Instruction) -> Boolean {
+    \ redundant phi instruction:
+    \   v.1 = phi(v.2)
+
+    value_item := self.values.first_item
+    if (value_item == null) {
+        abort()
+    }
+    other_value := value_item.data as @IR_Value
+    value_item = value_item.next_item
+    while (value_item != null) {
+        value := value_item.data as @IR_Value
+        if (value != other_value) {
+            return false
+        }
+        value_item = value_item.next_item
+    }
+    return true
+}
+
+is_trivial :: (self: @IR_Phi_Instruction) -> Boolean {
+    \ trivial phi instructions:
+    \   v.1 = phi(v.1)
+    \   v.1 = phi(v.1, v.2)
+
+    value_item := self.values.first_item
+    if (value_item == null) {
+        abort()
+    }
+    result_value: @IR_Value = self.result_value
+    other_value: @IR_Value = null
+    while (value_item != null) {
+        value := value_item.data as @IR_Value
+        if (value != result_value) {
+            if (value != other_value) {
+                if (other_value != null) {
+                    return false
+                }
+                other_value = value
+            }
+        }
+        value_item = value_item.next_item
+    }
+    return true
+}

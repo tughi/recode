@@ -1,0 +1,20 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+Counter :: struct {
+    value: Int
+}
+
+init :: (self: @Counter) -> @Counter {
+    self.value = 0
+    return self
+}
+
+next :: (self: @Counter) -> Int {
+    self.value = self.value + 1
+    return self.value
+}
+
+reset :: (self: @Counter) -> @Counter {
+    self.value = 0
+    return self
+}

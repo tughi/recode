@@ -1,0 +1,1317 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+build :: (compilation_unit: @Compilation_Unit) -> @IR_Build {
+    builder := create_ir_builder(compilation_unit)
+    builder.build()
+    build := new IR_Build
+    build.sources = compilation_unit.sources
+    build.named_functions = builder.named_functions
+    build.named_types = builder.named_types
+    return build
+}
+
+IR_Build :: struct {
+    sources: @List
+    named_functions: @List
+    named_types: @List
+}
+
+IR_Builder :: struct {
+    context: @IR_Builder_Context
+    compilation_unit: @Compilation_Unit
+    named_types: @List
+    named_functions: @List
+    current_block: @IR_Block
+    current_loop: @IR_Loop
+    counter: @Counter
+}
+
+IR_Builder_Context :: struct {
+    parent: @IR_Builder_Context
+    variables: @List
+    named_values: @List
+}
+
+IR_Loop :: struct {
+    parent: @IR_Loop
+    end_block: @IR_Block
+}
+
+create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
+    builder := new IR_Builder
+    builder.compilation_unit = compilation_unit
+    builder.context = create_ir_builder_context(null, false)
+    builder.named_types = create_list()
+    builder.named_types.append(new IR_Any_Type.init("Any"))
+    builder.named_types.append(new IR_Boolean_Type.init("Boolean"))
+    builder.named_types.append(new IR_Int_Type.init("Int"))
+    builder.named_types.append(new IR_Int8_Type.init("Int8"))
+    builder.named_types.append(new IR_Int16_Type.init("Int16"))
+    builder.named_types.append(new IR_Int32_Type.init("Int32"))
+    builder.named_types.append(new IR_Int64_Type.init("Int64"))
+    builder.named_types.append(new IR_Nothing_Type.init("Nothing"))
+    builder.named_types.append(new IR_Null_Type.init("Null"))
+    builder.named_functions = create_list()
+    builder.current_block = null
+    builder.current_loop = null
+    builder.counter = new Counter.init()
+    return builder
+}
+
+create_ir_builder_context :: (parent: @IR_Builder_Context, reuse_named_values: Boolean) -> @IR_Builder_Context {
+    context := new IR_Builder_Context
+    context.parent = parent
+    context.variables = create_list()
+    if (reuse_named_values) {
+        context.named_values = parent.named_values
+    } else {
+        context.named_values = create_list()
+    }
+    return context
+}
+
+create_ir_loop :: (parent: @IR_Loop, end_block: @IR_Block) -> @IR_Loop {
+    new_loop := new IR_Loop
+    new_loop.parent = parent
+    new_loop.end_block = end_block
+    return new_loop
+}
+
+get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
+    named_types := self.named_types.create_iterator()
+    while (named_types.has_next()) {
+        named_type := named_types.next() as @IR_Type
+        if (name.equals(named_type.name)) {
+            return named_type
+        }
+    }
+    return null
+}
+
+add_variable :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable {
+    self.context.variables.prepend(variable)
+    return variable
+}
+
+get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
+    context := self.context
+    loop {
+        variables := context.variables.create_iterator()
+        while (variables.has_next()) {
+            variable := variables.next() as @IR_Variable
+            if (name.equals(variable.name)) {
+                return variable
+            }
+        }
+        context = context.parent
+        if (context == null) {
+            return null
+        }
+    }
+}
+
+get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
+    if (variable.is(IR_Global_Variable)) {
+        return self.append(create_ir_load_variable_instruction(self.create_variable_value(variable)), null) as @IR_Variable_Value
+    }
+    current_block_instruction := self.current_block.last_instruction
+    while (current_block_instruction != null) {
+        if (current_block_instruction.result_value != null && current_block_instruction.result_value.variable == variable) {
+            return current_block_instruction.result_value
+        }
+        current_block_instruction = current_block_instruction.prev_instruction
+    }
+    instruction := self.current_block.prepend(create_ir_phi_instruction(self.create_variable_value(variable)))
+    return instruction.result_value
+}
+
+create_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
+    return new IR_Variable_Value.init(variable)
+}
+
+get_named_function :: (self: @IR_Builder, name: @Identifier_Token, argument_types: @List) -> @IR_Function {
+    function := self.get_named_function(name.lexeme, argument_types)
+    if (function == null) {
+        message := clone("Undefined function: ").append(name.lexeme).append(" :: (")
+        argument_types := argument_types.create_iterator()
+        while (argument_types.has_next()) {
+            argument_type := argument_types.next() as @IR_Type
+            message.append(argument_type.name)
+            if (argument_types.has_next()) {
+                message.append(", ")
+            }
+        }
+        message.append(")")
+        abort(name.location, message)
+    }
+    return function
+}
+
+get_named_function :: (self: @IR_Builder, name: @String, argument_types: @List) -> @IR_Function {
+    function: @IR_Function = null
+    named_functions := self.named_functions.create_iterator()
+    while (named_functions.has_next()) {
+        named_function := named_functions.next() as @IR_Function
+        if (name.equals(named_function.name)) {
+            is_match := true
+            argument_types := argument_types.create_iterator()
+            named_function_parameters := named_function.parameters.create_iterator()
+            while (argument_types.has_next() && named_function_parameters.has_next()) {
+                argument_type := argument_types.next() as @IR_Type
+                named_function_parameter := named_function_parameters.next() as @IR_Function_Parameter
+                if (named_function_parameter.type.accepts(argument_type) == false) {
+                    is_match = false
+                    break
+                }
+            }
+            if (is_match && argument_types.has_next() == false && named_function_parameters.has_next() == false) {
+                if (function != null) {
+                    abort(name)
+                }
+                function = named_function
+            }
+        }
+    }
+    return function
+}
+
+accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
+    if (self == other) {
+        return true
+    }
+    if (self.is(IR_Pointer_Type)) {
+        self := self as @IR_Pointer_Type
+        if (self.pointed_type.is(IR_Pointer_Type)) {
+            stop := true
+        }
+        if (other.is(IR_Pointer_Type)) {
+            other := other as @IR_Pointer_Type
+            if (self.pointed_type == other.pointed_type) {
+                return true
+            }
+            if (self.pointed_type.is(IR_Any_Type)) {
+                return true
+            }
+            if (self.pointed_type.is(IR_Struct_Type) && other.pointed_type.is(IR_Struct_Type)) {
+                return (self.pointed_type as @IR_Struct_Type).is_base_type(other.pointed_type as @IR_Struct_Type)
+            }
+            return self.pointed_type.accepts(other.pointed_type)
+        }
+        if (other.is(IR_Null_Type)) {
+            return true
+        }
+        return false
+    }
+    return false
+}
+
+create_temp_variable :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable {
+    return new IR_Variable.init(clone("$").append(self.counter.next()), type)
+}
+
+create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable_Value {
+    return self.create_variable_value(self.create_temp_variable(type))
+}
+
+append :: (self: @IR_Builder, instruction: @IR_Instruction, location: @Source_Location) -> @IR_Variable_Value {
+    instruction.location = location
+    self.current_block.append(instruction)
+    return instruction.result_value
+}
+
+build :: (self: @IR_Builder) -> Nothing {
+    types := self.compilation_unit.types.create_iterator()
+    while (types.has_next()) {
+        statement := types.next() as @AST_Statement
+        self.convert_type_statement(statement)
+    }
+
+    global_variables := self.compilation_unit.global_variables.create_iterator()
+    while (global_variables.has_next()) {
+        variable_statement := global_variables.next() as @AST_Variable_Statement
+        self.create_global_variable(variable_statement)
+    }
+
+    functions := self.compilation_unit.functions.create_iterator()
+    while (functions.has_next()) {
+        function_statement := functions.next() as @AST_Function_Statement
+        self.create_function(function_statement)
+    }
+
+    functions := self.compilation_unit.functions.create_iterator()
+    while (functions.has_next()) {
+        function_statement := functions.next() as @AST_Function_Statement
+        self.build_function(function_statement)
+    }
+}
+
+convert_type_statement :: (self: @IR_Builder, statement: @AST_Statement) -> @IR_Type {
+    if (statement.is(AST_Struct_Statement)) {
+        return self.convert_struct_statement(statement as @AST_Struct_Statement)
+    }
+    abort(statement.location, statement.object_type)
+}
+
+convert_struct_statement :: (self: @IR_Builder, struct_statement: @AST_Struct_Statement) -> @IR_Type {
+    struct_name := struct_statement.name.lexeme
+    type := self.get_named_type(struct_name)
+    if (type != null) {
+        if (type.is(IR_Struct_Type) && (type as @IR_Struct_Type).statement == struct_statement) {
+            return type
+        }
+        abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
+    }
+    type := create_ir_struct_type(struct_name, struct_statement)
+    self.named_types.append(type)
+    if (struct_statement.base_type != null) {
+        base_type := self.convert_value_type(struct_statement.base_type)
+        if ((base_type.is(IR_Struct_Type)) == false) {
+            abort(struct_statement.base_type.location, "Not a struct type.")
+        }
+        type.base_type = base_type as @IR_Struct_Type
+    }
+    if (struct_statement.members != null) {
+        struct_members := struct_statement.members.create_iterator()
+        while (struct_members.has_next()) {
+            struct_member := struct_members.next() as @AST_Struct_Member
+            struct_member_name := struct_member.name.lexeme
+            struct_member_type := self.convert_value_type(struct_member.type)
+            type.add_member(struct_member_name, struct_member_type)
+        }
+    }
+    if (type.is_object_type()) {
+        self.create_global_variable(create_ast_variable_statement(struct_statement.name, create_ast_pointer_type(null, create_ast_named_type(create_identifier_token("Object_Type", null))), null, false))
+    }
+    return type
+}
+
+convert_value_type :: (self: @IR_Builder, type: @AST_Type) -> @IR_Type {
+    if (type.is(AST_Array_Type)) {
+        return self.convert_array_type(type as @AST_Array_Type)
+    }
+    if (type.is(AST_Named_Type)) {
+        return self.convert_named_type(type as @AST_Named_Type)
+    }
+    if (type.is(AST_Pointer_Type)) {
+        return self.convert_pointer_type(type as @AST_Pointer_Type)
+    }
+    abort(type.location, type.object_type)
+}
+
+convert_array_type :: (self: @IR_Builder, type: @AST_Array_Type) -> @IR_Type {
+    return create_ir_array_type(self.convert_value_type(type.item_type), type.size_expression)
+}
+
+convert_named_type :: (self: @IR_Builder, type: @AST_Named_Type) -> @IR_Type {
+    type_name := type.name
+    type := self.get_named_type(type_name.lexeme)
+    if (type == null) {
+        types := self.compilation_unit.types.create_iterator()
+        while (types.has_next()) {
+            statement := types.next() as @AST_Statement
+            if (statement.is(AST_Struct_Statement)) {
+                statement := statement as @AST_Struct_Statement
+                if (statement.name.lexeme.equals(type_name.lexeme)) {
+                    return self.convert_struct_statement(statement)
+                }
+            } else {
+                abort(statement.location, statement.object_type)
+            }
+        }
+        abort(type_name.location, clone("Unknown type: ").append(type_name.lexeme))
+    }
+    return type
+}
+
+convert_pointer_type :: (self: @IR_Builder, type: @AST_Pointer_Type) -> @IR_Type {
+    return create_ir_pointer_type(self.convert_value_type(type.pointed_type))
+}
+
+create_global_variable :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
+    variable_name := variable_statement.name.lexeme
+    variable_type: @IR_Type
+    if (variable_statement.type != null) {
+        variable_type = self.convert_value_type(variable_statement.type)
+    } else {
+        abort(variable_statement.location, "Type inference is not supported yet.")
+    }
+    variable := create_ir_global_variable(variable_name, variable_type, variable_statement.is_external)
+    if (variable_statement.value_expression != null) {
+        abort(variable_statement.value_expression.location, "Initialized global variables are not supported yet.")
+    }
+    self.add_variable(variable)
+    self.create_variable_value(variable)
+}
+
+create_function :: (self: @IR_Builder, function_statement: @AST_Function_Statement) -> @IR_Function {
+    function := new IR_Function
+    function.id = self.named_functions.size + 1
+    function.location = function_statement.location
+    function.blocks = create_list()
+    function.name = function_statement.name.lexeme
+    function.parameters = create_list()
+    function.return_type = self.convert_value_type(function_statement.return_type)
+    function.is_external = function_statement.body == null
+
+    parameters := function_statement.parameters.create_iterator()
+    while (parameters.has_next()) {
+        parameter := parameters.next() as @AST_Function_Parameter
+        parameter_type := self.convert_value_type(parameter.type)
+        parameter_name := parameter.name.lexeme
+        function_parameter := new IR_Function_Parameter.init(parameter_name, parameter_type) as @IR_Function_Parameter
+        function.parameters.append(function_parameter)
+    }
+
+    function_statement.ir_function = function
+    self.named_functions.append(function)
+
+    return function
+}
+
+build_function :: (self: @IR_Builder, function_statement: @AST_Function_Statement) -> Nothing {
+    if (function_statement.body == null) {
+        return
+    }
+
+    function := function_statement.ir_function
+
+    self.context = create_ir_builder_context(self.context, false)
+    self.counter.reset()
+
+    self.current_block = function.create_block()
+
+    function_parameters := function.parameters.create_iterator()
+    while (function_parameters.has_next()) {
+        function_parameter := function_parameters.next() as @IR_Function_Parameter
+        self.add_variable(function_parameter)
+        self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(function_parameter)))
+    }
+
+    self.convert_block_statement(function_statement.body)
+    if (self.current_block.last_instruction == null || self.current_block.last_instruction.is_exit_instruction() == false) {
+        if (self.current_block.predecessors.size == 0 && self.current_block.id != 1) {
+            \ this block is unreachable
+            function.blocks.remove(self.current_block).prune()
+        } else if (function.return_type.is(IR_Nothing_Type)) {
+            self.append(create_ir_return_instruction(null), null)
+        } else {
+            abort(function_statement.location, "Missing return statement")
+        }
+    }
+    self.current_block = null
+
+    self.remove_redundant_blocks(function)
+    self.populate_phi_instructions(function)
+    self.remove_trivial_phi_instructions(function)
+    self.remove_redundant_set_instructions(function)
+
+    self.context = self.context.parent
+}
+
+remove_redundant_blocks :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        repeat := false
+
+        blocks := function.blocks.prune().create_iterator()
+
+        while (blocks.has_next()) {
+            block := blocks.next() as @IR_Block
+            if (block.id != 1) {
+                if (block.predecessors.size == 0) {
+                    \ found unreachable block
+                    if (block.last_instruction == null) {
+                        blocks.remove_current()
+                    } else if (block.last_instruction == block.first_instruction && block.last_instruction.is(IR_Direct_Jump_Instruction)) {
+                        block_instruction := block.last_instruction as @IR_Direct_Jump_Instruction
+                        block_instruction.block.predecessors.remove(block)
+                        block_instruction.block.predecessors.prune()
+                        blocks.remove_current()
+                        repeat = true
+                        break
+                    } else {
+                        abort(function.location, clone("Found non-empty unreachable block: block.").append(block.id))
+                    }
+                }
+                if (block.first_instruction == block.last_instruction && block.first_instruction.is(IR_Direct_Jump_Instruction)) {
+                    \ found jump block
+                    block_predecessor := block.predecessors.last() as @IR_Block
+                    block_successor := (block.first_instruction as @IR_Direct_Jump_Instruction).block
+                    if (block_predecessor.last_instruction.is(IR_Conditional_Jump_Instruction)) {
+                        block.predecessors.remove(block_predecessor).prune()
+                        block_predecessor_instruction := block_predecessor.last_instruction as @IR_Conditional_Jump_Instruction
+                        if (block_predecessor_instruction.false_block == block) {
+                            block_predecessor_instruction.false_block = block_successor
+                        } else {
+                            block_predecessor_instruction.true_block = block_successor
+                        }
+                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
+                        repeat = true
+                        break
+                    }
+                    if (block_predecessor.last_instruction.is(IR_Direct_Jump_Instruction)) {
+                        block.predecessors.remove(block_predecessor).prune()
+                        block_predecessor_instruction := block_predecessor.last_instruction as @IR_Direct_Jump_Instruction
+                        block_predecessor_instruction.block = block_successor
+                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
+                        repeat = true
+                        break
+                    }
+                }
+            }
+        }
+
+        if (repeat == false) {
+            break
+        }
+    }
+}
+
+populate_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
+    blocks := function.blocks.create_iterator()
+    while (blocks.has_next()) {
+        block := blocks.next() as @IR_Block
+        block_instruction := block.first_instruction
+        while (block_instruction != null && block_instruction.is(IR_Phi_Instruction)) {
+            instruction := block_instruction as @IR_Phi_Instruction
+            if (instruction.values.size == 0) {
+                block_predecessors := block.predecessors.create_iterator()
+                while (block_predecessors.has_next()) {
+                    block_predecessor := block_predecessors.next() as @IR_Block
+                    instruction.append(self.get_block_variable_value(block_predecessor, instruction.result_value.variable))
+                }
+            }
+            block_instruction = block_instruction.next_instruction
+        }
+    }
+}
+
+get_block_variable_value :: (self: @IR_Builder, block: @IR_Block, variable: @IR_Variable) -> @IR_Value {
+    block_instruction := block.last_instruction
+    while (block_instruction != null) {
+        if (block_instruction.result_value != null && block_instruction.result_value.variable == variable) {
+            return block_instruction.result_value
+        }
+        block_instruction = block_instruction.prev_instruction
+    }
+    if (block.predecessors.size == 1) {
+        return self.get_block_variable_value(block.predecessors.last() as @IR_Block, variable)
+    }
+    instruction := create_ir_phi_instruction(self.create_variable_value(variable))
+    block.prepend(instruction)
+    block_predecessors := block.predecessors.create_iterator()
+    while (block_predecessors.has_next()) {
+        block_predecessor := block_predecessors.next() as @IR_Block
+        instruction.append(self.get_block_variable_value(block_predecessor, variable))
+    }
+    return instruction.result_value
+}
+
+remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        repeat := false
+
+        blocks := function.blocks.prune().create_iterator()
+
+        \ skip entry block
+        blocks.next()
+
+        while (blocks.has_next()) {
+            block := blocks.next() as @IR_Block
+            block_instruction := block.first_instruction
+            while (block_instruction != null && block_instruction.is(IR_Phi_Instruction)) {
+                instruction := block_instruction as @IR_Phi_Instruction
+                if (instruction.is_trivial()) {
+                    \ found a trivial phi instruction
+                    instruction.values.remove_all(instruction.result_value).prune()
+                }
+                if (instruction.is_redundant()) {
+                    \ found redundant phi instruction
+                    old_value := instruction.result_value
+                    new_value := instruction.values.first() as @IR_Value
+                    user_instructions := old_value.user_instructions.create_iterator()
+                    while (user_instructions.has_next()) {
+                        user_instruction := user_instructions.next() as @IR_Instruction
+                        user_instruction.replace_value(old_value, new_value)
+                    }
+                    new_value.user_instructions.remove_all(instruction).prune()
+                    block.remove(instruction)
+                    repeat = true
+                }
+                block_instruction = block_instruction.next_instruction
+            }
+        }
+
+        if (repeat == false) {
+            break
+        }
+    }
+}
+
+remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        repeat := false
+
+        blocks := function.blocks.prune().create_iterator()
+        while (blocks.has_next()) {
+            block := blocks.next() as @IR_Block
+
+            block_instruction := block.first_instruction
+            while (block_instruction != null) {
+                if (block_instruction.is(IR_Set_Instruction)) {
+                    block_instruction := block_instruction as @IR_Set_Instruction
+                    if (block_instruction.get_value().is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0) {
+                        block.remove(block_instruction)
+                        repeat = true
+                        break
+                    }
+                }
+                if (block_instruction.result_value != null && block_instruction.result_value.user_instructions.size == 1) {
+                    user_instruction := block_instruction.result_value.user_instructions.first() as @IR_Instruction
+                    if (user_instruction.is(IR_Set_Instruction) && user_instruction.parent_block == block) {
+                        block.remove(user_instruction)
+                        block_instruction.result_value = user_instruction.result_value
+                        repeat = true
+                        break
+                    }
+                }
+                block_instruction = block_instruction.next_instruction
+            }
+        }
+
+        if (repeat == false) {
+            break
+        }
+    }
+}
+
+replace_value :: (instruction: @IR_Instruction, value: @IR_Value, new_value: @IR_Value) -> Nothing {
+    value.user_instructions.remove(instruction).prune()
+    new_value.user_instructions.append(instruction)
+    if (instruction.is(IR_Phi_Instruction)) {
+        instruction := instruction as @IR_Phi_Instruction
+        instruction_values := instruction.values.create_iterator()
+        while (instruction_values.has_next()) {
+            instruction_value := instruction_values.next() as @IR_Value
+            if (instruction_value == value) {
+                instruction.values.remove_all(value).remove_all(new_value).prune().append(new_value)
+            }
+        }
+        return
+    }
+    instruction.operand_values.replace(value, new_value)
+}
+
+convert_statement :: (self: @IR_Builder, statement: @AST_Statement) -> Nothing {
+    if (self.current_block == null) {
+        abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
+    }
+    if (statement.is(AST_Assignment_Statement)) {
+        self.convert_assignment_statement(statement as @AST_Assignment_Statement)
+    } else if (statement.is(AST_Block_Statement)) {
+        self.convert_block_statement(statement as @AST_Block_Statement)
+    } else if (statement.is(AST_Break_Statement)) {
+        self.convert_break_statement(statement as @AST_Break_Statement)
+    } else if (statement.is(AST_Expression_Statement)) {
+        self.convert_expression_statement(statement as @AST_Expression_Statement)
+    } else if (statement.is(AST_If_Statement)) {
+        self.convert_if_statement(statement as @AST_If_Statement)
+    } else if (statement.is(AST_Loop_Statement)) {
+        self.convert_loop_statement(statement as @AST_Loop_Statement)
+    } else if (statement.is(AST_Return_Statement)) {
+        self.convert_return_statement(statement as @AST_Return_Statement)
+    } else if (statement.is(AST_Variable_Statement)) {
+        self.convert_variable_statement(statement as @AST_Variable_Statement)
+    } else if (statement.is(AST_While_Statement)) {
+        self.convert_while_statement(statement as @AST_While_Statement)
+    } else {
+        abort(statement.location, statement.object_type)
+    }
+}
+
+convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @AST_Assignment_Statement) -> Nothing {
+    if (assignment_statement.storage_expression.is(AST_Array_Access_Expression)) {
+        array_access_expression := assignment_statement.storage_expression as @AST_Array_Access_Expression
+        array_item_index_value := self.convert_expression(array_access_expression.index_expression)
+        value := self.convert_expression(assignment_statement.value_expression)
+        array_address := self.convert_expression_address(array_access_expression.array_expression)
+        if (array_address.type.is(IR_Pointer_Type) == false) {
+            abort(assignment_statement.location, clone("Not an array pointer"))
+        }
+        array_item_type := (array_address.type as @IR_Pointer_Type).pointed_type
+        if (array_item_type.accepts(value.type) == false) {
+            abort(assignment_statement.value_expression.location, "Invalid expression type")
+        }
+        self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
+    } else if (assignment_statement.storage_expression.is(AST_Member_Access_Expression)) {
+        value := self.convert_expression(assignment_statement.value_expression)
+        member_access_expression := assignment_statement.storage_expression as @AST_Member_Access_Expression
+        object_address_value := self.convert_expression_address(member_access_expression.object_expression)
+        if (object_address_value.type.is(IR_Pointer_Type) == false) {
+            abort(assignment_statement.location, clone("Not a '").append(IR_Pointer_Type.name).append("' value"))
+        }
+        object_type := (object_address_value.type as @IR_Pointer_Type).pointed_type
+        if (object_type.is(IR_Struct_Type) == false) {
+            abort(assignment_statement.location, clone("Not a '").append(IR_Struct_Type.name).append("' value"))
+        }
+        struct_type_member := (object_type as @IR_Struct_Type).get_member(member_access_expression.member_name.lexeme)
+        if (struct_type_member == null) {
+            abort(member_access_expression.member_name.location, clone(object_type.name).append(" doesn't have a '").append(member_access_expression.member_name.lexeme).append("' member"))
+        }
+        if (struct_type_member.type.accepts(value.type) == false) {
+            abort(assignment_statement.value_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(struct_type_member.type.name).append("' struct member"))
+        }
+        self.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, value), assignment_statement.location)
+    } else if (assignment_statement.storage_expression.is(AST_Variable_Expression)) {
+        value := self.convert_expression(assignment_statement.value_expression)
+        variable_expression := assignment_statement.storage_expression as @AST_Variable_Expression
+        variable_name := variable_expression.name.lexeme
+        variable := self.get_variable(variable_name)
+        if (variable == null) {
+            abort(variable_expression.location, clone("Undeclared variable: ").append(variable_name))
+        }
+        if (variable.type.accepts(value.type) == false) {
+            abort(variable_expression.location, clone("Cannot assign a '").append(value.type.name).append("' value to a '").append(variable.type.name).append("' variable"))
+        }
+        self.append(create_ir_set_instruction(self.create_variable_value(variable), value), assignment_statement.location)
+    } else {
+        abort(assignment_statement.location, assignment_statement.storage_expression.object_type)
+    }
+}
+
+convert_block_statement :: (self: @IR_Builder, statement: @AST_Block_Statement) -> Nothing {
+    self.context = create_ir_builder_context(self.context, true)
+    block_statements := statement.statements.create_iterator()
+    while (block_statements.has_next()) {
+        block_statement := block_statements.next() as @AST_Statement
+        self.convert_statement(block_statement)
+    }
+    self.context = self.context.parent
+}
+
+convert_break_statement :: (self: @IR_Builder, statement: @AST_Break_Statement) -> Nothing {
+    if (self.current_loop == null) {
+        abort(statement.location, "Break outside of a loop?")
+    }
+    self.current_block.append_jump(self.current_loop.end_block)
+    self.current_block = self.current_block.function.create_block()
+}
+
+convert_expression_statement :: (self: @IR_Builder, statement: @AST_Expression_Statement) -> Nothing {
+    self.convert_expression(statement.expression)
+}
+
+convert_if_statement :: (self: @IR_Builder, statement: @AST_If_Statement) -> Nothing {
+    condition_value := self.convert_expression(statement.condition_expression)
+    true_block := self.current_block.function.create_block()
+    end_block := self.current_block.function.create_block()
+    if (statement.false_statement != null) {
+        false_block := self.current_block.function.create_block()
+        self.current_block.append_jump(condition_value, true_block, false_block)
+        self.current_block = false_block
+        self.convert_statement(statement.false_statement)
+        if (self.current_block.last_instruction.is_exit_instruction() == false) {
+            self.current_block.append_jump(end_block)
+        }
+    } else {
+        self.current_block.append_jump(condition_value, true_block, end_block)
+    }
+    self.current_block = true_block
+    self.convert_statement(statement.true_statement)
+    if (self.current_block.last_instruction.is_exit_instruction() == false) {
+        self.current_block.append_jump(end_block)
+    }
+    self.current_block = end_block
+}
+
+convert_loop_statement :: (self: @IR_Builder, statement: @AST_Loop_Statement) -> Nothing {
+    loop_block := self.current_block.function.create_block()
+    end_block := self.current_block.function.create_block()
+    self.current_block.append_jump(loop_block)
+    self.current_block = loop_block
+    self.current_loop = create_ir_loop(self.current_loop, end_block)
+    self.convert_block_statement(statement.block)
+    self.current_block.append_jump(loop_block)
+    self.current_block = end_block
+    self.current_loop = self.current_loop.parent
+}
+
+convert_return_statement :: (self: @IR_Builder, statement: @AST_Return_Statement) -> Nothing {
+    if (statement.value_expression != null) {
+        return_value := self.convert_expression(statement.value_expression)
+        if (self.current_block.function.return_type.accepts(return_value.type) == false) {
+            abort(statement.location, clone("Unexpected returned expression type: ").append(return_value.type.name))
+        }
+        self.append(create_ir_return_instruction(return_value), statement.location)
+    } else {
+        self.append(create_ir_return_instruction(null), statement.location)
+    }
+    self.current_block = self.current_block.function.create_block()
+}
+
+convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
+    variable_name := variable_statement.name.lexeme
+    variable_value: @IR_Value
+    if (variable_statement.value_expression != null) {
+        variable_value = self.convert_expression(variable_statement.value_expression)
+    } else {
+        variable_value = null
+    }
+    variable_type: @IR_Type
+    if (variable_statement.type != null) {
+        variable_type = self.convert_value_type(variable_statement.type)
+        if (variable_value != null) {
+            if (variable_type.accepts(variable_value.type) == false) {
+                abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
+            }
+            if (variable_type.equals(variable_value.type)) {
+                stderr.write(variable_statement.type.location).write(": Redundant type declaration").end_line()
+            }
+        }
+    } else {
+        if (variable_value == null) {
+            abort(variable_statement.location, "Invalid state")
+        }
+        if (variable_value.type.is(IR_Null_Type)) {
+            abort(variable_statement.value_expression.location, "Cannot infer type from null value")
+        }
+        variable_type = variable_value.type
+    }
+    if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type)) {
+        abort(variable_statement.location, clone("Invalid variable type: ").append(variable_type.name))
+    }
+    variable := new IR_Variable.init(variable_name, variable_type)
+    self.add_variable(variable)
+    if (variable_value == null) {
+        variable_value = new IR_Undefined_Value.init(variable_type)
+    }
+    self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
+}
+
+convert_while_statement :: (self: @IR_Builder, statement: @AST_While_Statement) -> Nothing {
+    condition_block := self.current_block.function.create_block()
+    loop_block := self.current_block.function.create_block()
+    end_block := self.current_block.function.create_block()
+    self.current_block.append_jump(condition_block)
+    self.current_block = condition_block
+    condition_value := self.convert_expression(statement.condition_expression)
+    self.current_block.append_jump(condition_value, loop_block, end_block)
+    self.current_block = loop_block
+    self.current_loop = create_ir_loop(self.current_loop, end_block)
+    self.convert_block_statement(statement.block)
+    self.current_block.append_jump(condition_block)
+    self.current_block = end_block
+    self.current_loop = self.current_loop.parent
+}
+
+convert_expression :: (self: @IR_Builder, expression: @AST_Expression) -> @IR_Value {
+    if (expression.is(AST_Add_Expression)) {
+        return self.convert_add_expression(expression as @AST_Add_Expression)
+    }
+    if (expression.is(AST_Array_Access_Expression)) {
+        return self.convert_array_access_expression(expression as @AST_Array_Access_Expression)
+    }
+    if (expression.is(AST_Call_Expression)) {
+        return self.convert_call_expression(expression as @AST_Call_Expression)
+    }
+    if (expression.is(AST_Cast_Expression)) {
+        return self.convert_cast_expression(expression as @AST_Cast_Expression)
+    }
+    if (expression.is(AST_Divide_Expression)) {
+        return self.convert_divide_expression(expression as @AST_Divide_Expression)
+    }
+    if (expression.is(AST_Equals_Expression)) {
+        return self.convert_equals_expression(expression as @AST_Equals_Expression)
+    }
+    if (expression.is(AST_Greater_Than_Expression)) {
+        return self.convert_greater_than_expression(expression as @AST_Greater_Than_Expression)
+    }
+    if (expression.is(AST_Greater_Than_Or_Equals_Expression)) {
+        return self.convert_greater_than_or_equals_expression(expression as @AST_Greater_Than_Or_Equals_Expression)
+    }
+    if (expression.is(AST_Less_Than_Expression)) {
+        return self.convert_less_than_expression(expression as @AST_Less_Than_Expression)
+    }
+    if (expression.is(AST_Less_Than_Or_Equals_Expression)) {
+        return self.convert_less_than_or_equals_expression(expression as @AST_Less_Than_Or_Equals_Expression)
+    }
+    if (expression.is(AST_Literal_Expression)) {
+        return self.convert_literal_expression(expression as @AST_Literal_Expression)
+    }
+    if (expression.is(AST_Logic_And_Expression)) {
+        return self.convert_logic_and_expression(expression as @AST_Logic_And_Expression)
+    }
+    if (expression.is(AST_Logic_Or_Expression)) {
+        return self.convert_logic_or_expression(expression as @AST_Logic_Or_Expression)
+    }
+    if (expression.is(AST_Member_Access_Expression)) {
+        return self.convert_member_access_expression(expression as @AST_Member_Access_Expression)
+    }
+    if (expression.is(AST_Modulo_Expression)) {
+        return self.convert_modulo_expression(expression as @AST_Modulo_Expression)
+    }
+    if (expression.is(AST_Multiply_Expression)) {
+        return self.convert_multiply_expression(expression as @AST_Multiply_Expression)
+    }
+    if (expression.is(AST_New_Expression)) {
+        return self.convert_new_expression(expression as @AST_New_Expression)
+    }
+    if (expression.is(AST_Not_Equals_Expression)) {
+        return self.convert_not_equals_expression(expression as @AST_Not_Equals_Expression)
+    }
+    if (expression.is(AST_Substract_Expression)) {
+        return self.convert_substract_expression(expression as @AST_Substract_Expression)
+    }
+    if (expression.is(AST_Variable_Expression)) {
+        return self.convert_variable_expression(expression as @AST_Variable_Expression)
+    }
+    abort(expression.location, expression.object_type)
+}
+
+convert_expression_address :: (self: @IR_Builder, expression: @AST_Expression) -> @IR_Value {
+    if (expression.is(AST_Member_Access_Expression)) {
+        return self.convert_member_access_expression_address(expression as @AST_Member_Access_Expression)
+    }
+    if (expression.is(AST_Variable_Expression)) {
+        return self.convert_variable_expression_address(expression as @AST_Variable_Expression)
+    }
+    abort(expression.location, expression.object_type)
+}
+
+convert_add_expression :: (self: @IR_Builder, expression: @AST_Add_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Add_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+}
+
+convert_array_access_expression :: (self: @IR_Builder, array_access_expression: @AST_Array_Access_Expression) -> @IR_Value {
+    index_value := self.convert_expression(array_access_expression.index_expression)
+    object_value := self.convert_expression(array_access_expression.array_expression)
+    object_value_type := object_value.type
+    if ((object_value_type.is(IR_Pointer_Type)) == false) {
+        abort(array_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
+    }
+    object_value_type := object_value_type as @IR_Pointer_Type
+    return self.append(create_ir_load_array_item_instruction(self.create_temp_value(object_value_type.pointed_type), object_value, index_value), array_access_expression.location)
+}
+
+convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression) -> @IR_Value {
+    if (call_expression.callee.is(AST_Member_Access_Expression)) {
+        callee := call_expression.callee as @AST_Member_Access_Expression
+        call_arguments := create_list()
+        call_argument_types := create_list()
+        first_argument := self.convert_expression(callee.object_expression)
+        call_arguments.append(first_argument)
+        call_argument_types.append(first_argument.type)
+        call_expression_arguments := call_expression.arguments.create_iterator()
+        while (call_expression_arguments.has_next()) {
+            call_expression_argument := call_expression_arguments.next() as @AST_Expression
+            call_argument := self.convert_expression(call_expression_argument)
+            call_arguments.append(call_argument)
+            call_argument_types.append(call_argument.type)
+        }
+        call_function := self.get_named_function(callee.member_name, call_argument_types)
+        if (call_function == null) {
+            abort(callee.member_name.location, clone("No such function: ").append(callee.member_name.lexeme))
+        }
+        result_value: @IR_Variable_Value = null
+        if (call_function.return_type.is(IR_Nothing_Type) == false) {
+            result_value = self.create_temp_value(call_function.return_type)
+        }
+        return self.append(create_ir_call_instruction(result_value, call_function, call_arguments), call_expression.location)
+    }
+    if (call_expression.callee.is(AST_Variable_Expression)) {
+        callee := call_expression.callee as @AST_Variable_Expression
+        call_arguments := create_list()
+        call_argument_types := create_list()
+        call_expression_arguments := call_expression.arguments.create_iterator()
+        while (call_expression_arguments.has_next()) {
+            call_expression_argument := call_expression_arguments.next() as @AST_Expression
+            call_argument := self.convert_expression(call_expression_argument)
+            call_arguments.append(call_argument)
+            call_argument_types.append(call_argument.type)
+        }
+        call_function := self.get_named_function(callee.name, call_argument_types)
+        if (call_function == null) {
+            abort(callee.name.location, clone("No such function: ").append(callee.name.lexeme))
+        }
+        result_value: @IR_Variable_Value = null
+        if (call_function.return_type.is(IR_Nothing_Type) == false) {
+            result_value = self.create_temp_value(call_function.return_type)
+        }
+        return self.append(create_ir_call_instruction(result_value, call_function, call_arguments), call_expression.location)
+    }
+    abort(call_expression.location, call_expression.callee.object_type)
+}
+
+convert_cast_expression :: (self: @IR_Builder, cast_expression: @AST_Cast_Expression) -> @IR_Value {
+    value := self.convert_expression(cast_expression.value_expression)
+    result_value := self.create_temp_value(self.convert_value_type(cast_expression.type))
+    if (value.type.is(IR_Pointer_Type) && result_value.type.is(IR_Pointer_Type)) {
+        return self.append(create_ir_set_instruction(result_value, value), cast_expression.location)
+    }
+    if (value.type.is(IR_Int_Type) && (result_value.type.is(IR_Int32_Type) || result_value.type.is(IR_Int8_Type))) {
+        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
+    }
+    if (value.type.is(IR_Int32_Type) && (result_value.type.is(IR_Int_Type) || result_value.type.is(IR_Int8_Type))) {
+        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
+    }
+    if (value.type.is(IR_Int8_Type) && (result_value.type.is(IR_Int_Type) || result_value.type.is(IR_Int32_Type))) {
+        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
+    }
+    abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
+}
+
+convert_divide_expression :: (self: @IR_Builder, expression: @AST_Divide_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Divide_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+}
+
+convert_equals_expression :: (self: @IR_Builder, expression: @AST_Equals_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.equals(right_value.type) == false && (left_value.type.is(IR_Pointer_Type) && right_value.type.is(IR_Null_Type) == false)) {
+        abort(expression.location, "Operands are not the same type")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+}
+
+convert_greater_than_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Greater_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+}
+
+convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Or_Equals_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Greater_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+}
+
+convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Less_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+}
+
+convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Or_Equals_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Less_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+}
+
+convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Value {
+    if (expression.literal.is(Boolean_Token)) {
+        return create_ir_constant_value(self.get_named_type("Boolean"), expression.literal)
+    }
+    if (expression.literal.is(Character_Token)) {
+        return create_ir_constant_value(self.get_named_type("Int8"), expression.literal)
+    }
+    if (expression.literal.is(Integer_Token)) {
+        return create_ir_constant_value(self.get_named_type("Int"), expression.literal)
+    }
+    if (expression.literal.is(Null_Token)) {
+        return create_ir_constant_value(self.get_named_type("Null"), expression.literal)
+    }
+    if (expression.literal.is(String_Token)) {
+        return create_ir_constant_value(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
+    }
+    abort(expression.location, expression.literal.object_type)
+}
+
+convert_logic_and_expression :: (self: @IR_Builder, expression: @AST_Logic_And_Expression) -> @IR_Value {
+    next_block := self.current_block.function.create_block()
+    end_block := self.current_block.function.create_block()
+    left_value := self.convert_expression(expression.left_expression)
+    if (left_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.left_expression.location, "Must be a boolean expression")
+    }
+    result_variable := self.create_temp_variable(self.get_named_type("Boolean"))
+    result_value_left := self.create_variable_value(result_variable)
+    self.append(create_ir_set_instruction(result_value_left, left_value), expression.location)
+    self.current_block.append_jump(result_value_left, next_block, end_block)
+    self.current_block = next_block
+    right_value := self.convert_expression(expression.right_expression)
+    if (right_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.right_expression.location, "Must be a boolean expression")
+    }
+    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), expression.location)
+    self.current_block.append_jump(end_block)
+    self.current_block = end_block
+    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)), expression.location)
+}
+
+convert_logic_or_expression :: (self: @IR_Builder, expression: @AST_Logic_Or_Expression) -> @IR_Value {
+    next_block := self.current_block.function.create_block()
+    end_block := self.current_block.function.create_block()
+    left_value := self.convert_expression(expression.left_expression)
+    if (left_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.left_expression.location, "Must be a boolean expression")
+    }
+    result_variable := self.create_temp_variable(self.get_named_type("Boolean"))
+    result_value_left := self.create_variable_value(result_variable)
+    self.append(create_ir_set_instruction(result_value_left, left_value), expression.location)
+    self.current_block.append_jump(result_value_left, end_block, next_block)
+    self.current_block = next_block
+    right_value := self.convert_expression(expression.right_expression)
+    if (right_value.type.is(IR_Boolean_Type) == false) {
+        abort(expression.right_expression.location, "Must be a boolean expression")
+    }
+    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), expression.location)
+    self.current_block.append_jump(end_block)
+    self.current_block = end_block
+    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)), expression.location)
+}
+
+convert_member_access_expression :: (self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
+    object_value := self.convert_expression(member_access_expression.object_expression)
+    object_value_type := object_value.type
+    if ((object_value_type.is(IR_Pointer_Type)) == false) {
+        abort(member_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
+    }
+    object_value_type := object_value_type as @IR_Pointer_Type
+    if ((object_value_type.pointed_type.is(IR_Struct_Type)) == false) {
+        abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
+    }
+    struct_type := object_value_type.pointed_type as @IR_Struct_Type
+    struct_type_member := struct_type.get_member(member_access_expression.member_name.lexeme)
+    if (struct_type_member == null) {
+        abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
+    }
+    if (struct_type_member.type.is(IR_Struct_Type)) {
+        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true), member_access_expression.location)
+    }
+    return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), object_value, struct_type_member, false), member_access_expression.location)
+}
+
+convert_member_access_expression_address :: (self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
+    result_type := self.deduce_expression_type(member_access_expression)
+    if (result_type.is(IR_Pointer_Type)) {
+        return self.convert_member_access_expression(member_access_expression)
+    }
+    abort(member_access_expression.location, result_type.object_type)
+}
+
+convert_modulo_expression :: (self: @IR_Builder, expression: @AST_Modulo_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Modulo_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+}
+
+convert_multiply_expression :: (self: @IR_Builder, expression: @AST_Multiply_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Multiply_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+}
+
+convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -> @IR_Value {
+    type := self.convert_value_type(expression.type)
+    if (type.is(IR_Array_Type)) {
+        type := type as @IR_Array_Type
+        size_value := self.convert_expression(type.size_expression)
+        return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type.pointed_type)), type.pointed_type, size_value), expression.location)
+    }
+    return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null), expression.location)
+}
+
+convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.equals(right_value.type) == false && (left_value.type.is(IR_Pointer_Type) && right_value.type.is(IR_Null_Type) == false)) {
+        abort(expression.location, "Operands are not the same type")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Not_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+}
+
+convert_substract_expression :: (self: @IR_Builder, expression: @AST_Substract_Expression) -> @IR_Value {
+    left_value := self.convert_expression(expression.left_expression)
+    right_value := self.convert_expression(expression.right_expression)
+    if (left_value.type.is(IR_Int_Type) == false) {
+        abort(expression.left_expression.location, "Not an Int expression")
+    }
+    if (right_value.type.is(IR_Int_Type) == false) {
+        abort(expression.right_expression.location, "Not an Int expression")
+    }
+    if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
+        abort(expression.location, "TODO: Evaluate constant expression")
+    }
+    return self.append(new IR_Substract_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+}
+
+convert_variable_expression :: (self: @IR_Builder, expression: @AST_Variable_Expression) -> @IR_Value {
+    variable := self.get_variable(expression.name.lexeme)
+    if (variable == null) {
+        abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))
+    }
+    value := self.get_variable_value(variable)
+    if (value == null) {
+        abort(expression.location, clone("Undeclared variable value: ").append(expression.name.lexeme))
+    }
+    return value
+}
+
+convert_variable_expression_address :: (self: @IR_Builder, expression: @AST_Variable_Expression) -> @IR_Value {
+    variable := self.get_variable(expression.name.lexeme)
+    if (variable == null) {
+        abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))
+    }
+    if (variable.type.is(IR_Pointer_Type)) {
+        return self.get_variable_value(variable)
+    }
+    abort(expression.location, clone("Variable type without address: ").append(variable.type.name))
+}
+
+deduce_expression_type :: (self: @IR_Builder, expression: @AST_Expression) -> @IR_Type {
+    if (expression.is(AST_Call_Expression)) {
+        return self.deduce_call_expression_type(expression as @AST_Call_Expression)
+    }
+    if (expression.is(AST_Literal_Expression)) {
+        return self.deduce_literal_expression_type(expression as @AST_Literal_Expression)
+    }
+    if (expression.is(AST_Member_Access_Expression)) {
+        return self.deduce_member_access_expression_type(expression as @AST_Member_Access_Expression)
+    }
+    if (expression.is(AST_Variable_Expression)) {
+        return self.deduce_variable_expression_type(expression as @AST_Variable_Expression)
+    }
+    abort(expression.location, expression.object_type)
+}
+
+deduce_call_expression_type :: (self: @IR_Builder, expression: @AST_Call_Expression) -> @IR_Type {
+    argument_types := create_list()
+    arguments := expression.arguments.create_iterator()
+    while (arguments.has_next()) {
+        argument := arguments.next() as @AST_Expression
+        argument_type := self.deduce_expression_type(argument)
+        argument_types.append(argument_type)
+    }
+    if (expression.callee.is(AST_Member_Access_Expression)) {
+        callee := expression.callee as @AST_Member_Access_Expression
+        object_type := self.deduce_expression_type(callee.object_expression)
+        if (object_type.is(IR_Struct_Type)) {
+            argument_types.prepend(create_ir_pointer_type(object_type))
+        } else {
+            argument_types.prepend(object_type)
+        }
+        function := self.get_named_function(callee.member_name.lexeme, argument_types)
+        if (function == null) {
+            abort(callee.member_name.location, clone("Unknown function: ").append(callee.member_name.lexeme))
+        }
+        return function.return_type
+    }
+    abort(expression.location, expression.callee.object_type)
+}
+
+deduce_literal_expression_type :: (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Type {
+    literal := expression.literal
+    if (literal.is(String_Token)) {
+        return create_ir_pointer_type(self.get_named_type("String"))
+    }
+    abort(literal.location, literal.object_type)
+}
+
+deduce_member_access_expression_type :: (self: @IR_Builder, expression: @AST_Member_Access_Expression) -> @IR_Type {
+    object_type := self.deduce_expression_type(expression.object_expression)
+    if (object_type.is(IR_Pointer_Type) == false) {
+        abort(expression.location, object_type.object_type)
+    }
+    object_type := (object_type as @IR_Pointer_Type).pointed_type
+    if (object_type.is(IR_Struct_Type) == false) {
+        abort(expression.location, object_type.object_type)
+    }
+    object_type := object_type as @IR_Struct_Type
+    member := object_type.get_member(expression.member_name.lexeme)
+    if (member == null) {
+        abort(expression.member_name.location, clone(object_type.name).append(" has no such member: ").append(expression.member_name.lexeme))
+    }
+    if (member.type.is(IR_Struct_Type)) {
+        return create_ir_pointer_type(member.type)
+    }
+    return member.type
+}
+
+deduce_variable_expression_type :: (self: @IR_Builder, expression: @AST_Variable_Expression) -> @IR_Type {
+    variable := self.get_variable(expression.name.lexeme)
+    if (variable == null) {
+        abort(expression.location, clone("Unknown variable: ").append(expression.name.lexeme))
+    }
+    return variable.type
+}
