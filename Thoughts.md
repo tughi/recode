@@ -36,7 +36,7 @@ Pointers can be treated as unchecked arrays of unknown size: `x[n]` is the addre
 
 ## Nullable pointers
 
-The `@?` suffix declares a nullable pointer type.
+The `@?` prefix declares a nullable pointer type.
 
 The value of an `@?Any` variable can be access only after a `null` check.
 
@@ -136,3 +136,40 @@ root_node := new Node           \ root_node holds the address of a Node
 ```
 
 The variable names are symbols used by the compiler to know where the value are stored.
+
+## Functions
+
+```
+max :: (v1: Int, v2: Int) -> Int {
+    if (v1 > v2) {
+        return v1
+    }
+    return v2
+}
+```
+
+## Templates
+
+Templates look like functions but they are always inlined where _invoked_.
+
+```
+for_each :: (list: @List, block: (item: @Any, index: Int) => Nothing) => Nothing {
+    index := 0
+    item := list.first_item
+    while (item != null) {
+        block(item.data, index)
+        index = index + 1
+        item = item.next_item
+    }
+}
+```
+
+If a template has accepts block-parameters, these blocks get inlined within the template's body.
+
+The last block-parameter can be inlined after the template _invocation_.
+
+```
+    list.for_each() {
+        stdout.write(item)
+    }
+```
