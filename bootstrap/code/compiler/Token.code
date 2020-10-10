@@ -1,0 +1,144 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+Token :: struct : Object {
+    lexeme: @String
+    location: @Source_Location
+    next_token: @Token
+}
+
+init :: (self: @Token, lexeme: @String, location: @Source_Location) -> Nothing {
+    self.location = location
+    self.lexeme = lexeme
+    self.next_token = null
+}
+
+Literal_Token :: struct : Token {
+}
+
+Character_Token :: struct : Literal_Token {
+    value: Int8
+}
+
+create_character_token :: (lexeme: @String, location: @Source_Location, value: Int8) -> @Character_Token {
+    token := new Character_Token
+    token.init(lexeme, location)
+    token.value = value
+    return token
+}
+
+Boolean_Token :: struct : Literal_Token {
+    value: Boolean
+}
+
+create_boolean_token :: (lexeme: @String, location: @Source_Location, value: Boolean) -> @Boolean_Token {
+    token := new Boolean_Token
+    token.init(lexeme, location)
+    token.value = value
+    return token
+}
+
+Comment_Token :: struct : Token {
+}
+
+create_comment_token :: (lexeme: @String, location: @Source_Location) -> @Comment_Token {
+    token := new Comment_Token
+    token.init(lexeme, location)
+    return token
+}
+
+End_Of_File_Token :: struct : Token {
+}
+
+create_end_of_file_token :: (lexeme: @String, location: @Source_Location) -> @End_Of_File_Token {
+    token := new End_Of_File_Token
+    token.init(lexeme, location)
+    token.next_token = token
+    return token
+}
+
+End_Of_Line_Token :: struct : Token {
+}
+
+create_end_of_line_token :: (lexeme: @String, location: @Source_Location) -> @End_Of_Line_Token {
+    token := new End_Of_Line_Token
+    token.init(lexeme, location)
+    return token
+}
+
+Error_Token :: struct : Token {
+}
+
+create_error_token :: (lexeme: @String, location: @Source_Location) -> @Error_Token {
+    token := new Error_Token
+    token.init(lexeme, location)
+    return token
+}
+
+Identifier_Token :: struct : Token {
+}
+
+create_identifier_token :: (lexeme: @String, location: @Source_Location) -> @Identifier_Token {
+    token := new Identifier_Token
+    token.init(lexeme, location)
+    return token
+}
+
+Integer_Token :: struct : Literal_Token {
+    value: Int
+}
+
+create_integer_token :: (lexeme: @String, location: @Source_Location, value: Int) -> @Integer_Token {
+    token := new Integer_Token
+    token.init(lexeme, location)
+    token.value = value
+    return token
+}
+
+Keyword_Token :: struct : Token {
+}
+
+create_keyword_token :: (lexeme: @String, location: @Source_Location) -> @Keyword_Token {
+    token := new Keyword_Token
+    token.init(lexeme, location)
+    return token
+}
+
+Null_Token :: struct : Literal_Token {
+}
+
+create_null_token :: (lexeme: @String, location: @Source_Location) -> @Null_Token {
+    token := new Null_Token
+    token.init(lexeme, location)
+    return token
+}
+
+Other_Token :: struct : Token {
+}
+
+create_other_token :: (lexeme: @String, location: @Source_Location) -> @Other_Token {
+    token := new Other_Token
+    token.init(lexeme, location)
+    return token
+}
+
+Space_Token :: struct : Token {
+    count: Int
+}
+
+create_space_token :: (lexeme: @String, location: @Source_Location, count: Int) -> @Space_Token {
+    token := new Space_Token
+    token.init(lexeme, location)
+    token.count = count
+    return token
+}
+
+String_Token :: struct : Literal_Token {
+    value: @String
+}
+
+create_string_token :: (lexeme: @String, location: @Source_Location, value: @String) -> @String_Token {
+    token := new String_Token
+    token.init(lexeme, location)
+    token.value = value
+    return token
+}

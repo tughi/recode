@@ -1,0 +1,986 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+Parser :: struct {
+    scanner: @Scanner
+    compilation_unit: @Compilation_Unit
+    current_alignment: Int
+    optional_comment: @Matcher
+    optional_space: @Matcher
+    required_ampersand: @Matcher
+    required_as: @Matcher
+    required_asterisk: @Matcher
+    required_at: @Matcher
+    required_break: @Matcher
+    required_close_brace: @Matcher
+    required_close_bracket: @Matcher
+    required_close_paren: @Matcher
+    required_colon: @Matcher
+    required_column: @Matcher
+    required_comma: @Matcher
+    required_comment: @Matcher
+    required_dot: @Matcher
+    required_else: @Matcher
+    required_end_of_file: @Matcher
+    required_end_of_line: @Matcher
+    required_equals: @Matcher
+    required_exclamation_mark: @Matcher
+    required_external: @Matcher
+    required_greater_than: @Matcher
+    required_hyphen: @Matcher
+    required_identifier: @Matcher
+    required_if: @Matcher
+    required_include: @Matcher
+    required_less_than: @Matcher
+    required_literal: @Matcher
+    required_loop: @Matcher
+    required_new: @Matcher
+    required_open_brace: @Matcher
+    required_open_bracket: @Matcher
+    required_open_paren: @Matcher
+    required_plus: @Matcher
+    required_return: @Matcher
+    required_slash: @Matcher
+    required_string_literal: @Matcher
+    required_struct: @Matcher
+    required_vertical_bar: @Matcher
+    required_while: @Matcher
+}
+
+create_parser :: () -> @Parser {
+    parser := new Parser
+    parser.scanner = null
+    parser.compilation_unit = create_compilation_unit()
+    parser.current_alignment = 0
+
+    parser.optional_comment = create_comment_matcher(false)
+    parser.optional_space = create_space_matcher(false)
+
+    parser.required_ampersand = create_other_matcher(true, "&")
+    parser.required_as = create_keyword_matcher(true, "as")
+    parser.required_asterisk = create_other_matcher(true, "*")
+    parser.required_at = create_other_matcher(true, "@")
+    parser.required_break = create_keyword_matcher(true, "break")
+    parser.required_close_brace = create_other_matcher(true, "}")
+    parser.required_close_bracket = create_other_matcher(true, "]")
+    parser.required_close_paren = create_other_matcher(true, ")")
+    parser.required_colon = create_other_matcher(true, ":")
+    parser.required_column = create_other_matcher(true, ";")
+    parser.required_comma = create_other_matcher(true, ",")
+    parser.required_comment = create_comment_matcher(true)
+    parser.required_dot = create_other_matcher(true, ".")
+    parser.required_else = create_keyword_matcher(true, "else")
+    parser.required_end_of_file = create_end_of_file_matcher(true)
+    parser.required_end_of_line = create_end_of_line_matcher(true)
+    parser.required_equals = create_other_matcher(true, "=")
+    parser.required_exclamation_mark = create_other_matcher(true, "!")
+    parser.required_external = create_keyword_matcher(true, "external")
+    parser.required_greater_than = create_other_matcher(true, ">")
+    parser.required_hyphen = create_other_matcher(true, "-")
+    parser.required_identifier = create_identifier_matcher(true)
+    parser.required_if = create_keyword_matcher(true, "if")
+    parser.required_include = create_keyword_matcher(true, "include")
+    parser.required_less_than = create_other_matcher(true, "<")
+    parser.required_literal = create_literal_matcher(true)
+    parser.required_loop = create_keyword_matcher(true, "loop")
+    parser.required_new = create_keyword_matcher(true, "new")
+    parser.required_open_brace = create_other_matcher(true, "{")
+    parser.required_open_bracket = create_other_matcher(true, "[")
+    parser.required_open_paren = create_other_matcher(true, "(")
+    parser.required_plus = create_other_matcher(true, "+")
+    parser.required_return = create_keyword_matcher(true, "return")
+    parser.required_slash = create_other_matcher(true, "/")
+    parser.required_string_literal = create_string_literal_matcher(true)
+    parser.required_struct = create_keyword_matcher(true, "struct")
+    parser.required_vertical_bar = create_other_matcher(true, "|")
+    parser.required_while = create_keyword_matcher(true, "while")
+
+    return parser
+}
+
+parse :: (file_path: @String) -> @Compilation_Unit {
+    parser := create_parser()
+    parser.parse(file_path, null)
+    return parser.compilation_unit
+}
+
+parse :: (self: @Parser, file_path: @String, location: @Source_Location) -> Nothing {
+    source := create_source(file_path)
+    if (source == null) {
+        message := clone("Failed to open file: ").append(file_path)
+        if (location != null) {
+            abort(location, message)
+        }
+        abort(message)
+    }
+
+    self.compilation_unit.sources.append(source)
+    source.id = self.compilation_unit.sources.size
+
+    other_scanner := self.scanner
+    self.scanner = create_scanner(source)
+    self.parse_statements(self.compilation_unit.statements)
+    if (self.scanner.current_token.is(End_Of_File_Token) == false) {
+        abort(self, self.scanner.current_token)
+    }
+
+    self.scanner = other_scanner
+}
+
+\ statements
+\   : ( statement <EOL> )*
+parse_statements :: (self: @Parser, statements: @List) -> Nothing {
+    loop {
+        statement := self.parse_statement()
+        if (statement == null) {
+            break
+        }
+        self.consume_end_of_line()
+        if (statement.is(AST_Include_Statement)) {
+            statement := statement as @AST_Include_Statement
+
+            statement_file_path := statement.file_path.make_relative_path(statement.location.source.file_path)
+            if (statement_file_path == null) {
+                abort(statement.location, clone("Unsupported file path: ").append(statement.file_path))
+            }
+
+            compilation_unit_sources_item := self.compilation_unit.sources.first_item
+            while (compilation_unit_sources_item != null) {
+                if ((compilation_unit_sources_item.data as @Source).file_path.equals(statement_file_path)) {
+                    break
+                }
+                compilation_unit_sources_item = compilation_unit_sources_item.next_item
+            }
+
+            if (compilation_unit_sources_item == null) {
+                self.parse(statement_file_path, statement.location)
+            }
+        } else {
+            statements.append(statement)
+        }
+    }
+}
+
+make_relative_path :: (file_path: @String, base_file_path: @String) -> @String {
+    if (file_path.starts_with("./")) {
+        relative_path := clone(base_file_path).append(file_path).remove(base_file_path.last_index_of('/') + 1, base_file_path.length + 2)
+        return relative_path
+    }
+    if (file_path.starts_with("../")) {
+        relative_path := clone(base_file_path).append(file_path).remove(base_file_path.last_index_of('/') + 1, base_file_path.length)
+        loop {
+            index := relative_path.index_of("/../")
+            if (index <= 0) {
+                break
+            }
+            relative_path.remove(relative_path.last_index_of('/', index - 1), index + 3)
+        }
+        return relative_path
+    }
+    return file_path
+}
+
+\ statement
+\   : if
+\   | "return" expression?
+\   | loop
+\   | while
+\   | "break"
+\   | expression ( "::" ( struct | function ) | ":" type? ( "=" expression )? )?
+parse_statement :: (self: @Parser) -> @AST_Statement {
+    while (self.consume_empty_line()) {
+    }
+
+    if (self.matches(self.optional_space, self.required_close_brace) || self.matches(self.required_end_of_file)) {
+        return null
+    }
+
+    self.consume_space(self.current_alignment * 4)
+
+    if (self.matches(self.required_if)) {
+        return self.parse_if()
+    }
+    if (self.matches(self.required_return)) {
+        token := self.consume(self.required_return)
+        value_expression: @AST_Expression = null
+        if (self.matches_end_of_line() == false) {
+            self.consume_space(1)
+            value_expression = self.parse_expression()
+        }
+        return create_ast_return_statement(token.location, value_expression)
+    }
+    if (self.matches(self.required_loop)) {
+        return self.parse_loop()
+    }
+    if (self.matches(self.required_while)) {
+        return self.parse_while()
+    }
+    if (self.matches(self.required_break)) {
+        token := self.consume(self.required_break)
+        return create_ast_break_statement(token.location)
+    }
+    if (self.matches(self.required_include)) {
+        return self.parse_include()
+    }
+
+    expression := self.parse_expression()
+
+    if (self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)) {
+        return create_ast_expression_statement(expression)
+    }
+
+    if (self.matches(self.optional_space, self.required_colon, self.required_colon)) {
+        self.consume_space(1)
+        self.consume(self.required_colon, self.required_colon)
+        self.consume_space(1)
+        if (self.matches(self.required_struct)) {
+            return self.parse_struct(expression)
+        }
+        return self.parse_function(expression)
+    }
+
+    if (self.matches(self.optional_space, self.required_colon)) {
+        if (expression.is(AST_Variable_Expression)) {
+            expression := expression as @AST_Variable_Expression
+            variable_name := expression.name
+            variable_value_type: @AST_Type = null
+            variable_value_expression: @AST_Expression = null
+            variable_is_external := false
+            if (self.matches(self.optional_space, self.required_colon, self.required_equals)) {
+                self.consume_space(1)
+                self.consume(self.required_colon, self.required_equals)
+                self.consume_space(1)
+                variable_value_expression = self.parse_expression()
+            } else {
+                self.consume_space(0)
+                self.consume(self.required_colon)
+                self.consume_space(1)
+                variable_value_type = self.parse_type()
+                if (self.matches(self.optional_space, self.required_equals)) {
+                    self.consume_space(1)
+                    self.consume(self.required_equals)
+                    self.consume_space(1)
+                    if (self.matches(self.required_external)) {
+                        self.consume(self.required_external)
+                        variable_is_external = true
+                    } else {
+                        variable_value_expression = self.parse_expression()
+                    }
+                }
+            }
+            variable_statement := create_ast_variable_statement(variable_name, variable_value_type, variable_value_expression, variable_is_external)
+            if (self.current_alignment == 0) {
+                self.compilation_unit.global_variables.append(variable_statement)
+            }
+            return variable_statement
+        }
+        abort(expression.location, "Cannot use expression as variable name")
+    }
+
+    if (self.matches(self.optional_space, self.required_equals)) {
+        self.consume_space(1)
+        operator := self.consume(self.required_equals) as @Other_Token
+        self.consume_space(1)
+        return create_ast_assignment_statement(expression, operator, self.parse_expression())
+    }
+
+    return null
+}
+
+\ include
+\   : "include" STRING
+parse_include :: (self: @Parser) -> @AST_Include_Statement {
+    statement := new AST_Include_Statement
+    statement.location = self.consume(self.required_include).location
+    self.consume_space(1)
+    statement.file_path = (self.consume(self.required_string_literal) as @String_Token).value
+    return statement
+}
+
+\ struct
+\   : "struct" ( ":" IDENTIFIER )? ( "{" <EOL> struct_members "}" )?
+parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statement {
+    if (name_expression.is(AST_Variable_Expression)) {
+        struct_name := (name_expression as @AST_Variable_Expression).name
+        self.consume(self.required_struct)
+        base_type: @AST_Type
+        if (self.matches(self.optional_space, self.required_colon)) {
+            self.consume_space(1)
+            self.consume(self.required_colon)
+            self.consume_space(1)
+            base_type = self.parse_type()
+        } else {
+            base_type = null
+        }
+        struct_members: @List
+        if (self.matches(self.optional_space, self.required_open_brace)) {
+            struct_members = create_list()
+            self.consume_space(1)
+            self.consume(self.required_open_brace)
+            self.consume_end_of_line()
+            self.current_alignment = self.current_alignment + 1
+            self.parse_struct_members(struct_members)
+            self.current_alignment = self.current_alignment - 1
+            self.consume_space(self.current_alignment * 4)
+            self.consume(self.required_close_brace)
+        } else {
+            struct_members = null
+        }
+        struct_statement := create_ast_struct_statement(struct_name, base_type, struct_members)
+        self.compilation_unit.types.append(struct_statement)
+        return struct_statement
+    }
+    abort(name_expression.location, "Cannot use expression as struct name")
+}
+
+\ struct_members
+\   : ( IDENTIFIER ":" type <EOL> )*
+parse_struct_members :: (self: @Parser, struct_members: @List) -> Nothing {
+    loop {
+        while (self.consume_empty_line()) {
+        }
+
+        if (self.matches(self.optional_space, self.required_identifier)) {
+            self.consume_space(self.current_alignment * 4)
+            member_name := self.consume(self.required_identifier) as @Identifier_Token
+            self.consume_space(0)
+            self.consume(self.required_colon)
+            self.consume_space(1)
+            member_value_type := self.parse_type()
+            struct_members.append(create_ast_struct_member(member_name, member_value_type))
+        } else {
+            break
+        }
+    }
+}
+
+\ function
+\   : "(" function_parameters? ")" "->" type block?
+parse_function :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statement {
+    if (name_expression.is(AST_Variable_Expression)) {
+        function_name := (name_expression as @AST_Variable_Expression).name
+        self.consume(self.required_open_paren)
+        function_parameters: @List
+        if (self.matches(self.optional_space, self.required_close_paren)) {
+            function_parameters = create_list()
+        } else {
+            function_parameters = self.parse_function_parameters()
+        }
+        self.consume_space(0)
+        self.consume(self.required_close_paren)
+        self.consume_space(1)
+        self.consume(self.required_hyphen, self.required_greater_than)
+        self.consume_space(1)
+        function_return_type := self.parse_type()
+        function_body: @AST_Block_Statement
+        if (self.matches(self.optional_space, self.required_open_brace)) {
+            self.consume_space(1)
+            function_body = self.parse_block()
+        } else {
+            function_body = null
+        }
+        function_statement := create_ast_function_statement(function_name, function_parameters, function_return_type, function_body)
+        self.compilation_unit.functions.append(function_statement)
+        return function_statement
+    }
+    abort(name_expression.location, "Cannot use expression as function name")
+}
+
+\ function_parameters
+\   : function_parameter ( "," function_parameter )*
+parse_function_parameters :: (self: @Parser) -> @List {
+    function_parameters := create_list()
+    expected_space := 0
+    loop {
+        self.consume_space(expected_space)
+        function_parameters.append(self.parse_function_parameter())
+        if (self.matches(self.optional_space, self.required_comma)) {
+            self.consume_space(0)
+            self.consume(self.required_comma)
+            expected_space = 1
+        } else {
+            break
+        }
+    }
+    return function_parameters
+}
+
+\ function_parameter
+\   : IDENTIFIER ":" type
+parse_function_parameter :: (self: @Parser) -> @AST_Function_Parameter {
+    parameter_name := self.consume(self.required_identifier) as @Identifier_Token
+    self.consume_space(0)
+    self.consume(self.required_colon)
+    self.consume_space(1)
+    parameter_type := self.parse_type()
+    return create_ast_function_parameter(parameter_name, parameter_type)
+}
+
+\ block
+\   : "{" statements "}"
+parse_block :: (self: @Parser) -> @AST_Block_Statement {
+    token := self.consume(self.required_open_brace)
+    self.consume_end_of_line()
+    self.current_alignment = self.current_alignment + 1
+    statements := create_list()
+    self.parse_statements(statements)
+    self.current_alignment = self.current_alignment - 1
+    self.consume_space(self.current_alignment * 4)
+    self.consume(self.required_close_brace)
+    return create_ast_block_statement(token, statements)
+}
+
+\ if
+\   : "if" "(" expression ")" block ( "else" ( block | if ) )?
+parse_if :: (self: @Parser) -> @AST_Statement {
+    token := self.consume(self.required_if)
+    self.consume_space(1)
+    self.consume(self.required_open_paren)
+    self.consume_space(0)
+    condition_expression := self.parse_expression()
+    self.consume_space(0)
+    self.consume(self.required_close_paren)
+    self.consume_space(1)
+    true_statement := self.parse_block()
+    false_statement: @AST_Statement = null
+    if (self.matches(self.optional_space, self.required_else)) {
+        self.consume_space(1)
+        self.consume(self.required_else)
+        self.consume_space(1)
+        if (self.matches(self.required_if)) {
+            false_statement = self.parse_if()
+        } else {
+            false_statement = self.parse_block()
+        }
+    }
+    return create_ast_if_statement(token.location, condition_expression, true_statement, false_statement)
+}
+
+\ loop
+\   : "loop" block
+parse_loop :: (self: @Parser) -> @AST_Statement {
+    token := self.consume(self.required_loop)
+    self.consume_space(1)
+    loop_block := self.parse_block()
+    return create_ast_loop_statement(token.location, loop_block)
+}
+
+\ while
+\   : "while" "(" expression ")" block
+parse_while :: (self: @Parser) -> @AST_Statement {
+    token := self.consume(self.required_while)
+    self.consume_space(1)
+    self.consume(self.required_open_paren)
+    self.consume_space(0)
+    condition_expression := self.parse_expression()
+    self.consume_space(0)
+    self.consume(self.required_close_paren)
+    self.consume_space(1)
+    loop_block := self.parse_block()
+    return create_ast_while_statement(token.location, condition_expression, loop_block)
+}
+
+\ type
+\   : "@" type
+\   | IDENTIFIER
+\   | "[" type ( ";" expression )? "]"
+\   | "(" comma_separated_members? ")" "->" type
+parse_type :: (self: @Parser) -> @AST_Type {
+    if (self.matches(self.required_at)) {
+        token := self.consume(self.required_at)
+        self.consume_space(0)
+        type := self.parse_type()
+        return create_ast_pointer_type(token.location, type)
+    }
+    if (self.matches(self.required_open_bracket)) {
+        token := self.consume(self.required_open_bracket)
+        array_item_type := self.parse_type()
+        if (self.matches(self.optional_space, self.required_column)) {
+            self.consume_space(0)
+            self.consume(self.required_column)
+            self.consume_space(1)
+            array_size_expression := self.parse_expression()
+            self.consume_space(0)
+            self.consume(self.required_close_bracket)
+            return create_ast_array_type(token.location, array_item_type, array_size_expression)
+        }
+        return create_ast_array_type(token.location, array_item_type, null)
+    }
+    return create_ast_named_type(self.consume(self.required_identifier) as @Identifier_Token)
+}
+
+parse_expression :: (self: @Parser) -> @AST_Expression {
+    return self.parse_logic_or_expression()
+}
+
+\ logic_or_expression
+\   : logic_and_expression ( "||" logic_and_expression )*
+parse_logic_or_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_logic_and_expression()
+    while (self.matches(self.optional_space, self.required_vertical_bar, self.required_vertical_bar)) {
+        self.consume_space(1)
+        self.consume(self.required_vertical_bar, self.required_vertical_bar)
+        self.consume_space(1)
+        expression = new AST_Logic_Or_Expression.init(expression, self.parse_logic_and_expression())
+    }
+    return expression
+}
+
+\ logic_and_expression
+\   : equality_expression ( "&&" equality_expression )*
+parse_logic_and_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_equality_expression()
+    while (self.matches(self.optional_space, self.required_ampersand, self.required_ampersand)) {
+        self.consume_space(1)
+        self.consume(self.required_ampersand, self.required_ampersand)
+        self.consume_space(1)
+        expression = new AST_Logic_And_Expression.init(expression, self.parse_equality_expression())
+    }
+    return expression
+}
+
+\ equality_expression
+\   : comparison_expression ( ( "==" | "!=" ) comparison_expression )?
+parse_equality_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_comparison_expression()
+    if (self.matches(self.optional_space, self.required_equals, self.required_equals) || self.matches(self.optional_space, self.required_exclamation_mark, self.required_equals)) {
+        self.consume_space(1)
+        binary_expression: @AST_Binary_Expression
+        if (self.matches(self.required_equals)) {
+            self.consume(self.required_equals)
+            binary_expression = new AST_Equals_Expression
+        } else {
+            self.consume(self.required_exclamation_mark)
+            binary_expression = new AST_Not_Equals_Expression
+        }
+        self.consume(self.required_equals)
+        self.consume_space(1)
+        expression = binary_expression.init(expression, self.parse_comparison_expression())
+    }
+    return expression
+}
+
+\ comparison_expression
+\   : addition_expression ( ( "<" | "<=" | ">" | ">=" ) addition_expression )?
+parse_comparison_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_addition_expression()
+    if (self.matches(self.optional_space, self.required_less_than) || self.matches(self.optional_space, self.required_greater_than)) {
+        self.consume_space(1)
+        binary_expression: @AST_Binary_Expression
+        if (self.matches(self.required_less_than)) {
+            self.consume(self.required_less_than)
+            if (self.matches(self.required_equals)) {
+                self.consume(self.required_equals)
+                binary_expression = new AST_Less_Than_Or_Equals_Expression
+            } else {
+                binary_expression = new AST_Less_Than_Expression
+            }
+        } else {
+            self.consume(self.required_greater_than)
+            if (self.matches(self.required_equals)) {
+                self.consume(self.required_equals)
+                binary_expression = new AST_Greater_Than_Or_Equals_Expression
+            } else {
+                binary_expression = new AST_Greater_Than_Expression
+            }
+        }
+        self.consume_space(1)
+        expression = binary_expression.init(expression, self.parse_addition_expression())
+    }
+    return expression
+}
+
+\ addition_expression
+\   : multiplication_expression ( ( "+" | "-" ) multiplication_expression )*
+parse_addition_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_multiplication_expression()
+    while (self.matches(self.optional_space, self.required_plus) || self.matches(self.optional_space, self.required_hyphen)) {
+        self.consume_space(1)
+        binary_expression: @AST_Binary_Expression
+        if (self.matches(self.required_plus)) {
+            self.consume(self.required_plus)
+            binary_expression = new AST_Add_Expression
+        } else {
+            self.consume(self.required_hyphen)
+            binary_expression = new AST_Substract_Expression
+        }
+        self.consume_space(1)
+        expression = binary_expression.init(expression, self.parse_multiplication_expression())
+    }
+    return expression
+}
+
+\ multiplication_expression
+\   : unary_expression ( ( "*" | "/" | "//" ) unary_expression )*
+parse_multiplication_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_unary_expression()
+    while (self.matches(self.optional_space, self.required_asterisk) || self.matches(self.optional_space, self.required_slash)) {
+        self.consume_space(1)
+        binary_expression: @AST_Binary_Expression
+        if (self.matches(self.required_slash)) {
+            self.consume(self.required_slash)
+            if (self.matches(self.required_slash)) {
+                self.consume(self.required_slash)
+                binary_expression = new AST_Modulo_Expression
+            } else {
+                binary_expression = new AST_Divide_Expression
+            }
+        } else {
+            self.consume(self.required_asterisk)
+            binary_expression = new AST_Multiply_Expression
+        }
+        self.consume_space(1)
+        expression = binary_expression.init(expression, self.parse_unary_expression())
+    }
+    return expression
+}
+
+parse_unary_expression :: (self: @Parser) -> @AST_Expression {
+    return self.parse_cast_expression()
+}
+
+\ cast_expression
+\   : access_expression ( "as" type )?
+parse_cast_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_access_expression()
+    if (self.matches(self.optional_space, self.required_as)) {
+        self.consume_space(1)
+        self.consume(self.required_as)
+        self.consume_space(1)
+        type := self.parse_type()
+        return create_ast_cast_expression(expression, type)
+    }
+    return expression
+}
+
+\ access_expression
+\   : primary_expression ( "." IDENTIFIER | "(" call_arguments? ")" | "[" expression "]" )*
+parse_access_expression :: (self: @Parser) -> @AST_Expression {
+    expression := self.parse_primary_expression()
+    loop {
+        old_expression := expression
+        if (self.matches(self.optional_space, self.required_dot)) {
+            self.consume_space(0)
+            self.consume(self.required_dot)
+            self.consume_space(0)
+            expression = create_ast_member_access_expression(expression, self.consume(self.required_identifier) as @Identifier_Token)
+        }
+        if (self.matches(self.optional_space, self.required_open_paren)) {
+            self.consume_space(0)
+            self.consume(self.required_open_paren)
+            self.consume_space(0)
+            call_arguments := create_list()
+            if (self.matches(self.optional_space, self.required_close_paren) == false) {
+                self.parse_call_arguments(call_arguments)
+            }
+            self.consume_space(0)
+            self.consume(self.required_close_paren)
+            expression = create_ast_call_expression(expression, call_arguments)
+        }
+        if (self.matches(self.optional_space, self.required_open_bracket)) {
+            self.consume_space(0)
+            self.consume(self.required_open_bracket)
+            self.consume_space(0)
+            index_expression := self.parse_expression()
+            self.consume_space(0)
+            self.consume(self.required_close_bracket)
+            expression = create_ast_array_access_expression(expression, index_expression)
+        }
+        if (expression == old_expression) {
+            break
+        }
+    }
+    return expression
+}
+
+\ call_arguments
+\   : expression ( "," expression )*
+parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
+    call_arguments.append(self.parse_expression())
+    while (self.matches(self.optional_space, self.required_comma)) {
+        self.consume_space(0)
+        self.consume(self.required_comma)
+        self.consume_space(1)
+        call_arguments.append(self.parse_expression())
+    }
+}
+
+\ primary_expression
+\   : IDENTIFIER
+\   | INTEGER
+\   | STRING
+\   | CHARACTER
+\   | "null"
+\   | "false"
+\   | "true"
+\   | "(" expression ")"
+\   | "new" type
+parse_primary_expression :: (self: @Parser) -> @AST_Expression {
+    if (self.matches(self.required_identifier)) {
+        return create_ast_variable_expression(self.consume(self.required_identifier) as @Identifier_Token)
+    }
+    if (self.matches(self.required_literal)) {
+        return create_ast_literal_expression(self.consume(self.required_literal) as @Literal_Token)
+    }
+    if (self.matches(self.required_open_paren)) {
+        self.consume(self.required_open_paren)
+        self.consume_space(0)
+        expression := self.parse_expression()
+        self.consume_space(0)
+        self.consume(self.required_close_paren)
+        return expression
+    }
+    if (self.matches(self.required_new)) {
+        token := self.consume(self.required_new)
+        self.consume_space(1)
+        type := self.parse_type()
+        return create_ast_new_expression(token.location, type)
+    }
+    return null
+}
+
+consume_end_of_line :: (self: @Parser) -> Nothing {
+    if (self.matches(self.optional_space, self.required_comment)) {
+        self.consume_space(1)
+        self.consume(self.required_comment)
+    } else {
+        self.consume_space(0)
+    }
+    self.consume(self.required_end_of_line)
+}
+
+consume_empty_line :: (self: @Parser) -> Boolean {
+    if (self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)) {
+        if (self.matches(self.optional_space, self.required_comment)) {
+            self.consume_space(self.current_alignment * 4)
+            self.consume(self.required_comment)
+        } else {
+            self.consume_space(0)
+        }
+        self.consume(self.required_end_of_line)
+        return true
+    }
+    return false
+}
+
+consume_space :: (self: @Parser, expected_space_count: Int) -> Nothing {
+    space_count: Int
+    token := self.scanner.current_token
+    if (token.is(Space_Token)) {
+        self.scanner.next_token()
+        space := token as @Space_Token
+        space_count = space.count
+    } else {
+        space_count = 0
+    }
+    if (space_count != expected_space_count) {
+        stderr.write(token.location).write(": Consumed ").write(space_count).write(" spaces where ").write(expected_space_count).write(" are expected").end_line()
+    }
+}
+
+consume :: (self: @Parser, first_matcher: @Matcher) -> @Token {
+    return self.consume(first_matcher, null)
+}
+
+consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) -> @Token {
+    return self.consume(first_matcher, second_matcher, null)
+}
+
+consume :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> @Token {
+    token := self.scanner.current_token
+    first_token := token
+    if (first_matcher.accepts(token)) {
+        token = self.scanner.next_token()
+    } else {
+        if (first_matcher.is_required) {
+            self.abort(token)
+        }
+    }
+    if (second_matcher != null) {
+        if (second_matcher.accepts(token)) {
+            token = self.scanner.next_token()
+        } else {
+            if (second_matcher.is_required) {
+                self.abort(token)
+            }
+        }
+    }
+    if (third_matcher != null) {
+        if (third_matcher.accepts(token)) {
+            token = self.scanner.next_token()
+        } else {
+            if (third_matcher.is_required) {
+                self.abort(token)
+            }
+        }
+    }
+    return first_token
+}
+
+matches_end_of_line :: (self: @Parser) -> Boolean {
+    return self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)
+}
+
+matches :: (self: @Parser, first_matcher: @Matcher) -> Boolean {
+    return self.matches(first_matcher, null)
+}
+
+matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) -> Boolean {
+    return self.matches(first_matcher, second_matcher, null)
+}
+
+matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, third_matcher: @Matcher) -> Boolean {
+    token := self.scanner.current_token
+    peek_offset := 0
+    if (first_matcher.accepts(token)) {
+        token = self.scanner.peek_token(peek_offset)
+        peek_offset = peek_offset + 1
+    } else if (first_matcher.is_required) {
+        return false
+    }
+    if (second_matcher != null) {
+        if (second_matcher.accepts(token)) {
+            token = self.scanner.peek_token(peek_offset)
+            peek_offset = peek_offset + 1
+        } else if (second_matcher.is_required) {
+            return false
+        }
+    }
+    if (third_matcher != null) {
+        if (third_matcher.accepts(token)) {
+            token = self.scanner.peek_token(peek_offset)
+            peek_offset = peek_offset + 1
+        } else if (third_matcher.is_required) {
+            return false
+        }
+    }
+    return true
+}
+
+Matcher :: struct : Object {
+    is_required: Boolean
+}
+
+Comment_Matcher :: struct : Matcher {
+}
+
+create_comment_matcher :: (required: Boolean) -> @Comment_Matcher {
+    matcher := new Comment_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+End_Of_File_Matcher :: struct : Matcher {
+}
+
+create_end_of_file_matcher :: (required: Boolean) -> @End_Of_File_Matcher {
+    matcher := new End_Of_File_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+End_Of_Line_Matcher :: struct : Matcher {
+}
+
+create_end_of_line_matcher :: (required: Boolean) -> @End_Of_Line_Matcher {
+    matcher := new End_Of_Line_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+Identifier_Matcher :: struct : Matcher {
+}
+
+create_identifier_matcher :: (required: Boolean) -> @Identifier_Matcher {
+    matcher := new Identifier_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+Keyword_Matcher :: struct : Matcher {
+    lexeme: @String
+}
+
+create_keyword_matcher :: (required: Boolean, lexeme: @String) -> @Keyword_Matcher {
+    matcher := new Keyword_Matcher
+    matcher.is_required = required
+    matcher.lexeme = lexeme
+    return matcher
+}
+
+Literal_Matcher :: struct : Matcher {
+}
+
+create_literal_matcher :: (required: Boolean) -> @Literal_Matcher {
+    matcher := new Literal_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+String_Literal_Matcher :: struct : Matcher {
+}
+
+create_string_literal_matcher :: (required: Boolean) -> @String_Literal_Matcher {
+    matcher := new String_Literal_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+Other_Matcher :: struct : Matcher {
+    lexeme: @String
+}
+
+create_other_matcher :: (required: Boolean, lexeme: @String) -> @Other_Matcher {
+    matcher := new Other_Matcher
+    matcher.is_required = required
+    matcher.lexeme = lexeme
+    return matcher
+}
+
+Space_Matcher :: struct : Matcher {
+}
+
+create_space_matcher :: (required: Boolean) -> @Space_Matcher {
+    matcher := new Space_Matcher
+    matcher.is_required = required
+    return matcher
+}
+
+accepts :: (self: @Matcher, token: @Token) -> Boolean {
+    if (self.is(Other_Matcher)) {
+        self := self as @Other_Matcher
+        if (token.is(Other_Token)) {
+            return token.lexeme.equals(self.lexeme)
+        }
+        return false
+    }
+    if (self.is(Space_Matcher)) {
+        return token.is(Space_Token)
+    }
+    if (self.is(Identifier_Matcher)) {
+        return token.is(Identifier_Token)
+    }
+    if (self.is(Keyword_Matcher)) {
+        self := self as @Keyword_Matcher
+        if (token.is(Keyword_Token)) {
+            return token.lexeme.equals(self.lexeme)
+        }
+        return false
+    }
+    if (self.is(String_Literal_Matcher)) {
+        return token.is(String_Token)
+    }
+    if (self.is(Literal_Matcher)) {
+        return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token)
+    }
+    if (self.is(End_Of_Line_Matcher)) {
+        return token.is(End_Of_Line_Token)
+    }
+    if (self.is(Comment_Matcher)) {
+        return token.is(Comment_Token)
+    }
+    if (self.is(End_Of_File_Matcher)) {
+        return token.is(End_Of_File_Token)
+    }
+    stderr.write("Unsupported token matcher").end_line()
+    abort()
+}

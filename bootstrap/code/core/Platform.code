@@ -1,0 +1,24 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+\ stdio
+
+FILE :: struct
+
+stdout: @FILE = external
+stderr: @FILE = external
+
+fclose :: (file: @FILE) -> Int32
+feof :: (file: @FILE) -> Int32
+fflush :: (file: @FILE) -> Int32
+fgetc :: (file: @FILE) -> Int32
+fopen :: (file: @Int8, mode: @Int8) -> @FILE
+fputc :: (char: Int32, file: @FILE) -> Int32
+fputs :: (chars: @Int8, file: @FILE) -> Int32
+
+\ stdlib
+
+abort :: () -> Nothing
+exit :: (code: Int) -> Nothing
+free :: (block: @Any) -> Nothing
+malloc :: (size: Int) -> @Any
+realloc :: (block: @Int8, size: Int) -> @Any

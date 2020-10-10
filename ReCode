@@ -39,17 +39,18 @@ def build_stage(n):
     output_file = f'build/stage{n}/ReCode.s'
     compiler_args = f'{source_file} {output_file}'
 
-    source_changed = False
-    for root, dirs, files in os.walk(os.path.dirname(source_file)):
-        for file in files:
-            if os.path.getmtime(output_file) < os.path.getmtime(f'{root}/{file}'):
-                source_changed = True
-                break
-        else:
-            continue
-        break
+    compiler_changed = not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler)
+    if not compiler_changed:
+        for root, dirs, files in os.walk(os.path.dirname(source_file)):
+            for file in files:
+                if os.path.getmtime(output_file) < os.path.getmtime(f'{root}/{file}'):
+                    compiler_changed = True
+                    break
+            else:
+                continue
+            break
 
-    if source_changed or not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler):
+    if compiler_changed:
         if execute(f'{compiler} {compiler_args}', exit_on_error=False) != 0:
             subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {compiler_args} &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
             exit(1)
@@ -94,7 +95,8 @@ def stage():
     build_stage(2)
     build_stage(3)
     execute('diff -q build/stage2/ReCode.s build/stage3/ReCode.s')
-    execute('cp compiler/ReCode.code bootstrap/ReCode.code')
+    execute('rm -fr bootstrap', echo=False)
+    execute('cp -R compiler bootstrap')
     execute('build/stage2/ReCode bootstrap/ReCode.code bootstrap/ReCode.s')
     bootstrap()
 
