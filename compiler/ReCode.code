@@ -566,6 +566,9 @@ write_line :: (file: @FILE, string: @String) -> @FILE {
 }
 
 write :: (self: @FILE, number: Int) -> @FILE {
+    if (number < 0) {
+        return self.write('-').write(-number)
+    }
     if (number >= 10) {
         self.write(number / 10)
     }

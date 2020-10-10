@@ -634,7 +634,14 @@ parse_multiplication_expression :: (self: @Parser) -> @AST_Expression {
     return expression
 }
 
+\ unary_expression
+\   : "-"? cast_expression
 parse_unary_expression :: (self: @Parser) -> @AST_Expression {
+    if (self.matches(self.required_hyphen)) {
+        location := self.consume(self.required_hyphen).location
+        self.consume_space(0)
+        return new AST_Negate_Expression.init(location, self.parse_cast_expression())
+    }
     return self.parse_cast_expression()
 }
 

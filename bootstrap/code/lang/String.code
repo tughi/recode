@@ -67,8 +67,7 @@ index_of :: (self: @String, other: @String) -> Int {
         }
         self_index = self_index + 1
     }
-    zero := 0
-    return zero - 1
+    return -1
 }
 
 starts_with :: (self: @String, other: @String) -> Boolean {
@@ -124,7 +123,7 @@ append :: (self: @String, char: Int8) -> @String {
 
 append :: (self: @String, number: Int) -> @String {
     if (number < 0) {
-        return self.append('-').append(0 - number)
+        return self.append('-').append(-number)
     }
     if (number >= 10) {
         self.append(number / 10)

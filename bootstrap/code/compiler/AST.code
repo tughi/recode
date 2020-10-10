@@ -317,6 +317,19 @@ AST_Not_Equals_Expression :: struct : AST_Binary_Expression {
 AST_Substract_Expression :: struct : AST_Binary_Expression {
 }
 
+AST_Unary_Expression :: struct : AST_Expression {
+    expression: @AST_Expression
+}
+
+init :: (self: @AST_Unary_Expression, location: @Source_Location, expression: @AST_Expression) -> @AST_Unary_Expression {
+    self.location = location
+    self.expression = expression
+    return self
+}
+
+AST_Negate_Expression :: struct : AST_Unary_Expression {
+}
+
 AST_Cast_Expression :: struct : AST_Expression {
     value_expression: @AST_Expression
     type: @AST_Type

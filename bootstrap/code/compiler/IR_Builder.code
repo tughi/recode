@@ -852,6 +852,9 @@ convert_expression :: (self: @IR_Builder, expression: @AST_Expression) -> @IR_Va
     if (expression.is(AST_Multiply_Expression)) {
         return self.convert_multiply_expression(expression as @AST_Multiply_Expression)
     }
+    if (expression.is(AST_Negate_Expression)) {
+        return self.convert_negate_expression(expression as @AST_Negate_Expression)
+    }
     if (expression.is(AST_New_Expression)) {
         return self.convert_new_expression(expression as @AST_New_Expression)
     }
@@ -1177,6 +1180,14 @@ convert_multiply_expression :: (self: @IR_Builder, expression: @AST_Multiply_Exp
         abort(expression.location, "TODO: Evaluate constant expression")
     }
     return self.append(new IR_Multiply_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+}
+
+convert_negate_expression :: (self: @IR_Builder, expression: @AST_Negate_Expression) -> @IR_Value {
+    value := self.convert_expression(expression.expression)
+    if (value.type.is(IR_Int_Type) == false) {
+        abort(expression.expression.location, "Not an Int expression")
+    }
+    return self.append(new IR_Substract_Instruction.init(self.create_temp_value(value.type), create_ir_constant_value(value.type, create_integer_token("", expression.location, 0)), value), expression.location)
 }
 
 convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -> @IR_Value {

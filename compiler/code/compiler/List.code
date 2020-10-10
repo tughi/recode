@@ -121,7 +121,7 @@ index_of :: (self: @List, data: @Any) -> Int {
         item = item.next_item
         index = index + 1
     }
-    return index * 0 - 1
+    return -1
 }
 
 get :: (self: @List, index: Int) -> @Any {
