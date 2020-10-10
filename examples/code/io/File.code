@@ -1,3 +1,9 @@
+write :: (self: @FILE, string: @String) -> @FILE {
+    return self.write(string.data)
+}
+
+include "../lang/String.code"
+
 write :: (file: @FILE, chars: @Int8) -> @FILE {
     index := 0
     loop {

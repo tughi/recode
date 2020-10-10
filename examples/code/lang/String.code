@@ -1,0 +1,5 @@
+String :: struct {
+    data: @Int8
+    data_size: Int
+    length: Int
+}

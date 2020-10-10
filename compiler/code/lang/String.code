@@ -19,7 +19,16 @@ init :: (self: @String, data_size: Int) -> @String {
 }
 
 init :: (self: @String, data: @Int8) -> @String {
-    self.length = data.length()
+    data_length := 0
+    loop {
+        char := data[data_length]
+        if (char == '\0') {
+            break
+        }
+        data_length = data_length + 1
+    }
+
+    self.length = data_length
     self.data_size = self.length + 1
     self.data = data
     return self
@@ -30,6 +39,76 @@ clone :: (self: @String) -> @String {
     clone.init(self.data_size)
     clone.append(self)
     return clone
+}
+
+equals :: (self: @String, other: @String) -> Boolean {
+    if (self.length == other.length) {
+        index := 0
+        while (index < self.length) {
+            if (self.data[index] != other.data[index]) {
+                return false
+            }
+            index = index + 1
+        }
+        return true
+    }
+    return false
+}
+
+index_of :: (self: @String, other: @String) -> Int {
+    self_index := 0
+    while (self_index <= self.length - other.length) {
+        other_index := 0
+        while (other_index < other.length && self.data[self_index + other_index] == other.data[other_index]) {
+            other_index = other_index + 1
+        }
+        if (other_index == other.length) {
+            return self_index
+        }
+        self_index = self_index + 1
+    }
+    zero := 0
+    return zero - 1
+}
+
+starts_with :: (self: @String, other: @String) -> Boolean {
+    if (self.length < other.length) {
+        return false
+    }
+    index := 0
+    while (index < other.length) {
+        if (self.data[index] != other.data[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+ends_with :: (self: @String, other: @String) -> Boolean {
+    if (self.length < other.length) {
+        return false
+    }
+    index := 0
+    while (index < other.length) {
+        if (self.data[self.length - other.length + index] != other.data[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+last_index_of :: (self: @String, char: Int8) -> Int {
+    return self.last_index_of(char, self.length - 1)
+}
+
+last_index_of :: (self: @String, char: Int8, from_index: Int) -> Int {
+    index := from_index
+    while (index >= 0 && self.data[index] != char) {
+        index = index - 1
+    }
+    return index
 }
 
 append :: (self: @String, char: Int8) -> @String {
@@ -44,6 +123,9 @@ append :: (self: @String, char: Int8) -> @String {
 }
 
 append :: (self: @String, number: Int) -> @String {
+    if (number < 0) {
+        return self.append('-').append(0 - number)
+    }
     if (number >= 10) {
         self.append(number / 10)
     }
@@ -72,56 +154,15 @@ append :: (self: @String, other: @String) -> @String {
     return self
 }
 
-starts_with :: (self: @String, prefix: @String) -> Boolean {
-    if (self.length < prefix.length) {
-        return false
+remove :: (self: @String, begin_index: Int, end_index: Int) -> @String {
+    if (begin_index < 0 || begin_index > end_index || end_index >= self.length) {
+        abort("Invalid state")
     }
     index := 0
-    while (index < prefix.length) {
-        if (self.data[index] != prefix.data[index]) {
-            return false
-        }
+    while (index + end_index <= self.length) {
+        self.data[begin_index + index] = self.data[end_index + index]
         index = index + 1
     }
-    return true
+    self.length = begin_index + index - 1
+    return self
 }
-
-ends_with :: (self: @String, suffix: @String) -> Boolean {
-    if (self.length < suffix.length) {
-        return false
-    }
-    index := 0
-    while (index < suffix.length) {
-        if (self.data[self.length - suffix.length + index] != suffix.data[index]) {
-            return false
-        }
-        index = index + 1
-    }
-    return true
-}
-
-equals :: (self: @String, other: @String) -> Boolean {
-    if (self.length == other.length) {
-        index := 0
-        while (index < self.length) {
-            if (self.data[index] != other.data[index]) {
-                return false
-            }
-            index = index + 1
-        }
-        return true
-    }
-    return false
-}
-
-length :: (string: @Int8) -> Int {
-    length := 0
-    loop {
-        char := string[length]
-        if (char == '\0') {
-            return length
-        }
-        length = length + 1
-    }
-}
-

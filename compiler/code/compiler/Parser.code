@@ -99,12 +99,20 @@ create_parser :: () -> @Parser {
 
 parse :: (file_path: @String) -> @Compilation_Unit {
     parser := create_parser()
-    parser.parse(file_path)
+    parser.parse(file_path, null)
     return parser.compilation_unit
 }
 
-parse :: (self: @Parser, file_path: @String) -> Nothing {
+parse :: (self: @Parser, file_path: @String, location: @Source_Location) -> Nothing {
     source := create_source(file_path)
+    if (source == null) {
+        message := clone("Failed to open file: ").append(file_path)
+        if (location != null) {
+            abort(location, message)
+        }
+        abort(message)
+    }
+
     self.compilation_unit.sources.append(source)
     source.id = self.compilation_unit.sources.size
 
@@ -131,6 +139,9 @@ parse_statements :: (self: @Parser, statements: @List) -> Nothing {
             statement := statement as @AST_Include_Statement
 
             statement_file_path := statement.file_path.make_relative_path(statement.location.source.file_path)
+            if (statement_file_path == null) {
+                abort(statement.location, clone("Unsupported file path: ").append(statement.file_path))
+            }
 
             compilation_unit_sources_item := self.compilation_unit.sources.first_item
             while (compilation_unit_sources_item != null) {
@@ -141,7 +152,7 @@ parse_statements :: (self: @Parser, statements: @List) -> Nothing {
             }
 
             if (compilation_unit_sources_item == null) {
-                self.parse(statement_file_path)
+                self.parse(statement_file_path, statement.location)
             }
         } else {
             statements.append(statement)
@@ -149,33 +160,23 @@ parse_statements :: (self: @Parser, statements: @List) -> Nothing {
     }
 }
 
-make_parent_path :: (file_path: @String) -> @String {
-    end_index := file_path.length - 1
-    while (end_index > 0 && file_path.data[end_index] != '/') {
-        end_index = end_index - 1
-    }
-    parent_path := new String.init()
-    if (end_index > 0) {
-        index := 0
-        while (index < end_index) {
-            parent_path.append(file_path.data[index])
-            index = index + 1
-        }
-    }
-    return parent_path
-}
-
 make_relative_path :: (file_path: @String, base_file_path: @String) -> @String {
     if (file_path.starts_with("./")) {
-        relative_path := make_parent_path(base_file_path)
-        index := 1
-        while (index < file_path.length) {
-            relative_path.append(file_path.data[index])
-            index = index + 1
+        relative_path := clone(base_file_path).append(file_path).remove(base_file_path.last_index_of('/') + 1, base_file_path.length + 2)
+        return relative_path
+    }
+    if (file_path.starts_with("../")) {
+        relative_path := clone(base_file_path).append(file_path).remove(base_file_path.last_index_of('/') + 1, base_file_path.length)
+        loop {
+            index := relative_path.index_of("/../")
+            if (index <= 0) {
+                break
+            }
+            relative_path.remove(relative_path.last_index_of('/', index - 1), index + 3)
         }
         return relative_path
     }
-    abort(clone("Unsupported file path: ").append(file_path))
+    return file_path
 }
 
 \ statement

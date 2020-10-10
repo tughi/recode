@@ -17,7 +17,7 @@ create_source :: (file_path: @String) -> @Source {
 
     file := fopen(file_path.data, "r".data)
     if (file == null) {
-        abort(clone("Failed to open file: ").append(file_path))
+        return null
     }
 
     content_size := 1024
