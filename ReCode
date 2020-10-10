@@ -38,7 +38,18 @@ def build_stage(n):
     source_file = f'compiler/ReCode.code'
     output_file = f'build/stage{n}/ReCode.s'
     compiler_args = f'{source_file} {output_file}'
-    if not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(source_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler):
+
+    source_changed = False
+    for root, dirs, files in os.walk(os.path.dirname(source_file)):
+        for file in files:
+            if os.path.getmtime(output_file) < os.path.getmtime(f'{root}/{file}'):
+                source_changed = True
+                break
+        else:
+            continue
+        break
+
+    if source_changed or not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler):
         if execute(f'{compiler} {compiler_args}', exit_on_error=False) != 0:
             subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {compiler_args} &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
             exit(1)
