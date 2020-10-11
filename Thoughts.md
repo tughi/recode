@@ -89,11 +89,12 @@ Node :: struct {
     name: String        \ embedded
     parent: @Node       \ parent node address
     children: [@Node]   \ checked array of child node addresses
+    type: Int = 42      \ with default value
 }
 ```
 
 ```
-Extended_Node :: struct : Node {
+Extended_Node :: struct : Node(type = 7) { \ type has another default value
     data: @Object       \ checked array of child node addresses
 }
 ```
