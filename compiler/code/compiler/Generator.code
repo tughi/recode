@@ -33,13 +33,12 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  .text").end_line()
     if (function.name.equals("main")) {
         self.output_file.write("  .globl main").end_line()
-        self.output_file.write(function.name).write(':').end_line()
-    } else {
-        self.output_file.write(function.name).write('_').write(function.id).write(':').end_line()
+        self.output_file.write("main:").end_line()
     }
+    self.output_file.write_function_label(function).write(':').end_line()
     self.output_file.write("  push rbp").end_line()
     self.output_file.write("  mov rbp, rsp").end_line()
-    self.output_file.write("  movsx rax, WORD PTR ").write(function.name).write('_').write(function.id).write("__stack_frame_size").write("[rip]").end_line()
+    self.output_file.write("  movsx rax, WORD PTR ").write_function_label(function).write("__stack_frame_size").write("[rip]").end_line()
     self.output_file.write("  sub rsp, rax").end_line()
 
     blocks := function.blocks.create_iterator()
@@ -67,13 +66,21 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     if (stack_frame_size // 16 != 0) {
         stack_frame_size = stack_frame_size + 16 - stack_frame_size // 16
     }
-    self.output_file.write(function.name).write('_').write(function.id).write("__stack_frame_size").write(": .word ").write(stack_frame_size).end_line()
+    self.output_file.write_function_label(function).write("__stack_frame_size").write(": .word ").write(stack_frame_size).end_line()
 
     self.reset()
 }
 
+write_function_label :: (file: @FILE, function: @IR_Function) -> @FILE {
+    file.write(function.name)
+    if (function.is_external == false) {
+        file.write('_').write(function.id)
+    }
+    return file
+}
+
 write_function_end_label :: (file: @FILE, function: @IR_Function) -> @FILE {
-    return file.write(".LABEL__").write(function.name).write('_').write(function.id).write("__").write("end")
+    return file.write(".LABEL__").write_function_label(function).write("__").write("end")
 }
 
 output_unreached_ir_instructions :: (self: @MC_Generator) -> Nothing {
@@ -143,6 +150,8 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_divide_instruction(instruction as @IR_Divide_Instruction)
     } else if (instruction.is(IR_Load_Array_Item_Instruction)) {
         self.generate_load_array_item_instruction(instruction as @IR_Load_Array_Item_Instruction)
+    } else if (instruction.is(IR_Load_Function_Address_Instruction)) {
+        self.generate_load_function_address_instruction(instruction as @IR_Load_Function_Address_Instruction)
     } else if (instruction.is(IR_Load_Struct_Member_Instruction)) {
         self.generate_load_struct_member_instruction(instruction as @IR_Load_Struct_Member_Instruction)
     } else if (instruction.is(IR_Load_Variable_Instruction)) {
@@ -178,30 +187,34 @@ generate_add_instruction :: (self: @MC_Generator, instruction: @IR_Add_Instructi
 }
 
 generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
-    if (instruction.arguments.size > 0) {
-        self.generate_load_value(self.register_rdi, instruction.arguments.first() as @IR_Value)
-        if (instruction.arguments.size > 1) {
-            self.generate_load_value(self.register_rsi, instruction.arguments.get(1) as @IR_Value)
-            if (instruction.arguments.size > 2) {
-                self.generate_load_value(self.register_rdx, instruction.arguments.get(2) as @IR_Value)
-                if (instruction.arguments.size > 3) {
-                    self.generate_load_value(self.register_rcx, instruction.arguments.get(3) as @IR_Value)
-                    if (instruction.arguments.size > 4) {
-                        self.generate_load_value(self.register_r8, instruction.arguments.get(4) as @IR_Value)
-                        if (instruction.arguments.size > 5) {
-                            self.generate_load_value(self.register_r9, instruction.arguments.get(5) as @IR_Value)
+    if (instruction.arguments_size > 0) {
+        self.generate_load_value(self.register_rdi, instruction.argument(0))
+        if (instruction.arguments_size > 1) {
+            self.generate_load_value(self.register_rsi, instruction.argument(1))
+            if (instruction.arguments_size > 2) {
+                self.generate_load_value(self.register_rdx, instruction.argument(2))
+                if (instruction.arguments_size > 3) {
+                    self.generate_load_value(self.register_rcx, instruction.argument(3))
+                    if (instruction.arguments_size > 4) {
+                        self.generate_load_value(self.register_r8, instruction.argument(4))
+                        if (instruction.arguments_size > 5) {
+                            self.generate_load_value(self.register_r9, instruction.argument(5))
                         }
                     }
                 }
             }
         }
     }
-    self.release_all_registers()
-    self.output_file.write("  call ").write(instruction.function.name)
-    if (instruction.function.is_external == false) {
-        self.output_file.write('_').write(instruction.function.id)
+    if (instruction.is(IR_Direct_Call_Instruction)) {
+        self.release_all_registers()
+        self.output_file.write("  call ").write_function_label((instruction as @IR_Direct_Call_Instruction).function).end_line()
+    } else if (instruction.is(IR_Dynamic_Call_Instruction)) {
+        self.generate_load_value(self.register_rax, (instruction as @IR_Dynamic_Call_Instruction).function_address())
+        self.release_all_registers()
+        self.output_file.write("  call ").write(self.register_rax.name_q).end_line()
+    } else {
+        abort(instruction.location, instruction.object_type)
     }
-    self.output_file.end_line()
     if (instruction.result_value != null) {
         self.map_variable_value(instruction.result_value, self.register_rax)
     }
@@ -387,6 +400,12 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
     } else {
         self.output_file.write("  mov ").write(result_register.name_b).write(", [").write(result_register.name_q).write(']').end_line()
     }
+}
+
+generate_load_function_address_instruction :: (self: @MC_Generator, instruction: @IR_Load_Function_Address_Instruction) -> Nothing {
+    result_register := self.find_unused_register()
+    self.output_file.write("  lea ").write(result_register.name_q).write(", ").write_function_label(instruction.function).write("[rip]").end_line()
+    self.map_variable_value(instruction.result_value, result_register)
 }
 
 generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
@@ -719,6 +738,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         if (mc_value.register != null) {
             if (ir_value_type.is(IR_Boolean_Type)) {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
+            } else if (ir_value_type.is(IR_Function_Type)) {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Int_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Int32_Type)) {
@@ -732,6 +753,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             }
         } else if (ir_value_type.is(IR_Boolean_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
+        } else if (ir_value_type.is(IR_Function_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Int_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Int32_Type)) {
@@ -1302,6 +1325,9 @@ create_mc_local_variable_address :: (offset: Int) -> @MC_Local_Variable_Address 
 get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
     if (ir_type.is(IR_Boolean_Type)) {
         return 1
+    }
+    if (ir_type.is(IR_Function_Type)) {
+        return 8
     }
     if (ir_type.is(IR_Int_Type)) {
         return 8

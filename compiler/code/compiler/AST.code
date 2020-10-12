@@ -28,18 +28,16 @@ AST_Include_Statement :: struct : AST_Statement {
 
 AST_Function_Statement :: struct : AST_Statement {
     name: @Identifier_Token
-    parameters: @List
-    return_type: @AST_Type
+    type: @AST_Function_Type
     body: @AST_Block_Statement
     ir_function: @IR_Function
 }
 
-create_ast_function_statement :: (name: @Identifier_Token, parameters: @List, return_type: @AST_Type, body: @AST_Block_Statement) -> @AST_Function_Statement {
+create_ast_function_statement :: (name: @Identifier_Token, type: @AST_Function_Type, body: @AST_Block_Statement) -> @AST_Function_Statement {
     function_statement := new AST_Function_Statement
     function_statement.location = name.location
     function_statement.name = name
-    function_statement.parameters = parameters
-    function_statement.return_type = return_type
+    function_statement.type = type
     function_statement.body = body
     function_statement.ir_function = null
     return function_statement
@@ -237,6 +235,19 @@ create_ast_array_type :: (location: @Source_Location, item_type: @AST_Type, size
     type.location = location
     type.item_type = item_type
     type.size_expression = size_expression
+    return type
+}
+
+AST_Function_Type :: struct : AST_Type {
+    parameters: @List
+    return_type: @AST_Type
+}
+
+create_ast_function_type :: (location: @Source_Location, parameters: @List, return_type: @AST_Type) -> @AST_Function_Type {
+    type := new AST_Function_Type
+    type.location = location
+    type.parameters = parameters
+    type.return_type = return_type
     return type
 }
 

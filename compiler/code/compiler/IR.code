@@ -71,13 +71,50 @@ create_ir_array_type :: (item_type: @IR_Type, size_expression: @AST_Expression) 
     return type
 }
 
+IR_Function_Type :: struct : IR_Type {
+    parameters: @List
+    return_type: @IR_Type
+}
+
+IR_Function_Type_Parameter :: struct {
+    name: @String
+    type: @IR_Type
+}
+
+create_ir_function_type :: (parameters: @List, return_type: @IR_Type) -> @IR_Function_Type {
+    type_name := new String.init().append("(")
+    parameters_item := parameters.first_item
+    while (parameters_item != null) {
+        parameter := parameters_item.data as @IR_Function_Type_Parameter
+        type_name.append(parameter.name).append(": ").append(parameter.type.name)
+        parameters_item = parameters_item.next_item
+        if (parameters_item != null) {
+            type_name.append(", ")
+        }
+    }
+    type_name.append(") -> ").append(return_type.name)
+
+    type := new IR_Function_Type
+    type.init(type_name)
+    type.parameters = parameters
+    type.return_type = return_type
+    return type
+}
+
+create_ir_function_type_parameter :: (name: @String, type: @IR_Type) -> @IR_Function_Type_Parameter {
+    parameter := new IR_Function_Type_Parameter
+    parameter.name = name
+    parameter.type = type
+    return parameter
+}
+
 IR_Struct_Type :: struct : IR_Type {
     base_type: @IR_Struct_Type
     members: @List
     statement: @AST_Struct_Statement
 }
 
-IR_Struct_Type_Member :: struct : Object {
+IR_Struct_Type_Member :: struct {
     struct_type: @IR_Struct_Type
     name: @String
     type: @IR_Type
@@ -342,8 +379,8 @@ is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
     if (self.is(IR_Jump_Instruction) || self.is(IR_Return_Instruction)) {
         return true
     }
-    if (self.is(IR_Call_Instruction)) {
-        self := self as @IR_Call_Instruction
+    if (self.is(IR_Direct_Call_Instruction)) {
+        self := self as @IR_Direct_Call_Instruction
         function := self.function
         if (function.name.equals("abort")) {
             return true
@@ -359,22 +396,52 @@ is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
 }
 
 IR_Call_Instruction :: struct : IR_Instruction {
-    function: @IR_Function
-    arguments: @List
+    arguments_size: Int
 }
 
-create_ir_call_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function, arguments: @List) -> @IR_Call_Instruction {
-    instruction := new IR_Call_Instruction
-    instruction.init(result_value)
-    instruction.function = function
-    instruction.arguments = instruction.operand_values
+init :: (self: @IR_Call_Instruction, result_value: @IR_Variable_Value, arguments: @List) -> @IR_Call_Instruction {
+    self.init(result_value)
+    self.arguments_size = arguments.size
     arguments := arguments.create_iterator()
     while (arguments.has_next()) {
         value := arguments.next() as @IR_Value
-        instruction.operand_values.append(value)
-        value.user_instructions.append(instruction)
+        self.operand_values.append(value)
+        value.user_instructions.append(self)
     }
+    return self
+}
+
+argument :: (self: @IR_Call_Instruction, index: Int) -> @IR_Value {
+    if (index >= self.arguments_size) {
+        return null
+    }
+    return self.operand_values.get(index) as @IR_Value
+}
+
+IR_Direct_Call_Instruction :: struct : IR_Call_Instruction {
+    function: @IR_Function
+}
+
+create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, arguments: @List, function: @IR_Function) -> @IR_Call_Instruction {
+    instruction := new IR_Direct_Call_Instruction
+    instruction.init(result_value, arguments)
+    instruction.function = function
     return instruction
+}
+
+IR_Dynamic_Call_Instruction :: struct : IR_Call_Instruction {
+}
+
+create_ir_dynamic_call_instruction :: (result_value: @IR_Variable_Value, arguments: @List, function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
+    instruction := new IR_Dynamic_Call_Instruction
+    instruction.init(result_value, arguments)
+    instruction.operand_values.append(function_address)
+    function_address.user_instructions.append(instruction)
+    return instruction
+}
+
+function_address :: (self: @IR_Dynamic_Call_Instruction) -> @IR_Variable_Value {
+    return self.operand_values.last() as @IR_Variable_Value
 }
 
 IR_Cast_Instruction :: struct : IR_Instruction {
@@ -427,6 +494,17 @@ get_array_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
 
 get_index_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.last() as @IR_Value
+}
+
+IR_Load_Function_Address_Instruction :: struct : IR_Instruction {
+    function: @IR_Function
+}
+
+create_ir_load_function_address_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function) -> @IR_Load_Function_Address_Instruction {
+    instruction := new IR_Load_Function_Address_Instruction
+    instruction.init(result_value)
+    instruction.function = function
+    return instruction
 }
 
 IR_Load_Struct_Member_Instruction :: struct : IR_Instruction {
