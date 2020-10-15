@@ -396,16 +396,20 @@ create_function :: (self: @IR_Builder, function_statement: @AST_Function_Stateme
     function.is_external = function_statement.body == null
 
     parameters := function_statement.type.parameters.create_iterator()
+    function_type_parameters := create_list()
     while (parameters.has_next()) {
         parameter := parameters.next() as @AST_Function_Parameter
         parameter_type := self.convert_value_type(parameter.type)
         parameter_name := parameter.name.lexeme
         function_parameter := new IR_Function_Parameter.init(parameter_name, parameter_type) as @IR_Function_Parameter
         function.parameters.append(function_parameter)
+        function_type_parameters.append(create_ir_function_type_parameter(parameter_name, parameter_type))
     }
 
     function_statement.ir_function = function
     self.named_functions.append(function)
+
+    function.type = create_ir_function_type(function_type_parameters, function.return_type)
 
     return function
 }
@@ -839,6 +843,8 @@ convert_expression :: (self: @IR_Builder, expression: @AST_Expression, expected_
         value = self.convert_add_expression(expression as @AST_Add_Expression)
     } else if (expression.is(AST_Array_Access_Expression)) {
         value = self.convert_array_access_expression(expression as @AST_Array_Access_Expression)
+    } else if (expression.is(AST_Atomic_Expression)) {
+        value = self.convert_expression((expression as @AST_Atomic_Expression).expression, expected_type)
     } else if (expression.is(AST_Call_Expression)) {
         value = self.convert_call_expression(expression as @AST_Call_Expression)
     } else if (expression.is(AST_Cast_Expression)) {
@@ -917,6 +923,13 @@ convert_array_access_expression :: (self: @IR_Builder, array_access_expression: 
 }
 
 convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression) -> @IR_Value {
+    if (call_expression.callee.is(AST_Atomic_Expression)) {
+        callee_value := self.convert_expression(call_expression.callee, null)
+        if (callee_value.type.is(IR_Function_Type) == false) {
+            abort(call_expression.location, clone("Values of type ").append(callee_value.type.name).append(" are not callable"))
+        }
+        return self.convert_dynamic_call_expression(call_expression, callee_value, null)
+    }
     if (call_expression.callee.is(AST_Member_Access_Expression)) {
         callee := call_expression.callee as @AST_Member_Access_Expression
         callee_value := self.convert_expression(callee.object_expression, null)
@@ -926,79 +939,87 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expres
             if (callee_value_type.pointed_type.is(IR_Struct_Type)) {
                 struct_type_member := (callee_value_type.pointed_type as @IR_Struct_Type).get_member(callee.member_name.lexeme)
                 if (struct_type_member != null && struct_type_member.type.is(IR_Function_Type)) {
-                    call_function_type := struct_type_member.type as @IR_Function_Type
-                    call_arguments := create_list()
-                    call_function_type_parameters := call_function_type.parameters.create_iterator()
-                    if (call_function_type_parameters.has_next() && (call_function_type.parameters.first() as @IR_Function_Type_Parameter).type.accepts(callee_value_type)) {
-                        call_arguments.append(callee_value)
-                        call_function_type_parameters.next()
-                    }
-                    call_expression_arguments := call_expression.arguments.create_iterator()
-                    while (call_function_type_parameters.has_next() && call_expression_arguments.has_next()) {
-                        call_function_type_parameter := call_function_type_parameters.next() as @IR_Function_Type_Parameter
-                        call_expression_argument := call_expression_arguments.next() as @AST_Expression
-                        call_argument := self.convert_expression(call_expression_argument, call_function_type_parameter.type)
-                        call_arguments.append(call_argument)
-                    }
-                    if (call_function_type_parameters.has_next()) {
-                        abort(call_expression.location, "Too few arguments")
-                    }
-                    if (call_expression_arguments.has_next()) {
-                        abort(call_expression.location, "Too many arguments")
-                    }
                     call_function_value := self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), callee_value, struct_type_member, false), call_expression.location)
-                    result_value: @IR_Variable_Value = null
-                    if (call_function_type.return_type.is(IR_Nothing_Type) == false) {
-                        result_value = self.create_temp_value(call_function_type.return_type)
-                    }
-                    return self.append(create_ir_dynamic_call_instruction(result_value, call_arguments, call_function_value), call_expression.location)
+                    return self.convert_dynamic_call_expression(call_expression, call_function_value, callee_value)
                 }
             }
         }
-        call_arguments := create_list()
-        call_argument_types := create_list()
-        first_argument := callee_value
-        call_arguments.append(first_argument)
-        call_argument_types.append(first_argument.type)
-        call_expression_arguments := call_expression.arguments.create_iterator()
-        while (call_expression_arguments.has_next()) {
-            call_expression_argument := call_expression_arguments.next() as @AST_Expression
-            call_argument := self.convert_expression(call_expression_argument, null)
-            call_arguments.append(call_argument)
-            call_argument_types.append(call_argument.type)
-        }
-        call_function := self.get_named_function(callee.member_name, call_argument_types)
-        if (call_function == null) {
-            abort(callee.member_name.location, clone("No such function: ").append(callee.member_name.lexeme))
-        }
-        result_value: @IR_Variable_Value = null
-        if (call_function.return_type.is(IR_Nothing_Type) == false) {
-            result_value = self.create_temp_value(call_function.return_type)
-        }
-        return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
+        return self.convert_direct_call_expression(call_expression, callee.member_name, callee_value)
     }
     if (call_expression.callee.is(AST_Variable_Expression)) {
         callee := call_expression.callee as @AST_Variable_Expression
-        call_arguments := create_list()
-        call_argument_types := create_list()
-        call_expression_arguments := call_expression.arguments.create_iterator()
-        while (call_expression_arguments.has_next()) {
-            call_expression_argument := call_expression_arguments.next() as @AST_Expression
-            call_argument := self.convert_expression(call_expression_argument, null)
-            call_arguments.append(call_argument)
-            call_argument_types.append(call_argument.type)
-        }
-        call_function := self.get_named_function(callee.name, call_argument_types)
-        if (call_function == null) {
-            abort(callee.name.location, clone("No such function: ").append(callee.name.lexeme))
-        }
-        result_value: @IR_Variable_Value = null
-        if (call_function.return_type.is(IR_Nothing_Type) == false) {
-            result_value = self.create_temp_value(call_function.return_type)
-        }
-        return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
+        return self.convert_direct_call_expression(call_expression, callee.name, null)
     }
     abort(call_expression.location, call_expression.callee.object_type)
+}
+
+convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, call_function_name: @Identifier_Token, first_argument: @IR_Value) -> @IR_Value {
+    call_arguments := self.convert_call_arguments(call_expression)
+    if (first_argument != null) {
+        call_arguments.prepend(first_argument)
+    }
+
+    call_function: @IR_Function = null
+    named_functions_item := self.named_functions.first_item
+    while (named_functions_item != null) {
+        named_function := named_functions_item.data as @IR_Function
+        if (named_function.name.equals(call_function_name.lexeme)) {
+            if (named_function.type.accepts(call_arguments)) {
+                if (call_function != null) {
+                    abort(call_expression.location, "Found at least two matching functions")
+                }
+                call_function = named_function
+            }
+        }
+        named_functions_item = named_functions_item.next_item
+    }
+    if (call_function == null) {
+        abort(call_expression.location, "Found no matching function")
+    }
+
+    result_value: @IR_Variable_Value = null
+    if (call_function.return_type.is(IR_Nothing_Type) == false) {
+        result_value = self.create_temp_value(call_function.return_type)
+    }
+    return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
+}
+
+convert_dynamic_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, call_function: @IR_Value, first_argument: @IR_Value) -> @IR_Value {
+    call_arguments := self.convert_call_arguments(call_expression)
+    if (first_argument != null) {
+        call_arguments.prepend(first_argument)
+    }
+    call_function_type := call_function.type as @IR_Function_Type
+    if (call_function_type.accepts(call_arguments) == false) {
+        abort(call_expression.location, "Unsupported arguments")
+    }
+    result_value: @IR_Variable_Value = null
+    if (call_function_type.return_type.is(IR_Nothing_Type) == false) {
+        result_value = self.create_temp_value(call_function_type.return_type)
+    }
+    return self.append(create_ir_dynamic_call_instruction(result_value, call_arguments, call_function as @IR_Variable_Value), call_expression.location)
+}
+
+accepts :: (self: @IR_Function_Type, call_arguments: @List) -> Boolean {
+    call_arguments_item := call_arguments.first_item
+    function_parameters_item := self.parameters.first_item
+    while (call_arguments_item != null && function_parameters_item != null && (function_parameters_item.data as @IR_Function_Type_Parameter).type.accepts((call_arguments_item.data as @IR_Value).type)) {
+        call_arguments_item = call_arguments_item.next_item
+        function_parameters_item = function_parameters_item.next_item
+    }
+    return call_arguments_item == null && function_parameters_item == null
+}
+
+convert_call_arguments :: (self: @IR_Builder, call_expression: @AST_Call_Expression) -> @List {
+    call_arguments := create_list()
+    call_arguments_item := call_expression.arguments.first_item
+    while (call_arguments_item != null) {
+        call_argument_expresion := call_arguments_item.data as @AST_Expression
+        call_argument_value := self.convert_expression(call_argument_expresion, null)
+        call_arguments.append(call_argument_value)
+        call_arguments_item = call_arguments_item.next_item
+    }
+    return call_arguments
 }
 
 convert_cast_expression :: (self: @IR_Builder, cast_expression: @AST_Cast_Expression) -> @IR_Value {

@@ -255,6 +255,17 @@ AST_Expression :: struct : Object {
     location: @Source_Location
 }
 
+AST_Atomic_Expression :: struct : AST_Expression {
+    expression: @AST_Expression
+}
+
+create_ast_atomic_expression :: (location: @Source_Location, expression: @AST_Expression) -> @AST_Atomic_Expression {
+    result := new AST_Atomic_Expression
+    result.location = location
+    result.expression = expression
+    return result
+}
+
 AST_Literal_Expression :: struct : AST_Expression {
     literal: @Literal_Token
 }

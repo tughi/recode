@@ -724,12 +724,12 @@ parse_primary_expression :: (self: @Parser) -> @AST_Expression {
         return create_ast_literal_expression(self.consume(self.required_literal) as @Literal_Token)
     }
     if (self.matches(self.required_open_paren)) {
-        self.consume(self.required_open_paren)
+        location := self.consume(self.required_open_paren).location
         self.consume_space(0)
         expression := self.parse_expression()
         self.consume_space(0)
         self.consume(self.required_close_paren)
-        return expression
+        return create_ast_atomic_expression(location, expression)
     }
     if (self.matches(self.required_new)) {
         token := self.consume(self.required_new)

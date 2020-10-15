@@ -307,6 +307,7 @@ IR_Function :: struct : Object {
     name: @String
     parameters: @List
     return_type: @IR_Type
+    type: @IR_Function_Type
     is_external: Boolean
     blocks: @List
 }
