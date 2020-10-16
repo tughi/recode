@@ -159,14 +159,16 @@ AST_Struct_Statement :: struct : AST_Statement {
     name: @Identifier_Token
     base_type: @AST_Type
     members: @List
+    default_init_arguments: @List
 }
 
-create_ast_struct_statement :: (name: @Identifier_Token, base_type: @AST_Type, members: @List) -> @AST_Struct_Statement {
+create_ast_struct_statement :: (name: @Identifier_Token, base_type: @AST_Type, members: @List, default_init_arguments: @List) -> @AST_Struct_Statement {
     statement := new AST_Struct_Statement
     statement.location = name.location
     statement.name = name
     statement.base_type = base_type
     statement.members = members
+    statement.default_init_arguments = default_init_arguments
     return statement
 }
 
@@ -182,6 +184,18 @@ create_ast_struct_member :: (name: @Identifier_Token, type: @AST_Type) -> @AST_S
     struct_member.name = name
     struct_member.type = type
     return struct_member
+}
+
+AST_Init_Argument :: struct {
+    name: @Identifier_Token
+    value_expression: @AST_Expression
+}
+
+create_ast_init_argument :: (name: @Identifier_Token, value_expression: @AST_Expression) -> @AST_Init_Argument {
+    argument := new AST_Init_Argument
+    argument.name = name
+    argument.value_expression = value_expression
+    return argument
 }
 
 AST_Assignment_Statement :: struct : AST_Statement {

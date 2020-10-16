@@ -297,60 +297,83 @@ parse_include :: (self: @Parser) -> @AST_Include_Statement {
 }
 
 \ struct
-\   : "struct" ( ":" IDENTIFIER )? ( "{" <EOL> struct_members "}" )?
+\   : "struct" ( ":" IDENTIFIER ( "(" init_argument ( "," init_argument )* ")" )? )? ( "{" <EOL> ( IDENTIFIER ":" type ( "=" expression )? <EOL> )* "}" )?
 parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statement {
-    if (name_expression.is(AST_Variable_Expression)) {
-        struct_name := (name_expression as @AST_Variable_Expression).name
-        self.consume(self.required_struct)
-        base_type: @AST_Type
-        if (self.matches(self.optional_space, self.required_colon)) {
-            self.consume_space(1)
-            self.consume(self.required_colon)
-            self.consume_space(1)
-            base_type = self.parse_type()
-        } else {
-            base_type = null
-        }
-        struct_members: @List
-        if (self.matches(self.optional_space, self.required_open_brace)) {
-            struct_members = create_list()
-            self.consume_space(1)
-            self.consume(self.required_open_brace)
-            self.consume_end_of_line()
-            self.current_alignment = self.current_alignment + 1
-            self.parse_struct_members(struct_members)
-            self.current_alignment = self.current_alignment - 1
-            self.consume_space(self.current_alignment * 4)
-            self.consume(self.required_close_brace)
-        } else {
-            struct_members = null
-        }
-        struct_statement := create_ast_struct_statement(struct_name, base_type, struct_members)
-        self.compilation_unit.types.append(struct_statement)
-        return struct_statement
+    if (name_expression.is(AST_Variable_Expression) == false) {
+        abort(name_expression.location, "Cannot use expression as struct name")
     }
-    abort(name_expression.location, "Cannot use expression as struct name")
+    struct_name := (name_expression as @AST_Variable_Expression).name
+    struct_default_init_arguments := create_list()
+    self.consume(self.required_struct)
+    base_type: @AST_Type = null
+    if (self.matches(self.optional_space, self.required_colon)) {
+        self.consume_space(1)
+        self.consume(self.required_colon)
+        self.consume_space(1)
+        base_type = self.parse_type()
+        if (self.matches(self.optional_space, self.required_open_paren)) {
+            self.consume_space(0)
+            self.consume(self.required_open_paren)
+            struct_default_init_arguments.append(self.parse_init_argument())
+            while (self.matches(self.optional_space, self.required_comma)) {
+                self.consume_space(0)
+                self.consume(self.required_comma)
+                self.consume_space(1)
+                struct_default_init_arguments.append(self.parse_init_argument())
+            }
+            self.consume_space(0)
+            self.consume(self.required_close_paren)
+        }
+    }
+    struct_members: @List = null
+    if (self.matches(self.optional_space, self.required_open_brace)) {
+        self.consume_space(1)
+        self.consume(self.required_open_brace)
+        self.consume_end_of_line()
+        self.current_alignment = self.current_alignment + 1
+
+        struct_members = create_list()
+        loop {
+            if (self.consume_empty_line() == false) {
+                if (self.matches(self.optional_space, self.required_identifier)) {
+                    self.consume_space(self.current_alignment * 4)
+                    struct_member_name := self.consume(self.required_identifier) as @Identifier_Token
+                    self.consume_space(0)
+                    self.consume(self.required_colon)
+                    self.consume_space(1)
+                    struct_member_value_type := self.parse_type()
+                    if (self.matches(self.optional_space, self.required_equals)) {
+                        self.consume_space(1)
+                        self.consume(self.required_equals)
+                        self.consume_space(1)
+                        value_expression := self.parse_expression()
+                        struct_default_init_arguments.append(create_ast_init_argument(struct_member_name, value_expression))
+                    }
+                    struct_members.append(create_ast_struct_member(struct_member_name, struct_member_value_type))
+                } else {
+                    break
+                }
+            }
+        }
+
+        self.current_alignment = self.current_alignment - 1
+        self.consume_space(self.current_alignment * 4)
+        self.consume(self.required_close_brace)
+    }
+    struct_statement := create_ast_struct_statement(struct_name, base_type, struct_members, struct_default_init_arguments)
+    self.compilation_unit.types.append(struct_statement)
+    return struct_statement
 }
 
-\ struct_members
-\   : ( IDENTIFIER ":" type <EOL> )*
-parse_struct_members :: (self: @Parser, struct_members: @List) -> Nothing {
-    loop {
-        while (self.consume_empty_line()) {
-        }
-
-        if (self.matches(self.optional_space, self.required_identifier)) {
-            self.consume_space(self.current_alignment * 4)
-            member_name := self.consume(self.required_identifier) as @Identifier_Token
-            self.consume_space(0)
-            self.consume(self.required_colon)
-            self.consume_space(1)
-            member_value_type := self.parse_type()
-            struct_members.append(create_ast_struct_member(member_name, member_value_type))
-        } else {
-            break
-        }
-    }
+\ init_argument
+\   : IDENTIFIER "=" expression
+parse_init_argument :: (self: @Parser) -> @AST_Init_Argument {
+    name := self.consume(self.required_identifier) as @Identifier_Token
+    self.consume_space(1)
+    self.consume(self.required_equals)
+    self.consume_space(1)
+    value_expression := self.parse_expression()
+    return create_ast_init_argument(name, value_expression)
 }
 
 \ function
@@ -715,7 +738,7 @@ parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
 \   | "false"
 \   | "true"
 \   | "(" expression ")"
-\   | "new" type
+\   | "new" type ( "(" init_argument ( "," init_argument )* ")" )?
 parse_primary_expression :: (self: @Parser) -> @AST_Expression {
     if (self.matches(self.required_identifier)) {
         return create_ast_variable_expression(self.consume(self.required_identifier) as @Identifier_Token)
@@ -735,6 +758,20 @@ parse_primary_expression :: (self: @Parser) -> @AST_Expression {
         token := self.consume(self.required_new)
         self.consume_space(1)
         type := self.parse_type()
+        init_arguments := create_list()
+        if (self.matches(self.optional_space, self.required_open_paren)) {
+            self.consume_space(0)
+            self.consume(self.required_open_paren)
+            init_arguments.append(self.parse_init_argument())
+            while (self.matches(self.optional_space, self.required_comma)) {
+                self.consume_space(0)
+                self.consume(self.required_comma)
+                self.consume_space(1)
+                init_arguments.append(self.parse_init_argument())
+            }
+            self.consume_space(0)
+            self.consume(self.required_close_paren)
+        }
         return create_ast_new_expression(token.location, type)
     }
     return null
