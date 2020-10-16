@@ -79,7 +79,9 @@ def examples():
             print()
             exit(1)
         execute(f'gcc -g -o build/examples/{example[:-5]} build/examples/{example[:-5]}.s', echo=True)
-        execute(f'build/examples/{example[:-5]}', echo=True)
+        if execute(f'build/examples/{example[:-5]}', exit_on_error=False, echo=True) != 0:
+            subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run &> /dev/null' -ex=bt -ex=quit --args build/examples/{example[:-5]}''', shell=True)
+            exit(1)
 
 
 def build():
