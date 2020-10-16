@@ -39,6 +39,9 @@ IR_Nothing_Type :: struct : IR_Type {
 IR_Null_Type :: struct : IR_Type {
 }
 
+IR_Undefined_Type :: struct : IR_Type {
+}
+
 IR_Pointer_Type :: struct : IR_Type {
     pointed_type: @IR_Type
 }

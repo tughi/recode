@@ -1,5 +1,5 @@
 String :: struct {
-    data: @Int8
-    data_size: Int
-    length: Int
+    data: @Int8 = undefined
+    data_size: Int = undefined
+    length: Int = undefined
 }

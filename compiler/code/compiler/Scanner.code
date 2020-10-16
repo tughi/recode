@@ -230,6 +230,9 @@ scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location:
     if (token_lexeme.equals("true")) {
         return create_boolean_token(token_lexeme, token_location, true)
     }
+    if (token_lexeme.equals("undefined")) {
+        return create_undefined_token(token_lexeme, token_location)
+    }
     if (token_lexeme.equals("while")) {
         return create_keyword_token(token_lexeme, token_location)
     }

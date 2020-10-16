@@ -731,6 +731,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         } else if (ir_value.literal.is(String_Token)) {
             mc_string := self.convert_string(ir_value.literal as @String_Token)
             self.output_file.write("  lea ").write(register.name_q).write(", ").write_string_label(mc_string).write("[rip]").write(" # ").write(mc_string.literal.lexeme).end_line()
+        } else if (ir_value.literal.is(Undefined_Token)) {
+            \ do nothing
         } else {
             self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
         }

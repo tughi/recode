@@ -51,6 +51,7 @@ create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
     builder.named_types.append(new IR_Int64_Type.init("Int64"))
     builder.named_types.append(new IR_Nothing_Type.init("Nothing"))
     builder.named_types.append(new IR_Null_Type.init("Null"))
+    builder.named_types.append(new IR_Undefined_Type.init("Undefined"))
     builder.named_functions = create_list()
     builder.current_block = null
     builder.current_loop = null
@@ -204,7 +205,7 @@ get_named_function :: (self: @IR_Builder, name: @String, function_type: @IR_Func
 }
 
 accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
-    if (self == other) {
+    if (self == other || other.is(IR_Undefined_Type)) {
         return true
     }
     if (self.is(IR_Pointer_Type)) {
@@ -810,7 +811,7 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Varia
         }
         variable_type = variable_value.type
     }
-    if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type)) {
+    if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type) || variable_type.is(IR_Undefined_Type)) {
         abort(variable_statement.location, clone("Invalid variable type: ").append(variable_type.name))
     }
     variable := new IR_Variable.init(variable_name, variable_type)
@@ -1118,6 +1119,9 @@ convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expre
     if (expression.literal.is(String_Token)) {
         return create_ir_constant_value(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
     }
+    if (expression.literal.is(Undefined_Token)) {
+        return create_ir_constant_value(self.get_named_type("Undefined"), expression.literal)
+    }
     abort(expression.location, expression.literal.object_type)
 }
 
@@ -1228,7 +1232,9 @@ convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -
                     stderr.write(expression.location).write(": Uninitialized struct member: ").write(type.name).write('.').write(struct_member.name).end_line()
                 } else {
                     struct_member_value := self.convert_expression(init_argument.value_expression, struct_member.type)
-                    self.append(create_ir_store_struct_member_instruction(result_value, struct_member, struct_member_value), init_argument.value_expression.location)
+                    if (struct_member_value.type.is(IR_Undefined_Type) == false) {
+                        self.append(create_ir_store_struct_member_instruction(result_value, struct_member, struct_member_value), init_argument.value_expression.location)
+                    }
                 }
                 struct_members_item = struct_members_item.next_item
             }

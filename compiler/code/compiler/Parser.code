@@ -737,6 +737,7 @@ parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
 \   | "null"
 \   | "false"
 \   | "true"
+\   | "undefined"
 \   | "(" expression ")"
 \   | "new" type ( "(" init_argument ( "," init_argument )* ")" )?
 parse_primary_expression :: (self: @Parser) -> @AST_Expression {
@@ -1009,7 +1010,7 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
         return token.is(String_Token)
     }
     if (self.is(Literal_Matcher)) {
-        return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token)
+        return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token) || token.is(Undefined_Token)
     }
     if (self.is(End_Of_Line_Matcher)) {
         return token.is(End_Of_Line_Token)

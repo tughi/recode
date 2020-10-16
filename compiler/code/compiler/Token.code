@@ -142,3 +142,12 @@ create_string_token :: (lexeme: @String, location: @Source_Location, value: @Str
     token.value = value
     return token
 }
+
+Undefined_Token :: struct : Literal_Token {
+}
+
+create_undefined_token :: (lexeme: @String, location: @Source_Location) -> @Undefined_Token {
+    token := new Undefined_Token
+    token.init(lexeme, location)
+    return token
+}
