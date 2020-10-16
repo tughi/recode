@@ -772,7 +772,7 @@ parse_primary_expression :: (self: @Parser) -> @AST_Expression {
             self.consume_space(0)
             self.consume(self.required_close_paren)
         }
-        return create_ast_new_expression(token.location, type)
+        return create_ast_new_expression(token.location, type, init_arguments)
     }
     return null
 }

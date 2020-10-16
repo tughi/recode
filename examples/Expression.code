@@ -1,0 +1,42 @@
+Expression :: struct {
+    evaluate: (self: @Expression) -> Int = null
+}
+
+Int_Expression :: struct : Expression(evaluate = evaluate_int) {
+    value: Int
+}
+
+evaluate_int :: (self: @Expression) -> Int {
+    self := self as @Int_Expression
+    return self.value
+}
+
+Binary_Expression :: struct : Expression {
+    left_expression: @Expression
+    right_expression: @Expression
+}
+
+Addition_Expression :: struct : Binary_Expression(evaluate = evaluate_addition) {
+}
+
+evaluate_addition :: (self: @Expression) -> Int {
+    self := self as @Addition_Expression
+    return self.left_expression.evaluate() + self.right_expression.evaluate()
+}
+
+Substraction_Expression :: struct : Binary_Expression(evaluate = evaluate_substraction) {
+}
+
+evaluate_substraction :: (self: @Expression) -> Int {
+    self := self as @Substraction_Expression
+    return self.left_expression.evaluate() - self.right_expression.evaluate()
+}
+
+main :: () -> Int {
+    one := new Int_Expression(value = 1)
+    two := new Int_Expression(value = 2)
+    three := new Int_Expression(value = 3)
+    expression := new Addition_Expression(left_expression = one, right_expression = two)
+    expression := new Substraction_Expression(left_expression = three, right_expression = expression)
+    return expression.evaluate()
+}

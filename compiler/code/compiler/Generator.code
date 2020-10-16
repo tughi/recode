@@ -650,20 +650,26 @@ generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @
             self.map_variable_value(ir_value, register)
         }
     }
-    ir_value_type_size := self.get_type_size(ir_value.type)
-    self.output_file.write("  mov ")
-    if (ir_value_type_size == 8) {
-        self.output_file.write("QWORD PTR ")
-    } else if (ir_value_type_size == 4) {
-        self.output_file.write("DWORD PTR ")
-    } else if (ir_value_type_size == 2) {
-        self.output_file.write("WORD PTR ")
-    } else if (ir_value_type_size == 1) {
-        self.output_file.write("BYTE PTR ")
+    if (ir_value.is(IR_Constant_Value) && (ir_value as @IR_Constant_Value).literal.is(String_Token)) {
+        register := self.find_unused_register()
+        self.generate_load_value(register, ir_value)
+        self.output_file.write("  mov [").write(address_register.name_q).write("], ").write(register.name_q).end_line()
     } else {
-        self.abort("Invalid state")
+        ir_value_type_size := self.get_type_size(ir_value.type)
+        self.output_file.write("  mov ")
+        if (ir_value_type_size == 8) {
+            self.output_file.write("QWORD PTR ")
+        } else if (ir_value_type_size == 4) {
+            self.output_file.write("DWORD PTR ")
+        } else if (ir_value_type_size == 2) {
+            self.output_file.write("WORD PTR ")
+        } else if (ir_value_type_size == 1) {
+            self.output_file.write("BYTE PTR ")
+        } else {
+            self.abort("Invalid state")
+        }
+        self.output_file.write('[').write(address_register.name_q).write("], ").write_operand(self, ir_value).end_line()
     }
-    self.output_file.write('[').write(address_register.name_q).write(']').write(", ").write_operand(self, ir_value).end_line()
     address_register.is_reserved = false
 }
 
