@@ -231,6 +231,11 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
         }
         return false
     }
+    if (self.is(IR_Function_Type)) {
+        if (other.is(IR_Null_Type)) {
+            return true
+        }
+    }
     return false
 }
 
@@ -1216,57 +1221,79 @@ convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -
         size_value := self.convert_expression(type.size_expression, self.get_named_type("Int"))
         return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type.pointed_type)), type.pointed_type, size_value), expression.location)
     }
-    result_value := self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null), expression.location)
     if (type.is(IR_Struct_Type)) {
         type := type as @IR_Struct_Type
+
+        \ prepare struct member values
+        struct_member_values := create_list()
+        init_arguments := expression.init_arguments.first_item
+        while (init_arguments != null) {
+            self.convert_init_argument(init_arguments.data as @AST_Init_Argument, type, struct_member_values)
+            init_arguments = init_arguments.next_item
+        }
+        base_type := type
+        while (base_type != null) {
+            init_arguments := base_type.statement.init_arguments.first_item
+            while (init_arguments != null) {
+                self.convert_init_argument(init_arguments.data as @AST_Init_Argument, type, struct_member_values)
+                init_arguments = init_arguments.next_item
+            }
+            base_type = base_type.base_type
+        }
+
+        result_value := self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null), expression.location)
+
+        \ apply struct member values
         base_type := type
         while (base_type != null) {
             struct_members_item := base_type.members.first_item
             while (struct_members_item != null) {
                 struct_member := struct_members_item.data as @IR_Struct_Type_Member
-                init_argument := expression.get_init_argument(struct_member.name)
-                if (init_argument == null) {
-                    init_argument = type.get_init_argument(struct_member.name)
-                }
-                if (init_argument == null) {
+                struct_member_value := struct_member_values.get(struct_member)
+                if (struct_member_value == null) {
                     stderr.write(expression.location).write(": Uninitialized struct member: ").write(type.name).write('.').write(struct_member.name).end_line()
                 } else {
-                    struct_member_value := self.convert_expression(init_argument.value_expression, struct_member.type)
-                    if (struct_member_value.type.is(IR_Undefined_Type) == false) {
-                        self.append(create_ir_store_struct_member_instruction(result_value, struct_member, struct_member_value), init_argument.value_expression.location)
+                    if (struct_member_value.value.type.is(IR_Undefined_Type) == false) {
+                        self.append(create_ir_store_struct_member_instruction(result_value, struct_member, struct_member_value.value), struct_member_value.value_expression.location)
                     }
                 }
                 struct_members_item = struct_members_item.next_item
             }
             base_type = base_type.base_type
         }
+        return result_value
     }
-    return result_value
+    abort(expression.location, clone("Unsupported type: ").append(type.name))
 }
 
-get_init_argument :: (self: @IR_Struct_Type, name: @String) -> @AST_Init_Argument {
-    init_arguments_item := self.statement.init_arguments.first_item
-    while (init_arguments_item != null) {
-        init_argument := init_arguments_item.data as @AST_Init_Argument
-        if (init_argument.name.lexeme.equals(name)) {
-            return init_argument
-        }
-        init_arguments_item = init_arguments_item.next_item
+convert_init_argument :: (self: @IR_Builder, init_argument: @AST_Init_Argument, type: @IR_Struct_Type, struct_member_values: @List) -> Nothing {
+    struct_member := type.get_member(init_argument.name.lexeme)
+    if (struct_member == null) {
+        abort(init_argument.name.location, clone(type.name).append(" has no such member: ").append(init_argument.name.lexeme))
     }
-    if (self.base_type != null) {
-        return self.base_type.get_init_argument(name)
+    if (struct_member_values.get(struct_member) == null) {
+        struct_member_value := new IR_Struct_Member_Value
+        struct_member_value.struct_member = struct_member
+        struct_member_value.value_expression = init_argument.value_expression
+        struct_member_value.value = self.convert_expression(init_argument.value_expression, struct_member.type)
+        struct_member_values.append(struct_member_value)
     }
-    return null
 }
 
-get_init_argument :: (self: @AST_New_Expression, name: @String) -> @AST_Init_Argument {
-    init_arguments_item := self.init_arguments.first_item
-    while (init_arguments_item != null) {
-        init_argument := init_arguments_item.data as @AST_Init_Argument
-        if (init_argument.name.lexeme.equals(name)) {
-            return init_argument
+IR_Struct_Member_Value :: struct {
+    struct_member: @IR_Struct_Type_Member
+    value_expression: @AST_Expression
+    value: @IR_Value
+}
+
+get :: (list: @List, struct_member: @IR_Struct_Type_Member) -> @IR_Struct_Member_Value {
+    list_item := list.first_item
+    while (list_item != null) {
+        struct_member_value := list_item.data as @IR_Struct_Member_Value
+        if (struct_member_value.struct_member == struct_member) {
+            return struct_member_value
         }
-        init_arguments_item = init_arguments_item.next_item
+        list_item = list_item.next_item
     }
     return null
 }
