@@ -739,7 +739,7 @@ parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
 \   | "true"
 \   | "undefined"
 \   | "(" expression ")"
-\   | "new" type ( "(" init_argument ( "," init_argument )* ")" )?
+\   | "new" type ( "(" ( init_argument ( "," init_argument )* )? ")" )?
 parse_primary_expression :: (self: @Parser) -> @AST_Expression {
     if (self.matches(self.required_identifier)) {
         return create_ast_variable_expression(self.consume(self.required_identifier) as @Identifier_Token)
@@ -763,12 +763,14 @@ parse_primary_expression :: (self: @Parser) -> @AST_Expression {
         if (self.matches(self.optional_space, self.required_open_paren)) {
             self.consume_space(0)
             self.consume(self.required_open_paren)
-            init_arguments.append(self.parse_init_argument())
-            while (self.matches(self.optional_space, self.required_comma)) {
-                self.consume_space(0)
-                self.consume(self.required_comma)
-                self.consume_space(1)
+            if (self.matches(self.optional_space, self.required_identifier)) {
                 init_arguments.append(self.parse_init_argument())
+                while (self.matches(self.optional_space, self.required_comma)) {
+                    self.consume_space(0)
+                    self.consume(self.required_comma)
+                    self.consume_space(1)
+                    init_arguments.append(self.parse_init_argument())
+                }
             }
             self.consume_space(0)
             self.consume(self.required_close_paren)
