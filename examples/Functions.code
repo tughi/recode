@@ -1,0 +1,52 @@
+main :: () -> Int {
+    hello: @Value = create_string_value("Hello")
+    forty_two: @Value = create_int_value(42)
+
+    hello.dump(stdout)
+    (forty_two.dump)(forty_two, ((stdout)))
+
+    dump: (self: @Value, file: @FILE) -> Nothing =  dump_int
+    dump = dump_int
+
+    dump(forty_two, stdout)
+
+    return 0
+}
+
+Value :: struct {
+    dump: (self: @Value, file: @FILE) -> Nothing
+}
+
+Int_Value :: struct : Value {
+    value: Int
+}
+
+create_int_value :: (value: Int) -> @Int_Value {
+    instance := new Int_Value
+    instance.dump = dump_int
+    instance.value = value
+    return instance
+}
+
+dump_int :: (self: @Value, file: @FILE) -> Nothing {
+    self := self as @Int_Value
+    file.write("Int: ").write(self.value).end_line()
+}
+
+String_Value :: struct : Value {
+    value: @String
+}
+
+create_string_value :: (value: @String) -> @String_Value {
+    instance := new String_Value
+    instance.dump = dump_string
+    instance.value = value
+    return instance
+}
+
+dump_string :: (self: @Value, file: @FILE) -> Nothing {
+    self := self as @String_Value
+    file.write("String: ").write(self.value).end_line()
+}
+
+include "./code/io/File.code"

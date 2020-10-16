@@ -784,15 +784,15 @@ convert_return_statement :: (self: @IR_Builder, statement: @AST_Return_Statement
 
 convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
     variable_name := variable_statement.name.lexeme
-    variable_value: @IR_Value
-    if (variable_statement.value_expression != null) {
-        variable_value = self.convert_expression(variable_statement.value_expression, null)
-    } else {
-        variable_value = null
-    }
-    variable_type: @IR_Type
+    variable_type: @IR_Type = null
     if (variable_statement.type != null) {
         variable_type = self.convert_value_type(variable_statement.type)
+    }
+    variable_value: @IR_Value = null
+    if (variable_statement.value_expression != null) {
+        variable_value = self.convert_expression(variable_statement.value_expression, variable_type)
+    }
+    if (variable_type != null) {
         if (variable_value != null) {
             if (variable_type.accepts(variable_value.type) == false) {
                 abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
@@ -948,6 +948,11 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expres
     }
     if (call_expression.callee.is(AST_Variable_Expression)) {
         callee := call_expression.callee as @AST_Variable_Expression
+        variable := self.get_variable(callee.name.lexeme)
+        if (variable != null && variable.type.is(IR_Function_Type)) {
+            call_function_value := self.convert_expression(callee, null)
+            return self.convert_dynamic_call_expression(call_expression, call_function_value, null)
+        }
         return self.convert_direct_call_expression(call_expression, callee.name, null)
     }
     abort(call_expression.location, call_expression.callee.object_type)
