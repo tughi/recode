@@ -40,24 +40,20 @@ The `@?` prefix declares a nullable pointer type.
 
 The value of an `@?Any` variable can be access only after a `null` check.
 
-```
-length :: (self: @?String) -> Int {
-    if (self != null) {
-        return self.length
+    length :: (self: @?String) -> Int {
+        if (self != null) {
+            return self.length
+        }
     }
-}
-```
 
 ## Checked Arrays
 
 An `[Int8]` array has the following in-memory structure:
 
-```
-Int8_Array :: struct {
-    size: Int
-    data: @Int8
-}
-```
+    Int8_Array :: struct {
+        size: Int
+        data: @Int8
+    }
 
 For checked arrays, the compiler makes sure that each access is withing bounds. The program will
 panick if an out of bounds access is detected.
@@ -73,45 +69,36 @@ checked array automatically.
 
 The `String` type has the following structure:
 
-```
-String :: struct {
-    length: Int
-    content: @Int8
-}
-```
+    String :: struct {
+        length: Int
+        content: @Int8
+    }
 
 String literals are global values of type `String`.
 
 ## Structs
 
-```
-Node :: struct {
-    name: String        \ embedded
-    parent: @Node       \ parent node address
-    children: [@Node]   \ checked array of child node addresses
-    type: Int = 42      \ with default value
-}
-```
+    Node :: struct {
+        name: String        \ embedded
+        parent: @Node       \ parent node address
+        children: [@Node]   \ checked array of child node addresses
+        type: Int = 42      \ with default value
+    }
 
-```
-Extended_Node :: struct : Node(type = 7) { \ type has another default value
-    data: @Object       \ checked array of child node addresses
-}
-```
+    Extended_Node :: struct : Node(type = 7) { \ type has another default value
+        data: @Object       \ checked array of child node addresses
+    }
 
-## Objects
+Newly created structs can be initializated using named arguments, which can replace default values.
 
-The `Object` type is a special base type that holds `Object_Type` information.
+    node := new Extended_Node(parent = null, type = 6)
 
-The compiler assignes the associated `Object_Type` when an `Object` is allocated.
+Initilization arguments can be declared also on separate lines.
 
-The `Object` structure looks like this:
-
-```
-Object :: struct {
-    object_type: @Object_Type
-}
-```
+    node := new Extended_Node(
+        parent = null
+        type = 6
+    )
 
 ## Object types
 
@@ -120,57 +107,47 @@ the type.
 
 The `Object_Type` structure looks like this:
 
-```
-Object_Type :: struct {
-    id: Int
-    name: String
-    base_type: @Object_Type
-}
-```
+    Object_Type :: struct {
+        id: Int
+        name: String
+        base_type: @Object_Type
+    }
 
 ## Variables
 
-```
-text: @String = "123"           \ text holds the address to the specified string
-number: Int = text.length + 1   \ number holds the result of the provided expression
-root_node := new Node           \ root_node holds the address of a Node
-```
+    text: @String = "123"           \ text holds the address to the specified string
+    number: Int = text.length + 1   \ number holds the result of the provided expression
+    root_node := new Node           \ root_node holds the address of a Node
 
 The variable names are symbols used by the compiler to know where the value are stored.
 
 ## Functions
 
-```
-max :: (v1: Int, v2: Int) -> Int {
-    if (v1 > v2) {
-        return v1
+    max :: (v1: Int, v2: Int) -> Int {
+        if (v1 > v2) {
+            return v1
+        }
+        return v2
     }
-    return v2
-}
-```
 
 ## Templates
 
 Templates look like functions but they are always inlined where _invoked_.
 
-```
-for_each :: (list: @List, block: (item: @Any, index: Int) => Nothing) => Nothing {
-    index := 0
-    item := list.first_item
-    while (item != null) {
-        block(item.data, index)
-        index = index + 1
-        item = item.next_item
+    for_each :: (list: @List, block: (item: @Any, index: Int) => Nothing) => Nothing {
+        index := 0
+        item := list.first_item
+        while (item != null) {
+            block(item.data, index)
+            index = index + 1
+            item = item.next_item
+        }
     }
-}
-```
 
 If a template has accepts block-parameters, these blocks get inlined within the template's body.
 
 The last block-parameter can be inlined after the template _invocation_.
 
-```
     list.for_each() {
         stdout.write(item)
     }
-```
