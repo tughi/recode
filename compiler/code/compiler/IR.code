@@ -143,12 +143,13 @@ add_member :: (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Stru
 get_member :: (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
     struct_type := self
     loop {
-        members := struct_type.members.create_iterator()
-        while (members.has_next()) {
-            member := members.next() as @IR_Struct_Type_Member
+        members_item := struct_type.members.first_item
+        while (members_item != null) {
+            member := members_item.data as @IR_Struct_Type_Member
             if (member.name.equals(name)) {
                 return member
             }
+            members_item = members_item.next_item
         }
         struct_type = struct_type.base_type
         if (struct_type == null) {
@@ -399,18 +400,31 @@ is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
     return false
 }
 
+IR_Call_Argument :: struct {
+    name: @String
+    value: @IR_Value
+}
+
+create_ir_call_argument :: (name: @String, value: @IR_Value) -> @IR_Call_Argument {
+    argument := new IR_Call_Argument
+    argument.name = name
+    argument.value = value
+    return argument
+}
+
 IR_Call_Instruction :: struct : IR_Instruction {
     arguments_size: Int
 }
 
-init :: (self: @IR_Call_Instruction, result_value: @IR_Variable_Value, arguments: @List) -> @IR_Call_Instruction {
+init :: (self: @IR_Call_Instruction, result_value: @IR_Variable_Value, call_arguments: @List) -> @IR_Call_Instruction {
     self.init(result_value)
-    self.arguments_size = arguments.size
-    arguments := arguments.create_iterator()
-    while (arguments.has_next()) {
-        value := arguments.next() as @IR_Value
-        self.operand_values.append(value)
-        value.user_instructions.append(self)
+    self.arguments_size = call_arguments.size
+    call_arguments_item := call_arguments.first_item
+    while (call_arguments_item != null) {
+        call_argument := call_arguments_item.data as @IR_Call_Argument
+        self.operand_values.append(call_argument.value)
+        call_argument.value.user_instructions.append(self)
+        call_arguments_item = call_arguments_item.next_item
     }
     return self
 }
@@ -426,9 +440,9 @@ IR_Direct_Call_Instruction :: struct : IR_Call_Instruction {
     function: @IR_Function
 }
 
-create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, arguments: @List, function: @IR_Function) -> @IR_Call_Instruction {
+create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function: @IR_Function) -> @IR_Call_Instruction {
     instruction := new IR_Direct_Call_Instruction
-    instruction.init(result_value, arguments)
+    instruction.init(result_value, call_arguments)
     instruction.function = function
     return instruction
 }
@@ -436,9 +450,9 @@ create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, argument
 IR_Dynamic_Call_Instruction :: struct : IR_Call_Instruction {
 }
 
-create_ir_dynamic_call_instruction :: (result_value: @IR_Variable_Value, arguments: @List, function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
+create_ir_dynamic_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
     instruction := new IR_Dynamic_Call_Instruction
-    instruction.init(result_value, arguments)
+    instruction.init(result_value, call_arguments)
     instruction.operand_values.append(function_address)
     function_address.user_instructions.append(instruction)
     return instruction

@@ -297,13 +297,13 @@ parse_include :: (self: @Parser) -> @AST_Include_Statement {
 }
 
 \ struct
-\   : "struct" ( ":" IDENTIFIER ( "(" init_argument ( "," init_argument )* ")" )? )? ( "{" <EOL> ( IDENTIFIER ":" type ( "=" expression )? <EOL> )* "}" )?
+\   : "struct" ( ":" IDENTIFIER ( "(" call_arguments ")" )? )? ( "{" <EOL> ( IDENTIFIER ":" type ( "=" expression )? <EOL> )* "}" )?
 parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statement {
     if (name_expression.is(AST_Variable_Expression) == false) {
         abort(name_expression.location, "Cannot use expression as struct name")
     }
     struct_name := (name_expression as @AST_Variable_Expression).name
-    struct_default_init_arguments := create_list()
+    struct_init_arguments := create_list()
     self.consume(self.required_struct)
     base_type: @AST_Type = null
     if (self.matches(self.optional_space, self.required_colon)) {
@@ -314,13 +314,7 @@ parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statem
         if (self.matches(self.optional_space, self.required_open_paren)) {
             self.consume_space(0)
             self.consume(self.required_open_paren)
-            struct_default_init_arguments.append(self.parse_init_argument())
-            while (self.matches(self.optional_space, self.required_comma)) {
-                self.consume_space(0)
-                self.consume(self.required_comma)
-                self.consume_space(1)
-                struct_default_init_arguments.append(self.parse_init_argument())
-            }
+            self.parse_call_arguments(struct_init_arguments)
             self.consume_space(0)
             self.consume(self.required_close_paren)
         }
@@ -347,7 +341,7 @@ parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statem
                         self.consume(self.required_equals)
                         self.consume_space(1)
                         value_expression := self.parse_expression()
-                        struct_default_init_arguments.append(create_ast_init_argument(struct_member_name, value_expression))
+                        struct_init_arguments.append(create_ast_call_argument(struct_member_name, value_expression))
                     }
                     struct_members.append(create_ast_struct_member(struct_member_name, struct_member_value_type))
                 } else {
@@ -360,20 +354,9 @@ parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statem
         self.consume_space(self.current_alignment * 4)
         self.consume(self.required_close_brace)
     }
-    struct_statement := create_ast_struct_statement(struct_name, base_type, struct_members, struct_default_init_arguments)
+    struct_statement := create_ast_struct_statement(struct_name, base_type, struct_members, struct_init_arguments)
     self.compilation_unit.types.append(struct_statement)
     return struct_statement
-}
-
-\ init_argument
-\   : IDENTIFIER "=" expression
-parse_init_argument :: (self: @Parser) -> @AST_Init_Argument {
-    name := self.consume(self.required_identifier) as @Identifier_Token
-    self.consume_space(1)
-    self.consume(self.required_equals)
-    self.consume_space(1)
-    value_expression := self.parse_expression()
-    return create_ast_init_argument(name, value_expression)
 }
 
 \ function
@@ -718,15 +701,30 @@ parse_access_expression :: (self: @Parser) -> @AST_Expression {
 }
 
 \ call_arguments
-\   : expression ( "," expression )*
+\   : call_argument ( "," call_argument )*
 parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
-    call_arguments.append(self.parse_expression())
+    call_arguments.append(self.parse_call_argument())
     while (self.matches(self.optional_space, self.required_comma)) {
         self.consume_space(0)
         self.consume(self.required_comma)
         self.consume_space(1)
-        call_arguments.append(self.parse_expression())
+        call_arguments.append(self.parse_call_argument())
     }
+}
+
+\ call_argument
+\   : ( IDENTIFIER "=" )? expression
+parse_call_argument :: (self: @Parser) -> @AST_Call_Argument {
+    if (self.matches(self.required_identifier, self.optional_space, self.required_equals)) {
+        name := self.consume(self.required_identifier) as @Identifier_Token
+        self.consume_space(1)
+        self.consume(self.required_equals)
+        self.consume_space(1)
+        value := self.parse_expression()
+        return create_ast_call_argument(name, value)
+    }
+    value := self.parse_expression()
+    return create_ast_call_argument(null, value)
 }
 
 \ primary_expression
@@ -739,7 +737,7 @@ parse_call_arguments :: (self: @Parser, call_arguments: @List) -> Nothing {
 \   | "true"
 \   | "undefined"
 \   | "(" expression ")"
-\   | "new" type ( "(" ( init_argument ( "," init_argument )* )? ")" )?
+\   | "new" type ( "(" call_arguments? ")" )?
 parse_primary_expression :: (self: @Parser) -> @AST_Expression {
     if (self.matches(self.required_identifier)) {
         return create_ast_variable_expression(self.consume(self.required_identifier) as @Identifier_Token)
@@ -759,23 +757,17 @@ parse_primary_expression :: (self: @Parser) -> @AST_Expression {
         token := self.consume(self.required_new)
         self.consume_space(1)
         type := self.parse_type()
-        init_arguments := create_list()
+        call_arguments := create_list()
         if (self.matches(self.optional_space, self.required_open_paren)) {
             self.consume_space(0)
             self.consume(self.required_open_paren)
-            if (self.matches(self.optional_space, self.required_identifier)) {
-                init_arguments.append(self.parse_init_argument())
-                while (self.matches(self.optional_space, self.required_comma)) {
-                    self.consume_space(0)
-                    self.consume(self.required_comma)
-                    self.consume_space(1)
-                    init_arguments.append(self.parse_init_argument())
-                }
+            if (self.matches(self.optional_space, self.required_close_paren) == false) {
+                self.parse_call_arguments(call_arguments)
             }
             self.consume_space(0)
             self.consume(self.required_close_paren)
         }
-        return create_ast_new_expression(token.location, type, init_arguments)
+        return create_ast_new_expression(token.location, type, call_arguments)
     }
     return null
 }
