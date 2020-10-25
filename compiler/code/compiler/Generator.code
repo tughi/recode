@@ -565,12 +565,25 @@ generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Ins
 }
 
 generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
-    result_register := self.find_unused_register()
-    result_value := instruction.get_value()
-    if (result_value.is(IR_Undefined_Value)) {
+    ir_value := instruction.get_value()
+    if (ir_value.is(IR_Undefined_Value)) {
         self.abort(clone("Looks like ").append(instruction.result_value.variable.name).append(" is not properly initialized"))
     }
-    self.generate_load_value(result_register, result_value)
+    result_register: @MC_Register
+    if (ir_value.is(IR_Variable_Value)) {
+        ir_value := ir_value as @IR_Variable_Value
+        mc_value := self.get_value(ir_value)
+        result_register = mc_value.register
+        if (result_register != null) {
+            self.release_register(result_register)
+        } else {
+            result_register = self.find_unused_register()
+            self.generate_load_value(result_register, ir_value)
+        }
+    } else {
+        result_register = self.find_unused_register()
+        self.generate_load_value(result_register, ir_value)
+    }
     self.map_variable_value(instruction.result_value, result_register)
 }
 
@@ -743,6 +756,7 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         if (mc_value == null) {
             self.abort("Invalid state")
         }
+        register.loaded_value = mc_value
         if (mc_value.register != null) {
             if (ir_value_type.is(IR_Boolean_Type)) {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
@@ -1010,13 +1024,16 @@ map_variable_value :: (self: @MC_Generator, ir_variable_value: @IR_Variable_Valu
 map_variable_value :: (self: @MC_Generator, ir_variable_value: @IR_Variable_Value, register: @MC_Register) -> @MC_Value {
     mc_value := self.first_value
     while (mc_value != null && mc_value.ir_variable_value != ir_variable_value) {
+        if (mc_value.ir_variable_value.variable == ir_variable_value.variable && mc_value.register != null) {
+            self.release_register(mc_value.register)
+        }
         mc_value = mc_value.next_value
     }
     if (mc_value == null) {
         self.abort("Invalid state")
     }
     if (register.value != null) {
-        self.abort(clone("Register ").append(register.name_q).append(" already mapped to variable: ").append(register.value.ir_variable_value.variable.name))
+        self.abort(clone("Register ").append(register.name_q).append(" already mapped to variable: ").append(register.value.ir_variable_value.variable.name).append('.').append(register.value.ir_variable_value.version))
     }
     mc_value.register = register
     register.value = mc_value
@@ -1091,24 +1108,27 @@ release_all_registers :: (self: @MC_Generator) -> Nothing {
 release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
     mc_value := register.value
     if (mc_value != null) {
-        persist_value := false
+        if (register.loaded_value != mc_value) {
+            persist_value := false
 
-        ir_value_user_instruction_item := mc_value.ir_variable_value.user_instructions.first_item
-        while (ir_value_user_instruction_item != null) {
-            ir_value_user_instruction := ir_value_user_instruction_item.data as @IR_Instruction
-            if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
-                persist_value = true
-                break
+            ir_value_user_instruction_item := mc_value.ir_variable_value.user_instructions.first_item
+            while (ir_value_user_instruction_item != null) {
+                ir_value_user_instruction := ir_value_user_instruction_item.data as @IR_Instruction
+                if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
+                    persist_value = true
+                    break
+                }
+                ir_value_user_instruction_item = ir_value_user_instruction_item.next_item
             }
-            ir_value_user_instruction_item = ir_value_user_instruction_item.next_item
-        }
 
-        if (persist_value) {
-            self.spill_local_variable(mc_value)
+            if (persist_value) {
+                self.spill_local_variable(mc_value)
+            }
         }
 
         mc_value.register = null
         register.value = null
+        register.loaded_value = null
     }
 }
 
@@ -1183,12 +1203,12 @@ output_live_values :: (self: @MC_Generator) -> Nothing {
     mc_value := self.first_value
     while (mc_value != null) {
         if (mc_value.ir_instruction.is_generated) {
-            self.output_file.write(mc_value.ir_variable_value.variable.name).write('.').write(mc_value.ir_variable_value.version).write(':')
+            self.output_file.write(mc_value.ir_variable_value.variable.name).write('.').write(mc_value.ir_variable_value.version)
             if (mc_value.register != null) {
-                self.output_file.write(mc_value.register.name_q)
+                self.output_file.write(':').write(mc_value.register.name_q)
             }
             if (mc_value.address != null) {
-                self.output_file.write(mc_value.address)
+                self.output_file.write(':').write(mc_value.address)
             }
             self.output_file.write(' ')
         }
@@ -1241,6 +1261,7 @@ MC_Register :: struct : Object {
     name_b: @String
     is_reserved: Boolean
     value: @MC_Value
+    loaded_value: @MC_Value
 }
 
 init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, name_b: @String) -> @MC_Register {
@@ -1250,6 +1271,7 @@ init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, 
     self.name_b = name_b
     self.is_reserved = false
     self.value = null
+    self.loaded_value = null
     return self
 }
 
