@@ -1,21 +1,11 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 Compilation_Unit :: struct {
-    sources: @List
-    types: @List
-    global_variables: @List
-    functions: @List
-    statements: @List
-}
-
-create_compilation_unit :: () -> @Compilation_Unit {
-    compilation_unit := new Compilation_Unit
-    compilation_unit.sources = create_list()
-    compilation_unit.types = create_list()
-    compilation_unit.global_variables = create_list()
-    compilation_unit.functions = create_list()
-    compilation_unit.statements = create_list()
-    return compilation_unit
+    sources: @List = new List()
+    types: @List = new List()
+    global_variables: @List = new List()
+    functions: @List = new List()
+    statements: @List = new List()
 }
 
 AST_Statement :: struct : Object {
@@ -30,17 +20,7 @@ AST_Function_Statement :: struct : AST_Statement {
     name: @Identifier_Token
     type: @AST_Function_Type
     body: @AST_Block_Statement
-    ir_function: @IR_Function
-}
-
-create_ast_function_statement :: (name: @Identifier_Token, type: @AST_Function_Type, body: @AST_Block_Statement) -> @AST_Function_Statement {
-    function_statement := new AST_Function_Statement
-    function_statement.location = name.location
-    function_statement.name = name
-    function_statement.type = type
-    function_statement.body = body
-    function_statement.ir_function = null
-    return function_statement
+    ir_function: @IR_Function = null
 }
 
 AST_Function_Parameter :: struct {
@@ -49,34 +29,12 @@ AST_Function_Parameter :: struct {
     type: @AST_Type
 }
 
-create_ast_function_parameter :: (name: @Identifier_Token, type: @AST_Type) -> @AST_Function_Parameter {
-    function_parameter := new AST_Function_Parameter
-    function_parameter.location = name.location
-    function_parameter.name = name
-    function_parameter.type = type
-    return function_parameter
-}
-
 AST_Block_Statement :: struct : AST_Statement {
     statements: @List
 }
 
-create_ast_block_statement :: (open_brace: @Token, statements: @List) -> @AST_Block_Statement {
-    block_statement := new AST_Block_Statement
-    block_statement.location = open_brace.location
-    block_statement.statements = statements
-    return block_statement
-}
-
 AST_Expression_Statement :: struct : AST_Statement {
     expression: @AST_Expression
-}
-
-create_ast_expression_statement :: (expression: @AST_Expression) -> @AST_Expression_Statement {
-    statement := new AST_Expression_Statement
-    statement.location = expression.location
-    statement.expression = expression
-    return statement
 }
 
 AST_If_Statement :: struct : AST_Statement {
@@ -85,24 +43,8 @@ AST_If_Statement :: struct : AST_Statement {
     false_statement: @AST_Statement
 }
 
-create_ast_if_statement :: (location: @Source_Location, condition_expression: @AST_Expression, true_statement: @AST_Statement, false_statement: @AST_Statement) -> @AST_If_Statement {
-    statement := new AST_If_Statement
-    statement.location = location
-    statement.condition_expression = condition_expression
-    statement.true_statement = true_statement
-    statement.false_statement = false_statement
-    return statement
-}
-
 AST_Loop_Statement :: struct : AST_Statement {
     block: @AST_Block_Statement
-}
-
-create_ast_loop_statement :: (location: @Source_Location, block: @AST_Block_Statement) -> @AST_Loop_Statement {
-    statement := new AST_Loop_Statement
-    statement.location = location
-    statement.block = block
-    return statement
 }
 
 AST_While_Statement :: struct : AST_Statement {
@@ -110,49 +52,18 @@ AST_While_Statement :: struct : AST_Statement {
     block: @AST_Block_Statement
 }
 
-create_ast_while_statement :: (location: @Source_Location, condition_expression: @AST_Expression, block: @AST_Block_Statement) -> @AST_While_Statement {
-    statement := new AST_While_Statement
-    statement.location = location
-    statement.condition_expression = condition_expression
-    statement.block = block
-    return statement
-}
-
 AST_Break_Statement :: struct : AST_Statement {
-}
-
-create_ast_break_statement :: (location: @Source_Location) -> @AST_Break_Statement {
-    statement := new AST_Break_Statement
-    statement.location = location
-    return statement
 }
 
 AST_Return_Statement :: struct : AST_Statement {
     value_expression: @AST_Expression
 }
 
-create_ast_return_statement :: (location: @Source_Location, value_expression: @AST_Expression) -> @AST_Return_Statement {
-    statement := new AST_Return_Statement
-    statement.location = location
-    statement.value_expression = value_expression
-    return statement
-}
-
 AST_Variable_Statement :: struct : AST_Statement {
     name: @Identifier_Token
     type: @AST_Type
-    value_expression: @AST_Expression
-    is_external: Boolean
-}
-
-create_ast_variable_statement :: (name: @Identifier_Token, type: @AST_Type, value_expression: @AST_Expression, is_external: Boolean) -> @AST_Variable_Statement {
-    statement := new AST_Variable_Statement
-    statement.location = name.location
-    statement.name = name
-    statement.type = type
-    statement.value_expression = value_expression
-    statement.is_external = is_external
-    return statement
+    value_expression: @AST_Expression = null
+    is_external: Boolean = false
 }
 
 AST_Struct_Statement :: struct : AST_Statement {
@@ -162,28 +73,10 @@ AST_Struct_Statement :: struct : AST_Statement {
     init_arguments: @List
 }
 
-create_ast_struct_statement :: (name: @Identifier_Token, base_type: @AST_Type, members: @List, init_arguments: @List) -> @AST_Struct_Statement {
-    statement := new AST_Struct_Statement
-    statement.location = name.location
-    statement.name = name
-    statement.base_type = base_type
-    statement.members = members
-    statement.init_arguments = init_arguments
-    return statement
-}
-
 AST_Struct_Member :: struct {
     location: @Source_Location
     name: @Identifier_Token
     type: @AST_Type
-}
-
-create_ast_struct_member :: (name: @Identifier_Token, type: @AST_Type) -> @AST_Struct_Member {
-    struct_member := new AST_Struct_Member
-    struct_member.location = name.location
-    struct_member.name = name
-    struct_member.type = type
-    return struct_member
 }
 
 AST_Assignment_Statement :: struct : AST_Statement {
@@ -192,39 +85,16 @@ AST_Assignment_Statement :: struct : AST_Statement {
     value_expression: @AST_Expression
 }
 
-create_ast_assignment_statement :: (storage_expression: @AST_Expression, operator: @Other_Token, value_expression: @AST_Expression) -> @AST_Assignment_Statement {
-    statement := new AST_Assignment_Statement
-    statement.location = storage_expression.location
-    statement.storage_expression = storage_expression
-    statement.operator = operator
-    statement.value_expression = value_expression
-    return statement
-}
-
 AST_Type :: struct : Object {
-    location: @Source_Location
+    location: @Source_Location = null
 }
 
 AST_Named_Type :: struct : AST_Type {
     name: @Identifier_Token
 }
 
-create_ast_named_type :: (name: @Identifier_Token) -> @AST_Type {
-    type := new AST_Named_Type
-    type.location = name.location
-    type.name = name
-    return type
-}
-
 AST_Pointer_Type :: struct : AST_Type {
     pointed_type: @AST_Type
-}
-
-create_ast_pointer_type :: (location: @Source_Location, pointed_type: @AST_Type) -> @AST_Pointer_Type {
-    type := new AST_Pointer_Type
-    type.location = location
-    type.pointed_type = pointed_type
-    return type
 }
 
 AST_Array_Type :: struct : AST_Type {
@@ -232,25 +102,9 @@ AST_Array_Type :: struct : AST_Type {
     size_expression: @AST_Expression
 }
 
-create_ast_array_type :: (location: @Source_Location, item_type: @AST_Type, size_expression: @AST_Expression) -> @AST_Array_Type {
-    type := new AST_Array_Type
-    type.location = location
-    type.item_type = item_type
-    type.size_expression = size_expression
-    return type
-}
-
 AST_Function_Type :: struct : AST_Type {
     parameters: @List
     return_type: @AST_Type
-}
-
-create_ast_function_type :: (location: @Source_Location, parameters: @List, return_type: @AST_Type) -> @AST_Function_Type {
-    type := new AST_Function_Type
-    type.location = location
-    type.parameters = parameters
-    type.return_type = return_type
-    return type
 }
 
 AST_Expression :: struct : Object {
@@ -261,45 +115,17 @@ AST_Atomic_Expression :: struct : AST_Expression {
     expression: @AST_Expression
 }
 
-create_ast_atomic_expression :: (location: @Source_Location, expression: @AST_Expression) -> @AST_Atomic_Expression {
-    result := new AST_Atomic_Expression
-    result.location = location
-    result.expression = expression
-    return result
-}
-
 AST_Literal_Expression :: struct : AST_Expression {
     literal: @Literal_Token
-}
-
-create_ast_literal_expression :: (literal: @Literal_Token) -> @AST_Literal_Expression {
-    expression := new AST_Literal_Expression
-    expression.location = literal.location
-    expression.literal = literal
-    return expression
 }
 
 AST_Variable_Expression :: struct : AST_Expression {
     name: @Identifier_Token
 }
 
-create_ast_variable_expression :: (name: @Identifier_Token) -> @AST_Variable_Expression {
-    expression := new AST_Variable_Expression
-    expression.location = name.location
-    expression.name = name
-    return expression
-}
-
 AST_Binary_Expression :: struct : AST_Expression {
     left_expression: @AST_Expression
     right_expression: @AST_Expression
-}
-
-init :: (self: @AST_Binary_Expression, left_expression: @AST_Expression, right_expression: @AST_Expression) -> @AST_Binary_Expression {
-    self.location = left_expression.location
-    self.left_expression = left_expression
-    self.right_expression = right_expression
-    return self
 }
 
 AST_Add_Expression :: struct : AST_Binary_Expression {
@@ -345,12 +171,6 @@ AST_Unary_Expression :: struct : AST_Expression {
     expression: @AST_Expression
 }
 
-init :: (self: @AST_Unary_Expression, location: @Source_Location, expression: @AST_Expression) -> @AST_Unary_Expression {
-    self.location = location
-    self.expression = expression
-    return self
-}
-
 AST_Negate_Expression :: struct : AST_Unary_Expression {
 }
 
@@ -359,25 +179,9 @@ AST_Cast_Expression :: struct : AST_Expression {
     type: @AST_Type
 }
 
-create_ast_cast_expression :: (value_expression: @AST_Expression, type: @AST_Type) -> @AST_Cast_Expression {
-    expression := new AST_Cast_Expression
-    expression.location = value_expression.location
-    expression.value_expression = value_expression
-    expression.type = type
-    return expression
-}
-
 AST_New_Expression :: struct : AST_Expression {
     type: @AST_Type
     init_arguments: @List
-}
-
-create_ast_new_expression :: (location: @Source_Location, type: @AST_Type, init_arguments: @List) -> @AST_New_Expression {
-    expression := new AST_New_Expression
-    expression.location = location
-    expression.type = type
-    expression.init_arguments = init_arguments
-    return expression
 }
 
 AST_Call_Expression :: struct : AST_Expression {
@@ -385,24 +189,9 @@ AST_Call_Expression :: struct : AST_Expression {
     arguments: @List
 }
 
-create_ast_call_expression :: (callee: @AST_Expression, arguments: @List) -> @AST_Call_Expression {
-    expression := new AST_Call_Expression
-    expression.location = callee.location
-    expression.callee = callee
-    expression.arguments = arguments
-    return expression
-}
-
 AST_Call_Argument :: struct {
     name: @Identifier_Token
     value_expression: @AST_Expression
-}
-
-create_ast_call_argument :: (name: @Identifier_Token, value_expression: @AST_Expression) -> @AST_Call_Argument {
-    argument := new AST_Call_Argument
-    argument.name = name
-    argument.value_expression = value_expression
-    return argument
 }
 
 AST_Access_Expression :: struct : AST_Expression {
@@ -413,23 +202,7 @@ AST_Member_Access_Expression :: struct : AST_Access_Expression {
     member_name: @Identifier_Token
 }
 
-create_ast_member_access_expression :: (object_expression: @AST_Expression, member_name: @Identifier_Token) -> @AST_Member_Access_Expression {
-    expression := new AST_Member_Access_Expression
-    expression.location = object_expression.location
-    expression.object_expression = object_expression
-    expression.member_name = member_name
-    return expression
-}
-
 AST_Array_Access_Expression :: struct : AST_Access_Expression {
     array_expression: @AST_Expression
     index_expression: @AST_Expression
-}
-
-create_ast_array_access_expression :: (array_expression: @AST_Expression, index_expression: @AST_Expression) -> @AST_Array_Access_Expression {
-    expression := new AST_Array_Access_Expression
-    expression.location = array_expression.location
-    expression.array_expression = array_expression
-    expression.index_expression = index_expression
-    return expression
 }

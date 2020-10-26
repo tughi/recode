@@ -52,12 +52,20 @@ evaluate_substraction :: (self: @Expression) -> Int {
 
 main :: () -> Int {
     one := new Int_Expression(value = 1)
-    two := new Int_Expression(value = 2)
-    three := new Int_Expression(value = 3)
 
-    expression: @Expression = new Addition_Expression(left_expression = two, right_expression = three)
+    expression: @Expression = new Addition_Expression(
+        left_expression = new Int_Expression(
+            value = 2
+        )
+        right_expression = new Int_Expression(
+            value = 3
+        )
+    )
     while (expression.evaluate() > 0) {
-        expression = new Substraction_Expression(left_expression = expression, right_expression = one)
+        expression = new Substraction_Expression(
+            left_expression = expression
+            right_expression = one
+        )
     }
 
     expression.dump()

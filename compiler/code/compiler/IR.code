@@ -1,15 +1,7 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-IR :: struct {
-}
-
 IR_Type :: struct : Object {
     name: @String
-}
-
-init :: (self: @IR_Type, name: @String) -> @IR_Type {
-    self.name = name
-    return self
 }
 
 IR_Any_Type :: struct : IR_Type {
@@ -56,10 +48,8 @@ equals :: (self: @IR_Type, other: @IR_Type) -> Boolean {
 }
 
 create_ir_pointer_type :: (pointed_type: @IR_Type) -> @IR_Pointer_Type {
-    type := new IR_Pointer_Type
-    type.init(clone("@").append(pointed_type.name))
-    type.pointed_type = pointed_type
-    return type
+    type_name := clone("@").append(pointed_type.name)
+    return new IR_Pointer_Type(name = type_name, pointed_type = pointed_type)
 }
 
 IR_Array_Type :: struct : IR_Pointer_Type {
@@ -67,11 +57,8 @@ IR_Array_Type :: struct : IR_Pointer_Type {
 }
 
 create_ir_array_type :: (item_type: @IR_Type, size_expression: @AST_Expression) -> @IR_Type {
-    type := new IR_Array_Type
-    type.init(clone("[").append(item_type.name).append("]"))
-    type.pointed_type = item_type
-    type.size_expression = size_expression
-    return type
+    type_name := clone("[").append(item_type.name).append("]")
+    return new IR_Array_Type(name = type_name, pointed_type = item_type, size_expression = size_expression)
 }
 
 IR_Function_Type :: struct : IR_Type {
@@ -85,7 +72,7 @@ IR_Function_Type_Parameter :: struct {
 }
 
 create_ir_function_type :: (parameters: @List, return_type: @IR_Type) -> @IR_Function_Type {
-    type_name := new String.init().append("(")
+    type_name := new String().append("(")
     parameters_item := parameters.first_item
     while (parameters_item != null) {
         parameter := parameters_item.data as @IR_Function_Type_Parameter
@@ -97,23 +84,12 @@ create_ir_function_type :: (parameters: @List, return_type: @IR_Type) -> @IR_Fun
     }
     type_name.append(") -> ").append(return_type.name)
 
-    type := new IR_Function_Type
-    type.init(type_name)
-    type.parameters = parameters
-    type.return_type = return_type
-    return type
-}
-
-create_ir_function_type_parameter :: (name: @String, type: @IR_Type) -> @IR_Function_Type_Parameter {
-    parameter := new IR_Function_Type_Parameter
-    parameter.name = name
-    parameter.type = type
-    return parameter
+    return new IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
 }
 
 IR_Struct_Type :: struct : IR_Type {
-    base_type: @IR_Struct_Type
-    members: @List
+    base_type: @IR_Struct_Type = null
+    members: @List = new List()
     statement: @AST_Struct_Statement
 }
 
@@ -124,18 +100,11 @@ IR_Struct_Type_Member :: struct {
 }
 
 create_ir_struct_type :: (name: @String, statement: @AST_Struct_Statement) -> @IR_Struct_Type {
-    type := new IR_Struct_Type
-    type.init(name)
-    type.members = create_list()
-    type.statement = statement
-    return type
+    return new IR_Struct_Type(name = name, statement = statement)
 }
 
 add_member :: (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
-    member := new IR_Struct_Type_Member
-    member.struct_type = self
-    member.name = name
-    member.type = type
+    member := new IR_Struct_Type_Member(struct_type = self, name = name, type = type)
     self.members.append(member)
     return member
 }
@@ -186,13 +155,7 @@ is_object_type :: (self: @IR_Struct_Type) -> Boolean {
 
 IR_Value :: struct : Object {
     type: @IR_Type
-    user_instructions: @List
-}
-
-init :: (self: @IR_Value, type: @IR_Type) -> @IR_Value {
-    self.type = type
-    self.user_instructions = create_list()
-    return self
+    user_instructions: @List = new List()
 }
 
 IR_Undefined_Value :: struct : IR_Value {
@@ -202,20 +165,12 @@ IR_Constant_Value :: struct : IR_Value {
     literal: @Literal_Token
 }
 
-create_ir_constant_value :: (type: @IR_Type, literal: @Literal_Token) -> @IR_Constant_Value {
-    value := new IR_Constant_Value
-    value.init(type)
-    value.literal = literal
-    return value
-}
-
 IR_Variable_Value :: struct : IR_Value {
     variable: @IR_Variable
     version: Int
 }
 
 init :: (self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value {
-    self.init(variable.type)
     self.variable = variable
     self.version = variable.values.size + 1
     variable.values.append(self)
@@ -225,11 +180,11 @@ init :: (self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value
 IR_Block :: struct : Object {
     id: Int
     function: @IR_Function
-    predecessors: @List
-    first_instruction: @IR_Instruction
-    last_instruction: @IR_Instruction
-    is_being_generated: Boolean
-    is_generated: Boolean
+    predecessors: @List = new List()
+    first_instruction: @IR_Instruction = null
+    last_instruction: @IR_Instruction = null
+    is_being_generated: Boolean = false
+    is_generated: Boolean = false
 }
 
 has_instructions :: (self: @IR_Block) -> Boolean {
@@ -263,21 +218,16 @@ append :: (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
 }
 
 append_jump :: (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instruction {
-    instruction := new IR_Direct_Jump_Instruction
-    instruction.init(null)
-    instruction.block = block
+    instruction := new IR_Direct_Jump_Instruction(result_value = null, block = block)
     block.predecessors.append(self)
     self.append(instruction)
     return instruction
 }
 
 append_jump :: (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
-    instruction := new IR_Conditional_Jump_Instruction
-    instruction.init(null)
+    instruction := new IR_Conditional_Jump_Instruction(result_value = null, true_block = true_block, false_block = false_block)
     instruction.operand_values.append(condition_value)
-    instruction.true_block = true_block
     true_block.predecessors.append(self)
-    instruction.false_block = false_block
     false_block.predecessors.append(self)
     condition_value.user_instructions.append(instruction)
     self.append(instruction)
@@ -317,14 +267,7 @@ IR_Function :: struct : Object {
 }
 
 create_block :: (self: @IR_Function) -> @IR_Block {
-    block := new IR_Block
-    block.id = self.blocks.size + 1
-    block.function = self
-    block.predecessors = create_list()
-    block.first_instruction = null
-    block.last_instruction = null
-    block.is_being_generated = false
-    block.is_generated = false
+    block := new IR_Block(id = self.blocks.size + 1, function = self)
     self.blocks.append(block)
     return block
 }
@@ -332,14 +275,7 @@ create_block :: (self: @IR_Function) -> @IR_Block {
 IR_Variable :: struct : Object {
     name: @String
     type: @IR_Type
-    values: @List
-}
-
-init :: (self: @IR_Variable, name: @String, type: @IR_Type) -> @IR_Variable {
-    self.name = name
-    self.type = type
-    self.values = create_list()
-    return self
+    values: @List = new List()
 }
 
 IR_Global_Variable :: struct : IR_Variable {
@@ -347,9 +283,7 @@ IR_Global_Variable :: struct : IR_Variable {
 }
 
 create_ir_global_variable :: (name: @String, type: @IR_Type, is_external: Boolean) -> @IR_Global_Variable {
-    variable := new IR_Global_Variable
-    variable.init(name, type)
-    variable.is_external = is_external
+    variable := new IR_Global_Variable(name = name, type = type, is_external = is_external)
     return variable
 }
 
@@ -357,24 +291,13 @@ IR_Function_Parameter :: struct : IR_Variable {
 }
 
 IR_Instruction :: struct : Object {
-    location: @Source_Location
+    location: @Source_Location = null
     result_value: @IR_Variable_Value
-    operand_values: @List
-    parent_block: @IR_Block
-    prev_instruction: @IR_Instruction
-    next_instruction: @IR_Instruction
-    is_generated: Boolean
-}
-
-init :: (self: @IR_Instruction, result_value: @IR_Variable_Value) -> @IR_Instruction {
-    self.location = null
-    self.result_value = result_value
-    self.operand_values = create_list()
-    self.parent_block = null
-    self.prev_instruction = null
-    self.next_instruction = null
-    self.is_generated = false
-    return self
+    operand_values: @List = new List()
+    parent_block: @IR_Block = undefined
+    prev_instruction: @IR_Instruction = null
+    next_instruction: @IR_Instruction = null
+    is_generated: Boolean = false
 }
 
 is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
@@ -401,24 +324,16 @@ is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
 }
 
 IR_Call_Argument :: struct {
-    name: @String
+    name: @String = null
     value: @IR_Value
 }
 
-create_ir_call_argument :: (name: @String, value: @IR_Value) -> @IR_Call_Argument {
-    argument := new IR_Call_Argument
-    argument.name = name
-    argument.value = value
-    return argument
-}
-
 IR_Call_Instruction :: struct : IR_Instruction {
-    arguments_size: Int
+    arguments_size: Int = 0
 }
 
-init :: (self: @IR_Call_Instruction, result_value: @IR_Variable_Value, call_arguments: @List) -> @IR_Call_Instruction {
-    self.init(result_value)
-    self.arguments_size = call_arguments.size
+add_arguments :: (self: @IR_Call_Instruction, call_arguments: @List) -> @IR_Call_Instruction {
+    self.arguments_size = self.arguments_size + call_arguments.size
     call_arguments_item := call_arguments.first_item
     while (call_arguments_item != null) {
         call_argument := call_arguments_item.data as @IR_Call_Argument
@@ -441,9 +356,8 @@ IR_Direct_Call_Instruction :: struct : IR_Call_Instruction {
 }
 
 create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function: @IR_Function) -> @IR_Call_Instruction {
-    instruction := new IR_Direct_Call_Instruction
-    instruction.init(result_value, call_arguments)
-    instruction.function = function
+    instruction := new IR_Direct_Call_Instruction(result_value = result_value, function = function)
+    instruction.add_arguments(call_arguments)
     return instruction
 }
 
@@ -451,8 +365,8 @@ IR_Dynamic_Call_Instruction :: struct : IR_Call_Instruction {
 }
 
 create_ir_dynamic_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
-    instruction := new IR_Dynamic_Call_Instruction
-    instruction.init(result_value, call_arguments)
+    instruction := new IR_Dynamic_Call_Instruction(result_value = result_value)
+    instruction.add_arguments(call_arguments)
     instruction.operand_values.append(function_address)
     function_address.user_instructions.append(instruction)
     return instruction
@@ -466,8 +380,7 @@ IR_Cast_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_cast_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
-    instruction := new IR_Cast_Instruction
-    instruction.init(result_value)
+    instruction := new IR_Cast_Instruction(result_value = result_value)
     instruction.operand_values.append(value)
     value.user_instructions.append(instruction)
     return instruction
@@ -497,8 +410,7 @@ IR_Load_Array_Item_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_load_array_item_instruction :: (result_value: @IR_Variable_Value, array_value: @IR_Value, index_value: @IR_Value) -> @IR_Load_Array_Item_Instruction {
-    instruction := new IR_Load_Array_Item_Instruction
-    instruction.init(result_value)
+    instruction := new IR_Load_Array_Item_Instruction(result_value = result_value)
     instruction.operand_values.append(array_value)
     instruction.operand_values.append(index_value)
     array_value.user_instructions.append(instruction)
@@ -519,9 +431,7 @@ IR_Load_Function_Address_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_load_function_address_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function) -> @IR_Load_Function_Address_Instruction {
-    instruction := new IR_Load_Function_Address_Instruction
-    instruction.init(result_value)
-    instruction.function = function
+    instruction := new IR_Load_Function_Address_Instruction(result_value = result_value, function = function)
     return instruction
 }
 
@@ -531,11 +441,8 @@ IR_Load_Struct_Member_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_load_struct_member_instruction :: (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
-    instruction := new IR_Load_Struct_Member_Instruction
-    instruction.init(result_value)
+    instruction := new IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
     instruction.operand_values.append(struct_pointer_value)
-    instruction.struct_type_member = struct_type_member
-    instruction.load_address = load_address
     struct_pointer_value.user_instructions.append(instruction)
     return instruction
 }
@@ -549,9 +456,7 @@ IR_Load_Variable_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
-    instruction := new IR_Load_Variable_Instruction
-    instruction.init(result_value)
-    instruction.variable = result_value.variable
+    instruction := new IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
     return instruction
 }
 
@@ -560,9 +465,7 @@ IR_New_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, size_value: @IR_Value) -> @IR_New_Instruction {
-    instruction := new IR_New_Instruction
-    instruction.init(result_value)
-    instruction.type = type
+    instruction := new IR_New_Instruction(result_value = result_value, type = type)
     instruction.operand_values.append(size_value)
     if (size_value != null) {
         size_value.user_instructions.append(instruction)
@@ -578,8 +481,7 @@ IR_Return_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_return_instruction :: (return_value: @IR_Value) -> @IR_Return_Instruction {
-    instruction := new IR_Return_Instruction
-    instruction.init(null)
+    instruction := new IR_Return_Instruction(result_value = null)
     instruction.operand_values.append(return_value)
     if (return_value != null) {
         return_value.user_instructions.append(instruction)
@@ -595,8 +497,7 @@ IR_Set_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_set_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
-    instruction := new IR_Set_Instruction
-    instruction.init(result_value)
+    instruction := new IR_Set_Instruction(result_value = result_value)
     instruction.operand_values.append(value)
     value.user_instructions.append(instruction)
     return instruction
@@ -610,8 +511,7 @@ IR_Store_Array_Item_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_store_array_item_instruction :: (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
-    instruction := new IR_Store_Array_Item_Instruction
-    instruction.init(null)
+    instruction := new IR_Store_Array_Item_Instruction(result_value = null)
     instruction.operand_values.append(array_value)
     instruction.operand_values.append(index_value)
     instruction.operand_values.append(value)
@@ -638,10 +538,8 @@ IR_Store_Struct_Member_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_store_struct_member_instruction :: (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
-    instruction := new IR_Store_Struct_Member_Instruction
-    instruction.init(null)
+    instruction := new IR_Store_Struct_Member_Instruction(result_value = null, struct_type_member = struct_type_member)
     instruction.operand_values.append(struct_pointer_value)
-    instruction.struct_type_member = struct_type_member
     instruction.operand_values.append(value)
     struct_pointer_value.user_instructions.append(instruction)
     value.user_instructions.append(instruction)
@@ -659,8 +557,7 @@ get_value :: (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
 IR_Binary_Instruction :: struct : IR_Instruction {
 }
 
-init :: (self: @IR_Binary_Instruction, result_value: @IR_Variable_Value, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
-    self.init(result_value)
+init :: (self: @IR_Binary_Instruction, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
     self.operand_values.append(left_value)
     self.operand_values.append(right_value)
     left_value.user_instructions.append(self)
@@ -717,8 +614,7 @@ IR_Phi_Instruction :: struct : IR_Instruction {
 }
 
 create_ir_phi_instruction :: (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
-    instruction := new IR_Phi_Instruction
-    instruction.init(result_value)
+    instruction := new IR_Phi_Instruction(result_value = result_value, values = undefined)
     instruction.values = instruction.operand_values
     return instruction
 }

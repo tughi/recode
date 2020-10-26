@@ -1,12 +1,7 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 Counter :: struct {
-    value: Int
-}
-
-init :: (self: @Counter) -> @Counter {
-    self.value = 0
-    return self
+    value: Int = 0
 }
 
 next :: (self: @Counter) -> Int {

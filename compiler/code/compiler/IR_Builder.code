@@ -3,11 +3,11 @@
 build :: (compilation_unit: @Compilation_Unit) -> @IR_Build {
     builder := create_ir_builder(compilation_unit)
     builder.build()
-    build := new IR_Build
-    build.sources = compilation_unit.sources
-    build.named_functions = builder.named_functions
-    build.named_types = builder.named_types
-    return build
+    return new IR_Build(
+        sources = compilation_unit.sources
+        named_functions = builder.named_functions
+        named_types = builder.named_types
+    )
 }
 
 IR_Build :: struct {
@@ -20,16 +20,16 @@ IR_Builder :: struct {
     context: @IR_Builder_Context
     compilation_unit: @Compilation_Unit
     named_types: @List
-    named_functions: @List
-    current_block: @IR_Block
-    current_loop: @IR_Loop
-    counter: @Counter
+    named_functions: @List = new List()
+    current_block: @IR_Block = null
+    current_loop: @IR_Loop = null
+    counter: @Counter = new Counter()
 }
 
 IR_Builder_Context :: struct {
     parent: @IR_Builder_Context
-    variables: @List
-    named_values: @List
+    variables: @List = new List()
+    named_values: @List = new List()
 }
 
 IR_Loop :: struct {
@@ -38,44 +38,22 @@ IR_Loop :: struct {
 }
 
 create_ir_builder :: (compilation_unit: @Compilation_Unit) -> @IR_Builder {
-    builder := new IR_Builder
-    builder.compilation_unit = compilation_unit
-    builder.context = create_ir_builder_context(null, false)
-    builder.named_types = create_list()
-    builder.named_types.append(new IR_Any_Type.init("Any"))
-    builder.named_types.append(new IR_Boolean_Type.init("Boolean"))
-    builder.named_types.append(new IR_Int_Type.init("Int"))
-    builder.named_types.append(new IR_Int8_Type.init("Int8"))
-    builder.named_types.append(new IR_Int16_Type.init("Int16"))
-    builder.named_types.append(new IR_Int32_Type.init("Int32"))
-    builder.named_types.append(new IR_Int64_Type.init("Int64"))
-    builder.named_types.append(new IR_Nothing_Type.init("Nothing"))
-    builder.named_types.append(new IR_Null_Type.init("Null"))
-    builder.named_types.append(new IR_Undefined_Type.init("Undefined"))
-    builder.named_functions = create_list()
-    builder.current_block = null
-    builder.current_loop = null
-    builder.counter = new Counter.init()
-    return builder
-}
-
-create_ir_builder_context :: (parent: @IR_Builder_Context, reuse_named_values: Boolean) -> @IR_Builder_Context {
-    context := new IR_Builder_Context
-    context.parent = parent
-    context.variables = create_list()
-    if (reuse_named_values) {
-        context.named_values = parent.named_values
-    } else {
-        context.named_values = create_list()
-    }
-    return context
-}
-
-create_ir_loop :: (parent: @IR_Loop, end_block: @IR_Block) -> @IR_Loop {
-    new_loop := new IR_Loop
-    new_loop.parent = parent
-    new_loop.end_block = end_block
-    return new_loop
+    named_types := new List()
+    named_types.append(new IR_Any_Type(name = "Any"))
+    named_types.append(new IR_Boolean_Type(name = "Boolean"))
+    named_types.append(new IR_Int_Type(name = "Int"))
+    named_types.append(new IR_Int8_Type(name = "Int8"))
+    named_types.append(new IR_Int16_Type(name = "Int16"))
+    named_types.append(new IR_Int32_Type(name = "Int32"))
+    named_types.append(new IR_Int64_Type(name = "Int64"))
+    named_types.append(new IR_Nothing_Type(name = "Nothing"))
+    named_types.append(new IR_Null_Type(name = "Null"))
+    named_types.append(new IR_Undefined_Type(name = "Undefined"))
+    return new IR_Builder(
+        context = new IR_Builder_Context(parent = null)
+        compilation_unit = compilation_unit
+        named_types = named_types
+    )
 }
 
 get_named_type :: (self: @IR_Builder, name: @String) -> @IR_Type {
@@ -127,7 +105,7 @@ get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variabl
 }
 
 create_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
-    return new IR_Variable_Value.init(variable)
+    return new IR_Variable_Value(type = variable.type, variable = undefined, version = undefined).init(variable)
 }
 
 get_named_function :: (self: @IR_Builder, name: @Identifier_Token, argument_types: @List) -> @IR_Function {
@@ -240,7 +218,7 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
 }
 
 create_temp_variable :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable {
-    return new IR_Variable.init(clone("$").append(self.counter.next()), type)
+    return new IR_Variable(name = clone("$").append(self.counter.next()), type = type)
 }
 
 create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable_Value {
@@ -314,7 +292,17 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @AST_Struct_St
         }
     }
     if (type.is_object_type()) {
-        self.create_global_variable(create_ast_variable_statement(struct_statement.name, create_ast_pointer_type(null, create_ast_named_type(create_identifier_token("Object_Type", null))), null, false))
+        self.create_global_variable(
+            new AST_Variable_Statement(
+                location = struct_statement.name.location
+                name = struct_statement.name
+                type = new AST_Pointer_Type(
+                    pointed_type = new AST_Named_Type(
+                        name = new Identifier_Token(lexeme = "Object_Type", location = null)
+                    )
+                )
+            )
+        )
     }
     return type
 }
@@ -340,11 +328,11 @@ convert_array_type :: (self: @IR_Builder, type: @AST_Array_Type) -> @IR_Type {
 }
 
 convert_function_type :: (self: @IR_Builder, type: @AST_Function_Type) -> @IR_Type {
-    parameters := create_list()
+    parameters := new List()
     function_parameters_item := type.parameters.first_item
     while (function_parameters_item != null) {
         function_parameter := function_parameters_item.data as @AST_Function_Parameter
-        parameters.append(create_ir_function_type_parameter(function_parameter.name.lexeme, self.convert_value_type(function_parameter.type)))
+        parameters.append(new IR_Function_Type_Parameter(name = function_parameter.name.lexeme, type = self.convert_value_type(function_parameter.type)))
         function_parameters_item = function_parameters_item.next_item
     }
     return create_ir_function_type(parameters, self.convert_value_type(type.return_type))
@@ -392,24 +380,26 @@ create_global_variable :: (self: @IR_Builder, variable_statement: @AST_Variable_
 }
 
 create_function :: (self: @IR_Builder, function_statement: @AST_Function_Statement) -> @IR_Function {
-    function := new IR_Function
-    function.id = self.named_functions.size + 1
-    function.location = function_statement.location
-    function.blocks = create_list()
-    function.name = function_statement.name.lexeme
-    function.parameters = create_list()
-    function.return_type = self.convert_value_type(function_statement.type.return_type)
-    function.is_external = function_statement.body == null
+    function := new IR_Function(
+        id = self.named_functions.size + 1
+        location = function_statement.location
+        blocks = new List()
+        name = function_statement.name.lexeme
+        parameters = new List()
+        return_type = self.convert_value_type(function_statement.type.return_type)
+        is_external = function_statement.body == null
+        type = undefined
+    )
 
     parameters := function_statement.type.parameters.create_iterator()
-    function_type_parameters := create_list()
+    function_type_parameters := new List()
     while (parameters.has_next()) {
         parameter := parameters.next() as @AST_Function_Parameter
         parameter_type := self.convert_value_type(parameter.type)
         parameter_name := parameter.name.lexeme
-        function_parameter := new IR_Function_Parameter.init(parameter_name, parameter_type) as @IR_Function_Parameter
+        function_parameter := new IR_Function_Parameter(name = parameter_name, type = parameter_type)
         function.parameters.append(function_parameter)
-        function_type_parameters.append(create_ir_function_type_parameter(parameter_name, parameter_type))
+        function_type_parameters.append(new IR_Function_Type_Parameter(name = parameter_name, type = parameter_type))
     }
 
     function_statement.ir_function = function
@@ -427,7 +417,7 @@ build_function :: (self: @IR_Builder, function_statement: @AST_Function_Statemen
 
     function := function_statement.ir_function
 
-    self.context = create_ir_builder_context(self.context, false)
+    self.context = new IR_Builder_Context(parent = self.context)
     self.counter.reset()
 
     self.current_block = function.create_block()
@@ -722,7 +712,7 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @AST_A
 }
 
 convert_block_statement :: (self: @IR_Builder, statement: @AST_Block_Statement) -> Nothing {
-    self.context = create_ir_builder_context(self.context, true)
+    self.context = new IR_Builder_Context(parent = self.context, named_values = self.context.named_values)
     block_statements := statement.statements.create_iterator()
     while (block_statements.has_next()) {
         block_statement := block_statements.next() as @AST_Statement
@@ -771,7 +761,7 @@ convert_loop_statement :: (self: @IR_Builder, statement: @AST_Loop_Statement) ->
     end_block := self.current_block.function.create_block()
     self.current_block.append_jump(loop_block)
     self.current_block = loop_block
-    self.current_loop = create_ir_loop(self.current_loop, end_block)
+    self.current_loop = new IR_Loop(parent = self.current_loop, end_block = end_block)
     self.convert_block_statement(statement.block)
     self.current_block.append_jump(loop_block)
     self.current_block = end_block
@@ -819,10 +809,10 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Varia
     if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type) || variable_type.is(IR_Undefined_Type)) {
         abort(variable_statement.location, clone("Invalid variable type: ").append(variable_type.name))
     }
-    variable := new IR_Variable.init(variable_name, variable_type)
+    variable := new IR_Variable(name = variable_name, type = variable_type)
     self.add_variable(variable)
     if (variable_value == null) {
-        variable_value = new IR_Undefined_Value.init(variable_type)
+        variable_value = new IR_Undefined_Value(type = variable_type)
     }
     self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
 }
@@ -836,7 +826,7 @@ convert_while_statement :: (self: @IR_Builder, statement: @AST_While_Statement) 
     condition_value := self.convert_expression(statement.condition_expression, self.get_named_type("Boolean"))
     self.current_block.append_jump(condition_value, loop_block, end_block)
     self.current_block = loop_block
-    self.current_loop = create_ir_loop(self.current_loop, end_block)
+    self.current_loop = new IR_Loop(parent = self.current_loop, end_block = end_block)
     self.convert_block_statement(statement.block)
     self.current_block.append_jump(condition_block)
     self.current_block = end_block
@@ -914,7 +904,7 @@ convert_add_expression :: (self: @IR_Builder, expression: @AST_Add_Expression) -
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Add_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+    return self.append(new IR_Add_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
 convert_array_access_expression :: (self: @IR_Builder, array_access_expression: @AST_Array_Access_Expression) -> @IR_Value {
@@ -967,7 +957,7 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expres
 convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, call_function_name: @Identifier_Token, first_argument: @IR_Value) -> @IR_Value {
     call_arguments := self.convert_call_arguments(call_expression.arguments)
     if (first_argument != null) {
-        call_arguments.prepend(create_ir_call_argument(null, first_argument))
+        call_arguments.prepend(new IR_Call_Argument(value = first_argument))
     }
 
     call_function: @IR_Function = null
@@ -998,7 +988,7 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
 convert_dynamic_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, call_function: @IR_Value, first_argument: @IR_Value) -> @IR_Value {
     call_arguments := self.convert_call_arguments(call_expression.arguments)
     if (first_argument != null) {
-        call_arguments.prepend(create_ir_call_argument(null, first_argument))
+        call_arguments.prepend(new IR_Call_Argument(value = first_argument))
     }
     call_function_type := call_function.type as @IR_Function_Type
     if (call_function_type.accepts(call_arguments) == false) {
@@ -1023,19 +1013,19 @@ accepts :: (self: @IR_Function_Type, call_arguments: @List) -> Boolean {
 
 convert_call_arguments :: (self: @IR_Builder, ast_call_arguments: @List) -> @List {
     has_named_arguments := false
-    call_arguments := create_list()
+    call_arguments := new List()
     ast_call_arguments_item := ast_call_arguments.first_item
     while (ast_call_arguments_item != null) {
         call_argument := ast_call_arguments_item.data as @AST_Call_Argument
         call_argument_value := self.convert_expression(call_argument.value_expression, null)
         if (call_argument.name != null) {
-            call_arguments.append(create_ir_call_argument(call_argument.name.lexeme, call_argument_value))
+            call_arguments.append(new IR_Call_Argument(name = call_argument.name.lexeme, value = call_argument_value))
             has_named_arguments = true
         } else {
             if (has_named_arguments) {
                 abort(call_argument.value_expression.location, "Positional arguments cannot be added after named ones")
             }
-            call_arguments.append(create_ir_call_argument(null, call_argument_value))
+            call_arguments.append(new IR_Call_Argument(value = call_argument_value))
         }
         ast_call_arguments_item = ast_call_arguments_item.next_item
     }
@@ -1066,7 +1056,7 @@ convert_divide_expression :: (self: @IR_Builder, expression: @AST_Divide_Express
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Divide_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+    return self.append(new IR_Divide_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
 convert_equals_expression :: (self: @IR_Builder, expression: @AST_Equals_Expression) -> @IR_Value {
@@ -1078,7 +1068,7 @@ convert_equals_expression :: (self: @IR_Builder, expression: @AST_Equals_Express
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+    return self.append(new IR_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_greater_than_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Expression) -> @IR_Value {
@@ -1087,7 +1077,7 @@ convert_greater_than_expression :: (self: @IR_Builder, expression: @AST_Greater_
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Than_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Or_Equals_Expression) -> @IR_Value {
@@ -1096,7 +1086,7 @@ convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AS
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Than_Or_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Expression) -> @IR_Value {
@@ -1105,7 +1095,7 @@ convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_E
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+    return self.append(new IR_Less_Than_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Or_Equals_Expression) -> @IR_Value {
@@ -1114,27 +1104,27 @@ convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_L
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Or_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+    return self.append(new IR_Less_Than_Or_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Value {
     if (expression.literal.is(Boolean_Token)) {
-        return create_ir_constant_value(self.get_named_type("Boolean"), expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("Boolean"), literal = expression.literal)
     }
     if (expression.literal.is(Character_Token)) {
-        return create_ir_constant_value(self.get_named_type("Int8"), expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("Int8"), literal = expression.literal)
     }
     if (expression.literal.is(Integer_Token)) {
-        return create_ir_constant_value(self.get_named_type("Int"), expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("Int"), literal = expression.literal)
     }
     if (expression.literal.is(Null_Token)) {
-        return create_ir_constant_value(self.get_named_type("Null"), expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("Null"), literal = expression.literal)
     }
     if (expression.literal.is(String_Token)) {
-        return create_ir_constant_value(create_ir_pointer_type(self.get_named_type("String")), expression.literal)
+        return new IR_Constant_Value(type = create_ir_pointer_type(self.get_named_type("String")), literal = expression.literal)
     }
     if (expression.literal.is(Undefined_Token)) {
-        return create_ir_constant_value(self.get_named_type("Undefined"), expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("Undefined"), literal = expression.literal)
     }
     abort(expression.location, expression.literal.object_type)
 }
@@ -1206,7 +1196,7 @@ convert_modulo_expression :: (self: @IR_Builder, expression: @AST_Modulo_Express
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Modulo_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+    return self.append(new IR_Modulo_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
 convert_multiply_expression :: (self: @IR_Builder, expression: @AST_Multiply_Expression) -> @IR_Value {
@@ -1215,12 +1205,21 @@ convert_multiply_expression :: (self: @IR_Builder, expression: @AST_Multiply_Exp
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Multiply_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+    return self.append(new IR_Multiply_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
 convert_negate_expression :: (self: @IR_Builder, expression: @AST_Negate_Expression) -> @IR_Value {
     value := self.convert_expression(expression.expression, self.get_named_type("Int"))
-    return self.append(new IR_Substract_Instruction.init(self.create_temp_value(value.type), create_ir_constant_value(value.type, create_integer_token("", expression.location, 0)), value), expression.location)
+    return self.append(
+        new IR_Substract_Instruction(result_value = self.create_temp_value(value.type)).init(
+            new IR_Constant_Value(
+                type = value.type
+                literal = new Integer_Token(lexeme = "", location = expression.location, value = 0)
+            )
+            value
+        )
+        expression.location
+    )
 }
 
 convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -> @IR_Value {
@@ -1228,11 +1227,18 @@ convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -
     if (type.is(IR_Array_Type)) {
         type := type as @IR_Array_Type
         size_value := self.convert_expression(type.size_expression, self.get_named_type("Int"))
-        return self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type.pointed_type)), type.pointed_type, size_value), expression.location)
+        return self.append(
+            create_ir_new_instruction(
+                self.create_temp_value(create_ir_pointer_type(type.pointed_type))
+                type.pointed_type
+                size_value
+            )
+            expression.location
+        )
     }
     if (type.is(IR_Struct_Type)) {
         type := type as @IR_Struct_Type
-        init_arguments := create_list()
+        init_arguments := new List()
         self.prepare_struct_init_arguments(init_arguments, expression.init_arguments, type, type)
         result_value := self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null), expression.location)
         self.apply_struct_init_arguments(result_value, type, init_arguments, expression)
@@ -1254,7 +1260,7 @@ prepare_struct_init_arguments :: (self: @IR_Builder, init_arguments: @List, call
             if (struct_type_member == null) {
                 abort(call_argument.name.location, clone(struct_type.name).append(" has no such member: ").append(call_argument_name))
             }
-            init_arguments.append(create_ir_call_argument(call_argument_name, self.convert_expression(call_argument.value_expression, struct_type_member.type)))
+            init_arguments.append(new IR_Call_Argument(name = call_argument_name, value = self.convert_expression(call_argument.value_expression, struct_type_member.type)))
         }
         call_arguments_item = call_arguments_item.next_item
     }
@@ -1323,7 +1329,7 @@ convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Not_Equals_Comparison_Instruction.init(self.create_temp_value(self.get_named_type("Boolean")), left_value, right_value), expression.location)
+    return self.append(new IR_Not_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_substract_expression :: (self: @IR_Builder, expression: @AST_Substract_Expression) -> @IR_Value {
@@ -1332,7 +1338,7 @@ convert_substract_expression :: (self: @IR_Builder, expression: @AST_Substract_E
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Substract_Instruction.init(self.create_temp_value(left_value.type), left_value, right_value), expression.location)
+    return self.append(new IR_Substract_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
 convert_variable_expression :: (self: @IR_Builder, expression: @AST_Variable_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -1381,7 +1387,7 @@ deduce_expression_type :: (self: @IR_Builder, expression: @AST_Expression) -> @I
 }
 
 deduce_call_expression_type :: (self: @IR_Builder, expression: @AST_Call_Expression) -> @IR_Type {
-    argument_types := create_list()
+    argument_types := new List()
     arguments := expression.arguments.create_iterator()
     while (arguments.has_next()) {
         argument := arguments.next() as @AST_Expression

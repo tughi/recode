@@ -1,7 +1,7 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 Object :: struct {
-    object_type: @Object_Type
+    object_type: @Object_Type = undefined
 }
 
 Object_Type :: struct {

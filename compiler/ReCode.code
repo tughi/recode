@@ -7,13 +7,13 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    source_file_path := new String.init(argv[1])
+    source_file_path := create_string(argv[1])
     if (source_file_path.ends_with(".code") == false) {
         stdout.write("'").write(source_file_path).write("' doesn't end with '.code'.").end_line()
         exit(1)
     }
 
-    output_file_path := new String.init(argv[2])
+    output_file_path := create_string(argv[2])
     if (output_file_path.ends_with(".s") == false) {
         stdout.write("'").write(output_file_path).write("' doesn't end with '.s'.").end_line()
         exit(1)
@@ -21,7 +21,7 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 
     dump_file_path: @String = null
     if (argc >= 4) {
-        dump_file_path = new String.init(argv[3])
+        dump_file_path = create_string(argv[3])
         if (dump_file_path.ends_with(".ir") == false) {
             stdout.write("'").write(dump_file_path).write("' doesn't end with '.ir'.").end_line()
             exit(1)

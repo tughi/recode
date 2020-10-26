@@ -1,7 +1,7 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 Source :: struct {
-    id: Int
+    id: Int = undefined
     file_path: @String
     content: @Int8
 }
@@ -13,8 +13,6 @@ Source_Location :: struct {
 }
 
 create_source :: (file_path: @String) -> @Source {
-    source := new Source
-
     file := fopen(file_path.data, "r".data)
     if (file == null) {
         return null
@@ -37,8 +35,5 @@ create_source :: (file_path: @String) -> @Source {
     }
     content[content_length] = '\0'
 
-    source.file_path = file_path
-    source.content = content
-
-    return source
+    return new Source(file_path = file_path, content = content)
 }

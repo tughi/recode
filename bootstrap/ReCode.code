@@ -7,13 +7,13 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    source_file_path := new String.init(argv[1])
+    source_file_path := create_string(argv[1])
     if (source_file_path.ends_with(".code") == false) {
         stdout.write("'").write(source_file_path).write("' doesn't end with '.code'.").end_line()
         exit(1)
     }
 
-    output_file_path := new String.init(argv[2])
+    output_file_path := create_string(argv[2])
     if (output_file_path.ends_with(".s") == false) {
         stdout.write("'").write(output_file_path).write("' doesn't end with '.s'.").end_line()
         exit(1)
@@ -21,7 +21,7 @@ main :: (argc: Int, argv: @@Int8) -> Nothing {
 
     dump_file_path: @String = null
     if (argc >= 4) {
-        dump_file_path = new String.init(argv[3])
+        dump_file_path = create_string(argv[3])
         if (dump_file_path.ends_with(".ir") == false) {
             stdout.write("'").write(dump_file_path).write("' doesn't end with '.ir'.").end_line()
             exit(1)
@@ -117,16 +117,21 @@ dump :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
     }
     if (instruction.is(IR_Call_Instruction)) {
         instruction := instruction as @IR_Call_Instruction
-        if (instruction.result_value == null) {
-            file.write("call").write('(').write(instruction.function.name).write('.').write(instruction.function.id)
-        } else {
-            file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("call").write('(').write(instruction.function.name).write('.').write(instruction.function.id)
+        if (instruction.result_value != null) {
+            file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ")
         }
-        call_arguments := (instruction as @IR_Call_Instruction).arguments.create_iterator()
-        while (call_arguments.has_next()) {
-            file.write(", ")
-            call_argument := call_arguments.next() as @IR_Value
-            file.write(call_argument, true)
+        if (instruction.is(IR_Direct_Call_Instruction) != null) {
+            file.write("call").write('(').write_function_label((instruction as @IR_Direct_Call_Instruction).function)
+        } else if (instruction.is(IR_Dynamic_Call_Instruction) != null) {
+            function_address := (instruction as @IR_Dynamic_Call_Instruction).function_address()
+            file.write("call").write('(').write(function_address.variable.name).write('.').write(function_address.version)
+        } else {
+            abort(clone("Unsupported type: ").append(instruction.object_type.name))
+        }
+        call_argument_index := 0
+        while (call_argument_index < instruction.arguments_size) {
+            file.write(", ").write(instruction.argument(call_argument_index), true)
+            call_argument_index = call_argument_index + 1
         }
         return file.write(')').end_line()
     }
@@ -169,6 +174,10 @@ dump :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
     if (instruction.is(IR_Load_Array_Item_Instruction)) {
         instruction := instruction as @IR_Load_Array_Item_Instruction
         return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(')').end_line()
+    }
+    if (instruction.is(IR_Load_Function_Address_Instruction)) {
+        instruction := instruction as @IR_Load_Function_Address_Instruction
+        return file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("load_function_address").write('(').write(instruction.function.name).write('_').write(instruction.function.id).write(')').end_line()
     }
     if (instruction.is(IR_Load_Struct_Member_Instruction)) {
         instruction := instruction as @IR_Load_Struct_Member_Instruction
@@ -307,7 +316,7 @@ write :: (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
     if (statement.is(AST_Function_Statement)) {
         statement := statement as @AST_Function_Statement
         file.write(statement.name).write(" :: (")
-        function_parameters := statement.parameters.create_iterator()
+        function_parameters := statement.type.parameters.create_iterator()
         if (function_parameters.has_next()) {
             loop {
                 file.write(function_parameters.next() as @AST_Function_Parameter)
@@ -318,7 +327,7 @@ write :: (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
                 }
             }
         }
-        file.write(") -> ").write(statement.return_type)
+        file.write(") -> ").write(statement.type.return_type)
         if (statement.body == null) {
             return file
         }

@@ -1,25 +1,13 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 List :: struct {
-    first_item: @List_Item
-    last_item: @List_Item
-    size: Int
-}
-
-create_list :: () -> @List {
-    list := new List
-    list.first_item = null
-    list.last_item = null
-    list.size = 0
-    return list
+    first_item: @List_Item = null
+    last_item: @List_Item = null
+    size: Int = 0
 }
 
 append :: (self: @List, data: @Any) -> Nothing {
-    item := new List_Item
-    item.is_removed = false
-    item.data = data
-    item.prev_item = self.last_item
-    item.next_item = null
+    item := new List_Item(data = data, prev_item = self.last_item)
     if (self.last_item == null) {
         self.first_item = item
     } else {
@@ -30,11 +18,7 @@ append :: (self: @List, data: @Any) -> Nothing {
 }
 
 prepend :: (self: @List, data: @Any) -> Nothing {
-    item := new List_Item
-    item.is_removed = false
-    item.data = data
-    item.prev_item = null
-    item.next_item = self.first_item
+    item := new List_Item(data = data, next_item = self.first_item)
     if (self.first_item == null) {
         self.last_item = item
     } else {
@@ -151,10 +135,10 @@ last :: (self: @List) -> @Any {
 }
 
 List_Item :: struct {
-    prev_item: @List_Item
-    next_item: @List_Item
+    prev_item: @List_Item = null
+    next_item: @List_Item = null
     data: @Any
-    is_removed: Boolean
+    is_removed: Boolean = false
 }
 
 List_Iterator :: struct {
@@ -163,10 +147,7 @@ List_Iterator :: struct {
 }
 
 create_iterator :: (list: @List) -> @List_Iterator {
-    iterator := new List_Iterator
-    iterator.current_item = null
-    iterator.next_item = list.first_item
-    return iterator
+    return new List_Iterator(current_item = null, next_item = list.first_item)
 }
 
 current :: (self: @List_Iterator) -> @Any {

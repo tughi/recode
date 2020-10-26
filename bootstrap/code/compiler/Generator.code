@@ -33,13 +33,12 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  .text").end_line()
     if (function.name.equals("main")) {
         self.output_file.write("  .globl main").end_line()
-        self.output_file.write(function.name).write(':').end_line()
-    } else {
-        self.output_file.write(function.name).write('_').write(function.id).write(':').end_line()
+        self.output_file.write("main:").end_line()
     }
+    self.output_file.write_function_label(function).write(':').end_line()
     self.output_file.write("  push rbp").end_line()
     self.output_file.write("  mov rbp, rsp").end_line()
-    self.output_file.write("  movsx rax, WORD PTR ").write(function.name).write('_').write(function.id).write("__stack_frame_size").write("[rip]").end_line()
+    self.output_file.write("  movsx rax, WORD PTR ").write_function_label(function).write("__stack_frame_size").write("[rip]").end_line()
     self.output_file.write("  sub rsp, rax").end_line()
 
     blocks := function.blocks.create_iterator()
@@ -67,13 +66,21 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     if (stack_frame_size // 16 != 0) {
         stack_frame_size = stack_frame_size + 16 - stack_frame_size // 16
     }
-    self.output_file.write(function.name).write('_').write(function.id).write("__stack_frame_size").write(": .word ").write(stack_frame_size).end_line()
+    self.output_file.write_function_label(function).write("__stack_frame_size").write(": .word ").write(stack_frame_size).end_line()
 
     self.reset()
 }
 
+write_function_label :: (file: @FILE, function: @IR_Function) -> @FILE {
+    file.write(function.name)
+    if (function.is_external == false) {
+        file.write('_').write(function.id)
+    }
+    return file
+}
+
 write_function_end_label :: (file: @FILE, function: @IR_Function) -> @FILE {
-    return file.write(".LABEL__").write(function.name).write('_').write(function.id).write("__").write("end")
+    return file.write(".LABEL__").write_function_label(function).write("__").write("end")
 }
 
 output_unreached_ir_instructions :: (self: @MC_Generator) -> Nothing {
@@ -143,6 +150,8 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_divide_instruction(instruction as @IR_Divide_Instruction)
     } else if (instruction.is(IR_Load_Array_Item_Instruction)) {
         self.generate_load_array_item_instruction(instruction as @IR_Load_Array_Item_Instruction)
+    } else if (instruction.is(IR_Load_Function_Address_Instruction)) {
+        self.generate_load_function_address_instruction(instruction as @IR_Load_Function_Address_Instruction)
     } else if (instruction.is(IR_Load_Struct_Member_Instruction)) {
         self.generate_load_struct_member_instruction(instruction as @IR_Load_Struct_Member_Instruction)
     } else if (instruction.is(IR_Load_Variable_Instruction)) {
@@ -178,30 +187,34 @@ generate_add_instruction :: (self: @MC_Generator, instruction: @IR_Add_Instructi
 }
 
 generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
-    if (instruction.arguments.size > 0) {
-        self.generate_load_value(self.register_rdi, instruction.arguments.first() as @IR_Value)
-        if (instruction.arguments.size > 1) {
-            self.generate_load_value(self.register_rsi, instruction.arguments.get(1) as @IR_Value)
-            if (instruction.arguments.size > 2) {
-                self.generate_load_value(self.register_rdx, instruction.arguments.get(2) as @IR_Value)
-                if (instruction.arguments.size > 3) {
-                    self.generate_load_value(self.register_rcx, instruction.arguments.get(3) as @IR_Value)
-                    if (instruction.arguments.size > 4) {
-                        self.generate_load_value(self.register_r8, instruction.arguments.get(4) as @IR_Value)
-                        if (instruction.arguments.size > 5) {
-                            self.generate_load_value(self.register_r9, instruction.arguments.get(5) as @IR_Value)
+    if (instruction.arguments_size > 0) {
+        self.generate_load_value(self.register_rdi, instruction.argument(0))
+        if (instruction.arguments_size > 1) {
+            self.generate_load_value(self.register_rsi, instruction.argument(1))
+            if (instruction.arguments_size > 2) {
+                self.generate_load_value(self.register_rdx, instruction.argument(2))
+                if (instruction.arguments_size > 3) {
+                    self.generate_load_value(self.register_rcx, instruction.argument(3))
+                    if (instruction.arguments_size > 4) {
+                        self.generate_load_value(self.register_r8, instruction.argument(4))
+                        if (instruction.arguments_size > 5) {
+                            self.generate_load_value(self.register_r9, instruction.argument(5))
                         }
                     }
                 }
             }
         }
     }
-    self.release_all_registers()
-    self.output_file.write("  call ").write(instruction.function.name)
-    if (instruction.function.is_external == false) {
-        self.output_file.write('_').write(instruction.function.id)
+    if (instruction.is(IR_Direct_Call_Instruction)) {
+        self.release_all_registers()
+        self.output_file.write("  call ").write_function_label((instruction as @IR_Direct_Call_Instruction).function).end_line()
+    } else if (instruction.is(IR_Dynamic_Call_Instruction)) {
+        self.generate_load_value(self.register_rax, (instruction as @IR_Dynamic_Call_Instruction).function_address())
+        self.release_all_registers()
+        self.output_file.write("  call ").write(self.register_rax.name_q).end_line()
+    } else {
+        abort(instruction.location, instruction.object_type)
     }
-    self.output_file.end_line()
     if (instruction.result_value != null) {
         self.map_variable_value(instruction.result_value, self.register_rax)
     }
@@ -389,6 +402,12 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
     }
 }
 
+generate_load_function_address_instruction :: (self: @MC_Generator, instruction: @IR_Load_Function_Address_Instruction) -> Nothing {
+    result_register := self.find_unused_register()
+    self.output_file.write("  lea ").write(result_register.name_q).write(", ").write_function_label(instruction.function).write("[rip]").end_line()
+    self.map_variable_value(instruction.result_value, result_register)
+}
+
 generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
     if (instruction.variable.is(IR_Function_Parameter)) {
         parameter := instruction.variable as @IR_Function_Parameter
@@ -431,7 +450,7 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
         ir_variable := instruction.variable as @IR_Global_Variable
         if (ir_variable.is_external) {
             \ map external variable to global variable address
-            self.map_variable_value(instruction.result_value, create_mc_global_variable_address(ir_variable))
+            self.map_variable_value(instruction.result_value, new MC_Global_Variable_Address(ir_variable = ir_variable))
             return
         }
         if (ir_variable.type.is(IR_Pointer_Type)) {
@@ -546,12 +565,25 @@ generate_return_instruction :: (self: @MC_Generator, instruction: @IR_Return_Ins
 }
 
 generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
-    result_register := self.find_unused_register()
-    result_value := instruction.get_value()
-    if (result_value.is(IR_Undefined_Value)) {
+    ir_value := instruction.get_value()
+    if (ir_value.is(IR_Undefined_Value)) {
         self.abort(clone("Looks like ").append(instruction.result_value.variable.name).append(" is not properly initialized"))
     }
-    self.generate_load_value(result_register, result_value)
+    result_register: @MC_Register
+    if (ir_value.is(IR_Variable_Value)) {
+        ir_value := ir_value as @IR_Variable_Value
+        mc_value := self.get_value(ir_value)
+        result_register = mc_value.register
+        if (result_register != null) {
+            self.release_register(result_register)
+        } else {
+            result_register = self.find_unused_register()
+            self.generate_load_value(result_register, ir_value)
+        }
+    } else {
+        result_register = self.find_unused_register()
+        self.generate_load_value(result_register, ir_value)
+    }
     self.map_variable_value(instruction.result_value, result_register)
 }
 
@@ -631,20 +663,26 @@ generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @
             self.map_variable_value(ir_value, register)
         }
     }
-    ir_value_type_size := self.get_type_size(ir_value.type)
-    self.output_file.write("  mov ")
-    if (ir_value_type_size == 8) {
-        self.output_file.write("QWORD PTR ")
-    } else if (ir_value_type_size == 4) {
-        self.output_file.write("DWORD PTR ")
-    } else if (ir_value_type_size == 2) {
-        self.output_file.write("WORD PTR ")
-    } else if (ir_value_type_size == 1) {
-        self.output_file.write("BYTE PTR ")
+    if (ir_value.is(IR_Constant_Value) && (ir_value as @IR_Constant_Value).literal.is(String_Token)) {
+        register := self.find_unused_register()
+        self.generate_load_value(register, ir_value)
+        self.output_file.write("  mov [").write(address_register.name_q).write("], ").write(register.name_q).end_line()
     } else {
-        self.abort("Invalid state")
+        ir_value_type_size := self.get_type_size(ir_value.type)
+        self.output_file.write("  mov ")
+        if (ir_value_type_size == 8) {
+            self.output_file.write("QWORD PTR ")
+        } else if (ir_value_type_size == 4) {
+            self.output_file.write("DWORD PTR ")
+        } else if (ir_value_type_size == 2) {
+            self.output_file.write("WORD PTR ")
+        } else if (ir_value_type_size == 1) {
+            self.output_file.write("BYTE PTR ")
+        } else {
+            self.abort("Invalid state")
+        }
+        self.output_file.write('[').write(address_register.name_q).write("], ").write_operand(self, ir_value).end_line()
     }
-    self.output_file.write('[').write(address_register.name_q).write(']').write(", ").write_operand(self, ir_value).end_line()
     address_register.is_reserved = false
 }
 
@@ -706,6 +744,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         } else if (ir_value.literal.is(String_Token)) {
             mc_string := self.convert_string(ir_value.literal as @String_Token)
             self.output_file.write("  lea ").write(register.name_q).write(", ").write_string_label(mc_string).write("[rip]").write(" # ").write(mc_string.literal.lexeme).end_line()
+        } else if (ir_value.literal.is(Undefined_Token)) {
+            \ do nothing
         } else {
             self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
         }
@@ -716,9 +756,12 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         if (mc_value == null) {
             self.abort("Invalid state")
         }
+        register.loaded_value = mc_value
         if (mc_value.register != null) {
             if (ir_value_type.is(IR_Boolean_Type)) {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
+            } else if (ir_value_type.is(IR_Function_Type)) {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Int_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Int32_Type)) {
@@ -732,6 +775,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             }
         } else if (ir_value_type.is(IR_Boolean_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
+        } else if (ir_value_type.is(IR_Function_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Int_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Int32_Type)) {
@@ -837,51 +882,32 @@ MC_Generator :: struct {
     output_file_path: @String
     output_file: @FILE
     output_debug_comments: Boolean
-    registers: @List
-    register_rax: @MC_Register
-    register_rcx: @MC_Register
-    register_rdx: @MC_Register
-    register_rbx: @MC_Register
-    register_rsi: @MC_Register
-    register_rdi: @MC_Register
-    register_r8: @MC_Register
-    register_r9: @MC_Register
-    register_r10: @MC_Register
-    register_r11: @MC_Register
-    register_r12: @MC_Register
-    register_r13: @MC_Register
-    register_r14: @MC_Register
-    register_r15: @MC_Register
-    first_value: @MC_Value
-    last_value: @MC_Value
-    stack_frame_size: Int
-    strings: @List
+    register_rax: @MC_Register = new MC_Register_RAX(name_q = "rax", name_d = "eax", name_w = "ax", name_b = "al")
+    register_rcx: @MC_Register = new MC_Register_RCX(name_q = "rcx", name_d = "ecx", name_w = "cx", name_b = "cl")
+    register_rdx: @MC_Register = new MC_Register_RDX(name_q = "rdx", name_d = "edx", name_w = "dx", name_b = "dl")
+    register_rbx: @MC_Register = new MC_Register_RBX(name_q = "rbx", name_d = "ebx", name_w = "bx", name_b = "bl")
+    register_rsi: @MC_Register = new MC_Register_RSI(name_q = "rsi", name_d = "esi", name_w = "si", name_b = "sil")
+    register_rdi: @MC_Register = new MC_Register_RDI(name_q = "rdi", name_d = "edi", name_w = "di", name_b = "dil")
+    register_r8: @MC_Register = new MC_Register_R8(name_q = "r8", name_d = "r8d", name_w = "r8w", name_b = "r8b")
+    register_r9: @MC_Register = new MC_Register_R9(name_q = "r9", name_d = "r9d", name_w = "r9w", name_b = "r9b")
+    register_r10: @MC_Register = new MC_Register_R10(name_q = "r10", name_d = "r10d", name_w = "r10w", name_b = "r10b")
+    register_r11: @MC_Register = new MC_Register_R11(name_q = "r11", name_d = "r11d", name_w = "r11w", name_b = "r11b")
+    register_r12: @MC_Register = new MC_Register_R12(name_q = "r12", name_d = "r12d", name_w = "r12w", name_b = "r12b")
+    register_r13: @MC_Register = new MC_Register_R13(name_q = "r13", name_d = "r13d", name_w = "r13w", name_b = "r13b")
+    register_r14: @MC_Register = new MC_Register_R14(name_q = "r14", name_d = "r14d", name_w = "r14w", name_b = "r14b")
+    register_r15: @MC_Register = new MC_Register_R15(name_q = "r15", name_d = "r15d", name_w = "r15w", name_b = "r15b")
+    first_value: @MC_Value = null
+    last_value: @MC_Value = null
+    stack_frame_size: Int = 0
+    strings: @List = new List()
 }
 
 create_mc_generator :: (output_file_path: @String) -> @MC_Generator {
-    generator := new MC_Generator
-    generator.output_file_path = output_file_path
-    generator.output_file = fopen(output_file_path.data, "w".data)
-    generator.output_debug_comments = true
-    generator.register_rax = new MC_Register_RAX.init("rax", "eax", "ax", "al")
-    generator.register_rcx = new MC_Register_RCX.init("rcx", "ecx", "cx", "cl")
-    generator.register_rdx = new MC_Register_RDX.init("rdx", "edx", "dx", "dl")
-    generator.register_rbx = new MC_Register_RBX.init("rbx", "ebx", "bx", "bl")
-    generator.register_rsi = new MC_Register_RSI.init("rsi", "esi", "si", "sil")
-    generator.register_rdi = new MC_Register_RDI.init("rdi", "edi", "di", "dil")
-    generator.register_r8 = new MC_Register_R8.init("r8", "r8d", "r8w", "r8b")
-    generator.register_r9 = new MC_Register_R9.init("r9", "r9d", "r9w", "r9b")
-    generator.register_r10 = new MC_Register_R10.init("r10", "r10d", "r10w", "r10b")
-    generator.register_r11 = new MC_Register_R11.init("r11", "r11d", "r11w", "r11b")
-    generator.register_r12 = new MC_Register_R12.init("r12", "r12d", "r12w", "r12b")
-    generator.register_r13 = new MC_Register_R13.init("r13", "r13d", "r13w", "r13b")
-    generator.register_r14 = new MC_Register_R14.init("r14", "r14d", "r14w", "r14b")
-    generator.register_r15 = new MC_Register_R15.init("r15", "r15d", "r15w", "r15b")
-    generator.first_value = null
-    generator.last_value = null
-    generator.stack_frame_size = 0
-    generator.strings = create_list()
-    return generator
+    return new MC_Generator(
+        output_file_path = output_file_path
+        output_file = fopen(output_file_path.data, "w".data)
+        output_debug_comments = true
+    )
 }
 
 reset :: (self: @MC_Generator) -> Nothing {
@@ -945,13 +971,11 @@ find_unused_register :: (self: @MC_Generator) -> @MC_Register {
 }
 
 create_mc_value :: (self: @MC_Generator, ir_instruction: @IR_Instruction) -> Nothing {
-    mc_value := new MC_Value
-    mc_value.ir_variable_value = ir_instruction.result_value
-    mc_value.ir_instruction = ir_instruction
-    mc_value.register = null
-    mc_value.address = null
-    mc_value.next_value = null
-    mc_value.prev_value = self.last_value
+    mc_value := new MC_Value(
+        prev_value = self.last_value
+        ir_variable_value = ir_instruction.result_value
+        ir_instruction = ir_instruction
+    )
     if (self.first_value == null) {
         self.first_value = mc_value
     } else {
@@ -979,13 +1003,16 @@ map_variable_value :: (self: @MC_Generator, ir_variable_value: @IR_Variable_Valu
 map_variable_value :: (self: @MC_Generator, ir_variable_value: @IR_Variable_Value, register: @MC_Register) -> @MC_Value {
     mc_value := self.first_value
     while (mc_value != null && mc_value.ir_variable_value != ir_variable_value) {
+        if (mc_value.ir_variable_value.variable == ir_variable_value.variable && mc_value.register != null) {
+            self.release_register(mc_value.register)
+        }
         mc_value = mc_value.next_value
     }
     if (mc_value == null) {
         self.abort("Invalid state")
     }
     if (register.value != null) {
-        self.abort(clone("Register ").append(register.name_q).append(" already mapped to variable: ").append(register.value.ir_variable_value.variable.name))
+        self.abort(clone("Register ").append(register.name_q).append(" already mapped to variable: ").append(register.value.ir_variable_value.variable.name).append('.').append(register.value.ir_variable_value.version))
     }
     mc_value.register = register
     register.value = mc_value
@@ -1023,7 +1050,7 @@ spill_local_variable :: (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
         if (offset > self.stack_frame_size) {
             self.stack_frame_size = offset
         }
-        self.map_variable_value(mc_value.ir_variable_value, create_mc_local_variable_address(offset))
+        self.map_variable_value(mc_value.ir_variable_value, new MC_Local_Variable_Address(offset = offset))
     }
     if (variable_type_size == 8) {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_q).end_line()
@@ -1060,24 +1087,27 @@ release_all_registers :: (self: @MC_Generator) -> Nothing {
 release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
     mc_value := register.value
     if (mc_value != null) {
-        persist_value := false
+        if (register.loaded_value != mc_value) {
+            persist_value := false
 
-        ir_value_user_instruction_item := mc_value.ir_variable_value.user_instructions.first_item
-        while (ir_value_user_instruction_item != null) {
-            ir_value_user_instruction := ir_value_user_instruction_item.data as @IR_Instruction
-            if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
-                persist_value = true
-                break
+            ir_value_user_instruction_item := mc_value.ir_variable_value.user_instructions.first_item
+            while (ir_value_user_instruction_item != null) {
+                ir_value_user_instruction := ir_value_user_instruction_item.data as @IR_Instruction
+                if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
+                    persist_value = true
+                    break
+                }
+                ir_value_user_instruction_item = ir_value_user_instruction_item.next_item
             }
-            ir_value_user_instruction_item = ir_value_user_instruction_item.next_item
-        }
 
-        if (persist_value) {
-            self.spill_local_variable(mc_value)
+            if (persist_value) {
+                self.spill_local_variable(mc_value)
+            }
         }
 
         mc_value.register = null
         register.value = null
+        register.loaded_value = null
     }
 }
 
@@ -1152,12 +1182,12 @@ output_live_values :: (self: @MC_Generator) -> Nothing {
     mc_value := self.first_value
     while (mc_value != null) {
         if (mc_value.ir_instruction.is_generated) {
-            self.output_file.write(mc_value.ir_variable_value.variable.name).write('.').write(mc_value.ir_variable_value.version).write(':')
+            self.output_file.write(mc_value.ir_variable_value.variable.name).write('.').write(mc_value.ir_variable_value.version)
             if (mc_value.register != null) {
-                self.output_file.write(mc_value.register.name_q)
+                self.output_file.write(':').write(mc_value.register.name_q)
             }
             if (mc_value.address != null) {
-                self.output_file.write(mc_value.address)
+                self.output_file.write(':').write(mc_value.address)
             }
             self.output_file.write(' ')
         }
@@ -1195,12 +1225,12 @@ output_used_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing
 }
 
 MC_Value :: struct {
-    prev_value: @MC_Value
-    next_value: @MC_Value
+    prev_value: @MC_Value = null
+    next_value: @MC_Value = null
     ir_instruction: @IR_Instruction
     ir_variable_value: @IR_Variable_Value
-    register: @MC_Register
-    address: @MC_Address
+    register: @MC_Register = null
+    address: @MC_Address = null
 }
 
 MC_Register :: struct : Object {
@@ -1208,8 +1238,9 @@ MC_Register :: struct : Object {
     name_d: @String
     name_w: @String
     name_b: @String
-    is_reserved: Boolean
-    value: @MC_Value
+    is_reserved: Boolean = false
+    value: @MC_Value = null
+    loaded_value: @MC_Value = null
 }
 
 init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, name_b: @String) -> @MC_Register {
@@ -1219,6 +1250,7 @@ init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, 
     self.name_b = name_b
     self.is_reserved = false
     self.value = null
+    self.loaded_value = null
     return self
 }
 
@@ -1283,25 +1315,16 @@ MC_Global_Variable_Address :: struct : MC_Address {
     ir_variable: @IR_Variable
 }
 
-create_mc_global_variable_address :: (ir_variable: @IR_Variable) -> @MC_Global_Variable_Address {
-    address := new MC_Global_Variable_Address
-    address.ir_variable = ir_variable
-    return address
-}
-
 MC_Local_Variable_Address :: struct : MC_Address {
     offset: Int
-}
-
-create_mc_local_variable_address :: (offset: Int) -> @MC_Local_Variable_Address {
-    address := new MC_Local_Variable_Address
-    address.offset = offset
-    return address
 }
 
 get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
     if (ir_type.is(IR_Boolean_Type)) {
         return 1
+    }
+    if (ir_type.is(IR_Function_Type)) {
+        return 8
     }
     if (ir_type.is(IR_Int_Type)) {
         return 8
@@ -1351,9 +1374,7 @@ convert_string :: (self: @MC_Generator, literal: @String_Token) -> @MC_String {
         }
         string_item = string_item.next_item
     }
-    string := new MC_String
-    string.id = self.strings.size
-    string.literal = literal
+    string := new MC_String(id = self.strings.size, literal = literal)
     self.strings.append(string)
     return string
 }
