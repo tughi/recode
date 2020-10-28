@@ -30524,95 +30524,401 @@ convert_direct_call_expression_104:
   test al, al
   jz .LABEL__convert_direct_call_expression_104__14
 .LABEL__convert_direct_call_expression_104__13:
-  # $19.1: @Source_Location = load_struct_member(call_expression.1, location)
-  .loc 3 978 15
+  # $19.1: @List = load_struct_member(self.1, named_functions)
+  .loc 3 978 33
+  mov rax, [rbp-32]
+  mov rbx, [rax+24]
+  # [discarded value]: $18.1
+  # [live values]: self.1:rax:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] $19.1:rbx 
+  # named_functions_item.1: @List_Item = load_struct_member($19.1, first_item)
+  .loc 3 978 33
+  mov r15, [rbx+0]
+  # [discarded value]: $19.1
+  # [live values]: self.1:rax:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:r15 
+  # jump(block.15)
+  mov [rbp-64], r15
+.LABEL__convert_direct_call_expression_104__15:
+  # named_functions_item.2: @List_Item = phi(named_functions_item.1, named_functions_item.5)
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] 
+  # $21.1: Boolean = named_functions_item.2 != null
+  .loc 3 979 16
+  cmp QWORD PTR [rbp-64], 0
+  setne al
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] $21.1:rax 
+  # jump($21.1, block.16, block.17)
+  test al, al
+  jz .LABEL__convert_direct_call_expression_104__17
+.LABEL__convert_direct_call_expression_104__16:
+  # named_function.1: @IR_Function = load_struct_member(named_functions_item.2, data)
+  .loc 3 980 31
+  mov rax, [rbp-64]
+  mov rbx, [rax+16]
+  # [discarded value]: $21.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:rax:[rbp-64] named_function.1:rbx 
+  # $24.1: @String = load_struct_member(named_function.1, name)
+  .loc 3 981 17
+  mov r15, [rbx+24]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:rax:[rbp-64] named_function.1:rbx $24.1:r15 
+  # $25.1: @String = load_struct_member(call_function_name.1, lexeme)
+  .loc 3 981 44
+  mov r14, [rbp-24]
+  mov r13, [r14+8]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:r14:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:rax:[rbp-64] named_function.1:rbx $24.1:r15 $25.1:r13 
+  # $26.1: Boolean = call(equals_295, $24.1, $25.1)
+  .loc 3 981 17
+  mov rdi, r15
+  mov rsi, r13
+  mov [rbp-72], rbx
+  call equals_295
+  # [discarded value]: $24.1
+  # [discarded value]: $25.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] $26.1:rax 
+  # jump($26.1, block.18, block.19)
+  test al, al
+  jz .LABEL__convert_direct_call_expression_104__19
+.LABEL__convert_direct_call_expression_104__18:
+  # stderr.3: @FILE = load_variable(stderr)
+  # [discarded value]: $26.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] stderr.3:stderr[rip] 
+  # $27.1: @FILE = call(end_line_289, stderr.3)
+  .loc 3 982 17
+  mov rdi, stderr[rip]
+  call end_line_289
+  # [discarded value]: stderr.3
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] $27.1:rax 
+  # $28.1: @Source_Location = load_struct_member(named_function.1, location)
+  .loc 3 982 41
+  mov rbx, [rbp-72]
+  mov r15, [rbx+16]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:rbx:[rbp-72] $27.1:rax $28.1:r15 
+  # $29.1: @FILE = call(write_266, $27.1, $28.1)
+  .loc 3 982 17
+  mov rdi, rax
+  mov rsi, r15
+  call write_266
+  # [discarded value]: $27.1
+  # [discarded value]: $28.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] $29.1:rax 
+  # $30.1: @FILE = call(write_286, $29.1, ": ")
+  .loc 3 982 17
+  mov rdi, rax
+  lea rsi, .LABEL__string_203[rip] # ": "
+  call write_286
+  # [discarded value]: $29.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] $30.1:rax 
+  # $31.1: @String = load_struct_member(named_function.1, name)
+  .loc 3 982 84
+  mov rbx, [rbp-72]
+  mov r15, [rbx+24]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:rbx:[rbp-72] $30.1:rax $31.1:r15 
+  # $32.1: @FILE = call(write_286, $30.1, $31.1)
+  .loc 3 982 17
+  mov rdi, rax
+  mov rsi, r15
+  call write_286
+  # [discarded value]: $30.1
+  # [discarded value]: $31.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] $32.1:rax 
+  # $33.1: @FILE = call(write_286, $32.1, " :: ")
+  .loc 3 982 17
+  mov rdi, rax
+  lea rsi, .LABEL__string_204[rip] # " :: "
+  call write_286
+  # [discarded value]: $32.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] $33.1:rax 
+  # $34.1: @IR_Function_Type = load_struct_member(named_function.1, type)
+  .loc 3 982 125
+  mov rbx, [rbp-72]
+  mov r15, [rbx+48]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:rbx:[rbp-72] $33.1:rax $34.1:r15 
+  # $35.1: @String = load_struct_member($34.1, name)
+  .loc 3 982 125
+  mov r14, [r15+8]
+  # [discarded value]: $34.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:rbx:[rbp-72] $33.1:rax $35.1:r14 
+  # $36.1: @FILE = call(write_286, $33.1, $35.1)
+  .loc 3 982 17
+  mov rdi, rax
+  mov rsi, r14
+  call write_286
+  # [discarded value]: $33.1
+  # [discarded value]: $35.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] $36.1:rax 
+  # $37.1: @FILE = call(end_line_289, $36.1)
+  .loc 3 982 17
+  mov rdi, rax
+  call end_line_289
+  # [discarded value]: $36.1
+  # [discarded value]: $37.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] 
+  # jump(block.19)
+.LABEL__convert_direct_call_expression_104__19:
+  # named_functions_item.5: @List_Item = load_struct_member(named_functions_item.2, next_item)
+  .loc 3 984 36
+  mov rax, [rbp-64]
+  mov rbx, [rax+8]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] named_functions_item.5:rbx:[rbp-64] 
+  # jump(block.15)
+  mov [rbp-64], rbx
+  jmp .LABEL__convert_direct_call_expression_104__15
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] named_functions_item.5:[rbp-64] 
+  # [discarded value]: named_functions_item.5
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] named_function.1:[rbp-72] 
+  # [discarded value]: named_function.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] 
+.LABEL__convert_direct_call_expression_104__17:
+  # $39.1: @String = call(clone_294, "Found no matching function: ")
+  .loc 3 986 20
+  lea rdi, .LABEL__string_205[rip] # "Found no matching function: "
+  call clone_294
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] $39.1:rax 
+  # $40.1: @String = load_struct_member(call_function_name.1, lexeme)
+  .loc 3 986 65
+  mov rbx, [rbp-24]
+  mov r15, [rbx+8]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:rbx:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] $39.1:rax $40.1:r15 
+  # $41.1: @String = call(append_303, $39.1, $40.1)
+  .loc 3 986 20
+  mov rdi, rax
+  mov rsi, r15
+  call append_303
+  # [discarded value]: $39.1
+  # [discarded value]: $40.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] $41.1:rax 
+  # message.1: @String = call(append_303, $41.1, " :: (")
+  .loc 3 986 20
+  mov rdi, rax
+  lea rsi, .LABEL__string_172[rip] # " :: ("
+  call append_303
+  # [discarded value]: $41.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:rax 
+  # call_arguments_item.1: @List_Item = load_struct_member(call_arguments.1, first_item)
+  .loc 3 987 32
+  mov rbx, [rbp-40]
+  mov r15, [rbx+0]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:rbx:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:rax call_arguments_item.1:r15 
+  # $44.1: Boolean = call_arguments_item.1 != null
+  .loc 3 988 13
+  cmp r15, 0
+  setne r14b
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:rbx:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:rax call_arguments_item.1:r15 $44.1:r14 
+  # jump($44.1, block.22, block.21)
+  test r14b, r14b
+  mov [rbp-72], rax
+  mov [rbp-80], r15
+  jz .LABEL__convert_direct_call_expression_104__21
+.LABEL__convert_direct_call_expression_104__22:
+  # call_arguments_item.2: @List_Item = phi(call_arguments_item.4, call_arguments_item.1)
+  # [discarded value]: $44.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] 
+  # call_argument.1: @IR_Call_Argument = load_struct_member(call_arguments_item.2, data)
+  .loc 3 990 34
+  mov rax, [rbp-80]
+  mov rbx, [rax+16]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:rax:[rbp-80] call_argument.1:rbx 
+  # $47.1: @String = load_struct_member(call_argument.1, name)
+  .loc 3 991 21
+  mov r15, [rbx+0]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:rax:[rbp-80] call_argument.1:rbx $47.1:r15 
+  # $48.1: Boolean = $47.1 != null
+  .loc 3 991 21
+  cmp r15, 0
+  setne r14b
+  # [discarded value]: $47.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:rax:[rbp-80] call_argument.1:rbx $48.1:r14 
+  # jump($48.1, block.24, block.25)
+  test r14b, r14b
+  mov [rbp-88], rbx
+  jz .LABEL__convert_direct_call_expression_104__25
+.LABEL__convert_direct_call_expression_104__24:
+  # $49.1: @String = load_struct_member(call_argument.1, name)
+  .loc 3 992 36
+  mov rax, [rbp-88]
+  mov rbx, [rax+0]
+  # [discarded value]: $48.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:rax:[rbp-88] $49.1:rbx 
+  # $50.1: @String = call(append_303, message.1, $49.1)
+  .loc 3 992 21
+  mov rdi, [rbp-72]
+  mov rsi, rbx
+  call append_303
+  # [discarded value]: $49.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] $50.1:rax 
+  # $51.1: @String = call(append_303, $50.1, ": ")
+  .loc 3 992 21
+  mov rdi, rax
+  lea rsi, .LABEL__string_203[rip] # ": "
+  call append_303
+  # [discarded value]: $50.1
+  # [discarded value]: $51.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] 
+  # jump(block.25)
+.LABEL__convert_direct_call_expression_104__25:
+  # $52.1: @IR_Value = load_struct_member(call_argument.1, value)
+  .loc 3 994 32
+  mov rax, [rbp-88]
+  mov rbx, [rax+8]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:rax:[rbp-88] $52.1:rbx 
+  # $53.1: @IR_Type = load_struct_member($52.1, type)
+  .loc 3 994 32
+  mov r15, [rbx+8]
+  # [discarded value]: $52.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:rax:[rbp-88] $53.1:r15 
+  # $54.1: @String = load_struct_member($53.1, name)
+  .loc 3 994 32
+  mov rbx, [r15+8]
+  # [discarded value]: $53.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:rax:[rbp-88] $54.1:rbx 
+  # $55.1: @String = call(append_303, message.1, $54.1)
+  .loc 3 994 17
+  mov rdi, [rbp-72]
+  mov rsi, rbx
+  call append_303
+  # [discarded value]: $54.1
+  # [discarded value]: $55.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] 
+  # call_arguments_item.4: @List_Item = load_struct_member(call_arguments_item.2, next_item)
+  .loc 3 995 39
+  mov rax, [rbp-80]
+  mov rbx, [rax+8]
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:rbx:[rbp-80] 
+  # $57.1: Boolean = call_arguments_item.4 == null
+  .loc 3 996 21
+  cmp rbx, 0
+  sete al
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:rbx:[rbp-80] $57.1:rax 
+  # jump($57.1, block.21, block.27)
+  test al, al
+  mov [rbp-80], rbx
+  jz .LABEL__convert_direct_call_expression_104__27
+.LABEL__convert_direct_call_expression_104__21:
+  # $59.1: @String = call(append_303, message.1, ") -> Any")
+  .loc 3 1002 9
+  mov rdi, [rbp-72]
+  lea rsi, .LABEL__string_206[rip] # ") -> Any"
+  call append_303
+  # [discarded value]: $59.1
+  # [discarded value]: $57.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:[rbp-80] 
+  # $60.1: @Source_Location = load_struct_member(call_expression.1, location)
+  .loc 3 1003 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
-  # [discarded value]: $18.1
-  # [live values]: self.1:[rbp-32] call_expression.1:rax:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] $19.1:rbx 
-  # call(abort_263, $19.1, "Found no matching function")
-  .loc 3 978 9
+  # [live values]: self.1:[rbp-32] call_expression.1:rax:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] $60.1:rbx call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:[rbp-80] 
+  # call(abort_263, $60.1, message.1)
+  .loc 3 1003 9
   mov rdi, rbx
-  lea rsi, .LABEL__string_203[rip] # "Found no matching function"
+  mov rsi, [rbp-72]
   call abort_263
-  # [discarded value]: $19.1
+  # [discarded value]: $60.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:[rbp-80] 
+.LABEL__convert_direct_call_expression_104__27:
+  # $58.1: @String = call(append_303, message.1, ", ")
+  .loc 3 999 17
+  mov rdi, [rbp-72]
+  lea rsi, .LABEL__string_37[rip] # ", "
+  call append_303
+  # [discarded value]: $58.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:[rbp-80] 
+  # jump(block.22)
+  jmp .LABEL__convert_direct_call_expression_104__22
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:[rbp-80] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] call_arguments_item.4:[rbp-80] 
+  # [discarded value]: call_arguments_item.4
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] call_arguments_item.2:[rbp-80] call_argument.1:[rbp-88] 
+  # [discarded value]: call_arguments_item.2
+  # [discarded value]: call_argument.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] message.1:[rbp-72] call_arguments_item.1:[rbp-80] 
+  # [discarded value]: message.1
+  # [discarded value]: call_arguments_item.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] named_functions_item.2:[rbp-64] 
+  # [discarded value]: named_functions_item.2
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] named_functions_item.1:[rbp-64] 
+  # [discarded value]: named_functions_item.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] 
 .LABEL__convert_direct_call_expression_104__14:
   # result_value.1: @IR_Variable_Value = null
-  .loc 3 981 5
+  .loc 3 1006 5
   xor rax, rax
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:rax 
-  # $20.1: @IR_Type = load_struct_member(call_function.8, return_type)
-  .loc 3 982 9
+  # $61.1: @IR_Type = load_struct_member(call_function.8, return_type)
+  .loc 3 1007 9
   mov rbx, [rbp-48]
   mov r15, [rbx+40]
-  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:rbx:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:rax $20.1:r15 
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:rbx:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:rax $61.1:r15 
   # IR_Nothing_Type.4: @Object_Type = load_variable(IR_Nothing_Type)
   lea r14, IR_Nothing_Type[rip]
-  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:rbx:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:rax $20.1:r15 IR_Nothing_Type.4:r14 
-  # $21.1: Boolean = call(is_292, $20.1, IR_Nothing_Type.4)
-  .loc 3 982 9
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:rbx:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:rax $61.1:r15 IR_Nothing_Type.4:r14 
+  # $62.1: Boolean = call(is_292, $61.1, IR_Nothing_Type.4)
+  .loc 3 1007 9
   mov rdi, r15
   mov rsi, r14
   mov [rbp-64], rax
   call is_292
-  # [discarded value]: $20.1
+  # [discarded value]: $61.1
   # [discarded value]: IR_Nothing_Type.4
-  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] $21.1:rax 
-  # $22.1: Boolean = $21.1 == false
-  .loc 3 982 9
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] $62.1:rax 
+  # $63.1: Boolean = $62.1 == false
+  .loc 3 1007 9
   cmp al, 0
   sete bl
-  # [discarded value]: $21.1
-  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] $22.1:rbx 
-  # jump($22.1, block.15, block.16)
+  # [discarded value]: $62.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] $63.1:rbx 
+  # jump($63.1, block.29, block.30)
   test bl, bl
-  jz .LABEL__convert_direct_call_expression_104__16
-.LABEL__convert_direct_call_expression_104__15:
-  # $23.1: @IR_Type = load_struct_member(call_function.8, return_type)
-  .loc 3 983 47
+  jz .LABEL__convert_direct_call_expression_104__30
+.LABEL__convert_direct_call_expression_104__29:
+  # $64.1: @IR_Type = load_struct_member(call_function.8, return_type)
+  .loc 3 1008 47
   mov rax, [rbp-48]
   mov rbx, [rax+40]
-  # [discarded value]: $22.1
-  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:rax:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] $23.1:rbx 
-  # result_value.2: @IR_Variable_Value = call(create_temp_value_70, self.1, $23.1)
-  .loc 3 983 24
+  # [discarded value]: $63.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:rax:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] $64.1:rbx 
+  # result_value.2: @IR_Variable_Value = call(create_temp_value_70, self.1, $64.1)
+  .loc 3 1008 24
   mov rdi, [rbp-32]
   mov rsi, rbx
   call create_temp_value_70
-  # [discarded value]: $23.1
+  # [discarded value]: $64.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:rax:[rbp-64] 
-  # jump(block.16)
+  # jump(block.30)
   mov [rbp-64], rax
-.LABEL__convert_direct_call_expression_104__16:
+.LABEL__convert_direct_call_expression_104__30:
   # result_value.3: @IR_Variable_Value = phi(result_value.1, result_value.2)
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] result_value.3:[rbp-64] 
-  # $25.1: @IR_Call_Instruction = call(create_ir_direct_call_instruction_161, result_value.3, call_arguments.1, call_function.8)
-  .loc 3 985 24
+  # $66.1: @IR_Call_Instruction = call(create_ir_direct_call_instruction_161, result_value.3, call_arguments.1, call_function.8)
+  .loc 3 1010 24
   mov rdi, [rbp-64]
   mov rsi, [rbp-40]
   mov rdx, [rbp-48]
   call create_ir_direct_call_instruction_161
   # [discarded value]: result_value.3
-  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] $25.1:rax 
-  # $26.1: @Source_Location = load_struct_member(call_expression.1, location)
-  .loc 3 985 104
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] $66.1:rax 
+  # $67.1: @Source_Location = load_struct_member(call_expression.1, location)
+  .loc 3 1010 104
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
-  # [live values]: self.1:[rbp-32] call_expression.1:rbx:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] $25.1:rax $26.1:r15 
-  # $27.1: @IR_Variable_Value = call(append_71, self.1, $25.1, $26.1)
-  .loc 3 985 12
+  # [live values]: self.1:[rbp-32] call_expression.1:rbx:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] $66.1:rax $67.1:r15 
+  # $68.1: @IR_Variable_Value = call(append_71, self.1, $66.1, $67.1)
+  .loc 3 1010 12
   mov rdi, [rbp-32]
   mov rsi, rax
   mov rdx, r15
   call append_71
-  # [discarded value]: $25.1
-  # [discarded value]: $26.1
-  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] $27.1:rax 
-  # return($27.1)
-  .loc 3 985 5
+  # [discarded value]: $66.1
+  # [discarded value]: $67.1
+  # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] $68.1:rax 
+  # return($68.1)
+  .loc 3 1010 5
   jmp .LABEL__convert_direct_call_expression_104__end
-  # [discarded value]: $27.1
+  # [discarded value]: $68.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] 
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function_name.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function.1:[rbp-48] named_functions_item.1:[rbp-56] call_function.8:[rbp-48] named_functions_item.2:[rbp-56] result_value.1:[rbp-64] result_value.2:[rbp-64] 
   # [discarded value]: result_value.2
@@ -30642,9 +30948,9 @@ convert_direct_call_expression_104:
   pop rbp
   ret
 
-convert_direct_call_expression_104__stack_frame_size: .word 64
+convert_direct_call_expression_104__stack_frame_size: .word 96
 
-  .loc 3 988 1
+  .loc 3 1013 1
   .text
 convert_dynamic_call_expression_105:
   push rbp
@@ -30661,11 +30967,11 @@ convert_dynamic_call_expression_105:
   # first_argument.1: @IR_Value = load_variable(first_argument)
   # [live values]: self.1:rdi call_expression.1:rsi call_function.1:rdx first_argument.1:rcx 
   # $1.1: @List = load_struct_member(call_expression.1, arguments)
-  .loc 3 989 51
+  .loc 3 1014 51
   mov rax, [rsi+24]
   # [live values]: self.1:rdi call_expression.1:rsi call_function.1:rdx first_argument.1:rcx $1.1:rax 
   # call_arguments.1: @List = call(convert_call_arguments_107, self.1, $1.1)
-  .loc 3 989 23
+  .loc 3 1014 23
   mov [rbp-8], rsi
   mov rsi, rax
   mov [rbp-16], rcx
@@ -30675,7 +30981,7 @@ convert_dynamic_call_expression_105:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:rax 
   # $3.1: Boolean = first_argument.1 != null
-  .loc 3 990 9
+  .loc 3 1015 9
   cmp QWORD PTR [rbp-16], 0
   setne bl
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:rax $3.1:rbx 
@@ -30685,7 +30991,7 @@ convert_dynamic_call_expression_105:
   jz .LABEL__convert_dynamic_call_expression_105__3
 .LABEL__convert_dynamic_call_expression_105__2:
   # $4.1: @IR_Call_Argument = new(IR_Call_Argument)
-  .loc 3 991 32
+  .loc 3 1016 32
   mov rdi, 16
   call malloc
   # [discarded value]: $3.1
@@ -30698,7 +31004,7 @@ convert_dynamic_call_expression_105:
   mov QWORD PTR [rax+8], rbx
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:rbx:[rbp-16] call_arguments.1:[rbp-40] $4.1:rax 
   # call(prepend_268, call_arguments.1, $4.1)
-  .loc 3 991 9
+  .loc 3 1016 9
   mov rdi, [rbp-40]
   mov rsi, rax
   call prepend_268
@@ -30707,19 +31013,19 @@ convert_dynamic_call_expression_105:
   # jump(block.3)
 .LABEL__convert_dynamic_call_expression_105__3:
   # call_function_type.1: @IR_Function_Type = load_struct_member(call_function.1, type)
-  .loc 3 993 27
+  .loc 3 1018 27
   mov rax, [rbp-24]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:rax:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:rbx 
   # $7.1: Boolean = call(accepts_106, call_function_type.1, call_arguments.1)
-  .loc 3 994 9
+  .loc 3 1019 9
   mov rdi, rbx
   mov rsi, [rbp-40]
   mov [rbp-48], rbx
   call accepts_106
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] $7.1:rax 
   # $8.1: Boolean = $7.1 == false
-  .loc 3 994 9
+  .loc 3 1019 9
   cmp al, 0
   sete bl
   # [discarded value]: $7.1
@@ -30729,25 +31035,25 @@ convert_dynamic_call_expression_105:
   jz .LABEL__convert_dynamic_call_expression_105__5
 .LABEL__convert_dynamic_call_expression_105__4:
   # $9.1: @Source_Location = load_struct_member(call_expression.1, location)
-  .loc 3 995 15
+  .loc 3 1020 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-32] call_expression.1:rax:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] $9.1:rbx 
   # call(abort_263, $9.1, "Unsupported arguments")
-  .loc 3 995 9
+  .loc 3 1020 9
   mov rdi, rbx
-  lea rsi, .LABEL__string_204[rip] # "Unsupported arguments"
+  lea rsi, .LABEL__string_207[rip] # "Unsupported arguments"
   call abort_263
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] 
 .LABEL__convert_dynamic_call_expression_105__5:
   # result_value.1: @IR_Variable_Value = null
-  .loc 3 997 5
+  .loc 3 1022 5
   xor rax, rax
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:rax 
   # $10.1: @IR_Type = load_struct_member(call_function_type.1, return_type)
-  .loc 3 998 9
+  .loc 3 1023 9
   mov rbx, [rbp-48]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:rbx:[rbp-48] result_value.1:rax $10.1:r15 
@@ -30755,7 +31061,7 @@ convert_dynamic_call_expression_105:
   lea r14, IR_Nothing_Type[rip]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:rbx:[rbp-48] result_value.1:rax $10.1:r15 IR_Nothing_Type.5:r14 
   # $11.1: Boolean = call(is_292, $10.1, IR_Nothing_Type.5)
-  .loc 3 998 9
+  .loc 3 1023 9
   mov rdi, r15
   mov rsi, r14
   mov [rbp-56], rax
@@ -30764,7 +31070,7 @@ convert_dynamic_call_expression_105:
   # [discarded value]: IR_Nothing_Type.5
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:[rbp-56] $11.1:rax 
   # $12.1: Boolean = $11.1 == false
-  .loc 3 998 9
+  .loc 3 1023 9
   cmp al, 0
   sete bl
   # [discarded value]: $11.1
@@ -30774,13 +31080,13 @@ convert_dynamic_call_expression_105:
   jz .LABEL__convert_dynamic_call_expression_105__7
 .LABEL__convert_dynamic_call_expression_105__6:
   # $13.1: @IR_Type = load_struct_member(call_function_type.1, return_type)
-  .loc 3 999 47
+  .loc 3 1024 47
   mov rax, [rbp-48]
   mov rbx, [rax+24]
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:rax:[rbp-48] result_value.1:[rbp-56] $13.1:rbx 
   # result_value.2: @IR_Variable_Value = call(create_temp_value_70, self.1, $13.1)
-  .loc 3 999 24
+  .loc 3 1024 24
   mov rdi, [rbp-32]
   mov rsi, rbx
   call create_temp_value_70
@@ -30792,11 +31098,11 @@ convert_dynamic_call_expression_105:
   # result_value.3: @IR_Variable_Value = phi(result_value.1, result_value.2)
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:[rbp-56] result_value.2:[rbp-56] result_value.3:[rbp-56] 
   # $15.1: @IR_Variable_Value = call_function.1
-  .loc 3 1001 89
+  .loc 3 1026 89
   mov rax, [rbp-24]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:[rbp-56] result_value.2:[rbp-56] result_value.3:[rbp-56] $15.1:rax 
   # $16.1: @IR_Call_Instruction = call(create_ir_dynamic_call_instruction_162, result_value.3, call_arguments.1, $15.1)
-  .loc 3 1001 24
+  .loc 3 1026 24
   mov rdi, [rbp-56]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -30805,12 +31111,12 @@ convert_dynamic_call_expression_105:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:[rbp-56] result_value.2:[rbp-56] $16.1:rax 
   # $17.1: @Source_Location = load_struct_member(call_expression.1, location)
-  .loc 3 1001 127
+  .loc 3 1026 127
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-32] call_expression.1:rbx:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:[rbp-56] result_value.2:[rbp-56] $16.1:rax $17.1:r15 
   # $18.1: @IR_Variable_Value = call(append_71, self.1, $16.1, $17.1)
-  .loc 3 1001 12
+  .loc 3 1026 12
   mov rdi, [rbp-32]
   mov rsi, rax
   mov rdx, r15
@@ -30819,7 +31125,7 @@ convert_dynamic_call_expression_105:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:[rbp-56] result_value.2:[rbp-56] $18.1:rax 
   # return($18.1)
-  .loc 3 1001 5
+  .loc 3 1026 5
   jmp .LABEL__convert_dynamic_call_expression_105__end
   # [discarded value]: $18.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:[rbp-40] call_function_type.1:[rbp-48] result_value.1:[rbp-56] result_value.2:[rbp-56] 
@@ -30847,7 +31153,7 @@ convert_dynamic_call_expression_105:
 
 convert_dynamic_call_expression_105__stack_frame_size: .word 64
 
-  .loc 3 1004 1
+  .loc 3 1029 1
   .text
 accepts_106:
   push rbp
@@ -30860,17 +31166,17 @@ accepts_106:
   # call_arguments.1: @List = load_variable(call_arguments)
   # [live values]: self.1:rdi call_arguments.1:rsi 
   # call_arguments_item.1: @List_Item = load_struct_member(call_arguments.1, first_item)
-  .loc 3 1005 28
+  .loc 3 1030 28
   mov rax, [rsi+0]
   # [discarded value]: call_arguments.1
   # [live values]: self.1:rdi call_arguments_item.1:rax 
   # $2.1: @List = load_struct_member(self.1, parameters)
-  .loc 3 1006 33
+  .loc 3 1031 33
   mov rbx, [rdi+16]
   # [discarded value]: self.1
   # [live values]: call_arguments_item.1:rax $2.1:rbx 
   # function_parameters_item.1: @List_Item = load_struct_member($2.1, first_item)
-  .loc 3 1006 33
+  .loc 3 1031 33
   mov r15, [rbx+0]
   # [discarded value]: $2.1
   # [live values]: call_arguments_item.1:rax function_parameters_item.1:r15 
@@ -30883,7 +31189,7 @@ accepts_106:
   # call_arguments_item.2: @List_Item = phi(call_arguments_item.1, call_arguments_item.5)
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] 
   # $5.1: Boolean = call_arguments_item.2 != null
-  .loc 3 1007 12
+  .loc 3 1032 12
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:rax 
@@ -30893,7 +31199,7 @@ accepts_106:
   jz .LABEL__accepts_106__8
 .LABEL__accepts_106__7:
   # $5.2: Boolean = function_parameters_item.9 != null
-  .loc 3 1007 43
+  .loc 3 1032 43
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $5.2:rax:[rbp-17] 
@@ -30901,7 +31207,7 @@ accepts_106:
   mov [rbp-17], al
 .LABEL__accepts_106__8:
   # $7.1: Boolean = phi($5.1, $5.2)
-  .loc 3 1007 12
+  .loc 3 1032 12
   mov al, [rbp-17]
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $5.2:[rbp-17] $7.1:rax 
   # jump($7.1, block.5, block.6)
@@ -30910,32 +31216,32 @@ accepts_106:
   jz .LABEL__accepts_106__6
 .LABEL__accepts_106__5:
   # $9.1: @IR_Function_Type_Parameter = load_struct_member(function_parameters_item.9, data)
-  .loc 3 1007 80
+  .loc 3 1032 80
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:rax:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $9.1:rbx $5.2:[rbp-17] $7.1:[rbp-18] 
   # $10.1: @IR_Type = load_struct_member($9.1, type)
-  .loc 3 1007 79
+  .loc 3 1032 79
   mov r15, [rbx+8]
   # [discarded value]: $9.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:rax:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $10.1:r15 $5.2:[rbp-17] $7.1:[rbp-18] 
   # $12.1: @IR_Call_Argument = load_struct_member(call_arguments_item.2, data)
-  .loc 3 1007 156
+  .loc 3 1032 156
   mov rbx, [rbp-8]
   mov r14, [rbx+16]
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:rax:[rbp-16] call_arguments_item.2:rbx:[rbp-8] $5.1:[rbp-17] $10.1:r15 $12.1:r14 $5.2:[rbp-17] $7.1:[rbp-18] 
   # $13.1: @IR_Value = load_struct_member($12.1, value)
-  .loc 3 1007 155
+  .loc 3 1032 155
   mov r13, [r14+8]
   # [discarded value]: $12.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:rax:[rbp-16] call_arguments_item.2:rbx:[rbp-8] $5.1:[rbp-17] $10.1:r15 $13.1:r13 $5.2:[rbp-17] $7.1:[rbp-18] 
   # $14.1: @IR_Type = load_struct_member($13.1, type)
-  .loc 3 1007 155
+  .loc 3 1032 155
   mov r14, [r13+8]
   # [discarded value]: $13.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:rax:[rbp-16] call_arguments_item.2:rbx:[rbp-8] $5.1:[rbp-17] $10.1:r15 $14.1:r14 $5.2:[rbp-17] $7.1:[rbp-18] 
   # $7.2: Boolean = call(accepts_68, $10.1, $14.1)
-  .loc 3 1007 79
+  .loc 3 1032 79
   mov rdi, r15
   mov rsi, r14
   call accepts_68
@@ -30946,7 +31252,7 @@ accepts_106:
   mov [rbp-18], al
 .LABEL__accepts_106__6:
   # $7.3: Boolean = phi($7.1, $7.2)
-  .loc 3 1007 12
+  .loc 3 1032 12
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
   # jump($7.3, block.3, block.4)
   mov al, [rbp-18]
@@ -30954,13 +31260,13 @@ accepts_106:
   jz .LABEL__accepts_106__4
 .LABEL__accepts_106__3:
   # call_arguments_item.5: @List_Item = load_struct_member(call_arguments_item.2, next_item)
-  .loc 3 1008 31
+  .loc 3 1033 31
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $7.3
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] call_arguments_item.5:rbx:[rbp-8] $7.2:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
   # function_parameters_item.5: @List_Item = load_struct_member(function_parameters_item.9, next_item)
-  .loc 3 1009 36
+  .loc 3 1034 36
   mov rax, [rbp-16]
   mov r15, [rax+8]
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] call_arguments_item.5:rbx:[rbp-8] function_parameters_item.5:r15:[rbp-16] $7.2:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
@@ -30974,7 +31280,7 @@ accepts_106:
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $7.2:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
 .LABEL__accepts_106__4:
   # $19.1: Boolean = call_arguments_item.2 == null
-  .loc 3 1011 12
+  .loc 3 1036 12
   cmp QWORD PTR [rbp-8], 0
   sete al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $19.1:rax $7.2:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
@@ -30984,7 +31290,7 @@ accepts_106:
   jz .LABEL__accepts_106__10
 .LABEL__accepts_106__9:
   # $19.2: Boolean = function_parameters_item.9 == null
-  .loc 3 1011 43
+  .loc 3 1036 43
   cmp QWORD PTR [rbp-16], 0
   sete al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $19.1:[rbp-19] $7.2:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] $19.2:rax:[rbp-19] 
@@ -30992,10 +31298,10 @@ accepts_106:
   mov [rbp-19], al
 .LABEL__accepts_106__10:
   # $19.3: Boolean = phi($19.1, $19.2)
-  .loc 3 1011 12
+  .loc 3 1036 12
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $19.1:[rbp-19] $7.2:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] $19.2:[rbp-19] $19.3:[rbp-19] 
   # return($19.3)
-  .loc 3 1011 5
+  .loc 3 1036 5
   mov al, [rbp-19]
   jmp .LABEL__accepts_106__end
   # [discarded value]: $19.3
@@ -31032,7 +31338,7 @@ accepts_106:
 
 accepts_106__stack_frame_size: .word 32
 
-  .loc 3 1014 1
+  .loc 3 1039 1
   .text
 convert_call_arguments_107:
   push rbp
@@ -31045,11 +31351,11 @@ convert_call_arguments_107:
   # ast_call_arguments.1: @List = load_variable(ast_call_arguments)
   # [live values]: self.1:rdi ast_call_arguments.1:rsi 
   # has_named_arguments.1: Boolean = false
-  .loc 3 1015 5
+  .loc 3 1040 5
   mov al, 0
   # [live values]: self.1:rdi ast_call_arguments.1:rsi has_named_arguments.1:rax 
   # $1.1: @List = new(List)
-  .loc 3 1016 23
+  .loc 3 1041 23
   mov [rbp-1], al
   mov [rbp-9], rsi
   mov [rbp-17], rdi
@@ -31066,11 +31372,11 @@ convert_call_arguments_107:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-17] ast_call_arguments.1:[rbp-9] has_named_arguments.1:[rbp-1] $1.1:rax 
   # call_arguments.1: @List = $1.1
-  .loc 3 1016 5
+  .loc 3 1041 5
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-17] ast_call_arguments.1:[rbp-9] has_named_arguments.1:[rbp-1] call_arguments.1:rax 
   # ast_call_arguments_item.1: @List_Item = load_struct_member(ast_call_arguments.1, first_item)
-  .loc 3 1017 32
+  .loc 3 1042 32
   mov rbx, [rbp-9]
   mov r15, [rbx+0]
   # [discarded value]: ast_call_arguments.1
@@ -31084,7 +31390,7 @@ convert_call_arguments_107:
   # ast_call_arguments_item.2: @List_Item = phi(ast_call_arguments_item.1, ast_call_arguments_item.5)
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] 
   # $3.1: Boolean = ast_call_arguments_item.2 != null
-  .loc 3 1018 12
+  .loc 3 1043 12
   cmp QWORD PTR [rbp-33], 0
   setne al
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] $3.1:rax 
@@ -31093,17 +31399,17 @@ convert_call_arguments_107:
   jz .LABEL__convert_call_arguments_107__4
 .LABEL__convert_call_arguments_107__3:
   # call_argument.1: @AST_Call_Argument = load_struct_member(ast_call_arguments_item.2, data)
-  .loc 3 1019 26
+  .loc 3 1044 26
   mov rax, [rbp-33]
   mov rbx, [rax+16]
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:rax:[rbp-33] call_argument.1:rbx 
   # $6.1: @AST_Expression = load_struct_member(call_argument.1, value_expression)
-  .loc 3 1020 56
+  .loc 3 1045 56
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:rax:[rbp-33] call_argument.1:rbx $6.1:r15 
   # call_argument_value.1: @IR_Value = call(convert_expression_99, self.1, $6.1, null)
-  .loc 3 1020 32
+  .loc 3 1045 32
   mov rdi, [rbp-17]
   mov rsi, r15
   xor rdx, rdx
@@ -31112,12 +31418,12 @@ convert_call_arguments_107:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:rax 
   # $8.1: @Identifier_Token = load_struct_member(call_argument.1, name)
-  .loc 3 1021 13
+  .loc 3 1046 13
   mov rbx, [rbp-41]
   mov r15, [rbx+0]
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:rbx:[rbp-41] call_argument_value.1:rax $8.1:r15 
   # $9.1: Boolean = $8.1 != null
-  .loc 3 1021 13
+  .loc 3 1046 13
   cmp r15, 0
   setne r14b
   # [discarded value]: $8.1
@@ -31128,18 +31434,18 @@ convert_call_arguments_107:
   jz .LABEL__convert_call_arguments_107__7
 .LABEL__convert_call_arguments_107__5:
   # $13.1: @Identifier_Token = load_struct_member(call_argument.1, name)
-  .loc 3 1022 63
+  .loc 3 1047 63
   mov rax, [rbp-41]
   mov rbx, [rax+0]
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:rax:[rbp-41] call_argument_value.1:[rbp-49] $13.1:rbx 
   # $14.1: @String = load_struct_member($13.1, lexeme)
-  .loc 3 1022 63
+  .loc 3 1047 63
   mov r15, [rbx+8]
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:rax:[rbp-41] call_argument_value.1:[rbp-49] $14.1:r15 
   # $15.1: @IR_Call_Argument = new(IR_Call_Argument)
-  .loc 3 1022 35
+  .loc 3 1047 35
   mov [rbp-57], r15
   mov rdi, 16
   call malloc
@@ -31154,14 +31460,14 @@ convert_call_arguments_107:
   mov QWORD PTR [rax+8], rbx
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:rbx:[rbp-49] $15.1:rax 
   # call(append_267, call_arguments.1, $15.1)
-  .loc 3 1022 13
+  .loc 3 1047 13
   mov rdi, [rbp-25]
   mov rsi, rax
   call append_267
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:[rbp-49] 
   # has_named_arguments.3: Boolean = true
-  .loc 3 1023 13
+  .loc 3 1048 13
   mov al, 1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:[rbp-49] has_named_arguments.3:rax:[rbp-1] 
   # jump(block.6)
@@ -31170,7 +31476,7 @@ convert_call_arguments_107:
   # has_named_arguments.5: Boolean = phi(has_named_arguments.3, has_named_arguments.4)
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:[rbp-49] has_named_arguments.3:[rbp-1] has_named_arguments.5:[rbp-1] 
   # ast_call_arguments_item.5: @List_Item = load_struct_member(ast_call_arguments_item.2, next_item)
-  .loc 3 1030 35
+  .loc 3 1055 35
   mov rax, [rbp-33]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:[rbp-49] has_named_arguments.3:[rbp-1] has_named_arguments.5:[rbp-1] ast_call_arguments_item.5:rbx:[rbp-33] 
@@ -31191,25 +31497,25 @@ convert_call_arguments_107:
   jz .LABEL__convert_call_arguments_107__9
 .LABEL__convert_call_arguments_107__8:
   # $10.1: @AST_Expression = load_struct_member(call_argument.1, value_expression)
-  .loc 3 1026 23
+  .loc 3 1051 23
   mov rax, [rbp-41]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:rax:[rbp-41] call_argument_value.1:[rbp-49] $10.1:rbx 
   # $11.1: @Source_Location = load_struct_member($10.1, location)
-  .loc 3 1026 23
+  .loc 3 1051 23
   mov r15, [rbx+8]
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:rax:[rbp-41] call_argument_value.1:[rbp-49] $11.1:r15 
   # call(abort_263, $11.1, "Positional arguments cannot be added after named ones")
-  .loc 3 1026 17
+  .loc 3 1051 17
   mov rdi, r15
-  lea rsi, .LABEL__string_205[rip] # "Positional arguments cannot be added after named ones"
+  lea rsi, .LABEL__string_208[rip] # "Positional arguments cannot be added after named ones"
   call abort_263
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:[rbp-49] 
 .LABEL__convert_call_arguments_107__9:
   # $12.1: @IR_Call_Argument = new(IR_Call_Argument)
-  .loc 3 1028 35
+  .loc 3 1053 35
   mov rdi, 16
   call malloc
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:[rbp-49] $12.1:rax 
@@ -31221,7 +31527,7 @@ convert_call_arguments_107:
   mov QWORD PTR [rax+8], rbx
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] call_argument.1:[rbp-41] call_argument_value.1:rbx:[rbp-49] $12.1:rax 
   # call(append_267, call_arguments.1, $12.1)
-  .loc 3 1028 13
+  .loc 3 1053 13
   mov rdi, [rbp-25]
   mov rsi, rax
   call append_267
@@ -31237,7 +31543,7 @@ convert_call_arguments_107:
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] 
 .LABEL__convert_call_arguments_107__4:
   # return(call_arguments.1)
-  .loc 3 1032 5
+  .loc 3 1057 5
   mov rax, [rbp-25]
   jmp .LABEL__convert_call_arguments_107__end
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] 
@@ -31258,7 +31564,7 @@ convert_call_arguments_107:
 
 convert_call_arguments_107__stack_frame_size: .word 64
 
-  .loc 3 1035 1
+  .loc 3 1060 1
   .text
 convert_cast_expression_108:
   push rbp
@@ -31271,11 +31577,11 @@ convert_cast_expression_108:
   # cast_expression.1: @AST_Cast_Expression = load_variable(cast_expression)
   # [live values]: self.1:rdi cast_expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(cast_expression.1, value_expression)
-  .loc 3 1036 38
+  .loc 3 1061 38
   mov rax, [rsi+16]
   # [live values]: self.1:rdi cast_expression.1:rsi $1.1:rax 
   # value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, null)
-  .loc 3 1036 14
+  .loc 3 1061 14
   mov [rbp-8], rsi
   mov rsi, rax
   xor rdx, rdx
@@ -31284,12 +31590,12 @@ convert_cast_expression_108:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax 
   # $3.1: @AST_Type = load_struct_member(cast_expression.1, type)
-  .loc 3 1037 68
+  .loc 3 1062 68
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-16] cast_expression.1:rbx:[rbp-8] value.1:rax $3.1:r15 
   # $4.1: @IR_Type = call(convert_value_type_75, self.1, $3.1)
-  .loc 3 1037 44
+  .loc 3 1062 44
   mov rdi, [rbp-16]
   mov rsi, r15
   mov [rbp-24], rax
@@ -31297,14 +31603,14 @@ convert_cast_expression_108:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] $4.1:rax 
   # result_value.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $4.1)
-  .loc 3 1037 21
+  .loc 3 1062 21
   mov rdi, [rbp-16]
   mov rsi, rax
   call create_temp_value_70
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax 
   # $6.1: @IR_Type = load_struct_member(value.1, type)
-  .loc 3 1038 9
+  .loc 3 1063 9
   mov rbx, [rbp-24]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rbx:[rbp-24] result_value.1:rax $6.1:r15 
@@ -31312,7 +31618,7 @@ convert_cast_expression_108:
   lea r14, IR_Pointer_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rbx:[rbp-24] result_value.1:rax $6.1:r15 IR_Pointer_Type.14:r14 
   # $8.1: Boolean = call(is_292, $6.1, IR_Pointer_Type.14)
-  .loc 3 1038 9
+  .loc 3 1063 9
   mov rdi, r15
   mov rsi, r14
   mov [rbp-32], rax
@@ -31326,7 +31632,7 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__3
 .LABEL__convert_cast_expression_108__2:
   # $9.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1038 43
+  .loc 3 1063 43
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $9.1:rbx 
@@ -31334,7 +31640,7 @@ convert_cast_expression_108:
   lea r15, IR_Pointer_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $9.1:rbx IR_Pointer_Type.15:r15 
   # $8.2: Boolean = call(is_292, $9.1, IR_Pointer_Type.15)
-  .loc 3 1038 43
+  .loc 3 1063 43
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31345,7 +31651,7 @@ convert_cast_expression_108:
   mov [rbp-33], al
 .LABEL__convert_cast_expression_108__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1038 9
+  .loc 3 1063 9
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $8.3:[rbp-33] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-33]
@@ -31353,19 +31659,19 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__5
 .LABEL__convert_cast_expression_108__4:
   # $11.1: @IR_Set_Instruction = call(create_ir_set_instruction_178, result_value.1, value.1)
-  .loc 3 1039 28
+  .loc 3 1064 28
   mov rdi, [rbp-32]
   mov rsi, [rbp-24]
   call create_ir_set_instruction_178
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $11.1:rax 
   # $12.1: @Source_Location = load_struct_member(cast_expression.1, location)
-  .loc 3 1039 76
+  .loc 3 1064 76
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:rbx:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $11.1:rax $12.1:r15 
   # $13.1: @IR_Variable_Value = call(append_71, self.1, $11.1, $12.1)
-  .loc 3 1039 16
+  .loc 3 1064 16
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -31374,13 +31680,13 @@ convert_cast_expression_108:
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $13.1:rax 
   # return($13.1)
-  .loc 3 1039 9
+  .loc 3 1064 9
   jmp .LABEL__convert_cast_expression_108__end
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] 
 .LABEL__convert_cast_expression_108__5:
   # $14.1: @IR_Type = load_struct_member(value.1, type)
-  .loc 3 1041 9
+  .loc 3 1066 9
   mov rax, [rbp-24]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $14.1:rbx 
@@ -31388,7 +31694,7 @@ convert_cast_expression_108:
   lea r15, IR_Int_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $14.1:rbx IR_Int_Type.8:r15 
   # $16.1: Boolean = call(is_292, $14.1, IR_Int_Type.8)
-  .loc 3 1041 9
+  .loc 3 1066 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31401,7 +31707,7 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__8
 .LABEL__convert_cast_expression_108__7:
   # $17.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1041 40
+  .loc 3 1066 40
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $17.1:rbx 
@@ -31409,7 +31715,7 @@ convert_cast_expression_108:
   lea r15, IR_Int32_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $17.1:rbx IR_Int32_Type.8:r15 
   # $19.1: Boolean = call(is_292, $17.1, IR_Int32_Type.8)
-  .loc 3 1041 40
+  .loc 3 1066 40
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31422,14 +31728,14 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__9
 .LABEL__convert_cast_expression_108__10:
   # $16.2: Boolean = phi($19.1, $19.2)
-  .loc 3 1041 40
+  .loc 3 1066 40
   mov al, [rbp-35]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:rax:[rbp-34] 
   # jump(block.8)
   mov [rbp-34], al
 .LABEL__convert_cast_expression_108__8:
   # $16.3: Boolean = phi($16.1, $16.2)
-  .loc 3 1041 9
+  .loc 3 1066 9
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.3:[rbp-34] $16.2:[rbp-34] 
   # jump($16.3, block.11, block.12)
   mov al, [rbp-34]
@@ -31437,19 +31743,19 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__12
 .LABEL__convert_cast_expression_108__11:
   # $22.1: @IR_Cast_Instruction = call(create_ir_cast_instruction_164, result_value.1, value.1)
-  .loc 3 1042 28
+  .loc 3 1067 28
   mov rdi, [rbp-32]
   mov rsi, [rbp-24]
   call create_ir_cast_instruction_164
   # [discarded value]: $16.3
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $22.1:rax 
   # $23.1: @Source_Location = load_struct_member(cast_expression.1, location)
-  .loc 3 1042 77
+  .loc 3 1067 77
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:rbx:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $22.1:rax $23.1:r15 
   # $24.1: @IR_Variable_Value = call(append_71, self.1, $22.1, $23.1)
-  .loc 3 1042 16
+  .loc 3 1067 16
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -31458,13 +31764,13 @@ convert_cast_expression_108:
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $24.1:rax 
   # return($24.1)
-  .loc 3 1042 9
+  .loc 3 1067 9
   jmp .LABEL__convert_cast_expression_108__end
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] 
 .LABEL__convert_cast_expression_108__12:
   # $25.1: @IR_Type = load_struct_member(value.1, type)
-  .loc 3 1044 9
+  .loc 3 1069 9
   mov rax, [rbp-24]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $25.1:rbx 
@@ -31472,7 +31778,7 @@ convert_cast_expression_108:
   lea r15, IR_Int32_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $25.1:rbx IR_Int32_Type.9:r15 
   # $27.1: Boolean = call(is_292, $25.1, IR_Int32_Type.9)
-  .loc 3 1044 9
+  .loc 3 1069 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31485,7 +31791,7 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__15
 .LABEL__convert_cast_expression_108__14:
   # $28.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1044 42
+  .loc 3 1069 42
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $28.1:rbx 
@@ -31493,7 +31799,7 @@ convert_cast_expression_108:
   lea r15, IR_Int_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $28.1:rbx IR_Int_Type.9:r15 
   # $30.1: Boolean = call(is_292, $28.1, IR_Int_Type.9)
-  .loc 3 1044 42
+  .loc 3 1069 42
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31506,14 +31812,14 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__16
 .LABEL__convert_cast_expression_108__17:
   # $27.2: Boolean = phi($30.1, $30.2)
-  .loc 3 1044 42
+  .loc 3 1069 42
   mov al, [rbp-37]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:rax:[rbp-36] 
   # jump(block.15)
   mov [rbp-36], al
 .LABEL__convert_cast_expression_108__15:
   # $27.3: Boolean = phi($27.1, $27.2)
-  .loc 3 1044 9
+  .loc 3 1069 9
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.3:[rbp-36] $27.2:[rbp-36] 
   # jump($27.3, block.18, block.19)
   mov al, [rbp-36]
@@ -31521,19 +31827,19 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__19
 .LABEL__convert_cast_expression_108__18:
   # $33.1: @IR_Cast_Instruction = call(create_ir_cast_instruction_164, result_value.1, value.1)
-  .loc 3 1045 28
+  .loc 3 1070 28
   mov rdi, [rbp-32]
   mov rsi, [rbp-24]
   call create_ir_cast_instruction_164
   # [discarded value]: $27.3
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $33.1:rax 
   # $34.1: @Source_Location = load_struct_member(cast_expression.1, location)
-  .loc 3 1045 77
+  .loc 3 1070 77
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:rbx:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $33.1:rax $34.1:r15 
   # $35.1: @IR_Variable_Value = call(append_71, self.1, $33.1, $34.1)
-  .loc 3 1045 16
+  .loc 3 1070 16
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -31542,13 +31848,13 @@ convert_cast_expression_108:
   # [discarded value]: $34.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $35.1:rax 
   # return($35.1)
-  .loc 3 1045 9
+  .loc 3 1070 9
   jmp .LABEL__convert_cast_expression_108__end
   # [discarded value]: $35.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] 
 .LABEL__convert_cast_expression_108__19:
   # $36.1: @IR_Type = load_struct_member(value.1, type)
-  .loc 3 1047 9
+  .loc 3 1072 9
   mov rax, [rbp-24]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $36.1:rbx 
@@ -31556,7 +31862,7 @@ convert_cast_expression_108:
   lea r15, IR_Int8_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $36.1:rbx IR_Int8_Type.10:r15 
   # $38.1: Boolean = call(is_292, $36.1, IR_Int8_Type.10)
-  .loc 3 1047 9
+  .loc 3 1072 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31569,7 +31875,7 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__22
 .LABEL__convert_cast_expression_108__21:
   # $39.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1047 41
+  .loc 3 1072 41
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $39.1:rbx 
@@ -31577,7 +31883,7 @@ convert_cast_expression_108:
   lea r15, IR_Int_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $39.1:rbx IR_Int_Type.10:r15 
   # $41.1: Boolean = call(is_292, $39.1, IR_Int_Type.10)
-  .loc 3 1047 41
+  .loc 3 1072 41
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31590,14 +31896,14 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__23
 .LABEL__convert_cast_expression_108__24:
   # $38.2: Boolean = phi($41.1, $41.2)
-  .loc 3 1047 41
+  .loc 3 1072 41
   mov al, [rbp-39]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:rax:[rbp-38] 
   # jump(block.22)
   mov [rbp-38], al
 .LABEL__convert_cast_expression_108__22:
   # $38.3: Boolean = phi($38.1, $38.2)
-  .loc 3 1047 9
+  .loc 3 1072 9
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.3:[rbp-38] $38.2:[rbp-38] 
   # jump($38.3, block.25, block.26)
   mov al, [rbp-38]
@@ -31605,19 +31911,19 @@ convert_cast_expression_108:
   jz .LABEL__convert_cast_expression_108__26
 .LABEL__convert_cast_expression_108__25:
   # $44.1: @IR_Cast_Instruction = call(create_ir_cast_instruction_164, result_value.1, value.1)
-  .loc 3 1048 28
+  .loc 3 1073 28
   mov rdi, [rbp-32]
   mov rsi, [rbp-24]
   call create_ir_cast_instruction_164
   # [discarded value]: $38.3
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $44.1:rax 
   # $45.1: @Source_Location = load_struct_member(cast_expression.1, location)
-  .loc 3 1048 77
+  .loc 3 1073 77
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:rbx:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $44.1:rax $45.1:r15 
   # $46.1: @IR_Variable_Value = call(append_71, self.1, $44.1, $45.1)
-  .loc 3 1048 16
+  .loc 3 1073 16
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -31626,34 +31932,34 @@ convert_cast_expression_108:
   # [discarded value]: $45.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $46.1:rax 
   # return($46.1)
-  .loc 3 1048 9
+  .loc 3 1073 9
   jmp .LABEL__convert_cast_expression_108__end
   # [discarded value]: $46.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] 
 .LABEL__convert_cast_expression_108__26:
   # $47.1: @Source_Location = load_struct_member(cast_expression.1, location)
-  .loc 3 1050 11
+  .loc 3 1075 11
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:rax:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:rbx 
   # $48.1: @String = call(clone_294, "Cannot cast ")
-  .loc 3 1050 37
+  .loc 3 1075 37
   lea rdi, .LABEL__string_40[rip] # "Cannot cast "
   mov [rbp-47], rbx
   call clone_294
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $48.1:rax 
   # $49.1: @IR_Type = load_struct_member(value.1, type)
-  .loc 3 1050 66
+  .loc 3 1075 66
   mov rbx, [rbp-24]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rbx:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $48.1:rax $49.1:r15 
   # $50.1: @String = load_struct_member($49.1, name)
-  .loc 3 1050 66
+  .loc 3 1075 66
   mov r14, [r15+8]
   # [discarded value]: $49.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rbx:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $48.1:rax $50.1:r14 
   # $51.1: @String = call(append_303, $48.1, $50.1)
-  .loc 3 1050 37
+  .loc 3 1075 37
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -31661,24 +31967,24 @@ convert_cast_expression_108:
   # [discarded value]: $50.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $51.1:rax 
   # $52.1: @String = call(append_303, $51.1, " to ")
-  .loc 3 1050 37
+  .loc 3 1075 37
   mov rdi, rax
   lea rsi, .LABEL__string_41[rip] # " to "
   call append_303
   # [discarded value]: $51.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $52.1:rax 
   # $53.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1050 105
+  .loc 3 1075 105
   mov rbx, [rbp-32]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rbx:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $52.1:rax $53.1:r15 
   # $54.1: @String = load_struct_member($53.1, name)
-  .loc 3 1050 105
+  .loc 3 1075 105
   mov r14, [r15+8]
   # [discarded value]: $53.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rbx:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $52.1:rax $54.1:r14 
   # $55.1: @String = call(append_303, $52.1, $54.1)
-  .loc 3 1050 37
+  .loc 3 1075 37
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -31686,7 +31992,7 @@ convert_cast_expression_108:
   # [discarded value]: $54.1
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $38.2:[rbp-38] $47.1:[rbp-47] $55.1:rax 
   # call(abort_263, $47.1, $55.1)
-  .loc 3 1050 5
+  .loc 3 1075 5
   mov rdi, [rbp-47]
   mov rsi, rax
   call abort_263
@@ -31699,7 +32005,7 @@ convert_cast_expression_108:
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] 
 .LABEL__convert_cast_expression_108__23:
   # $42.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1047 78
+  .loc 3 1072 78
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $42.1:rbx 
@@ -31707,7 +32013,7 @@ convert_cast_expression_108:
   lea r15, IR_Int32_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $27.2:[rbp-36] $38.1:[rbp-38] $41.1:[rbp-39] $42.1:rbx IR_Int32_Type.10:r15 
   # $41.2: Boolean = call(is_292, $42.1, IR_Int32_Type.10)
-  .loc 3 1047 78
+  .loc 3 1072 78
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31732,7 +32038,7 @@ convert_cast_expression_108:
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] 
 .LABEL__convert_cast_expression_108__16:
   # $31.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1044 79
+  .loc 3 1069 79
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $31.1:rbx 
@@ -31740,7 +32046,7 @@ convert_cast_expression_108:
   lea r15, IR_Int8_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $16.2:[rbp-34] $27.1:[rbp-36] $30.1:[rbp-37] $31.1:rbx IR_Int8_Type.9:r15 
   # $30.2: Boolean = call(is_292, $31.1, IR_Int8_Type.9)
-  .loc 3 1044 79
+  .loc 3 1069 79
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31765,7 +32071,7 @@ convert_cast_expression_108:
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] 
 .LABEL__convert_cast_expression_108__9:
   # $20.1: @IR_Type = load_struct_member(result_value.1, type)
-  .loc 3 1041 79
+  .loc 3 1066 79
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $20.1:rbx 
@@ -31773,7 +32079,7 @@ convert_cast_expression_108:
   lea r15, IR_Int8_Type[rip]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $8.2:[rbp-33] $16.1:[rbp-34] $19.1:[rbp-35] $20.1:rbx IR_Int8_Type.8:r15 
   # $19.2: Boolean = call(is_292, $20.1, IR_Int8_Type.8)
-  .loc 3 1041 79
+  .loc 3 1066 79
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -31810,7 +32116,7 @@ convert_cast_expression_108:
 
 convert_cast_expression_108__stack_frame_size: .word 48
 
-  .loc 3 1053 1
+  .loc 3 1078 1
   .text
 convert_divide_expression_109:
   push rbp
@@ -31823,11 +32129,11 @@ convert_divide_expression_109:
   # expression.1: @AST_Divide_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1054 43
+  .loc 3 1079 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1054 71
+  .loc 3 1079 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -31835,7 +32141,7 @@ convert_divide_expression_109:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1054 19
+  .loc 3 1079 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -31844,12 +32150,12 @@ convert_divide_expression_109:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1055 44
+  .loc 3 1080 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1055 73
+  .loc 3 1080 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -31857,7 +32163,7 @@ convert_divide_expression_109:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1055 20
+  .loc 3 1080 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -31869,7 +32175,7 @@ convert_divide_expression_109:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.13:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.13)
-  .loc 3 1056 9
+  .loc 3 1081 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -31885,7 +32191,7 @@ convert_divide_expression_109:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.14:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.14)
-  .loc 3 1056 45
+  .loc 3 1081 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -31895,7 +32201,7 @@ convert_divide_expression_109:
   mov [rbp-41], al
 .LABEL__convert_divide_expression_109__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1056 9
+  .loc 3 1081 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -31903,13 +32209,13 @@ convert_divide_expression_109:
   jz .LABEL__convert_divide_expression_109__5
 .LABEL__convert_divide_expression_109__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1057 15
+  .loc 3 1082 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1057 9
+  .loc 3 1082 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -31917,12 +32223,12 @@ convert_divide_expression_109:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_divide_expression_109__5:
   # $11.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1059 88
+  .loc 3 1084 88
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rbx 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1059 65
+  .loc 3 1084 65
   mov rdi, [rbp-24]
   mov rsi, rbx
   call create_temp_value_70
@@ -31944,7 +32250,7 @@ convert_divide_expression_109:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Divide_Instruction = new(IR_Divide_Instruction)
-  .loc 3 1059 24
+  .loc 3 1084 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -31974,7 +32280,7 @@ convert_divide_expression_109:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1059 24
+  .loc 3 1084 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -31982,12 +32288,12 @@ convert_divide_expression_109:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1059 137
+  .loc 3 1084 137
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1059 12
+  .loc 3 1084 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -31996,7 +32302,7 @@ convert_divide_expression_109:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1059 5
+  .loc 3 1084 5
   jmp .LABEL__convert_divide_expression_109__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -32018,7 +32324,7 @@ convert_divide_expression_109:
 
 convert_divide_expression_109__stack_frame_size: .word 64
 
-  .loc 3 1062 1
+  .loc 3 1087 1
   .text
 convert_equals_expression_110:
   push rbp
@@ -32031,11 +32337,11 @@ convert_equals_expression_110:
   # expression.1: @AST_Equals_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1063 43
+  .loc 3 1088 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, null)
-  .loc 3 1063 19
+  .loc 3 1088 19
   mov [rbp-8], rsi
   mov rsi, rax
   xor rdx, rdx
@@ -32044,12 +32350,12 @@ convert_equals_expression_110:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax 
   # $3.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1064 44
+  .loc 3 1089 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] left_value.1:rax $3.1:r15 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $3.1, null)
-  .loc 3 1064 20
+  .loc 3 1089 20
   mov rdi, [rbp-16]
   mov rsi, r15
   xor rdx, rdx
@@ -32058,16 +32364,16 @@ convert_equals_expression_110:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax 
   # $5.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1065 9
+  .loc 3 1090 9
   mov rbx, [rbp-24]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $5.1:r15 
   # $6.1: @IR_Type = load_struct_member(right_value.1, type)
-  .loc 3 1065 32
+  .loc 3 1090 32
   mov r14, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $5.1:r15 $6.1:r14 
   # $7.1: Boolean = call(equals_140, $5.1, $6.1)
-  .loc 3 1065 9
+  .loc 3 1090 9
   mov rdi, r15
   mov rsi, r14
   mov [rbp-32], rax
@@ -32076,7 +32382,7 @@ convert_equals_expression_110:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $7.1:rax 
   # $9.1: Boolean = $7.1 == false
-  .loc 3 1065 9
+  .loc 3 1090 9
   cmp al, 0
   sete bl
   # [discarded value]: $7.1
@@ -32087,7 +32393,7 @@ convert_equals_expression_110:
   jz .LABEL__convert_equals_expression_110__3
 .LABEL__convert_equals_expression_110__2:
   # $10.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1065 63
+  .loc 3 1090 63
   mov rax, [rbp-24]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $10.1:rbx 
@@ -32095,7 +32401,7 @@ convert_equals_expression_110:
   lea r15, IR_Pointer_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $10.1:rbx IR_Pointer_Type.16:r15 
   # $12.1: Boolean = call(is_292, $10.1, IR_Pointer_Type.16)
-  .loc 3 1065 63
+  .loc 3 1090 63
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -32108,7 +32414,7 @@ convert_equals_expression_110:
   jz .LABEL__convert_equals_expression_110__5
 .LABEL__convert_equals_expression_110__4:
   # $13.1: @IR_Type = load_struct_member(right_value.1, type)
-  .loc 3 1065 102
+  .loc 3 1090 102
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $13.1:rbx 
@@ -32116,7 +32422,7 @@ convert_equals_expression_110:
   lea r15, IR_Null_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $13.1:rbx IR_Null_Type.6:r15 
   # $14.1: Boolean = call(is_292, $13.1, IR_Null_Type.6)
-  .loc 3 1065 102
+  .loc 3 1090 102
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -32124,7 +32430,7 @@ convert_equals_expression_110:
   # [discarded value]: IR_Null_Type.6
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $14.1:rax 
   # $12.2: Boolean = $14.1 == false
-  .loc 3 1065 102
+  .loc 3 1090 102
   cmp al, 0
   sete bl
   # [discarded value]: $14.1
@@ -32133,14 +32439,14 @@ convert_equals_expression_110:
   mov [rbp-34], bl
 .LABEL__convert_equals_expression_110__5:
   # $9.2: Boolean = phi($12.1, $12.2)
-  .loc 3 1065 63
+  .loc 3 1090 63
   mov al, [rbp-34]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:rax:[rbp-33] 
   # jump(block.3)
   mov [rbp-33], al
 .LABEL__convert_equals_expression_110__3:
   # $9.3: Boolean = phi($9.1, $9.2)
-  .loc 3 1065 9
+  .loc 3 1090 9
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $9.3:[rbp-33] $12.2:[rbp-34] $9.2:[rbp-33] 
   # jump($9.3, block.6, block.7)
   mov al, [rbp-33]
@@ -32148,15 +32454,15 @@ convert_equals_expression_110:
   jz .LABEL__convert_equals_expression_110__7
 .LABEL__convert_equals_expression_110__6:
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1066 15
+  .loc 3 1091 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $9.3
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $16.1:rbx 
   # call(abort_263, $16.1, "Operands are not the same type")
-  .loc 3 1066 9
+  .loc 3 1091 9
   mov rdi, rbx
-  lea rsi, .LABEL__string_206[rip] # "Operands are not the same type"
+  lea rsi, .LABEL__string_209[rip] # "Operands are not the same type"
   call abort_263
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] 
@@ -32165,7 +32471,7 @@ convert_equals_expression_110:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] IR_Constant_Value.15:rax 
   # $18.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.15)
-  .loc 3 1068 9
+  .loc 3 1093 9
   mov rdi, [rbp-24]
   mov rsi, rax
   call is_292
@@ -32180,7 +32486,7 @@ convert_equals_expression_110:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] IR_Constant_Value.16:rax 
   # $18.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.16)
-  .loc 3 1068 45
+  .loc 3 1093 45
   mov rdi, [rbp-32]
   mov rsi, rax
   call is_292
@@ -32190,7 +32496,7 @@ convert_equals_expression_110:
   mov [rbp-35], al
 .LABEL__convert_equals_expression_110__9:
   # $18.3: Boolean = phi($18.1, $18.2)
-  .loc 3 1068 9
+  .loc 3 1093 9
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $18.3:[rbp-35] 
   # jump($18.3, block.10, block.11)
   mov al, [rbp-35]
@@ -32198,13 +32504,13 @@ convert_equals_expression_110:
   jz .LABEL__convert_equals_expression_110__11
 .LABEL__convert_equals_expression_110__10:
   # $20.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1069 15
+  .loc 3 1094 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $18.3
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $20.1:rbx 
   # call(abort_263, $20.1, "TODO: Evaluate constant expression")
-  .loc 3 1069 9
+  .loc 3 1094 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -32212,13 +32518,13 @@ convert_equals_expression_110:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] 
 .LABEL__convert_equals_expression_110__11:
   # $21.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1071 99
+  .loc 3 1096 99
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   call get_named_type_60
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $21.1:rax 
   # $22.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $21.1)
-  .loc 3 1071 76
+  .loc 3 1096 76
   mov rdi, [rbp-16]
   mov rsi, rax
   call create_temp_value_70
@@ -32240,7 +32546,7 @@ convert_equals_expression_110:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $22.1:[rbp-43] $23.1:rax 
   # $24.1: @IR_Equals_Comparison_Instruction = new(IR_Equals_Comparison_Instruction)
-  .loc 3 1071 24
+  .loc 3 1096 24
   mov [rbp-51], rax
   mov rdi, 57
   call malloc
@@ -32270,7 +32576,7 @@ convert_equals_expression_110:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $24.1:rax 
   # $25.1: @IR_Binary_Instruction = call(init_187, $24.1, left_value.1, right_value.1)
-  .loc 3 1071 24
+  .loc 3 1096 24
   mov rdi, rax
   mov rsi, [rbp-24]
   mov rdx, [rbp-32]
@@ -32278,12 +32584,12 @@ convert_equals_expression_110:
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $25.1:rax 
   # $26.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1071 163
+  .loc 3 1096 163
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $25.1:rax $26.1:r15 
   # $27.1: @IR_Variable_Value = call(append_71, self.1, $25.1, $26.1)
-  .loc 3 1071 12
+  .loc 3 1096 12
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -32292,7 +32598,7 @@ convert_equals_expression_110:
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $27.1:rax 
   # return($27.1)
-  .loc 3 1071 5
+  .loc 3 1096 5
   jmp .LABEL__convert_equals_expression_110__end
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] 
@@ -32327,7 +32633,7 @@ convert_equals_expression_110:
 
 convert_equals_expression_110__stack_frame_size: .word 64
 
-  .loc 3 1074 1
+  .loc 3 1099 1
   .text
 convert_greater_than_expression_111:
   push rbp
@@ -32340,11 +32646,11 @@ convert_greater_than_expression_111:
   # expression.1: @AST_Greater_Than_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1075 43
+  .loc 3 1100 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1075 71
+  .loc 3 1100 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -32352,7 +32658,7 @@ convert_greater_than_expression_111:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1075 19
+  .loc 3 1100 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -32361,12 +32667,12 @@ convert_greater_than_expression_111:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1076 44
+  .loc 3 1101 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1076 73
+  .loc 3 1101 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -32374,7 +32680,7 @@ convert_greater_than_expression_111:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1076 20
+  .loc 3 1101 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -32386,7 +32692,7 @@ convert_greater_than_expression_111:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.17:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.17)
-  .loc 3 1077 9
+  .loc 3 1102 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -32402,7 +32708,7 @@ convert_greater_than_expression_111:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.18:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.18)
-  .loc 3 1077 45
+  .loc 3 1102 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -32412,7 +32718,7 @@ convert_greater_than_expression_111:
   mov [rbp-41], al
 .LABEL__convert_greater_than_expression_111__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1077 9
+  .loc 3 1102 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -32420,13 +32726,13 @@ convert_greater_than_expression_111:
   jz .LABEL__convert_greater_than_expression_111__5
 .LABEL__convert_greater_than_expression_111__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1078 15
+  .loc 3 1103 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1078 9
+  .loc 3 1103 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -32434,13 +32740,13 @@ convert_greater_than_expression_111:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_greater_than_expression_111__5:
   # $11.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1080 105
+  .loc 3 1105 105
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rax 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1080 82
+  .loc 3 1105 82
   mov rdi, [rbp-24]
   mov rsi, rax
   call create_temp_value_70
@@ -32462,7 +32768,7 @@ convert_greater_than_expression_111:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Greater_Than_Comparison_Instruction = new(IR_Greater_Than_Comparison_Instruction)
-  .loc 3 1080 24
+  .loc 3 1105 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -32492,7 +32798,7 @@ convert_greater_than_expression_111:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1080 24
+  .loc 3 1105 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -32500,12 +32806,12 @@ convert_greater_than_expression_111:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1080 169
+  .loc 3 1105 169
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1080 12
+  .loc 3 1105 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -32514,7 +32820,7 @@ convert_greater_than_expression_111:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1080 5
+  .loc 3 1105 5
   jmp .LABEL__convert_greater_than_expression_111__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -32536,7 +32842,7 @@ convert_greater_than_expression_111:
 
 convert_greater_than_expression_111__stack_frame_size: .word 64
 
-  .loc 3 1083 1
+  .loc 3 1108 1
   .text
 convert_greater_than_or_equals_expression_112:
   push rbp
@@ -32549,11 +32855,11 @@ convert_greater_than_or_equals_expression_112:
   # expression.1: @AST_Greater_Than_Or_Equals_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1084 43
+  .loc 3 1109 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1084 71
+  .loc 3 1109 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -32561,7 +32867,7 @@ convert_greater_than_or_equals_expression_112:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1084 19
+  .loc 3 1109 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -32570,12 +32876,12 @@ convert_greater_than_or_equals_expression_112:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1085 44
+  .loc 3 1110 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1085 73
+  .loc 3 1110 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -32583,7 +32889,7 @@ convert_greater_than_or_equals_expression_112:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1085 20
+  .loc 3 1110 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -32595,7 +32901,7 @@ convert_greater_than_or_equals_expression_112:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.19:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.19)
-  .loc 3 1086 9
+  .loc 3 1111 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -32611,7 +32917,7 @@ convert_greater_than_or_equals_expression_112:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.20:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.20)
-  .loc 3 1086 45
+  .loc 3 1111 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -32621,7 +32927,7 @@ convert_greater_than_or_equals_expression_112:
   mov [rbp-41], al
 .LABEL__convert_greater_than_or_equals_expression_112__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1086 9
+  .loc 3 1111 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -32629,13 +32935,13 @@ convert_greater_than_or_equals_expression_112:
   jz .LABEL__convert_greater_than_or_equals_expression_112__5
 .LABEL__convert_greater_than_or_equals_expression_112__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1087 15
+  .loc 3 1112 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1087 9
+  .loc 3 1112 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -32643,13 +32949,13 @@ convert_greater_than_or_equals_expression_112:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_greater_than_or_equals_expression_112__5:
   # $11.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1089 115
+  .loc 3 1114 115
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rax 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1089 92
+  .loc 3 1114 92
   mov rdi, [rbp-24]
   mov rsi, rax
   call create_temp_value_70
@@ -32671,7 +32977,7 @@ convert_greater_than_or_equals_expression_112:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Greater_Than_Or_Equals_Comparison_Instruction = new(IR_Greater_Than_Or_Equals_Comparison_Instruction)
-  .loc 3 1089 24
+  .loc 3 1114 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -32701,7 +33007,7 @@ convert_greater_than_or_equals_expression_112:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1089 24
+  .loc 3 1114 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -32709,12 +33015,12 @@ convert_greater_than_or_equals_expression_112:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1089 179
+  .loc 3 1114 179
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1089 12
+  .loc 3 1114 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -32723,7 +33029,7 @@ convert_greater_than_or_equals_expression_112:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1089 5
+  .loc 3 1114 5
   jmp .LABEL__convert_greater_than_or_equals_expression_112__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -32745,7 +33051,7 @@ convert_greater_than_or_equals_expression_112:
 
 convert_greater_than_or_equals_expression_112__stack_frame_size: .word 64
 
-  .loc 3 1092 1
+  .loc 3 1117 1
   .text
 convert_less_than_expression_113:
   push rbp
@@ -32758,11 +33064,11 @@ convert_less_than_expression_113:
   # expression.1: @AST_Less_Than_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1093 43
+  .loc 3 1118 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1093 71
+  .loc 3 1118 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -32770,7 +33076,7 @@ convert_less_than_expression_113:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1093 19
+  .loc 3 1118 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -32779,12 +33085,12 @@ convert_less_than_expression_113:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1094 44
+  .loc 3 1119 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1094 73
+  .loc 3 1119 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -32792,7 +33098,7 @@ convert_less_than_expression_113:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1094 20
+  .loc 3 1119 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -32804,7 +33110,7 @@ convert_less_than_expression_113:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.21:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.21)
-  .loc 3 1095 9
+  .loc 3 1120 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -32820,7 +33126,7 @@ convert_less_than_expression_113:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.22:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.22)
-  .loc 3 1095 45
+  .loc 3 1120 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -32830,7 +33136,7 @@ convert_less_than_expression_113:
   mov [rbp-41], al
 .LABEL__convert_less_than_expression_113__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1095 9
+  .loc 3 1120 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -32838,13 +33144,13 @@ convert_less_than_expression_113:
   jz .LABEL__convert_less_than_expression_113__5
 .LABEL__convert_less_than_expression_113__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1096 15
+  .loc 3 1121 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1096 9
+  .loc 3 1121 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -32852,13 +33158,13 @@ convert_less_than_expression_113:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_less_than_expression_113__5:
   # $11.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1098 102
+  .loc 3 1123 102
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rax 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1098 79
+  .loc 3 1123 79
   mov rdi, [rbp-24]
   mov rsi, rax
   call create_temp_value_70
@@ -32880,7 +33186,7 @@ convert_less_than_expression_113:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Less_Than_Comparison_Instruction = new(IR_Less_Than_Comparison_Instruction)
-  .loc 3 1098 24
+  .loc 3 1123 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -32910,7 +33216,7 @@ convert_less_than_expression_113:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1098 24
+  .loc 3 1123 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -32918,12 +33224,12 @@ convert_less_than_expression_113:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1098 166
+  .loc 3 1123 166
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1098 12
+  .loc 3 1123 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -32932,7 +33238,7 @@ convert_less_than_expression_113:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1098 5
+  .loc 3 1123 5
   jmp .LABEL__convert_less_than_expression_113__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -32954,7 +33260,7 @@ convert_less_than_expression_113:
 
 convert_less_than_expression_113__stack_frame_size: .word 64
 
-  .loc 3 1101 1
+  .loc 3 1126 1
   .text
 convert_less_than_or_equals_expression_114:
   push rbp
@@ -32967,11 +33273,11 @@ convert_less_than_or_equals_expression_114:
   # expression.1: @AST_Less_Than_Or_Equals_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1102 43
+  .loc 3 1127 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1102 71
+  .loc 3 1127 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -32979,7 +33285,7 @@ convert_less_than_or_equals_expression_114:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1102 19
+  .loc 3 1127 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -32988,12 +33294,12 @@ convert_less_than_or_equals_expression_114:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1103 44
+  .loc 3 1128 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1103 73
+  .loc 3 1128 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -33001,7 +33307,7 @@ convert_less_than_or_equals_expression_114:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1103 20
+  .loc 3 1128 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -33013,7 +33319,7 @@ convert_less_than_or_equals_expression_114:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.23:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.23)
-  .loc 3 1104 9
+  .loc 3 1129 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -33029,7 +33335,7 @@ convert_less_than_or_equals_expression_114:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.24:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.24)
-  .loc 3 1104 45
+  .loc 3 1129 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -33039,7 +33345,7 @@ convert_less_than_or_equals_expression_114:
   mov [rbp-41], al
 .LABEL__convert_less_than_or_equals_expression_114__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1104 9
+  .loc 3 1129 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -33047,13 +33353,13 @@ convert_less_than_or_equals_expression_114:
   jz .LABEL__convert_less_than_or_equals_expression_114__5
 .LABEL__convert_less_than_or_equals_expression_114__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1105 15
+  .loc 3 1130 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1105 9
+  .loc 3 1130 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -33061,13 +33367,13 @@ convert_less_than_or_equals_expression_114:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_less_than_or_equals_expression_114__5:
   # $11.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1107 112
+  .loc 3 1132 112
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rax 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1107 89
+  .loc 3 1132 89
   mov rdi, [rbp-24]
   mov rsi, rax
   call create_temp_value_70
@@ -33089,7 +33395,7 @@ convert_less_than_or_equals_expression_114:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Less_Than_Or_Equals_Comparison_Instruction = new(IR_Less_Than_Or_Equals_Comparison_Instruction)
-  .loc 3 1107 24
+  .loc 3 1132 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -33119,7 +33425,7 @@ convert_less_than_or_equals_expression_114:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1107 24
+  .loc 3 1132 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -33127,12 +33433,12 @@ convert_less_than_or_equals_expression_114:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1107 176
+  .loc 3 1132 176
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1107 12
+  .loc 3 1132 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -33141,7 +33447,7 @@ convert_less_than_or_equals_expression_114:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1107 5
+  .loc 3 1132 5
   jmp .LABEL__convert_less_than_or_equals_expression_114__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -33163,7 +33469,7 @@ convert_less_than_or_equals_expression_114:
 
 convert_less_than_or_equals_expression_114__stack_frame_size: .word 64
 
-  .loc 3 1110 1
+  .loc 3 1135 1
   .text
 convert_literal_expression_115:
   push rbp
@@ -33176,14 +33482,14 @@ convert_literal_expression_115:
   # expression.1: @AST_Literal_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1111 9
+  .loc 3 1136 9
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # Boolean_Token.4: @Object_Type = load_variable(Boolean_Token)
   lea rbx, Boolean_Token[rip]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax Boolean_Token.4:rbx 
   # $2.1: Boolean = call(is_292, $1.1, Boolean_Token.4)
-  .loc 3 1111 9
+  .loc 3 1136 9
   mov [rbp-8], rdi
   mov rdi, rax
   mov [rbp-16], rsi
@@ -33197,14 +33503,14 @@ convert_literal_expression_115:
   jz .LABEL__convert_literal_expression_115__3
 .LABEL__convert_literal_expression_115__2:
   # $3.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1112 45
+  .loc 3 1137 45
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   call get_named_type_60
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:rax 
   # $4.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1112 87
+  .loc 3 1137 87
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] $3.1:rax $4.1:r15 
@@ -33225,7 +33531,7 @@ convert_literal_expression_115:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-24] $4.1:[rbp-32] $5.1:rax 
   # $6.1: @IR_Constant_Value = new(IR_Constant_Value)
-  .loc 3 1112 16
+  .loc 3 1137 16
   mov [rbp-40], rax
   mov rdi, 32
   call malloc
@@ -33248,13 +33554,13 @@ convert_literal_expression_115:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:rax 
   # return($6.1)
-  .loc 3 1112 9
+  .loc 3 1137 9
   jmp .LABEL__convert_literal_expression_115__end
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
 .LABEL__convert_literal_expression_115__3:
   # $7.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1114 9
+  .loc 3 1139 9
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $7.1:rbx 
@@ -33262,7 +33568,7 @@ convert_literal_expression_115:
   lea r15, Character_Token[rip]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $7.1:rbx Character_Token.4:r15 
   # $8.1: Boolean = call(is_292, $7.1, Character_Token.4)
-  .loc 3 1114 9
+  .loc 3 1139 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -33274,14 +33580,14 @@ convert_literal_expression_115:
   jz .LABEL__convert_literal_expression_115__6
 .LABEL__convert_literal_expression_115__5:
   # $9.1: @IR_Type = call(get_named_type_60, self.1, "Int8")
-  .loc 3 1115 45
+  .loc 3 1140 45
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_164[rip] # "Int8"
   call get_named_type_60
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $9.1:rax 
   # $10.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1115 84
+  .loc 3 1140 84
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] $9.1:rax $10.1:r15 
@@ -33302,7 +33608,7 @@ convert_literal_expression_115:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $9.1:[rbp-24] $10.1:[rbp-32] $11.1:rax 
   # $12.1: @IR_Constant_Value = new(IR_Constant_Value)
-  .loc 3 1115 16
+  .loc 3 1140 16
   mov [rbp-40], rax
   mov rdi, 32
   call malloc
@@ -33325,13 +33631,13 @@ convert_literal_expression_115:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $12.1:rax 
   # return($12.1)
-  .loc 3 1115 9
+  .loc 3 1140 9
   jmp .LABEL__convert_literal_expression_115__end
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
 .LABEL__convert_literal_expression_115__6:
   # $13.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1117 9
+  .loc 3 1142 9
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $13.1:rbx 
@@ -33339,7 +33645,7 @@ convert_literal_expression_115:
   lea r15, Integer_Token[rip]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $13.1:rbx Integer_Token.6:r15 
   # $14.1: Boolean = call(is_292, $13.1, Integer_Token.6)
-  .loc 3 1117 9
+  .loc 3 1142 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -33351,14 +33657,14 @@ convert_literal_expression_115:
   jz .LABEL__convert_literal_expression_115__9
 .LABEL__convert_literal_expression_115__8:
   # $15.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1118 45
+  .loc 3 1143 45
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_163[rip] # "Int"
   call get_named_type_60
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $15.1:rax 
   # $16.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1118 83
+  .loc 3 1143 83
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] $15.1:rax $16.1:r15 
@@ -33379,7 +33685,7 @@ convert_literal_expression_115:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $15.1:[rbp-24] $16.1:[rbp-32] $17.1:rax 
   # $18.1: @IR_Constant_Value = new(IR_Constant_Value)
-  .loc 3 1118 16
+  .loc 3 1143 16
   mov [rbp-40], rax
   mov rdi, 32
   call malloc
@@ -33402,13 +33708,13 @@ convert_literal_expression_115:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $18.1:rax 
   # return($18.1)
-  .loc 3 1118 9
+  .loc 3 1143 9
   jmp .LABEL__convert_literal_expression_115__end
   # [discarded value]: $18.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
 .LABEL__convert_literal_expression_115__9:
   # $19.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1120 9
+  .loc 3 1145 9
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $19.1:rbx 
@@ -33416,7 +33722,7 @@ convert_literal_expression_115:
   lea r15, Null_Token[rip]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $19.1:rbx Null_Token.4:r15 
   # $20.1: Boolean = call(is_292, $19.1, Null_Token.4)
-  .loc 3 1120 9
+  .loc 3 1145 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -33428,14 +33734,14 @@ convert_literal_expression_115:
   jz .LABEL__convert_literal_expression_115__12
 .LABEL__convert_literal_expression_115__11:
   # $21.1: @IR_Type = call(get_named_type_60, self.1, "Null")
-  .loc 3 1121 45
+  .loc 3 1146 45
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_169[rip] # "Null"
   call get_named_type_60
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $21.1:rax 
   # $22.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1121 84
+  .loc 3 1146 84
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] $21.1:rax $22.1:r15 
@@ -33456,7 +33762,7 @@ convert_literal_expression_115:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $21.1:[rbp-24] $22.1:[rbp-32] $23.1:rax 
   # $24.1: @IR_Constant_Value = new(IR_Constant_Value)
-  .loc 3 1121 16
+  .loc 3 1146 16
   mov [rbp-40], rax
   mov rdi, 32
   call malloc
@@ -33479,13 +33785,13 @@ convert_literal_expression_115:
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $24.1:rax 
   # return($24.1)
-  .loc 3 1121 9
+  .loc 3 1146 9
   jmp .LABEL__convert_literal_expression_115__end
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
 .LABEL__convert_literal_expression_115__12:
   # $25.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1123 9
+  .loc 3 1148 9
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $25.1:rbx 
@@ -33493,7 +33799,7 @@ convert_literal_expression_115:
   lea r15, String_Token[rip]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $25.1:rbx String_Token.4:r15 
   # $26.1: Boolean = call(is_292, $25.1, String_Token.4)
-  .loc 3 1123 9
+  .loc 3 1148 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -33505,20 +33811,20 @@ convert_literal_expression_115:
   jz .LABEL__convert_literal_expression_115__15
 .LABEL__convert_literal_expression_115__14:
   # $27.1: @IR_Type = call(get_named_type_60, self.1, "String")
-  .loc 3 1124 68
+  .loc 3 1149 68
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_207[rip] # "String"
+  lea rsi, .LABEL__string_210[rip] # "String"
   call get_named_type_60
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $27.1:rax 
   # $28.1: @IR_Pointer_Type = call(create_ir_pointer_type_141, $27.1)
-  .loc 3 1124 45
+  .loc 3 1149 45
   mov rdi, rax
   call create_ir_pointer_type_141
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $28.1:rax 
   # $29.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1124 110
+  .loc 3 1149 110
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] $28.1:rax $29.1:r15 
@@ -33539,7 +33845,7 @@ convert_literal_expression_115:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $28.1:[rbp-24] $29.1:[rbp-32] $30.1:rax 
   # $31.1: @IR_Constant_Value = new(IR_Constant_Value)
-  .loc 3 1124 16
+  .loc 3 1149 16
   mov [rbp-40], rax
   mov rdi, 32
   call malloc
@@ -33562,13 +33868,13 @@ convert_literal_expression_115:
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $31.1:rax 
   # return($31.1)
-  .loc 3 1124 9
+  .loc 3 1149 9
   jmp .LABEL__convert_literal_expression_115__end
   # [discarded value]: $31.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
 .LABEL__convert_literal_expression_115__15:
   # $32.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1126 9
+  .loc 3 1151 9
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $32.1:rbx 
@@ -33576,7 +33882,7 @@ convert_literal_expression_115:
   lea r15, Undefined_Token[rip]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $32.1:rbx Undefined_Token.3:r15 
   # $33.1: Boolean = call(is_292, $32.1, Undefined_Token.3)
-  .loc 3 1126 9
+  .loc 3 1151 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -33588,14 +33894,14 @@ convert_literal_expression_115:
   jz .LABEL__convert_literal_expression_115__18
 .LABEL__convert_literal_expression_115__17:
   # $34.1: @IR_Type = call(get_named_type_60, self.1, "Undefined")
-  .loc 3 1127 45
+  .loc 3 1152 45
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_170[rip] # "Undefined"
   call get_named_type_60
   # [discarded value]: $33.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $34.1:rax 
   # $35.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1127 89
+  .loc 3 1152 89
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] $34.1:rax $35.1:r15 
@@ -33616,7 +33922,7 @@ convert_literal_expression_115:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $34.1:[rbp-24] $35.1:[rbp-32] $36.1:rax 
   # $37.1: @IR_Constant_Value = new(IR_Constant_Value)
-  .loc 3 1127 16
+  .loc 3 1152 16
   mov [rbp-40], rax
   mov rdi, 32
   call malloc
@@ -33639,27 +33945,27 @@ convert_literal_expression_115:
   # [discarded value]: $35.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $37.1:rax 
   # return($37.1)
-  .loc 3 1127 9
+  .loc 3 1152 9
   jmp .LABEL__convert_literal_expression_115__end
   # [discarded value]: $37.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
 .LABEL__convert_literal_expression_115__18:
   # $38.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1129 11
+  .loc 3 1154 11
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $38.1:rbx 
   # $39.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1129 32
+  .loc 3 1154 32
   mov r15, [rax+16]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $38.1:rbx $39.1:r15 
   # $40.1: @Object_Type = load_struct_member($39.1, object_type)
-  .loc 3 1129 32
+  .loc 3 1154 32
   mov r14, [r15+0]
   # [discarded value]: $39.1
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $38.1:rbx $40.1:r14 
   # call(abort_137, $38.1, $40.1)
-  .loc 3 1129 5
+  .loc 3 1154 5
   mov rdi, rbx
   mov rsi, r14
   call abort_137
@@ -33682,7 +33988,7 @@ convert_literal_expression_115:
 
 convert_literal_expression_115__stack_frame_size: .word 48
 
-  .loc 3 1132 1
+  .loc 3 1157 1
   .text
 convert_logic_and_expression_116:
   push rbp
@@ -33695,16 +34001,16 @@ convert_logic_and_expression_116:
   # expression.1: @AST_Logic_And_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1133 19
+  .loc 3 1158 19
   mov rax, [rdi+32]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Function = load_struct_member($1.1, function)
-  .loc 3 1133 19
+  .loc 3 1158 19
   mov rbx, [rax+16]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi expression.1:rsi $2.1:rbx 
   # next_block.1: @IR_Block = call(create_block_156, $2.1)
-  .loc 3 1133 19
+  .loc 3 1158 19
   mov [rbp-8], rdi
   mov rdi, rbx
   mov [rbp-16], rsi
@@ -33712,29 +34018,29 @@ convert_logic_and_expression_116:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:rax 
   # $4.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1134 18
+  .loc 3 1159 18
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] next_block.1:rax $4.1:r15 
   # $5.1: @IR_Function = load_struct_member($4.1, function)
-  .loc 3 1134 18
+  .loc 3 1159 18
   mov r14, [r15+16]
   # [discarded value]: $4.1
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] next_block.1:rax $5.1:r14 
   # end_block.1: @IR_Block = call(create_block_156, $5.1)
-  .loc 3 1134 18
+  .loc 3 1159 18
   mov rdi, r14
   mov [rbp-24], rax
   call create_block_156
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:rax 
   # $7.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1135 43
+  .loc 3 1160 43
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] next_block.1:[rbp-24] end_block.1:rax $7.1:r15 
   # $8.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1135 71
+  .loc 3 1160 71
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   mov [rbp-32], rax
@@ -33742,7 +34048,7 @@ convert_logic_and_expression_116:
   call get_named_type_60
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] $7.1:[rbp-40] $8.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $7.1, $8.1)
-  .loc 3 1135 19
+  .loc 3 1160 19
   mov rdi, [rbp-8]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -33751,28 +34057,28 @@ convert_logic_and_expression_116:
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:rax 
   # $10.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1136 50
+  .loc 3 1161 50
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   mov [rbp-40], rax
   call get_named_type_60
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] $10.1:rax 
   # result_variable.1: @IR_Variable = call(create_temp_variable_69, self.1, $10.1)
-  .loc 3 1136 24
+  .loc 3 1161 24
   mov rdi, [rbp-8]
   mov rsi, rax
   call create_temp_variable_69
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] result_variable.1:rax 
   # result_value_left.1: @IR_Variable_Value = call(create_variable_value_64, self.1, result_variable.1)
-  .loc 3 1137 26
+  .loc 3 1162 26
   mov rdi, [rbp-8]
   mov rsi, rax
   mov [rbp-48], rax
   call create_variable_value_64
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] result_variable.1:[rbp-48] result_value_left.1:rax 
   # $13.1: @IR_Set_Instruction = call(create_ir_set_instruction_178, result_value_left.1, left_value.1)
-  .loc 3 1138 17
+  .loc 3 1163 17
   mov rdi, rax
   mov rsi, [rbp-40]
   mov [rbp-56], rax
@@ -33780,12 +34086,12 @@ convert_logic_and_expression_116:
   # [discarded value]: left_value.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] $13.1:rax 
   # $14.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1138 75
+  .loc 3 1163 75
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] $13.1:rax $14.1:r15 
   # $15.1: @IR_Variable_Value = call(append_71, self.1, $13.1, $14.1)
-  .loc 3 1138 5
+  .loc 3 1163 5
   mov rdi, [rbp-8]
   mov rsi, rax
   mov rdx, r15
@@ -33795,12 +34101,12 @@ convert_logic_and_expression_116:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] 
   # $16.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1139 5
+  .loc 3 1164 5
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] $16.1:rbx 
   # $17.1: @IR_Conditional_Jump_Instruction = call(append_jump_154, $16.1, result_value_left.1, next_block.1, end_block.1)
-  .loc 3 1139 5
+  .loc 3 1164 5
   mov rdi, rbx
   mov rsi, [rbp-56]
   mov rdx, [rbp-24]
@@ -33811,26 +34117,26 @@ convert_logic_and_expression_116:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # store_struct_member(self.1, current_block, next_block.1)
-  .loc 3 1140 5
+  .loc 3 1165 5
   mov rax, [rbp-8]
   mov rbx, [rbp-24]
   mov QWORD PTR [rax+32], rbx
   # [discarded value]: next_block.1
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # $18.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1141 44
+  .loc 3 1166 44
   mov rbx, [rbp-16]
   mov r15, [rbx+24]
   # [live values]: self.1:rax:[rbp-8] expression.1:rbx:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:r15 
   # $19.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1141 73
+  .loc 3 1166 73
   mov rdi, rax
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   mov [rbp-56], r15
   call get_named_type_60
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:[rbp-56] $19.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $18.1, $19.1)
-  .loc 3 1141 20
+  .loc 3 1166 20
   mov rdi, [rbp-8]
   mov rsi, [rbp-56]
   mov rdx, rax
@@ -33839,14 +34145,14 @@ convert_logic_and_expression_116:
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] right_value.1:rax 
   # $21.1: @IR_Variable_Value = call(create_variable_value_64, self.1, result_variable.1)
-  .loc 3 1142 43
+  .loc 3 1167 43
   mov rdi, [rbp-8]
   mov rsi, [rbp-48]
   mov [rbp-56], rax
   call create_variable_value_64
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] right_value.1:[rbp-56] $21.1:rax 
   # $22.1: @IR_Set_Instruction = call(create_ir_set_instruction_178, $21.1, right_value.1)
-  .loc 3 1142 17
+  .loc 3 1167 17
   mov rdi, rax
   mov rsi, [rbp-56]
   call create_ir_set_instruction_178
@@ -33854,12 +34160,12 @@ convert_logic_and_expression_116:
   # [discarded value]: $21.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $22.1:rax 
   # $23.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1142 102
+  .loc 3 1167 102
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $22.1:rax $23.1:r15 
   # $24.1: @IR_Variable_Value = call(append_71, self.1, $22.1, $23.1)
-  .loc 3 1142 5
+  .loc 3 1167 5
   mov rdi, [rbp-8]
   mov rsi, rax
   mov rdx, r15
@@ -33869,12 +34175,12 @@ convert_logic_and_expression_116:
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # $25.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1143 5
+  .loc 3 1168 5
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $25.1:rbx 
   # $26.1: @IR_Direct_Jump_Instruction = call(append_jump_153, $25.1, end_block.1)
-  .loc 3 1143 5
+  .loc 3 1168 5
   mov rdi, rbx
   mov rsi, [rbp-32]
   call append_jump_153
@@ -33882,33 +34188,33 @@ convert_logic_and_expression_116:
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # store_struct_member(self.1, current_block, end_block.1)
-  .loc 3 1144 5
+  .loc 3 1169 5
   mov rax, [rbp-8]
   mov rbx, [rbp-32]
   mov QWORD PTR [rax+32], rbx
   # [discarded value]: end_block.1
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] result_variable.1:[rbp-48] 
   # $27.1: @IR_Variable_Value = call(create_variable_value_64, self.1, result_variable.1)
-  .loc 3 1145 50
+  .loc 3 1170 50
   mov rdi, rax
   mov rsi, [rbp-48]
   call create_variable_value_64
   # [discarded value]: result_variable.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $27.1:rax 
   # $28.1: @IR_Phi_Instruction = call(create_ir_phi_instruction_190, $27.1)
-  .loc 3 1145 24
+  .loc 3 1170 24
   mov rdi, rax
   call create_ir_phi_instruction_190
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $28.1:rax 
   # $29.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1145 96
+  .loc 3 1170 96
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [discarded value]: expression.1
   # [live values]: self.1:[rbp-8] $28.1:rax $29.1:r15 
   # $30.1: @IR_Variable_Value = call(append_71, self.1, $28.1, $29.1)
-  .loc 3 1145 12
+  .loc 3 1170 12
   mov rdi, [rbp-8]
   mov rsi, rax
   mov rdx, r15
@@ -33918,7 +34224,7 @@ convert_logic_and_expression_116:
   # [discarded value]: $29.1
   # [live values]: $30.1:rax 
   # return($30.1)
-  .loc 3 1145 5
+  .loc 3 1170 5
   jmp .LABEL__convert_logic_and_expression_116__end
   # [discarded value]: $30.1
   # [live values]: 
@@ -33929,7 +34235,7 @@ convert_logic_and_expression_116:
 
 convert_logic_and_expression_116__stack_frame_size: .word 64
 
-  .loc 3 1148 1
+  .loc 3 1173 1
   .text
 convert_logic_or_expression_117:
   push rbp
@@ -33942,16 +34248,16 @@ convert_logic_or_expression_117:
   # expression.1: @AST_Logic_Or_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1149 19
+  .loc 3 1174 19
   mov rax, [rdi+32]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Function = load_struct_member($1.1, function)
-  .loc 3 1149 19
+  .loc 3 1174 19
   mov rbx, [rax+16]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi expression.1:rsi $2.1:rbx 
   # next_block.1: @IR_Block = call(create_block_156, $2.1)
-  .loc 3 1149 19
+  .loc 3 1174 19
   mov [rbp-8], rdi
   mov rdi, rbx
   mov [rbp-16], rsi
@@ -33959,29 +34265,29 @@ convert_logic_or_expression_117:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:rax 
   # $4.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1150 18
+  .loc 3 1175 18
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] next_block.1:rax $4.1:r15 
   # $5.1: @IR_Function = load_struct_member($4.1, function)
-  .loc 3 1150 18
+  .loc 3 1175 18
   mov r14, [r15+16]
   # [discarded value]: $4.1
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] next_block.1:rax $5.1:r14 
   # end_block.1: @IR_Block = call(create_block_156, $5.1)
-  .loc 3 1150 18
+  .loc 3 1175 18
   mov rdi, r14
   mov [rbp-24], rax
   call create_block_156
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:rax 
   # $7.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1151 43
+  .loc 3 1176 43
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] next_block.1:[rbp-24] end_block.1:rax $7.1:r15 
   # $8.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1151 71
+  .loc 3 1176 71
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   mov [rbp-32], rax
@@ -33989,7 +34295,7 @@ convert_logic_or_expression_117:
   call get_named_type_60
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] $7.1:[rbp-40] $8.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $7.1, $8.1)
-  .loc 3 1151 19
+  .loc 3 1176 19
   mov rdi, [rbp-8]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -33998,28 +34304,28 @@ convert_logic_or_expression_117:
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:rax 
   # $10.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1152 50
+  .loc 3 1177 50
   mov rdi, [rbp-8]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   mov [rbp-40], rax
   call get_named_type_60
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] $10.1:rax 
   # result_variable.1: @IR_Variable = call(create_temp_variable_69, self.1, $10.1)
-  .loc 3 1152 24
+  .loc 3 1177 24
   mov rdi, [rbp-8]
   mov rsi, rax
   call create_temp_variable_69
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] result_variable.1:rax 
   # result_value_left.1: @IR_Variable_Value = call(create_variable_value_64, self.1, result_variable.1)
-  .loc 3 1153 26
+  .loc 3 1178 26
   mov rdi, [rbp-8]
   mov rsi, rax
   mov [rbp-48], rax
   call create_variable_value_64
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] result_variable.1:[rbp-48] result_value_left.1:rax 
   # $13.1: @IR_Set_Instruction = call(create_ir_set_instruction_178, result_value_left.1, left_value.1)
-  .loc 3 1154 17
+  .loc 3 1179 17
   mov rdi, rax
   mov rsi, [rbp-40]
   mov [rbp-56], rax
@@ -34027,12 +34333,12 @@ convert_logic_or_expression_117:
   # [discarded value]: left_value.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] $13.1:rax 
   # $14.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1154 75
+  .loc 3 1179 75
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] $13.1:rax $14.1:r15 
   # $15.1: @IR_Variable_Value = call(append_71, self.1, $13.1, $14.1)
-  .loc 3 1154 5
+  .loc 3 1179 5
   mov rdi, [rbp-8]
   mov rsi, rax
   mov rdx, r15
@@ -34042,12 +34348,12 @@ convert_logic_or_expression_117:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] 
   # $16.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1155 5
+  .loc 3 1180 5
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] result_value_left.1:[rbp-56] $16.1:rbx 
   # $17.1: @IR_Conditional_Jump_Instruction = call(append_jump_154, $16.1, result_value_left.1, end_block.1, next_block.1)
-  .loc 3 1155 5
+  .loc 3 1180 5
   mov rdi, rbx
   mov rsi, [rbp-56]
   mov rdx, [rbp-32]
@@ -34058,26 +34364,26 @@ convert_logic_or_expression_117:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # store_struct_member(self.1, current_block, next_block.1)
-  .loc 3 1156 5
+  .loc 3 1181 5
   mov rax, [rbp-8]
   mov rbx, [rbp-24]
   mov QWORD PTR [rax+32], rbx
   # [discarded value]: next_block.1
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # $18.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1157 44
+  .loc 3 1182 44
   mov rbx, [rbp-16]
   mov r15, [rbx+24]
   # [live values]: self.1:rax:[rbp-8] expression.1:rbx:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:r15 
   # $19.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1157 73
+  .loc 3 1182 73
   mov rdi, rax
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   mov [rbp-56], r15
   call get_named_type_60
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:[rbp-56] $19.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $18.1, $19.1)
-  .loc 3 1157 20
+  .loc 3 1182 20
   mov rdi, [rbp-8]
   mov rsi, [rbp-56]
   mov rdx, rax
@@ -34086,14 +34392,14 @@ convert_logic_or_expression_117:
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] right_value.1:rax 
   # $21.1: @IR_Variable_Value = call(create_variable_value_64, self.1, result_variable.1)
-  .loc 3 1158 43
+  .loc 3 1183 43
   mov rdi, [rbp-8]
   mov rsi, [rbp-48]
   mov [rbp-56], rax
   call create_variable_value_64
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] right_value.1:[rbp-56] $21.1:rax 
   # $22.1: @IR_Set_Instruction = call(create_ir_set_instruction_178, $21.1, right_value.1)
-  .loc 3 1158 17
+  .loc 3 1183 17
   mov rdi, rax
   mov rsi, [rbp-56]
   call create_ir_set_instruction_178
@@ -34101,12 +34407,12 @@ convert_logic_or_expression_117:
   # [discarded value]: $21.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $22.1:rax 
   # $23.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1158 102
+  .loc 3 1183 102
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $22.1:rax $23.1:r15 
   # $24.1: @IR_Variable_Value = call(append_71, self.1, $22.1, $23.1)
-  .loc 3 1158 5
+  .loc 3 1183 5
   mov rdi, [rbp-8]
   mov rsi, rax
   mov rdx, r15
@@ -34116,12 +34422,12 @@ convert_logic_or_expression_117:
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # $25.1: @IR_Block = load_struct_member(self.1, current_block)
-  .loc 3 1159 5
+  .loc 3 1184 5
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $25.1:rbx 
   # $26.1: @IR_Direct_Jump_Instruction = call(append_jump_153, $25.1, end_block.1)
-  .loc 3 1159 5
+  .loc 3 1184 5
   mov rdi, rbx
   mov rsi, [rbp-32]
   call append_jump_153
@@ -34129,33 +34435,33 @@ convert_logic_or_expression_117:
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] 
   # store_struct_member(self.1, current_block, end_block.1)
-  .loc 3 1160 5
+  .loc 3 1185 5
   mov rax, [rbp-8]
   mov rbx, [rbp-32]
   mov QWORD PTR [rax+32], rbx
   # [discarded value]: end_block.1
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] result_variable.1:[rbp-48] 
   # $27.1: @IR_Variable_Value = call(create_variable_value_64, self.1, result_variable.1)
-  .loc 3 1161 50
+  .loc 3 1186 50
   mov rdi, rax
   mov rsi, [rbp-48]
   call create_variable_value_64
   # [discarded value]: result_variable.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $27.1:rax 
   # $28.1: @IR_Phi_Instruction = call(create_ir_phi_instruction_190, $27.1)
-  .loc 3 1161 24
+  .loc 3 1186 24
   mov rdi, rax
   call create_ir_phi_instruction_190
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $28.1:rax 
   # $29.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1161 96
+  .loc 3 1186 96
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [discarded value]: expression.1
   # [live values]: self.1:[rbp-8] $28.1:rax $29.1:r15 
   # $30.1: @IR_Variable_Value = call(append_71, self.1, $28.1, $29.1)
-  .loc 3 1161 12
+  .loc 3 1186 12
   mov rdi, [rbp-8]
   mov rsi, rax
   mov rdx, r15
@@ -34165,7 +34471,7 @@ convert_logic_or_expression_117:
   # [discarded value]: $29.1
   # [live values]: $30.1:rax 
   # return($30.1)
-  .loc 3 1161 5
+  .loc 3 1186 5
   jmp .LABEL__convert_logic_or_expression_117__end
   # [discarded value]: $30.1
   # [live values]: 
@@ -34176,7 +34482,7 @@ convert_logic_or_expression_117:
 
 convert_logic_or_expression_117__stack_frame_size: .word 64
 
-  .loc 3 1164 1
+  .loc 3 1189 1
   .text
 convert_member_access_expression_118:
   push rbp
@@ -34189,11 +34495,11 @@ convert_member_access_expression_118:
   # member_access_expression.1: @AST_Member_Access_Expression = load_variable(member_access_expression)
   # [live values]: self.1:rdi member_access_expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(member_access_expression.1, object_expression)
-  .loc 3 1165 45
+  .loc 3 1190 45
   mov rax, [rsi+16]
   # [live values]: self.1:rdi member_access_expression.1:rsi $1.1:rax 
   # object_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, null)
-  .loc 3 1165 21
+  .loc 3 1190 21
   mov [rbp-8], rsi
   mov rsi, rax
   xor rdx, rdx
@@ -34202,14 +34508,14 @@ convert_member_access_expression_118:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:rax 
   # object_value_type.1: @IR_Type = load_struct_member(object_value.1, type)
-  .loc 3 1166 26
+  .loc 3 1191 26
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:rax object_value_type.1:rbx 
   # IR_Pointer_Type.17: @Object_Type = load_variable(IR_Pointer_Type)
   lea r15, IR_Pointer_Type[rip]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:rax object_value_type.1:rbx IR_Pointer_Type.17:r15 
   # $4.1: Boolean = call(is_292, object_value_type.1, IR_Pointer_Type.17)
-  .loc 3 1167 10
+  .loc 3 1192 10
   mov rdi, rbx
   mov rsi, r15
   mov [rbp-24], rax
@@ -34218,7 +34524,7 @@ convert_member_access_expression_118:
   # [discarded value]: IR_Pointer_Type.17
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:rax 
   # $5.1: Boolean = $4.1 == false
-  .loc 3 1167 9
+  .loc 3 1192 9
   cmp al, 0
   sete bl
   # [discarded value]: $4.1
@@ -34228,24 +34534,24 @@ convert_member_access_expression_118:
   jz .LABEL__convert_member_access_expression_118__3
 .LABEL__convert_member_access_expression_118__2:
   # $6.1: @Source_Location = load_struct_member(member_access_expression.1, location)
-  .loc 3 1168 15
+  .loc 3 1193 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:rax:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $6.1:rbx 
   # $7.1: @String = call(clone_294, "Not an IR_Pointer_Type value: ")
-  .loc 3 1168 50
+  .loc 3 1193 50
   lea rdi, .LABEL__string_199[rip] # "Not an IR_Pointer_Type value: "
   mov [rbp-40], rbx
   call clone_294
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $6.1:[rbp-40] $7.1:rax 
   # $8.1: @String = load_struct_member(object_value_type.1, name)
-  .loc 3 1168 97
+  .loc 3 1193 97
   mov rbx, [rbp-32]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:rbx:[rbp-32] $6.1:[rbp-40] $7.1:rax $8.1:r15 
   # $9.1: @String = call(append_303, $7.1, $8.1)
-  .loc 3 1168 50
+  .loc 3 1193 50
   mov rdi, rax
   mov rsi, r15
   call append_303
@@ -34253,7 +34559,7 @@ convert_member_access_expression_118:
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $6.1:[rbp-40] $9.1:rax 
   # call(abort_263, $6.1, $9.1)
-  .loc 3 1168 9
+  .loc 3 1193 9
   mov rdi, [rbp-40]
   mov rsi, rax
   call abort_263
@@ -34262,18 +34568,18 @@ convert_member_access_expression_118:
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] 
 .LABEL__convert_member_access_expression_118__3:
   # object_value_type.1: @IR_Pointer_Type = object_value_type.1
-  .loc 3 1170 26
+  .loc 3 1195 26
   mov rax, [rbp-32]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:rax 
   # $11.1: @IR_Type = load_struct_member(object_value_type.1, pointed_type)
-  .loc 3 1171 10
+  .loc 3 1196 10
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:rax $11.1:rbx 
   # IR_Struct_Type.12: @Object_Type = load_variable(IR_Struct_Type)
   lea r15, IR_Struct_Type[rip]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:rax $11.1:rbx IR_Struct_Type.12:r15 
   # $12.1: Boolean = call(is_292, $11.1, IR_Struct_Type.12)
-  .loc 3 1171 10
+  .loc 3 1196 10
   mov rdi, rbx
   mov rsi, r15
   mov [rbp-40], rax
@@ -34282,7 +34588,7 @@ convert_member_access_expression_118:
   # [discarded value]: IR_Struct_Type.12
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] $12.1:rax 
   # $13.1: Boolean = $12.1 == false
-  .loc 3 1171 9
+  .loc 3 1196 9
   cmp al, 0
   sete bl
   # [discarded value]: $12.1
@@ -34292,24 +34598,24 @@ convert_member_access_expression_118:
   jz .LABEL__convert_member_access_expression_118__5
 .LABEL__convert_member_access_expression_118__4:
   # $14.1: @Source_Location = load_struct_member(member_access_expression.1, location)
-  .loc 3 1172 15
+  .loc 3 1197 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:rax:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] $14.1:rbx 
   # $15.1: @String = call(clone_294, "Not a IR_Struct_Type pointer value: ")
-  .loc 3 1172 50
-  lea rdi, .LABEL__string_208[rip] # "Not a IR_Struct_Type pointer value: "
+  .loc 3 1197 50
+  lea rdi, .LABEL__string_211[rip] # "Not a IR_Struct_Type pointer value: "
   mov [rbp-48], rbx
   call clone_294
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] $14.1:[rbp-48] $15.1:rax 
   # $16.1: @String = load_struct_member(object_value_type.1, name)
-  .loc 3 1172 103
+  .loc 3 1197 103
   mov rbx, [rbp-40]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:rbx:[rbp-40] $14.1:[rbp-48] $15.1:rax $16.1:r15 
   # $17.1: @String = call(append_303, $15.1, $16.1)
-  .loc 3 1172 50
+  .loc 3 1197 50
   mov rdi, rax
   mov rsi, r15
   call append_303
@@ -34317,7 +34623,7 @@ convert_member_access_expression_118:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] $14.1:[rbp-48] $17.1:rax 
   # call(abort_263, $14.1, $17.1)
-  .loc 3 1172 9
+  .loc 3 1197 9
   mov rdi, [rbp-48]
   mov rsi, rax
   call abort_263
@@ -34326,22 +34632,22 @@ convert_member_access_expression_118:
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] 
 .LABEL__convert_member_access_expression_118__5:
   # struct_type.1: @IR_Struct_Type = load_struct_member(object_value_type.1, pointed_type)
-  .loc 3 1174 20
+  .loc 3 1199 20
   mov rax, [rbp-40]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:rax:[rbp-40] struct_type.1:rbx 
   # $20.1: @Identifier_Token = load_struct_member(member_access_expression.1, member_name)
-  .loc 3 1175 50
+  .loc 3 1200 50
   mov r15, [rbp-8]
   mov r14, [r15+24]
   # [live values]: self.1:[rbp-16] member_access_expression.1:r15:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:rax:[rbp-40] struct_type.1:rbx $20.1:r14 
   # $21.1: @String = load_struct_member($20.1, lexeme)
-  .loc 3 1175 50
+  .loc 3 1200 50
   mov r13, [r14+8]
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:r15:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:rax:[rbp-40] struct_type.1:rbx $21.1:r13 
   # struct_type_member.1: @IR_Struct_Type_Member = call(get_member_146, struct_type.1, $21.1)
-  .loc 3 1175 27
+  .loc 3 1200 27
   mov rdi, rbx
   mov rsi, r13
   mov [rbp-48], rbx
@@ -34349,7 +34655,7 @@ convert_member_access_expression_118:
   # [discarded value]: $21.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:rax 
   # $23.1: Boolean = struct_type_member.1 == null
-  .loc 3 1176 9
+  .loc 3 1201 9
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:rax $23.1:rbx 
@@ -34359,47 +34665,47 @@ convert_member_access_expression_118:
   jz .LABEL__convert_member_access_expression_118__7
 .LABEL__convert_member_access_expression_118__6:
   # $24.1: @Identifier_Token = load_struct_member(member_access_expression.1, member_name)
-  .loc 3 1177 15
+  .loc 3 1202 15
   mov rax, [rbp-8]
   mov rbx, [rax+24]
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:rax:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $24.1:rbx 
   # $25.1: @Source_Location = load_struct_member($24.1, location)
-  .loc 3 1177 15
+  .loc 3 1202 15
   mov r15, [rbx+16]
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:rax:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $25.1:r15 
   # $26.1: @String = load_struct_member(struct_type.1, name)
-  .loc 3 1177 68
+  .loc 3 1202 68
   mov rbx, [rbp-48]
   mov r14, [rbx+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:rax:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:rbx:[rbp-48] struct_type_member.1:[rbp-56] $25.1:r15 $26.1:r14 
   # $27.1: @String = call(clone_294, $26.1)
-  .loc 3 1177 62
+  .loc 3 1202 62
   mov rdi, r14
   mov [rbp-64], r15
   call clone_294
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $25.1:[rbp-64] $27.1:rax 
   # $28.1: @String = call(append_303, $27.1, " has no such member: ")
-  .loc 3 1177 62
+  .loc 3 1202 62
   mov rdi, rax
-  lea rsi, .LABEL__string_209[rip] # " has no such member: "
+  lea rsi, .LABEL__string_212[rip] # " has no such member: "
   call append_303
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $25.1:[rbp-64] $28.1:rax 
   # $29.1: @Identifier_Token = load_struct_member(member_access_expression.1, member_name)
-  .loc 3 1177 125
+  .loc 3 1202 125
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-16] member_access_expression.1:rbx:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $25.1:[rbp-64] $28.1:rax $29.1:r15 
   # $30.1: @String = load_struct_member($29.1, lexeme)
-  .loc 3 1177 125
+  .loc 3 1202 125
   mov r14, [r15+8]
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:rbx:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $25.1:[rbp-64] $28.1:rax $30.1:r14 
   # $31.1: @String = call(append_303, $28.1, $30.1)
-  .loc 3 1177 62
+  .loc 3 1202 62
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -34407,7 +34713,7 @@ convert_member_access_expression_118:
   # [discarded value]: $30.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $25.1:[rbp-64] $31.1:rax 
   # call(abort_263, $25.1, $31.1)
-  .loc 3 1177 9
+  .loc 3 1202 9
   mov rdi, [rbp-64]
   mov rsi, rax
   call abort_263
@@ -34416,7 +34722,7 @@ convert_member_access_expression_118:
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] 
 .LABEL__convert_member_access_expression_118__7:
   # $32.1: @IR_Type = load_struct_member(struct_type_member.1, type)
-  .loc 3 1179 9
+  .loc 3 1204 9
   mov rax, [rbp-56]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:rax:[rbp-56] $32.1:rbx 
@@ -34424,7 +34730,7 @@ convert_member_access_expression_118:
   lea r15, IR_Struct_Type[rip]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:rax:[rbp-56] $32.1:rbx IR_Struct_Type.13:r15 
   # $33.1: Boolean = call(is_292, $32.1, IR_Struct_Type.13)
-  .loc 3 1179 9
+  .loc 3 1204 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -34436,26 +34742,26 @@ convert_member_access_expression_118:
   jz .LABEL__convert_member_access_expression_118__9
 .LABEL__convert_member_access_expression_118__8:
   # $34.1: @IR_Type = load_struct_member(struct_type_member.1, type)
-  .loc 3 1180 115
+  .loc 3 1205 115
   mov rax, [rbp-56]
   mov rbx, [rax+16]
   # [discarded value]: $33.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:rax:[rbp-56] $34.1:rbx 
   # $35.1: @IR_Pointer_Type = call(create_ir_pointer_type_141, $34.1)
-  .loc 3 1180 92
+  .loc 3 1205 92
   mov rdi, rbx
   call create_ir_pointer_type_141
   # [discarded value]: $34.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $35.1:rax 
   # $36.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $35.1)
-  .loc 3 1180 69
+  .loc 3 1205 69
   mov rdi, [rbp-16]
   mov rsi, rax
   call create_temp_value_70
   # [discarded value]: $35.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $36.1:rax 
   # $37.1: @IR_Load_Struct_Member_Instruction = call(create_ir_load_struct_member_instruction_171, $36.1, object_value.1, struct_type_member.1, true)
-  .loc 3 1180 28
+  .loc 3 1205 28
   mov rdi, rax
   mov rsi, [rbp-24]
   mov rdx, [rbp-56]
@@ -34464,12 +34770,12 @@ convert_member_access_expression_118:
   # [discarded value]: $36.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $37.1:rax 
   # $38.1: @Source_Location = load_struct_member(member_access_expression.1, location)
-  .loc 3 1180 183
+  .loc 3 1205 183
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:rbx:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $37.1:rax $38.1:r15 
   # $39.1: @IR_Variable_Value = call(append_71, self.1, $37.1, $38.1)
-  .loc 3 1180 16
+  .loc 3 1205 16
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -34478,25 +34784,25 @@ convert_member_access_expression_118:
   # [discarded value]: $38.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $39.1:rax 
   # return($39.1)
-  .loc 3 1180 9
+  .loc 3 1205 9
   jmp .LABEL__convert_member_access_expression_118__end
   # [discarded value]: $39.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] 
 .LABEL__convert_member_access_expression_118__9:
   # $40.1: @IR_Type = load_struct_member(struct_type_member.1, type)
-  .loc 3 1182 88
+  .loc 3 1207 88
   mov rax, [rbp-56]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:rax:[rbp-56] $40.1:rbx 
   # $41.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $40.1)
-  .loc 3 1182 65
+  .loc 3 1207 65
   mov rdi, [rbp-16]
   mov rsi, rbx
   call create_temp_value_70
   # [discarded value]: $40.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $41.1:rax 
   # $42.1: @IR_Load_Struct_Member_Instruction = call(create_ir_load_struct_member_instruction_171, $41.1, object_value.1, struct_type_member.1, false)
-  .loc 3 1182 24
+  .loc 3 1207 24
   mov rdi, rax
   mov rsi, [rbp-24]
   mov rdx, [rbp-56]
@@ -34505,12 +34811,12 @@ convert_member_access_expression_118:
   # [discarded value]: $41.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $42.1:rax 
   # $43.1: @Source_Location = load_struct_member(member_access_expression.1, location)
-  .loc 3 1182 156
+  .loc 3 1207 156
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:rbx:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $42.1:rax $43.1:r15 
   # $44.1: @IR_Variable_Value = call(append_71, self.1, $42.1, $43.1)
-  .loc 3 1182 12
+  .loc 3 1207 12
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -34519,7 +34825,7 @@ convert_member_access_expression_118:
   # [discarded value]: $43.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] $44.1:rax 
   # return($44.1)
-  .loc 3 1182 5
+  .loc 3 1207 5
   jmp .LABEL__convert_member_access_expression_118__end
   # [discarded value]: $44.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] object_value_type.1:[rbp-40] struct_type.1:[rbp-48] struct_type_member.1:[rbp-56] 
@@ -34544,7 +34850,7 @@ convert_member_access_expression_118:
 
 convert_member_access_expression_118__stack_frame_size: .word 64
 
-  .loc 3 1185 1
+  .loc 3 1210 1
   .text
 convert_member_access_expression_address_119:
   push rbp
@@ -34557,7 +34863,7 @@ convert_member_access_expression_address_119:
   # member_access_expression.1: @AST_Member_Access_Expression = load_variable(member_access_expression)
   # [live values]: self.1:rdi member_access_expression.1:rsi 
   # result_type.1: @IR_Type = call(deduce_expression_type_132, self.1, member_access_expression.1)
-  .loc 3 1186 20
+  .loc 3 1211 20
   mov [rbp-8], rsi
   mov [rbp-16], rdi
   call deduce_expression_type_132
@@ -34566,7 +34872,7 @@ convert_member_access_expression_address_119:
   lea rbx, IR_Pointer_Type[rip]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] result_type.1:rax IR_Pointer_Type.18:rbx 
   # $2.1: Boolean = call(is_292, result_type.1, IR_Pointer_Type.18)
-  .loc 3 1187 9
+  .loc 3 1212 9
   mov rdi, rax
   mov rsi, rbx
   mov [rbp-24], rax
@@ -34578,30 +34884,30 @@ convert_member_access_expression_address_119:
   jz .LABEL__convert_member_access_expression_address_119__3
 .LABEL__convert_member_access_expression_address_119__2:
   # $3.1: @IR_Value = call(convert_member_access_expression_118, self.1, member_access_expression.1)
-  .loc 3 1188 16
+  .loc 3 1213 16
   mov rdi, [rbp-16]
   mov rsi, [rbp-8]
   call convert_member_access_expression_118
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] result_type.1:[rbp-24] $3.1:rax 
   # return($3.1)
-  .loc 3 1188 9
+  .loc 3 1213 9
   jmp .LABEL__convert_member_access_expression_address_119__end
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] result_type.1:[rbp-24] 
 .LABEL__convert_member_access_expression_address_119__3:
   # $4.1: @Source_Location = load_struct_member(member_access_expression.1, location)
-  .loc 3 1190 11
+  .loc 3 1215 11
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:rax:[rbp-8] result_type.1:[rbp-24] $4.1:rbx 
   # $5.1: @Object_Type = load_struct_member(result_type.1, object_type)
-  .loc 3 1190 46
+  .loc 3 1215 46
   mov r15, [rbp-24]
   mov r14, [r15+0]
   # [live values]: self.1:[rbp-16] member_access_expression.1:rax:[rbp-8] result_type.1:r15:[rbp-24] $4.1:rbx $5.1:r14 
   # call(abort_137, $4.1, $5.1)
-  .loc 3 1190 5
+  .loc 3 1215 5
   mov rdi, rbx
   mov rsi, r14
   call abort_137
@@ -34620,7 +34926,7 @@ convert_member_access_expression_address_119:
 
 convert_member_access_expression_address_119__stack_frame_size: .word 32
 
-  .loc 3 1193 1
+  .loc 3 1218 1
   .text
 convert_modulo_expression_120:
   push rbp
@@ -34633,11 +34939,11 @@ convert_modulo_expression_120:
   # expression.1: @AST_Modulo_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1194 43
+  .loc 3 1219 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1194 71
+  .loc 3 1219 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -34645,7 +34951,7 @@ convert_modulo_expression_120:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1194 19
+  .loc 3 1219 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -34654,12 +34960,12 @@ convert_modulo_expression_120:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1195 44
+  .loc 3 1220 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1195 73
+  .loc 3 1220 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -34667,7 +34973,7 @@ convert_modulo_expression_120:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1195 20
+  .loc 3 1220 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -34679,7 +34985,7 @@ convert_modulo_expression_120:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.25:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.25)
-  .loc 3 1196 9
+  .loc 3 1221 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -34695,7 +35001,7 @@ convert_modulo_expression_120:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.26:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.26)
-  .loc 3 1196 45
+  .loc 3 1221 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -34705,7 +35011,7 @@ convert_modulo_expression_120:
   mov [rbp-41], al
 .LABEL__convert_modulo_expression_120__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1196 9
+  .loc 3 1221 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -34713,13 +35019,13 @@ convert_modulo_expression_120:
   jz .LABEL__convert_modulo_expression_120__5
 .LABEL__convert_modulo_expression_120__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1197 15
+  .loc 3 1222 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1197 9
+  .loc 3 1222 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -34727,12 +35033,12 @@ convert_modulo_expression_120:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_modulo_expression_120__5:
   # $11.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1199 88
+  .loc 3 1224 88
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rbx 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1199 65
+  .loc 3 1224 65
   mov rdi, [rbp-24]
   mov rsi, rbx
   call create_temp_value_70
@@ -34754,7 +35060,7 @@ convert_modulo_expression_120:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Modulo_Instruction = new(IR_Modulo_Instruction)
-  .loc 3 1199 24
+  .loc 3 1224 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -34784,7 +35090,7 @@ convert_modulo_expression_120:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1199 24
+  .loc 3 1224 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -34792,12 +35098,12 @@ convert_modulo_expression_120:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1199 137
+  .loc 3 1224 137
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1199 12
+  .loc 3 1224 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -34806,7 +35112,7 @@ convert_modulo_expression_120:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1199 5
+  .loc 3 1224 5
   jmp .LABEL__convert_modulo_expression_120__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -34828,7 +35134,7 @@ convert_modulo_expression_120:
 
 convert_modulo_expression_120__stack_frame_size: .word 64
 
-  .loc 3 1202 1
+  .loc 3 1227 1
   .text
 convert_multiply_expression_121:
   push rbp
@@ -34841,11 +35147,11 @@ convert_multiply_expression_121:
   # expression.1: @AST_Multiply_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1203 43
+  .loc 3 1228 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1203 71
+  .loc 3 1228 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -34853,7 +35159,7 @@ convert_multiply_expression_121:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1203 19
+  .loc 3 1228 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -34862,12 +35168,12 @@ convert_multiply_expression_121:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1204 44
+  .loc 3 1229 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1204 73
+  .loc 3 1229 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -34875,7 +35181,7 @@ convert_multiply_expression_121:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1204 20
+  .loc 3 1229 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -34887,7 +35193,7 @@ convert_multiply_expression_121:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.27:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.27)
-  .loc 3 1205 9
+  .loc 3 1230 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -34903,7 +35209,7 @@ convert_multiply_expression_121:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.28:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.28)
-  .loc 3 1205 45
+  .loc 3 1230 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -34913,7 +35219,7 @@ convert_multiply_expression_121:
   mov [rbp-41], al
 .LABEL__convert_multiply_expression_121__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1205 9
+  .loc 3 1230 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -34921,13 +35227,13 @@ convert_multiply_expression_121:
   jz .LABEL__convert_multiply_expression_121__5
 .LABEL__convert_multiply_expression_121__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1206 15
+  .loc 3 1231 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1206 9
+  .loc 3 1231 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -34935,12 +35241,12 @@ convert_multiply_expression_121:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_multiply_expression_121__5:
   # $11.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1208 90
+  .loc 3 1233 90
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rbx 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1208 67
+  .loc 3 1233 67
   mov rdi, [rbp-24]
   mov rsi, rbx
   call create_temp_value_70
@@ -34962,7 +35268,7 @@ convert_multiply_expression_121:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Multiply_Instruction = new(IR_Multiply_Instruction)
-  .loc 3 1208 24
+  .loc 3 1233 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -34992,7 +35298,7 @@ convert_multiply_expression_121:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1208 24
+  .loc 3 1233 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -35000,12 +35306,12 @@ convert_multiply_expression_121:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1208 139
+  .loc 3 1233 139
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1208 12
+  .loc 3 1233 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -35014,7 +35320,7 @@ convert_multiply_expression_121:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1208 5
+  .loc 3 1233 5
   jmp .LABEL__convert_multiply_expression_121__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -35036,7 +35342,7 @@ convert_multiply_expression_121:
 
 convert_multiply_expression_121__stack_frame_size: .word 64
 
-  .loc 3 1211 1
+  .loc 3 1236 1
   .text
 convert_negate_expression_122:
   push rbp
@@ -35049,11 +35355,11 @@ convert_negate_expression_122:
   # expression.1: @AST_Negate_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, expression)
-  .loc 3 1212 38
+  .loc 3 1237 38
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1212 61
+  .loc 3 1237 61
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -35061,7 +35367,7 @@ convert_negate_expression_122:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1212 14
+  .loc 3 1237 14
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -35070,11 +35376,11 @@ convert_negate_expression_122:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:rax 
   # $4.1: @IR_Type = load_struct_member(value.1, type)
-  .loc 3 1214 76
+  .loc 3 1239 76
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:rax $4.1:rbx 
   # $5.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $4.1)
-  .loc 3 1214 53
+  .loc 3 1239 53
   mov rdi, [rbp-24]
   mov rsi, rbx
   mov [rbp-32], rax
@@ -35097,7 +35403,7 @@ convert_negate_expression_122:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:[rbp-32] $5.1:[rbp-40] $6.1:rax 
   # $7.1: @IR_Substract_Instruction = new(IR_Substract_Instruction)
-  .loc 3 1214 9
+  .loc 3 1239 9
   mov [rbp-48], rax
   mov rdi, 57
   call malloc
@@ -35127,17 +35433,17 @@ convert_negate_expression_122:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:[rbp-32] $7.1:rax 
   # $8.1: @IR_Type = load_struct_member(value.1, type)
-  .loc 3 1216 24
+  .loc 3 1241 24
   mov rbx, [rbp-32]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:rbx:[rbp-32] $7.1:rax $8.1:r15 
   # $9.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1217 69
+  .loc 3 1242 69
   mov r14, [rbp-8]
   mov r13, [r14+8]
   # [live values]: self.1:[rbp-24] expression.1:r14:[rbp-8] value.1:rbx:[rbp-32] $7.1:rax $8.1:r15 $9.1:r13 
   # $10.1: @Integer_Token = new(Integer_Token)
-  .loc 3 1217 27
+  .loc 3 1242 27
   mov [rbp-40], rax
   mov [rbp-48], r13
   mov [rbp-56], r15
@@ -35147,7 +35453,7 @@ convert_negate_expression_122:
   mov [rax], rbx
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:[rbp-32] $7.1:[rbp-40] $8.1:[rbp-56] $9.1:[rbp-48] $10.1:rax 
   # store_struct_member($10.1, lexeme, "")
-  lea rbx, .LABEL__string_210[rip] # ""
+  lea rbx, .LABEL__string_213[rip] # ""
   mov [rax+8], rbx
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:[rbp-32] $7.1:[rbp-40] $8.1:[rbp-56] $9.1:[rbp-48] $10.1:rax 
   # store_struct_member($10.1, location, $9.1)
@@ -35177,7 +35483,7 @@ convert_negate_expression_122:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:[rbp-32] $7.1:[rbp-40] $8.1:[rbp-56] $10.1:[rbp-64] $11.1:rax 
   # $12.1: @IR_Constant_Value = new(IR_Constant_Value)
-  .loc 3 1215 13
+  .loc 3 1240 13
   mov [rbp-72], rax
   mov rdi, 32
   call malloc
@@ -35200,7 +35506,7 @@ convert_negate_expression_122:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] value.1:[rbp-32] $7.1:[rbp-40] $12.1:rax 
   # $13.1: @IR_Binary_Instruction = call(init_187, $7.1, $12.1, value.1)
-  .loc 3 1214 9
+  .loc 3 1239 9
   mov rdi, [rbp-40]
   mov rsi, rax
   mov rdx, [rbp-32]
@@ -35210,13 +35516,13 @@ convert_negate_expression_122:
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $13.1:rax 
   # $14.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1221 9
+  .loc 3 1246 9
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [discarded value]: expression.1
   # [live values]: self.1:[rbp-24] $13.1:rax $14.1:r15 
   # $15.1: @IR_Variable_Value = call(append_71, self.1, $13.1, $14.1)
-  .loc 3 1213 12
+  .loc 3 1238 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -35226,7 +35532,7 @@ convert_negate_expression_122:
   # [discarded value]: $14.1
   # [live values]: $15.1:rax 
   # return($15.1)
-  .loc 3 1213 5
+  .loc 3 1238 5
   jmp .LABEL__convert_negate_expression_122__end
   # [discarded value]: $15.1
   # [live values]: 
@@ -35237,7 +35543,7 @@ convert_negate_expression_122:
 
 convert_negate_expression_122__stack_frame_size: .word 80
 
-  .loc 3 1225 1
+  .loc 3 1250 1
   .text
 convert_new_expression_123:
   push rbp
@@ -35250,11 +35556,11 @@ convert_new_expression_123:
   # expression.1: @AST_New_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Type = load_struct_member(expression.1, type)
-  .loc 3 1226 37
+  .loc 3 1251 37
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # type.1: @IR_Type = call(convert_value_type_75, self.1, $1.1)
-  .loc 3 1226 13
+  .loc 3 1251 13
   mov [rbp-8], rsi
   mov rsi, rax
   mov [rbp-16], rdi
@@ -35265,7 +35571,7 @@ convert_new_expression_123:
   lea rbx, IR_Array_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:rax IR_Array_Type.2:rbx 
   # $3.1: Boolean = call(is_292, type.1, IR_Array_Type.2)
-  .loc 3 1227 9
+  .loc 3 1252 9
   mov rdi, rax
   mov rsi, rbx
   mov [rbp-24], rax
@@ -35277,16 +35583,16 @@ convert_new_expression_123:
   jz .LABEL__convert_new_expression_123__3
 .LABEL__convert_new_expression_123__2:
   # type.1: @IR_Array_Type = type.1
-  .loc 3 1228 17
+  .loc 3 1253 17
   mov rax, [rbp-24]
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:rax 
   # $5.1: @AST_Expression = load_struct_member(type.1, size_expression)
-  .loc 3 1229 47
+  .loc 3 1254 47
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:rax $5.1:rbx 
   # $6.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1229 69
+  .loc 3 1254 69
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -35294,7 +35600,7 @@ convert_new_expression_123:
   call get_named_type_60
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] $5.1:[rbp-40] $6.1:rax 
   # size_value.1: @IR_Value = call(convert_expression_99, self.1, $5.1, $6.1)
-  .loc 3 1229 23
+  .loc 3 1254 23
   mov rdi, [rbp-16]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -35303,32 +35609,32 @@ convert_new_expression_123:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] size_value.1:rax 
   # $8.1: @IR_Type = load_struct_member(type.1, pointed_type)
-  .loc 3 1232 63
+  .loc 3 1257 63
   mov rbx, [rbp-32]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:rbx:[rbp-32] size_value.1:rax $8.1:r15 
   # $9.1: @IR_Pointer_Type = call(create_ir_pointer_type_141, $8.1)
-  .loc 3 1232 40
+  .loc 3 1257 40
   mov rdi, r15
   mov [rbp-40], rax
   call create_ir_pointer_type_141
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] size_value.1:[rbp-40] $9.1:rax 
   # $10.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $9.1)
-  .loc 3 1232 17
+  .loc 3 1257 17
   mov rdi, [rbp-16]
   mov rsi, rax
   call create_temp_value_70
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] size_value.1:[rbp-40] $10.1:rax 
   # $11.1: @IR_Type = load_struct_member(type.1, pointed_type)
-  .loc 3 1233 17
+  .loc 3 1258 17
   mov rbx, [rbp-32]
   mov r15, [rbx+16]
   # [discarded value]: type.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] size_value.1:[rbp-40] $10.1:rax $11.1:r15 
   # $12.1: @IR_New_Instruction = call(create_ir_new_instruction_174, $10.1, $11.1, size_value.1)
-  .loc 3 1231 13
+  .loc 3 1256 13
   mov rdi, rax
   mov rsi, r15
   mov rdx, [rbp-40]
@@ -35338,12 +35644,12 @@ convert_new_expression_123:
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] $12.1:rax 
   # $13.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1236 13
+  .loc 3 1261 13
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] type.1:[rbp-24] $12.1:rax $13.1:r15 
   # $14.1: @IR_Variable_Value = call(append_71, self.1, $12.1, $13.1)
-  .loc 3 1230 16
+  .loc 3 1255 16
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -35352,7 +35658,7 @@ convert_new_expression_123:
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] $14.1:rax 
   # return($14.1)
-  .loc 3 1230 9
+  .loc 3 1255 9
   jmp .LABEL__convert_new_expression_123__end
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] 
@@ -35361,7 +35667,7 @@ convert_new_expression_123:
   lea rax, IR_Struct_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] IR_Struct_Type.14:rax 
   # $15.1: Boolean = call(is_292, type.1, IR_Struct_Type.14)
-  .loc 3 1239 9
+  .loc 3 1264 9
   mov rdi, [rbp-24]
   mov rsi, rax
   call is_292
@@ -35372,12 +35678,12 @@ convert_new_expression_123:
   jz .LABEL__convert_new_expression_123__6
 .LABEL__convert_new_expression_123__5:
   # type.1: @IR_Struct_Type = type.1
-  .loc 3 1240 17
+  .loc 3 1265 17
   mov rax, [rbp-24]
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:rax 
   # $17.1: @List = new(List)
-  .loc 3 1241 27
+  .loc 3 1266 27
   mov [rbp-32], rax
   mov rdi, 24
   call malloc
@@ -35392,16 +35698,16 @@ convert_new_expression_123:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] $17.1:rax 
   # init_arguments.1: @List = $17.1
-  .loc 3 1241 9
+  .loc 3 1266 9
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:rax 
   # $18.1: @List = load_struct_member(expression.1, init_arguments)
-  .loc 3 1242 60
+  .loc 3 1267 60
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:rax $18.1:r15 
   # call(prepare_struct_init_arguments_124, self.1, init_arguments.1, $18.1, type.1, type.1)
-  .loc 3 1242 9
+  .loc 3 1267 9
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -35412,19 +35718,19 @@ convert_new_expression_123:
   # [discarded value]: $18.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:[rbp-40] 
   # $19.1: @IR_Pointer_Type = call(create_ir_pointer_type_141, type.1)
-  .loc 3 1243 86
+  .loc 3 1268 86
   mov rdi, [rbp-32]
   call create_ir_pointer_type_141
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:[rbp-40] $19.1:rax 
   # $20.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $19.1)
-  .loc 3 1243 63
+  .loc 3 1268 63
   mov rdi, [rbp-16]
   mov rsi, rax
   call create_temp_value_70
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:[rbp-40] $20.1:rax 
   # $21.1: @IR_New_Instruction = call(create_ir_new_instruction_174, $20.1, type.1, null)
-  .loc 3 1243 37
+  .loc 3 1268 37
   mov rdi, rax
   mov rsi, [rbp-32]
   xor rdx, rdx
@@ -35432,12 +35738,12 @@ convert_new_expression_123:
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:[rbp-40] $21.1:rax 
   # $22.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1243 130
+  .loc 3 1268 130
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:[rbp-40] $21.1:rax $22.1:r15 
   # result_value.1: @IR_Variable_Value = call(append_71, self.1, $21.1, $22.1)
-  .loc 3 1243 25
+  .loc 3 1268 25
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -35446,7 +35752,7 @@ convert_new_expression_123:
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] type.1:[rbp-32] init_arguments.1:[rbp-40] result_value.1:rax 
   # call(apply_struct_init_arguments_126, self.1, result_value.1, type.1, init_arguments.1, expression.1)
-  .loc 3 1244 9
+  .loc 3 1269 9
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, [rbp-32]
@@ -35458,30 +35764,30 @@ convert_new_expression_123:
   # [discarded value]: init_arguments.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] result_value.1:[rbp-48] 
   # return(result_value.1)
-  .loc 3 1245 9
+  .loc 3 1270 9
   mov rax, [rbp-48]
   jmp .LABEL__convert_new_expression_123__end
   # [discarded value]: result_value.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] 
 .LABEL__convert_new_expression_123__6:
   # $24.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1247 11
+  .loc 3 1272 11
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] type.1:[rbp-24] $24.1:rbx 
   # $25.1: @String = call(clone_294, "Unsupported type: ")
-  .loc 3 1247 32
+  .loc 3 1272 32
   lea rdi, .LABEL__string_150[rip] # "Unsupported type: "
   mov [rbp-32], rbx
   call clone_294
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] $24.1:[rbp-32] $25.1:rax 
   # $26.1: @String = load_struct_member(type.1, name)
-  .loc 3 1247 67
+  .loc 3 1272 67
   mov rbx, [rbp-24]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:rbx:[rbp-24] $24.1:[rbp-32] $25.1:rax $26.1:r15 
   # $27.1: @String = call(append_303, $25.1, $26.1)
-  .loc 3 1247 32
+  .loc 3 1272 32
   mov rdi, rax
   mov rsi, r15
   call append_303
@@ -35489,7 +35795,7 @@ convert_new_expression_123:
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] type.1:[rbp-24] $24.1:[rbp-32] $27.1:rax 
   # call(abort_263, $24.1, $27.1)
-  .loc 3 1247 5
+  .loc 3 1272 5
   mov rdi, [rbp-32]
   mov rsi, rax
   call abort_263
@@ -35509,7 +35815,7 @@ convert_new_expression_123:
 
 convert_new_expression_123__stack_frame_size: .word 48
 
-  .loc 3 1250 1
+  .loc 3 1275 1
   .text
 prepare_struct_init_arguments_124:
   push rbp
@@ -35528,7 +35834,7 @@ prepare_struct_init_arguments_124:
   # base_type.1: @IR_Struct_Type = load_variable(base_type)
   # [live values]: self.1:rdi init_arguments.1:rsi call_arguments.1:rdx struct_type.1:rcx base_type.1:r8 
   # call_arguments_item.1: @List_Item = load_struct_member(call_arguments.1, first_item)
-  .loc 3 1251 28
+  .loc 3 1276 28
   mov rax, [rdx+0]
   # [discarded value]: call_arguments.1
   # [live values]: self.1:rdi init_arguments.1:rsi struct_type.1:rcx base_type.1:r8 call_arguments_item.1:rax 
@@ -35542,7 +35848,7 @@ prepare_struct_init_arguments_124:
   # call_arguments_item.2: @List_Item = phi(call_arguments_item.1, call_arguments_item.5)
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] 
   # $2.1: Boolean = call_arguments_item.2 != null
-  .loc 3 1252 12
+  .loc 3 1277 12
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:rax 
@@ -35551,17 +35857,17 @@ prepare_struct_init_arguments_124:
   jz .LABEL__prepare_struct_init_arguments_124__4
 .LABEL__prepare_struct_init_arguments_124__3:
   # call_argument.1: @AST_Call_Argument = load_struct_member(call_arguments_item.2, data)
-  .loc 3 1253 26
+  .loc 3 1278 26
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:rax:[rbp-8] call_argument.1:rbx 
   # $5.1: @Identifier_Token = load_struct_member(call_argument.1, name)
-  .loc 3 1254 13
+  .loc 3 1279 13
   mov r15, [rbx+0]
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:rax:[rbp-8] call_argument.1:rbx $5.1:r15 
   # $6.1: Boolean = $5.1 == null
-  .loc 3 1254 13
+  .loc 3 1279 13
   cmp r15, 0
   sete r14b
   # [discarded value]: $5.1
@@ -35572,43 +35878,43 @@ prepare_struct_init_arguments_124:
   jz .LABEL__prepare_struct_init_arguments_124__6
 .LABEL__prepare_struct_init_arguments_124__5:
   # $7.1: @AST_Expression = load_struct_member(call_argument.1, value_expression)
-  .loc 3 1255 19
+  .loc 3 1280 19
   mov rax, [rbp-48]
   mov rbx, [rax+8]
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] $7.1:rbx 
   # $8.1: @Source_Location = load_struct_member($7.1, location)
-  .loc 3 1255 19
+  .loc 3 1280 19
   mov r15, [rbx+8]
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] $8.1:r15 
   # call(abort_263, $8.1, "Struct init argument without name")
-  .loc 3 1255 13
+  .loc 3 1280 13
   mov rdi, r15
-  lea rsi, .LABEL__string_211[rip] # "Struct init argument without name"
+  lea rsi, .LABEL__string_214[rip] # "Struct init argument without name"
   call abort_263
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] 
 .LABEL__prepare_struct_init_arguments_124__6:
   # $9.1: @Identifier_Token = load_struct_member(call_argument.1, name)
-  .loc 3 1257 31
+  .loc 3 1282 31
   mov rax, [rbp-48]
   mov rbx, [rax+0]
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] $9.1:rbx 
   # call_argument_name.1: @String = load_struct_member($9.1, lexeme)
-  .loc 3 1257 31
+  .loc 3 1282 31
   mov r15, [rbx+8]
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] call_argument_name.1:r15 
   # $11.1: @IR_Call_Argument = call(get_named_argument_125, init_arguments.1, call_argument_name.1)
-  .loc 3 1258 13
+  .loc 3 1283 13
   mov rdi, [rbp-24]
   mov rsi, r15
   mov [rbp-56], r15
   call get_named_argument_125
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] $11.1:rax 
   # $12.1: Boolean = $11.1 == null
-  .loc 3 1258 13
+  .loc 3 1283 13
   cmp rax, 0
   sete bl
   # [discarded value]: $11.1
@@ -35618,14 +35924,14 @@ prepare_struct_init_arguments_124:
   jz .LABEL__prepare_struct_init_arguments_124__8
 .LABEL__prepare_struct_init_arguments_124__7:
   # struct_type_member.1: @IR_Struct_Type_Member = call(get_member_146, struct_type.1, call_argument_name.1)
-  .loc 3 1259 35
+  .loc 3 1284 35
   mov rdi, [rbp-16]
   mov rsi, [rbp-56]
   call get_member_146
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:rax 
   # $14.1: Boolean = struct_type_member.1 == null
-  .loc 3 1260 17
+  .loc 3 1285 17
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:rax $14.1:rbx 
@@ -35635,44 +35941,44 @@ prepare_struct_init_arguments_124:
   jz .LABEL__prepare_struct_init_arguments_124__10
 .LABEL__prepare_struct_init_arguments_124__9:
   # $15.1: @Identifier_Token = load_struct_member(call_argument.1, name)
-  .loc 3 1261 23
+  .loc 3 1286 23
   mov rax, [rbp-48]
   mov rbx, [rax+0]
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $15.1:rbx 
   # $16.1: @Source_Location = load_struct_member($15.1, location)
-  .loc 3 1261 23
+  .loc 3 1286 23
   mov r15, [rbx+16]
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $16.1:r15 
   # $17.1: @String = load_struct_member(struct_type.1, name)
-  .loc 3 1261 58
+  .loc 3 1286 58
   mov rbx, [rbp-16]
   mov r14, [rbx+8]
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:rbx:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $16.1:r15 $17.1:r14 
   # $18.1: @String = call(clone_294, $17.1)
-  .loc 3 1261 52
+  .loc 3 1286 52
   mov rdi, r14
   mov [rbp-72], r15
   call clone_294
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $16.1:[rbp-72] $18.1:rax 
   # $19.1: @String = call(append_303, $18.1, " has no such member: ")
-  .loc 3 1261 52
+  .loc 3 1286 52
   mov rdi, rax
-  lea rsi, .LABEL__string_209[rip] # " has no such member: "
+  lea rsi, .LABEL__string_212[rip] # " has no such member: "
   call append_303
   # [discarded value]: $18.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $16.1:[rbp-72] $19.1:rax 
   # $20.1: @String = call(append_303, $19.1, call_argument_name.1)
-  .loc 3 1261 52
+  .loc 3 1286 52
   mov rdi, rax
   mov rsi, [rbp-56]
   call append_303
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $16.1:[rbp-72] $20.1:rax 
   # call(abort_263, $16.1, $20.1)
-  .loc 3 1261 17
+  .loc 3 1286 17
   mov rdi, [rbp-72]
   mov rsi, rax
   call abort_263
@@ -35681,17 +35987,17 @@ prepare_struct_init_arguments_124:
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] 
 .LABEL__prepare_struct_init_arguments_124__10:
   # $21.1: @AST_Expression = load_struct_member(call_argument.1, value_expression)
-  .loc 3 1263 115
+  .loc 3 1288 115
   mov rax, [rbp-48]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $21.1:rbx 
   # $22.1: @IR_Type = load_struct_member(struct_type_member.1, type)
-  .loc 3 1263 147
+  .loc 3 1288 147
   mov r15, [rbp-64]
   mov r14, [r15+16]
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:rax:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:r15:[rbp-64] $21.1:rbx $22.1:r14 
   # $23.1: @IR_Value = call(convert_expression_99, self.1, $21.1, $22.1)
-  .loc 3 1263 91
+  .loc 3 1288 91
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov rdx, r14
@@ -35700,7 +36006,7 @@ prepare_struct_init_arguments_124:
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] $23.1:rax 
   # $24.1: @IR_Call_Argument = new(IR_Call_Argument)
-  .loc 3 1263 35
+  .loc 3 1288 35
   mov [rbp-72], rax
   mov rdi, 16
   call malloc
@@ -35715,7 +36021,7 @@ prepare_struct_init_arguments_124:
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:rbx:[rbp-56] struct_type_member.1:[rbp-64] $24.1:rax 
   # call(append_267, init_arguments.1, $24.1)
-  .loc 3 1263 13
+  .loc 3 1288 13
   mov rdi, [rbp-24]
   mov rsi, rax
   call append_267
@@ -35724,7 +36030,7 @@ prepare_struct_init_arguments_124:
   # jump(block.8)
 .LABEL__prepare_struct_init_arguments_124__8:
   # call_arguments_item.5: @List_Item = load_struct_member(call_arguments_item.2, next_item)
-  .loc 3 1265 31
+  .loc 3 1290 31
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] call_argument.1:[rbp-48] call_argument_name.1:[rbp-56] struct_type_member.1:[rbp-64] call_arguments_item.5:rbx:[rbp-8] 
@@ -35746,7 +36052,7 @@ prepare_struct_init_arguments_124:
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] 
 .LABEL__prepare_struct_init_arguments_124__4:
   # $26.1: Boolean = base_type.1 != null
-  .loc 3 1267 9
+  .loc 3 1292 9
   cmp QWORD PTR [rbp-40], 0
   setne al
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $26.1:rax 
@@ -35755,22 +36061,22 @@ prepare_struct_init_arguments_124:
   jz .LABEL__prepare_struct_init_arguments_124__12
 .LABEL__prepare_struct_init_arguments_124__11:
   # $27.1: @AST_Struct_Statement = load_struct_member(base_type.1, statement)
-  .loc 3 1268 60
+  .loc 3 1293 60
   mov rax, [rbp-40]
   mov rbx, [rax+32]
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:rax:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $27.1:rbx 
   # $28.1: @List = load_struct_member($27.1, init_arguments)
-  .loc 3 1268 60
+  .loc 3 1293 60
   mov r15, [rbx+40]
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:rax:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $28.1:r15 
   # $29.1: @IR_Struct_Type = load_struct_member(base_type.1, base_type)
-  .loc 3 1268 109
+  .loc 3 1293 109
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-32] init_arguments.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:rax:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $28.1:r15 $29.1:rbx 
   # call(prepare_struct_init_arguments_124, self.1, init_arguments.1, $28.1, struct_type.1, $29.1)
-  .loc 3 1268 9
+  .loc 3 1293 9
   mov rdi, [rbp-32]
   mov rsi, [rbp-24]
   mov rdx, r15
@@ -35804,7 +36110,7 @@ prepare_struct_init_arguments_124:
 
 prepare_struct_init_arguments_124__stack_frame_size: .word 80
 
-  .loc 3 1272 1
+  .loc 3 1297 1
   .text
 get_named_argument_125:
   push rbp
@@ -35817,7 +36123,7 @@ get_named_argument_125:
   # name.1: @String = load_variable(name)
   # [live values]: list.1:rdi name.1:rsi 
   # list_item.1: @List_Item = load_struct_member(list.1, first_item)
-  .loc 3 1273 18
+  .loc 3 1298 18
   mov rax, [rdi+0]
   # [discarded value]: list.1
   # [live values]: name.1:rsi list_item.1:rax 
@@ -35828,7 +36134,7 @@ get_named_argument_125:
   # list_item.2: @List_Item = phi(list_item.1, list_item.5)
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] 
   # $2.1: Boolean = list_item.2 != null
-  .loc 3 1274 12
+  .loc 3 1299 12
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] $2.1:rax 
@@ -35837,17 +36143,17 @@ get_named_argument_125:
   jz .LABEL__get_named_argument_125__4
 .LABEL__get_named_argument_125__3:
   # call_argument.1: @IR_Call_Argument = load_struct_member(list_item.2, data)
-  .loc 3 1275 26
+  .loc 3 1300 26
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:rax:[rbp-8] call_argument.1:rbx 
   # $5.1: @String = load_struct_member(call_argument.1, name)
-  .loc 3 1276 25
+  .loc 3 1301 25
   mov r15, [rbx+0]
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:rax:[rbp-8] call_argument.1:rbx $5.1:r15 
   # $6.1: Boolean = call(equals_295, name.1, $5.1)
-  .loc 3 1276 13
+  .loc 3 1301 13
   mov rdi, [rbp-16]
   mov rsi, r15
   mov [rbp-24], rbx
@@ -35859,14 +36165,14 @@ get_named_argument_125:
   jz .LABEL__get_named_argument_125__6
 .LABEL__get_named_argument_125__5:
   # return(call_argument.1)
-  .loc 3 1277 13
+  .loc 3 1302 13
   mov rax, [rbp-24]
   jmp .LABEL__get_named_argument_125__end
   # [discarded value]: $6.1
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] call_argument.1:[rbp-24] 
 .LABEL__get_named_argument_125__6:
   # list_item.5: @List_Item = load_struct_member(list_item.2, next_item)
-  .loc 3 1279 21
+  .loc 3 1304 21
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] call_argument.1:[rbp-24] list_item.5:rbx:[rbp-8] 
@@ -35881,7 +36187,7 @@ get_named_argument_125:
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] 
 .LABEL__get_named_argument_125__4:
   # return(null)
-  .loc 3 1281 5
+  .loc 3 1306 5
   xor rax, rax
   jmp .LABEL__get_named_argument_125__end
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] 
@@ -35899,7 +36205,7 @@ get_named_argument_125:
 
 get_named_argument_125__stack_frame_size: .word 32
 
-  .loc 3 1284 1
+  .loc 3 1309 1
   .text
 apply_struct_init_arguments_126:
   push rbp
@@ -35918,11 +36224,11 @@ apply_struct_init_arguments_126:
   # expression.1: @AST_New_Expression = load_variable(expression)
   # [live values]: self.1:rdi object_address_value.1:rsi struct_type.1:rdx call_arguments.1:rcx expression.1:r8 
   # $1.1: @IR_Struct_Type = load_struct_member(struct_type.1, base_type)
-  .loc 3 1285 9
+  .loc 3 1310 9
   mov rax, [rdx+16]
   # [live values]: self.1:rdi object_address_value.1:rsi struct_type.1:rdx call_arguments.1:rcx expression.1:r8 $1.1:rax 
   # $2.1: Boolean = $1.1 != null
-  .loc 3 1285 9
+  .loc 3 1310 9
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -35937,13 +36243,13 @@ apply_struct_init_arguments_126:
   jz .LABEL__apply_struct_init_arguments_126__3
 .LABEL__apply_struct_init_arguments_126__2:
   # $3.1: @IR_Struct_Type = load_struct_member(struct_type.1, base_type)
-  .loc 3 1286 64
+  .loc 3 1311 64
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:rax:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] $3.1:rbx 
   # call(apply_struct_init_arguments_126, self.1, object_address_value.1, $3.1, call_arguments.1, expression.1)
-  .loc 3 1286 9
+  .loc 3 1311 9
   mov rdi, [rbp-32]
   mov rsi, [rbp-24]
   mov rdx, rbx
@@ -35955,12 +36261,12 @@ apply_struct_init_arguments_126:
   # jump(block.3)
 .LABEL__apply_struct_init_arguments_126__3:
   # $4.1: @List = load_struct_member(struct_type.1, members)
-  .loc 3 1288 33
+  .loc 3 1313 33
   mov rax, [rbp-16]
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:rax:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] $4.1:rbx 
   # struct_type_members_item.1: @List_Item = load_struct_member($4.1, first_item)
-  .loc 3 1288 33
+  .loc 3 1313 33
   mov r15, [rbx+0]
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:rax:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:r15 
@@ -35970,7 +36276,7 @@ apply_struct_init_arguments_126:
   # struct_type_members_item.2: @List_Item = phi(struct_type_members_item.1, struct_type_members_item.5)
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] 
   # $6.1: Boolean = struct_type_members_item.2 != null
-  .loc 3 1289 12
+  .loc 3 1314 12
   cmp QWORD PTR [rbp-48], 0
   setne al
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] $6.1:rax 
@@ -35979,17 +36285,17 @@ apply_struct_init_arguments_126:
   jz .LABEL__apply_struct_init_arguments_126__6
 .LABEL__apply_struct_init_arguments_126__5:
   # struct_type_member.1: @IR_Struct_Type_Member = load_struct_member(struct_type_members_item.2, data)
-  .loc 3 1290 31
+  .loc 3 1315 31
   mov rax, [rbp-48]
   mov rbx, [rax+16]
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:rax:[rbp-48] struct_type_member.1:rbx 
   # struct_type_member_name.1: @String = load_struct_member(struct_type_member.1, name)
-  .loc 3 1291 36
+  .loc 3 1316 36
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:rax:[rbp-48] struct_type_member.1:rbx struct_type_member_name.1:r15 
   # call_argument.1: @IR_Call_Argument = call(get_named_argument_125, call_arguments.1, struct_type_member_name.1)
-  .loc 3 1292 26
+  .loc 3 1317 26
   mov rdi, [rbp-8]
   mov rsi, r15
   mov [rbp-56], rbx
@@ -35997,7 +36303,7 @@ apply_struct_init_arguments_126:
   call get_named_argument_125
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:rax 
   # $11.1: Boolean = call_argument.1 != null
-  .loc 3 1293 13
+  .loc 3 1318 13
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:rax $11.1:rbx 
@@ -36007,20 +36313,20 @@ apply_struct_init_arguments_126:
   jz .LABEL__apply_struct_init_arguments_126__9
 .LABEL__apply_struct_init_arguments_126__7:
   # call_argument_value.1: @IR_Value = load_struct_member(call_argument.1, value)
-  .loc 3 1294 36
+  .loc 3 1319 36
   mov rax, [rbp-72]
   mov rbx, [rax+8]
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:rax:[rbp-72] call_argument_value.1:rbx 
   # $22.1: @IR_Type = load_struct_member(call_argument_value.1, type)
-  .loc 3 1295 17
+  .loc 3 1320 17
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:rax:[rbp-72] call_argument_value.1:rbx $22.1:r15 
   # IR_Undefined_Type.4: @Object_Type = load_variable(IR_Undefined_Type)
   lea r14, IR_Undefined_Type[rip]
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:rax:[rbp-72] call_argument_value.1:rbx $22.1:r15 IR_Undefined_Type.4:r14 
   # $23.1: Boolean = call(is_292, $22.1, IR_Undefined_Type.4)
-  .loc 3 1295 17
+  .loc 3 1320 17
   mov rdi, r15
   mov rsi, r14
   mov [rbp-80], rbx
@@ -36029,7 +36335,7 @@ apply_struct_init_arguments_126:
   # [discarded value]: IR_Undefined_Type.4
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] call_argument_value.1:[rbp-80] $23.1:rax 
   # $24.1: Boolean = $23.1 == false
-  .loc 3 1295 17
+  .loc 3 1320 17
   cmp al, 0
   sete bl
   # [discarded value]: $23.1
@@ -36039,7 +36345,7 @@ apply_struct_init_arguments_126:
   jz .LABEL__apply_struct_init_arguments_126__8
 .LABEL__apply_struct_init_arguments_126__10:
   # $25.1: @IR_Store_Struct_Member_Instruction = call(create_ir_store_struct_member_instruction_184, object_address_value.1, struct_type_member.1, call_argument_value.1)
-  .loc 3 1296 29
+  .loc 3 1321 29
   mov rdi, [rbp-24]
   mov rsi, [rbp-56]
   mov rdx, [rbp-80]
@@ -36047,7 +36353,7 @@ apply_struct_init_arguments_126:
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] call_argument_value.1:[rbp-80] $25.1:rax 
   # $26.1: @IR_Variable_Value = call(append_71, self.1, $25.1, null)
-  .loc 3 1296 17
+  .loc 3 1321 17
   mov rdi, [rbp-32]
   mov rsi, rax
   xor rdx, rdx
@@ -36058,7 +36364,7 @@ apply_struct_init_arguments_126:
   # jump(block.8)
 .LABEL__apply_struct_init_arguments_126__8:
   # struct_type_members_item.5: @List_Item = load_struct_member(struct_type_members_item.2, next_item)
-  .loc 3 1301 36
+  .loc 3 1326 36
   mov rax, [rbp-48]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] call_argument_value.1:[rbp-80] struct_type_members_item.5:rbx:[rbp-48] 
@@ -36076,12 +36382,12 @@ apply_struct_init_arguments_126:
   # stdout.7: @FILE = load_variable(stdout)
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] stdout.7:stdout[rip] 
   # $12.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1299 26
+  .loc 3 1324 26
   mov rax, [rbp-40]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:rax:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] stdout.7:stdout[rip] $12.1:rbx 
   # $13.1: @FILE = call(write_266, stdout.7, $12.1)
-  .loc 3 1299 13
+  .loc 3 1324 13
   mov rdi, stdout[rip]
   mov rsi, rbx
   call write_266
@@ -36089,19 +36395,19 @@ apply_struct_init_arguments_126:
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] $13.1:rax 
   # $14.1: @FILE = call(write_286, $13.1, ": ")
-  .loc 3 1299 13
+  .loc 3 1324 13
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] $14.1:rax 
   # $15.1: @String = load_struct_member(struct_type.1, name)
-  .loc 3 1299 65
+  .loc 3 1324 65
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:rbx:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] $14.1:rax $15.1:r15 
   # $16.1: @FILE = call(write_286, $14.1, $15.1)
-  .loc 3 1299 13
+  .loc 3 1324 13
   mov rdi, rax
   mov rsi, r15
   call write_286
@@ -36109,28 +36415,28 @@ apply_struct_init_arguments_126:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] $16.1:rax 
   # $17.1: @FILE = call(write_288, $16.1, '.')
-  .loc 3 1299 13
+  .loc 3 1324 13
   mov rdi, rax
   mov sil, 46
   call write_288
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] $17.1:rax 
   # $18.1: @FILE = call(write_286, $17.1, struct_type_member_name.1)
-  .loc 3 1299 13
+  .loc 3 1324 13
   mov rdi, rax
   mov rsi, [rbp-64]
   call write_286
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] $18.1:rax 
   # $19.1: @FILE = call(write_286, $18.1, " is not initialized")
-  .loc 3 1299 13
+  .loc 3 1324 13
   mov rdi, rax
-  lea rsi, .LABEL__string_213[rip] # " is not initialized"
+  lea rsi, .LABEL__string_215[rip] # " is not initialized"
   call write_286
   # [discarded value]: $18.1
   # [live values]: self.1:[rbp-32] object_address_value.1:[rbp-24] struct_type.1:[rbp-16] call_arguments.1:[rbp-8] expression.1:[rbp-40] struct_type_members_item.1:[rbp-48] struct_type_members_item.2:[rbp-48] struct_type_member.1:[rbp-56] struct_type_member_name.1:[rbp-64] call_argument.1:[rbp-72] $19.1:rax 
   # $20.1: @FILE = call(end_line_289, $19.1)
-  .loc 3 1299 13
+  .loc 3 1324 13
   mov rdi, rax
   call end_line_289
   # [discarded value]: $19.1
@@ -36169,7 +36475,7 @@ apply_struct_init_arguments_126:
 
 apply_struct_init_arguments_126__stack_frame_size: .word 80
 
-  .loc 3 1311 1
+  .loc 3 1336 1
   .text
 get_127:
   push rbp
@@ -36182,7 +36488,7 @@ get_127:
   # struct_member.1: @IR_Struct_Type_Member = load_variable(struct_member)
   # [live values]: list.1:rdi struct_member.1:rsi 
   # list_item.1: @List_Item = load_struct_member(list.1, first_item)
-  .loc 3 1312 18
+  .loc 3 1337 18
   mov rax, [rdi+0]
   # [discarded value]: list.1
   # [live values]: struct_member.1:rsi list_item.1:rax 
@@ -36193,7 +36499,7 @@ get_127:
   # list_item.2: @List_Item = phi(list_item.1, list_item.5)
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] 
   # $2.1: Boolean = list_item.2 != null
-  .loc 3 1313 12
+  .loc 3 1338 12
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] $2.1:rax 
@@ -36202,17 +36508,17 @@ get_127:
   jz .LABEL__get_127__4
 .LABEL__get_127__3:
   # struct_member_value.1: @IR_Struct_Member_Value = load_struct_member(list_item.2, data)
-  .loc 3 1314 32
+  .loc 3 1339 32
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:rax:[rbp-8] struct_member_value.1:rbx 
   # $5.1: @IR_Struct_Type_Member = load_struct_member(struct_member_value.1, struct_member)
-  .loc 3 1315 13
+  .loc 3 1340 13
   mov r15, [rbx+0]
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:rax:[rbp-8] struct_member_value.1:rbx $5.1:r15 
   # $6.1: Boolean = $5.1 == struct_member.1
-  .loc 3 1315 13
+  .loc 3 1340 13
   cmp r15, QWORD PTR [rbp-16]
   sete r14b
   # [discarded value]: $5.1
@@ -36223,14 +36529,14 @@ get_127:
   jz .LABEL__get_127__6
 .LABEL__get_127__5:
   # return(struct_member_value.1)
-  .loc 3 1316 13
+  .loc 3 1341 13
   mov rax, [rbp-24]
   jmp .LABEL__get_127__end
   # [discarded value]: $6.1
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] struct_member_value.1:[rbp-24] 
 .LABEL__get_127__6:
   # list_item.5: @List_Item = load_struct_member(list_item.2, next_item)
-  .loc 3 1318 21
+  .loc 3 1343 21
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] struct_member_value.1:[rbp-24] list_item.5:rbx:[rbp-8] 
@@ -36245,7 +36551,7 @@ get_127:
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] 
 .LABEL__get_127__4:
   # return(null)
-  .loc 3 1320 5
+  .loc 3 1345 5
   xor rax, rax
   jmp .LABEL__get_127__end
   # [live values]: struct_member.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] 
@@ -36263,7 +36569,7 @@ get_127:
 
 get_127__stack_frame_size: .word 32
 
-  .loc 3 1323 1
+  .loc 3 1348 1
   .text
 convert_not_equals_expression_128:
   push rbp
@@ -36276,11 +36582,11 @@ convert_not_equals_expression_128:
   # expression.1: @AST_Not_Equals_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1324 43
+  .loc 3 1349 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, null)
-  .loc 3 1324 19
+  .loc 3 1349 19
   mov [rbp-8], rsi
   mov rsi, rax
   xor rdx, rdx
@@ -36289,12 +36595,12 @@ convert_not_equals_expression_128:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax 
   # $3.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1325 44
+  .loc 3 1350 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] left_value.1:rax $3.1:r15 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $3.1, null)
-  .loc 3 1325 20
+  .loc 3 1350 20
   mov rdi, [rbp-16]
   mov rsi, r15
   xor rdx, rdx
@@ -36303,16 +36609,16 @@ convert_not_equals_expression_128:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax 
   # $5.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1326 9
+  .loc 3 1351 9
   mov rbx, [rbp-24]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $5.1:r15 
   # $6.1: @IR_Type = load_struct_member(right_value.1, type)
-  .loc 3 1326 32
+  .loc 3 1351 32
   mov r14, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $5.1:r15 $6.1:r14 
   # $7.1: Boolean = call(equals_140, $5.1, $6.1)
-  .loc 3 1326 9
+  .loc 3 1351 9
   mov rdi, r15
   mov rsi, r14
   mov [rbp-32], rax
@@ -36321,7 +36627,7 @@ convert_not_equals_expression_128:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $7.1:rax 
   # $9.1: Boolean = $7.1 == false
-  .loc 3 1326 9
+  .loc 3 1351 9
   cmp al, 0
   sete bl
   # [discarded value]: $7.1
@@ -36332,7 +36638,7 @@ convert_not_equals_expression_128:
   jz .LABEL__convert_not_equals_expression_128__3
 .LABEL__convert_not_equals_expression_128__2:
   # $10.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1326 63
+  .loc 3 1351 63
   mov rax, [rbp-24]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $10.1:rbx 
@@ -36340,7 +36646,7 @@ convert_not_equals_expression_128:
   lea r15, IR_Pointer_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $10.1:rbx IR_Pointer_Type.19:r15 
   # $12.1: Boolean = call(is_292, $10.1, IR_Pointer_Type.19)
-  .loc 3 1326 63
+  .loc 3 1351 63
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -36353,7 +36659,7 @@ convert_not_equals_expression_128:
   jz .LABEL__convert_not_equals_expression_128__5
 .LABEL__convert_not_equals_expression_128__4:
   # $13.1: @IR_Type = load_struct_member(right_value.1, type)
-  .loc 3 1326 102
+  .loc 3 1351 102
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $13.1:rbx 
@@ -36361,7 +36667,7 @@ convert_not_equals_expression_128:
   lea r15, IR_Null_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $13.1:rbx IR_Null_Type.7:r15 
   # $14.1: Boolean = call(is_292, $13.1, IR_Null_Type.7)
-  .loc 3 1326 102
+  .loc 3 1351 102
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -36369,7 +36675,7 @@ convert_not_equals_expression_128:
   # [discarded value]: IR_Null_Type.7
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $14.1:rax 
   # $12.2: Boolean = $14.1 == false
-  .loc 3 1326 102
+  .loc 3 1351 102
   cmp al, 0
   sete bl
   # [discarded value]: $14.1
@@ -36378,14 +36684,14 @@ convert_not_equals_expression_128:
   mov [rbp-34], bl
 .LABEL__convert_not_equals_expression_128__5:
   # $9.2: Boolean = phi($12.1, $12.2)
-  .loc 3 1326 63
+  .loc 3 1351 63
   mov al, [rbp-34]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:rax:[rbp-33] 
   # jump(block.3)
   mov [rbp-33], al
 .LABEL__convert_not_equals_expression_128__3:
   # $9.3: Boolean = phi($9.1, $9.2)
-  .loc 3 1326 9
+  .loc 3 1351 9
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $9.3:[rbp-33] $12.2:[rbp-34] $9.2:[rbp-33] 
   # jump($9.3, block.6, block.7)
   mov al, [rbp-33]
@@ -36393,15 +36699,15 @@ convert_not_equals_expression_128:
   jz .LABEL__convert_not_equals_expression_128__7
 .LABEL__convert_not_equals_expression_128__6:
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1327 15
+  .loc 3 1352 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $9.3
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $16.1:rbx 
   # call(abort_263, $16.1, "Operands are not the same type")
-  .loc 3 1327 9
+  .loc 3 1352 9
   mov rdi, rbx
-  lea rsi, .LABEL__string_206[rip] # "Operands are not the same type"
+  lea rsi, .LABEL__string_209[rip] # "Operands are not the same type"
   call abort_263
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] 
@@ -36410,7 +36716,7 @@ convert_not_equals_expression_128:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] IR_Constant_Value.29:rax 
   # $18.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.29)
-  .loc 3 1329 9
+  .loc 3 1354 9
   mov rdi, [rbp-24]
   mov rsi, rax
   call is_292
@@ -36425,7 +36731,7 @@ convert_not_equals_expression_128:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] IR_Constant_Value.30:rax 
   # $18.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.30)
-  .loc 3 1329 45
+  .loc 3 1354 45
   mov rdi, [rbp-32]
   mov rsi, rax
   call is_292
@@ -36435,7 +36741,7 @@ convert_not_equals_expression_128:
   mov [rbp-35], al
 .LABEL__convert_not_equals_expression_128__9:
   # $18.3: Boolean = phi($18.1, $18.2)
-  .loc 3 1329 9
+  .loc 3 1354 9
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $18.3:[rbp-35] 
   # jump($18.3, block.10, block.11)
   mov al, [rbp-35]
@@ -36443,13 +36749,13 @@ convert_not_equals_expression_128:
   jz .LABEL__convert_not_equals_expression_128__11
 .LABEL__convert_not_equals_expression_128__10:
   # $20.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1330 15
+  .loc 3 1355 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $18.3
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $20.1:rbx 
   # call(abort_263, $20.1, "TODO: Evaluate constant expression")
-  .loc 3 1330 9
+  .loc 3 1355 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -36457,13 +36763,13 @@ convert_not_equals_expression_128:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] 
 .LABEL__convert_not_equals_expression_128__11:
   # $21.1: @IR_Type = call(get_named_type_60, self.1, "Boolean")
-  .loc 3 1332 103
+  .loc 3 1357 103
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_162[rip] # "Boolean"
   call get_named_type_60
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $21.1:rax 
   # $22.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $21.1)
-  .loc 3 1332 80
+  .loc 3 1357 80
   mov rdi, [rbp-16]
   mov rsi, rax
   call create_temp_value_70
@@ -36485,7 +36791,7 @@ convert_not_equals_expression_128:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $22.1:[rbp-43] $23.1:rax 
   # $24.1: @IR_Not_Equals_Comparison_Instruction = new(IR_Not_Equals_Comparison_Instruction)
-  .loc 3 1332 24
+  .loc 3 1357 24
   mov [rbp-51], rax
   mov rdi, 57
   call malloc
@@ -36515,7 +36821,7 @@ convert_not_equals_expression_128:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $24.1:rax 
   # $25.1: @IR_Binary_Instruction = call(init_187, $24.1, left_value.1, right_value.1)
-  .loc 3 1332 24
+  .loc 3 1357 24
   mov rdi, rax
   mov rsi, [rbp-24]
   mov rdx, [rbp-32]
@@ -36523,12 +36829,12 @@ convert_not_equals_expression_128:
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $25.1:rax 
   # $26.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1332 167
+  .loc 3 1357 167
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $25.1:rax $26.1:r15 
   # $27.1: @IR_Variable_Value = call(append_71, self.1, $25.1, $26.1)
-  .loc 3 1332 12
+  .loc 3 1357 12
   mov rdi, [rbp-16]
   mov rsi, rax
   mov rdx, r15
@@ -36537,7 +36843,7 @@ convert_not_equals_expression_128:
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] $27.1:rax 
   # return($27.1)
-  .loc 3 1332 5
+  .loc 3 1357 5
   jmp .LABEL__convert_not_equals_expression_128__end
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $9.1:[rbp-33] $12.1:[rbp-34] $12.2:[rbp-34] $9.2:[rbp-33] $18.1:[rbp-35] $18.2:[rbp-35] 
@@ -36572,7 +36878,7 @@ convert_not_equals_expression_128:
 
 convert_not_equals_expression_128__stack_frame_size: .word 64
 
-  .loc 3 1335 1
+  .loc 3 1360 1
   .text
 convert_substract_expression_129:
   push rbp
@@ -36585,11 +36891,11 @@ convert_substract_expression_129:
   # expression.1: @AST_Substract_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, left_expression)
-  .loc 3 1336 43
+  .loc 3 1361 43
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1336 71
+  .loc 3 1361 71
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-16], rax
@@ -36597,7 +36903,7 @@ convert_substract_expression_129:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] $1.1:[rbp-16] $2.1:rax 
   # left_value.1: @IR_Value = call(convert_expression_99, self.1, $1.1, $2.1)
-  .loc 3 1336 19
+  .loc 3 1361 19
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   mov rdx, rax
@@ -36606,12 +36912,12 @@ convert_substract_expression_129:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax 
   # $4.1: @AST_Expression = load_struct_member(expression.1, right_expression)
-  .loc 3 1337 44
+  .loc 3 1362 44
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   # $5.1: @IR_Type = call(get_named_type_60, self.1, "Int")
-  .loc 3 1337 73
+  .loc 3 1362 73
   mov rdi, [rbp-24]
   lea rsi, .LABEL__string_163[rip] # "Int"
   mov [rbp-32], rax
@@ -36619,7 +36925,7 @@ convert_substract_expression_129:
   call get_named_type_60
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] $4.1:[rbp-40] $5.1:rax 
   # right_value.1: @IR_Value = call(convert_expression_99, self.1, $4.1, $5.1)
-  .loc 3 1337 20
+  .loc 3 1362 20
   mov rdi, [rbp-24]
   mov rsi, [rbp-40]
   mov rdx, rax
@@ -36631,7 +36937,7 @@ convert_substract_expression_129:
   lea rbx, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax IR_Constant_Value.31:rbx 
   # $8.1: Boolean = call(is_292, left_value.1, IR_Constant_Value.31)
-  .loc 3 1338 9
+  .loc 3 1363 9
   mov rdi, [rbp-32]
   mov rsi, rbx
   mov [rbp-40], rax
@@ -36647,7 +36953,7 @@ convert_substract_expression_129:
   lea rax, IR_Constant_Value[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] IR_Constant_Value.32:rax 
   # $8.2: Boolean = call(is_292, right_value.1, IR_Constant_Value.32)
-  .loc 3 1338 45
+  .loc 3 1363 45
   mov rdi, [rbp-40]
   mov rsi, rax
   call is_292
@@ -36657,7 +36963,7 @@ convert_substract_expression_129:
   mov [rbp-41], al
 .LABEL__convert_substract_expression_129__3:
   # $8.3: Boolean = phi($8.1, $8.2)
-  .loc 3 1338 9
+  .loc 3 1363 9
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, block.4, block.5)
   mov al, [rbp-41]
@@ -36665,13 +36971,13 @@ convert_substract_expression_129:
   jz .LABEL__convert_substract_expression_129__5
 .LABEL__convert_substract_expression_129__4:
   # $10.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1339 15
+  .loc 3 1364 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $8.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $10.1:rbx 
   # call(abort_263, $10.1, "TODO: Evaluate constant expression")
-  .loc 3 1339 9
+  .loc 3 1364 9
   mov rdi, rbx
   lea rsi, .LABEL__string_198[rip] # "TODO: Evaluate constant expression"
   call abort_263
@@ -36679,12 +36985,12 @@ convert_substract_expression_129:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
 .LABEL__convert_substract_expression_129__5:
   # $11.1: @IR_Type = load_struct_member(left_value.1, type)
-  .loc 3 1341 91
+  .loc 3 1366 91
   mov rax, [rbp-32]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:rax:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $11.1:rbx 
   # $12.1: @IR_Variable_Value = call(create_temp_value_70, self.1, $11.1)
-  .loc 3 1341 68
+  .loc 3 1366 68
   mov rdi, [rbp-24]
   mov rsi, rbx
   call create_temp_value_70
@@ -36706,7 +37012,7 @@ convert_substract_expression_129:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $12.1:[rbp-49] $13.1:rax 
   # $14.1: @IR_Substract_Instruction = new(IR_Substract_Instruction)
-  .loc 3 1341 24
+  .loc 3 1366 24
   mov [rbp-57], rax
   mov rdi, 57
   call malloc
@@ -36736,7 +37042,7 @@ convert_substract_expression_129:
   mov BYTE PTR [rax+56], 0
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $14.1:rax 
   # $15.1: @IR_Binary_Instruction = call(init_187, $14.1, left_value.1, right_value.1)
-  .loc 3 1341 24
+  .loc 3 1366 24
   mov rdi, rax
   mov rsi, [rbp-32]
   mov rdx, [rbp-40]
@@ -36744,12 +37050,12 @@ convert_substract_expression_129:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax 
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1341 140
+  .loc 3 1366 140
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $15.1:rax $16.1:r15 
   # $17.1: @IR_Variable_Value = call(append_71, self.1, $15.1, $16.1)
-  .loc 3 1341 12
+  .loc 3 1366 12
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -36758,7 +37064,7 @@ convert_substract_expression_129:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $17.1:rax 
   # return($17.1)
-  .loc 3 1341 5
+  .loc 3 1366 5
   jmp .LABEL__convert_substract_expression_129__end
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] 
@@ -36780,7 +37086,7 @@ convert_substract_expression_129:
 
 convert_substract_expression_129__stack_frame_size: .word 64
 
-  .loc 3 1344 1
+  .loc 3 1369 1
   .text
 convert_variable_expression_130:
   push rbp
@@ -36795,16 +37101,16 @@ convert_variable_expression_130:
   # expected_type.1: @IR_Type = load_variable(expected_type)
   # [live values]: self.1:rdi expression.1:rsi expected_type.1:rdx 
   # $1.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1345 35
+  .loc 3 1370 35
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi expected_type.1:rdx $1.1:rax 
   # $2.1: @String = load_struct_member($1.1, lexeme)
-  .loc 3 1345 35
+  .loc 3 1370 35
   mov rbx, [rax+8]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi expression.1:rsi expected_type.1:rdx $2.1:rbx 
   # variable.1: @IR_Variable = call(get_variable_62, self.1, $2.1)
-  .loc 3 1345 17
+  .loc 3 1370 17
   mov [rbp-8], rsi
   mov rsi, rbx
   mov [rbp-16], rdx
@@ -36813,7 +37119,7 @@ convert_variable_expression_130:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:rax 
   # $4.1: Boolean = variable.1 == null
-  .loc 3 1346 9
+  .loc 3 1371 9
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:rax $4.1:rbx 
@@ -36823,7 +37129,7 @@ convert_variable_expression_130:
   jz .LABEL__convert_variable_expression_130__3
 .LABEL__convert_variable_expression_130__2:
   # $6.1: Boolean = expected_type.1 != null
-  .loc 3 1347 13
+  .loc 3 1372 13
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [discarded value]: $4.1
@@ -36837,7 +37143,7 @@ convert_variable_expression_130:
   lea rax, IR_Function_Type[rip]
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] IR_Function_Type.9:rax 
   # $6.2: Boolean = call(is_292, expected_type.1, IR_Function_Type.9)
-  .loc 3 1347 38
+  .loc 3 1372 38
   mov rdi, [rbp-16]
   mov rsi, rax
   call is_292
@@ -36847,7 +37153,7 @@ convert_variable_expression_130:
   mov [rbp-33], al
 .LABEL__convert_variable_expression_130__5:
   # $6.3: Boolean = phi($6.1, $6.2)
-  .loc 3 1347 13
+  .loc 3 1372 13
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] $6.3:[rbp-33] 
   # jump($6.3, block.6, block.7)
   mov al, [rbp-33]
@@ -36855,22 +37161,22 @@ convert_variable_expression_130:
   jz .LABEL__convert_variable_expression_130__7
 .LABEL__convert_variable_expression_130__6:
   # $8.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1348 49
+  .loc 3 1373 49
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [discarded value]: $6.3
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] $8.1:rbx 
   # $9.1: @String = load_struct_member($8.1, lexeme)
-  .loc 3 1348 49
+  .loc 3 1373 49
   mov r15, [rbx+8]
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] $9.1:r15 
   # $10.1: @IR_Function_Type = expected_type.1
-  .loc 3 1348 73
+  .loc 3 1373 73
   mov rbx, [rbp-16]
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] $9.1:r15 $10.1:rbx 
   # function.1: @IR_Function = call(get_named_function_67, self.1, $9.1, $10.1)
-  .loc 3 1348 25
+  .loc 3 1373 25
   mov rdi, [rbp-24]
   mov rsi, r15
   mov rdx, rbx
@@ -36879,7 +37185,7 @@ convert_variable_expression_130:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:rax 
   # $12.1: Boolean = function.1 != null
-  .loc 3 1349 17
+  .loc 3 1374 17
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:rax $12.1:rbx 
@@ -36889,26 +37195,26 @@ convert_variable_expression_130:
   jz .LABEL__convert_variable_expression_130__7
 .LABEL__convert_variable_expression_130__8:
   # $13.1: @IR_Variable_Value = call(create_temp_value_70, self.1, expected_type.1)
-  .loc 3 1350 80
+  .loc 3 1375 80
   mov rdi, [rbp-24]
   mov rsi, [rbp-16]
   call create_temp_value_70
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $13.1:rax 
   # $14.1: @IR_Load_Function_Address_Instruction = call(create_ir_load_function_address_instruction_170, $13.1, function.1)
-  .loc 3 1350 36
+  .loc 3 1375 36
   mov rdi, rax
   mov rsi, [rbp-41]
   call create_ir_load_function_address_instruction_170
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $14.1:rax 
   # $15.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1350 130
+  .loc 3 1375 130
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $14.1:rax $15.1:r15 
   # $16.1: @IR_Variable_Value = call(append_71, self.1, $14.1, $15.1)
-  .loc 3 1350 24
+  .loc 3 1375 24
   mov rdi, [rbp-24]
   mov rsi, rax
   mov rdx, r15
@@ -36917,34 +37223,34 @@ convert_variable_expression_130:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $16.1:rax 
   # return($16.1)
-  .loc 3 1350 17
+  .loc 3 1375 17
   jmp .LABEL__convert_variable_expression_130__end
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] 
 .LABEL__convert_variable_expression_130__7:
   # $17.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1353 15
+  .loc 3 1378 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $17.1:rbx 
   # $18.1: @String = call(clone_294, "Undeclared variable: ")
-  .loc 3 1353 36
+  .loc 3 1378 36
   lea rdi, .LABEL__string_188[rip] # "Undeclared variable: "
   mov [rbp-49], rbx
   call clone_294
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $17.1:[rbp-49] $18.1:rax 
   # $19.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1353 74
+  .loc 3 1378 74
   mov rbx, [rbp-8]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $17.1:[rbp-49] $18.1:rax $19.1:r15 
   # $20.1: @String = load_struct_member($19.1, lexeme)
-  .loc 3 1353 74
+  .loc 3 1378 74
   mov r14, [r15+8]
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $17.1:[rbp-49] $18.1:rax $20.1:r14 
   # $21.1: @String = call(append_303, $18.1, $20.1)
-  .loc 3 1353 36
+  .loc 3 1378 36
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -36952,7 +37258,7 @@ convert_variable_expression_130:
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $6.1:[rbp-33] $6.2:[rbp-33] function.1:[rbp-41] $17.1:[rbp-49] $21.1:rax 
   # call(abort_263, $17.1, $21.1)
-  .loc 3 1353 9
+  .loc 3 1378 9
   mov rdi, [rbp-49]
   mov rsi, rax
   call abort_263
@@ -36971,13 +37277,13 @@ convert_variable_expression_130:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] 
 .LABEL__convert_variable_expression_130__3:
   # value.1: @IR_Variable_Value = call(get_variable_value_63, self.1, variable.1)
-  .loc 3 1355 14
+  .loc 3 1380 14
   mov rdi, [rbp-24]
   mov rsi, [rbp-32]
   call get_variable_value_63
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:rax 
   # $23.1: Boolean = value.1 == null
-  .loc 3 1356 9
+  .loc 3 1381 9
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:rax $23.1:rbx 
@@ -36987,29 +37293,29 @@ convert_variable_expression_130:
   jz .LABEL__convert_variable_expression_130__12
 .LABEL__convert_variable_expression_130__11:
   # $24.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1357 15
+  .loc 3 1382 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-24] expression.1:rax:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:[rbp-40] $24.1:rbx 
   # $25.1: @String = call(clone_294, "Undeclared variable value: ")
-  .loc 3 1357 36
-  lea rdi, .LABEL__string_214[rip] # "Undeclared variable value: "
+  .loc 3 1382 36
+  lea rdi, .LABEL__string_216[rip] # "Undeclared variable value: "
   mov [rbp-48], rbx
   call clone_294
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:[rbp-40] $24.1:[rbp-48] $25.1:rax 
   # $26.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1357 80
+  .loc 3 1382 80
   mov rbx, [rbp-8]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:[rbp-40] $24.1:[rbp-48] $25.1:rax $26.1:r15 
   # $27.1: @String = load_struct_member($26.1, lexeme)
-  .loc 3 1357 80
+  .loc 3 1382 80
   mov r14, [r15+8]
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:[rbp-40] $24.1:[rbp-48] $25.1:rax $27.1:r14 
   # $28.1: @String = call(append_303, $25.1, $27.1)
-  .loc 3 1357 36
+  .loc 3 1382 36
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -37017,7 +37323,7 @@ convert_variable_expression_130:
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:[rbp-40] $24.1:[rbp-48] $28.1:rax 
   # call(abort_263, $24.1, $28.1)
-  .loc 3 1357 9
+  .loc 3 1382 9
   mov rdi, [rbp-48]
   mov rsi, rax
   call abort_263
@@ -37026,7 +37332,7 @@ convert_variable_expression_130:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:[rbp-40] 
 .LABEL__convert_variable_expression_130__12:
   # return(value.1)
-  .loc 3 1359 5
+  .loc 3 1384 5
   mov rax, [rbp-40]
   jmp .LABEL__convert_variable_expression_130__end
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] value.1:[rbp-40] 
@@ -37046,7 +37352,7 @@ convert_variable_expression_130:
 
 convert_variable_expression_130__stack_frame_size: .word 64
 
-  .loc 3 1362 1
+  .loc 3 1387 1
   .text
 convert_variable_expression_address_131:
   push rbp
@@ -37059,16 +37365,16 @@ convert_variable_expression_address_131:
   # expression.1: @AST_Variable_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1363 35
+  .loc 3 1388 35
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @String = load_struct_member($1.1, lexeme)
-  .loc 3 1363 35
+  .loc 3 1388 35
   mov rbx, [rax+8]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi expression.1:rsi $2.1:rbx 
   # variable.1: @IR_Variable = call(get_variable_62, self.1, $2.1)
-  .loc 3 1363 17
+  .loc 3 1388 17
   mov [rbp-8], rsi
   mov rsi, rbx
   mov [rbp-16], rdi
@@ -37076,7 +37382,7 @@ convert_variable_expression_address_131:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax 
   # $4.1: Boolean = variable.1 == null
-  .loc 3 1364 9
+  .loc 3 1389 9
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax $4.1:rbx 
@@ -37086,29 +37392,29 @@ convert_variable_expression_address_131:
   jz .LABEL__convert_variable_expression_address_131__3
 .LABEL__convert_variable_expression_address_131__2:
   # $5.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1365 15
+  .loc 3 1390 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] variable.1:[rbp-24] $5.1:rbx 
   # $6.1: @String = call(clone_294, "Undeclared variable: ")
-  .loc 3 1365 36
+  .loc 3 1390 36
   lea rdi, .LABEL__string_188[rip] # "Undeclared variable: "
   mov [rbp-32], rbx
   call clone_294
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] $5.1:[rbp-32] $6.1:rax 
   # $7.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1365 74
+  .loc 3 1390 74
   mov rbx, [rbp-8]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] variable.1:[rbp-24] $5.1:[rbp-32] $6.1:rax $7.1:r15 
   # $8.1: @String = load_struct_member($7.1, lexeme)
-  .loc 3 1365 74
+  .loc 3 1390 74
   mov r14, [r15+8]
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] variable.1:[rbp-24] $5.1:[rbp-32] $6.1:rax $8.1:r14 
   # $9.1: @String = call(append_303, $6.1, $8.1)
-  .loc 3 1365 36
+  .loc 3 1390 36
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -37116,7 +37422,7 @@ convert_variable_expression_address_131:
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] $5.1:[rbp-32] $9.1:rax 
   # call(abort_263, $5.1, $9.1)
-  .loc 3 1365 9
+  .loc 3 1390 9
   mov rdi, [rbp-32]
   mov rsi, rax
   call abort_263
@@ -37125,7 +37431,7 @@ convert_variable_expression_address_131:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] 
 .LABEL__convert_variable_expression_address_131__3:
   # $10.1: @IR_Type = load_struct_member(variable.1, type)
-  .loc 3 1367 9
+  .loc 3 1392 9
   mov rax, [rbp-24]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax:[rbp-24] $10.1:rbx 
@@ -37133,7 +37439,7 @@ convert_variable_expression_address_131:
   lea r15, IR_Pointer_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax:[rbp-24] $10.1:rbx IR_Pointer_Type.20:r15 
   # $11.1: Boolean = call(is_292, $10.1, IR_Pointer_Type.20)
-  .loc 3 1367 9
+  .loc 3 1392 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -37145,41 +37451,41 @@ convert_variable_expression_address_131:
   jz .LABEL__convert_variable_expression_address_131__5
 .LABEL__convert_variable_expression_address_131__4:
   # $12.1: @IR_Variable_Value = call(get_variable_value_63, self.1, variable.1)
-  .loc 3 1368 16
+  .loc 3 1393 16
   mov rdi, [rbp-16]
   mov rsi, [rbp-24]
   call get_variable_value_63
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] $12.1:rax 
   # return($12.1)
-  .loc 3 1368 9
+  .loc 3 1393 9
   jmp .LABEL__convert_variable_expression_address_131__end
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] 
 .LABEL__convert_variable_expression_address_131__5:
   # $13.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1370 11
+  .loc 3 1395 11
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] variable.1:[rbp-24] $13.1:rbx 
   # $14.1: @String = call(clone_294, "Variable type without address: ")
-  .loc 3 1370 32
-  lea rdi, .LABEL__string_215[rip] # "Variable type without address: "
+  .loc 3 1395 32
+  lea rdi, .LABEL__string_217[rip] # "Variable type without address: "
   mov [rbp-32], rbx
   call clone_294
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] $13.1:[rbp-32] $14.1:rax 
   # $15.1: @IR_Type = load_struct_member(variable.1, type)
-  .loc 3 1370 80
+  .loc 3 1395 80
   mov rbx, [rbp-24]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rbx:[rbp-24] $13.1:[rbp-32] $14.1:rax $15.1:r15 
   # $16.1: @String = load_struct_member($15.1, name)
-  .loc 3 1370 80
+  .loc 3 1395 80
   mov r14, [r15+8]
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rbx:[rbp-24] $13.1:[rbp-32] $14.1:rax $16.1:r14 
   # $17.1: @String = call(append_303, $14.1, $16.1)
-  .loc 3 1370 32
+  .loc 3 1395 32
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -37187,7 +37493,7 @@ convert_variable_expression_address_131:
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] $13.1:[rbp-32] $17.1:rax 
   # call(abort_263, $13.1, $17.1)
-  .loc 3 1370 5
+  .loc 3 1395 5
   mov rdi, [rbp-32]
   mov rsi, rax
   call abort_263
@@ -37207,7 +37513,7 @@ convert_variable_expression_address_131:
 
 convert_variable_expression_address_131__stack_frame_size: .word 32
 
-  .loc 3 1373 1
+  .loc 3 1398 1
   .text
 deduce_expression_type_132:
   push rbp
@@ -37223,7 +37529,7 @@ deduce_expression_type_132:
   lea rax, AST_Call_Expression[rip]
   # [live values]: self.1:rdi expression.1:rsi AST_Call_Expression.3:rax 
   # $1.1: Boolean = call(is_292, expression.1, AST_Call_Expression.3)
-  .loc 3 1374 9
+  .loc 3 1399 9
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -37236,19 +37542,19 @@ deduce_expression_type_132:
   jz .LABEL__deduce_expression_type_132__3
 .LABEL__deduce_expression_type_132__2:
   # $2.1: @AST_Call_Expression = expression.1
-  .loc 3 1375 49
+  .loc 3 1400 49
   mov rax, [rbp-16]
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:rax 
   # $3.1: @IR_Type = call(deduce_call_expression_type_133, self.1, $2.1)
-  .loc 3 1375 16
+  .loc 3 1400 16
   mov rdi, [rbp-8]
   mov rsi, rax
   call deduce_call_expression_type_133
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:rax 
   # return($3.1)
-  .loc 3 1375 9
+  .loc 3 1400 9
   jmp .LABEL__deduce_expression_type_132__end
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
@@ -37257,7 +37563,7 @@ deduce_expression_type_132:
   lea rax, AST_Literal_Expression[rip]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] AST_Literal_Expression.3:rax 
   # $4.1: Boolean = call(is_292, expression.1, AST_Literal_Expression.3)
-  .loc 3 1377 9
+  .loc 3 1402 9
   mov rdi, [rbp-16]
   mov rsi, rax
   call is_292
@@ -37268,19 +37574,19 @@ deduce_expression_type_132:
   jz .LABEL__deduce_expression_type_132__6
 .LABEL__deduce_expression_type_132__5:
   # $5.1: @AST_Literal_Expression = expression.1
-  .loc 3 1378 52
+  .loc 3 1403 52
   mov rax, [rbp-16]
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:rax 
   # $6.1: @IR_Type = call(deduce_literal_expression_type_134, self.1, $5.1)
-  .loc 3 1378 16
+  .loc 3 1403 16
   mov rdi, [rbp-8]
   mov rsi, rax
   call deduce_literal_expression_type_134
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:rax 
   # return($6.1)
-  .loc 3 1378 9
+  .loc 3 1403 9
   jmp .LABEL__deduce_expression_type_132__end
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
@@ -37289,7 +37595,7 @@ deduce_expression_type_132:
   lea rax, AST_Member_Access_Expression[rip]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] AST_Member_Access_Expression.6:rax 
   # $7.1: Boolean = call(is_292, expression.1, AST_Member_Access_Expression.6)
-  .loc 3 1380 9
+  .loc 3 1405 9
   mov rdi, [rbp-16]
   mov rsi, rax
   call is_292
@@ -37300,19 +37606,19 @@ deduce_expression_type_132:
   jz .LABEL__deduce_expression_type_132__9
 .LABEL__deduce_expression_type_132__8:
   # $8.1: @AST_Member_Access_Expression = expression.1
-  .loc 3 1381 58
+  .loc 3 1406 58
   mov rax, [rbp-16]
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $8.1:rax 
   # $9.1: @IR_Type = call(deduce_member_access_expression_type_135, self.1, $8.1)
-  .loc 3 1381 16
+  .loc 3 1406 16
   mov rdi, [rbp-8]
   mov rsi, rax
   call deduce_member_access_expression_type_135
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $9.1:rax 
   # return($9.1)
-  .loc 3 1381 9
+  .loc 3 1406 9
   jmp .LABEL__deduce_expression_type_132__end
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
@@ -37321,7 +37627,7 @@ deduce_expression_type_132:
   lea rax, AST_Variable_Expression[rip]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] AST_Variable_Expression.6:rax 
   # $10.1: Boolean = call(is_292, expression.1, AST_Variable_Expression.6)
-  .loc 3 1383 9
+  .loc 3 1408 9
   mov rdi, [rbp-16]
   mov rsi, rax
   call is_292
@@ -37332,34 +37638,34 @@ deduce_expression_type_132:
   jz .LABEL__deduce_expression_type_132__12
 .LABEL__deduce_expression_type_132__11:
   # $11.1: @AST_Variable_Expression = expression.1
-  .loc 3 1384 53
+  .loc 3 1409 53
   mov rax, [rbp-16]
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $11.1:rax 
   # $12.1: @IR_Type = call(deduce_variable_expression_type_136, self.1, $11.1)
-  .loc 3 1384 16
+  .loc 3 1409 16
   mov rdi, [rbp-8]
   mov rsi, rax
   call deduce_variable_expression_type_136
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $12.1:rax 
   # return($12.1)
-  .loc 3 1384 9
+  .loc 3 1409 9
   jmp .LABEL__deduce_expression_type_132__end
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] 
 .LABEL__deduce_expression_type_132__12:
   # $13.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1386 11
+  .loc 3 1411 11
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $13.1:rbx 
   # $14.1: @Object_Type = load_struct_member(expression.1, object_type)
-  .loc 3 1386 32
+  .loc 3 1411 32
   mov r15, [rax+0]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $13.1:rbx $14.1:r15 
   # call(abort_137, $13.1, $14.1)
-  .loc 3 1386 5
+  .loc 3 1411 5
   mov rdi, rbx
   mov rsi, r15
   call abort_137
@@ -37380,7 +37686,7 @@ deduce_expression_type_132:
 
 deduce_expression_type_132__stack_frame_size: .word 16
 
-  .loc 3 1389 1
+  .loc 3 1414 1
   .text
 deduce_call_expression_type_133:
   push rbp
@@ -37393,7 +37699,7 @@ deduce_call_expression_type_133:
   # expression.1: @AST_Call_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @List = new(List)
-  .loc 3 1390 23
+  .loc 3 1415 23
   mov [rbp-8], rsi
   mov [rbp-16], rdi
   mov rdi, 24
@@ -37409,16 +37715,16 @@ deduce_call_expression_type_133:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] $1.1:rax 
   # argument_types.1: @List = $1.1
-  .loc 3 1390 5
+  .loc 3 1415 5
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:rax 
   # $2.1: @List = load_struct_member(expression.1, arguments)
-  .loc 3 1391 18
+  .loc 3 1416 18
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-16] expression.1:rbx:[rbp-8] argument_types.1:rax $2.1:r15 
   # arguments.1: @List_Iterator = call(create_iterator_278, $2.1)
-  .loc 3 1391 18
+  .loc 3 1416 18
   mov rdi, r15
   mov [rbp-24], rax
   call create_iterator_278
@@ -37428,7 +37734,7 @@ deduce_call_expression_type_133:
   mov [rbp-32], rax
 .LABEL__deduce_call_expression_type_133__2:
   # $4.1: Boolean = call(has_next_281, arguments.1)
-  .loc 3 1392 12
+  .loc 3 1417 12
   mov rdi, [rbp-32]
   call has_next_281
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $4.1:rax 
@@ -37437,20 +37743,20 @@ deduce_call_expression_type_133:
   jz .LABEL__deduce_call_expression_type_133__4
 .LABEL__deduce_call_expression_type_133__3:
   # argument.1: @AST_Expression = call(next_282, arguments.1)
-  .loc 3 1393 21
+  .loc 3 1418 21
   mov rdi, [rbp-32]
   call next_282
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] argument.1:rax 
   # argument_type.1: @IR_Type = call(deduce_expression_type_132, self.1, argument.1)
-  .loc 3 1394 26
+  .loc 3 1419 26
   mov rdi, [rbp-16]
   mov rsi, rax
   call deduce_expression_type_132
   # [discarded value]: argument.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] argument_type.1:rax 
   # call(append_267, argument_types.1, argument_type.1)
-  .loc 3 1395 9
+  .loc 3 1420 9
   mov rdi, [rbp-24]
   mov rsi, rax
   call append_267
@@ -37461,7 +37767,7 @@ deduce_call_expression_type_133:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] 
 .LABEL__deduce_call_expression_type_133__4:
   # $8.1: @AST_Expression = load_struct_member(expression.1, callee)
-  .loc 3 1397 9
+  .loc 3 1422 9
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $8.1:rbx 
@@ -37469,7 +37775,7 @@ deduce_call_expression_type_133:
   lea r15, AST_Member_Access_Expression[rip]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $8.1:rbx AST_Member_Access_Expression.7:r15 
   # $9.1: Boolean = call(is_292, $8.1, AST_Member_Access_Expression.7)
-  .loc 3 1397 9
+  .loc 3 1422 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -37481,17 +37787,17 @@ deduce_call_expression_type_133:
   jz .LABEL__deduce_call_expression_type_133__6
 .LABEL__deduce_call_expression_type_133__5:
   # callee.1: @AST_Member_Access_Expression = load_struct_member(expression.1, callee)
-  .loc 3 1398 19
+  .loc 3 1423 19
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rbx 
   # $12.1: @AST_Expression = load_struct_member(callee.1, object_expression)
-  .loc 3 1399 52
+  .loc 3 1424 52
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rbx $12.1:r15 
   # object_type.1: @IR_Type = call(deduce_expression_type_132, self.1, $12.1)
-  .loc 3 1399 24
+  .loc 3 1424 24
   mov rdi, [rbp-16]
   mov rsi, r15
   mov [rbp-40], rbx
@@ -37502,7 +37808,7 @@ deduce_call_expression_type_133:
   lea rbx, IR_Struct_Type[rip]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:rax IR_Struct_Type.15:rbx 
   # $14.1: Boolean = call(is_292, object_type.1, IR_Struct_Type.15)
-  .loc 3 1400 13
+  .loc 3 1425 13
   mov rdi, rax
   mov rsi, rbx
   mov [rbp-48], rax
@@ -37514,13 +37820,13 @@ deduce_call_expression_type_133:
   jz .LABEL__deduce_call_expression_type_133__9
 .LABEL__deduce_call_expression_type_133__7:
   # $15.1: @IR_Pointer_Type = call(create_ir_pointer_type_141, object_type.1)
-  .loc 3 1401 36
+  .loc 3 1426 36
   mov rdi, [rbp-48]
   call create_ir_pointer_type_141
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] $15.1:rax 
   # call(prepend_268, argument_types.1, $15.1)
-  .loc 3 1401 13
+  .loc 3 1426 13
   mov rdi, [rbp-24]
   mov rsi, rax
   call prepend_268
@@ -37529,17 +37835,17 @@ deduce_call_expression_type_133:
   # jump(block.8)
 .LABEL__deduce_call_expression_type_133__8:
   # $16.1: @Identifier_Token = load_struct_member(callee.1, member_name)
-  .loc 3 1405 45
+  .loc 3 1430 45
   mov rax, [rbp-40]
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rax:[rbp-40] object_type.1:[rbp-48] $16.1:rbx 
   # $17.1: @String = load_struct_member($16.1, lexeme)
-  .loc 3 1405 45
+  .loc 3 1430 45
   mov r15, [rbx+8]
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rax:[rbp-40] object_type.1:[rbp-48] $17.1:r15 
   # function.1: @IR_Function = call(get_named_function_66, self.1, $17.1, argument_types.1)
-  .loc 3 1405 21
+  .loc 3 1430 21
   mov rdi, [rbp-16]
   mov rsi, r15
   mov rdx, [rbp-24]
@@ -37547,7 +37853,7 @@ deduce_call_expression_type_133:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] function.1:rax 
   # $19.1: Boolean = function.1 == null
-  .loc 3 1406 13
+  .loc 3 1431 13
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] function.1:rax $19.1:rbx 
@@ -37557,34 +37863,34 @@ deduce_call_expression_type_133:
   jz .LABEL__deduce_call_expression_type_133__11
 .LABEL__deduce_call_expression_type_133__10:
   # $20.1: @Identifier_Token = load_struct_member(callee.1, member_name)
-  .loc 3 1407 19
+  .loc 3 1432 19
   mov rax, [rbp-40]
   mov rbx, [rax+24]
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rax:[rbp-40] object_type.1:[rbp-48] function.1:[rbp-56] $20.1:rbx 
   # $21.1: @Source_Location = load_struct_member($20.1, location)
-  .loc 3 1407 19
+  .loc 3 1432 19
   mov r15, [rbx+16]
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rax:[rbp-40] object_type.1:[rbp-48] function.1:[rbp-56] $21.1:r15 
   # $22.1: @String = call(clone_294, "Unknown function: ")
-  .loc 3 1407 48
-  lea rdi, .LABEL__string_216[rip] # "Unknown function: "
+  .loc 3 1432 48
+  lea rdi, .LABEL__string_218[rip] # "Unknown function: "
   mov [rbp-64], r15
   call clone_294
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] function.1:[rbp-56] $21.1:[rbp-64] $22.1:rax 
   # $23.1: @Identifier_Token = load_struct_member(callee.1, member_name)
-  .loc 3 1407 83
+  .loc 3 1432 83
   mov rbx, [rbp-40]
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rbx:[rbp-40] object_type.1:[rbp-48] function.1:[rbp-56] $21.1:[rbp-64] $22.1:rax $23.1:r15 
   # $24.1: @String = load_struct_member($23.1, lexeme)
-  .loc 3 1407 83
+  .loc 3 1432 83
   mov r14, [r15+8]
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:rbx:[rbp-40] object_type.1:[rbp-48] function.1:[rbp-56] $21.1:[rbp-64] $22.1:rax $24.1:r14 
   # $25.1: @String = call(append_303, $22.1, $24.1)
-  .loc 3 1407 48
+  .loc 3 1432 48
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -37592,7 +37898,7 @@ deduce_call_expression_type_133:
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] function.1:[rbp-56] $21.1:[rbp-64] $25.1:rax 
   # call(abort_263, $21.1, $25.1)
-  .loc 3 1407 13
+  .loc 3 1432 13
   mov rdi, [rbp-64]
   mov rsi, rax
   call abort_263
@@ -37601,12 +37907,12 @@ deduce_call_expression_type_133:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] function.1:[rbp-56] 
 .LABEL__deduce_call_expression_type_133__11:
   # $26.1: @IR_Type = load_struct_member(function.1, return_type)
-  .loc 3 1409 16
+  .loc 3 1434 16
   mov rax, [rbp-56]
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] function.1:rax:[rbp-56] $26.1:rbx 
   # return($26.1)
-  .loc 3 1409 9
+  .loc 3 1434 9
   mov rax, rbx
   jmp .LABEL__deduce_call_expression_type_133__end
   # [discarded value]: $26.1
@@ -37617,7 +37923,7 @@ deduce_call_expression_type_133:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] callee.1:[rbp-40] object_type.1:[rbp-48] 
 .LABEL__deduce_call_expression_type_133__9:
   # call(prepend_268, argument_types.1, object_type.1)
-  .loc 3 1403 13
+  .loc 3 1428 13
   mov rdi, [rbp-24]
   mov rsi, [rbp-48]
   call prepend_268
@@ -37631,21 +37937,21 @@ deduce_call_expression_type_133:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] 
 .LABEL__deduce_call_expression_type_133__6:
   # $27.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1411 11
+  .loc 3 1436 11
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $27.1:rbx 
   # $28.1: @AST_Expression = load_struct_member(expression.1, callee)
-  .loc 3 1411 32
+  .loc 3 1436 32
   mov r15, [rax+16]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $27.1:rbx $28.1:r15 
   # $29.1: @Object_Type = load_struct_member($28.1, object_type)
-  .loc 3 1411 32
+  .loc 3 1436 32
   mov r14, [r15+0]
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $27.1:rbx $29.1:r14 
   # call(abort_137, $27.1, $29.1)
-  .loc 3 1411 5
+  .loc 3 1436 5
   mov rdi, rbx
   mov rsi, r14
   call abort_137
@@ -37667,7 +37973,7 @@ deduce_call_expression_type_133:
 
 deduce_call_expression_type_133__stack_frame_size: .word 64
 
-  .loc 3 1414 1
+  .loc 3 1439 1
   .text
 deduce_literal_expression_type_134:
   push rbp
@@ -37680,7 +37986,7 @@ deduce_literal_expression_type_134:
   # expression.1: @AST_Literal_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # literal.1: @Literal_Token = load_struct_member(expression.1, literal)
-  .loc 3 1415 16
+  .loc 3 1440 16
   mov rax, [rsi+16]
   # [discarded value]: expression.1
   # [live values]: self.1:rdi literal.1:rax 
@@ -37688,7 +37994,7 @@ deduce_literal_expression_type_134:
   lea rbx, String_Token[rip]
   # [live values]: self.1:rdi literal.1:rax String_Token.5:rbx 
   # $2.1: Boolean = call(is_292, literal.1, String_Token.5)
-  .loc 3 1416 9
+  .loc 3 1441 9
   mov [rbp-8], rdi
   mov rdi, rax
   mov rsi, rbx
@@ -37701,35 +38007,35 @@ deduce_literal_expression_type_134:
   jz .LABEL__deduce_literal_expression_type_134__3
 .LABEL__deduce_literal_expression_type_134__2:
   # $3.1: @IR_Type = call(get_named_type_60, self.1, "String")
-  .loc 3 1417 39
+  .loc 3 1442 39
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_207[rip] # "String"
+  lea rsi, .LABEL__string_210[rip] # "String"
   call get_named_type_60
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] literal.1:[rbp-16] $3.1:rax 
   # $4.1: @IR_Pointer_Type = call(create_ir_pointer_type_141, $3.1)
-  .loc 3 1417 16
+  .loc 3 1442 16
   mov rdi, rax
   call create_ir_pointer_type_141
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] literal.1:[rbp-16] $4.1:rax 
   # return($4.1)
-  .loc 3 1417 9
+  .loc 3 1442 9
   jmp .LABEL__deduce_literal_expression_type_134__end
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] literal.1:[rbp-16] 
 .LABEL__deduce_literal_expression_type_134__3:
   # $5.1: @Source_Location = load_struct_member(literal.1, location)
-  .loc 3 1419 11
+  .loc 3 1444 11
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] literal.1:rax:[rbp-16] $5.1:rbx 
   # $6.1: @Object_Type = load_struct_member(literal.1, object_type)
-  .loc 3 1419 29
+  .loc 3 1444 29
   mov r15, [rax+0]
   # [live values]: self.1:[rbp-8] literal.1:rax:[rbp-16] $5.1:rbx $6.1:r15 
   # call(abort_137, $5.1, $6.1)
-  .loc 3 1419 5
+  .loc 3 1444 5
   mov rdi, rbx
   mov rsi, r15
   call abort_137
@@ -37747,7 +38053,7 @@ deduce_literal_expression_type_134:
 
 deduce_literal_expression_type_134__stack_frame_size: .word 16
 
-  .loc 3 1422 1
+  .loc 3 1447 1
   .text
 deduce_member_access_expression_type_135:
   push rbp
@@ -37760,11 +38066,11 @@ deduce_member_access_expression_type_135:
   # expression.1: @AST_Member_Access_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @AST_Expression = load_struct_member(expression.1, object_expression)
-  .loc 3 1423 48
+  .loc 3 1448 48
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # object_type.1: @IR_Type = call(deduce_expression_type_132, self.1, $1.1)
-  .loc 3 1423 20
+  .loc 3 1448 20
   mov [rbp-8], rsi
   mov rsi, rax
   call deduce_expression_type_132
@@ -37775,7 +38081,7 @@ deduce_member_access_expression_type_135:
   lea rbx, IR_Pointer_Type[rip]
   # [live values]: expression.1:[rbp-8] object_type.1:rax IR_Pointer_Type.21:rbx 
   # $3.1: Boolean = call(is_292, object_type.1, IR_Pointer_Type.21)
-  .loc 3 1424 9
+  .loc 3 1449 9
   mov rdi, rax
   mov rsi, rbx
   mov [rbp-16], rax
@@ -37783,7 +38089,7 @@ deduce_member_access_expression_type_135:
   # [discarded value]: IR_Pointer_Type.21
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] $3.1:rax 
   # $4.1: Boolean = $3.1 == false
-  .loc 3 1424 9
+  .loc 3 1449 9
   cmp al, 0
   sete bl
   # [discarded value]: $3.1
@@ -37793,18 +38099,18 @@ deduce_member_access_expression_type_135:
   jz .LABEL__deduce_member_access_expression_type_135__3
 .LABEL__deduce_member_access_expression_type_135__2:
   # $5.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1425 15
+  .loc 3 1450 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $4.1
   # [live values]: expression.1:rax:[rbp-8] object_type.1:[rbp-16] $5.1:rbx 
   # $6.1: @Object_Type = load_struct_member(object_type.1, object_type)
-  .loc 3 1425 36
+  .loc 3 1450 36
   mov r15, [rbp-16]
   mov r14, [r15+0]
   # [live values]: expression.1:rax:[rbp-8] object_type.1:r15:[rbp-16] $5.1:rbx $6.1:r14 
   # call(abort_137, $5.1, $6.1)
-  .loc 3 1425 9
+  .loc 3 1450 9
   mov rdi, rbx
   mov rsi, r14
   call abort_137
@@ -37813,11 +38119,11 @@ deduce_member_access_expression_type_135:
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] 
 .LABEL__deduce_member_access_expression_type_135__3:
   # $7.1: @IR_Pointer_Type = object_type.1
-  .loc 3 1427 21
+  .loc 3 1452 21
   mov rax, [rbp-16]
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] $7.1:rax 
   # object_type.1: @IR_Type = load_struct_member($7.1, pointed_type)
-  .loc 3 1427 20
+  .loc 3 1452 20
   mov rbx, [rax+16]
   # [discarded value]: $7.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:rbx 
@@ -37825,7 +38131,7 @@ deduce_member_access_expression_type_135:
   lea rax, IR_Struct_Type[rip]
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:rbx IR_Struct_Type.16:rax 
   # $9.1: Boolean = call(is_292, object_type.1, IR_Struct_Type.16)
-  .loc 3 1428 9
+  .loc 3 1453 9
   mov rdi, rbx
   mov rsi, rax
   mov [rbp-24], rbx
@@ -37833,7 +38139,7 @@ deduce_member_access_expression_type_135:
   # [discarded value]: IR_Struct_Type.16
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] $9.1:rax 
   # $10.1: Boolean = $9.1 == false
-  .loc 3 1428 9
+  .loc 3 1453 9
   cmp al, 0
   sete bl
   # [discarded value]: $9.1
@@ -37843,18 +38149,18 @@ deduce_member_access_expression_type_135:
   jz .LABEL__deduce_member_access_expression_type_135__5
 .LABEL__deduce_member_access_expression_type_135__4:
   # $11.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1429 15
+  .loc 3 1454 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $10.1
   # [live values]: expression.1:rax:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] $11.1:rbx 
   # $12.1: @Object_Type = load_struct_member(object_type.1, object_type)
-  .loc 3 1429 36
+  .loc 3 1454 36
   mov r15, [rbp-24]
   mov r14, [r15+0]
   # [live values]: expression.1:rax:[rbp-8] object_type.1:[rbp-16] object_type.1:r15:[rbp-24] $11.1:rbx $12.1:r14 
   # call(abort_137, $11.1, $12.1)
-  .loc 3 1429 9
+  .loc 3 1454 9
   mov rdi, rbx
   mov rsi, r14
   call abort_137
@@ -37863,21 +38169,21 @@ deduce_member_access_expression_type_135:
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] 
 .LABEL__deduce_member_access_expression_type_135__5:
   # object_type.1: @IR_Struct_Type = object_type.1
-  .loc 3 1431 20
+  .loc 3 1456 20
   mov rax, [rbp-24]
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:rax 
   # $14.1: @Identifier_Token = load_struct_member(expression.1, member_name)
-  .loc 3 1432 38
+  .loc 3 1457 38
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: expression.1:rbx:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:rax $14.1:r15 
   # $15.1: @String = load_struct_member($14.1, lexeme)
-  .loc 3 1432 38
+  .loc 3 1457 38
   mov r14, [r15+8]
   # [discarded value]: $14.1
   # [live values]: expression.1:rbx:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:rax $15.1:r14 
   # member.1: @IR_Struct_Type_Member = call(get_member_146, object_type.1, $15.1)
-  .loc 3 1432 15
+  .loc 3 1457 15
   mov rdi, rax
   mov rsi, r14
   mov [rbp-32], rax
@@ -37885,7 +38191,7 @@ deduce_member_access_expression_type_135:
   # [discarded value]: $15.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:rax 
   # $17.1: Boolean = member.1 == null
-  .loc 3 1433 9
+  .loc 3 1458 9
   cmp rax, 0
   sete bl
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:rax $17.1:rbx 
@@ -37895,47 +38201,47 @@ deduce_member_access_expression_type_135:
   jz .LABEL__deduce_member_access_expression_type_135__7
 .LABEL__deduce_member_access_expression_type_135__6:
   # $18.1: @Identifier_Token = load_struct_member(expression.1, member_name)
-  .loc 3 1434 15
+  .loc 3 1459 15
   mov rax, [rbp-8]
   mov rbx, [rax+24]
   # [discarded value]: $17.1
   # [live values]: expression.1:rax:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $18.1:rbx 
   # $19.1: @Source_Location = load_struct_member($18.1, location)
-  .loc 3 1434 15
+  .loc 3 1459 15
   mov r15, [rbx+16]
   # [discarded value]: $18.1
   # [live values]: expression.1:rax:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $19.1:r15 
   # $20.1: @String = load_struct_member(object_type.1, name)
-  .loc 3 1434 54
+  .loc 3 1459 54
   mov rbx, [rbp-32]
   mov r14, [rbx+8]
   # [live values]: expression.1:rax:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:rbx:[rbp-32] member.1:[rbp-40] $19.1:r15 $20.1:r14 
   # $21.1: @String = call(clone_294, $20.1)
-  .loc 3 1434 48
+  .loc 3 1459 48
   mov rdi, r14
   mov [rbp-48], r15
   call clone_294
   # [discarded value]: $20.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $19.1:[rbp-48] $21.1:rax 
   # $22.1: @String = call(append_303, $21.1, " has no such member: ")
-  .loc 3 1434 48
+  .loc 3 1459 48
   mov rdi, rax
-  lea rsi, .LABEL__string_209[rip] # " has no such member: "
+  lea rsi, .LABEL__string_212[rip] # " has no such member: "
   call append_303
   # [discarded value]: $21.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $19.1:[rbp-48] $22.1:rax 
   # $23.1: @Identifier_Token = load_struct_member(expression.1, member_name)
-  .loc 3 1434 111
+  .loc 3 1459 111
   mov rbx, [rbp-8]
   mov r15, [rbx+24]
   # [live values]: expression.1:rbx:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $19.1:[rbp-48] $22.1:rax $23.1:r15 
   # $24.1: @String = load_struct_member($23.1, lexeme)
-  .loc 3 1434 111
+  .loc 3 1459 111
   mov r14, [r15+8]
   # [discarded value]: $23.1
   # [live values]: expression.1:rbx:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $19.1:[rbp-48] $22.1:rax $24.1:r14 
   # $25.1: @String = call(append_303, $22.1, $24.1)
-  .loc 3 1434 48
+  .loc 3 1459 48
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -37943,7 +38249,7 @@ deduce_member_access_expression_type_135:
   # [discarded value]: $24.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $19.1:[rbp-48] $25.1:rax 
   # call(abort_263, $19.1, $25.1)
-  .loc 3 1434 9
+  .loc 3 1459 9
   mov rdi, [rbp-48]
   mov rsi, rax
   call abort_263
@@ -37952,7 +38258,7 @@ deduce_member_access_expression_type_135:
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] 
 .LABEL__deduce_member_access_expression_type_135__7:
   # $26.1: @IR_Type = load_struct_member(member.1, type)
-  .loc 3 1436 9
+  .loc 3 1461 9
   mov rax, [rbp-40]
   mov rbx, [rax+16]
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:rax:[rbp-40] $26.1:rbx 
@@ -37960,7 +38266,7 @@ deduce_member_access_expression_type_135:
   lea r15, IR_Struct_Type[rip]
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:rax:[rbp-40] $26.1:rbx IR_Struct_Type.17:r15 
   # $27.1: Boolean = call(is_292, $26.1, IR_Struct_Type.17)
-  .loc 3 1436 9
+  .loc 3 1461 9
   mov rdi, rbx
   mov rsi, r15
   call is_292
@@ -37972,30 +38278,30 @@ deduce_member_access_expression_type_135:
   jz .LABEL__deduce_member_access_expression_type_135__9
 .LABEL__deduce_member_access_expression_type_135__8:
   # $28.1: @IR_Type = load_struct_member(member.1, type)
-  .loc 3 1437 39
+  .loc 3 1462 39
   mov rax, [rbp-40]
   mov rbx, [rax+16]
   # [discarded value]: $27.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:rax:[rbp-40] $28.1:rbx 
   # $29.1: @IR_Pointer_Type = call(create_ir_pointer_type_141, $28.1)
-  .loc 3 1437 16
+  .loc 3 1462 16
   mov rdi, rbx
   call create_ir_pointer_type_141
   # [discarded value]: $28.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] $29.1:rax 
   # return($29.1)
-  .loc 3 1437 9
+  .loc 3 1462 9
   jmp .LABEL__deduce_member_access_expression_type_135__end
   # [discarded value]: $29.1
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:[rbp-40] 
 .LABEL__deduce_member_access_expression_type_135__9:
   # $30.1: @IR_Type = load_struct_member(member.1, type)
-  .loc 3 1439 12
+  .loc 3 1464 12
   mov rax, [rbp-40]
   mov rbx, [rax+16]
   # [live values]: expression.1:[rbp-8] object_type.1:[rbp-16] object_type.1:[rbp-24] object_type.1:[rbp-32] member.1:rax:[rbp-40] $30.1:rbx 
   # return($30.1)
-  .loc 3 1439 5
+  .loc 3 1464 5
   mov rax, rbx
   jmp .LABEL__deduce_member_access_expression_type_135__end
   # [discarded value]: $30.1
@@ -38019,7 +38325,7 @@ deduce_member_access_expression_type_135:
 
 deduce_member_access_expression_type_135__stack_frame_size: .word 48
 
-  .loc 3 1442 1
+  .loc 3 1467 1
   .text
 deduce_variable_expression_type_136:
   push rbp
@@ -38032,16 +38338,16 @@ deduce_variable_expression_type_136:
   # expression.1: @AST_Variable_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   # $1.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1443 35
+  .loc 3 1468 35
   mov rax, [rsi+16]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   # $2.1: @String = load_struct_member($1.1, lexeme)
-  .loc 3 1443 35
+  .loc 3 1468 35
   mov rbx, [rax+8]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi expression.1:rsi $2.1:rbx 
   # variable.1: @IR_Variable = call(get_variable_62, self.1, $2.1)
-  .loc 3 1443 17
+  .loc 3 1468 17
   mov [rbp-8], rsi
   mov rsi, rbx
   call get_variable_62
@@ -38049,7 +38355,7 @@ deduce_variable_expression_type_136:
   # [discarded value]: $2.1
   # [live values]: expression.1:[rbp-8] variable.1:rax 
   # $4.1: Boolean = variable.1 == null
-  .loc 3 1444 9
+  .loc 3 1469 9
   cmp rax, 0
   sete bl
   # [live values]: expression.1:[rbp-8] variable.1:rax $4.1:rbx 
@@ -38059,29 +38365,29 @@ deduce_variable_expression_type_136:
   jz .LABEL__deduce_variable_expression_type_136__3
 .LABEL__deduce_variable_expression_type_136__2:
   # $5.1: @Source_Location = load_struct_member(expression.1, location)
-  .loc 3 1445 15
+  .loc 3 1470 15
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: $4.1
   # [live values]: expression.1:rax:[rbp-8] variable.1:[rbp-16] $5.1:rbx 
   # $6.1: @String = call(clone_294, "Unknown variable: ")
-  .loc 3 1445 36
-  lea rdi, .LABEL__string_217[rip] # "Unknown variable: "
+  .loc 3 1470 36
+  lea rdi, .LABEL__string_219[rip] # "Unknown variable: "
   mov [rbp-24], rbx
   call clone_294
   # [live values]: expression.1:[rbp-8] variable.1:[rbp-16] $5.1:[rbp-24] $6.1:rax 
   # $7.1: @Identifier_Token = load_struct_member(expression.1, name)
-  .loc 3 1445 71
+  .loc 3 1470 71
   mov rbx, [rbp-8]
   mov r15, [rbx+16]
   # [live values]: expression.1:rbx:[rbp-8] variable.1:[rbp-16] $5.1:[rbp-24] $6.1:rax $7.1:r15 
   # $8.1: @String = load_struct_member($7.1, lexeme)
-  .loc 3 1445 71
+  .loc 3 1470 71
   mov r14, [r15+8]
   # [discarded value]: $7.1
   # [live values]: expression.1:rbx:[rbp-8] variable.1:[rbp-16] $5.1:[rbp-24] $6.1:rax $8.1:r14 
   # $9.1: @String = call(append_303, $6.1, $8.1)
-  .loc 3 1445 36
+  .loc 3 1470 36
   mov rdi, rax
   mov rsi, r14
   call append_303
@@ -38089,7 +38395,7 @@ deduce_variable_expression_type_136:
   # [discarded value]: $8.1
   # [live values]: expression.1:[rbp-8] variable.1:[rbp-16] $5.1:[rbp-24] $9.1:rax 
   # call(abort_263, $5.1, $9.1)
-  .loc 3 1445 9
+  .loc 3 1470 9
   mov rdi, [rbp-24]
   mov rsi, rax
   call abort_263
@@ -38098,12 +38404,12 @@ deduce_variable_expression_type_136:
   # [live values]: expression.1:[rbp-8] variable.1:[rbp-16] 
 .LABEL__deduce_variable_expression_type_136__3:
   # $10.1: @IR_Type = load_struct_member(variable.1, type)
-  .loc 3 1447 12
+  .loc 3 1472 12
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: expression.1:[rbp-8] variable.1:rax:[rbp-16] $10.1:rbx 
   # return($10.1)
-  .loc 3 1447 5
+  .loc 3 1472 5
   mov rax, rbx
   jmp .LABEL__deduce_variable_expression_type_136__end
   # [discarded value]: $10.1
@@ -38131,15 +38437,15 @@ abort_137:
   # [live values]: location.1:rdi 
   # unexpected_type.1: @Object_Type = load_variable(unexpected_type)
   # [live values]: location.1:rdi unexpected_type.1:rsi 
-  # stderr.3: @FILE = load_variable(stderr)
-  # [live values]: location.1:rdi unexpected_type.1:rsi stderr.3:stderr[rip] 
-  # $1.1: @FILE = call(end_line_289, stderr.3)
+  # stderr.4: @FILE = load_variable(stderr)
+  # [live values]: location.1:rdi unexpected_type.1:rsi stderr.4:stderr[rip] 
+  # $1.1: @FILE = call(end_line_289, stderr.4)
   .loc 1 49 5
   mov [rbp-8], rdi
   mov rdi, stderr[rip]
   mov [rbp-16], rsi
   call end_line_289
-  # [discarded value]: stderr.3
+  # [discarded value]: stderr.4
   # [live values]: location.1:[rbp-8] unexpected_type.1:[rbp-16] $1.1:rax 
   # $2.1: @FILE = call(end_line_289, $1.1)
   .loc 1 49 5
@@ -38158,7 +38464,7 @@ abort_137:
   # $4.1: @FILE = call(write_286, $3.1, ": Unexpected type: ")
   .loc 1 49 5
   mov rdi, rax
-  lea rsi, .LABEL__string_218[rip] # ": Unexpected type: "
+  lea rsi, .LABEL__string_220[rip] # ": Unexpected type: "
   call write_286
   # [discarded value]: $3.1
   # [live values]: unexpected_type.1:[rbp-16] $4.1:rax 
@@ -38387,7 +38693,7 @@ create_ir_pointer_type_141:
   # $1.1: @String = call(clone_294, "@")
   .loc 5 51 18
   mov [rbp-8], rdi
-  lea rdi, .LABEL__string_219[rip] # "@"
+  lea rdi, .LABEL__string_221[rip] # "@"
   call clone_294
   # [live values]: pointed_type.1:[rbp-8] $1.1:rax 
   # $2.1: @String = load_struct_member(pointed_type.1, name)
@@ -38448,7 +38754,7 @@ create_ir_array_type_142:
   # $1.1: @String = call(clone_294, "[")
   .loc 5 60 18
   mov [rbp-8], rdi
-  lea rdi, .LABEL__string_220[rip] # "["
+  lea rdi, .LABEL__string_222[rip] # "["
   mov [rbp-16], rsi
   call clone_294
   # [live values]: item_type.1:[rbp-8] size_expression.1:[rbp-16] $1.1:rax 
@@ -38468,7 +38774,7 @@ create_ir_array_type_142:
   # type_name.1: @String = call(append_303, $3.1, "]")
   .loc 5 60 18
   mov rdi, rax
-  lea rsi, .LABEL__string_221[rip] # "]"
+  lea rsi, .LABEL__string_223[rip] # "]"
   call append_303
   # [discarded value]: $3.1
   # [live values]: item_type.1:[rbp-8] size_expression.1:[rbp-16] type_name.1:rax 
@@ -38546,7 +38852,7 @@ create_ir_function_type_143:
   # type_name.1: @String = call(append_303, $3.1, "(")
   .loc 5 75 18
   mov rdi, rax
-  lea rsi, .LABEL__string_222[rip] # "("
+  lea rsi, .LABEL__string_224[rip] # "("
   call append_303
   # [discarded value]: $3.1
   # [live values]: parameters.1:[rbp-8] return_type.1:[rbp-16] type_name.1:rax 
@@ -38591,7 +38897,7 @@ create_ir_function_type_143:
   # $11.1: @String = call(append_303, $10.1, ": ")
   .loc 5 79 9
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call append_303
   # [discarded value]: $10.1
   # [live values]: parameters.1:[rbp-8] return_type.1:[rbp-16] type_name.1:[rbp-24] parameters_item.1:[rbp-32] parameters_item.2:[rbp-32] parameter.1:[rbp-40] $11.1:rax 
@@ -38648,7 +38954,7 @@ create_ir_function_type_143:
   # $18.1: @String = call(append_303, type_name.1, ") -> ")
   .loc 5 85 5
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_223[rip] # ") -> "
+  lea rsi, .LABEL__string_225[rip] # ") -> "
   call append_303
   # [live values]: parameters.1:[rbp-8] return_type.1:[rbp-16] type_name.1:[rbp-24] parameters_item.1:[rbp-32] parameters_item.2:[rbp-32] $18.1:rax 
   # $19.1: @String = load_struct_member(return_type.1, name)
@@ -39066,7 +39372,7 @@ is_object_type_148:
   # $2.1: Boolean = call(equals_295, $1.1, "Object")
   .loc 5 146 13
   mov rdi, rbx
-  lea rsi, .LABEL__string_224[rip] # "Object"
+  lea rsi, .LABEL__string_226[rip] # "Object"
   call equals_295
   # [discarded value]: $1.1
   # [live values]: struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:rax 
@@ -39672,7 +39978,7 @@ remove_155:
 .LABEL__remove_155__2:
   # call(abort_291, "Tried to remove instruction belonging to another block")
   .loc 5 239 9
-  lea rdi, .LABEL__string_225[rip] # "Tried to remove instruction belonging to another block"
+  lea rdi, .LABEL__string_227[rip] # "Tried to remove instruction belonging to another block"
   call abort_291
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] 
@@ -40104,7 +40410,7 @@ is_exit_instruction_158:
   # $9.1: Boolean = call(equals_295, $8.1, "abort")
   .loc 5 313 13
   mov rdi, rax
-  lea rsi, .LABEL__string_226[rip] # "abort"
+  lea rsi, .LABEL__string_228[rip] # "abort"
   mov [rbp-17], rbx
   call equals_295
   # [discarded value]: $8.1
@@ -40128,7 +40434,7 @@ is_exit_instruction_158:
   # $12.1: Boolean = call(equals_295, $10.1, "exit")
   .loc 5 316 13
   mov rdi, rbx
-  lea rsi, .LABEL__string_227[rip] # "exit"
+  lea rsi, .LABEL__string_229[rip] # "exit"
   call equals_295
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] $3.1:[rbp-9] function.1:[rbp-17] $12.1:rax 
@@ -42984,7 +43290,7 @@ dump_195:
   # $14.1: @FILE = call(write_286, $13.1, ": ")
   .loc 1 73 9
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $13.1
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] function_parameter.1:[rbp-32] $14.1:rax 
@@ -43033,7 +43339,7 @@ dump_195:
   # $20.1: @FILE = call(write_286, file.1, ") -> ")
   .loc 1 78 5
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_223[rip] # ") -> "
+  lea rsi, .LABEL__string_225[rip] # ") -> "
   call write_286
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] $20.1:rax 
   # $21.1: @IR_Type = load_struct_member(function.1, return_type)
@@ -43057,7 +43363,7 @@ dump_195:
   # $24.1: @FILE = call(write_286, $23.1, " {")
   .loc 1 78 5
   mov rdi, rax
-  lea rsi, .LABEL__string_228[rip] # " {"
+  lea rsi, .LABEL__string_230[rip] # " {"
   call write_286
   # [discarded value]: $23.1
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] $24.1:rax 
@@ -43170,7 +43476,7 @@ dump_196:
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
-  lea rsi, .LABEL__string_229[rip] # "block."
+  lea rsi, .LABEL__string_231[rip] # "block."
   call write_286
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] $1.1:rax 
   # $2.1: Int = load_struct_member(block.1, id)
@@ -43226,7 +43532,7 @@ dump_196:
   # $10.1: @FILE = call(write_286, file.1, "block.")
   .loc 1 94 13
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_229[rip] # "block."
+  lea rsi, .LABEL__string_231[rip] # "block."
   mov [rbp-32], rax
   call write_286
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] block_predecessors.1:[rbp-24] block_predecessor.1:[rbp-32] $10.1:rax 
@@ -43311,7 +43617,7 @@ dump_196:
   .loc 1 106 9
   mov rdi, [rbp-32]
   mov rsi, [rbp-16]
-  lea rdx, .LABEL__string_230[rip] # "   "
+  lea rdx, .LABEL__string_232[rip] # "   "
   call dump_197
   # [discarded value]: $19.1
   # [discarded value]: $20.1
@@ -43413,7 +43719,7 @@ dump_197:
   # $6.1: @FILE = call(write_286, $5.1, ": ")
   .loc 1 116 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $5.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $6.1:rax 
@@ -43443,7 +43749,7 @@ dump_197:
   # $11.1: @FILE = call(write_286, $10.1, " = ")
   .loc 1 116 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $10.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $11.1:rax 
@@ -43465,7 +43771,7 @@ dump_197:
   # $14.1: @FILE = call(write_286, $13.1, " + ")
   .loc 1 116 16
   mov rdi, rax
-  lea rsi, .LABEL__string_232[rip] # " + "
+  lea rsi, .LABEL__string_234[rip] # " + "
   call write_286
   # [discarded value]: $13.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $14.1:rax 
@@ -43548,7 +43854,7 @@ dump_197:
   # $24.1: @FILE = call(write_286, $23.1, ": ")
   .loc 1 121 13
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $23.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $24.1:rax 
@@ -43578,7 +43884,7 @@ dump_197:
   # $29.1: @FILE = call(write_286, $28.1, " = ")
   .loc 1 121 13
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $28.1
   # [discarded value]: $29.1
@@ -43608,7 +43914,7 @@ dump_197:
   # $48.1: @FILE = call(write_286, file.1, "call")
   .loc 1 124 13
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_233[rip] # "call"
+  lea rsi, .LABEL__string_235[rip] # "call"
   call write_286
   # [discarded value]: $31.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $48.1:rax 
@@ -43758,7 +44064,7 @@ dump_197:
   # $40.1: @FILE = call(write_286, file.1, "call")
   .loc 1 127 13
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_233[rip] # "call"
+  lea rsi, .LABEL__string_235[rip] # "call"
   mov [rbp-32], rax
   call write_286
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] function_address.1:[rbp-32] $40.1:rax 
@@ -43885,7 +44191,7 @@ dump_197:
   # $65.1: @FILE = call(write_286, $64.1, ": ")
   .loc 1 140 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $64.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $65.1:rax 
@@ -43915,14 +44221,14 @@ dump_197:
   # $70.1: @FILE = call(write_286, $69.1, " = ")
   .loc 1 140 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $69.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $70.1:rax 
   # $71.1: @FILE = call(write_286, $70.1, "cast")
   .loc 1 140 16
   mov rdi, rax
-  lea rsi, .LABEL__string_234[rip] # "cast"
+  lea rsi, .LABEL__string_236[rip] # "cast"
   call write_286
   # [discarded value]: $70.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $71.1:rax 
@@ -43990,7 +44296,7 @@ dump_197:
   # $79.1: @FILE = call(write_286, file.1, "jump")
   .loc 1 144 16
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_235[rip] # "jump"
+  lea rsi, .LABEL__string_237[rip] # "jump"
   mov [rbp-24], rax
   call write_286
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $79.1:rax 
@@ -44019,7 +44325,7 @@ dump_197:
   # $83.1: @FILE = call(write_286, $82.1, ", block.")
   .loc 1 144 16
   mov rdi, rax
-  lea rsi, .LABEL__string_236[rip] # ", block."
+  lea rsi, .LABEL__string_238[rip] # ", block."
   call write_286
   # [discarded value]: $82.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $83.1:rax 
@@ -44044,7 +44350,7 @@ dump_197:
   # $87.1: @FILE = call(write_286, $86.1, ", block.")
   .loc 1 144 16
   mov rdi, rax
-  lea rsi, .LABEL__string_236[rip] # ", block."
+  lea rsi, .LABEL__string_238[rip] # ", block."
   call write_286
   # [discarded value]: $86.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $87.1:rax 
@@ -44108,7 +44414,7 @@ dump_197:
   # $95.1: @FILE = call(write_286, file.1, "jump")
   .loc 1 148 16
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_235[rip] # "jump"
+  lea rsi, .LABEL__string_237[rip] # "jump"
   mov [rbp-24], rax
   call write_286
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $95.1:rax 
@@ -44122,7 +44428,7 @@ dump_197:
   # $97.1: @FILE = call(write_286, $96.1, "block.")
   .loc 1 148 16
   mov rdi, rax
-  lea rsi, .LABEL__string_229[rip] # "block."
+  lea rsi, .LABEL__string_231[rip] # "block."
   call write_286
   # [discarded value]: $96.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $97.1:rax 
@@ -44199,7 +44505,7 @@ dump_197:
   # $107.1: @FILE = call(write_286, $106.1, ": ")
   .loc 1 152 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $106.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $107.1:rax 
@@ -44229,7 +44535,7 @@ dump_197:
   # $112.1: @FILE = call(write_286, $111.1, " = ")
   .loc 1 152 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $111.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $112.1:rax 
@@ -44251,7 +44557,7 @@ dump_197:
   # $115.1: @FILE = call(write_286, $114.1, " / ")
   .loc 1 152 16
   mov rdi, rax
-  lea rsi, .LABEL__string_237[rip] # " / "
+  lea rsi, .LABEL__string_239[rip] # " / "
   call write_286
   # [discarded value]: $114.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $115.1:rax 
@@ -44318,7 +44624,7 @@ dump_197:
   # $123.1: @FILE = call(write_286, $122.1, ": ")
   .loc 1 156 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $122.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $123.1:rax 
@@ -44348,7 +44654,7 @@ dump_197:
   # $128.1: @FILE = call(write_286, $127.1, " = ")
   .loc 1 156 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $127.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $128.1:rax 
@@ -44370,7 +44676,7 @@ dump_197:
   # $131.1: @FILE = call(write_286, $130.1, " == ")
   .loc 1 156 16
   mov rdi, rax
-  lea rsi, .LABEL__string_238[rip] # " == "
+  lea rsi, .LABEL__string_240[rip] # " == "
   call write_286
   # [discarded value]: $130.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $131.1:rax 
@@ -44437,7 +44743,7 @@ dump_197:
   # $139.1: @FILE = call(write_286, $138.1, ": ")
   .loc 1 160 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $138.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $139.1:rax 
@@ -44467,7 +44773,7 @@ dump_197:
   # $144.1: @FILE = call(write_286, $143.1, " = ")
   .loc 1 160 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $143.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $144.1:rax 
@@ -44489,7 +44795,7 @@ dump_197:
   # $147.1: @FILE = call(write_286, $146.1, " > ")
   .loc 1 160 16
   mov rdi, rax
-  lea rsi, .LABEL__string_239[rip] # " > "
+  lea rsi, .LABEL__string_241[rip] # " > "
   call write_286
   # [discarded value]: $146.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $147.1:rax 
@@ -44556,7 +44862,7 @@ dump_197:
   # $155.1: @FILE = call(write_286, $154.1, ": ")
   .loc 1 164 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $154.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $155.1:rax 
@@ -44586,7 +44892,7 @@ dump_197:
   # $160.1: @FILE = call(write_286, $159.1, " = ")
   .loc 1 164 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $159.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $160.1:rax 
@@ -44608,7 +44914,7 @@ dump_197:
   # $163.1: @FILE = call(write_286, $162.1, " >= ")
   .loc 1 164 16
   mov rdi, rax
-  lea rsi, .LABEL__string_240[rip] # " >= "
+  lea rsi, .LABEL__string_242[rip] # " >= "
   call write_286
   # [discarded value]: $162.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $163.1:rax 
@@ -44675,7 +44981,7 @@ dump_197:
   # $171.1: @FILE = call(write_286, $170.1, ": ")
   .loc 1 168 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $170.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $171.1:rax 
@@ -44705,7 +45011,7 @@ dump_197:
   # $176.1: @FILE = call(write_286, $175.1, " = ")
   .loc 1 168 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $175.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $176.1:rax 
@@ -44727,7 +45033,7 @@ dump_197:
   # $179.1: @FILE = call(write_286, $178.1, " < ")
   .loc 1 168 16
   mov rdi, rax
-  lea rsi, .LABEL__string_241[rip] # " < "
+  lea rsi, .LABEL__string_243[rip] # " < "
   call write_286
   # [discarded value]: $178.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $179.1:rax 
@@ -44794,7 +45100,7 @@ dump_197:
   # $187.1: @FILE = call(write_286, $186.1, ": ")
   .loc 1 172 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $186.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $187.1:rax 
@@ -44824,7 +45130,7 @@ dump_197:
   # $192.1: @FILE = call(write_286, $191.1, " = ")
   .loc 1 172 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $191.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $192.1:rax 
@@ -44846,7 +45152,7 @@ dump_197:
   # $195.1: @FILE = call(write_286, $194.1, " <= ")
   .loc 1 172 16
   mov rdi, rax
-  lea rsi, .LABEL__string_242[rip] # " <= "
+  lea rsi, .LABEL__string_244[rip] # " <= "
   call write_286
   # [discarded value]: $194.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $195.1:rax 
@@ -44913,7 +45219,7 @@ dump_197:
   # $203.1: @FILE = call(write_286, $202.1, ": ")
   .loc 1 176 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $202.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $203.1:rax 
@@ -44943,14 +45249,14 @@ dump_197:
   # $208.1: @FILE = call(write_286, $207.1, " = ")
   .loc 1 176 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $207.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $208.1:rax 
   # $209.1: @FILE = call(write_286, $208.1, "load_array_item")
   .loc 1 176 16
   mov rdi, rax
-  lea rsi, .LABEL__string_243[rip] # "load_array_item"
+  lea rsi, .LABEL__string_245[rip] # "load_array_item"
   call write_286
   # [discarded value]: $208.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $209.1:rax 
@@ -45053,7 +45359,7 @@ dump_197:
   # $222.1: @FILE = call(write_286, $221.1, ": ")
   .loc 1 180 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $221.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $222.1:rax 
@@ -45083,14 +45389,14 @@ dump_197:
   # $227.1: @FILE = call(write_286, $226.1, " = ")
   .loc 1 180 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $226.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $227.1:rax 
   # $228.1: @FILE = call(write_286, $227.1, "load_function_address")
   .loc 1 180 16
   mov rdi, rax
-  lea rsi, .LABEL__string_244[rip] # "load_function_address"
+  lea rsi, .LABEL__string_246[rip] # "load_function_address"
   call write_286
   # [discarded value]: $227.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $228.1:rax 
@@ -45199,7 +45505,7 @@ dump_197:
   # $243.1: @FILE = call(write_286, $242.1, ": ")
   .loc 1 184 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $242.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $243.1:rax 
@@ -45229,14 +45535,14 @@ dump_197:
   # $248.1: @FILE = call(write_286, $247.1, " = ")
   .loc 1 184 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $247.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $248.1:rax 
   # $249.1: @FILE = call(write_286, $248.1, "load_struct_member")
   .loc 1 184 16
   mov rdi, rax
-  lea rsi, .LABEL__string_245[rip] # "load_struct_member"
+  lea rsi, .LABEL__string_247[rip] # "load_struct_member"
   call write_286
   # [discarded value]: $248.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $249.1:rax 
@@ -45338,7 +45644,7 @@ dump_197:
   # $262.1: @FILE = call(write_286, $261.1, ": ")
   .loc 1 187 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $261.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] $262.1:rax 
@@ -45368,14 +45674,14 @@ dump_197:
   # $267.1: @FILE = call(write_286, $266.1, " = ")
   .loc 1 187 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $266.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] $267.1:rax 
   # $268.1: @FILE = call(write_286, $267.1, "load_variable")
   .loc 1 187 16
   mov rdi, rax
-  lea rsi, .LABEL__string_246[rip] # "load_variable"
+  lea rsi, .LABEL__string_248[rip] # "load_variable"
   call write_286
   # [discarded value]: $267.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] $268.1:rax 
@@ -45462,7 +45768,7 @@ dump_197:
   # $280.1: @FILE = call(write_286, $279.1, ": ")
   .loc 1 191 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $279.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $280.1:rax 
@@ -45492,7 +45798,7 @@ dump_197:
   # $285.1: @FILE = call(write_286, $284.1, " = ")
   .loc 1 191 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $284.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $285.1:rax 
@@ -45514,7 +45820,7 @@ dump_197:
   # $288.1: @FILE = call(write_286, $287.1, " // ")
   .loc 1 191 16
   mov rdi, rax
-  lea rsi, .LABEL__string_247[rip] # " // "
+  lea rsi, .LABEL__string_249[rip] # " // "
   call write_286
   # [discarded value]: $287.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $288.1:rax 
@@ -45581,7 +45887,7 @@ dump_197:
   # $296.1: @FILE = call(write_286, $295.1, ": ")
   .loc 1 195 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $295.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $296.1:rax 
@@ -45611,7 +45917,7 @@ dump_197:
   # $301.1: @FILE = call(write_286, $300.1, " = ")
   .loc 1 195 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $300.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $301.1:rax 
@@ -45633,7 +45939,7 @@ dump_197:
   # $304.1: @FILE = call(write_286, $303.1, " * ")
   .loc 1 195 16
   mov rdi, rax
-  lea rsi, .LABEL__string_248[rip] # " * "
+  lea rsi, .LABEL__string_250[rip] # " * "
   call write_286
   # [discarded value]: $303.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $304.1:rax 
@@ -45700,7 +46006,7 @@ dump_197:
   # $312.1: @FILE = call(write_286, $311.1, ": ")
   .loc 1 199 9
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $311.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $312.1:rax 
@@ -45730,14 +46036,14 @@ dump_197:
   # $317.1: @FILE = call(write_286, $316.1, " = ")
   .loc 1 199 9
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $316.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $317.1:rax 
   # $318.1: @FILE = call(write_286, $317.1, "new")
   .loc 1 199 9
   mov rdi, rax
-  lea rsi, .LABEL__string_249[rip] # "new"
+  lea rsi, .LABEL__string_251[rip] # "new"
   call write_286
   # [discarded value]: $317.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $318.1:rax 
@@ -45864,7 +46170,7 @@ dump_197:
   # $334.1: @FILE = call(write_286, $333.1, ": ")
   .loc 1 207 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $333.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $334.1:rax 
@@ -45894,7 +46200,7 @@ dump_197:
   # $339.1: @FILE = call(write_286, $338.1, " = ")
   .loc 1 207 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $338.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $339.1:rax 
@@ -45916,7 +46222,7 @@ dump_197:
   # $342.1: @FILE = call(write_286, $341.1, " != ")
   .loc 1 207 16
   mov rdi, rax
-  lea rsi, .LABEL__string_250[rip] # " != "
+  lea rsi, .LABEL__string_252[rip] # " != "
   call write_286
   # [discarded value]: $341.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $342.1:rax 
@@ -45983,7 +46289,7 @@ dump_197:
   # $350.1: @FILE = call(write_286, $349.1, ": ")
   .loc 1 211 9
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $349.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $350.1:rax 
@@ -46013,14 +46319,14 @@ dump_197:
   # $355.1: @FILE = call(write_286, $354.1, " = ")
   .loc 1 211 9
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $354.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $355.1:rax 
   # $356.1: @FILE = call(write_286, $355.1, "phi")
   .loc 1 211 9
   mov rdi, rax
-  lea rsi, .LABEL__string_251[rip] # "phi"
+  lea rsi, .LABEL__string_253[rip] # "phi"
   call write_286
   # [discarded value]: $355.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $356.1:rax 
@@ -46150,7 +46456,7 @@ dump_197:
   # $372.1: @FILE = call(write_286, file.1, "return")
   .loc 1 229 20
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_252[rip] # "return"
+  lea rsi, .LABEL__string_254[rip] # "return"
   call write_286
   # [discarded value]: $371.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $372.1:rax 
@@ -46183,7 +46489,7 @@ dump_197:
   # $376.1: @FILE = call(write_286, file.1, "return")
   .loc 1 231 16
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_252[rip] # "return"
+  lea rsi, .LABEL__string_254[rip] # "return"
   call write_286
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $376.1:rax 
   # $377.1: @FILE = call(write_288, $376.1, '(')
@@ -46265,7 +46571,7 @@ dump_197:
   # $386.1: @FILE = call(write_286, $385.1, ": ")
   .loc 1 235 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $385.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $386.1:rax 
@@ -46295,7 +46601,7 @@ dump_197:
   # $391.1: @FILE = call(write_286, $390.1, " = ")
   .loc 1 235 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $390.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $391.1:rax 
@@ -46349,7 +46655,7 @@ dump_197:
   # $397.1: @FILE = call(write_286, file.1, "store_array_item")
   .loc 1 239 16
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_253[rip] # "store_array_item"
+  lea rsi, .LABEL__string_255[rip] # "store_array_item"
   mov [rbp-24], rax
   call write_286
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $397.1:rax 
@@ -46461,7 +46767,7 @@ dump_197:
   # $411.1: @FILE = call(write_286, file.1, "store_struct_member")
   .loc 1 243 16
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_254[rip] # "store_struct_member"
+  lea rsi, .LABEL__string_256[rip] # "store_struct_member"
   mov [rbp-24], rax
   call write_286
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $411.1:rax 
@@ -46589,7 +46895,7 @@ dump_197:
   # $428.1: @FILE = call(write_286, $427.1, ": ")
   .loc 1 247 16
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $427.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $428.1:rax 
@@ -46619,7 +46925,7 @@ dump_197:
   # $433.1: @FILE = call(write_286, $432.1, " = ")
   .loc 1 247 16
   mov rdi, rax
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $432.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $433.1:rax 
@@ -46641,7 +46947,7 @@ dump_197:
   # $436.1: @FILE = call(write_286, $435.1, " - ")
   .loc 1 247 16
   mov rdi, rax
-  lea rsi, .LABEL__string_255[rip] # " - "
+  lea rsi, .LABEL__string_257[rip] # " - "
   call write_286
   # [discarded value]: $435.1
   # [live values]: instruction.1:[rbp-8] file.1:[rbp-16] instruction.1:[rbp-24] $436.1:rax 
@@ -46816,15 +47122,15 @@ write_198:
   .loc 1 257 30
   mov rbx, [rax+32]
   # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] value.1:rax value_version.1:rbx 
-  # stderr.4: @FILE = load_variable(stderr)
-  # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] value.1:rax value_version.1:rbx stderr.4:stderr[rip] 
-  # $9.1: @FILE = call(end_line_289, stderr.4)
+  # stderr.5: @FILE = load_variable(stderr)
+  # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] value.1:rax value_version.1:rbx stderr.5:stderr[rip] 
+  # $9.1: @FILE = call(end_line_289, stderr.5)
   .loc 1 258 13
   mov rdi, stderr[rip]
   mov [rbp-25], rax
   mov [rbp-33], rbx
   call end_line_289
-  # [discarded value]: stderr.4
+  # [discarded value]: stderr.5
   # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] value.1:[rbp-25] value_version.1:[rbp-33] $9.1:rax 
   # $10.1: @IR_Variable = load_struct_member(value.1, variable)
   .loc 1 258 37
@@ -46848,7 +47154,7 @@ write_198:
   # $13.1: @FILE = call(write_286, $12.1, ".")
   .loc 1 258 13
   mov rdi, rax
-  lea rsi, .LABEL__string_256[rip] # "."
+  lea rsi, .LABEL__string_258[rip] # "."
   call write_286
   # [discarded value]: $12.1
   # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] value_version.1:[rbp-33] $13.1:rax 
@@ -46994,7 +47300,7 @@ write_198:
   # $31.1: @FILE = call(write_286, file.1, "undefined")
   .loc 1 269 16
   mov rdi, [rbp-17]
-  lea rsi, .LABEL__string_257[rip] # "undefined"
+  lea rsi, .LABEL__string_259[rip] # "undefined"
   call write_286
   # [discarded value]: $30.1
   # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] $31.1:rax 
@@ -47205,7 +47511,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:rax 
   # store_struct_member($9.1, lexeme, "&")
-  lea rbx, .LABEL__string_258[rip] # "&"
+  lea rbx, .LABEL__string_260[rip] # "&"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:rax 
   # $10.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47220,7 +47526,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:rax 
   # store_struct_member($10.1, lexeme, "as")
-  lea rbx, .LABEL__string_259[rip] # "as"
+  lea rbx, .LABEL__string_261[rip] # "as"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:rax 
   # $11.1: @Other_Matcher = new(Other_Matcher)
@@ -47235,7 +47541,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:rax 
   # store_struct_member($11.1, lexeme, "*")
-  lea rbx, .LABEL__string_260[rip] # "*"
+  lea rbx, .LABEL__string_262[rip] # "*"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:rax 
   # $12.1: @Other_Matcher = new(Other_Matcher)
@@ -47250,7 +47556,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:rax 
   # store_struct_member($12.1, lexeme, "@")
-  lea rbx, .LABEL__string_219[rip] # "@"
+  lea rbx, .LABEL__string_221[rip] # "@"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:rax 
   # $13.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47265,7 +47571,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:rax 
   # store_struct_member($13.1, lexeme, "break")
-  lea rbx, .LABEL__string_261[rip] # "break"
+  lea rbx, .LABEL__string_263[rip] # "break"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:rax 
   # $14.1: @Other_Matcher = new(Other_Matcher)
@@ -47280,7 +47586,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:rax 
   # store_struct_member($14.1, lexeme, "}")
-  lea rbx, .LABEL__string_262[rip] # "}"
+  lea rbx, .LABEL__string_264[rip] # "}"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:rax 
   # $15.1: @Other_Matcher = new(Other_Matcher)
@@ -47295,7 +47601,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:rax 
   # store_struct_member($15.1, lexeme, "]")
-  lea rbx, .LABEL__string_221[rip] # "]"
+  lea rbx, .LABEL__string_223[rip] # "]"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:rax 
   # $16.1: @Other_Matcher = new(Other_Matcher)
@@ -47340,7 +47646,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:rax 
   # store_struct_member($18.1, lexeme, ";")
-  lea rbx, .LABEL__string_263[rip] # ";"
+  lea rbx, .LABEL__string_265[rip] # ";"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:rax 
   # $19.1: @Other_Matcher = new(Other_Matcher)
@@ -47355,7 +47661,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:rax 
   # store_struct_member($19.1, lexeme, ",")
-  lea rbx, .LABEL__string_264[rip] # ","
+  lea rbx, .LABEL__string_266[rip] # ","
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:rax 
   # $20.1: @Comment_Matcher = new(Comment_Matcher)
@@ -47381,7 +47687,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:rax 
   # store_struct_member($21.1, lexeme, ".")
-  lea rbx, .LABEL__string_256[rip] # "."
+  lea rbx, .LABEL__string_258[rip] # "."
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:rax 
   # $22.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47396,7 +47702,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:rax 
   # store_struct_member($22.1, lexeme, "else")
-  lea rbx, .LABEL__string_265[rip] # "else"
+  lea rbx, .LABEL__string_267[rip] # "else"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:rax 
   # $23.1: @End_Of_File_Matcher = new(End_Of_File_Matcher)
@@ -47433,7 +47739,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:rax 
   # store_struct_member($25.1, lexeme, "=")
-  lea rbx, .LABEL__string_266[rip] # "="
+  lea rbx, .LABEL__string_268[rip] # "="
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:rax 
   # $26.1: @Other_Matcher = new(Other_Matcher)
@@ -47448,7 +47754,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:rax 
   # store_struct_member($26.1, lexeme, "!")
-  lea rbx, .LABEL__string_267[rip] # "!"
+  lea rbx, .LABEL__string_269[rip] # "!"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:rax 
   # $27.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47463,7 +47769,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:rax 
   # store_struct_member($27.1, lexeme, "external")
-  lea rbx, .LABEL__string_268[rip] # "external"
+  lea rbx, .LABEL__string_270[rip] # "external"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:rax 
   # $28.1: @Other_Matcher = new(Other_Matcher)
@@ -47478,7 +47784,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:rax 
   # store_struct_member($28.1, lexeme, ">")
-  lea rbx, .LABEL__string_269[rip] # ">"
+  lea rbx, .LABEL__string_271[rip] # ">"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:rax 
   # $29.1: @Other_Matcher = new(Other_Matcher)
@@ -47493,7 +47799,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:rax 
   # store_struct_member($29.1, lexeme, "-")
-  lea rbx, .LABEL__string_270[rip] # "-"
+  lea rbx, .LABEL__string_272[rip] # "-"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:rax 
   # $30.1: @Identifier_Matcher = new(Identifier_Matcher)
@@ -47519,7 +47825,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:rax 
   # store_struct_member($31.1, lexeme, "if")
-  lea rbx, .LABEL__string_271[rip] # "if"
+  lea rbx, .LABEL__string_273[rip] # "if"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:rax 
   # $32.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47534,7 +47840,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:rax 
   # store_struct_member($32.1, lexeme, "include")
-  lea rbx, .LABEL__string_272[rip] # "include"
+  lea rbx, .LABEL__string_274[rip] # "include"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:rax 
   # $33.1: @Other_Matcher = new(Other_Matcher)
@@ -47549,7 +47855,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:rax 
   # store_struct_member($33.1, lexeme, "<")
-  lea rbx, .LABEL__string_273[rip] # "<"
+  lea rbx, .LABEL__string_275[rip] # "<"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:rax 
   # $34.1: @Literal_Matcher = new(Literal_Matcher)
@@ -47575,7 +47881,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:rax 
   # store_struct_member($35.1, lexeme, "loop")
-  lea rbx, .LABEL__string_274[rip] # "loop"
+  lea rbx, .LABEL__string_276[rip] # "loop"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:rax 
   # $36.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47590,7 +47896,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:rax 
   # store_struct_member($36.1, lexeme, "new")
-  lea rbx, .LABEL__string_249[rip] # "new"
+  lea rbx, .LABEL__string_251[rip] # "new"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:rax 
   # $37.1: @Other_Matcher = new(Other_Matcher)
@@ -47605,7 +47911,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:rax 
   # store_struct_member($37.1, lexeme, "{")
-  lea rbx, .LABEL__string_275[rip] # "{"
+  lea rbx, .LABEL__string_277[rip] # "{"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:rax 
   # $38.1: @Other_Matcher = new(Other_Matcher)
@@ -47620,7 +47926,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:rax 
   # store_struct_member($38.1, lexeme, "[")
-  lea rbx, .LABEL__string_220[rip] # "["
+  lea rbx, .LABEL__string_222[rip] # "["
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:rax 
   # $39.1: @Other_Matcher = new(Other_Matcher)
@@ -47635,7 +47941,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:rax 
   # store_struct_member($39.1, lexeme, "(")
-  lea rbx, .LABEL__string_222[rip] # "("
+  lea rbx, .LABEL__string_224[rip] # "("
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:rax 
   # $40.1: @Other_Matcher = new(Other_Matcher)
@@ -47650,7 +47956,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:rax 
   # store_struct_member($40.1, lexeme, "+")
-  lea rbx, .LABEL__string_276[rip] # "+"
+  lea rbx, .LABEL__string_278[rip] # "+"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:rax 
   # $41.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47665,7 +47971,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:rax 
   # store_struct_member($41.1, lexeme, "return")
-  lea rbx, .LABEL__string_252[rip] # "return"
+  lea rbx, .LABEL__string_254[rip] # "return"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:rax 
   # $42.1: @Other_Matcher = new(Other_Matcher)
@@ -47680,7 +47986,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:rax 
   # store_struct_member($42.1, lexeme, "/")
-  lea rbx, .LABEL__string_277[rip] # "/"
+  lea rbx, .LABEL__string_279[rip] # "/"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:rax 
   # $43.1: @String_Literal_Matcher = new(String_Literal_Matcher)
@@ -47706,7 +48012,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:rax 
   # store_struct_member($44.1, lexeme, "struct")
-  lea rbx, .LABEL__string_278[rip] # "struct"
+  lea rbx, .LABEL__string_280[rip] # "struct"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:rax 
   # $45.1: @Other_Matcher = new(Other_Matcher)
@@ -47721,7 +48027,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:rax 
   # store_struct_member($45.1, lexeme, "|")
-  lea rbx, .LABEL__string_279[rip] # "|"
+  lea rbx, .LABEL__string_281[rip] # "|"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:rax 
   # $46.1: @Keyword_Matcher = new(Keyword_Matcher)
@@ -47736,7 +48042,7 @@ parse_199:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:rax 
   # store_struct_member($46.1, lexeme, "while")
-  lea rbx, .LABEL__string_280[rip] # "while"
+  lea rbx, .LABEL__string_282[rip] # "while"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:rax 
   # $47.1: @Parser = new(Parser)
@@ -48022,7 +48328,7 @@ parse_200:
 .LABEL__parse_200__2:
   # $3.1: @String = call(clone_294, "Failed to open file: ")
   .loc 6 58 20
-  lea rdi, .LABEL__string_281[rip] # "Failed to open file: "
+  lea rdi, .LABEL__string_283[rip] # "Failed to open file: "
   call clone_294
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $3.1:rax 
@@ -48310,7 +48616,7 @@ parse_statements_201:
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] statement.1:rax:[rbp-32] statement_file_path.1:[rbp-40] $11.1:rbx 
   # $12.1: @String = call(clone_294, "Unsupported file path: ")
   .loc 6 92 43
-  lea rdi, .LABEL__string_282[rip] # "Unsupported file path: "
+  lea rdi, .LABEL__string_284[rip] # "Unsupported file path: "
   mov [rbp-48], rbx
   call clone_294
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] statement.1:[rbp-32] statement_file_path.1:[rbp-40] $11.1:[rbp-48] $12.1:rax 
@@ -48478,7 +48784,7 @@ make_relative_path_202:
   # $1.1: Boolean = call(starts_with_297, file_path.1, "./")
   .loc 6 113 9
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_283[rip] # "./"
+  lea rsi, .LABEL__string_285[rip] # "./"
   mov [rbp-16], rdi
   call starts_with_297
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:rax 
@@ -48542,7 +48848,7 @@ make_relative_path_202:
   # $9.1: Boolean = call(starts_with_297, file_path.1, "../")
   .loc 6 117 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_284[rip] # "../"
+  lea rsi, .LABEL__string_286[rip] # "../"
   call starts_with_297
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $9.1:rax 
   # jump($9.1, block.5, block.6)
@@ -48596,7 +48902,7 @@ make_relative_path_202:
   # index.1: Int = call(index_of_296, relative_path.1, "/../")
   .loc 6 120 22
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_285[rip] # "/../"
+  lea rsi, .LABEL__string_287[rip] # "/../"
   call index_of_296
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] relative_path.1:[rbp-24] index.1:rax 
   # $17.1: Boolean = index.1 <= 0
@@ -49560,7 +49866,7 @@ parse_statement_203:
   # call(abort_263, $88.1, "Cannot use expression as variable name")
   .loc 6 225 9
   mov rdi, rbx
-  lea rsi, .LABEL__string_286[rip] # "Cannot use expression as variable name"
+  lea rsi, .LABEL__string_288[rip] # "Cannot use expression as variable name"
   call abort_263
   # [discarded value]: $88.1
   # [live values]: self.1:[rbp-8] $5.1:[rbp-9] expression.1:[rbp-17] 
@@ -49833,7 +50139,7 @@ parse_struct_205:
   # call(abort_263, $3.1, "Cannot use expression as struct name")
   .loc 6 251 9
   mov rdi, rbx
-  lea rsi, .LABEL__string_287[rip] # "Cannot use expression as struct name"
+  lea rsi, .LABEL__string_289[rip] # "Cannot use expression as struct name"
   call abort_263
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] 
@@ -50633,7 +50939,7 @@ parse_function_206:
   # call(abort_263, $13.1, "Cannot use expression as function name")
   .loc 6 327 5
   mov rdi, rbx
-  lea rsi, .LABEL__string_288[rip] # "Cannot use expression as function name"
+  lea rsi, .LABEL__string_290[rip] # "Cannot use expression as function name"
   call abort_263
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] 
@@ -55239,26 +55545,26 @@ consume_space_229:
   test bl, bl
   jz .LABEL__consume_space_229__6
 .LABEL__consume_space_229__5:
-  # stderr.5: @FILE = load_variable(stderr)
+  # stderr.6: @FILE = load_variable(stderr)
   # [discarded value]: $8.1
-  # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] stderr.5:stderr[rip] 
+  # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] stderr.6:stderr[rip] 
   # $9.1: @Source_Location = load_struct_member(token.1, location)
   .loc 6 773 22
   mov rax, [rbp-24]
   mov rbx, [rax+16]
-  # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:rax:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] stderr.5:stderr[rip] $9.1:rbx 
-  # $10.1: @FILE = call(write_266, stderr.5, $9.1)
+  # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:rax:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] stderr.6:stderr[rip] $9.1:rbx 
+  # $10.1: @FILE = call(write_266, stderr.6, $9.1)
   .loc 6 773 9
   mov rdi, stderr[rip]
   mov rsi, rbx
   call write_266
-  # [discarded value]: stderr.5
+  # [discarded value]: stderr.6
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] $10.1:rax 
   # $11.1: @FILE = call(write_286, $10.1, ": Consumed ")
   .loc 6 773 9
   mov rdi, rax
-  lea rsi, .LABEL__string_289[rip] # ": Consumed "
+  lea rsi, .LABEL__string_291[rip] # ": Consumed "
   call write_286
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] $11.1:rax 
@@ -55272,7 +55578,7 @@ consume_space_229:
   # $13.1: @FILE = call(write_286, $12.1, " spaces where ")
   .loc 6 773 9
   mov rdi, rax
-  lea rsi, .LABEL__string_290[rip] # " spaces where "
+  lea rsi, .LABEL__string_292[rip] # " spaces where "
   call write_286
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] $13.1:rax 
@@ -55286,7 +55592,7 @@ consume_space_229:
   # $15.1: @FILE = call(write_286, $14.1, " are expected")
   .loc 6 773 9
   mov rdi, rax
-  lea rsi, .LABEL__string_291[rip] # " are expected"
+  lea rsi, .LABEL__string_293[rip] # " are expected"
   call write_286
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] space_count.3:[rbp-32] space_count.4:[rbp-32] $15.1:rax 
@@ -56489,14 +56795,14 @@ accepts_237:
   # [discarded value]: $36.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] 
 .LABEL__accepts_237__43:
-  # stderr.6: @FILE = load_variable(stderr)
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] stderr.6:stderr[rip] 
-  # $37.1: @FILE = call(write_286, stderr.6, "Unsupported token matcher")
+  # stderr.7: @FILE = load_variable(stderr)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] stderr.7:stderr[rip] 
+  # $37.1: @FILE = call(write_286, stderr.7, "Unsupported token matcher")
   .loc 6 925 5
   mov rdi, stderr[rip]
-  lea rsi, .LABEL__string_292[rip] # "Unsupported token matcher"
+  lea rsi, .LABEL__string_294[rip] # "Unsupported token matcher"
   call write_286
-  # [discarded value]: stderr.6
+  # [discarded value]: stderr.7
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $37.1:rax 
   # $38.1: @FILE = call(end_line_289, $37.1)
   .loc 6 925 5
@@ -56541,25 +56847,25 @@ abort_238:
   # [live values]: 
   # unexpected_token.1: @Token = load_variable(unexpected_token)
   # [live values]: unexpected_token.1:rsi 
-  # stderr.7: @FILE = load_variable(stderr)
-  # [live values]: unexpected_token.1:rsi stderr.7:stderr[rip] 
+  # stderr.8: @FILE = load_variable(stderr)
+  # [live values]: unexpected_token.1:rsi stderr.8:stderr[rip] 
   # $1.1: @Source_Location = load_struct_member(unexpected_token.1, location)
   .loc 1 277 18
   mov rax, [rsi+16]
-  # [live values]: unexpected_token.1:rsi stderr.7:stderr[rip] $1.1:rax 
-  # $2.1: @FILE = call(write_266, stderr.7, $1.1)
+  # [live values]: unexpected_token.1:rsi stderr.8:stderr[rip] $1.1:rax 
+  # $2.1: @FILE = call(write_266, stderr.8, $1.1)
   .loc 1 277 5
   mov rdi, stderr[rip]
   mov [rbp-8], rsi
   mov rsi, rax
   call write_266
-  # [discarded value]: stderr.7
+  # [discarded value]: stderr.8
   # [discarded value]: $1.1
   # [live values]: unexpected_token.1:[rbp-8] $2.1:rax 
   # $3.1: @FILE = call(write_286, $2.1, ": Unexpected ")
   .loc 1 277 5
   mov rdi, rax
-  lea rsi, .LABEL__string_293[rip] # ": Unexpected "
+  lea rsi, .LABEL__string_295[rip] # ": Unexpected "
   call write_286
   # [discarded value]: $2.1
   # [live values]: unexpected_token.1:[rbp-8] $3.1:rax 
@@ -56585,7 +56891,7 @@ abort_238:
   # $7.1: @FILE = call(write_286, $6.1, ": ")
   .loc 1 277 5
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $6.1
   # [live values]: unexpected_token.1:[rbp-8] $7.1:rax 
@@ -56955,7 +57261,7 @@ write_240:
   # $30.1: @FILE = call(write_286, file.1, "break")
   .loc 1 309 16
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_261[rip] # "break"
+  lea rsi, .LABEL__string_263[rip] # "break"
   call write_286
   # [discarded value]: $29.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $30.1:rax 
@@ -57105,7 +57411,7 @@ write_240:
   # $49.1: @FILE = call(write_286, file.1, ") -> ")
   .loc 1 330 9
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_223[rip] # ") -> "
+  lea rsi, .LABEL__string_225[rip] # ") -> "
   call write_286
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] function_parameters.1:[rbp-40] $49.1:rax 
   # $50.1: @AST_Function_Type = load_struct_member(statement.1, type)
@@ -57152,7 +57458,7 @@ write_240:
   # $55.1: @FILE = call(write_286, file.1, " ")
   .loc 1 334 16
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_294[rip] # " "
+  lea rsi, .LABEL__string_296[rip] # " "
   call write_286
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] function_parameters.1:[rbp-40] $55.1:rax 
   # $56.1: @AST_Block_Statement = load_struct_member(statement.1, body)
@@ -57203,7 +57509,7 @@ write_240:
   # $60.1: @FILE = call(write_286, file.1, "if (")
   .loc 1 339 9
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_295[rip] # "if ("
+  lea rsi, .LABEL__string_297[rip] # "if ("
   mov [rbp-32], rax
   call write_286
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $60.1:rax 
@@ -57223,7 +57529,7 @@ write_240:
   # $63.1: @FILE = call(write_286, $62.1, ") ")
   .loc 1 339 9
   mov rdi, rax
-  lea rsi, .LABEL__string_296[rip] # ") "
+  lea rsi, .LABEL__string_298[rip] # ") "
   call write_286
   # [discarded value]: $62.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $63.1:rax 
@@ -57260,7 +57566,7 @@ write_240:
   # $68.1: @FILE = call(write_286, file.1, " else ")
   .loc 1 341 13
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_297[rip] # " else "
+  lea rsi, .LABEL__string_299[rip] # " else "
   call write_286
   # [discarded value]: $67.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $68.1:rax 
@@ -57313,7 +57619,7 @@ write_240:
   # $73.1: @FILE = call(write_286, file.1, "loop ")
   .loc 1 348 16
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_298[rip] # "loop "
+  lea rsi, .LABEL__string_300[rip] # "loop "
   mov [rbp-32], rax
   call write_286
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $73.1:rax 
@@ -57360,7 +57666,7 @@ write_240:
   # $78.1: @FILE = call(write_286, file.1, "return")
   .loc 1 353 9
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_252[rip] # "return"
+  lea rsi, .LABEL__string_254[rip] # "return"
   mov [rbp-32], rax
   call write_286
   # [discarded value]: $78.1
@@ -57383,7 +57689,7 @@ write_240:
   # $81.1: @FILE = call(write_286, file.1, " ")
   .loc 1 355 13
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_294[rip] # " "
+  lea rsi, .LABEL__string_296[rip] # " "
   call write_286
   # [discarded value]: $80.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $81.1:rax 
@@ -57447,7 +57753,7 @@ write_240:
   # $88.1: @FILE = call(write_286, $87.1, " :: struct")
   .loc 1 362 9
   mov rdi, rax
-  lea rsi, .LABEL__string_299[rip] # " :: struct"
+  lea rsi, .LABEL__string_301[rip] # " :: struct"
   call write_286
   # [discarded value]: $87.1
   # [discarded value]: $88.1
@@ -57470,7 +57776,7 @@ write_240:
   # $91.1: @FILE = call(write_286, file.1, " : ")
   .loc 1 364 13
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_300[rip] # " : "
+  lea rsi, .LABEL__string_302[rip] # " : "
   call write_286
   # [discarded value]: $90.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $91.1:rax 
@@ -57515,7 +57821,7 @@ write_240:
   # $96.1: @FILE = call(write_286, file.1, " {")
   .loc 1 369 9
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_228[rip] # " {"
+  lea rsi, .LABEL__string_230[rip] # " {"
   call write_286
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $96.1:rax 
   # $97.1: @FILE = call(end_line_289, $96.1)
@@ -57589,7 +57895,7 @@ write_240:
   # $108.1: @FILE = call(write_286, $107.1, ": ")
   .loc 1 373 13
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $107.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] members.1:[rbp-40] member.1:[rbp-48] $108.1:rax 
@@ -57707,7 +58013,7 @@ write_240:
   # $125.1: @FILE = call(write_286, file.1, ": ")
   .loc 1 382 13
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $121.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $125.1:rax 
@@ -57743,7 +58049,7 @@ write_240:
   # $130.1: @FILE = call(write_286, file.1, " = ")
   .loc 1 384 17
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_231[rip] # " = "
+  lea rsi, .LABEL__string_233[rip] # " = "
   call write_286
   # [discarded value]: $129.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $130.1:rax 
@@ -57775,7 +58081,7 @@ write_240:
   # $134.1: @FILE = call(write_286, file.1, " = external")
   .loc 1 387 17
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_301[rip] # " = external"
+  lea rsi, .LABEL__string_303[rip] # " = external"
   call write_286
   # [discarded value]: $133.1
   # [discarded value]: $134.1
@@ -57795,7 +58101,7 @@ write_240:
   # $122.1: @FILE = call(write_286, file.1, " := ")
   .loc 1 390 13
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_302[rip] # " := "
+  lea rsi, .LABEL__string_304[rip] # " := "
   call write_286
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $122.1:rax 
   # $123.1: @AST_Expression = load_struct_member(statement.1, value_expression)
@@ -57841,7 +58147,7 @@ write_240:
   # $137.1: @FILE = call(write_286, file.1, "while (")
   .loc 1 397 16
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_303[rip] # "while ("
+  lea rsi, .LABEL__string_305[rip] # "while ("
   mov [rbp-32], rax
   call write_286
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $137.1:rax 
@@ -57861,7 +58167,7 @@ write_240:
   # $140.1: @FILE = call(write_286, $139.1, ") ")
   .loc 1 397 16
   mov rdi, rax
-  lea rsi, .LABEL__string_296[rip] # ") "
+  lea rsi, .LABEL__string_298[rip] # ") "
   call write_286
   # [discarded value]: $139.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] statement.1:[rbp-32] $140.1:rax 
@@ -57899,7 +58205,7 @@ write_240:
   # [live values]: file.1:[rbp-8] statement.1:rax:[rbp-16] alignment.1:[rbp-24] $144.1:rbx 
   # $145.1: @String = call(clone_294, "Unsupported AST_Statement type: ")
   .loc 1 401 31
-  lea rdi, .LABEL__string_304[rip] # "Unsupported AST_Statement type: "
+  lea rdi, .LABEL__string_306[rip] # "Unsupported AST_Statement type: "
   mov [rbp-32], rbx
   call clone_294
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $144.1:[rbp-32] $145.1:rax 
@@ -58065,7 +58371,7 @@ write_source_line_241:
   # $13.1: @FILE = call(write_286, $12.1, ": ")
   .loc 1 416 5
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $12.1
   # [discarded value]: $13.1
@@ -58164,7 +58470,7 @@ write_242:
   # $3.1: @FILE = call(write_286, $2.1, ": ")
   .loc 1 428 12
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $2.1
   # [live values]: parameter.1:[rbp-8] $3.1:rax 
@@ -58265,7 +58571,7 @@ write_243:
   # $8.1: @FILE = call(write_286, $7.1, "; ")
   .loc 1 435 20
   mov rdi, rax
-  lea rsi, .LABEL__string_305[rip] # "; "
+  lea rsi, .LABEL__string_307[rip] # "; "
   call write_286
   # [discarded value]: $7.1
   # [live values]: file.1:[rbp-8] type.1:[rbp-16] type.1:[rbp-24] $8.1:rax 
@@ -58424,7 +58730,7 @@ write_243:
   # [live values]: file.1:[rbp-8] type.1:rax:[rbp-16] $26.1:rbx 
   # $27.1: @String = call(clone_294, "Unsupported AST_Type type: ")
   .loc 1 449 26
-  lea rdi, .LABEL__string_306[rip] # "Unsupported AST_Type type: "
+  lea rdi, .LABEL__string_308[rip] # "Unsupported AST_Type type: "
   mov [rbp-24], rbx
   call clone_294
   # [live values]: file.1:[rbp-8] type.1:[rbp-16] $26.1:[rbp-24] $27.1:rax 
@@ -58606,7 +58912,7 @@ write_244:
   # $16.1: @FILE = call(write_286, file.1, " + ")
   .loc 1 460 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_232[rip] # " + "
+  lea rsi, .LABEL__string_234[rip] # " + "
   call write_286
   # [discarded value]: $15.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $16.1:rax 
@@ -58657,7 +58963,7 @@ write_244:
   # $22.1: @FILE = call(write_286, file.1, " / ")
   .loc 1 463 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_237[rip] # " / "
+  lea rsi, .LABEL__string_239[rip] # " / "
   call write_286
   # [discarded value]: $21.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $22.1:rax 
@@ -58708,7 +59014,7 @@ write_244:
   # $28.1: @FILE = call(write_286, file.1, " == ")
   .loc 1 466 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_238[rip] # " == "
+  lea rsi, .LABEL__string_240[rip] # " == "
   call write_286
   # [discarded value]: $27.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $28.1:rax 
@@ -58759,7 +59065,7 @@ write_244:
   # $34.1: @FILE = call(write_286, file.1, " > ")
   .loc 1 469 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_239[rip] # " > "
+  lea rsi, .LABEL__string_241[rip] # " > "
   call write_286
   # [discarded value]: $33.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $34.1:rax 
@@ -58810,7 +59116,7 @@ write_244:
   # $40.1: @FILE = call(write_286, file.1, " >= ")
   .loc 1 472 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_240[rip] # " >= "
+  lea rsi, .LABEL__string_242[rip] # " >= "
   call write_286
   # [discarded value]: $39.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $40.1:rax 
@@ -58861,7 +59167,7 @@ write_244:
   # $46.1: @FILE = call(write_286, file.1, " < ")
   .loc 1 475 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_241[rip] # " < "
+  lea rsi, .LABEL__string_243[rip] # " < "
   call write_286
   # [discarded value]: $45.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $46.1:rax 
@@ -58912,7 +59218,7 @@ write_244:
   # $52.1: @FILE = call(write_286, file.1, " <= ")
   .loc 1 478 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_242[rip] # " <= "
+  lea rsi, .LABEL__string_244[rip] # " <= "
   call write_286
   # [discarded value]: $51.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $52.1:rax 
@@ -58963,7 +59269,7 @@ write_244:
   # $58.1: @FILE = call(write_286, file.1, " && ")
   .loc 1 481 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_307[rip] # " && "
+  lea rsi, .LABEL__string_309[rip] # " && "
   call write_286
   # [discarded value]: $57.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $58.1:rax 
@@ -59014,7 +59320,7 @@ write_244:
   # $64.1: @FILE = call(write_286, file.1, " || ")
   .loc 1 484 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_308[rip] # " || "
+  lea rsi, .LABEL__string_310[rip] # " || "
   call write_286
   # [discarded value]: $63.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $64.1:rax 
@@ -59065,7 +59371,7 @@ write_244:
   # $70.1: @FILE = call(write_286, file.1, " // ")
   .loc 1 487 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_247[rip] # " // "
+  lea rsi, .LABEL__string_249[rip] # " // "
   call write_286
   # [discarded value]: $69.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $70.1:rax 
@@ -59116,7 +59422,7 @@ write_244:
   # $76.1: @FILE = call(write_286, file.1, " * ")
   .loc 1 490 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_248[rip] # " * "
+  lea rsi, .LABEL__string_250[rip] # " * "
   call write_286
   # [discarded value]: $75.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $76.1:rax 
@@ -59167,7 +59473,7 @@ write_244:
   # $82.1: @FILE = call(write_286, file.1, " != ")
   .loc 1 493 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_250[rip] # " != "
+  lea rsi, .LABEL__string_252[rip] # " != "
   call write_286
   # [discarded value]: $81.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $82.1:rax 
@@ -59218,7 +59524,7 @@ write_244:
   # $88.1: @FILE = call(write_286, file.1, " - ")
   .loc 1 496 20
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_255[rip] # " - "
+  lea rsi, .LABEL__string_257[rip] # " - "
   call write_286
   # [discarded value]: $87.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $88.1:rax 
@@ -59401,7 +59707,7 @@ write_244:
   # $112.1: @FILE = call(write_286, $111.1, " as ")
   .loc 1 517 16
   mov rdi, rax
-  lea rsi, .LABEL__string_309[rip] # " as "
+  lea rsi, .LABEL__string_311[rip] # " as "
   call write_286
   # [discarded value]: $111.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $112.1:rax 
@@ -59482,7 +59788,7 @@ write_244:
   # $121.1: @FILE = call(write_286, file.1, "new ")
   .loc 1 525 16
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_310[rip] # "new "
+  lea rsi, .LABEL__string_312[rip] # "new "
   call write_286
   # [discarded value]: $120.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $121.1:rax 
@@ -59620,7 +59926,7 @@ write_244:
   # [live values]: file.1:[rbp-8] expression.1:rax:[rbp-16] $138.1:rbx 
   # $139.1: @String = call(clone_294, "Unsupported AST_Expression type: ")
   .loc 1 537 32
-  lea rdi, .LABEL__string_311[rip] # "Unsupported AST_Expression type: "
+  lea rdi, .LABEL__string_313[rip] # "Unsupported AST_Expression type: "
   mov [rbp-24], rbx
   call clone_294
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $138.1:[rbp-24] $139.1:rax 
@@ -61669,7 +61975,7 @@ scan_identifier_token_259:
   # $5.1: Boolean = call(equals_295, token_lexeme.1, "as")
   .loc 8 185 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_259[rip] # "as"
+  lea rsi, .LABEL__string_261[rip] # "as"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $5.1:rax 
   # jump($5.1, block.5, block.6)
@@ -61704,7 +62010,7 @@ scan_identifier_token_259:
   # $7.1: Boolean = call(equals_295, token_lexeme.1, "break")
   .loc 8 188 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_261[rip] # "break"
+  lea rsi, .LABEL__string_263[rip] # "break"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $7.1:rax 
   # jump($7.1, block.8, block.9)
@@ -61739,7 +62045,7 @@ scan_identifier_token_259:
   # $9.1: Boolean = call(equals_295, token_lexeme.1, "else")
   .loc 8 191 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_265[rip] # "else"
+  lea rsi, .LABEL__string_267[rip] # "else"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $9.1:rax 
   # jump($9.1, block.11, block.12)
@@ -61774,7 +62080,7 @@ scan_identifier_token_259:
   # $11.1: Boolean = call(equals_295, token_lexeme.1, "external")
   .loc 8 194 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_268[rip] # "external"
+  lea rsi, .LABEL__string_270[rip] # "external"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $11.1:rax 
   # jump($11.1, block.14, block.15)
@@ -61809,7 +62115,7 @@ scan_identifier_token_259:
   # $13.1: Boolean = call(equals_295, token_lexeme.1, "false")
   .loc 8 197 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_312[rip] # "false"
+  lea rsi, .LABEL__string_314[rip] # "false"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $13.1:rax 
   # jump($13.1, block.17, block.18)
@@ -61847,7 +62153,7 @@ scan_identifier_token_259:
   # $15.1: Boolean = call(equals_295, token_lexeme.1, "if")
   .loc 8 200 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_271[rip] # "if"
+  lea rsi, .LABEL__string_273[rip] # "if"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $15.1:rax 
   # jump($15.1, block.20, block.21)
@@ -61882,7 +62188,7 @@ scan_identifier_token_259:
   # $17.1: Boolean = call(equals_295, token_lexeme.1, "include")
   .loc 8 203 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_272[rip] # "include"
+  lea rsi, .LABEL__string_274[rip] # "include"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $17.1:rax 
   # jump($17.1, block.23, block.24)
@@ -61917,7 +62223,7 @@ scan_identifier_token_259:
   # $19.1: Boolean = call(equals_295, token_lexeme.1, "loop")
   .loc 8 206 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_274[rip] # "loop"
+  lea rsi, .LABEL__string_276[rip] # "loop"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $19.1:rax 
   # jump($19.1, block.26, block.27)
@@ -61952,7 +62258,7 @@ scan_identifier_token_259:
   # $21.1: Boolean = call(equals_295, token_lexeme.1, "new")
   .loc 8 209 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_249[rip] # "new"
+  lea rsi, .LABEL__string_251[rip] # "new"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $21.1:rax 
   # jump($21.1, block.29, block.30)
@@ -61987,7 +62293,7 @@ scan_identifier_token_259:
   # $23.1: Boolean = call(equals_295, token_lexeme.1, "null")
   .loc 8 212 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_313[rip] # "null"
+  lea rsi, .LABEL__string_315[rip] # "null"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $23.1:rax 
   # jump($23.1, block.32, block.33)
@@ -62022,7 +62328,7 @@ scan_identifier_token_259:
   # $25.1: Boolean = call(equals_295, token_lexeme.1, "return")
   .loc 8 215 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_252[rip] # "return"
+  lea rsi, .LABEL__string_254[rip] # "return"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $25.1:rax 
   # jump($25.1, block.35, block.36)
@@ -62057,7 +62363,7 @@ scan_identifier_token_259:
   # $27.1: Boolean = call(equals_295, token_lexeme.1, "struct")
   .loc 8 218 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_278[rip] # "struct"
+  lea rsi, .LABEL__string_280[rip] # "struct"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $27.1:rax 
   # jump($27.1, block.38, block.39)
@@ -62092,7 +62398,7 @@ scan_identifier_token_259:
   # $29.1: Boolean = call(equals_295, token_lexeme.1, "true")
   .loc 8 221 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_314[rip] # "true"
+  lea rsi, .LABEL__string_316[rip] # "true"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $29.1:rax 
   # jump($29.1, block.41, block.42)
@@ -62130,7 +62436,7 @@ scan_identifier_token_259:
   # $31.1: Boolean = call(equals_295, token_lexeme.1, "undefined")
   .loc 8 224 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_257[rip] # "undefined"
+  lea rsi, .LABEL__string_259[rip] # "undefined"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $31.1:rax 
   # jump($31.1, block.44, block.45)
@@ -62165,7 +62471,7 @@ scan_identifier_token_259:
   # $33.1: Boolean = call(equals_295, token_lexeme.1, "while")
   .loc 8 227 9
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_280[rip] # "while"
+  lea rsi, .LABEL__string_282[rip] # "while"
   call equals_295
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $33.1:rax 
   # jump($33.1, block.47, block.48)
@@ -63000,15 +63306,15 @@ abort_263:
   # [live values]: location.1:rdi 
   # message.1: @String = load_variable(message)
   # [live values]: location.1:rdi message.1:rsi 
-  # stderr.8: @FILE = load_variable(stderr)
-  # [live values]: location.1:rdi message.1:rsi stderr.8:stderr[rip] 
-  # $1.1: @FILE = call(end_line_289, stderr.8)
+  # stderr.9: @FILE = load_variable(stderr)
+  # [live values]: location.1:rdi message.1:rsi stderr.9:stderr[rip] 
+  # $1.1: @FILE = call(end_line_289, stderr.9)
   .loc 1 543 5
   mov [rbp-8], rdi
   mov rdi, stderr[rip]
   mov [rbp-16], rsi
   call end_line_289
-  # [discarded value]: stderr.8
+  # [discarded value]: stderr.9
   # [live values]: location.1:[rbp-8] message.1:[rbp-16] $1.1:rax 
   # $2.1: @FILE = call(write_266, $1.1, location.1)
   .loc 1 543 5
@@ -63021,7 +63327,7 @@ abort_263:
   # $3.1: @FILE = call(write_286, $2.1, ": ")
   .loc 1 543 5
   mov rdi, rax
-  lea rsi, .LABEL__string_212[rip] # ": "
+  lea rsi, .LABEL__string_203[rip] # ": "
   call write_286
   # [discarded value]: $2.1
   # [live values]: message.1:[rbp-16] $3.1:rax 
@@ -63103,7 +63409,7 @@ write_264:
   # $14.1: @FILE = call(write_286, $13.1, "[2;37m")
   .loc 1 551 9
   mov rdi, rax
-  lea rsi, .LABEL__string_315[rip] # "[2;37m"
+  lea rsi, .LABEL__string_317[rip] # "[2;37m"
   call write_286
   # [discarded value]: $13.1
   # [discarded value]: $14.1
@@ -63137,7 +63443,7 @@ write_264:
   # $19.1: @FILE = call(write_286, $18.1, "[0m")
   .loc 1 558 5
   mov rdi, rax
-  lea rsi, .LABEL__string_316[rip] # "[0m"
+  lea rsi, .LABEL__string_318[rip] # "[0m"
   call write_286
   # [discarded value]: $18.1
   # [discarded value]: $19.1
@@ -63178,7 +63484,7 @@ write_264:
   # $11.1: @FILE = call(write_286, $10.1, "[1;33m")
   .loc 1 553 9
   mov rdi, rax
-  lea rsi, .LABEL__string_317[rip] # "[1;33m"
+  lea rsi, .LABEL__string_319[rip] # "[1;33m"
   call write_286
   # [discarded value]: $10.1
   # [discarded value]: $11.1
@@ -63216,7 +63522,7 @@ write_264:
   # $8.1: @FILE = call(write_286, $7.1, "[2;33m")
   .loc 1 555 9
   mov rdi, rax
-  lea rsi, .LABEL__string_318[rip] # "[2;33m"
+  lea rsi, .LABEL__string_320[rip] # "[2;33m"
   call write_286
   # [discarded value]: $7.1
   # [discarded value]: $8.1
@@ -63272,7 +63578,7 @@ create_source_265:
   # [live values]: file_path.1:rdi $1.1:rax 
   # $2.1: @Int8 = load_struct_member("r", data)
   .loc 10 16 35
-  lea rbx, .LABEL__string_319[rip] # "r"
+  lea rbx, .LABEL__string_321[rip] # "r"
   mov r15, [rbx+0]
   # [live values]: file_path.1:rdi $1.1:rax $2.1:r15 
   # file.1: @FILE = call(fopen, $1.1, $2.1)
@@ -63498,7 +63804,7 @@ write_266:
   # $2.1: @FILE = call(write_286, self.1, "null")
   .loc 1 566 16
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_313[rip] # "null"
+  lea rsi, .LABEL__string_315[rip] # "null"
   call write_286
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] location.1:[rbp-8] $2.1:rax 
@@ -65292,14 +65598,14 @@ write_287:
   test al, al
   jz .LABEL__write_287__3
 .LABEL__write_287__2:
-  # stderr.9: @FILE = load_variable(stderr)
+  # stderr.10: @FILE = load_variable(stderr)
   # [discarded value]: $3.1
-  # [live values]: self.1:[rbp-8] stderr.9:stderr[rip] 
-  # $4.1: @FILE = call(end_line_289, stderr.9)
+  # [live values]: self.1:[rbp-8] stderr.10:stderr[rip] 
+  # $4.1: @FILE = call(end_line_289, stderr.10)
   .loc 1 594 9
   mov rdi, stderr[rip]
   call end_line_289
-  # [discarded value]: stderr.9
+  # [discarded value]: stderr.10
   # [live values]: self.1:[rbp-8] $4.1:rax 
   # $5.1: @FILE = call(end_line_289, $4.1)
   .loc 1 594 9
@@ -65310,7 +65616,7 @@ write_287:
   # $6.1: @FILE = call(write_286, $5.1, "Failed to write text")
   .loc 1 594 9
   mov rdi, rax
-  lea rsi, .LABEL__string_320[rip] # "Failed to write text"
+  lea rsi, .LABEL__string_322[rip] # "Failed to write text"
   call write_286
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] $6.1:rax 
@@ -65377,14 +65683,14 @@ write_288:
   test bl, bl
   jz .LABEL__write_288__3
 .LABEL__write_288__2:
-  # stderr.10: @FILE = load_variable(stderr)
+  # stderr.11: @FILE = load_variable(stderr)
   # [discarded value]: $3.1
-  # [live values]: self.1:[rbp-8] c.1:[rbp-12] stderr.10:stderr[rip] 
-  # $4.1: @FILE = call(end_line_289, stderr.10)
+  # [live values]: self.1:[rbp-8] c.1:[rbp-12] stderr.11:stderr[rip] 
+  # $4.1: @FILE = call(end_line_289, stderr.11)
   .loc 1 603 9
   mov rdi, stderr[rip]
   call end_line_289
-  # [discarded value]: stderr.10
+  # [discarded value]: stderr.11
   # [live values]: self.1:[rbp-8] c.1:[rbp-12] $4.1:rax 
   # $5.1: @FILE = call(end_line_289, $4.1)
   .loc 1 603 9
@@ -65395,7 +65701,7 @@ write_288:
   # $6.1: @FILE = call(write_286, $5.1, "Failed to write character: ")
   .loc 1 603 9
   mov rdi, rax
-  lea rsi, .LABEL__string_321[rip] # "Failed to write character: "
+  lea rsi, .LABEL__string_323[rip] # "Failed to write character: "
   call write_286
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] c.1:[rbp-12] $6.1:rax 
@@ -65507,14 +65813,14 @@ abort_291:
 .LABEL__abort_291__1:
   # message.1: @String = load_variable(message)
   # [live values]: message.1:rdi 
-  # stderr.11: @FILE = load_variable(stderr)
-  # [live values]: message.1:rdi stderr.11:stderr[rip] 
-  # $1.1: @FILE = call(end_line_289, stderr.11)
+  # stderr.12: @FILE = load_variable(stderr)
+  # [live values]: message.1:rdi stderr.12:stderr[rip] 
+  # $1.1: @FILE = call(end_line_289, stderr.12)
   .loc 1 619 5
   mov [rbp-8], rdi
   mov rdi, stderr[rip]
   call end_line_289
-  # [discarded value]: stderr.11
+  # [discarded value]: stderr.12
   # [live values]: message.1:[rbp-8] $1.1:rax 
   # $2.1: @FILE = call(end_line_289, $1.1)
   .loc 1 619 5
@@ -68702,835 +69008,849 @@ remove_304__stack_frame_size: .word 48
   .align 8
 .LABEL__string_203:
   .quad .LABEL__string_203__data
-  .quad 27
-  .quad 26
-.LABEL__string_203__data: .string "Found no matching function"
+  .quad 3
+  .quad 2
+.LABEL__string_203__data: .string ": "
 
   .align 8
 .LABEL__string_204:
   .quad .LABEL__string_204__data
-  .quad 22
-  .quad 21
-.LABEL__string_204__data: .string "Unsupported arguments"
+  .quad 5
+  .quad 4
+.LABEL__string_204__data: .string " :: "
 
   .align 8
 .LABEL__string_205:
   .quad .LABEL__string_205__data
-  .quad 54
-  .quad 53
-.LABEL__string_205__data: .string "Positional arguments cannot be added after named ones"
+  .quad 29
+  .quad 28
+.LABEL__string_205__data: .string "Found no matching function: "
 
   .align 8
 .LABEL__string_206:
   .quad .LABEL__string_206__data
-  .quad 31
-  .quad 30
-.LABEL__string_206__data: .string "Operands are not the same type"
+  .quad 9
+  .quad 8
+.LABEL__string_206__data: .string ") -> Any"
 
   .align 8
 .LABEL__string_207:
   .quad .LABEL__string_207__data
-  .quad 7
-  .quad 6
-.LABEL__string_207__data: .string "String"
+  .quad 22
+  .quad 21
+.LABEL__string_207__data: .string "Unsupported arguments"
 
   .align 8
 .LABEL__string_208:
   .quad .LABEL__string_208__data
-  .quad 37
-  .quad 36
-.LABEL__string_208__data: .string "Not a IR_Struct_Type pointer value: "
+  .quad 54
+  .quad 53
+.LABEL__string_208__data: .string "Positional arguments cannot be added after named ones"
 
   .align 8
 .LABEL__string_209:
   .quad .LABEL__string_209__data
-  .quad 22
-  .quad 21
-.LABEL__string_209__data: .string " has no such member: "
+  .quad 31
+  .quad 30
+.LABEL__string_209__data: .string "Operands are not the same type"
 
   .align 8
 .LABEL__string_210:
   .quad .LABEL__string_210__data
-  .quad 1
-  .quad 0
-.LABEL__string_210__data: .string ""
+  .quad 7
+  .quad 6
+.LABEL__string_210__data: .string "String"
 
   .align 8
 .LABEL__string_211:
   .quad .LABEL__string_211__data
-  .quad 34
-  .quad 33
-.LABEL__string_211__data: .string "Struct init argument without name"
+  .quad 37
+  .quad 36
+.LABEL__string_211__data: .string "Not a IR_Struct_Type pointer value: "
 
   .align 8
 .LABEL__string_212:
   .quad .LABEL__string_212__data
-  .quad 3
-  .quad 2
-.LABEL__string_212__data: .string ": "
+  .quad 22
+  .quad 21
+.LABEL__string_212__data: .string " has no such member: "
 
   .align 8
 .LABEL__string_213:
   .quad .LABEL__string_213__data
-  .quad 20
-  .quad 19
-.LABEL__string_213__data: .string " is not initialized"
+  .quad 1
+  .quad 0
+.LABEL__string_213__data: .string ""
 
   .align 8
 .LABEL__string_214:
   .quad .LABEL__string_214__data
-  .quad 28
-  .quad 27
-.LABEL__string_214__data: .string "Undeclared variable value: "
+  .quad 34
+  .quad 33
+.LABEL__string_214__data: .string "Struct init argument without name"
 
   .align 8
 .LABEL__string_215:
   .quad .LABEL__string_215__data
-  .quad 32
-  .quad 31
-.LABEL__string_215__data: .string "Variable type without address: "
+  .quad 20
+  .quad 19
+.LABEL__string_215__data: .string " is not initialized"
 
   .align 8
 .LABEL__string_216:
   .quad .LABEL__string_216__data
-  .quad 19
-  .quad 18
-.LABEL__string_216__data: .string "Unknown function: "
+  .quad 28
+  .quad 27
+.LABEL__string_216__data: .string "Undeclared variable value: "
 
   .align 8
 .LABEL__string_217:
   .quad .LABEL__string_217__data
-  .quad 19
-  .quad 18
-.LABEL__string_217__data: .string "Unknown variable: "
+  .quad 32
+  .quad 31
+.LABEL__string_217__data: .string "Variable type without address: "
 
   .align 8
 .LABEL__string_218:
   .quad .LABEL__string_218__data
-  .quad 20
   .quad 19
-.LABEL__string_218__data: .string ": Unexpected type: "
+  .quad 18
+.LABEL__string_218__data: .string "Unknown function: "
 
   .align 8
 .LABEL__string_219:
   .quad .LABEL__string_219__data
-  .quad 2
-  .quad 1
-.LABEL__string_219__data: .string "@"
+  .quad 19
+  .quad 18
+.LABEL__string_219__data: .string "Unknown variable: "
 
   .align 8
 .LABEL__string_220:
   .quad .LABEL__string_220__data
-  .quad 2
-  .quad 1
-.LABEL__string_220__data: .string "["
+  .quad 20
+  .quad 19
+.LABEL__string_220__data: .string ": Unexpected type: "
 
   .align 8
 .LABEL__string_221:
   .quad .LABEL__string_221__data
   .quad 2
   .quad 1
-.LABEL__string_221__data: .string "]"
+.LABEL__string_221__data: .string "@"
 
   .align 8
 .LABEL__string_222:
   .quad .LABEL__string_222__data
   .quad 2
   .quad 1
-.LABEL__string_222__data: .string "("
+.LABEL__string_222__data: .string "["
 
   .align 8
 .LABEL__string_223:
   .quad .LABEL__string_223__data
-  .quad 6
-  .quad 5
-.LABEL__string_223__data: .string ") -> "
+  .quad 2
+  .quad 1
+.LABEL__string_223__data: .string "]"
 
   .align 8
 .LABEL__string_224:
   .quad .LABEL__string_224__data
-  .quad 7
-  .quad 6
-.LABEL__string_224__data: .string "Object"
+  .quad 2
+  .quad 1
+.LABEL__string_224__data: .string "("
 
   .align 8
 .LABEL__string_225:
   .quad .LABEL__string_225__data
-  .quad 55
-  .quad 54
-.LABEL__string_225__data: .string "Tried to remove instruction belonging to another block"
+  .quad 6
+  .quad 5
+.LABEL__string_225__data: .string ") -> "
 
   .align 8
 .LABEL__string_226:
   .quad .LABEL__string_226__data
+  .quad 7
   .quad 6
-  .quad 5
-.LABEL__string_226__data: .string "abort"
+.LABEL__string_226__data: .string "Object"
 
   .align 8
 .LABEL__string_227:
   .quad .LABEL__string_227__data
-  .quad 5
-  .quad 4
-.LABEL__string_227__data: .string "exit"
+  .quad 55
+  .quad 54
+.LABEL__string_227__data: .string "Tried to remove instruction belonging to another block"
 
   .align 8
 .LABEL__string_228:
   .quad .LABEL__string_228__data
-  .quad 3
-  .quad 2
-.LABEL__string_228__data: .string " {"
+  .quad 6
+  .quad 5
+.LABEL__string_228__data: .string "abort"
 
   .align 8
 .LABEL__string_229:
   .quad .LABEL__string_229__data
-  .quad 7
-  .quad 6
-.LABEL__string_229__data: .string "block."
+  .quad 5
+  .quad 4
+.LABEL__string_229__data: .string "exit"
 
   .align 8
 .LABEL__string_230:
   .quad .LABEL__string_230__data
-  .quad 4
   .quad 3
-.LABEL__string_230__data: .string "   "
+  .quad 2
+.LABEL__string_230__data: .string " {"
 
   .align 8
 .LABEL__string_231:
   .quad .LABEL__string_231__data
-  .quad 4
-  .quad 3
-.LABEL__string_231__data: .string " = "
+  .quad 7
+  .quad 6
+.LABEL__string_231__data: .string "block."
 
   .align 8
 .LABEL__string_232:
   .quad .LABEL__string_232__data
   .quad 4
   .quad 3
-.LABEL__string_232__data: .string " + "
+.LABEL__string_232__data: .string "   "
 
   .align 8
 .LABEL__string_233:
   .quad .LABEL__string_233__data
-  .quad 5
   .quad 4
-.LABEL__string_233__data: .string "call"
+  .quad 3
+.LABEL__string_233__data: .string " = "
 
   .align 8
 .LABEL__string_234:
   .quad .LABEL__string_234__data
-  .quad 5
   .quad 4
-.LABEL__string_234__data: .string "cast"
+  .quad 3
+.LABEL__string_234__data: .string " + "
 
   .align 8
 .LABEL__string_235:
   .quad .LABEL__string_235__data
   .quad 5
   .quad 4
-.LABEL__string_235__data: .string "jump"
+.LABEL__string_235__data: .string "call"
 
   .align 8
 .LABEL__string_236:
   .quad .LABEL__string_236__data
-  .quad 9
-  .quad 8
-.LABEL__string_236__data: .string ", block."
+  .quad 5
+  .quad 4
+.LABEL__string_236__data: .string "cast"
 
   .align 8
 .LABEL__string_237:
   .quad .LABEL__string_237__data
+  .quad 5
   .quad 4
-  .quad 3
-.LABEL__string_237__data: .string " / "
+.LABEL__string_237__data: .string "jump"
 
   .align 8
 .LABEL__string_238:
   .quad .LABEL__string_238__data
-  .quad 5
-  .quad 4
-.LABEL__string_238__data: .string " == "
+  .quad 9
+  .quad 8
+.LABEL__string_238__data: .string ", block."
 
   .align 8
 .LABEL__string_239:
   .quad .LABEL__string_239__data
   .quad 4
   .quad 3
-.LABEL__string_239__data: .string " > "
+.LABEL__string_239__data: .string " / "
 
   .align 8
 .LABEL__string_240:
   .quad .LABEL__string_240__data
   .quad 5
   .quad 4
-.LABEL__string_240__data: .string " >= "
+.LABEL__string_240__data: .string " == "
 
   .align 8
 .LABEL__string_241:
   .quad .LABEL__string_241__data
   .quad 4
   .quad 3
-.LABEL__string_241__data: .string " < "
+.LABEL__string_241__data: .string " > "
 
   .align 8
 .LABEL__string_242:
   .quad .LABEL__string_242__data
   .quad 5
   .quad 4
-.LABEL__string_242__data: .string " <= "
+.LABEL__string_242__data: .string " >= "
 
   .align 8
 .LABEL__string_243:
   .quad .LABEL__string_243__data
-  .quad 16
-  .quad 15
-.LABEL__string_243__data: .string "load_array_item"
+  .quad 4
+  .quad 3
+.LABEL__string_243__data: .string " < "
 
   .align 8
 .LABEL__string_244:
   .quad .LABEL__string_244__data
-  .quad 22
-  .quad 21
-.LABEL__string_244__data: .string "load_function_address"
+  .quad 5
+  .quad 4
+.LABEL__string_244__data: .string " <= "
 
   .align 8
 .LABEL__string_245:
   .quad .LABEL__string_245__data
-  .quad 19
-  .quad 18
-.LABEL__string_245__data: .string "load_struct_member"
+  .quad 16
+  .quad 15
+.LABEL__string_245__data: .string "load_array_item"
 
   .align 8
 .LABEL__string_246:
   .quad .LABEL__string_246__data
-  .quad 14
-  .quad 13
-.LABEL__string_246__data: .string "load_variable"
+  .quad 22
+  .quad 21
+.LABEL__string_246__data: .string "load_function_address"
 
   .align 8
 .LABEL__string_247:
   .quad .LABEL__string_247__data
-  .quad 5
-  .quad 4
-.LABEL__string_247__data: .string " // "
+  .quad 19
+  .quad 18
+.LABEL__string_247__data: .string "load_struct_member"
 
   .align 8
 .LABEL__string_248:
   .quad .LABEL__string_248__data
-  .quad 4
-  .quad 3
-.LABEL__string_248__data: .string " * "
+  .quad 14
+  .quad 13
+.LABEL__string_248__data: .string "load_variable"
 
   .align 8
 .LABEL__string_249:
   .quad .LABEL__string_249__data
+  .quad 5
   .quad 4
-  .quad 3
-.LABEL__string_249__data: .string "new"
+.LABEL__string_249__data: .string " // "
 
   .align 8
 .LABEL__string_250:
   .quad .LABEL__string_250__data
-  .quad 5
   .quad 4
-.LABEL__string_250__data: .string " != "
+  .quad 3
+.LABEL__string_250__data: .string " * "
 
   .align 8
 .LABEL__string_251:
   .quad .LABEL__string_251__data
   .quad 4
   .quad 3
-.LABEL__string_251__data: .string "phi"
+.LABEL__string_251__data: .string "new"
 
   .align 8
 .LABEL__string_252:
   .quad .LABEL__string_252__data
-  .quad 7
-  .quad 6
-.LABEL__string_252__data: .string "return"
+  .quad 5
+  .quad 4
+.LABEL__string_252__data: .string " != "
 
   .align 8
 .LABEL__string_253:
   .quad .LABEL__string_253__data
-  .quad 17
-  .quad 16
-.LABEL__string_253__data: .string "store_array_item"
+  .quad 4
+  .quad 3
+.LABEL__string_253__data: .string "phi"
 
   .align 8
 .LABEL__string_254:
   .quad .LABEL__string_254__data
-  .quad 20
-  .quad 19
-.LABEL__string_254__data: .string "store_struct_member"
+  .quad 7
+  .quad 6
+.LABEL__string_254__data: .string "return"
 
   .align 8
 .LABEL__string_255:
   .quad .LABEL__string_255__data
-  .quad 4
-  .quad 3
-.LABEL__string_255__data: .string " - "
+  .quad 17
+  .quad 16
+.LABEL__string_255__data: .string "store_array_item"
 
   .align 8
 .LABEL__string_256:
   .quad .LABEL__string_256__data
-  .quad 2
-  .quad 1
-.LABEL__string_256__data: .string "."
+  .quad 20
+  .quad 19
+.LABEL__string_256__data: .string "store_struct_member"
 
   .align 8
 .LABEL__string_257:
   .quad .LABEL__string_257__data
-  .quad 10
-  .quad 9
-.LABEL__string_257__data: .string "undefined"
+  .quad 4
+  .quad 3
+.LABEL__string_257__data: .string " - "
 
   .align 8
 .LABEL__string_258:
   .quad .LABEL__string_258__data
   .quad 2
   .quad 1
-.LABEL__string_258__data: .string "&"
+.LABEL__string_258__data: .string "."
 
   .align 8
 .LABEL__string_259:
   .quad .LABEL__string_259__data
-  .quad 3
-  .quad 2
-.LABEL__string_259__data: .string "as"
+  .quad 10
+  .quad 9
+.LABEL__string_259__data: .string "undefined"
 
   .align 8
 .LABEL__string_260:
   .quad .LABEL__string_260__data
   .quad 2
   .quad 1
-.LABEL__string_260__data: .string "*"
+.LABEL__string_260__data: .string "&"
 
   .align 8
 .LABEL__string_261:
   .quad .LABEL__string_261__data
-  .quad 6
-  .quad 5
-.LABEL__string_261__data: .string "break"
+  .quad 3
+  .quad 2
+.LABEL__string_261__data: .string "as"
 
   .align 8
 .LABEL__string_262:
   .quad .LABEL__string_262__data
   .quad 2
   .quad 1
-.LABEL__string_262__data: .string "}"
+.LABEL__string_262__data: .string "*"
 
   .align 8
 .LABEL__string_263:
   .quad .LABEL__string_263__data
-  .quad 2
-  .quad 1
-.LABEL__string_263__data: .string ";"
+  .quad 6
+  .quad 5
+.LABEL__string_263__data: .string "break"
 
   .align 8
 .LABEL__string_264:
   .quad .LABEL__string_264__data
   .quad 2
   .quad 1
-.LABEL__string_264__data: .string ","
+.LABEL__string_264__data: .string "}"
 
   .align 8
 .LABEL__string_265:
   .quad .LABEL__string_265__data
-  .quad 5
-  .quad 4
-.LABEL__string_265__data: .string "else"
+  .quad 2
+  .quad 1
+.LABEL__string_265__data: .string ";"
 
   .align 8
 .LABEL__string_266:
   .quad .LABEL__string_266__data
   .quad 2
   .quad 1
-.LABEL__string_266__data: .string "="
+.LABEL__string_266__data: .string ","
 
   .align 8
 .LABEL__string_267:
   .quad .LABEL__string_267__data
-  .quad 2
-  .quad 1
-.LABEL__string_267__data: .string "!"
+  .quad 5
+  .quad 4
+.LABEL__string_267__data: .string "else"
 
   .align 8
 .LABEL__string_268:
   .quad .LABEL__string_268__data
-  .quad 9
-  .quad 8
-.LABEL__string_268__data: .string "external"
+  .quad 2
+  .quad 1
+.LABEL__string_268__data: .string "="
 
   .align 8
 .LABEL__string_269:
   .quad .LABEL__string_269__data
   .quad 2
   .quad 1
-.LABEL__string_269__data: .string ">"
+.LABEL__string_269__data: .string "!"
 
   .align 8
 .LABEL__string_270:
   .quad .LABEL__string_270__data
-  .quad 2
-  .quad 1
-.LABEL__string_270__data: .string "-"
+  .quad 9
+  .quad 8
+.LABEL__string_270__data: .string "external"
 
   .align 8
 .LABEL__string_271:
   .quad .LABEL__string_271__data
-  .quad 3
   .quad 2
-.LABEL__string_271__data: .string "if"
+  .quad 1
+.LABEL__string_271__data: .string ">"
 
   .align 8
 .LABEL__string_272:
   .quad .LABEL__string_272__data
-  .quad 8
-  .quad 7
-.LABEL__string_272__data: .string "include"
+  .quad 2
+  .quad 1
+.LABEL__string_272__data: .string "-"
 
   .align 8
 .LABEL__string_273:
   .quad .LABEL__string_273__data
+  .quad 3
   .quad 2
-  .quad 1
-.LABEL__string_273__data: .string "<"
+.LABEL__string_273__data: .string "if"
 
   .align 8
 .LABEL__string_274:
   .quad .LABEL__string_274__data
-  .quad 5
-  .quad 4
-.LABEL__string_274__data: .string "loop"
+  .quad 8
+  .quad 7
+.LABEL__string_274__data: .string "include"
 
   .align 8
 .LABEL__string_275:
   .quad .LABEL__string_275__data
   .quad 2
   .quad 1
-.LABEL__string_275__data: .string "{"
+.LABEL__string_275__data: .string "<"
 
   .align 8
 .LABEL__string_276:
   .quad .LABEL__string_276__data
-  .quad 2
-  .quad 1
-.LABEL__string_276__data: .string "+"
+  .quad 5
+  .quad 4
+.LABEL__string_276__data: .string "loop"
 
   .align 8
 .LABEL__string_277:
   .quad .LABEL__string_277__data
   .quad 2
   .quad 1
-.LABEL__string_277__data: .string "/"
+.LABEL__string_277__data: .string "{"
 
   .align 8
 .LABEL__string_278:
   .quad .LABEL__string_278__data
-  .quad 7
-  .quad 6
-.LABEL__string_278__data: .string "struct"
+  .quad 2
+  .quad 1
+.LABEL__string_278__data: .string "+"
 
   .align 8
 .LABEL__string_279:
   .quad .LABEL__string_279__data
   .quad 2
   .quad 1
-.LABEL__string_279__data: .string "|"
+.LABEL__string_279__data: .string "/"
 
   .align 8
 .LABEL__string_280:
   .quad .LABEL__string_280__data
+  .quad 7
   .quad 6
-  .quad 5
-.LABEL__string_280__data: .string "while"
+.LABEL__string_280__data: .string "struct"
 
   .align 8
 .LABEL__string_281:
   .quad .LABEL__string_281__data
-  .quad 22
-  .quad 21
-.LABEL__string_281__data: .string "Failed to open file: "
+  .quad 2
+  .quad 1
+.LABEL__string_281__data: .string "|"
 
   .align 8
 .LABEL__string_282:
   .quad .LABEL__string_282__data
-  .quad 24
-  .quad 23
-.LABEL__string_282__data: .string "Unsupported file path: "
+  .quad 6
+  .quad 5
+.LABEL__string_282__data: .string "while"
 
   .align 8
 .LABEL__string_283:
   .quad .LABEL__string_283__data
-  .quad 3
-  .quad 2
-.LABEL__string_283__data: .string "./"
+  .quad 22
+  .quad 21
+.LABEL__string_283__data: .string "Failed to open file: "
 
   .align 8
 .LABEL__string_284:
   .quad .LABEL__string_284__data
-  .quad 4
-  .quad 3
-.LABEL__string_284__data: .string "../"
+  .quad 24
+  .quad 23
+.LABEL__string_284__data: .string "Unsupported file path: "
 
   .align 8
 .LABEL__string_285:
   .quad .LABEL__string_285__data
-  .quad 5
-  .quad 4
-.LABEL__string_285__data: .string "/../"
+  .quad 3
+  .quad 2
+.LABEL__string_285__data: .string "./"
 
   .align 8
 .LABEL__string_286:
   .quad .LABEL__string_286__data
-  .quad 39
-  .quad 38
-.LABEL__string_286__data: .string "Cannot use expression as variable name"
+  .quad 4
+  .quad 3
+.LABEL__string_286__data: .string "../"
 
   .align 8
 .LABEL__string_287:
   .quad .LABEL__string_287__data
-  .quad 37
-  .quad 36
-.LABEL__string_287__data: .string "Cannot use expression as struct name"
+  .quad 5
+  .quad 4
+.LABEL__string_287__data: .string "/../"
 
   .align 8
 .LABEL__string_288:
   .quad .LABEL__string_288__data
   .quad 39
   .quad 38
-.LABEL__string_288__data: .string "Cannot use expression as function name"
+.LABEL__string_288__data: .string "Cannot use expression as variable name"
 
   .align 8
 .LABEL__string_289:
   .quad .LABEL__string_289__data
-  .quad 12
-  .quad 11
-.LABEL__string_289__data: .string ": Consumed "
+  .quad 37
+  .quad 36
+.LABEL__string_289__data: .string "Cannot use expression as struct name"
 
   .align 8
 .LABEL__string_290:
   .quad .LABEL__string_290__data
-  .quad 15
-  .quad 14
-.LABEL__string_290__data: .string " spaces where "
+  .quad 39
+  .quad 38
+.LABEL__string_290__data: .string "Cannot use expression as function name"
 
   .align 8
 .LABEL__string_291:
   .quad .LABEL__string_291__data
-  .quad 14
-  .quad 13
-.LABEL__string_291__data: .string " are expected"
+  .quad 12
+  .quad 11
+.LABEL__string_291__data: .string ": Consumed "
 
   .align 8
 .LABEL__string_292:
   .quad .LABEL__string_292__data
-  .quad 26
-  .quad 25
-.LABEL__string_292__data: .string "Unsupported token matcher"
+  .quad 15
+  .quad 14
+.LABEL__string_292__data: .string " spaces where "
 
   .align 8
 .LABEL__string_293:
   .quad .LABEL__string_293__data
   .quad 14
   .quad 13
-.LABEL__string_293__data: .string ": Unexpected "
+.LABEL__string_293__data: .string " are expected"
 
   .align 8
 .LABEL__string_294:
   .quad .LABEL__string_294__data
-  .quad 2
-  .quad 1
-.LABEL__string_294__data: .string " "
+  .quad 26
+  .quad 25
+.LABEL__string_294__data: .string "Unsupported token matcher"
 
   .align 8
 .LABEL__string_295:
   .quad .LABEL__string_295__data
-  .quad 5
-  .quad 4
-.LABEL__string_295__data: .string "if ("
+  .quad 14
+  .quad 13
+.LABEL__string_295__data: .string ": Unexpected "
 
   .align 8
 .LABEL__string_296:
   .quad .LABEL__string_296__data
-  .quad 3
   .quad 2
-.LABEL__string_296__data: .string ") "
+  .quad 1
+.LABEL__string_296__data: .string " "
 
   .align 8
 .LABEL__string_297:
   .quad .LABEL__string_297__data
-  .quad 7
-  .quad 6
-.LABEL__string_297__data: .string " else "
+  .quad 5
+  .quad 4
+.LABEL__string_297__data: .string "if ("
 
   .align 8
 .LABEL__string_298:
   .quad .LABEL__string_298__data
-  .quad 6
-  .quad 5
-.LABEL__string_298__data: .string "loop "
+  .quad 3
+  .quad 2
+.LABEL__string_298__data: .string ") "
 
   .align 8
 .LABEL__string_299:
   .quad .LABEL__string_299__data
-  .quad 11
-  .quad 10
-.LABEL__string_299__data: .string " :: struct"
+  .quad 7
+  .quad 6
+.LABEL__string_299__data: .string " else "
 
   .align 8
 .LABEL__string_300:
   .quad .LABEL__string_300__data
-  .quad 4
-  .quad 3
-.LABEL__string_300__data: .string " : "
+  .quad 6
+  .quad 5
+.LABEL__string_300__data: .string "loop "
 
   .align 8
 .LABEL__string_301:
   .quad .LABEL__string_301__data
-  .quad 12
   .quad 11
-.LABEL__string_301__data: .string " = external"
+  .quad 10
+.LABEL__string_301__data: .string " :: struct"
 
   .align 8
 .LABEL__string_302:
   .quad .LABEL__string_302__data
-  .quad 5
   .quad 4
-.LABEL__string_302__data: .string " := "
+  .quad 3
+.LABEL__string_302__data: .string " : "
 
   .align 8
 .LABEL__string_303:
   .quad .LABEL__string_303__data
-  .quad 8
-  .quad 7
-.LABEL__string_303__data: .string "while ("
+  .quad 12
+  .quad 11
+.LABEL__string_303__data: .string " = external"
 
   .align 8
 .LABEL__string_304:
   .quad .LABEL__string_304__data
-  .quad 33
-  .quad 32
-.LABEL__string_304__data: .string "Unsupported AST_Statement type: "
+  .quad 5
+  .quad 4
+.LABEL__string_304__data: .string " := "
 
   .align 8
 .LABEL__string_305:
   .quad .LABEL__string_305__data
-  .quad 3
-  .quad 2
-.LABEL__string_305__data: .string "; "
+  .quad 8
+  .quad 7
+.LABEL__string_305__data: .string "while ("
 
   .align 8
 .LABEL__string_306:
   .quad .LABEL__string_306__data
-  .quad 28
-  .quad 27
-.LABEL__string_306__data: .string "Unsupported AST_Type type: "
+  .quad 33
+  .quad 32
+.LABEL__string_306__data: .string "Unsupported AST_Statement type: "
 
   .align 8
 .LABEL__string_307:
   .quad .LABEL__string_307__data
-  .quad 5
-  .quad 4
-.LABEL__string_307__data: .string " && "
+  .quad 3
+  .quad 2
+.LABEL__string_307__data: .string "; "
 
   .align 8
 .LABEL__string_308:
   .quad .LABEL__string_308__data
-  .quad 5
-  .quad 4
-.LABEL__string_308__data: .string " || "
+  .quad 28
+  .quad 27
+.LABEL__string_308__data: .string "Unsupported AST_Type type: "
 
   .align 8
 .LABEL__string_309:
   .quad .LABEL__string_309__data
   .quad 5
   .quad 4
-.LABEL__string_309__data: .string " as "
+.LABEL__string_309__data: .string " && "
 
   .align 8
 .LABEL__string_310:
   .quad .LABEL__string_310__data
   .quad 5
   .quad 4
-.LABEL__string_310__data: .string "new "
+.LABEL__string_310__data: .string " || "
 
   .align 8
 .LABEL__string_311:
   .quad .LABEL__string_311__data
-  .quad 34
-  .quad 33
-.LABEL__string_311__data: .string "Unsupported AST_Expression type: "
+  .quad 5
+  .quad 4
+.LABEL__string_311__data: .string " as "
 
   .align 8
 .LABEL__string_312:
   .quad .LABEL__string_312__data
-  .quad 6
   .quad 5
-.LABEL__string_312__data: .string "false"
+  .quad 4
+.LABEL__string_312__data: .string "new "
 
   .align 8
 .LABEL__string_313:
   .quad .LABEL__string_313__data
-  .quad 5
-  .quad 4
-.LABEL__string_313__data: .string "null"
+  .quad 34
+  .quad 33
+.LABEL__string_313__data: .string "Unsupported AST_Expression type: "
 
   .align 8
 .LABEL__string_314:
   .quad .LABEL__string_314__data
+  .quad 6
   .quad 5
-  .quad 4
-.LABEL__string_314__data: .string "true"
+.LABEL__string_314__data: .string "false"
 
   .align 8
 .LABEL__string_315:
   .quad .LABEL__string_315__data
-  .quad 7
-  .quad 6
-.LABEL__string_315__data: .string "[2;37m"
+  .quad 5
+  .quad 4
+.LABEL__string_315__data: .string "null"
 
   .align 8
 .LABEL__string_316:
   .quad .LABEL__string_316__data
+  .quad 5
   .quad 4
-  .quad 3
-.LABEL__string_316__data: .string "[0m"
+.LABEL__string_316__data: .string "true"
 
   .align 8
 .LABEL__string_317:
   .quad .LABEL__string_317__data
   .quad 7
   .quad 6
-.LABEL__string_317__data: .string "[1;33m"
+.LABEL__string_317__data: .string "[2;37m"
 
   .align 8
 .LABEL__string_318:
   .quad .LABEL__string_318__data
-  .quad 7
-  .quad 6
-.LABEL__string_318__data: .string "[2;33m"
+  .quad 4
+  .quad 3
+.LABEL__string_318__data: .string "[0m"
 
   .align 8
 .LABEL__string_319:
   .quad .LABEL__string_319__data
-  .quad 2
-  .quad 1
-.LABEL__string_319__data: .string "r"
+  .quad 7
+  .quad 6
+.LABEL__string_319__data: .string "[1;33m"
 
   .align 8
 .LABEL__string_320:
   .quad .LABEL__string_320__data
-  .quad 21
-  .quad 20
-.LABEL__string_320__data: .string "Failed to write text"
+  .quad 7
+  .quad 6
+.LABEL__string_320__data: .string "[2;33m"
 
   .align 8
 .LABEL__string_321:
   .quad .LABEL__string_321__data
+  .quad 2
+  .quad 1
+.LABEL__string_321__data: .string "r"
+
+  .align 8
+.LABEL__string_322:
+  .quad .LABEL__string_322__data
+  .quad 21
+  .quad 20
+.LABEL__string_322__data: .string "Failed to write text"
+
+  .align 8
+.LABEL__string_323:
+  .quad .LABEL__string_323__data
   .quad 28
   .quad 27
-.LABEL__string_321__data: .string "Failed to write character: "
+.LABEL__string_323__data: .string "Failed to write character: "
 
   .section .rodata
 

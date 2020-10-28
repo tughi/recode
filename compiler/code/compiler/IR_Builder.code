@@ -975,7 +975,32 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
         named_functions_item = named_functions_item.next_item
     }
     if (call_function == null) {
-        abort(call_expression.location, "Found no matching function")
+        named_functions_item := self.named_functions.first_item
+        while (named_functions_item != null) {
+            named_function := named_functions_item.data as @IR_Function
+            if (named_function.name.equals(call_function_name.lexeme)) {
+                stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" :: ").write(named_function.type.name).end_line()
+            }
+            named_functions_item = named_functions_item.next_item
+        }
+        message := clone("Found no matching function: ").append(call_function_name.lexeme).append(" :: (")
+        call_arguments_item := call_arguments.first_item
+        if (call_arguments_item != null) {
+            loop {
+                call_argument := call_arguments_item.data as @IR_Call_Argument
+                if (call_argument.name != null) {
+                    message.append(call_argument.name).append(": ")
+                }
+                message.append(call_argument.value.type.name)
+                call_arguments_item = call_arguments_item.next_item
+                if (call_arguments_item == null) {
+                    break
+                }
+                message.append(", ")
+            }
+        }
+        message.append(") -> Any")
+        abort(call_expression.location, message)
     }
 
     result_value: @IR_Variable_Value = null
