@@ -1148,33 +1148,30 @@ discard_used_values :: (self: @MC_Generator) -> Int {
     while (mc_value != null) {
         if (mc_value.ir_instruction.is_generated && mc_value.ir_instruction.parent_block.is_being_generated) {
             discard_value := true
+            value_is_phi_argument := false
 
             user_instruction_item := mc_value.ir_variable_value.user_instructions.first_item
-            while (user_instruction_item != null) {
+            while (discard_value && user_instruction_item != null) {
                 user_instruction := user_instruction_item.data as @IR_Instruction
+                if (user_instruction.is(IR_Phi_Instruction)) {
+                    value_is_phi_argument = true
+                }
                 if (user_instruction.is_generated == false) {
                     \ there is at least one more user instruction that requires this value
                     discard_value = false
-                    break
+                } else if (user_instruction.parent_block != mc_value.ir_instruction.parent_block && mc_value.ir_instruction.parent_block.is_generated == false) {
+                    \ there is at least one user instruction in another block that requires this value and the value's parent block hasn't been generated yet
+                    discard_value = false
                 }
                 user_instruction_item = user_instruction_item.next_item
             }
 
             if (discard_value) {
-                user_instruction_item = mc_value.ir_variable_value.user_instructions.first_item
-                while (user_instruction_item != null) {
-                    user_instruction := user_instruction_item.data as @IR_Instruction
-                    if (user_instruction.parent_block != mc_value.ir_instruction.parent_block && mc_value.ir_instruction.parent_block.is_generated == false) {
-                        \ there is at least one user instruction in another block that requires this value and the value's parent block hasn't been generated yet
-                        discard_value = false
-                        break
-                    }
-                    user_instruction_item = user_instruction_item.next_item
-                }
-            }
-
-            if (discard_value) {
                 if (mc_value.register != null) {
+                    if (value_is_phi_argument) {
+                        self.spill_local_variable(mc_value)
+                    }
+
                     mc_value.register.value = null
                     mc_value.register = null
                 }
