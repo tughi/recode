@@ -691,8 +691,10 @@ convert_assignment_statement :: (self: @IR_Builder, assignment_statement: @AST_A
         if (object_type.is(IR_Struct_Type) == false) {
             abort(assignment_statement.location, clone("Not a '").append(IR_Struct_Type.name).append("' value"))
         }
-        struct_type_member := (object_type as @IR_Struct_Type).get_member(member_access_expression.member_name.lexeme)
+        struct_type := (object_type as @IR_Struct_Type)
+        struct_type_member := struct_type.get_member(member_access_expression.member_name.lexeme)
         if (struct_type_member == null) {
+            struct_type.dump_struct_members()
             abort(member_access_expression.member_name.location, clone(object_type.name).append(" doesn't have a '").append(member_access_expression.member_name.lexeme).append("' member"))
         }
         value := self.convert_expression(assignment_statement.value_expression, struct_type_member.type)
@@ -1199,12 +1201,28 @@ convert_member_access_expression :: (self: @IR_Builder, member_access_expression
     struct_type := object_value_type.pointed_type as @IR_Struct_Type
     struct_type_member := struct_type.get_member(member_access_expression.member_name.lexeme)
     if (struct_type_member == null) {
+        struct_type.dump_struct_members()
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
     }
     if (struct_type_member.type.is(IR_Struct_Type)) {
         return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true), member_access_expression.location)
     }
     return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), object_value, struct_type_member, false), member_access_expression.location)
+}
+
+dump_struct_members :: (struct_type: @IR_Struct_Type) -> Nothing {
+    stderr.end_line()
+    while (struct_type != null) {
+        struct_type_members_item := struct_type.statement.members.first_item
+        while (struct_type_members_item != null) {
+            struct_type_member := struct_type_members_item.data as @AST_Struct_Member
+            struct_type_member_name := struct_type_member.name.lexeme
+            struct_type_member_type := struct_type.get_member(struct_type_member_name).type
+            stderr.write(struct_type_member.location).write(": ").write(struct_type.name).write('.').write(struct_type_member_name).write(": ").write(struct_type_member_type.name).end_line()
+            struct_type_members_item = struct_type_members_item.next_item
+        }
+        struct_type = struct_type.base_type
+    }
 }
 
 convert_member_access_expression_address :: (self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
