@@ -498,7 +498,7 @@ write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
     }
 
     if (expression.is(AST_Call_Expression)) {
-        file.write((expression as @AST_Call_Expression).callee).write('(')
+        file.write((expression as @AST_Call_Expression).callee_expression).write('(')
         call_arguments := (expression as @AST_Call_Expression).arguments.create_iterator()
         if (call_arguments.has_next()) {
             loop {

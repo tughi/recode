@@ -630,7 +630,7 @@ parse_access_expression :: (self: @Parser) -> @AST_Expression {
             }
             self.consume_space(0)
             self.consume(self.required_close_paren)
-            expression = new AST_Call_Expression(location = expression.location, callee = expression, arguments = call_arguments)
+            expression = new AST_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
         }
         if (self.matches(self.optional_space, self.required_open_bracket)) {
             self.consume_space(0)

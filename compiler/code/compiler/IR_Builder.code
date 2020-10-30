@@ -921,39 +921,39 @@ convert_array_access_expression :: (self: @IR_Builder, array_access_expression: 
 }
 
 convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression) -> @IR_Value {
-    if (call_expression.callee.is(AST_Atomic_Expression)) {
-        callee_value := self.convert_expression(call_expression.callee, null)
+    if (call_expression.callee_expression.is(AST_Atomic_Expression)) {
+        callee_value := self.convert_expression(call_expression.callee_expression, null)
         if (callee_value.type.is(IR_Function_Type) == false) {
             abort(call_expression.location, clone("Values of type ").append(callee_value.type.name).append(" are not callable"))
         }
         return self.convert_dynamic_call_expression(call_expression, callee_value, null)
     }
-    if (call_expression.callee.is(AST_Member_Access_Expression)) {
-        callee := call_expression.callee as @AST_Member_Access_Expression
-        callee_value := self.convert_expression(callee.object_expression, null)
+    if (call_expression.callee_expression.is(AST_Member_Access_Expression)) {
+        callee_expression := call_expression.callee_expression as @AST_Member_Access_Expression
+        callee_value := self.convert_expression(callee_expression.object_expression, null)
         callee_value_type := callee_value.type
         if (callee_value_type.is(IR_Pointer_Type)) {
             callee_value_type := callee_value_type as @IR_Pointer_Type
             if (callee_value_type.pointed_type.is(IR_Struct_Type)) {
-                struct_type_member := (callee_value_type.pointed_type as @IR_Struct_Type).get_member(callee.member_name.lexeme)
+                struct_type_member := (callee_value_type.pointed_type as @IR_Struct_Type).get_member(callee_expression.member_name.lexeme)
                 if (struct_type_member != null && struct_type_member.type.is(IR_Function_Type)) {
                     call_function_value := self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), callee_value, struct_type_member, false), call_expression.location)
                     return self.convert_dynamic_call_expression(call_expression, call_function_value, callee_value)
                 }
             }
         }
-        return self.convert_direct_call_expression(call_expression, callee.member_name, callee_value)
+        return self.convert_direct_call_expression(call_expression, callee_expression.member_name, callee_value)
     }
-    if (call_expression.callee.is(AST_Variable_Expression)) {
-        callee := call_expression.callee as @AST_Variable_Expression
-        variable := self.get_variable(callee.name.lexeme)
+    if (call_expression.callee_expression.is(AST_Variable_Expression)) {
+        callee_expression := call_expression.callee_expression as @AST_Variable_Expression
+        variable := self.get_variable(callee_expression.name.lexeme)
         if (variable != null && variable.type.is(IR_Function_Type)) {
-            call_function_value := self.convert_expression(callee, null)
+            call_function_value := self.convert_expression(callee_expression, null)
             return self.convert_dynamic_call_expression(call_expression, call_function_value, null)
         }
-        return self.convert_direct_call_expression(call_expression, callee.name, null)
+        return self.convert_direct_call_expression(call_expression, callee_expression.name, null)
     }
-    abort(call_expression.location, call_expression.callee.object_type)
+    abort(call_expression.location, call_expression.callee_expression.object_type)
 }
 
 convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, call_function_name: @Identifier_Token, first_argument: @IR_Value) -> @IR_Value {
@@ -1437,21 +1437,21 @@ deduce_call_expression_type :: (self: @IR_Builder, expression: @AST_Call_Express
         argument_type := self.deduce_expression_type(argument)
         argument_types.append(argument_type)
     }
-    if (expression.callee.is(AST_Member_Access_Expression)) {
-        callee := expression.callee as @AST_Member_Access_Expression
-        object_type := self.deduce_expression_type(callee.object_expression)
+    if (expression.callee_expression.is(AST_Member_Access_Expression)) {
+        callee_expression := expression.callee_expression as @AST_Member_Access_Expression
+        object_type := self.deduce_expression_type(callee_expression.object_expression)
         if (object_type.is(IR_Struct_Type)) {
             argument_types.prepend(create_ir_pointer_type(object_type))
         } else {
             argument_types.prepend(object_type)
         }
-        function := self.get_named_function(callee.member_name.lexeme, argument_types)
+        function := self.get_named_function(callee_expression.member_name.lexeme, argument_types)
         if (function == null) {
-            abort(callee.member_name.location, clone("Unknown function: ").append(callee.member_name.lexeme))
+            abort(callee_expression.member_name.location, clone("Unknown function: ").append(callee_expression.member_name.lexeme))
         }
         return function.return_type
     }
-    abort(expression.location, expression.callee.object_type)
+    abort(expression.location, expression.callee_expression.object_type)
 }
 
 deduce_literal_expression_type :: (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Type {
