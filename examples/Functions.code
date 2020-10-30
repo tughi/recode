@@ -6,8 +6,6 @@ main :: () -> Nothing {
     (forty_two.dump)(forty_two, ((stdout)))
 
     dump: (self: @Value, file: @FILE) -> Nothing = dump_int
-    dump = dump_int
-
     dump(forty_two, stdout)
 }
 

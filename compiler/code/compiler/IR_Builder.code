@@ -610,10 +610,13 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
                 if (block_instruction.result_value != null && block_instruction.result_value.user_instructions.size == 1) {
                     user_instruction := block_instruction.result_value.user_instructions.first() as @IR_Instruction
                     if (user_instruction.is(IR_Set_Instruction) && user_instruction.parent_block == block) {
-                        block.remove(user_instruction)
-                        block_instruction.result_value = user_instruction.result_value
-                        repeat = true
-                        break
+                        user_instruction := user_instruction as @IR_Set_Instruction
+                        if (user_instruction.get_value() == (block_instruction.result_value as @IR_Value)) {
+                            block.remove(user_instruction)
+                            block_instruction.result_value = user_instruction.result_value
+                            repeat = true
+                            break
+                        }
                     }
                 }
                 block_instruction = block_instruction.next_instruction
