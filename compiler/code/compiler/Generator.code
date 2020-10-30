@@ -60,6 +60,9 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
+    if (function.name.equals("main") && function.return_type.is(IR_Nothing_Type)) {
+        self.output_file.write("  xor rax, rax").end_line()
+    }
     self.output_file.write("  ret").end_line().end_line()
 
     stack_frame_size := self.stack_frame_size

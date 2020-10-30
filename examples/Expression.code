@@ -50,7 +50,7 @@ evaluate_substraction :: (self: @Expression) -> Int {
     return self.left_expression.evaluate() - self.right_expression.evaluate()
 }
 
-main :: () -> Int {
+main :: () -> Nothing {
     one := new Int_Expression(value = 1)
 
     expression: @Expression = new Addition_Expression(
@@ -70,6 +70,4 @@ main :: () -> Int {
 
     expression.dump()
     stdout.write(" = ").write(expression.evaluate()).end_line()
-
-    return 0
 }

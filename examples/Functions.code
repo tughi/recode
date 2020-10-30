@@ -1,4 +1,4 @@
-main :: () -> Int {
+main :: () -> Nothing {
     hello := new String_Value(value = "Hello")
     forty_two := new Int_Value(value = 42)
 
@@ -9,8 +9,6 @@ main :: () -> Int {
     dump = dump_int
 
     dump(forty_two, stdout)
-
-    return 0
 }
 
 Value :: struct {
