@@ -924,6 +924,8 @@ MC_Generator :: struct {
     register_rbx: @MC_Register = new MC_Register_RBX(name_q = "rbx", name_d = "ebx", name_w = "bx", name_b = "bl")
     register_rsi: @MC_Register = new MC_Register_RSI(name_q = "rsi", name_d = "esi", name_w = "si", name_b = "sil")
     register_rdi: @MC_Register = new MC_Register_RDI(name_q = "rdi", name_d = "edi", name_w = "di", name_b = "dil")
+    register_rsp: @MC_Register = new MC_Register_RSP(name_q = "rsp", name_d = "esp", name_w = "sp", name_b = "spl")
+    register_rbp: @MC_Register = new MC_Register_RBP(name_q = "rbp", name_d = "ebp", name_w = "bp", name_b = "bpl")
     register_r8: @MC_Register = new MC_Register_R8(name_q = "r8", name_d = "r8d", name_w = "r8w", name_b = "r8b")
     register_r9: @MC_Register = new MC_Register_R9(name_q = "r9", name_d = "r9d", name_w = "r9w", name_b = "r9b")
     register_r10: @MC_Register = new MC_Register_R10(name_q = "r10", name_d = "r10d", name_w = "r10w", name_b = "r10b")
@@ -1090,17 +1092,17 @@ create_local_variable_address :: (self: @MC_Generator, variable_type_size: Int) 
         mc_value_address := mc_value.address
         if (mc_value_address != null && mc_value_address.is(MC_Local_Variable_Address)) {
             mc_value_address := mc_value_address as @MC_Local_Variable_Address
-            if (offset < mc_value_address.offset) {
+            if (offset > mc_value_address.offset) {
                 offset = mc_value_address.offset
             }
         }
         mc_value = mc_value.next_value
     }
-    offset = offset + variable_type_size
-    if (offset > self.stack_frame_size) {
-        self.stack_frame_size = offset
+    offset = offset - variable_type_size
+    if (-offset > self.stack_frame_size) {
+        self.stack_frame_size = -offset
     }
-    return new MC_Local_Variable_Address(offset = offset)
+    return new MC_Local_Variable_Address(register = self.register_rbp, offset = offset)
 }
 
 spill_global_variable :: (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
@@ -1313,6 +1315,12 @@ MC_Register_RSI :: struct : MC_Register {
 MC_Register_RDI :: struct : MC_Register {
 }
 
+MC_Register_RSP :: struct : MC_Register {
+}
+
+MC_Register_RBP :: struct : MC_Register {
+}
+
 MC_Register_R8 :: struct : MC_Register {
 }
 
@@ -1345,9 +1353,15 @@ write :: (file: @FILE, address: @MC_Address) -> @FILE {
         address := address as @MC_Global_Variable_Address
         return file.write(address.ir_variable.name).write("[rip]")
     }
-    if (address.is(MC_Local_Variable_Address)) {
-        address := address as @MC_Local_Variable_Address
-        return file.write("[rbp-").write(address.offset).write(']')
+    if (address.is(MC_Register_Based_Address)) {
+        address := address as @MC_Register_Based_Address
+        file.write('[').write(address.register.name_q)
+        if (address.offset > 0) {
+            file.write('+').write(address.offset)
+        } else if (address.offset < 0) {
+            file.write(address.offset)
+        }
+        return file.write(']')
     }
     abort(clone("Unsupported type: ").append(address.object_type.name))
 }
@@ -1356,8 +1370,12 @@ MC_Global_Variable_Address :: struct : MC_Address {
     ir_variable: @IR_Variable
 }
 
-MC_Local_Variable_Address :: struct : MC_Address {
+MC_Register_Based_Address :: struct : MC_Address {
+    register: @MC_Register
     offset: Int
+}
+
+MC_Local_Variable_Address :: struct : MC_Register_Based_Address {
 }
 
 get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
