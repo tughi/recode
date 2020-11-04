@@ -515,7 +515,7 @@ populate_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -> Noth
         block_instruction := block.first_instruction
         while (block_instruction != null && block_instruction.is(IR_Phi_Instruction)) {
             instruction := block_instruction as @IR_Phi_Instruction
-            if (instruction.values.size == 0) {
+            if (instruction.operand_values.first_entry == null) {
                 block_predecessors := block.predecessors.create_iterator()
                 while (block_predecessors.has_next()) {
                     block_predecessor := block_predecessors.next() as @IR_Block
@@ -564,16 +564,16 @@ remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -
                 instruction := block_instruction as @IR_Phi_Instruction
                 if (instruction.is_trivial()) {
                     \ found a trivial phi instruction
-                    instruction.values.remove_all(instruction.result_value).prune()
+                    instruction.operand_values.remove_values(instruction.result_value)
                 }
                 if (instruction.is_redundant()) {
                     \ found redundant phi instruction
                     old_value := instruction.result_value
-                    new_value := instruction.values.first() as @IR_Value
+                    new_value := instruction.operand_values.first_entry.value
                     user_instructions := old_value.user_instructions.create_iterator()
                     while (user_instructions.has_next()) {
                         user_instruction := user_instructions.next() as @IR_Instruction
-                        user_instruction.replace_value(old_value, new_value)
+                        user_instruction.replace_operand_value(old_value, new_value)
                     }
                     new_value.user_instructions.remove_all(instruction).prune()
                     block.remove(instruction)
@@ -627,23 +627,6 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
             break
         }
     }
-}
-
-replace_value :: (instruction: @IR_Instruction, value: @IR_Value, new_value: @IR_Value) -> Nothing {
-    value.user_instructions.remove(instruction).prune()
-    new_value.user_instructions.append(instruction)
-    if (instruction.is(IR_Phi_Instruction)) {
-        instruction := instruction as @IR_Phi_Instruction
-        instruction_values := instruction.values.create_iterator()
-        while (instruction_values.has_next()) {
-            instruction_value := instruction_values.next() as @IR_Value
-            if (instruction_value == value) {
-                instruction.values.remove_all(value).remove_all(new_value).prune().append(new_value)
-            }
-        }
-        return
-    }
-    instruction.operand_values.replace(value, new_value)
 }
 
 convert_statement :: (self: @IR_Builder, statement: @AST_Statement) -> Nothing {

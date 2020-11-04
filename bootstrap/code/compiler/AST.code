@@ -185,7 +185,7 @@ AST_New_Expression :: struct : AST_Expression {
 }
 
 AST_Call_Expression :: struct : AST_Expression {
-    callee: @AST_Expression
+    callee_expression: @AST_Expression
     arguments: @List
 }
 

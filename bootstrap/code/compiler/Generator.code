@@ -60,6 +60,9 @@ generate_function :: (self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
+    if (function.name.equals("main") && function.return_type.is(IR_Nothing_Type)) {
+        self.output_file.write("  xor rax, rax").end_line()
+    }
     self.output_file.write("  ret").end_line().end_line()
 
     stack_frame_size := self.stack_frame_size
@@ -106,9 +109,6 @@ generate_block :: (self: @MC_Generator, block: @IR_Block) -> Nothing {
     self.output_file.write_block_label(block).write(':').end_line()
     block_instruction := block.first_instruction
     while (block_instruction != null) {
-        if (self.output_debug_comments) {
-            block_instruction.dump(self.output_file, "  # ")
-        }
         self.generate_instruction(block_instruction)
         if (block_instruction.is(IR_Load_Variable_Instruction) == false && block_instruction.result_value != null && block_instruction.result_value.variable.is(IR_Global_Variable)) {
             self.spill_global_variable(self.get_value(block_instruction.result_value))
@@ -130,9 +130,11 @@ write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
 }
 
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
-    instruction.is_generated = true
     if (instruction.location != null) {
         self.output_file.write("  .loc ").write(instruction.location.source.id).write(' ').write(instruction.location.line).write(' ').write(instruction.location.column).end_line()
+    }
+    if (self.output_debug_comments) {
+        instruction.dump(self.output_file, "  # ")
     }
     if (instruction.is(IR_Add_Instruction)) {
         self.generate_add_instruction(instruction as @IR_Add_Instruction)
@@ -177,6 +179,7 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
     } else {
         self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
     }
+    instruction.is_generated = true
 }
 
 generate_add_instruction :: (self: @MC_Generator, instruction: @IR_Add_Instruction) -> Nothing {
@@ -188,17 +191,17 @@ generate_add_instruction :: (self: @MC_Generator, instruction: @IR_Add_Instructi
 
 generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
     if (instruction.arguments_size > 0) {
-        self.generate_load_value(self.register_rdi, instruction.argument(0))
+        self.generate_load_value(self.register_rdi, instruction.get_argument_value(0))
         if (instruction.arguments_size > 1) {
-            self.generate_load_value(self.register_rsi, instruction.argument(1))
+            self.generate_load_value(self.register_rsi, instruction.get_argument_value(1))
             if (instruction.arguments_size > 2) {
-                self.generate_load_value(self.register_rdx, instruction.argument(2))
+                self.generate_load_value(self.register_rdx, instruction.get_argument_value(2))
                 if (instruction.arguments_size > 3) {
-                    self.generate_load_value(self.register_rcx, instruction.argument(3))
+                    self.generate_load_value(self.register_rcx, instruction.get_argument_value(3))
                     if (instruction.arguments_size > 4) {
-                        self.generate_load_value(self.register_r8, instruction.argument(4))
+                        self.generate_load_value(self.register_r8, instruction.get_argument_value(4))
                         if (instruction.arguments_size > 5) {
-                            self.generate_load_value(self.register_r9, instruction.argument(5))
+                            self.generate_load_value(self.register_r9, instruction.get_argument_value(5))
                         }
                     }
                 }
@@ -206,10 +209,12 @@ generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruc
         }
     }
     if (instruction.is(IR_Direct_Call_Instruction)) {
+        instruction.is_generated = true
         self.release_all_registers()
         self.output_file.write("  call ").write_function_label((instruction as @IR_Direct_Call_Instruction).function).end_line()
     } else if (instruction.is(IR_Dynamic_Call_Instruction)) {
-        self.generate_load_value(self.register_rax, (instruction as @IR_Dynamic_Call_Instruction).function_address())
+        self.generate_load_value(self.register_rax, (instruction as @IR_Dynamic_Call_Instruction).get_function_address())
+        instruction.is_generated = true
         self.release_all_registers()
         self.output_file.write("  call ").write(self.register_rax.name_q).end_line()
     } else {
@@ -471,7 +476,7 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
 generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @IR_Load_Struct_Member_Instruction) -> Nothing {
     ir_struct_pointer_value := instruction.get_struct_pointer_value()
     struct_pointer_register: @MC_Register
-    if (ir_struct_pointer_value.is(IR_Variable_Value) == true) {
+    if (ir_struct_pointer_value.is(IR_Variable_Value)) {
         ir_struct_pointer_value := ir_struct_pointer_value as @IR_Variable_Value
         mc_struct_pointer_value := self.get_value(ir_struct_pointer_value)
         if (mc_struct_pointer_value == null) {
@@ -479,6 +484,9 @@ generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @I
         }
         struct_pointer_register = mc_struct_pointer_value.register
         if (struct_pointer_register == null) {
+            if (mc_struct_pointer_value.address == null) {
+                self.abort("Invalid state")
+            }
             struct_pointer_register = self.find_unused_register()
             self.generate_load_value(struct_pointer_register, ir_struct_pointer_value)
             self.map_variable_value(ir_struct_pointer_value, struct_pointer_register)
@@ -497,22 +505,22 @@ generate_load_struct_member_instruction :: (self: @MC_Generator, instruction: @I
         if (struct_type_member_offset > 0) {
             self.output_file.write("  add ").write(result_register.name_q).write(", ").write(struct_type_member_offset).end_line()
         }
-        return
-    }
-    result_value_type_size := self.get_type_size(instruction.result_value.type)
-    self.output_file.write("  mov ")
-    if (result_value_type_size == 8) {
-        self.output_file.write(result_register.name_q)
-    } else if (result_value_type_size == 4) {
-        self.output_file.write(result_register.name_d)
-    } else if (result_value_type_size == 2) {
-        self.output_file.write(result_register.name_w)
-    } else if (result_value_type_size == 1) {
-        self.output_file.write(result_register.name_b)
     } else {
-        self.abort("Invalid state")
+        result_value_type_size := self.get_type_size(instruction.result_value.type)
+        self.output_file.write("  mov ")
+        if (result_value_type_size == 8) {
+            self.output_file.write(result_register.name_q)
+        } else if (result_value_type_size == 4) {
+            self.output_file.write(result_register.name_d)
+        } else if (result_value_type_size == 2) {
+            self.output_file.write(result_register.name_w)
+        } else if (result_value_type_size == 1) {
+            self.output_file.write(result_register.name_b)
+        } else {
+            self.abort("Invalid state")
+        }
+        self.output_file.write(", ").write('[').write(struct_pointer_register.name_q).write('+').write(struct_type_member_offset).write(']').end_line()
     }
-    self.output_file.write(", ").write('[').write(struct_pointer_register.name_q).write('+').write(struct_type_member_offset).write(']').end_line()
     struct_pointer_register.is_reserved = false
 }
 
@@ -563,16 +571,16 @@ generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instructi
 
 generate_phi_instruction :: (self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
     result_variable := instruction.result_value.variable
-    instruction_value_item := instruction.values.first_item
-    while (instruction_value_item != null) {
-        instruction_value := instruction_value_item.data as @IR_Variable_Value
+    instruction_values_entry := instruction.operand_values.first_entry
+    while (instruction_values_entry != null) {
+        instruction_value := instruction_values_entry.value as @IR_Variable_Value
         if (result_variable != instruction_value.variable) {
             result_register := self.find_unused_register()
             self.generate_load_value(result_register, instruction_value)
             self.map_variable_value(instruction.result_value, result_register)
             return
         }
-        instruction_value_item = instruction_value_item.next_item
+        instruction_values_entry = instruction_values_entry.next_entry
     }
 }
 
@@ -803,6 +811,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             } else {
                 self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
             }
+        } else if (mc_value.address == null) {
+            self.abort("Invalid state")
         } else if (ir_value_type.is(IR_Boolean_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Function_Type)) {
@@ -918,6 +928,8 @@ MC_Generator :: struct {
     register_rbx: @MC_Register = new MC_Register_RBX(name_q = "rbx", name_d = "ebx", name_w = "bx", name_b = "bl")
     register_rsi: @MC_Register = new MC_Register_RSI(name_q = "rsi", name_d = "esi", name_w = "si", name_b = "sil")
     register_rdi: @MC_Register = new MC_Register_RDI(name_q = "rdi", name_d = "edi", name_w = "di", name_b = "dil")
+    register_rsp: @MC_Register = new MC_Register_RSP(name_q = "rsp", name_d = "esp", name_w = "sp", name_b = "spl")
+    register_rbp: @MC_Register = new MC_Register_RBP(name_q = "rbp", name_d = "ebp", name_w = "bp", name_b = "bpl")
     register_r8: @MC_Register = new MC_Register_R8(name_q = "r8", name_d = "r8d", name_w = "r8w", name_b = "r8b")
     register_r9: @MC_Register = new MC_Register_R9(name_q = "r9", name_d = "r9d", name_w = "r9w", name_b = "r9b")
     register_r10: @MC_Register = new MC_Register_R10(name_q = "r10", name_d = "r10d", name_w = "r10w", name_b = "r10b")
@@ -1064,23 +1076,7 @@ spill_local_variable :: (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
     }
     variable_type_size := self.get_type_size(mc_value.ir_variable_value.type)
     if (mc_value.address == null) {
-        offset := 0
-        other_mc_value := self.first_value
-        while (other_mc_value != null) {
-            other_mc_value_address := other_mc_value.address
-            if (other_mc_value_address != null && other_mc_value_address.is(MC_Local_Variable_Address)) {
-                other_mc_value_address := other_mc_value_address as @MC_Local_Variable_Address
-                if (offset < other_mc_value_address.offset) {
-                    offset = other_mc_value_address.offset
-                }
-            }
-            other_mc_value = other_mc_value.next_value
-        }
-        offset = offset + variable_type_size
-        if (offset > self.stack_frame_size) {
-            self.stack_frame_size = offset
-        }
-        self.map_variable_value(mc_value.ir_variable_value, new MC_Local_Variable_Address(offset = offset))
+        self.map_variable_value(mc_value.ir_variable_value, self.create_local_variable_address(variable_type_size))
     }
     if (variable_type_size == 8) {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_q).end_line()
@@ -1091,6 +1087,26 @@ spill_local_variable :: (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
     } else if (variable_type_size == 1) {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_b).end_line()
     }
+}
+
+create_local_variable_address :: (self: @MC_Generator, variable_type_size: Int) -> @MC_Local_Variable_Address {
+    offset := 0
+    mc_value := self.first_value
+    while (mc_value != null) {
+        mc_value_address := mc_value.address
+        if (mc_value_address != null && mc_value_address.is(MC_Local_Variable_Address)) {
+            mc_value_address := mc_value_address as @MC_Local_Variable_Address
+            if (offset > mc_value_address.offset) {
+                offset = mc_value_address.offset
+            }
+        }
+        mc_value = mc_value.next_value
+    }
+    offset = offset - variable_type_size
+    if (-offset > self.stack_frame_size) {
+        self.stack_frame_size = -offset
+    }
+    return new MC_Local_Variable_Address(register = self.register_rbp, offset = offset)
 }
 
 spill_global_variable :: (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
@@ -1144,7 +1160,7 @@ release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
 discard_used_values :: (self: @MC_Generator) -> Int {
     removed_values := 0
 
-    mc_value := self.first_value
+    mc_value := self.last_value
     while (mc_value != null) {
         if (mc_value.ir_instruction.is_generated && mc_value.ir_instruction.parent_block.is_being_generated) {
             discard_value := true
@@ -1195,7 +1211,7 @@ discard_used_values :: (self: @MC_Generator) -> Int {
             }
         }
 
-        mc_value = mc_value.next_value
+        mc_value = mc_value.prev_value
     }
 
     return removed_values
@@ -1303,6 +1319,12 @@ MC_Register_RSI :: struct : MC_Register {
 MC_Register_RDI :: struct : MC_Register {
 }
 
+MC_Register_RSP :: struct : MC_Register {
+}
+
+MC_Register_RBP :: struct : MC_Register {
+}
+
 MC_Register_R8 :: struct : MC_Register {
 }
 
@@ -1335,9 +1357,15 @@ write :: (file: @FILE, address: @MC_Address) -> @FILE {
         address := address as @MC_Global_Variable_Address
         return file.write(address.ir_variable.name).write("[rip]")
     }
-    if (address.is(MC_Local_Variable_Address)) {
-        address := address as @MC_Local_Variable_Address
-        return file.write("[rbp-").write(address.offset).write(']')
+    if (address.is(MC_Register_Based_Address)) {
+        address := address as @MC_Register_Based_Address
+        file.write('[').write(address.register.name_q)
+        if (address.offset > 0) {
+            file.write('+').write(address.offset)
+        } else if (address.offset < 0) {
+            file.write(address.offset)
+        }
+        return file.write(']')
     }
     abort(clone("Unsupported type: ").append(address.object_type.name))
 }
@@ -1346,8 +1374,12 @@ MC_Global_Variable_Address :: struct : MC_Address {
     ir_variable: @IR_Variable
 }
 
-MC_Local_Variable_Address :: struct : MC_Address {
+MC_Register_Based_Address :: struct : MC_Address {
+    register: @MC_Register
     offset: Int
+}
+
+MC_Local_Variable_Address :: struct : MC_Register_Based_Address {
 }
 
 get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {

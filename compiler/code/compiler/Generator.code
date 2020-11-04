@@ -130,7 +130,6 @@ write_block_label :: (file: @FILE, block: @IR_Block) -> @FILE {
 }
 
 generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
-    instruction.is_generated = true
     if (instruction.location != null) {
         self.output_file.write("  .loc ").write(instruction.location.source.id).write(' ').write(instruction.location.line).write(' ').write(instruction.location.column).end_line()
     }
@@ -180,6 +179,7 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
     } else {
         self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
     }
+    instruction.is_generated = true
 }
 
 generate_add_instruction :: (self: @MC_Generator, instruction: @IR_Add_Instruction) -> Nothing {
@@ -191,17 +191,17 @@ generate_add_instruction :: (self: @MC_Generator, instruction: @IR_Add_Instructi
 
 generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
     if (instruction.arguments_size > 0) {
-        self.generate_load_value(self.register_rdi, instruction.argument(0))
+        self.generate_load_value(self.register_rdi, instruction.get_argument_value(0))
         if (instruction.arguments_size > 1) {
-            self.generate_load_value(self.register_rsi, instruction.argument(1))
+            self.generate_load_value(self.register_rsi, instruction.get_argument_value(1))
             if (instruction.arguments_size > 2) {
-                self.generate_load_value(self.register_rdx, instruction.argument(2))
+                self.generate_load_value(self.register_rdx, instruction.get_argument_value(2))
                 if (instruction.arguments_size > 3) {
-                    self.generate_load_value(self.register_rcx, instruction.argument(3))
+                    self.generate_load_value(self.register_rcx, instruction.get_argument_value(3))
                     if (instruction.arguments_size > 4) {
-                        self.generate_load_value(self.register_r8, instruction.argument(4))
+                        self.generate_load_value(self.register_r8, instruction.get_argument_value(4))
                         if (instruction.arguments_size > 5) {
-                            self.generate_load_value(self.register_r9, instruction.argument(5))
+                            self.generate_load_value(self.register_r9, instruction.get_argument_value(5))
                         }
                     }
                 }
@@ -209,10 +209,12 @@ generate_call_instruction :: (self: @MC_Generator, instruction: @IR_Call_Instruc
         }
     }
     if (instruction.is(IR_Direct_Call_Instruction)) {
+        instruction.is_generated = true
         self.release_all_registers()
         self.output_file.write("  call ").write_function_label((instruction as @IR_Direct_Call_Instruction).function).end_line()
     } else if (instruction.is(IR_Dynamic_Call_Instruction)) {
-        self.generate_load_value(self.register_rax, (instruction as @IR_Dynamic_Call_Instruction).function_address())
+        self.generate_load_value(self.register_rax, (instruction as @IR_Dynamic_Call_Instruction).get_function_address())
+        instruction.is_generated = true
         self.release_all_registers()
         self.output_file.write("  call ").write(self.register_rax.name_q).end_line()
     } else {
@@ -569,16 +571,16 @@ generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instructi
 
 generate_phi_instruction :: (self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
     result_variable := instruction.result_value.variable
-    instruction_value_item := instruction.values.first_item
-    while (instruction_value_item != null) {
-        instruction_value := instruction_value_item.data as @IR_Variable_Value
+    instruction_values_entry := instruction.operand_values.first_entry
+    while (instruction_values_entry != null) {
+        instruction_value := instruction_values_entry.value as @IR_Variable_Value
         if (result_variable != instruction_value.variable) {
             result_register := self.find_unused_register()
             self.generate_load_value(result_register, instruction_value)
             self.map_variable_value(instruction.result_value, result_register)
             return
         }
-        instruction_value_item = instruction_value_item.next_item
+        instruction_values_entry = instruction_values_entry.next_entry
     }
 }
 
@@ -809,6 +811,8 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             } else {
                 self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
             }
+        } else if (mc_value.address == null) {
+            self.abort("Invalid state")
         } else if (ir_value_type.is(IR_Boolean_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Function_Type)) {

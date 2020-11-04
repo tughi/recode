@@ -612,37 +612,39 @@ parse_cast_expression :: (self: @Parser) -> @AST_Expression {
 \   : primary_expression ( "." IDENTIFIER | "(" call_arguments? ")" | "[" expression "]" )*
 parse_access_expression :: (self: @Parser) -> @AST_Expression {
     expression := self.parse_primary_expression()
-    loop {
-        old_expression := expression
-        if (self.matches(self.optional_space, self.required_dot)) {
-            self.consume_space(0)
-            self.consume(self.required_dot)
-            self.consume_space(0)
-            expression = new AST_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(self.required_identifier) as @Identifier_Token)
-        }
-        if (self.matches(self.optional_space, self.required_open_paren)) {
-            self.consume_space(0)
-            self.consume(self.required_open_paren)
-            self.consume_space(0)
-            call_arguments := new List()
-            if (self.matches(self.optional_space, self.required_close_paren) == false) {
-                self.parse_call_arguments(call_arguments)
+    if (expression != null) {
+        loop {
+            old_expression := expression
+            if (self.matches(self.optional_space, self.required_dot)) {
+                self.consume_space(0)
+                self.consume(self.required_dot)
+                self.consume_space(0)
+                expression = new AST_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(self.required_identifier) as @Identifier_Token)
             }
-            self.consume_space(0)
-            self.consume(self.required_close_paren)
-            expression = new AST_Call_Expression(location = expression.location, callee = expression, arguments = call_arguments)
-        }
-        if (self.matches(self.optional_space, self.required_open_bracket)) {
-            self.consume_space(0)
-            self.consume(self.required_open_bracket)
-            self.consume_space(0)
-            index_expression := self.parse_expression()
-            self.consume_space(0)
-            self.consume(self.required_close_bracket)
-            expression = new AST_Array_Access_Expression(location = expression.location, array_expression = expression, index_expression = index_expression)
-        }
-        if (expression == old_expression) {
-            break
+            if (self.matches(self.optional_space, self.required_open_paren)) {
+                self.consume_space(0)
+                self.consume(self.required_open_paren)
+                self.consume_space(0)
+                call_arguments := new List()
+                if (self.matches(self.optional_space, self.required_close_paren) == false) {
+                    self.parse_call_arguments(call_arguments)
+                }
+                self.consume_space(0)
+                self.consume(self.required_close_paren)
+                expression = new AST_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
+            }
+            if (self.matches(self.optional_space, self.required_open_bracket)) {
+                self.consume_space(0)
+                self.consume(self.required_open_bracket)
+                self.consume_space(0)
+                index_expression := self.parse_expression()
+                self.consume_space(0)
+                self.consume(self.required_close_bracket)
+                expression = new AST_Array_Access_Expression(location = expression.location, array_expression = expression, index_expression = index_expression)
+            }
+            if (expression == old_expression) {
+                break
+            }
         }
     }
     return expression

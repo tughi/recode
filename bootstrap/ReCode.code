@@ -123,14 +123,14 @@ dump :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         if (instruction.is(IR_Direct_Call_Instruction) != null) {
             file.write("call").write('(').write_function_label((instruction as @IR_Direct_Call_Instruction).function)
         } else if (instruction.is(IR_Dynamic_Call_Instruction) != null) {
-            function_address := (instruction as @IR_Dynamic_Call_Instruction).function_address()
+            function_address := (instruction as @IR_Dynamic_Call_Instruction).get_function_address()
             file.write("call").write('(').write(function_address.variable.name).write('.').write(function_address.version)
         } else {
             abort(clone("Unsupported type: ").append(instruction.object_type.name))
         }
         call_argument_index := 0
         while (call_argument_index < instruction.arguments_size) {
-            file.write(", ").write(instruction.argument(call_argument_index), true)
+            file.write(", ").write(instruction.get_argument_value(call_argument_index), true)
             call_argument_index = call_argument_index + 1
         }
         return file.write(')').end_line()
@@ -209,16 +209,15 @@ dump :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
     if (instruction.is(IR_Phi_Instruction)) {
         instruction := instruction as @IR_Phi_Instruction
         file.write(instruction.result_value, false).write(": ").write(instruction.result_value.type.name).write(" = ").write("phi").write('(')
-        values := instruction.values.create_iterator()
-        if (values.has_next()) {
+        operand_values_entry := instruction.operand_values.first_entry
+        if (operand_values_entry != null) {
             loop {
-                value := values.next() as @IR_Value
-                file.write(value, true)
-                if (values.has_next()) {
-                    file.write(", ")
-                } else {
+                file.write(operand_values_entry.value, true)
+                operand_values_entry = operand_values_entry.next_entry
+                if (operand_values_entry == null) {
                     break
                 }
+                file.write(", ")
             }
         }
         return file.write(')').end_line()
@@ -498,7 +497,7 @@ write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
     }
 
     if (expression.is(AST_Call_Expression)) {
-        file.write((expression as @AST_Call_Expression).callee).write('(')
+        file.write((expression as @AST_Call_Expression).callee_expression).write('(')
         call_arguments := (expression as @AST_Call_Expression).arguments.create_iterator()
         if (call_arguments.has_next()) {
             loop {

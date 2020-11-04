@@ -1,0 +1,87 @@
+IR_Values_Map :: struct {
+    first_entry: @IR_Values_Map_Entry = null
+    last_entry: @IR_Values_Map_Entry = null
+}
+
+IR_Values_Map_Entry :: struct {
+    key: @Any
+    value: @IR_Value
+    prev_entry: @IR_Values_Map_Entry = null
+    next_entry: @IR_Values_Map_Entry = null
+}
+
+get :: (self: @IR_Values_Map, key: @Any) -> @IR_Value {
+    entry := self.first_entry
+    while (entry != null) {
+        if (entry.key == key) {
+            return entry.value
+        }
+        entry = entry.next_entry
+    }
+    return null
+}
+
+put :: (self: @IR_Values_Map, key: @Any, value: @IR_Value) -> @IR_Value {
+    entry := self.first_entry
+    while (entry != null) {
+        if (entry.key == key) {
+            old_value := entry.value
+            entry.value = value
+            return old_value
+        }
+        entry = entry.next_entry
+    }
+    entry = new IR_Values_Map_Entry(key = key, value = value, prev_entry = self.last_entry)
+    if (self.last_entry == null) {
+        self.first_entry = entry
+    } else {
+        self.last_entry.next_entry = entry
+    }
+    self.last_entry = entry
+    return null
+}
+
+remove :: (self: @IR_Values_Map, key: @Any) -> @IR_Value {
+    entry := self.first_entry
+    while (entry != null) {
+        if (entry.key == key) {
+            return self.unlink(entry).value
+        }
+        entry = entry.next_entry
+    }
+    return null
+}
+
+remove_values :: (self: @IR_Values_Map, value: @IR_Value) -> Nothing {
+    entry := self.first_entry
+    while (entry != null) {
+        if (entry.value == value) {
+            self.unlink(entry)
+        }
+        entry = entry.next_entry
+    }
+}
+
+unlink :: (self: @IR_Values_Map, entry: @IR_Values_Map_Entry) -> @IR_Values_Map_Entry {
+    if (entry.prev_entry != null) {
+        entry.prev_entry.next_entry = entry.next_entry
+    } else {
+        self.first_entry = entry.next_entry
+    }
+    if (entry.next_entry != null) {
+        entry.next_entry.prev_entry = entry.prev_entry
+    } else {
+        self.last_entry = entry.prev_entry
+    }
+    return entry
+}
+
+replace_values :: (self: @IR_Values_Map, old_value: @IR_Value, new_value: @IR_Value) -> Nothing {
+    entry := self.first_entry
+    while (entry != null) {
+        if (entry.value == old_value) {
+            entry.value = new_value
+        }
+        entry = entry.next_entry
+    }
+}
