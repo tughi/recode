@@ -842,54 +842,79 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
         self.output_file.write("  mov BYTE PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else if (ir_value_type.is(IR_Struct_Type)) {
         struct_type := ir_value_type as @IR_Struct_Type
-        destination_register := self.find_unused_register()
-        destination_register.is_reserved = true
-        destination_address := new MC_Register_Based_Address(register = destination_register)
-        self.output_file.write("  lea ").write(destination_register.name_q).write(", ").write(address).end_line()
+        destination_register: @MC_Register
+        destination_address: @MC_Register_Based_Address
+        destination_address_extra_offset: Int
+        if (address.is(MC_Register_Based_Address)) {
+            address := address as @MC_Register_Based_Address
+            destination_register = null
+            destination_address = new MC_Register_Based_Address(register = address.register)
+            destination_address_extra_offset = address.offset
+        } else {
+            destination_register = self.find_unused_register()
+            destination_register.is_reserved = true
+            self.output_file.write("  lea ").write(destination_register.name_q).write(", ").write(address).end_line()
+            destination_address = new MC_Register_Based_Address(register = destination_register)
+            destination_address_extra_offset = 0
+        }
         if (ir_value.is(IR_Variable_Value)) {
             ir_value := ir_value as @IR_Variable_Value
             mc_value := self.get_value(ir_value)
             if (mc_value == null) {
                 self.abort("Invalid state")
             }
-            source_register := self.find_unused_register()
-            source_register.is_reserved = true
-            source_address := new MC_Register_Based_Address(register = source_register)
-            self.output_file.write("  lea ").write(source_register.name_q).write(", ").write(mc_value.address).end_line()
+            source_register: @MC_Register
+            source_address: @MC_Register_Based_Address
+            source_address_extra_offset: Int
+            mc_value_address := mc_value.address
+            if (mc_value_address.is(MC_Register_Based_Address)) {
+                mc_value_address := mc_value_address as @MC_Register_Based_Address
+                source_register = null
+                source_address = new MC_Register_Based_Address(register = mc_value_address.register)
+                source_address_extra_offset = mc_value_address.offset
+            } else {
+                source_register = self.find_unused_register()
+                source_register.is_reserved = true
+                self.output_file.write("  lea ").write(source_register.name_q).write(", ").write(mc_value_address).end_line()
+                source_address = new MC_Register_Based_Address(register = source_register)
+                source_address_extra_offset = 0
+            }
             ir_value_type_size := self.get_type_size(ir_value_type)
             data_register := self.find_unused_register()
             data_register.is_reserved = true
             copied_bytes := 0
             while (ir_value_type_size - copied_bytes >= 8) {
-                source_address.offset = copied_bytes
+                source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_q).write(", ").write(source_address).end_line()
-                destination_address.offset = copied_bytes
+                destination_address.offset = destination_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_q).end_line()
                 copied_bytes = copied_bytes + 8
             }
             if (ir_value_type_size - copied_bytes >= 4) {
-                source_address.offset = copied_bytes
+                source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_d).write(", ").write(source_address).end_line()
-                destination_address.offset = copied_bytes
+                destination_address.offset = destination_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_d).end_line()
                 copied_bytes = copied_bytes + 4
             }
             if (ir_value_type_size - copied_bytes >= 2) {
-                source_address.offset = copied_bytes
+                source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_w).write(", ").write(source_address).end_line()
-                destination_address.offset = copied_bytes
+                destination_address.offset = destination_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_w).end_line()
                 copied_bytes = copied_bytes + 2
             }
             if (ir_value_type_size - copied_bytes == 1) {
-                source_address.offset = copied_bytes
+                source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_b).write(", ").write(source_address).end_line()
-                destination_address.offset = copied_bytes
+                destination_address.offset = destination_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_b).end_line()
                 copied_bytes = copied_bytes + 1
             }
             data_register.is_reserved = false
-            source_register.is_reserved = false
+            if (source_register != null) {
+                source_register.is_reserved = false
+            }
         } else if (ir_value.is(IR_Struct_Constructor_Value)) {
             ir_value := ir_value as @IR_Struct_Constructor_Value
             init_arguments_item := ir_value.init_arguments.first_item
@@ -899,14 +924,16 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
                 if (struct_type_member == null) {
                     self.abort("Invalid state")
                 }
-                destination_address.offset = self.get_offset(struct_type_member)
+                destination_address.offset = destination_address_extra_offset + self.get_offset(struct_type_member)
                 self.generate_store_value(init_argument.value, destination_address)
                 init_arguments_item = init_arguments_item.next_item
             }
         } else {
             self.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
         }
-        destination_register.is_reserved = false
+        if (destination_register != null) {
+            destination_register.is_reserved = false
+        }
     } else if (ir_value_type.is(IR_Function_Type)) {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else {
