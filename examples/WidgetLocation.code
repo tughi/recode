@@ -2,12 +2,11 @@ include "./code/lang/Object.code"
 
 main :: (argc: Int, argv: @@Int8) -> Int {
     window := new Widget()
-    window.set_location(42, 42)
     return window.bounds.location.x - 42
 }
 
 Widget :: struct : Object {
-    bounds: Rectangle
+    bounds: Rectangle = Rectangle()
 }
 
 set_location :: (self: @Widget, x: Int, y: Int) -> Nothing {
@@ -15,7 +14,7 @@ set_location :: (self: @Widget, x: Int, y: Int) -> Nothing {
 }
 
 Rectangle :: struct {
-    location: Point
+    location: Point = Point(x = 42, y = 42)
     width: Int
     height: Int
 }

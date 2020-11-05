@@ -598,22 +598,31 @@ generate_set_instruction :: (self: @MC_Generator, instruction: @IR_Set_Instructi
     if (ir_value.is(IR_Undefined_Value)) {
         self.abort(clone("Looks like ").append(instruction.result_value.variable.name).append(" is not properly initialized"))
     }
-    result_register: @MC_Register
-    if (ir_value.is(IR_Variable_Value)) {
-        ir_value := ir_value as @IR_Variable_Value
-        mc_value := self.get_value(ir_value)
-        result_register = mc_value.register
-        if (result_register != null) {
-            self.release_register(result_register)
+    if (ir_value.type.is(IR_Struct_Type)) {
+        mc_value := self.get_value(instruction.result_value)
+        if (mc_value.address == null) {
+            mc_value_address := self.create_local_variable_address(self.get_type_size(ir_value.type))
+            self.map_variable_value(instruction.result_value, mc_value_address)
+        }
+        self.generate_store_value(ir_value, mc_value.address)
+    } else {
+        result_register: @MC_Register
+        if (ir_value.is(IR_Variable_Value)) {
+            ir_value := ir_value as @IR_Variable_Value
+            mc_value := self.get_value(ir_value)
+            result_register = mc_value.register
+            if (result_register != null) {
+                self.release_register(result_register)
+            } else {
+                result_register = self.find_unused_register()
+                self.generate_load_value(result_register, ir_value)
+            }
         } else {
             result_register = self.find_unused_register()
             self.generate_load_value(result_register, ir_value)
         }
-    } else {
-        result_register = self.find_unused_register()
-        self.generate_load_value(result_register, ir_value)
+        self.map_variable_value(instruction.result_value, result_register)
     }
-    self.map_variable_value(instruction.result_value, result_register)
 }
 
 generate_store_array_item_instruction :: (self: @MC_Generator, instruction: @IR_Store_Array_Item_Instruction) -> Nothing {
@@ -693,7 +702,7 @@ generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @
 
     struct_type_member_offset := self.get_offset(instruction.struct_type_member)
     ir_value := instruction.get_value()
-    if (ir_value.is(IR_Variable_Value)) {
+    if (ir_value.is(IR_Variable_Value) && ir_value.type.is(IR_Struct_Type) == false) {
         ir_value := ir_value as @IR_Variable_Value
         mc_value := self.get_value(ir_value)
         if (mc_value.register == null) {
@@ -702,26 +711,8 @@ generate_store_struct_member_instruction :: (self: @MC_Generator, instruction: @
             self.map_variable_value(ir_value, register)
         }
     }
-    if (ir_value.is(IR_Constant_Value) && (ir_value as @IR_Constant_Value).literal.is(String_Token)) {
-        register := self.find_unused_register()
-        self.generate_load_value(register, ir_value)
-        self.output_file.write("  mov [").write(struct_pointer_register.name_q).write('+').write(struct_type_member_offset).write("], ").write(register.name_q).end_line()
-    } else {
-        ir_value_type_size := self.get_type_size(ir_value.type)
-        self.output_file.write("  mov ")
-        if (ir_value_type_size == 8) {
-            self.output_file.write("QWORD PTR ")
-        } else if (ir_value_type_size == 4) {
-            self.output_file.write("DWORD PTR ")
-        } else if (ir_value_type_size == 2) {
-            self.output_file.write("WORD PTR ")
-        } else if (ir_value_type_size == 1) {
-            self.output_file.write("BYTE PTR ")
-        } else {
-            self.abort("Invalid state")
-        }
-        self.output_file.write('[').write(struct_pointer_register.name_q).write('+').write(struct_type_member_offset).write("], ").write_operand(self, ir_value).end_line()
-    }
+    struct_type_member_address := new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
+    self.generate_store_value(ir_value, struct_type_member_address)
 }
 
 generate_substract_instruction :: (self: @MC_Generator, instruction: @IR_Substract_Instruction) -> Nothing {
@@ -830,6 +821,96 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         }
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
+    }
+}
+
+generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_Address) -> Nothing {
+    ir_value_type := ir_value.type
+    if (ir_value.is(IR_Constant_Value) && (ir_value as @IR_Constant_Value).literal.is(String_Token)) {
+        register := self.find_unused_register()
+        self.generate_load_value(register, ir_value)
+        self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
+    } else if (ir_value_type.is(IR_Int_Type)) {
+        self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Int8_Type)) {
+        self.output_file.write("  mov BYTE PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Pointer_Type)) {
+        self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Null_Type)) {
+        self.output_file.write("  mov QWORD PTR ").write(address).write(", 0").end_line()
+    } else if (ir_value_type.is(IR_Boolean_Type)) {
+        self.output_file.write("  mov BYTE PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Struct_Type)) {
+        struct_type := ir_value_type as @IR_Struct_Type
+        destination_register := self.find_unused_register()
+        destination_register.is_reserved = true
+        destination_address := new MC_Register_Based_Address(register = destination_register)
+        self.output_file.write("  lea ").write(destination_register.name_q).write(", ").write(address).end_line()
+        if (ir_value.is(IR_Variable_Value)) {
+            ir_value := ir_value as @IR_Variable_Value
+            mc_value := self.get_value(ir_value)
+            if (mc_value == null) {
+                self.abort("Invalid state")
+            }
+            source_register := self.find_unused_register()
+            source_register.is_reserved = true
+            source_address := new MC_Register_Based_Address(register = source_register)
+            self.output_file.write("  lea ").write(source_register.name_q).write(", ").write(mc_value.address).end_line()
+            ir_value_type_size := self.get_type_size(ir_value_type)
+            data_register := self.find_unused_register()
+            data_register.is_reserved = true
+            copied_bytes := 0
+            while (ir_value_type_size - copied_bytes >= 8) {
+                source_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(data_register.name_q).write(", ").write(source_address).end_line()
+                destination_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_q).end_line()
+                copied_bytes = copied_bytes + 8
+            }
+            if (ir_value_type_size - copied_bytes >= 4) {
+                source_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(data_register.name_d).write(", ").write(source_address).end_line()
+                destination_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_d).end_line()
+                copied_bytes = copied_bytes + 4
+            }
+            if (ir_value_type_size - copied_bytes >= 2) {
+                source_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(data_register.name_w).write(", ").write(source_address).end_line()
+                destination_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_w).end_line()
+                copied_bytes = copied_bytes + 2
+            }
+            if (ir_value_type_size - copied_bytes == 1) {
+                source_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(data_register.name_b).write(", ").write(source_address).end_line()
+                destination_address.offset = copied_bytes
+                self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_b).end_line()
+                copied_bytes = copied_bytes + 1
+            }
+            data_register.is_reserved = false
+            source_register.is_reserved = false
+        } else if (ir_value.is(IR_Struct_Constructor_Value)) {
+            ir_value := ir_value as @IR_Struct_Constructor_Value
+            init_arguments_item := ir_value.init_arguments.first_item
+            while (init_arguments_item != null) {
+                init_argument := init_arguments_item.data as @IR_Call_Argument
+                struct_type_member := struct_type.get_member(init_argument.name)
+                if (struct_type_member == null) {
+                    self.abort("Invalid state")
+                }
+                destination_address.offset = self.get_offset(struct_type_member)
+                self.generate_store_value(init_argument.value, destination_address)
+                init_arguments_item = init_arguments_item.next_item
+            }
+        } else {
+            self.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
+        }
+        destination_register.is_reserved = false
+    } else if (ir_value_type.is(IR_Function_Type)) {
+        self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else {
+        self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
     }
 }
 
@@ -1376,7 +1457,7 @@ MC_Global_Variable_Address :: struct : MC_Address {
 
 MC_Register_Based_Address :: struct : MC_Address {
     register: @MC_Register
-    offset: Int
+    offset: Int = 0
 }
 
 MC_Local_Variable_Address :: struct : MC_Register_Based_Address {

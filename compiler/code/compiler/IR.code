@@ -165,6 +165,24 @@ IR_Constant_Value :: struct : IR_Value {
     literal: @Literal_Token
 }
 
+IR_Compound_Value :: struct : IR_Value {
+    values: @IR_Values_Map = new IR_Values_Map()
+}
+
+IR_Struct_Constructor_Value :: struct : IR_Compound_Value {
+    init_arguments: @List
+}
+
+init :: (self: @IR_Struct_Constructor_Value) -> @IR_Struct_Constructor_Value {
+    init_arguments_item := self.init_arguments.first_item
+    while (init_arguments_item != null) {
+        init_argument := init_arguments_item.data as @IR_Call_Argument
+        self.values.put(init_arguments_item, init_argument.value)
+        init_arguments_item = init_arguments_item.next_item
+    }
+    return self
+}
+
 IR_Variable_Value :: struct : IR_Value {
     variable: @IR_Variable
     version: Int
@@ -325,6 +343,14 @@ is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
 set_operand_value :: (self: @IR_Instruction, key: @Any, value: @IR_Value) -> Nothing {
     self.operand_values.put(key, value)
     value.user_instructions.append(self)
+    if (value.is(IR_Compound_Value)) {
+        compound_value := value as @IR_Compound_Value
+        compound_value_values_entry := compound_value.values.first_entry
+        while (compound_value_values_entry != null) {
+            self.set_operand_value(compound_value_values_entry.key, compound_value_values_entry.value)
+            compound_value_values_entry = compound_value_values_entry.next_entry
+        }
+    }
 }
 
 replace_operand_value :: (self: @IR_Instruction, old_value: @IR_Value, new_value: @IR_Value) -> Nothing {

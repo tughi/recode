@@ -942,7 +942,15 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expres
     abort(call_expression.location, call_expression.callee_expression.object_type)
 }
 
-convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, call_function_name: @Identifier_Token, first_argument: @IR_Value) -> @IR_Value {
+convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, callee_name: @Identifier_Token, first_argument: @IR_Value) -> @IR_Value {
+    type := self.get_named_type(callee_name.lexeme)
+    if (type != null && type.is(IR_Struct_Type)) {
+        if (first_argument != null) {
+            abort(call_expression.location, "Invalid type literal syntax")
+        }
+        return self.convert_struct_constructor_expression(call_expression, type as @IR_Struct_Type)
+    }
+
     call_arguments := self.convert_call_arguments(call_expression.arguments)
     if (first_argument != null) {
         call_arguments.prepend(new IR_Call_Argument(value = first_argument))
@@ -952,7 +960,7 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
     named_functions_item := self.named_functions.first_item
     while (named_functions_item != null) {
         named_function := named_functions_item.data as @IR_Function
-        if (named_function.name.equals(call_function_name.lexeme)) {
+        if (named_function.name.equals(callee_name.lexeme)) {
             if (named_function.type.accepts(call_arguments)) {
                 if (call_function != null) {
                     abort(call_expression.location, "Found at least two matching functions")
@@ -966,12 +974,12 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
         named_functions_item := self.named_functions.first_item
         while (named_functions_item != null) {
             named_function := named_functions_item.data as @IR_Function
-            if (named_function.name.equals(call_function_name.lexeme)) {
+            if (named_function.name.equals(callee_name.lexeme)) {
                 stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" :: ").write(named_function.type.name).end_line()
             }
             named_functions_item = named_functions_item.next_item
         }
-        message := clone("Found no matching function: ").append(call_function_name.lexeme).append(" :: (")
+        message := clone("Found no matching function: ").append(callee_name.lexeme).append(" :: (")
         call_arguments_item := call_arguments.first_item
         if (call_arguments_item != null) {
             loop {
@@ -1347,6 +1355,12 @@ get :: (list: @List, struct_member: @IR_Struct_Type_Member) -> @IR_Struct_Member
         list_item = list_item.next_item
     }
     return null
+}
+
+convert_struct_constructor_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Constructor_Value {
+    init_arguments := new List()
+    self.prepare_struct_init_arguments(init_arguments, call_expression.arguments, struct_type, struct_type)
+    return new IR_Struct_Constructor_Value(type = struct_type, init_arguments = init_arguments).init()
 }
 
 convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {

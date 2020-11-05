@@ -261,12 +261,28 @@ write :: (file: @FILE, value: @IR_Value, check_users: Boolean) -> @FILE {
 }
 
 write_value :: (file: @FILE, value: @IR_Value) -> @FILE {
-    if (value.is(IR_Constant_Value)) {
-        return file.write((value as @IR_Constant_Value).literal.lexeme)
-    }
     if (value.is(IR_Variable_Value)) {
         value := value as @IR_Variable_Value
         return file.write(value.variable.name).write('.').write(value.version)
+    }
+    if (value.is(IR_Constant_Value)) {
+        return file.write((value as @IR_Constant_Value).literal.lexeme)
+    }
+    if (value.is(IR_Struct_Constructor_Value)) {
+        value := value as @IR_Struct_Constructor_Value
+        file.write(value.type.name).write('(')
+        init_arguments_item := value.init_arguments.first_item
+        if (init_arguments_item != null) {
+            loop {
+                file.write((init_arguments_item.data as @IR_Call_Argument).name).write(" = ").write(value.values.get(init_arguments_item), true)
+                init_arguments_item = init_arguments_item.next_item
+                if (init_arguments_item == null) {
+                    break
+                }
+                file.write(", ")
+            }
+        }
+        return file.write(')')
     }
     if (value.is(IR_Undefined_Value)) {
         return file.write("undefined")
