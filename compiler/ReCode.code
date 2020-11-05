@@ -254,15 +254,19 @@ write :: (file: @FILE, value: @IR_Value, check_users: Boolean) -> @FILE {
         if (value.is(IR_Variable_Value)) {
             value := value as @IR_Variable_Value
             value_version := value.version
-            stderr.end_line().write(value.variable.name).write(".").write(value_version).end_line()
         }
-        \ abort()
+        stderr.write("Found ").write(value.object_type.name).write(" without user instructions: ").write_value(value).end_line()
     }
+    return file.write_value(value)
+}
+
+write_value :: (file: @FILE, value: @IR_Value) -> @FILE {
     if (value.is(IR_Constant_Value)) {
         return file.write((value as @IR_Constant_Value).literal.lexeme)
     }
     if (value.is(IR_Variable_Value)) {
-        return file.write((value as @IR_Variable_Value).variable.name).write('.').write((value as @IR_Variable_Value).version)
+        value := value as @IR_Variable_Value
+        return file.write(value.variable.name).write('.').write(value.version)
     }
     if (value.is(IR_Undefined_Value)) {
         return file.write("undefined")
