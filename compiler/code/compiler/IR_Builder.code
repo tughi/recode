@@ -16,6 +16,17 @@ IR_Build :: struct {
     named_types: @List
 }
 
+dump :: (build: @IR_Build, file: @FILE) -> Nothing {
+    functions := build.named_functions.create_iterator()
+    while (functions.has_next()) {
+        function := functions.next() as @IR_Function
+        if (function.is_external == false) {
+            function.dump(file)
+            file.end_line()
+        }
+    }
+}
+
 IR_Builder :: struct {
     context: @IR_Builder_Context
     compilation_unit: @Compilation_Unit
@@ -1098,7 +1109,7 @@ convert_greater_than_expression :: (self: @IR_Builder, expression: @AST_Greater_
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Or_Equals_Expression) -> @IR_Value {
@@ -1107,7 +1118,7 @@ convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AS
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Or_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Expression) -> @IR_Value {
@@ -1116,7 +1127,7 @@ convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_E
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Less_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Or_Equals_Expression) -> @IR_Value {
@@ -1125,7 +1136,7 @@ convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_L
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Or_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Value {
@@ -1372,7 +1383,7 @@ convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Not_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Not_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_substract_expression :: (self: @IR_Builder, expression: @AST_Substract_Expression) -> @IR_Value {

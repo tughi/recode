@@ -16,6 +16,17 @@ IR_Build :: struct {
     named_types: @List
 }
 
+dump :: (build: @IR_Build, file: @FILE) -> Nothing {
+    functions := build.named_functions.create_iterator()
+    while (functions.has_next()) {
+        function := functions.next() as @IR_Function
+        if (function.is_external == false) {
+            function.dump(file)
+            file.end_line()
+        }
+    }
+}
+
 IR_Builder :: struct {
     context: @IR_Builder_Context
     compilation_unit: @Compilation_Unit
@@ -942,7 +953,15 @@ convert_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expres
     abort(call_expression.location, call_expression.callee_expression.object_type)
 }
 
-convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, call_function_name: @Identifier_Token, first_argument: @IR_Value) -> @IR_Value {
+convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, callee_name: @Identifier_Token, first_argument: @IR_Value) -> @IR_Value {
+    type := self.get_named_type(callee_name.lexeme)
+    if (type != null && type.is(IR_Struct_Type)) {
+        if (first_argument != null) {
+            abort(call_expression.location, "Invalid type literal syntax")
+        }
+        return self.convert_struct_constructor_expression(call_expression, type as @IR_Struct_Type)
+    }
+
     call_arguments := self.convert_call_arguments(call_expression.arguments)
     if (first_argument != null) {
         call_arguments.prepend(new IR_Call_Argument(value = first_argument))
@@ -952,7 +971,7 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
     named_functions_item := self.named_functions.first_item
     while (named_functions_item != null) {
         named_function := named_functions_item.data as @IR_Function
-        if (named_function.name.equals(call_function_name.lexeme)) {
+        if (named_function.name.equals(callee_name.lexeme)) {
             if (named_function.type.accepts(call_arguments)) {
                 if (call_function != null) {
                     abort(call_expression.location, "Found at least two matching functions")
@@ -966,12 +985,12 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
         named_functions_item := self.named_functions.first_item
         while (named_functions_item != null) {
             named_function := named_functions_item.data as @IR_Function
-            if (named_function.name.equals(call_function_name.lexeme)) {
+            if (named_function.name.equals(callee_name.lexeme)) {
                 stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" :: ").write(named_function.type.name).end_line()
             }
             named_functions_item = named_functions_item.next_item
         }
-        message := clone("Found no matching function: ").append(call_function_name.lexeme).append(" :: (")
+        message := clone("Found no matching function: ").append(callee_name.lexeme).append(" :: (")
         call_arguments_item := call_arguments.first_item
         if (call_arguments_item != null) {
             loop {
@@ -1090,7 +1109,7 @@ convert_greater_than_expression :: (self: @IR_Builder, expression: @AST_Greater_
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Greater_Than_Or_Equals_Expression) -> @IR_Value {
@@ -1099,7 +1118,7 @@ convert_greater_than_or_equals_expression :: (self: @IR_Builder, expression: @AS
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Than_Or_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Expression) -> @IR_Value {
@@ -1108,7 +1127,7 @@ convert_less_than_expression :: (self: @IR_Builder, expression: @AST_Less_Than_E
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Less_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_Less_Than_Or_Equals_Expression) -> @IR_Value {
@@ -1117,7 +1136,7 @@ convert_less_than_or_equals_expression :: (self: @IR_Builder, expression: @AST_L
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Than_Or_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Value {
@@ -1349,6 +1368,12 @@ get :: (list: @List, struct_member: @IR_Struct_Type_Member) -> @IR_Struct_Member
     return null
 }
 
+convert_struct_constructor_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Constructor_Value {
+    init_arguments := new List()
+    self.prepare_struct_init_arguments(init_arguments, call_expression.arguments, struct_type, struct_type)
+    return new IR_Struct_Constructor_Value(type = struct_type, init_arguments = init_arguments).init()
+}
+
 convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {
     left_value := self.convert_expression(expression.left_expression, null)
     right_value := self.convert_expression(expression.right_expression, null)
@@ -1358,7 +1383,7 @@ convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Not_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Not_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
 }
 
 convert_substract_expression :: (self: @IR_Builder, expression: @AST_Substract_Expression) -> @IR_Value {

@@ -156,21 +156,66 @@ is_object_type :: (self: @IR_Struct_Type) -> Boolean {
 IR_Value :: struct : Object {
     type: @IR_Type
     user_instructions: @List = new List()
+    dump: (value: @IR_Value, file: @FILE) -> @FILE = dump_ir_value
 }
 
-IR_Undefined_Value :: struct : IR_Value {
+dump_ir_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    file.flush()
+    abort(clone("Unsupported type: ").append(value.object_type.name))
 }
 
-IR_Constant_Value :: struct : IR_Value {
+write :: (file: @FILE, value: @IR_Value, check_users: Boolean) -> @FILE {
+    if (check_users && value.user_instructions.size == 0) {
+        file.flush()
+        if (value.is(IR_Variable_Value)) {
+            value := value as @IR_Variable_Value
+            value_version := value.version
+        }
+        stderr.write("Found ").write(value.object_type.name).write(" without user instructions: ")
+        value.dump(stderr)
+        stderr.end_line()
+    }
+    return value.dump(file)
+}
+
+IR_Undefined_Value :: struct : IR_Value(dump = dump_ir_undefined_value) {
+}
+
+dump_ir_undefined_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    return file.write("undefined")
+}
+
+IR_Constant_Value :: struct : IR_Value(dump = dump_ir_constant_value) {
     literal: @Literal_Token
+}
+
+dump_ir_constant_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    return file.write((value as @IR_Constant_Value).literal.lexeme)
 }
 
 IR_Compound_Value :: struct : IR_Value {
     values: @IR_Values_Map = new IR_Values_Map()
 }
 
-IR_Struct_Constructor_Value :: struct : IR_Compound_Value {
+IR_Struct_Constructor_Value :: struct : IR_Compound_Value(dump = dump_ir_struct_constructor_value) {
     init_arguments: @List
+}
+
+dump_ir_struct_constructor_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Struct_Constructor_Value
+    file.write(value.type.name).write('(')
+    init_arguments_item := value.init_arguments.first_item
+    if (init_arguments_item != null) {
+        loop {
+            file.write((init_arguments_item.data as @IR_Call_Argument).name).write(" = ").write(value.values.get(init_arguments_item), true)
+            init_arguments_item = init_arguments_item.next_item
+            if (init_arguments_item == null) {
+                break
+            }
+            file.write(", ")
+        }
+    }
+    return file.write(')')
 }
 
 init :: (self: @IR_Struct_Constructor_Value) -> @IR_Struct_Constructor_Value {
@@ -183,7 +228,7 @@ init :: (self: @IR_Struct_Constructor_Value) -> @IR_Struct_Constructor_Value {
     return self
 }
 
-IR_Variable_Value :: struct : IR_Value {
+IR_Variable_Value :: struct : IR_Value(dump = dump_ir_variable_value) {
     variable: @IR_Variable
     version: Int
 }
@@ -193,6 +238,11 @@ init :: (self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value
     self.version = variable.values.size + 1
     variable.values.append(self)
     return self
+}
+
+dump_ir_variable_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Variable_Value
+    return file.write(value.variable.name).write('.').write(value.version)
 }
 
 IR_Block :: struct : Object {
@@ -272,6 +322,31 @@ remove :: (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
     instruction.next_instruction = null
 }
 
+dump :: (block: @IR_Block, file: @FILE) -> @FILE {
+    file.write("block.").write(block.id)
+    block_predecessors := block.predecessors.create_iterator()
+    if (block_predecessors.has_next()) {
+        file.write('(')
+        loop {
+            block_predecessor := block_predecessors.next() as @IR_Block
+            file.write("block.").write(block_predecessor.id)
+            if (block_predecessors.has_next()) {
+                file.write(", ")
+            } else {
+                break
+            }
+        }
+        file.write(')')
+    }
+    file.write(':').end_line()
+    block_instruction := block.first_instruction
+    while (block_instruction != null) {
+        block_instruction.dump(file, "   ")
+        block_instruction = block_instruction.next_instruction
+    }
+    return file
+}
+
 IR_Function :: struct : Object {
     id: Int
     location: @Source_Location
@@ -287,6 +362,25 @@ create_block :: (self: @IR_Function) -> @IR_Block {
     block := new IR_Block(id = self.blocks.size + 1, function = self)
     self.blocks.append(block)
     return block
+}
+
+dump :: (function: @IR_Function, file: @FILE) -> Nothing {
+    file.write_function_label(function).write(" :: (")
+    function_parameters := function.parameters.create_iterator()
+    while (function_parameters.has_next()) {
+        function_parameter := function_parameters.next() as @IR_Function_Parameter
+        file.write(function_parameter.name).write(": ").write(function_parameter.type.name)
+        if (function_parameters.has_next()) {
+            file.write(", ")
+        }
+    }
+    file.write(") -> ").write(function.return_type.name).write(" {").end_line()
+    block_item := function.blocks.first_item
+    while (block_item != null) {
+        (block_item.data as @IR_Block).dump(file)
+        block_item = block_item.next_item
+    }
+    file.write('}').end_line()
 }
 
 IR_Variable :: struct : Object {
@@ -315,6 +409,19 @@ IR_Instruction :: struct : Object {
     prev_instruction: @IR_Instruction = null
     next_instruction: @IR_Instruction = null
     is_generated: Boolean = false
+    dump: (self: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE = dump_ir_instruction
+}
+
+dump_ir_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    file.flush()
+    abort(clone("Unsupported type: ").append(instruction.object_type.name))
+}
+
+dump_ir_instruction_result :: (self: @IR_Instruction, file: @FILE, prefix: @String) -> Nothing {
+    file.write(prefix)
+    if (self.result_value != null) {
+        file.write(self.result_value, false).write(": ").write(self.result_value.type.name).write(" = ")
+    }
 }
 
 is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
@@ -370,6 +477,14 @@ IR_Call_Instruction :: struct : IR_Instruction {
     arguments_size: Int = 0
 }
 
+dump_ir_call_instruction_arguments :: (instruction: @IR_Call_Instruction, file: @FILE) -> Nothing {
+    call_argument_index := 0
+    while (call_argument_index < instruction.arguments_size) {
+        file.write(", ").write(instruction.get_argument_value(call_argument_index), true)
+        call_argument_index = call_argument_index + 1
+    }
+}
+
 IR_Call_Argument :: struct {
     name: @String = null
     value: @IR_Value
@@ -407,8 +522,16 @@ get_argument_key :: (index: Int) -> @String {
     abort(clone("Missing argument index: ").append(index))
 }
 
-IR_Direct_Call_Instruction :: struct : IR_Call_Instruction {
+IR_Direct_Call_Instruction :: struct : IR_Call_Instruction(dump = dump_ir_direct_call_instruction) {
     function: @IR_Function
+}
+
+dump_ir_direct_call_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Direct_Call_Instruction
+    file.write("call").write('(').write_function_label(instruction.function)
+    instruction.dump_ir_call_instruction_arguments(file)
+    return file.write(')').end_line()
 }
 
 create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function: @IR_Function) -> @IR_Call_Instruction {
@@ -417,7 +540,16 @@ create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, call_arg
     return instruction
 }
 
-IR_Dynamic_Call_Instruction :: struct : IR_Call_Instruction {
+IR_Dynamic_Call_Instruction :: struct : IR_Call_Instruction(dump = dump_ir_dynamic_call_instruction) {
+}
+
+dump_ir_dynamic_call_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Dynamic_Call_Instruction
+    function_address := instruction.get_function_address()
+    file.write("call").write('(').write(function_address.variable.name).write('.').write(function_address.version)
+    instruction.dump_ir_call_instruction_arguments(file)
+    return file.write(')').end_line()
 }
 
 create_ir_dynamic_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
@@ -431,7 +563,13 @@ get_function_address :: (self: @IR_Dynamic_Call_Instruction) -> @IR_Variable_Val
     return self.operand_values.get("function_address") as @IR_Variable_Value
 }
 
-IR_Cast_Instruction :: struct : IR_Instruction {
+IR_Cast_Instruction :: struct : IR_Instruction(dump = dump_ir_cast_instruction) {
+}
+
+dump_ir_cast_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Cast_Instruction
+    return file.write("cast").write('(').write(instruction.get_value(), true).write(')').end_line()
 }
 
 create_ir_cast_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
@@ -447,20 +585,38 @@ get_value :: (self: @IR_Cast_Instruction) -> @IR_Value {
 IR_Jump_Instruction :: struct : IR_Instruction {
 }
 
-IR_Conditional_Jump_Instruction :: struct : IR_Jump_Instruction {
+IR_Conditional_Jump_Instruction :: struct : IR_Jump_Instruction(dump = dump_ir_conditional_jump_instruction) {
     true_block: @IR_Block
     false_block: @IR_Block
+}
+
+dump_ir_conditional_jump_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Conditional_Jump_Instruction
+    return file.write("jump").write('(').write(instruction.get_condition_value(), true).write(", ").write_block_label(instruction.true_block).write(", ").write_block_label(instruction.false_block).write(')').end_line()
 }
 
 get_condition_value :: (self: @IR_Conditional_Jump_Instruction) -> @IR_Value {
     return self.operand_values.get("condition")
 }
 
-IR_Direct_Jump_Instruction :: struct : IR_Jump_Instruction {
+IR_Direct_Jump_Instruction :: struct : IR_Jump_Instruction(dump = dump_ir_direct_jump_instruction) {
     block: @IR_Block
 }
 
-IR_Load_Array_Item_Instruction :: struct : IR_Instruction {
+dump_ir_direct_jump_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Direct_Jump_Instruction
+    return file.write("jump").write('(').write_block_label(instruction.block).write(')').end_line()
+}
+
+IR_Load_Array_Item_Instruction :: struct : IR_Instruction(dump = dump_ir_load_array_item_instruction) {
+}
+
+dump_ir_load_array_item_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Load_Array_Item_Instruction
+    return file.write("load_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(')').end_line()
 }
 
 create_ir_load_array_item_instruction :: (result_value: @IR_Variable_Value, array_value: @IR_Value, index_value: @IR_Value) -> @IR_Load_Array_Item_Instruction {
@@ -478,8 +634,14 @@ get_index_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("index_value")
 }
 
-IR_Load_Function_Address_Instruction :: struct : IR_Instruction {
+IR_Load_Function_Address_Instruction :: struct : IR_Instruction(dump = dump_ir_load_function_address_instruction) {
     function: @IR_Function
+}
+
+dump_ir_load_function_address_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Load_Function_Address_Instruction
+    return file.write("load_function_address").write('(').write_function_label(instruction.function).write(')').end_line()
 }
 
 create_ir_load_function_address_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function) -> @IR_Load_Function_Address_Instruction {
@@ -487,9 +649,20 @@ create_ir_load_function_address_instruction :: (result_value: @IR_Variable_Value
     return instruction
 }
 
-IR_Load_Struct_Member_Instruction :: struct : IR_Instruction {
+IR_Load_Struct_Member_Instruction :: struct : IR_Instruction(dump = dump_ir_load_struct_member_instruction) {
     struct_type_member: @IR_Struct_Type_Member
     load_address: Boolean
+}
+
+dump_ir_load_struct_member_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Load_Struct_Member_Instruction
+    if (instruction.load_address) {
+        file.write("load_struct_member_address")
+    } else {
+        file.write("load_struct_member")
+    }
+    return file.write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(')').end_line()
 }
 
 create_ir_load_struct_member_instruction :: (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
@@ -502,8 +675,13 @@ get_struct_pointer_value :: (self: @IR_Load_Struct_Member_Instruction) -> @IR_Va
     return self.operand_values.get("struct_pointer_value")
 }
 
-IR_Load_Variable_Instruction :: struct : IR_Instruction {
+IR_Load_Variable_Instruction :: struct : IR_Instruction(dump = dump_ir_load_variable_instruction) {
     variable: @IR_Variable
+}
+
+dump_ir_load_variable_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    return file.write("load_variable").write('(').write((instruction as @IR_Load_Variable_Instruction).variable.name).write(')').end_line()
 }
 
 create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
@@ -511,8 +689,18 @@ create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR
     return instruction
 }
 
-IR_New_Instruction :: struct : IR_Instruction {
+IR_New_Instruction :: struct : IR_Instruction(dump = dump_ir_new_instruction) {
     type: @IR_Type
+}
+
+dump_ir_new_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_New_Instruction
+    file.write("new").write('(').write(instruction.type.name)
+    if (instruction.get_size_value() != null) {
+        file.write(", ").write(instruction.get_size_value(), true)
+    }
+    return file.write(')').end_line()
 }
 
 create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, size_value: @IR_Value) -> @IR_New_Instruction {
@@ -527,7 +715,16 @@ get_size_value :: (self: @IR_New_Instruction) -> @IR_Value {
     return self.operand_values.get("size_value")
 }
 
-IR_Return_Instruction :: struct : IR_Instruction {
+IR_Return_Instruction :: struct : IR_Instruction(dump = dump_ir_return_instruction) {
+}
+
+dump_ir_return_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Return_Instruction
+    if (instruction.get_return_value() == null) {
+        return file.write("return").write('(').write(')').end_line()
+    }
+    return file.write("return").write('(').write(instruction.get_return_value(), true).write(')').end_line()
 }
 
 create_ir_return_instruction :: (return_value: @IR_Value) -> @IR_Return_Instruction {
@@ -542,7 +739,13 @@ get_return_value :: (self: @IR_Return_Instruction) -> @IR_Value {
     return self.operand_values.get("return_value")
 }
 
-IR_Set_Instruction :: struct : IR_Instruction {
+IR_Set_Instruction :: struct : IR_Instruction(dump = dump_ir_set_instruction) {
+}
+
+dump_ir_set_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Set_Instruction
+    return file.write(instruction.get_value(), true).end_line()
 }
 
 create_ir_set_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
@@ -555,7 +758,13 @@ get_value :: (self: @IR_Set_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
-IR_Store_Array_Item_Instruction :: struct : IR_Instruction {
+IR_Store_Array_Item_Instruction :: struct : IR_Instruction(dump = dump_ir_store_array_item_instruction) {
+}
+
+dump_ir_store_array_item_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Store_Array_Item_Instruction
+    return file.write("store_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(", ").write(instruction.get_value(), true).write(')').end_line()
 }
 
 create_ir_store_array_item_instruction :: (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
@@ -578,8 +787,14 @@ get_value :: (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
-IR_Store_Struct_Member_Instruction :: struct : IR_Instruction {
+IR_Store_Struct_Member_Instruction :: struct : IR_Instruction(dump = dump_ir_store_struct_member_instruction) {
     struct_type_member: @IR_Struct_Type_Member
+}
+
+dump_ir_store_struct_member_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Store_Struct_Member_Instruction
+    return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
 }
 
 create_ir_store_struct_member_instruction :: (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
@@ -614,43 +829,127 @@ get_right_value :: (self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("right_value")
 }
 
-IR_Add_Instruction :: struct : IR_Binary_Instruction {
+IR_Add_Instruction :: struct : IR_Binary_Instruction(dump = dump_ir_add_instruction) {
+}
+
+dump_ir_add_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" + ").write(instruction.get_right_value(), true).end_line()
 }
 
 IR_Comparison_Instruction :: struct : IR_Binary_Instruction {
 }
 
-IR_Divide_Instruction :: struct : IR_Binary_Instruction {
+IR_Divide_Instruction :: struct : IR_Binary_Instruction(dump = dump_ir_divide_instruction) {
 }
 
-IR_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+dump_ir_divide_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" / ").write(instruction.get_right_value(), true).end_line()
 }
 
-IR_Greater_Than_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+IR_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction(dump = dump_ir_equal_comparison_instruction) {
 }
 
-IR_Greater_Than_Or_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+dump_ir_equal_comparison_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" == ").write(instruction.get_right_value(), true).end_line()
 }
 
-IR_Less_Than_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+IR_Greater_Comparison_Instruction :: struct : IR_Comparison_Instruction(dump = dump_ir_greater_comparison_instruction) {
 }
 
-IR_Less_Than_Or_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+dump_ir_greater_comparison_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" > ").write(instruction.get_right_value(), true).end_line()
 }
 
-IR_Modulo_Instruction :: struct : IR_Binary_Instruction {
+IR_Greater_Or_Equal_Comparison_Instruction :: struct : IR_Comparison_Instruction(dump = dump_ir_greater_or_equal_comparison_instruction) {
 }
 
-IR_Multiply_Instruction :: struct : IR_Binary_Instruction {
+dump_ir_greater_or_equal_comparison_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" >= ").write(instruction.get_right_value(), true).end_line()
 }
 
-IR_Not_Equals_Comparison_Instruction :: struct : IR_Comparison_Instruction {
+IR_Less_Comparison_Instruction :: struct : IR_Comparison_Instruction(dump = dump_ir_less_comparison_instruction) {
 }
 
-IR_Substract_Instruction :: struct : IR_Binary_Instruction {
+dump_ir_less_comparison_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" < ").write(instruction.get_right_value(), true).end_line()
 }
 
-IR_Phi_Instruction :: struct : IR_Instruction {
+IR_Less_Or_Equal_Comparison_Instruction :: struct : IR_Comparison_Instruction(dump = dump_ir_less_or_equal_comparison_instruction) {
+}
+
+dump_ir_less_or_equal_comparison_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" <= ").write(instruction.get_right_value(), true).end_line()
+}
+
+IR_Modulo_Instruction :: struct : IR_Binary_Instruction(dump = dump_ir_modulo_instruction) {
+}
+
+dump_ir_modulo_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" // ").write(instruction.get_right_value(), true).end_line()
+}
+
+IR_Multiply_Instruction :: struct : IR_Binary_Instruction(dump = dump_ir_multiply_instruction) {
+}
+
+dump_ir_multiply_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" * ").write(instruction.get_right_value(), true).end_line()
+}
+
+IR_Not_Equal_Comparison_Instruction :: struct : IR_Comparison_Instruction(dump = dump_ir_not_equal_comparison_instruction) {
+}
+
+dump_ir_not_equal_comparison_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Binary_Instruction
+    return file.write(instruction.get_left_value(), true).write(" != ").write(instruction.get_right_value(), true).end_line()
+}
+
+IR_Substract_Instruction :: struct : IR_Binary_Instruction(dump = dump_ir_substract_instruction) {
+}
+
+dump_ir_substract_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction := instruction as @IR_Binary_Instruction
+    instruction.dump_ir_instruction_result(file, prefix)
+    return file.write(instruction.get_left_value(), true).write(" - ").write(instruction.get_right_value(), true).end_line()
+}
+
+IR_Phi_Instruction :: struct : IR_Instruction(dump = dump_ir_phi_instruction) {
+}
+
+dump_ir_phi_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Phi_Instruction
+    file.write("phi").write('(')
+    operand_values_entry := instruction.operand_values.first_entry
+    if (operand_values_entry != null) {
+        loop {
+            file.write(operand_values_entry.value, true)
+            operand_values_entry = operand_values_entry.next_entry
+            if (operand_values_entry == null) {
+                break
+            }
+            file.write(", ")
+        }
+    }
+    return file.write(')').end_line()
 }
 
 create_ir_phi_instruction :: (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
