@@ -1371,6 +1371,23 @@ get :: (list: @List, struct_member: @IR_Struct_Type_Member) -> @IR_Struct_Member
 convert_struct_constructor_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Constructor_Value {
     init_arguments := new List()
     self.prepare_struct_init_arguments(init_arguments, call_expression.arguments, struct_type, struct_type)
+    if (struct_type.is_object_type()) {
+        variable := self.get_variable(struct_type.name)
+        variable_value := self.append(
+            create_ir_load_variable_instruction(self.create_variable_value(variable))
+            call_expression.location
+        )
+        object_type_member_name := struct_type.get_member("object_type").name
+        init_arguments_item := init_arguments.last_item
+        while (init_arguments_item != null) {
+            init_argument := init_arguments_item.data as @IR_Call_Argument
+            if (init_argument.name == object_type_member_name) {
+                init_argument.value = variable_value
+                break
+            }
+            init_arguments_item = init_arguments_item.prev_item
+        }
+    }
     return new IR_Struct_Constructor_Value(type = struct_type, init_arguments = init_arguments).init()
 }
 
