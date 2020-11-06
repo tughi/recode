@@ -1,7 +1,7 @@
 include "./code/lang/Object.code"
 
 main :: (argc: Int, argv: @@Int8) -> Int {
-    window := new Widget()
+    window := Widget()
     return window.bounds.location.x - 42
 }
 

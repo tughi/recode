@@ -820,6 +820,11 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
+    } else if (ir_value.is(IR_Variable_Address_Value)) {
+        ir_value := ir_value as @IR_Variable_Address_Value
+        ir_variable_value := ir_value.values.get(ir_value) as @IR_Variable_Value
+        mc_value := self.get_value(ir_variable_value)
+        self.output_file.write("  lea ").write(register.name_q).write(", ").write(mc_value.address).end_line()
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
     }

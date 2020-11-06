@@ -245,6 +245,20 @@ dump_ir_variable_value :: (value: @IR_Value, file: @FILE) -> @FILE {
     return file.write(value.variable.name).write('.').write(value.version)
 }
 
+IR_Variable_Address_Value :: struct : IR_Compound_Value(dump = dump_ir_variable_address_value) {
+    variable_value: @IR_Variable_Value
+}
+
+init :: (self: @IR_Variable_Address_Value) -> @IR_Variable_Address_Value {
+    self.values.put(self, self.variable_value)
+    return self
+}
+
+dump_ir_variable_address_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Variable_Address_Value
+    return file.write(value.variable_value, true).write(".address")
+}
+
 IR_Block :: struct : Object {
     id: Int
     function: @IR_Function

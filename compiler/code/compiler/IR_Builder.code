@@ -1196,14 +1196,22 @@ convert_logic_or_expression :: (self: @IR_Builder, expression: @AST_Logic_Or_Exp
 convert_member_access_expression :: (self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
     object_value := self.convert_expression(member_access_expression.object_expression, null)
     object_value_type := object_value.type
-    if ((object_value_type.is(IR_Pointer_Type)) == false) {
+    struct_type: @IR_Struct_Type
+    if (object_value_type.is(IR_Struct_Type)) {
+        if (object_value.is(IR_Variable_Value) == false) {
+            abort(member_access_expression.location, clone("Unuspported value type: ").append(object_value.object_type.name))
+        }
+        struct_type = object_value_type as @IR_Struct_Type
+        object_value = new IR_Variable_Address_Value(type = create_ir_pointer_type(struct_type), variable_value = object_value as @IR_Variable_Value).init()
+    } else if (object_value_type.is(IR_Pointer_Type)) {
+        pointed_type := (object_value_type as @IR_Pointer_Type).pointed_type
+        if (pointed_type.is(IR_Struct_Type) == false) {
+            abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
+        }
+        struct_type = pointed_type as @IR_Struct_Type
+    } else {
         abort(member_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
-    object_value_type := object_value_type as @IR_Pointer_Type
-    if ((object_value_type.pointed_type.is(IR_Struct_Type)) == false) {
-        abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
-    }
-    struct_type := object_value_type.pointed_type as @IR_Struct_Type
     struct_type_member := struct_type.get_member(member_access_expression.member_name.lexeme)
     if (struct_type_member == null) {
         struct_type.dump_struct_members()
