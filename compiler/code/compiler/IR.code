@@ -155,6 +155,7 @@ is_object_type :: (self: @IR_Struct_Type) -> Boolean {
 
 IR_Value :: struct : Object {
     type: @IR_Type
+    creator_instruction: @IR_Instruction = null
     user_instructions: @List = new List()
     dump: (value: @IR_Value, file: @FILE) -> @FILE = dump_ir_value
 }
@@ -551,6 +552,9 @@ dump_ir_direct_call_instruction :: (instruction: @IR_Instruction, file: @FILE, p
 create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function: @IR_Function) -> @IR_Call_Instruction {
     instruction := new IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
+    if (result_value != null) {
+        result_value.creator_instruction = instruction
+    }
     return instruction
 }
 
@@ -570,6 +574,9 @@ create_ir_dynamic_call_instruction :: (result_value: @IR_Variable_Value, call_ar
     instruction := new IR_Dynamic_Call_Instruction(result_value = result_value)
     instruction.add_arguments(call_arguments)
     instruction.set_operand_value("function_address", function_address)
+    if (result_value != null) {
+        result_value.creator_instruction = instruction
+    }
     return instruction
 }
 
@@ -589,6 +596,7 @@ dump_ir_cast_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: 
 create_ir_cast_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
     instruction := new IR_Cast_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -637,6 +645,7 @@ create_ir_load_array_item_instruction :: (result_value: @IR_Variable_Value, arra
     instruction := new IR_Load_Array_Item_Instruction(result_value = result_value)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -660,6 +669,7 @@ dump_ir_load_function_address_instruction :: (instruction: @IR_Instruction, file
 
 create_ir_load_function_address_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function) -> @IR_Load_Function_Address_Instruction {
     instruction := new IR_Load_Function_Address_Instruction(result_value = result_value, function = function)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -682,6 +692,7 @@ dump_ir_load_struct_member_instruction :: (instruction: @IR_Instruction, file: @
 create_ir_load_struct_member_instruction :: (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
     instruction := new IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -700,6 +711,7 @@ dump_ir_load_variable_instruction :: (instruction: @IR_Instruction, file: @FILE,
 
 create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
     instruction := new IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -722,6 +734,7 @@ create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, 
     if (size_value != null) {
         instruction.set_operand_value("size_value", size_value)
     }
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -765,6 +778,7 @@ dump_ir_set_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @
 create_ir_set_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
     instruction := new IR_Set_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -968,6 +982,7 @@ dump_ir_phi_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @
 
 create_ir_phi_instruction :: (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
     instruction := new IR_Phi_Instruction(result_value = result_value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 

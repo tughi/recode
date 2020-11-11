@@ -611,20 +611,18 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
             block_instruction := block.first_instruction
             while (block_instruction != null) {
                 if (block_instruction.is(IR_Set_Instruction)) {
-                    block_instruction := block_instruction as @IR_Set_Instruction
-                    if (block_instruction.get_value().is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0) {
+                    value := (block_instruction as @IR_Set_Instruction).get_value()
+                    if (value.is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0) {
                         block.remove(block_instruction)
                         repeat = true
                         break
                     }
-                }
-                if (block_instruction.result_value != null && block_instruction.result_value.user_instructions.size == 1) {
-                    user_instruction := block_instruction.result_value.user_instructions.first() as @IR_Instruction
-                    if (user_instruction.is(IR_Set_Instruction) && user_instruction.parent_block == block) {
-                        user_instruction := user_instruction as @IR_Set_Instruction
-                        if (user_instruction.get_value() == (block_instruction.result_value as @IR_Value)) {
-                            block.remove(user_instruction)
-                            block_instruction.result_value = user_instruction.result_value
+                    if (value.user_instructions.size == 1 && value.user_instructions.first_item.data as @IR_Instruction == block_instruction) {
+                        value_creator_instruction := value.creator_instruction
+                        if (value_creator_instruction != null && value_creator_instruction.parent_block == block) {
+                            value_creator_instruction.result_value = block_instruction.result_value
+                            value_creator_instruction.result_value.creator_instruction = value_creator_instruction
+                            block.remove(block_instruction)
                             repeat = true
                             break
                         }
