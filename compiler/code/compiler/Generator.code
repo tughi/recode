@@ -921,8 +921,8 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
             if (source_register != null) {
                 source_register.is_reserved = false
             }
-        } else if (ir_value.is(IR_Struct_Constructor_Value)) {
-            ir_value := ir_value as @IR_Struct_Constructor_Value
+        } else if (ir_value.is(IR_Struct_Literal_Value)) {
+            ir_value := ir_value as @IR_Struct_Literal_Value
             init_arguments_item := ir_value.init_arguments.first_item
             while (init_arguments_item != null) {
                 init_argument := init_arguments_item.data as @IR_Call_Argument

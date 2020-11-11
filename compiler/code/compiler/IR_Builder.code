@@ -959,7 +959,7 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
         if (first_argument != null) {
             abort(call_expression.location, "Invalid type literal syntax")
         }
-        return self.convert_struct_constructor_expression(call_expression, type as @IR_Struct_Type)
+        return self.convert_struct_literal_expression(call_expression, type as @IR_Struct_Type)
     }
 
     call_arguments := self.convert_call_arguments(call_expression.arguments)
@@ -1376,7 +1376,7 @@ get :: (list: @List, struct_member: @IR_Struct_Type_Member) -> @IR_Struct_Member
     return null
 }
 
-convert_struct_constructor_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Constructor_Value {
+convert_struct_literal_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Literal_Value {
     init_arguments := new List()
     self.prepare_struct_init_arguments(init_arguments, call_expression.arguments, struct_type, struct_type)
     if (struct_type.is_object_type()) {
@@ -1396,7 +1396,7 @@ convert_struct_constructor_expression :: (self: @IR_Builder, call_expression: @A
             init_arguments_item = init_arguments_item.prev_item
         }
     }
-    return new IR_Struct_Constructor_Value(type = struct_type, init_arguments = init_arguments).init()
+    return new IR_Struct_Literal_Value(type = struct_type, init_arguments = init_arguments).init()
 }
 
 convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {

@@ -197,12 +197,12 @@ IR_Compound_Value :: struct : IR_Value {
     values: @IR_Values_Map = new IR_Values_Map()
 }
 
-IR_Struct_Constructor_Value :: struct : IR_Compound_Value(dump = dump_ir_struct_constructor_value) {
+IR_Struct_Literal_Value :: struct : IR_Compound_Value(dump = dump_IR_Struct_Literal_Value) {
     init_arguments: @List
 }
 
-dump_ir_struct_constructor_value :: (value: @IR_Value, file: @FILE) -> @FILE {
-    value := value as @IR_Struct_Constructor_Value
+dump_IR_Struct_Literal_Value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Struct_Literal_Value
     file.write(value.type.name).write('(')
     init_arguments_item := value.init_arguments.first_item
     if (init_arguments_item != null) {
@@ -218,7 +218,7 @@ dump_ir_struct_constructor_value :: (value: @IR_Value, file: @FILE) -> @FILE {
     return file.write(')')
 }
 
-init :: (self: @IR_Struct_Constructor_Value) -> @IR_Struct_Constructor_Value {
+init :: (self: @IR_Struct_Literal_Value) -> @IR_Struct_Literal_Value {
     init_arguments_item := self.init_arguments.first_item
     while (init_arguments_item != null) {
         init_argument := init_arguments_item.data as @IR_Call_Argument
