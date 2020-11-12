@@ -158,6 +158,8 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_load_struct_member_instruction(instruction as @IR_Load_Struct_Member_Instruction)
     } else if (instruction.is(IR_Load_Variable_Instruction)) {
         self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
+    } else if (instruction.is(IR_Load_Variable_Address_Instruction)) {
+        self.generate_load_variable_address_instruction(instruction as @IR_Load_Variable_Address_Instruction)
     } else if (instruction.is(IR_Modulo_Instruction)) {
         self.generate_modulo_instruction(instruction as @IR_Modulo_Instruction)
     } else if (instruction.is(IR_Multiply_Instruction)) {
@@ -412,6 +414,18 @@ generate_load_function_address_instruction :: (self: @MC_Generator, instruction:
     result_register := self.find_unused_register()
     self.output_file.write("  lea ").write(result_register.name_q).write(", ").write_function_label(instruction.function).write("[rip]").end_line()
     self.map_variable_value(instruction.result_value, result_register)
+}
+
+generate_load_variable_address_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Address_Instruction) -> Nothing {
+    variable_value := self.get_value(instruction.get_variable_value())
+    if (variable_value == null) {
+        self.abort("Invalid state")
+    }
+    if (variable_value.address == null) {
+        self.abort("Variable has no address")
+    }
+    result_value := self.map_variable_value(instruction.result_value, self.find_unused_register())
+    self.output_file.write("  lea ").write(result_value.register.name_q).write(", ").write(variable_value.address).end_line()
 }
 
 generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
@@ -822,8 +836,11 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         }
     } else if (ir_value.is(IR_Variable_Address_Value)) {
         ir_value := ir_value as @IR_Variable_Address_Value
-        ir_variable_value := ir_value.values.get(ir_value) as @IR_Variable_Value
+        ir_variable_value := ir_value.variable_value
         mc_value := self.get_value(ir_variable_value)
+        if (mc_value == null) {
+            self.abort("The required variable value has been discarded already?")
+        }
         self.output_file.write("  lea ").write(register.name_q).write(", ").write(mc_value.address).end_line()
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
@@ -923,16 +940,17 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
             }
         } else if (ir_value.is(IR_Struct_Literal_Value)) {
             ir_value := ir_value as @IR_Struct_Literal_Value
-            init_arguments_item := ir_value.init_arguments.first_item
-            while (init_arguments_item != null) {
-                init_argument := init_arguments_item.data as @IR_Call_Argument
-                struct_type_member := struct_type.get_member(init_argument.name)
-                if (struct_type_member == null) {
-                    self.abort("Invalid state")
+            ir_value_links_item := ir_value.links.first_item
+            while (ir_value_links_item != null) {
+                ir_value_link := ir_value_links_item.data as @IR_Link
+                if (ir_value_link.is(IR_Struct_Literal_Member_Value_Link)) {
+                    ir_value_link := ir_value_link as @IR_Struct_Literal_Member_Value_Link
+                    destination_address.offset = destination_address_extra_offset + self.get_offset(ir_value_link.struct_type_member)
+                    self.generate_store_value(ir_value_link.value, destination_address)
+                    \ TODO: find a better way to mark a used member value, so that it can be discarded
+                    ir_value_link.value.links.remove(ir_value_link.back_link).prune()
                 }
-                destination_address.offset = destination_address_extra_offset + self.get_offset(struct_type_member)
-                self.generate_store_value(init_argument.value, destination_address)
-                init_arguments_item = init_arguments_item.next_item
+                ir_value_links_item = ir_value_links_item.next_item
             }
         } else {
             self.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
@@ -1294,6 +1312,28 @@ discard_used_values :: (self: @MC_Generator) -> Int {
                     discard_value = false
                 }
                 user_instruction_item = user_instruction_item.next_item
+            }
+
+            if (discard_value) {
+                value_links_item := mc_value.ir_variable_value.links.first_item
+                while (value_links_item != null) {
+                    value_link := value_links_item.data as @IR_Link
+                    if (value_link.is(IR_Required_By_Value_Link)) {
+                        other_value := (value_link as @IR_Required_By_Value_Link).value
+                        if (other_value.is(IR_Variable_Value) && self.get_value(other_value as @IR_Variable_Value) != null) {
+                            \ there is at least one other value that depends on this value
+                            discard_value = false
+                            break
+                        }
+                        if (other_value.is(IR_Struct_Literal_Value)) {
+                            \ TODO: find a way to check if the struct literal has been used
+                            \ there is at least one struct literal that requires this value
+                            discard_value = false
+                            break
+                        }
+                    }
+                    value_links_item = value_links_item.next_item
+                }
             }
 
             if (discard_value) {

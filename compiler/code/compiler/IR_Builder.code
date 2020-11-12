@@ -620,6 +620,18 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
                     if (value.user_instructions.size == 1 && value.user_instructions.first_item.data as @IR_Instruction == block_instruction) {
                         value_creator_instruction := value.creator_instruction
                         if (value_creator_instruction != null && value_creator_instruction.parent_block == block) {
+                            redundant_value := value_creator_instruction.result_value
+                            replacement_value: @IR_Value = block_instruction.result_value
+                            redundant_value_links_item := redundant_value.links.first_item
+                            while (redundant_value_links_item != null) {
+                                redundant_value_link := redundant_value_links_item.data as @IR_Link
+                                if (redundant_value_link.is(IR_Requires_Value_Link)) {
+                                    redundant_value_link := redundant_value_link as @IR_Requires_Value_Link
+                                    redundant_value_link.back_link.value = replacement_value
+                                    replacement_value.links.append(redundant_value_link)
+                                }
+                                redundant_value_links_item = redundant_value_links_item.next_item
+                            }
                             value_creator_instruction.result_value = block_instruction.result_value
                             value_creator_instruction.result_value.creator_instruction = value_creator_instruction
                             block.remove(block_instruction)
@@ -1200,7 +1212,13 @@ convert_member_access_expression :: (self: @IR_Builder, member_access_expression
             abort(member_access_expression.location, clone("Unuspported value type: ").append(object_value.object_type.name))
         }
         struct_type = object_value_type as @IR_Struct_Type
-        object_value = new IR_Variable_Address_Value(type = create_ir_pointer_type(struct_type), variable_value = object_value as @IR_Variable_Value).init()
+        object_value = self.append(
+            create_ir_load_variable_address_instruction(
+                self.create_temp_value(create_ir_pointer_type(struct_type))
+                object_value as @IR_Variable_Value
+            )
+            member_access_expression.location
+        )
     } else if (object_value_type.is(IR_Pointer_Type)) {
         pointed_type := (object_value_type as @IR_Pointer_Type).pointed_type
         if (pointed_type.is(IR_Struct_Type) == false) {
@@ -1394,7 +1412,8 @@ convert_struct_literal_expression :: (self: @IR_Builder, call_expression: @AST_C
             init_arguments_item = init_arguments_item.prev_item
         }
     }
-    return new IR_Struct_Literal_Value(type = struct_type, init_arguments = init_arguments).init()
+    \ TODO: convert default init_arguments to member values
+    return new IR_Struct_Literal_Value(type = struct_type).init(init_arguments)
 }
 
 convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {
