@@ -211,6 +211,32 @@ dump_ir_constant_value :: (value: @IR_Value, file: @FILE) -> @FILE {
 IR_Struct_Literal_Value :: struct : IR_Value(dump = dump_IR_Struct_Literal_Value) {
 }
 
+IR_Struct_Literal_Member_Value_Link :: struct : IR_Requires_Value_Link {
+    struct_type_member: @IR_Struct_Type_Member
+}
+
+get_member_value :: (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Value {
+    links_item := self.links.first_item
+    while (links_item != null) {
+        link := links_item.data as @IR_Link
+        if (link.is(IR_Struct_Literal_Member_Value_Link)) {
+            link := link as @IR_Struct_Literal_Member_Value_Link
+            if (link.struct_type_member == struct_type_member) {
+                return link.value
+            }
+        }
+        links_item = links_item.next_item
+    }
+    return null
+}
+
+set_member_value :: (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> Nothing {
+    member_value_link := new IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
+    member_value_link.back_link = new IR_Required_By_Value_Link(value = self, back_link = member_value_link)
+    self.links.append(member_value_link)
+    value.links.append(member_value_link.back_link)
+}
+
 dump_IR_Struct_Literal_Value :: (value: @IR_Value, file: @FILE) -> @FILE {
     value := value as @IR_Struct_Literal_Value
     file.write(value.type.name).write('(')
@@ -232,26 +258,13 @@ dump_IR_Struct_Literal_Value :: (value: @IR_Value, file: @FILE) -> @FILE {
     return file.write(')')
 }
 
-init :: (self: @IR_Struct_Literal_Value, init_arguments: @List) -> @IR_Struct_Literal_Value {
-    struct_type := self.type as @IR_Struct_Type
-    init_arguments_item := init_arguments.first_item
-    while (init_arguments_item != null) {
-        init_argument := init_arguments_item.data as @IR_Call_Argument
-        struct_type_member := struct_type.get_member(init_argument.name)
-        if (struct_type_member == null) {
-            abort("Invalid state")
-        }
-        member_value_link := new IR_Struct_Literal_Member_Value_Link(value = init_argument.value, struct_type_member = struct_type_member, back_link = undefined)
-        member_value_link.back_link = new IR_Required_By_Value_Link(value = self, back_link = member_value_link)
-        self.links.append(member_value_link)
-        init_argument.value.links.append(member_value_link.back_link)
-        init_arguments_item = init_arguments_item.next_item
-    }
-    return self
+IR_Global_Variable_Value :: struct : IR_Value(dump = dump_ir_global_variable_value) {
+    variable: @IR_Variable
 }
 
-IR_Struct_Literal_Member_Value_Link :: struct : IR_Requires_Value_Link {
-    struct_type_member: @IR_Struct_Type_Member
+dump_ir_global_variable_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Variable_Value
+    return file.write(value.variable.name)
 }
 
 IR_Variable_Value :: struct : IR_Value(dump = dump_ir_variable_value) {
@@ -708,10 +721,9 @@ create_ir_load_struct_member_instruction :: (result_value: @IR_Variable_Value, s
 
     if (struct_type_member.type.is(IR_Struct_Type)) {
         result_value_link := new IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
-        struct_pointer_value_link := new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
-        result_value_link.back_link = struct_pointer_value_link
+        result_value_link.back_link = new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
         result_value.links.append(result_value_link)
-        struct_pointer_value.links.append(struct_pointer_value_link)
+        struct_pointer_value.links.append(result_value_link.back_link)
     }
 
     return instruction
@@ -736,10 +748,9 @@ create_ir_load_variable_address_instruction :: (result_value: @IR_Variable_Value
     result_value.creator_instruction = instruction
 
     result_value_link := new IR_Requires_Value_Link(value = variable_value, back_link = undefined)
-    variable_value_link := new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
-    result_value_link.back_link = variable_value_link
+    result_value_link.back_link = new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
     result_value.links.append(result_value_link)
-    variable_value.links.append(variable_value_link)
+    variable_value.links.append(result_value_link.back_link)
 
     return instruction
 }
@@ -770,24 +781,18 @@ IR_New_Instruction :: struct : IR_Instruction(dump = dump_ir_new_instruction) {
 dump_ir_new_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
     instruction.dump_ir_instruction_result(file, prefix)
     instruction := instruction as @IR_New_Instruction
-    file.write("new").write('(').write(instruction.type.name)
-    if (instruction.get_size_value() != null) {
-        file.write(", ").write(instruction.get_size_value(), true)
-    }
-    return file.write(')').end_line()
+    return file.write("new").write(' ').write(instruction.get_init_value(), true).end_line()
 }
 
-create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, size_value: @IR_Value) -> @IR_New_Instruction {
+create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, init_value: @IR_Value) -> @IR_New_Instruction {
     instruction := new IR_New_Instruction(result_value = result_value, type = type)
-    if (size_value != null) {
-        instruction.set_operand_value("size_value", size_value)
-    }
+    instruction.set_operand_value("init_value", init_value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-get_size_value :: (self: @IR_New_Instruction) -> @IR_Value {
-    return self.operand_values.get("size_value")
+get_init_value :: (self: @IR_New_Instruction) -> @IR_Value {
+    return self.operand_values.get("init_value")
 }
 
 IR_Return_Instruction :: struct : IR_Instruction(dump = dump_ir_return_instruction) {

@@ -450,39 +450,6 @@ generate_load_variable_instruction :: (self: @MC_Generator, instruction: @IR_Loa
         } else {
             self.abort(clone("Invalid state"))
         }
-    } else if (instruction.variable.is(IR_Global_Variable)) {
-        ir_variable_value := instruction.result_value
-        mc_value := self.get_value(ir_variable_value)
-        if (mc_value == null) {
-            self.abort("Invalid state")
-        }
-        address := mc_value.address
-        if (address != null) {
-            if (address.is(MC_Global_Variable_Address) == false) {
-                self.abort("Invalid state")
-            }
-            address := address as @MC_Global_Variable_Address
-            if (address.ir_variable != ir_variable_value.variable) {
-                self.abort("Invalid state")
-            }
-            return
-        }
-        ir_variable := instruction.variable as @IR_Global_Variable
-        if (ir_variable.is_external) {
-            \ map external variable to global variable address
-            self.map_variable_value(instruction.result_value, new MC_Global_Variable_Address(ir_variable = ir_variable))
-            return
-        }
-        if (ir_variable.type.is(IR_Pointer_Type)) {
-            pointed_type := (ir_variable.type as @IR_Pointer_Type).pointed_type
-            if (pointed_type.name.equals("Object_Type")) {
-                result_register := self.find_unused_register()
-                self.output_file.write("  lea ").write(result_register.name_q).write(", ").write(ir_variable.name).write("[rip]").end_line()
-                self.map_variable_value(instruction.result_value, result_register)
-                return
-            }
-        }
-        self.abort("Unsupported non-external variable")
     } else {
         self.abort(clone("Unsupported variable type: ").append(instruction.variable.object_type.name))
     }
@@ -571,17 +538,9 @@ generate_multiply_instruction :: (self: @MC_Generator, instruction: @IR_Multiply
 generate_new_instruction :: (self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
     self.release_all_registers()
     self.output_file.write("  mov ").write(self.register_rdi.name_q).write(", ").write(self.get_type_size(instruction.type)).end_line()
-    if (instruction.get_size_value() != null) {
-        self.abort("TODO: compute array size")
-    }
     self.output_file.write("  call ").write("malloc").end_line()
     self.map_variable_value(instruction.result_value, self.register_rax)
-
-    if (instruction.type.is(IR_Struct_Type) && (instruction.type as @IR_Struct_Type).is_object_type()) {
-        register := self.find_unused_register()
-        self.output_file.write("  lea ").write(register.name_q).write(", ").write_type_label(instruction.type).write("[rip]").end_line()
-        self.output_file.write("  mov ").write(new MC_Register_Based_Address(register = self.register_rax)).write(", ").write(register.name_q).end_line()
-    }
+    self.generate_store_value(instruction.get_init_value(), new MC_Register_Based_Address(register = self.register_rax))
 }
 
 generate_phi_instruction :: (self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
@@ -842,6 +801,15 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
             self.abort("The required variable value has been discarded already?")
         }
         self.output_file.write("  lea ").write(register.name_q).write(", ").write(mc_value.address).end_line()
+    } else if (ir_value.is(IR_Global_Variable_Value)) {
+        ir_value := ir_value as @IR_Global_Variable_Value
+        ir_value_type := ir_value.type
+        if (ir_value_type.is(IR_Pointer_Type)) {
+            variable_address := new MC_Global_Variable_Address(ir_variable = ir_value.variable)
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
+        } else {
+            self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
+        }
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
     }
@@ -849,10 +817,26 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
 
 generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_Address) -> Nothing {
     ir_value_type := ir_value.type
+    if (ir_value.is(IR_Variable_Value) && ir_value_type.is(IR_Struct_Type) == false) {
+        mc_value := self.get_value(ir_value as @IR_Variable_Value)
+        if (mc_value.register == null) {
+            register := self.find_unused_register()
+            self.generate_load_value(register, ir_value)
+            self.map_variable_value(mc_value.ir_variable_value, register)
+        }
+    }
     if (ir_value.is(IR_Constant_Value) && (ir_value as @IR_Constant_Value).literal.is(String_Token)) {
         register := self.find_unused_register()
         self.generate_load_value(register, ir_value)
         self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
+    } else if (ir_value.is(IR_Global_Variable_Value)) {
+        register := self.find_unused_register()
+        self.generate_load_value(register, ir_value)
+        if (ir_value_type.is(IR_Pointer_Type)) {
+            self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
+        } else {
+            self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
+        }
     } else if (ir_value_type.is(IR_Int_Type)) {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else if (ir_value_type.is(IR_Int8_Type)) {
@@ -945,8 +929,10 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
                 ir_value_link := ir_value_links_item.data as @IR_Link
                 if (ir_value_link.is(IR_Struct_Literal_Member_Value_Link)) {
                     ir_value_link := ir_value_link as @IR_Struct_Literal_Member_Value_Link
-                    destination_address.offset = destination_address_extra_offset + self.get_offset(ir_value_link.struct_type_member)
-                    self.generate_store_value(ir_value_link.value, destination_address)
+                    if (ir_value_link.value.type.is(IR_Undefined_Type) == false) {
+                        destination_address.offset = destination_address_extra_offset + self.get_offset(ir_value_link.struct_type_member)
+                        self.generate_store_value(ir_value_link.value, destination_address)
+                    }
                 }
                 ir_value_links_item = ir_value_links_item.next_item
             }
@@ -1139,6 +1125,10 @@ find_unused_register :: (self: @MC_Generator) -> @MC_Register {
     if (self.register_rdi.is_reserved == false && self.register_rdi.value == null) {
         return self.register_rdi
     }
+    if (self.register_rbx.is_reserved == false && self.register_rbx.value == self.register_rbx.loaded_value) {
+        self.release_register(self.register_rbx)
+        return self.register_rbx
+    }
     self.abort("All registered are used")
 }
 
@@ -1200,10 +1190,6 @@ get_value :: (self: @MC_Generator, ir_variable_value: @IR_Variable_Value) -> @MC
 }
 
 spill_local_variable :: (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
-    if (mc_value.ir_variable_value.variable.is(IR_Global_Variable)) {
-        \ global variables are spilled after each instruction
-        self.abort("Invalid state")
-    }
     variable_type_size := self.get_type_size(mc_value.ir_variable_value.type)
     if (mc_value.address == null) {
         self.map_variable_value(mc_value.ir_variable_value, self.create_local_variable_address(variable_type_size))
@@ -1264,16 +1250,18 @@ release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
     mc_value := register.value
     if (mc_value != null) {
         if (register.loaded_value != mc_value) {
-            persist_value := false
+            persist_value := mc_value.ir_variable_value.is_used() == false
 
-            ir_value_user_instructions_item := mc_value.ir_variable_value.user_instructions.first_item
-            while (ir_value_user_instructions_item != null) {
-                ir_value_user_instruction := ir_value_user_instructions_item.data as @IR_Instruction
-                if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
-                    persist_value = true
-                    break
+            if (persist_value == false) {
+                ir_value_user_instructions_item := mc_value.ir_variable_value.user_instructions.first_item
+                while (ir_value_user_instructions_item != null) {
+                    ir_value_user_instruction := ir_value_user_instructions_item.data as @IR_Instruction
+                    if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
+                        persist_value = true
+                        break
+                    }
+                    ir_value_user_instructions_item = ir_value_user_instructions_item.next_item
                 }
-                ir_value_user_instructions_item = ir_value_user_instructions_item.next_item
             }
 
             if (persist_value) {
@@ -1628,16 +1616,18 @@ generate_object_types :: (self: @MC_Generator, types: @List) -> Nothing {
                 self.output_file.end_line()
                 self.output_file.write("  .align 8").end_line()
                 self.output_file.write_type_label(type).write(':').end_line()
+                self.output_file.write("  .quad .LABEL__").write_type_label(type).write("__object_type").end_line()
+                self.output_file.write(".LABEL__").write_type_label(type).write("__object_type").write(':').end_line()
                 self.output_file.write("  .quad ").write(0).end_line() \ CHECK: Why isn't there a type.id? Isn't it needed anymore?
-                self.output_file.write("  .quad .LABEL__").write(type.name).write("__type_name__data").end_line()
+                self.output_file.write("  .quad .LABEL__").write(type.name).write("__object_type__name__data").end_line()
                 self.output_file.write("  .quad ").write(type.name.length + 1).end_line()
                 self.output_file.write("  .quad ").write(type.name.length).end_line()
                 if (type.base_type != null) {
-                    self.output_file.write("  .quad ").write(type.base_type.name).end_line()
+                    self.output_file.write("  .quad .LABEL__").write(type.base_type.name).write("__object_type").end_line()
                 } else {
                     self.output_file.write("  .quad 0").end_line()
                 }
-                self.output_file.write(".LABEL__").write(type.name).write("__type_name__data: .string \"").write(type.name).write('"').end_line()
+                self.output_file.write(".LABEL__").write(type.name).write("__object_type__name__data: .string \"").write(type.name).write('"').end_line()
             }
         }
         type_item = type_item.next_item

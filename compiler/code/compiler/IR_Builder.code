@@ -100,9 +100,9 @@ get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
     }
 }
 
-get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
+get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
     if (variable.is(IR_Global_Variable)) {
-        return self.append(create_ir_load_variable_instruction(self.create_variable_value(variable)), null) as @IR_Variable_Value
+        return new IR_Global_Variable_Value(type = variable.type, variable = variable)
     }
     current_block_instruction := self.current_block.last_instruction
     while (current_block_instruction != null) {
@@ -573,11 +573,13 @@ remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -
             block_instruction := block.first_instruction
             while (block_instruction != null && block_instruction.is(IR_Phi_Instruction)) {
                 instruction := block_instruction as @IR_Phi_Instruction
-                if (instruction.is_trivial()) {
+                instruction_is_redundant := instruction.is_redundant()
+                if (instruction_is_redundant == false && instruction.is_trivial()) {
                     \ found a trivial phi instruction
                     instruction.operand_values.remove_values(instruction.result_value)
+                    instruction_is_redundant = true
                 }
-                if (instruction.is_redundant()) {
+                if (instruction_is_redundant) {
                     \ found redundant phi instruction
                     old_value := instruction.result_value
                     new_value := instruction.operand_values.first_entry.value
@@ -587,6 +589,16 @@ remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -
                         user_instruction.replace_operand_value(old_value, new_value)
                     }
                     new_value.user_instructions.remove_all(instruction).prune()
+                    old_value_links_item := old_value.links.first_item
+                    while (old_value_links_item != null) {
+                        old_value_link := old_value_links_item.data as @IR_Link
+                        if (old_value_link.is(IR_Required_By_Value_Link)) {
+                            old_value_link := old_value_link as @IR_Required_By_Value_Link
+                            old_value_link.back_link.value = new_value
+                            new_value.links.append(old_value_link)
+                        }
+                        old_value_links_item = old_value_links_item.next_item
+                    }
                     block.remove(instruction)
                     repeat = true
                 }
@@ -1311,33 +1323,51 @@ convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -
     if (type.is(IR_Struct_Type)) {
         type := type as @IR_Struct_Type
         init_arguments := new List()
-        self.prepare_struct_init_arguments(init_arguments, expression.init_arguments, type, type)
-        result_value := self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null), expression.location)
-        self.apply_struct_init_arguments(result_value, type, init_arguments, expression)
+        init_value := self.convert_struct_literal_expression(expression, type)
+        result_value := self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, init_value), expression.location)
         return result_value
     }
     abort(expression.location, clone("Unsupported type: ").append(type.name))
 }
 
-prepare_struct_init_arguments :: (self: @IR_Builder, init_arguments: @List, call_arguments: @List, struct_type: @IR_Struct_Type, base_type: @IR_Struct_Type) -> Nothing {
+convert_struct_literal_expression :: (self: @IR_Builder, expression: @AST_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Literal_Value {
+    call_arguments: @List
+    if (expression.is(AST_Call_Expression)) {
+        call_arguments = (expression as @AST_Call_Expression).arguments
+    } else if (expression.is(AST_New_Expression)) {
+        call_arguments = (expression as @AST_New_Expression).init_arguments
+    } else {
+        abort(expression.location, clone("Unsupported type: ").append(expression.object_type.name))
+    }
+    struct_literal_value := new IR_Struct_Literal_Value(type = struct_type)
+    if (struct_type.is_object_type()) {
+        variable := self.get_variable(struct_type.name)
+        object_type_member := struct_type.get_member("object_type")
+        struct_literal_value.set_member_value(object_type_member, new IR_Global_Variable_Value(type = variable.type, variable = variable))
+    }
+    self.convert_struct_literal_value(struct_literal_value, call_arguments, struct_type, struct_type)
+    return struct_literal_value
+}
+
+convert_struct_literal_value :: (self: @IR_Builder, struct_literal_value: @IR_Struct_Literal_Value, call_arguments: @List, struct_type: @IR_Struct_Type, base_type: @IR_Struct_Type) -> Nothing {
     call_arguments_item := call_arguments.first_item
     while (call_arguments_item != null) {
         call_argument := call_arguments_item.data as @AST_Call_Argument
-        if (call_argument.name == null) {
+        call_argument_name := call_argument.name
+        if (call_argument_name == null) {
             abort(call_argument.value_expression.location, "Struct init argument without name")
         }
-        call_argument_name := call_argument.name.lexeme
-        if (init_arguments.get_named_argument(call_argument_name) == null) {
-            struct_type_member := struct_type.get_member(call_argument_name)
-            if (struct_type_member == null) {
-                abort(call_argument.name.location, clone(struct_type.name).append(" has no such member: ").append(call_argument_name))
-            }
-            init_arguments.append(new IR_Call_Argument(name = call_argument_name, value = self.convert_expression(call_argument.value_expression, struct_type_member.type)))
+        struct_type_member := struct_type.get_member(call_argument_name.lexeme)
+        if (struct_type_member == null) {
+            abort(call_argument_name.location, clone(struct_type.name).append(" has no such member: ").append(call_argument_name.lexeme))
+        }
+        if (struct_literal_value.get_member_value(struct_type_member) == null) {
+            struct_literal_value.set_member_value(struct_type_member, self.convert_expression(call_argument.value_expression, struct_type_member.type))
         }
         call_arguments_item = call_arguments_item.next_item
     }
     if (base_type != null) {
-        self.prepare_struct_init_arguments(init_arguments, base_type.statement.init_arguments, struct_type, base_type.base_type)
+        self.convert_struct_literal_value(struct_literal_value, base_type.statement.init_arguments, struct_type, base_type.base_type)
     }
 }
 
@@ -1351,69 +1381,6 @@ get_named_argument :: (list: @List, name: @String) -> @IR_Call_Argument {
         list_item = list_item.next_item
     }
     return null
-}
-
-apply_struct_init_arguments :: (self: @IR_Builder, object_address_value: @IR_Value, struct_type: @IR_Struct_Type, call_arguments: @List, expression: @AST_New_Expression) -> Nothing {
-    if (struct_type.base_type != null) {
-        self.apply_struct_init_arguments(object_address_value, struct_type.base_type, call_arguments, expression)
-    }
-    struct_type_members_item := struct_type.members.first_item
-    while (struct_type_members_item != null) {
-        struct_type_member := struct_type_members_item.data as @IR_Struct_Type_Member
-        struct_type_member_name := struct_type_member.name
-        call_argument := call_arguments.get_named_argument(struct_type_member_name)
-        if (call_argument != null) {
-            call_argument_value := call_argument.value
-            if (call_argument_value.type.is(IR_Undefined_Type) == false) {
-                self.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, call_argument_value), null)
-            }
-        } else {
-            stdout.write(expression.location).write(": ").write(struct_type.name).write('.').write(struct_type_member_name).write(" is not initialized").end_line()
-        }
-        struct_type_members_item = struct_type_members_item.next_item
-    }
-}
-
-IR_Struct_Member_Value :: struct {
-    struct_member: @IR_Struct_Type_Member
-    value_expression: @AST_Expression
-    value: @IR_Value
-}
-
-get :: (list: @List, struct_member: @IR_Struct_Type_Member) -> @IR_Struct_Member_Value {
-    list_item := list.first_item
-    while (list_item != null) {
-        struct_member_value := list_item.data as @IR_Struct_Member_Value
-        if (struct_member_value.struct_member == struct_member) {
-            return struct_member_value
-        }
-        list_item = list_item.next_item
-    }
-    return null
-}
-
-convert_struct_literal_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Literal_Value {
-    init_arguments := new List()
-    self.prepare_struct_init_arguments(init_arguments, call_expression.arguments, struct_type, struct_type)
-    if (struct_type.is_object_type()) {
-        variable := self.get_variable(struct_type.name)
-        variable_value := self.append(
-            create_ir_load_variable_instruction(self.create_variable_value(variable))
-            call_expression.location
-        )
-        object_type_member_name := struct_type.get_member("object_type").name
-        init_arguments_item := init_arguments.last_item
-        while (init_arguments_item != null) {
-            init_argument := init_arguments_item.data as @IR_Call_Argument
-            if (init_argument.name == object_type_member_name) {
-                init_argument.value = variable_value
-                break
-            }
-            init_arguments_item = init_arguments_item.prev_item
-        }
-    }
-    \ TODO: convert default init_arguments to member values
-    return new IR_Struct_Literal_Value(type = struct_type).init(init_arguments)
 }
 
 convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {
