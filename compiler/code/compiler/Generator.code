@@ -947,8 +947,6 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
                     ir_value_link := ir_value_link as @IR_Struct_Literal_Member_Value_Link
                     destination_address.offset = destination_address_extra_offset + self.get_offset(ir_value_link.struct_type_member)
                     self.generate_store_value(ir_value_link.value, destination_address)
-                    \ TODO: find a better way to mark a used member value, so that it can be discarded
-                    ir_value_link.value.links.remove(ir_value_link.back_link).prune()
                 }
                 ir_value_links_item = ir_value_links_item.next_item
             }
@@ -1268,14 +1266,14 @@ release_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing {
         if (register.loaded_value != mc_value) {
             persist_value := false
 
-            ir_value_user_instruction_item := mc_value.ir_variable_value.user_instructions.first_item
-            while (ir_value_user_instruction_item != null) {
-                ir_value_user_instruction := ir_value_user_instruction_item.data as @IR_Instruction
+            ir_value_user_instructions_item := mc_value.ir_variable_value.user_instructions.first_item
+            while (ir_value_user_instructions_item != null) {
+                ir_value_user_instruction := ir_value_user_instructions_item.data as @IR_Instruction
                 if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
                     persist_value = true
                     break
                 }
-                ir_value_user_instruction_item = ir_value_user_instruction_item.next_item
+                ir_value_user_instructions_item = ir_value_user_instructions_item.next_item
             }
 
             if (persist_value) {
@@ -1294,13 +1292,13 @@ discard_used_values :: (self: @MC_Generator) -> Int {
 
     mc_value := self.last_value
     while (mc_value != null) {
-        if (mc_value.ir_instruction.is_generated && mc_value.ir_instruction.parent_block.is_being_generated) {
+        if (mc_value.ir_instruction.is_generated && mc_value.ir_instruction.parent_block.is_being_generated && mc_value.ir_variable_value.is_used()) {
             discard_value := true
             value_is_phi_argument := false
 
-            user_instruction_item := mc_value.ir_variable_value.user_instructions.first_item
-            while (discard_value && user_instruction_item != null) {
-                user_instruction := user_instruction_item.data as @IR_Instruction
+            user_instructions_item := mc_value.ir_variable_value.user_instructions.first_item
+            while (discard_value && user_instructions_item != null) {
+                user_instruction := user_instructions_item.data as @IR_Instruction
                 if (user_instruction.is(IR_Phi_Instruction)) {
                     value_is_phi_argument = true
                 }
@@ -1311,29 +1309,7 @@ discard_used_values :: (self: @MC_Generator) -> Int {
                     \ there is at least one user instruction in another block that requires this value and the value's parent block hasn't been generated yet
                     discard_value = false
                 }
-                user_instruction_item = user_instruction_item.next_item
-            }
-
-            if (discard_value) {
-                value_links_item := mc_value.ir_variable_value.links.first_item
-                while (value_links_item != null) {
-                    value_link := value_links_item.data as @IR_Link
-                    if (value_link.is(IR_Required_By_Value_Link)) {
-                        other_value := (value_link as @IR_Required_By_Value_Link).value
-                        if (other_value.is(IR_Variable_Value) && self.get_value(other_value as @IR_Variable_Value) != null) {
-                            \ there is at least one other value that depends on this value
-                            discard_value = false
-                            break
-                        }
-                        if (other_value.is(IR_Struct_Literal_Value)) {
-                            \ TODO: find a way to check if the struct literal has been used
-                            \ there is at least one struct literal that requires this value
-                            discard_value = false
-                            break
-                        }
-                    }
-                    value_links_item = value_links_item.next_item
-                }
+                user_instructions_item = user_instructions_item.next_item
             }
 
             if (discard_value) {
@@ -1369,6 +1345,29 @@ discard_used_values :: (self: @MC_Generator) -> Int {
     }
 
     return removed_values
+}
+
+is_used :: (self: @IR_Value) -> Boolean {
+    user_instructions_item := self.user_instructions.first_item
+    while (user_instructions_item != null) {
+        user_instruction := user_instructions_item.data as @IR_Instruction
+        if (user_instruction.is_generated == false) {
+            return false
+        }
+        user_instructions_item = user_instructions_item.next_item
+    }
+    links_item := self.links.first_item
+    while (links_item != null) {
+        link := links_item.data as @IR_Link
+        if (link.is(IR_Required_By_Value_Link)) {
+            link := link as @IR_Required_By_Value_Link
+            if (link.value.is_used() == false) {
+                return false
+            }
+        }
+        links_item = links_item.next_item
+    }
+    return true
 }
 
 output_live_values :: (self: @MC_Generator) -> Nothing {
