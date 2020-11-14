@@ -89,13 +89,11 @@ def build():
     build_stage(1)
     examples()
     build_stage(2)
+    build_stage(3)
 
 
 def stage():
-    bootstrap()
-    build_stage(1)
-    build_stage(2)
-    build_stage(3)
+    build()
     execute('diff -q build/stage2/ReCode.s build/stage3/ReCode.s')
     execute('rm -fr bootstrap', echo=False)
     execute('cp -R compiler bootstrap')
