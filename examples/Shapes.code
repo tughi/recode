@@ -1,0 +1,33 @@
+main :: () -> Int {
+    square := new Square()
+    if (square.is(Polygon) == false) {
+        return 1
+    }
+    stdout.write(square.object_type.name).write(" has sides: ").write(square.sides).end_line()
+    return 0
+}
+
+Shape :: struct : Object {
+}
+
+Ellipse :: struct : Shape {
+}
+
+Circle :: struct : Ellipse {
+}
+
+Polygon :: struct : Shape {
+    sides: Int
+}
+
+Triangle :: struct : Polygon(sides = 3) {
+}
+
+Rectangle :: struct : Polygon(sides = 4) {
+}
+
+Square :: struct : Rectangle {
+}
+
+include "./code/io/File.code"
+include "./code/lang/Object.code"
