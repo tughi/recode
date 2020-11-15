@@ -1410,7 +1410,7 @@ convert_variable_expression :: (self: @IR_Builder, expression: @AST_Variable_Exp
         if (expected_type != null && expected_type.is(IR_Function_Type)) {
             function := self.get_named_function(expression.name.lexeme, expected_type as @IR_Function_Type)
             if (function != null) {
-                return self.append(create_ir_load_function_address_instruction(self.create_temp_value(expected_type), function), expression.location)
+                return new IR_Function_Address_Value(type = expected_type, function = function)
             }
         }
         abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))

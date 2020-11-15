@@ -152,8 +152,6 @@ generate_instruction :: (self: @MC_Generator, instruction: @IR_Instruction) -> N
         self.generate_divide_instruction(instruction as @IR_Divide_Instruction)
     } else if (instruction.is(IR_Load_Array_Item_Instruction)) {
         self.generate_load_array_item_instruction(instruction as @IR_Load_Array_Item_Instruction)
-    } else if (instruction.is(IR_Load_Function_Address_Instruction)) {
-        self.generate_load_function_address_instruction(instruction as @IR_Load_Function_Address_Instruction)
     } else if (instruction.is(IR_Load_Struct_Member_Instruction)) {
         self.generate_load_struct_member_instruction(instruction as @IR_Load_Struct_Member_Instruction)
     } else if (instruction.is(IR_Load_Variable_Instruction)) {
@@ -408,12 +406,6 @@ generate_load_array_item_instruction :: (self: @MC_Generator, instruction: @IR_L
     } else {
         self.output_file.write("  mov ").write(result_register.name_b).write(", ").write(address).end_line()
     }
-}
-
-generate_load_function_address_instruction :: (self: @MC_Generator, instruction: @IR_Load_Function_Address_Instruction) -> Nothing {
-    result_register := self.find_unused_register()
-    self.output_file.write("  lea ").write(result_register.name_q).write(", ").write_function_label(instruction.function).write("[rip]").end_line()
-    self.map_variable_value(instruction.result_value, result_register)
 }
 
 generate_load_variable_address_instruction :: (self: @MC_Generator, instruction: @IR_Load_Variable_Address_Instruction) -> Nothing {
@@ -810,6 +802,9 @@ generate_load_value :: (self: @MC_Generator, register: @MC_Register, ir_value: @
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
+    } else if (ir_value.is(IR_Function_Address_Value)) {
+        ir_value := ir_value as @IR_Function_Address_Value
+        self.output_file.write("  lea ").write(register.name_q).write(", ").write_function_label(ir_value.function).write("[rip]").end_line()
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value.object_type.name))
     }
@@ -833,6 +828,14 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
         register := self.find_unused_register()
         self.generate_load_value(register, ir_value)
         if (ir_value_type.is(IR_Pointer_Type)) {
+            self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
+        } else {
+            self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
+        }
+    } else if (ir_value.is(IR_Function_Address_Value)) {
+        register := self.find_unused_register()
+        self.generate_load_value(register, ir_value)
+        if (ir_value_type.is(IR_Function_Type)) {
             self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))

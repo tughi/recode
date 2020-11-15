@@ -293,6 +293,15 @@ dump_ir_variable_address_value :: (value: @IR_Value, file: @FILE) -> @FILE {
     return file.write(value.variable_value, true).write(".address")
 }
 
+IR_Function_Address_Value :: struct : IR_Value(dump = dump_ir_function_address_value) {
+    function: @IR_Function
+}
+
+dump_ir_function_address_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Function_Address_Value
+    return file.write_function_label(value.function).write(".address")
+}
+
 IR_Block :: struct : Object {
     id: Int
     function: @IR_Function
@@ -680,22 +689,6 @@ get_array_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
 
 get_index_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("index_value")
-}
-
-IR_Load_Function_Address_Instruction :: struct : IR_Instruction(dump = dump_ir_load_function_address_instruction) {
-    function: @IR_Function
-}
-
-dump_ir_load_function_address_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
-    instruction.dump_ir_instruction_result(file, prefix)
-    instruction := instruction as @IR_Load_Function_Address_Instruction
-    return file.write("load_function_address").write('(').write_function_label(instruction.function).write(')').end_line()
-}
-
-create_ir_load_function_address_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function) -> @IR_Load_Function_Address_Instruction {
-    instruction := new IR_Load_Function_Address_Instruction(result_value = result_value, function = function)
-    result_value.creator_instruction = instruction
-    return instruction
 }
 
 IR_Load_Struct_Member_Instruction :: struct : IR_Instruction(dump = dump_ir_load_struct_member_instruction) {
