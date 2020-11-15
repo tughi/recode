@@ -268,6 +268,15 @@ dump_ir_global_variable_value :: (value: @IR_Value, file: @FILE) -> @FILE {
     return file.write(value.variable.name)
 }
 
+IR_Global_Variable_Address_Value :: struct : IR_Value(dump = dump_ir_global_variable_address_value) {
+    variable: @IR_Variable
+}
+
+dump_ir_global_variable_address_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Variable_Value
+    return file.write(value.variable.name).write(".address")
+}
+
 IR_Variable_Value :: struct : IR_Value(dump = dump_ir_variable_value) {
     variable: @IR_Variable
     version: Int
@@ -442,6 +451,7 @@ dump :: (function: @IR_Function, file: @FILE) -> Nothing {
 }
 
 IR_Variable :: struct : Object {
+    location: @Source_Location
     name: @String
     type: @IR_Type
     values: @List = new List()
@@ -449,11 +459,6 @@ IR_Variable :: struct : Object {
 
 IR_Global_Variable :: struct : IR_Variable {
     is_external: Boolean
-}
-
-create_ir_global_variable :: (name: @String, type: @IR_Type, is_external: Boolean) -> @IR_Global_Variable {
-    variable := new IR_Global_Variable(name = name, type = type, is_external = is_external)
-    return variable
 }
 
 IR_Function_Parameter :: struct : IR_Variable {

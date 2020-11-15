@@ -7,6 +7,7 @@ build :: (compilation_unit: @Compilation_Unit) -> @IR_Build {
         sources = compilation_unit.sources
         named_functions = builder.named_functions
         named_types = builder.named_types
+        global_variables = builder.context.variables
     )
 }
 
@@ -14,6 +15,7 @@ IR_Build :: struct {
     sources: @List
     named_functions: @List
     named_types: @List
+    global_variables: @List
 }
 
 dump :: (build: @IR_Build, file: @FILE) -> Nothing {
@@ -229,7 +231,7 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
 }
 
 create_temp_variable :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable {
-    return new IR_Variable(name = clone("$").append(self.counter.next()), type = type)
+    return new IR_Variable(location = null, name = clone("$").append(self.counter.next()), type = type)
 }
 
 create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable_Value {
@@ -382,7 +384,12 @@ create_global_variable :: (self: @IR_Builder, variable_statement: @AST_Variable_
     } else {
         abort(variable_statement.location, "Type inference is not supported yet.")
     }
-    variable := create_ir_global_variable(variable_name, variable_type, variable_statement.is_external)
+    variable := new IR_Global_Variable(
+        location = variable_statement.location
+        name = variable_name
+        type = variable_type
+        is_external = variable_statement.is_external
+    )
     if (variable_statement.value_expression != null) {
         abort(variable_statement.value_expression.location, "Initialized global variables are not supported yet.")
     }
@@ -408,7 +415,7 @@ create_function :: (self: @IR_Builder, function_statement: @AST_Function_Stateme
         parameter := parameters.next() as @AST_Function_Parameter
         parameter_type := self.convert_value_type(parameter.type)
         parameter_name := parameter.name.lexeme
-        function_parameter := new IR_Function_Parameter(name = parameter_name, type = parameter_type)
+        function_parameter := new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
         function.parameters.append(function_parameter)
         function_type_parameters.append(new IR_Function_Type_Parameter(name = parameter_name, type = parameter_type))
     }
@@ -830,7 +837,7 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Varia
     if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type) || variable_type.is(IR_Undefined_Type)) {
         abort(variable_statement.location, clone("Invalid variable type: ").append(variable_type.name))
     }
-    variable := new IR_Variable(name = variable_name, type = variable_type)
+    variable := new IR_Variable(location = variable_statement.location, name = variable_name, type = variable_type)
     self.add_variable(variable)
     if (variable_value == null) {
         variable_value = new IR_Undefined_Value(type = variable_type)
@@ -1220,17 +1227,24 @@ convert_member_access_expression :: (self: @IR_Builder, member_access_expression
     object_value_type := object_value.type
     struct_type: @IR_Struct_Type
     if (object_value_type.is(IR_Struct_Type)) {
-        if (object_value.is(IR_Variable_Value) == false) {
+        if (object_value.is(IR_Variable_Value)) {
+            struct_type = object_value_type as @IR_Struct_Type
+            object_value = self.append(
+                create_ir_load_variable_address_instruction(
+                    self.create_temp_value(create_ir_pointer_type(struct_type))
+                    object_value as @IR_Variable_Value
+                )
+                member_access_expression.location
+            )
+        } else if (object_value.is(IR_Global_Variable_Value)) {
+            struct_type = object_value_type as @IR_Struct_Type
+            object_value = new IR_Global_Variable_Address_Value(
+                type = create_ir_pointer_type(struct_type)
+                variable = (object_value as @IR_Global_Variable_Value).variable
+            )
+        } else {
             abort(member_access_expression.location, clone("Unuspported value type: ").append(object_value.object_type.name))
         }
-        struct_type = object_value_type as @IR_Struct_Type
-        object_value = self.append(
-            create_ir_load_variable_address_instruction(
-                self.create_temp_value(create_ir_pointer_type(struct_type))
-                object_value as @IR_Variable_Value
-            )
-            member_access_expression.location
-        )
     } else if (object_value_type.is(IR_Pointer_Type)) {
         pointed_type := (object_value_type as @IR_Pointer_Type).pointed_type
         if (pointed_type.is(IR_Struct_Type) == false) {
@@ -1429,6 +1443,9 @@ convert_variable_expression_address :: (self: @IR_Builder, expression: @AST_Vari
     }
     if (variable.type.is(IR_Pointer_Type)) {
         return self.get_variable_value(variable)
+    }
+    if (variable.is(IR_Global_Variable)) {
+        return new IR_Global_Variable_Address_Value(type = create_ir_pointer_type(variable.type), variable = variable)
     }
     abort(expression.location, clone("Variable type without address: ").append(variable.type.name))
 }

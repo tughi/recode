@@ -1,7 +1,0 @@
-main :: () -> Int {
-    minus_one: Int
-    two: Int = 2 \ redundant type declaration
-    minus_one = -1
-    three := two - minus_one
-    return 3 - three
-}

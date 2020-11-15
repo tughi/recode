@@ -1,10 +1,18 @@
+shape: @Shape
+
+polygon: Polygon
+
 main :: () -> Int {
-    square := new Square()
-    if (square.is(Polygon) == false) {
+    shape = new Square()
+    if (shape.is(Polygon) == false) {
         return 1
     }
-    stdout.write(square.object_type.name).write(" has sides: ").write(square.sides).end_line()
-    return 0
+    stdout.write(shape.object_type.name).write(" has sides: ").write((shape as @Polygon).sides).end_line()
+    shape := shape as @Polygon
+
+    polygon.sides = 4
+
+    return shape.sides - polygon.sides
 }
 
 Shape :: struct : Object {
