@@ -1339,7 +1339,7 @@ convert_struct_literal_expression :: (self: @IR_Builder, expression: @AST_Expres
     } else {
         abort(expression.location, clone("Unsupported type: ").append(expression.object_type.name))
     }
-    struct_literal_value := new IR_Struct_Literal_Value(type = struct_type)
+    struct_literal_value := new IR_Struct_Literal_Value(type = struct_type, location = expression.location)
     if (struct_type.is_object_type()) {
         variable := self.get_variable(struct_type.name)
         object_type_member := struct_type.get_member("object_type")

@@ -209,6 +209,7 @@ dump_ir_constant_value :: (value: @IR_Value, file: @FILE) -> @FILE {
 }
 
 IR_Struct_Literal_Value :: struct : IR_Value(dump = dump_IR_Struct_Literal_Value) {
+    location: @Source_Location
 }
 
 IR_Struct_Literal_Member_Value_Link :: struct : IR_Requires_Value_Link {

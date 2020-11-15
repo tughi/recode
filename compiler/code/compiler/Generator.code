@@ -926,19 +926,8 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
                 source_register.is_reserved = false
             }
         } else if (ir_value.is(IR_Struct_Literal_Value)) {
-            ir_value := ir_value as @IR_Struct_Literal_Value
-            ir_value_links_item := ir_value.links.first_item
-            while (ir_value_links_item != null) {
-                ir_value_link := ir_value_links_item.data as @IR_Link
-                if (ir_value_link.is(IR_Struct_Literal_Member_Value_Link)) {
-                    ir_value_link := ir_value_link as @IR_Struct_Literal_Member_Value_Link
-                    if (ir_value_link.value.type.is(IR_Undefined_Type) == false) {
-                        destination_address.offset = destination_address_extra_offset + self.get_offset(ir_value_link.struct_type_member)
-                        self.generate_store_value(ir_value_link.value, destination_address)
-                    }
-                }
-                ir_value_links_item = ir_value_links_item.next_item
-            }
+            destination_address.offset = destination_address_extra_offset
+            self.generate_store_struct_literal_value(ir_value as @IR_Struct_Literal_Value, ir_value.type as @IR_Struct_Type, destination_address)
         } else {
             self.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
         }
@@ -949,6 +938,29 @@ generate_store_value :: (self: @MC_Generator, ir_value: @IR_Value, address: @MC_
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
+    }
+}
+
+generate_store_struct_literal_value :: (self: @MC_Generator, ir_value: @IR_Struct_Literal_Value, struct_type: @IR_Struct_Type, address: @MC_Register_Based_Address) -> Nothing {
+    if (struct_type.base_type != null) {
+        self.generate_store_struct_literal_value(ir_value, struct_type.base_type, address)
+    }
+    struct_type_members_item := struct_type.members.first_item
+    while (struct_type_members_item != null) {
+        struct_type_member := struct_type_members_item.data as @IR_Struct_Type_Member
+        struct_type_member_value := ir_value.get_member_value(struct_type_member)
+        if (struct_type_member_value != null) {
+            self.output_file.write("  #     .").write(struct_type_member.name).write(" = ").write(struct_type_member_value, false).end_line()
+            if (struct_type_member_value.type.is(IR_Undefined_Type) == false) {
+                struct_type_member_offset := self.get_offset(struct_type_member)
+                address.offset = address.offset + struct_type_member_offset
+                self.generate_store_value(struct_type_member_value, address)
+                address.offset = address.offset - struct_type_member_offset
+            }
+        } else {
+            stderr.write(ir_value.location).write(": ").write(struct_type.name).write('.').write(struct_type_member.name).write(" is not initialized").end_line()
+        }
+        struct_type_members_item = struct_type_members_item.next_item
     }
 }
 
