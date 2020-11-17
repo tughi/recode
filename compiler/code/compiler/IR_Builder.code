@@ -314,6 +314,7 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @AST_Struct_St
                         name = new Identifier_Token(lexeme = "Object_Type", location = null)
                     )
                 )
+                is_external = true
             )
         )
     }

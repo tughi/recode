@@ -1679,7 +1679,7 @@ generate_global_variables :: (self: @MC_Generator, variables: @List) -> Nothing 
             self.abort("Invalid state")
         }
         variable := variable as @IR_Global_Variable
-        if (variable.is_external == false && variable.type.name.equals("@Object_Type") == false) { \ TODO: find a bteer way to exclude generated object types 
+        if (variable.is_external == false) {
             self.output_file.end_line()
             self.output_file.write("  .align 8").end_line()
             self.output_file.write(variable.name).write(':').end_line()
