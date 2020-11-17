@@ -254,7 +254,7 @@ build :: (self: @IR_Builder) -> Nothing {
     global_variables := self.compilation_unit.global_variables.create_iterator()
     while (global_variables.has_next()) {
         variable_statement := global_variables.next() as @AST_Variable_Statement
-        self.create_global_variable(variable_statement)
+        self.convert_variable_statement(variable_statement, true)
     }
 
     functions := self.compilation_unit.functions.create_iterator()
@@ -305,7 +305,7 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @AST_Struct_St
         }
     }
     if (type.is_object_type()) {
-        self.create_global_variable(
+        self.convert_variable_statement(
             new AST_Variable_Statement(
                 location = struct_statement.name.location
                 name = struct_statement.name
@@ -316,6 +316,7 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @AST_Struct_St
                 )
                 is_external = true
             )
+            true
         )
     }
     return type
@@ -375,27 +376,6 @@ convert_named_type :: (self: @IR_Builder, type: @AST_Named_Type) -> @IR_Type {
 
 convert_pointer_type :: (self: @IR_Builder, type: @AST_Pointer_Type) -> @IR_Type {
     return create_ir_pointer_type(self.convert_value_type(type.pointed_type))
-}
-
-create_global_variable :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
-    variable_name := variable_statement.name.lexeme
-    variable_type: @IR_Type
-    if (variable_statement.type != null) {
-        variable_type = self.convert_value_type(variable_statement.type)
-    } else {
-        abort(variable_statement.location, "Type inference is not supported yet.")
-    }
-    variable := new IR_Global_Variable(
-        location = variable_statement.location
-        name = variable_name
-        type = variable_type
-        is_external = variable_statement.is_external
-    )
-    if (variable_statement.value_expression != null) {
-        abort(variable_statement.value_expression.location, "Initialized global variables are not supported yet.")
-    }
-    self.add_variable(variable)
-    self.create_variable_value(variable)
 }
 
 create_function :: (self: @IR_Builder, function_statement: @AST_Function_Statement) -> @IR_Function {
@@ -689,7 +669,7 @@ convert_statement :: (self: @IR_Builder, statement: @AST_Statement) -> Nothing {
     } else if (statement.is(AST_Return_Statement)) {
         self.convert_return_statement(statement as @AST_Return_Statement)
     } else if (statement.is(AST_Variable_Statement)) {
-        self.convert_variable_statement(statement as @AST_Variable_Statement)
+        self.convert_variable_statement(statement as @AST_Variable_Statement, false)
     } else if (statement.is(AST_While_Statement)) {
         self.convert_while_statement(statement as @AST_While_Statement)
     } else {
@@ -807,7 +787,7 @@ convert_return_statement :: (self: @IR_Builder, statement: @AST_Return_Statement
     self.current_block = self.current_block.function.create_block()
 }
 
-convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
+convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement, is_global: Boolean) -> Nothing {
     variable_name := variable_statement.name.lexeme
     variable_type: @IR_Type = null
     if (variable_statement.type != null) {
@@ -817,33 +797,49 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Varia
     if (variable_statement.value_expression != null) {
         variable_value = self.convert_expression(variable_statement.value_expression, variable_type)
     }
-    if (variable_type != null) {
-        if (variable_value != null) {
-            if (variable_type.accepts(variable_value.type) == false) {
-                abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
+    if (variable_statement.is_external == false) {
+        if (variable_type != null) {
+            if (variable_value != null) {
+                if (variable_type.accepts(variable_value.type) == false) {
+                    abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
+                }
+                if (variable_type.equals(variable_value.type)) {
+                    stderr.write(variable_statement.type.location).write(": Redundant type declaration").end_line()
+                }
             }
-            if (variable_type.equals(variable_value.type)) {
-                stderr.write(variable_statement.type.location).write(": Redundant type declaration").end_line()
+        } else {
+            if (variable_value == null) {
+                abort(variable_statement.location, "Invalid state")
             }
+            if (variable_value.type.is(IR_Null_Type)) {
+                abort(variable_statement.value_expression.location, "Cannot infer type from null value")
+            }
+            variable_type = variable_value.type
         }
-    } else {
         if (variable_value == null) {
-            abort(variable_statement.location, "Invalid state")
+            variable_value = new IR_Undefined_Value(type = variable_type)
         }
-        if (variable_value.type.is(IR_Null_Type)) {
-            abort(variable_statement.value_expression.location, "Cannot infer type from null value")
-        }
-        variable_type = variable_value.type
     }
     if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type) || variable_type.is(IR_Undefined_Type)) {
         abort(variable_statement.location, clone("Invalid variable type: ").append(variable_type.name))
     }
-    variable := new IR_Variable(location = variable_statement.location, name = variable_name, type = variable_type)
-    self.add_variable(variable)
-    if (variable_value == null) {
-        variable_value = new IR_Undefined_Value(type = variable_type)
+    if (is_global) {
+        variable := new IR_Global_Variable(
+            location = variable_statement.location
+            name = variable_name
+            type = variable_type
+            value = variable_value
+            is_external = variable_statement.is_external
+        )
+        if (self.current_block != null) {
+            abort(variable_statement.location, "Invalid state")
+        }
+        self.add_variable(variable)
+    } else {
+        variable := new IR_Variable(location = variable_statement.location, name = variable_name, type = variable_type)
+        self.add_variable(variable)
+        self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
     }
-    self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
 }
 
 convert_while_statement :: (self: @IR_Builder, statement: @AST_While_Statement) -> Nothing {
@@ -1186,7 +1182,7 @@ convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expre
         return new IR_Constant_Value(type = create_ir_pointer_type(self.get_named_type("String")), literal = expression.literal)
     }
     if (expression.literal.is(Undefined_Token)) {
-        return new IR_Constant_Value(type = self.get_named_type("Undefined"), literal = expression.literal)
+        return new IR_Undefined_Value(type = self.get_named_type("Undefined"))
     }
     abort(expression.location, expression.literal.object_type)
 }

@@ -1672,7 +1672,7 @@ write_type_label :: (file: @FILE, type: @IR_Type) -> @FILE {
 generate_global_variables :: (self: @MC_Generator, variables: @List) -> Nothing {
     self.output_file.end_line().write("  .bss").end_line()
 
-    variables_item := variables.first_item
+    variables_item := variables.last_item
     while (variables_item != null) {
         variable := variables_item.data as @IR_Variable
         if (variable.is(IR_Global_Variable) == null) {
@@ -1680,12 +1680,15 @@ generate_global_variables :: (self: @MC_Generator, variables: @List) -> Nothing 
         }
         variable := variable as @IR_Global_Variable
         if (variable.is_external == false) {
+            if (variable.value.is(IR_Undefined_Value) == false) {
+                self.abort("Global variables must be declared as undefined for now")
+            }
             self.output_file.end_line()
             self.output_file.write("  .align 8").end_line()
             self.output_file.write(variable.name).write(':').end_line()
             self.output_file.write("  .skip ").write(self.get_type_size(variable.type)).end_line()
         }
-        variables_item = variables_item.next_item
+        variables_item = variables_item.prev_item
     }
 }
 

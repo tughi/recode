@@ -1,4 +1,4 @@
-shape: @Shape
+shape: @Shape = undefined
 
 polygon: Polygon
 

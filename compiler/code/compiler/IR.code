@@ -458,6 +458,7 @@ IR_Variable :: struct : Object {
 }
 
 IR_Global_Variable :: struct : IR_Variable {
+    value: @IR_Value
     is_external: Boolean
 }
 
