@@ -4,50 +4,6 @@ define Parser = struct {
     scanner: @Scanner = null
     compilation_unit: @Compilation_Unit = new Compilation_Unit()
     current_alignment: Int = 0
-    optional_comment: @Matcher = new Comment_Matcher(is_required = false)
-    optional_space: @Matcher = new Space_Matcher(is_required = false)
-    required_ampersand: @Matcher = new Other_Matcher(is_required = true, lexeme = "&")
-    required_as: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "as")
-    required_asterisk: @Matcher = new Other_Matcher(is_required = true, lexeme = "*")
-    required_at: @Matcher = new Other_Matcher(is_required = true, lexeme = "@")
-    required_break: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "break")
-    required_close_brace: @Matcher = new Other_Matcher(is_required = true, lexeme = "}")
-    required_close_bracket: @Matcher = new Other_Matcher(is_required = true, lexeme = "]")
-    required_close_paren: @Matcher = new Other_Matcher(is_required = true, lexeme = ")")
-    required_colon: @Matcher = new Other_Matcher(is_required = true, lexeme = ":")
-    required_column: @Matcher = new Other_Matcher(is_required = true, lexeme = ";")
-    required_comma: @Matcher = new Other_Matcher(is_required = true, lexeme = ",")
-    required_comment: @Matcher = new Comment_Matcher(is_required = true)
-    required_define: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "define")
-    required_dot: @Matcher = new Other_Matcher(is_required = true, lexeme = ".")
-    required_else: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "else")
-    required_end_of_file: @Matcher = new End_Of_File_Matcher(is_required = true)
-    required_end_of_line: @Matcher = new End_Of_Line_Matcher(is_required = true)
-    required_equals: @Matcher = new Other_Matcher(is_required = true, lexeme = "=")
-    required_exclamation_mark: @Matcher = new Other_Matcher(is_required = true, lexeme = "!")
-    required_extends: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "extends")
-    required_external: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "external")
-    required_func: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "func")
-    required_greater_than: @Matcher = new Other_Matcher(is_required = true, lexeme = ">")
-    required_hyphen: @Matcher = new Other_Matcher(is_required = true, lexeme = "-")
-    required_identifier: @Matcher = new Identifier_Matcher(is_required = true)
-    required_if: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "if")
-    required_include: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "include")
-    required_less_than: @Matcher = new Other_Matcher(is_required = true, lexeme = "<")
-    required_literal: @Matcher = new Literal_Matcher(is_required = true)
-    required_loop: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "loop")
-    required_new: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "new")
-    required_open_brace: @Matcher = new Other_Matcher(is_required = true, lexeme = "{")
-    required_open_bracket: @Matcher = new Other_Matcher(is_required = true, lexeme = "[")
-    required_open_paren: @Matcher = new Other_Matcher(is_required = true, lexeme = "(")
-    required_plus: @Matcher = new Other_Matcher(is_required = true, lexeme = "+")
-    required_return: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "return")
-    required_slash: @Matcher = new Other_Matcher(is_required = true, lexeme = "/")
-    required_string_literal: @Matcher = new String_Literal_Matcher(is_required = true)
-    required_struct: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "struct")
-    required_unknown: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "unknown")
-    required_vertical_bar: @Matcher = new Other_Matcher(is_required = true, lexeme = "|")
-    required_while: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "while")
 }
 
 define parse = func (file_path: @String) -> @Compilation_Unit {
@@ -150,20 +106,20 @@ define parse_statement = func (self: @Parser) -> @AST_Statement {
     while (self.consume_empty_line()) {
     }
 
-    if (self.matches(self.optional_space, self.required_close_brace) || self.matches(self.required_end_of_file)) {
+    if (self.matches(optional_space, required_close_brace) || self.matches(required_end_of_file)) {
         return null
     }
 
     self.consume_space(self.current_alignment * 4)
 
-    if (self.matches(self.required_define)) {
+    if (self.matches(required_define)) {
         return self.parse_define()
     }
-    if (self.matches(self.required_if)) {
+    if (self.matches(required_if)) {
         return self.parse_if()
     }
-    if (self.matches(self.required_return)) {
-        token := self.consume(self.required_return)
+    if (self.matches(required_return)) {
+        token := self.consume(required_return)
         value_expression: @AST_Expression = null
         if (self.matches_end_of_line() == false) {
             self.consume_space(1)
@@ -171,49 +127,49 @@ define parse_statement = func (self: @Parser) -> @AST_Statement {
         }
         return new AST_Return_Statement(location = token.location, value_expression = value_expression)
     }
-    if (self.matches(self.required_loop)) {
+    if (self.matches(required_loop)) {
         return self.parse_loop()
     }
-    if (self.matches(self.required_while)) {
+    if (self.matches(required_while)) {
         return self.parse_while()
     }
-    if (self.matches(self.required_break)) {
-        token := self.consume(self.required_break)
+    if (self.matches(required_break)) {
+        token := self.consume(required_break)
         return new AST_Break_Statement(location = token.location)
     }
-    if (self.matches(self.required_include)) {
+    if (self.matches(required_include)) {
         return self.parse_include()
     }
 
     expression := self.parse_expression()
 
-    if (self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)) {
+    if (self.matches(optional_space, optional_comment, required_end_of_line)) {
         return new AST_Expression_Statement(location = expression.location, expression = expression)
     }
 
-    if (self.matches(self.optional_space, self.required_colon)) {
+    if (self.matches(optional_space, required_colon)) {
         if (expression.is(AST_Variable_Expression)) {
             expression := expression as @AST_Variable_Expression
             variable_name := expression.name
             variable_value_type: @AST_Type = null
             variable_value_expression: @AST_Expression = null
             variable_is_external := false
-            if (self.matches(self.optional_space, self.required_colon, self.required_equals)) {
+            if (self.matches(optional_space, required_colon, required_equals)) {
                 self.consume_space(1)
-                self.consume(self.required_colon, self.required_equals)
+                self.consume(required_colon, required_equals)
                 self.consume_space(1)
                 variable_value_expression = self.parse_expression()
             } else {
                 self.consume_space(0)
-                self.consume(self.required_colon)
+                self.consume(required_colon)
                 self.consume_space(1)
                 variable_value_type = self.parse_type()
-                if (self.matches(self.optional_space, self.required_equals)) {
+                if (self.matches(optional_space, required_equals)) {
                     self.consume_space(1)
-                    self.consume(self.required_equals)
+                    self.consume(required_equals)
                     self.consume_space(1)
-                    if (self.matches(self.required_external)) {
-                        self.consume(self.required_external)
+                    if (self.matches(required_external)) {
+                        self.consume(required_external)
                         variable_is_external = true
                     } else {
                         variable_value_expression = self.parse_expression()
@@ -229,9 +185,9 @@ define parse_statement = func (self: @Parser) -> @AST_Statement {
         abort(expression.location, "Cannot use expression as variable name")
     }
 
-    if (self.matches(self.optional_space, self.required_equals)) {
+    if (self.matches(optional_space, required_equals)) {
         self.consume_space(1)
-        operator := self.consume(self.required_equals) as @Other_Token
+        operator := self.consume(required_equals) as @Other_Token
         self.consume_space(1)
         return new AST_Assignment_Statement(location = expression.location, storage_expression = expression, operator = operator, value_expression = self.parse_expression())
     }
@@ -242,30 +198,30 @@ define parse_statement = func (self: @Parser) -> @AST_Statement {
 \ include
 \   : "include" STRING
 define parse_include = func (self: @Parser) -> @AST_Include_Statement {
-    location := self.consume(self.required_include).location
+    location := self.consume(required_include).location
     self.consume_space(1)
-    file_path := (self.consume(self.required_string_literal) as @String_Token).value
+    file_path := (self.consume(required_string_literal) as @String_Token).value
     return new AST_Include_Statement(location = location, file_path = file_path)
 }
 
 \ define
 \   : "define" IDENTIFIER "=" ( struct )
 define parse_define = func (self: @Parser) -> @AST_Statement {
-    self.consume(self.required_define)
+    self.consume(required_define)
     self.consume_space(1)
-    name := self.consume(self.required_identifier) as @Identifier_Token
+    name := self.consume(required_identifier) as @Identifier_Token
     self.consume_space(1)
-    self.consume(self.required_equals)
+    self.consume(required_equals)
     self.consume_space(1)
-    if (self.matches(self.required_unknown, self.optional_space, self.required_struct)) {
-        self.consume(self.required_unknown)
+    if (self.matches(required_unknown, optional_space, required_struct)) {
+        self.consume(required_unknown)
         self.consume_space(1)
-        self.consume(self.required_struct)
+        self.consume(required_struct)
         type_statement := new AST_Struct_Statement(location = name.location, name = name, base_type = null, members = null, init_arguments = null)
         self.compilation_unit.types.append(type_statement)
         return type_statement
     }
-    if (self.matches(self.required_struct)) {
+    if (self.matches(required_struct)) {
         return self.parse_struct(name)
     }
     return self.parse_function(name)
@@ -275,37 +231,37 @@ define parse_define = func (self: @Parser) -> @AST_Statement {
 \   : "struct" "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
 define parse_struct = func (self: @Parser, struct_name: @Identifier_Token) -> @AST_Statement {
     struct_init_arguments := new List()
-    self.consume(self.required_struct)
+    self.consume(required_struct)
     self.consume_space(1)
-    self.consume(self.required_open_brace)
+    self.consume(required_open_brace)
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
     base_type: @AST_Type = null
-    if (self.matches(self.optional_space, self.required_extends)) {
+    if (self.matches(optional_space, required_extends)) {
         self.consume_space(self.current_alignment * 4)
-        self.consume(self.required_extends)
+        self.consume(required_extends)
         self.consume_space(1)
         base_type = self.parse_type()
-        if (self.matches(self.optional_space, self.required_open_paren)) {
+        if (self.matches(optional_space, required_open_paren)) {
             self.consume_space(0)
-            self.consume(self.required_open_paren)
+            self.consume(required_open_paren)
             self.parse_call_arguments(struct_init_arguments)
             self.consume_space(0)
-            self.consume(self.required_close_paren)
+            self.consume(required_close_paren)
         }
         self.consume_end_of_line()
     }
-    struct_members: @List = new List()
-    while (self.matches(self.optional_space, self.required_close_brace) == false) {
+    struct_members := new List()
+    while (self.matches(optional_space, required_close_brace) == false) {
         self.consume_space(self.current_alignment * 4)
-        struct_member_name := self.consume(self.required_identifier) as @Identifier_Token
+        struct_member_name := self.consume(required_identifier) as @Identifier_Token
         self.consume_space(0)
-        self.consume(self.required_colon)
+        self.consume(required_colon)
         self.consume_space(1)
         struct_member_value_type := self.parse_type()
-        if (self.matches(self.optional_space, self.required_equals)) {
+        if (self.matches(optional_space, required_equals)) {
             self.consume_space(1)
-            self.consume(self.required_equals)
+            self.consume(required_equals)
             self.consume_space(1)
             value_expression := self.parse_expression()
             struct_init_arguments.append(new AST_Call_Argument(name = struct_member_name, value_expression = value_expression))
@@ -315,7 +271,7 @@ define parse_struct = func (self: @Parser, struct_name: @Identifier_Token) -> @A
     }
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
-    self.consume(self.required_close_brace)
+    self.consume(required_close_brace)
     struct_statement := new AST_Struct_Statement(location = struct_name.location, name = struct_name, base_type = base_type, members = struct_members, init_arguments = struct_init_arguments)
     self.compilation_unit.types.append(struct_statement)
     return struct_statement
@@ -326,7 +282,7 @@ define parse_struct = func (self: @Parser, struct_name: @Identifier_Token) -> @A
 define parse_function = func (self: @Parser, function_name: @Identifier_Token) -> @AST_Statement {
     function_type := self.parse_function_type()
     function_body: @AST_Block_Statement
-    if (self.matches(self.optional_space, self.required_open_brace)) {
+    if (self.matches(optional_space, required_open_brace)) {
         self.consume_space(1)
         function_body = self.parse_block()
     } else {
@@ -340,23 +296,23 @@ define parse_function = func (self: @Parser, function_name: @Identifier_Token) -
 \ function_type
 \   : "func" "(" ( function_parameter ( "," function_parameter )* )? ")" "->" type
 define parse_function_type = func (self: @Parser) -> @AST_Function_Type {
-    location := self.consume(self.required_func).location
+    location := self.consume(required_func).location
     self.consume_space(1)
-    self.consume(self.required_open_paren)
+    self.consume(required_open_paren)
     self.consume_space(0)
     function_parameters := new List()
-    if (self.matches(self.required_close_paren) == false) {
+    if (self.matches(required_close_paren) == false) {
         function_parameters.append(self.parse_function_parameter())
-        while (self.matches(self.optional_space, self.required_close_paren) == false) {
+        while (self.matches(optional_space, required_close_paren) == false) {
             self.consume_space(0)
-            self.consume(self.required_comma)
+            self.consume(required_comma)
             self.consume_space(1)
             function_parameters.append(self.parse_function_parameter())
         }
     }
-    self.consume(self.required_close_paren)
+    self.consume(required_close_paren)
     self.consume_space(1)
-    self.consume(self.required_hyphen, self.required_greater_than)
+    self.consume(required_hyphen, required_greater_than)
     self.consume_space(1)
     function_return_type := self.parse_type()
     return new AST_Function_Type(location = location, parameters = function_parameters, return_type = function_return_type)
@@ -365,9 +321,9 @@ define parse_function_type = func (self: @Parser) -> @AST_Function_Type {
 \ function_parameter
 \   : IDENTIFIER ":" type
 define parse_function_parameter = func (self: @Parser) -> @AST_Function_Parameter {
-    parameter_name := self.consume(self.required_identifier) as @Identifier_Token
+    parameter_name := self.consume(required_identifier) as @Identifier_Token
     self.consume_space(0)
-    self.consume(self.required_colon)
+    self.consume(required_colon)
     self.consume_space(1)
     parameter_type := self.parse_type()
     return new AST_Function_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
@@ -376,35 +332,35 @@ define parse_function_parameter = func (self: @Parser) -> @AST_Function_Paramete
 \ block
 \   : "{" statements "}"
 define parse_block = func (self: @Parser) -> @AST_Block_Statement {
-    location := self.consume(self.required_open_brace).location
+    location := self.consume(required_open_brace).location
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
     statements := new List()
     self.parse_statements(statements)
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
-    self.consume(self.required_close_brace)
+    self.consume(required_close_brace)
     return new AST_Block_Statement(location = location, statements = statements)
 }
 
 \ if
 \   : "if" "(" expression ")" block ( "else" ( block | if ) )?
 define parse_if = func (self: @Parser) -> @AST_Statement {
-    location := self.consume(self.required_if).location
+    location := self.consume(required_if).location
     self.consume_space(1)
-    self.consume(self.required_open_paren)
+    self.consume(required_open_paren)
     self.consume_space(0)
     condition_expression := self.parse_expression()
     self.consume_space(0)
-    self.consume(self.required_close_paren)
+    self.consume(required_close_paren)
     self.consume_space(1)
     true_statement := self.parse_block()
     false_statement: @AST_Statement = null
-    if (self.matches(self.optional_space, self.required_else)) {
+    if (self.matches(optional_space, required_else)) {
         self.consume_space(1)
-        self.consume(self.required_else)
+        self.consume(required_else)
         self.consume_space(1)
-        if (self.matches(self.required_if)) {
+        if (self.matches(required_if)) {
             false_statement = self.parse_if()
         } else {
             false_statement = self.parse_block()
@@ -416,7 +372,7 @@ define parse_if = func (self: @Parser) -> @AST_Statement {
 \ loop
 \   : "loop" block
 define parse_loop = func (self: @Parser) -> @AST_Statement {
-    location := self.consume(self.required_loop).location
+    location := self.consume(required_loop).location
     self.consume_space(1)
     loop_block := self.parse_block()
     return new AST_Loop_Statement(location = location, block = loop_block)
@@ -425,13 +381,13 @@ define parse_loop = func (self: @Parser) -> @AST_Statement {
 \ while
 \   : "while" "(" expression ")" block
 define parse_while = func (self: @Parser) -> @AST_Statement {
-    location := self.consume(self.required_while).location
+    location := self.consume(required_while).location
     self.consume_space(1)
-    self.consume(self.required_open_paren)
+    self.consume(required_open_paren)
     self.consume_space(0)
     condition_expression := self.parse_expression()
     self.consume_space(0)
-    self.consume(self.required_close_paren)
+    self.consume(required_close_paren)
     self.consume_space(1)
     loop_block := self.parse_block()
     return new AST_While_Statement(location = location, condition_expression = condition_expression, block = loop_block)
@@ -443,30 +399,30 @@ define parse_while = func (self: @Parser) -> @AST_Statement {
 \   | "[" type ( ";" expression )? "]"
 \   | function_type
 define parse_type = func (self: @Parser) -> @AST_Type {
-    if (self.matches(self.required_at)) {
-        token := self.consume(self.required_at)
+    if (self.matches(required_at)) {
+        token := self.consume(required_at)
         self.consume_space(0)
         type := self.parse_type()
         return new AST_Pointer_Type(location = token.location, pointed_type = type)
     }
-    if (self.matches(self.required_open_bracket)) {
-        token := self.consume(self.required_open_bracket)
+    if (self.matches(required_open_bracket)) {
+        token := self.consume(required_open_bracket)
         array_item_type := self.parse_type()
-        if (self.matches(self.optional_space, self.required_column)) {
+        if (self.matches(optional_space, required_column)) {
             self.consume_space(0)
-            self.consume(self.required_column)
+            self.consume(required_column)
             self.consume_space(1)
             array_size_expression := self.parse_expression()
             self.consume_space(0)
-            self.consume(self.required_close_bracket)
+            self.consume(required_close_bracket)
             return new AST_Array_Type(location = token.location, item_type = array_item_type, size_expression = array_size_expression)
         }
         return new AST_Array_Type(location = token.location, item_type = array_item_type, size_expression = null)
     }
-    if (self.matches(self.required_func)) {
+    if (self.matches(required_func)) {
         return self.parse_function_type()
     }
-    token := self.consume(self.required_identifier) as @Identifier_Token
+    token := self.consume(required_identifier) as @Identifier_Token
     return new AST_Named_Type(location = token.location, name = token)
 }
 
@@ -478,9 +434,9 @@ define parse_expression = func (self: @Parser) -> @AST_Expression {
 \   : logic_and_expression ( "||" logic_and_expression )*
 define parse_logic_or_expression = func (self: @Parser) -> @AST_Expression {
     expression := self.parse_logic_and_expression()
-    while (self.matches(self.optional_space, self.required_vertical_bar, self.required_vertical_bar)) {
+    while (self.matches(optional_space, required_vertical_bar, required_vertical_bar)) {
         self.consume_space(1)
-        self.consume(self.required_vertical_bar, self.required_vertical_bar)
+        self.consume(required_vertical_bar, required_vertical_bar)
         self.consume_space(1)
         expression = new AST_Logic_Or_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_logic_and_expression())
     }
@@ -491,9 +447,9 @@ define parse_logic_or_expression = func (self: @Parser) -> @AST_Expression {
 \   : equality_expression ( "&&" equality_expression )*
 define parse_logic_and_expression = func (self: @Parser) -> @AST_Expression {
     expression := self.parse_equality_expression()
-    while (self.matches(self.optional_space, self.required_ampersand, self.required_ampersand)) {
+    while (self.matches(optional_space, required_ampersand, required_ampersand)) {
         self.consume_space(1)
-        self.consume(self.required_ampersand, self.required_ampersand)
+        self.consume(required_ampersand, required_ampersand)
         self.consume_space(1)
         expression = new AST_Logic_And_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_equality_expression())
     }
@@ -504,14 +460,14 @@ define parse_logic_and_expression = func (self: @Parser) -> @AST_Expression {
 \   : comparison_expression ( ( "==" | "!=" ) comparison_expression )?
 define parse_equality_expression = func (self: @Parser) -> @AST_Expression {
     expression := self.parse_comparison_expression()
-    if (self.matches(self.optional_space, self.required_equals, self.required_equals) || self.matches(self.optional_space, self.required_exclamation_mark, self.required_equals)) {
+    if (self.matches(optional_space, required_equals, required_equals) || self.matches(optional_space, required_exclamation_mark, required_equals)) {
         self.consume_space(1)
-        if (self.matches(self.required_equals)) {
-            self.consume(self.required_equals, self.required_equals)
+        if (self.matches(required_equals)) {
+            self.consume(required_equals, required_equals)
             self.consume_space(1)
             expression = new AST_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
         } else {
-            self.consume(self.required_exclamation_mark, self.required_equals)
+            self.consume(required_exclamation_mark, required_equals)
             self.consume_space(1)
             expression = new AST_Not_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
         }
@@ -523,12 +479,12 @@ define parse_equality_expression = func (self: @Parser) -> @AST_Expression {
 \   : addition_expression ( ( "<" | "<=" | ">" | ">=" ) addition_expression )?
 define parse_comparison_expression = func (self: @Parser) -> @AST_Expression {
     expression := self.parse_addition_expression()
-    if (self.matches(self.optional_space, self.required_less_than) || self.matches(self.optional_space, self.required_greater_than)) {
+    if (self.matches(optional_space, required_less_than) || self.matches(optional_space, required_greater_than)) {
         self.consume_space(1)
-        if (self.matches(self.required_less_than)) {
-            self.consume(self.required_less_than)
-            if (self.matches(self.required_equals)) {
-                self.consume(self.required_equals)
+        if (self.matches(required_less_than)) {
+            self.consume(required_less_than)
+            if (self.matches(required_equals)) {
+                self.consume(required_equals)
                 self.consume_space(1)
                 expression = new AST_Less_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
             } else {
@@ -536,9 +492,9 @@ define parse_comparison_expression = func (self: @Parser) -> @AST_Expression {
                 expression = new AST_Less_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
             }
         } else {
-            self.consume(self.required_greater_than)
-            if (self.matches(self.required_equals)) {
-                self.consume(self.required_equals)
+            self.consume(required_greater_than)
+            if (self.matches(required_equals)) {
+                self.consume(required_equals)
                 self.consume_space(1)
                 expression = new AST_Greater_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
             } else {
@@ -554,15 +510,15 @@ define parse_comparison_expression = func (self: @Parser) -> @AST_Expression {
 \   : multiplication_expression ( ( "+" | "-" ) multiplication_expression )*
 define parse_addition_expression = func (self: @Parser) -> @AST_Expression {
     expression := self.parse_multiplication_expression()
-    while (self.matches(self.optional_space, self.required_plus) || self.matches(self.optional_space, self.required_hyphen)) {
+    while (self.matches(optional_space, required_plus) || self.matches(optional_space, required_hyphen)) {
         self.consume_space(1)
         binary_expression: @AST_Binary_Expression
-        if (self.matches(self.required_plus)) {
-            self.consume(self.required_plus)
+        if (self.matches(required_plus)) {
+            self.consume(required_plus)
             self.consume_space(1)
             expression = new AST_Add_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_multiplication_expression())
         } else {
-            self.consume(self.required_hyphen)
+            self.consume(required_hyphen)
             self.consume_space(1)
             expression = new AST_Substract_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_multiplication_expression())
         }
@@ -574,12 +530,12 @@ define parse_addition_expression = func (self: @Parser) -> @AST_Expression {
 \   : unary_expression ( ( "*" | "/" | "//" ) unary_expression )*
 define parse_multiplication_expression = func (self: @Parser) -> @AST_Expression {
     expression := self.parse_unary_expression()
-    while (self.matches(self.optional_space, self.required_asterisk) || self.matches(self.optional_space, self.required_slash)) {
+    while (self.matches(optional_space, required_asterisk) || self.matches(optional_space, required_slash)) {
         self.consume_space(1)
-        if (self.matches(self.required_slash)) {
-            self.consume(self.required_slash)
-            if (self.matches(self.required_slash)) {
-                self.consume(self.required_slash)
+        if (self.matches(required_slash)) {
+            self.consume(required_slash)
+            if (self.matches(required_slash)) {
+                self.consume(required_slash)
                 self.consume_space(1)
                 expression = new AST_Modulo_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
             } else {
@@ -587,7 +543,7 @@ define parse_multiplication_expression = func (self: @Parser) -> @AST_Expression
                 expression = new AST_Divide_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
             }
         } else {
-            self.consume(self.required_asterisk)
+            self.consume(required_asterisk)
             self.consume_space(1)
             expression = new AST_Multiply_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
         }
@@ -598,8 +554,8 @@ define parse_multiplication_expression = func (self: @Parser) -> @AST_Expression
 \ unary_expression
 \   : "-"? cast_expression
 define parse_unary_expression = func (self: @Parser) -> @AST_Expression {
-    if (self.matches(self.required_hyphen)) {
-        location := self.consume(self.required_hyphen).location
+    if (self.matches(required_hyphen)) {
+        location := self.consume(required_hyphen).location
         self.consume_space(0)
         return new AST_Negate_Expression(location = location, expression = self.parse_cast_expression())
     }
@@ -610,9 +566,9 @@ define parse_unary_expression = func (self: @Parser) -> @AST_Expression {
 \   : access_expression ( "as" type )?
 define parse_cast_expression = func (self: @Parser) -> @AST_Expression {
     expression := self.parse_access_expression()
-    if (self.matches(self.optional_space, self.required_as)) {
+    if (self.matches(optional_space, required_as)) {
         self.consume_space(1)
-        self.consume(self.required_as)
+        self.consume(required_as)
         self.consume_space(1)
         type := self.parse_type()
         return new AST_Cast_Expression(location = expression.location, value_expression = expression, type = type)
@@ -627,31 +583,31 @@ define parse_access_expression = func (self: @Parser) -> @AST_Expression {
     if (expression != null) {
         loop {
             old_expression := expression
-            if (self.matches(self.optional_space, self.required_dot)) {
+            if (self.matches(optional_space, required_dot)) {
                 self.consume_space(0)
-                self.consume(self.required_dot)
+                self.consume(required_dot)
                 self.consume_space(0)
-                expression = new AST_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(self.required_identifier) as @Identifier_Token)
+                expression = new AST_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(required_identifier) as @Identifier_Token)
             }
-            if (self.matches(self.optional_space, self.required_open_paren)) {
+            if (self.matches(optional_space, required_open_paren)) {
                 self.consume_space(0)
-                self.consume(self.required_open_paren)
+                self.consume(required_open_paren)
                 self.consume_space(0)
                 call_arguments := new List()
-                if (self.matches(self.optional_space, self.required_close_paren) == false) {
+                if (self.matches(optional_space, required_close_paren) == false) {
                     self.parse_call_arguments(call_arguments)
                 }
                 self.consume_space(0)
-                self.consume(self.required_close_paren)
+                self.consume(required_close_paren)
                 expression = new AST_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
             }
-            if (self.matches(self.optional_space, self.required_open_bracket)) {
+            if (self.matches(optional_space, required_open_bracket)) {
                 self.consume_space(0)
-                self.consume(self.required_open_bracket)
+                self.consume(required_open_bracket)
                 self.consume_space(0)
                 index_expression := self.parse_expression()
                 self.consume_space(0)
-                self.consume(self.required_close_bracket)
+                self.consume(required_close_bracket)
                 expression = new AST_Array_Access_Expression(location = expression.location, array_expression = expression, index_expression = index_expression)
             }
             if (expression == old_expression) {
@@ -669,7 +625,7 @@ define parse_call_arguments = func (self: @Parser, call_arguments: @List) -> Not
     if (self.matches_end_of_line()) {
         self.consume_end_of_line()
         self.current_alignment = self.current_alignment + 1
-        while (self.matches(self.optional_space, self.required_close_paren) == false) {
+        while (self.matches(optional_space, required_close_paren) == false) {
             self.consume_space(self.current_alignment * 4)
             call_arguments.append(self.parse_call_argument())
             self.consume_end_of_line()
@@ -678,9 +634,9 @@ define parse_call_arguments = func (self: @Parser, call_arguments: @List) -> Not
         self.consume_space(self.current_alignment * 4)
     } else {
         call_arguments.append(self.parse_call_argument())
-        while (self.matches(self.optional_space, self.required_comma)) {
+        while (self.matches(optional_space, required_comma)) {
             self.consume_space(0)
-            self.consume(self.required_comma)
+            self.consume(required_comma)
             self.consume_space(1)
             call_arguments.append(self.parse_call_argument())
         }
@@ -690,10 +646,10 @@ define parse_call_arguments = func (self: @Parser, call_arguments: @List) -> Not
 \ call_argument
 \   : ( IDENTIFIER "=" )? expression
 define parse_call_argument = func (self: @Parser) -> @AST_Call_Argument {
-    if (self.matches(self.required_identifier, self.optional_space, self.required_equals)) {
-        name := self.consume(self.required_identifier) as @Identifier_Token
+    if (self.matches(required_identifier, optional_space, required_equals)) {
+        name := self.consume(required_identifier) as @Identifier_Token
         self.consume_space(1)
-        self.consume(self.required_equals)
+        self.consume(required_equals)
         self.consume_space(1)
         value := self.parse_expression()
         return new AST_Call_Argument(name = name, value_expression = value)
@@ -714,62 +670,62 @@ define parse_call_argument = func (self: @Parser) -> @AST_Call_Argument {
 \   | "(" expression ")"
 \   | "new" type ( "(" call_arguments? ")" )?
 define parse_primary_expression = func (self: @Parser) -> @AST_Expression {
-    if (self.matches(self.required_new)) {
-        token := self.consume(self.required_new)
+    if (self.matches(required_new)) {
+        token := self.consume(required_new)
         self.consume_space(1)
         type := self.parse_type()
         call_arguments := new List()
-        if (self.matches(self.optional_space, self.required_open_paren)) {
+        if (self.matches(optional_space, required_open_paren)) {
             self.consume_space(0)
-            self.consume(self.required_open_paren)
-            if (self.matches(self.optional_space, self.required_close_paren) == false) {
+            self.consume(required_open_paren)
+            if (self.matches(optional_space, required_close_paren) == false) {
                 self.parse_call_arguments(call_arguments)
             }
             self.consume_space(0)
-            self.consume(self.required_close_paren)
+            self.consume(required_close_paren)
         }
         return new AST_New_Expression(location = token.location, type = type, init_arguments = call_arguments)
     }
-    if (self.matches(self.required_literal)) {
-        token := self.consume(self.required_literal) as @Literal_Token
+    if (self.matches(required_literal)) {
+        token := self.consume(required_literal) as @Literal_Token
         return new AST_Literal_Expression(location = token.location, literal = token)
     }
-    if (self.matches(self.required_identifier)) {
-        token := self.consume(self.required_identifier) as @Identifier_Token
+    if (self.matches(required_identifier)) {
+        token := self.consume(required_identifier) as @Identifier_Token
         return new AST_Variable_Expression(location = token.location, name = token)
     }
-    if (self.matches(self.required_open_paren)) {
-        location := self.consume(self.required_open_paren).location
+    if (self.matches(required_open_paren)) {
+        location := self.consume(required_open_paren).location
         self.consume_space(0)
         expression := self.parse_expression()
         self.consume_space(0)
-        self.consume(self.required_close_paren)
+        self.consume(required_close_paren)
         return new AST_Atomic_Expression(location = location, expression = expression)
     }
     return null
 }
 
 define consume_end_of_line = func (self: @Parser) -> Nothing {
-    if (self.matches(self.optional_space, self.required_comment)) {
+    if (self.matches(optional_space, required_comment)) {
         self.consume_space(1)
-        self.consume(self.required_comment)
+        self.consume(required_comment)
     } else {
         self.consume_space(0)
     }
-    if (self.matches(self.required_end_of_file) == false) {
-        self.consume(self.required_end_of_line)
+    if (self.matches(required_end_of_file) == false) {
+        self.consume(required_end_of_line)
     }
 }
 
 define consume_empty_line = func (self: @Parser) -> Boolean {
-    if (self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)) {
-        if (self.matches(self.optional_space, self.required_comment)) {
+    if (self.matches(optional_space, optional_comment, required_end_of_line)) {
+        if (self.matches(optional_space, required_comment)) {
             self.consume_space(self.current_alignment * 4)
-            self.consume(self.required_comment)
+            self.consume(required_comment)
         } else {
             self.consume_space(0)
         }
-        self.consume(self.required_end_of_line)
+        self.consume(required_end_of_line)
         return true
     }
     return false
@@ -830,7 +786,7 @@ define consume = func (self: @Parser, first_matcher: @Matcher, second_matcher: @
 }
 
 define matches_end_of_line = func (self: @Parser) -> Boolean {
-    return self.matches(self.optional_space, self.optional_comment, self.required_end_of_line)
+    return self.matches(optional_space, optional_comment, required_end_of_line)
 }
 
 define matches = func (self: @Parser, first_matcher: @Matcher) -> Boolean {
@@ -872,82 +828,181 @@ define matches = func (self: @Parser, first_matcher: @Matcher, second_matcher: @
 define Matcher = struct {
     extends Object
     is_required: Boolean
+    accepts: func (self: @Matcher, token: @Token) -> Boolean = matcher_accepts
+}
+
+define matcher_accepts = func (self: @Matcher, token: @Token) -> Boolean {
+    abort(token.location, "Illegal state")
 }
 
 define Comment_Matcher = struct {
-    extends Matcher
+    extends Matcher(accepts = accepts_comment)
+}
+
+define accepts_comment = func (self: @Matcher, token: @Token) -> Boolean {
+    return token.is(Comment_Token)
 }
 
 define End_Of_File_Matcher = struct {
-    extends Matcher
+    extends Matcher(accepts = accepts_end_of_file)
+}
+
+define accepts_end_of_file = func (self: @Matcher, token: @Token) -> Boolean {
+    return token.is(End_Of_File_Token)
 }
 
 define End_Of_Line_Matcher = struct {
-    extends Matcher
+    extends Matcher(accepts = accepts_end_of_line)
+}
+
+define accepts_end_of_line = func (self: @Matcher, token: @Token) -> Boolean {
+    return token.is(End_Of_Line_Token)
 }
 
 define Identifier_Matcher = struct {
-    extends Matcher
+    extends Matcher(accepts = accepts_identifier)
+}
+
+define accepts_identifier = func (self: @Matcher, token: @Token) -> Boolean {
+    return token.is(Identifier_Token)
 }
 
 define Keyword_Matcher = struct {
-    extends Matcher
+    extends Matcher(accepts = accepts_keyword)
     lexeme: @String
+}
+
+define accepts_keyword = func (self: @Matcher, token: @Token) -> Boolean {
+    if (token.is(Identifier_Token)) {
+        return token.lexeme.equals((self as @Keyword_Matcher).lexeme)
+    }
+    return false
 }
 
 define Literal_Matcher = struct {
-    extends Matcher
+    extends Matcher(accepts = accepts_literal)
 }
 
-define String_Literal_Matcher = struct {
-    extends Matcher
+define accepts_literal = func (self: @Matcher, token: @Token) -> Boolean {
+    return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token) || token.is(Undefined_Token)
 }
 
 define Other_Matcher = struct {
-    extends Matcher
+    extends Matcher(accepts = accepts_other)
     lexeme: @String
 }
 
-define Space_Matcher = struct {
-    extends Matcher
+define accepts_other = func (self: @Matcher, token: @Token) -> Boolean {
+    if (token.is(Other_Token)) {
+        return token.lexeme.equals((self as @Other_Matcher).lexeme)
+    }
+    return false
 }
 
-define accepts = func (self: @Matcher, token: @Token) -> Boolean {
-    if (self.is(Other_Matcher)) {
-        self := self as @Other_Matcher
-        if (token.is(Other_Token)) {
-            return token.lexeme.equals(self.lexeme)
-        }
-        return false
-    }
-    if (self.is(Space_Matcher)) {
-        return token.is(Space_Token)
-    }
-    if (self.is(Identifier_Matcher)) {
-        return token.is(Identifier_Token)
-    }
-    if (self.is(Keyword_Matcher)) {
-        self := self as @Keyword_Matcher
-        if (token.is(Identifier_Token)) {
-            return token.lexeme.equals(self.lexeme)
-        }
-        return false
-    }
-    if (self.is(String_Literal_Matcher)) {
-        return token.is(String_Token)
-    }
-    if (self.is(Literal_Matcher)) {
-        return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token) || token.is(Undefined_Token)
-    }
-    if (self.is(End_Of_Line_Matcher)) {
-        return token.is(End_Of_Line_Token)
-    }
-    if (self.is(Comment_Matcher)) {
-        return token.is(Comment_Token)
-    }
-    if (self.is(End_Of_File_Matcher)) {
-        return token.is(End_Of_File_Token)
-    }
-    stderr.write("Unsupported token matcher").end_line()
-    abort()
+define Space_Matcher = struct {
+    extends Matcher(accepts = accepts_space)
+}
+
+define accepts_space = func (self: @Matcher, token: @Token) -> Boolean {
+    return token.is(Space_Token)
+}
+
+define String_Literal_Matcher = struct {
+    extends Matcher(accepts = accepts_string_literal)
+}
+
+define accepts_string_literal = func (self: @Matcher, token: @Token) -> Boolean {
+    return token.is(String_Token)
+}
+
+optional_comment: @Matcher = undefined
+optional_space: @Matcher = undefined
+required_ampersand: @Matcher = undefined
+required_as: @Matcher = undefined
+required_asterisk: @Matcher = undefined
+required_at: @Matcher = undefined
+required_break: @Matcher = undefined
+required_close_brace: @Matcher = undefined
+required_close_bracket: @Matcher = undefined
+required_close_paren: @Matcher = undefined
+required_colon: @Matcher = undefined
+required_column: @Matcher = undefined
+required_comma: @Matcher = undefined
+required_comment: @Matcher = undefined
+required_define: @Matcher = undefined
+required_dot: @Matcher = undefined
+required_else: @Matcher = undefined
+required_end_of_file: @Matcher = undefined
+required_end_of_line: @Matcher = undefined
+required_equals: @Matcher = undefined
+required_exclamation_mark: @Matcher = undefined
+required_extends: @Matcher = undefined
+required_external: @Matcher = undefined
+required_func: @Matcher = undefined
+required_greater_than: @Matcher = undefined
+required_hyphen: @Matcher = undefined
+required_identifier: @Matcher = undefined
+required_if: @Matcher = undefined
+required_include: @Matcher = undefined
+required_less_than: @Matcher = undefined
+required_literal: @Matcher = undefined
+required_loop: @Matcher = undefined
+required_new: @Matcher = undefined
+required_open_brace: @Matcher = undefined
+required_open_bracket: @Matcher = undefined
+required_open_paren: @Matcher = undefined
+required_plus: @Matcher = undefined
+required_return: @Matcher = undefined
+required_slash: @Matcher = undefined
+required_string_literal: @Matcher = undefined
+required_struct: @Matcher = undefined
+required_unknown: @Matcher = undefined
+required_vertical_bar: @Matcher = undefined
+required_while: @Matcher = undefined
+
+define init_matchers = func () -> Nothing {
+    optional_comment = new Comment_Matcher(is_required = false)
+    optional_space = new Space_Matcher(is_required = false)
+    required_ampersand = new Other_Matcher(is_required = true, lexeme = "&")
+    required_as = new Keyword_Matcher(is_required = true, lexeme = "as")
+    required_asterisk = new Other_Matcher(is_required = true, lexeme = "*")
+    required_at = new Other_Matcher(is_required = true, lexeme = "@")
+    required_break = new Keyword_Matcher(is_required = true, lexeme = "break")
+    required_close_brace = new Other_Matcher(is_required = true, lexeme = "}")
+    required_close_bracket = new Other_Matcher(is_required = true, lexeme = "]")
+    required_close_paren = new Other_Matcher(is_required = true, lexeme = ")")
+    required_colon = new Other_Matcher(is_required = true, lexeme = ":")
+    required_column = new Other_Matcher(is_required = true, lexeme = ";")
+    required_comma = new Other_Matcher(is_required = true, lexeme = ",")
+    required_comment = new Comment_Matcher(is_required = true)
+    required_define = new Keyword_Matcher(is_required = true, lexeme = "define")
+    required_dot = new Other_Matcher(is_required = true, lexeme = ".")
+    required_else = new Keyword_Matcher(is_required = true, lexeme = "else")
+    required_end_of_file = new End_Of_File_Matcher(is_required = true)
+    required_end_of_line = new End_Of_Line_Matcher(is_required = true)
+    required_equals = new Other_Matcher(is_required = true, lexeme = "=")
+    required_exclamation_mark = new Other_Matcher(is_required = true, lexeme = "!")
+    required_extends = new Keyword_Matcher(is_required = true, lexeme = "extends")
+    required_external = new Keyword_Matcher(is_required = true, lexeme = "external")
+    required_func = new Keyword_Matcher(is_required = true, lexeme = "func")
+    required_greater_than = new Other_Matcher(is_required = true, lexeme = ">")
+    required_hyphen = new Other_Matcher(is_required = true, lexeme = "-")
+    required_identifier = new Identifier_Matcher(is_required = true)
+    required_if = new Keyword_Matcher(is_required = true, lexeme = "if")
+    required_include = new Keyword_Matcher(is_required = true, lexeme = "include")
+    required_less_than = new Other_Matcher(is_required = true, lexeme = "<")
+    required_literal = new Literal_Matcher(is_required = true)
+    required_loop = new Keyword_Matcher(is_required = true, lexeme = "loop")
+    required_new = new Keyword_Matcher(is_required = true, lexeme = "new")
+    required_open_brace = new Other_Matcher(is_required = true, lexeme = "{")
+    required_open_bracket = new Other_Matcher(is_required = true, lexeme = "[")
+    required_open_paren = new Other_Matcher(is_required = true, lexeme = "(")
+    required_plus = new Other_Matcher(is_required = true, lexeme = "+")
+    required_return = new Keyword_Matcher(is_required = true, lexeme = "return")
+    required_slash = new Other_Matcher(is_required = true, lexeme = "/")
+    required_string_literal = new String_Literal_Matcher(is_required = true)
+    required_struct = new Keyword_Matcher(is_required = true, lexeme = "struct")
+    required_unknown = new Keyword_Matcher(is_required = true, lexeme = "unknown")
+    required_vertical_bar = new Other_Matcher(is_required = true, lexeme = "|")
+    required_while = new Keyword_Matcher(is_required = true, lexeme = "while")
 }

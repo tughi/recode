@@ -28,6 +28,8 @@ define main = func (argc: Int, argv: @@Int8) -> Nothing {
         }
     }
 
+    init_matchers()
+
     compilation_unit := parse(source_file_path)
     \ stdout.write(compilation_unit).end_line()
 
