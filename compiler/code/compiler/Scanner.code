@@ -182,50 +182,17 @@ scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location:
     while (self.peek_char().is_identifier_body()) {
         token_lexeme.append(self.next_char())
     }
-    if (token_lexeme.equals("as")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("break")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("else")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("external")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
     if (token_lexeme.equals("false")) {
         return new Boolean_Token(lexeme = token_lexeme, location = token_location, value = false)
     }
-    if (token_lexeme.equals("if")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("include")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("loop")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("new")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
     if (token_lexeme.equals("null")) {
         return new Null_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("return")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("struct")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
     }
     if (token_lexeme.equals("true")) {
         return new Boolean_Token(lexeme = token_lexeme, location = token_location, value = true)
     }
     if (token_lexeme.equals("undefined")) {
         return new Undefined_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("while")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
     }
     return new Identifier_Token(lexeme = token_lexeme, location = token_location)
 }

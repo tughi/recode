@@ -18,14 +18,14 @@ define Parser = struct {
     required_column: @Matcher = new Other_Matcher(is_required = true, lexeme = ";")
     required_comma: @Matcher = new Other_Matcher(is_required = true, lexeme = ",")
     required_comment: @Matcher = new Comment_Matcher(is_required = true)
-    required_define: @Matcher = new Word_Matcher(is_required = true, lexeme = "define")
+    required_define: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "define")
     required_dot: @Matcher = new Other_Matcher(is_required = true, lexeme = ".")
     required_else: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "else")
     required_end_of_file: @Matcher = new End_Of_File_Matcher(is_required = true)
     required_end_of_line: @Matcher = new End_Of_Line_Matcher(is_required = true)
     required_equals: @Matcher = new Other_Matcher(is_required = true, lexeme = "=")
     required_exclamation_mark: @Matcher = new Other_Matcher(is_required = true, lexeme = "!")
-    required_extends: @Matcher = new Word_Matcher(is_required = true, lexeme = "extends")
+    required_extends: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "extends")
     required_external: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "external")
     required_greater_than: @Matcher = new Other_Matcher(is_required = true, lexeme = ">")
     required_hyphen: @Matcher = new Other_Matcher(is_required = true, lexeme = "-")
@@ -43,8 +43,8 @@ define Parser = struct {
     required_return: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "return")
     required_slash: @Matcher = new Other_Matcher(is_required = true, lexeme = "/")
     required_string_literal: @Matcher = new String_Literal_Matcher(is_required = true)
-    required_struct: @Matcher = new Word_Matcher(is_required = true, lexeme = "struct")
-    required_unknown: @Matcher = new Word_Matcher(is_required = true, lexeme = "unknown")
+    required_struct: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "struct")
+    required_unknown: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "unknown")
     required_vertical_bar: @Matcher = new Other_Matcher(is_required = true, lexeme = "|")
     required_while: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "while")
 }
@@ -719,22 +719,6 @@ parse_call_argument :: (self: @Parser) -> @AST_Call_Argument {
 \   | "(" expression ")"
 \   | "new" type ( "(" call_arguments? ")" )?
 parse_primary_expression :: (self: @Parser) -> @AST_Expression {
-    if (self.matches(self.required_identifier)) {
-        token := self.consume(self.required_identifier) as @Identifier_Token
-        return new AST_Variable_Expression(location = token.location, name = token)
-    }
-    if (self.matches(self.required_literal)) {
-        token := self.consume(self.required_literal) as @Literal_Token
-        return new AST_Literal_Expression(location = token.location, literal = token)
-    }
-    if (self.matches(self.required_open_paren)) {
-        location := self.consume(self.required_open_paren).location
-        self.consume_space(0)
-        expression := self.parse_expression()
-        self.consume_space(0)
-        self.consume(self.required_close_paren)
-        return new AST_Atomic_Expression(location = location, expression = expression)
-    }
     if (self.matches(self.required_new)) {
         token := self.consume(self.required_new)
         self.consume_space(1)
@@ -750,6 +734,22 @@ parse_primary_expression :: (self: @Parser) -> @AST_Expression {
             self.consume(self.required_close_paren)
         }
         return new AST_New_Expression(location = token.location, type = type, init_arguments = call_arguments)
+    }
+    if (self.matches(self.required_literal)) {
+        token := self.consume(self.required_literal) as @Literal_Token
+        return new AST_Literal_Expression(location = token.location, literal = token)
+    }
+    if (self.matches(self.required_identifier)) {
+        token := self.consume(self.required_identifier) as @Identifier_Token
+        return new AST_Variable_Expression(location = token.location, name = token)
+    }
+    if (self.matches(self.required_open_paren)) {
+        location := self.consume(self.required_open_paren).location
+        self.consume_space(0)
+        expression := self.parse_expression()
+        self.consume_space(0)
+        self.consume(self.required_close_paren)
+        return new AST_Atomic_Expression(location = location, expression = expression)
     }
     return null
 }
@@ -917,11 +917,6 @@ define Space_Matcher = struct {
     extends Matcher
 }
 
-define Word_Matcher = struct {
-    extends Matcher
-    lexeme: @String
-}
-
 accepts :: (self: @Matcher, token: @Token) -> Boolean {
     if (self.is(Other_Matcher)) {
         self := self as @Other_Matcher
@@ -936,16 +931,9 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
     if (self.is(Identifier_Matcher)) {
         return token.is(Identifier_Token)
     }
-    if (self.is(Word_Matcher)) {
-        self := self as @Word_Matcher
-        if (token.is(Identifier_Token) || token.is(Keyword_Token)) {
-            return token.lexeme.equals(self.lexeme)
-        }
-        return false
-    }
     if (self.is(Keyword_Matcher)) {
         self := self as @Keyword_Matcher
-        if (token.is(Keyword_Token)) {
+        if (token.is(Identifier_Token)) {
             return token.lexeme.equals(self.lexeme)
         }
         return false

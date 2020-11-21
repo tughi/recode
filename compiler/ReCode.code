@@ -330,7 +330,7 @@ abort :: (location: @Source_Location, message: @String) -> Nothing {
 include "./code/compiler/Token.code"
 
 write :: (file: @FILE, token: @Token) -> @FILE {
-    if (token.is(Other_Token) || token.is(Keyword_Token)) {
+    if (token.is(Other_Token)) {
         file.write(27 as Int8).write("[2;37m")
     } else if (token.is(Literal_Token)) {
         file.write(27 as Int8).write("[1;33m")
