@@ -1,6 +1,6 @@
 include "./code/lang/Object.code"
 
-main :: (argc: Int, argv: @@Int8) -> Int {
+define main = func (argc: Int, argv: @@Int8) -> Int {
     window := Widget()
     return window.bounds.location.x - 42
 }
@@ -10,7 +10,7 @@ define Widget = struct {
     bounds: Rectangle = Rectangle()
 }
 
-set_location :: (self: @Widget, x: Int, y: Int) -> Nothing {
+define set_location = func (self: @Widget, x: Int, y: Int) -> Nothing {
     self.bounds.location.set(x, y)
 }
 
@@ -20,7 +20,7 @@ define Rectangle = struct {
     height: Int
 }
 
-size :: (self: @Rectangle) -> Int {
+define size = func (self: @Rectangle) -> Int {
     return self.width * self.height
 }
 
@@ -29,7 +29,7 @@ define Point = struct {
     y: Int
 }
 
-set :: (self: @Point, x: Int, y: Int) -> Nothing {
+define set = func (self: @Point, x: Int, y: Int) -> Nothing {
     self.x = x
     self.y = y
 }

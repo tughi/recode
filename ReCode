@@ -67,7 +67,7 @@ def examples():
         with open(f'examples/{example}') as example_file:
             is_program = False
             for line in example_file:
-                if line.startswith('main :: ('):
+                if line.startswith('define main = func ('):
                     is_program = True
                     break
             if not is_program:

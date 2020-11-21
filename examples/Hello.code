@@ -1,5 +1,5 @@
 include "./code/io/File.code"
 
-main :: (argc: Int, argv: @@Int8) -> Nothing {
+define main = func (argc: Int, argv: @@Int8) -> Nothing {
     stdout.write("Hello Code!\n")
 }

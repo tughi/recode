@@ -2,7 +2,7 @@ shape: @Shape = undefined
 
 polygon: Polygon
 
-main :: () -> Int {
+define main = func () -> Int {
     shape = new Rectangle()
     if (shape.is(Polygon) == false) {
         return 1

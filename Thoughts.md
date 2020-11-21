@@ -40,7 +40,7 @@ The `@?` prefix declares a nullable pointer type.
 
 The value of an `@?Any` variable can be access only after a `null` check.
 
-    length :: (self: @?String) -> Int {
+    define length = func (self: @?String) -> Int {
         if (self != null) {
             return self.length
         }
@@ -125,7 +125,7 @@ The variable names are symbols used by the compiler to know where the value are 
 
 ## Functions
 
-    max :: (v1: Int, v2: Int) -> Int {
+    define max = func (v1: Int, v2: Int) -> Int {
         if (v1 > v2) {
             return v1
         }
@@ -136,7 +136,7 @@ The variable names are symbols used by the compiler to know where the value are 
 
 Templates look like functions but they are always inlined where _invoked_.
 
-    for_each :: (list: @List, block: (item: @Any, index: Int) => Nothing) => Nothing {
+    define for_each = func (list: @List, block: (item: @Any, index: Int) => Nothing) => Nothing {
         index := 0
         item := list.first_item
         while (item != null) {

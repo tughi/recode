@@ -1,10 +1,10 @@
-write :: (self: @FILE, string: @String) -> @FILE {
+define write = func (self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
 include "../lang/String.code"
 
-write :: (file: @FILE, chars: @Int8) -> @FILE {
+define write = func (file: @FILE, chars: @Int8) -> @FILE {
     index := 0
     loop {
         char := chars[index]
@@ -16,7 +16,7 @@ write :: (file: @FILE, chars: @Int8) -> @FILE {
     }
 }
 
-write :: (file: @FILE, number: Int) -> @FILE {
+define write = func (file: @FILE, number: Int) -> @FILE {
     if (number < 0) {
         return file.write('-').write(-number)
     }
@@ -26,12 +26,12 @@ write :: (file: @FILE, number: Int) -> @FILE {
     return file.write((number // 10 + '0' as Int) as Int8)
 }
 
-write :: (file: @FILE, char: Int8) -> @FILE {
+define write = func (file: @FILE, char: Int8) -> @FILE {
     fputc(char as Int32, file)
     return file
 }
 
-end_line :: (file: @FILE) -> @FILE {
+define end_line = func (file: @FILE) -> @FILE {
     return file.write('\n')
 }
 
@@ -39,4 +39,4 @@ define FILE = unknown struct
 
 stdout: @FILE = external
 
-fputc :: (char: Int32, file: @FILE) -> Int32
+define fputc = func (char: Int32, file: @FILE) -> Int32

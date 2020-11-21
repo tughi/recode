@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-main :: (argc: Int, argv: @@Int8) -> Nothing {
+define main = func (argc: Int, argv: @@Int8) -> Nothing {
     if (argc < 3) {
         stdout.write("Usage:").end_line()
         stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").end_line()
@@ -45,7 +45,7 @@ include "./code/compiler/Generator.code"
 
 include "./code/compiler/IR_Builder.code"
 
-abort :: (location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
+define abort = func (location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
     stderr.end_line().end_line().write(location).write(": Unexpected type: ").write(unexpected_type.name).end_line()
     abort()
 }
@@ -56,14 +56,14 @@ include "./code/compiler/IR.code"
 
 include "./code/compiler/Parser.code"
 
-abort :: (self: @Parser, unexpected_token: @Token) -> Nothing {
+define abort = func (self: @Parser, unexpected_token: @Token) -> Nothing {
     stderr.write(unexpected_token.location).write(": Unexpected ").write(unexpected_token.object_type.name).write(": ").write(unexpected_token).end_line()
     abort()
 }
 
 include "./code/compiler/AST.code"
 
-write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
+define write = func (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
     statements := compilation_unit.statements.create_iterator()
     while (statements.has_next()) {
         statement := statements.next() as @AST_Statement
@@ -72,7 +72,7 @@ write :: (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
     return file
 }
 
-write :: (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
+define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
     if (statement.is(AST_Assignment_Statement)) {
         statement := statement as @AST_Assignment_Statement
         return file.write(statement.storage_expression).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
@@ -184,7 +184,7 @@ write :: (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
     abort(statement.location, "Unsupported AST_Statement type: ".clone().append(statement.object_type.name))
 }
 
-write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
+define write_source_line = func (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
     file.write(location.source.file_path).write(':')
     line := location.line
     if (line < 1000) {
@@ -207,11 +207,11 @@ write_source_line :: (file: @FILE, location: @Source_Location, alignment: Int) -
     return file
 }
 
-write :: (file: @FILE, parameter: @AST_Function_Parameter) -> @FILE {
+define write = func (file: @FILE, parameter: @AST_Function_Parameter) -> @FILE {
     return file.write(parameter.name).write(": ").write(parameter.type)
 }
 
-write :: (file: @FILE, type: @AST_Type) -> @FILE {
+define write = func (file: @FILE, type: @AST_Type) -> @FILE {
     if (type.is(AST_Array_Type)) {
         type := type as @AST_Array_Type
         if (type.size_expression != null) {
@@ -232,7 +232,7 @@ write :: (file: @FILE, type: @AST_Type) -> @FILE {
     abort(type.location, "Unsupported AST_Type type: ".clone().append(type.object_type.name))
 }
 
-write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
+define write = func (file: @FILE, expression: @AST_Expression) -> @FILE {
     if (expression.is(AST_Array_Access_Expression)) {
         return file.write((expression as @AST_Array_Access_Expression).array_expression).write('[').write((expression as @AST_Array_Access_Expression).index_expression).write(']')
     }
@@ -322,14 +322,14 @@ write :: (file: @FILE, expression: @AST_Expression) -> @FILE {
 
 include "./code/compiler/Scanner.code"
 
-abort :: (location: @Source_Location, message: @String) -> Nothing {
+define abort = func (location: @Source_Location, message: @String) -> Nothing {
     stderr.end_line().write(location).write(": ").write(message).end_line()
     abort()
 }
 
 include "./code/compiler/Token.code"
 
-write :: (file: @FILE, token: @Token) -> @FILE {
+define write = func (file: @FILE, token: @Token) -> @FILE {
     if (token.is(Other_Token)) {
         file.write(27 as Int8).write("[2;37m")
     } else if (token.is(Literal_Token)) {
@@ -344,7 +344,7 @@ write :: (file: @FILE, token: @Token) -> @FILE {
 
 include "./code/compiler/Source.code"
 
-write :: (self: @FILE, location: @Source_Location) -> @FILE {
+define write = func (self: @FILE, location: @Source_Location) -> @FILE {
     if (location == null) {
         return self.write("null")
     }
@@ -353,11 +353,11 @@ write :: (self: @FILE, location: @Source_Location) -> @FILE {
 
 include "./code/compiler/List.code"
 
-write_line :: (file: @FILE, string: @String) -> @FILE {
+define write_line = func (file: @FILE, string: @String) -> @FILE {
     return file.end_line().write(string)
 }
 
-write :: (self: @FILE, number: Int) -> @FILE {
+define write = func (self: @FILE, number: Int) -> @FILE {
     if (number < 0) {
         return self.write('-').write(-number)
     }
@@ -368,11 +368,11 @@ write :: (self: @FILE, number: Int) -> @FILE {
     return self
 }
 
-write :: (self: @FILE, string: @String) -> @FILE {
+define write = func (self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
-write :: (self: @FILE, chars: @Int8) -> @FILE {
+define write = func (self: @FILE, chars: @Int8) -> @FILE {
     if (fputs(chars, self) as Int < 0) {
         stderr.end_line().end_line().write("Failed to write text").end_line()
         abort()
@@ -380,7 +380,7 @@ write :: (self: @FILE, chars: @Int8) -> @FILE {
     return self
 }
 
-write :: (self: @FILE, char: Int8) -> @FILE {
+define write = func (self: @FILE, char: Int8) -> @FILE {
     c := char as Int32
     if (fputc(c, self) != c) {
         stderr.end_line().end_line().write("Failed to write character: ").write(c as Int).end_line()
@@ -389,16 +389,16 @@ write :: (self: @FILE, char: Int8) -> @FILE {
     return self
 }
 
-end_line :: (self: @FILE) -> @FILE {
+define end_line = func (self: @FILE) -> @FILE {
     return self.write('\n')
 }
 
-flush :: (file: @FILE) -> @FILE {
+define flush = func (file: @FILE) -> @FILE {
     file.fflush()
     return file
 }
 
-abort :: (message: @String) -> Nothing {
+define abort = func (message: @String) -> Nothing {
     stderr.end_line().end_line().write(message).end_line()
     abort()
 }

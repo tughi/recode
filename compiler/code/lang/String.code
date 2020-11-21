@@ -6,7 +6,7 @@ define String = struct {
     length: Int = 0
 }
 
-create_string :: (data: @Int8) -> @String {
+define create_string = func (data: @Int8) -> @String {
     data_length := 0
     loop {
         char := data[data_length]
@@ -19,13 +19,13 @@ create_string :: (data: @Int8) -> @String {
     return new String(data = data, data_size = data_length + 1, length = data_length)
 }
 
-clone :: (self: @String) -> @String {
+define clone = func (self: @String) -> @String {
     clone := new String(data = malloc(self.data_size) as @Int8, data_size = self.data_size)
     clone.append(self)
     return clone
 }
 
-equals :: (self: @String, other: @String) -> Boolean {
+define equals = func (self: @String, other: @String) -> Boolean {
     if (self.length == other.length) {
         index := 0
         while (index < self.length) {
@@ -39,7 +39,7 @@ equals :: (self: @String, other: @String) -> Boolean {
     return false
 }
 
-index_of :: (self: @String, other: @String) -> Int {
+define index_of = func (self: @String, other: @String) -> Int {
     self_index := 0
     while (self_index <= self.length - other.length) {
         other_index := 0
@@ -54,7 +54,7 @@ index_of :: (self: @String, other: @String) -> Int {
     return -1
 }
 
-starts_with :: (self: @String, other: @String) -> Boolean {
+define starts_with = func (self: @String, other: @String) -> Boolean {
     if (self.length < other.length) {
         return false
     }
@@ -68,7 +68,7 @@ starts_with :: (self: @String, other: @String) -> Boolean {
     return true
 }
 
-ends_with :: (self: @String, other: @String) -> Boolean {
+define ends_with = func (self: @String, other: @String) -> Boolean {
     if (self.length < other.length) {
         return false
     }
@@ -82,11 +82,11 @@ ends_with :: (self: @String, other: @String) -> Boolean {
     return true
 }
 
-last_index_of :: (self: @String, char: Int8) -> Int {
+define last_index_of = func (self: @String, char: Int8) -> Int {
     return self.last_index_of(char, self.length - 1)
 }
 
-last_index_of :: (self: @String, char: Int8, from_index: Int) -> Int {
+define last_index_of = func (self: @String, char: Int8, from_index: Int) -> Int {
     index := from_index
     while (index >= 0 && self.data[index] != char) {
         index = index - 1
@@ -94,7 +94,7 @@ last_index_of :: (self: @String, char: Int8, from_index: Int) -> Int {
     return index
 }
 
-append :: (self: @String, char: Int8) -> @String {
+define append = func (self: @String, char: Int8) -> @String {
     if (self.length + 1 >= self.data_size) {
         self.data_size = self.data_size + 16
         self.data = realloc(self.data, self.data_size) as @Int8
@@ -105,7 +105,7 @@ append :: (self: @String, char: Int8) -> @String {
     return self
 }
 
-append :: (self: @String, number: Int) -> @String {
+define append = func (self: @String, number: Int) -> @String {
     if (number < 0) {
         return self.append('-').append(-number)
     }
@@ -115,7 +115,7 @@ append :: (self: @String, number: Int) -> @String {
     return self.append((number // 10 + '0' as Int) as Int8)
 }
 
-append :: (self: @String, other: @String) -> @String {
+define append = func (self: @String, other: @String) -> @String {
     if (self.length + other.length >= self.data_size) {
         self.data_size = self.length + other.length + 1
         self.data = realloc(self.data, self.data_size) as @Int8
@@ -137,7 +137,7 @@ append :: (self: @String, other: @String) -> @String {
     return self
 }
 
-remove :: (self: @String, begin_index: Int, end_index: Int) -> @String {
+define remove = func (self: @String, begin_index: Int, end_index: Int) -> @String {
     if (begin_index < 0 || begin_index > end_index || end_index >= self.length) {
         abort("Invalid state")
     }

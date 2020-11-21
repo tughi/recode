@@ -1,8 +1,8 @@
 include "./code/io/File.code"
 
 define Expression = struct {
-    dump: (self: @Expression) -> Nothing
-    evaluate: (self: @Expression) -> Int = null
+    dump: func (self: @Expression) -> Nothing
+    evaluate: func (self: @Expression) -> Int = null
 }
 
 define Int_Expression = struct {
@@ -10,12 +10,12 @@ define Int_Expression = struct {
     value: Int
 }
 
-dump_int :: (self: @Expression) -> Nothing {
+define dump_int = func (self: @Expression) -> Nothing {
     self := self as @Int_Expression
     stdout.write(self.value)
 }
 
-evaluate_int :: (self: @Expression) -> Int {
+define evaluate_int = func (self: @Expression) -> Int {
     self := self as @Int_Expression
     return self.value
 }
@@ -27,7 +27,7 @@ define Binary_Expression = struct {
     right_expression: @Expression
 }
 
-dump_binary_expression :: (self: @Expression) -> Nothing {
+define dump_binary_expression = func (self: @Expression) -> Nothing {
     self := self as @Binary_Expression
     stdout.write('(')
     self.left_expression.dump()
@@ -40,7 +40,7 @@ define Addition_Expression = struct {
     extends Binary_Expression(operator = "+", evaluate = evaluate_addition)
 }
 
-evaluate_addition :: (self: @Expression) -> Int {
+define evaluate_addition = func (self: @Expression) -> Int {
     self := self as @Addition_Expression
     return self.left_expression.evaluate() + self.right_expression.evaluate()
 }
@@ -49,12 +49,12 @@ define Substraction_Expression = struct {
     extends Binary_Expression(operator = "-", evaluate = evaluate_substraction)
 }
 
-evaluate_substraction :: (self: @Expression) -> Int {
+define evaluate_substraction = func (self: @Expression) -> Int {
     self := self as @Substraction_Expression
     return self.left_expression.evaluate() - self.right_expression.evaluate()
 }
 
-main :: () -> Nothing {
+define main = func () -> Nothing {
     one := new Int_Expression(value = 1)
 
     expression: @Expression = new Addition_Expression(

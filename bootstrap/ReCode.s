@@ -18,7 +18,7 @@
 
   .bss
 
-  .loc 1 3 1
+  .loc 1 3 8
   .text
   .globl main
 main:
@@ -402,7 +402,7 @@ main_1:
 
 main_1__stack_frame_size: .word 64
 
-  .loc 2 3 1
+  .loc 2 3 8
   .text
 generate_2:
   push rbp
@@ -668,7 +668,7 @@ generate_2:
 
 generate_2__stack_frame_size: .word 48
 
-  .loc 2 32 1
+  .loc 2 32 8
   .text
 generate_function_3:
   push rbp
@@ -1389,7 +1389,7 @@ generate_function_3:
 
 generate_function_3__stack_frame_size: .word 48
 
-  .loc 2 79 1
+  .loc 2 79 8
   .text
 write_function_label_4:
   push rbp
@@ -1470,7 +1470,7 @@ write_function_label_4:
 
 write_function_label_4__stack_frame_size: .word 32
 
-  .loc 2 87 1
+  .loc 2 87 8
   .text
 write_function_end_label_5:
   push rbp
@@ -1524,7 +1524,7 @@ write_function_end_label_5:
 
 write_function_end_label_5__stack_frame_size: .word 16
 
-  .loc 2 91 1
+  .loc 2 91 8
   .text
 output_unreached_ir_instructions_6:
   push rbp
@@ -1706,7 +1706,7 @@ output_unreached_ir_instructions_6:
 
 output_unreached_ir_instructions_6__stack_frame_size: .word 48
 
-  .loc 2 109 1
+  .loc 2 109 8
   .text
 generate_block_7:
   push rbp
@@ -1971,7 +1971,7 @@ generate_block_7:
 
 generate_block_7__stack_frame_size: .word 32
 
-  .loc 2 130 1
+  .loc 2 130 8
   .text
 write_block_label_8:
   push rbp
@@ -2067,7 +2067,7 @@ write_block_label_8:
 
 write_block_label_8__stack_frame_size: .word 16
 
-  .loc 2 134 1
+  .loc 2 134 8
   .text
 generate_instruction_9:
   push rbp
@@ -2838,7 +2838,7 @@ generate_instruction_9:
 
 generate_instruction_9__stack_frame_size: .word 48
 
-  .loc 2 187 1
+  .loc 2 187 8
   .text
 generate_add_instruction_10:
   push rbp
@@ -2951,7 +2951,7 @@ generate_add_instruction_10:
 
 generate_add_instruction_10__stack_frame_size: .word 32
 
-  .loc 2 194 1
+  .loc 2 194 8
   .text
 generate_call_instruction_11:
   push rbp
@@ -3424,7 +3424,7 @@ generate_call_instruction_11:
 
 generate_call_instruction_11__stack_frame_size: .word 32
 
-  .loc 2 230 1
+  .loc 2 230 8
   .text
 generate_cast_instruction_12:
   push rbp
@@ -3927,7 +3927,7 @@ generate_cast_instruction_12:
 
 generate_cast_instruction_12__stack_frame_size: .word 48
 
-  .loc 2 265 1
+  .loc 2 265 8
   .text
 generate_conditional_jump_instruction_13:
   push rbp
@@ -4327,7 +4327,7 @@ generate_conditional_jump_instruction_13:
 
 generate_conditional_jump_instruction_13__stack_frame_size: .word 64
 
-  .loc 2 303 1
+  .loc 2 303 8
   .text
 generate_comparison_instruction_14:
   push rbp
@@ -4950,7 +4950,7 @@ generate_comparison_instruction_14:
 
 generate_comparison_instruction_14__stack_frame_size: .word 64
 
-  .loc 2 342 1
+  .loc 2 342 8
   .text
 generate_direct_jump_instruction_15:
   push rbp
@@ -5049,7 +5049,7 @@ generate_direct_jump_instruction_15:
 
 generate_direct_jump_instruction_15__stack_frame_size: .word 32
 
-  .loc 2 351 1
+  .loc 2 351 8
   .text
 generate_divide_instruction_16:
   push rbp
@@ -5302,7 +5302,7 @@ generate_divide_instruction_16:
 
 generate_divide_instruction_16__stack_frame_size: .word 48
 
-  .loc 2 373 1
+  .loc 2 373 8
   .text
 generate_load_array_item_instruction_17:
   push rbp
@@ -5927,7 +5927,7 @@ generate_load_array_item_instruction_17:
 
 generate_load_array_item_instruction_17__stack_frame_size: .word 80
 
-  .loc 2 413 1
+  .loc 2 413 8
   .text
 generate_load_variable_address_instruction_18:
   push rbp
@@ -6091,7 +6091,7 @@ generate_load_variable_address_instruction_18:
 
 generate_load_variable_address_instruction_18__stack_frame_size: .word 48
 
-  .loc 2 425 1
+  .loc 2 425 8
   .text
 generate_load_variable_instruction_19:
   push rbp
@@ -6450,7 +6450,7 @@ generate_load_variable_instruction_19:
 
 generate_load_variable_instruction_19__stack_frame_size: .word 32
 
-  .loc 2 452 1
+  .loc 2 452 8
   .text
 generate_load_struct_member_instruction_20:
   push rbp
@@ -7019,7 +7019,7 @@ generate_load_struct_member_instruction_20:
 
 generate_load_struct_member_instruction_20__stack_frame_size: .word 96
 
-  .loc 2 503 1
+  .loc 2 503 8
   .text
 generate_modulo_instruction_21:
   push rbp
@@ -7272,7 +7272,7 @@ generate_modulo_instruction_21:
 
 generate_modulo_instruction_21__stack_frame_size: .word 48
 
-  .loc 2 525 1
+  .loc 2 525 8
   .text
 generate_multiply_instruction_22:
   push rbp
@@ -7385,7 +7385,7 @@ generate_multiply_instruction_22:
 
 generate_multiply_instruction_22__stack_frame_size: .word 32
 
-  .loc 2 532 1
+  .loc 2 532 8
   .text
 generate_new_instruction_23:
   push rbp
@@ -7561,7 +7561,7 @@ generate_new_instruction_23:
 
 generate_new_instruction_23__stack_frame_size: .word 32
 
-  .loc 2 540 1
+  .loc 2 540 8
   .text
 generate_phi_instruction_24:
   push rbp
@@ -7699,7 +7699,7 @@ generate_phi_instruction_24:
 
 generate_phi_instruction_24__stack_frame_size: .word 64
 
-  .loc 2 555 1
+  .loc 2 555 8
   .text
 generate_return_instruction_25:
   push rbp
@@ -7803,7 +7803,7 @@ generate_return_instruction_25:
 
 generate_return_instruction_25__stack_frame_size: .word 32
 
-  .loc 2 564 1
+  .loc 2 564 8
   .text
 generate_set_instruction_26:
   push rbp
@@ -8109,7 +8109,7 @@ generate_set_instruction_26:
 
 generate_set_instruction_26__stack_frame_size: .word 48
 
-  .loc 2 596 1
+  .loc 2 596 8
   .text
 generate_store_array_item_instruction_27:
   push rbp
@@ -8741,7 +8741,7 @@ generate_store_array_item_instruction_27:
 
 generate_store_array_item_instruction_27__stack_frame_size: .word 96
 
-  .loc 2 654 1
+  .loc 2 654 8
   .text
 generate_store_struct_member_instruction_28:
   push rbp
@@ -9141,7 +9141,7 @@ generate_store_struct_member_instruction_28:
 
 generate_store_struct_member_instruction_28__stack_frame_size: .word 96
 
-  .loc 2 695 1
+  .loc 2 695 8
   .text
 generate_substract_instruction_29:
   push rbp
@@ -9431,7 +9431,7 @@ generate_substract_instruction_29:
 
 generate_substract_instruction_29__stack_frame_size: .word 48
 
-  .loc 2 720 1
+  .loc 2 720 8
   .text
 generate_load_value_30:
   push rbp
@@ -11647,7 +11647,7 @@ generate_load_value_30:
 
 generate_load_value_30__stack_frame_size: .word 64
 
-  .loc 2 828 1
+  .loc 2 828 8
   .text
 generate_store_value_31:
   push rbp
@@ -13642,7 +13642,7 @@ generate_store_value_31:
 
 generate_store_value_31__stack_frame_size: .word 176
 
-  .loc 2 959 1
+  .loc 2 959 8
   .text
 generate_store_struct_literal_value_32:
   push rbp
@@ -13975,7 +13975,7 @@ generate_store_struct_literal_value_32:
 
 generate_store_struct_literal_value_32__stack_frame_size: .word 80
 
-  .loc 2 982 1
+  .loc 2 982 8
   .text
 get_offset_33:
   push rbp
@@ -14153,7 +14153,7 @@ get_offset_33:
 
 get_offset_33__stack_frame_size: .word 64
 
-  .loc 2 1000 1
+  .loc 2 1000 8
   .text
 write_operand_34:
   push rbp
@@ -14895,7 +14895,7 @@ write_operand_34:
 
 write_operand_34__stack_frame_size: .word 80
 
-  .loc 2 1062 1
+  .loc 2 1062 8
   .text
 abort_35:
   push rbp
@@ -14946,7 +14946,7 @@ abort_35:
 
 abort_35__stack_frame_size: .word 16
 
-  .loc 2 1093 1
+  .loc 2 1093 8
   .text
 create_mc_generator_36:
   push rbp
@@ -15521,7 +15521,7 @@ create_mc_generator_36:
 
 create_mc_generator_36__stack_frame_size: .word 160
 
-  .loc 2 1101 1
+  .loc 2 1101 8
   .text
 reset_37:
   push rbp
@@ -15621,7 +15621,7 @@ reset_37:
 
 reset_37__stack_frame_size: .word 16
 
-  .loc 2 1115 1
+  .loc 2 1115 8
   .text
 find_unused_register_38:
   push rbp
@@ -16852,7 +16852,7 @@ find_unused_register_38:
 
 find_unused_register_38__stack_frame_size: .word 32
 
-  .loc 2 1165 1
+  .loc 2 1165 8
   .text
 create_mc_value_39:
   push rbp
@@ -16961,7 +16961,7 @@ create_mc_value_39:
 
 create_mc_value_39__stack_frame_size: .word 48
 
-  .loc 2 1179 1
+  .loc 2 1179 8
   .text
 map_variable_value_40:
   push rbp
@@ -17113,7 +17113,7 @@ map_variable_value_40:
 
 map_variable_value_40__stack_frame_size: .word 48
 
-  .loc 2 1195 1
+  .loc 2 1195 8
   .text
 map_variable_value_41:
   push rbp
@@ -17439,7 +17439,7 @@ map_variable_value_41:
 
 map_variable_value_41__stack_frame_size: .word 48
 
-  .loc 2 1214 1
+  .loc 2 1214 8
   .text
 get_value_42:
   push rbp
@@ -17541,7 +17541,7 @@ get_value_42:
 
 get_value_42__stack_frame_size: .word 32
 
-  .loc 2 1222 1
+  .loc 2 1222 8
   .text
 spill_local_variable_43:
   push rbp
@@ -17918,7 +17918,7 @@ spill_local_variable_43:
 
 spill_local_variable_43__stack_frame_size: .word 48
 
-  .loc 2 1238 1
+  .loc 2 1238 8
   .text
 create_local_variable_address_44:
   push rbp
@@ -18151,7 +18151,7 @@ create_local_variable_address_44:
 
 create_local_variable_address_44__stack_frame_size: .word 64
 
-  .loc 2 1258 1
+  .loc 2 1258 8
   .text
 spill_global_variable_45:
   push rbp
@@ -18255,7 +18255,7 @@ spill_global_variable_45:
 
 spill_global_variable_45__stack_frame_size: .word 32
 
-  .loc 2 1263 1
+  .loc 2 1263 8
   .text
 release_all_registers_46:
   push rbp
@@ -18443,7 +18443,7 @@ release_all_registers_46:
 
 release_all_registers_46__stack_frame_size: .word 16
 
-  .loc 2 1280 1
+  .loc 2 1280 8
   .text
 release_register_47:
   push rbp
@@ -18690,7 +18690,7 @@ release_register_47:
 
 release_register_47__stack_frame_size: .word 48
 
-  .loc 2 1309 1
+  .loc 2 1309 8
   .text
 discard_used_values_48:
   push rbp
@@ -19341,7 +19341,7 @@ discard_used_values_48:
 
 discard_used_values_48__stack_frame_size: .word 64
 
-  .loc 2 1369 1
+  .loc 2 1369 8
   .text
 is_used_49:
   push rbp
@@ -19536,7 +19536,7 @@ is_used_49:
 
 is_used_49__stack_frame_size: .word 48
 
-  .loc 2 1392 1
+  .loc 2 1392 8
   .text
 output_live_values_50:
   push rbp
@@ -19567,7 +19567,7 @@ output_live_values_50:
 
 output_live_values_50__stack_frame_size: .word 0
 
-  .loc 2 1396 1
+  .loc 2 1396 8
   .text
 output_live_values_51:
   push rbp
@@ -19830,7 +19830,7 @@ output_live_values_51:
 
 output_live_values_51__stack_frame_size: .word 32
 
-  .loc 2 1418 1
+  .loc 2 1418 8
   .text
 output_used_registers_52:
   push rbp
@@ -20057,7 +20057,7 @@ output_used_registers_52:
 
 output_used_registers_52__stack_frame_size: .word 16
 
-  .loc 2 1440 1
+  .loc 2 1440 8
   .text
 output_used_register_53:
   push rbp
@@ -20195,7 +20195,7 @@ output_used_register_53:
 
 output_used_register_53__stack_frame_size: .word 32
 
-  .loc 2 1466 1
+  .loc 2 1466 8
   .text
 init_54:
   push rbp
@@ -20259,7 +20259,7 @@ init_54:
 
 init_54__stack_frame_size: .word 16
 
-  .loc 2 1545 1
+  .loc 2 1545 8
   .text
 write_55:
   push rbp
@@ -20495,7 +20495,7 @@ write_55:
 
 write_55__stack_frame_size: .word 48
 
-  .loc 2 1578 1
+  .loc 2 1578 8
   .text
 get_type_size_56:
   push rbp
@@ -20851,7 +20851,7 @@ get_type_size_56:
 
 get_type_size_56__stack_frame_size: .word 64
 
-  .loc 2 1624 1
+  .loc 2 1624 8
   .text
 convert_string_57:
   push rbp
@@ -21002,7 +21002,7 @@ convert_string_57:
 
 convert_string_57__stack_frame_size: .word 48
 
-  .loc 2 1638 1
+  .loc 2 1638 8
   .text
 generate_strings_58:
   push rbp
@@ -21323,7 +21323,7 @@ generate_strings_58:
 
 generate_strings_58__stack_frame_size: .word 32
 
-  .loc 2 1656 1
+  .loc 2 1656 8
   .text
 write_string_label_59:
   push rbp
@@ -21369,7 +21369,7 @@ write_string_label_59:
 
 write_string_label_59__stack_frame_size: .word 16
 
-  .loc 2 1660 1
+  .loc 2 1660 8
   .text
 generate_object_types_60:
   push rbp
@@ -21923,7 +21923,7 @@ generate_object_types_60:
 
 generate_object_types_60__stack_frame_size: .word 48
 
-  .loc 2 1689 1
+  .loc 2 1689 8
   .text
 write_type_label_61:
   push rbp
@@ -21960,7 +21960,7 @@ write_type_label_61:
 
 write_type_label_61__stack_frame_size: .word 16
 
-  .loc 2 1693 1
+  .loc 2 1693 8
   .text
 generate_global_variables_62:
   push rbp
@@ -22245,7 +22245,7 @@ generate_global_variables_62:
 
 generate_global_variables_62__stack_frame_size: .word 48
 
-  .loc 3 3 1
+  .loc 3 3 8
   .text
 build_63:
   push rbp
@@ -22329,7 +22329,7 @@ build_63:
 
 build_63__stack_frame_size: .word 32
 
-  .loc 3 21 1
+  .loc 3 21 8
   .text
 dump_64:
   push rbp
@@ -22423,7 +22423,7 @@ dump_64:
 
 dump_64__stack_frame_size: .word 32
 
-  .loc 3 53 1
+  .loc 3 53 8
   .text
 create_ir_builder_65:
   push rbp
@@ -22728,7 +22728,7 @@ create_ir_builder_65:
 
 create_ir_builder_65__stack_frame_size: .word 48
 
-  .loc 3 72 1
+  .loc 3 72 8
   .text
 get_named_type_66:
   push rbp
@@ -22815,7 +22815,7 @@ get_named_type_66:
 
 get_named_type_66__stack_frame_size: .word 32
 
-  .loc 3 83 1
+  .loc 3 83 8
   .text
 add_variable_67:
   push rbp
@@ -22857,7 +22857,7 @@ add_variable_67:
 
 add_variable_67__stack_frame_size: .word 16
 
-  .loc 3 88 1
+  .loc 3 88 8
   .text
 get_variable_68:
   push rbp
@@ -22978,7 +22978,7 @@ get_variable_68:
 
 get_variable_68__stack_frame_size: .word 48
 
-  .loc 3 105 1
+  .loc 3 105 8
   .text
 get_variable_value_69:
   push rbp
@@ -23236,7 +23236,7 @@ get_variable_value_69:
 
 get_variable_value_69__stack_frame_size: .word 48
 
-  .loc 3 120 1
+  .loc 3 120 8
   .text
 create_variable_value_70:
   push rbp
@@ -23327,7 +23327,7 @@ create_variable_value_70:
 
 create_variable_value_70__stack_frame_size: .word 32
 
-  .loc 3 124 1
+  .loc 3 124 8
   .text
 get_named_function_71:
   push rbp
@@ -23494,7 +23494,7 @@ get_named_function_71:
 
 get_named_function_71__stack_frame_size: .word 48
 
-  .loc 3 142 1
+  .loc 3 142 8
   .text
 get_named_function_72:
   push rbp
@@ -23806,7 +23806,7 @@ get_named_function_72:
 
 get_named_function_72__stack_frame_size: .word 80
 
-  .loc 3 170 1
+  .loc 3 170 8
   .text
 get_named_function_73:
   push rbp
@@ -24214,7 +24214,7 @@ get_named_function_73:
 
 get_named_function_73__stack_frame_size: .word 80
 
-  .loc 3 198 1
+  .loc 3 198 8
   .text
 accepts_74:
   push rbp
@@ -24564,7 +24564,7 @@ accepts_74:
 
 accepts_74__stack_frame_size: .word 48
 
-  .loc 3 233 1
+  .loc 3 233 8
   .text
 create_temp_variable_75:
   push rbp
@@ -24652,7 +24652,7 @@ create_temp_variable_75:
 
 create_temp_variable_75__stack_frame_size: .word 32
 
-  .loc 3 237 1
+  .loc 3 237 8
   .text
 create_temp_value_76:
   push rbp
@@ -24691,7 +24691,7 @@ create_temp_value_76:
 
 create_temp_value_76__stack_frame_size: .word 16
 
-  .loc 3 241 1
+  .loc 3 241 8
   .text
 append_77:
   push rbp
@@ -24743,7 +24743,7 @@ append_77:
 
 append_77__stack_frame_size: .word 16
 
-  .loc 3 247 1
+  .loc 3 247 8
   .text
 build_78:
   push rbp
@@ -24967,7 +24967,7 @@ build_78:
 
 build_78__stack_frame_size: .word 48
 
-  .loc 3 273 1
+  .loc 3 273 8
   .text
 convert_type_statement_79:
   push rbp
@@ -25039,7 +25039,7 @@ convert_type_statement_79:
 
 convert_type_statement_79__stack_frame_size: .word 32
 
-  .loc 3 280 1
+  .loc 3 280 8
   .text
 convert_struct_statement_80:
   push rbp
@@ -25482,7 +25482,7 @@ convert_struct_statement_80:
 
 convert_struct_statement_80__stack_frame_size: .word 96
 
-  .loc 3 325 1
+  .loc 3 325 8
   .text
 convert_value_type_81:
   push rbp
@@ -25647,7 +25647,7 @@ convert_value_type_81:
 
 convert_value_type_81__stack_frame_size: .word 32
 
-  .loc 3 341 1
+  .loc 3 341 8
   .text
 convert_array_type_82:
   push rbp
@@ -25698,7 +25698,7 @@ convert_array_type_82:
 
 convert_array_type_82__stack_frame_size: .word 16
 
-  .loc 3 345 1
+  .loc 3 345 8
   .text
 convert_function_type_83:
   push rbp
@@ -25851,7 +25851,7 @@ convert_function_type_83:
 
 convert_function_type_83__stack_frame_size: .word 64
 
-  .loc 3 356 1
+  .loc 3 356 8
   .text
 convert_named_type_84:
   push rbp
@@ -26064,7 +26064,7 @@ convert_named_type_84:
 
 convert_named_type_84__stack_frame_size: .word 64
 
-  .loc 3 377 1
+  .loc 3 377 8
   .text
 convert_pointer_type_85:
   push rbp
@@ -26107,7 +26107,7 @@ convert_pointer_type_85:
 
 convert_pointer_type_85__stack_frame_size: .word 16
 
-  .loc 3 381 1
+  .loc 3 381 8
   .text
 create_function_86:
   push rbp
@@ -26449,7 +26449,7 @@ create_function_86:
 
 create_function_86__stack_frame_size: .word 96
 
-  .loc 3 412 1
+  .loc 3 412 8
   .text
 build_function_87:
   push rbp
@@ -26932,7 +26932,7 @@ build_function_87:
 
 build_function_87__stack_frame_size: .word 64
 
-  .loc 3 452 1
+  .loc 3 452 8
   .text
 remove_redundant_blocks_88:
   push rbp
@@ -27521,7 +27521,7 @@ remove_redundant_blocks_88:
 
 remove_redundant_blocks_88__stack_frame_size: .word 64
 
-  .loc 3 510 1
+  .loc 3 510 8
   .text
 populate_phi_instructions_89:
   push rbp
@@ -27739,7 +27739,7 @@ populate_phi_instructions_89:
 
 populate_phi_instructions_89__stack_frame_size: .word 64
 
-  .loc 3 529 1
+  .loc 3 529 8
   .text
 get_block_variable_value_90:
   push rbp
@@ -28013,7 +28013,7 @@ get_block_variable_value_90:
 
 get_block_variable_value_90__stack_frame_size: .word 64
 
-  .loc 3 550 1
+  .loc 3 550 8
   .text
 remove_trivial_phi_instructions_91:
   push rbp
@@ -28468,7 +28468,7 @@ remove_trivial_phi_instructions_91:
 
 remove_trivial_phi_instructions_91__stack_frame_size: .word 96
 
-  .loc 3 603 1
+  .loc 3 603 8
   .text
 remove_redundant_set_instructions_92:
   push rbp
@@ -28968,7 +28968,7 @@ remove_redundant_set_instructions_92:
 
 remove_redundant_set_instructions_92__stack_frame_size: .word 96
 
-  .loc 3 653 1
+  .loc 3 653 8
   .text
 convert_statement_93:
   push rbp
@@ -29321,7 +29321,7 @@ convert_statement_93:
 
 convert_statement_93__stack_frame_size: .word 32
 
-  .loc 3 680 1
+  .loc 3 680 8
   .text
 convert_assignment_statement_94:
   push rbp
@@ -29995,7 +29995,7 @@ convert_assignment_statement_94:
 
 convert_assignment_statement_94__stack_frame_size: .word 80
 
-  .loc 3 723 1
+  .loc 3 723 8
   .text
 convert_block_statement_95:
   push rbp
@@ -30131,7 +30131,7 @@ convert_block_statement_95:
 
 convert_block_statement_95__stack_frame_size: .word 48
 
-  .loc 3 733 1
+  .loc 3 733 8
   .text
 convert_break_statement_96:
   push rbp
@@ -30233,7 +30233,7 @@ convert_break_statement_96:
 
 convert_break_statement_96__stack_frame_size: .word 32
 
-  .loc 3 741 1
+  .loc 3 741 8
   .text
 convert_expression_statement_97:
   push rbp
@@ -30271,7 +30271,7 @@ convert_expression_statement_97:
 
 convert_expression_statement_97__stack_frame_size: .word 0
 
-  .loc 3 745 1
+  .loc 3 745 8
   .text
 convert_if_statement_98:
   push rbp
@@ -30557,7 +30557,7 @@ convert_if_statement_98:
 
 convert_if_statement_98__stack_frame_size: .word 64
 
-  .loc 3 768 1
+  .loc 3 768 8
   .text
 convert_loop_statement_99:
   push rbp
@@ -30705,7 +30705,7 @@ convert_loop_statement_99:
 
 convert_loop_statement_99__stack_frame_size: .word 48
 
-  .loc 3 780 1
+  .loc 3 780 8
   .text
 convert_return_statement_100:
   push rbp
@@ -30848,7 +30848,7 @@ convert_return_statement_100:
 
 convert_return_statement_100__stack_frame_size: .word 32
 
-  .loc 3 790 1
+  .loc 3 790 8
   .text
 convert_variable_statement_101:
   push rbp
@@ -31600,7 +31600,7 @@ convert_variable_statement_101:
 
 convert_variable_statement_101__stack_frame_size: .word 80
 
-  .loc 3 845 1
+  .loc 3 845 8
   .text
 convert_while_statement_102:
   push rbp
@@ -31809,7 +31809,7 @@ convert_while_statement_102:
 
 convert_while_statement_102__stack_frame_size: .word 48
 
-  .loc 3 861 1
+  .loc 3 861 8
   .text
 convert_expression_103:
   push rbp
@@ -32648,7 +32648,7 @@ convert_expression_103:
 
 convert_expression_103__stack_frame_size: .word 64
 
-  .loc 3 916 1
+  .loc 3 916 8
   .text
 convert_expression_address_104:
   push rbp
@@ -32751,7 +32751,7 @@ convert_expression_address_104:
 
 convert_expression_address_104__stack_frame_size: .word 32
 
-  .loc 3 926 1
+  .loc 3 926 8
   .text
 convert_add_expression_105:
   push rbp
@@ -32946,7 +32946,7 @@ convert_add_expression_105:
 
 convert_add_expression_105__stack_frame_size: .word 64
 
-  .loc 3 935 1
+  .loc 3 935 8
   .text
 convert_array_access_expression_106:
   push rbp
@@ -33108,7 +33108,7 @@ convert_array_access_expression_106:
 
 convert_array_access_expression_106__stack_frame_size: .word 64
 
-  .loc 3 946 1
+  .loc 3 946 8
   .text
 convert_call_expression_107:
   push rbp
@@ -33634,7 +33634,7 @@ convert_call_expression_107:
 
 convert_call_expression_107__stack_frame_size: .word 80
 
-  .loc 3 982 1
+  .loc 3 982 8
   .text
 convert_direct_call_expression_108:
   push rbp
@@ -34363,7 +34363,7 @@ convert_direct_call_expression_108:
 
 convert_direct_call_expression_108__stack_frame_size: .word 112
 
-  .loc 3 1046 1
+  .loc 3 1046 8
   .text
 convert_dynamic_call_expression_109:
   push rbp
@@ -34564,7 +34564,7 @@ convert_dynamic_call_expression_109:
 
 convert_dynamic_call_expression_109__stack_frame_size: .word 80
 
-  .loc 3 1062 1
+  .loc 3 1062 8
   .text
 accepts_110:
   push rbp
@@ -34769,7 +34769,7 @@ accepts_110:
 
 accepts_110__stack_frame_size: .word 32
 
-  .loc 3 1072 1
+  .loc 3 1072 8
   .text
 convert_call_arguments_111:
   push rbp
@@ -34986,7 +34986,7 @@ convert_call_arguments_111:
 
 convert_call_arguments_111__stack_frame_size: .word 64
 
-  .loc 3 1093 1
+  .loc 3 1093 8
   .text
 convert_cast_expression_112:
   push rbp
@@ -35498,7 +35498,7 @@ convert_cast_expression_112:
 
 convert_cast_expression_112__stack_frame_size: .word 48
 
-  .loc 3 1111 1
+  .loc 3 1111 8
   .text
 convert_divide_expression_113:
   push rbp
@@ -35693,7 +35693,7 @@ convert_divide_expression_113:
 
 convert_divide_expression_113__stack_frame_size: .word 64
 
-  .loc 3 1120 1
+  .loc 3 1120 8
   .text
 convert_equals_expression_114:
   push rbp
@@ -35991,7 +35991,7 @@ convert_equals_expression_114:
 
 convert_equals_expression_114__stack_frame_size: .word 64
 
-  .loc 3 1132 1
+  .loc 3 1132 8
   .text
 convert_greater_than_expression_115:
   push rbp
@@ -36187,7 +36187,7 @@ convert_greater_than_expression_115:
 
 convert_greater_than_expression_115__stack_frame_size: .word 64
 
-  .loc 3 1141 1
+  .loc 3 1141 8
   .text
 convert_greater_than_or_equals_expression_116:
   push rbp
@@ -36383,7 +36383,7 @@ convert_greater_than_or_equals_expression_116:
 
 convert_greater_than_or_equals_expression_116__stack_frame_size: .word 64
 
-  .loc 3 1150 1
+  .loc 3 1150 8
   .text
 convert_less_than_expression_117:
   push rbp
@@ -36579,7 +36579,7 @@ convert_less_than_expression_117:
 
 convert_less_than_expression_117__stack_frame_size: .word 64
 
-  .loc 3 1159 1
+  .loc 3 1159 8
   .text
 convert_less_than_or_equals_expression_118:
   push rbp
@@ -36775,7 +36775,7 @@ convert_less_than_or_equals_expression_118:
 
 convert_less_than_or_equals_expression_118__stack_frame_size: .word 64
 
-  .loc 3 1168 1
+  .loc 3 1168 8
   .text
 convert_literal_expression_119:
   push rbp
@@ -37368,7 +37368,7 @@ convert_literal_expression_119:
 
 convert_literal_expression_119__stack_frame_size: .word 64
 
-  .loc 3 1190 1
+  .loc 3 1190 8
   .text
 convert_logic_and_expression_120:
   push rbp
@@ -37616,7 +37616,7 @@ convert_logic_and_expression_120:
 
 convert_logic_and_expression_120__stack_frame_size: .word 64
 
-  .loc 3 1206 1
+  .loc 3 1206 8
   .text
 convert_logic_or_expression_121:
   push rbp
@@ -37864,7 +37864,7 @@ convert_logic_or_expression_121:
 
 convert_logic_or_expression_121__stack_frame_size: .word 64
 
-  .loc 3 1222 1
+  .loc 3 1222 8
   .text
 convert_member_access_expression_122:
   push rbp
@@ -38445,7 +38445,7 @@ convert_member_access_expression_122:
 
 convert_member_access_expression_122__stack_frame_size: .word 80
 
-  .loc 3 1265 1
+  .loc 3 1265 8
   .text
 dump_struct_members_123:
   push rbp
@@ -38658,7 +38658,7 @@ dump_struct_members_123:
 
 dump_struct_members_123__stack_frame_size: .word 48
 
-  .loc 3 1280 1
+  .loc 3 1280 8
   .text
 convert_member_access_expression_address_124:
   push rbp
@@ -38732,7 +38732,7 @@ convert_member_access_expression_address_124:
 
 convert_member_access_expression_address_124__stack_frame_size: .word 48
 
-  .loc 3 1288 1
+  .loc 3 1288 8
   .text
 convert_modulo_expression_125:
   push rbp
@@ -38927,7 +38927,7 @@ convert_modulo_expression_125:
 
 convert_modulo_expression_125__stack_frame_size: .word 64
 
-  .loc 3 1297 1
+  .loc 3 1297 8
   .text
 convert_multiply_expression_126:
   push rbp
@@ -39122,7 +39122,7 @@ convert_multiply_expression_126:
 
 convert_multiply_expression_126__stack_frame_size: .word 64
 
-  .loc 3 1306 1
+  .loc 3 1306 8
   .text
 convert_negate_expression_127:
   push rbp
@@ -39331,7 +39331,7 @@ convert_negate_expression_127:
 
 convert_negate_expression_127__stack_frame_size: .word 80
 
-  .loc 3 1320 1
+  .loc 3 1320 8
   .text
 convert_new_expression_128:
   push rbp
@@ -39574,7 +39574,7 @@ convert_new_expression_128:
 
 convert_new_expression_128__stack_frame_size: .word 48
 
-  .loc 3 1344 1
+  .loc 3 1344 8
   .text
 convert_struct_literal_expression_129:
   push rbp
@@ -39879,7 +39879,7 @@ convert_struct_literal_expression_129:
 
 convert_struct_literal_expression_129__stack_frame_size: .word 96
 
-  .loc 3 1363 1
+  .loc 3 1363 8
   .text
 convert_struct_literal_value_130:
   push rbp
@@ -40160,7 +40160,7 @@ convert_struct_literal_value_130:
 
 convert_struct_literal_value_130__stack_frame_size: .word 80
 
-  .loc 3 1385 1
+  .loc 3 1385 8
   .text
 get_named_argument_131:
   push rbp
@@ -40257,7 +40257,7 @@ get_named_argument_131:
 
 get_named_argument_131__stack_frame_size: .word 32
 
-  .loc 3 1397 1
+  .loc 3 1397 8
   .text
 convert_not_equals_expression_132:
   push rbp
@@ -40555,7 +40555,7 @@ convert_not_equals_expression_132:
 
 convert_not_equals_expression_132__stack_frame_size: .word 64
 
-  .loc 3 1409 1
+  .loc 3 1409 8
   .text
 convert_substract_expression_133:
   push rbp
@@ -40750,7 +40750,7 @@ convert_substract_expression_133:
 
 convert_substract_expression_133__stack_frame_size: .word 64
 
-  .loc 3 1418 1
+  .loc 3 1418 8
   .text
 convert_variable_expression_134:
   push rbp
@@ -41044,7 +41044,7 @@ convert_variable_expression_134:
 
 convert_variable_expression_134__stack_frame_size: .word 64
 
-  .loc 3 1436 1
+  .loc 3 1436 8
   .text
 convert_variable_expression_address_135:
   push rbp
@@ -41288,7 +41288,7 @@ convert_variable_expression_address_135:
 
 convert_variable_expression_address_135__stack_frame_size: .word 64
 
-  .loc 3 1450 1
+  .loc 3 1450 8
   .text
 deduce_expression_type_136:
   push rbp
@@ -41453,7 +41453,7 @@ deduce_expression_type_136:
 
 deduce_expression_type_136__stack_frame_size: .word 32
 
-  .loc 3 1466 1
+  .loc 3 1466 8
   .text
 deduce_call_expression_type_137:
   push rbp
@@ -41730,7 +41730,7 @@ deduce_call_expression_type_137:
 
 deduce_call_expression_type_137__stack_frame_size: .word 80
 
-  .loc 3 1491 1
+  .loc 3 1491 8
   .text
 deduce_literal_expression_type_138:
   push rbp
@@ -41808,7 +41808,7 @@ deduce_literal_expression_type_138:
 
 deduce_literal_expression_type_138__stack_frame_size: .word 32
 
-  .loc 3 1499 1
+  .loc 3 1499 8
   .text
 deduce_member_access_expression_type_139:
   push rbp
@@ -42074,7 +42074,7 @@ deduce_member_access_expression_type_139:
 
 deduce_member_access_expression_type_139__stack_frame_size: .word 64
 
-  .loc 3 1519 1
+  .loc 3 1519 8
   .text
 deduce_variable_expression_type_140:
   push rbp
@@ -42176,7 +42176,7 @@ deduce_variable_expression_type_140:
 
 deduce_variable_expression_type_140__stack_frame_size: .word 32
 
-  .loc 1 48 1
+  .loc 1 48 8
   .text
 abort_141:
   push rbp
@@ -42249,7 +42249,7 @@ abort_141:
 
 abort_141__stack_frame_size: .word 16
 
-  .loc 4 7 1
+  .loc 4 7 8
   .text
 next_142:
   push rbp
@@ -42292,7 +42292,7 @@ next_142:
 
 next_142__stack_frame_size: .word 16
 
-  .loc 4 12 1
+  .loc 4 12 8
   .text
 reset_143:
   push rbp
@@ -42320,7 +42320,7 @@ reset_143:
 
 reset_143__stack_frame_size: .word 16
 
-  .loc 5 53 1
+  .loc 5 53 8
   .text
 equals_144:
   push rbp
@@ -42424,7 +42424,7 @@ equals_144:
 
 equals_144__stack_frame_size: .word 32
 
-  .loc 5 62 1
+  .loc 5 62 8
   .text
 create_ir_pointer_type_145:
   push rbp
@@ -42483,7 +42483,7 @@ create_ir_pointer_type_145:
 
 create_ir_pointer_type_145__stack_frame_size: .word 16
 
-  .loc 5 72 1
+  .loc 5 72 8
   .text
 create_ir_array_type_146:
   push rbp
@@ -42556,7 +42556,7 @@ create_ir_array_type_146:
 
 create_ir_array_type_146__stack_frame_size: .word 32
 
-  .loc 5 88 1
+  .loc 5 88 8
   .text
 create_ir_function_type_147:
   push rbp
@@ -42752,7 +42752,7 @@ create_ir_function_type_147:
 
 create_ir_function_type_147__stack_frame_size: .word 48
 
-  .loc 5 117 1
+  .loc 5 117 8
   .text
 create_ir_struct_type_148:
   push rbp
@@ -42813,7 +42813,7 @@ create_ir_struct_type_148:
 
 create_ir_struct_type_148__stack_frame_size: .word 32
 
-  .loc 5 121 1
+  .loc 5 121 8
   .text
 add_member_149:
   push rbp
@@ -42872,7 +42872,7 @@ add_member_149:
 
 add_member_149__stack_frame_size: .word 32
 
-  .loc 5 127 1
+  .loc 5 127 8
   .text
 get_member_150:
   push rbp
@@ -43003,7 +43003,7 @@ get_member_150:
 
 get_member_150__stack_frame_size: .word 48
 
-  .loc 5 145 1
+  .loc 5 145 8
   .text
 is_base_type_151:
   push rbp
@@ -43083,7 +43083,7 @@ is_base_type_151:
 
 is_base_type_151__stack_frame_size: .word 32
 
-  .loc 5 158 1
+  .loc 5 158 8
   .text
 is_object_type_152:
   push rbp
@@ -43160,7 +43160,7 @@ is_object_type_152:
 
 is_object_type_152__stack_frame_size: .word 16
 
-  .loc 5 180 1
+  .loc 5 180 8
   .text
 dump_ir_value_153:
   push rbp
@@ -43218,7 +43218,7 @@ dump_ir_value_153:
 
 dump_ir_value_153__stack_frame_size: .word 16
 
-  .loc 5 185 1
+  .loc 5 185 8
   .text
 write_154:
   push rbp
@@ -43395,7 +43395,7 @@ write_154:
 
 write_154__stack_frame_size: .word 32
 
-  .loc 5 219 1
+  .loc 5 219 8
   .text
 dump_ir_undefined_value_155:
   push rbp
@@ -43429,7 +43429,7 @@ dump_ir_undefined_value_155:
 
 dump_ir_undefined_value_155__stack_frame_size: .word 16
 
-  .loc 5 228 1
+  .loc 5 228 8
   .text
 dump_ir_constant_value_156:
   push rbp
@@ -43473,7 +43473,7 @@ dump_ir_constant_value_156:
 
 dump_ir_constant_value_156__stack_frame_size: .word 16
 
-  .loc 5 242 1
+  .loc 5 242 8
   .text
 get_member_value_157:
   push rbp
@@ -43601,7 +43601,7 @@ get_member_value_157:
 
 get_member_value_157__stack_frame_size: .word 48
 
-  .loc 5 257 1
+  .loc 5 257 8
   .text
 set_member_value_158:
   push rbp
@@ -43696,7 +43696,7 @@ set_member_value_158:
 
 set_member_value_158__stack_frame_size: .word 32
 
-  .loc 5 264 1
+  .loc 5 264 8
   .text
 dump_IR_Struct_Literal_Value_159:
   push rbp
@@ -43912,7 +43912,7 @@ dump_IR_Struct_Literal_Value_159:
 
 dump_IR_Struct_Literal_Value_159__stack_frame_size: .word 48
 
-  .loc 5 290 1
+  .loc 5 290 8
   .text
 dump_ir_global_variable_value_160:
   push rbp
@@ -43956,7 +43956,7 @@ dump_ir_global_variable_value_160:
 
 dump_ir_global_variable_value_160__stack_frame_size: .word 16
 
-  .loc 5 300 1
+  .loc 5 300 8
   .text
 dump_ir_global_variable_address_value_161:
   push rbp
@@ -44007,7 +44007,7 @@ dump_ir_global_variable_address_value_161:
 
 dump_ir_global_variable_address_value_161__stack_frame_size: .word 16
 
-  .loc 5 311 1
+  .loc 5 311 8
   .text
 init_162:
   push rbp
@@ -44069,7 +44069,7 @@ init_162:
 
 init_162__stack_frame_size: .word 16
 
-  .loc 5 318 1
+  .loc 5 318 8
   .text
 dump_ir_variable_value_163:
   push rbp
@@ -44134,7 +44134,7 @@ dump_ir_variable_value_163:
 
 dump_ir_variable_value_163__stack_frame_size: .word 16
 
-  .loc 5 328 1
+  .loc 5 328 8
   .text
 dump_ir_variable_address_value_164:
   push rbp
@@ -44181,7 +44181,7 @@ dump_ir_variable_address_value_164:
 
 dump_ir_variable_address_value_164__stack_frame_size: .word 16
 
-  .loc 5 338 1
+  .loc 5 338 8
   .text
 dump_ir_function_address_value_165:
   push rbp
@@ -44227,7 +44227,7 @@ dump_ir_function_address_value_165:
 
 dump_ir_function_address_value_165__stack_frame_size: .word 16
 
-  .loc 5 354 1
+  .loc 5 354 8
   .text
 has_instructions_166:
   push rbp
@@ -44262,7 +44262,7 @@ has_instructions_166:
 
 has_instructions_166__stack_frame_size: .word 16
 
-  .loc 5 358 1
+  .loc 5 358 8
   .text
 prepend_167:
   push rbp
@@ -44355,7 +44355,7 @@ prepend_167:
 
 prepend_167__stack_frame_size: .word 32
 
-  .loc 5 371 1
+  .loc 5 371 8
   .text
 append_168:
   push rbp
@@ -44448,7 +44448,7 @@ append_168:
 
 append_168__stack_frame_size: .word 32
 
-  .loc 5 384 1
+  .loc 5 384 8
   .text
 append_jump_169:
   push rbp
@@ -44535,7 +44535,7 @@ append_jump_169:
 
 append_jump_169__stack_frame_size: .word 32
 
-  .loc 5 391 1
+  .loc 5 391 8
   .text
 append_jump_170:
   push rbp
@@ -44653,7 +44653,7 @@ append_jump_170:
 
 append_jump_170__stack_frame_size: .word 48
 
-  .loc 5 400 1
+  .loc 5 400 8
   .text
 remove_171:
   push rbp
@@ -44852,7 +44852,7 @@ remove_171:
 
 remove_171__stack_frame_size: .word 32
 
-  .loc 5 421 1
+  .loc 5 421 8
   .text
 dump_172:
   push rbp
@@ -45063,7 +45063,7 @@ dump_172:
 
 dump_172__stack_frame_size: .word 48
 
-  .loc 5 458 1
+  .loc 5 458 8
   .text
 create_block_173:
   push rbp
@@ -45155,7 +45155,7 @@ create_block_173:
 
 create_block_173__stack_frame_size: .word 32
 
-  .loc 5 464 1
+  .loc 5 464 8
   .text
 dump_174:
   push rbp
@@ -45399,7 +45399,7 @@ dump_174:
 
 dump_174__stack_frame_size: .word 48
 
-  .loc 5 513 1
+  .loc 5 513 8
   .text
 dump_ir_instruction_175:
   push rbp
@@ -45460,7 +45460,7 @@ dump_ir_instruction_175:
 
 dump_ir_instruction_175__stack_frame_size: .word 16
 
-  .loc 5 518 1
+  .loc 5 518 8
   .text
 dump_ir_instruction_result_176:
   push rbp
@@ -45569,7 +45569,7 @@ dump_ir_instruction_result_176:
 
 dump_ir_instruction_result_176__stack_frame_size: .word 32
 
-  .loc 5 525 1
+  .loc 5 525 8
   .text
 is_exit_instruction_177:
   push rbp
@@ -45798,7 +45798,7 @@ is_exit_instruction_177:
 
 is_exit_instruction_177__stack_frame_size: .word 32
 
-  .loc 5 548 1
+  .loc 5 548 8
   .text
 set_operand_value_178:
   push rbp
@@ -45850,7 +45850,7 @@ set_operand_value_178:
 
 set_operand_value_178__stack_frame_size: .word 16
 
-  .loc 5 553 1
+  .loc 5 553 8
   .text
 replace_operand_value_179:
   push rbp
@@ -45971,7 +45971,7 @@ replace_operand_value_179:
 
 replace_operand_value_179__stack_frame_size: .word 32
 
-  .loc 6 13 1
+  .loc 6 13 8
   .text
 get_180:
   push rbp
@@ -46067,7 +46067,7 @@ get_180:
 
 get_180__stack_frame_size: .word 32
 
-  .loc 6 24 1
+  .loc 6 24 8
   .text
 put_181:
   push rbp
@@ -46247,7 +46247,7 @@ put_181:
 
 put_181__stack_frame_size: .word 48
 
-  .loc 6 44 1
+  .loc 6 44 8
   .text
 remove_182:
   push rbp
@@ -46350,7 +46350,7 @@ remove_182:
 
 remove_182__stack_frame_size: .word 48
 
-  .loc 6 55 1
+  .loc 6 55 8
   .text
 remove_values_183:
   push rbp
@@ -46442,7 +46442,7 @@ remove_values_183:
 
 remove_values_183__stack_frame_size: .word 32
 
-  .loc 6 65 1
+  .loc 6 65 8
   .text
 unlink_184:
   push rbp
@@ -46572,7 +46572,7 @@ unlink_184:
 
 unlink_184__stack_frame_size: .word 32
 
-  .loc 6 79 1
+  .loc 6 79 8
   .text
 replace_values_185:
   push rbp
@@ -46666,7 +46666,7 @@ replace_values_185:
 
 replace_values_185__stack_frame_size: .word 32
 
-  .loc 5 571 1
+  .loc 5 571 8
   .text
 dump_ir_call_instruction_arguments_186:
   push rbp
@@ -46764,7 +46764,7 @@ dump_ir_call_instruction_arguments_186:
 
 dump_ir_call_instruction_arguments_186__stack_frame_size: .word 48
 
-  .loc 5 584 1
+  .loc 5 584 8
   .text
 add_arguments_187:
   push rbp
@@ -46877,7 +46877,7 @@ add_arguments_187:
 
 add_arguments_187__stack_frame_size: .word 32
 
-  .loc 5 595 1
+  .loc 5 595 8
   .text
 get_argument_value_188:
   push rbp
@@ -46922,7 +46922,7 @@ get_argument_value_188:
 
 get_argument_value_188__stack_frame_size: .word 16
 
-  .loc 5 599 1
+  .loc 5 599 8
   .text
 get_argument_key_189:
   push rbp
@@ -47068,7 +47068,7 @@ get_argument_key_189:
 
 get_argument_key_189__stack_frame_size: .word 16
 
-  .loc 5 621 1
+  .loc 5 621 8
   .text
 dump_ir_direct_call_instruction_190:
   push rbp
@@ -47155,7 +47155,7 @@ dump_ir_direct_call_instruction_190:
 
 dump_ir_direct_call_instruction_190__stack_frame_size: .word 16
 
-  .loc 5 629 1
+  .loc 5 629 8
   .text
 create_ir_direct_call_instruction_191:
   push rbp
@@ -47260,7 +47260,7 @@ create_ir_direct_call_instruction_191:
 
 create_ir_direct_call_instruction_191__stack_frame_size: .word 48
 
-  .loc 5 642 1
+  .loc 5 642 8
   .text
 dump_ir_dynamic_call_instruction_192:
   push rbp
@@ -47379,7 +47379,7 @@ dump_ir_dynamic_call_instruction_192:
 
 dump_ir_dynamic_call_instruction_192__stack_frame_size: .word 32
 
-  .loc 5 651 1
+  .loc 5 651 8
   .text
 create_ir_dynamic_call_instruction_193:
   push rbp
@@ -47488,7 +47488,7 @@ create_ir_dynamic_call_instruction_193:
 
 create_ir_dynamic_call_instruction_193__stack_frame_size: .word 48
 
-  .loc 5 661 1
+  .loc 5 661 8
   .text
 get_function_address_194:
   push rbp
@@ -47523,7 +47523,7 @@ get_function_address_194:
 
 get_function_address_194__stack_frame_size: .word 16
 
-  .loc 5 669 1
+  .loc 5 669 8
   .text
 dump_ir_cast_instruction_195:
   push rbp
@@ -47606,7 +47606,7 @@ dump_ir_cast_instruction_195:
 
 dump_ir_cast_instruction_195__stack_frame_size: .word 32
 
-  .loc 5 675 1
+  .loc 5 675 8
   .text
 create_ir_cast_instruction_196:
   push rbp
@@ -47686,7 +47686,7 @@ create_ir_cast_instruction_196:
 
 create_ir_cast_instruction_196__stack_frame_size: .word 32
 
-  .loc 5 682 1
+  .loc 5 682 8
   .text
 get_value_197:
   push rbp
@@ -47721,7 +47721,7 @@ get_value_197:
 
 get_value_197__stack_frame_size: .word 16
 
-  .loc 5 696 1
+  .loc 5 696 8
   .text
 dump_ir_conditional_jump_instruction_198:
   push rbp
@@ -47844,7 +47844,7 @@ dump_ir_conditional_jump_instruction_198:
 
 dump_ir_conditional_jump_instruction_198__stack_frame_size: .word 32
 
-  .loc 5 702 1
+  .loc 5 702 8
   .text
 get_condition_value_199:
   push rbp
@@ -47879,7 +47879,7 @@ get_condition_value_199:
 
 get_condition_value_199__stack_frame_size: .word 16
 
-  .loc 5 711 1
+  .loc 5 711 8
   .text
 dump_ir_direct_jump_instruction_200:
   push rbp
@@ -47960,7 +47960,7 @@ dump_ir_direct_jump_instruction_200:
 
 dump_ir_direct_jump_instruction_200__stack_frame_size: .word 16
 
-  .loc 5 721 1
+  .loc 5 721 8
   .text
 dump_ir_load_array_item_instruction_201:
   push rbp
@@ -48065,7 +48065,7 @@ dump_ir_load_array_item_instruction_201:
 
 dump_ir_load_array_item_instruction_201__stack_frame_size: .word 32
 
-  .loc 5 727 1
+  .loc 5 727 8
   .text
 create_ir_load_array_item_instruction_202:
   push rbp
@@ -48156,7 +48156,7 @@ create_ir_load_array_item_instruction_202:
 
 create_ir_load_array_item_instruction_202__stack_frame_size: .word 32
 
-  .loc 5 735 1
+  .loc 5 735 8
   .text
 get_array_value_203:
   push rbp
@@ -48191,7 +48191,7 @@ get_array_value_203:
 
 get_array_value_203__stack_frame_size: .word 16
 
-  .loc 5 739 1
+  .loc 5 739 8
   .text
 get_index_value_204:
   push rbp
@@ -48226,7 +48226,7 @@ get_index_value_204:
 
 get_index_value_204__stack_frame_size: .word 16
 
-  .loc 5 749 1
+  .loc 5 749 8
   .text
 dump_ir_load_struct_member_instruction_205:
   push rbp
@@ -48360,7 +48360,7 @@ dump_ir_load_struct_member_instruction_205:
 
 dump_ir_load_struct_member_instruction_205__stack_frame_size: .word 32
 
-  .loc 5 760 1
+  .loc 5 760 8
   .text
 create_ir_load_struct_member_instruction_206:
   push rbp
@@ -48539,7 +48539,7 @@ create_ir_load_struct_member_instruction_206:
 
 create_ir_load_struct_member_instruction_206__stack_frame_size: .word 48
 
-  .loc 5 775 1
+  .loc 5 775 8
   .text
 get_struct_pointer_value_207:
   push rbp
@@ -48574,7 +48574,7 @@ get_struct_pointer_value_207:
 
 get_struct_pointer_value_207__stack_frame_size: .word 16
 
-  .loc 5 783 1
+  .loc 5 783 8
   .text
 dump_ir_load_variable_address_instruction_208:
   push rbp
@@ -48657,7 +48657,7 @@ dump_ir_load_variable_address_instruction_208:
 
 dump_ir_load_variable_address_instruction_208__stack_frame_size: .word 32
 
-  .loc 5 789 1
+  .loc 5 789 8
   .text
 create_ir_load_variable_address_instruction_209:
   push rbp
@@ -48799,7 +48799,7 @@ create_ir_load_variable_address_instruction_209:
 
 create_ir_load_variable_address_instruction_209__stack_frame_size: .word 32
 
-  .loc 5 802 1
+  .loc 5 802 8
   .text
 get_variable_value_210:
   push rbp
@@ -48834,7 +48834,7 @@ get_variable_value_210:
 
 get_variable_value_210__stack_frame_size: .word 16
 
-  .loc 5 811 1
+  .loc 5 811 8
   .text
 dump_ir_load_variable_instruction_211:
   push rbp
@@ -48918,7 +48918,7 @@ dump_ir_load_variable_instruction_211:
 
 dump_ir_load_variable_instruction_211__stack_frame_size: .word 16
 
-  .loc 5 816 1
+  .loc 5 816 8
   .text
 create_ir_load_variable_instruction_212:
   push rbp
@@ -48993,7 +48993,7 @@ create_ir_load_variable_instruction_212:
 
 create_ir_load_variable_instruction_212__stack_frame_size: .word 32
 
-  .loc 5 827 1
+  .loc 5 827 8
   .text
 dump_ir_new_instruction_213:
   push rbp
@@ -49069,7 +49069,7 @@ dump_ir_new_instruction_213:
 
 dump_ir_new_instruction_213__stack_frame_size: .word 32
 
-  .loc 5 833 1
+  .loc 5 833 8
   .text
 create_ir_new_instruction_214:
   push rbp
@@ -49156,7 +49156,7 @@ create_ir_new_instruction_214:
 
 create_ir_new_instruction_214__stack_frame_size: .word 32
 
-  .loc 5 840 1
+  .loc 5 840 8
   .text
 get_init_value_215:
   push rbp
@@ -49191,7 +49191,7 @@ get_init_value_215:
 
 get_init_value_215__stack_frame_size: .word 16
 
-  .loc 5 848 1
+  .loc 5 848 8
   .text
 dump_ir_return_instruction_216:
   push rbp
@@ -49326,7 +49326,7 @@ dump_ir_return_instruction_216:
 
 dump_ir_return_instruction_216__stack_frame_size: .word 32
 
-  .loc 5 857 1
+  .loc 5 857 8
   .text
 create_ir_return_instruction_217:
   push rbp
@@ -49411,7 +49411,7 @@ create_ir_return_instruction_217:
 
 create_ir_return_instruction_217__stack_frame_size: .word 32
 
-  .loc 5 865 1
+  .loc 5 865 8
   .text
 get_return_value_218:
   push rbp
@@ -49446,7 +49446,7 @@ get_return_value_218:
 
 get_return_value_218__stack_frame_size: .word 16
 
-  .loc 5 873 1
+  .loc 5 873 8
   .text
 dump_ir_set_instruction_219:
   push rbp
@@ -49506,7 +49506,7 @@ dump_ir_set_instruction_219:
 
 dump_ir_set_instruction_219__stack_frame_size: .word 16
 
-  .loc 5 879 1
+  .loc 5 879 8
   .text
 create_ir_set_instruction_220:
   push rbp
@@ -49586,7 +49586,7 @@ create_ir_set_instruction_220:
 
 create_ir_set_instruction_220__stack_frame_size: .word 32
 
-  .loc 5 886 1
+  .loc 5 886 8
   .text
 get_value_221:
   push rbp
@@ -49621,7 +49621,7 @@ get_value_221:
 
 get_value_221__stack_frame_size: .word 16
 
-  .loc 5 894 1
+  .loc 5 894 8
   .text
 dump_ir_store_array_item_instruction_222:
   push rbp
@@ -49748,7 +49748,7 @@ dump_ir_store_array_item_instruction_222:
 
 dump_ir_store_array_item_instruction_222__stack_frame_size: .word 32
 
-  .loc 5 900 1
+  .loc 5 900 8
   .text
 create_ir_store_array_item_instruction_223:
   push rbp
@@ -49839,7 +49839,7 @@ create_ir_store_array_item_instruction_223:
 
 create_ir_store_array_item_instruction_223__stack_frame_size: .word 32
 
-  .loc 5 908 1
+  .loc 5 908 8
   .text
 get_array_value_224:
   push rbp
@@ -49874,7 +49874,7 @@ get_array_value_224:
 
 get_array_value_224__stack_frame_size: .word 16
 
-  .loc 5 912 1
+  .loc 5 912 8
   .text
 get_index_value_225:
   push rbp
@@ -49909,7 +49909,7 @@ get_index_value_225:
 
 get_index_value_225__stack_frame_size: .word 16
 
-  .loc 5 916 1
+  .loc 5 916 8
   .text
 get_value_226:
   push rbp
@@ -49944,7 +49944,7 @@ get_value_226:
 
 get_value_226__stack_frame_size: .word 16
 
-  .loc 5 925 1
+  .loc 5 925 8
   .text
 dump_ir_store_struct_member_instruction_227:
   push rbp
@@ -50074,7 +50074,7 @@ dump_ir_store_struct_member_instruction_227:
 
 dump_ir_store_struct_member_instruction_227__stack_frame_size: .word 32
 
-  .loc 5 931 1
+  .loc 5 931 8
   .text
 create_ir_store_struct_member_instruction_228:
   push rbp
@@ -50161,7 +50161,7 @@ create_ir_store_struct_member_instruction_228:
 
 create_ir_store_struct_member_instruction_228__stack_frame_size: .word 32
 
-  .loc 5 938 1
+  .loc 5 938 8
   .text
 get_struct_pointer_value_229:
   push rbp
@@ -50196,7 +50196,7 @@ get_struct_pointer_value_229:
 
 get_struct_pointer_value_229__stack_frame_size: .word 16
 
-  .loc 5 942 1
+  .loc 5 942 8
   .text
 get_value_230:
   push rbp
@@ -50231,7 +50231,7 @@ get_value_230:
 
 get_value_230__stack_frame_size: .word 16
 
-  .loc 5 950 1
+  .loc 5 950 8
   .text
 init_231:
   push rbp
@@ -50276,7 +50276,7 @@ init_231:
 
 init_231__stack_frame_size: .word 32
 
-  .loc 5 956 1
+  .loc 5 956 8
   .text
 get_left_value_232:
   push rbp
@@ -50311,7 +50311,7 @@ get_left_value_232:
 
 get_left_value_232__stack_frame_size: .word 16
 
-  .loc 5 960 1
+  .loc 5 960 8
   .text
 get_right_value_233:
   push rbp
@@ -50346,7 +50346,7 @@ get_right_value_233:
 
 get_right_value_233__stack_frame_size: .word 16
 
-  .loc 5 968 1
+  .loc 5 968 8
   .text
 dump_ir_add_instruction_234:
   push rbp
@@ -50429,7 +50429,7 @@ dump_ir_add_instruction_234:
 
 dump_ir_add_instruction_234__stack_frame_size: .word 32
 
-  .loc 5 982 1
+  .loc 5 982 8
   .text
 dump_ir_divide_instruction_235:
   push rbp
@@ -50512,7 +50512,7 @@ dump_ir_divide_instruction_235:
 
 dump_ir_divide_instruction_235__stack_frame_size: .word 32
 
-  .loc 5 992 1
+  .loc 5 992 8
   .text
 dump_ir_equal_comparison_instruction_236:
   push rbp
@@ -50595,7 +50595,7 @@ dump_ir_equal_comparison_instruction_236:
 
 dump_ir_equal_comparison_instruction_236__stack_frame_size: .word 32
 
-  .loc 5 1002 1
+  .loc 5 1002 8
   .text
 dump_ir_greater_comparison_instruction_237:
   push rbp
@@ -50678,7 +50678,7 @@ dump_ir_greater_comparison_instruction_237:
 
 dump_ir_greater_comparison_instruction_237__stack_frame_size: .word 32
 
-  .loc 5 1012 1
+  .loc 5 1012 8
   .text
 dump_ir_greater_or_equal_comparison_instruction_238:
   push rbp
@@ -50761,7 +50761,7 @@ dump_ir_greater_or_equal_comparison_instruction_238:
 
 dump_ir_greater_or_equal_comparison_instruction_238__stack_frame_size: .word 32
 
-  .loc 5 1022 1
+  .loc 5 1022 8
   .text
 dump_ir_less_comparison_instruction_239:
   push rbp
@@ -50844,7 +50844,7 @@ dump_ir_less_comparison_instruction_239:
 
 dump_ir_less_comparison_instruction_239__stack_frame_size: .word 32
 
-  .loc 5 1032 1
+  .loc 5 1032 8
   .text
 dump_ir_less_or_equal_comparison_instruction_240:
   push rbp
@@ -50927,7 +50927,7 @@ dump_ir_less_or_equal_comparison_instruction_240:
 
 dump_ir_less_or_equal_comparison_instruction_240__stack_frame_size: .word 32
 
-  .loc 5 1042 1
+  .loc 5 1042 8
   .text
 dump_ir_modulo_instruction_241:
   push rbp
@@ -51010,7 +51010,7 @@ dump_ir_modulo_instruction_241:
 
 dump_ir_modulo_instruction_241__stack_frame_size: .word 32
 
-  .loc 5 1052 1
+  .loc 5 1052 8
   .text
 dump_ir_multiply_instruction_242:
   push rbp
@@ -51093,7 +51093,7 @@ dump_ir_multiply_instruction_242:
 
 dump_ir_multiply_instruction_242__stack_frame_size: .word 32
 
-  .loc 5 1062 1
+  .loc 5 1062 8
   .text
 dump_ir_not_equal_comparison_instruction_243:
   push rbp
@@ -51176,7 +51176,7 @@ dump_ir_not_equal_comparison_instruction_243:
 
 dump_ir_not_equal_comparison_instruction_243__stack_frame_size: .word 32
 
-  .loc 5 1072 1
+  .loc 5 1072 8
   .text
 dump_ir_substract_instruction_244:
   push rbp
@@ -51253,7 +51253,7 @@ dump_ir_substract_instruction_244:
 
 dump_ir_substract_instruction_244__stack_frame_size: .word 32
 
-  .loc 5 1082 1
+  .loc 5 1082 8
   .text
 dump_ir_phi_instruction_245:
   push rbp
@@ -51393,7 +51393,7 @@ dump_ir_phi_instruction_245:
 
 dump_ir_phi_instruction_245__stack_frame_size: .word 32
 
-  .loc 5 1100 1
+  .loc 5 1100 8
   .text
 create_ir_phi_instruction_246:
   push rbp
@@ -51459,7 +51459,7 @@ create_ir_phi_instruction_246:
 
 create_ir_phi_instruction_246__stack_frame_size: .word 16
 
-  .loc 5 1106 1
+  .loc 5 1106 8
   .text
 append_247:
   push rbp
@@ -51488,7 +51488,7 @@ append_247:
 
 append_247__stack_frame_size: .word 0
 
-  .loc 5 1110 1
+  .loc 5 1110 8
   .text
 is_redundant_248:
   push rbp
@@ -51609,7 +51609,7 @@ is_redundant_248:
 
 is_redundant_248__stack_frame_size: .word 32
 
-  .loc 5 1129 1
+  .loc 5 1129 8
   .text
 is_trivial_249:
   push rbp
@@ -51774,7 +51774,7 @@ is_trivial_249:
 
 is_trivial_249__stack_frame_size: .word 48
 
-  .loc 7 52 1
+  .loc 7 53 8
   .text
 parse_250:
   push rbp
@@ -52058,12 +52058,12 @@ parse_250:
   mov BYTE PTR [rax+8], 1
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:rax 
   .loc 7 21 33
-  # $21.1: @Word_Matcher = new Word_Matcher(object_type = Word_Matcher, is_required = true, lexeme = "define")
+  # $21.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "define")
   mov [rbp-128], rax
   mov rdi, 17
   call malloc
-  #     .object_type = Word_Matcher
-  mov rbx, Word_Matcher[rip]
+  #     .object_type = Keyword_Matcher
+  mov rbx, Keyword_Matcher[rip]
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
@@ -52150,12 +52150,12 @@ parse_250:
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:rax 
   .loc 7 28 34
-  # $28.1: @Word_Matcher = new Word_Matcher(object_type = Word_Matcher, is_required = true, lexeme = "extends")
+  # $28.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "extends")
   mov [rbp-184], rax
   mov rdi, 17
   call malloc
-  #     .object_type = Word_Matcher
-  mov rbx, Word_Matcher[rip]
+  #     .object_type = Keyword_Matcher
+  mov rbx, Keyword_Matcher[rip]
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
@@ -52177,22 +52177,22 @@ parse_250:
   lea rbx, .LABEL__string_307[rip] # "external"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:rax 
-  .loc 7 30 39
-  # $30.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = ">")
+  .loc 7 30 31
+  # $30.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "func")
   mov [rbp-200], rax
   mov rdi, 17
   call malloc
-  #     .object_type = Other_Matcher
-  mov rbx, Other_Matcher[rip]
+  #     .object_type = Keyword_Matcher
+  mov rbx, Keyword_Matcher[rip]
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
-  #     .lexeme = ">"
-  lea rbx, .LABEL__string_308[rip] # ">"
+  #     .lexeme = "func"
+  lea rbx, .LABEL__string_308[rip] # "func"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:rax 
-  .loc 7 31 33
-  # $31.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "-")
+  .loc 7 31 39
+  # $31.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = ">")
   mov [rbp-208], rax
   mov rdi, 17
   call malloc
@@ -52201,13 +52201,27 @@ parse_250:
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
-  #     .lexeme = "-"
-  lea rbx, .LABEL__string_309[rip] # "-"
+  #     .lexeme = ">"
+  lea rbx, .LABEL__string_309[rip] # ">"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:rax 
-  .loc 7 32 37
-  # $32.1: @Identifier_Matcher = new Identifier_Matcher(object_type = Identifier_Matcher, is_required = true)
+  .loc 7 32 33
+  # $32.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "-")
   mov [rbp-216], rax
+  mov rdi, 17
+  call malloc
+  #     .object_type = Other_Matcher
+  mov rbx, Other_Matcher[rip]
+  mov [rax], rbx
+  #     .is_required = true
+  mov BYTE PTR [rax+8], 1
+  #     .lexeme = "-"
+  lea rbx, .LABEL__string_310[rip] # "-"
+  mov [rax+9], rbx
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:rax 
+  .loc 7 33 37
+  # $33.1: @Identifier_Matcher = new Identifier_Matcher(object_type = Identifier_Matcher, is_required = true)
+  mov [rbp-224], rax
   mov rdi, 9
   call malloc
   #     .object_type = Identifier_Matcher
@@ -52215,23 +52229,9 @@ parse_250:
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:rax 
-  .loc 7 33 29
-  # $33.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "if")
-  mov [rbp-224], rax
-  mov rdi, 17
-  call malloc
-  #     .object_type = Keyword_Matcher
-  mov rbx, Keyword_Matcher[rip]
-  mov [rax], rbx
-  #     .is_required = true
-  mov BYTE PTR [rax+8], 1
-  #     .lexeme = "if"
-  lea rbx, .LABEL__string_310[rip] # "if"
-  mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:rax 
-  .loc 7 34 34
-  # $34.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "include")
+  .loc 7 34 29
+  # $34.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "if")
   mov [rbp-232], rax
   mov rdi, 17
   call malloc
@@ -52240,13 +52240,27 @@ parse_250:
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
-  #     .lexeme = "include"
-  lea rbx, .LABEL__string_311[rip] # "include"
+  #     .lexeme = "if"
+  lea rbx, .LABEL__string_311[rip] # "if"
   mov [rax+9], rbx
   # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:rax 
-  .loc 7 35 36
-  # $35.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "<")
+  .loc 7 35 34
+  # $35.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "include")
   mov [rbp-240], rax
+  mov rdi, 17
+  call malloc
+  #     .object_type = Keyword_Matcher
+  mov rbx, Keyword_Matcher[rip]
+  mov [rax], rbx
+  #     .is_required = true
+  mov BYTE PTR [rax+8], 1
+  #     .lexeme = "include"
+  lea rbx, .LABEL__string_312[rip] # "include"
+  mov [rax+9], rbx
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:rax 
+  .loc 7 36 36
+  # $36.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "<")
+  mov [rbp-248], rax
   mov rdi, 17
   call malloc
   #     .object_type = Other_Matcher
@@ -52255,12 +52269,12 @@ parse_250:
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "<"
-  lea rbx, .LABEL__string_312[rip] # "<"
+  lea rbx, .LABEL__string_313[rip] # "<"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:rax 
-  .loc 7 36 34
-  # $36.1: @Literal_Matcher = new Literal_Matcher(object_type = Literal_Matcher, is_required = true)
-  mov [rbp-248], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:rax 
+  .loc 7 37 34
+  # $37.1: @Literal_Matcher = new Literal_Matcher(object_type = Literal_Matcher, is_required = true)
+  mov [rbp-256], rax
   mov rdi, 9
   call malloc
   #     .object_type = Literal_Matcher
@@ -52268,10 +52282,10 @@ parse_250:
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:rax 
-  .loc 7 37 31
-  # $37.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "loop")
-  mov [rbp-256], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:rax 
+  .loc 7 38 31
+  # $38.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "loop")
+  mov [rbp-264], rax
   mov rdi, 17
   call malloc
   #     .object_type = Keyword_Matcher
@@ -52280,12 +52294,12 @@ parse_250:
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "loop"
-  lea rbx, .LABEL__string_313[rip] # "loop"
+  lea rbx, .LABEL__string_314[rip] # "loop"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:rax 
-  .loc 7 38 30
-  # $38.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "new")
-  mov [rbp-264], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:rax 
+  .loc 7 39 30
+  # $39.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "new")
+  mov [rbp-272], rax
   mov rdi, 17
   call malloc
   #     .object_type = Keyword_Matcher
@@ -52296,10 +52310,10 @@ parse_250:
   #     .lexeme = "new"
   lea rbx, .LABEL__string_274[rip] # "new"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:rax 
-  .loc 7 39 37
-  # $39.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "{")
-  mov [rbp-272], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:rax 
+  .loc 7 40 37
+  # $40.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "{")
+  mov [rbp-280], rax
   mov rdi, 17
   call malloc
   #     .object_type = Other_Matcher
@@ -52308,12 +52322,12 @@ parse_250:
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "{"
-  lea rbx, .LABEL__string_314[rip] # "{"
+  lea rbx, .LABEL__string_315[rip] # "{"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:rax 
-  .loc 7 40 39
-  # $40.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "[")
-  mov [rbp-280], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:rax 
+  .loc 7 41 39
+  # $41.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "[")
+  mov [rbp-288], rax
   mov rdi, 17
   call malloc
   #     .object_type = Other_Matcher
@@ -52324,10 +52338,10 @@ parse_250:
   #     .lexeme = "["
   lea rbx, .LABEL__string_237[rip] # "["
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:rax 
-  .loc 7 41 37
-  # $41.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "(")
-  mov [rbp-288], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:rax 
+  .loc 7 42 37
+  # $42.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "(")
+  mov [rbp-296], rax
   mov rdi, 17
   call malloc
   #     .object_type = Other_Matcher
@@ -52338,10 +52352,10 @@ parse_250:
   #     .lexeme = "("
   lea rbx, .LABEL__string_239[rip] # "("
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:rax 
-  .loc 7 42 31
-  # $42.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "+")
-  mov [rbp-296], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:rax 
+  .loc 7 43 31
+  # $43.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "+")
+  mov [rbp-304], rax
   mov rdi, 17
   call malloc
   #     .object_type = Other_Matcher
@@ -52350,12 +52364,12 @@ parse_250:
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "+"
-  lea rbx, .LABEL__string_315[rip] # "+"
+  lea rbx, .LABEL__string_316[rip] # "+"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:rax 
-  .loc 7 43 33
-  # $43.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "return")
-  mov [rbp-304], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:rax 
+  .loc 7 44 33
+  # $44.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "return")
+  mov [rbp-312], rax
   mov rdi, 17
   call malloc
   #     .object_type = Keyword_Matcher
@@ -52366,10 +52380,10 @@ parse_250:
   #     .lexeme = "return"
   lea rbx, .LABEL__string_276[rip] # "return"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:rax 
-  .loc 7 44 32
-  # $44.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "/")
-  mov [rbp-312], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:rax 
+  .loc 7 45 32
+  # $45.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "/")
+  mov [rbp-320], rax
   mov rdi, 17
   call malloc
   #     .object_type = Other_Matcher
@@ -52378,12 +52392,12 @@ parse_250:
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "/"
-  lea rbx, .LABEL__string_316[rip] # "/"
+  lea rbx, .LABEL__string_317[rip] # "/"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:rax 
-  .loc 7 45 41
-  # $45.1: @String_Literal_Matcher = new String_Literal_Matcher(object_type = String_Literal_Matcher, is_required = true)
-  mov [rbp-320], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:rax 
+  .loc 7 46 41
+  # $46.1: @String_Literal_Matcher = new String_Literal_Matcher(object_type = String_Literal_Matcher, is_required = true)
+  mov [rbp-328], rax
   mov rdi, 9
   call malloc
   #     .object_type = String_Literal_Matcher
@@ -52391,38 +52405,38 @@ parse_250:
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:rax 
-  .loc 7 46 33
-  # $46.1: @Word_Matcher = new Word_Matcher(object_type = Word_Matcher, is_required = true, lexeme = "struct")
-  mov [rbp-328], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:rax 
+  .loc 7 47 33
+  # $47.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "struct")
+  mov [rbp-336], rax
   mov rdi, 17
   call malloc
-  #     .object_type = Word_Matcher
-  mov rbx, Word_Matcher[rip]
+  #     .object_type = Keyword_Matcher
+  mov rbx, Keyword_Matcher[rip]
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "struct"
-  lea rbx, .LABEL__string_317[rip] # "struct"
+  lea rbx, .LABEL__string_318[rip] # "struct"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:rax 
-  .loc 7 47 34
-  # $47.1: @Word_Matcher = new Word_Matcher(object_type = Word_Matcher, is_required = true, lexeme = "unknown")
-  mov [rbp-336], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:[rbp-336] $47.1:rax 
+  .loc 7 48 34
+  # $48.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "unknown")
+  mov [rbp-344], rax
   mov rdi, 17
   call malloc
-  #     .object_type = Word_Matcher
-  mov rbx, Word_Matcher[rip]
+  #     .object_type = Keyword_Matcher
+  mov rbx, Keyword_Matcher[rip]
   mov [rax], rbx
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "unknown"
-  lea rbx, .LABEL__string_318[rip] # "unknown"
+  lea rbx, .LABEL__string_319[rip] # "unknown"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:[rbp-336] $47.1:rax 
-  .loc 7 48 39
-  # $48.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "|")
-  mov [rbp-344], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:[rbp-336] $47.1:[rbp-344] $48.1:rax 
+  .loc 7 49 39
+  # $49.1: @Other_Matcher = new Other_Matcher(object_type = Other_Matcher, is_required = true, lexeme = "|")
+  mov [rbp-352], rax
   mov rdi, 17
   call malloc
   #     .object_type = Other_Matcher
@@ -52431,12 +52445,12 @@ parse_250:
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "|"
-  lea rbx, .LABEL__string_319[rip] # "|"
+  lea rbx, .LABEL__string_320[rip] # "|"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:[rbp-336] $47.1:[rbp-344] $48.1:rax 
-  .loc 7 49 32
-  # $49.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "while")
-  mov [rbp-352], rax
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:[rbp-336] $47.1:[rbp-344] $48.1:[rbp-352] $49.1:rax 
+  .loc 7 50 32
+  # $50.1: @Keyword_Matcher = new Keyword_Matcher(object_type = Keyword_Matcher, is_required = true, lexeme = "while")
+  mov [rbp-360], rax
   mov rdi, 17
   call malloc
   #     .object_type = Keyword_Matcher
@@ -52445,13 +52459,13 @@ parse_250:
   #     .is_required = true
   mov BYTE PTR [rax+8], 1
   #     .lexeme = "while"
-  lea rbx, .LABEL__string_320[rip] # "while"
+  lea rbx, .LABEL__string_321[rip] # "while"
   mov [rax+9], rbx
-  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:[rbp-336] $47.1:[rbp-344] $48.1:[rbp-352] $49.1:rax 
-  .loc 7 53 15
-  # parser.1: @Parser = new Parser(scanner = null, compilation_unit = $6.1, current_alignment = 0, optional_comment = $7.1, optional_space = $8.1, required_ampersand = $9.1, required_as = $10.1, required_asterisk = $11.1, required_at = $12.1, required_break = $13.1, required_close_brace = $14.1, required_close_bracket = $15.1, required_close_paren = $16.1, required_colon = $17.1, required_column = $18.1, required_comma = $19.1, required_comment = $20.1, required_define = $21.1, required_dot = $22.1, required_else = $23.1, required_end_of_file = $24.1, required_end_of_line = $25.1, required_equals = $26.1, required_exclamation_mark = $27.1, required_extends = $28.1, required_external = $29.1, required_greater_than = $30.1, required_hyphen = $31.1, required_identifier = $32.1, required_if = $33.1, required_include = $34.1, required_less_than = $35.1, required_literal = $36.1, required_loop = $37.1, required_new = $38.1, required_open_brace = $39.1, required_open_bracket = $40.1, required_open_paren = $41.1, required_plus = $42.1, required_return = $43.1, required_slash = $44.1, required_string_literal = $45.1, required_struct = $46.1, required_unknown = $47.1, required_vertical_bar = $48.1, required_while = $49.1)
-  mov [rbp-360], rax
-  mov rdi, 368
+  # [live values]: file_path.1:[rbp-8] $6.1:[rbp-16] $7.1:[rbp-24] $8.1:[rbp-32] $9.1:[rbp-40] $10.1:[rbp-48] $11.1:[rbp-56] $12.1:[rbp-64] $13.1:[rbp-72] $14.1:[rbp-80] $15.1:[rbp-88] $16.1:[rbp-96] $17.1:[rbp-104] $18.1:[rbp-112] $19.1:[rbp-120] $20.1:[rbp-128] $21.1:[rbp-136] $22.1:[rbp-144] $23.1:[rbp-152] $24.1:[rbp-160] $25.1:[rbp-168] $26.1:[rbp-176] $27.1:[rbp-184] $28.1:[rbp-192] $29.1:[rbp-200] $30.1:[rbp-208] $31.1:[rbp-216] $32.1:[rbp-224] $33.1:[rbp-232] $34.1:[rbp-240] $35.1:[rbp-248] $36.1:[rbp-256] $37.1:[rbp-264] $38.1:[rbp-272] $39.1:[rbp-280] $40.1:[rbp-288] $41.1:[rbp-296] $42.1:[rbp-304] $43.1:[rbp-312] $44.1:[rbp-320] $45.1:[rbp-328] $46.1:[rbp-336] $47.1:[rbp-344] $48.1:[rbp-352] $49.1:[rbp-360] $50.1:rax 
+  .loc 7 54 15
+  # parser.1: @Parser = new Parser(scanner = null, compilation_unit = $6.1, current_alignment = 0, optional_comment = $7.1, optional_space = $8.1, required_ampersand = $9.1, required_as = $10.1, required_asterisk = $11.1, required_at = $12.1, required_break = $13.1, required_close_brace = $14.1, required_close_bracket = $15.1, required_close_paren = $16.1, required_colon = $17.1, required_column = $18.1, required_comma = $19.1, required_comment = $20.1, required_define = $21.1, required_dot = $22.1, required_else = $23.1, required_end_of_file = $24.1, required_end_of_line = $25.1, required_equals = $26.1, required_exclamation_mark = $27.1, required_extends = $28.1, required_external = $29.1, required_func = $30.1, required_greater_than = $31.1, required_hyphen = $32.1, required_identifier = $33.1, required_if = $34.1, required_include = $35.1, required_less_than = $36.1, required_literal = $37.1, required_loop = $38.1, required_new = $39.1, required_open_brace = $40.1, required_open_bracket = $41.1, required_open_paren = $42.1, required_plus = $43.1, required_return = $44.1, required_slash = $45.1, required_string_literal = $46.1, required_struct = $47.1, required_unknown = $48.1, required_vertical_bar = $49.1, required_while = $50.1)
+  mov [rbp-368], rax
+  mov rdi, 376
   call malloc
   #     .scanner = null
   mov QWORD PTR [rax], 0
@@ -52529,66 +52543,70 @@ parse_250:
   #     .required_external = $29.1
   mov rbx, [rbp-200]
   mov QWORD PTR [rax+200], rbx
-  #     .required_greater_than = $30.1
+  #     .required_func = $30.1
   mov rbx, [rbp-208]
   mov QWORD PTR [rax+208], rbx
-  #     .required_hyphen = $31.1
+  #     .required_greater_than = $31.1
   mov rbx, [rbp-216]
   mov QWORD PTR [rax+216], rbx
-  #     .required_identifier = $32.1
+  #     .required_hyphen = $32.1
   mov rbx, [rbp-224]
   mov QWORD PTR [rax+224], rbx
-  #     .required_if = $33.1
+  #     .required_identifier = $33.1
   mov rbx, [rbp-232]
   mov QWORD PTR [rax+232], rbx
-  #     .required_include = $34.1
+  #     .required_if = $34.1
   mov rbx, [rbp-240]
   mov QWORD PTR [rax+240], rbx
-  #     .required_less_than = $35.1
+  #     .required_include = $35.1
   mov rbx, [rbp-248]
   mov QWORD PTR [rax+248], rbx
-  #     .required_literal = $36.1
+  #     .required_less_than = $36.1
   mov rbx, [rbp-256]
   mov QWORD PTR [rax+256], rbx
-  #     .required_loop = $37.1
+  #     .required_literal = $37.1
   mov rbx, [rbp-264]
   mov QWORD PTR [rax+264], rbx
-  #     .required_new = $38.1
+  #     .required_loop = $38.1
   mov rbx, [rbp-272]
   mov QWORD PTR [rax+272], rbx
-  #     .required_open_brace = $39.1
+  #     .required_new = $39.1
   mov rbx, [rbp-280]
   mov QWORD PTR [rax+280], rbx
-  #     .required_open_bracket = $40.1
+  #     .required_open_brace = $40.1
   mov rbx, [rbp-288]
   mov QWORD PTR [rax+288], rbx
-  #     .required_open_paren = $41.1
+  #     .required_open_bracket = $41.1
   mov rbx, [rbp-296]
   mov QWORD PTR [rax+296], rbx
-  #     .required_plus = $42.1
+  #     .required_open_paren = $42.1
   mov rbx, [rbp-304]
   mov QWORD PTR [rax+304], rbx
-  #     .required_return = $43.1
+  #     .required_plus = $43.1
   mov rbx, [rbp-312]
   mov QWORD PTR [rax+312], rbx
-  #     .required_slash = $44.1
+  #     .required_return = $44.1
   mov rbx, [rbp-320]
   mov QWORD PTR [rax+320], rbx
-  #     .required_string_literal = $45.1
+  #     .required_slash = $45.1
   mov rbx, [rbp-328]
   mov QWORD PTR [rax+328], rbx
-  #     .required_struct = $46.1
+  #     .required_string_literal = $46.1
   mov rbx, [rbp-336]
   mov QWORD PTR [rax+336], rbx
-  #     .required_unknown = $47.1
+  #     .required_struct = $47.1
   mov rbx, [rbp-344]
   mov QWORD PTR [rax+344], rbx
-  #     .required_vertical_bar = $48.1
+  #     .required_unknown = $48.1
   mov rbx, [rbp-352]
   mov QWORD PTR [rax+352], rbx
-  #     .required_while = $49.1
+  #     .required_vertical_bar = $49.1
   mov rbx, [rbp-360]
   mov QWORD PTR [rax+360], rbx
+  #     .required_while = $50.1
+  mov rbx, [rbp-368]
+  mov QWORD PTR [rax+368], rbx
+  # [discarded value]: $50.1
   # [discarded value]: $49.1
   # [discarded value]: $48.1
   # [discarded value]: $47.1
@@ -52634,7 +52652,7 @@ parse_250:
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: file_path.1:[rbp-8] parser.1:rax 
-  .loc 7 54 5
+  .loc 7 55 5
   # call(parse_251, parser.1, file_path.1, null)
   mov rdi, rax
   mov rsi, [rbp-8]
@@ -52643,18 +52661,18 @@ parse_250:
   call parse_251
   # [discarded value]: file_path.1
   # [live values]: parser.1:[rbp-16] 
-  .loc 7 55 12
-  # $51.1: @Compilation_Unit = load_struct_member(parser.1, compilation_unit)
+  .loc 7 56 12
+  # $52.1: @Compilation_Unit = load_struct_member(parser.1, compilation_unit)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [discarded value]: parser.1
-  # [live values]: $51.1:rbx 
-  .loc 7 55 5
-  # return($51.1)
+  # [live values]: $52.1:rbx 
+  .loc 7 56 5
+  # return($52.1)
   mov rax, rbx
   mov [rbp-8], rbx
   jmp .LABEL__parse_250__end
-  # [discarded value]: $51.1
+  # [discarded value]: $52.1
   # [live values]: 
 .LABEL__parse_250__end:
   mov rsp, rbp
@@ -52663,7 +52681,7 @@ parse_250:
 
 parse_250__stack_frame_size: .word 368
 
-  .loc 7 58 1
+  .loc 7 59 8
   .text
 parse_251:
   push rbp
@@ -52677,7 +52695,7 @@ parse_251:
   # [live values]: self.1:rdi file_path.1:rsi 
   # location.1: @Source_Location = load_variable(location)
   # [live values]: self.1:rdi file_path.1:rsi location.1:rdx 
-  .loc 7 59 15
+  .loc 7 60 15
   # source.1: @Source = call(create_source_317, file_path.1)
   mov [rbp-8], rdi
   mov rdi, rsi
@@ -52685,7 +52703,7 @@ parse_251:
   mov [rbp-24], rsi
   call create_source_317
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:rax 
-  .loc 7 60 9
+  .loc 7 61 9
   # $2.1: Boolean = source.1 == null
   cmp rax, 0
   sete bl
@@ -52696,19 +52714,19 @@ parse_251:
   mov [rbp-33], bl
   jz .LABEL__parse_251__3
 .LABEL__parse_251__2:
-  .loc 7 61 20
+  .loc 7 62 20
   # $3.1: @String = call(clone_346, "Failed to open file: ")
-  lea rdi, .LABEL__string_321[rip] # "Failed to open file: "
+  lea rdi, .LABEL__string_322[rip] # "Failed to open file: "
   call clone_346
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $3.1:rax 
-  .loc 7 61 20
+  .loc 7 62 20
   # message.1: @String = call(append_355, $3.1, file_path.1)
   mov rdi, rax
   mov rsi, [rbp-24]
   call append_355
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] message.1:rax 
-  .loc 7 62 13
+  .loc 7 63 13
   # $5.1: Boolean = location.1 != null
   cmp QWORD PTR [rbp-16], 0
   setne bl
@@ -52719,14 +52737,14 @@ parse_251:
   mov [rbp-42], bl
   jz .LABEL__parse_251__5
 .LABEL__parse_251__4:
-  .loc 7 63 13
+  .loc 7 64 13
   # call(abort_315, location.1, message.1)
   mov rdi, [rbp-16]
   mov rsi, [rbp-41]
   call abort_315
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] message.1:[rbp-41] $5.1:[rbp-42] 
 .LABEL__parse_251__5:
-  .loc 7 65 9
+  .loc 7 66 9
   # call(abort_343, message.1)
   mov rdi, [rbp-41]
   call abort_343
@@ -52736,94 +52754,94 @@ parse_251:
   # [discarded value]: message.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] 
 .LABEL__parse_251__3:
-  .loc 7 68 5
+  .loc 7 69 5
   # $6.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $6.1:rbx 
-  .loc 7 68 5
+  .loc 7 69 5
   # $7.1: @List = load_struct_member($6.1, sources)
   mov r15, [rbx]
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $7.1:r15 
-  .loc 7 68 5
+  .loc 7 69 5
   # call(append_319, $7.1, source.1)
   mov rdi, r15
   mov rsi, [rbp-32]
   call append_319
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] 
-  .loc 7 69 17
+  .loc 7 70 17
   # $8.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $8.1:rbx 
-  .loc 7 69 17
+  .loc 7 70 17
   # $9.1: @List = load_struct_member($8.1, sources)
   mov r15, [rbx]
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $9.1:r15 
-  .loc 7 69 17
+  .loc 7 70 17
   # $10.1: Int = load_struct_member($9.1, size)
   mov rbx, [r15+16]
   # [discarded value]: $9.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $10.1:rbx 
-  .loc 7 69 5
+  .loc 7 70 5
   # store_struct_member(source.1, id, $10.1)
   mov r15, [rbp-32]
   mov QWORD PTR [r15], rbx
   # [discarded value]: $10.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:r15:[rbp-32] $2.1:[rbp-33] 
-  .loc 7 71 22
+  .loc 7 72 22
   # other_scanner.1: @Scanner = load_struct_member(self.1, scanner)
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:r15:[rbp-32] $2.1:[rbp-33] other_scanner.1:rbx 
-  .loc 7 72 20
+  .loc 7 73 20
   # $12.1: @Scanner = call(create_scanner_297, source.1)
   mov rdi, r15
   mov [rbp-41], rbx
   call create_scanner_297
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] $12.1:rax 
-  .loc 7 72 5
+  .loc 7 73 5
   # store_struct_member(self.1, scanner, $12.1)
   mov rbx, [rbp-8]
   mov QWORD PTR [rbx], rax
   # [discarded value]: $12.1
   # [live values]: self.1:rbx:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] 
-  .loc 7 73 27
+  .loc 7 74 27
   # $13.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
   mov rax, [rbx+8]
   # [live values]: self.1:rbx:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] $13.1:rax 
-  .loc 7 73 27
+  .loc 7 74 27
   # $14.1: @List = load_struct_member($13.1, statements)
   mov r15, [rax+32]
   # [discarded value]: $13.1
   # [live values]: self.1:rbx:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] $14.1:r15 
-  .loc 7 73 5
+  .loc 7 74 5
   # call(parse_statements_252, self.1, $14.1)
   mov rdi, rbx
   mov rsi, r15
   call parse_statements_252
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] 
-  .loc 7 75 14
+  .loc 7 76 14
   # $15.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-8]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] $15.1:rbx 
-  .loc 7 75 14
+  .loc 7 76 14
   # token.1: @Token = load_struct_member($15.1, current_token)
   mov r15, [rbx+32]
   # [discarded value]: $15.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:r15 
-  .loc 7 76 9
+  .loc 7 77 9
   # $17.1: Boolean = call(is_344, token.1, End_Of_File_Token)
   mov rdi, r15
   mov rsi, End_Of_File_Token[rip]
   mov [rbp-49], r15
   call is_344
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $17.1:rax 
-  .loc 7 76 9
+  .loc 7 77 9
   # $18.1: Boolean = $17.1 == false
   cmp al, 0
   sete bl
@@ -52834,17 +52852,17 @@ parse_251:
   mov [rbp-50], bl
   jz .LABEL__parse_251__7
 .LABEL__parse_251__6:
-  .loc 7 77 21
+  .loc 7 78 21
   # $19.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-8]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] $19.1:rbx 
-  .loc 7 77 21
+  .loc 7 78 21
   # $20.1: @Token = load_struct_member($19.1, current_token)
   mov r15, [rbx+32]
   # [discarded value]: $19.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] $20.1:r15 
-  .loc 7 77 9
+  .loc 7 78 9
   # call(abort_290, self.1, $20.1)
   mov rdi, rax
   mov rsi, r15
@@ -52852,20 +52870,20 @@ parse_251:
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] 
 .LABEL__parse_251__7:
-  .loc 7 79 14
+  .loc 7 80 14
   # token.1: @End_Of_File_Token = token.1
   mov rax, [rbp-49]
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:rax 
-  .loc 7 80 9
+  .loc 7 81 9
   # $22.1: @Source_Location = load_struct_member(token.1, location)
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:rax $22.1:rbx 
-  .loc 7 80 9
+  .loc 7 81 9
   # $23.1: Int = load_struct_member($22.1, column)
   mov r15, [rbx+16]
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:rax $23.1:r15 
-  .loc 7 80 9
+  .loc 7 81 9
   # $24.1: Boolean = $23.1 != 1
   cmp r15, 1
   setne bl
@@ -52877,26 +52895,26 @@ parse_251:
   mov [rbp-59], bl
   jz .LABEL__parse_251__9
 .LABEL__parse_251__8:
-  .loc 7 81 22
+  .loc 7 82 22
   # $25.1: @Source_Location = load_struct_member(token.1, location)
   mov rax, [rbp-58]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:rax:[rbp-58] $24.1:[rbp-59] $25.1:rbx 
-  .loc 7 81 9
+  .loc 7 82 9
   # $26.1: @FILE = call(write_318, stderr, $25.1)
   mov rdi, stderr[rip]
   mov rsi, rbx
   call write_318
   # [discarded value]: $25.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:[rbp-58] $24.1:[rbp-59] $26.1:rax 
-  .loc 7 81 9
+  .loc 7 82 9
   # $27.1: @FILE = call(write_338, $26.1, ": File doesn't end with a new line")
   mov rdi, rax
-  lea rsi, .LABEL__string_322[rip] # ": File doesn't end with a new line"
+  lea rsi, .LABEL__string_323[rip] # ": File doesn't end with a new line"
   call write_338
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:[rbp-58] $24.1:[rbp-59] $27.1:rax 
-  .loc 7 81 9
+  .loc 7 82 9
   # $28.1: @FILE = call(end_line_341, $27.1)
   mov rdi, rax
   call end_line_341
@@ -52905,7 +52923,7 @@ parse_251:
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:[rbp-58] $24.1:[rbp-59] 
   # jump(.LABEL__parse_251__9)
 .LABEL__parse_251__9:
-  .loc 7 84 5
+  .loc 7 85 5
   # store_struct_member(self.1, scanner, other_scanner.1)
   mov rax, [rbp-8]
   mov rbx, [rbp-41]
@@ -52938,7 +52956,7 @@ parse_251:
 
 parse_251__stack_frame_size: .word 64
 
-  .loc 7 89 1
+  .loc 7 90 8
   .text
 parse_statements_252:
   push rbp
@@ -52954,12 +52972,12 @@ parse_statements_252:
   mov [rbp-8], rsi
   mov [rbp-16], rdi
 .LABEL__parse_statements_252__2:
-  .loc 7 91 22
+  .loc 7 92 22
   # statement.1: @AST_Statement = call(parse_statement_254, self.1)
   mov rdi, [rbp-16]
   call parse_statement_254
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:rax 
-  .loc 7 92 13
+  .loc 7 93 13
   # $2.1: Boolean = statement.1 == null
   cmp rax, 0
   sete bl
@@ -52974,12 +52992,12 @@ parse_statements_252:
   jmp .LABEL__parse_statements_252__end
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] 
 .LABEL__parse_statements_252__5:
-  .loc 7 95 9
+  .loc 7 96 9
   # call(consume_end_of_line_279, self.1)
   mov rdi, [rbp-16]
   call consume_end_of_line_279
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] 
-  .loc 7 96 13
+  .loc 7 97 13
   # $3.1: Boolean = call(is_344, statement.1, AST_Include_Statement)
   mov rdi, [rbp-24]
   mov rsi, AST_Include_Statement[rip]
@@ -52990,29 +53008,29 @@ parse_statements_252:
   mov [rbp-26], al
   jz .LABEL__parse_statements_252__9
 .LABEL__parse_statements_252__7:
-  .loc 7 97 26
+  .loc 7 98 26
   # statement.1: @AST_Include_Statement = statement.1
   mov rax, [rbp-24]
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rax 
-  .loc 7 99 36
+  .loc 7 100 36
   # $5.1: @String = load_struct_member(statement.1, file_path)
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rax $5.1:rbx 
-  .loc 7 99 75
+  .loc 7 100 75
   # $6.1: @Source_Location = load_struct_member(statement.1, location)
   mov r15, [rax+8]
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rax $5.1:rbx $6.1:r15 
-  .loc 7 99 75
+  .loc 7 100 75
   # $7.1: @Source = load_struct_member($6.1, source)
   mov r14, [r15]
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rax $5.1:rbx $7.1:r14 
-  .loc 7 99 75
+  .loc 7 100 75
   # $8.1: @String = load_struct_member($7.1, file_path)
   mov r15, [r14+8]
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rax $5.1:rbx $8.1:r15 
-  .loc 7 99 36
+  .loc 7 100 36
   # statement_file_path.1: @String = call(make_relative_path_253, $5.1, $8.1)
   mov rdi, rbx
   mov rsi, r15
@@ -53021,7 +53039,7 @@ parse_statements_252:
   # [discarded value]: $8.1
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:rax 
-  .loc 7 100 17
+  .loc 7 101 17
   # $10.1: Boolean = statement_file_path.1 == null
   cmp rax, 0
   sete bl
@@ -53032,23 +53050,23 @@ parse_statements_252:
   mov [rbp-43], bl
   jz .LABEL__parse_statements_252__11
 .LABEL__parse_statements_252__10:
-  .loc 7 101 23
+  .loc 7 102 23
   # $11.1: @Source_Location = load_struct_member(statement.1, location)
   mov rax, [rbp-34]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rax:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] $11.1:rbx 
-  .loc 7 101 43
+  .loc 7 102 43
   # $12.1: @String = call(clone_346, "Unsupported file path: ")
-  lea rdi, .LABEL__string_323[rip] # "Unsupported file path: "
+  lea rdi, .LABEL__string_324[rip] # "Unsupported file path: "
   mov [rbp-51], rbx
   call clone_346
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] $11.1:[rbp-51] $12.1:rax 
-  .loc 7 101 83
+  .loc 7 102 83
   # $13.1: @String = load_struct_member(statement.1, file_path)
   mov rbx, [rbp-34]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rbx:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] $11.1:[rbp-51] $12.1:rax $13.1:r15 
-  .loc 7 101 43
+  .loc 7 102 43
   # $14.1: @String = call(append_355, $12.1, $13.1)
   mov rdi, rax
   mov rsi, r15
@@ -53056,7 +53074,7 @@ parse_statements_252:
   # [discarded value]: $13.1
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] $11.1:[rbp-51] $14.1:rax 
-  .loc 7 101 17
+  .loc 7 102 17
   # call(abort_315, $11.1, $14.1)
   mov rdi, [rbp-51]
   mov rsi, rax
@@ -53065,17 +53083,17 @@ parse_statements_252:
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] 
 .LABEL__parse_statements_252__11:
-  .loc 7 104 46
+  .loc 7 105 46
   # $15.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:rax:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] $15.1:rbx 
-  .loc 7 104 46
+  .loc 7 105 46
   # $16.1: @List = load_struct_member($15.1, sources)
   mov r15, [rbx]
   # [discarded value]: $15.1
   # [live values]: self.1:rax:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] $16.1:r15 
-  .loc 7 104 46
+  .loc 7 105 46
   # compilation_unit_sources_item.1: @List_Item = load_struct_member($16.1, first_item)
   mov rbx, [r15]
   # [discarded value]: $16.1
@@ -53085,7 +53103,7 @@ parse_statements_252:
 .LABEL__parse_statements_252__12:
   # compilation_unit_sources_item.2: @List_Item = phi(compilation_unit_sources_item.1, compilation_unit_sources_item.5)
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:[rbp-51] 
-  .loc 7 105 20
+  .loc 7 106 20
   # $18.1: Boolean = compilation_unit_sources_item.2 != null
   cmp QWORD PTR [rbp-51], 0
   setne al
@@ -53095,17 +53113,17 @@ parse_statements_252:
   mov [rbp-52], al
   jz .LABEL__parse_statements_252__14
 .LABEL__parse_statements_252__13:
-  .loc 7 106 22
+  .loc 7 107 22
   # $20.1: @Source = load_struct_member(compilation_unit_sources_item.2, data)
   mov rax, [rbp-51]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:rax:[rbp-51] $18.1:[rbp-52] $20.1:rbx 
-  .loc 7 106 21
+  .loc 7 107 21
   # $21.1: @String = load_struct_member($20.1, file_path)
   mov r15, [rbx+8]
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:rax:[rbp-51] $18.1:[rbp-52] $21.1:r15 
-  .loc 7 106 21
+  .loc 7 107 21
   # $22.1: Boolean = call(equals_347, $21.1, statement_file_path.1)
   mov rdi, r15
   mov rsi, [rbp-42]
@@ -53117,7 +53135,7 @@ parse_statements_252:
   mov [rbp-53], al
   jz .LABEL__parse_statements_252__16
 .LABEL__parse_statements_252__14:
-  .loc 7 112 17
+  .loc 7 113 17
   # $24.1: Boolean = compilation_unit_sources_item.2 == null
   cmp QWORD PTR [rbp-51], 0
   sete al
@@ -53127,12 +53145,12 @@ parse_statements_252:
   mov [rbp-54], al
   jz .LABEL__parse_statements_252__2
 .LABEL__parse_statements_252__18:
-  .loc 7 113 49
+  .loc 7 114 49
   # $25.1: @Source_Location = load_struct_member(statement.1, location)
   mov rax, [rbp-34]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:rax:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:[rbp-51] $18.1:[rbp-52] $22.1:[rbp-53] $24.1:[rbp-54] $25.1:rbx 
-  .loc 7 113 17
+  .loc 7 114 17
   # call(parse_251, self.1, statement_file_path.1, $25.1)
   mov rdi, [rbp-16]
   mov rsi, [rbp-42]
@@ -53146,7 +53164,7 @@ parse_statements_252:
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:[rbp-51] $18.1:[rbp-52] $22.1:[rbp-53] 
 .LABEL__parse_statements_252__16:
-  .loc 7 109 49
+  .loc 7 110 49
   # compilation_unit_sources_item.5: @List_Item = load_struct_member(compilation_unit_sources_item.2, next_item)
   mov rax, [rbp-51]
   mov rbx, [rax+8]
@@ -53172,7 +53190,7 @@ parse_statements_252:
   # [discarded value]: statement.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] 
 .LABEL__parse_statements_252__9:
-  .loc 7 116 13
+  .loc 7 117 13
   # call(append_319, statements.1, statement.1)
   mov rdi, [rbp-8]
   mov rsi, [rbp-24]
@@ -53198,7 +53216,7 @@ parse_statements_252:
 
 parse_statements_252__stack_frame_size: .word 64
 
-  .loc 7 121 1
+  .loc 7 122 8
   .text
 make_relative_path_253:
   push rbp
@@ -53210,10 +53228,10 @@ make_relative_path_253:
   # [live values]: file_path.1:rdi 
   # base_file_path.1: @String = load_variable(base_file_path)
   # [live values]: file_path.1:rdi base_file_path.1:rsi 
-  .loc 7 122 9
+  .loc 7 123 9
   # $1.1: Boolean = call(starts_with_349, file_path.1, "./")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_324[rip] # "./"
+  lea rsi, .LABEL__string_325[rip] # "./"
   mov [rbp-16], rdi
   call starts_with_349
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:rax 
@@ -53222,43 +53240,43 @@ make_relative_path_253:
   mov [rbp-17], al
   jz .LABEL__make_relative_path_253__3
 .LABEL__make_relative_path_253__2:
-  .loc 7 123 26
+  .loc 7 124 26
   # $2.1: @String = call(clone_346, base_file_path.1)
   mov rdi, [rbp-8]
   call clone_346
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $2.1:rax 
-  .loc 7 123 26
+  .loc 7 124 26
   # $3.1: @String = call(append_355, $2.1, file_path.1)
   mov rdi, rax
   mov rsi, [rbp-16]
   call append_355
   # [discarded value]: $2.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $3.1:rax 
-  .loc 7 123 73
+  .loc 7 124 73
   # $4.1: Int = call(last_index_of_351, base_file_path.1, '/')
   mov rdi, [rbp-8]
   mov sil, 47
   mov [rbp-25], rax
   call last_index_of_351
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $3.1:[rbp-25] $4.1:rax 
-  .loc 7 123 73
+  .loc 7 124 73
   # $5.1: Int = $4.1 + 1
   mov rbx, rax
   add rbx, 1
   # [discarded value]: $4.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $3.1:[rbp-25] $5.1:rbx 
-  .loc 7 123 112
+  .loc 7 124 112
   # $6.1: Int = load_struct_member(base_file_path.1, length)
   mov rax, [rbp-8]
   mov r15, [rax+16]
   # [live values]: file_path.1:[rbp-16] base_file_path.1:rax:[rbp-8] $1.1:[rbp-17] $3.1:[rbp-25] $5.1:rbx $6.1:r15 
-  .loc 7 123 112
+  .loc 7 124 112
   # $7.1: Int = $6.1 + 2
   mov r14, r15
   add r14, 2
   # [discarded value]: $6.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:rax:[rbp-8] $1.1:[rbp-17] $3.1:[rbp-25] $5.1:rbx $7.1:r14 
-  .loc 7 123 26
+  .loc 7 124 26
   # relative_path.1: @String = call(remove_356, $3.1, $5.1, $7.1)
   mov rdi, [rbp-25]
   mov rsi, rbx
@@ -53268,17 +53286,17 @@ make_relative_path_253:
   # [discarded value]: $5.1
   # [discarded value]: $3.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] relative_path.1:rax 
-  .loc 7 124 9
+  .loc 7 125 9
   # return(relative_path.1)
   mov [rbp-25], rax
   jmp .LABEL__make_relative_path_253__end
   # [discarded value]: relative_path.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] 
 .LABEL__make_relative_path_253__3:
-  .loc 7 126 9
+  .loc 7 127 9
   # $9.1: Boolean = call(starts_with_349, file_path.1, "../")
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_325[rip] # "../"
+  lea rsi, .LABEL__string_326[rip] # "../"
   call starts_with_349
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:rax 
   # jump($9.1, .LABEL__make_relative_path_253__5, .LABEL__make_relative_path_253__6)
@@ -53286,37 +53304,37 @@ make_relative_path_253:
   mov [rbp-18], al
   jz .LABEL__make_relative_path_253__6
 .LABEL__make_relative_path_253__5:
-  .loc 7 127 26
+  .loc 7 128 26
   # $10.1: @String = call(clone_346, base_file_path.1)
   mov rdi, [rbp-8]
   call clone_346
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $10.1:rax 
-  .loc 7 127 26
+  .loc 7 128 26
   # $11.1: @String = call(append_355, $10.1, file_path.1)
   mov rdi, rax
   mov rsi, [rbp-16]
   call append_355
   # [discarded value]: $10.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:rax 
-  .loc 7 127 73
+  .loc 7 128 73
   # $12.1: Int = call(last_index_of_351, base_file_path.1, '/')
   mov rdi, [rbp-8]
   mov sil, 47
   mov [rbp-26], rax
   call last_index_of_351
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:[rbp-26] $12.1:rax 
-  .loc 7 127 73
+  .loc 7 128 73
   # $13.1: Int = $12.1 + 1
   mov rbx, rax
   add rbx, 1
   # [discarded value]: $12.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:[rbp-26] $13.1:rbx 
-  .loc 7 127 112
+  .loc 7 128 112
   # $14.1: Int = load_struct_member(base_file_path.1, length)
   mov rax, [rbp-8]
   mov r15, [rax+16]
   # [live values]: file_path.1:[rbp-16] base_file_path.1:rax:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:[rbp-26] $13.1:rbx $14.1:r15 
-  .loc 7 127 26
+  .loc 7 128 26
   # relative_path.1: @String = call(remove_356, $11.1, $13.1, $14.1)
   mov rdi, [rbp-26]
   mov rsi, rbx
@@ -53329,13 +53347,13 @@ make_relative_path_253:
   # jump(.LABEL__make_relative_path_253__7)
   mov [rbp-26], rax
 .LABEL__make_relative_path_253__7:
-  .loc 7 129 22
+  .loc 7 130 22
   # index.1: Int = call(index_of_348, relative_path.1, "/../")
   mov rdi, [rbp-26]
-  lea rsi, .LABEL__string_326[rip] # "/../"
+  lea rsi, .LABEL__string_327[rip] # "/../"
   call index_of_348
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:rax 
-  .loc 7 130 17
+  .loc 7 131 17
   # $17.1: Boolean = index.1 <= 0
   cmp rax, 0
   setle bl
@@ -53346,18 +53364,18 @@ make_relative_path_253:
   mov [rbp-35], bl
   jz .LABEL__make_relative_path_253__10
 .LABEL__make_relative_path_253__8:
-  .loc 7 135 9
+  .loc 7 136 9
   # return(relative_path.1)
   mov rax, [rbp-26]
   jmp .LABEL__make_relative_path_253__end
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] 
 .LABEL__make_relative_path_253__10:
-  .loc 7 133 67
+  .loc 7 134 67
   # $18.1: Int = index.1 - 1
   mov rax, [rbp-34]
   dec rax
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] $18.1:rax 
-  .loc 7 133 34
+  .loc 7 134 34
   # $19.1: Int = call(last_index_of_352, relative_path.1, '/', $18.1)
   mov rdi, [rbp-26]
   mov sil, 47
@@ -53365,12 +53383,12 @@ make_relative_path_253:
   call last_index_of_352
   # [discarded value]: $18.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] $19.1:rax 
-  .loc 7 133 79
+  .loc 7 134 79
   # $20.1: Int = index.1 + 3
   mov rbx, [rbp-34]
   add rbx, 3
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] $19.1:rax $20.1:rbx 
-  .loc 7 133 13
+  .loc 7 134 13
   # $21.1: @String = call(remove_356, relative_path.1, $19.1, $20.1)
   mov rdi, [rbp-26]
   mov rsi, rax
@@ -53391,7 +53409,7 @@ make_relative_path_253:
   # [discarded value]: relative_path.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] 
 .LABEL__make_relative_path_253__6:
-  .loc 7 137 5
+  .loc 7 138 5
   # return(file_path.1)
   mov rax, [rbp-16]
   jmp .LABEL__make_relative_path_253__end
@@ -53410,7 +53428,7 @@ make_relative_path_253:
 
 make_relative_path_253__stack_frame_size: .word 48
 
-  .loc 7 148 1
+  .loc 7 149 8
   .text
 parse_statement_254:
   push rbp
@@ -53423,7 +53441,7 @@ parse_statement_254:
   # jump(.LABEL__parse_statement_254__2)
   mov [rbp-8], rdi
 .LABEL__parse_statement_254__2:
-  .loc 7 149 12
+  .loc 7 150 12
   # $1.1: Boolean = call(consume_empty_line_280, self.1)
   mov rdi, [rbp-8]
   call consume_empty_line_280
@@ -53433,16 +53451,16 @@ parse_statement_254:
   mov [rbp-9], al
   jnz .LABEL__parse_statement_254__2
 .LABEL__parse_statement_254__4:
-  .loc 7 152 22
+  .loc 7 153 22
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $2.1:rbx 
-  .loc 7 152 43
+  .loc 7 153 43
   # $3.1: @Matcher = load_struct_member(self.1, required_close_brace)
   mov r15, [rax+80]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $2.1:rbx $3.1:r15 
-  .loc 7 152 9
+  .loc 7 153 9
   # $5.1: Boolean = call(matches_287, self.1, $2.1, $3.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53456,7 +53474,7 @@ parse_statement_254:
   mov [rbp-10], al
   jz .LABEL__parse_statement_254__5
 .LABEL__parse_statement_254__6:
-  .loc 7 152 9
+  .loc 7 153 9
   # $5.3: Boolean = phi($5.1, $5.2)
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] 
   # jump($5.3, .LABEL__parse_statement_254__7, .LABEL__parse_statement_254__8)
@@ -53464,36 +53482,36 @@ parse_statement_254:
   test al, al
   jz .LABEL__parse_statement_254__8
 .LABEL__parse_statement_254__7:
-  .loc 7 153 9
+  .loc 7 154 9
   # return(null)
   xor rax, rax
   jmp .LABEL__parse_statement_254__end
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] 
 .LABEL__parse_statement_254__8:
-  .loc 7 156 24
+  .loc 7 157 24
   # $8.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $8.1:rbx 
-  .loc 7 156 24
+  .loc 7 157 24
   # $9.1: Int = $8.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $9.1:r15 
-  .loc 7 156 5
+  .loc 7 157 5
   # call(consume_space_281, self.1, $9.1)
   mov rdi, rax
   mov rsi, r15
   call consume_space_281
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] 
-  .loc 7 158 22
+  .loc 7 159 22
   # $10.1: @Matcher = load_struct_member(self.1, required_define)
   mov rax, [rbp-8]
   mov rbx, [rax+136]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $10.1:rbx 
-  .loc 7 158 9
+  .loc 7 159 9
   # $11.1: Boolean = call(matches_286, self.1, $10.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53505,24 +53523,24 @@ parse_statement_254:
   mov [rbp-11], al
   jz .LABEL__parse_statement_254__11
 .LABEL__parse_statement_254__10:
-  .loc 7 159 16
+  .loc 7 160 16
   # $12.1: @AST_Statement = call(parse_define_256, self.1)
   mov rdi, [rbp-8]
   call parse_define_256
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $12.1:rax 
-  .loc 7 159 9
+  .loc 7 160 9
   # return($12.1)
   mov [rbp-19], rax
   jmp .LABEL__parse_statement_254__end
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] 
 .LABEL__parse_statement_254__11:
-  .loc 7 161 22
+  .loc 7 162 22
   # $13.1: @Matcher = load_struct_member(self.1, required_if)
   mov rax, [rbp-8]
-  mov rbx, [rax+232]
+  mov rbx, [rax+240]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $13.1:rbx 
-  .loc 7 161 9
+  .loc 7 162 9
   # $14.1: Boolean = call(matches_286, self.1, $13.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53534,24 +53552,24 @@ parse_statement_254:
   mov [rbp-12], al
   jz .LABEL__parse_statement_254__14
 .LABEL__parse_statement_254__13:
-  .loc 7 162 16
+  .loc 7 163 16
   # $15.1: @AST_Statement = call(parse_if_262, self.1)
   mov rdi, [rbp-8]
   call parse_if_262
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $15.1:rax 
-  .loc 7 162 9
+  .loc 7 163 9
   # return($15.1)
   mov [rbp-20], rax
   jmp .LABEL__parse_statement_254__end
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] 
 .LABEL__parse_statement_254__14:
-  .loc 7 164 22
+  .loc 7 165 22
   # $16.1: @Matcher = load_struct_member(self.1, required_return)
   mov rax, [rbp-8]
-  mov rbx, [rax+312]
+  mov rbx, [rax+320]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $16.1:rbx 
-  .loc 7 164 9
+  .loc 7 165 9
   # $17.1: Boolean = call(matches_286, self.1, $16.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53563,30 +53581,30 @@ parse_statement_254:
   mov [rbp-13], al
   jz .LABEL__parse_statement_254__17
 .LABEL__parse_statement_254__16:
-  .loc 7 165 31
+  .loc 7 166 31
   # $18.1: @Matcher = load_struct_member(self.1, required_return)
   mov rax, [rbp-8]
-  mov rbx, [rax+312]
+  mov rbx, [rax+320]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $18.1:rbx 
-  .loc 7 165 18
+  .loc 7 166 18
   # token.1: @Token = call(consume_282, self.1, $18.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $18.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] token.1:rax 
-  .loc 7 166 9
+  .loc 7 167 9
   # value_expression.1: @AST_Expression = null
   xor rbx, rbx
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] token.1:rax value_expression.1:rbx 
-  .loc 7 167 13
+  .loc 7 168 13
   # $20.1: Boolean = call(matches_end_of_line_285, self.1)
   mov rdi, [rbp-8]
   mov [rbp-21], rax
   mov [rbp-29], rbx
   call matches_end_of_line_285
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] token.1:[rbp-21] value_expression.1:[rbp-29] $20.1:rax 
-  .loc 7 167 13
+  .loc 7 168 13
   # $21.1: Boolean = $20.1 == false
   cmp al, 0
   sete bl
@@ -53597,13 +53615,13 @@ parse_statement_254:
   mov [rbp-30], bl
   jz .LABEL__parse_statement_254__19
 .LABEL__parse_statement_254__18:
-  .loc 7 168 13
+  .loc 7 169 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] token.1:[rbp-21] value_expression.1:[rbp-29] $21.1:[rbp-30] 
-  .loc 7 169 32
+  .loc 7 170 32
   # value_expression.2: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
@@ -53613,12 +53631,12 @@ parse_statement_254:
 .LABEL__parse_statement_254__19:
   # value_expression.3: @AST_Expression = phi(value_expression.1, value_expression.2)
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] token.1:[rbp-21] value_expression.1:[rbp-29] $21.1:[rbp-30] value_expression.2:[rbp-29] value_expression.3:[rbp-29] 
-  .loc 7 171 52
+  .loc 7 172 52
   # $23.1: @Source_Location = load_struct_member(token.1, location)
   mov rax, [rbp-21]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] token.1:rax:[rbp-21] value_expression.1:[rbp-29] $21.1:[rbp-30] value_expression.2:[rbp-29] value_expression.3:[rbp-29] $23.1:rbx 
-  .loc 7 171 16
+  .loc 7 172 16
   # $24.1: @AST_Return_Statement = new AST_Return_Statement(object_type = AST_Return_Statement, location = $23.1, value_expression = value_expression.3)
   mov [rbp-38], rbx
   mov rdi, 24
@@ -53635,7 +53653,7 @@ parse_statement_254:
   # [discarded value]: $23.1
   # [discarded value]: value_expression.3
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] token.1:[rbp-21] value_expression.1:[rbp-29] $21.1:[rbp-30] value_expression.2:[rbp-29] $24.1:rax 
-  .loc 7 171 9
+  .loc 7 172 9
   # return($24.1)
   mov [rbp-38], rax
   jmp .LABEL__parse_statement_254__end
@@ -53650,12 +53668,12 @@ parse_statement_254:
   # [discarded value]: token.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] 
 .LABEL__parse_statement_254__17:
-  .loc 7 173 22
+  .loc 7 174 22
   # $25.1: @Matcher = load_struct_member(self.1, required_loop)
   mov rax, [rbp-8]
-  mov rbx, [rax+264]
+  mov rbx, [rax+272]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $25.1:rbx 
-  .loc 7 173 9
+  .loc 7 174 9
   # $26.1: Boolean = call(matches_286, self.1, $25.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53667,24 +53685,24 @@ parse_statement_254:
   mov [rbp-14], al
   jz .LABEL__parse_statement_254__22
 .LABEL__parse_statement_254__21:
-  .loc 7 174 16
+  .loc 7 175 16
   # $27.1: @AST_Statement = call(parse_loop_263, self.1)
   mov rdi, [rbp-8]
   call parse_loop_263
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $27.1:rax 
-  .loc 7 174 9
+  .loc 7 175 9
   # return($27.1)
   mov [rbp-22], rax
   jmp .LABEL__parse_statement_254__end
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] 
 .LABEL__parse_statement_254__22:
-  .loc 7 176 22
+  .loc 7 177 22
   # $28.1: @Matcher = load_struct_member(self.1, required_while)
   mov rax, [rbp-8]
-  mov rbx, [rax+360]
+  mov rbx, [rax+368]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $28.1:rbx 
-  .loc 7 176 9
+  .loc 7 177 9
   # $29.1: Boolean = call(matches_286, self.1, $28.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53696,24 +53714,24 @@ parse_statement_254:
   mov [rbp-15], al
   jz .LABEL__parse_statement_254__25
 .LABEL__parse_statement_254__24:
-  .loc 7 177 16
+  .loc 7 178 16
   # $30.1: @AST_Statement = call(parse_while_264, self.1)
   mov rdi, [rbp-8]
   call parse_while_264
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $30.1:rax 
-  .loc 7 177 9
+  .loc 7 178 9
   # return($30.1)
   mov [rbp-23], rax
   jmp .LABEL__parse_statement_254__end
   # [discarded value]: $30.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] 
 .LABEL__parse_statement_254__25:
-  .loc 7 179 22
+  .loc 7 180 22
   # $31.1: @Matcher = load_struct_member(self.1, required_break)
   mov rax, [rbp-8]
   mov rbx, [rax+72]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $31.1:rbx 
-  .loc 7 179 9
+  .loc 7 180 9
   # $32.1: Boolean = call(matches_286, self.1, $31.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53725,24 +53743,24 @@ parse_statement_254:
   mov [rbp-16], al
   jz .LABEL__parse_statement_254__28
 .LABEL__parse_statement_254__27:
-  .loc 7 180 31
+  .loc 7 181 31
   # $33.1: @Matcher = load_struct_member(self.1, required_break)
   mov rax, [rbp-8]
   mov rbx, [rax+72]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $33.1:rbx 
-  .loc 7 180 18
+  .loc 7 181 18
   # token.1: @Token = call(consume_282, self.1, $33.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $33.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] token.1:rax 
-  .loc 7 181 51
+  .loc 7 182 51
   # $35.1: @Source_Location = load_struct_member(token.1, location)
   mov rbx, [rax+16]
   # [discarded value]: token.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $35.1:rbx 
-  .loc 7 181 16
+  .loc 7 182 16
   # $36.1: @AST_Break_Statement = new AST_Break_Statement(object_type = AST_Break_Statement, location = $35.1)
   mov [rbp-24], rbx
   mov rdi, 16
@@ -53755,19 +53773,19 @@ parse_statement_254:
   mov QWORD PTR [rax+8], rbx
   # [discarded value]: $35.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $36.1:rax 
-  .loc 7 181 9
+  .loc 7 182 9
   # return($36.1)
   mov [rbp-24], rax
   jmp .LABEL__parse_statement_254__end
   # [discarded value]: $36.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] 
 .LABEL__parse_statement_254__28:
-  .loc 7 183 22
+  .loc 7 184 22
   # $37.1: @Matcher = load_struct_member(self.1, required_include)
   mov rax, [rbp-8]
-  mov rbx, [rax+240]
+  mov rbx, [rax+248]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $37.1:rbx 
-  .loc 7 183 9
+  .loc 7 184 9
   # $38.1: Boolean = call(matches_286, self.1, $37.1)
   mov rdi, rax
   mov rsi, rbx
@@ -53779,37 +53797,37 @@ parse_statement_254:
   mov [rbp-17], al
   jz .LABEL__parse_statement_254__31
 .LABEL__parse_statement_254__30:
-  .loc 7 184 16
+  .loc 7 185 16
   # $39.1: @AST_Include_Statement = call(parse_include_255, self.1)
   mov rdi, [rbp-8]
   call parse_include_255
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] $39.1:rax 
-  .loc 7 184 9
+  .loc 7 185 9
   # return($39.1)
   mov [rbp-25], rax
   jmp .LABEL__parse_statement_254__end
   # [discarded value]: $39.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] 
 .LABEL__parse_statement_254__31:
-  .loc 7 187 19
+  .loc 7 188 19
   # expression.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax 
-  .loc 7 189 22
+  .loc 7 190 22
   # $41.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax $41.1:r15 
-  .loc 7 189 43
+  .loc 7 190 43
   # $42.1: @Matcher = load_struct_member(self.1, optional_comment)
   mov r14, [rbx+24]
   # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax $41.1:r15 $42.1:r14 
-  .loc 7 189 66
+  .loc 7 190 66
   # $43.1: @Matcher = load_struct_member(self.1, required_end_of_line)
   mov r13, [rbx+168]
   # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax $41.1:r15 $42.1:r14 $43.1:r13 
-  .loc 7 189 9
+  .loc 7 190 9
   # $44.1: Boolean = call(matches_288, self.1, $41.1, $42.1, $43.1)
   mov rdi, rbx
   mov rsi, r15
@@ -53826,12 +53844,12 @@ parse_statement_254:
   mov [rbp-26], al
   jz .LABEL__parse_statement_254__34
 .LABEL__parse_statement_254__33:
-  .loc 7 190 56
+  .loc 7 191 56
   # $45.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-25]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax:[rbp-25] $44.1:[rbp-26] $45.1:rbx 
-  .loc 7 190 16
+  .loc 7 191 16
   # $46.1: @AST_Expression_Statement = new AST_Expression_Statement(object_type = AST_Expression_Statement, location = $45.1, expression = expression.1)
   mov [rbp-34], rbx
   mov rdi, 24
@@ -53847,562 +53865,487 @@ parse_statement_254:
   mov QWORD PTR [rax+16], r15
   # [discarded value]: $45.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:r15:[rbp-25] $44.1:[rbp-26] $46.1:rax 
-  .loc 7 190 9
+  .loc 7 191 9
   # return($46.1)
   mov [rbp-34], rax
   jmp .LABEL__parse_statement_254__end
   # [discarded value]: $46.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] 
 .LABEL__parse_statement_254__34:
-  .loc 7 193 22
+  .loc 7 194 22
   # $47.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $47.1:rbx 
-  .loc 7 193 43
+  .loc 7 194 43
   # $48.1: @Matcher = load_struct_member(self.1, required_colon)
   mov r15, [rax+104]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $47.1:rbx $48.1:r15 
-  .loc 7 193 64
-  # $49.1: @Matcher = load_struct_member(self.1, required_colon)
-  mov r14, [rax+104]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $47.1:rbx $48.1:r15 $49.1:r14 
-  .loc 7 193 9
-  # $50.1: Boolean = call(matches_288, self.1, $47.1, $48.1, $49.1)
-  mov rdi, rax
-  mov rsi, rbx
-  mov rdx, r15
-  mov rcx, r14
-  call matches_288
-  # [discarded value]: $49.1
-  # [discarded value]: $48.1
-  # [discarded value]: $47.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:rax 
-  # jump($50.1, .LABEL__parse_statement_254__36, .LABEL__parse_statement_254__37)
-  test al, al
-  mov [rbp-27], al
-  jz .LABEL__parse_statement_254__37
-.LABEL__parse_statement_254__36:
   .loc 7 194 9
-  # call(consume_space_281, self.1, 1)
-  mov rdi, [rbp-8]
-  mov rsi, 1
-  call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] 
-  .loc 7 195 22
-  # $51.1: @Matcher = load_struct_member(self.1, required_colon)
-  mov rax, [rbp-8]
-  mov rbx, [rax+104]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $51.1:rbx 
-  .loc 7 195 43
-  # $52.1: @Matcher = load_struct_member(self.1, required_colon)
-  mov r15, [rax+104]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $51.1:rbx $52.1:r15 
-  .loc 7 195 9
-  # $53.1: @Token = call(consume_283, self.1, $51.1, $52.1)
-  mov rdi, rax
-  mov rsi, rbx
-  mov rdx, r15
-  call consume_283
-  # [discarded value]: $53.1
-  # [discarded value]: $52.1
-  # [discarded value]: $51.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] 
-  .loc 7 196 9
-  # call(consume_space_281, self.1, 1)
-  mov rdi, [rbp-8]
-  mov rsi, 1
-  call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] 
-  .loc 7 197 16
-  # $54.1: @AST_Statement = call(parse_function_258, self.1, expression.1)
-  mov rdi, [rbp-8]
-  mov rsi, [rbp-25]
-  call parse_function_258
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $54.1:rax 
-  .loc 7 197 9
-  # return($54.1)
-  mov [rbp-35], rax
-  jmp .LABEL__parse_statement_254__end
-  # [discarded value]: $54.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] 
-.LABEL__parse_statement_254__37:
-  .loc 7 200 22
-  # $55.1: @Matcher = load_struct_member(self.1, optional_space)
-  mov rax, [rbp-8]
-  mov rbx, [rax+32]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $55.1:rbx 
-  .loc 7 200 43
-  # $56.1: @Matcher = load_struct_member(self.1, required_colon)
-  mov r15, [rax+104]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $55.1:rbx $56.1:r15 
-  .loc 7 200 9
-  # $57.1: Boolean = call(matches_287, self.1, $55.1, $56.1)
+  # $49.1: Boolean = call(matches_287, self.1, $47.1, $48.1)
   mov rdi, rax
   mov rsi, rbx
   mov rdx, r15
   call matches_287
-  # [discarded value]: $56.1
-  # [discarded value]: $55.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:rax 
-  # jump($57.1, .LABEL__parse_statement_254__39, .LABEL__parse_statement_254__40)
+  # [discarded value]: $48.1
+  # [discarded value]: $47.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:rax 
+  # jump($49.1, .LABEL__parse_statement_254__36, .LABEL__parse_statement_254__37)
   test al, al
-  mov [rbp-28], al
-  jz .LABEL__parse_statement_254__40
-.LABEL__parse_statement_254__39:
-  .loc 7 201 13
-  # $58.1: Boolean = call(is_344, expression.1, AST_Variable_Expression)
+  mov [rbp-27], al
+  jz .LABEL__parse_statement_254__37
+.LABEL__parse_statement_254__36:
+  .loc 7 195 13
+  # $50.1: Boolean = call(is_344, expression.1, AST_Variable_Expression)
   mov rdi, [rbp-25]
   mov rsi, AST_Variable_Expression[rip]
   call is_344
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:rax 
-  # jump($58.1, .LABEL__parse_statement_254__41, .LABEL__parse_statement_254__42)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:rax 
+  # jump($50.1, .LABEL__parse_statement_254__38, .LABEL__parse_statement_254__39)
   test al, al
-  mov [rbp-29], al
-  jz .LABEL__parse_statement_254__42
-.LABEL__parse_statement_254__41:
-  .loc 7 202 27
+  mov [rbp-28], al
+  jz .LABEL__parse_statement_254__39
+.LABEL__parse_statement_254__38:
+  .loc 7 196 27
   # expression.1: @AST_Variable_Expression = expression.1
   mov rax, [rbp-25]
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] expression.1:rax 
-  .loc 7 203 30
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] expression.1:rax 
+  .loc 7 197 30
   # variable_name.1: @Identifier_Token = load_struct_member(expression.1, name)
   mov rbx, [rax+16]
   # [discarded value]: expression.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rbx 
-  .loc 7 204 13
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rbx 
+  .loc 7 198 13
   # variable_value_type.1: @AST_Type = null
   xor rax, rax
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rbx variable_value_type.1:rax 
-  .loc 7 205 13
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rbx variable_value_type.1:rax 
+  .loc 7 199 13
   # variable_value_expression.1: @AST_Expression = null
   xor r15, r15
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 
-  .loc 7 206 13
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 
+  .loc 7 200 13
   # variable_is_external.1: Boolean = false
   mov r14b, 0
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 
-  .loc 7 207 30
-  # $61.1: @Matcher = load_struct_member(self.1, optional_space)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 
+  .loc 7 201 30
+  # $53.1: @Matcher = load_struct_member(self.1, optional_space)
   mov r13, [rbp-8]
   mov r12, [r13+32]
-  # [live values]: self.1:r13:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 $61.1:r12 
-  .loc 7 207 51
-  # $62.1: @Matcher = load_struct_member(self.1, required_colon)
+  # [live values]: self.1:r13:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 $53.1:r12 
+  .loc 7 201 51
+  # $54.1: @Matcher = load_struct_member(self.1, required_colon)
   mov r11, [r13+104]
-  # [live values]: self.1:r13:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 $61.1:r12 $62.1:r11 
-  .loc 7 207 72
-  # $63.1: @Matcher = load_struct_member(self.1, required_equals)
+  # [live values]: self.1:r13:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 $53.1:r12 $54.1:r11 
+  .loc 7 201 72
+  # $55.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r10, [r13+176]
-  # [live values]: self.1:r13:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 $61.1:r12 $62.1:r11 $63.1:r10 
-  .loc 7 207 17
-  # $64.1: Boolean = call(matches_288, self.1, $61.1, $62.1, $63.1)
+  # [live values]: self.1:r13:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rbx variable_value_type.1:rax variable_value_expression.1:r15 variable_is_external.1:r14 $53.1:r12 $54.1:r11 $55.1:r10 
+  .loc 7 201 17
+  # $56.1: Boolean = call(matches_288, self.1, $53.1, $54.1, $55.1)
   mov rdi, r13
   mov rsi, r12
   mov rdx, r11
   mov rcx, r10
-  mov [rbp-37], rax
-  mov [rbp-45], rbx
-  mov [rbp-46], r14b
-  mov [rbp-54], r15
+  mov [rbp-36], rax
+  mov [rbp-44], rbx
+  mov [rbp-45], r14b
+  mov [rbp-53], r15
   call matches_288
-  # [discarded value]: $63.1
-  # [discarded value]: $62.1
-  # [discarded value]: $61.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:rax 
-  # jump($64.1, .LABEL__parse_statement_254__43, .LABEL__parse_statement_254__45)
+  # [discarded value]: $55.1
+  # [discarded value]: $54.1
+  # [discarded value]: $53.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:rax 
+  # jump($56.1, .LABEL__parse_statement_254__40, .LABEL__parse_statement_254__42)
   test al, al
-  mov [rbp-55], al
-  jz .LABEL__parse_statement_254__45
-.LABEL__parse_statement_254__43:
-  .loc 7 208 17
+  mov [rbp-54], al
+  jz .LABEL__parse_statement_254__42
+.LABEL__parse_statement_254__40:
+  .loc 7 202 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-  .loc 7 209 30
-  # $78.1: @Matcher = load_struct_member(self.1, required_colon)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+  .loc 7 203 30
+  # $70.1: @Matcher = load_struct_member(self.1, required_colon)
   mov rax, [rbp-8]
   mov rbx, [rax+104]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] $78.1:rbx 
-  .loc 7 209 51
-  # $79.1: @Matcher = load_struct_member(self.1, required_equals)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] $70.1:rbx 
+  .loc 7 203 51
+  # $71.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r15, [rax+176]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] $78.1:rbx $79.1:r15 
-  .loc 7 209 17
-  # $80.1: @Token = call(consume_283, self.1, $78.1, $79.1)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] $70.1:rbx $71.1:r15 
+  .loc 7 203 17
+  # $72.1: @Token = call(consume_283, self.1, $70.1, $71.1)
   mov rdi, rax
   mov rsi, rbx
   mov rdx, r15
   call consume_283
-  # [discarded value]: $80.1
-  # [discarded value]: $79.1
-  # [discarded value]: $78.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-  .loc 7 210 17
+  # [discarded value]: $72.1
+  # [discarded value]: $71.1
+  # [discarded value]: $70.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+  .loc 7 204 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-  .loc 7 211 45
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+  .loc 7 205 45
   # variable_value_expression.3: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:rax:[rbp-54] 
-  # jump(.LABEL__parse_statement_254__44)
-  mov [rbp-54], rax
-.LABEL__parse_statement_254__44:
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:rax:[rbp-53] 
+  # jump(.LABEL__parse_statement_254__41)
+  mov [rbp-53], rax
+.LABEL__parse_statement_254__41:
   # variable_is_external.3: Boolean = phi(variable_is_external.1, variable_is_external.2)
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_is_external.3:[rbp-46] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_is_external.3:[rbp-45] 
   # variable_value_expression.4: @AST_Expression = phi(variable_value_expression.3, variable_value_expression.1, variable_value_expression.2)
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_is_external.3:[rbp-46] variable_value_expression.4:[rbp-54] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_is_external.3:[rbp-45] variable_value_expression.4:[rbp-53] 
   # variable_value_type.3: @AST_Type = phi(variable_value_type.1, variable_value_type.2)
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_is_external.3:[rbp-46] variable_value_expression.4:[rbp-54] variable_value_type.3:[rbp-37] 
-  .loc 7 229 73
-  # $82.1: @Source_Location = load_struct_member(variable_name.1, location)
-  mov rax, [rbp-45]
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_is_external.3:[rbp-45] variable_value_expression.4:[rbp-53] variable_value_type.3:[rbp-36] 
+  .loc 7 223 73
+  # $74.1: @Source_Location = load_struct_member(variable_name.1, location)
+  mov rax, [rbp-44]
   mov rbx, [rax+16]
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:rax:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_is_external.3:[rbp-46] variable_value_expression.4:[rbp-54] variable_value_type.3:[rbp-37] $82.1:rbx 
-  .loc 7 229 35
-  # variable_statement.1: @AST_Variable_Statement = new AST_Variable_Statement(object_type = AST_Variable_Statement, location = $82.1, name = variable_name.1, type = variable_value_type.3, value_expression = variable_value_expression.4, is_external = variable_is_external.3)
-  mov [rbp-63], rbx
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:rax:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_is_external.3:[rbp-45] variable_value_expression.4:[rbp-53] variable_value_type.3:[rbp-36] $74.1:rbx 
+  .loc 7 223 35
+  # variable_statement.1: @AST_Variable_Statement = new AST_Variable_Statement(object_type = AST_Variable_Statement, location = $74.1, name = variable_name.1, type = variable_value_type.3, value_expression = variable_value_expression.4, is_external = variable_is_external.3)
+  mov [rbp-62], rbx
   mov rdi, 41
   call malloc
   #     .object_type = AST_Variable_Statement
   mov rbx, AST_Variable_Statement[rip]
   mov [rax], rbx
-  #     .location = $82.1
-  mov rbx, [rbp-63]
+  #     .location = $74.1
+  mov rbx, [rbp-62]
   mov QWORD PTR [rax+8], rbx
   #     .name = variable_name.1
-  mov r15, [rbp-45]
+  mov r15, [rbp-44]
   mov QWORD PTR [rax+16], r15
   #     .type = variable_value_type.3
-  mov r14, [rbp-37]
+  mov r14, [rbp-36]
   mov QWORD PTR [rax+24], r14
   #     .value_expression = variable_value_expression.4
-  mov r13, [rbp-54]
+  mov r13, [rbp-53]
   mov QWORD PTR [rax+32], r13
   #     .is_external = variable_is_external.3
-  mov r12b, [rbp-46]
+  mov r12b, [rbp-45]
   mov BYTE PTR [rax+40], r12b
-  # [discarded value]: $82.1
+  # [discarded value]: $74.1
   # [discarded value]: variable_value_type.3
   # [discarded value]: variable_value_expression.4
   # [discarded value]: variable_is_external.3
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:r15:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:rax 
-  .loc 7 230 17
-  # $84.1: Int = load_struct_member(self.1, current_alignment)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:r15:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:rax 
+  .loc 7 224 17
+  # $76.1: Int = load_struct_member(self.1, current_alignment)
   mov rbx, [rbp-8]
   mov r14, [rbx+16]
-  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:r15:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:rax $84.1:r14 
-  .loc 7 230 17
-  # $85.1: Boolean = $84.1 == 0
+  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:r15:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:rax $76.1:r14 
+  .loc 7 224 17
+  # $77.1: Boolean = $76.1 == 0
   cmp r14, 0
   sete r13b
-  # [discarded value]: $84.1
-  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:r15:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:rax $85.1:r13 
-  # jump($85.1, .LABEL__parse_statement_254__51, .LABEL__parse_statement_254__52)
+  # [discarded value]: $76.1
+  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:r15:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:rax $77.1:r13 
+  # jump($77.1, .LABEL__parse_statement_254__48, .LABEL__parse_statement_254__49)
   test r13b, r13b
-  mov [rbp-63], rax
-  mov [rbp-64], r13b
-  jz .LABEL__parse_statement_254__52
-.LABEL__parse_statement_254__51:
-  .loc 7 231 17
-  # $86.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
+  mov [rbp-62], rax
+  mov [rbp-63], r13b
+  jz .LABEL__parse_statement_254__49
+.LABEL__parse_statement_254__48:
+  .loc 7 225 17
+  # $78.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
   mov rax, [rbp-8]
   mov rbx, [rax+8]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:[rbp-63] $85.1:[rbp-64] $86.1:rbx 
-  .loc 7 231 17
-  # $87.1: @List = load_struct_member($86.1, global_variables)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:[rbp-62] $77.1:[rbp-63] $78.1:rbx 
+  .loc 7 225 17
+  # $79.1: @List = load_struct_member($78.1, global_variables)
   mov r15, [rbx+16]
-  # [discarded value]: $86.1
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:[rbp-63] $85.1:[rbp-64] $87.1:r15 
-  .loc 7 231 17
-  # call(append_319, $87.1, variable_statement.1)
+  # [discarded value]: $78.1
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:[rbp-62] $77.1:[rbp-63] $79.1:r15 
+  .loc 7 225 17
+  # call(append_319, $79.1, variable_statement.1)
   mov rdi, r15
-  mov rsi, [rbp-63]
+  mov rsi, [rbp-62]
   call append_319
-  # [discarded value]: $87.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:[rbp-63] $85.1:[rbp-64] 
-  # jump(.LABEL__parse_statement_254__52)
-.LABEL__parse_statement_254__52:
-  .loc 7 233 13
+  # [discarded value]: $79.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:[rbp-62] $77.1:[rbp-63] 
+  # jump(.LABEL__parse_statement_254__49)
+.LABEL__parse_statement_254__49:
+  .loc 7 227 13
   # return(variable_statement.1)
-  mov rax, [rbp-63]
+  mov rax, [rbp-62]
   jmp .LABEL__parse_statement_254__end
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:[rbp-63] $85.1:[rbp-64] 
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:[rbp-63] $85.1:[rbp-64] 
-  # [discarded value]: $85.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] variable_statement.1:[rbp-63] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:[rbp-62] $77.1:[rbp-63] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:[rbp-62] $77.1:[rbp-63] 
+  # [discarded value]: $77.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] variable_statement.1:[rbp-62] 
   # [discarded value]: variable_statement.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] 
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_expression.3:[rbp-54] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_expression.3:[rbp-53] 
   # [discarded value]: variable_value_expression.3
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-.LABEL__parse_statement_254__45:
-  .loc 7 213 17
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+.LABEL__parse_statement_254__42:
+  .loc 7 207 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-  .loc 7 214 30
-  # $65.1: @Matcher = load_struct_member(self.1, required_colon)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+  .loc 7 208 30
+  # $57.1: @Matcher = load_struct_member(self.1, required_colon)
   mov rax, [rbp-8]
   mov rbx, [rax+104]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] $65.1:rbx 
-  .loc 7 214 17
-  # $66.1: @Token = call(consume_282, self.1, $65.1)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] $57.1:rbx 
+  .loc 7 208 17
+  # $58.1: @Token = call(consume_282, self.1, $57.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $66.1
-  # [discarded value]: $65.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-  .loc 7 215 17
+  # [discarded value]: $58.1
+  # [discarded value]: $57.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+  .loc 7 209 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-  .loc 7 216 39
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+  .loc 7 210 39
   # variable_value_type.2: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-8]
   call parse_type_265
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:rax:[rbp-37] 
-  .loc 7 217 34
-  # $68.1: @Matcher = load_struct_member(self.1, optional_space)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:rax:[rbp-36] 
+  .loc 7 211 34
+  # $60.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
-  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:rax:[rbp-37] $68.1:r15 
-  .loc 7 217 55
-  # $69.1: @Matcher = load_struct_member(self.1, required_equals)
+  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:rax:[rbp-36] $60.1:r15 
+  .loc 7 211 55
+  # $61.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r14, [rbx+176]
-  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:rax:[rbp-37] $68.1:r15 $69.1:r14 
-  .loc 7 217 21
-  # $70.1: Boolean = call(matches_287, self.1, $68.1, $69.1)
+  # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:rax:[rbp-36] $60.1:r15 $61.1:r14 
+  .loc 7 211 21
+  # $62.1: Boolean = call(matches_287, self.1, $60.1, $61.1)
   mov rdi, rbx
   mov rsi, r15
   mov rdx, r14
-  mov [rbp-37], rax
+  mov [rbp-36], rax
   call matches_287
-  # [discarded value]: $69.1
-  # [discarded value]: $68.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:rax 
-  # jump($70.1, .LABEL__parse_statement_254__46, .LABEL__parse_statement_254__44)
+  # [discarded value]: $61.1
+  # [discarded value]: $60.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:rax 
+  # jump($62.1, .LABEL__parse_statement_254__43, .LABEL__parse_statement_254__41)
   test al, al
-  mov [rbp-56], al
-  jz .LABEL__parse_statement_254__44
-.LABEL__parse_statement_254__46:
-  .loc 7 218 21
+  mov [rbp-55], al
+  jz .LABEL__parse_statement_254__41
+.LABEL__parse_statement_254__43:
+  .loc 7 212 21
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] 
-  .loc 7 219 34
-  # $71.1: @Matcher = load_struct_member(self.1, required_equals)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] 
+  .loc 7 213 34
+  # $63.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $71.1:rbx 
-  .loc 7 219 21
-  # $72.1: @Token = call(consume_282, self.1, $71.1)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $63.1:rbx 
+  .loc 7 213 21
+  # $64.1: @Token = call(consume_282, self.1, $63.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $72.1
-  # [discarded value]: $71.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] 
-  .loc 7 220 21
+  # [discarded value]: $64.1
+  # [discarded value]: $63.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] 
+  .loc 7 214 21
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] 
-  .loc 7 221 38
-  # $73.1: @Matcher = load_struct_member(self.1, required_external)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] 
+  .loc 7 215 38
+  # $65.1: @Matcher = load_struct_member(self.1, required_external)
   mov rax, [rbp-8]
   mov rbx, [rax+200]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $73.1:rbx 
-  .loc 7 221 25
-  # $74.1: Boolean = call(matches_286, self.1, $73.1)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $65.1:rbx 
+  .loc 7 215 25
+  # $66.1: Boolean = call(matches_286, self.1, $65.1)
   mov rdi, rax
   mov rsi, rbx
   call matches_286
-  # [discarded value]: $73.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:rax 
-  # jump($74.1, .LABEL__parse_statement_254__48, .LABEL__parse_statement_254__50)
+  # [discarded value]: $65.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:rax 
+  # jump($66.1, .LABEL__parse_statement_254__45, .LABEL__parse_statement_254__47)
   test al, al
-  mov [rbp-57], al
-  jz .LABEL__parse_statement_254__50
-.LABEL__parse_statement_254__48:
-  .loc 7 222 38
-  # $76.1: @Matcher = load_struct_member(self.1, required_external)
+  mov [rbp-56], al
+  jz .LABEL__parse_statement_254__47
+.LABEL__parse_statement_254__45:
+  .loc 7 216 38
+  # $68.1: @Matcher = load_struct_member(self.1, required_external)
   mov rax, [rbp-8]
   mov rbx, [rax+200]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] $76.1:rbx 
-  .loc 7 222 25
-  # $77.1: @Token = call(consume_282, self.1, $76.1)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] $68.1:rbx 
+  .loc 7 216 25
+  # $69.1: @Token = call(consume_282, self.1, $68.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $77.1
-  # [discarded value]: $76.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] 
-  .loc 7 223 25
+  # [discarded value]: $69.1
+  # [discarded value]: $68.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] 
+  .loc 7 217 25
   # variable_is_external.2: Boolean = true
   mov al, 1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] variable_is_external.2:rax:[rbp-46] 
-  # jump(.LABEL__parse_statement_254__44)
-  mov [rbp-46], al
-  jmp .LABEL__parse_statement_254__44
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] variable_is_external.2:[rbp-46] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] variable_is_external.2:rax:[rbp-45] 
+  # jump(.LABEL__parse_statement_254__41)
+  mov [rbp-45], al
+  jmp .LABEL__parse_statement_254__41
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] variable_is_external.2:[rbp-45] 
   # [discarded value]: variable_is_external.2
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] 
-.LABEL__parse_statement_254__50:
-  .loc 7 225 53
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] 
+.LABEL__parse_statement_254__47:
+  .loc 7 219 53
   # variable_value_expression.2: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] variable_value_expression.2:rax:[rbp-54] 
-  # jump(.LABEL__parse_statement_254__44)
-  mov [rbp-54], rax
-  jmp .LABEL__parse_statement_254__44
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] variable_value_expression.2:[rbp-54] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] variable_value_expression.2:rax:[rbp-53] 
+  # jump(.LABEL__parse_statement_254__41)
+  mov [rbp-53], rax
+  jmp .LABEL__parse_statement_254__41
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] variable_value_expression.2:[rbp-53] 
   # [discarded value]: variable_value_expression.2
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] $74.1:[rbp-57] 
-  # [discarded value]: $74.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] $70.1:[rbp-56] 
-  # [discarded value]: $70.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] variable_value_type.2:[rbp-37] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] $66.1:[rbp-56] 
+  # [discarded value]: $66.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] $62.1:[rbp-55] 
+  # [discarded value]: $62.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] variable_value_type.2:[rbp-36] 
   # [discarded value]: variable_value_type.2
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] $64.1:[rbp-55] 
-  # [discarded value]: $64.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] variable_name.1:[rbp-45] variable_value_type.1:[rbp-37] variable_value_expression.1:[rbp-54] variable_is_external.1:[rbp-46] 
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] $56.1:[rbp-54] 
+  # [discarded value]: $56.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] variable_name.1:[rbp-44] variable_value_type.1:[rbp-36] variable_value_expression.1:[rbp-53] variable_is_external.1:[rbp-45] 
   # [discarded value]: variable_is_external.1
   # [discarded value]: variable_value_expression.1
   # [discarded value]: variable_value_type.1
   # [discarded value]: variable_name.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] 
-.LABEL__parse_statement_254__42:
-  .loc 7 235 15
-  # $88.1: @Source_Location = load_struct_member(expression.1, location)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] 
+.LABEL__parse_statement_254__39:
+  .loc 7 229 15
+  # $80.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-25]
   mov rbx, [rax+8]
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] $88.1:rbx 
-  .loc 7 235 9
-  # call(abort_315, $88.1, "Cannot use expression as variable name")
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] $80.1:rbx 
+  .loc 7 229 9
+  # call(abort_315, $80.1, "Cannot use expression as variable name")
   mov rdi, rbx
-  lea rsi, .LABEL__string_327[rip] # "Cannot use expression as variable name"
+  lea rsi, .LABEL__string_328[rip] # "Cannot use expression as variable name"
   call abort_315
-  # [discarded value]: $88.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $58.1:[rbp-29] 
-  # [discarded value]: $58.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] 
-.LABEL__parse_statement_254__40:
-  .loc 7 238 22
-  # $89.1: @Matcher = load_struct_member(self.1, optional_space)
+  # [discarded value]: $80.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $50.1:[rbp-28] 
+  # [discarded value]: $50.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] 
+.LABEL__parse_statement_254__37:
+  .loc 7 232 22
+  # $81.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $89.1:rbx 
-  .loc 7 238 43
-  # $90.1: @Matcher = load_struct_member(self.1, required_equals)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $81.1:rbx 
+  .loc 7 232 43
+  # $82.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r15, [rax+176]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $89.1:rbx $90.1:r15 
-  .loc 7 238 9
-  # $91.1: Boolean = call(matches_287, self.1, $89.1, $90.1)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $81.1:rbx $82.1:r15 
+  .loc 7 232 9
+  # $83.1: Boolean = call(matches_287, self.1, $81.1, $82.1)
   mov rdi, rax
   mov rsi, rbx
   mov rdx, r15
   call matches_287
-  # [discarded value]: $90.1
-  # [discarded value]: $89.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:rax 
-  # jump($91.1, .LABEL__parse_statement_254__54, .LABEL__parse_statement_254__55)
+  # [discarded value]: $82.1
+  # [discarded value]: $81.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:rax 
+  # jump($83.1, .LABEL__parse_statement_254__51, .LABEL__parse_statement_254__52)
   test al, al
-  mov [rbp-29], al
-  jz .LABEL__parse_statement_254__55
-.LABEL__parse_statement_254__54:
-  .loc 7 239 9
+  mov [rbp-28], al
+  jz .LABEL__parse_statement_254__52
+.LABEL__parse_statement_254__51:
+  .loc 7 233 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] 
-  .loc 7 240 34
-  # $92.1: @Matcher = load_struct_member(self.1, required_equals)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] 
+  .loc 7 234 34
+  # $84.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
-  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] $92.1:rbx 
-  .loc 7 240 21
-  # operator.1: @Other_Token = call(consume_282, self.1, $92.1)
+  # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] $84.1:rbx 
+  .loc 7 234 21
+  # operator.1: @Other_Token = call(consume_282, self.1, $84.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $92.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] operator.1:rax 
-  .loc 7 241 9
+  # [discarded value]: $84.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] operator.1:rax 
+  .loc 7 235 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
-  mov [rbp-37], rax
+  mov [rbp-36], rax
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] operator.1:[rbp-37] 
-  .loc 7 242 56
-  # $95.1: @Source_Location = load_struct_member(expression.1, location)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] operator.1:[rbp-36] 
+  .loc 7 236 56
+  # $87.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-25]
   mov rbx, [rax+8]
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] operator.1:[rbp-37] $95.1:rbx 
-  .loc 7 242 150
-  # $96.1: @AST_Expression = call(parse_expression_266, self.1)
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:rax:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] operator.1:[rbp-36] $87.1:rbx 
+  .loc 7 236 150
+  # $88.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
-  mov [rbp-45], rbx
+  mov [rbp-44], rbx
   call parse_expression_266
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] operator.1:[rbp-37] $95.1:[rbp-45] $96.1:rax 
-  .loc 7 242 16
-  # $97.1: @AST_Assignment_Statement = new AST_Assignment_Statement(object_type = AST_Assignment_Statement, location = $95.1, storage_expression = expression.1, operator = operator.1, value_expression = $96.1)
-  mov [rbp-53], rax
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] operator.1:[rbp-36] $87.1:[rbp-44] $88.1:rax 
+  .loc 7 236 16
+  # $89.1: @AST_Assignment_Statement = new AST_Assignment_Statement(object_type = AST_Assignment_Statement, location = $87.1, storage_expression = expression.1, operator = operator.1, value_expression = $88.1)
+  mov [rbp-52], rax
   mov rdi, 40
   call malloc
   #     .object_type = AST_Assignment_Statement
   mov rbx, AST_Assignment_Statement[rip]
   mov [rax], rbx
-  #     .location = $95.1
-  mov rbx, [rbp-45]
+  #     .location = $87.1
+  mov rbx, [rbp-44]
   mov QWORD PTR [rax+8], rbx
   #     .storage_expression = expression.1
   mov r15, [rbp-25]
   mov QWORD PTR [rax+16], r15
   #     .operator = operator.1
-  mov r14, [rbp-37]
+  mov r14, [rbp-36]
   mov QWORD PTR [rax+24], r14
-  #     .value_expression = $96.1
-  mov r13, [rbp-53]
+  #     .value_expression = $88.1
+  mov r13, [rbp-52]
   mov QWORD PTR [rax+32], r13
-  # [discarded value]: $96.1
-  # [discarded value]: $95.1
+  # [discarded value]: $88.1
+  # [discarded value]: $87.1
   # [discarded value]: operator.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:r15:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] $97.1:rax 
-  .loc 7 242 9
-  # return($97.1)
-  mov [rbp-37], rax
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:r15:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] $89.1:rax 
+  .loc 7 236 9
+  # return($89.1)
+  mov [rbp-36], rax
   jmp .LABEL__parse_statement_254__end
-  # [discarded value]: $97.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] 
-.LABEL__parse_statement_254__55:
-  .loc 7 245 5
+  # [discarded value]: $89.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] 
+.LABEL__parse_statement_254__52:
+  .loc 7 239 5
   # return(null)
   xor rax, rax
   jmp .LABEL__parse_statement_254__end
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] $91.1:[rbp-29] 
-  # [discarded value]: $91.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] $57.1:[rbp-28] 
-  # [discarded value]: $57.1
-  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $50.1:[rbp-27] 
-  # [discarded value]: $50.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] $83.1:[rbp-28] 
+  # [discarded value]: $83.1
+  # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] $49.1:[rbp-27] 
+  # [discarded value]: $49.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] $44.1:[rbp-26] 
   # [discarded value]: $44.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $5.3:[rbp-10] $11.1:[rbp-11] $14.1:[rbp-12] $17.1:[rbp-13] $26.1:[rbp-14] $29.1:[rbp-15] $32.1:[rbp-16] $38.1:[rbp-17] expression.1:[rbp-25] 
@@ -54425,12 +54368,12 @@ parse_statement_254:
   # [discarded value]: $5.3
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] 
 .LABEL__parse_statement_254__5:
-  .loc 7 152 86
+  .loc 7 153 86
   # $6.1: @Matcher = load_struct_member(self.1, required_end_of_file)
   mov rax, [rbp-8]
   mov rbx, [rax+160]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $5.1:[rbp-10] $6.1:rbx 
-  .loc 7 152 73
+  .loc 7 153 73
   # $5.2: Boolean = call(matches_286, self.1, $6.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54458,7 +54401,7 @@ parse_statement_254:
 
 parse_statement_254__stack_frame_size: .word 64
 
-  .loc 7 250 1
+  .loc 7 244 8
   .text
 parse_include_255:
   push rbp
@@ -54468,35 +54411,35 @@ parse_include_255:
 .LABEL__parse_include_255__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 251 30
+  .loc 7 245 30
   # $1.1: @Matcher = load_struct_member(self.1, required_include)
-  mov rax, [rdi+240]
+  mov rax, [rdi+248]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 251 17
+  .loc 7 245 17
   # $2.1: @Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
   call consume_282
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $2.1:rax 
-  .loc 7 251 17
+  .loc 7 245 17
   # location.1: @Source_Location = load_struct_member($2.1, location)
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] location.1:rbx 
-  .loc 7 252 5
+  .loc 7 246 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   mov [rbp-16], rbx
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 253 32
+  .loc 7 247 32
   # $4.1: @Matcher = load_struct_member(self.1, required_string_literal)
   mov rax, [rbp-8]
-  mov rbx, [rax+328]
+  mov rbx, [rax+336]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] $4.1:rbx 
-  .loc 7 253 19
+  .loc 7 247 19
   # $6.1: @String_Token = call(consume_282, self.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54504,12 +54447,12 @@ parse_include_255:
   # [discarded value]: $4.1
   # [discarded value]: self.1
   # [live values]: location.1:[rbp-16] $6.1:rax 
-  .loc 7 253 18
+  .loc 7 247 18
   # file_path.1: @String = load_struct_member($6.1, value)
   mov rbx, [rax+32]
   # [discarded value]: $6.1
   # [live values]: location.1:[rbp-16] file_path.1:rbx 
-  .loc 7 254 12
+  .loc 7 248 12
   # $8.1: @AST_Include_Statement = new AST_Include_Statement(object_type = AST_Include_Statement, location = location.1, file_path = file_path.1)
   mov [rbp-24], rbx
   mov rdi, 24
@@ -54526,7 +54469,7 @@ parse_include_255:
   # [discarded value]: file_path.1
   # [discarded value]: location.1
   # [live values]: $8.1:rax 
-  .loc 7 254 5
+  .loc 7 248 5
   # return($8.1)
   mov [rbp-8], rax
   jmp .LABEL__parse_include_255__end
@@ -54539,7 +54482,7 @@ parse_include_255:
 
 parse_include_255__stack_frame_size: .word 32
 
-  .loc 7 259 1
+  .loc 7 253 8
   .text
 parse_define_256:
   push rbp
@@ -54549,11 +54492,11 @@ parse_define_256:
 .LABEL__parse_define_256__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 260 18
+  .loc 7 254 18
   # $1.1: @Matcher = load_struct_member(self.1, required_define)
   mov rax, [rdi+136]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 260 5
+  .loc 7 254 5
   # $2.1: @Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
@@ -54561,37 +54504,37 @@ parse_define_256:
   # [discarded value]: $2.1
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] 
-  .loc 7 261 5
+  .loc 7 255 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] 
-  .loc 7 262 26
+  .loc 7 256 26
   # $3.1: @Matcher = load_struct_member(self.1, required_identifier)
   mov rax, [rbp-8]
-  mov rbx, [rax+224]
+  mov rbx, [rax+232]
   # [live values]: self.1:rax:[rbp-8] $3.1:rbx 
-  .loc 7 262 13
+  .loc 7 256 13
   # name.1: @Identifier_Token = call(consume_282, self.1, $3.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] name.1:rax 
-  .loc 7 263 5
+  .loc 7 257 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   mov [rbp-16], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] 
-  .loc 7 264 18
+  .loc 7 258 18
   # $6.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] name.1:[rbp-16] $6.1:rbx 
-  .loc 7 264 5
+  .loc 7 258 5
   # $7.1: @Token = call(consume_282, self.1, $6.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54599,26 +54542,26 @@ parse_define_256:
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] 
-  .loc 7 265 5
+  .loc 7 259 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] 
-  .loc 7 266 22
+  .loc 7 260 22
   # $8.1: @Matcher = load_struct_member(self.1, required_unknown)
   mov rax, [rbp-8]
-  mov rbx, [rax+344]
+  mov rbx, [rax+352]
   # [live values]: self.1:rax:[rbp-8] name.1:[rbp-16] $8.1:rbx 
-  .loc 7 266 45
+  .loc 7 260 45
   # $9.1: @Matcher = load_struct_member(self.1, optional_space)
   mov r15, [rax+32]
   # [live values]: self.1:rax:[rbp-8] name.1:[rbp-16] $8.1:rbx $9.1:r15 
-  .loc 7 266 66
+  .loc 7 260 66
   # $10.1: @Matcher = load_struct_member(self.1, required_struct)
-  mov r14, [rax+336]
+  mov r14, [rax+344]
   # [live values]: self.1:rax:[rbp-8] name.1:[rbp-16] $8.1:rbx $9.1:r15 $10.1:r14 
-  .loc 7 266 9
+  .loc 7 260 9
   # $11.1: Boolean = call(matches_288, self.1, $8.1, $9.1, $10.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54634,12 +54577,12 @@ parse_define_256:
   mov [rbp-17], al
   jz .LABEL__parse_define_256__3
 .LABEL__parse_define_256__2:
-  .loc 7 267 22
+  .loc 7 261 22
   # $12.1: @Matcher = load_struct_member(self.1, required_unknown)
   mov rax, [rbp-8]
-  mov rbx, [rax+344]
+  mov rbx, [rax+352]
   # [live values]: self.1:rax:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $12.1:rbx 
-  .loc 7 267 9
+  .loc 7 261 9
   # $13.1: @Token = call(consume_282, self.1, $12.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54647,18 +54590,18 @@ parse_define_256:
   # [discarded value]: $13.1
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] 
-  .loc 7 268 9
+  .loc 7 262 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] 
-  .loc 7 269 22
+  .loc 7 263 22
   # $14.1: @Matcher = load_struct_member(self.1, required_struct)
   mov rax, [rbp-8]
-  mov rbx, [rax+336]
+  mov rbx, [rax+344]
   # [live values]: self.1:rax:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $14.1:rbx 
-  .loc 7 269 9
+  .loc 7 263 9
   # $15.1: @Token = call(consume_282, self.1, $14.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54666,12 +54609,12 @@ parse_define_256:
   # [discarded value]: $15.1
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] 
-  .loc 7 270 63
+  .loc 7 264 63
   # $16.1: @Source_Location = load_struct_member(name.1, location)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] name.1:rax:[rbp-16] $11.1:[rbp-17] $16.1:rbx 
-  .loc 7 270 27
+  .loc 7 264 27
   # type_statement.1: @AST_Struct_Statement = new AST_Struct_Statement(object_type = AST_Struct_Statement, location = $16.1, name = name.1, base_type = null, members = null, init_arguments = null)
   mov [rbp-25], rbx
   mov rdi, 48
@@ -54693,17 +54636,17 @@ parse_define_256:
   mov QWORD PTR [rax+40], 0
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-8] name.1:r15:[rbp-16] $11.1:[rbp-17] type_statement.1:rax 
-  .loc 7 271 9
+  .loc 7 265 9
   # $18.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
   mov rbx, [rbp-8]
   mov r14, [rbx+8]
   # [live values]: self.1:rbx:[rbp-8] name.1:r15:[rbp-16] $11.1:[rbp-17] type_statement.1:rax $18.1:r14 
-  .loc 7 271 9
+  .loc 7 265 9
   # $19.1: @List = load_struct_member($18.1, types)
   mov r13, [r14+8]
   # [discarded value]: $18.1
   # [live values]: self.1:rbx:[rbp-8] name.1:r15:[rbp-16] $11.1:[rbp-17] type_statement.1:rax $19.1:r13 
-  .loc 7 271 9
+  .loc 7 265 9
   # call(append_319, $19.1, type_statement.1)
   mov rdi, r13
   mov rsi, rax
@@ -54711,24 +54654,56 @@ parse_define_256:
   call append_319
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] type_statement.1:[rbp-25] 
-  .loc 7 272 9
+  .loc 7 266 9
   # return(type_statement.1)
   mov rax, [rbp-25]
   jmp .LABEL__parse_define_256__end
   # [discarded value]: type_statement.1
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] 
 .LABEL__parse_define_256__3:
-  .loc 7 274 12
-  # $20.1: @AST_Statement = call(parse_struct_257, self.1, name.1)
+  .loc 7 268 22
+  # $20.1: @Matcher = load_struct_member(self.1, required_struct)
+  mov rax, [rbp-8]
+  mov rbx, [rax+344]
+  # [live values]: self.1:rax:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $20.1:rbx 
+  .loc 7 268 9
+  # $21.1: Boolean = call(matches_286, self.1, $20.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call matches_286
+  # [discarded value]: $20.1
+  # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $21.1:rax 
+  # jump($21.1, .LABEL__parse_define_256__5, .LABEL__parse_define_256__6)
+  test al, al
+  mov [rbp-18], al
+  jz .LABEL__parse_define_256__6
+.LABEL__parse_define_256__5:
+  .loc 7 269 16
+  # $22.1: @AST_Statement = call(parse_struct_257, self.1, name.1)
   mov rdi, [rbp-8]
   mov rsi, [rbp-16]
   call parse_struct_257
-  # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $20.1:rax 
-  .loc 7 274 5
-  # return($20.1)
-  mov [rbp-25], rax
+  # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $21.1:[rbp-18] $22.1:rax 
+  .loc 7 269 9
+  # return($22.1)
+  mov [rbp-26], rax
   jmp .LABEL__parse_define_256__end
-  # [discarded value]: $20.1
+  # [discarded value]: $22.1
+  # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $21.1:[rbp-18] 
+.LABEL__parse_define_256__6:
+  .loc 7 271 12
+  # $23.1: @AST_Statement = call(parse_function_258, self.1, name.1)
+  mov rdi, [rbp-8]
+  mov rsi, [rbp-16]
+  call parse_function_258
+  # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $21.1:[rbp-18] $23.1:rax 
+  .loc 7 271 5
+  # return($23.1)
+  mov [rbp-26], rax
+  jmp .LABEL__parse_define_256__end
+  # [discarded value]: $23.1
+  # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] $21.1:[rbp-18] 
+  # [discarded value]: $21.1
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] $11.1:[rbp-17] 
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] 
@@ -54742,7 +54717,7 @@ parse_define_256:
 
 parse_define_256__stack_frame_size: .word 32
 
-  .loc 7 279 1
+  .loc 7 276 8
   .text
 parse_struct_257:
   push rbp
@@ -54754,7 +54729,7 @@ parse_struct_257:
   # [live values]: self.1:rdi 
   # struct_name.1: @Identifier_Token = load_variable(struct_name)
   # [live values]: self.1:rdi struct_name.1:rsi 
-  .loc 7 280 30
+  .loc 7 277 30
   # struct_init_arguments.1: @List = new List(first_item = null, last_item = null, size = 0)
   mov [rbp-8], rsi
   mov [rbp-16], rdi
@@ -54767,12 +54742,12 @@ parse_struct_257:
   #     .size = 0
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:rax 
-  .loc 7 281 18
+  .loc 7 278 18
   # $2.1: @Matcher = load_struct_member(self.1, required_struct)
   mov rbx, [rbp-16]
-  mov r15, [rbx+336]
+  mov r15, [rbx+344]
   # [live values]: self.1:rbx:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:rax $2.1:r15 
-  .loc 7 281 5
+  .loc 7 278 5
   # $3.1: @Token = call(consume_282, self.1, $2.1)
   mov rdi, rbx
   mov rsi, r15
@@ -54781,18 +54756,18 @@ parse_struct_257:
   # [discarded value]: $3.1
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] 
-  .loc 7 282 5
+  .loc 7 279 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-16]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] 
-  .loc 7 283 18
+  .loc 7 280 18
   # $4.1: @Matcher = load_struct_member(self.1, required_open_brace)
   mov rax, [rbp-16]
-  mov rbx, [rax+280]
+  mov rbx, [rax+288]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] $4.1:rbx 
-  .loc 7 283 5
+  .loc 7 280 5
   # $5.1: @Token = call(consume_282, self.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54800,40 +54775,40 @@ parse_struct_257:
   # [discarded value]: $5.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] 
-  .loc 7 284 5
+  .loc 7 281 5
   # call(consume_end_of_line_279, self.1)
   mov rdi, [rbp-16]
   call consume_end_of_line_279
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] 
-  .loc 7 285 30
+  .loc 7 282 30
   # $6.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] $6.1:rbx 
-  .loc 7 285 30
+  .loc 7 282 30
   # $7.1: Int = $6.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] $7.1:r15 
-  .loc 7 285 5
+  .loc 7 282 5
   # store_struct_member(self.1, current_alignment, $7.1)
   mov QWORD PTR [rax+16], r15
   # [discarded value]: $7.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] 
-  .loc 7 286 5
+  .loc 7 283 5
   # base_type.1: @AST_Type = null
   xor rbx, rbx
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:rbx 
-  .loc 7 287 22
+  .loc 7 284 22
   # $8.1: @Matcher = load_struct_member(self.1, optional_space)
   mov r15, [rax+32]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:rbx $8.1:r15 
-  .loc 7 287 43
+  .loc 7 284 43
   # $9.1: @Matcher = load_struct_member(self.1, required_extends)
   mov r14, [rax+192]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:rbx $8.1:r15 $9.1:r14 
-  .loc 7 287 9
+  .loc 7 284 9
   # $10.1: Boolean = call(matches_287, self.1, $8.1, $9.1)
   mov rdi, rax
   mov rsi, r15
@@ -54848,30 +54823,30 @@ parse_struct_257:
   mov [rbp-33], al
   jz .LABEL__parse_struct_257__3
 .LABEL__parse_struct_257__2:
-  .loc 7 288 28
+  .loc 7 285 28
   # $11.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] $11.1:rbx 
-  .loc 7 288 28
+  .loc 7 285 28
   # $12.1: Int = $11.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $11.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] $12.1:r15 
-  .loc 7 288 9
+  .loc 7 285 9
   # call(consume_space_281, self.1, $12.1)
   mov rdi, rax
   mov rsi, r15
   call consume_space_281
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] 
-  .loc 7 289 22
+  .loc 7 286 22
   # $13.1: @Matcher = load_struct_member(self.1, required_extends)
   mov rax, [rbp-16]
   mov rbx, [rax+192]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] $13.1:rbx 
-  .loc 7 289 9
+  .loc 7 286 9
   # $14.1: @Token = call(consume_282, self.1, $13.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54879,27 +54854,27 @@ parse_struct_257:
   # [discarded value]: $14.1
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] 
-  .loc 7 290 9
+  .loc 7 287 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-16]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] 
-  .loc 7 291 21
+  .loc 7 288 21
   # base_type.2: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-16]
   call parse_type_265
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:rax:[rbp-32] 
-  .loc 7 292 26
+  .loc 7 289 26
   # $16.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-16]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:rax:[rbp-32] $16.1:r15 
-  .loc 7 292 47
+  .loc 7 289 47
   # $17.1: @Matcher = load_struct_member(self.1, required_open_paren)
-  mov r14, [rbx+296]
+  mov r14, [rbx+304]
   # [live values]: self.1:rbx:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:rax:[rbp-32] $16.1:r15 $17.1:r14 
-  .loc 7 292 13
+  .loc 7 289 13
   # $18.1: Boolean = call(matches_287, self.1, $16.1, $17.1)
   mov rdi, rbx
   mov rsi, r15
@@ -54914,18 +54889,18 @@ parse_struct_257:
   mov [rbp-34], al
   jz .LABEL__parse_struct_257__5
 .LABEL__parse_struct_257__4:
-  .loc 7 293 13
+  .loc 7 290 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-16]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] 
-  .loc 7 294 26
+  .loc 7 291 26
   # $19.1: @Matcher = load_struct_member(self.1, required_open_paren)
   mov rax, [rbp-16]
-  mov rbx, [rax+296]
+  mov rbx, [rax+304]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] $19.1:rbx 
-  .loc 7 294 13
+  .loc 7 291 13
   # $20.1: @Token = call(consume_282, self.1, $19.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54933,24 +54908,24 @@ parse_struct_257:
   # [discarded value]: $20.1
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] 
-  .loc 7 295 13
+  .loc 7 292 13
   # call(parse_call_arguments_276, self.1, struct_init_arguments.1)
   mov rdi, [rbp-16]
   mov rsi, [rbp-24]
   call parse_call_arguments_276
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] 
-  .loc 7 296 13
+  .loc 7 293 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-16]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] 
-  .loc 7 297 26
+  .loc 7 294 26
   # $21.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov rax, [rbp-16]
   mov rbx, [rax+96]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] $21.1:rbx 
-  .loc 7 297 13
+  .loc 7 294 13
   # $22.1: @Token = call(consume_282, self.1, $21.1)
   mov rdi, rax
   mov rsi, rbx
@@ -54960,7 +54935,7 @@ parse_struct_257:
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] 
   # jump(.LABEL__parse_struct_257__5)
 .LABEL__parse_struct_257__5:
-  .loc 7 299 9
+  .loc 7 296 9
   # call(consume_end_of_line_279, self.1)
   mov rdi, [rbp-16]
   call consume_end_of_line_279
@@ -54969,7 +54944,7 @@ parse_struct_257:
 .LABEL__parse_struct_257__3:
   # base_type.5: @AST_Type = phi(base_type.1, base_type.2)
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] 
-  .loc 7 301 29
+  .loc 7 298 29
   # struct_members.1: @List = new List(first_item = null, last_item = null, size = 0)
   mov rdi, 24
   call malloc
@@ -54983,16 +54958,16 @@ parse_struct_257:
   # jump(.LABEL__parse_struct_257__6)
   mov [rbp-42], rax
 .LABEL__parse_struct_257__6:
-  .loc 7 302 25
+  .loc 7 299 25
   # $24.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-16]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $24.1:rbx 
-  .loc 7 302 46
+  .loc 7 299 46
   # $25.1: @Matcher = load_struct_member(self.1, required_close_brace)
   mov r15, [rax+80]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $24.1:rbx $25.1:r15 
-  .loc 7 302 12
+  .loc 7 299 12
   # $26.1: Boolean = call(matches_287, self.1, $24.1, $25.1)
   mov rdi, rax
   mov rsi, rbx
@@ -55001,7 +54976,7 @@ parse_struct_257:
   # [discarded value]: $25.1
   # [discarded value]: $24.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $26.1:rax 
-  .loc 7 302 12
+  .loc 7 299 12
   # $27.1: Boolean = $26.1 == false
   cmp al, 0
   sete bl
@@ -55012,49 +54987,49 @@ parse_struct_257:
   mov [rbp-43], bl
   jz .LABEL__parse_struct_257__8
 .LABEL__parse_struct_257__7:
-  .loc 7 303 28
+  .loc 7 300 28
   # $28.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $28.1:rbx 
-  .loc 7 303 28
+  .loc 7 300 28
   # $29.1: Int = $28.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $28.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $29.1:r15 
-  .loc 7 303 9
+  .loc 7 300 9
   # call(consume_space_281, self.1, $29.1)
   mov rdi, rax
   mov rsi, r15
   call consume_space_281
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] 
-  .loc 7 304 44
+  .loc 7 301 44
   # $30.1: @Matcher = load_struct_member(self.1, required_identifier)
   mov rax, [rbp-16]
-  mov rbx, [rax+224]
+  mov rbx, [rax+232]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $30.1:rbx 
-  .loc 7 304 31
+  .loc 7 301 31
   # struct_member_name.1: @Identifier_Token = call(consume_282, self.1, $30.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $30.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:rax 
-  .loc 7 305 9
+  .loc 7 302 9
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-16]
   xor rsi, rsi
   mov [rbp-51], rax
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] 
-  .loc 7 306 22
+  .loc 7 303 22
   # $33.1: @Matcher = load_struct_member(self.1, required_colon)
   mov rax, [rbp-16]
   mov rbx, [rax+104]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] $33.1:rbx 
-  .loc 7 306 9
+  .loc 7 303 9
   # $34.1: @Token = call(consume_282, self.1, $33.1)
   mov rdi, rax
   mov rsi, rbx
@@ -55062,27 +55037,27 @@ parse_struct_257:
   # [discarded value]: $34.1
   # [discarded value]: $33.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] 
-  .loc 7 307 9
+  .loc 7 304 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-16]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] 
-  .loc 7 308 37
+  .loc 7 305 37
   # struct_member_value_type.1: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-16]
   call parse_type_265
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:rax 
-  .loc 7 309 26
+  .loc 7 306 26
   # $36.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-16]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:rax $36.1:r15 
-  .loc 7 309 47
+  .loc 7 306 47
   # $37.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r14, [rbx+176]
   # [live values]: self.1:rbx:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:rax $36.1:r15 $37.1:r14 
-  .loc 7 309 13
+  .loc 7 306 13
   # $38.1: Boolean = call(matches_287, self.1, $36.1, $37.1)
   mov rdi, rbx
   mov rsi, r15
@@ -55097,18 +55072,18 @@ parse_struct_257:
   mov [rbp-60], al
   jz .LABEL__parse_struct_257__10
 .LABEL__parse_struct_257__9:
-  .loc 7 310 13
+  .loc 7 307 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-16]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] 
-  .loc 7 311 26
+  .loc 7 308 26
   # $39.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-16]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] $39.1:rbx 
-  .loc 7 311 13
+  .loc 7 308 13
   # $40.1: @Token = call(consume_282, self.1, $39.1)
   mov rdi, rax
   mov rsi, rbx
@@ -55116,18 +55091,18 @@ parse_struct_257:
   # [discarded value]: $40.1
   # [discarded value]: $39.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] 
-  .loc 7 312 13
+  .loc 7 309 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-16]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] 
-  .loc 7 313 33
+  .loc 7 310 33
   # value_expression.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-16]
   call parse_expression_266
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] value_expression.1:rax 
-  .loc 7 314 42
+  .loc 7 311 42
   # $42.1: @AST_Call_Argument = new AST_Call_Argument(name = struct_member_name.1, value_expression = value_expression.1)
   mov [rbp-68], rax
   mov rdi, 16
@@ -55140,7 +55115,7 @@ parse_struct_257:
   mov QWORD PTR [rax+8], r15
   # [discarded value]: value_expression.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:rbx:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] $42.1:rax 
-  .loc 7 314 13
+  .loc 7 311 13
   # call(append_319, struct_init_arguments.1, $42.1)
   mov rdi, [rbp-24]
   mov rsi, rax
@@ -55149,17 +55124,17 @@ parse_struct_257:
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] 
   # jump(.LABEL__parse_struct_257__10)
 .LABEL__parse_struct_257__10:
-  .loc 7 316 9
+  .loc 7 313 9
   # call(consume_end_of_line_279, self.1)
   mov rdi, [rbp-16]
   call consume_end_of_line_279
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] 
-  .loc 7 317 64
+  .loc 7 314 64
   # $43.1: @Source_Location = load_struct_member(struct_member_name.1, location)
   mov rax, [rbp-51]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:rax:[rbp-51] struct_member_value_type.1:[rbp-59] $38.1:[rbp-60] $43.1:rbx 
-  .loc 7 317 31
+  .loc 7 314 31
   # $44.1: @AST_Struct_Member = new AST_Struct_Member(location = $43.1, name = struct_member_name.1, type = struct_member_value_type.1)
   mov [rbp-68], rbx
   mov rdi, 24
@@ -55176,7 +55151,7 @@ parse_struct_257:
   # [discarded value]: $43.1
   # [discarded value]: struct_member_value_type.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_member_name.1:r15:[rbp-51] $38.1:[rbp-60] $44.1:rax 
-  .loc 7 317 9
+  .loc 7 314 9
   # call(append_319, struct_members.1, $44.1)
   mov rdi, [rbp-42]
   mov rsi, rax
@@ -55192,45 +55167,45 @@ parse_struct_257:
   # [discarded value]: struct_member_name.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] 
 .LABEL__parse_struct_257__8:
-  .loc 7 319 30
+  .loc 7 316 30
   # $45.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $45.1:rbx 
-  .loc 7 319 30
+  .loc 7 316 30
   # $46.1: Int = $45.1 - 1
   mov r15, rbx
   dec r15
   # [discarded value]: $45.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $46.1:r15 
-  .loc 7 319 5
+  .loc 7 316 5
   # store_struct_member(self.1, current_alignment, $46.1)
   mov QWORD PTR [rax+16], r15
   # [discarded value]: $46.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] 
-  .loc 7 320 24
+  .loc 7 317 24
   # $47.1: Int = load_struct_member(self.1, current_alignment)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $47.1:rbx 
-  .loc 7 320 24
+  .loc 7 317 24
   # $48.1: Int = $47.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $47.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $48.1:r15 
-  .loc 7 320 5
+  .loc 7 317 5
   # call(consume_space_281, self.1, $48.1)
   mov rdi, rax
   mov rsi, r15
   call consume_space_281
   # [discarded value]: $48.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] 
-  .loc 7 321 18
+  .loc 7 318 18
   # $49.1: @Matcher = load_struct_member(self.1, required_close_brace)
   mov rax, [rbp-16]
   mov rbx, [rax+80]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $49.1:rbx 
-  .loc 7 321 5
+  .loc 7 318 5
   # $50.1: @Token = call(consume_282, self.1, $49.1)
   mov rdi, rax
   mov rsi, rbx
@@ -55238,12 +55213,12 @@ parse_struct_257:
   # [discarded value]: $50.1
   # [discarded value]: $49.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] 
-  .loc 7 322 61
+  .loc 7 319 61
   # $51.1: @Source_Location = load_struct_member(struct_name.1, location)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] struct_name.1:rax:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $27.1:[rbp-43] $51.1:rbx 
-  .loc 7 322 25
+  .loc 7 319 25
   # struct_statement.1: @AST_Struct_Statement = new AST_Struct_Statement(object_type = AST_Struct_Statement, location = $51.1, name = struct_name.1, base_type = base_type.5, members = struct_members.1, init_arguments = struct_init_arguments.1)
   mov [rbp-51], rbx
   mov rdi, 48
@@ -55269,17 +55244,17 @@ parse_struct_257:
   # [discarded value]: $51.1
   # [discarded value]: base_type.5
   # [live values]: self.1:[rbp-16] struct_name.1:r15:[rbp-8] struct_init_arguments.1:r12:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] struct_members.1:r13:[rbp-42] $27.1:[rbp-43] struct_statement.1:rax 
-  .loc 7 323 5
+  .loc 7 320 5
   # $53.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
   mov rbx, [rbp-16]
   mov r14, [rbx+8]
   # [live values]: self.1:rbx:[rbp-16] struct_name.1:r15:[rbp-8] struct_init_arguments.1:r12:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] struct_members.1:r13:[rbp-42] $27.1:[rbp-43] struct_statement.1:rax $53.1:r14 
-  .loc 7 323 5
+  .loc 7 320 5
   # $54.1: @List = load_struct_member($53.1, types)
   mov r11, [r14+8]
   # [discarded value]: $53.1
   # [live values]: self.1:rbx:[rbp-16] struct_name.1:r15:[rbp-8] struct_init_arguments.1:r12:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] struct_members.1:r13:[rbp-42] $27.1:[rbp-43] struct_statement.1:rax $54.1:r11 
-  .loc 7 323 5
+  .loc 7 320 5
   # call(append_319, $54.1, struct_statement.1)
   mov rdi, r11
   mov rsi, rax
@@ -55287,7 +55262,7 @@ parse_struct_257:
   call append_319
   # [discarded value]: $54.1
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $10.1:[rbp-33] base_type.2:[rbp-32] $18.1:[rbp-34] struct_members.1:[rbp-42] $27.1:[rbp-43] struct_statement.1:[rbp-51] 
-  .loc 7 324 5
+  .loc 7 321 5
   # return(struct_statement.1)
   mov rax, [rbp-51]
   jmp .LABEL__parse_struct_257__end
@@ -55318,7 +55293,7 @@ parse_struct_257:
 
 parse_struct_257__stack_frame_size: .word 80
 
-  .loc 7 329 1
+  .loc 7 326 8
   .text
 parse_function_258:
   push rbp
@@ -55328,165 +55303,126 @@ parse_function_258:
 .LABEL__parse_function_258__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  # name_expression.1: @AST_Expression = load_variable(name_expression)
-  # [live values]: self.1:rdi name_expression.1:rsi 
-  .loc 7 330 9
-  # $1.1: Boolean = call(is_344, name_expression.1, AST_Variable_Expression)
-  mov [rbp-8], rdi
-  mov rdi, rsi
-  mov [rbp-16], rsi
-  mov rsi, AST_Variable_Expression[rip]
-  call is_344
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:rax 
-  # jump($1.1, .LABEL__parse_function_258__2, .LABEL__parse_function_258__3)
-  test al, al
-  mov [rbp-17], al
-  jz .LABEL__parse_function_258__3
-.LABEL__parse_function_258__2:
-  .loc 7 331 27
-  # $2.1: @AST_Variable_Expression = name_expression.1
-  mov rax, [rbp-16]
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] $2.1:rax 
-  .loc 7 331 26
-  # function_name.1: @Identifier_Token = load_struct_member($2.1, name)
-  mov rbx, [rax+16]
-  # [discarded value]: $2.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:rbx 
-  .loc 7 332 26
+  # function_name.1: @Identifier_Token = load_variable(function_name)
+  # [live values]: self.1:rdi function_name.1:rsi 
+  .loc 7 327 22
   # function_type.1: @AST_Function_Type = call(parse_function_type_259, self.1)
-  mov rdi, [rbp-8]
-  mov [rbp-25], rbx
+  mov [rbp-8], rsi
+  mov [rbp-16], rdi
   call parse_function_type_259
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] function_type.1:rax 
-  .loc 7 334 26
-  # $5.1: @Matcher = load_struct_member(self.1, optional_space)
-  mov rbx, [rbp-8]
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] function_type.1:rax 
+  .loc 7 329 22
+  # $2.1: @Matcher = load_struct_member(self.1, optional_space)
+  mov rbx, [rbp-16]
   mov r15, [rbx+32]
-  # [live values]: self.1:rbx:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] function_type.1:rax $5.1:r15 
-  .loc 7 334 47
-  # $6.1: @Matcher = load_struct_member(self.1, required_open_brace)
-  mov r14, [rbx+280]
-  # [live values]: self.1:rbx:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] function_type.1:rax $5.1:r15 $6.1:r14 
-  .loc 7 334 13
-  # $7.1: Boolean = call(matches_287, self.1, $5.1, $6.1)
+  # [live values]: self.1:rbx:[rbp-16] function_name.1:[rbp-8] function_type.1:rax $2.1:r15 
+  .loc 7 329 43
+  # $3.1: @Matcher = load_struct_member(self.1, required_open_brace)
+  mov r14, [rbx+288]
+  # [live values]: self.1:rbx:[rbp-16] function_name.1:[rbp-8] function_type.1:rax $2.1:r15 $3.1:r14 
+  .loc 7 329 9
+  # $4.1: Boolean = call(matches_287, self.1, $2.1, $3.1)
   mov rdi, rbx
   mov rsi, r15
   mov rdx, r14
-  mov [rbp-33], rax
+  mov [rbp-24], rax
   call matches_287
-  # [discarded value]: $6.1
-  # [discarded value]: $5.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] function_type.1:[rbp-33] $7.1:rax 
-  # jump($7.1, .LABEL__parse_function_258__4, .LABEL__parse_function_258__6)
+  # [discarded value]: $3.1
+  # [discarded value]: $2.1
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] function_type.1:[rbp-24] $4.1:rax 
+  # jump($4.1, .LABEL__parse_function_258__2, .LABEL__parse_function_258__4)
   test al, al
-  mov [rbp-34], al
-  jz .LABEL__parse_function_258__6
-.LABEL__parse_function_258__4:
-  .loc 7 335 13
+  mov [rbp-25], al
+  jz .LABEL__parse_function_258__4
+.LABEL__parse_function_258__2:
+  .loc 7 330 9
   # call(consume_space_281, self.1, 1)
-  mov rdi, [rbp-8]
+  mov rdi, [rbp-16]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] function_type.1:[rbp-33] $7.1:[rbp-34] 
-  .loc 7 336 29
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] function_type.1:[rbp-24] $4.1:[rbp-25] 
+  .loc 7 331 25
   # function_body.3: @AST_Block_Statement = call(parse_block_261, self.1)
-  mov rdi, [rbp-8]
+  mov rdi, [rbp-16]
   call parse_block_261
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] function_type.1:[rbp-33] $7.1:[rbp-34] function_body.3:rax 
-  # jump(.LABEL__parse_function_258__5)
-  mov [rbp-42], rax
-.LABEL__parse_function_258__5:
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] function_type.1:[rbp-24] $4.1:[rbp-25] function_body.3:rax 
+  # jump(.LABEL__parse_function_258__3)
+  mov [rbp-33], rax
+.LABEL__parse_function_258__3:
   # function_body.4: @AST_Block_Statement = phi(function_body.2, function_body.3)
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] function_type.1:[rbp-33] $7.1:[rbp-34] function_body.3:[rbp-42] function_body.4:[rbp-42] 
-  .loc 7 340 69
-  # $9.1: @Source_Location = load_struct_member(function_name.1, location)
-  mov rax, [rbp-25]
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] function_type.1:[rbp-24] $4.1:[rbp-25] function_body.3:[rbp-33] function_body.4:[rbp-33] 
+  .loc 7 335 65
+  # $6.1: @Source_Location = load_struct_member(function_name.1, location)
+  mov rax, [rbp-8]
   mov rbx, [rax+16]
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:rax:[rbp-25] function_type.1:[rbp-33] $7.1:[rbp-34] function_body.3:[rbp-42] function_body.4:[rbp-42] $9.1:rbx 
-  .loc 7 340 31
-  # function_statement.1: @AST_Function_Statement = new AST_Function_Statement(object_type = AST_Function_Statement, location = $9.1, name = function_name.1, type = function_type.1, body = function_body.4, ir_function = null)
-  mov [rbp-50], rbx
+  # [live values]: self.1:[rbp-16] function_name.1:rax:[rbp-8] function_type.1:[rbp-24] $4.1:[rbp-25] function_body.3:[rbp-33] function_body.4:[rbp-33] $6.1:rbx 
+  .loc 7 335 27
+  # function_statement.1: @AST_Function_Statement = new AST_Function_Statement(object_type = AST_Function_Statement, location = $6.1, name = function_name.1, type = function_type.1, body = function_body.4, ir_function = null)
+  mov [rbp-41], rbx
   mov rdi, 48
   call malloc
   #     .object_type = AST_Function_Statement
   mov rbx, AST_Function_Statement[rip]
   mov [rax], rbx
-  #     .location = $9.1
-  mov rbx, [rbp-50]
+  #     .location = $6.1
+  mov rbx, [rbp-41]
   mov QWORD PTR [rax+8], rbx
   #     .name = function_name.1
-  mov r15, [rbp-25]
+  mov r15, [rbp-8]
   mov QWORD PTR [rax+16], r15
   #     .type = function_type.1
-  mov r14, [rbp-33]
+  mov r14, [rbp-24]
   mov QWORD PTR [rax+24], r14
   #     .body = function_body.4
-  mov r13, [rbp-42]
+  mov r13, [rbp-33]
   mov QWORD PTR [rax+32], r13
   #     .ir_function = null
   mov QWORD PTR [rax+40], 0
-  # [discarded value]: $9.1
+  # [discarded value]: $6.1
   # [discarded value]: function_body.4
   # [discarded value]: function_type.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:r15:[rbp-25] $7.1:[rbp-34] function_body.3:[rbp-42] function_statement.1:rax 
-  .loc 7 341 9
-  # $11.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
-  mov rbx, [rbp-8]
+  # [live values]: self.1:[rbp-16] function_name.1:r15:[rbp-8] $4.1:[rbp-25] function_body.3:[rbp-33] function_statement.1:rax 
+  .loc 7 336 5
+  # $8.1: @Compilation_Unit = load_struct_member(self.1, compilation_unit)
+  mov rbx, [rbp-16]
   mov r14, [rbx+8]
-  # [live values]: self.1:rbx:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:r15:[rbp-25] $7.1:[rbp-34] function_body.3:[rbp-42] function_statement.1:rax $11.1:r14 
-  .loc 7 341 9
-  # $12.1: @List = load_struct_member($11.1, functions)
+  # [live values]: self.1:rbx:[rbp-16] function_name.1:r15:[rbp-8] $4.1:[rbp-25] function_body.3:[rbp-33] function_statement.1:rax $8.1:r14 
+  .loc 7 336 5
+  # $9.1: @List = load_struct_member($8.1, functions)
   mov r13, [r14+24]
-  # [discarded value]: $11.1
-  # [live values]: self.1:rbx:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:r15:[rbp-25] $7.1:[rbp-34] function_body.3:[rbp-42] function_statement.1:rax $12.1:r13 
-  .loc 7 341 9
-  # call(append_319, $12.1, function_statement.1)
+  # [discarded value]: $8.1
+  # [live values]: self.1:rbx:[rbp-16] function_name.1:r15:[rbp-8] $4.1:[rbp-25] function_body.3:[rbp-33] function_statement.1:rax $9.1:r13 
+  .loc 7 336 5
+  # call(append_319, $9.1, function_statement.1)
   mov rdi, r13
   mov rsi, rax
-  mov [rbp-50], rax
+  mov [rbp-41], rax
   call append_319
-  # [discarded value]: $12.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] $7.1:[rbp-34] function_body.3:[rbp-42] function_statement.1:[rbp-50] 
-  .loc 7 342 9
+  # [discarded value]: $9.1
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] $4.1:[rbp-25] function_body.3:[rbp-33] function_statement.1:[rbp-41] 
+  .loc 7 337 5
   # return(function_statement.1)
-  mov rax, [rbp-50]
+  mov rax, [rbp-41]
   jmp .LABEL__parse_function_258__end
   # [discarded value]: function_statement.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] $7.1:[rbp-34] function_body.3:[rbp-42] 
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] $7.1:[rbp-34] function_body.3:[rbp-42] 
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] $4.1:[rbp-25] function_body.3:[rbp-33] 
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] $4.1:[rbp-25] function_body.3:[rbp-33] 
   # [discarded value]: function_body.3
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] $7.1:[rbp-34] 
-.LABEL__parse_function_258__6:
-  .loc 7 338 13
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] $4.1:[rbp-25] 
+.LABEL__parse_function_258__4:
+  .loc 7 333 9
   # function_body.2: @AST_Block_Statement = null
   xor rax, rax
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] $7.1:[rbp-34] function_body.2:rax:[rbp-42] 
-  # jump(.LABEL__parse_function_258__5)
-  mov [rbp-42], rax
-  jmp .LABEL__parse_function_258__5
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] $7.1:[rbp-34] function_body.2:[rbp-42] 
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] $4.1:[rbp-25] function_body.2:rax:[rbp-33] 
+  # jump(.LABEL__parse_function_258__3)
+  mov [rbp-33], rax
+  jmp .LABEL__parse_function_258__3
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] $4.1:[rbp-25] function_body.2:[rbp-33] 
   # [discarded value]: function_body.2
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] $7.1:[rbp-34] 
-  # [discarded value]: $7.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] function_name.1:[rbp-25] 
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] $4.1:[rbp-25] 
+  # [discarded value]: $4.1
+  # [live values]: self.1:[rbp-16] function_name.1:[rbp-8] 
   # [discarded value]: function_name.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] 
-.LABEL__parse_function_258__3:
-  .loc 7 344 11
-  # $13.1: @Source_Location = load_struct_member(name_expression.1, location)
-  mov rax, [rbp-16]
-  mov rbx, [rax+8]
-  # [live values]: self.1:[rbp-8] name_expression.1:rax:[rbp-16] $1.1:[rbp-17] $13.1:rbx 
-  .loc 7 344 5
-  # call(abort_315, $13.1, "Cannot use expression as function name")
-  mov rdi, rbx
-  lea rsi, .LABEL__string_328[rip] # "Cannot use expression as function name"
-  call abort_315
-  # [discarded value]: $13.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] $1.1:[rbp-17] 
-  # [discarded value]: $1.1
-  # [live values]: self.1:[rbp-8] name_expression.1:[rbp-16] 
-  # [discarded value]: name_expression.1
   # [discarded value]: self.1
   # [live values]: 
 .LABEL__parse_function_258__end:
@@ -55494,9 +55430,9 @@ parse_function_258:
   pop rbp
   ret
 
-parse_function_258__stack_frame_size: .word 64
+parse_function_258__stack_frame_size: .word 48
 
-  .loc 7 349 1
+  .loc 7 342 8
   .text
 parse_function_type_259:
   push rbp
@@ -55506,30 +55442,49 @@ parse_function_type_259:
 .LABEL__parse_function_type_259__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 350 30
-  # $1.1: @Matcher = load_struct_member(self.1, required_open_paren)
-  mov rax, [rdi+296]
+  .loc 7 343 30
+  # $1.1: @Matcher = load_struct_member(self.1, required_func)
+  mov rax, [rdi+208]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 350 17
+  .loc 7 343 17
   # $2.1: @Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
   call consume_282
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $2.1:rax 
-  .loc 7 350 17
+  .loc 7 343 17
   # location.1: @Source_Location = load_struct_member($2.1, location)
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] location.1:rbx 
-  .loc 7 351 5
-  # call(consume_space_281, self.1, 0)
+  .loc 7 344 5
+  # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
-  xor rsi, rsi
+  mov rsi, 1
   mov [rbp-16], rbx
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 352 28
+  .loc 7 345 18
+  # $4.1: @Matcher = load_struct_member(self.1, required_open_paren)
+  mov rax, [rbp-8]
+  mov rbx, [rax+304]
+  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] $4.1:rbx 
+  .loc 7 345 5
+  # $5.1: @Token = call(consume_282, self.1, $4.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call consume_282
+  # [discarded value]: $5.1
+  # [discarded value]: $4.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
+  .loc 7 346 5
+  # call(consume_space_281, self.1, 0)
+  mov rdi, [rbp-8]
+  xor rsi, rsi
+  call consume_space_281
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
+  .loc 7 347 28
   # function_parameters.1: @List = new List(first_item = null, last_item = null, size = 0)
   mov rdi, 24
   call malloc
@@ -55540,165 +55495,165 @@ parse_function_type_259:
   #     .size = 0
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:rax 
-  .loc 7 353 22
-  # $5.1: @Matcher = load_struct_member(self.1, required_close_paren)
+  .loc 7 348 22
+  # $7.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov rbx, [rbp-8]
   mov r15, [rbx+96]
-  # [live values]: self.1:rbx:[rbp-8] location.1:[rbp-16] function_parameters.1:rax $5.1:r15 
-  .loc 7 353 9
-  # $6.1: Boolean = call(matches_286, self.1, $5.1)
+  # [live values]: self.1:rbx:[rbp-8] location.1:[rbp-16] function_parameters.1:rax $7.1:r15 
+  .loc 7 348 9
+  # $8.1: Boolean = call(matches_286, self.1, $7.1)
   mov rdi, rbx
   mov rsi, r15
   mov [rbp-24], rax
   call matches_286
-  # [discarded value]: $5.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $6.1:rax 
-  .loc 7 353 9
-  # $7.1: Boolean = $6.1 == false
+  # [discarded value]: $7.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $8.1:rax 
+  .loc 7 348 9
+  # $9.1: Boolean = $8.1 == false
   cmp al, 0
   sete bl
-  # [discarded value]: $6.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:rbx 
-  # jump($7.1, .LABEL__parse_function_type_259__2, .LABEL__parse_function_type_259__3)
+  # [discarded value]: $8.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:rbx 
+  # jump($9.1, .LABEL__parse_function_type_259__2, .LABEL__parse_function_type_259__3)
   test bl, bl
   mov [rbp-25], bl
   jz .LABEL__parse_function_type_259__3
 .LABEL__parse_function_type_259__2:
-  .loc 7 354 36
-  # $8.1: @AST_Function_Parameter = call(parse_function_parameter_260, self.1)
+  .loc 7 349 36
+  # $10.1: @AST_Function_Parameter = call(parse_function_parameter_260, self.1)
   mov rdi, [rbp-8]
   call parse_function_parameter_260
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $8.1:rax 
-  .loc 7 354 9
-  # call(append_319, function_parameters.1, $8.1)
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $10.1:rax 
+  .loc 7 349 9
+  # call(append_319, function_parameters.1, $10.1)
   mov rdi, [rbp-24]
   mov rsi, rax
   call append_319
-  # [discarded value]: $8.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] 
+  # [discarded value]: $10.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] 
   # jump(.LABEL__parse_function_type_259__4)
 .LABEL__parse_function_type_259__4:
-  .loc 7 355 29
-  # $9.1: @Matcher = load_struct_member(self.1, optional_space)
+  .loc 7 350 29
+  # $11.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
-  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $9.1:rbx 
-  .loc 7 355 50
-  # $10.1: @Matcher = load_struct_member(self.1, required_close_paren)
+  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $11.1:rbx 
+  .loc 7 350 50
+  # $12.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov r15, [rax+96]
-  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $9.1:rbx $10.1:r15 
-  .loc 7 355 16
-  # $11.1: Boolean = call(matches_287, self.1, $9.1, $10.1)
+  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $11.1:rbx $12.1:r15 
+  .loc 7 350 16
+  # $13.1: Boolean = call(matches_287, self.1, $11.1, $12.1)
   mov rdi, rax
   mov rsi, rbx
   mov rdx, r15
   call matches_287
-  # [discarded value]: $10.1
-  # [discarded value]: $9.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $11.1:rax 
-  .loc 7 355 16
-  # $12.1: Boolean = $11.1 == false
+  # [discarded value]: $12.1
+  # [discarded value]: $11.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $13.1:rax 
+  .loc 7 350 16
+  # $14.1: Boolean = $13.1 == false
   cmp al, 0
   sete bl
-  # [discarded value]: $11.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:rbx 
-  # jump($12.1, .LABEL__parse_function_type_259__5, .LABEL__parse_function_type_259__3)
+  # [discarded value]: $13.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:rbx 
+  # jump($14.1, .LABEL__parse_function_type_259__5, .LABEL__parse_function_type_259__3)
   test bl, bl
   mov [rbp-26], bl
   jz .LABEL__parse_function_type_259__3
 .LABEL__parse_function_type_259__5:
-  .loc 7 356 13
+  .loc 7 351 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  .loc 7 357 26
-  # $13.1: @Matcher = load_struct_member(self.1, required_comma)
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  .loc 7 352 26
+  # $15.1: @Matcher = load_struct_member(self.1, required_comma)
   mov rax, [rbp-8]
   mov rbx, [rax+120]
-  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] $13.1:rbx 
-  .loc 7 357 13
-  # $14.1: @Token = call(consume_282, self.1, $13.1)
+  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] $15.1:rbx 
+  .loc 7 352 13
+  # $16.1: @Token = call(consume_282, self.1, $15.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $14.1
-  # [discarded value]: $13.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  .loc 7 358 13
+  # [discarded value]: $16.1
+  # [discarded value]: $15.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  .loc 7 353 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  .loc 7 359 40
-  # $15.1: @AST_Function_Parameter = call(parse_function_parameter_260, self.1)
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  .loc 7 354 40
+  # $17.1: @AST_Function_Parameter = call(parse_function_parameter_260, self.1)
   mov rdi, [rbp-8]
   call parse_function_parameter_260
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] $15.1:rax 
-  .loc 7 359 13
-  # call(append_319, function_parameters.1, $15.1)
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] $17.1:rax 
+  .loc 7 354 13
+  # call(append_319, function_parameters.1, $17.1)
   mov rdi, [rbp-24]
   mov rsi, rax
   call append_319
-  # [discarded value]: $15.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
+  # [discarded value]: $17.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
   # jump(.LABEL__parse_function_type_259__4)
   jmp .LABEL__parse_function_type_259__4
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
 .LABEL__parse_function_type_259__3:
-  .loc 7 362 18
-  # $16.1: @Matcher = load_struct_member(self.1, required_close_paren)
+  .loc 7 357 18
+  # $18.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov rax, [rbp-8]
   mov rbx, [rax+96]
-  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $16.1:rbx $12.1:[rbp-26] 
-  .loc 7 362 5
-  # $17.1: @Token = call(consume_282, self.1, $16.1)
+  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $18.1:rbx $14.1:[rbp-26] 
+  .loc 7 357 5
+  # $19.1: @Token = call(consume_282, self.1, $18.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $17.1
-  # [discarded value]: $16.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  .loc 7 363 5
+  # [discarded value]: $19.1
+  # [discarded value]: $18.1
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  .loc 7 358 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  .loc 7 364 18
-  # $18.1: @Matcher = load_struct_member(self.1, required_hyphen)
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  .loc 7 359 18
+  # $20.1: @Matcher = load_struct_member(self.1, required_hyphen)
   mov rax, [rbp-8]
-  mov rbx, [rax+216]
-  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $18.1:rbx $12.1:[rbp-26] 
-  .loc 7 364 40
-  # $19.1: @Matcher = load_struct_member(self.1, required_greater_than)
-  mov r15, [rax+208]
-  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $18.1:rbx $19.1:r15 $12.1:[rbp-26] 
-  .loc 7 364 5
-  # $20.1: @Token = call(consume_283, self.1, $18.1, $19.1)
+  mov rbx, [rax+224]
+  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $20.1:rbx $14.1:[rbp-26] 
+  .loc 7 359 40
+  # $21.1: @Matcher = load_struct_member(self.1, required_greater_than)
+  mov r15, [rax+216]
+  # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $20.1:rbx $21.1:r15 $14.1:[rbp-26] 
+  .loc 7 359 5
+  # $22.1: @Token = call(consume_283, self.1, $20.1, $21.1)
   mov rdi, rax
   mov rsi, rbx
   mov rdx, r15
   call consume_283
+  # [discarded value]: $22.1
+  # [discarded value]: $21.1
   # [discarded value]: $20.1
-  # [discarded value]: $19.1
-  # [discarded value]: $18.1
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  .loc 7 365 5
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  .loc 7 360 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  .loc 7 366 29
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  .loc 7 361 29
   # function_return_type.1: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-8]
   call parse_type_265
-  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $7.1:[rbp-25] function_return_type.1:rax $12.1:[rbp-26] 
-  .loc 7 367 12
-  # $22.1: @AST_Function_Type = new AST_Function_Type(object_type = AST_Function_Type, location = location.1, parameters = function_parameters.1, return_type = function_return_type.1)
+  # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $9.1:[rbp-25] function_return_type.1:rax $14.1:[rbp-26] 
+  .loc 7 362 12
+  # $24.1: @AST_Function_Type = new AST_Function_Type(object_type = AST_Function_Type, location = location.1, parameters = function_parameters.1, return_type = function_return_type.1)
   mov [rbp-34], rax
   mov rdi, 32
   call malloc
@@ -55716,17 +55671,17 @@ parse_function_type_259:
   mov QWORD PTR [rax+24], r14
   # [discarded value]: function_return_type.1
   # [discarded value]: location.1
-  # [live values]: self.1:[rbp-8] function_parameters.1:r15:[rbp-24] $7.1:[rbp-25] $22.1:rax $12.1:[rbp-26] 
-  .loc 7 367 5
-  # return($22.1)
+  # [live values]: self.1:[rbp-8] function_parameters.1:r15:[rbp-24] $9.1:[rbp-25] $24.1:rax $14.1:[rbp-26] 
+  .loc 7 362 5
+  # return($24.1)
   mov [rbp-34], rax
   jmp .LABEL__parse_function_type_259__end
-  # [discarded value]: $22.1
-  # [live values]: self.1:[rbp-8] function_parameters.1:[rbp-24] $7.1:[rbp-25] $12.1:[rbp-26] 
-  # [discarded value]: $12.1
-  # [live values]: self.1:[rbp-8] function_parameters.1:[rbp-24] $7.1:[rbp-25] 
-  # [live values]: self.1:[rbp-8] function_parameters.1:[rbp-24] $7.1:[rbp-25] 
-  # [discarded value]: $7.1
+  # [discarded value]: $24.1
+  # [live values]: self.1:[rbp-8] function_parameters.1:[rbp-24] $9.1:[rbp-25] $14.1:[rbp-26] 
+  # [discarded value]: $14.1
+  # [live values]: self.1:[rbp-8] function_parameters.1:[rbp-24] $9.1:[rbp-25] 
+  # [live values]: self.1:[rbp-8] function_parameters.1:[rbp-24] $9.1:[rbp-25] 
+  # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] function_parameters.1:[rbp-24] 
   # [discarded value]: function_parameters.1
   # [discarded value]: self.1
@@ -55738,7 +55693,7 @@ parse_function_type_259:
 
 parse_function_type_259__stack_frame_size: .word 48
 
-  .loc 7 372 1
+  .loc 7 367 8
   .text
 parse_function_parameter_260:
   push rbp
@@ -55748,30 +55703,30 @@ parse_function_parameter_260:
 .LABEL__parse_function_parameter_260__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 373 36
+  .loc 7 368 36
   # $1.1: @Matcher = load_struct_member(self.1, required_identifier)
-  mov rax, [rdi+224]
+  mov rax, [rdi+232]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 373 23
+  .loc 7 368 23
   # parameter_name.1: @Identifier_Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
   call consume_282
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] parameter_name.1:rax 
-  .loc 7 374 5
+  .loc 7 369 5
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   mov [rbp-16], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] parameter_name.1:[rbp-16] 
-  .loc 7 375 18
+  .loc 7 370 18
   # $4.1: @Matcher = load_struct_member(self.1, required_colon)
   mov rax, [rbp-8]
   mov rbx, [rax+104]
   # [live values]: self.1:rax:[rbp-8] parameter_name.1:[rbp-16] $4.1:rbx 
-  .loc 7 375 5
+  .loc 7 370 5
   # $5.1: @Token = call(consume_282, self.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -55779,24 +55734,24 @@ parse_function_parameter_260:
   # [discarded value]: $5.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] parameter_name.1:[rbp-16] 
-  .loc 7 376 5
+  .loc 7 371 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] parameter_name.1:[rbp-16] 
-  .loc 7 377 23
+  .loc 7 372 23
   # parameter_type.1: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-8]
   call parse_type_265
   # [discarded value]: self.1
   # [live values]: parameter_name.1:[rbp-16] parameter_type.1:rax 
-  .loc 7 378 50
+  .loc 7 373 50
   # $7.1: @Source_Location = load_struct_member(parameter_name.1, location)
   mov rbx, [rbp-16]
   mov r15, [rbx+16]
   # [live values]: parameter_name.1:rbx:[rbp-16] parameter_type.1:rax $7.1:r15 
-  .loc 7 378 12
+  .loc 7 373 12
   # $8.1: @AST_Function_Parameter = new AST_Function_Parameter(location = $7.1, name = parameter_name.1, type = parameter_type.1)
   mov [rbp-24], rax
   mov [rbp-32], r15
@@ -55815,7 +55770,7 @@ parse_function_parameter_260:
   # [discarded value]: parameter_type.1
   # [discarded value]: parameter_name.1
   # [live values]: $8.1:rax 
-  .loc 7 378 5
+  .loc 7 373 5
   # return($8.1)
   mov [rbp-8], rax
   jmp .LABEL__parse_function_parameter_260__end
@@ -55828,7 +55783,7 @@ parse_function_parameter_260:
 
 parse_function_parameter_260__stack_frame_size: .word 32
 
-  .loc 7 383 1
+  .loc 7 378 8
   .text
 parse_block_261:
   push rbp
@@ -55838,45 +55793,45 @@ parse_block_261:
 .LABEL__parse_block_261__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 384 30
+  .loc 7 379 30
   # $1.1: @Matcher = load_struct_member(self.1, required_open_brace)
-  mov rax, [rdi+280]
+  mov rax, [rdi+288]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 384 17
+  .loc 7 379 17
   # $2.1: @Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
   call consume_282
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $2.1:rax 
-  .loc 7 384 17
+  .loc 7 379 17
   # location.1: @Source_Location = load_struct_member($2.1, location)
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] location.1:rbx 
-  .loc 7 385 5
+  .loc 7 380 5
   # call(consume_end_of_line_279, self.1)
   mov rdi, [rbp-8]
   mov [rbp-16], rbx
   call consume_end_of_line_279
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 386 30
+  .loc 7 381 30
   # $4.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] $4.1:rbx 
-  .loc 7 386 30
+  .loc 7 381 30
   # $5.1: Int = $4.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $4.1
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] $5.1:r15 
-  .loc 7 386 5
+  .loc 7 381 5
   # store_struct_member(self.1, current_alignment, $5.1)
   mov QWORD PTR [rax+16], r15
   # [discarded value]: $5.1
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] 
-  .loc 7 387 19
+  .loc 7 382 19
   # statements.1: @List = new List(first_item = null, last_item = null, size = 0)
   mov rdi, 24
   call malloc
@@ -55887,52 +55842,52 @@ parse_block_261:
   #     .size = 0
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] statements.1:rax 
-  .loc 7 388 5
+  .loc 7 383 5
   # call(parse_statements_252, self.1, statements.1)
   mov rdi, [rbp-8]
   mov rsi, rax
   mov [rbp-24], rax
   call parse_statements_252
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] 
-  .loc 7 389 30
+  .loc 7 384 30
   # $7.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] $7.1:rbx 
-  .loc 7 389 30
+  .loc 7 384 30
   # $8.1: Int = $7.1 - 1
   mov r15, rbx
   dec r15
   # [discarded value]: $7.1
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] $8.1:r15 
-  .loc 7 389 5
+  .loc 7 384 5
   # store_struct_member(self.1, current_alignment, $8.1)
   mov QWORD PTR [rax+16], r15
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] 
-  .loc 7 390 24
+  .loc 7 385 24
   # $9.1: Int = load_struct_member(self.1, current_alignment)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] $9.1:rbx 
-  .loc 7 390 24
+  .loc 7 385 24
   # $10.1: Int = $9.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $9.1
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] $10.1:r15 
-  .loc 7 390 5
+  .loc 7 385 5
   # call(consume_space_281, self.1, $10.1)
   mov rdi, rax
   mov rsi, r15
   call consume_space_281
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] 
-  .loc 7 391 18
+  .loc 7 386 18
   # $11.1: @Matcher = load_struct_member(self.1, required_close_brace)
   mov rax, [rbp-8]
   mov rbx, [rax+80]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] $11.1:rbx 
-  .loc 7 391 5
+  .loc 7 386 5
   # $12.1: @Token = call(consume_282, self.1, $11.1)
   mov rdi, rax
   mov rsi, rbx
@@ -55941,7 +55896,7 @@ parse_block_261:
   # [discarded value]: $11.1
   # [discarded value]: self.1
   # [live values]: location.1:[rbp-16] statements.1:[rbp-24] 
-  .loc 7 392 12
+  .loc 7 387 12
   # $13.1: @AST_Block_Statement = new AST_Block_Statement(object_type = AST_Block_Statement, location = location.1, statements = statements.1)
   mov rdi, 24
   call malloc
@@ -55957,7 +55912,7 @@ parse_block_261:
   # [discarded value]: statements.1
   # [discarded value]: location.1
   # [live values]: $13.1:rax 
-  .loc 7 392 5
+  .loc 7 387 5
   # return($13.1)
   mov [rbp-8], rax
   jmp .LABEL__parse_block_261__end
@@ -55970,7 +55925,7 @@ parse_block_261:
 
 parse_block_261__stack_frame_size: .word 32
 
-  .loc 7 397 1
+  .loc 7 392 8
   .text
 parse_if_262:
   push rbp
@@ -55980,35 +55935,35 @@ parse_if_262:
 .LABEL__parse_if_262__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 398 30
+  .loc 7 393 30
   # $1.1: @Matcher = load_struct_member(self.1, required_if)
-  mov rax, [rdi+232]
+  mov rax, [rdi+240]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 398 17
+  .loc 7 393 17
   # $2.1: @Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
   call consume_282
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $2.1:rax 
-  .loc 7 398 17
+  .loc 7 393 17
   # location.1: @Source_Location = load_struct_member($2.1, location)
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] location.1:rbx 
-  .loc 7 399 5
+  .loc 7 394 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   mov [rbp-16], rbx
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 400 18
+  .loc 7 395 18
   # $4.1: @Matcher = load_struct_member(self.1, required_open_paren)
   mov rax, [rbp-8]
-  mov rbx, [rax+296]
+  mov rbx, [rax+304]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] $4.1:rbx 
-  .loc 7 400 5
+  .loc 7 395 5
   # $5.1: @Token = call(consume_282, self.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56016,30 +55971,30 @@ parse_if_262:
   # [discarded value]: $5.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 401 5
+  .loc 7 396 5
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 402 29
+  .loc 7 397 29
   # condition_expression.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:rax 
-  .loc 7 403 5
+  .loc 7 398 5
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   mov [rbp-24], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] 
-  .loc 7 404 18
+  .loc 7 399 18
   # $7.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov rax, [rbp-8]
   mov rbx, [rax+96]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] $7.1:rbx 
-  .loc 7 404 5
+  .loc 7 399 5
   # $8.1: @Token = call(consume_282, self.1, $7.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56047,31 +56002,31 @@ parse_if_262:
   # [discarded value]: $8.1
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] 
-  .loc 7 405 5
+  .loc 7 400 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] 
-  .loc 7 406 23
+  .loc 7 401 23
   # true_statement.1: @AST_Block_Statement = call(parse_block_261, self.1)
   mov rdi, [rbp-8]
   call parse_block_261
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:rax 
-  .loc 7 407 5
+  .loc 7 402 5
   # false_statement.1: @AST_Statement = null
   xor rbx, rbx
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:rax false_statement.1:rbx 
-  .loc 7 408 22
+  .loc 7 403 22
   # $10.1: @Matcher = load_struct_member(self.1, optional_space)
   mov r15, [rbp-8]
   mov r14, [r15+32]
   # [live values]: self.1:r15:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:rax false_statement.1:rbx $10.1:r14 
-  .loc 7 408 43
+  .loc 7 403 43
   # $11.1: @Matcher = load_struct_member(self.1, required_else)
   mov r13, [r15+152]
   # [live values]: self.1:r15:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:rax false_statement.1:rbx $10.1:r14 $11.1:r13 
-  .loc 7 408 9
+  .loc 7 403 9
   # $12.1: Boolean = call(matches_287, self.1, $10.1, $11.1)
   mov rdi, r15
   mov rsi, r14
@@ -56087,18 +56042,18 @@ parse_if_262:
   mov [rbp-41], al
   jz .LABEL__parse_if_262__3
 .LABEL__parse_if_262__2:
-  .loc 7 409 9
+  .loc 7 404 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:[rbp-32] false_statement.1:[rbp-40] $12.1:[rbp-41] 
-  .loc 7 410 22
+  .loc 7 405 22
   # $13.1: @Matcher = load_struct_member(self.1, required_else)
   mov rax, [rbp-8]
   mov rbx, [rax+152]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:[rbp-32] false_statement.1:[rbp-40] $12.1:[rbp-41] $13.1:rbx 
-  .loc 7 410 9
+  .loc 7 405 9
   # $14.1: @Token = call(consume_282, self.1, $13.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56106,18 +56061,18 @@ parse_if_262:
   # [discarded value]: $14.1
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:[rbp-32] false_statement.1:[rbp-40] $12.1:[rbp-41] 
-  .loc 7 411 9
+  .loc 7 406 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:[rbp-32] false_statement.1:[rbp-40] $12.1:[rbp-41] 
-  .loc 7 412 26
+  .loc 7 407 26
   # $15.1: @Matcher = load_struct_member(self.1, required_if)
   mov rax, [rbp-8]
-  mov rbx, [rax+232]
+  mov rbx, [rax+240]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:[rbp-32] false_statement.1:[rbp-40] $12.1:[rbp-41] $15.1:rbx 
-  .loc 7 412 13
+  .loc 7 407 13
   # $16.1: Boolean = call(matches_286, self.1, $15.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56129,7 +56084,7 @@ parse_if_262:
   mov [rbp-42], al
   jz .LABEL__parse_if_262__6
 .LABEL__parse_if_262__4:
-  .loc 7 413 31
+  .loc 7 408 31
   # false_statement.3: @AST_Statement = call(parse_if_262, self.1)
   mov rdi, [rbp-8]
   call parse_if_262
@@ -56139,7 +56094,7 @@ parse_if_262:
 .LABEL__parse_if_262__3:
   # false_statement.4: @AST_Statement = phi(false_statement.1, false_statement.3, false_statement.2)
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:[rbp-32] false_statement.1:[rbp-40] $12.1:[rbp-41] $16.1:[rbp-42] false_statement.4:[rbp-40] false_statement.3:[rbp-40] 
-  .loc 7 418 12
+  .loc 7 413 12
   # $19.1: @AST_If_Statement = new AST_If_Statement(object_type = AST_If_Statement, location = location.1, condition_expression = condition_expression.1, true_statement = true_statement.1, false_statement = false_statement.4)
   mov rdi, 40
   call malloc
@@ -56163,7 +56118,7 @@ parse_if_262:
   # [discarded value]: condition_expression.1
   # [discarded value]: location.1
   # [live values]: self.1:[rbp-8] false_statement.1:[rbp-40] $12.1:[rbp-41] $16.1:[rbp-42] $19.1:rax false_statement.3:[rbp-40] 
-  .loc 7 418 5
+  .loc 7 413 5
   # return($19.1)
   mov [rbp-50], rax
   jmp .LABEL__parse_if_262__end
@@ -56173,7 +56128,7 @@ parse_if_262:
   # [discarded value]: false_statement.3
   # [live values]: self.1:[rbp-8] false_statement.1:[rbp-40] $12.1:[rbp-41] $16.1:[rbp-42] 
 .LABEL__parse_if_262__6:
-  .loc 7 415 31
+  .loc 7 410 31
   # false_statement.2: @AST_Statement = call(parse_block_261, self.1)
   mov rdi, [rbp-8]
   call parse_block_261
@@ -56198,7 +56153,7 @@ parse_if_262:
 
 parse_if_262__stack_frame_size: .word 64
 
-  .loc 7 423 1
+  .loc 7 418 8
   .text
 parse_loop_263:
   push rbp
@@ -56208,36 +56163,36 @@ parse_loop_263:
 .LABEL__parse_loop_263__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 424 30
+  .loc 7 419 30
   # $1.1: @Matcher = load_struct_member(self.1, required_loop)
-  mov rax, [rdi+264]
+  mov rax, [rdi+272]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 424 17
+  .loc 7 419 17
   # $2.1: @Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
   call consume_282
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $2.1:rax 
-  .loc 7 424 17
+  .loc 7 419 17
   # location.1: @Source_Location = load_struct_member($2.1, location)
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] location.1:rbx 
-  .loc 7 425 5
+  .loc 7 420 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   mov [rbp-16], rbx
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 426 19
+  .loc 7 421 19
   # loop_block.1: @AST_Block_Statement = call(parse_block_261, self.1)
   mov rdi, [rbp-8]
   call parse_block_261
   # [discarded value]: self.1
   # [live values]: location.1:[rbp-16] loop_block.1:rax 
-  .loc 7 427 12
+  .loc 7 422 12
   # $5.1: @AST_Loop_Statement = new AST_Loop_Statement(object_type = AST_Loop_Statement, location = location.1, block = loop_block.1)
   mov [rbp-24], rax
   mov rdi, 24
@@ -56254,7 +56209,7 @@ parse_loop_263:
   # [discarded value]: loop_block.1
   # [discarded value]: location.1
   # [live values]: $5.1:rax 
-  .loc 7 427 5
+  .loc 7 422 5
   # return($5.1)
   mov [rbp-8], rax
   jmp .LABEL__parse_loop_263__end
@@ -56267,7 +56222,7 @@ parse_loop_263:
 
 parse_loop_263__stack_frame_size: .word 32
 
-  .loc 7 432 1
+  .loc 7 427 8
   .text
 parse_while_264:
   push rbp
@@ -56277,35 +56232,35 @@ parse_while_264:
 .LABEL__parse_while_264__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 433 30
+  .loc 7 428 30
   # $1.1: @Matcher = load_struct_member(self.1, required_while)
-  mov rax, [rdi+360]
+  mov rax, [rdi+368]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 433 17
+  .loc 7 428 17
   # $2.1: @Token = call(consume_282, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
   call consume_282
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $2.1:rax 
-  .loc 7 433 17
+  .loc 7 428 17
   # location.1: @Source_Location = load_struct_member($2.1, location)
   mov rbx, [rax+16]
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] location.1:rbx 
-  .loc 7 434 5
+  .loc 7 429 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   mov [rbp-16], rbx
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 435 18
+  .loc 7 430 18
   # $4.1: @Matcher = load_struct_member(self.1, required_open_paren)
   mov rax, [rbp-8]
-  mov rbx, [rax+296]
+  mov rbx, [rax+304]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] $4.1:rbx 
-  .loc 7 435 5
+  .loc 7 430 5
   # $5.1: @Token = call(consume_282, self.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56313,30 +56268,30 @@ parse_while_264:
   # [discarded value]: $5.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 436 5
+  .loc 7 431 5
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
-  .loc 7 437 29
+  .loc 7 432 29
   # condition_expression.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:rax 
-  .loc 7 438 5
+  .loc 7 433 5
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   mov [rbp-24], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] 
-  .loc 7 439 18
+  .loc 7 434 18
   # $7.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov rax, [rbp-8]
   mov rbx, [rax+96]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] $7.1:rbx 
-  .loc 7 439 5
+  .loc 7 434 5
   # $8.1: @Token = call(consume_282, self.1, $7.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56344,19 +56299,19 @@ parse_while_264:
   # [discarded value]: $8.1
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] 
-  .loc 7 440 5
+  .loc 7 435 5
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] 
-  .loc 7 441 19
+  .loc 7 436 19
   # loop_block.1: @AST_Block_Statement = call(parse_block_261, self.1)
   mov rdi, [rbp-8]
   call parse_block_261
   # [discarded value]: self.1
   # [live values]: location.1:[rbp-16] condition_expression.1:[rbp-24] loop_block.1:rax 
-  .loc 7 442 12
+  .loc 7 437 12
   # $10.1: @AST_While_Statement = new AST_While_Statement(object_type = AST_While_Statement, location = location.1, condition_expression = condition_expression.1, block = loop_block.1)
   mov [rbp-32], rax
   mov rdi, 32
@@ -56377,7 +56332,7 @@ parse_while_264:
   # [discarded value]: condition_expression.1
   # [discarded value]: location.1
   # [live values]: $10.1:rax 
-  .loc 7 442 5
+  .loc 7 437 5
   # return($10.1)
   mov [rbp-8], rax
   jmp .LABEL__parse_while_264__end
@@ -56390,7 +56345,7 @@ parse_while_264:
 
 parse_while_264__stack_frame_size: .word 32
 
-  .loc 7 450 1
+  .loc 7 445 8
   .text
 parse_type_265:
   push rbp
@@ -56400,11 +56355,11 @@ parse_type_265:
 .LABEL__parse_type_265__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 451 22
+  .loc 7 446 22
   # $1.1: @Matcher = load_struct_member(self.1, required_at)
   mov rax, [rdi+64]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 451 9
+  .loc 7 446 9
   # $2.1: Boolean = call(matches_286, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
@@ -56416,37 +56371,37 @@ parse_type_265:
   mov [rbp-9], al
   jz .LABEL__parse_type_265__3
 .LABEL__parse_type_265__2:
-  .loc 7 452 31
+  .loc 7 447 31
   # $3.1: @Matcher = load_struct_member(self.1, required_at)
   mov rax, [rbp-8]
   mov rbx, [rax+64]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $3.1:rbx 
-  .loc 7 452 18
+  .loc 7 447 18
   # token.1: @Token = call(consume_282, self.1, $3.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:rax 
-  .loc 7 453 9
+  .loc 7 448 9
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   mov [rbp-17], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] 
-  .loc 7 454 17
+  .loc 7 449 17
   # type.1: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-8]
   call parse_type_265
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:rax 
-  .loc 7 455 48
+  .loc 7 450 48
   # $6.1: @Source_Location = load_struct_member(token.1, location)
   mov rbx, [rbp-17]
   mov r15, [rbx+16]
   # [discarded value]: token.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] type.1:rax $6.1:r15 
-  .loc 7 455 16
+  .loc 7 450 16
   # $7.1: @AST_Pointer_Type = new AST_Pointer_Type(object_type = AST_Pointer_Type, location = $6.1, pointed_type = type.1)
   mov [rbp-17], rax
   mov [rbp-25], r15
@@ -56464,19 +56419,19 @@ parse_type_265:
   # [discarded value]: $6.1
   # [discarded value]: type.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $7.1:rax 
-  .loc 7 455 9
+  .loc 7 450 9
   # return($7.1)
   mov [rbp-17], rax
   jmp .LABEL__parse_type_265__end
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] 
 .LABEL__parse_type_265__3:
-  .loc 7 457 22
+  .loc 7 452 22
   # $8.1: @Matcher = load_struct_member(self.1, required_open_bracket)
   mov rax, [rbp-8]
-  mov rbx, [rax+288]
+  mov rbx, [rax+296]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $8.1:rbx 
-  .loc 7 457 9
+  .loc 7 452 9
   # $9.1: Boolean = call(matches_286, self.1, $8.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56488,34 +56443,34 @@ parse_type_265:
   mov [rbp-10], al
   jz .LABEL__parse_type_265__6
 .LABEL__parse_type_265__5:
-  .loc 7 458 31
+  .loc 7 453 31
   # $10.1: @Matcher = load_struct_member(self.1, required_open_bracket)
   mov rax, [rbp-8]
-  mov rbx, [rax+288]
+  mov rbx, [rax+296]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $10.1:rbx 
-  .loc 7 458 18
+  .loc 7 453 18
   # token.1: @Token = call(consume_282, self.1, $10.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:rax 
-  .loc 7 459 28
+  .loc 7 454 28
   # array_item_type.1: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-8]
   mov [rbp-18], rax
   call parse_type_265
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:rax 
-  .loc 7 460 26
+  .loc 7 455 26
   # $13.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:rax $13.1:r15 
-  .loc 7 460 47
+  .loc 7 455 47
   # $14.1: @Matcher = load_struct_member(self.1, required_column)
   mov r14, [rbx+112]
   # [live values]: self.1:rbx:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:rax $13.1:r15 $14.1:r14 
-  .loc 7 460 13
+  .loc 7 455 13
   # $15.1: Boolean = call(matches_287, self.1, $13.1, $14.1)
   mov rdi, rbx
   mov rsi, r15
@@ -56530,18 +56485,18 @@ parse_type_265:
   mov [rbp-27], al
   jz .LABEL__parse_type_265__8
 .LABEL__parse_type_265__7:
-  .loc 7 461 13
+  .loc 7 456 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] 
-  .loc 7 462 26
+  .loc 7 457 26
   # $16.1: @Matcher = load_struct_member(self.1, required_column)
   mov rax, [rbp-8]
   mov rbx, [rax+112]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] $16.1:rbx 
-  .loc 7 462 13
+  .loc 7 457 13
   # $17.1: @Token = call(consume_282, self.1, $16.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56549,30 +56504,30 @@ parse_type_265:
   # [discarded value]: $17.1
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] 
-  .loc 7 463 13
+  .loc 7 458 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] 
-  .loc 7 464 38
+  .loc 7 459 38
   # array_size_expression.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] array_size_expression.1:rax 
-  .loc 7 465 13
+  .loc 7 460 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   mov [rbp-35], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] array_size_expression.1:[rbp-35] 
-  .loc 7 466 26
+  .loc 7 461 26
   # $19.1: @Matcher = load_struct_member(self.1, required_close_bracket)
   mov rax, [rbp-8]
   mov rbx, [rax+88]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] array_size_expression.1:[rbp-35] $19.1:rbx 
-  .loc 7 466 13
+  .loc 7 461 13
   # $20.1: @Token = call(consume_282, self.1, $19.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56580,12 +56535,12 @@ parse_type_265:
   # [discarded value]: $20.1
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] array_size_expression.1:[rbp-35] 
-  .loc 7 467 50
+  .loc 7 462 50
   # $21.1: @Source_Location = load_struct_member(token.1, location)
   mov rax, [rbp-18]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:rax:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] array_size_expression.1:[rbp-35] $21.1:rbx 
-  .loc 7 467 20
+  .loc 7 462 20
   # $22.1: @AST_Array_Type = new AST_Array_Type(object_type = AST_Array_Type, location = $21.1, item_type = array_item_type.1, size_expression = array_size_expression.1)
   mov [rbp-43], rbx
   mov rdi, 32
@@ -56605,19 +56560,19 @@ parse_type_265:
   # [discarded value]: $21.1
   # [discarded value]: array_size_expression.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:r15:[rbp-26] $15.1:[rbp-27] $22.1:rax 
-  .loc 7 467 13
+  .loc 7 462 13
   # return($22.1)
   mov [rbp-35], rax
   jmp .LABEL__parse_type_265__end
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] 
 .LABEL__parse_type_265__8:
-  .loc 7 469 46
+  .loc 7 464 46
   # $23.1: @Source_Location = load_struct_member(token.1, location)
   mov rax, [rbp-18]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:rax:[rbp-18] array_item_type.1:[rbp-26] $15.1:[rbp-27] $23.1:rbx 
-  .loc 7 469 16
+  .loc 7 464 16
   # $24.1: @AST_Array_Type = new AST_Array_Type(object_type = AST_Array_Type, location = $23.1, item_type = array_item_type.1, size_expression = null)
   mov [rbp-35], rbx
   mov rdi, 32
@@ -56636,7 +56591,7 @@ parse_type_265:
   # [discarded value]: $23.1
   # [discarded value]: array_item_type.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:[rbp-18] $15.1:[rbp-27] $24.1:rax 
-  .loc 7 469 9
+  .loc 7 464 9
   # return($24.1)
   mov [rbp-35], rax
   jmp .LABEL__parse_type_265__end
@@ -56647,12 +56602,12 @@ parse_type_265:
   # [discarded value]: token.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] 
 .LABEL__parse_type_265__6:
-  .loc 7 471 22
-  # $25.1: @Matcher = load_struct_member(self.1, required_open_paren)
+  .loc 7 466 22
+  # $25.1: @Matcher = load_struct_member(self.1, required_func)
   mov rax, [rbp-8]
-  mov rbx, [rax+296]
+  mov rbx, [rax+208]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $25.1:rbx 
-  .loc 7 471 9
+  .loc 7 466 9
   # $26.1: Boolean = call(matches_286, self.1, $25.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56664,35 +56619,35 @@ parse_type_265:
   mov [rbp-11], al
   jz .LABEL__parse_type_265__12
 .LABEL__parse_type_265__11:
-  .loc 7 472 16
+  .loc 7 467 16
   # $27.1: @AST_Function_Type = call(parse_function_type_259, self.1)
   mov rdi, [rbp-8]
   call parse_function_type_259
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $26.1:[rbp-11] $27.1:rax 
-  .loc 7 472 9
+  .loc 7 467 9
   # return($27.1)
   mov [rbp-19], rax
   jmp .LABEL__parse_type_265__end
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $26.1:[rbp-11] 
 .LABEL__parse_type_265__12:
-  .loc 7 474 27
+  .loc 7 469 27
   # $28.1: @Matcher = load_struct_member(self.1, required_identifier)
   mov rax, [rbp-8]
-  mov rbx, [rax+224]
+  mov rbx, [rax+232]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $26.1:[rbp-11] $28.1:rbx 
-  .loc 7 474 14
+  .loc 7 469 14
   # token.1: @Identifier_Token = call(consume_282, self.1, $28.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $26.1:[rbp-11] token.1:rax 
-  .loc 7 475 42
+  .loc 7 470 42
   # $31.1: @Source_Location = load_struct_member(token.1, location)
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $26.1:[rbp-11] token.1:rax $31.1:rbx 
-  .loc 7 475 12
+  .loc 7 470 12
   # $32.1: @AST_Named_Type = new AST_Named_Type(object_type = AST_Named_Type, location = $31.1, name = token.1)
   mov [rbp-19], rax
   mov [rbp-27], rbx
@@ -56710,7 +56665,7 @@ parse_type_265:
   # [discarded value]: $31.1
   # [discarded value]: token.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $26.1:[rbp-11] $32.1:rax 
-  .loc 7 475 5
+  .loc 7 470 5
   # return($32.1)
   mov [rbp-19], rax
   jmp .LABEL__parse_type_265__end
@@ -56731,7 +56686,7 @@ parse_type_265:
 
 parse_type_265__stack_frame_size: .word 48
 
-  .loc 7 478 1
+  .loc 7 473 8
   .text
 parse_expression_266:
   push rbp
@@ -56741,12 +56696,12 @@ parse_expression_266:
 .LABEL__parse_expression_266__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 479 12
+  .loc 7 474 12
   # $1.1: @AST_Expression = call(parse_logic_or_expression_267, self.1)
   call parse_logic_or_expression_267
   # [discarded value]: self.1
   # [live values]: $1.1:rax 
-  .loc 7 479 5
+  .loc 7 474 5
   # return($1.1)
   mov [rbp-8], rax
   jmp .LABEL__parse_expression_266__end
@@ -56759,7 +56714,7 @@ parse_expression_266:
 
 parse_expression_266__stack_frame_size: .word 16
 
-  .loc 7 484 1
+  .loc 7 479 8
   .text
 parse_logic_or_expression_267:
   push rbp
@@ -56769,7 +56724,7 @@ parse_logic_or_expression_267:
 .LABEL__parse_logic_or_expression_267__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 485 19
+  .loc 7 480 19
   # expression.1: @AST_Expression = call(parse_logic_and_expression_268, self.1)
   mov [rbp-8], rdi
   call parse_logic_and_expression_268
@@ -56779,20 +56734,20 @@ parse_logic_or_expression_267:
 .LABEL__parse_logic_or_expression_267__2:
   # expression.5: @AST_Expression = phi(expression.1, expression.3)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] 
-  .loc 7 486 25
+  .loc 7 481 25
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $2.1:rbx 
-  .loc 7 486 46
+  .loc 7 481 46
   # $3.1: @Matcher = load_struct_member(self.1, required_vertical_bar)
-  mov r15, [rax+352]
+  mov r15, [rax+360]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $2.1:rbx $3.1:r15 
-  .loc 7 486 74
+  .loc 7 481 74
   # $4.1: @Matcher = load_struct_member(self.1, required_vertical_bar)
-  mov r14, [rax+352]
+  mov r14, [rax+360]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $2.1:rbx $3.1:r15 $4.1:r14 
-  .loc 7 486 12
+  .loc 7 481 12
   # $5.1: Boolean = call(matches_288, self.1, $2.1, $3.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56808,22 +56763,22 @@ parse_logic_or_expression_267:
   mov [rbp-17], al
   jz .LABEL__parse_logic_or_expression_267__4
 .LABEL__parse_logic_or_expression_267__3:
-  .loc 7 487 9
+  .loc 7 482 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
-  .loc 7 488 22
+  .loc 7 483 22
   # $6.1: @Matcher = load_struct_member(self.1, required_vertical_bar)
   mov rax, [rbp-8]
-  mov rbx, [rax+352]
+  mov rbx, [rax+360]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] $6.1:rbx 
-  .loc 7 488 50
+  .loc 7 483 50
   # $7.1: @Matcher = load_struct_member(self.1, required_vertical_bar)
-  mov r15, [rax+352]
+  mov r15, [rax+360]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] $6.1:rbx $7.1:r15 
-  .loc 7 488 9
+  .loc 7 483 9
   # $8.1: @Token = call(consume_283, self.1, $6.1, $7.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56833,24 +56788,24 @@ parse_logic_or_expression_267:
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
-  .loc 7 489 9
+  .loc 7 484 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
-  .loc 7 490 61
+  .loc 7 485 61
   # $9.1: @Source_Location = load_struct_member(expression.5, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:rax:[rbp-16] $5.1:[rbp-17] $9.1:rbx 
-  .loc 7 490 131
+  .loc 7 485 131
   # $10.1: @AST_Expression = call(parse_logic_and_expression_268, self.1)
   mov rdi, [rbp-8]
   mov [rbp-25], rbx
   call parse_logic_and_expression_268
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] $9.1:[rbp-25] $10.1:rax 
-  .loc 7 490 22
+  .loc 7 485 22
   # expression.3: @AST_Expression = new AST_Logic_Or_Expression(object_type = AST_Logic_Or_Expression, location = $9.1, left_expression = expression.5, right_expression = $10.1)
   mov [rbp-33], rax
   mov rdi, 32
@@ -56877,7 +56832,7 @@ parse_logic_or_expression_267:
   # [discarded value]: expression.3
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
 .LABEL__parse_logic_or_expression_267__4:
-  .loc 7 492 5
+  .loc 7 487 5
   # return(expression.5)
   mov rax, [rbp-16]
   jmp .LABEL__parse_logic_or_expression_267__end
@@ -56897,7 +56852,7 @@ parse_logic_or_expression_267:
 
 parse_logic_or_expression_267__stack_frame_size: .word 48
 
-  .loc 7 497 1
+  .loc 7 492 8
   .text
 parse_logic_and_expression_268:
   push rbp
@@ -56907,7 +56862,7 @@ parse_logic_and_expression_268:
 .LABEL__parse_logic_and_expression_268__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 498 19
+  .loc 7 493 19
   # expression.1: @AST_Expression = call(parse_equality_expression_269, self.1)
   mov [rbp-8], rdi
   call parse_equality_expression_269
@@ -56917,20 +56872,20 @@ parse_logic_and_expression_268:
 .LABEL__parse_logic_and_expression_268__2:
   # expression.5: @AST_Expression = phi(expression.1, expression.3)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] 
-  .loc 7 499 25
+  .loc 7 494 25
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $2.1:rbx 
-  .loc 7 499 46
+  .loc 7 494 46
   # $3.1: @Matcher = load_struct_member(self.1, required_ampersand)
   mov r15, [rax+40]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $2.1:rbx $3.1:r15 
-  .loc 7 499 71
+  .loc 7 494 71
   # $4.1: @Matcher = load_struct_member(self.1, required_ampersand)
   mov r14, [rax+40]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $2.1:rbx $3.1:r15 $4.1:r14 
-  .loc 7 499 12
+  .loc 7 494 12
   # $5.1: Boolean = call(matches_288, self.1, $2.1, $3.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56946,22 +56901,22 @@ parse_logic_and_expression_268:
   mov [rbp-17], al
   jz .LABEL__parse_logic_and_expression_268__4
 .LABEL__parse_logic_and_expression_268__3:
-  .loc 7 500 9
+  .loc 7 495 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
-  .loc 7 501 22
+  .loc 7 496 22
   # $6.1: @Matcher = load_struct_member(self.1, required_ampersand)
   mov rax, [rbp-8]
   mov rbx, [rax+40]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] $6.1:rbx 
-  .loc 7 501 47
+  .loc 7 496 47
   # $7.1: @Matcher = load_struct_member(self.1, required_ampersand)
   mov r15, [rax+40]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] $6.1:rbx $7.1:r15 
-  .loc 7 501 9
+  .loc 7 496 9
   # $8.1: @Token = call(consume_283, self.1, $6.1, $7.1)
   mov rdi, rax
   mov rsi, rbx
@@ -56971,24 +56926,24 @@ parse_logic_and_expression_268:
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
-  .loc 7 502 9
+  .loc 7 497 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
-  .loc 7 503 62
+  .loc 7 498 62
   # $9.1: @Source_Location = load_struct_member(expression.5, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:rax:[rbp-16] $5.1:[rbp-17] $9.1:rbx 
-  .loc 7 503 132
+  .loc 7 498 132
   # $10.1: @AST_Expression = call(parse_equality_expression_269, self.1)
   mov rdi, [rbp-8]
   mov [rbp-25], rbx
   call parse_equality_expression_269
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] $9.1:[rbp-25] $10.1:rax 
-  .loc 7 503 22
+  .loc 7 498 22
   # expression.3: @AST_Expression = new AST_Logic_And_Expression(object_type = AST_Logic_And_Expression, location = $9.1, left_expression = expression.5, right_expression = $10.1)
   mov [rbp-33], rax
   mov rdi, 32
@@ -57015,7 +56970,7 @@ parse_logic_and_expression_268:
   # [discarded value]: expression.3
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] $5.1:[rbp-17] 
 .LABEL__parse_logic_and_expression_268__4:
-  .loc 7 505 5
+  .loc 7 500 5
   # return(expression.5)
   mov rax, [rbp-16]
   jmp .LABEL__parse_logic_and_expression_268__end
@@ -57035,7 +56990,7 @@ parse_logic_and_expression_268:
 
 parse_logic_and_expression_268__stack_frame_size: .word 48
 
-  .loc 7 510 1
+  .loc 7 505 8
   .text
 parse_equality_expression_269:
   push rbp
@@ -57045,25 +57000,25 @@ parse_equality_expression_269:
 .LABEL__parse_equality_expression_269__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 511 19
+  .loc 7 506 19
   # expression.1: @AST_Expression = call(parse_comparison_expression_270, self.1)
   mov [rbp-8], rdi
   call parse_comparison_expression_270
   # [live values]: self.1:[rbp-8] expression.1:rax 
-  .loc 7 512 22
+  .loc 7 507 22
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] expression.1:rax $2.1:r15 
-  .loc 7 512 43
+  .loc 7 507 43
   # $3.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r14, [rbx+176]
   # [live values]: self.1:rbx:[rbp-8] expression.1:rax $2.1:r15 $3.1:r14 
-  .loc 7 512 65
+  .loc 7 507 65
   # $4.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r13, [rbx+176]
   # [live values]: self.1:rbx:[rbp-8] expression.1:rax $2.1:r15 $3.1:r14 $4.1:r13 
-  .loc 7 512 9
+  .loc 7 507 9
   # $6.1: Boolean = call(matches_288, self.1, $2.1, $3.1, $4.1)
   mov rdi, rbx
   mov rsi, r15
@@ -57080,7 +57035,7 @@ parse_equality_expression_269:
   mov [rbp-17], al
   jz .LABEL__parse_equality_expression_269__2
 .LABEL__parse_equality_expression_269__3:
-  .loc 7 512 9
+  .loc 7 507 9
   # $6.3: Boolean = phi($6.1, $6.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] 
   # jump($6.3, .LABEL__parse_equality_expression_269__4, .LABEL__parse_equality_expression_269__5)
@@ -57088,18 +57043,18 @@ parse_equality_expression_269:
   test al, al
   jz .LABEL__parse_equality_expression_269__5
 .LABEL__parse_equality_expression_269__4:
-  .loc 7 513 9
+  .loc 7 508 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] 
-  .loc 7 514 26
+  .loc 7 509 26
   # $11.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $11.1:rbx 
-  .loc 7 514 13
+  .loc 7 509 13
   # $12.1: Boolean = call(matches_286, self.1, $11.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57111,16 +57066,16 @@ parse_equality_expression_269:
   mov [rbp-18], al
   jz .LABEL__parse_equality_expression_269__8
 .LABEL__parse_equality_expression_269__6:
-  .loc 7 515 26
+  .loc 7 510 26
   # $19.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $19.1:rbx 
-  .loc 7 515 48
+  .loc 7 510 48
   # $20.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r15, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $19.1:rbx $20.1:r15 
-  .loc 7 515 13
+  .loc 7 510 13
   # $21.1: @Token = call(consume_283, self.1, $19.1, $20.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57130,24 +57085,24 @@ parse_equality_expression_269:
   # [discarded value]: $20.1
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] 
-  .loc 7 516 13
+  .loc 7 511 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] 
-  .loc 7 517 63
+  .loc 7 512 63
   # $22.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $22.1:rbx 
-  .loc 7 517 133
+  .loc 7 512 133
   # $23.1: @AST_Expression = call(parse_comparison_expression_270, self.1)
   mov rdi, [rbp-8]
   mov [rbp-26], rbx
   call parse_comparison_expression_270
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $22.1:[rbp-26] $23.1:rax 
-  .loc 7 517 26
+  .loc 7 512 26
   # expression.5: @AST_Expression = new AST_Equals_Expression(object_type = AST_Equals_Expression, location = $22.1, left_expression = expression.1, right_expression = $23.1)
   mov [rbp-34], rax
   mov rdi, 32
@@ -57172,7 +57127,7 @@ parse_equality_expression_269:
 .LABEL__parse_equality_expression_269__5:
   # expression.6: @AST_Expression = phi(expression.5, expression.3, expression.1)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] expression.6:[rbp-16] expression.5:[rbp-16] 
-  .loc 7 524 5
+  .loc 7 519 5
   # return(expression.6)
   mov rax, [rbp-16]
   jmp .LABEL__parse_equality_expression_269__end
@@ -57182,16 +57137,16 @@ parse_equality_expression_269:
   # [discarded value]: expression.5
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] 
 .LABEL__parse_equality_expression_269__8:
-  .loc 7 519 26
+  .loc 7 514 26
   # $13.1: @Matcher = load_struct_member(self.1, required_exclamation_mark)
   mov rax, [rbp-8]
   mov rbx, [rax+184]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $13.1:rbx 
-  .loc 7 519 58
+  .loc 7 514 58
   # $14.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r15, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $13.1:rbx $14.1:r15 
-  .loc 7 519 13
+  .loc 7 514 13
   # $15.1: @Token = call(consume_283, self.1, $13.1, $14.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57201,24 +57156,24 @@ parse_equality_expression_269:
   # [discarded value]: $14.1
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] 
-  .loc 7 520 13
+  .loc 7 515 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] 
-  .loc 7 521 67
+  .loc 7 516 67
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $16.1:rbx 
-  .loc 7 521 137
+  .loc 7 516 137
   # $17.1: @AST_Expression = call(parse_comparison_expression_270, self.1)
   mov rdi, [rbp-8]
   mov [rbp-26], rbx
   call parse_comparison_expression_270
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $6.3:[rbp-17] $12.1:[rbp-18] $16.1:[rbp-26] $17.1:rax 
-  .loc 7 521 26
+  .loc 7 516 26
   # expression.3: @AST_Expression = new AST_Not_Equals_Expression(object_type = AST_Not_Equals_Expression, location = $16.1, left_expression = expression.1, right_expression = $17.1)
   mov [rbp-34], rax
   mov rdi, 32
@@ -57249,20 +57204,20 @@ parse_equality_expression_269:
   # [discarded value]: $6.3
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] 
 .LABEL__parse_equality_expression_269__2:
-  .loc 7 512 103
+  .loc 7 507 103
   # $7.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $7.1:rbx 
-  .loc 7 512 124
+  .loc 7 507 124
   # $8.1: @Matcher = load_struct_member(self.1, required_exclamation_mark)
   mov r15, [rax+184]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $7.1:rbx $8.1:r15 
-  .loc 7 512 156
+  .loc 7 507 156
   # $9.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r14, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $6.1:[rbp-17] $7.1:rbx $8.1:r15 $9.1:r14 
-  .loc 7 512 90
+  .loc 7 507 90
   # $6.2: Boolean = call(matches_288, self.1, $7.1, $8.1, $9.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57291,7 +57246,7 @@ parse_equality_expression_269:
 
 parse_equality_expression_269__stack_frame_size: .word 48
 
-  .loc 7 529 1
+  .loc 7 524 8
   .text
 parse_comparison_expression_270:
   push rbp
@@ -57301,21 +57256,21 @@ parse_comparison_expression_270:
 .LABEL__parse_comparison_expression_270__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 530 19
+  .loc 7 525 19
   # expression.1: @AST_Expression = call(parse_addition_expression_271, self.1)
   mov [rbp-8], rdi
   call parse_addition_expression_271
   # [live values]: self.1:[rbp-8] expression.1:rax 
-  .loc 7 531 22
+  .loc 7 526 22
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] expression.1:rax $2.1:r15 
-  .loc 7 531 43
+  .loc 7 526 43
   # $3.1: @Matcher = load_struct_member(self.1, required_less_than)
-  mov r14, [rbx+248]
+  mov r14, [rbx+256]
   # [live values]: self.1:rbx:[rbp-8] expression.1:rax $2.1:r15 $3.1:r14 
-  .loc 7 531 9
+  .loc 7 526 9
   # $5.1: Boolean = call(matches_287, self.1, $2.1, $3.1)
   mov rdi, rbx
   mov rsi, r15
@@ -57330,7 +57285,7 @@ parse_comparison_expression_270:
   mov [rbp-17], al
   jz .LABEL__parse_comparison_expression_270__2
 .LABEL__parse_comparison_expression_270__3:
-  .loc 7 531 9
+  .loc 7 526 9
   # $5.3: Boolean = phi($5.1, $5.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
   # jump($5.3, .LABEL__parse_comparison_expression_270__4, .LABEL__parse_comparison_expression_270__5)
@@ -57338,18 +57293,18 @@ parse_comparison_expression_270:
   test al, al
   jz .LABEL__parse_comparison_expression_270__5
 .LABEL__parse_comparison_expression_270__4:
-  .loc 7 532 9
+  .loc 7 527 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
-  .loc 7 533 26
+  .loc 7 528 26
   # $9.1: @Matcher = load_struct_member(self.1, required_less_than)
   mov rax, [rbp-8]
-  mov rbx, [rax+248]
+  mov rbx, [rax+256]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $9.1:rbx 
-  .loc 7 533 13
+  .loc 7 528 13
   # $10.1: Boolean = call(matches_286, self.1, $9.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57361,12 +57316,12 @@ parse_comparison_expression_270:
   mov [rbp-18], al
   jz .LABEL__parse_comparison_expression_270__8
 .LABEL__parse_comparison_expression_270__6:
-  .loc 7 534 26
+  .loc 7 529 26
   # $23.1: @Matcher = load_struct_member(self.1, required_less_than)
   mov rax, [rbp-8]
-  mov rbx, [rax+248]
+  mov rbx, [rax+256]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $23.1:rbx 
-  .loc 7 534 13
+  .loc 7 529 13
   # $24.1: @Token = call(consume_282, self.1, $23.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57374,12 +57329,12 @@ parse_comparison_expression_270:
   # [discarded value]: $24.1
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] 
-  .loc 7 535 30
+  .loc 7 530 30
   # $25.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $25.1:rbx 
-  .loc 7 535 17
+  .loc 7 530 17
   # $26.1: Boolean = call(matches_286, self.1, $25.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57391,12 +57346,12 @@ parse_comparison_expression_270:
   mov [rbp-19], al
   jz .LABEL__parse_comparison_expression_270__14
 .LABEL__parse_comparison_expression_270__12:
-  .loc 7 536 30
+  .loc 7 531 30
   # $30.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] $30.1:rbx 
-  .loc 7 536 17
+  .loc 7 531 17
   # $31.1: @Token = call(consume_282, self.1, $30.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57404,24 +57359,24 @@ parse_comparison_expression_270:
   # [discarded value]: $31.1
   # [discarded value]: $30.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] 
-  .loc 7 537 17
+  .loc 7 532 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] 
-  .loc 7 538 80
+  .loc 7 533 80
   # $32.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] $32.1:rbx 
-  .loc 7 538 150
+  .loc 7 533 150
   # $33.1: @AST_Expression = call(parse_addition_expression_271, self.1)
   mov rdi, [rbp-8]
   mov [rbp-27], rbx
   call parse_addition_expression_271
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] $32.1:[rbp-27] $33.1:rax 
-  .loc 7 538 30
+  .loc 7 533 30
   # expression.9: @AST_Expression = new AST_Less_Than_Or_Equals_Expression(object_type = AST_Less_Than_Or_Equals_Expression, location = $32.1, left_expression = expression.1, right_expression = $33.1)
   mov [rbp-35], rax
   mov rdi, 32
@@ -57446,7 +57401,7 @@ parse_comparison_expression_270:
 .LABEL__parse_comparison_expression_270__5:
   # expression.10: @AST_Expression = phi(expression.5, expression.3, expression.9, expression.7, expression.1)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] expression.10:[rbp-16] $26.1:[rbp-19] expression.9:[rbp-16] 
-  .loc 7 555 5
+  .loc 7 550 5
   # return(expression.10)
   mov rax, [rbp-16]
   jmp .LABEL__parse_comparison_expression_270__end
@@ -57456,24 +57411,24 @@ parse_comparison_expression_270:
   # [discarded value]: expression.9
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] 
 .LABEL__parse_comparison_expression_270__14:
-  .loc 7 540 17
+  .loc 7 535 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] 
-  .loc 7 541 70
+  .loc 7 536 70
   # $27.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] $27.1:rbx 
-  .loc 7 541 140
+  .loc 7 536 140
   # $28.1: @AST_Expression = call(parse_addition_expression_271, self.1)
   mov rdi, [rbp-8]
   mov [rbp-27], rbx
   call parse_addition_expression_271
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $26.1:[rbp-19] $27.1:[rbp-27] $28.1:rax 
-  .loc 7 541 30
+  .loc 7 536 30
   # expression.7: @AST_Expression = new AST_Less_Than_Expression(object_type = AST_Less_Than_Expression, location = $27.1, left_expression = expression.1, right_expression = $28.1)
   mov [rbp-35], rax
   mov rdi, 32
@@ -57502,12 +57457,12 @@ parse_comparison_expression_270:
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] 
 .LABEL__parse_comparison_expression_270__8:
-  .loc 7 544 26
+  .loc 7 539 26
   # $11.1: @Matcher = load_struct_member(self.1, required_greater_than)
   mov rax, [rbp-8]
-  mov rbx, [rax+208]
+  mov rbx, [rax+216]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $11.1:rbx 
-  .loc 7 544 13
+  .loc 7 539 13
   # $12.1: @Token = call(consume_282, self.1, $11.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57515,12 +57470,12 @@ parse_comparison_expression_270:
   # [discarded value]: $12.1
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] 
-  .loc 7 545 30
+  .loc 7 540 30
   # $13.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $13.1:rbx 
-  .loc 7 545 17
+  .loc 7 540 17
   # $14.1: Boolean = call(matches_286, self.1, $13.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57532,12 +57487,12 @@ parse_comparison_expression_270:
   mov [rbp-19], al
   jz .LABEL__parse_comparison_expression_270__11
 .LABEL__parse_comparison_expression_270__9:
-  .loc 7 546 30
+  .loc 7 541 30
   # $18.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] $18.1:rbx 
-  .loc 7 546 17
+  .loc 7 541 17
   # $19.1: @Token = call(consume_282, self.1, $18.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57545,24 +57500,24 @@ parse_comparison_expression_270:
   # [discarded value]: $19.1
   # [discarded value]: $18.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] 
-  .loc 7 547 17
+  .loc 7 542 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] 
-  .loc 7 548 83
+  .loc 7 543 83
   # $20.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] $20.1:rbx 
-  .loc 7 548 153
+  .loc 7 543 153
   # $21.1: @AST_Expression = call(parse_addition_expression_271, self.1)
   mov rdi, [rbp-8]
   mov [rbp-27], rbx
   call parse_addition_expression_271
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] $20.1:[rbp-27] $21.1:rax 
-  .loc 7 548 30
+  .loc 7 543 30
   # expression.5: @AST_Expression = new AST_Greater_Than_Or_Equals_Expression(object_type = AST_Greater_Than_Or_Equals_Expression, location = $20.1, left_expression = expression.1, right_expression = $21.1)
   mov [rbp-35], rax
   mov rdi, 32
@@ -57589,24 +57544,24 @@ parse_comparison_expression_270:
   # [discarded value]: expression.5
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] 
 .LABEL__parse_comparison_expression_270__11:
-  .loc 7 550 17
+  .loc 7 545 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] 
-  .loc 7 551 73
+  .loc 7 546 73
   # $15.1: @Source_Location = load_struct_member(expression.1, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] $15.1:rbx 
-  .loc 7 551 143
+  .loc 7 546 143
   # $16.1: @AST_Expression = call(parse_addition_expression_271, self.1)
   mov rdi, [rbp-8]
   mov [rbp-27], rbx
   call parse_addition_expression_271
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] $10.1:[rbp-18] $14.1:[rbp-19] $15.1:[rbp-27] $16.1:rax 
-  .loc 7 551 30
+  .loc 7 546 30
   # expression.3: @AST_Expression = new AST_Greater_Than_Expression(object_type = AST_Greater_Than_Expression, location = $15.1, left_expression = expression.1, right_expression = $16.1)
   mov [rbp-35], rax
   mov rdi, 32
@@ -57639,16 +57594,16 @@ parse_comparison_expression_270:
   # [discarded value]: $5.3
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] 
 .LABEL__parse_comparison_expression_270__2:
-  .loc 7 531 84
+  .loc 7 526 84
   # $6.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $6.1:rbx 
-  .loc 7 531 105
+  .loc 7 526 105
   # $7.1: @Matcher = load_struct_member(self.1, required_greater_than)
-  mov r15, [rax+208]
+  mov r15, [rax+216]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $5.1:[rbp-17] $6.1:rbx $7.1:r15 
-  .loc 7 531 71
+  .loc 7 526 71
   # $5.2: Boolean = call(matches_287, self.1, $6.1, $7.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57675,7 +57630,7 @@ parse_comparison_expression_270:
 
 parse_comparison_expression_270__stack_frame_size: .word 48
 
-  .loc 7 560 1
+  .loc 7 555 8
   .text
 parse_addition_expression_271:
   push rbp
@@ -57685,7 +57640,7 @@ parse_addition_expression_271:
 .LABEL__parse_addition_expression_271__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 561 19
+  .loc 7 556 19
   # expression.1: @AST_Expression = call(parse_multiplication_expression_272, self.1)
   mov [rbp-8], rdi
   call parse_multiplication_expression_272
@@ -57695,16 +57650,16 @@ parse_addition_expression_271:
 .LABEL__parse_addition_expression_271__2:
   # expression.8: @AST_Expression = phi(expression.1, expression.5, expression.3)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] 
-  .loc 7 562 25
+  .loc 7 557 25
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $2.1:rbx 
-  .loc 7 562 46
+  .loc 7 557 46
   # $3.1: @Matcher = load_struct_member(self.1, required_plus)
-  mov r15, [rax+304]
+  mov r15, [rax+312]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $2.1:rbx $3.1:r15 
-  .loc 7 562 12
+  .loc 7 557 12
   # $5.1: Boolean = call(matches_287, self.1, $2.1, $3.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57718,7 +57673,7 @@ parse_addition_expression_271:
   mov [rbp-17], al
   jz .LABEL__parse_addition_expression_271__5
 .LABEL__parse_addition_expression_271__6:
-  .loc 7 562 12
+  .loc 7 557 12
   # $5.3: Boolean = phi($5.1, $5.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
   # jump($5.3, .LABEL__parse_addition_expression_271__3, .LABEL__parse_addition_expression_271__4)
@@ -57726,18 +57681,18 @@ parse_addition_expression_271:
   test al, al
   jz .LABEL__parse_addition_expression_271__4
 .LABEL__parse_addition_expression_271__3:
-  .loc 7 563 9
+  .loc 7 558 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
-  .loc 7 565 26
+  .loc 7 560 26
   # $9.1: @Matcher = load_struct_member(self.1, required_plus)
   mov rax, [rbp-8]
-  mov rbx, [rax+304]
+  mov rbx, [rax+312]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $9.1:rbx $5.3:[rbp-17] 
-  .loc 7 565 13
+  .loc 7 560 13
   # $10.1: Boolean = call(matches_286, self.1, $9.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57749,12 +57704,12 @@ parse_addition_expression_271:
   mov [rbp-18], al
   jz .LABEL__parse_addition_expression_271__9
 .LABEL__parse_addition_expression_271__7:
-  .loc 7 566 26
+  .loc 7 561 26
   # $16.1: @Matcher = load_struct_member(self.1, required_plus)
   mov rax, [rbp-8]
-  mov rbx, [rax+304]
+  mov rbx, [rax+312]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $16.1:rbx 
-  .loc 7 566 13
+  .loc 7 561 13
   # $17.1: @Token = call(consume_282, self.1, $16.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57762,24 +57717,24 @@ parse_addition_expression_271:
   # [discarded value]: $17.1
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
-  .loc 7 567 13
+  .loc 7 562 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
-  .loc 7 568 60
+  .loc 7 563 60
   # $18.1: @Source_Location = load_struct_member(expression.8, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:rax:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $18.1:rbx 
-  .loc 7 568 130
+  .loc 7 563 130
   # $19.1: @AST_Expression = call(parse_multiplication_expression_272, self.1)
   mov rdi, [rbp-8]
   mov [rbp-26], rbx
   call parse_multiplication_expression_272
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $18.1:[rbp-26] $19.1:rax 
-  .loc 7 568 26
+  .loc 7 563 26
   # expression.5: @AST_Expression = new AST_Add_Expression(object_type = AST_Add_Expression, location = $18.1, left_expression = expression.8, right_expression = $19.1)
   mov [rbp-34], rax
   mov rdi, 32
@@ -57806,12 +57761,12 @@ parse_addition_expression_271:
   # [discarded value]: expression.5
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
 .LABEL__parse_addition_expression_271__9:
-  .loc 7 570 26
+  .loc 7 565 26
   # $11.1: @Matcher = load_struct_member(self.1, required_hyphen)
   mov rax, [rbp-8]
-  mov rbx, [rax+216]
+  mov rbx, [rax+224]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $11.1:rbx 
-  .loc 7 570 13
+  .loc 7 565 13
   # $12.1: @Token = call(consume_282, self.1, $11.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57819,24 +57774,24 @@ parse_addition_expression_271:
   # [discarded value]: $12.1
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
-  .loc 7 571 13
+  .loc 7 566 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
-  .loc 7 572 66
+  .loc 7 567 66
   # $13.1: @Source_Location = load_struct_member(expression.8, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:rax:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $13.1:rbx 
-  .loc 7 572 136
+  .loc 7 567 136
   # $14.1: @AST_Expression = call(parse_multiplication_expression_272, self.1)
   mov rdi, [rbp-8]
   mov [rbp-26], rbx
   call parse_multiplication_expression_272
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $13.1:[rbp-26] $14.1:rax 
-  .loc 7 572 26
+  .loc 7 567 26
   # expression.3: @AST_Expression = new AST_Substract_Expression(object_type = AST_Substract_Expression, location = $13.1, left_expression = expression.8, right_expression = $14.1)
   mov [rbp-34], rax
   mov rdi, 32
@@ -57865,7 +57820,7 @@ parse_addition_expression_271:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
 .LABEL__parse_addition_expression_271__4:
-  .loc 7 575 5
+  .loc 7 570 5
   # return(expression.8)
   mov rax, [rbp-16]
   jmp .LABEL__parse_addition_expression_271__end
@@ -57873,16 +57828,16 @@ parse_addition_expression_271:
   # [discarded value]: $5.3
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] 
 .LABEL__parse_addition_expression_271__5:
-  .loc 7 562 82
+  .loc 7 557 82
   # $6.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $6.1:rbx 
-  .loc 7 562 103
+  .loc 7 557 103
   # $7.1: @Matcher = load_struct_member(self.1, required_hyphen)
-  mov r15, [rax+216]
+  mov r15, [rax+224]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $5.1:[rbp-17] $6.1:rbx $7.1:r15 
-  .loc 7 562 69
+  .loc 7 557 69
   # $5.2: Boolean = call(matches_287, self.1, $6.1, $7.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57912,7 +57867,7 @@ parse_addition_expression_271:
 
 parse_addition_expression_271__stack_frame_size: .word 48
 
-  .loc 7 580 1
+  .loc 7 575 8
   .text
 parse_multiplication_expression_272:
   push rbp
@@ -57922,7 +57877,7 @@ parse_multiplication_expression_272:
 .LABEL__parse_multiplication_expression_272__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 581 19
+  .loc 7 576 19
   # expression.1: @AST_Expression = call(parse_unary_expression_273, self.1)
   mov [rbp-8], rdi
   call parse_unary_expression_273
@@ -57932,16 +57887,16 @@ parse_multiplication_expression_272:
 .LABEL__parse_multiplication_expression_272__2:
   # expression.10: @AST_Expression = phi(expression.1, expression.3, expression.7, expression.5)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] 
-  .loc 7 582 25
+  .loc 7 577 25
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $2.1:rbx 
-  .loc 7 582 46
+  .loc 7 577 46
   # $3.1: @Matcher = load_struct_member(self.1, required_asterisk)
   mov r15, [rax+56]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $2.1:rbx $3.1:r15 
-  .loc 7 582 12
+  .loc 7 577 12
   # $5.1: Boolean = call(matches_287, self.1, $2.1, $3.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57955,7 +57910,7 @@ parse_multiplication_expression_272:
   mov [rbp-17], al
   jz .LABEL__parse_multiplication_expression_272__5
 .LABEL__parse_multiplication_expression_272__6:
-  .loc 7 582 12
+  .loc 7 577 12
   # $5.3: Boolean = phi($5.1, $5.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
   # jump($5.3, .LABEL__parse_multiplication_expression_272__3, .LABEL__parse_multiplication_expression_272__4)
@@ -57963,18 +57918,18 @@ parse_multiplication_expression_272:
   test al, al
   jz .LABEL__parse_multiplication_expression_272__4
 .LABEL__parse_multiplication_expression_272__3:
-  .loc 7 583 9
+  .loc 7 578 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
-  .loc 7 584 26
+  .loc 7 579 26
   # $9.1: @Matcher = load_struct_member(self.1, required_slash)
   mov rax, [rbp-8]
-  mov rbx, [rax+320]
+  mov rbx, [rax+328]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $9.1:rbx $5.3:[rbp-17] 
-  .loc 7 584 13
+  .loc 7 579 13
   # $10.1: Boolean = call(matches_286, self.1, $9.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57986,12 +57941,12 @@ parse_multiplication_expression_272:
   mov [rbp-18], al
   jz .LABEL__parse_multiplication_expression_272__9
 .LABEL__parse_multiplication_expression_272__7:
-  .loc 7 585 26
+  .loc 7 580 26
   # $16.1: @Matcher = load_struct_member(self.1, required_slash)
   mov rax, [rbp-8]
-  mov rbx, [rax+320]
+  mov rbx, [rax+328]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $16.1:rbx 
-  .loc 7 585 13
+  .loc 7 580 13
   # $17.1: @Token = call(consume_282, self.1, $16.1)
   mov rdi, rax
   mov rsi, rbx
@@ -57999,12 +57954,12 @@ parse_multiplication_expression_272:
   # [discarded value]: $17.1
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
-  .loc 7 586 30
+  .loc 7 581 30
   # $18.1: @Matcher = load_struct_member(self.1, required_slash)
   mov rax, [rbp-8]
-  mov rbx, [rax+320]
+  mov rbx, [rax+328]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $18.1:rbx 
-  .loc 7 586 17
+  .loc 7 581 17
   # $19.1: Boolean = call(matches_286, self.1, $18.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58016,12 +57971,12 @@ parse_multiplication_expression_272:
   mov [rbp-19], al
   jz .LABEL__parse_multiplication_expression_272__12
 .LABEL__parse_multiplication_expression_272__10:
-  .loc 7 587 30
+  .loc 7 582 30
   # $23.1: @Matcher = load_struct_member(self.1, required_slash)
   mov rax, [rbp-8]
-  mov rbx, [rax+320]
+  mov rbx, [rax+328]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] $23.1:rbx 
-  .loc 7 587 17
+  .loc 7 582 17
   # $24.1: @Token = call(consume_282, self.1, $23.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58029,24 +57984,24 @@ parse_multiplication_expression_272:
   # [discarded value]: $24.1
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] 
-  .loc 7 588 17
+  .loc 7 583 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] 
-  .loc 7 589 67
+  .loc 7 584 67
   # $25.1: @Source_Location = load_struct_member(expression.10, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:rax:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] $25.1:rbx 
-  .loc 7 589 137
+  .loc 7 584 137
   # $26.1: @AST_Expression = call(parse_unary_expression_273, self.1)
   mov rdi, [rbp-8]
   mov [rbp-27], rbx
   call parse_unary_expression_273
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] $25.1:[rbp-27] $26.1:rax 
-  .loc 7 589 30
+  .loc 7 584 30
   # expression.7: @AST_Expression = new AST_Modulo_Expression(object_type = AST_Modulo_Expression, location = $25.1, left_expression = expression.10, right_expression = $26.1)
   mov [rbp-35], rax
   mov rdi, 32
@@ -58073,24 +58028,24 @@ parse_multiplication_expression_272:
   # [discarded value]: expression.7
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] 
 .LABEL__parse_multiplication_expression_272__12:
-  .loc 7 591 17
+  .loc 7 586 17
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] 
-  .loc 7 592 67
+  .loc 7 587 67
   # $20.1: @Source_Location = load_struct_member(expression.10, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:rax:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] $20.1:rbx 
-  .loc 7 592 137
+  .loc 7 587 137
   # $21.1: @AST_Expression = call(parse_unary_expression_273, self.1)
   mov rdi, [rbp-8]
   mov [rbp-27], rbx
   call parse_unary_expression_273
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $19.1:[rbp-19] $20.1:[rbp-27] $21.1:rax 
-  .loc 7 592 30
+  .loc 7 587 30
   # expression.5: @AST_Expression = new AST_Divide_Expression(object_type = AST_Divide_Expression, location = $20.1, left_expression = expression.10, right_expression = $21.1)
   mov [rbp-35], rax
   mov rdi, 32
@@ -58119,12 +58074,12 @@ parse_multiplication_expression_272:
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
 .LABEL__parse_multiplication_expression_272__9:
-  .loc 7 595 26
+  .loc 7 590 26
   # $11.1: @Matcher = load_struct_member(self.1, required_asterisk)
   mov rax, [rbp-8]
   mov rbx, [rax+56]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $11.1:rbx 
-  .loc 7 595 13
+  .loc 7 590 13
   # $12.1: @Token = call(consume_282, self.1, $11.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58132,24 +58087,24 @@ parse_multiplication_expression_272:
   # [discarded value]: $12.1
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
-  .loc 7 596 13
+  .loc 7 591 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] 
-  .loc 7 597 65
+  .loc 7 592 65
   # $13.1: @Source_Location = load_struct_member(expression.10, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:rax:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $13.1:rbx 
-  .loc 7 597 135
+  .loc 7 592 135
   # $14.1: @AST_Expression = call(parse_unary_expression_273, self.1)
   mov rdi, [rbp-8]
   mov [rbp-26], rbx
   call parse_unary_expression_273
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $10.1:[rbp-18] $5.3:[rbp-17] $13.1:[rbp-26] $14.1:rax 
-  .loc 7 597 26
+  .loc 7 592 26
   # expression.3: @AST_Expression = new AST_Multiply_Expression(object_type = AST_Multiply_Expression, location = $13.1, left_expression = expression.10, right_expression = $14.1)
   mov [rbp-34], rax
   mov rdi, 32
@@ -58178,7 +58133,7 @@ parse_multiplication_expression_272:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $5.3:[rbp-17] 
 .LABEL__parse_multiplication_expression_272__4:
-  .loc 7 600 5
+  .loc 7 595 5
   # return(expression.10)
   mov rax, [rbp-16]
   jmp .LABEL__parse_multiplication_expression_272__end
@@ -58186,16 +58141,16 @@ parse_multiplication_expression_272:
   # [discarded value]: $5.3
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] 
 .LABEL__parse_multiplication_expression_272__5:
-  .loc 7 582 86
+  .loc 7 577 86
   # $6.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $6.1:rbx 
-  .loc 7 582 107
+  .loc 7 577 107
   # $7.1: @Matcher = load_struct_member(self.1, required_slash)
-  mov r15, [rax+320]
+  mov r15, [rax+328]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $5.1:[rbp-17] $6.1:rbx $7.1:r15 
-  .loc 7 582 73
+  .loc 7 577 73
   # $5.2: Boolean = call(matches_287, self.1, $6.1, $7.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58225,7 +58180,7 @@ parse_multiplication_expression_272:
 
 parse_multiplication_expression_272__stack_frame_size: .word 48
 
-  .loc 7 605 1
+  .loc 7 600 8
   .text
 parse_unary_expression_273:
   push rbp
@@ -58235,11 +58190,11 @@ parse_unary_expression_273:
 .LABEL__parse_unary_expression_273__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 606 22
+  .loc 7 601 22
   # $1.1: @Matcher = load_struct_member(self.1, required_hyphen)
-  mov rax, [rdi+216]
+  mov rax, [rdi+224]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 606 9
+  .loc 7 601 9
   # $2.1: Boolean = call(matches_286, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
@@ -58251,36 +58206,36 @@ parse_unary_expression_273:
   mov [rbp-9], al
   jz .LABEL__parse_unary_expression_273__3
 .LABEL__parse_unary_expression_273__2:
-  .loc 7 607 34
+  .loc 7 602 34
   # $3.1: @Matcher = load_struct_member(self.1, required_hyphen)
   mov rax, [rbp-8]
-  mov rbx, [rax+216]
+  mov rbx, [rax+224]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $3.1:rbx 
-  .loc 7 607 21
+  .loc 7 602 21
   # $4.1: @Token = call(consume_282, self.1, $3.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $4.1:rax 
-  .loc 7 607 21
+  .loc 7 602 21
   # location.1: @Source_Location = load_struct_member($4.1, location)
   mov rbx, [rax+16]
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] location.1:rbx 
-  .loc 7 608 9
+  .loc 7 603 9
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   mov [rbp-17], rbx
   call consume_space_281
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] location.1:[rbp-17] 
-  .loc 7 609 76
+  .loc 7 604 76
   # $6.1: @AST_Expression = call(parse_cast_expression_274, self.1)
   mov rdi, [rbp-8]
   call parse_cast_expression_274
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] location.1:[rbp-17] $6.1:rax 
-  .loc 7 609 16
+  .loc 7 604 16
   # $7.1: @AST_Negate_Expression = new AST_Negate_Expression(object_type = AST_Negate_Expression, location = location.1, expression = $6.1)
   mov [rbp-25], rax
   mov rdi, 24
@@ -58297,19 +58252,19 @@ parse_unary_expression_273:
   # [discarded value]: $6.1
   # [discarded value]: location.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $7.1:rax 
-  .loc 7 609 9
+  .loc 7 604 9
   # return($7.1)
   mov [rbp-17], rax
   jmp .LABEL__parse_unary_expression_273__end
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] 
 .LABEL__parse_unary_expression_273__3:
-  .loc 7 611 12
+  .loc 7 606 12
   # $8.1: @AST_Expression = call(parse_cast_expression_274, self.1)
   mov rdi, [rbp-8]
   call parse_cast_expression_274
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $8.1:rax 
-  .loc 7 611 5
+  .loc 7 606 5
   # return($8.1)
   mov [rbp-17], rax
   jmp .LABEL__parse_unary_expression_273__end
@@ -58326,7 +58281,7 @@ parse_unary_expression_273:
 
 parse_unary_expression_273__stack_frame_size: .word 32
 
-  .loc 7 616 1
+  .loc 7 611 8
   .text
 parse_cast_expression_274:
   push rbp
@@ -58336,21 +58291,21 @@ parse_cast_expression_274:
 .LABEL__parse_cast_expression_274__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 617 19
+  .loc 7 612 19
   # expression.1: @AST_Expression = call(parse_access_expression_275, self.1)
   mov [rbp-8], rdi
   call parse_access_expression_275
   # [live values]: self.1:[rbp-8] expression.1:rax 
-  .loc 7 618 22
+  .loc 7 613 22
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] expression.1:rax $2.1:r15 
-  .loc 7 618 43
+  .loc 7 613 43
   # $3.1: @Matcher = load_struct_member(self.1, required_as)
   mov r14, [rbx+48]
   # [live values]: self.1:rbx:[rbp-8] expression.1:rax $2.1:r15 $3.1:r14 
-  .loc 7 618 9
+  .loc 7 613 9
   # $4.1: Boolean = call(matches_287, self.1, $2.1, $3.1)
   mov rdi, rbx
   mov rsi, r15
@@ -58365,18 +58320,18 @@ parse_cast_expression_274:
   mov [rbp-17], al
   jz .LABEL__parse_cast_expression_274__3
 .LABEL__parse_cast_expression_274__2:
-  .loc 7 619 9
+  .loc 7 614 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $4.1:[rbp-17] 
-  .loc 7 620 22
+  .loc 7 615 22
   # $5.1: @Matcher = load_struct_member(self.1, required_as)
   mov rax, [rbp-8]
   mov rbx, [rax+48]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $4.1:[rbp-17] $5.1:rbx 
-  .loc 7 620 9
+  .loc 7 615 9
   # $6.1: @Token = call(consume_282, self.1, $5.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58384,23 +58339,23 @@ parse_cast_expression_274:
   # [discarded value]: $6.1
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $4.1:[rbp-17] 
-  .loc 7 621 9
+  .loc 7 616 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $4.1:[rbp-17] 
-  .loc 7 622 17
+  .loc 7 617 17
   # type.1: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-8]
   call parse_type_265
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $4.1:[rbp-17] type.1:rax 
-  .loc 7 623 51
+  .loc 7 618 51
   # $8.1: @Source_Location = load_struct_member(expression.1, location)
   mov rbx, [rbp-16]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] $4.1:[rbp-17] type.1:rax $8.1:r15 
-  .loc 7 623 16
+  .loc 7 618 16
   # $9.1: @AST_Cast_Expression = new AST_Cast_Expression(object_type = AST_Cast_Expression, location = $8.1, value_expression = expression.1, type = type.1)
   mov [rbp-25], rax
   mov [rbp-33], r15
@@ -58421,14 +58376,14 @@ parse_cast_expression_274:
   # [discarded value]: $8.1
   # [discarded value]: type.1
   # [live values]: self.1:[rbp-8] expression.1:r15:[rbp-16] $4.1:[rbp-17] $9.1:rax 
-  .loc 7 623 9
+  .loc 7 618 9
   # return($9.1)
   mov [rbp-25], rax
   jmp .LABEL__parse_cast_expression_274__end
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $4.1:[rbp-17] 
 .LABEL__parse_cast_expression_274__3:
-  .loc 7 625 5
+  .loc 7 620 5
   # return(expression.1)
   mov rax, [rbp-16]
   jmp .LABEL__parse_cast_expression_274__end
@@ -58445,7 +58400,7 @@ parse_cast_expression_274:
 
 parse_cast_expression_274__stack_frame_size: .word 48
 
-  .loc 7 630 1
+  .loc 7 625 8
   .text
 parse_access_expression_275:
   push rbp
@@ -58455,12 +58410,12 @@ parse_access_expression_275:
 .LABEL__parse_access_expression_275__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 631 19
+  .loc 7 626 19
   # expression.1: @AST_Expression = call(parse_primary_expression_278, self.1)
   mov [rbp-8], rdi
   call parse_primary_expression_278
   # [live values]: self.1:[rbp-8] expression.1:rax 
-  .loc 7 632 9
+  .loc 7 627 9
   # $2.1: Boolean = expression.1 != null
   cmp rax, 0
   setne bl
@@ -58473,20 +58428,20 @@ parse_access_expression_275:
 .LABEL__parse_access_expression_275__4:
   # expression.2: @AST_Expression = phi(expression.1, expression.9)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] 
-  .loc 7 634 13
+  .loc 7 629 13
   # old_expression.1: @AST_Expression = expression.2
   mov rax, [rbp-16]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:rax 
-  .loc 7 635 30
+  .loc 7 630 30
   # $3.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:rax $3.1:r15 
-  .loc 7 635 51
+  .loc 7 630 51
   # $4.1: @Matcher = load_struct_member(self.1, required_dot)
   mov r14, [rbx+144]
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:rax $3.1:r15 $4.1:r14 
-  .loc 7 635 17
+  .loc 7 630 17
   # $5.1: Boolean = call(matches_287, self.1, $3.1, $4.1)
   mov rdi, rbx
   mov rsi, r15
@@ -58501,18 +58456,18 @@ parse_access_expression_275:
   mov [rbp-26], al
   jz .LABEL__parse_access_expression_275__7
 .LABEL__parse_access_expression_275__6:
-  .loc 7 636 17
+  .loc 7 631 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] 
-  .loc 7 637 30
+  .loc 7 632 30
   # $6.1: @Matcher = load_struct_member(self.1, required_dot)
   mov rax, [rbp-8]
   mov rbx, [rax+144]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] $6.1:rbx 
-  .loc 7 637 17
+  .loc 7 632 17
   # $7.1: @Token = call(consume_282, self.1, $6.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58520,23 +58475,23 @@ parse_access_expression_275:
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] 
-  .loc 7 638 17
+  .loc 7 633 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] 
-  .loc 7 639 74
+  .loc 7 634 74
   # $8.1: @Source_Location = load_struct_member(expression.2, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:rax:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] $8.1:rbx 
-  .loc 7 639 154
+  .loc 7 634 154
   # $9.1: @Matcher = load_struct_member(self.1, required_identifier)
   mov r15, [rbp-8]
-  mov r14, [r15+224]
+  mov r14, [r15+232]
   # [live values]: self.1:r15:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:rax:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] $8.1:rbx $9.1:r14 
-  .loc 7 639 141
+  .loc 7 634 141
   # $11.1: @Identifier_Token = call(consume_282, self.1, $9.1)
   mov rdi, r15
   mov rsi, r14
@@ -58544,7 +58499,7 @@ parse_access_expression_275:
   call consume_282
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] $8.1:[rbp-34] $11.1:rax 
-  .loc 7 639 30
+  .loc 7 634 30
   # expression.4: @AST_Expression = new AST_Member_Access_Expression(object_type = AST_Member_Access_Expression, location = $8.1, object_expression = expression.2, member_name = $11.1)
   mov [rbp-42], rax
   mov rdi, 32
@@ -58569,16 +58524,16 @@ parse_access_expression_275:
 .LABEL__parse_access_expression_275__7:
   # expression.11: @AST_Expression = phi(expression.2, expression.4)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] 
-  .loc 7 641 30
+  .loc 7 636 30
   # $13.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $13.1:rbx 
-  .loc 7 641 51
+  .loc 7 636 51
   # $14.1: @Matcher = load_struct_member(self.1, required_open_paren)
-  mov r15, [rax+296]
+  mov r15, [rax+304]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $13.1:rbx $14.1:r15 
-  .loc 7 641 17
+  .loc 7 636 17
   # $15.1: Boolean = call(matches_287, self.1, $13.1, $14.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58592,18 +58547,18 @@ parse_access_expression_275:
   mov [rbp-27], al
   jz .LABEL__parse_access_expression_275__9
 .LABEL__parse_access_expression_275__8:
-  .loc 7 642 17
+  .loc 7 637 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] 
-  .loc 7 643 30
+  .loc 7 638 30
   # $16.1: @Matcher = load_struct_member(self.1, required_open_paren)
   mov rax, [rbp-8]
-  mov rbx, [rax+296]
+  mov rbx, [rax+304]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] $16.1:rbx 
-  .loc 7 643 17
+  .loc 7 638 17
   # $17.1: @Token = call(consume_282, self.1, $16.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58611,13 +58566,13 @@ parse_access_expression_275:
   # [discarded value]: $17.1
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] 
-  .loc 7 644 17
+  .loc 7 639 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] 
-  .loc 7 645 35
+  .loc 7 640 35
   # call_arguments.1: @List = new List(first_item = null, last_item = null, size = 0)
   mov rdi, 24
   call malloc
@@ -58628,16 +58583,16 @@ parse_access_expression_275:
   #     .size = 0
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:rax 
-  .loc 7 646 34
+  .loc 7 641 34
   # $19.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:rax $19.1:r15 
-  .loc 7 646 55
+  .loc 7 641 55
   # $20.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov r14, [rbx+96]
   # [live values]: self.1:rbx:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:rax $19.1:r15 $20.1:r14 
-  .loc 7 646 21
+  .loc 7 641 21
   # $21.1: Boolean = call(matches_287, self.1, $19.1, $20.1)
   mov rdi, rbx
   mov rsi, r15
@@ -58647,7 +58602,7 @@ parse_access_expression_275:
   # [discarded value]: $20.1
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $21.1:rax 
-  .loc 7 646 21
+  .loc 7 641 21
   # $22.1: Boolean = $21.1 == false
   cmp al, 0
   sete bl
@@ -58658,7 +58613,7 @@ parse_access_expression_275:
   mov [rbp-36], bl
   jz .LABEL__parse_access_expression_275__11
 .LABEL__parse_access_expression_275__10:
-  .loc 7 647 21
+  .loc 7 642 21
   # call(parse_call_arguments_276, self.1, call_arguments.1)
   mov rdi, [rbp-8]
   mov rsi, [rbp-35]
@@ -58666,18 +58621,18 @@ parse_access_expression_275:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] 
   # jump(.LABEL__parse_access_expression_275__11)
 .LABEL__parse_access_expression_275__11:
-  .loc 7 649 17
+  .loc 7 644 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] 
-  .loc 7 650 30
+  .loc 7 645 30
   # $23.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov rax, [rbp-8]
   mov rbx, [rax+96]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] $23.1:rbx 
-  .loc 7 650 17
+  .loc 7 645 17
   # $24.1: @Token = call(consume_282, self.1, $23.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58685,12 +58640,12 @@ parse_access_expression_275:
   # [discarded value]: $24.1
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] 
-  .loc 7 651 65
+  .loc 7 646 65
   # $25.1: @Source_Location = load_struct_member(expression.11, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:rax:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] $25.1:rbx 
-  .loc 7 651 30
+  .loc 7 646 30
   # expression.6: @AST_Expression = new AST_Call_Expression(object_type = AST_Call_Expression, location = $25.1, callee_expression = expression.11, arguments = call_arguments.1)
   mov [rbp-44], rbx
   mov rdi, 32
@@ -58714,16 +58669,16 @@ parse_access_expression_275:
 .LABEL__parse_access_expression_275__9:
   # expression.12: @AST_Expression = phi(expression.11, expression.6)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] expression.6:[rbp-16] 
-  .loc 7 653 30
+  .loc 7 648 30
   # $27.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $27.1:rbx expression.6:[rbp-16] 
-  .loc 7 653 51
+  .loc 7 648 51
   # $28.1: @Matcher = load_struct_member(self.1, required_open_bracket)
-  mov r15, [rax+288]
+  mov r15, [rax+296]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $27.1:rbx $28.1:r15 expression.6:[rbp-16] 
-  .loc 7 653 17
+  .loc 7 648 17
   # $29.1: Boolean = call(matches_287, self.1, $27.1, $28.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58737,18 +58692,18 @@ parse_access_expression_275:
   mov [rbp-37], al
   jz .LABEL__parse_access_expression_275__13
 .LABEL__parse_access_expression_275__12:
-  .loc 7 654 17
+  .loc 7 649 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] 
-  .loc 7 655 30
+  .loc 7 650 30
   # $30.1: @Matcher = load_struct_member(self.1, required_open_bracket)
   mov rax, [rbp-8]
-  mov rbx, [rax+288]
+  mov rbx, [rax+296]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] $30.1:rbx 
-  .loc 7 655 17
+  .loc 7 650 17
   # $31.1: @Token = call(consume_282, self.1, $30.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58756,30 +58711,30 @@ parse_access_expression_275:
   # [discarded value]: $31.1
   # [discarded value]: $30.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] 
-  .loc 7 656 17
+  .loc 7 651 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] 
-  .loc 7 657 37
+  .loc 7 652 37
   # index_expression.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] index_expression.1:rax 
-  .loc 7 658 17
+  .loc 7 653 17
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   mov [rbp-45], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] index_expression.1:[rbp-45] 
-  .loc 7 659 30
+  .loc 7 654 30
   # $33.1: @Matcher = load_struct_member(self.1, required_close_bracket)
   mov rax, [rbp-8]
   mov rbx, [rax+88]
   # [live values]: self.1:rax:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] index_expression.1:[rbp-45] $33.1:rbx 
-  .loc 7 659 17
+  .loc 7 654 17
   # $34.1: @Token = call(consume_282, self.1, $33.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58787,12 +58742,12 @@ parse_access_expression_275:
   # [discarded value]: $34.1
   # [discarded value]: $33.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] index_expression.1:[rbp-45] 
-  .loc 7 660 73
+  .loc 7 655 73
   # $35.1: @Source_Location = load_struct_member(expression.12, location)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:rax:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] index_expression.1:[rbp-45] $35.1:rbx 
-  .loc 7 660 30
+  .loc 7 655 30
   # expression.8: @AST_Expression = new AST_Array_Access_Expression(object_type = AST_Array_Access_Expression, location = $35.1, array_expression = expression.12, index_expression = index_expression.1)
   mov [rbp-53], rbx
   mov rdi, 32
@@ -58817,7 +58772,7 @@ parse_access_expression_275:
 .LABEL__parse_access_expression_275__13:
   # expression.9: @AST_Expression = phi(expression.12, expression.8)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] expression.8:[rbp-16] expression.9:[rbp-16] 
-  .loc 7 662 17
+  .loc 7 657 17
   # $37.1: Boolean = expression.9 == old_expression.1
   mov rax, [rbp-16]
   cmp rax, QWORD PTR [rbp-25]
@@ -58830,7 +58785,7 @@ parse_access_expression_275:
 .LABEL__parse_access_expression_275__3:
   # expression.10: @AST_Expression = phi(expression.1, expression.9)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.10:[rbp-16] expression.2:[rbp-16] old_expression.1:[rbp-25] $5.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $15.1:[rbp-27] call_arguments.1:[rbp-35] $22.1:[rbp-36] expression.12:[rbp-16] $29.1:[rbp-37] expression.6:[rbp-16] expression.8:[rbp-16] expression.9:[rbp-16] $37.1:[rbp-38] 
-  .loc 7 667 5
+  .loc 7 662 5
   # return(expression.10)
   mov rax, [rbp-16]
   jmp .LABEL__parse_access_expression_275__end
@@ -58879,7 +58834,7 @@ parse_access_expression_275:
 
 parse_access_expression_275__stack_frame_size: .word 64
 
-  .loc 7 673 1
+  .loc 7 668 8
   .text
 parse_call_arguments_276:
   push rbp
@@ -58891,7 +58846,7 @@ parse_call_arguments_276:
   # [live values]: self.1:rdi 
   # call_arguments.1: @List = load_variable(call_arguments)
   # [live values]: self.1:rdi call_arguments.1:rsi 
-  .loc 7 674 9
+  .loc 7 669 9
   # $1.1: Boolean = call(matches_end_of_line_285, self.1)
   mov [rbp-8], rsi
   mov [rbp-16], rdi
@@ -58902,39 +58857,39 @@ parse_call_arguments_276:
   mov [rbp-17], al
   jz .LABEL__parse_call_arguments_276__4
 .LABEL__parse_call_arguments_276__2:
-  .loc 7 675 9
+  .loc 7 670 9
   # call(consume_end_of_line_279, self.1)
   mov rdi, [rbp-16]
   call consume_end_of_line_279
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] 
-  .loc 7 676 34
+  .loc 7 671 34
   # $9.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $9.1:rbx 
-  .loc 7 676 34
+  .loc 7 671 34
   # $10.1: Int = $9.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $9.1
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $10.1:r15 
-  .loc 7 676 9
+  .loc 7 671 9
   # store_struct_member(self.1, current_alignment, $10.1)
   mov QWORD PTR [rax+16], r15
   # [discarded value]: $10.1
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] 
   # jump(.LABEL__parse_call_arguments_276__8)
 .LABEL__parse_call_arguments_276__8:
-  .loc 7 677 29
+  .loc 7 672 29
   # $11.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-16]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $11.1:rbx 
-  .loc 7 677 50
+  .loc 7 672 50
   # $12.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov r15, [rax+96]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $11.1:rbx $12.1:r15 
-  .loc 7 677 16
+  .loc 7 672 16
   # $13.1: Boolean = call(matches_287, self.1, $11.1, $12.1)
   mov rdi, rax
   mov rsi, rbx
@@ -58943,7 +58898,7 @@ parse_call_arguments_276:
   # [discarded value]: $12.1
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $13.1:rax 
-  .loc 7 677 16
+  .loc 7 672 16
   # $14.1: Boolean = $13.1 == false
   cmp al, 0
   sete bl
@@ -58954,37 +58909,37 @@ parse_call_arguments_276:
   mov [rbp-18], bl
   jz .LABEL__parse_call_arguments_276__10
 .LABEL__parse_call_arguments_276__9:
-  .loc 7 678 32
+  .loc 7 673 32
   # $15.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] $15.1:rbx 
-  .loc 7 678 32
+  .loc 7 673 32
   # $16.1: Int = $15.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $15.1
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] $16.1:r15 
-  .loc 7 678 13
+  .loc 7 673 13
   # call(consume_space_281, self.1, $16.1)
   mov rdi, rax
   mov rsi, r15
   call consume_space_281
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] 
-  .loc 7 679 35
+  .loc 7 674 35
   # $17.1: @AST_Call_Argument = call(parse_call_argument_277, self.1)
   mov rdi, [rbp-16]
   call parse_call_argument_277
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] $17.1:rax 
-  .loc 7 679 13
+  .loc 7 674 13
   # call(append_319, call_arguments.1, $17.1)
   mov rdi, [rbp-8]
   mov rsi, rax
   call append_319
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] 
-  .loc 7 680 13
+  .loc 7 675 13
   # call(consume_end_of_line_279, self.1)
   mov rdi, [rbp-16]
   call consume_end_of_line_279
@@ -58993,33 +58948,33 @@ parse_call_arguments_276:
   jmp .LABEL__parse_call_arguments_276__8
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] 
 .LABEL__parse_call_arguments_276__10:
-  .loc 7 682 34
+  .loc 7 677 34
   # $18.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] $18.1:rbx 
-  .loc 7 682 34
+  .loc 7 677 34
   # $19.1: Int = $18.1 - 1
   mov r15, rbx
   dec r15
   # [discarded value]: $18.1
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] $19.1:r15 
-  .loc 7 682 9
+  .loc 7 677 9
   # store_struct_member(self.1, current_alignment, $19.1)
   mov QWORD PTR [rax+16], r15
   # [discarded value]: $19.1
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] 
-  .loc 7 683 28
+  .loc 7 678 28
   # $20.1: Int = load_struct_member(self.1, current_alignment)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] $20.1:rbx 
-  .loc 7 683 28
+  .loc 7 678 28
   # $21.1: Int = $20.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $20.1
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $14.1:[rbp-18] $21.1:r15 
-  .loc 7 683 9
+  .loc 7 678 9
   # call(consume_space_281, self.1, $21.1)
   mov rdi, rax
   mov rsi, r15
@@ -59036,12 +58991,12 @@ parse_call_arguments_276:
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] 
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] 
 .LABEL__parse_call_arguments_276__4:
-  .loc 7 685 31
+  .loc 7 680 31
   # $2.1: @AST_Call_Argument = call(parse_call_argument_277, self.1)
   mov rdi, [rbp-16]
   call parse_call_argument_277
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $2.1:rax 
-  .loc 7 685 9
+  .loc 7 680 9
   # call(append_319, call_arguments.1, $2.1)
   mov rdi, [rbp-8]
   mov rsi, rax
@@ -59050,16 +59005,16 @@ parse_call_arguments_276:
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] 
   # jump(.LABEL__parse_call_arguments_276__5)
 .LABEL__parse_call_arguments_276__5:
-  .loc 7 686 29
+  .loc 7 681 29
   # $3.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-16]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $3.1:rbx 
-  .loc 7 686 50
+  .loc 7 681 50
   # $4.1: @Matcher = load_struct_member(self.1, required_comma)
   mov r15, [rax+120]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $3.1:rbx $4.1:r15 
-  .loc 7 686 16
+  .loc 7 681 16
   # $5.1: Boolean = call(matches_287, self.1, $3.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59073,18 +59028,18 @@ parse_call_arguments_276:
   mov [rbp-18], al
   jz .LABEL__parse_call_arguments_276__3
 .LABEL__parse_call_arguments_276__6:
-  .loc 7 687 13
+  .loc 7 682 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-16]
   xor rsi, rsi
   call consume_space_281
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $5.1:[rbp-18] 
-  .loc 7 688 26
+  .loc 7 683 26
   # $6.1: @Matcher = load_struct_member(self.1, required_comma)
   mov rax, [rbp-16]
   mov rbx, [rax+120]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $5.1:[rbp-18] $6.1:rbx 
-  .loc 7 688 13
+  .loc 7 683 13
   # $7.1: @Token = call(consume_282, self.1, $6.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59092,18 +59047,18 @@ parse_call_arguments_276:
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $5.1:[rbp-18] 
-  .loc 7 689 13
+  .loc 7 684 13
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-16]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $5.1:[rbp-18] 
-  .loc 7 690 35
+  .loc 7 685 35
   # $8.1: @AST_Call_Argument = call(parse_call_argument_277, self.1)
   mov rdi, [rbp-16]
   call parse_call_argument_277
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $5.1:[rbp-18] $8.1:rax 
-  .loc 7 690 13
+  .loc 7 685 13
   # call(append_319, call_arguments.1, $8.1)
   mov rdi, [rbp-8]
   mov rsi, rax
@@ -59128,7 +59083,7 @@ parse_call_arguments_276:
 
 parse_call_arguments_276__stack_frame_size: .word 32
 
-  .loc 7 697 1
+  .loc 7 692 8
   .text
 parse_call_argument_277:
   push rbp
@@ -59138,19 +59093,19 @@ parse_call_argument_277:
 .LABEL__parse_call_argument_277__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 698 22
+  .loc 7 693 22
   # $1.1: @Matcher = load_struct_member(self.1, required_identifier)
-  mov rax, [rdi+224]
+  mov rax, [rdi+232]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 698 48
+  .loc 7 693 48
   # $2.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rdi+32]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx 
-  .loc 7 698 69
+  .loc 7 693 69
   # $3.1: @Matcher = load_struct_member(self.1, required_equals)
   mov r15, [rdi+176]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx $3.1:r15 
-  .loc 7 698 9
+  .loc 7 693 9
   # $4.1: Boolean = call(matches_288, self.1, $1.1, $2.1, $3.1)
   mov rsi, rax
   mov rdx, rbx
@@ -59166,31 +59121,31 @@ parse_call_argument_277:
   mov [rbp-9], al
   jz .LABEL__parse_call_argument_277__3
 .LABEL__parse_call_argument_277__2:
-  .loc 7 699 30
+  .loc 7 694 30
   # $5.1: @Matcher = load_struct_member(self.1, required_identifier)
   mov rax, [rbp-8]
-  mov rbx, [rax+224]
+  mov rbx, [rax+232]
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] $5.1:rbx 
-  .loc 7 699 17
+  .loc 7 694 17
   # name.1: @Identifier_Token = call(consume_282, self.1, $5.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] name.1:rax 
-  .loc 7 700 9
+  .loc 7 695 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   mov [rbp-17], rax
   call consume_space_281
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] name.1:[rbp-17] 
-  .loc 7 701 22
+  .loc 7 696 22
   # $8.1: @Matcher = load_struct_member(self.1, required_equals)
   mov rax, [rbp-8]
   mov rbx, [rax+176]
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] name.1:[rbp-17] $8.1:rbx 
-  .loc 7 701 9
+  .loc 7 696 9
   # $9.1: @Token = call(consume_282, self.1, $8.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59198,18 +59153,18 @@ parse_call_argument_277:
   # [discarded value]: $9.1
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] name.1:[rbp-17] 
-  .loc 7 702 9
+  .loc 7 697 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] name.1:[rbp-17] 
-  .loc 7 703 18
+  .loc 7 698 18
   # value.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] name.1:[rbp-17] value.1:rax 
-  .loc 7 704 16
+  .loc 7 699 16
   # $11.1: @AST_Call_Argument = new AST_Call_Argument(name = name.1, value_expression = value.1)
   mov [rbp-25], rax
   mov rdi, 16
@@ -59223,19 +59178,19 @@ parse_call_argument_277:
   # [discarded value]: value.1
   # [discarded value]: name.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] $11.1:rax 
-  .loc 7 704 9
+  .loc 7 699 9
   # return($11.1)
   mov [rbp-17], rax
   jmp .LABEL__parse_call_argument_277__end
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] 
 .LABEL__parse_call_argument_277__3:
-  .loc 7 706 14
+  .loc 7 701 14
   # value.1: @AST_Expression = call(parse_expression_266, self.1)
   mov rdi, [rbp-8]
   call parse_expression_266
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] value.1:rax 
-  .loc 7 707 12
+  .loc 7 702 12
   # $13.1: @AST_Call_Argument = new AST_Call_Argument(name = null, value_expression = value.1)
   mov [rbp-17], rax
   mov rdi, 16
@@ -59247,7 +59202,7 @@ parse_call_argument_277:
   mov QWORD PTR [rax+8], rbx
   # [discarded value]: value.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] $13.1:rax 
-  .loc 7 707 5
+  .loc 7 702 5
   # return($13.1)
   mov [rbp-17], rax
   jmp .LABEL__parse_call_argument_277__end
@@ -59264,7 +59219,7 @@ parse_call_argument_277:
 
 parse_call_argument_277__stack_frame_size: .word 32
 
-  .loc 7 721 1
+  .loc 7 716 8
   .text
 parse_primary_expression_278:
   push rbp
@@ -59274,11 +59229,11 @@ parse_primary_expression_278:
 .LABEL__parse_primary_expression_278__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 722 22
-  # $1.1: @Matcher = load_struct_member(self.1, required_identifier)
-  mov rax, [rdi+224]
+  .loc 7 717 22
+  # $1.1: @Matcher = load_struct_member(self.1, required_new)
+  mov rax, [rdi+280]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 722 9
+  .loc 7 717 9
   # $2.1: Boolean = call(matches_286, self.1, $1.1)
   mov rsi, rax
   mov [rbp-8], rdi
@@ -59290,238 +59245,33 @@ parse_primary_expression_278:
   mov [rbp-9], al
   jz .LABEL__parse_primary_expression_278__3
 .LABEL__parse_primary_expression_278__2:
-  .loc 7 723 31
-  # $3.1: @Matcher = load_struct_member(self.1, required_identifier)
+  .loc 7 718 31
+  # $3.1: @Matcher = load_struct_member(self.1, required_new)
   mov rax, [rbp-8]
-  mov rbx, [rax+224]
+  mov rbx, [rax+280]
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $3.1:rbx 
-  .loc 7 723 18
-  # token.1: @Identifier_Token = call(consume_282, self.1, $3.1)
+  .loc 7 718 18
+  # token.1: @Token = call(consume_282, self.1, $3.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:rax 
-  .loc 7 724 55
-  # $6.1: @Source_Location = load_struct_member(token.1, location)
-  mov rbx, [rax+16]
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:rax $6.1:rbx 
-  .loc 7 724 16
-  # $7.1: @AST_Variable_Expression = new AST_Variable_Expression(object_type = AST_Variable_Expression, location = $6.1, name = token.1)
-  mov [rbp-17], rax
-  mov [rbp-25], rbx
-  mov rdi, 24
-  call malloc
-  #     .object_type = AST_Variable_Expression
-  mov rbx, AST_Variable_Expression[rip]
-  mov [rax], rbx
-  #     .location = $6.1
-  mov rbx, [rbp-25]
-  mov QWORD PTR [rax+8], rbx
-  #     .name = token.1
-  mov r15, [rbp-17]
-  mov QWORD PTR [rax+16], r15
-  # [discarded value]: $6.1
-  # [discarded value]: token.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $7.1:rax 
-  .loc 7 724 9
-  # return($7.1)
-  mov [rbp-17], rax
-  jmp .LABEL__parse_primary_expression_278__end
-  # [discarded value]: $7.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] 
-.LABEL__parse_primary_expression_278__3:
-  .loc 7 726 22
-  # $8.1: @Matcher = load_struct_member(self.1, required_literal)
-  mov rax, [rbp-8]
-  mov rbx, [rax+256]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $8.1:rbx 
-  .loc 7 726 9
-  # $9.1: Boolean = call(matches_286, self.1, $8.1)
-  mov rdi, rax
-  mov rsi, rbx
-  call matches_286
-  # [discarded value]: $8.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:rax 
-  # jump($9.1, .LABEL__parse_primary_expression_278__5, .LABEL__parse_primary_expression_278__6)
-  test al, al
-  mov [rbp-10], al
-  jz .LABEL__parse_primary_expression_278__6
-.LABEL__parse_primary_expression_278__5:
-  .loc 7 727 31
-  # $10.1: @Matcher = load_struct_member(self.1, required_literal)
-  mov rax, [rbp-8]
-  mov rbx, [rax+256]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $10.1:rbx 
-  .loc 7 727 18
-  # token.1: @Literal_Token = call(consume_282, self.1, $10.1)
-  mov rdi, rax
-  mov rsi, rbx
-  call consume_282
-  # [discarded value]: $10.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:rax 
-  .loc 7 728 54
-  # $13.1: @Source_Location = load_struct_member(token.1, location)
-  mov rbx, [rax+16]
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] token.1:rax $13.1:rbx 
-  .loc 7 728 16
-  # $14.1: @AST_Literal_Expression = new AST_Literal_Expression(object_type = AST_Literal_Expression, location = $13.1, literal = token.1)
-  mov [rbp-18], rax
-  mov [rbp-26], rbx
-  mov rdi, 24
-  call malloc
-  #     .object_type = AST_Literal_Expression
-  mov rbx, AST_Literal_Expression[rip]
-  mov [rax], rbx
-  #     .location = $13.1
-  mov rbx, [rbp-26]
-  mov QWORD PTR [rax+8], rbx
-  #     .literal = token.1
-  mov r15, [rbp-18]
-  mov QWORD PTR [rax+16], r15
-  # [discarded value]: $13.1
-  # [discarded value]: token.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $14.1:rax 
-  .loc 7 728 9
-  # return($14.1)
-  mov [rbp-18], rax
-  jmp .LABEL__parse_primary_expression_278__end
-  # [discarded value]: $14.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] 
-.LABEL__parse_primary_expression_278__6:
-  .loc 7 730 22
-  # $15.1: @Matcher = load_struct_member(self.1, required_open_paren)
-  mov rax, [rbp-8]
-  mov rbx, [rax+296]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $15.1:rbx 
-  .loc 7 730 9
-  # $16.1: Boolean = call(matches_286, self.1, $15.1)
-  mov rdi, rax
-  mov rsi, rbx
-  call matches_286
-  # [discarded value]: $15.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:rax 
-  # jump($16.1, .LABEL__parse_primary_expression_278__8, .LABEL__parse_primary_expression_278__9)
-  test al, al
-  mov [rbp-11], al
-  jz .LABEL__parse_primary_expression_278__9
-.LABEL__parse_primary_expression_278__8:
-  .loc 7 731 34
-  # $17.1: @Matcher = load_struct_member(self.1, required_open_paren)
-  mov rax, [rbp-8]
-  mov rbx, [rax+296]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $17.1:rbx 
-  .loc 7 731 21
-  # $18.1: @Token = call(consume_282, self.1, $17.1)
-  mov rdi, rax
-  mov rsi, rbx
-  call consume_282
-  # [discarded value]: $17.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $18.1:rax 
-  .loc 7 731 21
-  # location.1: @Source_Location = load_struct_member($18.1, location)
-  mov rbx, [rax+16]
-  # [discarded value]: $18.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] location.1:rbx 
-  .loc 7 732 9
-  # call(consume_space_281, self.1, 0)
-  mov rdi, [rbp-8]
-  xor rsi, rsi
-  mov [rbp-19], rbx
-  call consume_space_281
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] location.1:[rbp-19] 
-  .loc 7 733 23
-  # expression.1: @AST_Expression = call(parse_expression_266, self.1)
-  mov rdi, [rbp-8]
-  call parse_expression_266
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] location.1:[rbp-19] expression.1:rax 
-  .loc 7 734 9
-  # call(consume_space_281, self.1, 0)
-  mov rdi, [rbp-8]
-  xor rsi, rsi
-  mov [rbp-27], rax
-  call consume_space_281
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] location.1:[rbp-19] expression.1:[rbp-27] 
-  .loc 7 735 22
-  # $21.1: @Matcher = load_struct_member(self.1, required_close_paren)
-  mov rax, [rbp-8]
-  mov rbx, [rax+96]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] location.1:[rbp-19] expression.1:[rbp-27] $21.1:rbx 
-  .loc 7 735 9
-  # $22.1: @Token = call(consume_282, self.1, $21.1)
-  mov rdi, rax
-  mov rsi, rbx
-  call consume_282
-  # [discarded value]: $22.1
-  # [discarded value]: $21.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] location.1:[rbp-19] expression.1:[rbp-27] 
-  .loc 7 736 16
-  # $23.1: @AST_Atomic_Expression = new AST_Atomic_Expression(object_type = AST_Atomic_Expression, location = location.1, expression = expression.1)
-  mov rdi, 24
-  call malloc
-  #     .object_type = AST_Atomic_Expression
-  mov rbx, AST_Atomic_Expression[rip]
-  mov [rax], rbx
-  #     .location = location.1
-  mov rbx, [rbp-19]
-  mov QWORD PTR [rax+8], rbx
-  #     .expression = expression.1
-  mov r15, [rbp-27]
-  mov QWORD PTR [rax+16], r15
-  # [discarded value]: expression.1
-  # [discarded value]: location.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $23.1:rax 
-  .loc 7 736 9
-  # return($23.1)
-  mov [rbp-19], rax
-  jmp .LABEL__parse_primary_expression_278__end
-  # [discarded value]: $23.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] 
-.LABEL__parse_primary_expression_278__9:
-  .loc 7 738 22
-  # $24.1: @Matcher = load_struct_member(self.1, required_new)
-  mov rax, [rbp-8]
-  mov rbx, [rax+272]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $24.1:rbx 
-  .loc 7 738 9
-  # $25.1: Boolean = call(matches_286, self.1, $24.1)
-  mov rdi, rax
-  mov rsi, rbx
-  call matches_286
-  # [discarded value]: $24.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:rax 
-  # jump($25.1, .LABEL__parse_primary_expression_278__11, .LABEL__parse_primary_expression_278__12)
-  test al, al
-  mov [rbp-12], al
-  jz .LABEL__parse_primary_expression_278__12
-.LABEL__parse_primary_expression_278__11:
-  .loc 7 739 31
-  # $26.1: @Matcher = load_struct_member(self.1, required_new)
-  mov rax, [rbp-8]
-  mov rbx, [rax+272]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] $26.1:rbx 
-  .loc 7 739 18
-  # token.1: @Token = call(consume_282, self.1, $26.1)
-  mov rdi, rax
-  mov rsi, rbx
-  call consume_282
-  # [discarded value]: $26.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:rax 
-  .loc 7 740 9
+  .loc 7 719 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
-  mov [rbp-20], rax
+  mov [rbp-17], rax
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] 
-  .loc 7 741 17
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] 
+  .loc 7 720 17
   # type.1: @AST_Type = call(parse_type_265, self.1)
   mov rdi, [rbp-8]
   call parse_type_265
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:rax 
-  .loc 7 742 27
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:rax 
+  .loc 7 721 27
   # call_arguments.1: @List = new List(first_item = null, last_item = null, size = 0)
-  mov [rbp-28], rax
+  mov [rbp-25], rax
   mov rdi, 24
   call malloc
   #     .first_item = null
@@ -59530,159 +59280,364 @@ parse_primary_expression_278:
   mov QWORD PTR [rax+8], 0
   #     .size = 0
   mov QWORD PTR [rax+16], 0
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:rax 
-  .loc 7 743 26
-  # $30.1: @Matcher = load_struct_member(self.1, optional_space)
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:rax 
+  .loc 7 722 26
+  # $7.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rbx, [rbp-8]
   mov r15, [rbx+32]
-  # [live values]: self.1:rbx:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:rax $30.1:r15 
-  .loc 7 743 47
-  # $31.1: @Matcher = load_struct_member(self.1, required_open_paren)
-  mov r14, [rbx+296]
-  # [live values]: self.1:rbx:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:rax $30.1:r15 $31.1:r14 
-  .loc 7 743 13
-  # $32.1: Boolean = call(matches_287, self.1, $30.1, $31.1)
+  # [live values]: self.1:rbx:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:rax $7.1:r15 
+  .loc 7 722 47
+  # $8.1: @Matcher = load_struct_member(self.1, required_open_paren)
+  mov r14, [rbx+304]
+  # [live values]: self.1:rbx:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:rax $7.1:r15 $8.1:r14 
+  .loc 7 722 13
+  # $9.1: Boolean = call(matches_287, self.1, $7.1, $8.1)
   mov rdi, rbx
   mov rsi, r15
   mov rdx, r14
-  mov [rbp-36], rax
+  mov [rbp-33], rax
   call matches_287
-  # [discarded value]: $31.1
-  # [discarded value]: $30.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:rax 
-  # jump($32.1, .LABEL__parse_primary_expression_278__13, .LABEL__parse_primary_expression_278__14)
+  # [discarded value]: $8.1
+  # [discarded value]: $7.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:rax 
+  # jump($9.1, .LABEL__parse_primary_expression_278__4, .LABEL__parse_primary_expression_278__5)
   test al, al
-  mov [rbp-37], al
-  jz .LABEL__parse_primary_expression_278__14
-.LABEL__parse_primary_expression_278__13:
-  .loc 7 744 13
+  mov [rbp-34], al
+  jz .LABEL__parse_primary_expression_278__5
+.LABEL__parse_primary_expression_278__4:
+  .loc 7 723 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] 
-  .loc 7 745 26
-  # $33.1: @Matcher = load_struct_member(self.1, required_open_paren)
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] 
+  .loc 7 724 26
+  # $10.1: @Matcher = load_struct_member(self.1, required_open_paren)
   mov rax, [rbp-8]
-  mov rbx, [rax+296]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $33.1:rbx 
-  .loc 7 745 13
-  # $34.1: @Token = call(consume_282, self.1, $33.1)
+  mov rbx, [rax+304]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $10.1:rbx 
+  .loc 7 724 13
+  # $11.1: @Token = call(consume_282, self.1, $10.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $34.1
-  # [discarded value]: $33.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] 
-  .loc 7 746 30
-  # $35.1: @Matcher = load_struct_member(self.1, optional_space)
+  # [discarded value]: $11.1
+  # [discarded value]: $10.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] 
+  .loc 7 725 30
+  # $12.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $35.1:rbx 
-  .loc 7 746 51
-  # $36.1: @Matcher = load_struct_member(self.1, required_close_paren)
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $12.1:rbx 
+  .loc 7 725 51
+  # $13.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov r15, [rax+96]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $35.1:rbx $36.1:r15 
-  .loc 7 746 17
-  # $37.1: Boolean = call(matches_287, self.1, $35.1, $36.1)
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $12.1:rbx $13.1:r15 
+  .loc 7 725 17
+  # $14.1: Boolean = call(matches_287, self.1, $12.1, $13.1)
   mov rdi, rax
   mov rsi, rbx
   mov rdx, r15
   call matches_287
-  # [discarded value]: $36.1
-  # [discarded value]: $35.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $37.1:rax 
-  .loc 7 746 17
-  # $38.1: Boolean = $37.1 == false
+  # [discarded value]: $13.1
+  # [discarded value]: $12.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $14.1:rax 
+  .loc 7 725 17
+  # $15.1: Boolean = $14.1 == false
   cmp al, 0
   sete bl
-  # [discarded value]: $37.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:rbx 
-  # jump($38.1, .LABEL__parse_primary_expression_278__15, .LABEL__parse_primary_expression_278__16)
+  # [discarded value]: $14.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:rbx 
+  # jump($15.1, .LABEL__parse_primary_expression_278__6, .LABEL__parse_primary_expression_278__7)
   test bl, bl
-  mov [rbp-38], bl
-  jz .LABEL__parse_primary_expression_278__16
-.LABEL__parse_primary_expression_278__15:
-  .loc 7 747 17
+  mov [rbp-35], bl
+  jz .LABEL__parse_primary_expression_278__7
+.LABEL__parse_primary_expression_278__6:
+  .loc 7 726 17
   # call(parse_call_arguments_276, self.1, call_arguments.1)
   mov rdi, [rbp-8]
-  mov rsi, [rbp-36]
+  mov rsi, [rbp-33]
   call parse_call_arguments_276
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] 
-  # jump(.LABEL__parse_primary_expression_278__16)
-.LABEL__parse_primary_expression_278__16:
-  .loc 7 749 13
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] 
+  # jump(.LABEL__parse_primary_expression_278__7)
+.LABEL__parse_primary_expression_278__7:
+  .loc 7 728 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
   call consume_space_281
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] 
-  .loc 7 750 26
-  # $39.1: @Matcher = load_struct_member(self.1, required_close_paren)
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] 
+  .loc 7 729 26
+  # $16.1: @Matcher = load_struct_member(self.1, required_close_paren)
   mov rax, [rbp-8]
   mov rbx, [rax+96]
-  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] $39.1:rbx 
-  .loc 7 750 13
-  # $40.1: @Token = call(consume_282, self.1, $39.1)
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] $16.1:rbx 
+  .loc 7 729 13
+  # $17.1: @Token = call(consume_282, self.1, $16.1)
   mov rdi, rax
   mov rsi, rbx
   call consume_282
-  # [discarded value]: $40.1
-  # [discarded value]: $39.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] 
-  # jump(.LABEL__parse_primary_expression_278__14)
-.LABEL__parse_primary_expression_278__14:
-  .loc 7 752 50
-  # $41.1: @Source_Location = load_struct_member(token.1, location)
-  mov rax, [rbp-20]
+  # [discarded value]: $17.1
+  # [discarded value]: $16.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] 
+  # jump(.LABEL__parse_primary_expression_278__5)
+.LABEL__parse_primary_expression_278__5:
+  .loc 7 731 50
+  # $18.1: @Source_Location = load_struct_member(token.1, location)
+  mov rax, [rbp-17]
   mov rbx, [rax+16]
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:rax:[rbp-20] type.1:[rbp-28] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] $41.1:rbx 
-  .loc 7 752 16
-  # $42.1: @AST_New_Expression = new AST_New_Expression(object_type = AST_New_Expression, location = $41.1, type = type.1, init_arguments = call_arguments.1)
-  mov [rbp-46], rbx
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:rax:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] $18.1:rbx 
+  .loc 7 731 16
+  # $19.1: @AST_New_Expression = new AST_New_Expression(object_type = AST_New_Expression, location = $18.1, type = type.1, init_arguments = call_arguments.1)
+  mov [rbp-43], rbx
   mov rdi, 32
   call malloc
   #     .object_type = AST_New_Expression
   mov rbx, AST_New_Expression[rip]
   mov [rax], rbx
-  #     .location = $41.1
-  mov rbx, [rbp-46]
+  #     .location = $18.1
+  mov rbx, [rbp-43]
   mov QWORD PTR [rax+8], rbx
   #     .type = type.1
-  mov r15, [rbp-28]
+  mov r15, [rbp-25]
   mov QWORD PTR [rax+16], r15
   #     .init_arguments = call_arguments.1
-  mov r14, [rbp-36]
+  mov r14, [rbp-33]
   mov QWORD PTR [rax+24], r14
-  # [discarded value]: $41.1
+  # [discarded value]: $18.1
   # [discarded value]: type.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] call_arguments.1:r14:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] $42.1:rax 
-  .loc 7 752 9
-  # return($42.1)
-  mov [rbp-46], rax
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] call_arguments.1:r14:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] $19.1:rax 
+  .loc 7 731 9
+  # return($19.1)
+  mov [rbp-43], rax
   jmp .LABEL__parse_primary_expression_278__end
-  # [discarded value]: $42.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] 
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] 
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] call_arguments.1:[rbp-36] $32.1:[rbp-37] $38.1:[rbp-38] 
-  # [discarded value]: $38.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] call_arguments.1:[rbp-36] $32.1:[rbp-37] 
-  # [discarded value]: $32.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] token.1:[rbp-20] call_arguments.1:[rbp-36] 
+  # [discarded value]: $19.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] 
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] 
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] call_arguments.1:[rbp-33] $9.1:[rbp-34] $15.1:[rbp-35] 
+  # [discarded value]: $15.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] call_arguments.1:[rbp-33] $9.1:[rbp-34] 
+  # [discarded value]: $9.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] token.1:[rbp-17] call_arguments.1:[rbp-33] 
   # [discarded value]: call_arguments.1
   # [discarded value]: token.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] 
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] 
+.LABEL__parse_primary_expression_278__3:
+  .loc 7 733 22
+  # $20.1: @Matcher = load_struct_member(self.1, required_literal)
+  mov rax, [rbp-8]
+  mov rbx, [rax+264]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $20.1:rbx 
+  .loc 7 733 9
+  # $21.1: Boolean = call(matches_286, self.1, $20.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call matches_286
+  # [discarded value]: $20.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:rax 
+  # jump($21.1, .LABEL__parse_primary_expression_278__9, .LABEL__parse_primary_expression_278__10)
+  test al, al
+  mov [rbp-10], al
+  jz .LABEL__parse_primary_expression_278__10
+.LABEL__parse_primary_expression_278__9:
+  .loc 7 734 31
+  # $22.1: @Matcher = load_struct_member(self.1, required_literal)
+  mov rax, [rbp-8]
+  mov rbx, [rax+264]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $22.1:rbx 
+  .loc 7 734 18
+  # token.1: @Literal_Token = call(consume_282, self.1, $22.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call consume_282
+  # [discarded value]: $22.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] token.1:rax 
+  .loc 7 735 54
+  # $25.1: @Source_Location = load_struct_member(token.1, location)
+  mov rbx, [rax+16]
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] token.1:rax $25.1:rbx 
+  .loc 7 735 16
+  # $26.1: @AST_Literal_Expression = new AST_Literal_Expression(object_type = AST_Literal_Expression, location = $25.1, literal = token.1)
+  mov [rbp-18], rax
+  mov [rbp-26], rbx
+  mov rdi, 24
+  call malloc
+  #     .object_type = AST_Literal_Expression
+  mov rbx, AST_Literal_Expression[rip]
+  mov [rax], rbx
+  #     .location = $25.1
+  mov rbx, [rbp-26]
+  mov QWORD PTR [rax+8], rbx
+  #     .literal = token.1
+  mov r15, [rbp-18]
+  mov QWORD PTR [rax+16], r15
+  # [discarded value]: $25.1
+  # [discarded value]: token.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $26.1:rax 
+  .loc 7 735 9
+  # return($26.1)
+  mov [rbp-18], rax
+  jmp .LABEL__parse_primary_expression_278__end
+  # [discarded value]: $26.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] 
+.LABEL__parse_primary_expression_278__10:
+  .loc 7 737 22
+  # $27.1: @Matcher = load_struct_member(self.1, required_identifier)
+  mov rax, [rbp-8]
+  mov rbx, [rax+232]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $27.1:rbx 
+  .loc 7 737 9
+  # $28.1: Boolean = call(matches_286, self.1, $27.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call matches_286
+  # [discarded value]: $27.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:rax 
+  # jump($28.1, .LABEL__parse_primary_expression_278__12, .LABEL__parse_primary_expression_278__13)
+  test al, al
+  mov [rbp-11], al
+  jz .LABEL__parse_primary_expression_278__13
 .LABEL__parse_primary_expression_278__12:
-  .loc 7 754 5
+  .loc 7 738 31
+  # $29.1: @Matcher = load_struct_member(self.1, required_identifier)
+  mov rax, [rbp-8]
+  mov rbx, [rax+232]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $29.1:rbx 
+  .loc 7 738 18
+  # token.1: @Identifier_Token = call(consume_282, self.1, $29.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call consume_282
+  # [discarded value]: $29.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] token.1:rax 
+  .loc 7 739 55
+  # $32.1: @Source_Location = load_struct_member(token.1, location)
+  mov rbx, [rax+16]
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] token.1:rax $32.1:rbx 
+  .loc 7 739 16
+  # $33.1: @AST_Variable_Expression = new AST_Variable_Expression(object_type = AST_Variable_Expression, location = $32.1, name = token.1)
+  mov [rbp-19], rax
+  mov [rbp-27], rbx
+  mov rdi, 24
+  call malloc
+  #     .object_type = AST_Variable_Expression
+  mov rbx, AST_Variable_Expression[rip]
+  mov [rax], rbx
+  #     .location = $32.1
+  mov rbx, [rbp-27]
+  mov QWORD PTR [rax+8], rbx
+  #     .name = token.1
+  mov r15, [rbp-19]
+  mov QWORD PTR [rax+16], r15
+  # [discarded value]: $32.1
+  # [discarded value]: token.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $33.1:rax 
+  .loc 7 739 9
+  # return($33.1)
+  mov [rbp-19], rax
+  jmp .LABEL__parse_primary_expression_278__end
+  # [discarded value]: $33.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] 
+.LABEL__parse_primary_expression_278__13:
+  .loc 7 741 22
+  # $34.1: @Matcher = load_struct_member(self.1, required_open_paren)
+  mov rax, [rbp-8]
+  mov rbx, [rax+304]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $34.1:rbx 
+  .loc 7 741 9
+  # $35.1: Boolean = call(matches_286, self.1, $34.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call matches_286
+  # [discarded value]: $34.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:rax 
+  # jump($35.1, .LABEL__parse_primary_expression_278__15, .LABEL__parse_primary_expression_278__16)
+  test al, al
+  mov [rbp-12], al
+  jz .LABEL__parse_primary_expression_278__16
+.LABEL__parse_primary_expression_278__15:
+  .loc 7 742 34
+  # $36.1: @Matcher = load_struct_member(self.1, required_open_paren)
+  mov rax, [rbp-8]
+  mov rbx, [rax+304]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] $36.1:rbx 
+  .loc 7 742 21
+  # $37.1: @Token = call(consume_282, self.1, $36.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call consume_282
+  # [discarded value]: $36.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] $37.1:rax 
+  .loc 7 742 21
+  # location.1: @Source_Location = load_struct_member($37.1, location)
+  mov rbx, [rax+16]
+  # [discarded value]: $37.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] location.1:rbx 
+  .loc 7 743 9
+  # call(consume_space_281, self.1, 0)
+  mov rdi, [rbp-8]
+  xor rsi, rsi
+  mov [rbp-20], rbx
+  call consume_space_281
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] location.1:[rbp-20] 
+  .loc 7 744 23
+  # expression.1: @AST_Expression = call(parse_expression_266, self.1)
+  mov rdi, [rbp-8]
+  call parse_expression_266
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] location.1:[rbp-20] expression.1:rax 
+  .loc 7 745 9
+  # call(consume_space_281, self.1, 0)
+  mov rdi, [rbp-8]
+  xor rsi, rsi
+  mov [rbp-28], rax
+  call consume_space_281
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] location.1:[rbp-20] expression.1:[rbp-28] 
+  .loc 7 746 22
+  # $40.1: @Matcher = load_struct_member(self.1, required_close_paren)
+  mov rax, [rbp-8]
+  mov rbx, [rax+96]
+  # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] location.1:[rbp-20] expression.1:[rbp-28] $40.1:rbx 
+  .loc 7 746 9
+  # $41.1: @Token = call(consume_282, self.1, $40.1)
+  mov rdi, rax
+  mov rsi, rbx
+  call consume_282
+  # [discarded value]: $41.1
+  # [discarded value]: $40.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] location.1:[rbp-20] expression.1:[rbp-28] 
+  .loc 7 747 16
+  # $42.1: @AST_Atomic_Expression = new AST_Atomic_Expression(object_type = AST_Atomic_Expression, location = location.1, expression = expression.1)
+  mov rdi, 24
+  call malloc
+  #     .object_type = AST_Atomic_Expression
+  mov rbx, AST_Atomic_Expression[rip]
+  mov [rax], rbx
+  #     .location = location.1
+  mov rbx, [rbp-20]
+  mov QWORD PTR [rax+8], rbx
+  #     .expression = expression.1
+  mov r15, [rbp-28]
+  mov QWORD PTR [rax+16], r15
+  # [discarded value]: expression.1
+  # [discarded value]: location.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] $42.1:rax 
+  .loc 7 747 9
+  # return($42.1)
+  mov [rbp-20], rax
+  jmp .LABEL__parse_primary_expression_278__end
+  # [discarded value]: $42.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] 
+.LABEL__parse_primary_expression_278__16:
+  .loc 7 749 5
   # return(null)
   xor rax, rax
   jmp .LABEL__parse_primary_expression_278__end
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] $25.1:[rbp-12] 
-  # [discarded value]: $25.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] $16.1:[rbp-11] 
-  # [discarded value]: $16.1
-  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $9.1:[rbp-10] 
-  # [discarded value]: $9.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] $35.1:[rbp-12] 
+  # [discarded value]: $35.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] $28.1:[rbp-11] 
+  # [discarded value]: $28.1
+  # [live values]: self.1:[rbp-8] $2.1:[rbp-9] $21.1:[rbp-10] 
+  # [discarded value]: $21.1
   # [live values]: self.1:[rbp-8] $2.1:[rbp-9] 
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] 
@@ -59695,7 +59650,7 @@ parse_primary_expression_278:
 
 parse_primary_expression_278__stack_frame_size: .word 48
 
-  .loc 7 757 1
+  .loc 7 752 8
   .text
 consume_end_of_line_279:
   push rbp
@@ -59705,15 +59660,15 @@ consume_end_of_line_279:
 .LABEL__consume_end_of_line_279__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 758 22
+  .loc 7 753 22
   # $1.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rdi+32]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 758 43
+  .loc 7 753 43
   # $2.1: @Matcher = load_struct_member(self.1, required_comment)
   mov rbx, [rdi+128]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx 
-  .loc 7 758 9
+  .loc 7 753 9
   # $3.1: Boolean = call(matches_287, self.1, $1.1, $2.1)
   mov rsi, rax
   mov rdx, rbx
@@ -59727,18 +59682,18 @@ consume_end_of_line_279:
   mov [rbp-9], al
   jz .LABEL__consume_end_of_line_279__4
 .LABEL__consume_end_of_line_279__2:
-  .loc 7 759 9
+  .loc 7 754 9
   # call(consume_space_281, self.1, 1)
   mov rdi, [rbp-8]
   mov rsi, 1
   call consume_space_281
   # [live values]: self.1:[rbp-8] $3.1:[rbp-9] 
-  .loc 7 760 22
+  .loc 7 755 22
   # $4.1: @Matcher = load_struct_member(self.1, required_comment)
   mov rax, [rbp-8]
   mov rbx, [rax+128]
   # [live values]: self.1:rax:[rbp-8] $3.1:[rbp-9] $4.1:rbx 
-  .loc 7 760 9
+  .loc 7 755 9
   # $5.1: @Token = call(consume_282, self.1, $4.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59748,19 +59703,19 @@ consume_end_of_line_279:
   # [live values]: self.1:[rbp-8] $3.1:[rbp-9] 
   # jump(.LABEL__consume_end_of_line_279__3)
 .LABEL__consume_end_of_line_279__3:
-  .loc 7 764 22
+  .loc 7 759 22
   # $6.1: @Matcher = load_struct_member(self.1, required_end_of_file)
   mov rax, [rbp-8]
   mov rbx, [rax+160]
   # [live values]: self.1:rax:[rbp-8] $3.1:[rbp-9] $6.1:rbx 
-  .loc 7 764 9
+  .loc 7 759 9
   # $7.1: Boolean = call(matches_286, self.1, $6.1)
   mov rdi, rax
   mov rsi, rbx
   call matches_286
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] $3.1:[rbp-9] $7.1:rax 
-  .loc 7 764 9
+  .loc 7 759 9
   # $8.1: Boolean = $7.1 == false
   cmp al, 0
   sete bl
@@ -59771,12 +59726,12 @@ consume_end_of_line_279:
   mov [rbp-10], bl
   jz .LABEL__consume_end_of_line_279__6
 .LABEL__consume_end_of_line_279__5:
-  .loc 7 765 22
+  .loc 7 760 22
   # $9.1: @Matcher = load_struct_member(self.1, required_end_of_line)
   mov rax, [rbp-8]
   mov rbx, [rax+168]
   # [live values]: self.1:rax:[rbp-8] $3.1:[rbp-9] $8.1:[rbp-10] $9.1:rbx 
-  .loc 7 765 9
+  .loc 7 760 9
   # $10.1: @Token = call(consume_282, self.1, $9.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59794,7 +59749,7 @@ consume_end_of_line_279:
   # [live values]: self.1:[rbp-8] $3.1:[rbp-9] 
   # [live values]: self.1:[rbp-8] $3.1:[rbp-9] 
 .LABEL__consume_end_of_line_279__4:
-  .loc 7 762 9
+  .loc 7 757 9
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
@@ -59814,7 +59769,7 @@ consume_end_of_line_279:
 
 consume_end_of_line_279__stack_frame_size: .word 16
 
-  .loc 7 769 1
+  .loc 7 764 8
   .text
 consume_empty_line_280:
   push rbp
@@ -59824,19 +59779,19 @@ consume_empty_line_280:
 .LABEL__consume_empty_line_280__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 770 22
+  .loc 7 765 22
   # $1.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rdi+32]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 770 43
+  .loc 7 765 43
   # $2.1: @Matcher = load_struct_member(self.1, optional_comment)
   mov rbx, [rdi+24]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx 
-  .loc 7 770 66
+  .loc 7 765 66
   # $3.1: @Matcher = load_struct_member(self.1, required_end_of_line)
   mov r15, [rdi+168]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx $3.1:r15 
-  .loc 7 770 9
+  .loc 7 765 9
   # $4.1: Boolean = call(matches_288, self.1, $1.1, $2.1, $3.1)
   mov rsi, rax
   mov rdx, rbx
@@ -59852,16 +59807,16 @@ consume_empty_line_280:
   mov [rbp-9], al
   jz .LABEL__consume_empty_line_280__3
 .LABEL__consume_empty_line_280__2:
-  .loc 7 771 26
+  .loc 7 766 26
   # $5.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rbp-8]
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] $5.1:rbx 
-  .loc 7 771 47
+  .loc 7 766 47
   # $6.1: @Matcher = load_struct_member(self.1, required_comment)
   mov r15, [rax+128]
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] $5.1:rbx $6.1:r15 
-  .loc 7 771 13
+  .loc 7 766 13
   # $7.1: Boolean = call(matches_287, self.1, $5.1, $6.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59875,30 +59830,30 @@ consume_empty_line_280:
   mov [rbp-10], al
   jz .LABEL__consume_empty_line_280__6
 .LABEL__consume_empty_line_280__4:
-  .loc 7 772 32
+  .loc 7 767 32
   # $8.1: Int = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] $8.1:rbx 
-  .loc 7 772 32
+  .loc 7 767 32
   # $9.1: Int = $8.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] $9.1:r15 
-  .loc 7 772 13
+  .loc 7 767 13
   # call(consume_space_281, self.1, $9.1)
   mov rdi, rax
   mov rsi, r15
   call consume_space_281
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] 
-  .loc 7 773 26
+  .loc 7 768 26
   # $10.1: @Matcher = load_struct_member(self.1, required_comment)
   mov rax, [rbp-8]
   mov rbx, [rax+128]
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] $10.1:rbx 
-  .loc 7 773 13
+  .loc 7 768 13
   # $11.1: @Token = call(consume_282, self.1, $10.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59908,12 +59863,12 @@ consume_empty_line_280:
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] 
   # jump(.LABEL__consume_empty_line_280__5)
 .LABEL__consume_empty_line_280__5:
-  .loc 7 777 22
+  .loc 7 772 22
   # $12.1: @Matcher = load_struct_member(self.1, required_end_of_line)
   mov rax, [rbp-8]
   mov rbx, [rax+168]
   # [live values]: self.1:rax:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] $12.1:rbx 
-  .loc 7 777 9
+  .loc 7 772 9
   # $13.1: @Token = call(consume_282, self.1, $12.1)
   mov rdi, rax
   mov rsi, rbx
@@ -59921,14 +59876,14 @@ consume_empty_line_280:
   # [discarded value]: $13.1
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] 
-  .loc 7 778 9
+  .loc 7 773 9
   # return(true)
   mov al, 1
   jmp .LABEL__consume_empty_line_280__end
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] 
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] $7.1:[rbp-10] 
 .LABEL__consume_empty_line_280__6:
-  .loc 7 775 13
+  .loc 7 770 13
   # call(consume_space_281, self.1, 0)
   mov rdi, [rbp-8]
   xor rsi, rsi
@@ -59940,7 +59895,7 @@ consume_empty_line_280:
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] $4.1:[rbp-9] 
 .LABEL__consume_empty_line_280__3:
-  .loc 7 780 5
+  .loc 7 775 5
   # return(false)
   mov al, 0
   jmp .LABEL__consume_empty_line_280__end
@@ -59956,7 +59911,7 @@ consume_empty_line_280:
 
 consume_empty_line_280__stack_frame_size: .word 16
 
-  .loc 7 783 1
+  .loc 7 778 8
   .text
 consume_space_281:
   push rbp
@@ -59968,16 +59923,16 @@ consume_space_281:
   # [live values]: self.1:rdi 
   # expected_space_count.1: Int = load_variable(expected_space_count)
   # [live values]: self.1:rdi expected_space_count.1:rsi 
-  .loc 7 785 14
+  .loc 7 780 14
   # $1.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rdi]
   # [live values]: self.1:rdi expected_space_count.1:rsi $1.1:rax 
-  .loc 7 785 14
+  .loc 7 780 14
   # token.1: @Token = load_struct_member($1.1, current_token)
   mov rbx, [rax+32]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi expected_space_count.1:rsi token.1:rbx 
-  .loc 7 786 9
+  .loc 7 781 9
   # $3.1: Boolean = call(is_344, token.1, Space_Token)
   mov [rbp-8], rdi
   mov rdi, rbx
@@ -59991,23 +59946,23 @@ consume_space_281:
   mov [rbp-25], al
   jz .LABEL__consume_space_281__4
 .LABEL__consume_space_281__2:
-  .loc 7 787 9
+  .loc 7 782 9
   # $4.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-8]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] $4.1:rbx 
-  .loc 7 787 9
+  .loc 7 782 9
   # $5.1: @Token = call(next_token_299, $4.1)
   mov rdi, rbx
   call next_token_299
   # [discarded value]: $5.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] 
-  .loc 7 788 18
+  .loc 7 783 18
   # space.1: @Space_Token = token.1
   mov rax, [rbp-24]
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space.1:rax 
-  .loc 7 789 23
+  .loc 7 784 23
   # space_count.3: Int = load_struct_member(space.1, count)
   mov rbx, [rax+32]
   # [discarded value]: space.1
@@ -60017,7 +59972,7 @@ consume_space_281:
 .LABEL__consume_space_281__3:
   # space_count.4: Int = phi(space_count.2, space_count.3)
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] 
-  .loc 7 793 9
+  .loc 7 788 9
   # $8.1: Boolean = space_count.4 != expected_space_count.1
   mov rax, [rbp-33]
   cmp rax, QWORD PTR [rbp-16]
@@ -60028,54 +59983,54 @@ consume_space_281:
   mov [rbp-34], bl
   jz .LABEL__consume_space_281__6
 .LABEL__consume_space_281__5:
-  .loc 7 794 22
+  .loc 7 789 22
   # $9.1: @Source_Location = load_struct_member(token.1, location)
   mov rax, [rbp-24]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:rax:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] $8.1:[rbp-34] $9.1:rbx 
-  .loc 7 794 9
+  .loc 7 789 9
   # $10.1: @FILE = call(write_318, stderr, $9.1)
   mov rdi, stderr[rip]
   mov rsi, rbx
   call write_318
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] $8.1:[rbp-34] $10.1:rax 
-  .loc 7 794 9
+  .loc 7 789 9
   # $11.1: @FILE = call(write_338, $10.1, ": Consumed ")
   mov rdi, rax
   lea rsi, .LABEL__string_329[rip] # ": Consumed "
   call write_338
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] $8.1:[rbp-34] $11.1:rax 
-  .loc 7 794 9
+  .loc 7 789 9
   # $12.1: @FILE = call(write_337, $11.1, space_count.4)
   mov rdi, rax
   mov rsi, [rbp-33]
   call write_337
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] $8.1:[rbp-34] $12.1:rax 
-  .loc 7 794 9
+  .loc 7 789 9
   # $13.1: @FILE = call(write_338, $12.1, " spaces where ")
   mov rdi, rax
   lea rsi, .LABEL__string_330[rip] # " spaces where "
   call write_338
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] $8.1:[rbp-34] $13.1:rax 
-  .loc 7 794 9
+  .loc 7 789 9
   # $14.1: @FILE = call(write_337, $13.1, expected_space_count.1)
   mov rdi, rax
   mov rsi, [rbp-16]
   call write_337
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] $8.1:[rbp-34] $14.1:rax 
-  .loc 7 794 9
+  .loc 7 789 9
   # $15.1: @FILE = call(write_338, $14.1, " are expected")
   mov rdi, rax
   lea rsi, .LABEL__string_331[rip] # " are expected"
   call write_338
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] $8.1:[rbp-34] $15.1:rax 
-  .loc 7 794 9
+  .loc 7 789 9
   # $16.1: @FILE = call(end_line_341, $15.1)
   mov rdi, rax
   call end_line_341
@@ -60096,7 +60051,7 @@ consume_space_281:
   # [discarded value]: space_count.3
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] 
 .LABEL__consume_space_281__4:
-  .loc 7 791 9
+  .loc 7 786 9
   # space_count.2: Int = 0
   xor rax, rax
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.2:rax:[rbp-33] 
@@ -60119,7 +60074,7 @@ consume_space_281:
 
 consume_space_281__stack_frame_size: .word 48
 
-  .loc 7 798 1
+  .loc 7 793 8
   .text
 consume_282:
   push rbp
@@ -60131,14 +60086,14 @@ consume_282:
   # [live values]: self.1:rdi 
   # first_matcher.1: @Matcher = load_variable(first_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi 
-  .loc 7 799 12
+  .loc 7 794 12
   # $1.1: @Token = call(consume_283, self.1, first_matcher.1, null)
   xor rdx, rdx
   call consume_283
   # [discarded value]: first_matcher.1
   # [discarded value]: self.1
   # [live values]: $1.1:rax 
-  .loc 7 799 5
+  .loc 7 794 5
   # return($1.1)
   mov [rbp-8], rax
   jmp .LABEL__consume_282__end
@@ -60151,7 +60106,7 @@ consume_282:
 
 consume_282__stack_frame_size: .word 16
 
-  .loc 7 802 1
+  .loc 7 797 8
   .text
 consume_283:
   push rbp
@@ -60165,7 +60120,7 @@ consume_283:
   # [live values]: self.1:rdi first_matcher.1:rsi 
   # second_matcher.1: @Matcher = load_variable(second_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx 
-  .loc 7 803 12
+  .loc 7 798 12
   # $1.1: @Token = call(consume_284, self.1, first_matcher.1, second_matcher.1, null)
   xor rcx, rcx
   call consume_284
@@ -60173,7 +60128,7 @@ consume_283:
   # [discarded value]: first_matcher.1
   # [discarded value]: self.1
   # [live values]: $1.1:rax 
-  .loc 7 803 5
+  .loc 7 798 5
   # return($1.1)
   mov [rbp-8], rax
   jmp .LABEL__consume_283__end
@@ -60186,7 +60141,7 @@ consume_283:
 
 consume_283__stack_frame_size: .word 16
 
-  .loc 7 806 1
+  .loc 7 801 8
   .text
 consume_284:
   push rbp
@@ -60202,20 +60157,20 @@ consume_284:
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx 
   # third_matcher.1: @Matcher = load_variable(third_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx 
-  .loc 7 807 14
+  .loc 7 802 14
   # $1.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rdi]
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx $1.1:rax 
-  .loc 7 807 14
+  .loc 7 802 14
   # token.1: @Token = load_struct_member($1.1, current_token)
   mov rbx, [rax+32]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:rbx 
-  .loc 7 808 5
+  .loc 7 803 5
   # first_token.1: @Token = token.1
   mov [rbp-8], rbx
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:[rbp-8] first_token.1:rbx 
-  .loc 7 809 9
+  .loc 7 804 9
   # $3.1: Boolean = call(accepts_289, first_matcher.1, token.1)
   mov [rbp-16], rdi
   mov rdi, rsi
@@ -60231,12 +60186,12 @@ consume_284:
   mov [rbp-49], al
   jz .LABEL__consume_284__4
 .LABEL__consume_284__2:
-  .loc 7 810 17
+  .loc 7 805 17
   # $5.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-16]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] $5.1:rbx 
-  .loc 7 810 17
+  .loc 7 805 17
   # token.3: @Token = call(next_token_299, $5.1)
   mov rdi, rbx
   call next_token_299
@@ -60247,7 +60202,7 @@ consume_284:
 .LABEL__consume_284__3:
   # token.10: @Token = phi(token.3, token.1)
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] 
-  .loc 7 816 9
+  .loc 7 811 9
   # $7.1: Boolean = second_matcher.1 != null
   cmp QWORD PTR [rbp-40], 0
   setne al
@@ -60257,7 +60212,7 @@ consume_284:
   mov [rbp-50], al
   jz .LABEL__consume_284__8
 .LABEL__consume_284__7:
-  .loc 7 817 13
+  .loc 7 812 13
   # $8.1: Boolean = call(accepts_289, second_matcher.1, token.10)
   mov rdi, [rbp-40]
   mov rsi, [rbp-8]
@@ -60268,12 +60223,12 @@ consume_284:
   mov [rbp-51], al
   jz .LABEL__consume_284__11
 .LABEL__consume_284__9:
-  .loc 7 818 21
+  .loc 7 813 21
   # $10.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-16]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $7.1:[rbp-50] $8.1:[rbp-51] $10.1:rbx 
-  .loc 7 818 21
+  .loc 7 813 21
   # token.6: @Token = call(next_token_299, $10.1)
   mov rdi, rbx
   call next_token_299
@@ -60284,7 +60239,7 @@ consume_284:
 .LABEL__consume_284__8:
   # token.11: @Token = phi(token.10, token.6)
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $7.1:[rbp-50] $8.1:[rbp-51] token.11:[rbp-8] token.6:[rbp-8] 
-  .loc 7 825 9
+  .loc 7 820 9
   # $12.1: Boolean = third_matcher.1 != null
   cmp QWORD PTR [rbp-32], 0
   setne al
@@ -60294,7 +60249,7 @@ consume_284:
   mov [rbp-52], al
   jz .LABEL__consume_284__15
 .LABEL__consume_284__14:
-  .loc 7 826 13
+  .loc 7 821 13
   # $13.1: Boolean = call(accepts_289, third_matcher.1, token.11)
   mov rdi, [rbp-32]
   mov rsi, [rbp-8]
@@ -60305,12 +60260,12 @@ consume_284:
   mov [rbp-53], al
   jz .LABEL__consume_284__18
 .LABEL__consume_284__16:
-  .loc 7 827 21
+  .loc 7 822 21
   # $15.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-16]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $7.1:[rbp-50] $8.1:[rbp-51] token.11:[rbp-8] $12.1:[rbp-52] token.6:[rbp-8] $13.1:[rbp-53] $15.1:rbx 
-  .loc 7 827 21
+  .loc 7 822 21
   # token.9: @Token = call(next_token_299, $15.1)
   mov rdi, rbx
   call next_token_299
@@ -60319,14 +60274,14 @@ consume_284:
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $7.1:[rbp-50] $8.1:[rbp-51] token.11:[rbp-8] $12.1:[rbp-52] token.6:[rbp-8] $13.1:[rbp-53] 
   # jump(.LABEL__consume_284__15)
 .LABEL__consume_284__15:
-  .loc 7 834 5
+  .loc 7 829 5
   # return(first_token.1)
   mov rax, [rbp-48]
   jmp .LABEL__consume_284__end
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $7.1:[rbp-50] $8.1:[rbp-51] token.11:[rbp-8] $12.1:[rbp-52] token.6:[rbp-8] $13.1:[rbp-53] 
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $7.1:[rbp-50] $8.1:[rbp-51] token.11:[rbp-8] $12.1:[rbp-52] token.6:[rbp-8] $13.1:[rbp-53] 
 .LABEL__consume_284__18:
-  .loc 7 829 17
+  .loc 7 824 17
   # $14.1: Boolean = load_struct_member(third_matcher.1, is_required)
   mov rax, [rbp-32]
   mov bl, [rax+8]
@@ -60336,7 +60291,7 @@ consume_284:
   mov [rbp-54], bl
   jz .LABEL__consume_284__15
 .LABEL__consume_284__19:
-  .loc 7 830 17
+  .loc 7 825 17
   # call(abort_290, self.1, token.11)
   mov rdi, [rbp-16]
   mov rsi, [rbp-8]
@@ -60354,7 +60309,7 @@ consume_284:
   # [discarded value]: token.6
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $7.1:[rbp-50] $8.1:[rbp-51] 
 .LABEL__consume_284__11:
-  .loc 7 820 17
+  .loc 7 815 17
   # $9.1: Boolean = load_struct_member(second_matcher.1, is_required)
   mov rax, [rbp-40]
   mov bl, [rax+8]
@@ -60364,7 +60319,7 @@ consume_284:
   mov [rbp-52], bl
   jz .LABEL__consume_284__8
 .LABEL__consume_284__12:
-  .loc 7 821 17
+  .loc 7 816 17
   # call(abort_290, self.1, token.10)
   mov rdi, [rbp-16]
   mov rsi, [rbp-8]
@@ -60382,7 +60337,7 @@ consume_284:
   # [discarded value]: token.3
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $3.1:[rbp-49] 
 .LABEL__consume_284__4:
-  .loc 7 812 13
+  .loc 7 807 13
   # $4.1: Boolean = load_struct_member(first_matcher.1, is_required)
   mov rax, [rbp-24]
   mov bl, [rax+8]
@@ -60392,7 +60347,7 @@ consume_284:
   mov [rbp-50], bl
   jz .LABEL__consume_284__3
 .LABEL__consume_284__5:
-  .loc 7 813 13
+  .loc 7 808 13
   # call(abort_290, self.1, token.1)
   mov rdi, [rbp-16]
   mov rsi, [rbp-8]
@@ -60416,7 +60371,7 @@ consume_284:
 
 consume_284__stack_frame_size: .word 64
 
-  .loc 7 837 1
+  .loc 7 832 8
   .text
 matches_end_of_line_285:
   push rbp
@@ -60426,19 +60381,19 @@ matches_end_of_line_285:
 .LABEL__matches_end_of_line_285__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 7 838 25
+  .loc 7 833 25
   # $1.1: @Matcher = load_struct_member(self.1, optional_space)
   mov rax, [rdi+32]
   # [live values]: self.1:rdi $1.1:rax 
-  .loc 7 838 46
+  .loc 7 833 46
   # $2.1: @Matcher = load_struct_member(self.1, optional_comment)
   mov rbx, [rdi+24]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx 
-  .loc 7 838 69
+  .loc 7 833 69
   # $3.1: @Matcher = load_struct_member(self.1, required_end_of_line)
   mov r15, [rdi+168]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx $3.1:r15 
-  .loc 7 838 12
+  .loc 7 833 12
   # $4.1: Boolean = call(matches_288, self.1, $1.1, $2.1, $3.1)
   mov rsi, rax
   mov rdx, rbx
@@ -60449,7 +60404,7 @@ matches_end_of_line_285:
   # [discarded value]: $1.1
   # [discarded value]: self.1
   # [live values]: $4.1:rax 
-  .loc 7 838 5
+  .loc 7 833 5
   # return($4.1)
   mov [rbp-1], al
   jmp .LABEL__matches_end_of_line_285__end
@@ -60462,7 +60417,7 @@ matches_end_of_line_285:
 
 matches_end_of_line_285__stack_frame_size: .word 16
 
-  .loc 7 841 1
+  .loc 7 836 8
   .text
 matches_286:
   push rbp
@@ -60474,14 +60429,14 @@ matches_286:
   # [live values]: self.1:rdi 
   # first_matcher.1: @Matcher = load_variable(first_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi 
-  .loc 7 842 12
+  .loc 7 837 12
   # $1.1: Boolean = call(matches_287, self.1, first_matcher.1, null)
   xor rdx, rdx
   call matches_287
   # [discarded value]: first_matcher.1
   # [discarded value]: self.1
   # [live values]: $1.1:rax 
-  .loc 7 842 5
+  .loc 7 837 5
   # return($1.1)
   mov [rbp-1], al
   jmp .LABEL__matches_286__end
@@ -60494,7 +60449,7 @@ matches_286:
 
 matches_286__stack_frame_size: .word 16
 
-  .loc 7 845 1
+  .loc 7 840 8
   .text
 matches_287:
   push rbp
@@ -60508,7 +60463,7 @@ matches_287:
   # [live values]: self.1:rdi first_matcher.1:rsi 
   # second_matcher.1: @Matcher = load_variable(second_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx 
-  .loc 7 846 12
+  .loc 7 841 12
   # $1.1: Boolean = call(matches_288, self.1, first_matcher.1, second_matcher.1, null)
   xor rcx, rcx
   call matches_288
@@ -60516,7 +60471,7 @@ matches_287:
   # [discarded value]: first_matcher.1
   # [discarded value]: self.1
   # [live values]: $1.1:rax 
-  .loc 7 846 5
+  .loc 7 841 5
   # return($1.1)
   mov [rbp-1], al
   jmp .LABEL__matches_287__end
@@ -60529,7 +60484,7 @@ matches_287:
 
 matches_287__stack_frame_size: .word 16
 
-  .loc 7 849 1
+  .loc 7 844 8
   .text
 matches_288:
   push rbp
@@ -60545,20 +60500,20 @@ matches_288:
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx 
   # third_matcher.1: @Matcher = load_variable(third_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx 
-  .loc 7 850 14
+  .loc 7 845 14
   # $1.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rdi]
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx $1.1:rax 
-  .loc 7 850 14
+  .loc 7 845 14
   # token.1: @Token = load_struct_member($1.1, current_token)
   mov rbx, [rax+32]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:rbx 
-  .loc 7 851 5
+  .loc 7 846 5
   # peek_offset.1: Int = 0
   xor rax, rax
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:rbx peek_offset.1:rax 
-  .loc 7 852 9
+  .loc 7 847 9
   # $3.1: Boolean = call(accepts_289, first_matcher.1, token.1)
   mov [rbp-8], rdi
   mov rdi, rsi
@@ -60575,24 +60530,24 @@ matches_288:
   mov [rbp-49], al
   jz .LABEL__matches_288__4
 .LABEL__matches_288__2:
-  .loc 7 853 17
+  .loc 7 848 17
   # $5.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-8]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] $5.1:rbx 
-  .loc 7 853 17
+  .loc 7 848 17
   # token.2: @Token = call(peek_token_298, $5.1, peek_offset.1)
   mov rdi, rbx
   mov rsi, [rbp-24]
   call peek_token_298
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:rax:[rbp-48] 
-  .loc 7 854 23
+  .loc 7 849 23
   # $7.1: Int = peek_offset.1 + 1
   mov rbx, [rbp-24]
   add rbx, 1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:rax:[rbp-48] $7.1:rbx 
-  .loc 7 854 9
+  .loc 7 849 9
   # peek_offset.3: Int = $7.1
   mov [rbp-57], rbx
   # [discarded value]: $7.1
@@ -60605,7 +60560,7 @@ matches_288:
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] 
   # token.7: @Token = phi(token.2, token.1)
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] 
-  .loc 7 858 9
+  .loc 7 853 9
   # $8.1: Boolean = second_matcher.1 != null
   cmp QWORD PTR [rbp-40], 0
   setne al
@@ -60615,7 +60570,7 @@ matches_288:
   mov [rbp-50], al
   jz .LABEL__matches_288__9
 .LABEL__matches_288__8:
-  .loc 7 859 13
+  .loc 7 854 13
   # $9.1: Boolean = call(accepts_289, second_matcher.1, token.7)
   mov rdi, [rbp-40]
   mov rsi, [rbp-48]
@@ -60626,24 +60581,24 @@ matches_288:
   mov [rbp-51], al
   jz .LABEL__matches_288__12
 .LABEL__matches_288__10:
-  .loc 7 860 21
+  .loc 7 855 21
   # $11.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-8]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] $11.1:rbx 
-  .loc 7 860 21
+  .loc 7 855 21
   # token.4: @Token = call(peek_token_298, $11.1, peek_offset.8)
   mov rdi, rbx
   mov rsi, [rbp-24]
   call peek_token_298
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] token.4:rax:[rbp-48] 
-  .loc 7 861 27
+  .loc 7 856 27
   # $13.1: Int = peek_offset.8 + 1
   mov rbx, [rbp-24]
   add rbx, 1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] token.4:rax:[rbp-48] $13.1:rbx 
-  .loc 7 861 13
+  .loc 7 856 13
   # peek_offset.5: Int = $13.1
   mov [rbp-59], rbx
   # [discarded value]: $13.1
@@ -60656,7 +60611,7 @@ matches_288:
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.4:[rbp-48] peek_offset.5:[rbp-24] 
   # token.8: @Token = phi(token.7, token.4)
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] token.4:[rbp-48] peek_offset.5:[rbp-24] 
-  .loc 7 866 9
+  .loc 7 861 9
   # $14.1: Boolean = third_matcher.1 != null
   cmp QWORD PTR [rbp-32], 0
   setne al
@@ -60666,7 +60621,7 @@ matches_288:
   mov [rbp-52], al
   jz .LABEL__matches_288__17
 .LABEL__matches_288__16:
-  .loc 7 867 13
+  .loc 7 862 13
   # $15.1: Boolean = call(accepts_289, third_matcher.1, token.8)
   mov rdi, [rbp-32]
   mov rsi, [rbp-48]
@@ -60677,12 +60632,12 @@ matches_288:
   mov [rbp-53], al
   jz .LABEL__matches_288__20
 .LABEL__matches_288__18:
-  .loc 7 868 21
+  .loc 7 863 21
   # $17.1: @Scanner = load_struct_member(self.1, scanner)
   mov rax, [rbp-8]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $14.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $15.1:[rbp-53] $17.1:rbx 
-  .loc 7 868 21
+  .loc 7 863 21
   # token.6: @Token = call(peek_token_298, $17.1, peek_offset.9)
   mov rdi, rbx
   mov rsi, [rbp-24]
@@ -60690,12 +60645,12 @@ matches_288:
   # [discarded value]: token.6
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $14.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $15.1:[rbp-53] 
-  .loc 7 869 27
+  .loc 7 864 27
   # $19.1: Int = peek_offset.9 + 1
   mov rax, [rbp-24]
   add rax, 1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $14.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $15.1:[rbp-53] $19.1:rax 
-  .loc 7 869 13
+  .loc 7 864 13
   # peek_offset.7: Int = $19.1
   mov [rbp-61], rax
   # [discarded value]: peek_offset.7
@@ -60703,14 +60658,14 @@ matches_288:
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $14.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $15.1:[rbp-53] 
   # jump(.LABEL__matches_288__17)
 .LABEL__matches_288__17:
-  .loc 7 874 5
+  .loc 7 869 5
   # return(true)
   mov al, 1
   jmp .LABEL__matches_288__end
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $14.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $15.1:[rbp-53] 
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $14.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $15.1:[rbp-53] 
 .LABEL__matches_288__20:
-  .loc 7 870 20
+  .loc 7 865 20
   # $16.1: Boolean = load_struct_member(third_matcher.1, is_required)
   mov rax, [rbp-32]
   mov bl, [rax+8]
@@ -60720,7 +60675,7 @@ matches_288:
   mov [rbp-54], bl
   jz .LABEL__matches_288__17
 .LABEL__matches_288__21:
-  .loc 7 871 13
+  .loc 7 866 13
   # return(false)
   mov al, 0
   jmp .LABEL__matches_288__end
@@ -60739,7 +60694,7 @@ matches_288:
   # [discarded value]: token.4
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $8.1:[rbp-50] $9.1:[rbp-51] 
 .LABEL__matches_288__12:
-  .loc 7 862 20
+  .loc 7 857 20
   # $10.1: Boolean = load_struct_member(second_matcher.1, is_required)
   mov rax, [rbp-40]
   mov bl, [rax+8]
@@ -60749,7 +60704,7 @@ matches_288:
   mov [rbp-52], bl
   jz .LABEL__matches_288__9
 .LABEL__matches_288__13:
-  .loc 7 863 13
+  .loc 7 858 13
   # return(false)
   mov al, 0
   jmp .LABEL__matches_288__end
@@ -60768,7 +60723,7 @@ matches_288:
   # [discarded value]: token.2
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $3.1:[rbp-49] 
 .LABEL__matches_288__4:
-  .loc 7 855 16
+  .loc 7 850 16
   # $4.1: Boolean = load_struct_member(first_matcher.1, is_required)
   mov rax, [rbp-16]
   mov bl, [rax+8]
@@ -60778,7 +60733,7 @@ matches_288:
   mov [rbp-50], bl
   jz .LABEL__matches_288__3
 .LABEL__matches_288__5:
-  .loc 7 856 9
+  .loc 7 851 9
   # return(false)
   mov al, 0
   jmp .LABEL__matches_288__end
@@ -60801,7 +60756,7 @@ matches_288:
 
 matches_288__stack_frame_size: .word 64
 
-  .loc 7 925 1
+  .loc 7 915 8
   .text
 accepts_289:
   push rbp
@@ -60813,7 +60768,7 @@ accepts_289:
   # [live values]: self.1:rdi 
   # token.1: @Token = load_variable(token)
   # [live values]: self.1:rdi token.1:rsi 
-  .loc 7 926 9
+  .loc 7 916 9
   # $1.1: Boolean = call(is_344, self.1, Other_Matcher)
   mov [rbp-8], rsi
   mov rsi, Other_Matcher[rip]
@@ -60825,11 +60780,11 @@ accepts_289:
   mov [rbp-17], al
   jz .LABEL__accepts_289__3
 .LABEL__accepts_289__2:
-  .loc 7 927 17
+  .loc 7 917 17
   # self.1: @Other_Matcher = self.1
   mov rax, [rbp-16]
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] self.1:rax 
-  .loc 7 928 13
+  .loc 7 918 13
   # $3.1: Boolean = call(is_344, token.1, Other_Token)
   mov rdi, [rbp-8]
   mov rsi, Other_Token[rip]
@@ -60841,17 +60796,17 @@ accepts_289:
   mov [rbp-26], al
   jz .LABEL__accepts_289__5
 .LABEL__accepts_289__4:
-  .loc 7 929 20
+  .loc 7 919 20
   # $4.1: @String = load_struct_member(token.1, lexeme)
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] self.1:[rbp-25] $3.1:[rbp-26] $4.1:rbx 
-  .loc 7 929 40
+  .loc 7 919 40
   # $5.1: @String = load_struct_member(self.1, lexeme)
   mov r15, [rbp-25]
   mov r14, [r15+9]
   # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] self.1:r15:[rbp-25] $3.1:[rbp-26] $4.1:rbx $5.1:r14 
-  .loc 7 929 20
+  .loc 7 919 20
   # $6.1: Boolean = call(equals_347, $4.1, $5.1)
   mov rdi, rbx
   mov rsi, r14
@@ -60859,14 +60814,14 @@ accepts_289:
   # [discarded value]: $5.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] self.1:[rbp-25] $3.1:[rbp-26] $6.1:rax 
-  .loc 7 929 13
+  .loc 7 919 13
   # return($6.1)
   mov [rbp-27], al
   jmp .LABEL__accepts_289__end
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] self.1:[rbp-25] $3.1:[rbp-26] 
 .LABEL__accepts_289__5:
-  .loc 7 931 9
+  .loc 7 921 9
   # return(false)
   mov al, 0
   jmp .LABEL__accepts_289__end
@@ -60876,7 +60831,7 @@ accepts_289:
   # [discarded value]: self.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] 
 .LABEL__accepts_289__3:
-  .loc 7 933 9
+  .loc 7 923 9
   # $7.1: Boolean = call(is_344, self.1, Space_Matcher)
   mov rdi, [rbp-16]
   mov rsi, Space_Matcher[rip]
@@ -60887,20 +60842,20 @@ accepts_289:
   mov [rbp-18], al
   jz .LABEL__accepts_289__9
 .LABEL__accepts_289__8:
-  .loc 7 934 16
+  .loc 7 924 16
   # $8.1: Boolean = call(is_344, token.1, Space_Token)
   mov rdi, [rbp-8]
   mov rsi, Space_Token[rip]
   call is_344
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $8.1:rax 
-  .loc 7 934 9
+  .loc 7 924 9
   # return($8.1)
   mov [rbp-19], al
   jmp .LABEL__accepts_289__end
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] 
 .LABEL__accepts_289__9:
-  .loc 7 936 9
+  .loc 7 926 9
   # $9.1: Boolean = call(is_344, self.1, Identifier_Matcher)
   mov rdi, [rbp-16]
   mov rsi, Identifier_Matcher[rip]
@@ -60911,23 +60866,23 @@ accepts_289:
   mov [rbp-19], al
   jz .LABEL__accepts_289__12
 .LABEL__accepts_289__11:
-  .loc 7 937 16
+  .loc 7 927 16
   # $10.1: Boolean = call(is_344, token.1, Identifier_Token)
   mov rdi, [rbp-8]
   mov rsi, Identifier_Token[rip]
   call is_344
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $10.1:rax 
-  .loc 7 937 9
+  .loc 7 927 9
   # return($10.1)
   mov [rbp-20], al
   jmp .LABEL__accepts_289__end
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] 
 .LABEL__accepts_289__12:
-  .loc 7 939 9
-  # $11.1: Boolean = call(is_344, self.1, Word_Matcher)
+  .loc 7 929 9
+  # $11.1: Boolean = call(is_344, self.1, Keyword_Matcher)
   mov rdi, [rbp-16]
-  mov rsi, Word_Matcher[rip]
+  mov rsi, Keyword_Matcher[rip]
   call is_344
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:rax 
   # jump($11.1, .LABEL__accepts_289__14, .LABEL__accepts_289__15)
@@ -60935,414 +60890,327 @@ accepts_289:
   mov [rbp-20], al
   jz .LABEL__accepts_289__15
 .LABEL__accepts_289__14:
-  .loc 7 940 17
-  # self.1: @Word_Matcher = self.1
+  .loc 7 930 17
+  # self.1: @Keyword_Matcher = self.1
   mov rax, [rbp-16]
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:rax 
-  .loc 7 941 13
-  # $14.1: Boolean = call(is_344, token.1, Identifier_Token)
+  .loc 7 931 13
+  # $13.1: Boolean = call(is_344, token.1, Identifier_Token)
   mov rdi, [rbp-8]
   mov rsi, Identifier_Token[rip]
   mov [rbp-28], rax
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:rax 
-  # jump($14.1, .LABEL__accepts_289__17, .LABEL__accepts_289__16)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $13.1:rax 
+  # jump($13.1, .LABEL__accepts_289__16, .LABEL__accepts_289__17)
   test al, al
   mov [rbp-29], al
-  jz .LABEL__accepts_289__16
-.LABEL__accepts_289__17:
-  .loc 7 941 13
-  # $14.3: Boolean = phi($14.1, $14.2)
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] $14.3:[rbp-29] 
-  # jump($14.3, .LABEL__accepts_289__18, .LABEL__accepts_289__19)
-  mov al, [rbp-29]
-  test al, al
-  jz .LABEL__accepts_289__19
-.LABEL__accepts_289__18:
-  .loc 7 942 20
-  # $16.1: @String = load_struct_member(token.1, lexeme)
+  jz .LABEL__accepts_289__17
+.LABEL__accepts_289__16:
+  .loc 7 932 20
+  # $14.1: @String = load_struct_member(token.1, lexeme)
   mov rax, [rbp-8]
   mov rbx, [rax+8]
-  # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] $14.3:[rbp-29] $16.1:rbx 
-  .loc 7 942 40
-  # $17.1: @String = load_struct_member(self.1, lexeme)
+  # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $13.1:[rbp-29] $14.1:rbx 
+  .loc 7 932 40
+  # $15.1: @String = load_struct_member(self.1, lexeme)
   mov r15, [rbp-28]
   mov r14, [r15+9]
-  # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:r15:[rbp-28] $14.1:[rbp-29] $14.3:[rbp-29] $16.1:rbx $17.1:r14 
-  .loc 7 942 20
-  # $18.1: Boolean = call(equals_347, $16.1, $17.1)
+  # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:r15:[rbp-28] $13.1:[rbp-29] $14.1:rbx $15.1:r14 
+  .loc 7 932 20
+  # $16.1: Boolean = call(equals_347, $14.1, $15.1)
   mov rdi, rbx
   mov rsi, r14
   call equals_347
-  # [discarded value]: $17.1
-  # [discarded value]: $16.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] $14.3:[rbp-29] $18.1:rax 
-  .loc 7 942 13
-  # return($18.1)
+  # [discarded value]: $15.1
+  # [discarded value]: $14.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $13.1:[rbp-29] $16.1:rax 
+  .loc 7 932 13
+  # return($16.1)
   mov [rbp-30], al
   jmp .LABEL__accepts_289__end
-  # [discarded value]: $18.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] $14.3:[rbp-29] 
-.LABEL__accepts_289__19:
-  .loc 7 944 9
+  # [discarded value]: $16.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $13.1:[rbp-29] 
+.LABEL__accepts_289__17:
+  .loc 7 934 9
   # return(false)
   mov al, 0
   jmp .LABEL__accepts_289__end
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] $14.3:[rbp-29] 
-  # [discarded value]: $14.3
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] 
-.LABEL__accepts_289__16:
-  .loc 7 941 43
-  # $14.2: Boolean = call(is_344, token.1, Keyword_Token)
-  mov rdi, [rbp-8]
-  mov rsi, Keyword_Token[rip]
-  call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] $14.2:rax:[rbp-29] 
-  # jump(.LABEL__accepts_289__17)
-  mov [rbp-29], al
-  jmp .LABEL__accepts_289__17
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] $14.2:[rbp-29] 
-  # [discarded value]: $14.2
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] 
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $14.1:[rbp-29] 
-  # [discarded value]: $14.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] $13.1:[rbp-29] 
+  # [discarded value]: $13.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] self.1:[rbp-28] 
   # [discarded value]: self.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] 
 .LABEL__accepts_289__15:
-  .loc 7 946 9
-  # $19.1: Boolean = call(is_344, self.1, Keyword_Matcher)
-  mov rdi, [rbp-16]
-  mov rsi, Keyword_Matcher[rip]
-  call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:rax 
-  # jump($19.1, .LABEL__accepts_289__22, .LABEL__accepts_289__23)
-  test al, al
-  mov [rbp-21], al
-  jz .LABEL__accepts_289__23
-.LABEL__accepts_289__22:
-  .loc 7 947 17
-  # self.1: @Keyword_Matcher = self.1
-  mov rax, [rbp-16]
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:rax 
-  .loc 7 948 13
-  # $21.1: Boolean = call(is_344, token.1, Keyword_Token)
-  mov rdi, [rbp-8]
-  mov rsi, Keyword_Token[rip]
-  mov [rbp-29], rax
-  call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:[rbp-29] $21.1:rax 
-  # jump($21.1, .LABEL__accepts_289__24, .LABEL__accepts_289__25)
-  test al, al
-  mov [rbp-30], al
-  jz .LABEL__accepts_289__25
-.LABEL__accepts_289__24:
-  .loc 7 949 20
-  # $22.1: @String = load_struct_member(token.1, lexeme)
-  mov rax, [rbp-8]
-  mov rbx, [rax+8]
-  # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:[rbp-29] $21.1:[rbp-30] $22.1:rbx 
-  .loc 7 949 40
-  # $23.1: @String = load_struct_member(self.1, lexeme)
-  mov r15, [rbp-29]
-  mov r14, [r15+9]
-  # [live values]: self.1:[rbp-16] token.1:rax:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:r15:[rbp-29] $21.1:[rbp-30] $22.1:rbx $23.1:r14 
-  .loc 7 949 20
-  # $24.1: Boolean = call(equals_347, $22.1, $23.1)
-  mov rdi, rbx
-  mov rsi, r14
-  call equals_347
-  # [discarded value]: $23.1
-  # [discarded value]: $22.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:[rbp-29] $21.1:[rbp-30] $24.1:rax 
-  .loc 7 949 13
-  # return($24.1)
-  mov [rbp-31], al
-  jmp .LABEL__accepts_289__end
-  # [discarded value]: $24.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:[rbp-29] $21.1:[rbp-30] 
-.LABEL__accepts_289__25:
-  .loc 7 951 9
-  # return(false)
-  mov al, 0
-  jmp .LABEL__accepts_289__end
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:[rbp-29] $21.1:[rbp-30] 
-  # [discarded value]: $21.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] self.1:[rbp-29] 
-  # [discarded value]: self.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] 
-.LABEL__accepts_289__23:
-  .loc 7 953 9
-  # $25.1: Boolean = call(is_344, self.1, String_Literal_Matcher)
+  .loc 7 936 9
+  # $17.1: Boolean = call(is_344, self.1, String_Literal_Matcher)
   mov rdi, [rbp-16]
   mov rsi, String_Literal_Matcher[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:rax 
-  # jump($25.1, .LABEL__accepts_289__28, .LABEL__accepts_289__29)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:rax 
+  # jump($17.1, .LABEL__accepts_289__20, .LABEL__accepts_289__21)
   test al, al
-  mov [rbp-22], al
-  jz .LABEL__accepts_289__29
-.LABEL__accepts_289__28:
-  .loc 7 954 16
-  # $26.1: Boolean = call(is_344, token.1, String_Token)
+  mov [rbp-21], al
+  jz .LABEL__accepts_289__21
+.LABEL__accepts_289__20:
+  .loc 7 937 16
+  # $18.1: Boolean = call(is_344, token.1, String_Token)
   mov rdi, [rbp-8]
   mov rsi, String_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $26.1:rax 
-  .loc 7 954 9
-  # return($26.1)
-  mov [rbp-23], al
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $18.1:rax 
+  .loc 7 937 9
+  # return($18.1)
+  mov [rbp-22], al
   jmp .LABEL__accepts_289__end
-  # [discarded value]: $26.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] 
-.LABEL__accepts_289__29:
-  .loc 7 956 9
-  # $27.1: Boolean = call(is_344, self.1, Literal_Matcher)
+  # [discarded value]: $18.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] 
+.LABEL__accepts_289__21:
+  .loc 7 939 9
+  # $19.1: Boolean = call(is_344, self.1, Literal_Matcher)
   mov rdi, [rbp-16]
   mov rsi, Literal_Matcher[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:rax 
-  # jump($27.1, .LABEL__accepts_289__31, .LABEL__accepts_289__32)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:rax 
+  # jump($19.1, .LABEL__accepts_289__23, .LABEL__accepts_289__24)
   test al, al
-  mov [rbp-23], al
-  jz .LABEL__accepts_289__32
-.LABEL__accepts_289__31:
-  .loc 7 957 16
-  # $29.1: Boolean = call(is_344, token.1, Integer_Token)
+  mov [rbp-22], al
+  jz .LABEL__accepts_289__24
+.LABEL__accepts_289__23:
+  .loc 7 940 16
+  # $21.1: Boolean = call(is_344, token.1, Integer_Token)
   mov rdi, [rbp-8]
   mov rsi, Integer_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:rax 
-  # jump($29.1, .LABEL__accepts_289__42, .LABEL__accepts_289__41)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:rax 
+  # jump($21.1, .LABEL__accepts_289__34, .LABEL__accepts_289__33)
   test al, al
-  mov [rbp-24], al
-  jz .LABEL__accepts_289__41
-.LABEL__accepts_289__42:
-  .loc 7 957 16
-  # $31.1: Boolean = phi($29.1, $29.2)
-  mov al, [rbp-24]
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $31.1:rax 
-  # jump($31.1, .LABEL__accepts_289__40, .LABEL__accepts_289__39)
-  test al, al
-  mov [rbp-25], al
-  jz .LABEL__accepts_289__39
-.LABEL__accepts_289__40:
-  .loc 7 957 16
-  # $33.1: Boolean = phi($31.1, $31.2)
-  mov al, [rbp-25]
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $33.1:rax $31.1:[rbp-25] 
-  # jump($33.1, .LABEL__accepts_289__38, .LABEL__accepts_289__37)
-  test al, al
-  mov [rbp-26], al
-  jz .LABEL__accepts_289__37
-.LABEL__accepts_289__38:
-  .loc 7 957 16
-  # $35.1: Boolean = phi($33.1, $33.2)
-  mov al, [rbp-26]
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $35.1:rax $33.1:[rbp-26] $31.1:[rbp-25] 
-  # jump($35.1, .LABEL__accepts_289__36, .LABEL__accepts_289__35)
-  test al, al
-  mov [rbp-27], al
-  jz .LABEL__accepts_289__35
-.LABEL__accepts_289__36:
-  .loc 7 957 16
-  # $37.1: Boolean = phi($35.1, $35.2)
-  mov al, [rbp-27]
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $37.1:rax $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # jump($37.1, .LABEL__accepts_289__34, .LABEL__accepts_289__33)
-  test al, al
-  mov [rbp-28], al
+  mov [rbp-23], al
   jz .LABEL__accepts_289__33
 .LABEL__accepts_289__34:
-  .loc 7 957 16
-  # $37.3: Boolean = phi($37.1, $37.2)
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $37.3:[rbp-28] $37.1:[rbp-28] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  .loc 7 957 9
-  # return($37.3)
-  mov al, [rbp-28]
+  .loc 7 940 16
+  # $23.1: Boolean = phi($21.1, $21.2)
+  mov al, [rbp-23]
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $23.1:rax 
+  # jump($23.1, .LABEL__accepts_289__32, .LABEL__accepts_289__31)
+  test al, al
+  mov [rbp-24], al
+  jz .LABEL__accepts_289__31
+.LABEL__accepts_289__32:
+  .loc 7 940 16
+  # $25.1: Boolean = phi($23.1, $23.2)
+  mov al, [rbp-24]
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $25.1:rax $23.1:[rbp-24] 
+  # jump($25.1, .LABEL__accepts_289__30, .LABEL__accepts_289__29)
+  test al, al
+  mov [rbp-25], al
+  jz .LABEL__accepts_289__29
+.LABEL__accepts_289__30:
+  .loc 7 940 16
+  # $27.1: Boolean = phi($25.1, $25.2)
+  mov al, [rbp-25]
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $27.1:rax $25.1:[rbp-25] $23.1:[rbp-24] 
+  # jump($27.1, .LABEL__accepts_289__28, .LABEL__accepts_289__27)
+  test al, al
+  mov [rbp-26], al
+  jz .LABEL__accepts_289__27
+.LABEL__accepts_289__28:
+  .loc 7 940 16
+  # $29.1: Boolean = phi($27.1, $27.2)
+  mov al, [rbp-26]
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $29.1:rax $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # jump($29.1, .LABEL__accepts_289__26, .LABEL__accepts_289__25)
+  test al, al
+  mov [rbp-27], al
+  jz .LABEL__accepts_289__25
+.LABEL__accepts_289__26:
+  .loc 7 940 16
+  # $29.3: Boolean = phi($29.1, $29.2)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $29.3:[rbp-27] $29.1:[rbp-27] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  .loc 7 940 9
+  # return($29.3)
+  mov al, [rbp-27]
   jmp .LABEL__accepts_289__end
-  # [discarded value]: $37.3
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $37.1:[rbp-28] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-.LABEL__accepts_289__33:
-  .loc 7 957 149
-  # $37.2: Boolean = call(is_344, token.1, Undefined_Token)
+  # [discarded value]: $29.3
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $29.1:[rbp-27] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+.LABEL__accepts_289__25:
+  .loc 7 940 149
+  # $29.2: Boolean = call(is_344, token.1, Undefined_Token)
   mov rdi, [rbp-8]
   mov rsi, Undefined_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $37.2:rax:[rbp-28] $37.1:[rbp-28] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # jump(.LABEL__accepts_289__34)
-  mov [rbp-28], al
-  jmp .LABEL__accepts_289__34
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $37.2:[rbp-28] $37.1:[rbp-28] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [discarded value]: $37.2
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $37.1:[rbp-28] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $37.1:[rbp-28] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [discarded value]: $37.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-.LABEL__accepts_289__35:
-  .loc 7 957 125
-  # $35.2: Boolean = call(is_344, token.1, Null_Token)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $29.2:rax:[rbp-27] $29.1:[rbp-27] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # jump(.LABEL__accepts_289__26)
+  mov [rbp-27], al
+  jmp .LABEL__accepts_289__26
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $29.2:[rbp-27] $29.1:[rbp-27] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [discarded value]: $29.2
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $29.1:[rbp-27] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $29.1:[rbp-27] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [discarded value]: $29.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+.LABEL__accepts_289__27:
+  .loc 7 940 125
+  # $27.2: Boolean = call(is_344, token.1, Null_Token)
   mov rdi, [rbp-8]
   mov rsi, Null_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $35.2:rax:[rbp-27] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # jump(.LABEL__accepts_289__36)
-  mov [rbp-27], al
-  jmp .LABEL__accepts_289__36
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $35.2:[rbp-27] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [discarded value]: $35.2
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $35.1:[rbp-27] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [discarded value]: $35.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $33.1:[rbp-26] $31.1:[rbp-25] 
-.LABEL__accepts_289__37:
-  .loc 7 957 98
-  # $33.2: Boolean = call(is_344, token.1, Boolean_Token)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $27.2:rax:[rbp-26] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # jump(.LABEL__accepts_289__28)
+  mov [rbp-26], al
+  jmp .LABEL__accepts_289__28
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $27.2:[rbp-26] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [discarded value]: $27.2
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $27.1:[rbp-26] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [discarded value]: $27.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $25.1:[rbp-25] $23.1:[rbp-24] 
+.LABEL__accepts_289__29:
+  .loc 7 940 98
+  # $25.2: Boolean = call(is_344, token.1, Boolean_Token)
   mov rdi, [rbp-8]
   mov rsi, Boolean_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $33.2:rax:[rbp-26] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # jump(.LABEL__accepts_289__38)
-  mov [rbp-26], al
-  jmp .LABEL__accepts_289__38
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $33.2:[rbp-26] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [discarded value]: $33.2
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $33.1:[rbp-26] $31.1:[rbp-25] 
-  # [discarded value]: $33.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $31.1:[rbp-25] 
-.LABEL__accepts_289__39:
-  .loc 7 957 69
-  # $31.2: Boolean = call(is_344, token.1, Character_Token)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $25.2:rax:[rbp-25] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # jump(.LABEL__accepts_289__30)
+  mov [rbp-25], al
+  jmp .LABEL__accepts_289__30
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $25.2:[rbp-25] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [discarded value]: $25.2
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $25.1:[rbp-25] $23.1:[rbp-24] 
+  # [discarded value]: $25.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $23.1:[rbp-24] 
+.LABEL__accepts_289__31:
+  .loc 7 940 69
+  # $23.2: Boolean = call(is_344, token.1, Character_Token)
   mov rdi, [rbp-8]
   mov rsi, Character_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $31.2:rax:[rbp-25] $31.1:[rbp-25] 
-  # jump(.LABEL__accepts_289__40)
-  mov [rbp-25], al
-  jmp .LABEL__accepts_289__40
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $31.2:[rbp-25] $31.1:[rbp-25] 
-  # [discarded value]: $31.2
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $31.1:[rbp-25] 
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $31.1:[rbp-25] 
-  # [discarded value]: $31.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] 
-.LABEL__accepts_289__41:
-  .loc 7 957 43
-  # $29.2: Boolean = call(is_344, token.1, String_Token)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $23.2:rax:[rbp-24] $23.1:[rbp-24] 
+  # jump(.LABEL__accepts_289__32)
+  mov [rbp-24], al
+  jmp .LABEL__accepts_289__32
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $23.2:[rbp-24] $23.1:[rbp-24] 
+  # [discarded value]: $23.2
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $23.1:[rbp-24] 
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $23.1:[rbp-24] 
+  # [discarded value]: $23.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] 
+.LABEL__accepts_289__33:
+  .loc 7 940 43
+  # $21.2: Boolean = call(is_344, token.1, String_Token)
   mov rdi, [rbp-8]
   mov rsi, String_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $29.2:rax:[rbp-24] 
-  # jump(.LABEL__accepts_289__42)
-  mov [rbp-24], al
-  jmp .LABEL__accepts_289__42
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] $29.2:[rbp-24] 
-  # [discarded value]: $29.2
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] 
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $29.1:[rbp-24] 
-  # [discarded value]: $29.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] 
-.LABEL__accepts_289__32:
-  .loc 7 959 9
-  # $39.1: Boolean = call(is_344, self.1, End_Of_Line_Matcher)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $21.2:rax:[rbp-23] 
+  # jump(.LABEL__accepts_289__34)
+  mov [rbp-23], al
+  jmp .LABEL__accepts_289__34
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] $21.2:[rbp-23] 
+  # [discarded value]: $21.2
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] 
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $21.1:[rbp-23] 
+  # [discarded value]: $21.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] 
+.LABEL__accepts_289__24:
+  .loc 7 942 9
+  # $31.1: Boolean = call(is_344, self.1, End_Of_Line_Matcher)
   mov rdi, [rbp-16]
   mov rsi, End_Of_Line_Matcher[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:rax 
-  # jump($39.1, .LABEL__accepts_289__44, .LABEL__accepts_289__45)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:rax 
+  # jump($31.1, .LABEL__accepts_289__36, .LABEL__accepts_289__37)
   test al, al
-  mov [rbp-24], al
-  jz .LABEL__accepts_289__45
-.LABEL__accepts_289__44:
-  .loc 7 960 16
-  # $40.1: Boolean = call(is_344, token.1, End_Of_Line_Token)
+  mov [rbp-23], al
+  jz .LABEL__accepts_289__37
+.LABEL__accepts_289__36:
+  .loc 7 943 16
+  # $32.1: Boolean = call(is_344, token.1, End_Of_Line_Token)
   mov rdi, [rbp-8]
   mov rsi, End_Of_Line_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $40.1:rax 
-  .loc 7 960 9
-  # return($40.1)
-  mov [rbp-25], al
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $32.1:rax 
+  .loc 7 943 9
+  # return($32.1)
+  mov [rbp-24], al
   jmp .LABEL__accepts_289__end
-  # [discarded value]: $40.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] 
-.LABEL__accepts_289__45:
-  .loc 7 962 9
-  # $41.1: Boolean = call(is_344, self.1, Comment_Matcher)
+  # [discarded value]: $32.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] 
+.LABEL__accepts_289__37:
+  .loc 7 945 9
+  # $33.1: Boolean = call(is_344, self.1, Comment_Matcher)
   mov rdi, [rbp-16]
   mov rsi, Comment_Matcher[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:rax 
-  # jump($41.1, .LABEL__accepts_289__47, .LABEL__accepts_289__48)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:rax 
+  # jump($33.1, .LABEL__accepts_289__39, .LABEL__accepts_289__40)
   test al, al
-  mov [rbp-25], al
-  jz .LABEL__accepts_289__48
-.LABEL__accepts_289__47:
-  .loc 7 963 16
-  # $42.1: Boolean = call(is_344, token.1, Comment_Token)
+  mov [rbp-24], al
+  jz .LABEL__accepts_289__40
+.LABEL__accepts_289__39:
+  .loc 7 946 16
+  # $34.1: Boolean = call(is_344, token.1, Comment_Token)
   mov rdi, [rbp-8]
   mov rsi, Comment_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] $42.1:rax 
-  .loc 7 963 9
-  # return($42.1)
-  mov [rbp-26], al
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] $34.1:rax 
+  .loc 7 946 9
+  # return($34.1)
+  mov [rbp-25], al
   jmp .LABEL__accepts_289__end
-  # [discarded value]: $42.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] 
-.LABEL__accepts_289__48:
-  .loc 7 965 9
-  # $43.1: Boolean = call(is_344, self.1, End_Of_File_Matcher)
+  # [discarded value]: $34.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] 
+.LABEL__accepts_289__40:
+  .loc 7 948 9
+  # $35.1: Boolean = call(is_344, self.1, End_Of_File_Matcher)
   mov rdi, [rbp-16]
   mov rsi, End_Of_File_Matcher[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] $43.1:rax 
-  # jump($43.1, .LABEL__accepts_289__50, .LABEL__accepts_289__51)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] $35.1:rax 
+  # jump($35.1, .LABEL__accepts_289__42, .LABEL__accepts_289__43)
   test al, al
-  mov [rbp-26], al
-  jz .LABEL__accepts_289__51
-.LABEL__accepts_289__50:
-  .loc 7 966 16
-  # $44.1: Boolean = call(is_344, token.1, End_Of_File_Token)
+  mov [rbp-25], al
+  jz .LABEL__accepts_289__43
+.LABEL__accepts_289__42:
+  .loc 7 949 16
+  # $36.1: Boolean = call(is_344, token.1, End_Of_File_Token)
   mov rdi, [rbp-8]
   mov rsi, End_Of_File_Token[rip]
   call is_344
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] $43.1:[rbp-26] $44.1:rax 
-  .loc 7 966 9
-  # return($44.1)
-  mov [rbp-27], al
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] $35.1:[rbp-25] $36.1:rax 
+  .loc 7 949 9
+  # return($36.1)
+  mov [rbp-26], al
   jmp .LABEL__accepts_289__end
-  # [discarded value]: $44.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] $43.1:[rbp-26] 
-.LABEL__accepts_289__51:
-  .loc 7 968 5
-  # $45.1: @FILE = call(write_338, stderr, "Unsupported token matcher")
+  # [discarded value]: $36.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] $35.1:[rbp-25] 
+.LABEL__accepts_289__43:
+  .loc 7 951 5
+  # $37.1: @FILE = call(write_338, stderr, "Unsupported token matcher")
   mov rdi, stderr[rip]
   lea rsi, .LABEL__string_332[rip] # "Unsupported token matcher"
   call write_338
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] $43.1:[rbp-26] $45.1:rax 
-  .loc 7 968 5
-  # $46.1: @FILE = call(end_line_341, $45.1)
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] $35.1:[rbp-25] $37.1:rax 
+  .loc 7 951 5
+  # $38.1: @FILE = call(end_line_341, $37.1)
   mov rdi, rax
   call end_line_341
-  # [discarded value]: $46.1
-  # [discarded value]: $45.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] $43.1:[rbp-26] 
-  .loc 7 969 5
+  # [discarded value]: $38.1
+  # [discarded value]: $37.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] $35.1:[rbp-25] 
+  .loc 7 952 5
   # call(abort)
   call abort
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] $43.1:[rbp-26] 
-  # [discarded value]: $43.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] $41.1:[rbp-25] 
-  # [discarded value]: $41.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] $39.1:[rbp-24] 
-  # [discarded value]: $39.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] $27.1:[rbp-23] 
-  # [discarded value]: $27.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] $25.1:[rbp-22] 
-  # [discarded value]: $25.1
-  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $19.1:[rbp-21] 
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] $35.1:[rbp-25] 
+  # [discarded value]: $35.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] $33.1:[rbp-24] 
+  # [discarded value]: $33.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] $31.1:[rbp-23] 
+  # [discarded value]: $31.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] $19.1:[rbp-22] 
   # [discarded value]: $19.1
+  # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] $17.1:[rbp-21] 
+  # [discarded value]: $17.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] $11.1:[rbp-20] 
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] token.1:[rbp-8] $1.1:[rbp-17] $7.1:[rbp-18] $9.1:[rbp-19] 
@@ -61362,7 +61230,7 @@ accepts_289:
 
 accepts_289__stack_frame_size: .word 32
 
-  .loc 1 59 1
+  .loc 1 59 8
   .text
 abort_290:
   push rbp
@@ -61446,7 +61314,7 @@ abort_290:
 
 abort_290__stack_frame_size: .word 16
 
-  .loc 1 66 1
+  .loc 1 66 8
   .text
 write_291:
   push rbp
@@ -61539,7 +61407,7 @@ write_291:
 
 write_291__stack_frame_size: .word 32
 
-  .loc 1 75 1
+  .loc 1 75 8
   .text
 write_292:
   push rbp
@@ -62771,7 +62639,7 @@ write_292:
 
 write_292__stack_frame_size: .word 64
 
-  .loc 1 187 1
+  .loc 1 187 8
   .text
 write_source_line_293:
   push rbp
@@ -62970,7 +62838,7 @@ write_source_line_293:
 
 write_source_line_293__stack_frame_size: .word 64
 
-  .loc 1 210 1
+  .loc 1 210 8
   .text
 write_294:
   push rbp
@@ -63028,7 +62896,7 @@ write_294:
 
 write_294__stack_frame_size: .word 16
 
-  .loc 1 214 1
+  .loc 1 214 8
   .text
 write_295:
   push rbp
@@ -63298,7 +63166,7 @@ write_295:
 
 write_295__stack_frame_size: .word 48
 
-  .loc 1 235 1
+  .loc 1 235 8
   .text
 write_296:
   push rbp
@@ -64471,7 +64339,7 @@ write_296:
 
 write_296__stack_frame_size: .word 64
 
-  .loc 9 11 1
+  .loc 9 11 8
   .text
 create_scanner_297:
   push rbp
@@ -64523,7 +64391,7 @@ create_scanner_297:
 
 create_scanner_297__stack_frame_size: .word 16
 
-  .loc 9 17 1
+  .loc 9 17 8
   .text
 peek_token_298:
   push rbp
@@ -64657,7 +64525,7 @@ peek_token_298:
 
 peek_token_298__stack_frame_size: .word 48
 
-  .loc 9 34 1
+  .loc 9 34 8
   .text
 next_token_299:
   push rbp
@@ -64746,7 +64614,7 @@ next_token_299:
 
 next_token_299__stack_frame_size: .word 32
 
-  .loc 9 42 1
+  .loc 9 42 8
   .text
 peek_char_300:
   push rbp
@@ -64793,7 +64661,7 @@ peek_char_300:
 
 peek_char_300__stack_frame_size: .word 16
 
-  .loc 9 46 1
+  .loc 9 46 8
   .text
 next_char_301:
   push rbp
@@ -64925,7 +64793,7 @@ next_char_301:
 
 next_char_301__stack_frame_size: .word 16
 
-  .loc 9 60 1
+  .loc 9 60 8
   .text
 scan_token_302:
   push rbp
@@ -65281,7 +65149,7 @@ scan_token_302:
 
 scan_token_302__stack_frame_size: .word 48
 
-  .loc 9 95 1
+  .loc 9 95 8
   .text
 is_digit_303:
   push rbp
@@ -65367,7 +65235,7 @@ is_digit_303:
 
 is_digit_303__stack_frame_size: .word 16
 
-  .loc 9 99 1
+  .loc 9 99 8
   .text
 is_identifier_start_304:
   push rbp
@@ -65424,7 +65292,7 @@ is_identifier_start_304:
 
 is_identifier_start_304__stack_frame_size: .word 16
 
-  .loc 9 103 1
+  .loc 9 103 8
   .text
 is_identifier_body_305:
   push rbp
@@ -65472,7 +65340,7 @@ is_identifier_body_305:
 
 is_identifier_body_305__stack_frame_size: .word 16
 
-  .loc 9 110 1
+  .loc 9 110 8
   .text
 is_letter_306:
   push rbp
@@ -65639,7 +65507,7 @@ is_letter_306:
 
 is_letter_306__stack_frame_size: .word 16
 
-  .loc 9 114 1
+  .loc 9 114 8
   .text
 is_space_307:
   push rbp
@@ -65668,7 +65536,7 @@ is_space_307:
 
 is_space_307__stack_frame_size: .word 16
 
-  .loc 9 118 1
+  .loc 9 118 8
   .text
 scan_character_token_308:
   push rbp
@@ -66227,7 +66095,7 @@ scan_character_token_308:
 
 scan_character_token_308__stack_frame_size: .word 48
 
-  .loc 9 170 1
+  .loc 9 170 8
   .text
 is_escape_309:
   push rbp
@@ -66406,7 +66274,7 @@ is_escape_309:
 
 is_escape_309__stack_frame_size: .word 16
 
-  .loc 9 174 1
+  .loc 9 174 8
   .text
 scan_comment_token_310:
   push rbp
@@ -66494,7 +66362,7 @@ scan_comment_token_310:
 
 scan_comment_token_310__stack_frame_size: .word 48
 
-  .loc 9 181 1
+  .loc 9 181 8
   .text
 scan_identifier_token_311:
   push rbp
@@ -66547,9 +66415,9 @@ scan_identifier_token_311:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] 
 .LABEL__scan_identifier_token_311__4:
   .loc 9 185 9
-  # $5.1: Boolean = call(equals_347, token_lexeme.1, "as")
+  # $5.1: Boolean = call(equals_347, token_lexeme.1, "false")
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_295[rip] # "as"
+  lea rsi, .LABEL__string_352[rip] # "false"
   call equals_347
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:rax 
   # jump($5.1, .LABEL__scan_identifier_token_311__5, .LABEL__scan_identifier_token_311__6)
@@ -66558,11 +66426,11 @@ scan_identifier_token_311:
   jz .LABEL__scan_identifier_token_311__6
 .LABEL__scan_identifier_token_311__5:
   .loc 9 186 16
-  # $6.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
+  # $6.1: @Boolean_Token = new Boolean_Token(object_type = Boolean_Token, lexeme = token_lexeme.1, location = token_location.1, value = false, next_token = null)
+  mov rdi, 33
   call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
+  #     .object_type = Boolean_Token
+  mov rbx, Boolean_Token[rip]
   mov [rax], rbx
   #     .lexeme = token_lexeme.1
   mov rbx, [rbp-16]
@@ -66572,6 +66440,8 @@ scan_identifier_token_311:
   mov QWORD PTR [rax+16], r15
   #     .next_token = null
   mov QWORD PTR [rax+24], 0
+  #     .value = false
+  mov BYTE PTR [rax+32], 0
   # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $6.1:rax 
   .loc 9 186 9
   # return($6.1)
@@ -66581,9 +66451,9 @@ scan_identifier_token_311:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] 
 .LABEL__scan_identifier_token_311__6:
   .loc 9 188 9
-  # $7.1: Boolean = call(equals_347, token_lexeme.1, "break")
+  # $7.1: Boolean = call(equals_347, token_lexeme.1, "null")
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_297[rip] # "break"
+  lea rsi, .LABEL__string_353[rip] # "null"
   call equals_347
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:rax 
   # jump($7.1, .LABEL__scan_identifier_token_311__8, .LABEL__scan_identifier_token_311__9)
@@ -66592,11 +66462,11 @@ scan_identifier_token_311:
   jz .LABEL__scan_identifier_token_311__9
 .LABEL__scan_identifier_token_311__8:
   .loc 9 189 16
-  # $8.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
+  # $8.1: @Null_Token = new Null_Token(object_type = Null_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
   mov rdi, 32
   call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
+  #     .object_type = Null_Token
+  mov rbx, Null_Token[rip]
   mov [rax], rbx
   #     .lexeme = token_lexeme.1
   mov rbx, [rbp-16]
@@ -66615,9 +66485,9 @@ scan_identifier_token_311:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] 
 .LABEL__scan_identifier_token_311__9:
   .loc 9 191 9
-  # $9.1: Boolean = call(equals_347, token_lexeme.1, "else")
+  # $9.1: Boolean = call(equals_347, token_lexeme.1, "true")
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_303[rip] # "else"
+  lea rsi, .LABEL__string_354[rip] # "true"
   call equals_347
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:rax 
   # jump($9.1, .LABEL__scan_identifier_token_311__11, .LABEL__scan_identifier_token_311__12)
@@ -66626,11 +66496,11 @@ scan_identifier_token_311:
   jz .LABEL__scan_identifier_token_311__12
 .LABEL__scan_identifier_token_311__11:
   .loc 9 192 16
-  # $10.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
+  # $10.1: @Boolean_Token = new Boolean_Token(object_type = Boolean_Token, lexeme = token_lexeme.1, location = token_location.1, value = true, next_token = null)
+  mov rdi, 33
   call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
+  #     .object_type = Boolean_Token
+  mov rbx, Boolean_Token[rip]
   mov [rax], rbx
   #     .lexeme = token_lexeme.1
   mov rbx, [rbp-16]
@@ -66640,6 +66510,8 @@ scan_identifier_token_311:
   mov QWORD PTR [rax+16], r15
   #     .next_token = null
   mov QWORD PTR [rax+24], 0
+  #     .value = true
+  mov BYTE PTR [rax+32], 1
   # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $10.1:rax 
   .loc 9 192 9
   # return($10.1)
@@ -66649,9 +66521,9 @@ scan_identifier_token_311:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] 
 .LABEL__scan_identifier_token_311__12:
   .loc 9 194 9
-  # $11.1: Boolean = call(equals_347, token_lexeme.1, "external")
+  # $11.1: Boolean = call(equals_347, token_lexeme.1, "undefined")
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_307[rip] # "external"
+  lea rsi, .LABEL__string_244[rip] # "undefined"
   call equals_347
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:rax 
   # jump($11.1, .LABEL__scan_identifier_token_311__14, .LABEL__scan_identifier_token_311__15)
@@ -66660,11 +66532,11 @@ scan_identifier_token_311:
   jz .LABEL__scan_identifier_token_311__15
 .LABEL__scan_identifier_token_311__14:
   .loc 9 195 16
-  # $12.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
+  # $12.1: @Undefined_Token = new Undefined_Token(object_type = Undefined_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
   mov rdi, 32
   call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
+  #     .object_type = Undefined_Token
+  mov rbx, Undefined_Token[rip]
   mov [rax], rbx
   #     .lexeme = token_lexeme.1
   mov rbx, [rbp-16]
@@ -66682,386 +66554,8 @@ scan_identifier_token_311:
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] 
 .LABEL__scan_identifier_token_311__15:
-  .loc 9 197 9
-  # $13.1: Boolean = call(equals_347, token_lexeme.1, "false")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_352[rip] # "false"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:rax 
-  # jump($13.1, .LABEL__scan_identifier_token_311__17, .LABEL__scan_identifier_token_311__18)
-  test al, al
-  mov [rbp-30], al
-  jz .LABEL__scan_identifier_token_311__18
-.LABEL__scan_identifier_token_311__17:
-  .loc 9 198 16
-  # $14.1: @Boolean_Token = new Boolean_Token(object_type = Boolean_Token, lexeme = token_lexeme.1, location = token_location.1, value = false, next_token = null)
-  mov rdi, 33
-  call malloc
-  #     .object_type = Boolean_Token
-  mov rbx, Boolean_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  #     .value = false
-  mov BYTE PTR [rax+32], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $14.1:rax 
-  .loc 9 198 9
-  # return($14.1)
-  mov [rbp-38], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $14.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] 
-.LABEL__scan_identifier_token_311__18:
-  .loc 9 200 9
-  # $15.1: Boolean = call(equals_347, token_lexeme.1, "if")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_310[rip] # "if"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:rax 
-  # jump($15.1, .LABEL__scan_identifier_token_311__20, .LABEL__scan_identifier_token_311__21)
-  test al, al
-  mov [rbp-31], al
-  jz .LABEL__scan_identifier_token_311__21
-.LABEL__scan_identifier_token_311__20:
-  .loc 9 201 16
-  # $16.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $16.1:rax 
-  .loc 9 201 9
-  # return($16.1)
-  mov [rbp-39], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $16.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] 
-.LABEL__scan_identifier_token_311__21:
-  .loc 9 203 9
-  # $17.1: Boolean = call(equals_347, token_lexeme.1, "include")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_311[rip] # "include"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:rax 
-  # jump($17.1, .LABEL__scan_identifier_token_311__23, .LABEL__scan_identifier_token_311__24)
-  test al, al
-  mov [rbp-32], al
-  jz .LABEL__scan_identifier_token_311__24
-.LABEL__scan_identifier_token_311__23:
-  .loc 9 204 16
-  # $18.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $18.1:rax 
-  .loc 9 204 9
-  # return($18.1)
-  mov [rbp-40], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $18.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] 
-.LABEL__scan_identifier_token_311__24:
-  .loc 9 206 9
-  # $19.1: Boolean = call(equals_347, token_lexeme.1, "loop")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_313[rip] # "loop"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:rax 
-  # jump($19.1, .LABEL__scan_identifier_token_311__26, .LABEL__scan_identifier_token_311__27)
-  test al, al
-  mov [rbp-33], al
-  jz .LABEL__scan_identifier_token_311__27
-.LABEL__scan_identifier_token_311__26:
-  .loc 9 207 16
-  # $20.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $20.1:rax 
-  .loc 9 207 9
-  # return($20.1)
-  mov [rbp-41], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $20.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] 
-.LABEL__scan_identifier_token_311__27:
-  .loc 9 209 9
-  # $21.1: Boolean = call(equals_347, token_lexeme.1, "new")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_274[rip] # "new"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:rax 
-  # jump($21.1, .LABEL__scan_identifier_token_311__29, .LABEL__scan_identifier_token_311__30)
-  test al, al
-  mov [rbp-34], al
-  jz .LABEL__scan_identifier_token_311__30
-.LABEL__scan_identifier_token_311__29:
-  .loc 9 210 16
-  # $22.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $22.1:rax 
-  .loc 9 210 9
-  # return($22.1)
-  mov [rbp-42], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $22.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] 
-.LABEL__scan_identifier_token_311__30:
-  .loc 9 212 9
-  # $23.1: Boolean = call(equals_347, token_lexeme.1, "null")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_353[rip] # "null"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:rax 
-  # jump($23.1, .LABEL__scan_identifier_token_311__32, .LABEL__scan_identifier_token_311__33)
-  test al, al
-  mov [rbp-35], al
-  jz .LABEL__scan_identifier_token_311__33
-.LABEL__scan_identifier_token_311__32:
-  .loc 9 213 16
-  # $24.1: @Null_Token = new Null_Token(object_type = Null_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Null_Token
-  mov rbx, Null_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $24.1:rax 
-  .loc 9 213 9
-  # return($24.1)
-  mov [rbp-43], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $24.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] 
-.LABEL__scan_identifier_token_311__33:
-  .loc 9 215 9
-  # $25.1: Boolean = call(equals_347, token_lexeme.1, "return")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_276[rip] # "return"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:rax 
-  # jump($25.1, .LABEL__scan_identifier_token_311__35, .LABEL__scan_identifier_token_311__36)
-  test al, al
-  mov [rbp-36], al
-  jz .LABEL__scan_identifier_token_311__36
-.LABEL__scan_identifier_token_311__35:
-  .loc 9 216 16
-  # $26.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $26.1:rax 
-  .loc 9 216 9
-  # return($26.1)
-  mov [rbp-44], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $26.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] 
-.LABEL__scan_identifier_token_311__36:
-  .loc 9 218 9
-  # $27.1: Boolean = call(equals_347, token_lexeme.1, "struct")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_317[rip] # "struct"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:rax 
-  # jump($27.1, .LABEL__scan_identifier_token_311__38, .LABEL__scan_identifier_token_311__39)
-  test al, al
-  mov [rbp-37], al
-  jz .LABEL__scan_identifier_token_311__39
-.LABEL__scan_identifier_token_311__38:
-  .loc 9 219 16
-  # $28.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $28.1:rax 
-  .loc 9 219 9
-  # return($28.1)
-  mov [rbp-45], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $28.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] 
-.LABEL__scan_identifier_token_311__39:
-  .loc 9 221 9
-  # $29.1: Boolean = call(equals_347, token_lexeme.1, "true")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_354[rip] # "true"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:rax 
-  # jump($29.1, .LABEL__scan_identifier_token_311__41, .LABEL__scan_identifier_token_311__42)
-  test al, al
-  mov [rbp-38], al
-  jz .LABEL__scan_identifier_token_311__42
-.LABEL__scan_identifier_token_311__41:
-  .loc 9 222 16
-  # $30.1: @Boolean_Token = new Boolean_Token(object_type = Boolean_Token, lexeme = token_lexeme.1, location = token_location.1, value = true, next_token = null)
-  mov rdi, 33
-  call malloc
-  #     .object_type = Boolean_Token
-  mov rbx, Boolean_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  #     .value = true
-  mov BYTE PTR [rax+32], 1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $30.1:rax 
-  .loc 9 222 9
-  # return($30.1)
-  mov [rbp-46], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $30.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] 
-.LABEL__scan_identifier_token_311__42:
-  .loc 9 224 9
-  # $31.1: Boolean = call(equals_347, token_lexeme.1, "undefined")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_244[rip] # "undefined"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:rax 
-  # jump($31.1, .LABEL__scan_identifier_token_311__44, .LABEL__scan_identifier_token_311__45)
-  test al, al
-  mov [rbp-39], al
-  jz .LABEL__scan_identifier_token_311__45
-.LABEL__scan_identifier_token_311__44:
-  .loc 9 225 16
-  # $32.1: @Undefined_Token = new Undefined_Token(object_type = Undefined_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Undefined_Token
-  mov rbx, Undefined_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] $32.1:rax 
-  .loc 9 225 9
-  # return($32.1)
-  mov [rbp-47], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $32.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] 
-.LABEL__scan_identifier_token_311__45:
-  .loc 9 227 9
-  # $33.1: Boolean = call(equals_347, token_lexeme.1, "while")
-  mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_320[rip] # "while"
-  call equals_347
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] $33.1:rax 
-  # jump($33.1, .LABEL__scan_identifier_token_311__47, .LABEL__scan_identifier_token_311__48)
-  test al, al
-  mov [rbp-40], al
-  jz .LABEL__scan_identifier_token_311__48
-.LABEL__scan_identifier_token_311__47:
-  .loc 9 228 16
-  # $34.1: @Keyword_Token = new Keyword_Token(object_type = Keyword_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
-  mov rdi, 32
-  call malloc
-  #     .object_type = Keyword_Token
-  mov rbx, Keyword_Token[rip]
-  mov [rax], rbx
-  #     .lexeme = token_lexeme.1
-  mov rbx, [rbp-16]
-  mov QWORD PTR [rax+8], rbx
-  #     .location = token_location.1
-  mov r15, [rbp-8]
-  mov QWORD PTR [rax+16], r15
-  #     .next_token = null
-  mov QWORD PTR [rax+24], 0
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] $33.1:[rbp-40] $34.1:rax 
-  .loc 9 228 9
-  # return($34.1)
-  mov [rbp-48], rax
-  jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $34.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] $33.1:[rbp-40] 
-.LABEL__scan_identifier_token_311__48:
-  .loc 9 230 12
-  # $35.1: @Identifier_Token = new Identifier_Token(object_type = Identifier_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
+  .loc 9 197 12
+  # $13.1: @Identifier_Token = new Identifier_Token(object_type = Identifier_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
   mov rdi, 32
   call malloc
   #     .object_type = Identifier_Token
@@ -67076,33 +66570,11 @@ scan_identifier_token_311:
   #     .next_token = null
   mov QWORD PTR [rax+24], 0
   # [discarded value]: token_location.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] $33.1:[rbp-40] $35.1:rax 
-  .loc 9 230 5
-  # return($35.1)
-  mov [rbp-48], rax
+  # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:rax 
+  .loc 9 197 5
+  # return($13.1)
+  mov [rbp-37], rax
   jmp .LABEL__scan_identifier_token_311__end
-  # [discarded value]: $35.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] $33.1:[rbp-40] 
-  # [discarded value]: $33.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] $31.1:[rbp-39] 
-  # [discarded value]: $31.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] $29.1:[rbp-38] 
-  # [discarded value]: $29.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] $27.1:[rbp-37] 
-  # [discarded value]: $27.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] $25.1:[rbp-36] 
-  # [discarded value]: $25.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] $23.1:[rbp-35] 
-  # [discarded value]: $23.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] $21.1:[rbp-34] 
-  # [discarded value]: $21.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] $19.1:[rbp-33] 
-  # [discarded value]: $19.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] $17.1:[rbp-32] 
-  # [discarded value]: $17.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] $15.1:[rbp-31] 
-  # [discarded value]: $15.1
-  # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] $13.1:[rbp-30] 
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-29] 
   # [discarded value]: $11.1
@@ -67126,7 +66598,7 @@ scan_identifier_token_311:
 
 scan_identifier_token_311__stack_frame_size: .word 48
 
-  .loc 9 233 1
+  .loc 9 200 8
   .text
 scan_integer_token_312:
   push rbp
@@ -67140,7 +66612,7 @@ scan_integer_token_312:
   # [live values]: self.1:rdi token_lexeme.1:rsi 
   # token_location.1: @Source_Location = load_variable(token_location)
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx 
-  .loc 9 234 5
+  .loc 9 201 5
   # value.1: Int = 0
   xor rax, rax
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx value.1:rax 
@@ -67152,12 +66624,12 @@ scan_integer_token_312:
 .LABEL__scan_integer_token_312__2:
   # value.5: Int = phi(value.1, value.3)
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] 
-  .loc 9 235 12
+  .loc 9 202 12
   # $1.1: Int8 = call(peek_char_300, self.1)
   mov rdi, [rbp-32]
   call peek_char_300
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $1.1:rax 
-  .loc 9 235 12
+  .loc 9 202 12
   # $2.1: Boolean = call(is_digit_303, $1.1)
   mov dil, al
   call is_digit_303
@@ -67168,46 +66640,46 @@ scan_integer_token_312:
   mov [rbp-33], al
   jz .LABEL__scan_integer_token_312__4
 .LABEL__scan_integer_token_312__3:
-  .loc 9 236 17
+  .loc 9 203 17
   # char.1: Int8 = call(next_char_301, self.1)
   mov rdi, [rbp-32]
   call next_char_301
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax 
-  .loc 9 237 17
+  .loc 9 204 17
   # $4.1: Int = value.5 * 10
   mov rbx, [rbp-8]
   imul rbx, 10
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx 
-  .loc 9 237 31
+  .loc 9 204 31
   # $5.1: Int = cast(char.1)
   mov r15b, al
   movsx r15, r15b
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx $5.1:r15 
-  .loc 9 237 45
+  .loc 9 204 45
   # $6.1: Int = cast('0')
   mov r14b, 48
   movsx r14, r14b
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx $5.1:r15 $6.1:r14 
-  .loc 9 237 31
+  .loc 9 204 31
   # $7.1: Int = $5.1 - $6.1
   mov r13, r15
   sub r13, r14
   # [discarded value]: $6.1
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx $7.1:r13 
-  .loc 9 237 17
+  .loc 9 204 17
   # $8.1: Int = $4.1 + $7.1
   mov r15, rbx
   add r15, r13
   # [discarded value]: $7.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $8.1:r15 
-  .loc 9 237 9
+  .loc 9 204 9
   # value.3: Int = $8.1
   mov [rbp-41], r15
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax value.3:r15:[rbp-8] 
-  .loc 9 238 9
+  .loc 9 205 9
   # $9.1: @String = call(append_353, token_lexeme.1, char.1)
   mov rdi, [rbp-24]
   mov sil, al
@@ -67222,7 +66694,7 @@ scan_integer_token_312:
   # [discarded value]: value.3
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] 
 .LABEL__scan_integer_token_312__4:
-  .loc 9 240 12
+  .loc 9 207 12
   # $10.1: @Integer_Token = new Integer_Token(object_type = Integer_Token, lexeme = token_lexeme.1, location = token_location.1, value = value.5, next_token = null)
   mov rdi, 40
   call malloc
@@ -67242,7 +66714,7 @@ scan_integer_token_312:
   mov QWORD PTR [rax+32], r14
   # [discarded value]: token_location.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:rbx:[rbp-24] value.1:[rbp-8] value.5:r14:[rbp-8] $2.1:[rbp-33] $10.1:rax 
-  .loc 9 240 5
+  .loc 9 207 5
   # return($10.1)
   mov [rbp-41], rax
   jmp .LABEL__scan_integer_token_312__end
@@ -67264,7 +66736,7 @@ scan_integer_token_312:
 
 scan_integer_token_312__stack_frame_size: .word 48
 
-  .loc 9 243 1
+  .loc 9 210 8
   .text
 scan_space_token_313:
   push rbp
@@ -67278,7 +66750,7 @@ scan_space_token_313:
   # [live values]: self.1:rdi token_lexeme.1:rsi 
   # token_location.1: @Source_Location = load_variable(token_location)
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx 
-  .loc 9 244 5
+  .loc 9 211 5
   # count.1: Int = 0
   xor rax, rax
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx count.1:rax 
@@ -67290,12 +66762,12 @@ scan_space_token_313:
 .LABEL__scan_space_token_313__2:
   # count.5: Int = phi(count.1, count.3)
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] 
-  .loc 9 245 12
+  .loc 9 212 12
   # $1.1: Int8 = call(peek_char_300, self.1)
   mov rdi, [rbp-32]
   call peek_char_300
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $1.1:rax 
-  .loc 9 245 12
+  .loc 9 212 12
   # $2.1: Boolean = $1.1 == ' '
   cmp al, 32
   sete bl
@@ -67306,22 +66778,22 @@ scan_space_token_313:
   mov [rbp-33], bl
   jz .LABEL__scan_space_token_313__4
 .LABEL__scan_space_token_313__3:
-  .loc 9 246 17
+  .loc 9 213 17
   # char.1: Int8 = call(next_char_301, self.1)
   mov rdi, [rbp-32]
   call next_char_301
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $2.1:[rbp-33] char.1:rax 
-  .loc 9 247 17
+  .loc 9 214 17
   # $4.1: Int = count.5 + 1
   mov rbx, [rbp-8]
   add rbx, 1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx 
-  .loc 9 247 9
+  .loc 9 214 9
   # count.3: Int = $4.1
   mov [rbp-41], rbx
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $2.1:[rbp-33] char.1:rax count.3:rbx:[rbp-8] 
-  .loc 9 248 9
+  .loc 9 215 9
   # $5.1: @String = call(append_353, token_lexeme.1, char.1)
   mov rdi, [rbp-24]
   mov sil, al
@@ -67336,7 +66808,7 @@ scan_space_token_313:
   # [discarded value]: count.3
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $2.1:[rbp-33] 
 .LABEL__scan_space_token_313__4:
-  .loc 9 250 12
+  .loc 9 217 12
   # $6.1: @Space_Token = new Space_Token(object_type = Space_Token, lexeme = token_lexeme.1, location = token_location.1, count = count.5, next_token = null)
   mov rdi, 40
   call malloc
@@ -67356,7 +66828,7 @@ scan_space_token_313:
   mov QWORD PTR [rax+32], r14
   # [discarded value]: token_location.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:rbx:[rbp-24] count.1:[rbp-8] count.5:r14:[rbp-8] $2.1:[rbp-33] $6.1:rax 
-  .loc 9 250 5
+  .loc 9 217 5
   # return($6.1)
   mov [rbp-41], rax
   jmp .LABEL__scan_space_token_313__end
@@ -67378,7 +66850,7 @@ scan_space_token_313:
 
 scan_space_token_313__stack_frame_size: .word 48
 
-  .loc 9 253 1
+  .loc 9 220 8
   .text
 scan_string_token_314:
   push rbp
@@ -67392,14 +66864,14 @@ scan_string_token_314:
   # [live values]: self.1:rdi token_lexeme.1:rsi 
   # token_location.1: @Source_Location = load_variable(token_location)
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx 
-  .loc 9 254 9
+  .loc 9 221 9
   # $1.1: Int8 = call(peek_char_300, self.1)
   mov [rbp-8], rdx
   mov [rbp-16], rsi
   mov [rbp-24], rdi
   call peek_char_300
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $1.1:rax 
-  .loc 9 254 9
+  .loc 9 221 9
   # $2.1: Boolean = $1.1 != '"'
   cmp al, 34
   setne bl
@@ -67410,7 +66882,7 @@ scan_string_token_314:
   mov [rbp-25], bl
   jz .LABEL__scan_string_token_314__3
 .LABEL__scan_string_token_314__2:
-  .loc 9 255 9
+  .loc 9 222 9
   # call(abort_343, "Invalid state")
   lea rdi, .LABEL__string_44[rip] # "Invalid state"
   call abort_343
@@ -67421,7 +66893,7 @@ scan_string_token_314:
   mov rdi, 16
   call malloc
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $4.1:rax 
-  .loc 9 258 14
+  .loc 9 225 14
   # value.1: @String = new String(data = $4.1, data_size = 16, length = 0)
   mov [rbp-33], rax
   mov rdi, 24
@@ -67435,13 +66907,13 @@ scan_string_token_314:
   mov QWORD PTR [rax+16], 0
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:rax 
-  .loc 9 260 25
+  .loc 9 227 25
   # $6.1: Int8 = call(next_char_301, self.1)
   mov rdi, [rbp-24]
   mov [rbp-33], rax
   call next_char_301
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] $6.1:rax 
-  .loc 9 260 5
+  .loc 9 227 5
   # $7.1: @String = call(append_353, token_lexeme.1, $6.1)
   mov rdi, [rbp-16]
   mov sil, al
@@ -67451,17 +66923,17 @@ scan_string_token_314:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] 
   # jump(.LABEL__scan_string_token_314__4)
 .LABEL__scan_string_token_314__4:
-  .loc 9 262 17
+  .loc 9 229 17
   # char.1: Int8 = call(peek_char_300, self.1)
   mov rdi, [rbp-24]
   call peek_char_300
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:rax 
-  .loc 9 263 13
+  .loc 9 230 13
   # $9.1: Boolean = char.1 == '\0'
   cmp al, 0
   sete bl
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:rax $9.1:rbx 
-  .loc 9 263 13
+  .loc 9 230 13
   # $10.1: Boolean = $9.1
   mov [rbp-34], bl
   # [discarded value]: $9.1
@@ -67472,7 +66944,7 @@ scan_string_token_314:
   mov [rbp-35], bl
   jz .LABEL__scan_string_token_314__6
 .LABEL__scan_string_token_314__7:
-  .loc 9 263 13
+  .loc 9 230 13
   # $10.3: Boolean = phi($10.1, $10.2)
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] 
   # jump($10.3, .LABEL__scan_string_token_314__8, .LABEL__scan_string_token_314__9)
@@ -67480,7 +66952,7 @@ scan_string_token_314:
   test al, al
   jz .LABEL__scan_string_token_314__9
 .LABEL__scan_string_token_314__8:
-  .loc 9 264 20
+  .loc 9 231 20
   # $12.1: @Error_Token = new Error_Token(object_type = Error_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
   mov rdi, 32
   call malloc
@@ -67496,19 +66968,19 @@ scan_string_token_314:
   #     .next_token = null
   mov QWORD PTR [rax+24], 0
   # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] $12.1:rax 
-  .loc 9 264 13
+  .loc 9 231 13
   # return($12.1)
   mov [rbp-43], rax
   jmp .LABEL__scan_string_token_314__end
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] 
 .LABEL__scan_string_token_314__9:
-  .loc 9 266 16
+  .loc 9 233 16
   # char.3: Int8 = call(next_char_301, self.1)
   mov rdi, [rbp-24]
   call next_char_301
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:rax:[rbp-34] 
-  .loc 9 267 9
+  .loc 9 234 9
   # $14.1: @String = call(append_353, token_lexeme.1, char.3)
   mov rdi, [rbp-16]
   mov sil, al
@@ -67516,7 +66988,7 @@ scan_string_token_314:
   call append_353
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] 
-  .loc 9 268 13
+  .loc 9 235 13
   # $15.1: Boolean = char.3 == '"'
   cmp BYTE PTR [rbp-34], 34
   sete al
@@ -67526,7 +66998,7 @@ scan_string_token_314:
   mov [rbp-36], al
   jz .LABEL__scan_string_token_314__12
 .LABEL__scan_string_token_314__11:
-  .loc 9 269 20
+  .loc 9 236 20
   # $16.1: @String_Token = new String_Token(object_type = String_Token, lexeme = token_lexeme.1, location = token_location.1, value = value.1, next_token = null)
   mov rdi, 40
   call malloc
@@ -67545,14 +67017,14 @@ scan_string_token_314:
   mov r14, [rbp-33]
   mov QWORD PTR [rax+32], r14
   # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] value.1:r14:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $16.1:rax 
-  .loc 9 269 13
+  .loc 9 236 13
   # return($16.1)
   mov [rbp-44], rax
   jmp .LABEL__scan_string_token_314__end
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] 
 .LABEL__scan_string_token_314__12:
-  .loc 9 271 13
+  .loc 9 238 13
   # $17.1: Boolean = char.3 == '\\'
   cmp BYTE PTR [rbp-34], 92
   sete al
@@ -67562,17 +67034,17 @@ scan_string_token_314:
   mov [rbp-37], al
   jz .LABEL__scan_string_token_314__16
 .LABEL__scan_string_token_314__14:
-  .loc 9 272 20
+  .loc 9 239 20
   # char.6: Int8 = call(peek_char_300, self.1)
   mov rdi, [rbp-24]
   call peek_char_300
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:rax:[rbp-34] 
-  .loc 9 273 17
+  .loc 9 240 17
   # $20.1: Boolean = char.6 == '\0'
   cmp al, 0
   sete bl
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:rax:[rbp-34] $20.1:rbx 
-  .loc 9 273 17
+  .loc 9 240 17
   # $21.1: Boolean = $20.1
   mov [rbp-38], bl
   # [discarded value]: $20.1
@@ -67583,7 +67055,7 @@ scan_string_token_314:
   mov [rbp-38], bl
   jz .LABEL__scan_string_token_314__17
 .LABEL__scan_string_token_314__18:
-  .loc 9 273 17
+  .loc 9 240 17
   # $21.3: Boolean = phi($21.1, $21.2)
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] 
   # jump($21.3, .LABEL__scan_string_token_314__19, .LABEL__scan_string_token_314__20)
@@ -67591,7 +67063,7 @@ scan_string_token_314:
   test al, al
   jz .LABEL__scan_string_token_314__20
 .LABEL__scan_string_token_314__19:
-  .loc 9 274 24
+  .loc 9 241 24
   # $23.1: @Error_Token = new Error_Token(object_type = Error_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
   mov rdi, 32
   call malloc
@@ -67607,19 +67079,19 @@ scan_string_token_314:
   #     .next_token = null
   mov QWORD PTR [rax+24], 0
   # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] token_location.1:r15:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] $23.1:rax 
-  .loc 9 274 17
+  .loc 9 241 17
   # return($23.1)
   mov [rbp-46], rax
   jmp .LABEL__scan_string_token_314__end
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] 
 .LABEL__scan_string_token_314__20:
-  .loc 9 276 20
+  .loc 9 243 20
   # char.8: Int8 = call(next_char_301, self.1)
   mov rdi, [rbp-24]
   call next_char_301
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:rax:[rbp-34] 
-  .loc 9 277 13
+  .loc 9 244 13
   # $25.1: @String = call(append_353, token_lexeme.1, char.8)
   mov rdi, [rbp-16]
   mov sil, al
@@ -67627,12 +67099,12 @@ scan_string_token_314:
   call append_353
   # [discarded value]: $25.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] 
-  .loc 9 278 17
+  .loc 9 245 17
   # $26.1: Boolean = call(is_escape_309, char.8)
   mov dil, [rbp-34]
   call is_escape_309
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $26.1:rax 
-  .loc 9 278 17
+  .loc 9 245 17
   # $27.1: Boolean = $26.1 == false
   cmp al, 0
   sete bl
@@ -67643,7 +67115,7 @@ scan_string_token_314:
   mov [rbp-39], bl
   jz .LABEL__scan_string_token_314__23
 .LABEL__scan_string_token_314__22:
-  .loc 9 279 24
+  .loc 9 246 24
   # $28.1: @Error_Token = new Error_Token(object_type = Error_Token, lexeme = token_lexeme.1, location = token_location.1, next_token = null)
   mov rdi, 32
   call malloc
@@ -67660,14 +67132,14 @@ scan_string_token_314:
   mov QWORD PTR [rax+24], 0
   # [discarded value]: token_location.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:rbx:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $28.1:rax 
-  .loc 9 279 17
+  .loc 9 246 17
   # return($28.1)
   mov [rbp-47], rax
   jmp .LABEL__scan_string_token_314__end
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] 
 .LABEL__scan_string_token_314__23:
-  .loc 9 281 17
+  .loc 9 248 17
   # $29.1: Boolean = char.8 == 'n'
   cmp BYTE PTR [rbp-34], 110
   sete al
@@ -67677,7 +67149,7 @@ scan_string_token_314:
   mov [rbp-40], al
   jz .LABEL__scan_string_token_314__27
 .LABEL__scan_string_token_314__25:
-  .loc 9 282 17
+  .loc 9 249 17
   # $40.1: @String = call(append_353, value.1, '\n')
   mov rdi, [rbp-33]
   mov sil, 10
@@ -67688,7 +67160,7 @@ scan_string_token_314:
   jmp .LABEL__scan_string_token_314__4
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] 
 .LABEL__scan_string_token_314__27:
-  .loc 9 283 24
+  .loc 9 250 24
   # $30.1: Boolean = char.8 == '\"'
   cmp BYTE PTR [rbp-34], 34
   sete al
@@ -67698,7 +67170,7 @@ scan_string_token_314:
   mov [rbp-41], al
   jz .LABEL__scan_string_token_314__30
 .LABEL__scan_string_token_314__28:
-  .loc 9 284 17
+  .loc 9 251 17
   # $39.1: @String = call(append_353, value.1, char.8)
   mov rdi, [rbp-33]
   mov sil, [rbp-34]
@@ -67709,7 +67181,7 @@ scan_string_token_314:
   jmp .LABEL__scan_string_token_314__4
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] 
 .LABEL__scan_string_token_314__30:
-  .loc 9 285 24
+  .loc 9 252 24
   # $31.1: Boolean = char.8 == '\''
   cmp BYTE PTR [rbp-34], 39
   sete al
@@ -67719,7 +67191,7 @@ scan_string_token_314:
   mov [rbp-42], al
   jz .LABEL__scan_string_token_314__33
 .LABEL__scan_string_token_314__31:
-  .loc 9 286 17
+  .loc 9 253 17
   # $38.1: @String = call(append_353, value.1, char.8)
   mov rdi, [rbp-33]
   mov sil, [rbp-34]
@@ -67730,7 +67202,7 @@ scan_string_token_314:
   jmp .LABEL__scan_string_token_314__4
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] 
 .LABEL__scan_string_token_314__33:
-  .loc 9 287 24
+  .loc 9 254 24
   # $32.1: Boolean = char.8 == '\\'
   cmp BYTE PTR [rbp-34], 92
   sete al
@@ -67740,7 +67212,7 @@ scan_string_token_314:
   mov [rbp-43], al
   jz .LABEL__scan_string_token_314__36
 .LABEL__scan_string_token_314__34:
-  .loc 9 288 17
+  .loc 9 255 17
   # $37.1: @String = call(append_353, value.1, char.8)
   mov rdi, [rbp-33]
   mov sil, [rbp-34]
@@ -67751,7 +67223,7 @@ scan_string_token_314:
   jmp .LABEL__scan_string_token_314__4
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:[rbp-43] 
 .LABEL__scan_string_token_314__36:
-  .loc 9 289 24
+  .loc 9 256 24
   # $33.1: Boolean = char.8 == 't'
   cmp BYTE PTR [rbp-34], 116
   sete al
@@ -67761,7 +67233,7 @@ scan_string_token_314:
   mov [rbp-44], al
   jz .LABEL__scan_string_token_314__39
 .LABEL__scan_string_token_314__37:
-  .loc 9 290 17
+  .loc 9 257 17
   # $36.1: @String = call(append_353, value.1, '\t')
   mov rdi, [rbp-33]
   mov sil, 9
@@ -67772,7 +67244,7 @@ scan_string_token_314:
   jmp .LABEL__scan_string_token_314__4
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:[rbp-43] $33.1:[rbp-44] 
 .LABEL__scan_string_token_314__39:
-  .loc 9 291 24
+  .loc 9 258 24
   # $34.1: Boolean = char.8 == '0'
   cmp BYTE PTR [rbp-34], 48
   sete al
@@ -67782,7 +67254,7 @@ scan_string_token_314:
   mov [rbp-45], al
   jz .LABEL__scan_string_token_314__42
 .LABEL__scan_string_token_314__40:
-  .loc 9 292 17
+  .loc 9 259 17
   # $35.1: @String = call(append_353, value.1, '\0')
   mov rdi, [rbp-33]
   mov sil, 0
@@ -67793,7 +67265,7 @@ scan_string_token_314:
   jmp .LABEL__scan_string_token_314__4
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:[rbp-43] $33.1:[rbp-44] $34.1:[rbp-45] 
 .LABEL__scan_string_token_314__42:
-  .loc 9 294 17
+  .loc 9 261 17
   # call(abort_343, "Invalid state")
   lea rdi, .LABEL__string_44[rip] # "Invalid state"
   call abort_343
@@ -67817,12 +67289,12 @@ scan_string_token_314:
   # [discarded value]: $21.3
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] 
 .LABEL__scan_string_token_314__17:
-  .loc 9 273 33
+  .loc 9 240 33
   # $22.1: Boolean = char.6 == '\n'
   cmp BYTE PTR [rbp-34], 10
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $22.1:rax 
-  .loc 9 273 17
+  .loc 9 240 17
   # $21.2: Boolean = $22.1
   mov [rbp-39], al
   # [discarded value]: $22.1
@@ -67838,7 +67310,7 @@ scan_string_token_314:
   # [discarded value]: char.6
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] 
 .LABEL__scan_string_token_314__16:
-  .loc 9 297 13
+  .loc 9 264 13
   # $18.1: @String = call(append_353, value.1, char.3)
   mov rdi, [rbp-33]
   mov sil, [rbp-34]
@@ -67857,12 +67329,12 @@ scan_string_token_314:
   # [discarded value]: $10.3
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] 
 .LABEL__scan_string_token_314__6:
-  .loc 9 263 29
+  .loc 9 230 29
   # $11.1: Boolean = char.1 == '\n'
   cmp BYTE PTR [rbp-34], 10
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $11.1:rax 
-  .loc 9 263 13
+  .loc 9 230 13
   # $10.2: Boolean = $11.1
   mov [rbp-36], al
   # [discarded value]: $11.1
@@ -67892,7 +67364,7 @@ scan_string_token_314:
 
 scan_string_token_314__stack_frame_size: .word 48
 
-  .loc 1 325 1
+  .loc 1 325 8
   .text
 abort_315:
   push rbp
@@ -67952,7 +67424,7 @@ abort_315:
 
 abort_315__stack_frame_size: .word 16
 
-  .loc 1 332 1
+  .loc 1 332 8
   .text
 write_316:
   push rbp
@@ -67965,174 +67437,151 @@ write_316:
   # token.1: @Token = load_variable(token)
   # [live values]: file.1:rdi token.1:rsi 
   .loc 1 333 9
-  # $2.1: Boolean = call(is_344, token.1, Other_Token)
+  # $1.1: Boolean = call(is_344, token.1, Other_Token)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
   mov rsi, Other_Token[rip]
   call is_344
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:rax 
-  # jump($2.1, .LABEL__write_316__3, .LABEL__write_316__2)
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:rax 
+  # jump($1.1, .LABEL__write_316__2, .LABEL__write_316__4)
   test al, al
   mov [rbp-17], al
-  jz .LABEL__write_316__2
-.LABEL__write_316__3:
-  .loc 1 333 9
-  # $2.3: Boolean = phi($2.1, $2.2)
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] 
-  # jump($2.3, .LABEL__write_316__4, .LABEL__write_316__6)
-  mov al, [rbp-17]
-  test al, al
-  jz .LABEL__write_316__6
-.LABEL__write_316__4:
+  jz .LABEL__write_316__4
+.LABEL__write_316__2:
   .loc 1 334 20
-  # $12.1: Int8 = cast(27)
+  # $10.1: Int8 = cast(27)
   mov rax, 27
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $12.1:rax 
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $10.1:rax 
   .loc 1 334 9
-  # $13.1: @FILE = call(write_340, file.1, $12.1)
+  # $11.1: @FILE = call(write_340, file.1, $10.1)
   mov rdi, [rbp-8]
   mov sil, al
   call write_340
-  # [discarded value]: $12.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $13.1:rax 
+  # [discarded value]: $10.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $11.1:rax 
   .loc 1 334 9
-  # $14.1: @FILE = call(write_338, $13.1, "[2;37m")
+  # $12.1: @FILE = call(write_338, $11.1, "[2;37m")
   mov rdi, rax
   lea rsi, .LABEL__string_355[rip] # "[2;37m"
   call write_338
-  # [discarded value]: $14.1
-  # [discarded value]: $13.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] 
-  # jump(.LABEL__write_316__5)
-.LABEL__write_316__5:
+  # [discarded value]: $12.1
+  # [discarded value]: $11.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
+  # jump(.LABEL__write_316__3)
+.LABEL__write_316__3:
   .loc 1 340 16
-  # $15.1: @String = load_struct_member(token.1, lexeme)
+  # $13.1: @String = load_struct_member(token.1, lexeme)
   mov rax, [rbp-16]
   mov rbx, [rax+8]
-  # [live values]: file.1:[rbp-8] token.1:rax:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $15.1:rbx 
+  # [live values]: file.1:[rbp-8] token.1:rax:[rbp-16] $1.1:[rbp-17] $13.1:rbx 
   .loc 1 340 5
-  # $16.1: @FILE = call(write_338, file.1, $15.1)
+  # $14.1: @FILE = call(write_338, file.1, $13.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call write_338
-  # [discarded value]: $16.1
-  # [discarded value]: $15.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] 
+  # [discarded value]: $14.1
+  # [discarded value]: $13.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
   .loc 1 341 16
-  # $17.1: Int8 = cast(27)
+  # $15.1: Int8 = cast(27)
   mov rax, 27
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $17.1:rax 
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $15.1:rax 
   .loc 1 341 5
-  # $18.1: @FILE = call(write_340, file.1, $17.1)
+  # $16.1: @FILE = call(write_340, file.1, $15.1)
   mov rdi, [rbp-8]
   mov sil, al
   call write_340
-  # [discarded value]: $17.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $18.1:rax 
+  # [discarded value]: $15.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $16.1:rax 
   .loc 1 341 5
-  # $19.1: @FILE = call(write_338, $18.1, "[0m")
+  # $17.1: @FILE = call(write_338, $16.1, "[0m")
   mov rdi, rax
   lea rsi, .LABEL__string_356[rip] # "[0m"
   call write_338
-  # [discarded value]: $19.1
-  # [discarded value]: $18.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] 
+  # [discarded value]: $17.1
+  # [discarded value]: $16.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
   .loc 1 342 5
   # return(file.1)
   mov rax, [rbp-8]
   jmp .LABEL__write_316__end
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] 
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] 
-.LABEL__write_316__6:
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
+.LABEL__write_316__4:
   .loc 1 335 16
-  # $4.1: Boolean = call(is_344, token.1, Literal_Token)
+  # $2.1: Boolean = call(is_344, token.1, Literal_Token)
   mov rdi, [rbp-16]
   mov rsi, Literal_Token[rip]
   call is_344
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:rax 
-  # jump($4.1, .LABEL__write_316__7, .LABEL__write_316__9)
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:rax 
+  # jump($2.1, .LABEL__write_316__5, .LABEL__write_316__7)
   test al, al
   mov [rbp-18], al
-  jz .LABEL__write_316__9
-.LABEL__write_316__7:
+  jz .LABEL__write_316__7
+.LABEL__write_316__5:
   .loc 1 336 20
-  # $9.1: Int8 = cast(27)
+  # $7.1: Int8 = cast(27)
   mov rax, 27
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] $9.1:rax 
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $7.1:rax 
   .loc 1 336 9
-  # $10.1: @FILE = call(write_340, file.1, $9.1)
+  # $8.1: @FILE = call(write_340, file.1, $7.1)
   mov rdi, [rbp-8]
   mov sil, al
   call write_340
-  # [discarded value]: $9.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] $10.1:rax 
+  # [discarded value]: $7.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $8.1:rax 
   .loc 1 336 9
-  # $11.1: @FILE = call(write_338, $10.1, "[1;33m")
+  # $9.1: @FILE = call(write_338, $8.1, "[1;33m")
   mov rdi, rax
   lea rsi, .LABEL__string_357[rip] # "[1;33m"
   call write_338
-  # [discarded value]: $11.1
-  # [discarded value]: $10.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] 
-  # jump(.LABEL__write_316__5)
-  jmp .LABEL__write_316__5
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] 
-.LABEL__write_316__9:
+  # [discarded value]: $9.1
+  # [discarded value]: $8.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] 
+  # jump(.LABEL__write_316__3)
+  jmp .LABEL__write_316__3
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] 
+.LABEL__write_316__7:
   .loc 1 337 16
-  # $5.1: Boolean = call(is_344, token.1, Comment_Token)
+  # $3.1: Boolean = call(is_344, token.1, Comment_Token)
   mov rdi, [rbp-16]
   mov rsi, Comment_Token[rip]
   call is_344
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] $5.1:rax 
-  # jump($5.1, .LABEL__write_316__10, .LABEL__write_316__5)
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:rax 
+  # jump($3.1, .LABEL__write_316__8, .LABEL__write_316__3)
   test al, al
   mov [rbp-19], al
-  jz .LABEL__write_316__5
-.LABEL__write_316__10:
+  jz .LABEL__write_316__3
+.LABEL__write_316__8:
   .loc 1 338 20
-  # $6.1: Int8 = cast(27)
+  # $4.1: Int8 = cast(27)
   mov rax, 27
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] $5.1:[rbp-19] $6.1:rax 
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:rax 
   .loc 1 338 9
-  # $7.1: @FILE = call(write_340, file.1, $6.1)
+  # $5.1: @FILE = call(write_340, file.1, $4.1)
   mov rdi, [rbp-8]
   mov sil, al
   call write_340
-  # [discarded value]: $6.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] $5.1:[rbp-19] $7.1:rax 
+  # [discarded value]: $4.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $5.1:rax 
   .loc 1 338 9
-  # $8.1: @FILE = call(write_338, $7.1, "[2;33m")
+  # $6.1: @FILE = call(write_338, $5.1, "[2;33m")
   mov rdi, rax
   lea rsi, .LABEL__string_358[rip] # "[2;33m"
   call write_338
-  # [discarded value]: $8.1
-  # [discarded value]: $7.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] $5.1:[rbp-19] 
-  # jump(.LABEL__write_316__5)
-  jmp .LABEL__write_316__5
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] $5.1:[rbp-19] 
+  # [discarded value]: $6.1
   # [discarded value]: $5.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] $4.1:[rbp-18] 
-  # [discarded value]: $4.1
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.3:[rbp-17] 
-  # [discarded value]: $2.3
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] 
-.LABEL__write_316__2:
-  .loc 1 333 34
-  # $2.2: Boolean = call(is_344, token.1, Keyword_Token)
-  mov rdi, [rbp-16]
-  mov rsi, Keyword_Token[rip]
-  call is_344
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.2:rax:[rbp-17] 
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] 
   # jump(.LABEL__write_316__3)
-  mov [rbp-17], al
   jmp .LABEL__write_316__3
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] $2.2:[rbp-17] 
-  # [discarded value]: $2.2
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] 
-  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $2.1:[rbp-17] 
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] 
+  # [discarded value]: $3.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] 
   # [discarded value]: $2.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
+  # [discarded value]: $1.1
+  # [live values]: file.1:[rbp-8] token.1:[rbp-16] 
   # [discarded value]: token.1
   # [discarded value]: file.1
   # [live values]: 
@@ -68143,7 +67592,7 @@ write_316:
 
 write_316__stack_frame_size: .word 32
 
-  .loc 11 15 1
+  .loc 11 15 8
   .text
 create_source_317:
   push rbp
@@ -68372,7 +67821,7 @@ create_source_317:
 
 create_source_317__stack_frame_size: .word 64
 
-  .loc 1 347 1
+  .loc 1 347 8
   .text
 write_318:
   push rbp
@@ -68484,7 +67933,7 @@ write_318:
 
 write_318__stack_frame_size: .word 32
 
-  .loc 12 9 1
+  .loc 12 9 8
   .text
 append_319:
   push rbp
@@ -68597,7 +68046,7 @@ append_319:
 
 append_319__stack_frame_size: .word 48
 
-  .loc 12 20 1
+  .loc 12 20 8
   .text
 prepend_320:
   push rbp
@@ -68710,7 +68159,7 @@ prepend_320:
 
 prepend_320__stack_frame_size: .word 48
 
-  .loc 12 31 1
+  .loc 12 31 8
   .text
 remove_321:
   push rbp
@@ -68802,7 +68251,7 @@ remove_321:
 
 remove_321__stack_frame_size: .word 32
 
-  .loc 12 43 1
+  .loc 12 43 8
   .text
 remove_all_322:
   push rbp
@@ -68894,7 +68343,7 @@ remove_all_322:
 
 remove_all_322__stack_frame_size: .word 32
 
-  .loc 12 54 1
+  .loc 12 54 8
   .text
 prune_323:
   push rbp
@@ -69123,7 +68572,7 @@ prune_323:
 
 prune_323__stack_frame_size: .word 32
 
-  .loc 12 77 1
+  .loc 12 77 8
   .text
 replace_324:
   push rbp
@@ -69217,7 +68666,7 @@ replace_324:
 
 replace_324__stack_frame_size: .word 32
 
-  .loc 12 87 1
+  .loc 12 87 8
   .text
 contains_325:
   push rbp
@@ -69306,7 +68755,7 @@ contains_325:
 
 contains_325__stack_frame_size: .word 32
 
-  .loc 12 98 1
+  .loc 12 98 8
   .text
 index_of_326:
   push rbp
@@ -69422,7 +68871,7 @@ index_of_326:
 
 index_of_326__stack_frame_size: .word 48
 
-  .loc 12 111 1
+  .loc 12 111 8
   .text
 get_327:
   push rbp
@@ -69567,7 +69016,7 @@ get_327:
 
 get_327__stack_frame_size: .word 48
 
-  .loc 12 123 1
+  .loc 12 123 8
   .text
 first_328:
   push rbp
@@ -69627,7 +69076,7 @@ first_328:
 
 first_328__stack_frame_size: .word 32
 
-  .loc 12 130 1
+  .loc 12 130 8
   .text
 last_329:
   push rbp
@@ -69687,7 +69136,7 @@ last_329:
 
 last_329__stack_frame_size: .word 32
 
-  .loc 12 149 1
+  .loc 12 149 8
   .text
 create_iterator_330:
   push rbp
@@ -69727,7 +69176,7 @@ create_iterator_330:
 
 create_iterator_330__stack_frame_size: .word 16
 
-  .loc 12 153 1
+  .loc 12 153 8
   .text
 current_331:
   push rbp
@@ -69787,7 +69236,7 @@ current_331:
 
 current_331__stack_frame_size: .word 32
 
-  .loc 12 160 1
+  .loc 12 160 8
   .text
 remove_current_332:
   push rbp
@@ -69817,7 +69266,7 @@ remove_current_332:
 
 remove_current_332__stack_frame_size: .word 0
 
-  .loc 12 164 1
+  .loc 12 164 8
   .text
 has_next_333:
   push rbp
@@ -69852,7 +69301,7 @@ has_next_333:
 
 has_next_333__stack_frame_size: .word 16
 
-  .loc 12 168 1
+  .loc 12 168 8
   .text
 next_334:
   push rbp
@@ -69935,7 +69384,7 @@ next_334:
 
 next_334__stack_frame_size: .word 32
 
-  .loc 12 177 1
+  .loc 12 177 8
   .text
 change_335:
   push rbp
@@ -69993,7 +69442,7 @@ change_335:
 
 change_335__stack_frame_size: .word 32
 
-  .loc 1 356 1
+  .loc 1 356 8
   .text
 write_line_336:
   push rbp
@@ -70032,7 +69481,7 @@ write_line_336:
 
 write_line_336__stack_frame_size: .word 16
 
-  .loc 1 360 1
+  .loc 1 360 8
   .text
 write_337:
   push rbp
@@ -70161,7 +69610,7 @@ write_337:
 
 write_337__stack_frame_size: .word 32
 
-  .loc 1 371 1
+  .loc 1 371 8
   .text
 write_338:
   push rbp
@@ -70198,7 +69647,7 @@ write_338:
 
 write_338__stack_frame_size: .word 16
 
-  .loc 1 375 1
+  .loc 1 375 8
   .text
 write_339:
   push rbp
@@ -70282,7 +69731,7 @@ write_339:
 
 write_339__stack_frame_size: .word 16
 
-  .loc 1 383 1
+  .loc 1 383 8
   .text
 write_340:
   push rbp
@@ -70379,7 +69828,7 @@ write_340:
 
 write_340__stack_frame_size: .word 16
 
-  .loc 1 392 1
+  .loc 1 392 8
   .text
 end_line_341:
   push rbp
@@ -70408,7 +69857,7 @@ end_line_341:
 
 end_line_341__stack_frame_size: .word 16
 
-  .loc 1 396 1
+  .loc 1 396 8
   .text
 flush_342:
   push rbp
@@ -70437,7 +69886,7 @@ flush_342:
 
 flush_342__stack_frame_size: .word 16
 
-  .loc 1 401 1
+  .loc 1 401 8
   .text
 abort_343:
   push rbp
@@ -70485,7 +69934,7 @@ abort_343:
 
 abort_343__stack_frame_size: .word 16
 
-  .loc 13 13 1
+  .loc 13 13 8
   .text
 is_344:
   push rbp
@@ -70565,7 +70014,7 @@ is_344:
 
 is_344__stack_frame_size: .word 32
 
-  .loc 14 9 1
+  .loc 14 9 8
   .text
 create_string_345:
   push rbp
@@ -70662,7 +70111,7 @@ create_string_345:
 
 create_string_345__stack_frame_size: .word 32
 
-  .loc 14 22 1
+  .loc 14 22 8
   .text
 clone_346:
   push rbp
@@ -70727,7 +70176,7 @@ clone_346:
 
 clone_346__stack_frame_size: .word 32
 
-  .loc 14 28 1
+  .loc 14 28 8
   .text
 equals_347:
   push rbp
@@ -70879,7 +70328,7 @@ equals_347:
 
 equals_347__stack_frame_size: .word 48
 
-  .loc 14 42 1
+  .loc 14 42 8
   .text
 index_of_348:
   push rbp
@@ -71112,7 +70561,7 @@ index_of_348:
 
 index_of_348__stack_frame_size: .word 48
 
-  .loc 14 57 1
+  .loc 14 57 8
   .text
 starts_with_349:
   push rbp
@@ -71264,7 +70713,7 @@ starts_with_349:
 
 starts_with_349__stack_frame_size: .word 48
 
-  .loc 14 71 1
+  .loc 14 71 8
   .text
 ends_with_350:
   push rbp
@@ -71438,7 +70887,7 @@ ends_with_350:
 
 ends_with_350__stack_frame_size: .word 48
 
-  .loc 14 85 1
+  .loc 14 85 8
   .text
 last_index_of_351:
   push rbp
@@ -71481,7 +70930,7 @@ last_index_of_351:
 
 last_index_of_351__stack_frame_size: .word 16
 
-  .loc 14 89 1
+  .loc 14 89 8
   .text
 last_index_of_352:
   push rbp
@@ -71595,7 +71044,7 @@ last_index_of_352:
 
 last_index_of_352__stack_frame_size: .word 32
 
-  .loc 14 97 1
+  .loc 14 97 8
   .text
 append_353:
   push rbp
@@ -71743,7 +71192,7 @@ append_353:
 
 append_353__stack_frame_size: .word 16
 
-  .loc 14 108 1
+  .loc 14 108 8
   .text
 append_354:
   push rbp
@@ -71872,7 +71321,7 @@ append_354:
 
 append_354__stack_frame_size: .word 32
 
-  .loc 14 118 1
+  .loc 14 118 8
   .text
 append_355:
   push rbp
@@ -72085,7 +71534,7 @@ append_355:
 
 append_355__stack_frame_size: .word 64
 
-  .loc 14 140 1
+  .loc 14 140 8
   .text
 remove_356:
   push rbp
@@ -74474,149 +73923,149 @@ remove_356__stack_frame_size: .word 48
   .align 8
 .LABEL__string_308:
   .quad .LABEL__string_308__data
-  .quad 2
-  .quad 1
-.LABEL__string_308__data: .string ">"
+  .quad 5
+  .quad 4
+.LABEL__string_308__data: .string "func"
 
   .align 8
 .LABEL__string_309:
   .quad .LABEL__string_309__data
   .quad 2
   .quad 1
-.LABEL__string_309__data: .string "-"
+.LABEL__string_309__data: .string ">"
 
   .align 8
 .LABEL__string_310:
   .quad .LABEL__string_310__data
-  .quad 3
   .quad 2
-.LABEL__string_310__data: .string "if"
+  .quad 1
+.LABEL__string_310__data: .string "-"
 
   .align 8
 .LABEL__string_311:
   .quad .LABEL__string_311__data
-  .quad 8
-  .quad 7
-.LABEL__string_311__data: .string "include"
+  .quad 3
+  .quad 2
+.LABEL__string_311__data: .string "if"
 
   .align 8
 .LABEL__string_312:
   .quad .LABEL__string_312__data
-  .quad 2
-  .quad 1
-.LABEL__string_312__data: .string "<"
+  .quad 8
+  .quad 7
+.LABEL__string_312__data: .string "include"
 
   .align 8
 .LABEL__string_313:
   .quad .LABEL__string_313__data
-  .quad 5
-  .quad 4
-.LABEL__string_313__data: .string "loop"
+  .quad 2
+  .quad 1
+.LABEL__string_313__data: .string "<"
 
   .align 8
 .LABEL__string_314:
   .quad .LABEL__string_314__data
-  .quad 2
-  .quad 1
-.LABEL__string_314__data: .string "{"
+  .quad 5
+  .quad 4
+.LABEL__string_314__data: .string "loop"
 
   .align 8
 .LABEL__string_315:
   .quad .LABEL__string_315__data
   .quad 2
   .quad 1
-.LABEL__string_315__data: .string "+"
+.LABEL__string_315__data: .string "{"
 
   .align 8
 .LABEL__string_316:
   .quad .LABEL__string_316__data
   .quad 2
   .quad 1
-.LABEL__string_316__data: .string "/"
+.LABEL__string_316__data: .string "+"
 
   .align 8
 .LABEL__string_317:
   .quad .LABEL__string_317__data
-  .quad 7
-  .quad 6
-.LABEL__string_317__data: .string "struct"
+  .quad 2
+  .quad 1
+.LABEL__string_317__data: .string "/"
 
   .align 8
 .LABEL__string_318:
   .quad .LABEL__string_318__data
-  .quad 8
   .quad 7
-.LABEL__string_318__data: .string "unknown"
+  .quad 6
+.LABEL__string_318__data: .string "struct"
 
   .align 8
 .LABEL__string_319:
   .quad .LABEL__string_319__data
-  .quad 2
-  .quad 1
-.LABEL__string_319__data: .string "|"
+  .quad 8
+  .quad 7
+.LABEL__string_319__data: .string "unknown"
 
   .align 8
 .LABEL__string_320:
   .quad .LABEL__string_320__data
-  .quad 6
-  .quad 5
-.LABEL__string_320__data: .string "while"
+  .quad 2
+  .quad 1
+.LABEL__string_320__data: .string "|"
 
   .align 8
 .LABEL__string_321:
   .quad .LABEL__string_321__data
-  .quad 22
-  .quad 21
-.LABEL__string_321__data: .string "Failed to open file: "
+  .quad 6
+  .quad 5
+.LABEL__string_321__data: .string "while"
 
   .align 8
 .LABEL__string_322:
   .quad .LABEL__string_322__data
-  .quad 35
-  .quad 34
-.LABEL__string_322__data: .string ": File doesn't end with a new line"
+  .quad 22
+  .quad 21
+.LABEL__string_322__data: .string "Failed to open file: "
 
   .align 8
 .LABEL__string_323:
   .quad .LABEL__string_323__data
-  .quad 24
-  .quad 23
-.LABEL__string_323__data: .string "Unsupported file path: "
+  .quad 35
+  .quad 34
+.LABEL__string_323__data: .string ": File doesn't end with a new line"
 
   .align 8
 .LABEL__string_324:
   .quad .LABEL__string_324__data
-  .quad 3
-  .quad 2
-.LABEL__string_324__data: .string "./"
+  .quad 24
+  .quad 23
+.LABEL__string_324__data: .string "Unsupported file path: "
 
   .align 8
 .LABEL__string_325:
   .quad .LABEL__string_325__data
-  .quad 4
   .quad 3
-.LABEL__string_325__data: .string "../"
+  .quad 2
+.LABEL__string_325__data: .string "./"
 
   .align 8
 .LABEL__string_326:
   .quad .LABEL__string_326__data
-  .quad 5
   .quad 4
-.LABEL__string_326__data: .string "/../"
+  .quad 3
+.LABEL__string_326__data: .string "../"
 
   .align 8
 .LABEL__string_327:
   .quad .LABEL__string_327__data
-  .quad 39
-  .quad 38
-.LABEL__string_327__data: .string "Cannot use expression as variable name"
+  .quad 5
+  .quad 4
+.LABEL__string_327__data: .string "/../"
 
   .align 8
 .LABEL__string_328:
   .quad .LABEL__string_328__data
   .quad 39
   .quad 38
-.LABEL__string_328__data: .string "Cannot use expression as function name"
+.LABEL__string_328__data: .string "Cannot use expression as variable name"
 
   .align 8
 .LABEL__string_329:
@@ -75996,17 +75445,6 @@ Space_Matcher:
 .LABEL__Space_Matcher__object_type__name__data: .string "Space_Matcher"
 
   .align 8
-Word_Matcher:
-  .quad .LABEL__Word_Matcher__object_type
-.LABEL__Word_Matcher__object_type:
-  .quad 0
-  .quad .LABEL__Word_Matcher__object_type__name__data
-  .quad 13
-  .quad 12
-  .quad .LABEL__Matcher__object_type
-.LABEL__Word_Matcher__object_type__name__data: .string "Word_Matcher"
-
-  .align 8
 AST_Include_Statement:
   .quad .LABEL__AST_Include_Statement__object_type
 .LABEL__AST_Include_Statement__object_type:
@@ -76533,17 +75971,6 @@ Integer_Token:
   .quad 13
   .quad .LABEL__Literal_Token__object_type
 .LABEL__Integer_Token__object_type__name__data: .string "Integer_Token"
-
-  .align 8
-Keyword_Token:
-  .quad .LABEL__Keyword_Token__object_type
-.LABEL__Keyword_Token__object_type:
-  .quad 0
-  .quad .LABEL__Keyword_Token__object_type__name__data
-  .quad 14
-  .quad 13
-  .quad .LABEL__Token__object_type
-.LABEL__Keyword_Token__object_type__name__data: .string "Keyword_Token"
 
   .align 8
 Null_Token:

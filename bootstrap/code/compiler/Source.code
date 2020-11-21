@@ -12,7 +12,7 @@ define Source_Location = struct {
     column: Int
 }
 
-create_source :: (file_path: @String) -> @Source {
+define create_source = func (file_path: @String) -> @Source {
     file := fopen(file_path.data, "r".data)
     if (file == null) {
         return null

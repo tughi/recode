@@ -46,10 +46,6 @@ define Integer_Token = struct {
     value: Int
 }
 
-define Keyword_Token = struct {
-    extends Token
-}
-
 define Null_Token = struct {
     extends Literal_Token
 }

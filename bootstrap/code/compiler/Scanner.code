@@ -8,13 +8,13 @@ define Scanner = struct {
     current_token: @Token = undefined
 }
 
-create_scanner :: (source: @Source) -> @Scanner {
+define create_scanner = func (source: @Source) -> @Scanner {
     scanner := new Scanner(source = source)
     scanner.current_token = scanner.scan_token()
     return scanner
 }
 
-peek_token :: (self: @Scanner, offset: Int) -> @Token {
+define peek_token = func (self: @Scanner, offset: Int) -> @Token {
     if (offset < 0) {
         abort("Invalid state")
     }
@@ -31,7 +31,7 @@ peek_token :: (self: @Scanner, offset: Int) -> @Token {
     }
 }
 
-next_token :: (self: @Scanner) -> @Token {
+define next_token = func (self: @Scanner) -> @Token {
     if (self.current_token.next_token == null) {
         self.current_token.next_token = self.scan_token()
     }
@@ -39,11 +39,11 @@ next_token :: (self: @Scanner) -> @Token {
     return self.current_token
 }
 
-peek_char :: (self: @Scanner) -> Int8 {
+define peek_char = func (self: @Scanner) -> Int8 {
     return self.source.content[self.current_char_index]
 }
 
-next_char :: (self: @Scanner) -> Int8 {
+define next_char = func (self: @Scanner) -> Int8 {
     next_char := self.source.content[self.current_char_index]
     if (next_char != '\0') {
         self.current_char_index = self.current_char_index + 1
@@ -57,7 +57,7 @@ next_char :: (self: @Scanner) -> Int8 {
     return next_char
 }
 
-scan_token :: (self: @Scanner) -> @Token {
+define scan_token = func (self: @Scanner) -> @Token {
     token_lexeme := new String()
     token_location := new Source_Location(source = self.source, line = self.current_line, column = self.current_column)
 
@@ -92,30 +92,30 @@ scan_token :: (self: @Scanner) -> @Token {
     return new Other_Token(lexeme = token_lexeme, location = token_location)
 }
 
-is_digit :: (char: Int8) -> Boolean {
+define is_digit = func (char: Int8) -> Boolean {
     return char as Int >= '0' as Int && char as Int <= '9' as Int
 }
 
-is_identifier_start :: (char: Int8) -> Boolean {
+define is_identifier_start = func (char: Int8) -> Boolean {
     return char.is_letter() || char == '_'
 }
 
-is_identifier_body :: (char: Int8) -> Boolean {
+define is_identifier_body = func (char: Int8) -> Boolean {
     if (char.is_identifier_start()) {
         return true
     }
     return char.is_digit()
 }
 
-is_letter :: (char: Int8) -> Boolean {
+define is_letter = func (char: Int8) -> Boolean {
     return (char as Int >= 'a' as Int && char as Int <= 'z' as Int) || (char as Int >= 'A' as Int && char as Int <= 'Z' as Int)
 }
 
-is_space :: (char: Int8) -> Boolean {
+define is_space = func (char: Int8) -> Boolean {
     return char == ' '
 }
 
-scan_character_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+define scan_character_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     if (self.peek_char() != '\'') {
         abort("Invalid state")
     }
@@ -167,56 +167,26 @@ scan_character_token :: (self: @Scanner, token_lexeme: @String, token_location: 
     return new Character_Token(lexeme = token_lexeme, location = token_location, value = value)
 }
 
-is_escape :: (char: Int8) -> Boolean {
+define is_escape = func (char: Int8) -> Boolean {
     return char == 'n' || char == 't' || char == '\"' || char == '\'' || char == '\\' || char == '0'
 }
 
-scan_comment_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+define scan_comment_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     while (self.peek_char() != '\n') {
         token_lexeme.append(self.next_char())
     }
     return new Comment_Token(lexeme = token_lexeme, location = token_location)
 }
 
-scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+define scan_identifier_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     while (self.peek_char().is_identifier_body()) {
         token_lexeme.append(self.next_char())
-    }
-    if (token_lexeme.equals("as")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("break")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("else")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("external")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
     }
     if (token_lexeme.equals("false")) {
         return new Boolean_Token(lexeme = token_lexeme, location = token_location, value = false)
     }
-    if (token_lexeme.equals("if")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("include")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("loop")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("new")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
     if (token_lexeme.equals("null")) {
         return new Null_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("return")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
-    if (token_lexeme.equals("struct")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
     }
     if (token_lexeme.equals("true")) {
         return new Boolean_Token(lexeme = token_lexeme, location = token_location, value = true)
@@ -224,13 +194,10 @@ scan_identifier_token :: (self: @Scanner, token_lexeme: @String, token_location:
     if (token_lexeme.equals("undefined")) {
         return new Undefined_Token(lexeme = token_lexeme, location = token_location)
     }
-    if (token_lexeme.equals("while")) {
-        return new Keyword_Token(lexeme = token_lexeme, location = token_location)
-    }
     return new Identifier_Token(lexeme = token_lexeme, location = token_location)
 }
 
-scan_integer_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+define scan_integer_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     value := 0
     while (self.peek_char().is_digit()) {
         char := self.next_char()
@@ -240,7 +207,7 @@ scan_integer_token :: (self: @Scanner, token_lexeme: @String, token_location: @S
     return new Integer_Token(lexeme = token_lexeme, location = token_location, value = value)
 }
 
-scan_space_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+define scan_space_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     count := 0
     while (self.peek_char() == ' ') {
         char := self.next_char()
@@ -250,7 +217,7 @@ scan_space_token :: (self: @Scanner, token_lexeme: @String, token_location: @Sou
     return new Space_Token(lexeme = token_lexeme, location = token_location, count = count)
 }
 
-scan_string_token :: (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
+define scan_string_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     if (self.peek_char() != '"') {
         abort("Invalid state")
     }

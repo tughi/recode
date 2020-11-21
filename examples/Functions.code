@@ -1,16 +1,16 @@
-main :: () -> Nothing {
+define main = func () -> Nothing {
     hello := new String_Value(value = "Hello")
     forty_two := new Int_Value(value = 42)
 
     hello.dump(stdout)
     (forty_two.dump)(forty_two, ((stdout)))
 
-    dump: (self: @Value, file: @FILE) -> Nothing = dump_int
+    dump: func (self: @Value, file: @FILE) -> Nothing = dump_int
     dump(forty_two, stdout)
 }
 
 define Value = struct {
-    dump: (self: @Value, file: @FILE) -> Nothing
+    dump: func (self: @Value, file: @FILE) -> Nothing
 }
 
 define Int_Value = struct {
@@ -18,7 +18,7 @@ define Int_Value = struct {
     value: Int
 }
 
-dump_int :: (self: @Value, file: @FILE) -> Nothing {
+define dump_int = func (self: @Value, file: @FILE) -> Nothing {
     self := self as @Int_Value
     file.write("Int: ").write(self.value).end_line()
 }
@@ -28,7 +28,7 @@ define String_Value = struct {
     value: @String
 }
 
-dump_string :: (self: @Value, file: @FILE) -> Nothing {
+define dump_string = func (self: @Value, file: @FILE) -> Nothing {
     self := self as @String_Value
     file.write("String: ").write(self.value).end_line()
 }
