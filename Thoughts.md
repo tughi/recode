@@ -36,11 +36,11 @@ Pointers can be treated as unchecked arrays of unknown size: `x[n]` is the addre
 
 ## Nullable pointers
 
-The `@?` prefix declares a nullable pointer type.
+The `?@` prefix declares a nullable pointer type.
 
-The value of an `@?Any` variable can be access only after a `null` check.
+The value of an `?@Any` variable can be accessed only after a `null` check.
 
-    define length = func (self: @?String) -> Int {
+    define length = func (self: ?@String) -> Int {
         if (self != null) {
             return self.length
         }
