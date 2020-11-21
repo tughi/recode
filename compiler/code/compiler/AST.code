@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-Compilation_Unit :: struct {
+define Compilation_Unit = struct {
     sources: @List = new List()
     types: @List = new List()
     global_variables: @List = new List()
@@ -8,201 +8,245 @@ Compilation_Unit :: struct {
     statements: @List = new List()
 }
 
-AST_Statement :: struct : Object {
+define AST_Statement = struct {
+    extends Object
     location: @Source_Location
 }
 
-AST_Include_Statement :: struct : AST_Statement {
+define AST_Include_Statement = struct {
+    extends AST_Statement
     file_path: @String
 }
 
-AST_Function_Statement :: struct : AST_Statement {
+define AST_Function_Statement = struct {
+    extends AST_Statement
     name: @Identifier_Token
     type: @AST_Function_Type
     body: @AST_Block_Statement
     ir_function: @IR_Function = null
 }
 
-AST_Function_Parameter :: struct {
+define AST_Function_Parameter = struct {
     location: @Source_Location
     name: @Identifier_Token
     type: @AST_Type
 }
 
-AST_Block_Statement :: struct : AST_Statement {
+define AST_Block_Statement = struct {
+    extends AST_Statement
     statements: @List
 }
 
-AST_Expression_Statement :: struct : AST_Statement {
+define AST_Expression_Statement = struct {
+    extends AST_Statement
     expression: @AST_Expression
 }
 
-AST_If_Statement :: struct : AST_Statement {
+define AST_If_Statement = struct {
+    extends AST_Statement
     condition_expression: @AST_Expression
     true_statement: @AST_Statement
     false_statement: @AST_Statement
 }
 
-AST_Loop_Statement :: struct : AST_Statement {
+define AST_Loop_Statement = struct {
+    extends AST_Statement
     block: @AST_Block_Statement
 }
 
-AST_While_Statement :: struct : AST_Statement {
+define AST_While_Statement = struct {
+    extends AST_Statement
     condition_expression: @AST_Expression
     block: @AST_Block_Statement
 }
 
-AST_Break_Statement :: struct : AST_Statement {
+define AST_Break_Statement = struct {
+    extends AST_Statement
 }
 
-AST_Return_Statement :: struct : AST_Statement {
+define AST_Return_Statement = struct {
+    extends AST_Statement
     value_expression: @AST_Expression
 }
 
-AST_Variable_Statement :: struct : AST_Statement {
+define AST_Variable_Statement = struct {
+    extends AST_Statement
     name: @Identifier_Token
     type: @AST_Type
     value_expression: @AST_Expression = null
     is_external: Boolean = false
 }
 
-AST_Struct_Statement :: struct : AST_Statement {
+define AST_Struct_Statement = struct {
+    extends AST_Statement
     name: @Identifier_Token
     base_type: @AST_Type
     members: @List
     init_arguments: @List
 }
 
-AST_Struct_Member :: struct {
+define AST_Struct_Member = struct {
     location: @Source_Location
     name: @Identifier_Token
     type: @AST_Type
 }
 
-AST_Assignment_Statement :: struct : AST_Statement {
+define AST_Assignment_Statement = struct {
+    extends AST_Statement
     storage_expression: @AST_Expression
     operator: @Other_Token
     value_expression: @AST_Expression
 }
 
-AST_Type :: struct : Object {
+define AST_Type = struct {
+    extends Object
     location: @Source_Location = null
 }
 
-AST_Named_Type :: struct : AST_Type {
+define AST_Named_Type = struct {
+    extends AST_Type
     name: @Identifier_Token
 }
 
-AST_Pointer_Type :: struct : AST_Type {
+define AST_Pointer_Type = struct {
+    extends AST_Type
     pointed_type: @AST_Type
 }
 
-AST_Array_Type :: struct : AST_Type {
+define AST_Array_Type = struct {
+    extends AST_Type
     item_type: @AST_Type
     size_expression: @AST_Expression
 }
 
-AST_Function_Type :: struct : AST_Type {
+define AST_Function_Type = struct {
+    extends AST_Type
     parameters: @List
     return_type: @AST_Type
 }
 
-AST_Expression :: struct : Object {
+define AST_Expression = struct {
+    extends Object
     location: @Source_Location
 }
 
-AST_Atomic_Expression :: struct : AST_Expression {
+define AST_Atomic_Expression = struct {
+    extends AST_Expression
     expression: @AST_Expression
 }
 
-AST_Literal_Expression :: struct : AST_Expression {
+define AST_Literal_Expression = struct {
+    extends AST_Expression
     literal: @Literal_Token
 }
 
-AST_Variable_Expression :: struct : AST_Expression {
+define AST_Variable_Expression = struct {
+    extends AST_Expression
     name: @Identifier_Token
 }
 
-AST_Binary_Expression :: struct : AST_Expression {
+define AST_Binary_Expression = struct {
+    extends AST_Expression
     left_expression: @AST_Expression
     right_expression: @AST_Expression
 }
 
-AST_Add_Expression :: struct : AST_Binary_Expression {
+define AST_Add_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Divide_Expression :: struct : AST_Binary_Expression {
+define AST_Divide_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Equals_Expression :: struct : AST_Binary_Expression {
+define AST_Equals_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Greater_Than_Expression :: struct : AST_Binary_Expression {
+define AST_Greater_Than_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Greater_Than_Or_Equals_Expression :: struct : AST_Binary_Expression {
+define AST_Greater_Than_Or_Equals_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Less_Than_Expression :: struct : AST_Binary_Expression {
+define AST_Less_Than_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Less_Than_Or_Equals_Expression :: struct : AST_Binary_Expression {
+define AST_Less_Than_Or_Equals_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Logic_And_Expression :: struct : AST_Binary_Expression {
+define AST_Logic_And_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Logic_Or_Expression :: struct : AST_Binary_Expression {
+define AST_Logic_Or_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Modulo_Expression :: struct : AST_Binary_Expression {
+define AST_Modulo_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Multiply_Expression :: struct : AST_Binary_Expression {
+define AST_Multiply_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Not_Equals_Expression :: struct : AST_Binary_Expression {
+define AST_Not_Equals_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Substract_Expression :: struct : AST_Binary_Expression {
+define AST_Substract_Expression = struct {
+    extends AST_Binary_Expression
 }
 
-AST_Unary_Expression :: struct : AST_Expression {
+define AST_Unary_Expression = struct {
+    extends AST_Expression
     expression: @AST_Expression
 }
 
-AST_Negate_Expression :: struct : AST_Unary_Expression {
+define AST_Negate_Expression = struct {
+    extends AST_Unary_Expression
 }
 
-AST_Cast_Expression :: struct : AST_Expression {
+define AST_Cast_Expression = struct {
+    extends AST_Expression
     value_expression: @AST_Expression
     type: @AST_Type
 }
 
-AST_New_Expression :: struct : AST_Expression {
+define AST_New_Expression = struct {
+    extends AST_Expression
     type: @AST_Type
     init_arguments: @List
 }
 
-AST_Call_Expression :: struct : AST_Expression {
+define AST_Call_Expression = struct {
+    extends AST_Expression
     callee_expression: @AST_Expression
     arguments: @List
 }
 
-AST_Call_Argument :: struct {
+define AST_Call_Argument = struct {
     name: @Identifier_Token
     value_expression: @AST_Expression
 }
 
-AST_Access_Expression :: struct : AST_Expression {
+define AST_Access_Expression = struct {
+    extends AST_Expression
 }
 
-AST_Member_Access_Expression :: struct : AST_Access_Expression {
+define AST_Member_Access_Expression = struct {
+    extends AST_Access_Expression
     object_expression: @AST_Expression
     member_name: @Identifier_Token
 }
 
-AST_Array_Access_Expression :: struct : AST_Access_Expression {
+define AST_Array_Access_Expression = struct {
+    extends AST_Access_Expression
     array_expression: @AST_Expression
     index_expression: @AST_Expression
 }

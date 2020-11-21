@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-Parser :: struct {
+define Parser = struct {
     scanner: @Scanner = null
     compilation_unit: @Compilation_Unit = new Compilation_Unit()
     current_alignment: Int = 0
@@ -18,12 +18,14 @@ Parser :: struct {
     required_column: @Matcher = new Other_Matcher(is_required = true, lexeme = ";")
     required_comma: @Matcher = new Other_Matcher(is_required = true, lexeme = ",")
     required_comment: @Matcher = new Comment_Matcher(is_required = true)
+    required_define: @Matcher = new Word_Matcher(is_required = true, lexeme = "define")
     required_dot: @Matcher = new Other_Matcher(is_required = true, lexeme = ".")
     required_else: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "else")
     required_end_of_file: @Matcher = new End_Of_File_Matcher(is_required = true)
     required_end_of_line: @Matcher = new End_Of_Line_Matcher(is_required = true)
     required_equals: @Matcher = new Other_Matcher(is_required = true, lexeme = "=")
     required_exclamation_mark: @Matcher = new Other_Matcher(is_required = true, lexeme = "!")
+    required_extends: @Matcher = new Word_Matcher(is_required = true, lexeme = "extends")
     required_external: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "external")
     required_greater_than: @Matcher = new Other_Matcher(is_required = true, lexeme = ">")
     required_hyphen: @Matcher = new Other_Matcher(is_required = true, lexeme = "-")
@@ -41,7 +43,8 @@ Parser :: struct {
     required_return: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "return")
     required_slash: @Matcher = new Other_Matcher(is_required = true, lexeme = "/")
     required_string_literal: @Matcher = new String_Literal_Matcher(is_required = true)
-    required_struct: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "struct")
+    required_struct: @Matcher = new Word_Matcher(is_required = true, lexeme = "struct")
+    required_unknown: @Matcher = new Word_Matcher(is_required = true, lexeme = "unknown")
     required_vertical_bar: @Matcher = new Other_Matcher(is_required = true, lexeme = "|")
     required_while: @Matcher = new Keyword_Matcher(is_required = true, lexeme = "while")
 }
@@ -135,7 +138,8 @@ make_relative_path :: (file_path: @String, base_file_path: @String) -> @String {
 }
 
 \ statement
-\   : if
+\   : define
+\   | if
 \   | "return" expression?
 \   | loop
 \   | while
@@ -151,6 +155,9 @@ parse_statement :: (self: @Parser) -> @AST_Statement {
 
     self.consume_space(self.current_alignment * 4)
 
+    if (self.matches(self.required_define)) {
+        return self.parse_define()
+    }
     if (self.matches(self.required_if)) {
         return self.parse_if()
     }
@@ -187,9 +194,6 @@ parse_statement :: (self: @Parser) -> @AST_Statement {
         self.consume_space(1)
         self.consume(self.required_colon, self.required_colon)
         self.consume_space(1)
-        if (self.matches(self.required_struct)) {
-            return self.parse_struct(expression)
-        }
         return self.parse_function(expression)
     }
 
@@ -250,19 +254,39 @@ parse_include :: (self: @Parser) -> @AST_Include_Statement {
     return new AST_Include_Statement(location = location, file_path = file_path)
 }
 
-\ struct
-\   : "struct" ( ":" IDENTIFIER ( "(" call_arguments ")" )? )? ( "{" <EOL> ( IDENTIFIER ":" type ( "=" expression )? <EOL> )* "}" )?
-parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statement {
-    if (name_expression.is(AST_Variable_Expression) == false) {
-        abort(name_expression.location, "Cannot use expression as struct name")
+\ define
+\   : "define" IDENTIFIER "=" ( struct )
+parse_define :: (self: @Parser) -> @AST_Statement {
+    self.consume(self.required_define)
+    self.consume_space(1)
+    name := self.consume(self.required_identifier) as @Identifier_Token
+    self.consume_space(1)
+    self.consume(self.required_equals)
+    self.consume_space(1)
+    if (self.matches(self.required_unknown, self.optional_space, self.required_struct)) {
+        self.consume(self.required_unknown)
+        self.consume_space(1)
+        self.consume(self.required_struct)
+        type_statement := new AST_Struct_Statement(location = name.location, name = name, base_type = null, members = null, init_arguments = null)
+        self.compilation_unit.types.append(type_statement)
+        return type_statement
     }
-    struct_name := (name_expression as @AST_Variable_Expression).name
+    return self.parse_struct(name)
+}
+
+\ struct
+\   : "struct" "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
+parse_struct :: (self: @Parser, struct_name: @Identifier_Token) -> @AST_Statement {
     struct_init_arguments := new List()
     self.consume(self.required_struct)
+    self.consume_space(1)
+    self.consume(self.required_open_brace)
+    self.consume_end_of_line()
+    self.current_alignment = self.current_alignment + 1
     base_type: @AST_Type = null
-    if (self.matches(self.optional_space, self.required_colon)) {
-        self.consume_space(1)
-        self.consume(self.required_colon)
+    if (self.matches(self.optional_space, self.required_extends)) {
+        self.consume_space(self.current_alignment * 4)
+        self.consume(self.required_extends)
         self.consume_space(1)
         base_type = self.parse_type()
         if (self.matches(self.optional_space, self.required_open_paren)) {
@@ -272,42 +296,29 @@ parse_struct :: (self: @Parser, name_expression: @AST_Expression) -> @AST_Statem
             self.consume_space(0)
             self.consume(self.required_close_paren)
         }
-    }
-    struct_members: @List = null
-    if (self.matches(self.optional_space, self.required_open_brace)) {
-        self.consume_space(1)
-        self.consume(self.required_open_brace)
         self.consume_end_of_line()
-        self.current_alignment = self.current_alignment + 1
-
-        struct_members = new List()
-        loop {
-            if (self.consume_empty_line() == false) {
-                if (self.matches(self.optional_space, self.required_identifier)) {
-                    self.consume_space(self.current_alignment * 4)
-                    struct_member_name := self.consume(self.required_identifier) as @Identifier_Token
-                    self.consume_space(0)
-                    self.consume(self.required_colon)
-                    self.consume_space(1)
-                    struct_member_value_type := self.parse_type()
-                    if (self.matches(self.optional_space, self.required_equals)) {
-                        self.consume_space(1)
-                        self.consume(self.required_equals)
-                        self.consume_space(1)
-                        value_expression := self.parse_expression()
-                        struct_init_arguments.append(new AST_Call_Argument(name = struct_member_name, value_expression = value_expression))
-                    }
-                    struct_members.append(new AST_Struct_Member(location = struct_member_name.location, name = struct_member_name, type = struct_member_value_type))
-                } else {
-                    break
-                }
-            }
-        }
-
-        self.current_alignment = self.current_alignment - 1
-        self.consume_space(self.current_alignment * 4)
-        self.consume(self.required_close_brace)
     }
+    struct_members: @List = new List()
+    while (self.matches(self.optional_space, self.required_close_brace) == false) {
+        self.consume_space(self.current_alignment * 4)
+        struct_member_name := self.consume(self.required_identifier) as @Identifier_Token
+        self.consume_space(0)
+        self.consume(self.required_colon)
+        self.consume_space(1)
+        struct_member_value_type := self.parse_type()
+        if (self.matches(self.optional_space, self.required_equals)) {
+            self.consume_space(1)
+            self.consume(self.required_equals)
+            self.consume_space(1)
+            value_expression := self.parse_expression()
+            struct_init_arguments.append(new AST_Call_Argument(name = struct_member_name, value_expression = value_expression))
+        }
+        self.consume_end_of_line()
+        struct_members.append(new AST_Struct_Member(location = struct_member_name.location, name = struct_member_name, type = struct_member_value_type))
+    }
+    self.current_alignment = self.current_alignment - 1
+    self.consume_space(self.current_alignment * 4)
+    self.consume(self.required_close_brace)
     struct_statement := new AST_Struct_Statement(location = struct_name.location, name = struct_name, base_type = base_type, members = struct_members, init_arguments = struct_init_arguments)
     self.compilation_unit.types.append(struct_statement)
     return struct_statement
@@ -863,37 +874,52 @@ matches :: (self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, th
     return true
 }
 
-Matcher :: struct : Object {
+define Matcher = struct {
+    extends Object
     is_required: Boolean
 }
 
-Comment_Matcher :: struct : Matcher {
+define Comment_Matcher = struct {
+    extends Matcher
 }
 
-End_Of_File_Matcher :: struct : Matcher {
+define End_Of_File_Matcher = struct {
+    extends Matcher
 }
 
-End_Of_Line_Matcher :: struct : Matcher {
+define End_Of_Line_Matcher = struct {
+    extends Matcher
 }
 
-Identifier_Matcher :: struct : Matcher {
+define Identifier_Matcher = struct {
+    extends Matcher
 }
 
-Keyword_Matcher :: struct : Matcher {
+define Keyword_Matcher = struct {
+    extends Matcher
     lexeme: @String
 }
 
-Literal_Matcher :: struct : Matcher {
+define Literal_Matcher = struct {
+    extends Matcher
 }
 
-String_Literal_Matcher :: struct : Matcher {
+define String_Literal_Matcher = struct {
+    extends Matcher
 }
 
-Other_Matcher :: struct : Matcher {
+define Other_Matcher = struct {
+    extends Matcher
     lexeme: @String
 }
 
-Space_Matcher :: struct : Matcher {
+define Space_Matcher = struct {
+    extends Matcher
+}
+
+define Word_Matcher = struct {
+    extends Matcher
+    lexeme: @String
 }
 
 accepts :: (self: @Matcher, token: @Token) -> Boolean {
@@ -909,6 +935,13 @@ accepts :: (self: @Matcher, token: @Token) -> Boolean {
     }
     if (self.is(Identifier_Matcher)) {
         return token.is(Identifier_Token)
+    }
+    if (self.is(Word_Matcher)) {
+        self := self as @Word_Matcher
+        if (token.is(Identifier_Token) || token.is(Keyword_Token)) {
+            return token.lexeme.equals(self.lexeme)
+        }
+        return false
     }
     if (self.is(Keyword_Matcher)) {
         self := self as @Keyword_Matcher

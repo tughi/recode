@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-Scanner :: struct {
+define Scanner = struct {
     source: @Source
     current_char_index: Int = 0
     current_line: Int = 1

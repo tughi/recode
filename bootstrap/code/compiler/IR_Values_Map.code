@@ -1,9 +1,9 @@
-IR_Values_Map :: struct {
+define IR_Values_Map = struct {
     first_entry: @IR_Values_Map_Entry = null
     last_entry: @IR_Values_Map_Entry = null
 }
 
-IR_Values_Map_Entry :: struct {
+define IR_Values_Map_Entry = struct {
     key: @Any
     value: @IR_Value
     prev_entry: @IR_Values_Map_Entry = null

@@ -35,7 +35,8 @@ end_line :: (file: @FILE) -> @FILE {
     return file.write('\n')
 }
 
-FILE :: struct
+define FILE = unknown struct
+
 stdout: @FILE = external
 
 fputc :: (char: Int32, file: @FILE) -> Int32

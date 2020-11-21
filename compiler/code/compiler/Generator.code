@@ -1064,7 +1064,7 @@ abort :: (self: @MC_Generator, message: @String) -> Nothing {
     abort(clone("[Generator] ").append(message))
 }
 
-MC_Generator :: struct {
+define MC_Generator = struct {
     output_file_path: @String
     output_file: @FILE
     output_debug_comments: Boolean
@@ -1443,7 +1443,7 @@ output_used_register :: (self: @MC_Generator, register: @MC_Register) -> Nothing
     }
 }
 
-MC_Value :: struct {
+define MC_Value = struct {
     prev_value: @MC_Value = null
     next_value: @MC_Value = null
     ir_instruction: @IR_Instruction
@@ -1452,7 +1452,8 @@ MC_Value :: struct {
     address: @MC_Address = null
 }
 
-MC_Register :: struct : Object {
+define MC_Register = struct {
+    extends Object
     name_q: @String
     name_d: @String
     name_w: @String
@@ -1473,55 +1474,72 @@ init :: (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, 
     return self
 }
 
-MC_Register_RAX :: struct : MC_Register {
+define MC_Register_RAX = struct {
+    extends MC_Register
 }
 
-MC_Register_RCX :: struct : MC_Register {
+define MC_Register_RCX = struct {
+    extends MC_Register
 }
 
-MC_Register_RDX :: struct : MC_Register {
+define MC_Register_RDX = struct {
+    extends MC_Register
 }
 
-MC_Register_RBX :: struct : MC_Register {
+define MC_Register_RBX = struct {
+    extends MC_Register
 }
 
-MC_Register_RSI :: struct : MC_Register {
+define MC_Register_RSI = struct {
+    extends MC_Register
 }
 
-MC_Register_RDI :: struct : MC_Register {
+define MC_Register_RDI = struct {
+    extends MC_Register
 }
 
-MC_Register_RSP :: struct : MC_Register {
+define MC_Register_RSP = struct {
+    extends MC_Register
 }
 
-MC_Register_RBP :: struct : MC_Register {
+define MC_Register_RBP = struct {
+    extends MC_Register
 }
 
-MC_Register_R8 :: struct : MC_Register {
+define MC_Register_R8 = struct {
+    extends MC_Register
 }
 
-MC_Register_R9 :: struct : MC_Register {
+define MC_Register_R9 = struct {
+    extends MC_Register
 }
 
-MC_Register_R10 :: struct : MC_Register {
+define MC_Register_R10 = struct {
+    extends MC_Register
 }
 
-MC_Register_R11 :: struct : MC_Register {
+define MC_Register_R11 = struct {
+    extends MC_Register
 }
 
-MC_Register_R12 :: struct : MC_Register {
+define MC_Register_R12 = struct {
+    extends MC_Register
 }
 
-MC_Register_R13 :: struct : MC_Register {
+define MC_Register_R13 = struct {
+    extends MC_Register
 }
 
-MC_Register_R14 :: struct : MC_Register {
+define MC_Register_R14 = struct {
+    extends MC_Register
 }
 
-MC_Register_R15 :: struct : MC_Register {
+define MC_Register_R15 = struct {
+    extends MC_Register
 }
 
-MC_Address :: struct : Object {
+define MC_Address = struct {
+    extends Object
 }
 
 write :: (file: @FILE, address: @MC_Address) -> @FILE {
@@ -1542,16 +1560,19 @@ write :: (file: @FILE, address: @MC_Address) -> @FILE {
     abort(clone("Unsupported type: ").append(address.object_type.name))
 }
 
-MC_Global_Variable_Address :: struct : MC_Address {
+define MC_Global_Variable_Address = struct {
+    extends MC_Address
     ir_variable: @IR_Variable
 }
 
-MC_Register_Based_Address :: struct : MC_Address {
+define MC_Register_Based_Address = struct {
+    extends MC_Address
     register: @MC_Register
     offset: Int = 0
 }
 
-MC_Local_Variable_Address :: struct : MC_Register_Based_Address {
+define MC_Local_Variable_Address = struct {
+    extends MC_Register_Based_Address
 }
 
 get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
@@ -1595,7 +1616,7 @@ get_type_size :: (self: @MC_Generator, ir_type: @IR_Type) -> Int {
     self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))
 }
 
-MC_String :: struct {
+define MC_String = struct {
     id: Int
     literal: @String_Token
 }

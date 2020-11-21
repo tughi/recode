@@ -50,7 +50,7 @@ The value of an `@?Any` variable can be access only after a `null` check.
 
 An `[Int8]` array has the following in-memory structure:
 
-    Int8_Array :: struct {
+    define Int8_Array = struct {
         size: Int
         data: @Int8
     }
@@ -69,24 +69,26 @@ checked array automatically.
 
 The `String` type has the following structure:
 
-    String :: struct {
+    define String = struct {
+        data: @Int8
+        data_size: Int
         length: Int
-        content: @Int8
     }
 
 String literals are global values of type `String`.
 
 ## Structs
 
-    Node :: struct {
+    define Node = struct {
         name: String        \ embedded
         parent: @Node       \ parent node address
         children: [@Node]   \ checked array of child node addresses
         type: Int = 42      \ with default value
     }
 
-    Extended_Node :: struct : Node(type = 7) { \ type has another default value
-        data: @Object       \ checked array of child node addresses
+    define Extended_Node = struct {
+        extends Node(type = 7)  \ type has another default value
+        data: @Object           \ checked array of child node addresses
     }
 
 Newly created structs can be initializated using named arguments, which can replace default values.
@@ -107,7 +109,7 @@ the type.
 
 The `Object_Type` structure looks like this:
 
-    Object_Type :: struct {
+    define Object_Type = struct {
         id: Int
         name: String
         base_type: @Object_Type

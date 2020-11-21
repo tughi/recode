@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-String :: struct {
+define String = struct {
     data: @Int8 = malloc(16) as @Int8
     data_size: Int = 16
     length: Int = 0

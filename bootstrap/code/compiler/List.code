@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-List :: struct {
+define List = struct {
     first_item: @List_Item = null
     last_item: @List_Item = null
     size: Int = 0
@@ -134,14 +134,14 @@ last :: (self: @List) -> @Any {
     return self.last_item.data
 }
 
-List_Item :: struct {
+define List_Item = struct {
     prev_item: @List_Item = null
     next_item: @List_Item = null
     data: @Any
     is_removed: Boolean = false
 }
 
-List_Iterator :: struct {
+define List_Iterator = struct {
     current_item: @List_Item
     next_item: @List_Item
 }

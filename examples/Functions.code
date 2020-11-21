@@ -9,11 +9,12 @@ main :: () -> Nothing {
     dump(forty_two, stdout)
 }
 
-Value :: struct {
+define Value = struct {
     dump: (self: @Value, file: @FILE) -> Nothing
 }
 
-Int_Value :: struct : Value(dump = dump_int) {
+define Int_Value = struct {
+    extends Value(dump = dump_int)
     value: Int
 }
 
@@ -22,7 +23,8 @@ dump_int :: (self: @Value, file: @FILE) -> Nothing {
     file.write("Int: ").write(self.value).end_line()
 }
 
-String_Value :: struct : Value(dump = dump_string) {
+define String_Value = struct {
+    extends Value(dump = dump_string)
     value: @String
 }
 

@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-Counter :: struct {
+define Counter = struct {
     value: Int = 0
 }
 

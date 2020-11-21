@@ -1,10 +1,10 @@
 include "./String.code"
 
-Object :: struct {
+define Object = struct {
     object_type: @Object_Type = undefined
 }
 
-Object_Type :: struct {
+define Object_Type = struct {
     id: Int
     name: String
     base_type: @Object_Type

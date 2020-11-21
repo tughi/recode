@@ -1,4 +1,4 @@
-String :: struct {
+define String = struct {
     data: @Int8 = undefined
     data_size: Int = undefined
     length: Int = undefined

@@ -5,7 +5,8 @@ main :: (argc: Int, argv: @@Int8) -> Int {
     return window.bounds.location.x - 42
 }
 
-Widget :: struct : Object {
+define Widget = struct {
+    extends Object
     bounds: Rectangle = Rectangle()
 }
 
@@ -13,7 +14,7 @@ set_location :: (self: @Widget, x: Int, y: Int) -> Nothing {
     self.bounds.location.set(x, y)
 }
 
-Rectangle :: struct {
+define Rectangle = struct {
     location: Point = Point(x = 42, y = 42)
     width: Int
     height: Int
@@ -23,7 +24,7 @@ size :: (self: @Rectangle) -> Int {
     return self.width * self.height
 }
 
-Point :: struct {
+define Point = struct {
     x: Int
     y: Int
 }

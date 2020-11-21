@@ -1,12 +1,12 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-Source :: struct {
+define Source = struct {
     id: Int = undefined
     file_path: @String
     content: @Int8
 }
 
-Source_Location :: struct {
+define Source_Location = struct {
     source: @Source
     line: Int
     column: Int

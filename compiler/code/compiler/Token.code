@@ -1,57 +1,73 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-Token :: struct : Object {
+define Token = struct {
+    extends Object
     lexeme: @String
     location: @Source_Location
     next_token: @Token = null
 }
 
-Literal_Token :: struct : Token {
+define Literal_Token = struct {
+    extends Token
 }
 
-Character_Token :: struct : Literal_Token {
+define Character_Token = struct {
+    extends Literal_Token
     value: Int8
 }
 
-Boolean_Token :: struct : Literal_Token {
+define Boolean_Token = struct {
+    extends Literal_Token
     value: Boolean
 }
 
-Comment_Token :: struct : Token {
+define Comment_Token = struct {
+    extends Token
 }
 
-End_Of_File_Token :: struct : Token {
+define End_Of_File_Token = struct {
+    extends Token
 }
 
-End_Of_Line_Token :: struct : Token {
+define End_Of_Line_Token = struct {
+    extends Token
 }
 
-Error_Token :: struct : Token {
+define Error_Token = struct {
+    extends Token
 }
 
-Identifier_Token :: struct : Token {
+define Identifier_Token = struct {
+    extends Token
 }
 
-Integer_Token :: struct : Literal_Token {
+define Integer_Token = struct {
+    extends Literal_Token
     value: Int
 }
 
-Keyword_Token :: struct : Token {
+define Keyword_Token = struct {
+    extends Token
 }
 
-Null_Token :: struct : Literal_Token {
+define Null_Token = struct {
+    extends Literal_Token
 }
 
-Other_Token :: struct : Token {
+define Other_Token = struct {
+    extends Token
 }
 
-Space_Token :: struct : Token {
+define Space_Token = struct {
+    extends Token
     count: Int
 }
 
-String_Token :: struct : Literal_Token {
+define String_Token = struct {
+    extends Literal_Token
     value: @String
 }
 
-Undefined_Token :: struct : Literal_Token {
+define Undefined_Token = struct {
+    extends Literal_Token
 }

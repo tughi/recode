@@ -1,11 +1,12 @@
 include "./code/io/File.code"
 
-Expression :: struct {
+define Expression = struct {
     dump: (self: @Expression) -> Nothing
     evaluate: (self: @Expression) -> Int = null
 }
 
-Int_Expression :: struct : Expression(dump = dump_int, evaluate = evaluate_int) {
+define Int_Expression = struct {
+    extends Expression(dump = dump_int, evaluate = evaluate_int)
     value: Int
 }
 
@@ -19,7 +20,8 @@ evaluate_int :: (self: @Expression) -> Int {
     return self.value
 }
 
-Binary_Expression :: struct : Expression(dump = dump_binary_expression) {
+define Binary_Expression = struct {
+    extends Expression(dump = dump_binary_expression)
     operator: @String
     left_expression: @Expression
     right_expression: @Expression
@@ -34,7 +36,8 @@ dump_binary_expression :: (self: @Expression) -> Nothing {
     stdout.write(')')
 }
 
-Addition_Expression :: struct : Binary_Expression(operator = "+", evaluate = evaluate_addition) {
+define Addition_Expression = struct {
+    extends Binary_Expression(operator = "+", evaluate = evaluate_addition)
 }
 
 evaluate_addition :: (self: @Expression) -> Int {
@@ -42,7 +45,8 @@ evaluate_addition :: (self: @Expression) -> Int {
     return self.left_expression.evaluate() + self.right_expression.evaluate()
 }
 
-Substraction_Expression :: struct : Binary_Expression(operator = "-", evaluate = evaluate_substraction) {
+define Substraction_Expression = struct {
+    extends Binary_Expression(operator = "-", evaluate = evaluate_substraction)
 }
 
 evaluate_substraction :: (self: @Expression) -> Int {

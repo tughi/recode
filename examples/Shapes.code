@@ -3,7 +3,7 @@ shape: @Shape = undefined
 polygon: Polygon
 
 main :: () -> Int {
-    shape = new Square()
+    shape = new Rectangle()
     if (shape.is(Polygon) == false) {
         return 1
     }
@@ -15,26 +15,29 @@ main :: () -> Int {
     return shape.sides - polygon.sides
 }
 
-Shape :: struct : Object {
+define Shape = struct {
+    extends Object
 }
 
-Ellipse :: struct : Shape {
+define Ellipse = struct {
+    extends Shape
 }
 
-Circle :: struct : Ellipse {
+define Circle = struct {
+    extends Ellipse
 }
 
-Polygon :: struct : Shape {
+define Polygon = struct {
+    extends Shape
     sides: Int
 }
 
-Triangle :: struct : Polygon(sides = 3) {
+define Triangle = struct {
+    extends Polygon(sides = 3)
 }
 
-Rectangle :: struct : Polygon(sides = 4) {
-}
-
-Square :: struct : Rectangle {
+define Rectangle = struct {
+    extends Polygon(sides = 4)
 }
 
 include "./code/io/File.code"

@@ -11,7 +11,7 @@ build :: (compilation_unit: @Compilation_Unit) -> @IR_Build {
     )
 }
 
-IR_Build :: struct {
+define IR_Build = struct {
     sources: @List
     named_functions: @List
     named_types: @List
@@ -29,7 +29,7 @@ dump :: (build: @IR_Build, file: @FILE) -> Nothing {
     }
 }
 
-IR_Builder :: struct {
+define IR_Builder = struct {
     context: @IR_Builder_Context
     compilation_unit: @Compilation_Unit
     named_types: @List
@@ -39,13 +39,13 @@ IR_Builder :: struct {
     counter: @Counter = new Counter()
 }
 
-IR_Builder_Context :: struct {
+define IR_Builder_Context = struct {
     parent: @IR_Builder_Context
     variables: @List = new List()
     named_values: @List = new List()
 }
 
-IR_Loop :: struct {
+define IR_Loop = struct {
     parent: @IR_Loop
     end_block: @IR_Block
 }

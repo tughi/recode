@@ -2,7 +2,7 @@
 
 \ stdio
 
-FILE :: struct
+define FILE = unknown struct
 
 stdout: @FILE = external
 stderr: @FILE = external
