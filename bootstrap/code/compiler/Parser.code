@@ -68,8 +68,14 @@ parse :: (self: @Parser, file_path: @String, location: @Source_Location) -> Noth
     other_scanner := self.scanner
     self.scanner = create_scanner(source)
     self.parse_statements(self.compilation_unit.statements)
-    if (self.scanner.current_token.is(End_Of_File_Token) == false) {
+
+    token := self.scanner.current_token
+    if (token.is(End_Of_File_Token) == false) {
         abort(self, self.scanner.current_token)
+    }
+    token := token as @End_Of_File_Token
+    if (token.location.column != 1) {
+        stderr.write(token.location).write(": File doesn't end with a new line").end_line()
     }
 
     self.scanner = other_scanner
@@ -744,7 +750,9 @@ consume_end_of_line :: (self: @Parser) -> Nothing {
     } else {
         self.consume_space(0)
     }
-    self.consume(self.required_end_of_line)
+    if (self.matches(self.required_end_of_file) == false) {
+        self.consume(self.required_end_of_line)
+    }
 }
 
 consume_empty_line :: (self: @Parser) -> Boolean {

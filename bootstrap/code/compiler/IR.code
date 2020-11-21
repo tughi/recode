@@ -155,7 +155,9 @@ is_object_type :: (self: @IR_Struct_Type) -> Boolean {
 
 IR_Value :: struct : Object {
     type: @IR_Type
+    creator_instruction: @IR_Instruction = null
     user_instructions: @List = new List()
+    links: @List = new List()
     dump: (value: @IR_Value, file: @FILE) -> @FILE = dump_ir_value
 }
 
@@ -178,6 +180,19 @@ write :: (file: @FILE, value: @IR_Value, check_users: Boolean) -> @FILE {
     return value.dump(file)
 }
 
+IR_Link :: struct : Object {
+}
+
+IR_Requires_Value_Link :: struct : IR_Link {
+    back_link: @IR_Required_By_Value_Link
+    value: @IR_Value
+}
+
+IR_Required_By_Value_Link :: struct : IR_Link {
+    back_link: @IR_Requires_Value_Link
+    value: @IR_Value
+}
+
 IR_Undefined_Value :: struct : IR_Value(dump = dump_ir_undefined_value) {
 }
 
@@ -193,39 +208,73 @@ dump_ir_constant_value :: (value: @IR_Value, file: @FILE) -> @FILE {
     return file.write((value as @IR_Constant_Value).literal.lexeme)
 }
 
-IR_Compound_Value :: struct : IR_Value {
-    values: @IR_Values_Map = new IR_Values_Map()
+IR_Struct_Literal_Value :: struct : IR_Value(dump = dump_IR_Struct_Literal_Value) {
+    location: @Source_Location
 }
 
-IR_Struct_Constructor_Value :: struct : IR_Compound_Value(dump = dump_ir_struct_constructor_value) {
-    init_arguments: @List
+IR_Struct_Literal_Member_Value_Link :: struct : IR_Requires_Value_Link {
+    struct_type_member: @IR_Struct_Type_Member
 }
 
-dump_ir_struct_constructor_value :: (value: @IR_Value, file: @FILE) -> @FILE {
-    value := value as @IR_Struct_Constructor_Value
-    file.write(value.type.name).write('(')
-    init_arguments_item := value.init_arguments.first_item
-    if (init_arguments_item != null) {
-        loop {
-            file.write((init_arguments_item.data as @IR_Call_Argument).name).write(" = ").write(value.values.get(init_arguments_item), true)
-            init_arguments_item = init_arguments_item.next_item
-            if (init_arguments_item == null) {
-                break
+get_member_value :: (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Value {
+    links_item := self.links.first_item
+    while (links_item != null) {
+        link := links_item.data as @IR_Link
+        if (link.is(IR_Struct_Literal_Member_Value_Link)) {
+            link := link as @IR_Struct_Literal_Member_Value_Link
+            if (link.struct_type_member == struct_type_member) {
+                return link.value
             }
-            file.write(", ")
         }
+        links_item = links_item.next_item
+    }
+    return null
+}
+
+set_member_value :: (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> Nothing {
+    member_value_link := new IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
+    member_value_link.back_link = new IR_Required_By_Value_Link(value = self, back_link = member_value_link)
+    self.links.append(member_value_link)
+    value.links.append(member_value_link.back_link)
+}
+
+dump_IR_Struct_Literal_Value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Struct_Literal_Value
+    file.write(value.type.name).write('(')
+    value_links_item := value.links.first_item
+    is_first_value_link := true
+    while (value_links_item != null) {
+        value_link := value_links_item.data as @IR_Link
+        if (value_link.is(IR_Struct_Literal_Member_Value_Link)) {
+            value_link := value_link as @IR_Struct_Literal_Member_Value_Link
+            if (is_first_value_link) {
+                is_first_value_link = false
+            } else {
+                file.write(", ")
+            }
+            file.write(value_link.struct_type_member.name).write(" = ").write(value_link.value, false)
+        }
+        value_links_item = value_links_item.next_item
     }
     return file.write(')')
 }
 
-init :: (self: @IR_Struct_Constructor_Value) -> @IR_Struct_Constructor_Value {
-    init_arguments_item := self.init_arguments.first_item
-    while (init_arguments_item != null) {
-        init_argument := init_arguments_item.data as @IR_Call_Argument
-        self.values.put(init_arguments_item, init_argument.value)
-        init_arguments_item = init_arguments_item.next_item
-    }
-    return self
+IR_Global_Variable_Value :: struct : IR_Value(dump = dump_ir_global_variable_value) {
+    variable: @IR_Variable
+}
+
+dump_ir_global_variable_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Variable_Value
+    return file.write(value.variable.name)
+}
+
+IR_Global_Variable_Address_Value :: struct : IR_Value(dump = dump_ir_global_variable_address_value) {
+    variable: @IR_Variable
+}
+
+dump_ir_global_variable_address_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Variable_Value
+    return file.write(value.variable.name).write(".address")
 }
 
 IR_Variable_Value :: struct : IR_Value(dump = dump_ir_variable_value) {
@@ -243,6 +292,24 @@ init :: (self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value
 dump_ir_variable_value :: (value: @IR_Value, file: @FILE) -> @FILE {
     value := value as @IR_Variable_Value
     return file.write(value.variable.name).write('.').write(value.version)
+}
+
+IR_Variable_Address_Value :: struct : IR_Value(dump = dump_ir_variable_address_value) {
+    variable_value: @IR_Variable_Value
+}
+
+dump_ir_variable_address_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Variable_Address_Value
+    return file.write(value.variable_value, true).write(".address")
+}
+
+IR_Function_Address_Value :: struct : IR_Value(dump = dump_ir_function_address_value) {
+    function: @IR_Function
+}
+
+dump_ir_function_address_value :: (value: @IR_Value, file: @FILE) -> @FILE {
+    value := value as @IR_Function_Address_Value
+    return file.write_function_label(value.function).write(".address")
 }
 
 IR_Block :: struct : Object {
@@ -384,18 +451,15 @@ dump :: (function: @IR_Function, file: @FILE) -> Nothing {
 }
 
 IR_Variable :: struct : Object {
+    location: @Source_Location
     name: @String
     type: @IR_Type
     values: @List = new List()
 }
 
 IR_Global_Variable :: struct : IR_Variable {
+    value: @IR_Value
     is_external: Boolean
-}
-
-create_ir_global_variable :: (name: @String, type: @IR_Type, is_external: Boolean) -> @IR_Global_Variable {
-    variable := new IR_Global_Variable(name = name, type = type, is_external = is_external)
-    return variable
 }
 
 IR_Function_Parameter :: struct : IR_Variable {
@@ -450,14 +514,6 @@ is_exit_instruction :: (self: @IR_Instruction) -> Boolean {
 set_operand_value :: (self: @IR_Instruction, key: @Any, value: @IR_Value) -> Nothing {
     self.operand_values.put(key, value)
     value.user_instructions.append(self)
-    if (value.is(IR_Compound_Value)) {
-        compound_value := value as @IR_Compound_Value
-        compound_value_values_entry := compound_value.values.first_entry
-        while (compound_value_values_entry != null) {
-            self.set_operand_value(compound_value_values_entry.key, compound_value_values_entry.value)
-            compound_value_values_entry = compound_value_values_entry.next_entry
-        }
-    }
 }
 
 replace_operand_value :: (self: @IR_Instruction, old_value: @IR_Value, new_value: @IR_Value) -> Nothing {
@@ -537,6 +593,9 @@ dump_ir_direct_call_instruction :: (instruction: @IR_Instruction, file: @FILE, p
 create_ir_direct_call_instruction :: (result_value: @IR_Variable_Value, call_arguments: @List, function: @IR_Function) -> @IR_Call_Instruction {
     instruction := new IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
+    if (result_value != null) {
+        result_value.creator_instruction = instruction
+    }
     return instruction
 }
 
@@ -556,6 +615,9 @@ create_ir_dynamic_call_instruction :: (result_value: @IR_Variable_Value, call_ar
     instruction := new IR_Dynamic_Call_Instruction(result_value = result_value)
     instruction.add_arguments(call_arguments)
     instruction.set_operand_value("function_address", function_address)
+    if (result_value != null) {
+        result_value.creator_instruction = instruction
+    }
     return instruction
 }
 
@@ -575,6 +637,7 @@ dump_ir_cast_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: 
 create_ir_cast_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
     instruction := new IR_Cast_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -623,6 +686,7 @@ create_ir_load_array_item_instruction :: (result_value: @IR_Variable_Value, arra
     instruction := new IR_Load_Array_Item_Instruction(result_value = result_value)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -632,21 +696,6 @@ get_array_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
 
 get_index_value :: (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("index_value")
-}
-
-IR_Load_Function_Address_Instruction :: struct : IR_Instruction(dump = dump_ir_load_function_address_instruction) {
-    function: @IR_Function
-}
-
-dump_ir_load_function_address_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
-    instruction.dump_ir_instruction_result(file, prefix)
-    instruction := instruction as @IR_Load_Function_Address_Instruction
-    return file.write("load_function_address").write('(').write_function_label(instruction.function).write(')').end_line()
-}
-
-create_ir_load_function_address_instruction :: (result_value: @IR_Variable_Value, function: @IR_Function) -> @IR_Load_Function_Address_Instruction {
-    instruction := new IR_Load_Function_Address_Instruction(result_value = result_value, function = function)
-    return instruction
 }
 
 IR_Load_Struct_Member_Instruction :: struct : IR_Instruction(dump = dump_ir_load_struct_member_instruction) {
@@ -668,11 +717,46 @@ dump_ir_load_struct_member_instruction :: (instruction: @IR_Instruction, file: @
 create_ir_load_struct_member_instruction :: (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
     instruction := new IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
+    result_value.creator_instruction = instruction
+
+    if (struct_type_member.type.is(IR_Struct_Type)) {
+        result_value_link := new IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
+        result_value_link.back_link = new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
+        result_value.links.append(result_value_link)
+        struct_pointer_value.links.append(result_value_link.back_link)
+    }
+
     return instruction
 }
 
 get_struct_pointer_value :: (self: @IR_Load_Struct_Member_Instruction) -> @IR_Value {
     return self.operand_values.get("struct_pointer_value")
+}
+
+IR_Load_Variable_Address_Instruction :: struct : IR_Instruction(dump = dump_ir_load_variable_address_instruction) {
+}
+
+dump_ir_load_variable_address_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+    instruction.dump_ir_instruction_result(file, prefix)
+    instruction := instruction as @IR_Load_Variable_Address_Instruction
+    return file.write("load_variable_address").write('(').write(instruction.get_variable_value(), true).write(')').end_line()
+}
+
+create_ir_load_variable_address_instruction :: (result_value: @IR_Variable_Value, variable_value: @IR_Variable_Value) -> @IR_Load_Variable_Address_Instruction {
+    instruction := new IR_Load_Variable_Address_Instruction(result_value = result_value)
+    instruction.set_operand_value("variable_value", variable_value)
+    result_value.creator_instruction = instruction
+
+    result_value_link := new IR_Requires_Value_Link(value = variable_value, back_link = undefined)
+    result_value_link.back_link = new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
+    result_value.links.append(result_value_link)
+    variable_value.links.append(result_value_link.back_link)
+
+    return instruction
+}
+
+get_variable_value :: (self: @IR_Load_Variable_Address_Instruction) -> @IR_Variable_Value {
+    return self.operand_values.get("variable_value") as @IR_Variable_Value
 }
 
 IR_Load_Variable_Instruction :: struct : IR_Instruction(dump = dump_ir_load_variable_instruction) {
@@ -686,6 +770,7 @@ dump_ir_load_variable_instruction :: (instruction: @IR_Instruction, file: @FILE,
 
 create_ir_load_variable_instruction :: (result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
     instruction := new IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -696,23 +781,18 @@ IR_New_Instruction :: struct : IR_Instruction(dump = dump_ir_new_instruction) {
 dump_ir_new_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
     instruction.dump_ir_instruction_result(file, prefix)
     instruction := instruction as @IR_New_Instruction
-    file.write("new").write('(').write(instruction.type.name)
-    if (instruction.get_size_value() != null) {
-        file.write(", ").write(instruction.get_size_value(), true)
-    }
-    return file.write(')').end_line()
+    return file.write("new").write(' ').write(instruction.get_init_value(), true).end_line()
 }
 
-create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, size_value: @IR_Value) -> @IR_New_Instruction {
+create_ir_new_instruction :: (result_value: @IR_Variable_Value, type: @IR_Type, init_value: @IR_Value) -> @IR_New_Instruction {
     instruction := new IR_New_Instruction(result_value = result_value, type = type)
-    if (size_value != null) {
-        instruction.set_operand_value("size_value", size_value)
-    }
+    instruction.set_operand_value("init_value", init_value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
-get_size_value :: (self: @IR_New_Instruction) -> @IR_Value {
-    return self.operand_values.get("size_value")
+get_init_value :: (self: @IR_New_Instruction) -> @IR_Value {
+    return self.operand_values.get("init_value")
 }
 
 IR_Return_Instruction :: struct : IR_Instruction(dump = dump_ir_return_instruction) {
@@ -751,6 +831,7 @@ dump_ir_set_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @
 create_ir_set_instruction :: (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
     instruction := new IR_Set_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 
@@ -954,6 +1035,7 @@ dump_ir_phi_instruction :: (instruction: @IR_Instruction, file: @FILE, prefix: @
 
 create_ir_phi_instruction :: (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
     instruction := new IR_Phi_Instruction(result_value = result_value)
+    result_value.creator_instruction = instruction
     return instruction
 }
 

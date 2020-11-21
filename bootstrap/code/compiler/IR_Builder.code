@@ -7,6 +7,7 @@ build :: (compilation_unit: @Compilation_Unit) -> @IR_Build {
         sources = compilation_unit.sources
         named_functions = builder.named_functions
         named_types = builder.named_types
+        global_variables = builder.context.variables
     )
 }
 
@@ -14,6 +15,7 @@ IR_Build :: struct {
     sources: @List
     named_functions: @List
     named_types: @List
+    global_variables: @List
 }
 
 dump :: (build: @IR_Build, file: @FILE) -> Nothing {
@@ -100,9 +102,9 @@ get_variable :: (self: @IR_Builder, name: @String) -> @IR_Variable {
     }
 }
 
-get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
+get_variable_value :: (self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
     if (variable.is(IR_Global_Variable)) {
-        return self.append(create_ir_load_variable_instruction(self.create_variable_value(variable)), null) as @IR_Variable_Value
+        return new IR_Global_Variable_Value(type = variable.type, variable = variable)
     }
     current_block_instruction := self.current_block.last_instruction
     while (current_block_instruction != null) {
@@ -229,7 +231,7 @@ accepts :: (self: @IR_Type, other: @IR_Type) -> Boolean {
 }
 
 create_temp_variable :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable {
-    return new IR_Variable(name = clone("$").append(self.counter.next()), type = type)
+    return new IR_Variable(location = null, name = clone("$").append(self.counter.next()), type = type)
 }
 
 create_temp_value :: (self: @IR_Builder, type: @IR_Type) -> @IR_Variable_Value {
@@ -252,7 +254,7 @@ build :: (self: @IR_Builder) -> Nothing {
     global_variables := self.compilation_unit.global_variables.create_iterator()
     while (global_variables.has_next()) {
         variable_statement := global_variables.next() as @AST_Variable_Statement
-        self.create_global_variable(variable_statement)
+        self.convert_variable_statement(variable_statement, true)
     }
 
     functions := self.compilation_unit.functions.create_iterator()
@@ -303,7 +305,7 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @AST_Struct_St
         }
     }
     if (type.is_object_type()) {
-        self.create_global_variable(
+        self.convert_variable_statement(
             new AST_Variable_Statement(
                 location = struct_statement.name.location
                 name = struct_statement.name
@@ -312,7 +314,9 @@ convert_struct_statement :: (self: @IR_Builder, struct_statement: @AST_Struct_St
                         name = new Identifier_Token(lexeme = "Object_Type", location = null)
                     )
                 )
+                is_external = true
             )
+            true
         )
     }
     return type
@@ -374,22 +378,6 @@ convert_pointer_type :: (self: @IR_Builder, type: @AST_Pointer_Type) -> @IR_Type
     return create_ir_pointer_type(self.convert_value_type(type.pointed_type))
 }
 
-create_global_variable :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
-    variable_name := variable_statement.name.lexeme
-    variable_type: @IR_Type
-    if (variable_statement.type != null) {
-        variable_type = self.convert_value_type(variable_statement.type)
-    } else {
-        abort(variable_statement.location, "Type inference is not supported yet.")
-    }
-    variable := create_ir_global_variable(variable_name, variable_type, variable_statement.is_external)
-    if (variable_statement.value_expression != null) {
-        abort(variable_statement.value_expression.location, "Initialized global variables are not supported yet.")
-    }
-    self.add_variable(variable)
-    self.create_variable_value(variable)
-}
-
 create_function :: (self: @IR_Builder, function_statement: @AST_Function_Statement) -> @IR_Function {
     function := new IR_Function(
         id = self.named_functions.size + 1
@@ -408,7 +396,7 @@ create_function :: (self: @IR_Builder, function_statement: @AST_Function_Stateme
         parameter := parameters.next() as @AST_Function_Parameter
         parameter_type := self.convert_value_type(parameter.type)
         parameter_name := parameter.name.lexeme
-        function_parameter := new IR_Function_Parameter(name = parameter_name, type = parameter_type)
+        function_parameter := new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
         function.parameters.append(function_parameter)
         function_type_parameters.append(new IR_Function_Type_Parameter(name = parameter_name, type = parameter_type))
     }
@@ -573,11 +561,13 @@ remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -
             block_instruction := block.first_instruction
             while (block_instruction != null && block_instruction.is(IR_Phi_Instruction)) {
                 instruction := block_instruction as @IR_Phi_Instruction
-                if (instruction.is_trivial()) {
+                instruction_is_redundant := instruction.is_redundant()
+                if (instruction_is_redundant == false && instruction.is_trivial()) {
                     \ found a trivial phi instruction
                     instruction.operand_values.remove_values(instruction.result_value)
+                    instruction_is_redundant = true
                 }
-                if (instruction.is_redundant()) {
+                if (instruction_is_redundant) {
                     \ found redundant phi instruction
                     old_value := instruction.result_value
                     new_value := instruction.operand_values.first_entry.value
@@ -587,6 +577,16 @@ remove_trivial_phi_instructions :: (self: @IR_Builder, function: @IR_Function) -
                         user_instruction.replace_operand_value(old_value, new_value)
                     }
                     new_value.user_instructions.remove_all(instruction).prune()
+                    old_value_links_item := old_value.links.first_item
+                    while (old_value_links_item != null) {
+                        old_value_link := old_value_links_item.data as @IR_Link
+                        if (old_value_link.is(IR_Required_By_Value_Link)) {
+                            old_value_link := old_value_link as @IR_Required_By_Value_Link
+                            old_value_link.back_link.value = new_value
+                            new_value.links.append(old_value_link)
+                        }
+                        old_value_links_item = old_value_links_item.next_item
+                    }
                     block.remove(instruction)
                     repeat = true
                 }
@@ -611,20 +611,30 @@ remove_redundant_set_instructions :: (self: @IR_Builder, function: @IR_Function)
             block_instruction := block.first_instruction
             while (block_instruction != null) {
                 if (block_instruction.is(IR_Set_Instruction)) {
-                    block_instruction := block_instruction as @IR_Set_Instruction
-                    if (block_instruction.get_value().is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0) {
+                    value := (block_instruction as @IR_Set_Instruction).get_value()
+                    if (value.is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0) {
                         block.remove(block_instruction)
                         repeat = true
                         break
                     }
-                }
-                if (block_instruction.result_value != null && block_instruction.result_value.user_instructions.size == 1) {
-                    user_instruction := block_instruction.result_value.user_instructions.first() as @IR_Instruction
-                    if (user_instruction.is(IR_Set_Instruction) && user_instruction.parent_block == block) {
-                        user_instruction := user_instruction as @IR_Set_Instruction
-                        if (user_instruction.get_value() == (block_instruction.result_value as @IR_Value)) {
-                            block.remove(user_instruction)
-                            block_instruction.result_value = user_instruction.result_value
+                    if (value.user_instructions.size == 1 && value.user_instructions.first_item.data as @IR_Instruction == block_instruction) {
+                        value_creator_instruction := value.creator_instruction
+                        if (value_creator_instruction != null && value_creator_instruction.parent_block == block) {
+                            redundant_value := value_creator_instruction.result_value
+                            replacement_value: @IR_Value = block_instruction.result_value
+                            redundant_value_links_item := redundant_value.links.first_item
+                            while (redundant_value_links_item != null) {
+                                redundant_value_link := redundant_value_links_item.data as @IR_Link
+                                if (redundant_value_link.is(IR_Requires_Value_Link)) {
+                                    redundant_value_link := redundant_value_link as @IR_Requires_Value_Link
+                                    redundant_value_link.back_link.value = replacement_value
+                                    replacement_value.links.append(redundant_value_link)
+                                }
+                                redundant_value_links_item = redundant_value_links_item.next_item
+                            }
+                            value_creator_instruction.result_value = block_instruction.result_value
+                            value_creator_instruction.result_value.creator_instruction = value_creator_instruction
+                            block.remove(block_instruction)
                             repeat = true
                             break
                         }
@@ -659,7 +669,7 @@ convert_statement :: (self: @IR_Builder, statement: @AST_Statement) -> Nothing {
     } else if (statement.is(AST_Return_Statement)) {
         self.convert_return_statement(statement as @AST_Return_Statement)
     } else if (statement.is(AST_Variable_Statement)) {
-        self.convert_variable_statement(statement as @AST_Variable_Statement)
+        self.convert_variable_statement(statement as @AST_Variable_Statement, false)
     } else if (statement.is(AST_While_Statement)) {
         self.convert_while_statement(statement as @AST_While_Statement)
     } else {
@@ -777,7 +787,7 @@ convert_return_statement :: (self: @IR_Builder, statement: @AST_Return_Statement
     self.current_block = self.current_block.function.create_block()
 }
 
-convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement) -> Nothing {
+convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Variable_Statement, is_global: Boolean) -> Nothing {
     variable_name := variable_statement.name.lexeme
     variable_type: @IR_Type = null
     if (variable_statement.type != null) {
@@ -787,33 +797,49 @@ convert_variable_statement :: (self: @IR_Builder, variable_statement: @AST_Varia
     if (variable_statement.value_expression != null) {
         variable_value = self.convert_expression(variable_statement.value_expression, variable_type)
     }
-    if (variable_type != null) {
-        if (variable_value != null) {
-            if (variable_type.accepts(variable_value.type) == false) {
-                abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
+    if (variable_statement.is_external == false) {
+        if (variable_type != null) {
+            if (variable_value != null) {
+                if (variable_type.accepts(variable_value.type) == false) {
+                    abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
+                }
+                if (variable_type.equals(variable_value.type)) {
+                    stderr.write(variable_statement.type.location).write(": Redundant type declaration").end_line()
+                }
             }
-            if (variable_type.equals(variable_value.type)) {
-                stderr.write(variable_statement.type.location).write(": Redundant type declaration").end_line()
+        } else {
+            if (variable_value == null) {
+                abort(variable_statement.location, "Invalid state")
             }
+            if (variable_value.type.is(IR_Null_Type)) {
+                abort(variable_statement.value_expression.location, "Cannot infer type from null value")
+            }
+            variable_type = variable_value.type
         }
-    } else {
         if (variable_value == null) {
-            abort(variable_statement.location, "Invalid state")
+            variable_value = new IR_Undefined_Value(type = variable_type)
         }
-        if (variable_value.type.is(IR_Null_Type)) {
-            abort(variable_statement.value_expression.location, "Cannot infer type from null value")
-        }
-        variable_type = variable_value.type
     }
     if (variable_type.is(IR_Any_Type) || variable_type.is(IR_Nothing_Type) || variable_type.is(IR_Undefined_Type)) {
         abort(variable_statement.location, clone("Invalid variable type: ").append(variable_type.name))
     }
-    variable := new IR_Variable(name = variable_name, type = variable_type)
-    self.add_variable(variable)
-    if (variable_value == null) {
-        variable_value = new IR_Undefined_Value(type = variable_type)
+    if (is_global) {
+        variable := new IR_Global_Variable(
+            location = variable_statement.location
+            name = variable_name
+            type = variable_type
+            value = variable_value
+            is_external = variable_statement.is_external
+        )
+        if (self.current_block != null) {
+            abort(variable_statement.location, "Invalid state")
+        }
+        self.add_variable(variable)
+    } else {
+        variable := new IR_Variable(location = variable_statement.location, name = variable_name, type = variable_type)
+        self.add_variable(variable)
+        self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
     }
-    self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
 }
 
 convert_while_statement :: (self: @IR_Builder, statement: @AST_While_Statement) -> Nothing {
@@ -959,7 +985,7 @@ convert_direct_call_expression :: (self: @IR_Builder, call_expression: @AST_Call
         if (first_argument != null) {
             abort(call_expression.location, "Invalid type literal syntax")
         }
-        return self.convert_struct_constructor_expression(call_expression, type as @IR_Struct_Type)
+        return self.convert_struct_literal_expression(call_expression, type as @IR_Struct_Type)
     }
 
     call_arguments := self.convert_call_arguments(call_expression.arguments)
@@ -1156,7 +1182,7 @@ convert_literal_expression :: (self: @IR_Builder, expression: @AST_Literal_Expre
         return new IR_Constant_Value(type = create_ir_pointer_type(self.get_named_type("String")), literal = expression.literal)
     }
     if (expression.literal.is(Undefined_Token)) {
-        return new IR_Constant_Value(type = self.get_named_type("Undefined"), literal = expression.literal)
+        return new IR_Undefined_Value(type = self.get_named_type("Undefined"))
     }
     abort(expression.location, expression.literal.object_type)
 }
@@ -1196,14 +1222,35 @@ convert_logic_or_expression :: (self: @IR_Builder, expression: @AST_Logic_Or_Exp
 convert_member_access_expression :: (self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
     object_value := self.convert_expression(member_access_expression.object_expression, null)
     object_value_type := object_value.type
-    if ((object_value_type.is(IR_Pointer_Type)) == false) {
+    struct_type: @IR_Struct_Type
+    if (object_value_type.is(IR_Struct_Type)) {
+        if (object_value.is(IR_Variable_Value)) {
+            struct_type = object_value_type as @IR_Struct_Type
+            object_value = self.append(
+                create_ir_load_variable_address_instruction(
+                    self.create_temp_value(create_ir_pointer_type(struct_type))
+                    object_value as @IR_Variable_Value
+                )
+                member_access_expression.location
+            )
+        } else if (object_value.is(IR_Global_Variable_Value)) {
+            struct_type = object_value_type as @IR_Struct_Type
+            object_value = new IR_Global_Variable_Address_Value(
+                type = create_ir_pointer_type(struct_type)
+                variable = (object_value as @IR_Global_Variable_Value).variable
+            )
+        } else {
+            abort(member_access_expression.location, clone("Unuspported value type: ").append(object_value.object_type.name))
+        }
+    } else if (object_value_type.is(IR_Pointer_Type)) {
+        pointed_type := (object_value_type as @IR_Pointer_Type).pointed_type
+        if (pointed_type.is(IR_Struct_Type) == false) {
+            abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
+        }
+        struct_type = pointed_type as @IR_Struct_Type
+    } else {
         abort(member_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
-    object_value_type := object_value_type as @IR_Pointer_Type
-    if ((object_value_type.pointed_type.is(IR_Struct_Type)) == false) {
-        abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
-    }
-    struct_type := object_value_type.pointed_type as @IR_Struct_Type
     struct_type_member := struct_type.get_member(member_access_expression.member_name.lexeme)
     if (struct_type_member == null) {
         struct_type.dump_struct_members()
@@ -1287,33 +1334,51 @@ convert_new_expression :: (self: @IR_Builder, expression: @AST_New_Expression) -
     if (type.is(IR_Struct_Type)) {
         type := type as @IR_Struct_Type
         init_arguments := new List()
-        self.prepare_struct_init_arguments(init_arguments, expression.init_arguments, type, type)
-        result_value := self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, null), expression.location)
-        self.apply_struct_init_arguments(result_value, type, init_arguments, expression)
+        init_value := self.convert_struct_literal_expression(expression, type)
+        result_value := self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, init_value), expression.location)
         return result_value
     }
     abort(expression.location, clone("Unsupported type: ").append(type.name))
 }
 
-prepare_struct_init_arguments :: (self: @IR_Builder, init_arguments: @List, call_arguments: @List, struct_type: @IR_Struct_Type, base_type: @IR_Struct_Type) -> Nothing {
+convert_struct_literal_expression :: (self: @IR_Builder, expression: @AST_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Literal_Value {
+    call_arguments: @List
+    if (expression.is(AST_Call_Expression)) {
+        call_arguments = (expression as @AST_Call_Expression).arguments
+    } else if (expression.is(AST_New_Expression)) {
+        call_arguments = (expression as @AST_New_Expression).init_arguments
+    } else {
+        abort(expression.location, clone("Unsupported type: ").append(expression.object_type.name))
+    }
+    struct_literal_value := new IR_Struct_Literal_Value(type = struct_type, location = expression.location)
+    if (struct_type.is_object_type()) {
+        variable := self.get_variable(struct_type.name)
+        object_type_member := struct_type.get_member("object_type")
+        struct_literal_value.set_member_value(object_type_member, new IR_Global_Variable_Value(type = variable.type, variable = variable))
+    }
+    self.convert_struct_literal_value(struct_literal_value, call_arguments, struct_type, struct_type)
+    return struct_literal_value
+}
+
+convert_struct_literal_value :: (self: @IR_Builder, struct_literal_value: @IR_Struct_Literal_Value, call_arguments: @List, struct_type: @IR_Struct_Type, base_type: @IR_Struct_Type) -> Nothing {
     call_arguments_item := call_arguments.first_item
     while (call_arguments_item != null) {
         call_argument := call_arguments_item.data as @AST_Call_Argument
-        if (call_argument.name == null) {
+        call_argument_name := call_argument.name
+        if (call_argument_name == null) {
             abort(call_argument.value_expression.location, "Struct init argument without name")
         }
-        call_argument_name := call_argument.name.lexeme
-        if (init_arguments.get_named_argument(call_argument_name) == null) {
-            struct_type_member := struct_type.get_member(call_argument_name)
-            if (struct_type_member == null) {
-                abort(call_argument.name.location, clone(struct_type.name).append(" has no such member: ").append(call_argument_name))
-            }
-            init_arguments.append(new IR_Call_Argument(name = call_argument_name, value = self.convert_expression(call_argument.value_expression, struct_type_member.type)))
+        struct_type_member := struct_type.get_member(call_argument_name.lexeme)
+        if (struct_type_member == null) {
+            abort(call_argument_name.location, clone(struct_type.name).append(" has no such member: ").append(call_argument_name.lexeme))
+        }
+        if (struct_literal_value.get_member_value(struct_type_member) == null) {
+            struct_literal_value.set_member_value(struct_type_member, self.convert_expression(call_argument.value_expression, struct_type_member.type))
         }
         call_arguments_item = call_arguments_item.next_item
     }
     if (base_type != null) {
-        self.prepare_struct_init_arguments(init_arguments, base_type.statement.init_arguments, struct_type, base_type.base_type)
+        self.convert_struct_literal_value(struct_literal_value, base_type.statement.init_arguments, struct_type, base_type.base_type)
     }
 }
 
@@ -1327,51 +1392,6 @@ get_named_argument :: (list: @List, name: @String) -> @IR_Call_Argument {
         list_item = list_item.next_item
     }
     return null
-}
-
-apply_struct_init_arguments :: (self: @IR_Builder, object_address_value: @IR_Value, struct_type: @IR_Struct_Type, call_arguments: @List, expression: @AST_New_Expression) -> Nothing {
-    if (struct_type.base_type != null) {
-        self.apply_struct_init_arguments(object_address_value, struct_type.base_type, call_arguments, expression)
-    }
-    struct_type_members_item := struct_type.members.first_item
-    while (struct_type_members_item != null) {
-        struct_type_member := struct_type_members_item.data as @IR_Struct_Type_Member
-        struct_type_member_name := struct_type_member.name
-        call_argument := call_arguments.get_named_argument(struct_type_member_name)
-        if (call_argument != null) {
-            call_argument_value := call_argument.value
-            if (call_argument_value.type.is(IR_Undefined_Type) == false) {
-                self.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, call_argument_value), null)
-            }
-        } else {
-            stdout.write(expression.location).write(": ").write(struct_type.name).write('.').write(struct_type_member_name).write(" is not initialized").end_line()
-        }
-        struct_type_members_item = struct_type_members_item.next_item
-    }
-}
-
-IR_Struct_Member_Value :: struct {
-    struct_member: @IR_Struct_Type_Member
-    value_expression: @AST_Expression
-    value: @IR_Value
-}
-
-get :: (list: @List, struct_member: @IR_Struct_Type_Member) -> @IR_Struct_Member_Value {
-    list_item := list.first_item
-    while (list_item != null) {
-        struct_member_value := list_item.data as @IR_Struct_Member_Value
-        if (struct_member_value.struct_member == struct_member) {
-            return struct_member_value
-        }
-        list_item = list_item.next_item
-    }
-    return null
-}
-
-convert_struct_constructor_expression :: (self: @IR_Builder, call_expression: @AST_Call_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Constructor_Value {
-    init_arguments := new List()
-    self.prepare_struct_init_arguments(init_arguments, call_expression.arguments, struct_type, struct_type)
-    return new IR_Struct_Constructor_Value(type = struct_type, init_arguments = init_arguments).init()
 }
 
 convert_not_equals_expression :: (self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {
@@ -1401,7 +1421,7 @@ convert_variable_expression :: (self: @IR_Builder, expression: @AST_Variable_Exp
         if (expected_type != null && expected_type.is(IR_Function_Type)) {
             function := self.get_named_function(expression.name.lexeme, expected_type as @IR_Function_Type)
             if (function != null) {
-                return self.append(create_ir_load_function_address_instruction(self.create_temp_value(expected_type), function), expression.location)
+                return new IR_Function_Address_Value(type = expected_type, function = function)
             }
         }
         abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))
@@ -1420,6 +1440,9 @@ convert_variable_expression_address :: (self: @IR_Builder, expression: @AST_Vari
     }
     if (variable.type.is(IR_Pointer_Type)) {
         return self.get_variable_value(variable)
+    }
+    if (variable.is(IR_Global_Variable)) {
+        return new IR_Global_Variable_Address_Value(type = create_ir_pointer_type(variable.type), variable = variable)
     }
     abort(expression.location, clone("Variable type without address: ").append(variable.type.name))
 }
