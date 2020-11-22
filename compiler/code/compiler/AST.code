@@ -11,6 +11,9 @@ define Compilation_Unit = struct {
 define AST_Statement = struct {
     extends Object
     location: @Source_Location
+    convert: func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+        abort(statement.location, statement.object_type)
+    }
 }
 
 define AST_Include_Statement = struct {
@@ -34,44 +37,76 @@ define AST_Function_Parameter = struct {
 }
 
 define AST_Block_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_block_statement(statement as @AST_Block_Statement)
+        }
+    )
     statements: @List
 }
 
 define AST_Expression_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_expression_statement(statement as @AST_Expression_Statement, null)
+        }
+    )
     expression: @AST_Expression
 }
 
 define AST_If_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_if_statement(statement as @AST_If_Statement)
+        }
+    )
     condition_expression: @AST_Expression
     true_statement: @AST_Statement
     false_statement: @AST_Statement
 }
 
 define AST_Loop_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_loop_statement(statement as @AST_Loop_Statement)
+        }
+    )
     block: @AST_Block_Statement
 }
 
 define AST_While_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_while_statement(statement as @AST_While_Statement)
+        }
+    )
     condition_expression: @AST_Expression
     block: @AST_Block_Statement
 }
 
 define AST_Break_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_break_statement(statement as @AST_Break_Statement)
+        }
+    )
 }
 
 define AST_Return_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_return_statement(statement as @AST_Return_Statement)
+        }
+    )
     value_expression: @AST_Expression
 }
 
 define AST_Variable_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_variable_statement(statement as @AST_Variable_Statement, false)
+        }
+    )
     name: @Identifier_Token
     type: @AST_Type
     value_expression: @AST_Expression = null
@@ -93,7 +128,11 @@ define AST_Struct_Member = struct {
 }
 
 define AST_Assignment_Statement = struct {
-    extends AST_Statement
+    extends AST_Statement(
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_assignment_statement(statement as @AST_Assignment_Statement)
+        }
+    )
     storage_expression: @AST_Expression
     operator: @Other_Token
     value_expression: @AST_Expression
@@ -129,20 +168,35 @@ define AST_Function_Type = struct {
 define AST_Expression = struct {
     extends Object
     location: @Source_Location
+    convert: func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        abort(expression.location, expression.object_type)
+    }
 }
 
 define AST_Atomic_Expression = struct {
-    extends AST_Expression
+    extends AST_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return (expression as @AST_Atomic_Expression).expression.convert(builder, expected_type)
+        }
+    )
     expression: @AST_Expression
 }
 
 define AST_Literal_Expression = struct {
-    extends AST_Expression
+    extends AST_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_literal_expression(expression as @AST_Literal_Expression)
+        }
+    )
     literal: @Literal_Token
 }
 
 define AST_Variable_Expression = struct {
-    extends AST_Expression
+    extends AST_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_variable_expression(expression as @AST_Variable_Expression, expected_type)
+        }
+    )
     name: @Identifier_Token
 }
 
@@ -153,55 +207,107 @@ define AST_Binary_Expression = struct {
 }
 
 define AST_Add_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_add_expression(expression as @AST_Add_Expression)
+        }
+    )
 }
 
 define AST_Divide_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_divide_expression(expression as @AST_Divide_Expression)
+        }
+    )
 }
 
 define AST_Equals_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_equals_expression(expression as @AST_Equals_Expression)
+        }
+    )
 }
 
 define AST_Greater_Than_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_greater_than_expression(expression as @AST_Greater_Than_Expression)
+        }
+    )
 }
 
 define AST_Greater_Than_Or_Equals_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_greater_than_or_equals_expression(expression as @AST_Greater_Than_Or_Equals_Expression)
+        }
+    )
 }
 
 define AST_Less_Than_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_less_than_expression(expression as @AST_Less_Than_Expression)
+        }
+    )
 }
 
 define AST_Less_Than_Or_Equals_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_less_than_or_equals_expression(expression as @AST_Less_Than_Or_Equals_Expression)
+        }
+    )
 }
 
 define AST_Logic_And_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_logic_and_expression(expression as @AST_Logic_And_Expression)
+        }
+    )
 }
 
 define AST_Logic_Or_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_logic_or_expression(expression as @AST_Logic_Or_Expression)
+        }
+    )
 }
 
 define AST_Modulo_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_modulo_expression(expression as @AST_Modulo_Expression)
+        }
+    )
 }
 
 define AST_Multiply_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_multiply_expression(expression as @AST_Multiply_Expression)
+        }
+    )
 }
 
 define AST_Not_Equals_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_not_equals_expression(expression as @AST_Not_Equals_Expression)
+        }
+    )
 }
 
 define AST_Substract_Expression = struct {
-    extends AST_Binary_Expression
+    extends AST_Binary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_substract_expression(expression as @AST_Substract_Expression)
+        }
+    )
 }
 
 define AST_Unary_Expression = struct {
@@ -210,28 +316,48 @@ define AST_Unary_Expression = struct {
 }
 
 define AST_Negate_Expression = struct {
-    extends AST_Unary_Expression
+    extends AST_Unary_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_negate_expression(expression as @AST_Negate_Expression)
+        }
+    )
 }
 
 define AST_Cast_Expression = struct {
-    extends AST_Expression
+    extends AST_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_cast_expression(expression as @AST_Cast_Expression)
+        }
+    )
     value_expression: @AST_Expression
     type: @AST_Type
 }
 
 define AST_New_Expression = struct {
-    extends AST_Expression
+    extends AST_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_new_expression(expression as @AST_New_Expression)
+        }
+    )
     type: @AST_Type
     init_arguments: @List
 }
 
 define AST_Function_Expression = struct {
-    extends AST_Expression
+    extends AST_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_function_expression(expression as @AST_Function_Expression)
+        }
+    )
     function_statement: @AST_Function_Statement
 }
 
 define AST_Call_Expression = struct {
-    extends AST_Expression
+    extends AST_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_call_expression(expression as @AST_Call_Expression)
+        }
+    )
     callee_expression: @AST_Expression
     arguments: @List
 }
@@ -246,13 +372,21 @@ define AST_Access_Expression = struct {
 }
 
 define AST_Member_Access_Expression = struct {
-    extends AST_Access_Expression
+    extends AST_Access_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_member_access_expression(expression as @AST_Member_Access_Expression)
+        }
+    )
     object_expression: @AST_Expression
     member_name: @Identifier_Token
 }
 
 define AST_Array_Access_Expression = struct {
-    extends AST_Access_Expression
+    extends AST_Access_Expression(
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_array_access_expression(expression as @AST_Array_Access_Expression)
+        }
+    )
     array_expression: @AST_Expression
     index_expression: @AST_Expression
 }

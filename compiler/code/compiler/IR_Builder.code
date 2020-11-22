@@ -673,27 +673,7 @@ define convert_statement = func (self: @IR_Builder, statement: @AST_Statement) -
     if (self.current_block == null) {
         abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
     }
-    if (statement.is(AST_Assignment_Statement)) {
-        self.convert_assignment_statement(statement as @AST_Assignment_Statement)
-    } else if (statement.is(AST_Block_Statement)) {
-        self.convert_block_statement(statement as @AST_Block_Statement)
-    } else if (statement.is(AST_Break_Statement)) {
-        self.convert_break_statement(statement as @AST_Break_Statement)
-    } else if (statement.is(AST_Expression_Statement)) {
-        self.convert_expression_statement(statement as @AST_Expression_Statement, null)
-    } else if (statement.is(AST_If_Statement)) {
-        self.convert_if_statement(statement as @AST_If_Statement)
-    } else if (statement.is(AST_Loop_Statement)) {
-        self.convert_loop_statement(statement as @AST_Loop_Statement)
-    } else if (statement.is(AST_Return_Statement)) {
-        self.convert_return_statement(statement as @AST_Return_Statement)
-    } else if (statement.is(AST_Variable_Statement)) {
-        self.convert_variable_statement(statement as @AST_Variable_Statement, false)
-    } else if (statement.is(AST_While_Statement)) {
-        self.convert_while_statement(statement as @AST_While_Statement)
-    } else {
-        abort(statement.location, statement.object_type)
-    }
+    statement.convert(self)
 }
 
 define convert_assignment_statement = func (self: @IR_Builder, assignment_statement: @AST_Assignment_Statement) -> Nothing {
@@ -878,56 +858,7 @@ define convert_while_statement = func (self: @IR_Builder, statement: @AST_While_
 }
 
 define convert_expression = func (self: @IR_Builder, expression: @AST_Expression, expected_type: @IR_Type) -> @IR_Value {
-    value: @IR_Value
-    if (expression.is(AST_Add_Expression)) {
-        value = self.convert_add_expression(expression as @AST_Add_Expression)
-    } else if (expression.is(AST_Array_Access_Expression)) {
-        value = self.convert_array_access_expression(expression as @AST_Array_Access_Expression)
-    } else if (expression.is(AST_Atomic_Expression)) {
-        value = self.convert_expression((expression as @AST_Atomic_Expression).expression, expected_type)
-    } else if (expression.is(AST_Call_Expression)) {
-        value = self.convert_call_expression(expression as @AST_Call_Expression)
-    } else if (expression.is(AST_Cast_Expression)) {
-        value = self.convert_cast_expression(expression as @AST_Cast_Expression)
-    } else if (expression.is(AST_Divide_Expression)) {
-        value = self.convert_divide_expression(expression as @AST_Divide_Expression)
-    } else if (expression.is(AST_Equals_Expression)) {
-        value = self.convert_equals_expression(expression as @AST_Equals_Expression)
-    } else if (expression.is(AST_Function_Expression)) {
-        value = self.convert_function_expression(expression as @AST_Function_Expression)
-    } else if (expression.is(AST_Greater_Than_Expression)) {
-        value = self.convert_greater_than_expression(expression as @AST_Greater_Than_Expression)
-    } else if (expression.is(AST_Greater_Than_Or_Equals_Expression)) {
-        value = self.convert_greater_than_or_equals_expression(expression as @AST_Greater_Than_Or_Equals_Expression)
-    } else if (expression.is(AST_Less_Than_Expression)) {
-        value = self.convert_less_than_expression(expression as @AST_Less_Than_Expression)
-    } else if (expression.is(AST_Less_Than_Or_Equals_Expression)) {
-        value = self.convert_less_than_or_equals_expression(expression as @AST_Less_Than_Or_Equals_Expression)
-    } else if (expression.is(AST_Literal_Expression)) {
-        value = self.convert_literal_expression(expression as @AST_Literal_Expression)
-    } else if (expression.is(AST_Logic_And_Expression)) {
-        value = self.convert_logic_and_expression(expression as @AST_Logic_And_Expression)
-    } else if (expression.is(AST_Logic_Or_Expression)) {
-        value = self.convert_logic_or_expression(expression as @AST_Logic_Or_Expression)
-    } else if (expression.is(AST_Member_Access_Expression)) {
-        value = self.convert_member_access_expression(expression as @AST_Member_Access_Expression)
-    } else if (expression.is(AST_Modulo_Expression)) {
-        value = self.convert_modulo_expression(expression as @AST_Modulo_Expression)
-    } else if (expression.is(AST_Multiply_Expression)) {
-        value = self.convert_multiply_expression(expression as @AST_Multiply_Expression)
-    } else if (expression.is(AST_Negate_Expression)) {
-        value = self.convert_negate_expression(expression as @AST_Negate_Expression)
-    } else if (expression.is(AST_New_Expression)) {
-        value = self.convert_new_expression(expression as @AST_New_Expression)
-    } else if (expression.is(AST_Not_Equals_Expression)) {
-        value = self.convert_not_equals_expression(expression as @AST_Not_Equals_Expression)
-    } else if (expression.is(AST_Substract_Expression)) {
-        value = self.convert_substract_expression(expression as @AST_Substract_Expression)
-    } else if (expression.is(AST_Variable_Expression)) {
-        value = self.convert_variable_expression(expression as @AST_Variable_Expression, expected_type)
-    } else {
-        abort(expression.location, expression.object_type)
-    }
+    value: @IR_Value = expression.convert(self, expected_type)
     if (expected_type != null && expected_type.accepts(value.type) == false) {
         abort(expression.location, clone("Incompatible types: got ").append(value.type.name).append(" instead of ").append(expected_type.name))
     }
