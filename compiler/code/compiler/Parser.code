@@ -4,6 +4,7 @@ define Parser = struct {
     scanner: @Scanner = null
     compilation_unit: @Compilation_Unit = new Compilation_Unit()
     current_alignment: Int = 0
+    anonymous_functions_counter: Counter = Counter()
 }
 
 define parse = func (file_path: @String) -> @Compilation_Unit {
@@ -229,7 +230,7 @@ define parse_define = func (self: @Parser) -> @AST_Statement {
 
 \ struct
 \   : "struct" "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
-define parse_struct = func (self: @Parser, struct_name: @Identifier_Token) -> @AST_Statement {
+define parse_struct = func (self: @Parser, struct_name: @Identifier_Token) -> @AST_Struct_Statement {
     struct_init_arguments := new List()
     self.consume(required_struct)
     self.consume_space(1)
@@ -279,16 +280,20 @@ define parse_struct = func (self: @Parser, struct_name: @Identifier_Token) -> @A
 
 \ function
 \   : function_type block?
-define parse_function = func (self: @Parser, function_name: @Identifier_Token) -> @AST_Statement {
+define parse_function = func (self: @Parser, function_name: @Identifier_Token) -> @AST_Function_Statement {
+    function_is_anonymous := function_name.is(Generated_Identifier_Token)
     function_type := self.parse_function_type()
     function_body: @AST_Block_Statement
     if (self.matches(optional_space, required_open_brace)) {
         self.consume_space(1)
         function_body = self.parse_block()
     } else {
+        if (function_is_anonymous) {
+            abort(function_name.location, "Anonymous function without body")
+        }
         function_body = null
     }
-    function_statement := new AST_Function_Statement(location = function_name.location, name = function_name, type = function_type, body = function_body)
+    function_statement := new AST_Function_Statement(location = function_name.location, name = function_name, type = function_type, body = function_body, is_anonymous = function_is_anonymous)
     self.compilation_unit.functions.append(function_statement)
     return function_statement
 }
@@ -669,6 +674,7 @@ define parse_call_argument = func (self: @Parser) -> @AST_Call_Argument {
 \   | "undefined"
 \   | "(" expression ")"
 \   | "new" type ( "(" call_arguments? ")" )?
+\   | function
 define parse_primary_expression = func (self: @Parser) -> @AST_Expression {
     if (self.matches(required_new)) {
         token := self.consume(required_new)
@@ -690,6 +696,11 @@ define parse_primary_expression = func (self: @Parser) -> @AST_Expression {
         token := self.consume(required_literal) as @Literal_Token
         return new AST_Literal_Expression(location = token.location, literal = token)
     }
+    if (self.matches(required_func)) {
+        function_name := clone("anonymous_function_").append(self.anonymous_functions_counter.next())
+        function_statement := self.parse_function(new Generated_Identifier_Token(location = self.scanner.current_token.location, lexeme = function_name))
+        return new AST_Function_Expression(location = function_statement.location, function_statement = function_statement)
+    }
     if (self.matches(required_identifier)) {
         token := self.consume(required_identifier) as @Identifier_Token
         return new AST_Variable_Expression(location = token.location, name = token)
@@ -703,6 +714,10 @@ define parse_primary_expression = func (self: @Parser) -> @AST_Expression {
         return new AST_Atomic_Expression(location = location, expression = expression)
     }
     return null
+}
+
+define Generated_Identifier_Token = struct {
+    extends Identifier_Token
 }
 
 define consume_end_of_line = func (self: @Parser) -> Nothing {
@@ -828,91 +843,89 @@ define matches = func (self: @Parser, first_matcher: @Matcher, second_matcher: @
 define Matcher = struct {
     extends Object
     is_required: Boolean
-    accepts: func (self: @Matcher, token: @Token) -> Boolean = matcher_accepts
-}
-
-define matcher_accepts = func (self: @Matcher, token: @Token) -> Boolean {
-    abort(token.location, "Illegal state")
+    accepts: func (self: @Matcher, token: @Token) -> Boolean = func (self: @Matcher, token: @Token) -> Boolean {
+        abort(token.location, "Invalid state")
+    }
 }
 
 define Comment_Matcher = struct {
-    extends Matcher(accepts = accepts_comment)
-}
-
-define accepts_comment = func (self: @Matcher, token: @Token) -> Boolean {
-    return token.is(Comment_Token)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            return token.is(Comment_Token)
+        }
+    )
 }
 
 define End_Of_File_Matcher = struct {
-    extends Matcher(accepts = accepts_end_of_file)
-}
-
-define accepts_end_of_file = func (self: @Matcher, token: @Token) -> Boolean {
-    return token.is(End_Of_File_Token)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            return token.is(End_Of_File_Token)
+        }
+    )
 }
 
 define End_Of_Line_Matcher = struct {
-    extends Matcher(accepts = accepts_end_of_line)
-}
-
-define accepts_end_of_line = func (self: @Matcher, token: @Token) -> Boolean {
-    return token.is(End_Of_Line_Token)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            return token.is(End_Of_Line_Token)
+        }
+    )
 }
 
 define Identifier_Matcher = struct {
-    extends Matcher(accepts = accepts_identifier)
-}
-
-define accepts_identifier = func (self: @Matcher, token: @Token) -> Boolean {
-    return token.is(Identifier_Token)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            return token.is(Identifier_Token)
+        }
+    )
 }
 
 define Keyword_Matcher = struct {
-    extends Matcher(accepts = accepts_keyword)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            if (token.is(Identifier_Token)) {
+                return token.lexeme.equals((self as @Keyword_Matcher).lexeme)
+            }
+            return false
+        }
+    )
     lexeme: @String
-}
-
-define accepts_keyword = func (self: @Matcher, token: @Token) -> Boolean {
-    if (token.is(Identifier_Token)) {
-        return token.lexeme.equals((self as @Keyword_Matcher).lexeme)
-    }
-    return false
 }
 
 define Literal_Matcher = struct {
-    extends Matcher(accepts = accepts_literal)
-}
-
-define accepts_literal = func (self: @Matcher, token: @Token) -> Boolean {
-    return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token) || token.is(Undefined_Token)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token) || token.is(Undefined_Token)
+        }
+    )
 }
 
 define Other_Matcher = struct {
-    extends Matcher(accepts = accepts_other)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            if (token.is(Other_Token)) {
+                return token.lexeme.equals((self as @Other_Matcher).lexeme)
+            }
+            return false
+        }
+    )
     lexeme: @String
 }
 
-define accepts_other = func (self: @Matcher, token: @Token) -> Boolean {
-    if (token.is(Other_Token)) {
-        return token.lexeme.equals((self as @Other_Matcher).lexeme)
-    }
-    return false
-}
-
 define Space_Matcher = struct {
-    extends Matcher(accepts = accepts_space)
-}
-
-define accepts_space = func (self: @Matcher, token: @Token) -> Boolean {
-    return token.is(Space_Token)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            return token.is(Space_Token)
+        }
+    )
 }
 
 define String_Literal_Matcher = struct {
-    extends Matcher(accepts = accepts_string_literal)
-}
-
-define accepts_string_literal = func (self: @Matcher, token: @Token) -> Boolean {
-    return token.is(String_Token)
+    extends Matcher(
+        accepts = func (self: @Matcher, token: @Token) -> Boolean {
+            return token.is(String_Token)
+        }
+    )
 }
 
 optional_comment: @Matcher = undefined

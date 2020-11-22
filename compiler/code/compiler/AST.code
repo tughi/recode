@@ -23,6 +23,7 @@ define AST_Function_Statement = struct {
     name: @Identifier_Token
     type: @AST_Function_Type
     body: @AST_Block_Statement
+    is_anonymous: Boolean
     ir_function: @IR_Function = null
 }
 
@@ -222,6 +223,11 @@ define AST_New_Expression = struct {
     extends AST_Expression
     type: @AST_Type
     init_arguments: @List
+}
+
+define AST_Function_Expression = struct {
+    extends AST_Expression
+    function_statement: @AST_Function_Statement
 }
 
 define AST_Call_Expression = struct {

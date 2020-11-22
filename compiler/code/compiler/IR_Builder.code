@@ -226,6 +226,25 @@ define accepts = func (self: @IR_Type, other: @IR_Type) -> Boolean {
         if (other.is(IR_Null_Type)) {
             return true
         }
+        if (other.is(IR_Function_Type)) {
+            self := self as @IR_Function_Type
+            other := other as @IR_Function_Type
+            self_parameters_item := self.parameters.first_item
+            other_parameters_item := other.parameters.first_item
+            while (self_parameters_item != null && other_parameters_item != null) {
+                self_parameter := self_parameters_item.data as @IR_Function_Type_Parameter
+                other_parameter := other_parameters_item.data as @IR_Function_Type_Parameter
+                if (self_parameter.type.accepts(other_parameter.type) == false) {
+                    return false
+                }
+                self_parameters_item = self_parameters_item.next_item
+                other_parameters_item = other_parameters_item.next_item
+            }
+            if (self_parameters_item != null || other_parameters_item != null) {
+                return false
+            }
+            return self.return_type.accepts(other.return_type)
+        }
     }
     return false
 }
@@ -874,6 +893,8 @@ define convert_expression = func (self: @IR_Builder, expression: @AST_Expression
         value = self.convert_divide_expression(expression as @AST_Divide_Expression)
     } else if (expression.is(AST_Equals_Expression)) {
         value = self.convert_equals_expression(expression as @AST_Equals_Expression)
+    } else if (expression.is(AST_Function_Expression)) {
+        value = self.convert_function_expression(expression as @AST_Function_Expression)
     } else if (expression.is(AST_Greater_Than_Expression)) {
         value = self.convert_greater_than_expression(expression as @AST_Greater_Than_Expression)
     } else if (expression.is(AST_Greater_Than_Or_Equals_Expression)) {
@@ -908,7 +929,7 @@ define convert_expression = func (self: @IR_Builder, expression: @AST_Expression
         abort(expression.location, expression.object_type)
     }
     if (expected_type != null && expected_type.accepts(value.type) == false) {
-        abort(expression.location, clone("Not an \"").append(expected_type.name).append("\" expression"))
+        abort(expression.location, clone("Incompatible types: got ").append(value.type.name).append(" instead of ").append(expected_type.name))
     }
     return value
 }
@@ -1012,11 +1033,11 @@ define convert_direct_call_expression = func (self: @IR_Builder, call_expression
         while (named_functions_item != null) {
             named_function := named_functions_item.data as @IR_Function
             if (named_function.name.equals(callee_name.lexeme)) {
-                stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" :: ").write(named_function.type.name).end_line()
+                stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" = ").write(named_function.type.name).end_line()
             }
             named_functions_item = named_functions_item.next_item
         }
-        message := clone("Found no matching function: ").append(callee_name.lexeme).append(" :: (")
+        message := clone("Found no matching function: ").append(callee_name.lexeme).append(" = func (")
         call_arguments_item := call_arguments.first_item
         if (call_arguments_item != null) {
             loop {
@@ -1127,6 +1148,23 @@ define convert_equals_expression = func (self: @IR_Builder, expression: @AST_Equ
         abort(expression.location, "TODO: Evaluate constant expression")
     }
     return self.append(new IR_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+}
+
+define convert_function_expression = func (self: @IR_Builder, expression: @AST_Function_Expression) -> @IR_Value {
+    function: @IR_Function = null
+    named_functions_item := self.named_functions.first_item
+    while (named_functions_item != null) {
+        named_function := named_functions_item.data as @IR_Function
+        if (named_function.name == expression.function_statement.name.lexeme) {
+            function = named_function
+            break
+        }
+        named_functions_item = named_functions_item.next_item
+    }
+    if (function == null) {
+        abort("Invalid state")
+    }
+    return new IR_Function_Address_Value(type = function.type, function = function)
 }
 
 define convert_greater_than_expression = func (self: @IR_Builder, expression: @AST_Greater_Than_Expression) -> @IR_Value {
