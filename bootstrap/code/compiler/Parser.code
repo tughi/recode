@@ -254,21 +254,23 @@ define parse_struct = func (self: @Parser, struct_name: @Identifier_Token) -> @A
     }
     struct_members := new List()
     while (self.matches(optional_space, required_close_brace) == false) {
-        self.consume_space(self.current_alignment * 4)
-        struct_member_name := self.consume(required_identifier) as @Identifier_Token
-        self.consume_space(0)
-        self.consume(required_colon)
-        self.consume_space(1)
-        struct_member_value_type := self.parse_type()
-        if (self.matches(optional_space, required_equals)) {
+        if (self.consume_empty_line() == false) {
+            self.consume_space(self.current_alignment * 4)
+            struct_member_name := self.consume(required_identifier) as @Identifier_Token
+            self.consume_space(0)
+            self.consume(required_colon)
             self.consume_space(1)
-            self.consume(required_equals)
-            self.consume_space(1)
-            value_expression := self.parse_expression()
-            struct_init_arguments.append(new AST_Call_Argument(name = struct_member_name, value_expression = value_expression))
+            struct_member_value_type := self.parse_type()
+            if (self.matches(optional_space, required_equals)) {
+                self.consume_space(1)
+                self.consume(required_equals)
+                self.consume_space(1)
+                value_expression := self.parse_expression()
+                struct_init_arguments.append(new AST_Call_Argument(name = struct_member_name, value_expression = value_expression))
+            }
+            self.consume_end_of_line()
+            struct_members.append(new AST_Struct_Member(location = struct_member_name.location, name = struct_member_name, type = struct_member_value_type))
         }
-        self.consume_end_of_line()
-        struct_members.append(new AST_Struct_Member(location = struct_member_name.location, name = struct_member_name, type = struct_member_value_type))
     }
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)

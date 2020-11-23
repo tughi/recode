@@ -674,18 +674,6 @@ define convert_statement = func (self: @IR_Builder, statement: @AST_Statement) -
         abort(statement.location, clone(statement.object_type.name).append(" requires a basic block."))
     }
     statement.convert(self)
-    if (statement.is(AST_Assignment_Statement)) {
-    } else if (statement.is(AST_Block_Statement)) {
-    } else if (statement.is(AST_Break_Statement)) {
-    } else if (statement.is(AST_Expression_Statement)) {
-    } else if (statement.is(AST_If_Statement)) {
-    } else if (statement.is(AST_Loop_Statement)) {
-    } else if (statement.is(AST_Return_Statement)) {
-    } else if (statement.is(AST_Variable_Statement)) {
-    } else if (statement.is(AST_While_Statement)) {
-    } else {
-        abort(statement.location, statement.object_type)
-    }
 }
 
 define convert_assignment_statement = func (self: @IR_Builder, assignment_statement: @AST_Assignment_Statement) -> Nothing {

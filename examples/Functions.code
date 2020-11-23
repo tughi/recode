@@ -20,6 +20,7 @@ define Value = struct {
 
 define Int_Value = struct {
     extends Value(dump = dump_int)
+
     value: Int
 }
 
@@ -35,6 +36,7 @@ define String_Value = struct {
             file.write("String: ").write(self.value).end_line()
         }
     )
+
     value: @String
 }
 
