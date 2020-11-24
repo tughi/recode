@@ -1,14 +1,14 @@
 define main = func () -> Nothing {
-    hello := new String_Value(value = "Hello")
-    forty_two := new Int_Value(value = 42)
+    let hello = new String_Value(value = "Hello")
+    let forty_two = new Int_Value(value = 42)
 
     hello.dump(stdout)
     (forty_two.dump)(forty_two, ((stdout)))
 
-    dump: func (self: @Value, file: @FILE) -> Nothing = dump_int
+    let dump: func (self: @Value, file: @FILE) -> Nothing = dump_int
     dump(forty_two, stdout)
 
-    anonymous_func := func (file: @FILE) -> Nothing {
+    let anonymous_func = func (file: @FILE) -> Nothing {
         file.write("Hello again!").end_line()
     }
     anonymous_func(stdout)
@@ -25,14 +25,14 @@ define Int_Value = struct {
 }
 
 define dump_int = func (self: @Value, file: @FILE) -> Nothing {
-    self := self as @Int_Value
+    let self = self as @Int_Value
     file.write("Int: ").write(self.value).end_line()
 }
 
 define String_Value = struct {
     extends Value(
         dump = func (self: @Value, file: @FILE) -> Nothing {
-            self := self as @String_Value
+            let self = self as @String_Value
             file.write("String: ").write(self.value).end_line()
         }
     )

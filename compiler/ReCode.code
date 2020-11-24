@@ -7,19 +7,19 @@ define main = func (argc: Int, argv: @@Int8) -> Nothing {
         exit(1)
     }
 
-    source_file_path := create_string(argv[1])
+    let source_file_path = create_string(argv[1])
     if (source_file_path.ends_with(".code") == false) {
         stdout.write("'").write(source_file_path).write("' doesn't end with '.code'.").end_line()
         exit(1)
     }
 
-    output_file_path := create_string(argv[2])
+    let output_file_path = create_string(argv[2])
     if (output_file_path.ends_with(".s") == false) {
         stdout.write("'").write(output_file_path).write("' doesn't end with '.s'.").end_line()
         exit(1)
     }
 
-    dump_file_path: @String = null
+    let dump_file_path: @String = null
     if (argc >= 4) {
         dump_file_path = create_string(argv[3])
         if (dump_file_path.ends_with(".ir") == false) {
@@ -30,12 +30,12 @@ define main = func (argc: Int, argv: @@Int8) -> Nothing {
 
     init_matchers()
 
-    compilation_unit := parse(source_file_path)
+    let compilation_unit = parse(source_file_path)
     \ stdout.write(compilation_unit).end_line()
 
-    build := build(compilation_unit)
+    let build = build(compilation_unit)
     if (dump_file_path != null) {
-        dump_file := fopen(dump_file_path.data, "w".data)
+        let dump_file = fopen(dump_file_path.data, "w".data)
         build.dump(dump_file)
         dump_file.fclose()
     }
@@ -66,9 +66,9 @@ define abort = func (self: @Parser, unexpected_token: @Token) -> Nothing {
 include "./code/compiler/AST.code"
 
 define write = func (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
-    statements := compilation_unit.statements.create_iterator()
+    let statements = compilation_unit.statements.create_iterator()
     while (statements.has_next()) {
-        statement := statements.next() as @AST_Statement
+        let statement = statements.next() as @AST_Statement
         file.write_source_line(statement.location, 0).write(statement, 0).end_line()
     }
     return file
@@ -76,15 +76,15 @@ define write = func (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE 
 
 define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> @FILE {
     if (statement.is(AST_Assignment_Statement)) {
-        statement := statement as @AST_Assignment_Statement
+        let statement = statement as @AST_Assignment_Statement
         return file.write(statement.storage_expression).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
     }
 
     if (statement.is(AST_Block_Statement)) {
         file.write('{').end_line()
-        block_statements := (statement as @AST_Block_Statement).statements.create_iterator()
+        let block_statements = (statement as @AST_Block_Statement).statements.create_iterator()
         while (block_statements.has_next()) {
-            block_statement := block_statements.next() as @AST_Statement
+            let block_statement = block_statements.next() as @AST_Statement
             file.write_source_line(block_statement.location, alignment + 1).write(block_statement, alignment + 1).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
@@ -99,9 +99,9 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> 
     }
 
     if (statement.is(AST_Function_Statement)) {
-        statement := statement as @AST_Function_Statement
+        let statement = statement as @AST_Function_Statement
         file.write(statement.name).write(" :: (")
-        function_parameters := statement.type.parameters.create_iterator()
+        let function_parameters = statement.type.parameters.create_iterator()
         if (function_parameters.has_next()) {
             loop {
                 file.write(function_parameters.next() as @AST_Function_Parameter)
@@ -120,7 +120,7 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> 
     }
 
     if (statement.is(AST_If_Statement)) {
-        statement := statement as @AST_If_Statement
+        let statement = statement as @AST_If_Statement
         file.write("if (").write(statement.condition_expression).write(") ").write(statement.true_statement, alignment)
         if (statement.false_statement != null) {
             file.write(" else ").write(statement.false_statement, alignment)
@@ -129,12 +129,12 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> 
     }
 
     if (statement.is(AST_Loop_Statement)) {
-        statement := statement as @AST_Loop_Statement
+        let statement = statement as @AST_Loop_Statement
         return file.write("loop ").write(statement.block, alignment)
     }
 
     if (statement.is(AST_Return_Statement)) {
-        statement := statement as @AST_Return_Statement
+        let statement = statement as @AST_Return_Statement
         file.write("return")
         if (statement.value_expression != null) {
             file.write(" ").write(statement.value_expression)
@@ -143,7 +143,7 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> 
     }
 
     if (statement.is(AST_Struct_Statement)) {
-        statement := statement as @AST_Struct_Statement
+        let statement = statement as @AST_Struct_Statement
         file.write(statement.name).write(" :: struct")
         if (statement.base_type != null) {
             file.write(" : ").write(statement.base_type)
@@ -152,16 +152,16 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> 
             return file
         }
         file.write(" {").end_line()
-        members := statement.members.create_iterator()
+        let members = statement.members.create_iterator()
         while (members.has_next()) {
-            member := members.next() as @AST_Struct_Member
+            let member = members.next() as @AST_Struct_Member
             file.write_source_line(member.location, alignment + 1).write(member.name).write(": ").write(member.type).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
     }
 
     if (statement.is(AST_Variable_Statement)) {
-        statement := statement as @AST_Variable_Statement
+        let statement = statement as @AST_Variable_Statement
         file.write((statement as @AST_Variable_Statement).name)
         if (statement.type != null) {
             file.write(": ").write(statement.type)
@@ -178,7 +178,7 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> 
     }
 
     if (statement.is(AST_While_Statement)) {
-        statement := statement as @AST_While_Statement
+        let statement = statement as @AST_While_Statement
         return file.write("while (").write(statement.condition_expression).write(") ").write(statement.block, alignment)
     }
 
@@ -188,7 +188,7 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: Int) -> 
 
 define write_source_line = func (file: @FILE, location: @Source_Location, alignment: Int) -> @FILE {
     file.write(location.source.file_path).write(':')
-    line := location.line
+    let line = location.line
     if (line < 1000) {
         file.write('0')
     }
@@ -200,7 +200,7 @@ define write_source_line = func (file: @FILE, location: @Source_Location, alignm
     }
     file.write(line).write(": ")
 
-    space_count := alignment * 2
+    let space_count = alignment * 2
     while (space_count > 0) {
         file.write(' ')
         space_count = space_count - 1
@@ -215,7 +215,7 @@ define write = func (file: @FILE, parameter: @AST_Function_Parameter) -> @FILE {
 
 define write = func (file: @FILE, type: @AST_Type) -> @FILE {
     if (type.is(AST_Array_Type)) {
-        type := type as @AST_Array_Type
+        let type = type as @AST_Array_Type
         if (type.size_expression != null) {
             return file.write('[').write(type.item_type).write("; ").write(type.size_expression).write(']')
         }
@@ -284,7 +284,7 @@ define write = func (file: @FILE, expression: @AST_Expression) -> @FILE {
 
     if (expression.is(AST_Call_Expression)) {
         file.write((expression as @AST_Call_Expression).callee_expression).write('(')
-        call_arguments := (expression as @AST_Call_Expression).arguments.create_iterator()
+        let call_arguments = (expression as @AST_Call_Expression).arguments.create_iterator()
         if (call_arguments.has_next()) {
             loop {
                 file.write(call_arguments.next() as @AST_Expression)
@@ -383,7 +383,7 @@ define write = func (self: @FILE, chars: @Int8) -> @FILE {
 }
 
 define write = func (self: @FILE, char: Int8) -> @FILE {
-    c := char as Int32
+    let c = char as Int32
     if (fputc(c, self) != c) {
         stderr.end_line().end_line().write("Failed to write character: ").write(c as Int).end_line()
         abort()

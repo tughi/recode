@@ -7,9 +7,9 @@ define String = struct {
 }
 
 define create_string = func (data: @Int8) -> @String {
-    data_length := 0
+    let data_length = 0
     loop {
-        char := data[data_length]
+        let char = data[data_length]
         if (char == '\0') {
             break
         }
@@ -20,14 +20,14 @@ define create_string = func (data: @Int8) -> @String {
 }
 
 define clone = func (self: @String) -> @String {
-    clone := new String(data = malloc(self.data_size) as @Int8, data_size = self.data_size)
+    let clone = new String(data = malloc(self.data_size) as @Int8, data_size = self.data_size)
     clone.append(self)
     return clone
 }
 
 define equals = func (self: @String, other: @String) -> Boolean {
     if (self.length == other.length) {
-        index := 0
+        let index = 0
         while (index < self.length) {
             if (self.data[index] != other.data[index]) {
                 return false
@@ -40,9 +40,9 @@ define equals = func (self: @String, other: @String) -> Boolean {
 }
 
 define index_of = func (self: @String, other: @String) -> Int {
-    self_index := 0
+    let self_index = 0
     while (self_index <= self.length - other.length) {
-        other_index := 0
+        let other_index = 0
         while (other_index < other.length && self.data[self_index + other_index] == other.data[other_index]) {
             other_index = other_index + 1
         }
@@ -58,7 +58,7 @@ define starts_with = func (self: @String, other: @String) -> Boolean {
     if (self.length < other.length) {
         return false
     }
-    index := 0
+    let index = 0
     while (index < other.length) {
         if (self.data[index] != other.data[index]) {
             return false
@@ -72,7 +72,7 @@ define ends_with = func (self: @String, other: @String) -> Boolean {
     if (self.length < other.length) {
         return false
     }
-    index := 0
+    let index = 0
     while (index < other.length) {
         if (self.data[self.length - other.length + index] != other.data[index]) {
             return false
@@ -87,7 +87,7 @@ define last_index_of = func (self: @String, char: Int8) -> Int {
 }
 
 define last_index_of = func (self: @String, char: Int8, from_index: Int) -> Int {
-    index := from_index
+    let index = from_index
     while (index >= 0 && self.data[index] != char) {
         index = index - 1
     }
@@ -120,12 +120,12 @@ define append = func (self: @String, other: @String) -> @String {
         self.data_size = self.length + other.length + 1
         self.data = realloc(self.data, self.data_size) as @Int8
     }
-    index := 0
-    other_data := other.data
-    self_data := self.data
-    self_length := self.length
+    let index = 0
+    let other_data = other.data
+    let self_data = self.data
+    let self_length = self.length
     loop {
-        char := other_data[index]
+        let char = other_data[index]
         self_data[self_length] = char
         if (char == '\0') {
             break
@@ -141,7 +141,7 @@ define remove = func (self: @String, begin_index: Int, end_index: Int) -> @Strin
     if (begin_index < 0 || begin_index > end_index || end_index >= self.length) {
         abort("Invalid state")
     }
-    index := 0
+    let index = 0
     while (index + end_index <= self.length) {
         self.data[begin_index + index] = self.data[end_index + index]
         index = index + 1

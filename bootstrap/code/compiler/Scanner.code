@@ -9,7 +9,7 @@ define Scanner = struct {
 }
 
 define create_scanner = func (source: @Source) -> @Scanner {
-    scanner := new Scanner(source = source)
+    let scanner = new Scanner(source = source)
     scanner.current_token = scanner.scan_token()
     return scanner
 }
@@ -18,7 +18,7 @@ define peek_token = func (self: @Scanner, offset: Int) -> @Token {
     if (offset < 0) {
         abort("Invalid state")
     }
-    token := self.current_token
+    let token = self.current_token
     loop {
         if (token.next_token == null) {
             token.next_token = self.scan_token()
@@ -44,7 +44,7 @@ define peek_char = func (self: @Scanner) -> Int8 {
 }
 
 define next_char = func (self: @Scanner) -> Int8 {
-    next_char := self.source.content[self.current_char_index]
+    let next_char = self.source.content[self.current_char_index]
     if (next_char != '\0') {
         self.current_char_index = self.current_char_index + 1
         if (next_char == '\n') {
@@ -58,10 +58,10 @@ define next_char = func (self: @Scanner) -> Int8 {
 }
 
 define scan_token = func (self: @Scanner) -> @Token {
-    token_lexeme := new String()
-    token_location := new Source_Location(source = self.source, line = self.current_line, column = self.current_column)
+    let token_lexeme = new String()
+    let token_location = new Source_Location(source = self.source, line = self.current_line, column = self.current_column)
 
-    next_char := self.peek_char()
+    let next_char = self.peek_char()
     if (next_char.is_identifier_start()) {
         return self.scan_identifier_token(token_lexeme, token_location)
     }
@@ -120,9 +120,9 @@ define scan_character_token = func (self: @Scanner, token_lexeme: @String, token
         abort("Invalid state")
     }
 
-    value: Int8
+    let value: Int8
     token_lexeme.append(self.next_char())
-    char := self.next_char()
+    let char = self.next_char()
     token_lexeme.append(char)
     if (char == '\'') {
         return new Error_Token(lexeme = token_lexeme, location = token_location)
@@ -198,9 +198,9 @@ define scan_identifier_token = func (self: @Scanner, token_lexeme: @String, toke
 }
 
 define scan_integer_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
-    value := 0
+    let value = 0
     while (self.peek_char().is_digit()) {
-        char := self.next_char()
+        let char = self.next_char()
         value = value * 10 + (char as Int - '0' as Int)
         token_lexeme.append(char)
     }
@@ -208,9 +208,9 @@ define scan_integer_token = func (self: @Scanner, token_lexeme: @String, token_l
 }
 
 define scan_space_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
-    count := 0
+    let count = 0
     while (self.peek_char() == ' ') {
-        char := self.next_char()
+        let char = self.next_char()
         count = count + 1
         token_lexeme.append(char)
     }
@@ -222,11 +222,11 @@ define scan_string_token = func (self: @Scanner, token_lexeme: @String, token_lo
         abort("Invalid state")
     }
 
-    value := new String()
+    let value = new String()
 
     token_lexeme.append(self.next_char())
     loop {
-        char := self.peek_char()
+        let char = self.peek_char()
         if (char == '\0' || char == '\n') {
             return new Error_Token(lexeme = token_lexeme, location = token_location)
         }

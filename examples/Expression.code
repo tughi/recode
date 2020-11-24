@@ -11,12 +11,12 @@ define Int_Expression = struct {
 }
 
 define dump_int = func (self: @Expression) -> Nothing {
-    self := self as @Int_Expression
+    let self = self as @Int_Expression
     stdout.write(self.value)
 }
 
 define evaluate_int = func (self: @Expression) -> Int {
-    self := self as @Int_Expression
+    let self = self as @Int_Expression
     return self.value
 }
 
@@ -28,7 +28,7 @@ define Binary_Expression = struct {
 }
 
 define dump_binary_expression = func (self: @Expression) -> Nothing {
-    self := self as @Binary_Expression
+    let self = self as @Binary_Expression
     stdout.write('(')
     self.left_expression.dump()
     stdout.write(' ').write(self.operator).write(' ')
@@ -41,7 +41,7 @@ define Addition_Expression = struct {
 }
 
 define evaluate_addition = func (self: @Expression) -> Int {
-    self := self as @Addition_Expression
+    let self = self as @Addition_Expression
     return self.left_expression.evaluate() + self.right_expression.evaluate()
 }
 
@@ -50,14 +50,14 @@ define Substraction_Expression = struct {
 }
 
 define evaluate_substraction = func (self: @Expression) -> Int {
-    self := self as @Substraction_Expression
+    let self = self as @Substraction_Expression
     return self.left_expression.evaluate() - self.right_expression.evaluate()
 }
 
 define main = func () -> Nothing {
-    one := new Int_Expression(value = 1)
+    let one = new Int_Expression(value = 1)
 
-    expression: @Expression = new Addition_Expression(
+    let expression: @Expression = new Addition_Expression(
         left_expression = new Int_Expression(
             value = 2
         )

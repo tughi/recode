@@ -93,11 +93,11 @@ String literals are global values of type `String`.
 
 Newly created structs can be initializated using named arguments, which can replace default values.
 
-    node := new Extended_Node(parent = null, type = 6)
+    let node = new Extended_Node(parent = null, type = 6)
 
 Initilization arguments can be declared also on separate lines.
 
-    node := new Extended_Node(
+    let node = new Extended_Node(
         parent = null
         type = 6
     )
@@ -117,9 +117,9 @@ The `Object_Type` structure looks like this:
 
 ## Variables
 
-    text: @String = "123"           \ text holds the address to the specified string
-    number: Int = text.length + 1   \ number holds the result of the provided expression
-    root_node := new Node           \ root_node holds the address of a Node
+    let text: @String = "123"           \ text holds the address to the specified string
+    let number: Int = text.length + 1   \ number holds the result of the provided expression
+    let root_node = new Node           \ root_node holds the address of a Node
 
 The variable names are symbols used by the compiler to know where the value are stored.
 
@@ -137,8 +137,8 @@ The variable names are symbols used by the compiler to know where the value are 
 Templates look like functions but they are always inlined where _invoked_.
 
     define for_each = func (list: @List, block: (item: @Any, index: Int) => Nothing) => Nothing {
-        index := 0
-        item := list.first_item
+        let index = 0
+        let item = list.first_item
         while (item != null) {
             block(item.data, index)
             index = index + 1

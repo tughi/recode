@@ -1,7 +1,7 @@
 include "./code/lang/Object.code"
 
 define main = func (argc: Int, argv: @@Int8) -> Int {
-    window := Widget()
+    let window = Widget()
     return window.bounds.location.x - 42
 }
 

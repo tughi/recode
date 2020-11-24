@@ -1,6 +1,6 @@
-shape: @Shape = undefined
+let shape: @Shape = undefined
 
-polygon: Polygon
+let polygon: Polygon
 
 define main = func () -> Int {
     shape = new Rectangle()
@@ -8,7 +8,7 @@ define main = func () -> Int {
         return 1
     }
     stdout.write(shape.object_type.name).write(" has sides: ").write((shape as @Polygon).sides).end_line()
-    shape := shape as @Polygon
+    let shape = shape as @Polygon
 
     polygon.sides = 4
 

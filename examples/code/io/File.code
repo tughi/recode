@@ -5,9 +5,9 @@ define write = func (self: @FILE, string: @String) -> @FILE {
 include "../lang/String.code"
 
 define write = func (file: @FILE, chars: @Int8) -> @FILE {
-    index := 0
+    let index = 0
     loop {
-        char := chars[index]
+        let char = chars[index]
         if (char == '\0') {
             return file
         }
@@ -37,6 +37,6 @@ define end_line = func (file: @FILE) -> @FILE {
 
 define FILE = unknown struct
 
-stdout: @FILE = external
+let stdout: @FILE = external
 
 define fputc = func (char: Int32, file: @FILE) -> Int32

@@ -13,16 +13,16 @@ define Source_Location = struct {
 }
 
 define create_source = func (file_path: @String) -> @Source {
-    file := fopen(file_path.data, "r".data)
+    let file = fopen(file_path.data, "r".data)
     if (file == null) {
         return null
     }
 
-    content_size := 1024
-    content := malloc(content_size) as @Int8
-    content_length := 0
+    let content_size = 1024
+    let content = malloc(content_size) as @Int8
+    let content_length = 0
     loop {
-        char := fgetc(file)
+        let char = fgetc(file)
         if (feof(file) as Int != 0) {
             break
         }

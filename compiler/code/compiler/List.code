@@ -7,7 +7,7 @@ define List = struct {
 }
 
 define append = func (self: @List, data: @Any) -> Nothing {
-    item := new List_Item(data = data, prev_item = self.last_item)
+    let item = new List_Item(data = data, prev_item = self.last_item)
     if (self.last_item == null) {
         self.first_item = item
     } else {
@@ -18,7 +18,7 @@ define append = func (self: @List, data: @Any) -> Nothing {
 }
 
 define prepend = func (self: @List, data: @Any) -> Nothing {
-    item := new List_Item(data = data, next_item = self.first_item)
+    let item = new List_Item(data = data, next_item = self.first_item)
     if (self.first_item == null) {
         self.last_item = item
     } else {
@@ -29,7 +29,7 @@ define prepend = func (self: @List, data: @Any) -> Nothing {
 }
 
 define remove = func (self: @List, data: @Any) -> @List {
-    item := self.first_item
+    let item = self.first_item
     while (item != null) {
         if (item.data == data) {
             item.is_removed = true
@@ -41,7 +41,7 @@ define remove = func (self: @List, data: @Any) -> @List {
 }
 
 define remove_all = func (self: @List, data: @Any) -> @List {
-    item := self.first_item
+    let item = self.first_item
     while (item != null) {
         if (item.data == data) {
             item.is_removed = true
@@ -52,7 +52,7 @@ define remove_all = func (self: @List, data: @Any) -> @List {
 }
 
 define prune = func (self: @List) -> @List {
-    item := self.first_item
+    let item = self.first_item
     while (item != null) {
         if (item.is_removed) {
             if (item.prev_item != null) {
@@ -75,7 +75,7 @@ define prune = func (self: @List) -> @List {
 }
 
 define replace = func (self: @List, data: @Any, new_data: @Any) -> Nothing {
-    item := self.first_item
+    let item = self.first_item
     while (item != null) {
         if (item.data == data) {
             item.data = new_data
@@ -85,7 +85,7 @@ define replace = func (self: @List, data: @Any, new_data: @Any) -> Nothing {
 }
 
 define contains = func (self: @List, data: @Any) -> Boolean {
-    item := self.first_item
+    let item = self.first_item
     while (item != null) {
         if (item.data == data) {
             return true
@@ -96,8 +96,8 @@ define contains = func (self: @List, data: @Any) -> Boolean {
 }
 
 define index_of = func (self: @List, data: @Any) -> Int {
-    index := 0
-    item := self.first_item
+    let index = 0
+    let item = self.first_item
     while (item != null) {
         if (item.data == data) {
             return index
@@ -112,7 +112,7 @@ define get = func (self: @List, index: Int) -> @Any {
     if (index >= self.size || index < 0) {
         return null
     }
-    item := self.first_item
+    let item = self.first_item
     while (index > 0) {
         item = item.next_item
         index = index - 1

@@ -11,7 +11,7 @@ define Object_Type = struct {
 }
 
 define is = func (self: @Object, object_type: @Object_Type) -> Boolean {
-    self_type := self.object_type
+    let self_type = self.object_type
     loop {
         if (self_type == object_type) {
             return true

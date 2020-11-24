@@ -4,8 +4,8 @@
 
 define FILE = unknown struct
 
-stdout: @FILE = external
-stderr: @FILE = external
+let stdout: @FILE = external
+let stderr: @FILE = external
 
 define fclose = func (file: @FILE) -> Int32
 define feof = func (file: @FILE) -> Int32
