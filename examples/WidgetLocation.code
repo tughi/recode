@@ -1,6 +1,6 @@
 include "./code/lang/Object.code"
 
-define main = func (argc: Int, argv: @@Int8) -> Int {
+define main = func (argc: Int, argv: [[Int8; ?]; ?]) -> Int {
     let window = Widget()
     return window.bounds.location.x - 42
 }

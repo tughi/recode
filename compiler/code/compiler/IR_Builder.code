@@ -358,7 +358,7 @@ define convert_value_type = func (self: @IR_Builder, type: @AST_Type) -> @IR_Typ
 }
 
 define convert_array_type = func (self: @IR_Builder, type: @AST_Array_Type) -> @IR_Type {
-    return create_ir_array_type(self.convert_value_type(type.item_type), type.size_expression)
+    return create_ir_array_type(self.convert_value_type(type.item_type), type.is_checked, type.size_expression)
 }
 
 define convert_function_type = func (self: @IR_Builder, type: @AST_Function_Type) -> @IR_Type {
