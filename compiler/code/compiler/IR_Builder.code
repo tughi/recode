@@ -34,6 +34,7 @@ define IR_Builder = struct {
     compilation_unit: @Compilation_Unit
     named_types: @List
     named_functions: @List = new List()
+    reusable_types: @List = new List()
     current_block: @IR_Block = null
     current_loop: @IR_Loop = null
     counter: @Counter = new Counter()
@@ -358,7 +359,32 @@ define convert_value_type = func (self: @IR_Builder, type: @AST_Type) -> @IR_Typ
 }
 
 define convert_array_type = func (self: @IR_Builder, type: @AST_Array_Type) -> @IR_Type {
-    return create_ir_array_type(self.convert_value_type(type.item_type), type.is_checked, type.size_expression)
+    let array_item_type = self.convert_value_type(type.item_type)
+
+    let reusable_types_item = self.reusable_types.first_item
+    while (reusable_types_item != null) {
+        let reusable_type = reusable_types_item.data as @IR_Type
+        if (type.is_checked == false) {
+            if (reusable_type.is(IR_Unchecked_Array_Type)) {
+                let reusable_type = reusable_type as @IR_Unchecked_Array_Type
+                if (reusable_type.item_type == array_item_type) {
+                    return reusable_type
+                }
+            }
+        }
+        reusable_types_item = reusable_types_item.next_item
+    }
+
+    let array_type: @IR_Type
+    if (type.is_checked) {
+        abort(type.location, "Checked array types are not supported yet")
+    } else {
+        array_type = create_ir_unchecked_array_type(array_item_type)
+    }
+
+    self.reusable_types.append(array_type)
+
+    return array_type
 }
 
 define convert_function_type = func (self: @IR_Builder, type: @AST_Function_Type) -> @IR_Type {
@@ -681,12 +707,13 @@ define convert_assignment_statement = func (self: @IR_Builder, assignment_statem
         let array_access_expression = assignment_statement.storage_expression as @AST_Array_Access_Expression
         let array_item_index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("Int"))
         let array_address = self.convert_expression_address(array_access_expression.array_expression)
-        if (array_address.type.is(IR_Pointer_Type) == false) {
-            abort(assignment_statement.location, clone("Not an array pointer"))
+        if (array_address.type.is(IR_Unchecked_Array_Type)) {
+            let array_item_type = (array_address.type as @IR_Unchecked_Array_Type).item_type
+            let value = self.convert_expression(assignment_statement.value_expression, array_item_type)
+            self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
+        } else {
+            abort(assignment_statement.location, clone("Not an array value"))
         }
-        let array_item_type = (array_address.type as @IR_Pointer_Type).pointed_type
-        let value = self.convert_expression(assignment_statement.value_expression, array_item_type)
-        self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
     } else if (assignment_statement.storage_expression.is(AST_Member_Access_Expression)) {
         let member_access_expression = assignment_statement.storage_expression as @AST_Member_Access_Expression
         let object_address_value = self.convert_expression_address(member_access_expression.object_expression)
@@ -888,11 +915,11 @@ define convert_array_access_expression = func (self: @IR_Builder, array_access_e
     let index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("Int"))
     let object_value = self.convert_expression(array_access_expression.array_expression, null)
     let object_value_type = object_value.type
-    if ((object_value_type.is(IR_Pointer_Type)) == false) {
-        abort(array_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
+    if ((object_value_type.is(IR_Unchecked_Array_Type))) {
+        let object_value_type = object_value_type as @IR_Unchecked_Array_Type
+        return self.append(create_ir_load_array_item_instruction(self.create_temp_value(object_value_type.item_type), object_value, index_value), array_access_expression.location)
     }
-    let object_value_type = object_value_type as @IR_Pointer_Type
-    return self.append(create_ir_load_array_item_instruction(self.create_temp_value(object_value_type.pointed_type), object_value, index_value), array_access_expression.location)
+    abort(array_access_expression.location, clone("Got ").append(object_value_type.name).append(" value instead of an array"))
 }
 
 define convert_call_expression = func (self: @IR_Builder, call_expression: @AST_Call_Expression) -> @IR_Value {
@@ -1045,7 +1072,7 @@ define convert_call_arguments = func (self: @IR_Builder, ast_call_arguments: @Li
 define convert_cast_expression = func (self: @IR_Builder, cast_expression: @AST_Cast_Expression) -> @IR_Value {
     let value = self.convert_expression(cast_expression.value_expression, null)
     let result_value = self.create_temp_value(self.convert_value_type(cast_expression.type))
-    if (value.type.is(IR_Pointer_Type) && result_value.type.is(IR_Pointer_Type)) {
+    if (value.type.is(IR_Pointer_Type) && (result_value.type.is(IR_Pointer_Type) || result_value.type.is(IR_Unchecked_Array_Type))) {
         return self.append(create_ir_set_instruction(result_value, value), cast_expression.location)
     }
     if (value.type.is(IR_Int_Type) && (result_value.type.is(IR_Int32_Type) || result_value.type.is(IR_Int8_Type))) {
@@ -1251,6 +1278,9 @@ define convert_member_access_expression_address = func (self: @IR_Builder, membe
     if (result_type.is(IR_Pointer_Type)) {
         return self.convert_member_access_expression(member_access_expression)
     }
+    if (result_type.is(IR_Unchecked_Array_Type)) {
+        return self.convert_member_access_expression(member_access_expression)
+    }
     abort(member_access_expression.location, result_type.object_type)
 }
 
@@ -1288,18 +1318,6 @@ define convert_negate_expression = func (self: @IR_Builder, expression: @AST_Neg
 
 define convert_new_expression = func (self: @IR_Builder, expression: @AST_New_Expression) -> @IR_Value {
     let type = self.convert_value_type(expression.type)
-    if (type.is(IR_Array_Type)) {
-        let type = type as @IR_Array_Type
-        let size_value = self.convert_expression(type.size_expression, self.get_named_type("Int"))
-        return self.append(
-            create_ir_new_instruction(
-                self.create_temp_value(create_ir_pointer_type(type.pointed_type))
-                type.pointed_type
-                size_value
-            )
-            expression.location
-        )
-    }
     if (type.is(IR_Struct_Type)) {
         let type = type as @IR_Struct_Type
         let init_arguments = new List()
@@ -1412,6 +1430,9 @@ define convert_variable_expression_address = func (self: @IR_Builder, expression
     }
     if (variable.is(IR_Global_Variable)) {
         return new IR_Global_Variable_Address_Value(type = create_ir_pointer_type(variable.type), variable = variable)
+    }
+    if (variable.type.is(IR_Unchecked_Array_Type)) {
+        return self.get_variable_value(variable)
     }
     abort(expression.location, clone("Variable type without address: ").append(variable.type.name))
 }

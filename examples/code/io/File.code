@@ -4,7 +4,7 @@ define write = func (self: @FILE, string: @String) -> @FILE {
 
 include "../lang/String.code"
 
-define write = func (file: @FILE, chars: @Int8) -> @FILE {
+define write = func (file: @FILE, chars: [Int8; ?]) -> @FILE {
     let index = 0
     loop {
         let char = chars[index]

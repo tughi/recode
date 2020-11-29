@@ -64,14 +64,14 @@ define create_ir_pointer_type = func (pointed_type: @IR_Type) -> @IR_Pointer_Typ
     return new IR_Pointer_Type(name = type_name, pointed_type = pointed_type)
 }
 
-define IR_Array_Type = struct {
-    extends IR_Pointer_Type
-    size_expression: @AST_Expression
+define IR_Unchecked_Array_Type = struct {
+    extends IR_Type
+    item_type: @IR_Type
 }
 
-define create_ir_array_type = func (item_type: @IR_Type, size_expression: @AST_Expression) -> @IR_Type {
-    let type_name = clone("[").append(item_type.name).append("]")
-    return new IR_Array_Type(name = type_name, pointed_type = item_type, size_expression = size_expression)
+define create_ir_unchecked_array_type = func (item_type: @IR_Type) -> @IR_Type {
+    let type_name = clone("[").append(item_type.name).append("; ?").append("]")
+    return new IR_Unchecked_Array_Type(name = type_name, item_type = item_type)
 }
 
 define IR_Function_Type = struct {

@@ -420,17 +420,24 @@ define parse_type = func (self: @Parser) -> @AST_Type {
     }
     if (self.matches(required_open_bracket)) {
         let token = self.consume(required_open_bracket)
+        self.consume_space(0)
         let array_item_type = self.parse_type()
+        let array_is_checked = true
+        let array_size_expression: @AST_Expression = null
         if (self.matches(optional_space, required_column)) {
             self.consume_space(0)
             self.consume(required_column)
             self.consume_space(1)
-            let array_size_expression = self.parse_expression()
-            self.consume_space(0)
-            self.consume(required_close_bracket)
-            return new AST_Array_Type(location = token.location, item_type = array_item_type, size_expression = array_size_expression)
+            if (self.matches(required_question_mark)) {
+                self.consume(required_question_mark)
+                array_is_checked = false
+            } else {
+                array_size_expression = self.parse_expression()
+            }
         }
-        return new AST_Array_Type(location = token.location, item_type = array_item_type, size_expression = null)
+        self.consume_space(0)
+        self.consume(required_close_bracket)
+        return new AST_Array_Type(location = token.location, item_type = array_item_type, is_checked = array_is_checked, size_expression = array_size_expression)
     }
     if (self.matches(required_func)) {
         return self.parse_function_type()
@@ -974,6 +981,7 @@ let required_open_brace: @Matcher = undefined
 let required_open_bracket: @Matcher = undefined
 let required_open_paren: @Matcher = undefined
 let required_plus: @Matcher = undefined
+let required_question_mark: @Matcher = undefined
 let required_return: @Matcher = undefined
 let required_slash: @Matcher = undefined
 let required_string_literal: @Matcher = undefined
@@ -1021,6 +1029,7 @@ define init_matchers = func () -> Nothing {
     required_open_bracket = new Other_Matcher(is_required = true, lexeme = "[")
     required_open_paren = new Other_Matcher(is_required = true, lexeme = "(")
     required_plus = new Other_Matcher(is_required = true, lexeme = "+")
+    required_question_mark = new Other_Matcher(is_required = true, lexeme = "?")
     required_return = new Keyword_Matcher(is_required = true, lexeme = "return")
     required_slash = new Other_Matcher(is_required = true, lexeme = "/")
     required_string_literal = new String_Literal_Matcher(is_required = true)

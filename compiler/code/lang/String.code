@@ -1,12 +1,12 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define String = struct {
-    data: @Int8 = malloc(16) as @Int8
+    data: [Int8; ?] = malloc(16) as [Int8; ?]
     data_size: Int = 16
     length: Int = 0
 }
 
-define create_string = func (data: @Int8) -> @String {
+define create_string = func (data: [Int8; ?]) -> @String {
     let data_length = 0
     loop {
         let char = data[data_length]
@@ -20,7 +20,7 @@ define create_string = func (data: @Int8) -> @String {
 }
 
 define clone = func (self: @String) -> @String {
-    let clone = new String(data = malloc(self.data_size) as @Int8, data_size = self.data_size)
+    let clone = new String(data = malloc(self.data_size) as [Int8; ?], data_size = self.data_size)
     clone.append(self)
     return clone
 }
@@ -97,7 +97,7 @@ define last_index_of = func (self: @String, char: Int8, from_index: Int) -> Int 
 define append = func (self: @String, char: Int8) -> @String {
     if (self.length + 1 >= self.data_size) {
         self.data_size = self.data_size + 16
-        self.data = realloc(self.data, self.data_size) as @Int8
+        self.data = realloc(self.data, self.data_size) as [Int8; ?]
     }
     self.data[self.length] = char
     self.length = self.length + 1
@@ -118,7 +118,7 @@ define append = func (self: @String, number: Int) -> @String {
 define append = func (self: @String, other: @String) -> @String {
     if (self.length + other.length >= self.data_size) {
         self.data_size = self.length + other.length + 1
-        self.data = realloc(self.data, self.data_size) as @Int8
+        self.data = realloc(self.data, self.data_size) as [Int8; ?]
     }
     let index = 0
     let other_data = other.data

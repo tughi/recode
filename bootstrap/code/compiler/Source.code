@@ -3,7 +3,7 @@
 define Source = struct {
     id: Int = undefined
     file_path: @String
-    content: @Int8
+    content: [Int8; ?]
 }
 
 define Source_Location = struct {
@@ -19,7 +19,7 @@ define create_source = func (file_path: @String) -> @Source {
     }
 
     let content_size = 1024
-    let content = malloc(content_size) as @Int8
+    let content = malloc(content_size) as [Int8; ?]
     let content_length = 0
     loop {
         let char = fgetc(file)
@@ -28,7 +28,7 @@ define create_source = func (file_path: @String) -> @Source {
         }
         if (content_length + 1 > content_size - 1) {
             content_size = content_size + 1024
-            content = realloc(content, content_size) as @Int8
+            content = realloc(content, content_size) as [Int8; ?]
         }
         content[content_length] = char as Int8
         content_length = content_length + 1

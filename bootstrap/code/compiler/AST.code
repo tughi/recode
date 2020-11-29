@@ -157,6 +157,7 @@ define AST_Array_Type = struct {
     extends AST_Type
     item_type: @AST_Type
     size_expression: @AST_Expression
+    is_checked: Boolean
 }
 
 define AST_Function_Type = struct {

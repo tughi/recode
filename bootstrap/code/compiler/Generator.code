@@ -776,6 +776,8 @@ define generate_load_value = func (self: @MC_Generator, register: @MC_Register, 
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
             } else if (ir_value_type.is(IR_Pointer_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
+            } else if (ir_value_type.is(IR_Unchecked_Array_Type)) {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else {
                 self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
             }
@@ -792,6 +794,8 @@ define generate_load_value = func (self: @MC_Generator, register: @MC_Register, 
         } else if (ir_value_type.is(IR_Int8_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Pointer_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
+        } else if (ir_value_type.is(IR_Unchecked_Array_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
@@ -950,6 +954,8 @@ define generate_store_value = func (self: @MC_Generator, ir_value: @IR_Value, ad
             destination_register.is_reserved = false
         }
     } else if (ir_value_type.is(IR_Function_Type)) {
+        self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Unchecked_Array_Type)) {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
@@ -1612,6 +1618,9 @@ define get_type_size = func (self: @MC_Generator, ir_type: @IR_Type) -> Int {
             size = size + self.get_type_size(struct_type_member.type)
         }
         return size
+    }
+    if (ir_type.is(IR_Unchecked_Array_Type)) {
+        return 8
     }
     self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))
 }

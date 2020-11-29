@@ -11,9 +11,9 @@ define fclose = func (file: @FILE) -> Int32
 define feof = func (file: @FILE) -> Int32
 define fflush = func (file: @FILE) -> Int32
 define fgetc = func (file: @FILE) -> Int32
-define fopen = func (file: @Int8, mode: @Int8) -> @FILE
+define fopen = func (file: [Int8; ?], mode: [Int8; ?]) -> @FILE
 define fputc = func (char: Int32, file: @FILE) -> Int32
-define fputs = func (chars: @Int8, file: @FILE) -> Int32
+define fputs = func (chars: [Int8; ?], file: @FILE) -> Int32
 
 \ stdlib
 
@@ -21,4 +21,4 @@ define abort = func () -> Nothing
 define exit = func (code: Int) -> Nothing
 define free = func (block: @Any) -> Nothing
 define malloc = func (size: Int) -> @Any
-define realloc = func (block: @Int8, size: Int) -> @Any
+define realloc = func (block: [Int8; ?], size: Int) -> @Any

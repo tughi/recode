@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-define main = func (argc: Int, argv: @@Int8) -> Nothing {
+define main = func (argc: Int, argv: [[Int8; ?]; ?]) -> Nothing {
     if (argc < 3) {
         stdout.write("Usage:").end_line()
         stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").end_line()
@@ -374,7 +374,7 @@ define write = func (self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
-define write = func (self: @FILE, chars: @Int8) -> @FILE {
+define write = func (self: @FILE, chars: [Int8; ?]) -> @FILE {
     if (fputs(chars, self) as Int < 0) {
         stderr.end_line().end_line().write("Failed to write text").end_line()
         abort()
