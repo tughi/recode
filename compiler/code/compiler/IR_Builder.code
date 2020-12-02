@@ -309,7 +309,7 @@ define convert_struct_statement = func (self: @IR_Builder, struct_statement: @AS
     let type = create_ir_struct_type(struct_name, struct_statement)
     self.named_types.append(type)
     if (struct_statement.base_type != null) {
-        let base_type = self.convert_value_type(struct_statement.base_type)
+        let base_type = self.convert_type(struct_statement.base_type)
         if ((base_type.is(IR_Struct_Type)) == false) {
             abort(struct_statement.base_type.location, "Not a struct type.")
         }
@@ -320,7 +320,7 @@ define convert_struct_statement = func (self: @IR_Builder, struct_statement: @AS
         while (struct_members.has_next()) {
             let struct_member = struct_members.next() as @AST_Struct_Member
             let struct_member_name = struct_member.name.lexeme
-            let struct_member_type = self.convert_value_type(struct_member.type)
+            let struct_member_type = self.convert_type(struct_member.type)
             type.add_member(struct_member_name, struct_member_type)
         }
     }
@@ -342,7 +342,7 @@ define convert_struct_statement = func (self: @IR_Builder, struct_statement: @AS
     return type
 }
 
-define convert_value_type = func (self: @IR_Builder, type: @AST_Type) -> @IR_Type {
+define convert_type = func (self: @IR_Builder, type: @AST_Type) -> @IR_Type {
     if (type.is(AST_Array_Type)) {
         return self.convert_array_type(type as @AST_Array_Type)
     }
@@ -359,7 +359,7 @@ define convert_value_type = func (self: @IR_Builder, type: @AST_Type) -> @IR_Typ
 }
 
 define convert_array_type = func (self: @IR_Builder, type: @AST_Array_Type) -> @IR_Type {
-    let array_item_type = self.convert_value_type(type.item_type)
+    let array_item_type = self.convert_type(type.item_type)
 
     let reusable_types_item = self.reusable_types.first_item
     while (reusable_types_item != null) {
@@ -392,10 +392,10 @@ define convert_function_type = func (self: @IR_Builder, type: @AST_Function_Type
     let function_parameters_item = type.parameters.first_item
     while (function_parameters_item != null) {
         let function_parameter = function_parameters_item.data as @AST_Function_Parameter
-        parameters.append(new IR_Function_Type_Parameter(name = function_parameter.name.lexeme, type = self.convert_value_type(function_parameter.type)))
+        parameters.append(new IR_Function_Type_Parameter(name = function_parameter.name.lexeme, type = self.convert_type(function_parameter.type)))
         function_parameters_item = function_parameters_item.next_item
     }
-    return create_ir_function_type(parameters, self.convert_value_type(type.return_type))
+    return create_ir_function_type(parameters, self.convert_type(type.return_type))
 }
 
 define convert_named_type = func (self: @IR_Builder, type: @AST_Named_Type) -> @IR_Type {
@@ -419,8 +419,31 @@ define convert_named_type = func (self: @IR_Builder, type: @AST_Named_Type) -> @
     return type
 }
 
-define convert_pointer_type = func (self: @IR_Builder, type: @AST_Pointer_Type) -> @IR_Type {
-    return create_ir_pointer_type(self.convert_value_type(type.pointed_type))
+define convert_pointer_type = func (self: @IR_Builder, type: @AST_Pointer_Type) -> @IR_Pointer_Type {
+    return self.create_ir_pointer_type(self.convert_type(type.pointed_type))
+}
+
+define create_ir_pointer_type = func (self: @IR_Builder, pointed_type: @IR_Type) -> @IR_Pointer_Type {
+    let reusable_types_item = self.reusable_types.first_item
+    while (reusable_types_item != null) {
+        let reusable_type = reusable_types_item.data as @IR_Type
+        if (reusable_type.is(IR_Pointer_Type)) {
+            let reusable_type = reusable_type as @IR_Pointer_Type
+            if (reusable_type.pointed_type == pointed_type) {
+                return reusable_type
+            }
+        }
+        reusable_types_item = reusable_types_item.next_item
+    }
+
+    let pointer_type = new IR_Pointer_Type(
+        name = clone("@").append(pointed_type.name)
+        pointed_type = pointed_type
+    )
+
+    self.reusable_types.append(pointer_type)
+
+    return pointer_type
 }
 
 define create_function = func (self: @IR_Builder, function_statement: @AST_Function_Statement) -> @IR_Function {
@@ -430,7 +453,7 @@ define create_function = func (self: @IR_Builder, function_statement: @AST_Funct
         blocks = new List()
         name = function_statement.name.lexeme
         parameters = new List()
-        return_type = self.convert_value_type(function_statement.type.return_type)
+        return_type = self.convert_type(function_statement.type.return_type)
         is_external = function_statement.body == null
         type = undefined
     )
@@ -439,7 +462,7 @@ define create_function = func (self: @IR_Builder, function_statement: @AST_Funct
     let function_type_parameters = new List()
     while (parameters.has_next()) {
         let parameter = parameters.next() as @AST_Function_Parameter
-        let parameter_type = self.convert_value_type(parameter.type)
+        let parameter_type = self.convert_type(parameter.type)
         let parameter_name = parameter.name.lexeme
         let function_parameter = new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
         function.parameters.append(function_parameter)
@@ -817,7 +840,7 @@ define convert_variable_statement = func (self: @IR_Builder, variable_statement:
     let variable_name = variable_statement.name.lexeme
     let variable_type: @IR_Type = null
     if (variable_statement.type != null) {
-        variable_type = self.convert_value_type(variable_statement.type)
+        variable_type = self.convert_type(variable_statement.type)
     }
     let variable_value: @IR_Value = null
     if (variable_statement.value_expression != null) {
@@ -1071,7 +1094,7 @@ define convert_call_arguments = func (self: @IR_Builder, ast_call_arguments: @Li
 
 define convert_cast_expression = func (self: @IR_Builder, cast_expression: @AST_Cast_Expression) -> @IR_Value {
     let value = self.convert_expression(cast_expression.value_expression, null)
-    let result_value = self.create_temp_value(self.convert_value_type(cast_expression.type))
+    let result_value = self.create_temp_value(self.convert_type(cast_expression.type))
     if (value.type.is(IR_Pointer_Type) && (result_value.type.is(IR_Pointer_Type) || result_value.type.is(IR_Unchecked_Array_Type))) {
         return self.append(create_ir_set_instruction(result_value, value), cast_expression.location)
     }
@@ -1175,7 +1198,7 @@ define convert_literal_expression = func (self: @IR_Builder, expression: @AST_Li
         return new IR_Constant_Value(type = self.get_named_type("Null"), literal = expression.literal)
     }
     if (expression.literal.is(String_Token)) {
-        return new IR_Constant_Value(type = create_ir_pointer_type(self.get_named_type("String")), literal = expression.literal)
+        return new IR_Constant_Value(type = self.create_ir_pointer_type(self.get_named_type("String")), literal = expression.literal)
     }
     if (expression.literal.is(Undefined_Token)) {
         return new IR_Undefined_Value(type = self.get_named_type("Undefined"))
@@ -1224,7 +1247,7 @@ define convert_member_access_expression = func (self: @IR_Builder, member_access
             struct_type = object_value_type as @IR_Struct_Type
             object_value = self.append(
                 create_ir_load_variable_address_instruction(
-                    self.create_temp_value(create_ir_pointer_type(struct_type))
+                    self.create_temp_value(self.create_ir_pointer_type(struct_type))
                     object_value as @IR_Variable_Value
                 )
                 member_access_expression.location
@@ -1232,7 +1255,7 @@ define convert_member_access_expression = func (self: @IR_Builder, member_access
         } else if (object_value.is(IR_Global_Variable_Value)) {
             struct_type = object_value_type as @IR_Struct_Type
             object_value = new IR_Global_Variable_Address_Value(
-                type = create_ir_pointer_type(struct_type)
+                type = self.create_ir_pointer_type(struct_type)
                 variable = (object_value as @IR_Global_Variable_Value).variable
             )
         } else {
@@ -1253,7 +1276,7 @@ define convert_member_access_expression = func (self: @IR_Builder, member_access
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
     }
     if (struct_type_member.type.is(IR_Struct_Type)) {
-        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true), member_access_expression.location)
+        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(self.create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true), member_access_expression.location)
     }
     return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), object_value, struct_type_member, false), member_access_expression.location)
 }
@@ -1317,12 +1340,12 @@ define convert_negate_expression = func (self: @IR_Builder, expression: @AST_Neg
 }
 
 define convert_new_expression = func (self: @IR_Builder, expression: @AST_New_Expression) -> @IR_Value {
-    let type = self.convert_value_type(expression.type)
+    let type = self.convert_type(expression.type)
     if (type.is(IR_Struct_Type)) {
         let type = type as @IR_Struct_Type
         let init_arguments = new List()
         let init_value = self.convert_struct_literal_expression(expression, type)
-        let result_value = self.append(create_ir_new_instruction(self.create_temp_value(create_ir_pointer_type(type)), type, init_value), expression.location)
+        let result_value = self.append(create_ir_new_instruction(self.create_temp_value(self.create_ir_pointer_type(type)), type, init_value), expression.location)
         return result_value
     }
     abort(expression.location, clone("Unsupported type: ").append(type.name))
@@ -1429,7 +1452,7 @@ define convert_variable_expression_address = func (self: @IR_Builder, expression
         return self.get_variable_value(variable)
     }
     if (variable.is(IR_Global_Variable)) {
-        return new IR_Global_Variable_Address_Value(type = create_ir_pointer_type(variable.type), variable = variable)
+        return new IR_Global_Variable_Address_Value(type = self.create_ir_pointer_type(variable.type), variable = variable)
     }
     if (variable.type.is(IR_Unchecked_Array_Type)) {
         return self.get_variable_value(variable)
@@ -1465,7 +1488,7 @@ define deduce_call_expression_type = func (self: @IR_Builder, expression: @AST_C
         let callee_expression = expression.callee_expression as @AST_Member_Access_Expression
         let object_type = self.deduce_expression_type(callee_expression.object_expression)
         if (object_type.is(IR_Struct_Type)) {
-            argument_types.prepend(create_ir_pointer_type(object_type))
+            argument_types.prepend(self.create_ir_pointer_type(object_type))
         } else {
             argument_types.prepend(object_type)
         }
@@ -1481,7 +1504,7 @@ define deduce_call_expression_type = func (self: @IR_Builder, expression: @AST_C
 define deduce_literal_expression_type = func (self: @IR_Builder, expression: @AST_Literal_Expression) -> @IR_Type {
     let literal = expression.literal
     if (literal.is(String_Token)) {
-        return create_ir_pointer_type(self.get_named_type("String"))
+        return self.create_ir_pointer_type(self.get_named_type("String"))
     }
     abort(literal.location, literal.object_type)
 }
@@ -1501,7 +1524,7 @@ define deduce_member_access_expression_type = func (self: @IR_Builder, expressio
         abort(expression.member_name.location, clone(object_type.name).append(" has no such member: ").append(expression.member_name.lexeme))
     }
     if (member.type.is(IR_Struct_Type)) {
-        return create_ir_pointer_type(member.type)
+        return self.create_ir_pointer_type(member.type)
     }
     return member.type
 }
