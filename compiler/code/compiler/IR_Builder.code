@@ -214,7 +214,7 @@ define accepts = func (self: @IR_Type, other: @IR_Type) -> Boolean {
                 return true
             }
             if (self.pointed_type.is(IR_Struct_Type) && other.pointed_type.is(IR_Struct_Type)) {
-                return (self.pointed_type as @IR_Struct_Type).is_base_type(other.pointed_type as @IR_Struct_Type)
+                return (self.pointed_type as @IR_Struct_Type).struct_descriptor.is_base_struct_descriptor((other.pointed_type as @IR_Struct_Type).struct_descriptor)
             }
             return self.pointed_type.accepts(other.pointed_type)
         }
@@ -297,34 +297,47 @@ define convert_type_statement = func (self: @IR_Builder, statement: @AST_Stateme
     abort(statement.location, statement.object_type)
 }
 
-define convert_struct_statement = func (self: @IR_Builder, struct_statement: @AST_Struct_Statement) -> @IR_Type {
+define convert_struct_statement = func (self: @IR_Builder, struct_statement: @AST_Struct_Statement) -> @IR_Struct_Type {
     let struct_name = struct_statement.name.lexeme
-    let type = self.get_named_type(struct_name)
-    if (type != null) {
-        if (type.is(IR_Struct_Type) && (type as @IR_Struct_Type).statement == struct_statement) {
-            return type
+
+    let struct_type = self.get_named_type(struct_name)
+    if (struct_type != null) {
+        if (struct_type.is(IR_Struct_Type) && (struct_type as @IR_Struct_Type).struct_descriptor.statement == struct_statement) {
+            return struct_type as @IR_Struct_Type
         }
         abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
     }
-    let type = create_ir_struct_type(struct_name, struct_statement)
-    self.named_types.append(type)
+
+    let struct_descriptor = new IR_Struct_Descriptor(
+        name = struct_name
+        statement = struct_statement
+    )
+    let struct_type = new IR_Struct_Type(
+        name = struct_name
+        struct_descriptor = struct_descriptor
+    )
+    self.named_types.append(struct_type)
+
     if (struct_statement.base_type != null) {
         let base_type = self.convert_type(struct_statement.base_type)
         if ((base_type.is(IR_Struct_Type)) == false) {
             abort(struct_statement.base_type.location, "Not a struct type.")
         }
-        type.base_type = base_type as @IR_Struct_Type
+        struct_descriptor.base_struct_descriptor = (base_type as @IR_Struct_Type).struct_descriptor
     }
+
     if (struct_statement.members != null) {
-        let struct_members = struct_statement.members.create_iterator()
-        while (struct_members.has_next()) {
-            let struct_member = struct_members.next() as @AST_Struct_Member
-            let struct_member_name = struct_member.name.lexeme
-            let struct_member_type = self.convert_type(struct_member.type)
-            type.add_member(struct_member_name, struct_member_type)
+        let struct_statement_members_item = struct_statement.members.first_item
+        while (struct_statement_members_item != null) {
+            let struct_member = struct_statement_members_item.data as @AST_Struct_Member
+            let struct_member_descriptor_name = struct_member.name.lexeme
+            let struct_member_descriptor_type = self.convert_type(struct_member.type)
+            struct_descriptor.add_member(struct_member_descriptor_name, struct_member_descriptor_type)
+            struct_statement_members_item = struct_statement_members_item.next_item
         }
     }
-    if (type.is_object_type()) {
+
+    if (struct_descriptor.is_object_struct_descriptor()) {
         self.convert_variable_statement(
             new AST_Variable_Statement(
                 location = struct_statement.name.location
@@ -339,7 +352,8 @@ define convert_struct_statement = func (self: @IR_Builder, struct_statement: @AS
             true
         )
     }
-    return type
+
+    return struct_type
 }
 
 define convert_type = func (self: @IR_Builder, type: @AST_Type) -> @IR_Type {
@@ -748,13 +762,13 @@ define convert_assignment_statement = func (self: @IR_Builder, assignment_statem
             abort(assignment_statement.location, clone(object_type.name).append(" is not a struct type"))
         }
         let struct_type = (object_type as @IR_Struct_Type)
-        let struct_type_member = struct_type.get_member(member_access_expression.member_name.lexeme)
-        if (struct_type_member == null) {
-            struct_type.dump_struct_members()
+        let struct_member_descriptor = struct_type.struct_descriptor.get_member(member_access_expression.member_name.lexeme)
+        if (struct_member_descriptor == null) {
+            struct_type.struct_descriptor.dump_struct_members()
             abort(member_access_expression.member_name.location, clone(object_type.name).append(" doesn't have a ").append(member_access_expression.member_name.lexeme).append(" member"))
         }
-        let value = self.convert_expression(assignment_statement.value_expression, struct_type_member.type)
-        self.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, value), assignment_statement.location)
+        let value = self.convert_expression(assignment_statement.value_expression, struct_member_descriptor.type)
+        self.append(create_ir_store_struct_member_instruction(object_address_value, struct_member_descriptor, value), assignment_statement.location)
     } else if (assignment_statement.storage_expression.is(AST_Variable_Expression)) {
         let variable_expression = assignment_statement.storage_expression as @AST_Variable_Expression
         let variable_name = variable_expression.name.lexeme
@@ -960,9 +974,9 @@ define convert_call_expression = func (self: @IR_Builder, call_expression: @AST_
         if (callee_value_type.is(IR_Pointer_Type)) {
             let callee_value_type = callee_value_type as @IR_Pointer_Type
             if (callee_value_type.pointed_type.is(IR_Struct_Type)) {
-                let struct_type_member = (callee_value_type.pointed_type as @IR_Struct_Type).get_member(callee_expression.member_name.lexeme)
-                if (struct_type_member != null && struct_type_member.type.is(IR_Function_Type)) {
-                    let call_function_value = self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), callee_value, struct_type_member, false), call_expression.location)
+                let struct_member_descriptor = (callee_value_type.pointed_type as @IR_Struct_Type).struct_descriptor.get_member(callee_expression.member_name.lexeme)
+                if (struct_member_descriptor != null && struct_member_descriptor.type.is(IR_Function_Type)) {
+                    let call_function_value = self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_member_descriptor.type), callee_value, struct_member_descriptor, false), call_expression.location)
                     return self.convert_dynamic_call_expression(call_expression, call_function_value, callee_value)
                 }
             }
@@ -1270,29 +1284,28 @@ define convert_member_access_expression = func (self: @IR_Builder, member_access
     } else {
         abort(member_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
     }
-    let struct_type_member = struct_type.get_member(member_access_expression.member_name.lexeme)
-    if (struct_type_member == null) {
-        struct_type.dump_struct_members()
+    let struct_member_descriptor = struct_type.struct_descriptor.get_member(member_access_expression.member_name.lexeme)
+    if (struct_member_descriptor == null) {
+        struct_type.struct_descriptor.dump_struct_members()
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
     }
-    if (struct_type_member.type.is(IR_Struct_Type)) {
-        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(self.create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true), member_access_expression.location)
+    if (struct_member_descriptor.type.is(IR_Struct_Type)) {
+        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(self.create_ir_pointer_type(struct_member_descriptor.type)), object_value, struct_member_descriptor, true), member_access_expression.location)
     }
-    return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), object_value, struct_type_member, false), member_access_expression.location)
+    return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_member_descriptor.type), object_value, struct_member_descriptor, false), member_access_expression.location)
 }
 
-define dump_struct_members = func (struct_type: @IR_Struct_Type) -> Nothing {
+define dump_struct_members = func (struct_descriptor: @IR_Struct_Descriptor) -> Nothing {
     stderr.end_line()
-    while (struct_type != null) {
-        let struct_type_members_item = struct_type.statement.members.first_item
-        while (struct_type_members_item != null) {
-            let struct_type_member = struct_type_members_item.data as @AST_Struct_Member
-            let struct_type_member_name = struct_type_member.name.lexeme
-            let struct_type_member_type = struct_type.get_member(struct_type_member_name).type
-            stderr.write(struct_type_member.location).write(": ").write(struct_type.name).write('.').write(struct_type_member_name).write(": ").write(struct_type_member_type.name).end_line()
-            struct_type_members_item = struct_type_members_item.next_item
+    while (struct_descriptor != null) {
+        let struct_members_item = struct_descriptor.statement.members.first_item
+        while (struct_members_item != null) {
+            let struct_member = struct_members_item.data as @AST_Struct_Member
+            let struct_member_descriptor = struct_descriptor.get_member(struct_member.name.lexeme)
+            stderr.write(struct_member.location).write(": ").write(struct_descriptor.name).write('.').write(struct_member_descriptor.name).write(": ").write(struct_member_descriptor.type.name).end_line()
+            struct_members_item = struct_members_item.next_item
         }
-        struct_type = struct_type.base_type
+        struct_descriptor = struct_descriptor.base_struct_descriptor
     }
 }
 
@@ -1361,16 +1374,16 @@ define convert_struct_literal_expression = func (self: @IR_Builder, expression: 
         abort(expression.location, clone("Unsupported type: ").append(expression.object_type.name))
     }
     let struct_literal_value = new IR_Struct_Literal_Value(type = struct_type, location = expression.location)
-    if (struct_type.is_object_type()) {
+    if (struct_type.struct_descriptor.is_object_struct_descriptor()) {
         let variable = self.get_variable(struct_type.name)
-        let object_type_member = struct_type.get_member("object_type")
+        let object_type_member = struct_type.struct_descriptor.get_member("object_type")
         struct_literal_value.set_member_value(object_type_member, new IR_Global_Variable_Value(type = variable.type, variable = variable))
     }
-    self.convert_struct_literal_value(struct_literal_value, call_arguments, struct_type, struct_type)
+    self.convert_struct_literal_value(struct_literal_value, call_arguments, struct_type.struct_descriptor, struct_type.struct_descriptor)
     return struct_literal_value
 }
 
-define convert_struct_literal_value = func (self: @IR_Builder, struct_literal_value: @IR_Struct_Literal_Value, call_arguments: @List, struct_type: @IR_Struct_Type, base_type: @IR_Struct_Type) -> Nothing {
+define convert_struct_literal_value = func (self: @IR_Builder, struct_literal_value: @IR_Struct_Literal_Value, call_arguments: @List, struct_descriptor: @IR_Struct_Descriptor, base_struct_descriptor: @IR_Struct_Descriptor) -> Nothing {
     let call_arguments_item = call_arguments.first_item
     while (call_arguments_item != null) {
         let call_argument = call_arguments_item.data as @AST_Call_Argument
@@ -1378,17 +1391,18 @@ define convert_struct_literal_value = func (self: @IR_Builder, struct_literal_va
         if (call_argument_name == null) {
             abort(call_argument.value_expression.location, "Struct init argument without name")
         }
-        let struct_type_member = struct_type.get_member(call_argument_name.lexeme)
-        if (struct_type_member == null) {
-            abort(call_argument_name.location, clone(struct_type.name).append(" has no such member: ").append(call_argument_name.lexeme))
+        let struct_member_descriptor = struct_descriptor.get_member(call_argument_name.lexeme)
+        if (struct_member_descriptor == null) {
+            struct_descriptor.dump_struct_members()
+            abort(call_argument_name.location, clone(struct_descriptor.name).append(" has no such member: ").append(call_argument_name.lexeme))
         }
-        if (struct_literal_value.get_member_value(struct_type_member) == null) {
-            struct_literal_value.set_member_value(struct_type_member, self.convert_expression(call_argument.value_expression, struct_type_member.type))
+        if (struct_literal_value.get_member_value(struct_member_descriptor) == null) {
+            struct_literal_value.set_member_value(struct_member_descriptor, self.convert_expression(call_argument.value_expression, struct_member_descriptor.type))
         }
         call_arguments_item = call_arguments_item.next_item
     }
-    if (base_type != null) {
-        self.convert_struct_literal_value(struct_literal_value, base_type.statement.init_arguments, struct_type, base_type.base_type)
+    if (base_struct_descriptor != null) {
+        self.convert_struct_literal_value(struct_literal_value, base_struct_descriptor.statement.init_arguments, struct_descriptor, base_struct_descriptor.base_struct_descriptor)
     }
 }
 
@@ -1519,14 +1533,14 @@ define deduce_member_access_expression_type = func (self: @IR_Builder, expressio
         abort(expression.location, object_type.object_type)
     }
     let object_type = object_type as @IR_Struct_Type
-    let member = object_type.get_member(expression.member_name.lexeme)
-    if (member == null) {
+    let struct_member_descriptor = object_type.struct_descriptor.get_member(expression.member_name.lexeme)
+    if (struct_member_descriptor == null) {
         abort(expression.member_name.location, clone(object_type.name).append(" has no such member: ").append(expression.member_name.lexeme))
     }
-    if (member.type.is(IR_Struct_Type)) {
-        return self.create_ir_pointer_type(member.type)
+    if (struct_member_descriptor.type.is(IR_Struct_Type)) {
+        return self.create_ir_pointer_type(struct_member_descriptor.type)
     }
-    return member.type
+    return struct_member_descriptor.type
 }
 
 define deduce_variable_expression_type = func (self: @IR_Builder, expression: @AST_Variable_Expression) -> @IR_Type {

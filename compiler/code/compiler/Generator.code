@@ -475,11 +475,11 @@ define generate_load_struct_member_instruction = func (self: @MC_Generator, inst
 
     let result_register = self.find_unused_register()
     self.map_variable_value(instruction.result_value, result_register)
-    let struct_type_member_offset = self.get_offset(instruction.struct_type_member)
+    let struct_member_descriptor_offset = self.get_offset(instruction.struct_member_descriptor)
     if (instruction.load_address) {
         self.output_file.write("  mov ").write(result_register.name_q).write(", ").write(struct_pointer_register.name_q).end_line()
-        if (struct_type_member_offset > 0) {
-            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(struct_type_member_offset).end_line()
+        if (struct_member_descriptor_offset > 0) {
+            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(struct_member_descriptor_offset).end_line()
         }
     } else {
         let result_value_type_size = self.get_type_size(instruction.result_value.type)
@@ -495,7 +495,7 @@ define generate_load_struct_member_instruction = func (self: @MC_Generator, inst
         } else {
             self.abort("Invalid state")
         }
-        self.output_file.write(", ").write(new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)).end_line()
+        self.output_file.write(", ").write(new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_member_descriptor_offset)).end_line()
     }
     struct_pointer_register.is_reserved = false
 }
@@ -666,7 +666,7 @@ define generate_store_struct_member_instruction = func (self: @MC_Generator, ins
             self.map_variable_value(ir_struct_pointer_value, struct_pointer_register)
         }
 
-        let struct_type_member_offset = self.get_offset(instruction.struct_type_member)
+        let struct_member_descriptor_offset = self.get_offset(instruction.struct_member_descriptor)
         let ir_value = instruction.get_value()
         if (ir_value.is(IR_Variable_Value) && ir_value.type.is(IR_Struct_Type) == false) {
             let ir_value = ir_value as @IR_Variable_Value
@@ -677,15 +677,15 @@ define generate_store_struct_member_instruction = func (self: @MC_Generator, ins
                 self.map_variable_value(ir_value, register)
             }
         }
-        let struct_type_member_address = new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
-        self.generate_store_value(ir_value, struct_type_member_address)
+        let struct_member_descriptor_address = new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_member_descriptor_offset)
+        self.generate_store_value(ir_value, struct_member_descriptor_address)
     } else if (ir_struct_pointer_value.is(IR_Global_Variable_Address_Value)) {
         let struct_pointer_register = self.find_unused_register()
         struct_pointer_register.is_reserved = true
         self.generate_load_value(struct_pointer_register, ir_struct_pointer_value)
-        let struct_type_member_offset = self.get_offset(instruction.struct_type_member)
-        let struct_type_member_address = new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
-        self.generate_store_value(instruction.get_value(), struct_type_member_address)
+        let struct_member_descriptor_offset = self.get_offset(instruction.struct_member_descriptor)
+        let struct_member_descriptor_address = new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_member_descriptor_offset)
+        self.generate_store_value(instruction.get_value(), struct_member_descriptor_address)
         struct_pointer_register.is_reserved = false
     } else {
         self.abort(clone("Unsupported type: ").append(ir_struct_pointer_value.object_type.name))
@@ -946,7 +946,7 @@ define generate_store_value = func (self: @MC_Generator, ir_value: @IR_Value, ad
             }
         } else if (ir_value.is(IR_Struct_Literal_Value)) {
             destination_address.offset = destination_address_extra_offset
-            self.generate_store_struct_literal_value(ir_value as @IR_Struct_Literal_Value, ir_value.type as @IR_Struct_Type, destination_address)
+            self.generate_store_struct_literal_value(ir_value as @IR_Struct_Literal_Value, (ir_value.type as @IR_Struct_Type).struct_descriptor, destination_address)
         } else {
             self.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
         }
@@ -962,43 +962,43 @@ define generate_store_value = func (self: @MC_Generator, ir_value: @IR_Value, ad
     }
 }
 
-define generate_store_struct_literal_value = func (self: @MC_Generator, ir_value: @IR_Struct_Literal_Value, struct_type: @IR_Struct_Type, address: @MC_Register_Based_Address) -> Nothing {
-    if (struct_type.base_type != null) {
-        self.generate_store_struct_literal_value(ir_value, struct_type.base_type, address)
+define generate_store_struct_literal_value = func (self: @MC_Generator, ir_value: @IR_Struct_Literal_Value, struct_descriptor: @IR_Struct_Descriptor, address: @MC_Register_Based_Address) -> Nothing {
+    if (struct_descriptor.base_struct_descriptor != null) {
+        self.generate_store_struct_literal_value(ir_value, struct_descriptor.base_struct_descriptor, address)
     }
-    let struct_type_members_item = struct_type.members.first_item
-    while (struct_type_members_item != null) {
-        let struct_type_member = struct_type_members_item.data as @IR_Struct_Type_Member
-        let struct_type_member_value = ir_value.get_member_value(struct_type_member)
-        if (struct_type_member_value != null) {
-            self.output_file.write("  #     .").write(struct_type_member.name).write(" = ").write(struct_type_member_value, false).end_line()
-            if (struct_type_member_value.type.is(IR_Undefined_Type) == false) {
-                let struct_type_member_offset = self.get_offset(struct_type_member)
-                address.offset = address.offset + struct_type_member_offset
-                self.generate_store_value(struct_type_member_value, address)
-                address.offset = address.offset - struct_type_member_offset
+    let struct_descriptor_members_item = struct_descriptor.members.first_item
+    while (struct_descriptor_members_item != null) {
+        let struct_member_descriptor = struct_descriptor_members_item.data as @IR_Struct_Member_Descriptor
+        let struct_member_value = ir_value.get_member_value(struct_member_descriptor)
+        if (struct_member_value != null) {
+            self.output_file.write("  #     .").write(struct_member_descriptor.name).write(" = ").write(struct_member_value, false).end_line()
+            if (struct_member_value.type.is(IR_Undefined_Type) == false) {
+                let struct_member_descriptor_offset = self.get_offset(struct_member_descriptor)
+                address.offset = address.offset + struct_member_descriptor_offset
+                self.generate_store_value(struct_member_value, address)
+                address.offset = address.offset - struct_member_descriptor_offset
             }
         } else {
-            stderr.write(ir_value.location).write(": ").write(struct_type.name).write('.').write(struct_type_member.name).write(" is not initialized").end_line()
+            stderr.write(ir_value.location).write(": ").write(struct_descriptor.name).write('.').write(struct_member_descriptor.name).write(" is not initialized").end_line()
         }
-        struct_type_members_item = struct_type_members_item.next_item
+        struct_descriptor_members_item = struct_descriptor_members_item.next_item
     }
 }
 
-define get_offset = func (self: @MC_Generator, struct_type_member: @IR_Struct_Type_Member) -> Int {
+define get_offset = func (self: @MC_Generator, struct_member_descriptor: @IR_Struct_Member_Descriptor) -> Int {
     let offset = 0
-    let struct_type = struct_type_member.struct_type
-    if (struct_type.base_type != null) {
-        offset = self.get_type_size(struct_type.base_type)
+    let struct_descriptor = struct_member_descriptor.struct_descriptor
+    if (struct_descriptor.base_struct_descriptor != null) {
+        offset = self.get_struct_size(struct_descriptor.base_struct_descriptor)
     }
-    let current_struct_type_member_item = struct_type.members.first_item
-    while (current_struct_type_member_item != null) {
-        let current_struct_type_member = current_struct_type_member_item.data as @IR_Struct_Type_Member
-        if (current_struct_type_member == struct_type_member) {
+    let other_struct_descriptor_members_item = struct_descriptor.members.first_item
+    while (other_struct_descriptor_members_item != null) {
+        let other_struct_member_descriptor = other_struct_descriptor_members_item.data as @IR_Struct_Member_Descriptor
+        if (other_struct_member_descriptor == struct_member_descriptor) {
             return offset
         }
-        offset = offset + self.get_type_size(current_struct_type_member.type)
-        current_struct_type_member_item = current_struct_type_member_item.next_item
+        offset = offset + self.get_type_size(other_struct_member_descriptor.type)
+        other_struct_descriptor_members_item = other_struct_descriptor_members_item.next_item
     }
     self.abort("Invalid state")
 }
@@ -1607,22 +1607,26 @@ define get_type_size = func (self: @MC_Generator, ir_type: @IR_Type) -> Int {
         return 8
     }
     if (ir_type.is(IR_Struct_Type)) {
-        let ir_type = ir_type as @IR_Struct_Type
-        let size = 0
-        if (ir_type.base_type != null) {
-            size = size + self.get_type_size(ir_type.base_type)
-        }
-        let struct_type_members = ir_type.members.create_iterator()
-        while (struct_type_members.has_next()) {
-            let struct_type_member = struct_type_members.next() as @IR_Struct_Type_Member
-            size = size + self.get_type_size(struct_type_member.type)
-        }
-        return size
+        return self.get_struct_size((ir_type as @IR_Struct_Type).struct_descriptor)
     }
     if (ir_type.is(IR_Unchecked_Array_Type)) {
         return 8
     }
     self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))
+}
+
+define get_struct_size = func (self: @MC_Generator, struct_descriptor: @IR_Struct_Descriptor) -> Int {
+    let size = 0
+    if (struct_descriptor.base_struct_descriptor != null) {
+        size = size + self.get_struct_size(struct_descriptor.base_struct_descriptor)
+    }
+    let struct_descriptor_members_item = struct_descriptor.members.first_item
+    while (struct_descriptor_members_item != null) {
+        let struct_member_descriptor = struct_descriptor_members_item.data as @IR_Struct_Member_Descriptor
+        size = size + self.get_type_size(struct_member_descriptor.type)
+        struct_descriptor_members_item = struct_descriptor_members_item.next_item
+    }
+    return size
 }
 
 define MC_String = struct {
@@ -1673,7 +1677,7 @@ define generate_object_types = func (self: @MC_Generator, types: @List) -> Nothi
         let type = type_item.data as @IR_Type
         if (type.is(IR_Struct_Type)) {
             let type = type as @IR_Struct_Type
-            if (type.is_object_type()) {
+            if (type.struct_descriptor.is_object_struct_descriptor()) {
                 self.output_file.end_line()
                 self.output_file.write("  .align 8").end_line()
                 self.output_file.write_type_label(type).write(':').end_line()
@@ -1683,8 +1687,8 @@ define generate_object_types = func (self: @MC_Generator, types: @List) -> Nothi
                 self.output_file.write("  .quad .LABEL__").write(type.name).write("__object_type__name__data").end_line()
                 self.output_file.write("  .quad ").write(type.name.length + 1).end_line()
                 self.output_file.write("  .quad ").write(type.name.length).end_line()
-                if (type.base_type != null) {
-                    self.output_file.write("  .quad .LABEL__").write(type.base_type.name).write("__object_type").end_line()
+                if (type.struct_descriptor.base_struct_descriptor != null) {
+                    self.output_file.write("  .quad .LABEL__").write(type.struct_descriptor.base_struct_descriptor.name).write("__object_type").end_line()
                 } else {
                     self.output_file.write("  .quad 0").end_line()
                 }

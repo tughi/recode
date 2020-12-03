@@ -98,66 +98,67 @@ define create_ir_function_type = func (parameters: @List, return_type: @IR_Type)
 
 define IR_Struct_Type = struct {
     extends IR_Type
-    base_type: @IR_Struct_Type = null
+    struct_descriptor: @IR_Struct_Descriptor
+}
+
+define IR_Struct_Descriptor = struct {
+    name: @String
+    base_struct_descriptor: @IR_Struct_Descriptor = null
     members: @List = new List()
     statement: @AST_Struct_Statement
 }
 
-define IR_Struct_Type_Member = struct {
-    struct_type: @IR_Struct_Type
+define IR_Struct_Member_Descriptor = struct {
+    struct_descriptor: @IR_Struct_Descriptor
     name: @String
     type: @IR_Type
 }
 
-define create_ir_struct_type = func (name: @String, statement: @AST_Struct_Statement) -> @IR_Struct_Type {
-    return new IR_Struct_Type(name = name, statement = statement)
-}
-
-define add_member = func (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
-    let member = new IR_Struct_Type_Member(struct_type = self, name = name, type = type)
+define add_member = func (self: @IR_Struct_Descriptor, name: @String, type: @IR_Type) -> @IR_Struct_Member_Descriptor {
+    let member = new IR_Struct_Member_Descriptor(struct_descriptor = self, name = name, type = type)
     self.members.append(member)
     return member
 }
 
-define get_member = func (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
-    let struct_type = self
+define get_member = func (self: @IR_Struct_Descriptor, name: @String) -> @IR_Struct_Member_Descriptor {
+    let struct_descriptor = self
     loop {
-        let members_item = struct_type.members.first_item
+        let members_item = struct_descriptor.members.first_item
         while (members_item != null) {
-            let member = members_item.data as @IR_Struct_Type_Member
+            let member = members_item.data as @IR_Struct_Member_Descriptor
             if (member.name.equals(name)) {
                 return member
             }
             members_item = members_item.next_item
         }
-        struct_type = struct_type.base_type
-        if (struct_type == null) {
+        struct_descriptor = struct_descriptor.base_struct_descriptor
+        if (struct_descriptor == null) {
             return null
         }
     }
 }
 
-define is_base_type = func (self: @IR_Struct_Type, other: @IR_Struct_Type) -> Boolean {
+define is_base_struct_descriptor = func (self: @IR_Struct_Descriptor, other: @IR_Struct_Descriptor) -> Boolean {
     let struct_type = other
     loop {
-        if (self == struct_type.base_type) {
+        if (self == struct_type.base_struct_descriptor) {
             return true
         }
-        struct_type = struct_type.base_type
+        struct_type = struct_type.base_struct_descriptor
         if (struct_type == null) {
             return false
         }
     }
 }
 
-define is_object_type = func (self: @IR_Struct_Type) -> Boolean {
-    let struct_type = self
+define is_object_struct_descriptor = func (self: @IR_Struct_Descriptor) -> Boolean {
+    let struct_descriptor = self
     loop {
-        if (struct_type.name.equals("Object")) {
+        if (struct_descriptor.name.equals("Object")) {
             return true
         }
-        struct_type = struct_type.base_type
-        if (struct_type == null) {
+        struct_descriptor = struct_descriptor.base_struct_descriptor
+        if (struct_descriptor == null) {
             return false
         }
     }
@@ -238,7 +239,7 @@ define IR_Struct_Literal_Value = struct {
                     } else {
                         file.write(", ")
                     }
-                    file.write(value_link.struct_type_member.name).write(" = ").write(value_link.value, false)
+                    file.write(value_link.struct_member_descriptor.name).write(" = ").write(value_link.value, false)
                 }
                 value_links_item = value_links_item.next_item
             }
@@ -250,16 +251,16 @@ define IR_Struct_Literal_Value = struct {
 
 define IR_Struct_Literal_Member_Value_Link = struct {
     extends IR_Requires_Value_Link
-    struct_type_member: @IR_Struct_Type_Member
+    struct_member_descriptor: @IR_Struct_Member_Descriptor
 }
 
-define get_member_value = func (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Value {
+define get_member_value = func (self: @IR_Struct_Literal_Value, struct_member_descriptor: @IR_Struct_Member_Descriptor) -> @IR_Value {
     let links_item = self.links.first_item
     while (links_item != null) {
         let link = links_item.data as @IR_Link
         if (link.is(IR_Struct_Literal_Member_Value_Link)) {
             let link = link as @IR_Struct_Literal_Member_Value_Link
-            if (link.struct_type_member == struct_type_member) {
+            if (link.struct_member_descriptor == struct_member_descriptor) {
                 return link.value
             }
         }
@@ -268,8 +269,8 @@ define get_member_value = func (self: @IR_Struct_Literal_Value, struct_type_memb
     return null
 }
 
-define set_member_value = func (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> Nothing {
-    let member_value_link = new IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
+define set_member_value = func (self: @IR_Struct_Literal_Value, struct_member_descriptor: @IR_Struct_Member_Descriptor, value: @IR_Value) -> Nothing {
+    let member_value_link = new IR_Struct_Literal_Member_Value_Link(value = value, struct_member_descriptor = struct_member_descriptor, back_link = undefined)
     member_value_link.back_link = new IR_Required_By_Value_Link(value = self, back_link = member_value_link)
     self.links.append(member_value_link)
     value.links.append(member_value_link.back_link)
@@ -741,19 +742,19 @@ define IR_Load_Struct_Member_Instruction = struct {
             } else {
                 file.write("load_struct_member")
             }
-            return file.write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(')').end_line()
+            return file.write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_member_descriptor.name).write(')').end_line()
         }
     )
-    struct_type_member: @IR_Struct_Type_Member
+    struct_member_descriptor: @IR_Struct_Member_Descriptor
     load_address: Boolean
 }
 
-define create_ir_load_struct_member_instruction = func (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
-    let instruction = new IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
+define create_ir_load_struct_member_instruction = func (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_member_descriptor: @IR_Struct_Member_Descriptor, load_address: Boolean) -> @IR_Load_Struct_Member_Instruction {
+    let instruction = new IR_Load_Struct_Member_Instruction(result_value = result_value, struct_member_descriptor = struct_member_descriptor, load_address = load_address)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     result_value.creator_instruction = instruction
 
-    if (struct_type_member.type.is(IR_Struct_Type)) {
+    if (struct_member_descriptor.type.is(IR_Struct_Type)) {
         let result_value_link = new IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
         result_value_link.back_link = new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
         result_value.links.append(result_value_link)
@@ -913,14 +914,14 @@ define IR_Store_Struct_Member_Instruction = struct {
         dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
             let instruction = instruction as @IR_Store_Struct_Member_Instruction
-            return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
+            return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_member_descriptor.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
         }
     )
-    struct_type_member: @IR_Struct_Type_Member
+    struct_member_descriptor: @IR_Struct_Member_Descriptor
 }
 
-define create_ir_store_struct_member_instruction = func (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
-    let instruction = new IR_Store_Struct_Member_Instruction(result_value = null, struct_type_member = struct_type_member)
+define create_ir_store_struct_member_instruction = func (struct_pointer_value: @IR_Value, struct_member_descriptor: @IR_Struct_Member_Descriptor, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
+    let instruction = new IR_Store_Struct_Member_Instruction(result_value = null, struct_member_descriptor = struct_member_descriptor)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     instruction.set_operand_value("value", value)
     return instruction
