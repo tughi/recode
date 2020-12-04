@@ -50,15 +50,6 @@ define IR_Pointer_Type = struct {
     pointed_type: @IR_Type
 }
 
-define equals = func (self: @IR_Type, other: @IR_Type) -> Boolean {
-    if (self.is(IR_Pointer_Type) && other.is(IR_Pointer_Type)) {
-        let self = self as @IR_Pointer_Type
-        let other = other as @IR_Pointer_Type
-        return self.pointed_type.equals(other.pointed_type)
-    }
-    return self == other
-}
-
 define IR_Unchecked_Array_Type = struct {
     extends IR_Type
     item_type: @IR_Type
