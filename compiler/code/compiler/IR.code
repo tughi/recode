@@ -64,11 +64,6 @@ define IR_Unchecked_Array_Type = struct {
     item_type: @IR_Type
 }
 
-define create_ir_unchecked_array_type = func (item_type: @IR_Type) -> @IR_Type {
-    let type_name = clone("[").append(item_type.name).append("; ?").append("]")
-    return new IR_Unchecked_Array_Type(name = type_name, item_type = item_type)
-}
-
 define IR_Function_Type = struct {
     extends IR_Type
     parameters: @List

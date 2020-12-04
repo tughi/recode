@@ -24,7 +24,7 @@ define generate = func (build: @IR_Build, output_file_path: @String) -> Nothing 
 
     generator.generate_strings()
 
-    generator.generate_object_types(build.named_types)
+    generator.generate_object_types(build.struct_descriptors)
 
     generator.output_file.fclose()
 }
@@ -1670,37 +1670,30 @@ define write_string_label = func (file: @FILE, string: @MC_String) -> @FILE {
     return file.write(".LABEL__string_").write(string.id)
 }
 
-define generate_object_types = func (self: @MC_Generator, types: @List) -> Nothing {
+define generate_object_types = func (self: @MC_Generator, struct_descriptors: @List) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
-    let type_item = types.first_item
-    while (type_item != null) {
-        let type = type_item.data as @IR_Type
-        if (type.is(IR_Struct_Type)) {
-            let type = type as @IR_Struct_Type
-            if (type.struct_descriptor.is_object_struct_descriptor()) {
-                self.output_file.end_line()
-                self.output_file.write("  .align 8").end_line()
-                self.output_file.write_type_label(type).write(':').end_line()
-                self.output_file.write("  .quad .LABEL__").write_type_label(type).write("__object_type").end_line()
-                self.output_file.write(".LABEL__").write_type_label(type).write("__object_type").write(':').end_line()
-                self.output_file.write("  .quad ").write(0).end_line() \ CHECK: Why isn't there a type.id? Isn't it needed anymore?
-                self.output_file.write("  .quad .LABEL__").write(type.name).write("__object_type__name__data").end_line()
-                self.output_file.write("  .quad ").write(type.name.length + 1).end_line()
-                self.output_file.write("  .quad ").write(type.name.length).end_line()
-                if (type.struct_descriptor.base_struct_descriptor != null) {
-                    self.output_file.write("  .quad .LABEL__").write(type.struct_descriptor.base_struct_descriptor.name).write("__object_type").end_line()
-                } else {
-                    self.output_file.write("  .quad 0").end_line()
-                }
-                self.output_file.write(".LABEL__").write(type.name).write("__object_type__name__data: .string \"").write(type.name).write('"').end_line()
+    let struct_descriptors_item = struct_descriptors.first_item
+    while (struct_descriptors_item != null) {
+        let struct_descriptor = struct_descriptors_item.data as @IR_Struct_Descriptor
+        if (struct_descriptor.is_object_struct_descriptor()) {
+            self.output_file.end_line()
+            self.output_file.write("  .align 8").end_line()
+            self.output_file.write(struct_descriptor.name).write(':').end_line()
+            self.output_file.write("  .quad .LABEL__").write(struct_descriptor.name).write("__object_type").end_line()
+            self.output_file.write(".LABEL__").write(struct_descriptor.name).write("__object_type").write(':').end_line()
+            self.output_file.write("  .quad ").write(0).end_line() \ CHECK: Why isn't there a type.id? Isn't it needed anymore?
+            self.output_file.write("  .quad .LABEL__").write(struct_descriptor.name).write("__object_type__name__data").end_line()
+            self.output_file.write("  .quad ").write(struct_descriptor.name.length + 1).end_line()
+            self.output_file.write("  .quad ").write(struct_descriptor.name.length).end_line()
+            if (struct_descriptor.base_struct_descriptor != null) {
+                self.output_file.write("  .quad .LABEL__").write(struct_descriptor.base_struct_descriptor.name).write("__object_type").end_line()
+            } else {
+                self.output_file.write("  .quad 0").end_line()
             }
+            self.output_file.write(".LABEL__").write(struct_descriptor.name).write("__object_type__name__data: .string \"").write(struct_descriptor.name).write('"').end_line()
         }
-        type_item = type_item.next_item
+        struct_descriptors_item = struct_descriptors_item.next_item
     }
-}
-
-define write_type_label = func (file: @FILE, type: @IR_Type) -> @FILE {
-    return file.write(type.name)
 }
 
 define generate_global_variables = func (self: @MC_Generator, variables: @List) -> Nothing {
