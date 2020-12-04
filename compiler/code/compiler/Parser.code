@@ -407,17 +407,21 @@ define parse_while = func (self: @Parser) -> @AST_Statement {
 }
 
 \ type
-\   : "@" type
-\   | IDENTIFIER
-\   | "[" type ( ";" expression )? "]"
-\   | function_type
+\   : ( "@" | "!" )? ( IDENTIFIER | "[" type ( ";" expression )? "]" | function_type )
 define parse_type = func (self: @Parser) -> @AST_Type {
-    if (self.matches(required_at)) {
-        let token = self.consume(required_at)
+    let is_embedded_type = false
+    let is_pointer_type = false
+    let location: @Source_Location = null
+    if (self.matches(required_exclamation_mark)) {
+        location = self.consume(required_exclamation_mark).location
         self.consume_space(0)
-        let type = self.parse_type()
-        return new AST_Pointer_Type(location = token.location, pointed_type = type)
+        is_embedded_type = true
+    } else if (self.matches(required_at)) {
+        location = self.consume(required_at).location
+        self.consume_space(0)
+        is_pointer_type = true
     }
+    let type: @AST_Type
     if (self.matches(required_open_bracket)) {
         let token = self.consume(required_open_bracket)
         self.consume_space(0)
@@ -437,13 +441,20 @@ define parse_type = func (self: @Parser) -> @AST_Type {
         }
         self.consume_space(0)
         self.consume(required_close_bracket)
-        return new AST_Array_Type(location = token.location, item_type = array_item_type, is_checked = array_is_checked, size_expression = array_size_expression)
+        type = new AST_Array_Type(location = token.location, item_type = array_item_type, is_checked = array_is_checked, size_expression = array_size_expression)
+    } else if (self.matches(required_func)) {
+        type = self.parse_function_type()
+    } else {
+        let type_name = self.consume(required_identifier) as @Identifier_Token
+        type = new AST_Named_Type(location = type_name.location, name = type_name)
     }
-    if (self.matches(required_func)) {
-        return self.parse_function_type()
+    if (is_embedded_type) {
+        return new AST_Embedded_Type(location = location, embedded_type = type)
     }
-    let token = self.consume(required_identifier) as @Identifier_Token
-    return new AST_Named_Type(location = token.location, name = token)
+    if (is_pointer_type) {
+        return new AST_Pointer_Type(location = location, pointed_type = type)
+    }
+    return type
 }
 
 define parse_expression = func (self: @Parser) -> @AST_Expression {

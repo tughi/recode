@@ -153,6 +153,11 @@ define AST_Pointer_Type = struct {
     pointed_type: @AST_Type
 }
 
+define AST_Embedded_Type = struct {
+    extends AST_Type
+    embedded_type: @AST_Type
+}
+
 define AST_Array_Type = struct {
     extends AST_Type
     item_type: @AST_Type
