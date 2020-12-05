@@ -28,15 +28,15 @@ The `Nothing` type is used only as return type to state that a function does not
 ## Structs
 
     define Node = struct {
-        name: String        \ embedded
-        parent: Node        \ parent node pointer
-        children: [Node]    \ checked array of child node pointers
+        name: !String       \ embedded
+        parent: Node        \ parent node reference
+        children: [Node]    \ checked array of child node references
         type: Int = 42      \ with default value
     }
 
     define Extended_Node = struct {
         extends Node(type = 7)  \ type has another default value
-        data: Object
+        data: alias Data        \ members of Data can be accessed without .data
     }
 
 Newly created structs can be initializated using named arguments, which can replace default values.
@@ -59,10 +59,12 @@ To pass a struct by value one need to specify this with the `!` prefix, like thi
 Template types have one or more other types as parameters.
 
     define Box[T] = struct {
-        it: T
+        it: alias T
     }
 
 Concrete template types that have different parameters are different types themselves.
+
+> NOTE: The `Box[!Value]` and `Value` types have similar usage.
 
 ## Object types
 
