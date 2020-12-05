@@ -1,0 +1,6 @@
+define main = func () -> Int {
+    let value: Any = "String"
+    return (value as String).length - 6
+}
+
+include "./code/lang/String.code"

@@ -2,17 +2,17 @@
 
 define Source = struct {
     id: Int = undefined
-    file_path: @String
+    file_path: String
     content: [Int8; ?]
 }
 
 define Source_Location = struct {
-    source: @Source
+    source: Source
     line: Int
     column: Int
 }
 
-define create_source = func (file_path: @String) -> @Source {
+define create_source = func (file_path: String) -> Source {
     let file = fopen(file_path.data, "r".data)
     if (file == null) {
         return null

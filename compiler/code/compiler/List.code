@@ -1,12 +1,12 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define List = struct {
-    first_item: @List_Item = null
-    last_item: @List_Item = null
+    first_item: List_Item = null
+    last_item: List_Item = null
     size: Int = 0
 }
 
-define append = func (self: @List, data: @Any) -> Nothing {
+define append = func (self: List, data: Any) -> Nothing {
     let item = new List_Item(data = data, prev_item = self.last_item)
     if (self.last_item == null) {
         self.first_item = item
@@ -17,7 +17,7 @@ define append = func (self: @List, data: @Any) -> Nothing {
     self.size = self.size + 1
 }
 
-define prepend = func (self: @List, data: @Any) -> Nothing {
+define prepend = func (self: List, data: Any) -> Nothing {
     let item = new List_Item(data = data, next_item = self.first_item)
     if (self.first_item == null) {
         self.last_item = item
@@ -28,7 +28,7 @@ define prepend = func (self: @List, data: @Any) -> Nothing {
     self.size = self.size + 1
 }
 
-define remove = func (self: @List, data: @Any) -> @List {
+define remove = func (self: List, data: Any) -> List {
     let item = self.first_item
     while (item != null) {
         if (item.data == data) {
@@ -40,7 +40,7 @@ define remove = func (self: @List, data: @Any) -> @List {
     return self
 }
 
-define remove_all = func (self: @List, data: @Any) -> @List {
+define remove_all = func (self: List, data: Any) -> List {
     let item = self.first_item
     while (item != null) {
         if (item.data == data) {
@@ -51,7 +51,7 @@ define remove_all = func (self: @List, data: @Any) -> @List {
     return self
 }
 
-define prune = func (self: @List) -> @List {
+define prune = func (self: List) -> List {
     let item = self.first_item
     while (item != null) {
         if (item.is_removed) {
@@ -74,7 +74,7 @@ define prune = func (self: @List) -> @List {
     return self
 }
 
-define replace = func (self: @List, data: @Any, new_data: @Any) -> Nothing {
+define replace = func (self: List, data: Any, new_data: Any) -> Nothing {
     let item = self.first_item
     while (item != null) {
         if (item.data == data) {
@@ -84,7 +84,7 @@ define replace = func (self: @List, data: @Any, new_data: @Any) -> Nothing {
     }
 }
 
-define contains = func (self: @List, data: @Any) -> Boolean {
+define contains = func (self: List, data: Any) -> Boolean {
     let item = self.first_item
     while (item != null) {
         if (item.data == data) {
@@ -95,7 +95,7 @@ define contains = func (self: @List, data: @Any) -> Boolean {
     return false
 }
 
-define index_of = func (self: @List, data: @Any) -> Int {
+define index_of = func (self: List, data: Any) -> Int {
     let index = 0
     let item = self.first_item
     while (item != null) {
@@ -108,7 +108,7 @@ define index_of = func (self: @List, data: @Any) -> Int {
     return -1
 }
 
-define get = func (self: @List, index: Int) -> @Any {
+define get = func (self: List, index: Int) -> Any {
     if (index >= self.size || index < 0) {
         return null
     }
@@ -120,14 +120,14 @@ define get = func (self: @List, index: Int) -> @Any {
     return item.data
 }
 
-define first = func (self: @List) -> @Any {
+define first = func (self: List) -> Any {
     if (self.first_item == null) {
         return null
     }
     return self.first_item.data
 }
 
-define last = func (self: @List) -> @Any {
+define last = func (self: List) -> Any {
     if (self.last_item == null) {
         return null
     }
@@ -135,37 +135,37 @@ define last = func (self: @List) -> @Any {
 }
 
 define List_Item = struct {
-    prev_item: @List_Item = null
-    next_item: @List_Item = null
-    data: @Any
+    prev_item: List_Item = null
+    next_item: List_Item = null
+    data: Any
     is_removed: Boolean = false
 }
 
 define List_Iterator = struct {
-    current_item: @List_Item
-    next_item: @List_Item
+    current_item: List_Item
+    next_item: List_Item
 }
 
-define create_iterator = func (list: @List) -> @List_Iterator {
+define create_iterator = func (list: List) -> List_Iterator {
     return new List_Iterator(current_item = null, next_item = list.first_item)
 }
 
-define current = func (self: @List_Iterator) -> @Any {
+define current = func (self: List_Iterator) -> Any {
     if (self.current_item != null) {
         return self.current_item.data
     }
     return null
 }
 
-define remove_current = func (self: @List_Iterator) -> Nothing {
+define remove_current = func (self: List_Iterator) -> Nothing {
     self.current_item.is_removed = true
 }
 
-define has_next = func (self: @List_Iterator) -> Boolean {
+define has_next = func (self: List_Iterator) -> Boolean {
     return self.next_item != null
 }
 
-define next = func (self: @List_Iterator) -> @Any {
+define next = func (self: List_Iterator) -> Any {
     if (self.next_item == null) {
         return null
     }
@@ -174,7 +174,7 @@ define next = func (self: @List_Iterator) -> @Any {
     return self.current_item.data
 }
 
-define change = func (self: @List_Iterator, data: @Any) -> Nothing {
+define change = func (self: List_Iterator, data: Any) -> Nothing {
     if (self.current_item != null) {
         self.current_item.data = data
     }

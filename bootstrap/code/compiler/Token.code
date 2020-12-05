@@ -2,9 +2,9 @@
 
 define Token = struct {
     extends Object
-    lexeme: @String
-    location: @Source_Location
-    next_token: @Token = null
+    lexeme: String
+    location: Source_Location
+    next_token: Token = null
 }
 
 define Literal_Token = struct {
@@ -61,7 +61,7 @@ define Space_Token = struct {
 
 define String_Token = struct {
     extends Literal_Token
-    value: @String
+    value: String
 }
 
 define Undefined_Token = struct {

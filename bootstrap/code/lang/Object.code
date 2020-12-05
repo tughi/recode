@@ -1,16 +1,16 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define Object = struct {
-    object_type: @Object_Type = undefined
+    object_type: Object_Type = undefined
 }
 
 define Object_Type = struct {
     id: Int
-    name: String
-    base_type: @Object_Type
+    name: !String
+    base_type: Object_Type
 }
 
-define is = func (self: @Object, object_type: @Object_Type) -> Boolean {
+define is = func (self: Object, object_type: Object_Type) -> Boolean {
     let self_type = self.object_type
     loop {
         if (self_type == object_type) {

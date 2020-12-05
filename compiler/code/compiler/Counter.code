@@ -4,12 +4,12 @@ define Counter = struct {
     value: Int = 0
 }
 
-define next = func (self: @Counter) -> Int {
+define next = func (self: Counter) -> Int {
     self.value = self.value + 1
     return self.value
 }
 
-define reset = func (self: @Counter) -> @Counter {
+define reset = func (self: Counter) -> Counter {
     self.value = 0
     return self
 }
