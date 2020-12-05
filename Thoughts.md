@@ -1,29 +1,30 @@
 ## Integers
 
 There is a fixed set of integer types:
-- `Int` - platform dependend integer
-- `Int8` - 8 bit integer
-- `Int16` - 16 bit integer
-- `Int32` - 32 bit integer
-- `Int64` - 64 bit integer
+- `i8` - 8 bit signed integer
+- `u8` - 8 bit unsigned integer
+- `i16` - 16 bit signed integer
+- `u16` - 16 bit unsigned integer
+- `i32` - 32 bit signed integer
+- `u32` - 32 bit unsigned integer
+- `i64` - 64 bit signed integer
+- `u64` - 64 bit unsigned integer
+- `isize` - platform dependent signed integer
+- `usize` - platform dependent unsigned integer
 
 ## Boolean
 
-The `Boolean` values can be either `true` or `false`.
+The `bool` values can be either `true` or `false`.
 
-You cannot cast a `Boolean` to an integer value.
+You cannot cast a `bool` to an integer value.
 
 ## Floats
 
 There is no support for floats yet.
 
 There will be a fixed set of float types:
-- `Float32` - 32 bit float
-- `Float64` - 64 bit float
-
-## Nothing
-
-The `Nothing` type is used only as return type to state that a function does not return anything.
+- `f32` - 32 bit float
+- `f64` - 64 bit float
 
 ## Structs
 
@@ -31,7 +32,7 @@ The `Nothing` type is used only as return type to state that a function does not
         name: !String       \ embedded
         parent: Node        \ parent node reference
         children: [Node]    \ checked array of child node references
-        type: Int = 42      \ with default value
+        type: i32 = 42      \ with default value
     }
 
     define Extended_Node = struct {
@@ -74,7 +75,7 @@ variable, named after the type.
 The `Object_Type` structure looks like this:
 
     define Object_Type = struct {
-        id: Int
+        id: i32
         name: !String
         base_type: Object_Type
     }
@@ -92,13 +93,13 @@ Types prefixed with a `?` become nullable types, and require a `null` check to g
 Nullable types have a similar in-memory structure with the following struct:
 
     define Nullable[T] = struct {
-        is_null: Boolean
+        is_null: bool
         value: T
     }
 
 The compiler will complain of missing a null-checks.
 
-    define length = func (self: ?String) -> Int {
+    define length = func (self: ?String) -> i32 {
         if (self != null) {
             return self.length  \ the compiler treats self as String at this point
         }
@@ -110,11 +111,11 @@ Like structs, arrays are passed by reference.
 
 ### Checked Arrays
 
-An `[Int8]` array has the following in-memory structure:
+An `[i8]` array has the following in-memory structure:
 
     define Int8_Array = struct {
-        size: Int
-        data: [Int8; ?]     \ this is a reference to an unchecked array
+        data: [i8; ?]       \ reference to an unchecked array
+        size: i32
     }
 
 For checked arrays, the compiler makes sure that each access has a bounds-check, similar to a null-
@@ -126,7 +127,7 @@ Unchecked arrays are unsafe. Avoid using them as much as possible.
 
 #### Fixed size arrays
 
-Fixed size arrays, like `[Int8; 42]` are arrays for which the compiler knows their size.
+Fixed size arrays, like `[i8; 42]` are arrays for which the compiler knows their size.
 
 The compliter can do some bounds-checks at compile time.
 
@@ -135,9 +136,9 @@ The compliter can do some bounds-checks at compile time.
 The `String` type has the following structure:
 
     define String = struct {
-        data: [Int8; ?]
-        data_size: Int
-        length: Int
+        data: [i8; ?]
+        data_size: i32
+        length: i32
     }
 
 String literals are global values of type `String`.
@@ -145,25 +146,27 @@ String literals are global values of type `String`.
 ## Variables
 
     let text: String = "123"            \ text holds the address to the specified string
-    let number: Int = text.length + 1   \ number holds the result of the provided expression
+    let number: i32 = text.length + 1   \ number holds the result of the provided expression
     let root_node = new Node            \ root_node holds the address of a Node
 
 The variable names are symbols used by the compiler to know where the value are stored.
 
 ## Functions
 
-    define max = func (v1: Int, v2: Int) -> Int {
+    define max = func (v1: i32, v2: i32) -> i32 {
         if (v1 > v2) {
             return v1
         }
         return v2
     }
 
+Functions that don't return a value are missing the `-> type` part.
+
 ## Templates
 
 Templates look like functions but they are always inlined where _invoked_.
 
-    define for_each = func (list: List, block: (item: Any, index: Int) => Nothing) => Nothing {
+    define for_each = func (list: List, block: func (item: Any, index: i32)) {
         let index = 0
         let item = list.first_item
         while (item != null) {
