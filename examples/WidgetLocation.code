@@ -1,6 +1,6 @@
 include "./code/lang/Object.code"
 
-define main = func (argc: Int, argv: [[Int8; ?]; ?]) -> Int {
+define main = func (argc: isize, argv: [[i8; ?]; ?]) -> isize {
     let window = Widget()
     return window.bounds.location.x - 42
 }
@@ -10,26 +10,26 @@ define Widget = struct {
     bounds: !Rectangle = Rectangle()
 }
 
-define set_location = func (self: Widget, x: Int, y: Int) -> Nothing {
+define set_location = func (self: Widget, x: isize, y: isize) -> Nothing {
     self.bounds.location.set(x, y)
 }
 
 define Rectangle = struct {
     location: !Point = Point(x = 42, y = 42)
-    width: Int
-    height: Int
+    width: isize
+    height: isize
 }
 
-define size = func (self: Rectangle) -> Int {
+define size = func (self: Rectangle) -> isize {
     return self.width * self.height
 }
 
 define Point = struct {
-    x: Int
-    y: Int
+    x: isize
+    y: isize
 }
 
-define set = func (self: Point, x: Int, y: Int) -> Nothing {
+define set = func (self: Point, x: isize, y: isize) -> Nothing {
     self.x = x
     self.y = y
 }

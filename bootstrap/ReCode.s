@@ -212,12 +212,12 @@ main_1:
   movsx rax, WORD PTR main_1__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__main_1__1:
-  # argc.1: Int = load_variable(argc)
+  # argc.1: isize = load_variable(argc)
   # [live values]: argc.1:rdi 
-  # argv.1: [[Int8; ?]; ?] = load_variable(argv)
+  # argv.1: [[i8; ?]; ?] = load_variable(argv)
   # [live values]: argc.1:rdi argv.1:rsi 
   .loc 1 4 9
-  # $1.1: Boolean = argc.1 < 3
+  # $1.1: bool = argc.1 < 3
   cmp rdi, 3
   setl al
   # [live values]: argc.1:rdi argv.1:rsi $1.1:rax 
@@ -248,7 +248,7 @@ main_1:
   call write_385
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] $4.1:rax 
   .loc 1 6 34
-  # $5.1: [Int8; ?] = load_array_item(argv.1, 0)
+  # $5.1: [i8; ?] = load_array_item(argv.1, 0)
   mov rbx, [rbp-9]
   mov rbx, [rbx]
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] $4.1:rax $5.1:rbx 
@@ -281,7 +281,7 @@ main_1:
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] 
 .LABEL__main_1__3:
   .loc 1 10 42
-  # $9.1: [Int8; ?] = load_array_item(argv.1, 1)
+  # $9.1: [i8; ?] = load_array_item(argv.1, 1)
   mov rax, [rbp-9]
   add rax, 8
   mov rax, [rax]
@@ -293,14 +293,14 @@ main_1:
   # [discarded value]: $9.1
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:rax 
   .loc 1 11 9
-  # $11.1: Boolean = call(ends_with_395, source_file_path.1, ".code")
+  # $11.1: bool = call(ends_with_395, source_file_path.1, ".code")
   mov rdi, rax
   lea rsi, .LABEL__string_2[rip] # ".code"
   mov [rbp-25], rax
   call ends_with_395
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $11.1:rax 
   .loc 1 11 9
-  # $12.1: Boolean = $11.1 == false
+  # $12.1: bool = $11.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $11.1
@@ -344,7 +344,7 @@ main_1:
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] 
 .LABEL__main_1__5:
   .loc 1 16 42
-  # $17.1: [Int8; ?] = load_array_item(argv.1, 2)
+  # $17.1: [i8; ?] = load_array_item(argv.1, 2)
   mov rax, [rbp-9]
   add rax, 16
   mov rax, [rax]
@@ -356,14 +356,14 @@ main_1:
   # [discarded value]: $17.1
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:rax 
   .loc 1 17 9
-  # $19.1: Boolean = call(ends_with_395, output_file_path.1, ".s")
+  # $19.1: bool = call(ends_with_395, output_file_path.1, ".s")
   mov rdi, rax
   lea rsi, .LABEL__string_5[rip] # ".s"
   mov [rbp-34], rax
   call ends_with_395
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $19.1:rax 
   .loc 1 17 9
-  # $20.1: Boolean = $19.1 == false
+  # $20.1: bool = $19.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $19.1
@@ -411,7 +411,7 @@ main_1:
   xor rax, rax
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:rax 
   .loc 1 23 9
-  # $25.1: Boolean = argc.1 >= 4
+  # $25.1: bool = argc.1 >= 4
   cmp QWORD PTR [rbp-17], 4
   setge bl
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:rax $25.1:rbx 
@@ -422,7 +422,7 @@ main_1:
   jz .LABEL__main_1__9
 .LABEL__main_1__8:
   .loc 1 24 40
-  # $26.1: [Int8; ?] = load_array_item(argv.1, 3)
+  # $26.1: [i8; ?] = load_array_item(argv.1, 3)
   mov rax, [rbp-9]
   add rax, 24
   mov rax, [rax]
@@ -434,14 +434,14 @@ main_1:
   # [discarded value]: $26.1
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:[rbp-43] $25.1:[rbp-44] dump_file_path.2:rax:[rbp-43] 
   .loc 1 25 13
-  # $28.1: Boolean = call(ends_with_395, dump_file_path.2, ".ir")
+  # $28.1: bool = call(ends_with_395, dump_file_path.2, ".ir")
   mov rdi, rax
   lea rsi, .LABEL__string_7[rip] # ".ir"
   mov [rbp-43], rax
   call ends_with_395
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:[rbp-43] $25.1:[rbp-44] dump_file_path.2:[rbp-43] $28.1:rax 
   .loc 1 25 13
-  # $29.1: Boolean = $28.1 == false
+  # $29.1: bool = $28.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $28.1
@@ -502,7 +502,7 @@ main_1:
   # [discarded value]: compilation_unit.1
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:[rbp-43] $25.1:[rbp-44] dump_file_path.2:[rbp-43] $29.1:[rbp-45] dump_file_path.4:[rbp-43] build.1:rax 
   .loc 1 37 9
-  # $36.1: Boolean = dump_file_path.4 != null
+  # $36.1: bool = dump_file_path.4 != null
   cmp QWORD PTR [rbp-43], 0
   setne bl
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:[rbp-43] $25.1:[rbp-44] dump_file_path.2:[rbp-43] $29.1:[rbp-45] dump_file_path.4:[rbp-43] build.1:rax $36.1:rbx 
@@ -513,12 +513,12 @@ main_1:
   jz .LABEL__main_1__13
 .LABEL__main_1__12:
   .loc 1 38 31
-  # $37.1: [Int8; ?] = load_struct_member(dump_file_path.4, data)
+  # $37.1: [i8; ?] = load_struct_member(dump_file_path.4, data)
   mov rax, [rbp-43]
   mov rbx, [rax]
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:[rbp-43] $25.1:[rbp-44] dump_file_path.2:[rbp-43] $29.1:[rbp-45] dump_file_path.4:rax:[rbp-43] build.1:[rbp-53] $36.1:[rbp-54] $37.1:rbx 
   .loc 1 38 52
-  # $38.1: [Int8; ?] = load_struct_member("w", data)
+  # $38.1: [i8; ?] = load_struct_member("w", data)
   lea r15, .LABEL__string_9[rip] # "w"
   mov r14, [r15]
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:[rbp-43] $25.1:[rbp-44] dump_file_path.2:[rbp-43] $29.1:[rbp-45] dump_file_path.4:rax:[rbp-43] build.1:[rbp-53] $36.1:[rbp-54] $37.1:rbx $38.1:r14 
@@ -538,7 +538,7 @@ main_1:
   call dump_64
   # [live values]: argc.1:[rbp-17] argv.1:[rbp-9] $1.1:[rbp-1] source_file_path.1:[rbp-25] $12.1:[rbp-26] output_file_path.1:[rbp-34] $20.1:[rbp-35] dump_file_path.1:[rbp-43] $25.1:[rbp-44] dump_file_path.2:[rbp-43] $29.1:[rbp-45] dump_file_path.4:[rbp-43] build.1:[rbp-53] $36.1:[rbp-54] dump_file.1:[rbp-62] 
   .loc 1 40 9
-  # $40.1: Int32 = call(fclose, dump_file.1)
+  # $40.1: i32 = call(fclose, dump_file.1)
   mov rdi, [rbp-62]
   call fclose
   # [discarded value]: $40.1
@@ -626,7 +626,7 @@ generate_2:
   # build_sources_item.2: @List_Item = phi(build_sources_item.1, build_sources_item.4)
   # [live values]: build.1:[rbp-8] generator.1:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] 
   .loc 2 7 12
-  # $4.1: Boolean = build_sources_item.2 != null
+  # $4.1: bool = build_sources_item.2 != null
   cmp QWORD PTR [rbp-24], 0
   setne al
   # [live values]: build.1:[rbp-8] generator.1:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] $4.1:rax 
@@ -654,7 +654,7 @@ generate_2:
   # [discarded value]: $7.1
   # [live values]: build.1:[rbp-8] generator.1:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] $4.1:[rbp-25] build_source.1:[rbp-33] $8.1:rax 
   .loc 2 9 55
-  # $9.1: Int = load_struct_member(build_source.1, id)
+  # $9.1: isize = load_struct_member(build_source.1, id)
   mov rbx, [rbp-33]
   mov r15, [rbx]
   # [live values]: build.1:[rbp-8] generator.1:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] $4.1:[rbp-25] build_source.1:rbx:[rbp-33] $8.1:rax $9.1:r15 
@@ -759,7 +759,7 @@ generate_2:
   mov [rbp-33], rax
 .LABEL__generate_2__5:
   .loc 2 18 12
-  # $23.1: Boolean = call(has_next_378, functions.1)
+  # $23.1: bool = call(has_next_378, functions.1)
   mov rdi, [rbp-33]
   call has_next_378
   # [live values]: build.1:[rbp-8] generator.1:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] $4.1:[rbp-25] functions.1:[rbp-33] $23.1:rax 
@@ -774,11 +774,11 @@ generate_2:
   call next_379
   # [live values]: build.1:[rbp-8] generator.1:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] $4.1:[rbp-25] functions.1:[rbp-33] $23.1:[rbp-34] function.1:rax 
   .loc 2 20 13
-  # $26.1: Boolean = load_struct_member(function.1, is_external)
+  # $26.1: bool = load_struct_member(function.1, is_external)
   mov bl, [rax+56]
   # [live values]: build.1:[rbp-8] generator.1:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] $4.1:[rbp-25] functions.1:[rbp-33] $23.1:[rbp-34] function.1:rax $26.1:rbx 
   .loc 2 20 13
-  # $27.1: Boolean = $26.1 == false
+  # $27.1: bool = $26.1 == false
   cmp bl, 0
   sete r15b
   # [discarded value]: $26.1
@@ -826,7 +826,7 @@ generate_2:
   mov rbx, [rax+8]
   # [live values]: build.1:[rbp-8] generator.1:rax:[rbp-16] build_sources_item.1:[rbp-24] build_sources_item.2:[rbp-24] $4.1:[rbp-25] functions.1:[rbp-33] $23.1:[rbp-34] $29.1:rbx 
   .loc 2 29 5
-  # $30.1: Int32 = call(fclose, $29.1)
+  # $30.1: i32 = call(fclose, $29.1)
   mov rdi, rbx
   call fclose
   # [discarded value]: $30.1
@@ -904,7 +904,7 @@ generate_function_3:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] function.1:rbx:[rbp-16] $4.1:rax $6.1:r14 
   .loc 2 34 45
-  # $7.1: Int = load_struct_member($6.1, id)
+  # $7.1: isize = load_struct_member($6.1, id)
   mov r15, [r14]
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] function.1:rbx:[rbp-16] $4.1:rax $7.1:r15 
@@ -929,7 +929,7 @@ generate_function_3:
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] function.1:rbx:[rbp-16] $9.1:rax $10.1:r15 
   .loc 2 34 91
-  # $11.1: Int = load_struct_member($10.1, line)
+  # $11.1: isize = load_struct_member($10.1, line)
   mov r14, [r15+8]
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] function.1:rbx:[rbp-16] $9.1:rax $11.1:r14 
@@ -954,7 +954,7 @@ generate_function_3:
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-8] function.1:rbx:[rbp-16] $13.1:rax $14.1:r15 
   .loc 2 34 132
-  # $15.1: Int = load_struct_member($14.1, column)
+  # $15.1: isize = load_struct_member($14.1, column)
   mov r14, [r15+16]
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] function.1:rbx:[rbp-16] $13.1:rax $15.1:r14 
@@ -998,7 +998,7 @@ generate_function_3:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] function.1:rax:[rbp-16] $21.1:rbx 
   .loc 2 36 9
-  # $22.1: Boolean = call(equals_392, $21.1, "main")
+  # $22.1: bool = call(equals_392, $21.1, "main")
   mov rdi, rbx
   lea rsi, .LABEL__string_16[rip] # "main"
   call equals_392
@@ -1187,7 +1187,7 @@ generate_function_3:
   mov [rbp-25], rax
 .LABEL__generate_function_3__4:
   .loc 2 47 12
-  # $50.1: Boolean = call(has_next_378, blocks.1)
+  # $50.1: bool = call(has_next_378, blocks.1)
   mov rdi, [rbp-25]
   call has_next_378
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:rax 
@@ -1212,7 +1212,7 @@ generate_function_3:
   # block_instruction.2: @IR_Instruction = phi(block_instruction.1, block_instruction.6)
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] 
   .loc 2 50 16
-  # $54.1: Boolean = block_instruction.2 != null
+  # $54.1: bool = block_instruction.2 != null
   cmp QWORD PTR [rbp-34], 0
   setne al
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $54.1:rax 
@@ -1227,7 +1227,7 @@ generate_function_3:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:rax:[rbp-34] $54.1:[rbp-35] $55.1:rbx 
   .loc 2 51 17
-  # $56.1: Boolean = $55.1 != null
+  # $56.1: bool = $55.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $55.1
@@ -1360,7 +1360,7 @@ generate_function_3:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] function.1:rax:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $71.1:rbx 
   .loc 2 65 9
-  # $73.1: Boolean = call(equals_392, $71.1, "main")
+  # $73.1: bool = call(equals_392, $71.1, "main")
   mov rdi, rbx
   lea rsi, .LABEL__string_16[rip] # "main"
   call equals_392
@@ -1377,7 +1377,7 @@ generate_function_3:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-8] function.1:rax:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $74.1:rbx 
   .loc 2 65 41
-  # $73.2: Boolean = call(is_389, $74.1, IR_Nothing_Type)
+  # $73.2: bool = call(is_389, $74.1, IR_Nothing_Type)
   mov rdi, rbx
   mov rsi, IR_Nothing_Type[rip]
   call is_389
@@ -1387,7 +1387,7 @@ generate_function_3:
   mov [rbp-27], al
 .LABEL__generate_function_3__13:
   .loc 2 65 9
-  # $73.3: Boolean = phi($73.1, $73.2)
+  # $73.3: bool = phi($73.1, $73.2)
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] 
   # jump($73.3, .LABEL__generate_function_3__14, .LABEL__generate_function_3__15)
   mov al, [rbp-27]
@@ -1441,19 +1441,19 @@ generate_function_3:
   # [discarded value]: $81.1
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] 
   .loc 2 70 28
-  # stack_frame_size.1: Int = load_struct_member(self.1, stack_frame_size)
+  # stack_frame_size.1: isize = load_struct_member(self.1, stack_frame_size)
   mov rax, [rbp-8]
   mov rbx, [rax+161]
   # [live values]: self.1:rax:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] stack_frame_size.1:rbx 
   .loc 2 71 9
-  # $84.1: Int = stack_frame_size.1 // 16
+  # $84.1: isize = stack_frame_size.1 // 16
   mov rax, rbx
   cqto
   mov r15, 16
   idiv r15
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] stack_frame_size.1:rbx $84.1:rdx 
   .loc 2 71 9
-  # $85.1: Boolean = $84.1 != 0
+  # $85.1: bool = $84.1 != 0
   cmp rdx, 0
   setne al
   # [discarded value]: $84.1
@@ -1465,12 +1465,12 @@ generate_function_3:
   jz .LABEL__generate_function_3__17
 .LABEL__generate_function_3__16:
   .loc 2 72 28
-  # $86.1: Int = stack_frame_size.1 + 16
+  # $86.1: isize = stack_frame_size.1 + 16
   mov rax, [rbp-36]
   add rax, 16
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] stack_frame_size.1:[rbp-36] $85.1:[rbp-28] $86.1:rax 
   .loc 2 72 52
-  # $87.1: Int = stack_frame_size.1 // 16
+  # $87.1: isize = stack_frame_size.1 // 16
   mov [rbp-44], rax
   mov rax, [rbp-36]
   cqto
@@ -1478,21 +1478,21 @@ generate_function_3:
   idiv rbx
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] stack_frame_size.1:[rbp-36] $85.1:[rbp-28] $86.1:[rbp-44] $87.1:rdx 
   .loc 2 72 28
-  # $88.1: Int = $86.1 - $87.1
+  # $88.1: isize = $86.1 - $87.1
   mov rax, [rbp-44]
   sub rax, rdx
   # [discarded value]: $87.1
   # [discarded value]: $86.1
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] stack_frame_size.1:[rbp-36] $85.1:[rbp-28] $88.1:rax 
   .loc 2 72 9
-  # stack_frame_size.3: Int = $88.1
+  # stack_frame_size.3: isize = $88.1
   mov [rbp-44], rax
   # [discarded value]: $88.1
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] stack_frame_size.1:[rbp-36] $85.1:[rbp-28] stack_frame_size.3:rax:[rbp-36] 
   # jump(.LABEL__generate_function_3__17)
   mov [rbp-36], rax
 .LABEL__generate_function_3__17:
-  # stack_frame_size.4: Int = phi(stack_frame_size.1, stack_frame_size.3)
+  # stack_frame_size.4: isize = phi(stack_frame_size.1, stack_frame_size.3)
   # [live values]: self.1:[rbp-8] function.1:[rbp-16] $22.1:[rbp-17] blocks.1:[rbp-25] $50.1:[rbp-26] $73.1:[rbp-27] $73.2:[rbp-27] $73.3:[rbp-27] stack_frame_size.1:[rbp-36] $85.1:[rbp-28] stack_frame_size.3:[rbp-36] stack_frame_size.4:[rbp-36] 
   .loc 2 74 5
   # $89.1: @FILE = load_struct_member(self.1, output_file)
@@ -1603,12 +1603,12 @@ write_function_label_4:
   # [discarded value]: $1.1
   # [live values]: file.1:[rbp-16] function.1:[rbp-8] 
   .loc 2 81 9
-  # $3.1: Boolean = load_struct_member(function.1, is_external)
+  # $3.1: bool = load_struct_member(function.1, is_external)
   mov rax, [rbp-8]
   mov bl, [rax+56]
   # [live values]: file.1:[rbp-16] function.1:rax:[rbp-8] $3.1:rbx 
   .loc 2 81 9
-  # $4.1: Boolean = $3.1 == false
+  # $4.1: bool = $3.1 == false
   cmp bl, 0
   sete r15b
   # [discarded value]: $3.1
@@ -1625,7 +1625,7 @@ write_function_label_4:
   call write_385
   # [live values]: file.1:[rbp-16] function.1:[rbp-8] $4.1:[rbp-17] $5.1:rax 
   .loc 2 82 31
-  # $6.1: Int = load_struct_member(function.1, id)
+  # $6.1: isize = load_struct_member(function.1, id)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: file.1:[rbp-16] function.1:rbx:[rbp-8] $4.1:[rbp-17] $5.1:rax $6.1:r15 
@@ -1723,11 +1723,11 @@ output_unreached_ir_instructions_6:
   # self.1: @MC_Generator = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 2 92 9
-  # $1.1: Boolean = load_struct_member(self.1, output_debug_comments)
+  # $1.1: bool = load_struct_member(self.1, output_debug_comments)
   mov al, [rdi+16]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 2 92 9
-  # $2.1: Boolean = $1.1 == false
+  # $2.1: bool = $1.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $1.1
@@ -1754,7 +1754,7 @@ output_unreached_ir_instructions_6:
   # mc_value.2: @MC_Value = phi(mc_value.1, mc_value.5)
   # [live values]: self.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-17] mc_value.2:[rbp-17] 
   .loc 2 96 12
-  # $4.1: Boolean = mc_value.2 != null
+  # $4.1: bool = mc_value.2 != null
   cmp QWORD PTR [rbp-17], 0
   setne al
   # [live values]: self.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-17] mc_value.2:[rbp-17] $4.1:rax 
@@ -1784,7 +1784,7 @@ output_unreached_ir_instructions_6:
   # ir_instruction_item.2: @List_Item = phi(ir_instruction_item.1, ir_instruction_item.5)
   # [live values]: self.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-17] mc_value.2:[rbp-17] $4.1:[rbp-18] ir_instruction_item.1:[rbp-26] ir_instruction_item.2:[rbp-26] 
   .loc 2 98 16
-  # $8.1: Boolean = ir_instruction_item.2 != null
+  # $8.1: bool = ir_instruction_item.2 != null
   cmp QWORD PTR [rbp-26], 0
   setne al
   # [live values]: self.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-17] mc_value.2:[rbp-17] $4.1:[rbp-18] ir_instruction_item.1:[rbp-26] ir_instruction_item.2:[rbp-26] $8.1:rax 
@@ -1799,11 +1799,11 @@ output_unreached_ir_instructions_6:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-17] mc_value.2:[rbp-17] $4.1:[rbp-18] ir_instruction_item.1:[rbp-26] ir_instruction_item.2:rax:[rbp-26] $8.1:[rbp-27] ir_instruction.1:rbx 
   .loc 2 100 17
-  # $11.1: Boolean = load_struct_member(ir_instruction.1, is_generated)
+  # $11.1: bool = load_struct_member(ir_instruction.1, is_generated)
   mov r15b, [rbx+56]
   # [live values]: self.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-17] mc_value.2:[rbp-17] $4.1:[rbp-18] ir_instruction_item.1:[rbp-26] ir_instruction_item.2:rax:[rbp-26] $8.1:[rbp-27] ir_instruction.1:rbx $11.1:r15 
   .loc 2 100 17
-  # $12.1: Boolean = $11.1 == false
+  # $12.1: bool = $11.1 == false
   cmp r15b, 0
   sete r14b
   # [discarded value]: $11.1
@@ -1947,7 +1947,7 @@ generate_block_7:
   # block_instruction.2: @IR_Instruction = phi(block_instruction.1, block_instruction.8)
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] 
   .loc 2 113 12
-  # $6.1: Boolean = block_instruction.2 != null
+  # $6.1: bool = block_instruction.2 != null
   cmp QWORD PTR [rbp-24], 0
   setne al
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:rax 
@@ -1963,19 +1963,19 @@ generate_block_7:
   call generate_instruction_9
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] 
   .loc 2 115 13
-  # $7.1: Boolean = call(is_389, block_instruction.2, IR_Load_Variable_Instruction)
+  # $7.1: bool = call(is_389, block_instruction.2, IR_Load_Variable_Instruction)
   mov rdi, [rbp-24]
   mov rsi, IR_Load_Variable_Instruction[rip]
   call is_389
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] $7.1:rax 
   .loc 2 115 13
-  # $8.1: Boolean = $7.1 == false
+  # $8.1: bool = $7.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] $8.1:rbx 
   .loc 2 115 13
-  # $9.1: Boolean = $8.1
+  # $9.1: bool = $8.1
   mov [rbp-26], bl
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] $9.1:rbx 
@@ -1990,13 +1990,13 @@ generate_block_7:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:rax:[rbp-24] $6.1:[rbp-25] $9.1:[rbp-26] $10.1:rbx 
   .loc 2 115 76
-  # $11.1: Boolean = $10.1 != null
+  # $11.1: bool = $10.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:rax:[rbp-24] $6.1:[rbp-25] $9.1:[rbp-26] $11.1:r15 
   .loc 2 115 13
-  # $9.2: Boolean = $11.1
+  # $9.2: bool = $11.1
   mov [rbp-27], r15b
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:rax:[rbp-24] $6.1:[rbp-25] $9.1:[rbp-26] $9.2:r15:[rbp-26] 
@@ -2004,7 +2004,7 @@ generate_block_7:
   mov [rbp-26], r15b
 .LABEL__generate_block_7__8:
   .loc 2 115 13
-  # $12.1: Boolean = phi($9.1, $9.2)
+  # $12.1: bool = phi($9.1, $9.2)
   mov al, [rbp-26]
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] $9.1:[rbp-26] $9.2:[rbp-26] $12.1:rax 
   # jump($12.1, .LABEL__generate_block_7__5, .LABEL__generate_block_7__6)
@@ -2023,7 +2023,7 @@ generate_block_7:
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:rax:[rbp-24] $6.1:[rbp-25] $9.1:[rbp-26] $14.1:r15 $9.2:[rbp-26] $12.1:[rbp-27] 
   .loc 2 115 118
-  # $12.2: Boolean = call(is_389, $14.1, IR_Global_Variable)
+  # $12.2: bool = call(is_389, $14.1, IR_Global_Variable)
   mov rdi, r15
   mov rsi, IR_Global_Variable[rip]
   call is_389
@@ -2033,7 +2033,7 @@ generate_block_7:
   mov [rbp-27], al
 .LABEL__generate_block_7__6:
   .loc 2 115 13
-  # $12.3: Boolean = phi($12.1, $12.2)
+  # $12.3: bool = phi($12.1, $12.2)
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] $9.1:[rbp-26] $12.2:[rbp-27] $12.3:[rbp-27] $9.2:[rbp-26] $12.1:[rbp-27] 
   # jump($12.3, .LABEL__generate_block_7__9, .LABEL__generate_block_7__10)
   mov al, [rbp-27]
@@ -2062,7 +2062,7 @@ generate_block_7:
   # jump(.LABEL__generate_block_7__10)
 .LABEL__generate_block_7__10:
   .loc 2 118 9
-  # $18.1: Int = call(discard_used_values_48, self.1)
+  # $18.1: isize = call(discard_used_values_48, self.1)
   mov rdi, [rbp-8]
   call discard_used_values_48
   # [discarded value]: $18.1
@@ -2110,12 +2110,12 @@ generate_block_7:
   mov BYTE PTR [rax+49], 1
   # [live values]: self.1:[rbp-8] block.1:rax:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] 
   .loc 2 124 9
-  # $20.1: Int = call(discard_used_values_48, self.1)
+  # $20.1: isize = call(discard_used_values_48, self.1)
   mov rdi, [rbp-8]
   call discard_used_values_48
   # [live values]: self.1:[rbp-8] block.1:[rbp-16] block_instruction.1:[rbp-24] block_instruction.2:[rbp-24] $6.1:[rbp-25] $20.1:rax 
   .loc 2 124 9
-  # $21.1: Boolean = $20.1 > 0
+  # $21.1: bool = $20.1 > 0
   cmp rax, 0
   setg bl
   # [discarded value]: $20.1
@@ -2209,7 +2209,7 @@ write_block_label_8:
   mov r15, [rbx+16]
   # [live values]: block.1:rbx:[rbp-8] $5.1:rax $6.1:r15 
   .loc 2 131 79
-  # $7.1: Int = load_struct_member($6.1, id)
+  # $7.1: isize = load_struct_member($6.1, id)
   mov r14, [r15+8]
   # [discarded value]: $6.1
   # [live values]: block.1:rbx:[rbp-8] $5.1:rax $7.1:r14 
@@ -2229,7 +2229,7 @@ write_block_label_8:
   # [discarded value]: $8.1
   # [live values]: block.1:[rbp-8] $9.1:rax 
   .loc 2 131 116
-  # $10.1: Int = load_struct_member(block.1, id)
+  # $10.1: isize = load_struct_member(block.1, id)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [discarded value]: block.1
@@ -2272,7 +2272,7 @@ generate_instruction_9:
   mov rax, [rsi+8]
   # [live values]: self.1:rdi instruction.1:rsi $1.1:rax 
   .loc 2 135 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -2307,7 +2307,7 @@ generate_instruction_9:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-17] instruction.1:rbx:[rbp-9] $2.1:[rbp-1] $4.1:rax $6.1:r14 
   .loc 2 136 49
-  # $7.1: Int = load_struct_member($6.1, id)
+  # $7.1: isize = load_struct_member($6.1, id)
   mov r15, [r14]
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-17] instruction.1:rbx:[rbp-9] $2.1:[rbp-1] $4.1:rax $7.1:r15 
@@ -2332,7 +2332,7 @@ generate_instruction_9:
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-17] instruction.1:rbx:[rbp-9] $2.1:[rbp-1] $9.1:rax $10.1:r15 
   .loc 2 136 98
-  # $11.1: Int = load_struct_member($10.1, line)
+  # $11.1: isize = load_struct_member($10.1, line)
   mov r14, [r15+8]
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-17] instruction.1:rbx:[rbp-9] $2.1:[rbp-1] $9.1:rax $11.1:r14 
@@ -2357,7 +2357,7 @@ generate_instruction_9:
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-17] instruction.1:rbx:[rbp-9] $2.1:[rbp-1] $13.1:rax $14.1:r15 
   .loc 2 136 142
-  # $15.1: Int = load_struct_member($14.1, column)
+  # $15.1: isize = load_struct_member($14.1, column)
   mov r14, [r15+16]
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-17] instruction.1:rbx:[rbp-9] $2.1:[rbp-1] $13.1:rax $15.1:r14 
@@ -2379,7 +2379,7 @@ generate_instruction_9:
   # jump(.LABEL__generate_instruction_9__3)
 .LABEL__generate_instruction_9__3:
   .loc 2 138 9
-  # $18.1: Boolean = load_struct_member(self.1, output_debug_comments)
+  # $18.1: bool = load_struct_member(self.1, output_debug_comments)
   mov rax, [rbp-17]
   mov bl, [rax+16]
   # [live values]: self.1:rax:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:rbx 
@@ -2412,7 +2412,7 @@ generate_instruction_9:
   # jump(.LABEL__generate_instruction_9__5)
 .LABEL__generate_instruction_9__5:
   .loc 2 141 9
-  # $22.1: Boolean = call(is_389, instruction.1, IR_Add_Instruction)
+  # $22.1: bool = call(is_389, instruction.1, IR_Add_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Add_Instruction[rip]
   call is_389
@@ -2446,7 +2446,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] 
 .LABEL__generate_instruction_9__8:
   .loc 2 143 16
-  # $23.1: Boolean = call(is_389, instruction.1, IR_Call_Instruction)
+  # $23.1: bool = call(is_389, instruction.1, IR_Call_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Call_Instruction[rip]
   call is_389
@@ -2472,7 +2472,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] 
 .LABEL__generate_instruction_9__11:
   .loc 2 145 16
-  # $24.1: Boolean = call(is_389, instruction.1, IR_Cast_Instruction)
+  # $24.1: bool = call(is_389, instruction.1, IR_Cast_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Cast_Instruction[rip]
   call is_389
@@ -2498,7 +2498,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] 
 .LABEL__generate_instruction_9__14:
   .loc 2 147 16
-  # $25.1: Boolean = call(is_389, instruction.1, IR_Conditional_Jump_Instruction)
+  # $25.1: bool = call(is_389, instruction.1, IR_Conditional_Jump_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Conditional_Jump_Instruction[rip]
   call is_389
@@ -2524,7 +2524,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] 
 .LABEL__generate_instruction_9__17:
   .loc 2 149 16
-  # $26.1: Boolean = call(is_389, instruction.1, IR_Comparison_Instruction)
+  # $26.1: bool = call(is_389, instruction.1, IR_Comparison_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Comparison_Instruction[rip]
   call is_389
@@ -2550,7 +2550,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] 
 .LABEL__generate_instruction_9__20:
   .loc 2 151 16
-  # $27.1: Boolean = call(is_389, instruction.1, IR_Direct_Jump_Instruction)
+  # $27.1: bool = call(is_389, instruction.1, IR_Direct_Jump_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Direct_Jump_Instruction[rip]
   call is_389
@@ -2576,7 +2576,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] 
 .LABEL__generate_instruction_9__23:
   .loc 2 153 16
-  # $28.1: Boolean = call(is_389, instruction.1, IR_Divide_Instruction)
+  # $28.1: bool = call(is_389, instruction.1, IR_Divide_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Divide_Instruction[rip]
   call is_389
@@ -2602,7 +2602,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] 
 .LABEL__generate_instruction_9__26:
   .loc 2 155 16
-  # $29.1: Boolean = call(is_389, instruction.1, IR_Load_Array_Item_Instruction)
+  # $29.1: bool = call(is_389, instruction.1, IR_Load_Array_Item_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Load_Array_Item_Instruction[rip]
   call is_389
@@ -2628,7 +2628,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] 
 .LABEL__generate_instruction_9__29:
   .loc 2 157 16
-  # $30.1: Boolean = call(is_389, instruction.1, IR_Load_Struct_Member_Instruction)
+  # $30.1: bool = call(is_389, instruction.1, IR_Load_Struct_Member_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Load_Struct_Member_Instruction[rip]
   call is_389
@@ -2654,7 +2654,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] 
 .LABEL__generate_instruction_9__32:
   .loc 2 159 16
-  # $31.1: Boolean = call(is_389, instruction.1, IR_Load_Variable_Instruction)
+  # $31.1: bool = call(is_389, instruction.1, IR_Load_Variable_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Load_Variable_Instruction[rip]
   call is_389
@@ -2680,7 +2680,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] 
 .LABEL__generate_instruction_9__35:
   .loc 2 161 16
-  # $32.1: Boolean = call(is_389, instruction.1, IR_Load_Variable_Address_Instruction)
+  # $32.1: bool = call(is_389, instruction.1, IR_Load_Variable_Address_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Load_Variable_Address_Instruction[rip]
   call is_389
@@ -2706,7 +2706,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] 
 .LABEL__generate_instruction_9__38:
   .loc 2 163 16
-  # $33.1: Boolean = call(is_389, instruction.1, IR_Modulo_Instruction)
+  # $33.1: bool = call(is_389, instruction.1, IR_Modulo_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Modulo_Instruction[rip]
   call is_389
@@ -2732,7 +2732,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] 
 .LABEL__generate_instruction_9__41:
   .loc 2 165 16
-  # $34.1: Boolean = call(is_389, instruction.1, IR_Multiply_Instruction)
+  # $34.1: bool = call(is_389, instruction.1, IR_Multiply_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Multiply_Instruction[rip]
   call is_389
@@ -2758,7 +2758,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] $34.1:[rbp-31] 
 .LABEL__generate_instruction_9__44:
   .loc 2 167 16
-  # $35.1: Boolean = call(is_389, instruction.1, IR_New_Instruction)
+  # $35.1: bool = call(is_389, instruction.1, IR_New_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_New_Instruction[rip]
   call is_389
@@ -2784,7 +2784,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] $34.1:[rbp-31] $35.1:[rbp-32] 
 .LABEL__generate_instruction_9__47:
   .loc 2 169 16
-  # $36.1: Boolean = call(is_389, instruction.1, IR_Phi_Instruction)
+  # $36.1: bool = call(is_389, instruction.1, IR_Phi_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Phi_Instruction[rip]
   call is_389
@@ -2810,7 +2810,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] $34.1:[rbp-31] $35.1:[rbp-32] $36.1:[rbp-33] 
 .LABEL__generate_instruction_9__50:
   .loc 2 171 16
-  # $37.1: Boolean = call(is_389, instruction.1, IR_Return_Instruction)
+  # $37.1: bool = call(is_389, instruction.1, IR_Return_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Return_Instruction[rip]
   call is_389
@@ -2836,7 +2836,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] $34.1:[rbp-31] $35.1:[rbp-32] $36.1:[rbp-33] $37.1:[rbp-34] 
 .LABEL__generate_instruction_9__53:
   .loc 2 173 16
-  # $38.1: Boolean = call(is_389, instruction.1, IR_Set_Instruction)
+  # $38.1: bool = call(is_389, instruction.1, IR_Set_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Set_Instruction[rip]
   call is_389
@@ -2862,7 +2862,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] $34.1:[rbp-31] $35.1:[rbp-32] $36.1:[rbp-33] $37.1:[rbp-34] $38.1:[rbp-35] 
 .LABEL__generate_instruction_9__56:
   .loc 2 175 16
-  # $39.1: Boolean = call(is_389, instruction.1, IR_Store_Array_Item_Instruction)
+  # $39.1: bool = call(is_389, instruction.1, IR_Store_Array_Item_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Store_Array_Item_Instruction[rip]
   call is_389
@@ -2888,7 +2888,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] $34.1:[rbp-31] $35.1:[rbp-32] $36.1:[rbp-33] $37.1:[rbp-34] $38.1:[rbp-35] $39.1:[rbp-36] 
 .LABEL__generate_instruction_9__59:
   .loc 2 177 16
-  # $40.1: Boolean = call(is_389, instruction.1, IR_Store_Struct_Member_Instruction)
+  # $40.1: bool = call(is_389, instruction.1, IR_Store_Struct_Member_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Store_Struct_Member_Instruction[rip]
   call is_389
@@ -2914,7 +2914,7 @@ generate_instruction_9:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $18.1:[rbp-18] $22.1:[rbp-19] $23.1:[rbp-20] $24.1:[rbp-21] $25.1:[rbp-22] $26.1:[rbp-23] $27.1:[rbp-24] $28.1:[rbp-25] $29.1:[rbp-26] $30.1:[rbp-27] $31.1:[rbp-28] $32.1:[rbp-29] $33.1:[rbp-30] $34.1:[rbp-31] $35.1:[rbp-32] $36.1:[rbp-33] $37.1:[rbp-34] $38.1:[rbp-35] $39.1:[rbp-36] $40.1:[rbp-37] 
 .LABEL__generate_instruction_9__62:
   .loc 2 179 16
-  # $41.1: Boolean = call(is_389, instruction.1, IR_Substract_Instruction)
+  # $41.1: bool = call(is_389, instruction.1, IR_Substract_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Substract_Instruction[rip]
   call is_389
@@ -3152,11 +3152,11 @@ generate_call_instruction_11:
   # instruction.1: @IR_Call_Instruction = load_variable(instruction)
   # [live values]: self.1:rdi instruction.1:rsi 
   .loc 2 195 9
-  # $1.1: Int = load_struct_member(instruction.1, arguments_size)
+  # $1.1: isize = load_struct_member(instruction.1, arguments_size)
   mov rax, [rsi+65]
   # [live values]: self.1:rdi instruction.1:rsi $1.1:rax 
   .loc 2 195 9
-  # $2.1: Boolean = $1.1 > 0
+  # $2.1: bool = $1.1 > 0
   cmp rax, 0
   setg bl
   # [discarded value]: $1.1
@@ -3190,12 +3190,12 @@ generate_call_instruction_11:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] 
   .loc 2 197 13
-  # $5.1: Int = load_struct_member(instruction.1, arguments_size)
+  # $5.1: isize = load_struct_member(instruction.1, arguments_size)
   mov rax, [rbp-9]
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $5.1:rbx 
   .loc 2 197 13
-  # $6.1: Boolean = $5.1 > 1
+  # $6.1: bool = $5.1 > 1
   cmp rbx, 1
   setg r15b
   # [discarded value]: $5.1
@@ -3227,12 +3227,12 @@ generate_call_instruction_11:
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] 
   .loc 2 199 17
-  # $9.1: Int = load_struct_member(instruction.1, arguments_size)
+  # $9.1: isize = load_struct_member(instruction.1, arguments_size)
   mov rax, [rbp-9]
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $9.1:rbx 
   .loc 2 199 17
-  # $10.1: Boolean = $9.1 > 2
+  # $10.1: bool = $9.1 > 2
   cmp rbx, 2
   setg r15b
   # [discarded value]: $9.1
@@ -3264,12 +3264,12 @@ generate_call_instruction_11:
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $10.1:[rbp-19] 
   .loc 2 201 21
-  # $13.1: Int = load_struct_member(instruction.1, arguments_size)
+  # $13.1: isize = load_struct_member(instruction.1, arguments_size)
   mov rax, [rbp-9]
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $10.1:[rbp-19] $13.1:rbx 
   .loc 2 201 21
-  # $14.1: Boolean = $13.1 > 3
+  # $14.1: bool = $13.1 > 3
   cmp rbx, 3
   setg r15b
   # [discarded value]: $13.1
@@ -3301,12 +3301,12 @@ generate_call_instruction_11:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $10.1:[rbp-19] $14.1:[rbp-20] 
   .loc 2 203 25
-  # $17.1: Int = load_struct_member(instruction.1, arguments_size)
+  # $17.1: isize = load_struct_member(instruction.1, arguments_size)
   mov rax, [rbp-9]
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $10.1:[rbp-19] $14.1:[rbp-20] $17.1:rbx 
   .loc 2 203 25
-  # $18.1: Boolean = $17.1 > 4
+  # $18.1: bool = $17.1 > 4
   cmp rbx, 4
   setg r15b
   # [discarded value]: $17.1
@@ -3338,12 +3338,12 @@ generate_call_instruction_11:
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $10.1:[rbp-19] $14.1:[rbp-20] $18.1:[rbp-21] 
   .loc 2 205 29
-  # $21.1: Int = load_struct_member(instruction.1, arguments_size)
+  # $21.1: isize = load_struct_member(instruction.1, arguments_size)
   mov rax, [rbp-9]
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $10.1:[rbp-19] $14.1:[rbp-20] $18.1:[rbp-21] $21.1:rbx 
   .loc 2 205 29
-  # $22.1: Boolean = $21.1 > 5
+  # $22.1: bool = $21.1 > 5
   cmp rbx, 5
   setg r15b
   # [discarded value]: $21.1
@@ -3377,7 +3377,7 @@ generate_call_instruction_11:
   # jump(.LABEL__generate_call_instruction_11__3)
 .LABEL__generate_call_instruction_11__3:
   .loc 2 213 9
-  # $25.1: Boolean = call(is_389, instruction.1, IR_Direct_Call_Instruction)
+  # $25.1: bool = call(is_389, instruction.1, IR_Direct_Call_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Direct_Call_Instruction[rip]
   call is_389
@@ -3441,7 +3441,7 @@ generate_call_instruction_11:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $25.1:[rbp-23] $10.1:[rbp-19] $14.1:[rbp-20] $18.1:[rbp-21] $22.1:[rbp-22] $44.1:rbx 
   .loc 2 225 9
-  # $45.1: Boolean = $44.1 != null
+  # $45.1: bool = $44.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $44.1
@@ -3482,7 +3482,7 @@ generate_call_instruction_11:
   # [live values]: self.1:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $6.1:[rbp-18] $25.1:[rbp-23] $10.1:[rbp-19] $14.1:[rbp-20] $18.1:[rbp-21] $22.1:[rbp-22] 
 .LABEL__generate_call_instruction_11__16:
   .loc 2 217 16
-  # $26.1: Boolean = call(is_389, instruction.1, IR_Dynamic_Call_Instruction)
+  # $26.1: bool = call(is_389, instruction.1, IR_Dynamic_Call_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Dynamic_Call_Instruction[rip]
   call is_389
@@ -3670,7 +3670,7 @@ generate_cast_instruction_12:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] ir_value.1:[rbp-24] result_register.1:[rbp-32] $6.1:r15 
   .loc 2 235 9
-  # $7.1: Boolean = call(is_389, $6.1, IR_Int_Type)
+  # $7.1: bool = call(is_389, $6.1, IR_Int_Type)
   mov rdi, r15
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -3687,7 +3687,7 @@ generate_cast_instruction_12:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $8.1:rbx 
   .loc 2 236 13
-  # $9.1: Boolean = call(is_389, $8.1, IR_Int32_Type)
+  # $9.1: bool = call(is_389, $8.1, IR_Int32_Type)
   mov rdi, rbx
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -3761,7 +3761,7 @@ generate_cast_instruction_12:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $9.1:[rbp-34] $18.1:rbx 
   .loc 2 240 13
-  # $19.1: Boolean = call(is_389, $18.1, IR_Int8_Type)
+  # $19.1: bool = call(is_389, $18.1, IR_Int8_Type)
   mov rdi, rbx
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -3840,7 +3840,7 @@ generate_cast_instruction_12:
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] ir_value.1:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $9.1:[rbp-34] $29.1:r15 $19.1:[rbp-35] 
   .loc 2 245 9
-  # $30.1: Boolean = call(is_389, $29.1, IR_Int32_Type)
+  # $30.1: bool = call(is_389, $29.1, IR_Int32_Type)
   mov rdi, r15
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -3857,7 +3857,7 @@ generate_cast_instruction_12:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $9.1:[rbp-34] $30.1:[rbp-36] $19.1:[rbp-35] $31.1:rbx 
   .loc 2 246 13
-  # $32.1: Boolean = call(is_389, $31.1, IR_Int_Type)
+  # $32.1: bool = call(is_389, $31.1, IR_Int_Type)
   mov rdi, rbx
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -3879,7 +3879,7 @@ generate_cast_instruction_12:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $9.1:[rbp-34] $30.1:[rbp-36] $19.1:[rbp-35] $32.1:[rbp-37] $33.1:rbx 
   .loc 2 249 13
-  # $34.1: Boolean = call(is_389, $33.1, IR_Int8_Type)
+  # $34.1: bool = call(is_389, $33.1, IR_Int8_Type)
   mov rdi, rbx
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -3958,7 +3958,7 @@ generate_cast_instruction_12:
   # [discarded value]: $43.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] ir_value.1:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $9.1:[rbp-34] $30.1:[rbp-36] $19.1:[rbp-35] $32.1:[rbp-37] $44.1:r15 $34.1:[rbp-38] 
   .loc 2 254 9
-  # $45.1: Boolean = call(is_389, $44.1, IR_Int8_Type)
+  # $45.1: bool = call(is_389, $44.1, IR_Int8_Type)
   mov rdi, r15
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -3975,7 +3975,7 @@ generate_cast_instruction_12:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $9.1:[rbp-34] $30.1:[rbp-36] $19.1:[rbp-35] $32.1:[rbp-37] $45.1:[rbp-39] $34.1:[rbp-38] $46.1:rbx 
   .loc 2 255 13
-  # $47.1: Boolean = call(is_389, $46.1, IR_Int_Type)
+  # $47.1: bool = call(is_389, $46.1, IR_Int_Type)
   mov rdi, rbx
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -3997,7 +3997,7 @@ generate_cast_instruction_12:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] result_register.1:[rbp-32] $7.1:[rbp-33] $9.1:[rbp-34] $30.1:[rbp-36] $19.1:[rbp-35] $32.1:[rbp-37] $45.1:[rbp-39] $34.1:[rbp-38] $47.1:[rbp-40] $48.1:rbx 
   .loc 2 258 13
-  # $49.1: Boolean = call(is_389, $48.1, IR_Int32_Type)
+  # $49.1: bool = call(is_389, $48.1, IR_Int32_Type)
   mov rdi, rbx
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -4139,7 +4139,7 @@ generate_conditional_jump_instruction_13:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] condition_value.1:rax $2.1:rbx 
   .loc 2 267 9
-  # $3.1: Boolean = call(is_389, $2.1, IR_Boolean_Type)
+  # $3.1: bool = call(is_389, $2.1, IR_Boolean_Type)
   mov rdi, rbx
   mov rsi, IR_Boolean_Type[rip]
   mov [rbp-24], rax
@@ -4147,7 +4147,7 @@ generate_conditional_jump_instruction_13:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] condition_value.1:[rbp-24] $3.1:rax 
   .loc 2 267 9
-  # $4.1: Boolean = $3.1 == false
+  # $4.1: bool = $3.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $3.1
@@ -4165,7 +4165,7 @@ generate_conditional_jump_instruction_13:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] 
 .LABEL__generate_conditional_jump_instruction_13__3:
   .loc 2 271 9
-  # $5.1: Boolean = call(is_389, condition_value.1, IR_Variable_Value)
+  # $5.1: bool = call(is_389, condition_value.1, IR_Variable_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -4187,7 +4187,7 @@ generate_conditional_jump_instruction_13:
   call get_value_42
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:rax 
   .loc 2 274 13
-  # $9.1: Boolean = mc_value.1 == null
+  # $9.1: bool = mc_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:rax $9.1:rbx 
@@ -4210,7 +4210,7 @@ generate_conditional_jump_instruction_13:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:rax:[rbp-42] $9.1:[rbp-43] condition_register.3:rbx 
   .loc 2 278 13
-  # $11.1: Boolean = condition_register.3 == null
+  # $11.1: bool = condition_register.3 == null
   cmp rbx, 0
   sete r15b
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:rax:[rbp-42] $9.1:[rbp-43] condition_register.3:rbx $11.1:r15 
@@ -4301,7 +4301,7 @@ generate_conditional_jump_instruction_13:
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:[rbp-42] $9.1:[rbp-43] $21.1:rbx condition_register.3:[rbp-51] $11.1:[rbp-52] condition_register.4:[rbp-51] 
   .loc 2 288 9
-  # $22.1: Boolean = load_struct_member($21.1, is_being_generated)
+  # $22.1: bool = load_struct_member($21.1, is_being_generated)
   mov r15b, [rbx+48]
   # [discarded value]: $21.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:[rbp-42] $9.1:[rbp-43] $22.1:r15 condition_register.3:[rbp-51] $11.1:[rbp-52] condition_register.4:[rbp-51] 
@@ -4348,7 +4348,7 @@ generate_conditional_jump_instruction_13:
   mov rbx, [rax+73]
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:[rbp-42] $9.1:[rbp-43] $22.1:[rbp-53] condition_register.3:[rbp-51] $11.1:[rbp-52] condition_register.4:[rbp-51] $38.1:rbx 
   .loc 2 290 13
-  # $39.1: Boolean = load_struct_member($38.1, is_being_generated)
+  # $39.1: bool = load_struct_member($38.1, is_being_generated)
   mov r15b, [rbx+48]
   # [discarded value]: $38.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:[rbp-42] $9.1:[rbp-43] $22.1:[rbp-53] condition_register.3:[rbp-51] $11.1:[rbp-52] condition_register.4:[rbp-51] $39.1:r15 
@@ -4435,12 +4435,12 @@ generate_conditional_jump_instruction_13:
   mov rbx, [rax+73]
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:[rbp-42] $9.1:[rbp-43] $22.1:[rbp-53] condition_register.3:[rbp-51] $11.1:[rbp-52] condition_register.4:[rbp-51] $29.1:rbx 
   .loc 2 297 13
-  # $30.1: Boolean = load_struct_member($29.1, is_being_generated)
+  # $30.1: bool = load_struct_member($29.1, is_being_generated)
   mov r15b, [rbx+48]
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] condition_value.1:[rbp-24] $4.1:[rbp-25] $5.1:[rbp-26] condition_value.1:[rbp-34] mc_value.1:[rbp-42] $9.1:[rbp-43] $22.1:[rbp-53] condition_register.3:[rbp-51] $11.1:[rbp-52] condition_register.4:[rbp-51] $30.1:r15 
   .loc 2 297 13
-  # $31.1: Boolean = $30.1 == false
+  # $31.1: bool = $30.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $30.1
@@ -4541,7 +4541,7 @@ generate_comparison_instruction_14:
   call get_right_value_233
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:rax 
   .loc 2 306 9
-  # $4.1: Boolean = call(is_389, left_value.1, IR_Variable_Value)
+  # $4.1: bool = call(is_389, left_value.1, IR_Variable_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Variable_Value[rip]
   mov [rbp-32], rax
@@ -4553,7 +4553,7 @@ generate_comparison_instruction_14:
   jz .LABEL__generate_comparison_instruction_14__3
 .LABEL__generate_comparison_instruction_14__2:
   .loc 2 306 45
-  # $4.2: Boolean = call(is_389, right_value.1, IR_Variable_Value)
+  # $4.2: bool = call(is_389, right_value.1, IR_Variable_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -4562,7 +4562,7 @@ generate_comparison_instruction_14:
   mov [rbp-33], al
 .LABEL__generate_comparison_instruction_14__3:
   .loc 2 306 9
-  # $4.3: Boolean = phi($4.1, $4.2)
+  # $4.3: bool = phi($4.1, $4.2)
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] 
   # jump($4.3, .LABEL__generate_comparison_instruction_14__4, .LABEL__generate_comparison_instruction_14__5)
   mov al, [rbp-33]
@@ -4586,7 +4586,7 @@ generate_comparison_instruction_14:
   # [discarded value]: mc_left_value.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $8.1:rbx 
   .loc 2 308 13
-  # $9.1: Boolean = $8.1 == null
+  # $9.1: bool = $8.1 == null
   cmp rbx, 0
   sete al
   # [discarded value]: $8.1
@@ -4613,7 +4613,7 @@ generate_comparison_instruction_14:
   # [discarded value]: mc_right_value.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $9.1:[rbp-34] $12.1:rbx 
   .loc 2 310 17
-  # $13.1: Boolean = $12.1 == null
+  # $13.1: bool = $12.1 == null
   cmp rbx, 0
   sete al
   # [discarded value]: $12.1
@@ -4700,7 +4700,7 @@ generate_comparison_instruction_14:
   call find_unused_register_38
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $9.1:[rbp-34] register.1:rax $13.1:[rbp-35] 
   .loc 2 319 9
-  # $24.1: Boolean = call(is_389, instruction.1, IR_Equals_Comparison_Instruction)
+  # $24.1: bool = call(is_389, instruction.1, IR_Equals_Comparison_Instruction)
   mov rdi, [rbp-16]
   mov rsi, IR_Equals_Comparison_Instruction[rip]
   mov [rbp-43], rax
@@ -4765,7 +4765,7 @@ generate_comparison_instruction_14:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $9.1:[rbp-34] register.1:[rbp-43] $24.1:[rbp-44] $13.1:[rbp-35] 
 .LABEL__generate_comparison_instruction_14__12:
   .loc 2 322 16
-  # $25.1: Boolean = call(is_389, instruction.1, IR_Greater_Comparison_Instruction)
+  # $25.1: bool = call(is_389, instruction.1, IR_Greater_Comparison_Instruction)
   mov rdi, [rbp-16]
   mov rsi, IR_Greater_Comparison_Instruction[rip]
   call is_389
@@ -4826,7 +4826,7 @@ generate_comparison_instruction_14:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $9.1:[rbp-34] register.1:[rbp-43] $24.1:[rbp-44] $13.1:[rbp-35] $25.1:[rbp-45] 
 .LABEL__generate_comparison_instruction_14__15:
   .loc 2 325 16
-  # $26.1: Boolean = call(is_389, instruction.1, IR_Greater_Or_Equal_Comparison_Instruction)
+  # $26.1: bool = call(is_389, instruction.1, IR_Greater_Or_Equal_Comparison_Instruction)
   mov rdi, [rbp-16]
   mov rsi, IR_Greater_Or_Equal_Comparison_Instruction[rip]
   call is_389
@@ -4887,7 +4887,7 @@ generate_comparison_instruction_14:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $9.1:[rbp-34] register.1:[rbp-43] $24.1:[rbp-44] $13.1:[rbp-35] $25.1:[rbp-45] $26.1:[rbp-46] 
 .LABEL__generate_comparison_instruction_14__18:
   .loc 2 328 16
-  # $27.1: Boolean = call(is_389, instruction.1, IR_Less_Comparison_Instruction)
+  # $27.1: bool = call(is_389, instruction.1, IR_Less_Comparison_Instruction)
   mov rdi, [rbp-16]
   mov rsi, IR_Less_Comparison_Instruction[rip]
   call is_389
@@ -4948,7 +4948,7 @@ generate_comparison_instruction_14:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $9.1:[rbp-34] register.1:[rbp-43] $24.1:[rbp-44] $13.1:[rbp-35] $25.1:[rbp-45] $26.1:[rbp-46] $27.1:[rbp-47] 
 .LABEL__generate_comparison_instruction_14__21:
   .loc 2 331 16
-  # $28.1: Boolean = call(is_389, instruction.1, IR_Less_Or_Equal_Comparison_Instruction)
+  # $28.1: bool = call(is_389, instruction.1, IR_Less_Or_Equal_Comparison_Instruction)
   mov rdi, [rbp-16]
   mov rsi, IR_Less_Or_Equal_Comparison_Instruction[rip]
   call is_389
@@ -5009,7 +5009,7 @@ generate_comparison_instruction_14:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] left_value.1:[rbp-24] right_value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] $9.1:[rbp-34] register.1:[rbp-43] $24.1:[rbp-44] $13.1:[rbp-35] $25.1:[rbp-45] $26.1:[rbp-46] $27.1:[rbp-47] $28.1:[rbp-48] 
 .LABEL__generate_comparison_instruction_14__24:
   .loc 2 334 16
-  # $29.1: Boolean = call(is_389, instruction.1, IR_Not_Equal_Comparison_Instruction)
+  # $29.1: bool = call(is_389, instruction.1, IR_Not_Equal_Comparison_Instruction)
   mov rdi, [rbp-16]
   mov rsi, IR_Not_Equal_Comparison_Instruction[rip]
   call is_389
@@ -5162,7 +5162,7 @@ generate_direct_jump_instruction_15:
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-16] instruction.1:rax:[rbp-8] $1.1:rbx 
   .loc 2 344 9
-  # $2.1: Boolean = load_struct_member($1.1, is_being_generated)
+  # $2.1: bool = load_struct_member($1.1, is_being_generated)
   mov r15b, [rbx+48]
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] instruction.1:rax:[rbp-8] $2.1:r15 
@@ -5336,7 +5336,7 @@ generate_divide_instruction_16:
   call get_right_value_233
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] right_value.1:rax 
   .loc 2 359 9
-  # $11.1: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $11.1: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, rax
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-24], rax
@@ -5547,7 +5547,7 @@ generate_load_array_item_instruction_17:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-16] instruction.1:rax:[rbp-8] result_register.1:[rbp-24] $6.1:r15 
   .loc 2 377 34
-  # result_value_type_size.1: Int = call(get_type_size_56, self.1, $6.1)
+  # result_value_type_size.1: isize = call(get_type_size_56, self.1, $6.1)
   mov rdi, [rbp-16]
   mov rsi, r15
   call get_type_size_56
@@ -5560,7 +5560,7 @@ generate_load_array_item_instruction_17:
   call get_index_value_204
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:rax 
   .loc 2 380 9
-  # $9.1: Boolean = call(is_389, index_value.1, IR_Constant_Value)
+  # $9.1: bool = call(is_389, index_value.1, IR_Constant_Value)
   mov rdi, rax
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -5580,7 +5580,7 @@ generate_load_array_item_instruction_17:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:rax $29.1:rbx 
   .loc 2 382 13
-  # $30.1: Boolean = call(is_389, $29.1, Integer_Token)
+  # $30.1: bool = call(is_389, $29.1, Integer_Token)
   mov rdi, rbx
   mov rsi, Integer_Token[rip]
   mov [rbp-49], rax
@@ -5588,7 +5588,7 @@ generate_load_array_item_instruction_17:
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $30.1:rax 
   .loc 2 382 13
-  # $31.1: Boolean = $30.1 == false
+  # $31.1: bool = $30.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $30.1
@@ -5611,12 +5611,12 @@ generate_load_array_item_instruction_17:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:rax:[rbp-49] $31.1:[rbp-50] $33.1:rbx 
   .loc 2 385 27
-  # index_value.1: Int = load_struct_member($33.1, value)
+  # index_value.1: isize = load_struct_member($33.1, value)
   mov r15, [rbx+32]
   # [discarded value]: $33.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:rax:[rbp-49] $31.1:[rbp-50] index_value.1:r15 
   .loc 2 386 13
-  # $35.1: Boolean = index_value.1 != 0
+  # $35.1: bool = index_value.1 != 0
   cmp r15, 0
   setne bl
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:rax:[rbp-49] $31.1:[rbp-50] index_value.1:r15 $35.1:rbx 
@@ -5627,7 +5627,7 @@ generate_load_array_item_instruction_17:
   jz .LABEL__generate_load_array_item_instruction_17__3
 .LABEL__generate_load_array_item_instruction_17__9:
   .loc 2 387 17
-  # $36.1: Boolean = index_value.1 < 0
+  # $36.1: bool = index_value.1 < 0
   cmp QWORD PTR [rbp-59], 0
   setl al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:rax 
@@ -5676,7 +5676,7 @@ generate_load_array_item_instruction_17:
   # [discarded value]: $40.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] $41.1:rax 
   .loc 2 390 94
-  # $42.1: Int = index_value.1 * result_value_type_size.1
+  # $42.1: isize = index_value.1 * result_value_type_size.1
   mov rbx, [rbp-59]
   imul rbx, QWORD PTR [rbp-32]
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] $41.1:rax $42.1:rbx 
@@ -5711,7 +5711,7 @@ generate_load_array_item_instruction_17:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:rbx:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] address.1:rax index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] 
   .loc 2 402 9
-  # $46.1: Boolean = result_value_type_size.1 == 8
+  # $46.1: bool = result_value_type_size.1 == 8
   cmp QWORD PTR [rbp-32], 8
   sete r15b
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:rbx:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] address.1:rax $46.1:r15 index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] 
@@ -5775,7 +5775,7 @@ generate_load_array_item_instruction_17:
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] address.1:[rbp-68] $46.1:[rbp-69] index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] 
 .LABEL__generate_load_array_item_instruction_17__15:
   .loc 2 404 16
-  # $47.1: Boolean = result_value_type_size.1 == 4
+  # $47.1: bool = result_value_type_size.1 == 4
   cmp QWORD PTR [rbp-32], 4
   sete al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] address.1:[rbp-68] $46.1:[rbp-69] index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] $47.1:rax 
@@ -5835,7 +5835,7 @@ generate_load_array_item_instruction_17:
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] address.1:[rbp-68] $46.1:[rbp-69] index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] $47.1:[rbp-70] 
 .LABEL__generate_load_array_item_instruction_17__18:
   .loc 2 406 16
-  # $48.1: Boolean = result_value_type_size.1 == 2
+  # $48.1: bool = result_value_type_size.1 == 2
   cmp QWORD PTR [rbp-32], 2
   sete al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_value.1:[rbp-49] $31.1:[rbp-50] address.1:[rbp-68] $46.1:[rbp-69] index_value.1:[rbp-59] $35.1:[rbp-51] $36.1:[rbp-60] $47.1:[rbp-70] $48.1:rax 
@@ -5983,7 +5983,7 @@ generate_load_array_item_instruction_17:
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_register.1:[rbp-49] 
   .loc 2 395 13
-  # $12.1: Boolean = result_value_type_size.1 > 1
+  # $12.1: bool = result_value_type_size.1 > 1
   cmp QWORD PTR [rbp-32], 1
   setg al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] result_value_type_size.1:[rbp-32] index_value.1:[rbp-40] $9.1:[rbp-41] index_register.1:[rbp-49] $12.1:rax 
@@ -6142,7 +6142,7 @@ generate_load_variable_address_instruction_18:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] variable_value.1:rax 
   .loc 2 415 9
-  # $3.1: Boolean = variable_value.1 == null
+  # $3.1: bool = variable_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] variable_value.1:rax $3.1:rbx 
@@ -6165,7 +6165,7 @@ generate_load_variable_address_instruction_18:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] variable_value.1:rax:[rbp-24] $3.1:[rbp-25] $4.1:rbx 
   .loc 2 418 9
-  # $5.1: Boolean = $4.1 == null
+  # $5.1: bool = $4.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $4.1
@@ -6296,7 +6296,7 @@ generate_load_variable_instruction_19:
   mov rax, [rsi+65]
   # [live values]: self.1:rdi instruction.1:rsi $1.1:rax 
   .loc 2 426 9
-  # $2.1: Boolean = call(is_389, $1.1, IR_Function_Parameter)
+  # $2.1: bool = call(is_389, $1.1, IR_Function_Parameter)
   mov [rbp-8], rdi
   mov rdi, rax
   mov [rbp-16], rsi
@@ -6329,7 +6329,7 @@ generate_load_variable_instruction_19:
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] $2.1:[rbp-17] parameter.1:rbx $12.1:r15 
   .loc 2 428 31
-  # parameter_index.1: Int = call(index_of_371, $12.1, parameter.1)
+  # parameter_index.1: isize = call(index_of_371, $12.1, parameter.1)
   mov rdi, r15
   mov rsi, rbx
   call index_of_371
@@ -6337,7 +6337,7 @@ generate_load_variable_instruction_19:
   # [discarded value]: parameter.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:rax 
   .loc 2 429 13
-  # $14.1: Boolean = parameter_index.1 < 0
+  # $14.1: bool = parameter_index.1 < 0
   cmp rax, 0
   setl bl
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:rax $14.1:rbx 
@@ -6355,7 +6355,7 @@ generate_load_variable_instruction_19:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] 
 .LABEL__generate_load_variable_instruction_19__6:
   .loc 2 432 13
-  # $15.1: Boolean = parameter_index.1 == 0
+  # $15.1: bool = parameter_index.1 == 0
   cmp QWORD PTR [rbp-25], 0
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:rax 
@@ -6392,7 +6392,7 @@ generate_load_variable_instruction_19:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] 
 .LABEL__generate_load_variable_instruction_19__9:
   .loc 2 434 20
-  # $16.1: Boolean = parameter_index.1 == 1
+  # $16.1: bool = parameter_index.1 == 1
   cmp QWORD PTR [rbp-25], 1
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:rax 
@@ -6426,7 +6426,7 @@ generate_load_variable_instruction_19:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] 
 .LABEL__generate_load_variable_instruction_19__12:
   .loc 2 436 20
-  # $17.1: Boolean = parameter_index.1 == 2
+  # $17.1: bool = parameter_index.1 == 2
   cmp QWORD PTR [rbp-25], 2
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] $17.1:rax 
@@ -6460,7 +6460,7 @@ generate_load_variable_instruction_19:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] $17.1:[rbp-29] 
 .LABEL__generate_load_variable_instruction_19__15:
   .loc 2 438 20
-  # $18.1: Boolean = parameter_index.1 == 3
+  # $18.1: bool = parameter_index.1 == 3
   cmp QWORD PTR [rbp-25], 3
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] $17.1:[rbp-29] $18.1:rax 
@@ -6494,7 +6494,7 @@ generate_load_variable_instruction_19:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] $17.1:[rbp-29] $18.1:[rbp-30] 
 .LABEL__generate_load_variable_instruction_19__18:
   .loc 2 440 20
-  # $19.1: Boolean = parameter_index.1 == 4
+  # $19.1: bool = parameter_index.1 == 4
   cmp QWORD PTR [rbp-25], 4
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] $17.1:[rbp-29] $18.1:[rbp-30] $19.1:rax 
@@ -6528,7 +6528,7 @@ generate_load_variable_instruction_19:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] $17.1:[rbp-29] $18.1:[rbp-30] $19.1:[rbp-31] 
 .LABEL__generate_load_variable_instruction_19__21:
   .loc 2 442 20
-  # $20.1: Boolean = parameter_index.1 == 5
+  # $20.1: bool = parameter_index.1 == 5
   cmp QWORD PTR [rbp-25], 5
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] $2.1:[rbp-17] parameter_index.1:[rbp-25] $14.1:[rbp-26] $15.1:[rbp-27] $16.1:[rbp-28] $17.1:[rbp-29] $18.1:[rbp-30] $19.1:[rbp-31] $20.1:rax 
@@ -6658,7 +6658,7 @@ generate_load_struct_member_instruction_20:
   call get_struct_pointer_value_207
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:rax 
   .loc 2 455 9
-  # $2.1: Boolean = call(is_389, ir_struct_pointer_value.1, IR_Variable_Value)
+  # $2.1: bool = call(is_389, ir_struct_pointer_value.1, IR_Variable_Value)
   mov rdi, rax
   mov rsi, IR_Variable_Value[rip]
   mov [rbp-24], rax
@@ -6681,7 +6681,7 @@ generate_load_struct_member_instruction_20:
   call get_value_42
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax 
   .loc 2 458 13
-  # $6.1: Boolean = mc_struct_pointer_value.1 == null
+  # $6.1: bool = mc_struct_pointer_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax $6.1:rbx 
@@ -6704,7 +6704,7 @@ generate_load_struct_member_instruction_20:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax:[rbp-41] $6.1:[rbp-42] struct_pointer_register.3:rbx 
   .loc 2 462 13
-  # $8.1: Boolean = struct_pointer_register.3 == null
+  # $8.1: bool = struct_pointer_register.3 == null
   cmp rbx, 0
   sete r15b
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax:[rbp-41] $6.1:[rbp-42] struct_pointer_register.3:rbx $8.1:r15 
@@ -6720,7 +6720,7 @@ generate_load_struct_member_instruction_20:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax:[rbp-41] $6.1:[rbp-42] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $9.1:rbx 
   .loc 2 463 17
-  # $10.1: Boolean = $9.1 == null
+  # $10.1: bool = $9.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $9.1
@@ -6788,14 +6788,14 @@ generate_load_struct_member_instruction_20:
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] $16.1:rbx struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] 
   .loc 2 478 37
-  # struct_type_member_offset.1: Int = call(get_offset_33, self.1, $16.1)
+  # struct_type_member_offset.1: isize = call(get_offset_33, self.1, $16.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call get_offset_33
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:rax struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] 
   .loc 2 479 9
-  # $18.1: Boolean = load_struct_member(instruction.1, load_address)
+  # $18.1: bool = load_struct_member(instruction.1, load_address)
   mov rbx, [rbp-16]
   mov r15b, [rbx+73]
   # [live values]: self.1:[rbp-8] instruction.1:rbx:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:rax $18.1:r15 struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] 
@@ -6858,7 +6858,7 @@ generate_load_struct_member_instruction_20:
   # [discarded value]: $51.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] 
   .loc 2 481 13
-  # $53.1: Boolean = struct_type_member_offset.1 > 0
+  # $53.1: bool = struct_type_member_offset.1 > 0
   cmp QWORD PTR [rbp-68], 0
   setg al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] $53.1:rax 
@@ -6938,7 +6938,7 @@ generate_load_struct_member_instruction_20:
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] $20.1:r15 
   .loc 2 485 38
-  # result_value_type_size.1: Int = call(get_type_size_56, self.1, $20.1)
+  # result_value_type_size.1: isize = call(get_type_size_56, self.1, $20.1)
   mov rdi, [rbp-8]
   mov rsi, r15
   call get_type_size_56
@@ -6959,7 +6959,7 @@ generate_load_struct_member_instruction_20:
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] 
   .loc 2 487 13
-  # $24.1: Boolean = result_value_type_size.1 == 8
+  # $24.1: bool = result_value_type_size.1 == 8
   cmp QWORD PTR [rbp-77], 8
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] $24.1:rax 
@@ -7037,7 +7037,7 @@ generate_load_struct_member_instruction_20:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] $24.1:[rbp-78] 
 .LABEL__generate_load_struct_member_instruction_20__16:
   .loc 2 489 20
-  # $25.1: Boolean = result_value_type_size.1 == 4
+  # $25.1: bool = result_value_type_size.1 == 4
   cmp QWORD PTR [rbp-77], 4
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] $24.1:[rbp-78] $25.1:rax 
@@ -7070,7 +7070,7 @@ generate_load_struct_member_instruction_20:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] $24.1:[rbp-78] $25.1:[rbp-79] 
 .LABEL__generate_load_struct_member_instruction_20__19:
   .loc 2 491 20
-  # $26.1: Boolean = result_value_type_size.1 == 2
+  # $26.1: bool = result_value_type_size.1 == 2
   cmp QWORD PTR [rbp-77], 2
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] $24.1:[rbp-78] $25.1:[rbp-79] $26.1:rax 
@@ -7103,7 +7103,7 @@ generate_load_struct_member_instruction_20:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] $24.1:[rbp-78] $25.1:[rbp-79] $26.1:[rbp-80] 
 .LABEL__generate_load_struct_member_instruction_20__22:
   .loc 2 493 20
-  # $27.1: Boolean = result_value_type_size.1 == 1
+  # $27.1: bool = result_value_type_size.1 == 1
   cmp QWORD PTR [rbp-77], 1
   sete al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $6.1:[rbp-42] struct_pointer_register.8:[rbp-50] result_register.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $18.1:[rbp-69] struct_pointer_register.3:[rbp-50] $8.1:[rbp-51] $10.1:[rbp-52] struct_pointer_register.4:[rbp-50] result_value_type_size.1:[rbp-77] $24.1:[rbp-78] $25.1:[rbp-79] $26.1:[rbp-80] $27.1:rax 
@@ -7306,7 +7306,7 @@ generate_modulo_instruction_21:
   call get_right_value_233
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] right_value.1:rax 
   .loc 2 511 9
-  # $11.1: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $11.1: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, rax
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-24], rax
@@ -7634,7 +7634,7 @@ generate_new_instruction_23:
   mov r15, [rbx+65]
   # [live values]: self.1:[rbp-16] instruction.1:rbx:[rbp-8] $6.1:rax $7.1:r15 
   .loc 2 534 88
-  # $8.1: Int = call(get_type_size_56, self.1, $7.1)
+  # $8.1: isize = call(get_type_size_56, self.1, $7.1)
   mov rdi, [rbp-16]
   mov rsi, r15
   mov [rbp-24], rax
@@ -7788,7 +7788,7 @@ generate_phi_instruction_24:
   # instruction_values_entry.2: @IR_Values_Map_Entry = phi(instruction_values_entry.1, instruction_values_entry.5)
   # [live values]: self.1:[rbp-24] instruction.1:[rbp-16] result_variable.1:[rbp-8] instruction_values_entry.1:[rbp-32] instruction_values_entry.2:[rbp-32] 
   .loc 2 543 12
-  # $5.1: Boolean = instruction_values_entry.2 != null
+  # $5.1: bool = instruction_values_entry.2 != null
   cmp QWORD PTR [rbp-32], 0
   setne al
   # [live values]: self.1:[rbp-24] instruction.1:[rbp-16] result_variable.1:[rbp-8] instruction_values_entry.1:[rbp-32] instruction_values_entry.2:[rbp-32] $5.1:rax 
@@ -7807,7 +7807,7 @@ generate_phi_instruction_24:
   mov r15, [rbx+48]
   # [live values]: self.1:[rbp-24] instruction.1:[rbp-16] result_variable.1:[rbp-8] instruction_values_entry.1:[rbp-32] instruction_values_entry.2:rax:[rbp-32] $5.1:[rbp-33] instruction_value.1:rbx $8.1:r15 
   .loc 2 545 13
-  # $9.1: Boolean = result_variable.1 != $8.1
+  # $9.1: bool = result_variable.1 != $8.1
   cmp QWORD PTR [rbp-8], r15
   setne r14b
   # [discarded value]: $8.1
@@ -7907,7 +7907,7 @@ generate_return_instruction_25:
   call get_return_value_218
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] return_value.1:rax 
   .loc 2 557 9
-  # $2.1: Boolean = return_value.1 != null
+  # $2.1: bool = return_value.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] return_value.1:rax $2.1:rbx 
@@ -8011,7 +8011,7 @@ generate_set_instruction_26:
   call get_value_221
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax 
   .loc 2 566 9
-  # $2.1: Boolean = call(is_389, ir_value.1, IR_Undefined_Value)
+  # $2.1: bool = call(is_389, ir_value.1, IR_Undefined_Value)
   mov rdi, rax
   mov rsi, IR_Undefined_Value[rip]
   mov [rbp-24], rax
@@ -8071,7 +8071,7 @@ generate_set_instruction_26:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] $2.1:[rbp-25] $9.1:rbx 
   .loc 2 569 9
-  # $10.1: Boolean = call(is_389, $9.1, IR_Struct_Type)
+  # $10.1: bool = call(is_389, $9.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -8099,7 +8099,7 @@ generate_set_instruction_26:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:[rbp-24] $2.1:[rbp-25] $10.1:[rbp-26] mc_value.1:rax $22.1:rbx 
   .loc 2 571 13
-  # $23.1: Boolean = $22.1 == null
+  # $23.1: bool = $22.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $22.1
@@ -8116,7 +8116,7 @@ generate_set_instruction_26:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:rax:[rbp-24] $2.1:[rbp-25] $10.1:[rbp-26] mc_value.1:[rbp-34] $23.1:[rbp-35] $24.1:rbx 
   .loc 2 572 71
-  # $25.1: Int = call(get_type_size_56, self.1, $24.1)
+  # $25.1: isize = call(get_type_size_56, self.1, $24.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call get_type_size_56
@@ -8171,7 +8171,7 @@ generate_set_instruction_26:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:[rbp-24] $2.1:[rbp-25] $10.1:[rbp-26] 
 .LABEL__generate_set_instruction_26__6:
   .loc 2 578 13
-  # $11.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $11.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -8198,7 +8198,7 @@ generate_set_instruction_26:
   # [discarded value]: mc_value.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:[rbp-24] $2.1:[rbp-25] $10.1:[rbp-26] $11.1:[rbp-27] ir_value.1:[rbp-35] result_register.3:rbx 
   .loc 2 582 17
-  # $16.1: Boolean = result_register.3 != null
+  # $16.1: bool = result_register.3 != null
   cmp rbx, 0
   setne al
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_value.1:[rbp-24] $2.1:[rbp-25] $10.1:[rbp-26] $11.1:[rbp-27] ir_value.1:[rbp-35] result_register.3:rbx $16.1:rax 
@@ -8343,7 +8343,7 @@ generate_store_array_item_instruction_27:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:rax $4.1:rbx 
   .loc 2 602 30
-  # ir_value_type_size.1: Int = call(get_type_size_56, self.1, $4.1)
+  # ir_value_type_size.1: isize = call(get_type_size_56, self.1, $4.1)
   mov rdi, [rbp-16]
   mov rsi, rbx
   mov [rbp-32], rax
@@ -8357,7 +8357,7 @@ generate_store_array_item_instruction_27:
   call get_index_value_225
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:rax 
   .loc 2 605 9
-  # $7.1: Boolean = call(is_389, index_value.1, IR_Constant_Value)
+  # $7.1: bool = call(is_389, index_value.1, IR_Constant_Value)
   mov rdi, rax
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-48], rax
@@ -8377,7 +8377,7 @@ generate_store_array_item_instruction_27:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:rax $27.1:rbx 
   .loc 2 607 13
-  # $28.1: Boolean = call(is_389, $27.1, Integer_Token)
+  # $28.1: bool = call(is_389, $27.1, Integer_Token)
   mov rdi, rbx
   mov rsi, Integer_Token[rip]
   mov [rbp-57], rax
@@ -8385,7 +8385,7 @@ generate_store_array_item_instruction_27:
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $28.1:rax 
   .loc 2 607 13
-  # $29.1: Boolean = $28.1 == false
+  # $29.1: bool = $28.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $28.1
@@ -8408,12 +8408,12 @@ generate_store_array_item_instruction_27:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:rax:[rbp-57] $29.1:[rbp-58] $31.1:rbx 
   .loc 2 610 27
-  # index_value.1: Int = load_struct_member($31.1, value)
+  # index_value.1: isize = load_struct_member($31.1, value)
   mov r15, [rbx+32]
   # [discarded value]: $31.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:rax:[rbp-57] $29.1:[rbp-58] index_value.1:r15 
   .loc 2 611 13
-  # $33.1: Boolean = index_value.1 != 0
+  # $33.1: bool = index_value.1 != 0
   cmp r15, 0
   setne bl
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:rax:[rbp-57] $29.1:[rbp-58] index_value.1:r15 $33.1:rbx 
@@ -8424,7 +8424,7 @@ generate_store_array_item_instruction_27:
   jz .LABEL__generate_store_array_item_instruction_27__3
 .LABEL__generate_store_array_item_instruction_27__9:
   .loc 2 612 17
-  # $34.1: Boolean = index_value.1 < 0
+  # $34.1: bool = index_value.1 < 0
   cmp QWORD PTR [rbp-67], 0
   setl al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:rax 
@@ -8473,7 +8473,7 @@ generate_store_array_item_instruction_27:
   # [discarded value]: $38.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] $39.1:rax 
   .loc 2 615 95
-  # $40.1: Int = index_value.1 * ir_value_type_size.1
+  # $40.1: isize = index_value.1 * ir_value_type_size.1
   mov rbx, [rbp-67]
   imul rbx, QWORD PTR [rbp-40]
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] $39.1:rax $40.1:rbx 
@@ -8495,7 +8495,7 @@ generate_store_array_item_instruction_27:
   # jump(.LABEL__generate_store_array_item_instruction_27__3)
 .LABEL__generate_store_array_item_instruction_27__3:
   .loc 2 628 9
-  # $43.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $43.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -8522,7 +8522,7 @@ generate_store_array_item_instruction_27:
   # [discarded value]: mc_value.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $46.1:rbx 
   .loc 2 631 13
-  # $47.1: Boolean = $46.1 == null
+  # $47.1: bool = $46.1 == null
   cmp rbx, 0
   sete al
   # [discarded value]: $46.1
@@ -8570,7 +8570,7 @@ generate_store_array_item_instruction_27:
   # [discarded value]: $50.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] 
   .loc 2 639 9
-  # $52.1: Boolean = ir_value_type_size.1 == 8
+  # $52.1: bool = ir_value_type_size.1 == 8
   cmp QWORD PTR [rbp-40], 8
   sete al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] $52.1:rax 
@@ -8654,7 +8654,7 @@ generate_store_array_item_instruction_27:
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] $52.1:[rbp-79] 
 .LABEL__generate_store_array_item_instruction_27__19:
   .loc 2 641 16
-  # $53.1: Boolean = ir_value_type_size.1 == 4
+  # $53.1: bool = ir_value_type_size.1 == 4
   cmp QWORD PTR [rbp-40], 4
   sete al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] $52.1:[rbp-79] $53.1:rax 
@@ -8681,7 +8681,7 @@ generate_store_array_item_instruction_27:
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] $52.1:[rbp-79] $53.1:[rbp-80] 
 .LABEL__generate_store_array_item_instruction_27__22:
   .loc 2 643 16
-  # $54.1: Boolean = ir_value_type_size.1 == 2
+  # $54.1: bool = ir_value_type_size.1 == 2
   cmp QWORD PTR [rbp-40], 2
   sete al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] $52.1:[rbp-79] $53.1:[rbp-80] $54.1:rax 
@@ -8708,7 +8708,7 @@ generate_store_array_item_instruction_27:
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] $52.1:[rbp-79] $53.1:[rbp-80] $54.1:[rbp-81] 
 .LABEL__generate_store_array_item_instruction_27__25:
   .loc 2 645 16
-  # $55.1: Boolean = ir_value_type_size.1 == 1
+  # $55.1: bool = ir_value_type_size.1 == 1
   cmp QWORD PTR [rbp-40], 1
   sete al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_value.1:[rbp-57] $29.1:[rbp-58] $43.1:[rbp-69] index_value.1:[rbp-67] $33.1:[rbp-59] $34.1:[rbp-68] ir_value.1:[rbp-77] $47.1:[rbp-78] $52.1:[rbp-79] $53.1:[rbp-80] $54.1:[rbp-81] $55.1:rax 
@@ -8791,7 +8791,7 @@ generate_store_array_item_instruction_27:
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_register.1:[rbp-57] 
   .loc 2 621 13
-  # $10.1: Boolean = ir_value_type_size.1 > 1
+  # $10.1: bool = ir_value_type_size.1 > 1
   cmp QWORD PTR [rbp-40], 1
   setg al
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] address_register.1:[rbp-24] ir_value.1:[rbp-32] ir_value_type_size.1:[rbp-40] index_value.1:[rbp-48] $7.1:[rbp-49] index_register.1:[rbp-57] $10.1:rax 
@@ -8949,7 +8949,7 @@ generate_store_struct_member_instruction_28:
   call get_struct_pointer_value_229
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:rax 
   .loc 2 656 9
-  # $2.1: Boolean = call(is_389, ir_struct_pointer_value.1, IR_Variable_Value)
+  # $2.1: bool = call(is_389, ir_struct_pointer_value.1, IR_Variable_Value)
   mov rdi, rax
   mov rsi, IR_Variable_Value[rip]
   mov [rbp-24], rax
@@ -8972,7 +8972,7 @@ generate_store_struct_member_instruction_28:
   call get_value_42
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax 
   .loc 2 659 13
-  # $15.1: Boolean = mc_struct_pointer_value.1 == null
+  # $15.1: bool = mc_struct_pointer_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax $15.1:rbx 
@@ -8995,7 +8995,7 @@ generate_store_struct_member_instruction_28:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:rbx 
   .loc 2 663 13
-  # $17.1: Boolean = struct_pointer_register.1 == null
+  # $17.1: bool = struct_pointer_register.1 == null
   cmp rbx, 0
   sete r15b
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:rax:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:rbx $17.1:r15 
@@ -9036,7 +9036,7 @@ generate_store_struct_member_instruction_28:
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] $20.1:rbx 
   .loc 2 669 41
-  # struct_type_member_offset.1: Int = call(get_offset_33, self.1, $20.1)
+  # struct_type_member_offset.1: isize = call(get_offset_33, self.1, $20.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call get_offset_33
@@ -9049,7 +9049,7 @@ generate_store_struct_member_instruction_28:
   call get_value_230
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] struct_type_member_offset.1:[rbp-59] ir_value.1:rax 
   .loc 2 671 13
-  # $24.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $24.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov rdi, rax
   mov rsi, IR_Variable_Value[rip]
   mov [rbp-67], rax
@@ -9066,20 +9066,20 @@ generate_store_struct_member_instruction_28:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] struct_type_member_offset.1:[rbp-59] ir_value.1:rax:[rbp-67] $24.1:[rbp-68] $25.1:rbx 
   .loc 2 671 47
-  # $26.1: Boolean = call(is_389, $25.1, IR_Struct_Type)
+  # $26.1: bool = call(is_389, $25.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   call is_389
   # [discarded value]: $25.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] struct_type_member_offset.1:[rbp-59] ir_value.1:[rbp-67] $24.1:[rbp-68] $26.1:rax 
   .loc 2 671 47
-  # $27.1: Boolean = $26.1 == false
+  # $27.1: bool = $26.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] struct_type_member_offset.1:[rbp-59] ir_value.1:[rbp-67] $24.1:[rbp-68] $27.1:rbx 
   .loc 2 671 13
-  # $24.2: Boolean = $27.1
+  # $24.2: bool = $27.1
   mov [rbp-69], bl
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] struct_type_member_offset.1:[rbp-59] ir_value.1:[rbp-67] $24.1:[rbp-68] $24.2:rbx:[rbp-68] 
@@ -9087,7 +9087,7 @@ generate_store_struct_member_instruction_28:
   mov [rbp-68], bl
 .LABEL__generate_store_struct_member_instruction_28__13:
   .loc 2 671 13
-  # $24.3: Boolean = phi($24.1, $24.2)
+  # $24.3: bool = phi($24.1, $24.2)
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] struct_type_member_offset.1:[rbp-59] ir_value.1:[rbp-67] $24.1:[rbp-68] $24.2:[rbp-68] $24.3:[rbp-68] 
   # jump($24.3, .LABEL__generate_store_struct_member_instruction_28__14, .LABEL__generate_store_struct_member_instruction_28__15)
   mov al, [rbp-68]
@@ -9111,7 +9111,7 @@ generate_store_struct_member_instruction_28:
   # [discarded value]: mc_value.1
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] ir_struct_pointer_value.1:[rbp-33] mc_struct_pointer_value.1:[rbp-41] $15.1:[rbp-42] struct_pointer_register.1:[rbp-50] $17.1:[rbp-51] struct_pointer_register.2:[rbp-50] struct_pointer_register.5:[rbp-50] struct_type_member_offset.1:[rbp-59] ir_value.1:[rbp-67] $24.1:[rbp-68] $24.2:[rbp-68] $24.3:[rbp-68] ir_value.1:[rbp-76] $30.1:rbx 
   .loc 2 674 17
-  # $31.1: Boolean = $30.1 == null
+  # $31.1: bool = $30.1 == null
   cmp rbx, 0
   sete al
   # [discarded value]: $30.1
@@ -9203,7 +9203,7 @@ generate_store_struct_member_instruction_28:
   # [live values]: self.1:[rbp-8] instruction.1:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] 
 .LABEL__generate_store_struct_member_instruction_28__4:
   .loc 2 682 16
-  # $3.1: Boolean = call(is_389, ir_struct_pointer_value.1, IR_Global_Variable_Address_Value)
+  # $3.1: bool = call(is_389, ir_struct_pointer_value.1, IR_Global_Variable_Address_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Global_Variable_Address_Value[rip]
   call is_389
@@ -9236,7 +9236,7 @@ generate_store_struct_member_instruction_28:
   mov rbx, [rax+65]
   # [live values]: self.1:[rbp-8] instruction.1:rax:[rbp-16] ir_struct_pointer_value.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] struct_pointer_register.1:[rbp-34] $9.1:rbx 
   .loc 2 686 41
-  # struct_type_member_offset.1: Int = call(get_offset_33, self.1, $9.1)
+  # struct_type_member_offset.1: isize = call(get_offset_33, self.1, $9.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call get_offset_33
@@ -9360,7 +9360,7 @@ generate_substract_instruction_29:
   call get_right_value_233
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] left_value.1:[rbp-32] right_value.1:rax 
   .loc 2 699 9
-  # $4.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $4.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -9381,12 +9381,12 @@ generate_substract_instruction_29:
   # [discarded value]: left_value.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] left_value.1:[rbp-32] right_value.1:[rbp-40] $4.1:[rbp-41] $7.1:rbx 
   .loc 2 701 13
-  # $8.1: Int = load_struct_member($7.1, value)
+  # $8.1: isize = load_struct_member($7.1, value)
   mov rax, [rbx+32]
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] left_value.1:[rbp-32] right_value.1:[rbp-40] $4.1:[rbp-41] $8.1:rax 
   .loc 2 701 13
-  # $9.1: Boolean = $8.1 == 0
+  # $9.1: bool = $8.1 == 0
   cmp rax, 0
   sete bl
   # [discarded value]: $8.1
@@ -9476,7 +9476,7 @@ generate_substract_instruction_29:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] left_value.1:[rbp-32] right_value.1:[rbp-40] $4.1:[rbp-41] $9.1:[rbp-42] 
   .loc 2 710 9
-  # $19.1: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $19.1: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -9496,12 +9496,12 @@ generate_substract_instruction_29:
   # [discarded value]: right_value.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] left_value.1:[rbp-32] right_value.1:[rbp-40] $4.1:[rbp-41] $9.1:[rbp-42] $19.1:[rbp-43] $22.1:rbx 
   .loc 2 712 13
-  # $23.1: Int = load_struct_member($22.1, value)
+  # $23.1: isize = load_struct_member($22.1, value)
   mov rax, [rbx+32]
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-16] instruction.1:[rbp-8] result_register.1:[rbp-24] left_value.1:[rbp-32] right_value.1:[rbp-40] $4.1:[rbp-41] $9.1:[rbp-42] $19.1:[rbp-43] $23.1:rax 
   .loc 2 712 13
-  # $24.1: Boolean = $23.1 == 1
+  # $24.1: bool = $23.1 == 1
   cmp rax, 1
   sete bl
   # [discarded value]: $23.1
@@ -9638,7 +9638,7 @@ generate_load_value_30:
   mov rax, [rsi+41]
   # [live values]: self.1:rdi register.1:rsi ir_value.1:rdx $1.1:rax 
   .loc 2 721 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -9652,7 +9652,7 @@ generate_load_value_30:
   jz .LABEL__generate_load_value_30__3
 .LABEL__generate_load_value_30__2:
   .loc 2 722 13
-  # $3.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $3.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov rdi, [rbp-8]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -9677,7 +9677,7 @@ generate_load_value_30:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-25] register.1:rbx:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] ir_value.1:rax $6.1:r14 
   .loc 2 724 17
-  # $7.1: Boolean = ir_value.1 == $6.1
+  # $7.1: bool = ir_value.1 == $6.1
   cmp rax, r14
   sete r15b
   # [discarded value]: $6.1
@@ -9702,7 +9702,7 @@ generate_load_value_30:
   # jump(.LABEL__generate_load_value_30__3)
 .LABEL__generate_load_value_30__3:
   .loc 2 730 9
-  # $8.1: Boolean = call(is_389, ir_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, ir_value.1, IR_Constant_Value)
   mov rdi, [rbp-8]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -9721,7 +9721,7 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax $216.1:rbx 
   .loc 2 732 13
-  # $217.1: Boolean = call(is_389, $216.1, Boolean_Token)
+  # $217.1: bool = call(is_389, $216.1, Boolean_Token)
   mov rdi, rbx
   mov rsi, Boolean_Token[rip]
   mov [rbp-36], rax
@@ -9739,7 +9739,7 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] literal.1:rbx 
   .loc 2 734 17
-  # $289.1: Boolean = load_struct_member(literal.1, value)
+  # $289.1: bool = load_struct_member(literal.1, value)
   mov r15b, [rbx+32]
   # [discarded value]: literal.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $289.1:r15 
@@ -9859,7 +9859,7 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $218.1:rbx 
   .loc 2 739 20
-  # $219.1: Boolean = call(is_389, $218.1, Character_Token)
+  # $219.1: bool = call(is_389, $218.1, Character_Token)
   mov rdi, rbx
   mov rsi, Character_Token[rip]
   call is_389
@@ -9908,12 +9908,12 @@ generate_load_value_30:
   mov r15, [rbx+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rbx:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $280.1:rax $282.1:r15 
   .loc 2 740 87
-  # $283.1: Int8 = load_struct_member($282.1, value)
+  # $283.1: i8 = load_struct_member($282.1, value)
   mov r14b, [r15+32]
   # [discarded value]: $282.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rbx:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $280.1:rax $283.1:r14 
   .loc 2 740 87
-  # $284.1: Int = cast($283.1)
+  # $284.1: isize = cast($283.1)
   mov r15b, r14b
   movsx r15, r15b
   # [discarded value]: $283.1
@@ -9943,7 +9943,7 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $220.1:rbx 
   .loc 2 741 20
-  # $221.1: Boolean = call(is_389, $220.1, Integer_Token)
+  # $221.1: bool = call(is_389, $220.1, Integer_Token)
   mov rdi, rbx
   mov rsi, Integer_Token[rip]
   call is_389
@@ -9960,11 +9960,11 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $221.1:[rbp-39] literal.1:rbx 
   .loc 2 743 17
-  # $258.1: Int = load_struct_member(literal.1, value)
+  # $258.1: isize = load_struct_member(literal.1, value)
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $221.1:[rbp-39] literal.1:rbx $258.1:r15 
   .loc 2 743 17
-  # $259.1: Boolean = $258.1 == 0
+  # $259.1: bool = $258.1 == 0
   cmp r15, 0
   sete r14b
   # [discarded value]: $258.1
@@ -10064,7 +10064,7 @@ generate_load_value_30:
   # [discarded value]: $263.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $221.1:[rbp-39] literal.1:[rbp-47] $259.1:[rbp-48] $264.1:rax 
   .loc 2 746 91
-  # $265.1: Int = load_struct_member(literal.1, value)
+  # $265.1: isize = load_struct_member(literal.1, value)
   mov rbx, [rbp-47]
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $221.1:[rbp-39] literal.1:rbx:[rbp-47] $259.1:[rbp-48] $264.1:rax $265.1:r15 
@@ -10097,7 +10097,7 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $221.1:[rbp-39] $222.1:rbx 
   .loc 2 748 20
-  # $223.1: Boolean = call(is_389, $222.1, Null_Token)
+  # $223.1: bool = call(is_389, $222.1, Null_Token)
   mov rdi, rbx
   mov rsi, Null_Token[rip]
   call is_389
@@ -10170,7 +10170,7 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $221.1:[rbp-39] $223.1:[rbp-40] $224.1:rbx 
   .loc 2 750 20
-  # $225.1: Boolean = call(is_389, $224.1, String_Token)
+  # $225.1: bool = call(is_389, $224.1, String_Token)
   mov rdi, rbx
   mov rsi, String_Token[rip]
   call is_389
@@ -10283,7 +10283,7 @@ generate_load_value_30:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] ir_value.1:rax:[rbp-36] $217.1:[rbp-37] $219.1:[rbp-38] $221.1:[rbp-39] $223.1:[rbp-40] $225.1:[rbp-41] $226.1:rbx 
   .loc 2 753 20
-  # $227.1: Boolean = call(is_389, $226.1, Undefined_Token)
+  # $227.1: bool = call(is_389, $226.1, Undefined_Token)
   mov rdi, rbx
   mov rsi, Undefined_Token[rip]
   call is_389
@@ -10346,7 +10346,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] 
 .LABEL__generate_load_value_30__11:
   .loc 2 758 16
-  # $9.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $9.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov rdi, [rbp-8]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -10373,7 +10373,7 @@ generate_load_value_30:
   # [discarded value]: ir_value.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:rax 
   .loc 2 762 13
-  # $69.1: Boolean = mc_value.1 == null
+  # $69.1: bool = mc_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:rax $69.1:rbx 
@@ -10401,7 +10401,7 @@ generate_load_value_30:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-25] register.1:rax:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:rbx:[rbp-45] $69.1:[rbp-46] $70.1:r15 
   .loc 2 766 13
-  # $71.1: Boolean = $70.1 != null
+  # $71.1: bool = $70.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $70.1
@@ -10412,7 +10412,7 @@ generate_load_value_30:
   jz .LABEL__generate_load_value_30__36
 .LABEL__generate_load_value_30__34:
   .loc 2 767 17
-  # $141.1: Boolean = call(is_389, ir_value_type.1, IR_Boolean_Type)
+  # $141.1: bool = call(is_389, ir_value_type.1, IR_Boolean_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Boolean_Type[rip]
   call is_389
@@ -10484,7 +10484,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $141.1:[rbp-48] 
 .LABEL__generate_load_value_30__63:
   .loc 2 769 24
-  # $142.1: Boolean = call(is_389, ir_value_type.1, IR_Function_Type)
+  # $142.1: bool = call(is_389, ir_value_type.1, IR_Function_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -10556,7 +10556,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $141.1:[rbp-48] $142.1:[rbp-49] 
 .LABEL__generate_load_value_30__66:
   .loc 2 771 24
-  # $143.1: Boolean = call(is_389, ir_value_type.1, IR_Int_Type)
+  # $143.1: bool = call(is_389, ir_value_type.1, IR_Int_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -10628,7 +10628,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $141.1:[rbp-48] $142.1:[rbp-49] $143.1:[rbp-50] 
 .LABEL__generate_load_value_30__69:
   .loc 2 773 24
-  # $144.1: Boolean = call(is_389, ir_value_type.1, IR_Int32_Type)
+  # $144.1: bool = call(is_389, ir_value_type.1, IR_Int32_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -10700,7 +10700,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $141.1:[rbp-48] $142.1:[rbp-49] $143.1:[rbp-50] $144.1:[rbp-51] 
 .LABEL__generate_load_value_30__72:
   .loc 2 775 24
-  # $145.1: Boolean = call(is_389, ir_value_type.1, IR_Int8_Type)
+  # $145.1: bool = call(is_389, ir_value_type.1, IR_Int8_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -10772,7 +10772,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $141.1:[rbp-48] $142.1:[rbp-49] $143.1:[rbp-50] $144.1:[rbp-51] $145.1:[rbp-52] 
 .LABEL__generate_load_value_30__75:
   .loc 2 777 24
-  # $146.1: Boolean = call(is_389, ir_value_type.1, IR_Pointer_Type)
+  # $146.1: bool = call(is_389, ir_value_type.1, IR_Pointer_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -10844,7 +10844,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $141.1:[rbp-48] $142.1:[rbp-49] $143.1:[rbp-50] $144.1:[rbp-51] $145.1:[rbp-52] $146.1:[rbp-53] 
 .LABEL__generate_load_value_30__78:
   .loc 2 779 24
-  # $147.1: Boolean = call(is_389, ir_value_type.1, IR_Unchecked_Array_Type)
+  # $147.1: bool = call(is_389, ir_value_type.1, IR_Unchecked_Array_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Unchecked_Array_Type[rip]
   call is_389
@@ -10967,7 +10967,7 @@ generate_load_value_30:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:rax:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $72.1:rbx 
   .loc 2 784 20
-  # $73.1: Boolean = $72.1 == null
+  # $73.1: bool = $72.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $72.1
@@ -10985,7 +10985,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $73.1:[rbp-48] 
 .LABEL__generate_load_value_30__39:
   .loc 2 786 20
-  # $74.1: Boolean = call(is_389, ir_value_type.1, IR_Boolean_Type)
+  # $74.1: bool = call(is_389, ir_value_type.1, IR_Boolean_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Boolean_Type[rip]
   call is_389
@@ -11052,7 +11052,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $73.1:[rbp-48] $74.1:[rbp-49] 
 .LABEL__generate_load_value_30__42:
   .loc 2 788 20
-  # $75.1: Boolean = call(is_389, ir_value_type.1, IR_Function_Type)
+  # $75.1: bool = call(is_389, ir_value_type.1, IR_Function_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -11119,7 +11119,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $73.1:[rbp-48] $74.1:[rbp-49] $75.1:[rbp-50] 
 .LABEL__generate_load_value_30__45:
   .loc 2 790 20
-  # $76.1: Boolean = call(is_389, ir_value_type.1, IR_Int_Type)
+  # $76.1: bool = call(is_389, ir_value_type.1, IR_Int_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -11186,7 +11186,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $73.1:[rbp-48] $74.1:[rbp-49] $75.1:[rbp-50] $76.1:[rbp-51] 
 .LABEL__generate_load_value_30__48:
   .loc 2 792 20
-  # $77.1: Boolean = call(is_389, ir_value_type.1, IR_Int32_Type)
+  # $77.1: bool = call(is_389, ir_value_type.1, IR_Int32_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -11253,7 +11253,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $73.1:[rbp-48] $74.1:[rbp-49] $75.1:[rbp-50] $76.1:[rbp-51] $77.1:[rbp-52] 
 .LABEL__generate_load_value_30__51:
   .loc 2 794 20
-  # $78.1: Boolean = call(is_389, ir_value_type.1, IR_Int8_Type)
+  # $78.1: bool = call(is_389, ir_value_type.1, IR_Int8_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -11320,7 +11320,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $73.1:[rbp-48] $74.1:[rbp-49] $75.1:[rbp-50] $76.1:[rbp-51] $77.1:[rbp-52] $78.1:[rbp-53] 
 .LABEL__generate_load_value_30__54:
   .loc 2 796 20
-  # $79.1: Boolean = call(is_389, ir_value_type.1, IR_Pointer_Type)
+  # $79.1: bool = call(is_389, ir_value_type.1, IR_Pointer_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -11387,7 +11387,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] ir_value_type.1:[rbp-37] mc_value.1:[rbp-45] $69.1:[rbp-46] $71.1:[rbp-47] $73.1:[rbp-48] $74.1:[rbp-49] $75.1:[rbp-50] $76.1:[rbp-51] $77.1:[rbp-52] $78.1:[rbp-53] $79.1:[rbp-54] 
 .LABEL__generate_load_value_30__57:
   .loc 2 798 20
-  # $80.1: Boolean = call(is_389, ir_value_type.1, IR_Unchecked_Array_Type)
+  # $80.1: bool = call(is_389, ir_value_type.1, IR_Unchecked_Array_Type)
   mov rdi, [rbp-37]
   mov rsi, IR_Unchecked_Array_Type[rip]
   call is_389
@@ -11509,7 +11509,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] 
 .LABEL__generate_load_value_30__14:
   .loc 2 803 16
-  # $10.1: Boolean = call(is_389, ir_value.1, IR_Variable_Address_Value)
+  # $10.1: bool = call(is_389, ir_value.1, IR_Variable_Address_Value)
   mov rdi, [rbp-8]
   mov rsi, IR_Variable_Address_Value[rip]
   call is_389
@@ -11536,7 +11536,7 @@ generate_load_value_30:
   # [discarded value]: ir_variable_value.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] $10.1:[rbp-30] mc_value.1:rax 
   .loc 2 807 13
-  # $57.1: Boolean = mc_value.1 == null
+  # $57.1: bool = mc_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] $10.1:[rbp-30] mc_value.1:rax $57.1:rbx 
@@ -11614,7 +11614,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] $10.1:[rbp-30] 
 .LABEL__generate_load_value_30__17:
   .loc 2 811 16
-  # $11.1: Boolean = call(is_389, ir_value.1, IR_Global_Variable_Value)
+  # $11.1: bool = call(is_389, ir_value.1, IR_Global_Variable_Value)
   mov rdi, [rbp-8]
   mov rsi, IR_Global_Variable_Value[rip]
   call is_389
@@ -11633,7 +11633,7 @@ generate_load_value_30:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] $10.1:[rbp-30] $11.1:[rbp-31] ir_value.1:rax ir_value_type.1:rbx 
   .loc 2 814 13
-  # $40.1: Boolean = call(is_389, ir_value_type.1, IR_Pointer_Type)
+  # $40.1: bool = call(is_389, ir_value_type.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-39], rax
@@ -11753,7 +11753,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] $10.1:[rbp-30] $11.1:[rbp-31] 
 .LABEL__generate_load_value_30__20:
   .loc 2 820 16
-  # $12.1: Boolean = call(is_389, ir_value.1, IR_Global_Variable_Address_Value)
+  # $12.1: bool = call(is_389, ir_value.1, IR_Global_Variable_Address_Value)
   mov rdi, [rbp-8]
   mov rsi, IR_Global_Variable_Address_Value[rip]
   call is_389
@@ -11838,7 +11838,7 @@ generate_load_value_30:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] ir_value.1:[rbp-8] $2.1:[rbp-9] $3.1:[rbp-26] $8.1:[rbp-28] $7.1:[rbp-27] $9.1:[rbp-29] $10.1:[rbp-30] $11.1:[rbp-31] $12.1:[rbp-32] 
 .LABEL__generate_load_value_30__23:
   .loc 2 824 16
-  # $13.1: Boolean = call(is_389, ir_value.1, IR_Function_Address_Value)
+  # $13.1: bool = call(is_389, ir_value.1, IR_Function_Address_Value)
   mov rdi, [rbp-8]
   mov rsi, IR_Function_Address_Value[rip]
   call is_389
@@ -11997,7 +11997,7 @@ generate_store_value_31:
   mov rax, [rsi+8]
   # [live values]: self.1:rdi ir_value.1:rsi address.1:rdx ir_value_type.1:rax 
   .loc 2 834 9
-  # $3.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $3.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -12012,19 +12012,19 @@ generate_store_value_31:
   jz .LABEL__generate_store_value_31__3
 .LABEL__generate_store_value_31__2:
   .loc 2 834 43
-  # $4.1: Boolean = call(is_389, ir_value_type.1, IR_Struct_Type)
+  # $4.1: bool = call(is_389, ir_value_type.1, IR_Struct_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Struct_Type[rip]
   call is_389
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $4.1:rax 
   .loc 2 834 43
-  # $5.1: Boolean = $4.1 == false
+  # $5.1: bool = $4.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $5.1:rbx 
   .loc 2 834 9
-  # $3.2: Boolean = $5.1
+  # $3.2: bool = $5.1
   mov [rbp-34], bl
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:rbx:[rbp-33] 
@@ -12032,7 +12032,7 @@ generate_store_value_31:
   mov [rbp-33], bl
 .LABEL__generate_store_value_31__3:
   .loc 2 834 9
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] 
   # jump($3.3, .LABEL__generate_store_value_31__4, .LABEL__generate_store_value_31__5)
   mov al, [rbp-33]
@@ -12055,7 +12055,7 @@ generate_store_value_31:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:rax $8.1:rbx 
   .loc 2 836 13
-  # $9.1: Boolean = $8.1 == null
+  # $9.1: bool = $8.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $8.1
@@ -12097,7 +12097,7 @@ generate_store_value_31:
   # jump(.LABEL__generate_store_value_31__5)
 .LABEL__generate_store_value_31__5:
   .loc 2 842 9
-  # $14.1: Boolean = call(is_389, ir_value.1, IR_Constant_Value)
+  # $14.1: bool = call(is_389, ir_value.1, IR_Constant_Value)
   mov rdi, [rbp-16]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -12117,7 +12117,7 @@ generate_store_value_31:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $16.1:rbx 
   .loc 2 842 43
-  # $14.2: Boolean = call(is_389, $16.1, String_Token)
+  # $14.2: bool = call(is_389, $16.1, String_Token)
   mov rdi, rbx
   mov rsi, String_Token[rip]
   call is_389
@@ -12127,7 +12127,7 @@ generate_store_value_31:
   mov [rbp-43], al
 .LABEL__generate_store_value_31__9:
   .loc 2 842 9
-  # $14.3: Boolean = phi($14.1, $14.2)
+  # $14.3: bool = phi($14.1, $14.2)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] 
   # jump($14.3, .LABEL__generate_store_value_31__10, .LABEL__generate_store_value_31__12)
   mov al, [rbp-43]
@@ -12202,7 +12202,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] 
 .LABEL__generate_store_value_31__12:
   .loc 2 846 16
-  # $18.1: Boolean = call(is_389, ir_value.1, IR_Global_Variable_Value)
+  # $18.1: bool = call(is_389, ir_value.1, IR_Global_Variable_Value)
   mov rdi, [rbp-16]
   mov rsi, IR_Global_Variable_Value[rip]
   call is_389
@@ -12226,7 +12226,7 @@ generate_store_value_31:
   call generate_load_value_30
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] register.1:[rbp-52] 
   .loc 2 849 13
-  # $209.1: Boolean = call(is_389, ir_value_type.1, IR_Pointer_Type)
+  # $209.1: bool = call(is_389, ir_value_type.1, IR_Pointer_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -12323,7 +12323,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] 
 .LABEL__generate_store_value_31__15:
   .loc 2 854 16
-  # $19.1: Boolean = call(is_389, ir_value.1, IR_Function_Address_Value)
+  # $19.1: bool = call(is_389, ir_value.1, IR_Function_Address_Value)
   mov rdi, [rbp-16]
   mov rsi, IR_Function_Address_Value[rip]
   call is_389
@@ -12347,7 +12347,7 @@ generate_store_value_31:
   call generate_load_value_30
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] register.1:[rbp-53] 
   .loc 2 857 13
-  # $196.1: Boolean = call(is_389, ir_value_type.1, IR_Function_Type)
+  # $196.1: bool = call(is_389, ir_value_type.1, IR_Function_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -12444,7 +12444,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] 
 .LABEL__generate_store_value_31__18:
   .loc 2 862 16
-  # $20.1: Boolean = call(is_389, ir_value_type.1, IR_Int_Type)
+  # $20.1: bool = call(is_389, ir_value_type.1, IR_Int_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -12500,7 +12500,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] 
 .LABEL__generate_store_value_31__21:
   .loc 2 864 16
-  # $21.1: Boolean = call(is_389, ir_value_type.1, IR_Int8_Type)
+  # $21.1: bool = call(is_389, ir_value_type.1, IR_Int8_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -12556,7 +12556,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] 
 .LABEL__generate_store_value_31__24:
   .loc 2 866 16
-  # $22.1: Boolean = call(is_389, ir_value_type.1, IR_Pointer_Type)
+  # $22.1: bool = call(is_389, ir_value_type.1, IR_Pointer_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -12612,7 +12612,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] 
 .LABEL__generate_store_value_31__27:
   .loc 2 868 16
-  # $23.1: Boolean = call(is_389, ir_value_type.1, IR_Null_Type)
+  # $23.1: bool = call(is_389, ir_value_type.1, IR_Null_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Null_Type[rip]
   call is_389
@@ -12660,7 +12660,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] 
 .LABEL__generate_store_value_31__30:
   .loc 2 870 16
-  # $24.1: Boolean = call(is_389, ir_value_type.1, IR_Boolean_Type)
+  # $24.1: bool = call(is_389, ir_value_type.1, IR_Boolean_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Boolean_Type[rip]
   call is_389
@@ -12716,7 +12716,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] 
 .LABEL__generate_store_value_31__33:
   .loc 2 872 16
-  # $25.1: Boolean = call(is_389, ir_value_type.1, IR_Struct_Type)
+  # $25.1: bool = call(is_389, ir_value_type.1, IR_Struct_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -12732,7 +12732,7 @@ generate_store_value_31:
   # [discarded value]: struct_type.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] 
   .loc 2 877 13
-  # $45.1: Boolean = call(is_389, address.1, MC_Register_Based_Address)
+  # $45.1: bool = call(is_389, address.1, MC_Register_Based_Address)
   mov rdi, [rbp-32]
   mov rsi, MC_Register_Based_Address[rip]
   call is_389
@@ -12772,7 +12772,7 @@ generate_store_value_31:
   # [discarded value]: $56.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] address.1:[rbp-60] destination_register.3:[rbp-68] destination_address.3:rax 
   .loc 2 881 48
-  # destination_address_extra_offset.3: Int = load_struct_member(address.1, offset)
+  # destination_address_extra_offset.3: isize = load_struct_member(address.1, offset)
   mov rbx, [rbp-60]
   mov r15, [rbx+16]
   # [discarded value]: address.1
@@ -12783,12 +12783,12 @@ generate_store_value_31:
 .LABEL__generate_store_value_31__44:
   # destination_address.9: @MC_Register_Based_Address = phi(destination_address.2, destination_address.3)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] 
-  # destination_address_extra_offset.9: Int = phi(destination_address_extra_offset.2, destination_address_extra_offset.3)
+  # destination_address_extra_offset.9: isize = phi(destination_address_extra_offset.2, destination_address_extra_offset.3)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] 
   # destination_register.6: @MC_Register = phi(destination_register.2, destination_register.3)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] 
   .loc 2 889 13
-  # $59.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $59.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov rdi, [rbp-16]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -12810,7 +12810,7 @@ generate_store_value_31:
   # [discarded value]: ir_value.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:rax 
   .loc 2 892 17
-  # $70.1: Boolean = mc_value.1 == null
+  # $70.1: bool = mc_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:rax $70.1:rbx 
@@ -12833,7 +12833,7 @@ generate_store_value_31:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:rax:[rbp-93] $70.1:[rbp-94] mc_value_address.1:rbx 
   .loc 2 899 17
-  # $72.1: Boolean = call(is_389, mc_value_address.1, MC_Register_Based_Address)
+  # $72.1: bool = call(is_389, mc_value_address.1, MC_Register_Based_Address)
   mov rdi, rbx
   mov rsi, MC_Register_Based_Address[rip]
   mov [rbp-102], rbx
@@ -12874,7 +12874,7 @@ generate_store_value_31:
   # [discarded value]: $83.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] mc_value_address.1:[rbp-111] source_register.3:[rbp-119] source_address.3:rax 
   .loc 2 903 47
-  # source_address_extra_offset.3: Int = load_struct_member(mc_value_address.1, offset)
+  # source_address_extra_offset.3: isize = load_struct_member(mc_value_address.1, offset)
   mov rbx, [rbp-111]
   mov r15, [rbx+16]
   # [discarded value]: mc_value_address.1
@@ -12887,10 +12887,10 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] 
   # source_address.9: @MC_Register_Based_Address = phi(source_address.2, source_address.3)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] 
-  # source_address_extra_offset.9: Int = phi(source_address_extra_offset.2, source_address_extra_offset.3)
+  # source_address_extra_offset.9: isize = phi(source_address_extra_offset.2, source_address_extra_offset.3)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] 
   .loc 2 911 38
-  # ir_value_type_size.1: Int = call(get_type_size_56, self.1, ir_value_type.1)
+  # ir_value_type_size.1: isize = call(get_type_size_56, self.1, ir_value_type.1)
   mov rdi, [rbp-8]
   mov rsi, [rbp-24]
   call get_type_size_56
@@ -12906,22 +12906,22 @@ generate_store_value_31:
   mov BYTE PTR [rax+40], 1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:rax 
   .loc 2 914 17
-  # copied_bytes.1: Int = 0
+  # copied_bytes.1: isize = 0
   xor rbx, rbx
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:rax copied_bytes.1:rbx 
   # jump(.LABEL__generate_store_value_31__57)
   mov [rbp-151], rax
   mov [rbp-159], rbx
 .LABEL__generate_store_value_31__57:
-  # copied_bytes.2: Int = phi(copied_bytes.1, copied_bytes.4)
+  # copied_bytes.2: isize = phi(copied_bytes.1, copied_bytes.4)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] 
   .loc 2 915 20
-  # $88.1: Int = ir_value_type_size.1 - copied_bytes.2
+  # $88.1: isize = ir_value_type_size.1 - copied_bytes.2
   mov rax, [rbp-143]
   sub rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $88.1:rax 
   .loc 2 915 20
-  # $89.1: Boolean = $88.1 >= 8
+  # $89.1: bool = $88.1 >= 8
   cmp rax, 8
   setge bl
   # [discarded value]: $88.1
@@ -12932,7 +12932,7 @@ generate_store_value_31:
   jz .LABEL__generate_store_value_31__59
 .LABEL__generate_store_value_31__58:
   .loc 2 916 41
-  # $90.1: Int = source_address_extra_offset.9 + copied_bytes.2
+  # $90.1: isize = source_address_extra_offset.9 + copied_bytes.2
   mov rax, [rbp-135]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $90.1:rax 
@@ -12989,7 +12989,7 @@ generate_store_value_31:
   # [discarded value]: $96.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] 
   .loc 2 918 46
-  # $98.1: Int = destination_address_extra_offset.9 + copied_bytes.2
+  # $98.1: isize = destination_address_extra_offset.9 + copied_bytes.2
   mov rax, [rbp-84]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $98.1:rax 
@@ -13046,12 +13046,12 @@ generate_store_value_31:
   # [discarded value]: $104.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] 
   .loc 2 920 32
-  # $106.1: Int = copied_bytes.2 + 8
+  # $106.1: isize = copied_bytes.2 + 8
   mov rax, [rbp-159]
   add rax, 8
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $106.1:rax 
   .loc 2 920 17
-  # copied_bytes.4: Int = $106.1
+  # copied_bytes.4: isize = $106.1
   mov [rbp-168], rax
   # [discarded value]: $106.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] copied_bytes.4:rax:[rbp-159] 
@@ -13063,12 +13063,12 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] 
 .LABEL__generate_store_value_31__59:
   .loc 2 922 17
-  # $107.1: Int = ir_value_type_size.1 - copied_bytes.2
+  # $107.1: isize = ir_value_type_size.1 - copied_bytes.2
   mov rax, [rbp-143]
   sub rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $107.1:rax 
   .loc 2 922 17
-  # $108.1: Boolean = $107.1 >= 4
+  # $108.1: bool = $107.1 >= 4
   cmp rax, 4
   setge bl
   # [discarded value]: $107.1
@@ -13079,7 +13079,7 @@ generate_store_value_31:
   jz .LABEL__generate_store_value_31__61
 .LABEL__generate_store_value_31__60:
   .loc 2 923 41
-  # $109.1: Int = source_address_extra_offset.9 + copied_bytes.2
+  # $109.1: isize = source_address_extra_offset.9 + copied_bytes.2
   mov rax, [rbp-135]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] $109.1:rax 
@@ -13136,7 +13136,7 @@ generate_store_value_31:
   # [discarded value]: $115.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] 
   .loc 2 925 46
-  # $117.1: Int = destination_address_extra_offset.9 + copied_bytes.2
+  # $117.1: isize = destination_address_extra_offset.9 + copied_bytes.2
   mov rax, [rbp-84]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] $117.1:rax 
@@ -13193,27 +13193,27 @@ generate_store_value_31:
   # [discarded value]: $123.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] 
   .loc 2 927 32
-  # $125.1: Int = copied_bytes.2 + 4
+  # $125.1: isize = copied_bytes.2 + 4
   mov rax, [rbp-159]
   add rax, 4
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] $125.1:rax 
   .loc 2 927 17
-  # copied_bytes.7: Int = $125.1
+  # copied_bytes.7: isize = $125.1
   mov [rbp-169], rax
   # [discarded value]: $125.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:rax:[rbp-159] 
   # jump(.LABEL__generate_store_value_31__61)
   mov [rbp-159], rax
 .LABEL__generate_store_value_31__61:
-  # copied_bytes.8: Int = phi(copied_bytes.7, copied_bytes.2)
+  # copied_bytes.8: isize = phi(copied_bytes.7, copied_bytes.2)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] 
   .loc 2 929 17
-  # $126.1: Int = ir_value_type_size.1 - copied_bytes.8
+  # $126.1: isize = ir_value_type_size.1 - copied_bytes.8
   mov rax, [rbp-143]
   sub rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $126.1:rax 
   .loc 2 929 17
-  # $127.1: Boolean = $126.1 >= 2
+  # $127.1: bool = $126.1 >= 2
   cmp rax, 2
   setge bl
   # [discarded value]: $126.1
@@ -13224,7 +13224,7 @@ generate_store_value_31:
   jz .LABEL__generate_store_value_31__63
 .LABEL__generate_store_value_31__62:
   .loc 2 930 41
-  # $128.1: Int = source_address_extra_offset.9 + copied_bytes.8
+  # $128.1: isize = source_address_extra_offset.9 + copied_bytes.8
   mov rax, [rbp-135]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] $128.1:rax 
@@ -13281,7 +13281,7 @@ generate_store_value_31:
   # [discarded value]: $134.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] 
   .loc 2 932 46
-  # $136.1: Int = destination_address_extra_offset.9 + copied_bytes.8
+  # $136.1: isize = destination_address_extra_offset.9 + copied_bytes.8
   mov rax, [rbp-84]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] $136.1:rax 
@@ -13338,27 +13338,27 @@ generate_store_value_31:
   # [discarded value]: $142.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] 
   .loc 2 934 32
-  # $144.1: Int = copied_bytes.8 + 2
+  # $144.1: isize = copied_bytes.8 + 2
   mov rax, [rbp-159]
   add rax, 2
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] $144.1:rax 
   .loc 2 934 17
-  # copied_bytes.10: Int = $144.1
+  # copied_bytes.10: isize = $144.1
   mov [rbp-170], rax
   # [discarded value]: $144.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:rax:[rbp-159] 
   # jump(.LABEL__generate_store_value_31__63)
   mov [rbp-159], rax
 .LABEL__generate_store_value_31__63:
-  # copied_bytes.11: Int = phi(copied_bytes.8, copied_bytes.10)
+  # copied_bytes.11: isize = phi(copied_bytes.8, copied_bytes.10)
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] 
   .loc 2 936 17
-  # $145.1: Int = ir_value_type_size.1 - copied_bytes.11
+  # $145.1: isize = ir_value_type_size.1 - copied_bytes.11
   mov rax, [rbp-143]
   sub rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $145.1:rax 
   .loc 2 936 17
-  # $146.1: Boolean = $145.1 == 1
+  # $146.1: bool = $145.1 == 1
   cmp rax, 1
   sete bl
   # [discarded value]: $145.1
@@ -13369,7 +13369,7 @@ generate_store_value_31:
   jz .LABEL__generate_store_value_31__65
 .LABEL__generate_store_value_31__64:
   .loc 2 937 41
-  # $147.1: Int = source_address_extra_offset.9 + copied_bytes.11
+  # $147.1: isize = source_address_extra_offset.9 + copied_bytes.11
   mov rax, [rbp-135]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] $147.1:rax 
@@ -13426,7 +13426,7 @@ generate_store_value_31:
   # [discarded value]: $153.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] 
   .loc 2 939 46
-  # $155.1: Int = destination_address_extra_offset.9 + copied_bytes.11
+  # $155.1: isize = destination_address_extra_offset.9 + copied_bytes.11
   mov rax, [rbp-84]
   add rax, QWORD PTR [rbp-159]
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] $155.1:rax 
@@ -13483,12 +13483,12 @@ generate_store_value_31:
   # [discarded value]: $161.1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] 
   .loc 2 941 32
-  # $163.1: Int = copied_bytes.11 + 1
+  # $163.1: isize = copied_bytes.11 + 1
   mov rax, [rbp-159]
   add rax, 1
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] $163.1:rax 
   .loc 2 941 17
-  # copied_bytes.13: Int = $163.1
+  # copied_bytes.13: isize = $163.1
   mov [rbp-171], rax
   # [discarded value]: copied_bytes.13
   # [discarded value]: $163.1
@@ -13501,7 +13501,7 @@ generate_store_value_31:
   mov BYTE PTR [rax+40], 0
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:rax:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] 
   .loc 2 944 17
-  # $164.1: Boolean = source_register.9 != null
+  # $164.1: bool = source_register.9 != null
   cmp QWORD PTR [rbp-119], 0
   setne bl
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:rax:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] $164.1:rbx 
@@ -13518,7 +13518,7 @@ generate_store_value_31:
   # jump(.LABEL__generate_store_value_31__47)
 .LABEL__generate_store_value_31__47:
   .loc 2 953 13
-  # $165.1: Boolean = destination_register.6 != null
+  # $165.1: bool = destination_register.6 != null
   cmp QWORD PTR [rbp-68], 0
   setne al
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] $165.1:rax mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.3:[rbp-119] source_address.3:[rbp-127] source_address_extra_offset.3:[rbp-135] source_register.9:[rbp-119] source_address.9:[rbp-127] source_address_extra_offset.9:[rbp-135] ir_value_type_size.1:[rbp-143] data_register.1:[rbp-151] copied_bytes.1:[rbp-159] copied_bytes.2:[rbp-159] $89.1:[rbp-160] $108.1:[rbp-161] copied_bytes.7:[rbp-159] copied_bytes.8:[rbp-159] $127.1:[rbp-162] copied_bytes.10:[rbp-159] copied_bytes.11:[rbp-159] $146.1:[rbp-163] $164.1:[rbp-164] 
@@ -13645,7 +13645,7 @@ generate_store_value_31:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.2:rbx:[rbp-119] source_address.2:rax:[rbp-127] 
   .loc 2 909 17
-  # source_address_extra_offset.2: Int = 0
+  # source_address_extra_offset.2: isize = 0
   xor r15, r15
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] mc_value.1:[rbp-93] $70.1:[rbp-94] mc_value_address.1:[rbp-102] $72.1:[rbp-103] source_register.2:rbx:[rbp-119] source_address.2:rax:[rbp-127] source_address_extra_offset.2:r15:[rbp-135] 
   # jump(.LABEL__generate_store_value_31__55)
@@ -13667,7 +13667,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.3:[rbp-68] destination_address.3:[rbp-76] destination_address_extra_offset.3:[rbp-84] destination_address.9:[rbp-76] destination_address_extra_offset.9:[rbp-84] destination_register.6:[rbp-68] $59.1:[rbp-85] 
 .LABEL__generate_store_value_31__48:
   .loc 2 947 20
-  # $60.1: Boolean = call(is_389, ir_value.1, IR_Struct_Literal_Value)
+  # $60.1: bool = call(is_389, ir_value.1, IR_Struct_Literal_Value)
   mov rdi, [rbp-16]
   mov rsi, IR_Struct_Literal_Value[rip]
   call is_389
@@ -13821,7 +13821,7 @@ generate_store_value_31:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.2:rbx:[rbp-68] destination_address.2:rax:[rbp-76] 
   .loc 2 887 13
-  # destination_address_extra_offset.2: Int = 0
+  # destination_address_extra_offset.2: isize = 0
   xor r15, r15
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $45.1:[rbp-52] destination_register.2:rbx:[rbp-68] destination_address.2:rax:[rbp-76] destination_address_extra_offset.2:r15:[rbp-84] 
   # jump(.LABEL__generate_store_value_31__44)
@@ -13837,7 +13837,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] 
 .LABEL__generate_store_value_31__36:
   .loc 2 956 16
-  # $26.1: Boolean = call(is_389, ir_value_type.1, IR_Function_Type)
+  # $26.1: bool = call(is_389, ir_value_type.1, IR_Function_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -13893,7 +13893,7 @@ generate_store_value_31:
   # [live values]: self.1:[rbp-8] ir_value.1:[rbp-16] address.1:[rbp-32] ir_value_type.1:[rbp-24] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] mc_value.1:[rbp-41] $9.1:[rbp-42] $14.1:[rbp-43] $14.2:[rbp-43] $14.3:[rbp-43] $18.1:[rbp-44] $19.1:[rbp-45] $20.1:[rbp-46] $21.1:[rbp-47] $22.1:[rbp-48] $23.1:[rbp-49] $24.1:[rbp-50] $25.1:[rbp-51] $26.1:[rbp-52] 
 .LABEL__generate_store_value_31__39:
   .loc 2 958 16
-  # $27.1: Boolean = call(is_389, ir_value_type.1, IR_Unchecked_Array_Type)
+  # $27.1: bool = call(is_389, ir_value_type.1, IR_Unchecked_Array_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Unchecked_Array_Type[rip]
   call is_389
@@ -14052,7 +14052,7 @@ generate_store_struct_literal_value_32:
   mov rax, [rdx+16]
   # [live values]: self.1:rdi ir_value.1:rsi struct_type.1:rdx address.1:rcx $1.1:rax 
   .loc 2 966 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -14098,7 +14098,7 @@ generate_store_struct_literal_value_32:
   # struct_type_members_item.2: @List_Item = phi(struct_type_members_item.1, struct_type_members_item.5)
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] 
   .loc 2 970 12
-  # $6.1: Boolean = struct_type_members_item.2 != null
+  # $6.1: bool = struct_type_members_item.2 != null
   cmp QWORD PTR [rbp-41], 0
   setne al
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:rax 
@@ -14120,7 +14120,7 @@ generate_store_struct_literal_value_32:
   call get_member_value_158
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:rax 
   .loc 2 973 13
-  # $10.1: Boolean = struct_type_member_value.1 != null
+  # $10.1: bool = struct_type_member_value.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:rax $10.1:rbx 
@@ -14183,14 +14183,14 @@ generate_store_struct_literal_value_32:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:rax:[rbp-58] $10.1:[rbp-59] $28.1:rbx 
   .loc 2 975 17
-  # $29.1: Boolean = call(is_389, $28.1, IR_Undefined_Type)
+  # $29.1: bool = call(is_389, $28.1, IR_Undefined_Type)
   mov rdi, rbx
   mov rsi, IR_Undefined_Type[rip]
   call is_389
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:[rbp-58] $10.1:[rbp-59] $29.1:rax 
   .loc 2 975 17
-  # $30.1: Boolean = $29.1 == false
+  # $30.1: bool = $29.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $29.1
@@ -14201,18 +14201,18 @@ generate_store_struct_literal_value_32:
   jz .LABEL__generate_store_struct_literal_value_32__8
 .LABEL__generate_store_struct_literal_value_32__10:
   .loc 2 976 49
-  # struct_type_member_offset.1: Int = call(get_offset_33, self.1, struct_type_member.1)
+  # struct_type_member_offset.1: isize = call(get_offset_33, self.1, struct_type_member.1)
   mov rdi, [rbp-33]
   mov rsi, [rbp-50]
   call get_offset_33
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:[rbp-58] $10.1:[rbp-59] $30.1:[rbp-60] struct_type_member_offset.1:rax 
   .loc 2 977 34
-  # $32.1: Int = load_struct_member(address.1, offset)
+  # $32.1: isize = load_struct_member(address.1, offset)
   mov rbx, [rbp-8]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:rbx:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:[rbp-58] $10.1:[rbp-59] $30.1:[rbp-60] struct_type_member_offset.1:rax $32.1:r15 
   .loc 2 977 34
-  # $33.1: Int = $32.1 + struct_type_member_offset.1
+  # $33.1: isize = $32.1 + struct_type_member_offset.1
   mov r14, r15
   add r14, rax
   # [discarded value]: $32.1
@@ -14231,12 +14231,12 @@ generate_store_struct_literal_value_32:
   call generate_store_value_31
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:[rbp-58] $10.1:[rbp-59] $30.1:[rbp-60] struct_type_member_offset.1:[rbp-68] 
   .loc 2 979 34
-  # $34.1: Int = load_struct_member(address.1, offset)
+  # $34.1: isize = load_struct_member(address.1, offset)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-33] ir_value.1:[rbp-25] struct_type.1:[rbp-16] address.1:rax:[rbp-8] $2.1:[rbp-17] struct_type_members_item.1:[rbp-41] struct_type_members_item.2:[rbp-41] $6.1:[rbp-42] struct_type_member.1:[rbp-50] struct_type_member_value.1:[rbp-58] $10.1:[rbp-59] $30.1:[rbp-60] struct_type_member_offset.1:[rbp-68] $34.1:rbx 
   .loc 2 979 34
-  # $35.1: Int = $34.1 - struct_type_member_offset.1
+  # $35.1: isize = $34.1 - struct_type_member_offset.1
   mov r15, rbx
   sub r15, QWORD PTR [rbp-68]
   # [discarded value]: $34.1
@@ -14377,7 +14377,7 @@ get_offset_33:
   # struct_type_member.1: @IR_Struct_Type_Member = load_variable(struct_type_member)
   # [live values]: self.1:rdi struct_type_member.1:rsi 
   .loc 2 989 9
-  # offset.1: Int = 0
+  # offset.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi struct_type_member.1:rsi offset.1:rax 
   .loc 2 990 23
@@ -14389,7 +14389,7 @@ get_offset_33:
   mov r15, [rbx+16]
   # [live values]: self.1:rdi struct_type_member.1:rsi offset.1:rax struct_type.1:rbx $2.1:r15 
   .loc 2 991 9
-  # $3.1: Boolean = $2.1 != null
+  # $3.1: bool = $2.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $2.1
@@ -14409,7 +14409,7 @@ get_offset_33:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:rax:[rbp-16] $3.1:[rbp-33] $4.1:rbx 
   .loc 2 992 18
-  # offset.2: Int = call(get_type_size_56, self.1, $4.1)
+  # offset.2: isize = call(get_type_size_56, self.1, $4.1)
   mov rdi, [rbp-32]
   mov rsi, rbx
   call get_type_size_56
@@ -14418,7 +14418,7 @@ get_offset_33:
   # jump(.LABEL__get_offset_33__3)
   mov [rbp-8], rax
 .LABEL__get_offset_33__3:
-  # offset.7: Int = phi(offset.1, offset.2)
+  # offset.7: isize = phi(offset.1, offset.2)
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] 
   .loc 2 994 43
   # $6.1: @List = load_struct_member(struct_type.1, members)
@@ -14433,12 +14433,12 @@ get_offset_33:
   # jump(.LABEL__get_offset_33__4)
   mov [rbp-41], r15
 .LABEL__get_offset_33__4:
-  # offset.6: Int = phi(offset.7, offset.5)
+  # offset.6: isize = phi(offset.7, offset.5)
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] 
   # current_struct_type_member_item.2: @List_Item = phi(current_struct_type_member_item.1, current_struct_type_member_item.5)
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:[rbp-41] 
   .loc 2 995 12
-  # $8.1: Boolean = current_struct_type_member_item.2 != null
+  # $8.1: bool = current_struct_type_member_item.2 != null
   cmp QWORD PTR [rbp-41], 0
   setne al
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:[rbp-41] $8.1:rax 
@@ -14453,7 +14453,7 @@ get_offset_33:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:rax:[rbp-41] $8.1:[rbp-42] current_struct_type_member.1:rbx 
   .loc 2 997 13
-  # $11.1: Boolean = current_struct_type_member.1 == struct_type_member.1
+  # $11.1: bool = current_struct_type_member.1 == struct_type_member.1
   cmp rbx, QWORD PTR [rbp-24]
   sete r15b
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:rax:[rbp-41] $8.1:[rbp-42] current_struct_type_member.1:rbx $11.1:r15 
@@ -14475,20 +14475,20 @@ get_offset_33:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:[rbp-41] $8.1:[rbp-42] current_struct_type_member.1:rax:[rbp-50] $11.1:[rbp-51] $12.1:rbx 
   .loc 2 1000 27
-  # $13.1: Int = call(get_type_size_56, self.1, $12.1)
+  # $13.1: isize = call(get_type_size_56, self.1, $12.1)
   mov rdi, [rbp-32]
   mov rsi, rbx
   call get_type_size_56
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:[rbp-41] $8.1:[rbp-42] current_struct_type_member.1:[rbp-50] $11.1:[rbp-51] $13.1:rax 
   .loc 2 1000 18
-  # $14.1: Int = offset.6 + $13.1
+  # $14.1: isize = offset.6 + $13.1
   mov rbx, [rbp-8]
   add rbx, rax
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:[rbp-41] $8.1:[rbp-42] current_struct_type_member.1:[rbp-50] $11.1:[rbp-51] $14.1:rbx 
   .loc 2 1000 9
-  # offset.5: Int = $14.1
+  # offset.5: isize = $14.1
   mov [rbp-59], rbx
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-32] struct_type_member.1:[rbp-24] offset.1:[rbp-8] struct_type.1:[rbp-16] $3.1:[rbp-33] offset.2:[rbp-8] offset.7:[rbp-8] current_struct_type_member_item.1:[rbp-41] offset.6:[rbp-8] current_struct_type_member_item.2:[rbp-41] $8.1:[rbp-42] current_struct_type_member.1:[rbp-50] $11.1:[rbp-51] offset.5:rbx:[rbp-8] 
@@ -14557,7 +14557,7 @@ write_operand_34:
   # ir_value.1: @IR_Value = load_variable(ir_value)
   # [live values]: file.1:rdi generator.1:rsi ir_value.1:rdx 
   .loc 2 1007 9
-  # $1.1: Boolean = call(is_389, ir_value.1, IR_Constant_Value)
+  # $1.1: bool = call(is_389, ir_value.1, IR_Constant_Value)
   mov [rbp-8], rdi
   mov rdi, rdx
   mov [rbp-16], rsi
@@ -14579,7 +14579,7 @@ write_operand_34:
   mov rbx, [rax+48]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax $3.1:rbx 
   .loc 2 1009 13
-  # $4.1: Boolean = call(is_389, $3.1, Boolean_Token)
+  # $4.1: bool = call(is_389, $3.1, Boolean_Token)
   mov rdi, rbx
   mov rsi, Boolean_Token[rip]
   mov [rbp-33], rax
@@ -14597,7 +14597,7 @@ write_operand_34:
   mov rbx, [rax+48]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $6.1:rbx 
   .loc 2 1010 17
-  # $7.1: Boolean = load_struct_member($6.1, value)
+  # $7.1: bool = load_struct_member($6.1, value)
   mov r15b, [rbx+32]
   # [discarded value]: $6.1
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $7.1:r15 
@@ -14640,7 +14640,7 @@ write_operand_34:
   mov rbx, [rax+48]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $10.1:rbx 
   .loc 2 1015 13
-  # $11.1: Boolean = call(is_389, $10.1, Character_Token)
+  # $11.1: bool = call(is_389, $10.1, Character_Token)
   mov rdi, rbx
   mov rsi, Character_Token[rip]
   call is_389
@@ -14657,12 +14657,12 @@ write_operand_34:
   mov rbx, [rax+48]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $11.1:[rbp-35] $13.1:rbx 
   .loc 2 1016 31
-  # $14.1: Int8 = load_struct_member($13.1, value)
+  # $14.1: i8 = load_struct_member($13.1, value)
   mov r15b, [rbx+32]
   # [discarded value]: $13.1
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $11.1:[rbp-35] $14.1:r15 
   .loc 2 1016 31
-  # $15.1: Int = cast($14.1)
+  # $15.1: isize = cast($14.1)
   mov bl, r15b
   movsx rbx, bl
   # [discarded value]: $14.1
@@ -14687,7 +14687,7 @@ write_operand_34:
   mov rbx, [rax+48]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $11.1:[rbp-35] $17.1:rbx 
   .loc 2 1018 13
-  # $18.1: Boolean = call(is_389, $17.1, Integer_Token)
+  # $18.1: bool = call(is_389, $17.1, Integer_Token)
   mov rdi, rbx
   mov rsi, Integer_Token[rip]
   call is_389
@@ -14704,7 +14704,7 @@ write_operand_34:
   mov rbx, [rax+48]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $11.1:[rbp-35] $18.1:[rbp-36] $20.1:rbx 
   .loc 2 1019 31
-  # $21.1: Int = load_struct_member($20.1, value)
+  # $21.1: isize = load_struct_member($20.1, value)
   mov r15, [rbx+32]
   # [discarded value]: $20.1
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $11.1:[rbp-35] $18.1:[rbp-36] $21.1:r15 
@@ -14728,7 +14728,7 @@ write_operand_34:
   mov rbx, [rax+48]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] ir_value.1:rax:[rbp-33] $4.1:[rbp-34] $11.1:[rbp-35] $18.1:[rbp-36] $23.1:rbx 
   .loc 2 1021 13
-  # $24.1: Boolean = call(is_389, $23.1, Null_Token)
+  # $24.1: bool = call(is_389, $23.1, Null_Token)
   mov rdi, rbx
   mov rsi, Null_Token[rip]
   call is_389
@@ -14800,7 +14800,7 @@ write_operand_34:
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] 
 .LABEL__write_operand_34__3:
   .loc 2 1026 9
-  # $31.1: Boolean = call(is_389, ir_value.1, IR_Variable_Value)
+  # $31.1: bool = call(is_389, ir_value.1, IR_Variable_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -14822,7 +14822,7 @@ write_operand_34:
   call get_value_42
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:rax 
   .loc 2 1029 13
-  # $34.1: Boolean = mc_value.1 == null
+  # $34.1: bool = mc_value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:rax $34.1:rbx 
@@ -14845,7 +14845,7 @@ write_operand_34:
   mov rbx, [rax+8]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:rax:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] $35.1:rbx 
   .loc 2 1032 31
-  # value_type_size.1: Int = call(get_type_size_56, generator.1, $35.1)
+  # value_type_size.1: isize = call(get_type_size_56, generator.1, $35.1)
   mov rdi, [rbp-16]
   mov rsi, rbx
   call get_type_size_56
@@ -14857,7 +14857,7 @@ write_operand_34:
   mov r15, [rbx+32]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:rbx:[rbp-42] $34.1:[rbp-43] value_type_size.1:rax $37.1:r15 
   .loc 2 1033 13
-  # $38.1: Boolean = $37.1 != null
+  # $38.1: bool = $37.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $37.1
@@ -14869,7 +14869,7 @@ write_operand_34:
   jz .LABEL__write_operand_34__24
 .LABEL__write_operand_34__23:
   .loc 2 1034 17
-  # $39.1: Boolean = value_type_size.1 == 8
+  # $39.1: bool = value_type_size.1 == 8
   cmp QWORD PTR [rbp-51], 8
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $39.1:rax 
@@ -14903,7 +14903,7 @@ write_operand_34:
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $39.1:[rbp-53] 
 .LABEL__write_operand_34__26:
   .loc 2 1037 17
-  # $43.1: Boolean = value_type_size.1 == 4
+  # $43.1: bool = value_type_size.1 == 4
   cmp QWORD PTR [rbp-51], 4
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $39.1:[rbp-53] $43.1:rax 
@@ -14937,7 +14937,7 @@ write_operand_34:
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $39.1:[rbp-53] $43.1:[rbp-54] 
 .LABEL__write_operand_34__29:
   .loc 2 1040 17
-  # $47.1: Boolean = value_type_size.1 == 2
+  # $47.1: bool = value_type_size.1 == 2
   cmp QWORD PTR [rbp-51], 2
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $39.1:[rbp-53] $43.1:[rbp-54] $47.1:rax 
@@ -14971,7 +14971,7 @@ write_operand_34:
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $39.1:[rbp-53] $43.1:[rbp-54] $47.1:[rbp-55] 
 .LABEL__write_operand_34__32:
   .loc 2 1043 17
-  # $51.1: Boolean = value_type_size.1 == 1
+  # $51.1: bool = value_type_size.1 == 1
   cmp QWORD PTR [rbp-51], 1
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $39.1:[rbp-53] $43.1:[rbp-54] $47.1:[rbp-55] $51.1:rax 
@@ -15038,7 +15038,7 @@ write_operand_34:
   mov rbx, [rax+40]
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:rax:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $57.1:rbx 
   .loc 2 1048 13
-  # $58.1: Boolean = $57.1 != null
+  # $58.1: bool = $57.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $57.1
@@ -15049,7 +15049,7 @@ write_operand_34:
   jz .LABEL__write_operand_34__38
 .LABEL__write_operand_34__37:
   .loc 2 1049 17
-  # $59.1: Boolean = value_type_size.1 == 8
+  # $59.1: bool = value_type_size.1 == 8
   cmp QWORD PTR [rbp-51], 8
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $58.1:[rbp-53] $59.1:rax 
@@ -15085,7 +15085,7 @@ write_operand_34:
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $58.1:[rbp-53] $59.1:[rbp-54] 
 .LABEL__write_operand_34__40:
   .loc 2 1052 17
-  # $63.1: Boolean = value_type_size.1 == 4
+  # $63.1: bool = value_type_size.1 == 4
   cmp QWORD PTR [rbp-51], 4
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $58.1:[rbp-53] $59.1:[rbp-54] $63.1:rax 
@@ -15121,7 +15121,7 @@ write_operand_34:
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $58.1:[rbp-53] $59.1:[rbp-54] $63.1:[rbp-55] 
 .LABEL__write_operand_34__43:
   .loc 2 1055 17
-  # $67.1: Boolean = value_type_size.1 == 2
+  # $67.1: bool = value_type_size.1 == 2
   cmp QWORD PTR [rbp-51], 2
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $58.1:[rbp-53] $59.1:[rbp-54] $63.1:[rbp-55] $67.1:rax 
@@ -15157,7 +15157,7 @@ write_operand_34:
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $58.1:[rbp-53] $59.1:[rbp-54] $63.1:[rbp-55] $67.1:[rbp-56] 
 .LABEL__write_operand_34__46:
   .loc 2 1058 17
-  # $71.1: Boolean = value_type_size.1 == 1
+  # $71.1: bool = value_type_size.1 == 1
   cmp QWORD PTR [rbp-51], 1
   sete al
   # [live values]: file.1:[rbp-8] generator.1:[rbp-16] ir_value.1:[rbp-24] $1.1:[rbp-25] $31.1:[rbp-26] ir_value.1:[rbp-34] mc_value.1:[rbp-42] $34.1:[rbp-43] value_type_size.1:[rbp-51] $38.1:[rbp-52] $58.1:[rbp-53] $59.1:[rbp-54] $63.1:[rbp-55] $67.1:[rbp-56] $71.1:rax 
@@ -15346,11 +15346,11 @@ create_mc_generator_36:
   # output_file_path.1: @String = load_variable(output_file_path)
   # [live values]: output_file_path.1:rdi 
   .loc 2 1102 29
-  # $1.1: [Int8; ?] = load_struct_member(output_file_path.1, data)
+  # $1.1: [i8; ?] = load_struct_member(output_file_path.1, data)
   mov rax, [rdi]
   # [live values]: output_file_path.1:rdi $1.1:rax 
   .loc 2 1102 52
-  # $2.1: [Int8; ?] = load_struct_member("w", data)
+  # $2.1: [i8; ?] = load_struct_member("w", data)
   lea rbx, .LABEL__string_9[rip] # "w"
   mov r15, [rbx]
   # [live values]: output_file_path.1:rdi $1.1:rax $2.1:r15 
@@ -15929,7 +15929,7 @@ reset_37:
   mov rbx, [rax+145]
   # [live values]: self.1:rax:[rbp-8] $1.1:rbx 
   .loc 2 1108 12
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $1.1
@@ -15967,7 +15967,7 @@ reset_37:
   # [discarded value]: value.1
   # [live values]: self.1:rax:[rbp-8] $2.1:[rbp-9] $5.1:r15 
   .loc 2 1113 13
-  # $6.1: Boolean = $5.1 != null
+  # $6.1: bool = $5.1 != null
   cmp r15, 0
   setne bl
   # [discarded value]: $5.1
@@ -16025,18 +16025,18 @@ find_unused_register_38:
   mov rax, [rdi+17]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 2 1122 9
-  # $2.1: Boolean = load_struct_member($1.1, is_reserved)
+  # $2.1: bool = load_struct_member($1.1, is_reserved)
   mov bl, [rax+40]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi $2.1:rbx 
   .loc 2 1122 9
-  # $3.1: Boolean = $2.1 == false
+  # $3.1: bool = $2.1 == false
   cmp bl, 0
   sete al
   # [discarded value]: $2.1
   # [live values]: self.1:rdi $3.1:rax 
   .loc 2 1122 9
-  # $4.1: Boolean = $3.1
+  # $4.1: bool = $3.1
   mov [rbp-1], al
   # [discarded value]: $3.1
   # [live values]: self.1:rdi $4.1:rax 
@@ -16057,13 +16057,13 @@ find_unused_register_38:
   # [discarded value]: $5.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $6.1:r15 
   .loc 2 1122 51
-  # $7.1: Boolean = $6.1 == null
+  # $7.1: bool = $6.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $7.1:rbx 
   .loc 2 1122 9
-  # $4.2: Boolean = $7.1
+  # $4.2: bool = $7.1
   mov [rbp-10], bl
   # [discarded value]: $7.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:rbx:[rbp-1] 
@@ -16071,7 +16071,7 @@ find_unused_register_38:
   mov [rbp-1], bl
 .LABEL__find_unused_register_38__3:
   .loc 2 1122 9
-  # $4.3: Boolean = phi($4.1, $4.2)
+  # $4.3: bool = phi($4.1, $4.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] 
   # jump($4.3, .LABEL__find_unused_register_38__4, .LABEL__find_unused_register_38__5)
   mov al, [rbp-1]
@@ -16097,18 +16097,18 @@ find_unused_register_38:
   mov rbx, [rax+41]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $9.1:rbx 
   .loc 2 1125 9
-  # $10.1: Boolean = load_struct_member($9.1, is_reserved)
+  # $10.1: bool = load_struct_member($9.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $9.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $10.1:r15 
   .loc 2 1125 9
-  # $11.1: Boolean = $10.1 == false
+  # $11.1: bool = $10.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $10.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $11.1:rbx 
   .loc 2 1125 9
-  # $12.1: Boolean = $11.1
+  # $12.1: bool = $11.1
   mov [rbp-10], bl
   # [discarded value]: $11.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:rbx 
@@ -16128,13 +16128,13 @@ find_unused_register_38:
   # [discarded value]: $13.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $14.1:r15 
   .loc 2 1125 51
-  # $15.1: Boolean = $14.1 == null
+  # $15.1: bool = $14.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $14.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $15.1:rbx 
   .loc 2 1125 9
-  # $12.2: Boolean = $15.1
+  # $12.2: bool = $15.1
   mov [rbp-11], bl
   # [discarded value]: $15.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:rbx:[rbp-10] 
@@ -16142,7 +16142,7 @@ find_unused_register_38:
   mov [rbp-10], bl
 .LABEL__find_unused_register_38__8:
   .loc 2 1125 9
-  # $12.3: Boolean = phi($12.1, $12.2)
+  # $12.3: bool = phi($12.1, $12.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] 
   # jump($12.3, .LABEL__find_unused_register_38__9, .LABEL__find_unused_register_38__10)
   mov al, [rbp-10]
@@ -16168,18 +16168,18 @@ find_unused_register_38:
   mov rbx, [rax+137]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $17.1:rbx 
   .loc 2 1128 9
-  # $18.1: Boolean = load_struct_member($17.1, is_reserved)
+  # $18.1: bool = load_struct_member($17.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $17.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $18.1:r15 
   .loc 2 1128 9
-  # $19.1: Boolean = $18.1 == false
+  # $19.1: bool = $18.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $18.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $19.1:rbx 
   .loc 2 1128 9
-  # $20.1: Boolean = $19.1
+  # $20.1: bool = $19.1
   mov [rbp-11], bl
   # [discarded value]: $19.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:rbx 
@@ -16199,13 +16199,13 @@ find_unused_register_38:
   # [discarded value]: $21.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $22.1:r15 
   .loc 2 1128 51
-  # $23.1: Boolean = $22.1 == null
+  # $23.1: bool = $22.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $22.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $23.1:rbx 
   .loc 2 1128 9
-  # $20.2: Boolean = $23.1
+  # $20.2: bool = $23.1
   mov [rbp-12], bl
   # [discarded value]: $23.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:rbx:[rbp-11] 
@@ -16213,7 +16213,7 @@ find_unused_register_38:
   mov [rbp-11], bl
 .LABEL__find_unused_register_38__13:
   .loc 2 1128 9
-  # $20.3: Boolean = phi($20.1, $20.2)
+  # $20.3: bool = phi($20.1, $20.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] 
   # jump($20.3, .LABEL__find_unused_register_38__14, .LABEL__find_unused_register_38__15)
   mov al, [rbp-11]
@@ -16239,18 +16239,18 @@ find_unused_register_38:
   mov rbx, [rax+129]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $25.1:rbx 
   .loc 2 1131 9
-  # $26.1: Boolean = load_struct_member($25.1, is_reserved)
+  # $26.1: bool = load_struct_member($25.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $25.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $26.1:r15 
   .loc 2 1131 9
-  # $27.1: Boolean = $26.1 == false
+  # $27.1: bool = $26.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $26.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $27.1:rbx 
   .loc 2 1131 9
-  # $28.1: Boolean = $27.1
+  # $28.1: bool = $27.1
   mov [rbp-12], bl
   # [discarded value]: $27.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:rbx 
@@ -16270,13 +16270,13 @@ find_unused_register_38:
   # [discarded value]: $29.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $30.1:r15 
   .loc 2 1131 51
-  # $31.1: Boolean = $30.1 == null
+  # $31.1: bool = $30.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $30.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $31.1:rbx 
   .loc 2 1131 9
-  # $28.2: Boolean = $31.1
+  # $28.2: bool = $31.1
   mov [rbp-13], bl
   # [discarded value]: $31.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:rbx:[rbp-12] 
@@ -16284,7 +16284,7 @@ find_unused_register_38:
   mov [rbp-12], bl
 .LABEL__find_unused_register_38__18:
   .loc 2 1131 9
-  # $28.3: Boolean = phi($28.1, $28.2)
+  # $28.3: bool = phi($28.1, $28.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] 
   # jump($28.3, .LABEL__find_unused_register_38__19, .LABEL__find_unused_register_38__20)
   mov al, [rbp-12]
@@ -16310,18 +16310,18 @@ find_unused_register_38:
   mov rbx, [rax+121]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $33.1:rbx 
   .loc 2 1134 9
-  # $34.1: Boolean = load_struct_member($33.1, is_reserved)
+  # $34.1: bool = load_struct_member($33.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $33.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $34.1:r15 
   .loc 2 1134 9
-  # $35.1: Boolean = $34.1 == false
+  # $35.1: bool = $34.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $34.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $35.1:rbx 
   .loc 2 1134 9
-  # $36.1: Boolean = $35.1
+  # $36.1: bool = $35.1
   mov [rbp-13], bl
   # [discarded value]: $35.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:rbx 
@@ -16341,13 +16341,13 @@ find_unused_register_38:
   # [discarded value]: $37.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $38.1:r15 
   .loc 2 1134 51
-  # $39.1: Boolean = $38.1 == null
+  # $39.1: bool = $38.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $38.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $39.1:rbx 
   .loc 2 1134 9
-  # $36.2: Boolean = $39.1
+  # $36.2: bool = $39.1
   mov [rbp-14], bl
   # [discarded value]: $39.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:rbx:[rbp-13] 
@@ -16355,7 +16355,7 @@ find_unused_register_38:
   mov [rbp-13], bl
 .LABEL__find_unused_register_38__23:
   .loc 2 1134 9
-  # $36.3: Boolean = phi($36.1, $36.2)
+  # $36.3: bool = phi($36.1, $36.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] 
   # jump($36.3, .LABEL__find_unused_register_38__24, .LABEL__find_unused_register_38__25)
   mov al, [rbp-13]
@@ -16381,18 +16381,18 @@ find_unused_register_38:
   mov rbx, [rax+113]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $41.1:rbx 
   .loc 2 1137 9
-  # $42.1: Boolean = load_struct_member($41.1, is_reserved)
+  # $42.1: bool = load_struct_member($41.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $41.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $42.1:r15 
   .loc 2 1137 9
-  # $43.1: Boolean = $42.1 == false
+  # $43.1: bool = $42.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $42.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $43.1:rbx 
   .loc 2 1137 9
-  # $44.1: Boolean = $43.1
+  # $44.1: bool = $43.1
   mov [rbp-14], bl
   # [discarded value]: $43.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:rbx 
@@ -16412,13 +16412,13 @@ find_unused_register_38:
   # [discarded value]: $45.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $46.1:r15 
   .loc 2 1137 51
-  # $47.1: Boolean = $46.1 == null
+  # $47.1: bool = $46.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $46.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $47.1:rbx 
   .loc 2 1137 9
-  # $44.2: Boolean = $47.1
+  # $44.2: bool = $47.1
   mov [rbp-15], bl
   # [discarded value]: $47.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:rbx:[rbp-14] 
@@ -16426,7 +16426,7 @@ find_unused_register_38:
   mov [rbp-14], bl
 .LABEL__find_unused_register_38__28:
   .loc 2 1137 9
-  # $44.3: Boolean = phi($44.1, $44.2)
+  # $44.3: bool = phi($44.1, $44.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] 
   # jump($44.3, .LABEL__find_unused_register_38__29, .LABEL__find_unused_register_38__30)
   mov al, [rbp-14]
@@ -16452,18 +16452,18 @@ find_unused_register_38:
   mov rbx, [rax+105]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $49.1:rbx 
   .loc 2 1140 9
-  # $50.1: Boolean = load_struct_member($49.1, is_reserved)
+  # $50.1: bool = load_struct_member($49.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $49.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $50.1:r15 
   .loc 2 1140 9
-  # $51.1: Boolean = $50.1 == false
+  # $51.1: bool = $50.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $50.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $51.1:rbx 
   .loc 2 1140 9
-  # $52.1: Boolean = $51.1
+  # $52.1: bool = $51.1
   mov [rbp-15], bl
   # [discarded value]: $51.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:rbx 
@@ -16483,13 +16483,13 @@ find_unused_register_38:
   # [discarded value]: $53.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $54.1:r15 
   .loc 2 1140 51
-  # $55.1: Boolean = $54.1 == null
+  # $55.1: bool = $54.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $54.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $55.1:rbx 
   .loc 2 1140 9
-  # $52.2: Boolean = $55.1
+  # $52.2: bool = $55.1
   mov [rbp-16], bl
   # [discarded value]: $55.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:rbx:[rbp-15] 
@@ -16497,7 +16497,7 @@ find_unused_register_38:
   mov [rbp-15], bl
 .LABEL__find_unused_register_38__33:
   .loc 2 1140 9
-  # $52.3: Boolean = phi($52.1, $52.2)
+  # $52.3: bool = phi($52.1, $52.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] 
   # jump($52.3, .LABEL__find_unused_register_38__34, .LABEL__find_unused_register_38__35)
   mov al, [rbp-15]
@@ -16523,18 +16523,18 @@ find_unused_register_38:
   mov rbx, [rax+97]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $57.1:rbx 
   .loc 2 1143 9
-  # $58.1: Boolean = load_struct_member($57.1, is_reserved)
+  # $58.1: bool = load_struct_member($57.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $57.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $58.1:r15 
   .loc 2 1143 9
-  # $59.1: Boolean = $58.1 == false
+  # $59.1: bool = $58.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $58.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $59.1:rbx 
   .loc 2 1143 9
-  # $60.1: Boolean = $59.1
+  # $60.1: bool = $59.1
   mov [rbp-16], bl
   # [discarded value]: $59.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:rbx 
@@ -16554,13 +16554,13 @@ find_unused_register_38:
   # [discarded value]: $61.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $62.1:r15 
   .loc 2 1143 51
-  # $63.1: Boolean = $62.1 == null
+  # $63.1: bool = $62.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $62.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $63.1:rbx 
   .loc 2 1143 9
-  # $60.2: Boolean = $63.1
+  # $60.2: bool = $63.1
   mov [rbp-17], bl
   # [discarded value]: $63.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:rbx:[rbp-16] 
@@ -16568,7 +16568,7 @@ find_unused_register_38:
   mov [rbp-16], bl
 .LABEL__find_unused_register_38__38:
   .loc 2 1143 9
-  # $60.3: Boolean = phi($60.1, $60.2)
+  # $60.3: bool = phi($60.1, $60.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] 
   # jump($60.3, .LABEL__find_unused_register_38__39, .LABEL__find_unused_register_38__40)
   mov al, [rbp-16]
@@ -16594,18 +16594,18 @@ find_unused_register_38:
   mov rbx, [rax+89]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $65.1:rbx 
   .loc 2 1146 9
-  # $66.1: Boolean = load_struct_member($65.1, is_reserved)
+  # $66.1: bool = load_struct_member($65.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $65.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $66.1:r15 
   .loc 2 1146 9
-  # $67.1: Boolean = $66.1 == false
+  # $67.1: bool = $66.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $66.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $67.1:rbx 
   .loc 2 1146 9
-  # $68.1: Boolean = $67.1
+  # $68.1: bool = $67.1
   mov [rbp-17], bl
   # [discarded value]: $67.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:rbx 
@@ -16625,13 +16625,13 @@ find_unused_register_38:
   # [discarded value]: $69.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $70.1:r15 
   .loc 2 1146 50
-  # $71.1: Boolean = $70.1 == null
+  # $71.1: bool = $70.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $70.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $71.1:rbx 
   .loc 2 1146 9
-  # $68.2: Boolean = $71.1
+  # $68.2: bool = $71.1
   mov [rbp-18], bl
   # [discarded value]: $71.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:rbx:[rbp-17] 
@@ -16639,7 +16639,7 @@ find_unused_register_38:
   mov [rbp-17], bl
 .LABEL__find_unused_register_38__43:
   .loc 2 1146 9
-  # $68.3: Boolean = phi($68.1, $68.2)
+  # $68.3: bool = phi($68.1, $68.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] 
   # jump($68.3, .LABEL__find_unused_register_38__44, .LABEL__find_unused_register_38__45)
   mov al, [rbp-17]
@@ -16665,18 +16665,18 @@ find_unused_register_38:
   mov rbx, [rax+81]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $73.1:rbx 
   .loc 2 1149 9
-  # $74.1: Boolean = load_struct_member($73.1, is_reserved)
+  # $74.1: bool = load_struct_member($73.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $73.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $74.1:r15 
   .loc 2 1149 9
-  # $75.1: Boolean = $74.1 == false
+  # $75.1: bool = $74.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $74.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $75.1:rbx 
   .loc 2 1149 9
-  # $76.1: Boolean = $75.1
+  # $76.1: bool = $75.1
   mov [rbp-18], bl
   # [discarded value]: $75.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:rbx 
@@ -16696,13 +16696,13 @@ find_unused_register_38:
   # [discarded value]: $77.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $78.1:r15 
   .loc 2 1149 50
-  # $79.1: Boolean = $78.1 == null
+  # $79.1: bool = $78.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $78.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $79.1:rbx 
   .loc 2 1149 9
-  # $76.2: Boolean = $79.1
+  # $76.2: bool = $79.1
   mov [rbp-19], bl
   # [discarded value]: $79.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:rbx:[rbp-18] 
@@ -16710,7 +16710,7 @@ find_unused_register_38:
   mov [rbp-18], bl
 .LABEL__find_unused_register_38__48:
   .loc 2 1149 9
-  # $76.3: Boolean = phi($76.1, $76.2)
+  # $76.3: bool = phi($76.1, $76.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] 
   # jump($76.3, .LABEL__find_unused_register_38__49, .LABEL__find_unused_register_38__50)
   mov al, [rbp-18]
@@ -16736,18 +16736,18 @@ find_unused_register_38:
   mov rbx, [rax+25]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $81.1:rbx 
   .loc 2 1152 9
-  # $82.1: Boolean = load_struct_member($81.1, is_reserved)
+  # $82.1: bool = load_struct_member($81.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $81.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $82.1:r15 
   .loc 2 1152 9
-  # $83.1: Boolean = $82.1 == false
+  # $83.1: bool = $82.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $82.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $83.1:rbx 
   .loc 2 1152 9
-  # $84.1: Boolean = $83.1
+  # $84.1: bool = $83.1
   mov [rbp-19], bl
   # [discarded value]: $83.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:rbx 
@@ -16767,13 +16767,13 @@ find_unused_register_38:
   # [discarded value]: $85.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $86.1:r15 
   .loc 2 1152 51
-  # $87.1: Boolean = $86.1 == null
+  # $87.1: bool = $86.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $86.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $87.1:rbx 
   .loc 2 1152 9
-  # $84.2: Boolean = $87.1
+  # $84.2: bool = $87.1
   mov [rbp-20], bl
   # [discarded value]: $87.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:rbx:[rbp-19] 
@@ -16781,7 +16781,7 @@ find_unused_register_38:
   mov [rbp-19], bl
 .LABEL__find_unused_register_38__53:
   .loc 2 1152 9
-  # $84.3: Boolean = phi($84.1, $84.2)
+  # $84.3: bool = phi($84.1, $84.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] 
   # jump($84.3, .LABEL__find_unused_register_38__54, .LABEL__find_unused_register_38__55)
   mov al, [rbp-19]
@@ -16807,18 +16807,18 @@ find_unused_register_38:
   mov rbx, [rax+33]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $89.1:rbx 
   .loc 2 1155 9
-  # $90.1: Boolean = load_struct_member($89.1, is_reserved)
+  # $90.1: bool = load_struct_member($89.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $89.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $90.1:r15 
   .loc 2 1155 9
-  # $91.1: Boolean = $90.1 == false
+  # $91.1: bool = $90.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $90.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $91.1:rbx 
   .loc 2 1155 9
-  # $92.1: Boolean = $91.1
+  # $92.1: bool = $91.1
   mov [rbp-20], bl
   # [discarded value]: $91.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:rbx 
@@ -16838,13 +16838,13 @@ find_unused_register_38:
   # [discarded value]: $93.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $94.1:r15 
   .loc 2 1155 51
-  # $95.1: Boolean = $94.1 == null
+  # $95.1: bool = $94.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $94.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $95.1:rbx 
   .loc 2 1155 9
-  # $92.2: Boolean = $95.1
+  # $92.2: bool = $95.1
   mov [rbp-21], bl
   # [discarded value]: $95.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:rbx:[rbp-20] 
@@ -16852,7 +16852,7 @@ find_unused_register_38:
   mov [rbp-20], bl
 .LABEL__find_unused_register_38__58:
   .loc 2 1155 9
-  # $92.3: Boolean = phi($92.1, $92.2)
+  # $92.3: bool = phi($92.1, $92.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] 
   # jump($92.3, .LABEL__find_unused_register_38__59, .LABEL__find_unused_register_38__60)
   mov al, [rbp-20]
@@ -16878,18 +16878,18 @@ find_unused_register_38:
   mov rbx, [rax+49]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $97.1:rbx 
   .loc 2 1158 9
-  # $98.1: Boolean = load_struct_member($97.1, is_reserved)
+  # $98.1: bool = load_struct_member($97.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $97.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $98.1:r15 
   .loc 2 1158 9
-  # $99.1: Boolean = $98.1 == false
+  # $99.1: bool = $98.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $98.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $99.1:rbx 
   .loc 2 1158 9
-  # $100.1: Boolean = $99.1
+  # $100.1: bool = $99.1
   mov [rbp-21], bl
   # [discarded value]: $99.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:rbx 
@@ -16909,13 +16909,13 @@ find_unused_register_38:
   # [discarded value]: $101.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $102.1:r15 
   .loc 2 1158 51
-  # $103.1: Boolean = $102.1 == null
+  # $103.1: bool = $102.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $102.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $103.1:rbx 
   .loc 2 1158 9
-  # $100.2: Boolean = $103.1
+  # $100.2: bool = $103.1
   mov [rbp-22], bl
   # [discarded value]: $103.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:rbx:[rbp-21] 
@@ -16923,7 +16923,7 @@ find_unused_register_38:
   mov [rbp-21], bl
 .LABEL__find_unused_register_38__63:
   .loc 2 1158 9
-  # $100.3: Boolean = phi($100.1, $100.2)
+  # $100.3: bool = phi($100.1, $100.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] 
   # jump($100.3, .LABEL__find_unused_register_38__64, .LABEL__find_unused_register_38__65)
   mov al, [rbp-21]
@@ -16949,18 +16949,18 @@ find_unused_register_38:
   mov rbx, [rax+57]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $105.1:rbx 
   .loc 2 1161 9
-  # $106.1: Boolean = load_struct_member($105.1, is_reserved)
+  # $106.1: bool = load_struct_member($105.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $105.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $106.1:r15 
   .loc 2 1161 9
-  # $107.1: Boolean = $106.1 == false
+  # $107.1: bool = $106.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $106.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $107.1:rbx 
   .loc 2 1161 9
-  # $108.1: Boolean = $107.1
+  # $108.1: bool = $107.1
   mov [rbp-22], bl
   # [discarded value]: $107.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:rbx 
@@ -16980,13 +16980,13 @@ find_unused_register_38:
   # [discarded value]: $109.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $110.1:r15 
   .loc 2 1161 51
-  # $111.1: Boolean = $110.1 == null
+  # $111.1: bool = $110.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $110.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $111.1:rbx 
   .loc 2 1161 9
-  # $108.2: Boolean = $111.1
+  # $108.2: bool = $111.1
   mov [rbp-23], bl
   # [discarded value]: $111.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:rbx:[rbp-22] 
@@ -16994,7 +16994,7 @@ find_unused_register_38:
   mov [rbp-22], bl
 .LABEL__find_unused_register_38__68:
   .loc 2 1161 9
-  # $108.3: Boolean = phi($108.1, $108.2)
+  # $108.3: bool = phi($108.1, $108.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] 
   # jump($108.3, .LABEL__find_unused_register_38__69, .LABEL__find_unused_register_38__70)
   mov al, [rbp-22]
@@ -17020,18 +17020,18 @@ find_unused_register_38:
   mov rbx, [rax+41]
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $113.1:rbx 
   .loc 2 1164 9
-  # $114.1: Boolean = load_struct_member($113.1, is_reserved)
+  # $114.1: bool = load_struct_member($113.1, is_reserved)
   mov r15b, [rbx+40]
   # [discarded value]: $113.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $114.1:r15 
   .loc 2 1164 9
-  # $115.1: Boolean = $114.1 == false
+  # $115.1: bool = $114.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $114.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $115.1:rbx 
   .loc 2 1164 9
-  # $116.1: Boolean = $115.1
+  # $116.1: bool = $115.1
   mov [rbp-23], bl
   # [discarded value]: $115.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $116.1:rbx 
@@ -17060,14 +17060,14 @@ find_unused_register_38:
   # [discarded value]: $119.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $116.1:[rbp-23] $118.1:r15 $120.1:r14 
   .loc 2 1164 51
-  # $121.1: Boolean = $118.1 == $120.1
+  # $121.1: bool = $118.1 == $120.1
   cmp r15, r14
   sete bl
   # [discarded value]: $120.1
   # [discarded value]: $118.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $116.1:[rbp-23] $121.1:rbx 
   .loc 2 1164 9
-  # $116.2: Boolean = $121.1
+  # $116.2: bool = $121.1
   mov [rbp-24], bl
   # [discarded value]: $121.1
   # [live values]: self.1:rax:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $116.1:[rbp-23] $116.2:rbx:[rbp-23] 
@@ -17075,7 +17075,7 @@ find_unused_register_38:
   mov [rbp-23], bl
 .LABEL__find_unused_register_38__73:
   .loc 2 1164 9
-  # $116.3: Boolean = phi($116.1, $116.2)
+  # $116.3: bool = phi($116.1, $116.2)
   # [live values]: self.1:[rbp-9] $4.1:[rbp-1] $4.2:[rbp-1] $4.3:[rbp-1] $12.1:[rbp-10] $12.2:[rbp-10] $12.3:[rbp-10] $20.1:[rbp-11] $20.2:[rbp-11] $20.3:[rbp-11] $28.1:[rbp-12] $28.2:[rbp-12] $28.3:[rbp-12] $36.1:[rbp-13] $36.2:[rbp-13] $36.3:[rbp-13] $44.1:[rbp-14] $44.2:[rbp-14] $44.3:[rbp-14] $52.1:[rbp-15] $52.2:[rbp-15] $52.3:[rbp-15] $60.1:[rbp-16] $60.2:[rbp-16] $60.3:[rbp-16] $68.1:[rbp-17] $68.2:[rbp-17] $68.3:[rbp-17] $76.1:[rbp-18] $76.2:[rbp-18] $76.3:[rbp-18] $84.1:[rbp-19] $84.2:[rbp-19] $84.3:[rbp-19] $92.1:[rbp-20] $92.2:[rbp-20] $92.3:[rbp-20] $100.1:[rbp-21] $100.2:[rbp-21] $100.3:[rbp-21] $108.1:[rbp-22] $108.2:[rbp-22] $108.3:[rbp-22] $116.1:[rbp-23] $116.2:[rbp-23] $116.3:[rbp-23] 
   # jump($116.3, .LABEL__find_unused_register_38__74, .LABEL__find_unused_register_38__75)
   mov al, [rbp-23]
@@ -17294,7 +17294,7 @@ create_mc_value_39:
   mov r15, [rbx+145]
   # [live values]: self.1:rbx:[rbp-32] mc_value.1:rax $4.1:r15 
   .loc 2 1177 9
-  # $5.1: Boolean = $4.1 == null
+  # $5.1: bool = $4.1 == null
   cmp r15, 0
   sete r14b
   # [discarded value]: $4.1
@@ -17365,7 +17365,7 @@ map_variable_value_40:
   # address.1: @MC_Address = load_variable(address)
   # [live values]: self.1:rdi ir_variable_value.1:rsi address.1:rdx 
   .loc 2 1186 9
-  # $1.1: Boolean = address.1 == null
+  # $1.1: bool = address.1 == null
   cmp rdx, 0
   sete al
   # [live values]: self.1:rdi ir_variable_value.1:rsi address.1:rdx $1.1:rax 
@@ -17395,7 +17395,7 @@ map_variable_value_40:
   # mc_value.2: @MC_Value = phi(mc_value.1, mc_value.7)
   # [live values]: self.1:[rbp-25] ir_variable_value.1:[rbp-17] address.1:[rbp-9] $1.1:[rbp-1] mc_value.1:[rbp-33] mc_value.2:[rbp-33] 
   .loc 2 1190 12
-  # $3.1: Boolean = mc_value.2 != null
+  # $3.1: bool = mc_value.2 != null
   cmp QWORD PTR [rbp-33], 0
   setne al
   # [live values]: self.1:[rbp-25] ir_variable_value.1:[rbp-17] address.1:[rbp-9] $1.1:[rbp-1] mc_value.1:[rbp-33] mc_value.2:[rbp-33] $3.1:rax 
@@ -17420,7 +17420,7 @@ map_variable_value_40:
   mov r14, [rbx+48]
   # [live values]: self.1:[rbp-25] ir_variable_value.1:rbx:[rbp-17] address.1:[rbp-9] $1.1:[rbp-1] mc_value.1:[rbp-33] mc_value.2:rax:[rbp-33] $3.1:[rbp-34] $5.1:r15 $6.1:r14 
   .loc 2 1191 13
-  # $7.1: Boolean = $5.1 == $6.1
+  # $7.1: bool = $5.1 == $6.1
   cmp r15, r14
   sete r13b
   # [discarded value]: $6.1
@@ -17437,7 +17437,7 @@ map_variable_value_40:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-25] ir_variable_value.1:[rbp-17] address.1:[rbp-9] $1.1:[rbp-1] mc_value.1:[rbp-33] mc_value.2:rax:[rbp-33] $3.1:[rbp-34] $7.1:[rbp-35] $8.1:rbx 
   .loc 2 1192 17
-  # $9.1: Boolean = $8.1 != null
+  # $9.1: bool = $8.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $8.1
@@ -17529,12 +17529,12 @@ map_variable_value_41:
   # mc_value.2: @MC_Value = phi(mc_value.1, mc_value.8)
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] 
   .loc 2 1203 12
-  # $2.1: Boolean = mc_value.2 != null
+  # $2.1: bool = mc_value.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $2.1:rax 
   .loc 2 1203 12
-  # $3.1: Boolean = $2.1
+  # $3.1: bool = $2.1
   mov [rbp-33], al
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:rax 
@@ -17549,13 +17549,13 @@ map_variable_value_41:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $4.1:rbx 
   .loc 2 1203 32
-  # $5.1: Boolean = $4.1 != ir_variable_value.1
+  # $5.1: bool = $4.1 != ir_variable_value.1
   cmp rbx, QWORD PTR [rbp-24]
   setne r15b
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $5.1:r15 
   .loc 2 1203 12
-  # $3.2: Boolean = $5.1
+  # $3.2: bool = $5.1
   mov [rbp-34], r15b
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $3.2:r15:[rbp-33] 
@@ -17563,7 +17563,7 @@ map_variable_value_41:
   mov [rbp-33], r15b
 .LABEL__map_variable_value_41__6:
   .loc 2 1203 12
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] 
   # jump($3.3, .LABEL__map_variable_value_41__3, .LABEL__map_variable_value_41__4)
   mov al, [rbp-33]
@@ -17586,14 +17586,14 @@ map_variable_value_41:
   mov r14, [rbx+48]
   # [live values]: self.1:[rbp-32] ir_variable_value.1:rbx:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $7.1:r15 $8.1:r14 $3.2:[rbp-33] $3.3:[rbp-33] 
   .loc 2 1204 13
-  # $9.1: Boolean = $7.1 == $8.1
+  # $9.1: bool = $7.1 == $8.1
   cmp r15, r14
   sete r13b
   # [discarded value]: $8.1
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:rbx:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $9.1:r13 $3.2:[rbp-33] $3.3:[rbp-33] 
   .loc 2 1204 13
-  # $10.1: Boolean = $9.1
+  # $10.1: bool = $9.1
   mov [rbp-34], r13b
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:rbx:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $10.1:r13 $3.2:[rbp-33] $3.3:[rbp-33] 
@@ -17608,13 +17608,13 @@ map_variable_value_41:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $10.1:[rbp-34] $3.2:[rbp-33] $3.3:[rbp-33] $11.1:rbx 
   .loc 2 1204 82
-  # $12.1: Boolean = $11.1 != null
+  # $12.1: bool = $11.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $10.1:[rbp-34] $3.2:[rbp-33] $3.3:[rbp-33] $12.1:r15 
   .loc 2 1204 13
-  # $10.2: Boolean = $12.1
+  # $10.2: bool = $12.1
   mov [rbp-35], r15b
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-33] $10.1:[rbp-34] $3.2:[rbp-33] $3.3:[rbp-33] $10.2:r15:[rbp-34] 
@@ -17622,7 +17622,7 @@ map_variable_value_41:
   mov [rbp-34], r15b
 .LABEL__map_variable_value_41__8:
   .loc 2 1204 13
-  # $10.3: Boolean = phi($10.1, $10.2)
+  # $10.3: bool = phi($10.1, $10.2)
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-33] $10.1:[rbp-34] $3.2:[rbp-33] $3.3:[rbp-33] $10.2:[rbp-34] $10.3:[rbp-34] 
   # jump($10.3, .LABEL__map_variable_value_41__9, .LABEL__map_variable_value_41__10)
   mov al, [rbp-34]
@@ -17665,7 +17665,7 @@ map_variable_value_41:
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-33] $3.2:[rbp-33] $3.3:[rbp-33] 
 .LABEL__map_variable_value_41__4:
   .loc 2 1209 9
-  # $15.1: Boolean = mc_value.2 == null
+  # $15.1: bool = mc_value.2 == null
   cmp QWORD PTR [rbp-8], 0
   sete al
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-33] $15.1:rax $3.2:[rbp-33] $3.3:[rbp-33] 
@@ -17687,7 +17687,7 @@ map_variable_value_41:
   mov rbx, [rax+41]
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:rax:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-33] $15.1:[rbp-34] $3.2:[rbp-33] $3.3:[rbp-33] $16.1:rbx 
   .loc 2 1212 9
-  # $17.1: Boolean = $16.1 != null
+  # $17.1: bool = $16.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $16.1
@@ -17768,7 +17768,7 @@ map_variable_value_41:
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:rbx:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-33] $15.1:[rbp-34] $3.2:[rbp-33] $3.3:[rbp-33] $17.1:[rbp-35] $27.1:rax $29.1:r14 
   .loc 2 1213 177
-  # $30.1: Int = load_struct_member($29.1, version)
+  # $30.1: isize = load_struct_member($29.1, version)
   mov r15, [r14+56]
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-32] ir_variable_value.1:[rbp-24] register.1:rbx:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-33] $15.1:[rbp-34] $3.2:[rbp-33] $3.3:[rbp-33] $17.1:[rbp-35] $27.1:rax $30.1:r15 
@@ -17852,12 +17852,12 @@ get_value_42:
   # mc_value.2: @MC_Value = phi(mc_value.1, mc_value.5)
   # [live values]: ir_variable_value.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] 
   .loc 2 1222 12
-  # $2.1: Boolean = mc_value.2 != null
+  # $2.1: bool = mc_value.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: ir_variable_value.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $2.1:rax 
   .loc 2 1222 12
-  # $3.1: Boolean = $2.1
+  # $3.1: bool = $2.1
   mov [rbp-17], al
   # [discarded value]: $2.1
   # [live values]: ir_variable_value.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:rax 
@@ -17872,13 +17872,13 @@ get_value_42:
   mov rbx, [rax+24]
   # [live values]: ir_variable_value.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-17] $4.1:rbx 
   .loc 2 1222 32
-  # $5.1: Boolean = $4.1 != ir_variable_value.1
+  # $5.1: bool = $4.1 != ir_variable_value.1
   cmp rbx, QWORD PTR [rbp-16]
   setne r15b
   # [discarded value]: $4.1
   # [live values]: ir_variable_value.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-17] $5.1:r15 
   .loc 2 1222 12
-  # $3.2: Boolean = $5.1
+  # $3.2: bool = $5.1
   mov [rbp-18], r15b
   # [discarded value]: $5.1
   # [live values]: ir_variable_value.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:rax:[rbp-8] $3.1:[rbp-17] $3.2:r15:[rbp-17] 
@@ -17886,7 +17886,7 @@ get_value_42:
   mov [rbp-17], r15b
 .LABEL__get_value_42__6:
   .loc 2 1222 12
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: ir_variable_value.1:[rbp-16] mc_value.1:[rbp-8] mc_value.2:[rbp-8] $3.1:[rbp-17] $3.2:[rbp-17] $3.3:[rbp-17] 
   # jump($3.3, .LABEL__get_value_42__3, .LABEL__get_value_42__4)
   mov al, [rbp-17]
@@ -17952,7 +17952,7 @@ spill_local_variable_43:
   # [discarded value]: $1.1
   # [live values]: self.1:rdi mc_value.1:rsi $2.1:rbx 
   .loc 2 1229 30
-  # variable_type_size.1: Int = call(get_type_size_56, self.1, $2.1)
+  # variable_type_size.1: isize = call(get_type_size_56, self.1, $2.1)
   mov [rbp-8], rsi
   mov rsi, rbx
   mov [rbp-16], rdi
@@ -17965,7 +17965,7 @@ spill_local_variable_43:
   mov r15, [rbx+40]
   # [live values]: self.1:[rbp-16] mc_value.1:rbx:[rbp-8] variable_type_size.1:rax $4.1:r15 
   .loc 2 1230 9
-  # $5.1: Boolean = $4.1 == null
+  # $5.1: bool = $4.1 == null
   cmp r15, 0
   sete r14b
   # [discarded value]: $4.1
@@ -18000,7 +18000,7 @@ spill_local_variable_43:
   # jump(.LABEL__spill_local_variable_43__3)
 .LABEL__spill_local_variable_43__3:
   .loc 2 1233 9
-  # $8.1: Boolean = variable_type_size.1 == 8
+  # $8.1: bool = variable_type_size.1 == 8
   cmp QWORD PTR [rbp-24], 8
   sete al
   # [live values]: self.1:[rbp-16] mc_value.1:[rbp-8] variable_type_size.1:[rbp-24] $5.1:[rbp-25] $8.1:rax 
@@ -18074,7 +18074,7 @@ spill_local_variable_43:
   # [live values]: self.1:[rbp-16] mc_value.1:[rbp-8] variable_type_size.1:[rbp-24] $5.1:[rbp-25] $8.1:[rbp-26] 
 .LABEL__spill_local_variable_43__6:
   .loc 2 1235 16
-  # $9.1: Boolean = variable_type_size.1 == 4
+  # $9.1: bool = variable_type_size.1 == 4
   cmp QWORD PTR [rbp-24], 4
   sete al
   # [live values]: self.1:[rbp-16] mc_value.1:[rbp-8] variable_type_size.1:[rbp-24] $5.1:[rbp-25] $8.1:[rbp-26] $9.1:rax 
@@ -18145,7 +18145,7 @@ spill_local_variable_43:
   # [live values]: self.1:[rbp-16] mc_value.1:[rbp-8] variable_type_size.1:[rbp-24] $5.1:[rbp-25] $8.1:[rbp-26] $9.1:[rbp-27] 
 .LABEL__spill_local_variable_43__9:
   .loc 2 1237 16
-  # $10.1: Boolean = variable_type_size.1 == 2
+  # $10.1: bool = variable_type_size.1 == 2
   cmp QWORD PTR [rbp-24], 2
   sete al
   # [live values]: self.1:[rbp-16] mc_value.1:[rbp-8] variable_type_size.1:[rbp-24] $5.1:[rbp-25] $8.1:[rbp-26] $9.1:[rbp-27] $10.1:rax 
@@ -18216,7 +18216,7 @@ spill_local_variable_43:
   # [live values]: self.1:[rbp-16] mc_value.1:[rbp-8] variable_type_size.1:[rbp-24] $5.1:[rbp-25] $8.1:[rbp-26] $9.1:[rbp-27] $10.1:[rbp-28] 
 .LABEL__spill_local_variable_43__12:
   .loc 2 1239 16
-  # $11.1: Boolean = variable_type_size.1 == 1
+  # $11.1: bool = variable_type_size.1 == 1
   cmp QWORD PTR [rbp-24], 1
   sete al
   # [live values]: self.1:[rbp-16] mc_value.1:[rbp-8] variable_type_size.1:[rbp-24] $5.1:[rbp-25] $8.1:[rbp-26] $9.1:[rbp-27] $10.1:[rbp-28] $11.1:rax 
@@ -18317,10 +18317,10 @@ create_local_variable_address_44:
 .LABEL__create_local_variable_address_44__1:
   # self.1: @MC_Generator = load_variable(self)
   # [live values]: self.1:rdi 
-  # variable_type_size.1: Int = load_variable(variable_type_size)
+  # variable_type_size.1: isize = load_variable(variable_type_size)
   # [live values]: self.1:rdi variable_type_size.1:rsi 
   .loc 2 1245 9
-  # offset.1: Int = 0
+  # offset.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi variable_type_size.1:rsi offset.1:rax 
   .loc 2 1246 20
@@ -18333,12 +18333,12 @@ create_local_variable_address_44:
   mov [rbp-24], rsi
   mov [rbp-32], rdi
 .LABEL__create_local_variable_address_44__2:
-  # offset.8: Int = phi(offset.1, offset.9)
+  # offset.8: isize = phi(offset.1, offset.9)
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] 
   # mc_value.2: @MC_Value = phi(mc_value.1, mc_value.5)
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] 
   .loc 2 1247 12
-  # $2.1: Boolean = mc_value.2 != null
+  # $2.1: bool = mc_value.2 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:rax 
@@ -18353,12 +18353,12 @@ create_local_variable_address_44:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-33] mc_value_address.1:rbx 
   .loc 2 1249 13
-  # $4.1: Boolean = mc_value_address.1 != null
+  # $4.1: bool = mc_value_address.1 != null
   cmp rbx, 0
   setne r15b
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-33] mc_value_address.1:rbx $4.1:r15 
   .loc 2 1249 13
-  # $5.1: Boolean = $4.1
+  # $5.1: bool = $4.1
   mov [rbp-34], r15b
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-33] mc_value_address.1:rbx $5.1:r15 
@@ -18369,7 +18369,7 @@ create_local_variable_address_44:
   jz .LABEL__create_local_variable_address_44__6
 .LABEL__create_local_variable_address_44__5:
   .loc 2 1249 41
-  # $5.2: Boolean = call(is_389, mc_value_address.1, MC_Local_Variable_Address)
+  # $5.2: bool = call(is_389, mc_value_address.1, MC_Local_Variable_Address)
   mov rdi, [rbp-41]
   mov rsi, MC_Local_Variable_Address[rip]
   call is_389
@@ -18378,7 +18378,7 @@ create_local_variable_address_44:
   mov [rbp-42], al
 .LABEL__create_local_variable_address_44__6:
   .loc 2 1249 13
-  # $5.3: Boolean = phi($5.1, $5.2)
+  # $5.3: bool = phi($5.1, $5.2)
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] mc_value_address.1:[rbp-41] $5.1:[rbp-42] $5.2:[rbp-42] $5.3:[rbp-42] 
   # jump($5.3, .LABEL__create_local_variable_address_44__7, .LABEL__create_local_variable_address_44__8)
   mov al, [rbp-42]
@@ -18390,11 +18390,11 @@ create_local_variable_address_44:
   mov rax, [rbp-41]
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] mc_value_address.1:[rbp-41] $5.1:[rbp-42] $5.2:[rbp-42] $5.3:[rbp-42] mc_value_address.1:rax 
   .loc 2 1251 26
-  # $8.1: Int = load_struct_member(mc_value_address.1, offset)
+  # $8.1: isize = load_struct_member(mc_value_address.1, offset)
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] mc_value_address.1:[rbp-41] $5.1:[rbp-42] $5.2:[rbp-42] $5.3:[rbp-42] mc_value_address.1:rax $8.1:rbx 
   .loc 2 1251 17
-  # $9.1: Boolean = offset.8 > $8.1
+  # $9.1: bool = offset.8 > $8.1
   cmp QWORD PTR [rbp-8], rbx
   setg r15b
   # [discarded value]: $8.1
@@ -18406,14 +18406,14 @@ create_local_variable_address_44:
   jz .LABEL__create_local_variable_address_44__8
 .LABEL__create_local_variable_address_44__9:
   .loc 2 1252 26
-  # offset.3: Int = load_struct_member(mc_value_address.1, offset)
+  # offset.3: isize = load_struct_member(mc_value_address.1, offset)
   mov rax, [rbp-50]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] mc_value_address.1:[rbp-41] $5.1:[rbp-42] $5.2:[rbp-42] $5.3:[rbp-42] mc_value_address.1:rax:[rbp-50] $9.1:[rbp-51] offset.3:rbx:[rbp-8] 
   # jump(.LABEL__create_local_variable_address_44__8)
   mov [rbp-8], rbx
 .LABEL__create_local_variable_address_44__8:
-  # offset.9: Int = phi(offset.3, offset.8)
+  # offset.9: isize = phi(offset.3, offset.8)
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] mc_value_address.1:[rbp-41] $5.1:[rbp-42] $5.2:[rbp-42] $5.3:[rbp-42] mc_value_address.1:[rbp-50] $9.1:[rbp-51] offset.9:[rbp-8] offset.3:[rbp-8] 
   .loc 2 1255 20
   # mc_value.5: @MC_Value = load_struct_member(mc_value.2, next_value)
@@ -18445,27 +18445,27 @@ create_local_variable_address_44:
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] 
 .LABEL__create_local_variable_address_44__4:
   .loc 2 1257 14
-  # $12.1: Int = offset.8 - variable_type_size.1
+  # $12.1: isize = offset.8 - variable_type_size.1
   mov rax, [rbp-8]
   sub rax, QWORD PTR [rbp-24]
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] $12.1:rax 
   .loc 2 1257 5
-  # offset.5: Int = $12.1
+  # offset.5: isize = $12.1
   mov [rbp-41], rax
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] offset.5:rax:[rbp-8] 
   .loc 2 1258 9
-  # $13.1: Int =  - offset.5
+  # $13.1: isize =  - offset.5
   mov rbx, rax
   neg rbx
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] offset.5:rax:[rbp-8] $13.1:rbx 
   .loc 2 1258 19
-  # $14.1: Int = load_struct_member(self.1, stack_frame_size)
+  # $14.1: isize = load_struct_member(self.1, stack_frame_size)
   mov r15, [rbp-32]
   mov r14, [r15+161]
   # [live values]: self.1:r15:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] offset.5:rax:[rbp-8] $13.1:rbx $14.1:r14 
   .loc 2 1258 9
-  # $15.1: Boolean = $13.1 > $14.1
+  # $15.1: bool = $13.1 > $14.1
   cmp rbx, r14
   setg r13b
   # [discarded value]: $14.1
@@ -18478,7 +18478,7 @@ create_local_variable_address_44:
   jz .LABEL__create_local_variable_address_44__12
 .LABEL__create_local_variable_address_44__11:
   .loc 2 1259 33
-  # $16.1: Int =  - offset.5
+  # $16.1: isize =  - offset.5
   mov rax, [rbp-8]
   neg rax
   # [live values]: self.1:[rbp-32] variable_type_size.1:[rbp-24] offset.1:[rbp-8] mc_value.1:[rbp-16] offset.8:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-33] offset.5:[rbp-8] $15.1:[rbp-34] $16.1:rax 
@@ -18849,7 +18849,7 @@ release_register_47:
   mov rax, [rsi+41]
   # [live values]: self.1:rdi register.1:rsi mc_value.1:rax 
   .loc 2 1288 9
-  # $2.1: Boolean = mc_value.1 != null
+  # $2.1: bool = mc_value.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:rdi register.1:rsi mc_value.1:rax $2.1:rbx 
@@ -18867,7 +18867,7 @@ release_register_47:
   mov rbx, [rax+49]
   # [live values]: self.1:[rbp-25] register.1:rax:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $3.1:rbx 
   .loc 2 1289 13
-  # $4.1: Boolean = $3.1 != mc_value.1
+  # $4.1: bool = $3.1 != mc_value.1
   cmp rbx, QWORD PTR [rbp-8]
   setne r15b
   # [discarded value]: $3.1
@@ -18883,24 +18883,24 @@ release_register_47:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:rax:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] $5.1:rbx 
   .loc 2 1290 33
-  # $6.1: Boolean = call(is_used_49, $5.1)
+  # $6.1: bool = call(is_used_49, $5.1)
   mov rdi, rbx
   call is_used_49
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] $6.1:rax 
   .loc 2 1290 33
-  # $7.1: Boolean = $6.1 == false
+  # $7.1: bool = $6.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] $7.1:rbx 
   .loc 2 1290 17
-  # persist_value.1: Boolean = $7.1
+  # persist_value.1: bool = $7.1
   mov [rbp-27], bl
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:rbx 
   .loc 2 1292 17
-  # $8.1: Boolean = persist_value.1 == false
+  # $8.1: bool = persist_value.1 == false
   cmp bl, 0
   sete al
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:rbx $8.1:rax 
@@ -18931,7 +18931,7 @@ release_register_47:
   # ir_value_user_instructions_item.2: @List_Item = phi(ir_value_user_instructions_item.1, ir_value_user_instructions_item.5)
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:[rbp-36] 
   .loc 2 1294 24
-  # $12.1: Boolean = ir_value_user_instructions_item.2 != null
+  # $12.1: bool = ir_value_user_instructions_item.2 != null
   cmp QWORD PTR [rbp-36], 0
   setne al
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:[rbp-36] $12.1:rax 
@@ -18946,17 +18946,17 @@ release_register_47:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:rax:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:rbx 
   .loc 2 1296 25
-  # $15.1: Boolean = load_struct_member(ir_value_user_instruction.1, is_generated)
+  # $15.1: bool = load_struct_member(ir_value_user_instruction.1, is_generated)
   mov r15b, [rbx+56]
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:rax:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:rbx $15.1:r15 
   .loc 2 1296 25
-  # $16.1: Boolean = $15.1 == false
+  # $16.1: bool = $15.1 == false
   cmp r15b, 0
   sete r14b
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:rax:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:rbx $16.1:r14 
   .loc 2 1296 25
-  # $17.1: Boolean = $16.1
+  # $17.1: bool = $16.1
   mov [rbp-38], r14b
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:rax:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:rbx $17.1:r14 
@@ -18967,7 +18967,7 @@ release_register_47:
   jz .LABEL__release_register_47__11
 .LABEL__release_register_47__12:
   .loc 2 1296 25
-  # $17.3: Boolean = phi($17.1, $17.2)
+  # $17.3: bool = phi($17.1, $17.2)
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:[rbp-45] $17.1:[rbp-46] $17.3:[rbp-46] 
   # jump($17.3, .LABEL__release_register_47__13, .LABEL__release_register_47__14)
   mov al, [rbp-46]
@@ -18975,13 +18975,13 @@ release_register_47:
   jz .LABEL__release_register_47__14
 .LABEL__release_register_47__13:
   .loc 2 1297 25
-  # persist_value.2: Boolean = true
+  # persist_value.2: bool = true
   mov al, 1
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:[rbp-45] $17.1:[rbp-46] $17.3:[rbp-46] persist_value.2:rax:[rbp-28] 
   # jump(.LABEL__release_register_47__7)
   mov [rbp-28], al
 .LABEL__release_register_47__7:
-  # persist_value.3: Boolean = phi(persist_value.1, persist_value.2)
+  # persist_value.3: bool = phi(persist_value.1, persist_value.2)
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] persist_value.3:[rbp-28] ir_value_user_instructions_item.2:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:[rbp-45] $17.1:[rbp-46] $17.3:[rbp-46] persist_value.2:[rbp-28] 
   # jump(persist_value.3, .LABEL__release_register_47__16, .LABEL__release_register_47__5)
   mov al, [rbp-28]
@@ -19038,7 +19038,7 @@ release_register_47:
   # [live values]: self.1:[rbp-25] register.1:[rbp-17] mc_value.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-26] persist_value.1:[rbp-28] $8.1:[rbp-27] ir_value_user_instructions_item.1:[rbp-36] ir_value_user_instructions_item.2:[rbp-36] $12.1:[rbp-37] ir_value_user_instruction.1:[rbp-45] $17.1:[rbp-46] 
 .LABEL__release_register_47__11:
   .loc 2 1296 76
-  # $17.2: Boolean = call(is_389, ir_value_user_instruction.1, IR_Phi_Instruction)
+  # $17.2: bool = call(is_389, ir_value_user_instruction.1, IR_Phi_Instruction)
   mov rdi, [rbp-45]
   mov rsi, IR_Phi_Instruction[rip]
   call is_389
@@ -19090,7 +19090,7 @@ discard_used_values_48:
   # self.1: @MC_Generator = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 2 1316 9
-  # removed_values.1: Int = 0
+  # removed_values.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi removed_values.1:rax 
   .loc 2 1318 20
@@ -19102,12 +19102,12 @@ discard_used_values_48:
   mov [rbp-16], rbx
   mov [rbp-24], rdi
 .LABEL__discard_used_values_48__2:
-  # removed_values.5: Int = phi(removed_values.1, removed_values.6)
+  # removed_values.5: isize = phi(removed_values.1, removed_values.6)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] 
   # mc_value.2: @MC_Value = phi(mc_value.1, mc_value.20)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] 
   .loc 2 1319 12
-  # $2.1: Boolean = mc_value.2 != null
+  # $2.1: bool = mc_value.2 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:rax 
@@ -19122,7 +19122,7 @@ discard_used_values_48:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $3.1:rbx 
   .loc 2 1320 13
-  # $5.1: Boolean = load_struct_member($3.1, is_generated)
+  # $5.1: bool = load_struct_member($3.1, is_generated)
   mov r15b, [rbx+56]
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:r15 
@@ -19142,7 +19142,7 @@ discard_used_values_48:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:r15 
   .loc 2 1320 53
-  # $5.2: Boolean = load_struct_member($7.1, is_being_generated)
+  # $5.2: bool = load_struct_member($7.1, is_being_generated)
   mov bl, [r15+48]
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $5.2:rbx:[rbp-26] 
@@ -19150,7 +19150,7 @@ discard_used_values_48:
   mov [rbp-26], bl
 .LABEL__discard_used_values_48__8:
   .loc 2 1320 13
-  # $9.1: Boolean = phi($5.1, $5.2)
+  # $9.1: bool = phi($5.1, $5.2)
   mov al, [rbp-26]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $5.2:[rbp-26] $9.1:rax 
   # jump($9.1, .LABEL__discard_used_values_48__5, .LABEL__discard_used_values_48__6)
@@ -19164,7 +19164,7 @@ discard_used_values_48:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $10.1:rbx $5.2:[rbp-26] $9.1:[rbp-27] 
   .loc 2 1320 112
-  # $9.2: Boolean = call(is_used_49, $10.1)
+  # $9.2: bool = call(is_used_49, $10.1)
   mov rdi, rbx
   call is_used_49
   # [discarded value]: $10.1
@@ -19173,7 +19173,7 @@ discard_used_values_48:
   mov [rbp-27], al
 .LABEL__discard_used_values_48__6:
   .loc 2 1320 13
-  # $9.3: Boolean = phi($9.1, $9.2)
+  # $9.3: bool = phi($9.1, $9.2)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] 
   # jump($9.3, .LABEL__discard_used_values_48__9, .LABEL__discard_used_values_48__10)
   mov al, [rbp-27]
@@ -19181,11 +19181,11 @@ discard_used_values_48:
   jz .LABEL__discard_used_values_48__10
 .LABEL__discard_used_values_48__9:
   .loc 2 1321 17
-  # discard_value.1: Boolean = true
+  # discard_value.1: bool = true
   mov al, 1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:rax 
   .loc 2 1322 17
-  # value_is_phi_argument.1: Boolean = false
+  # value_is_phi_argument.1: bool = false
   mov bl, 0
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:rax value_is_phi_argument.1:rbx 
   .loc 2 1324 42
@@ -19208,14 +19208,14 @@ discard_used_values_48:
   mov [rbp-29], bl
   mov [rbp-37], r14
 .LABEL__discard_used_values_48__11:
-  # value_is_phi_argument.5: Boolean = phi(value_is_phi_argument.1, value_is_phi_argument.7)
+  # value_is_phi_argument.5: bool = phi(value_is_phi_argument.1, value_is_phi_argument.7)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] 
   # user_instructions_item.7: @List_Item = phi(user_instructions_item.1, user_instructions_item.5)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] 
-  # discard_value.2: Boolean = phi(discard_value.1, discard_value.6)
+  # discard_value.2: bool = phi(discard_value.1, discard_value.6)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] 
   .loc 2 1325 20
-  # $15.1: Boolean = discard_value.2
+  # $15.1: bool = discard_value.2
   mov al, [rbp-28]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:rax 
   # jump($15.1, .LABEL__discard_used_values_48__14, .LABEL__discard_used_values_48__15)
@@ -19224,12 +19224,12 @@ discard_used_values_48:
   jz .LABEL__discard_used_values_48__15
 .LABEL__discard_used_values_48__14:
   .loc 2 1325 37
-  # $16.1: Boolean = user_instructions_item.7 != null
+  # $16.1: bool = user_instructions_item.7 != null
   cmp QWORD PTR [rbp-37], 0
   setne al
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $16.1:rax 
   .loc 2 1325 20
-  # $15.2: Boolean = $16.1
+  # $15.2: bool = $16.1
   mov [rbp-39], al
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:rax:[rbp-38] 
@@ -19237,7 +19237,7 @@ discard_used_values_48:
   mov [rbp-38], al
 .LABEL__discard_used_values_48__15:
   .loc 2 1325 20
-  # $15.3: Boolean = phi($15.1, $15.2)
+  # $15.3: bool = phi($15.1, $15.2)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] 
   # jump($15.3, .LABEL__discard_used_values_48__12, .LABEL__discard_used_values_48__13)
   mov al, [rbp-38]
@@ -19250,7 +19250,7 @@ discard_used_values_48:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:rax:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:rbx $15.2:[rbp-38] $15.3:[rbp-38] 
   .loc 2 1327 21
-  # $19.1: Boolean = call(is_389, user_instruction.1, IR_Phi_Instruction)
+  # $19.1: bool = call(is_389, user_instruction.1, IR_Phi_Instruction)
   mov rdi, rbx
   mov rsi, IR_Phi_Instruction[rip]
   mov [rbp-46], rbx
@@ -19262,21 +19262,21 @@ discard_used_values_48:
   jz .LABEL__discard_used_values_48__17
 .LABEL__discard_used_values_48__16:
   .loc 2 1328 21
-  # value_is_phi_argument.2: Boolean = true
+  # value_is_phi_argument.2: bool = true
   mov al, 1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:rax:[rbp-29] 
   # jump(.LABEL__discard_used_values_48__17)
   mov [rbp-29], al
 .LABEL__discard_used_values_48__17:
-  # value_is_phi_argument.7: Boolean = phi(value_is_phi_argument.2, value_is_phi_argument.5)
+  # value_is_phi_argument.7: bool = phi(value_is_phi_argument.2, value_is_phi_argument.5)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] 
   .loc 2 1330 21
-  # $20.1: Boolean = load_struct_member(user_instruction.1, is_generated)
+  # $20.1: bool = load_struct_member(user_instruction.1, is_generated)
   mov rax, [rbp-46]
   mov bl, [rax+56]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:rax:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $20.1:rbx 
   .loc 2 1330 21
-  # $21.1: Boolean = $20.1 == false
+  # $21.1: bool = $20.1 == false
   cmp bl, 0
   sete r15b
   # [discarded value]: $20.1
@@ -19287,13 +19287,13 @@ discard_used_values_48:
   jz .LABEL__discard_used_values_48__20
 .LABEL__discard_used_values_48__18:
   .loc 2 1332 21
-  # discard_value.4: Boolean = false
+  # discard_value.4: bool = false
   mov al, 0
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] discard_value.4:rax:[rbp-28] 
   # jump(.LABEL__discard_used_values_48__19)
   mov [rbp-28], al
 .LABEL__discard_used_values_48__19:
-  # discard_value.6: Boolean = phi(discard_value.4, discard_value.3, discard_value.2)
+  # discard_value.6: bool = phi(discard_value.4, discard_value.3, discard_value.2)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] discard_value.4:[rbp-28] discard_value.6:[rbp-28] 
   .loc 2 1337 42
   # user_instructions_item.5: @List_Item = load_struct_member(user_instructions_item.7, next_item)
@@ -19327,14 +19327,14 @@ discard_used_values_48:
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:r15:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:rax:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $22.1:rbx $24.1:r13 
   .loc 2 1333 28
-  # $25.1: Boolean = $22.1 != $24.1
+  # $25.1: bool = $22.1 != $24.1
   cmp rbx, r13
   setne r14b
   # [discarded value]: $24.1
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:r15:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:rax:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $25.1:r14 
   .loc 2 1333 28
-  # $26.1: Boolean = $25.1
+  # $26.1: bool = $25.1
   mov [rbp-49], r14b
   # [discarded value]: $25.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:r15:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:rax:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $26.1:r14 
@@ -19354,18 +19354,18 @@ discard_used_values_48:
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $26.1:[rbp-49] $28.1:r15 
   .loc 2 1333 101
-  # $29.1: Boolean = load_struct_member($28.1, is_generated)
+  # $29.1: bool = load_struct_member($28.1, is_generated)
   mov bl, [r15+49]
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $26.1:[rbp-49] $29.1:rbx 
   .loc 2 1333 101
-  # $30.1: Boolean = $29.1 == false
+  # $30.1: bool = $29.1 == false
   cmp bl, 0
   sete r15b
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $26.1:[rbp-49] $30.1:r15 
   .loc 2 1333 28
-  # $26.2: Boolean = $30.1
+  # $26.2: bool = $30.1
   mov [rbp-50], r15b
   # [discarded value]: $30.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $26.1:[rbp-49] $26.2:r15:[rbp-49] 
@@ -19373,7 +19373,7 @@ discard_used_values_48:
   mov [rbp-49], r15b
 .LABEL__discard_used_values_48__22:
   .loc 2 1333 28
-  # $26.3: Boolean = phi($26.1, $26.2)
+  # $26.3: bool = phi($26.1, $26.2)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $26.1:[rbp-49] $26.2:[rbp-49] $26.3:[rbp-49] 
   # jump($26.3, .LABEL__discard_used_values_48__23, .LABEL__discard_used_values_48__19)
   mov al, [rbp-49]
@@ -19381,7 +19381,7 @@ discard_used_values_48:
   jz .LABEL__discard_used_values_48__19
 .LABEL__discard_used_values_48__23:
   .loc 2 1335 21
-  # discard_value.3: Boolean = false
+  # discard_value.3: bool = false
   mov al, 0
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] user_instruction.1:[rbp-46] $19.1:[rbp-47] $15.2:[rbp-38] $15.3:[rbp-38] value_is_phi_argument.2:[rbp-29] value_is_phi_argument.7:[rbp-29] $21.1:[rbp-48] $26.1:[rbp-49] $26.2:[rbp-49] $26.3:[rbp-49] discard_value.3:rax:[rbp-28] 
   # jump(.LABEL__discard_used_values_48__19)
@@ -19421,7 +19421,7 @@ discard_used_values_48:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $32.1:rbx 
   .loc 2 1341 21
-  # $33.1: Boolean = $32.1 != null
+  # $33.1: bool = $32.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $32.1
@@ -19466,7 +19466,7 @@ discard_used_values_48:
   mov rbx, [rax]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $35.1:rbx 
   .loc 2 1351 21
-  # $36.1: Boolean = $35.1 != null
+  # $36.1: bool = $35.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $35.1
@@ -19499,7 +19499,7 @@ discard_used_values_48:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rax:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $40.1:rbx 
   .loc 2 1356 21
-  # $41.1: Boolean = $40.1 != null
+  # $41.1: bool = $40.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $40.1
@@ -19527,17 +19527,17 @@ discard_used_values_48:
   # jump(.LABEL__discard_used_values_48__35)
 .LABEL__discard_used_values_48__35:
   .loc 2 1361 34
-  # $45.1: Int = removed_values.5 + 1
+  # $45.1: isize = removed_values.5 + 1
   mov rax, [rbp-8]
   add rax, 1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $41.1:[rbp-41] $45.1:rax 
   .loc 2 1361 17
-  # removed_values.3: Int = $45.1
+  # removed_values.3: isize = $45.1
   mov [rbp-49], rax
   # [discarded value]: $45.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $41.1:[rbp-41] removed_values.3:rax:[rbp-8] 
   .loc 2 1363 21
-  # $46.1: Boolean = load_struct_member(self.1, output_debug_comments)
+  # $46.1: bool = load_struct_member(self.1, output_debug_comments)
   mov rbx, [rbp-24]
   mov r15b, [rbx+16]
   # [live values]: self.1:rbx:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $41.1:[rbp-41] removed_values.3:rax:[rbp-8] $46.1:r15 
@@ -19595,7 +19595,7 @@ discard_used_values_48:
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rbx:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $41.1:[rbp-41] removed_values.3:[rbp-8] $46.1:[rbp-42] $53.1:rax $54.1:r15 
   .loc 2 1364 136
-  # $55.1: Int = load_struct_member($54.1, version)
+  # $55.1: isize = load_struct_member($54.1, version)
   mov r14, [r15+56]
   # [discarded value]: $54.1
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:rbx:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $41.1:[rbp-41] removed_values.3:[rbp-8] $46.1:[rbp-42] $53.1:rax $55.1:r14 
@@ -19616,7 +19616,7 @@ discard_used_values_48:
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $41.1:[rbp-41] removed_values.3:[rbp-8] $46.1:[rbp-42] 
   # jump(.LABEL__discard_used_values_48__10)
 .LABEL__discard_used_values_48__10:
-  # removed_values.6: Int = phi(removed_values.3, removed_values.5)
+  # removed_values.6: isize = phi(removed_values.3, removed_values.5)
   # [live values]: self.1:[rbp-24] removed_values.1:[rbp-8] mc_value.1:[rbp-16] removed_values.5:[rbp-8] mc_value.2:[rbp-16] $2.1:[rbp-25] $5.1:[rbp-26] $9.2:[rbp-27] $9.3:[rbp-27] $5.2:[rbp-26] $9.1:[rbp-27] discard_value.1:[rbp-28] value_is_phi_argument.1:[rbp-29] user_instructions_item.1:[rbp-37] removed_values.6:[rbp-8] value_is_phi_argument.5:[rbp-29] user_instructions_item.7:[rbp-37] discard_value.2:[rbp-28] $15.1:[rbp-38] $15.2:[rbp-38] $15.3:[rbp-38] $33.1:[rbp-39] $36.1:[rbp-40] $41.1:[rbp-41] removed_values.3:[rbp-8] $46.1:[rbp-42] 
   .loc 2 1369 20
   # mc_value.20: @MC_Value = load_struct_member(mc_value.2, prev_value)
@@ -19756,7 +19756,7 @@ is_used_49:
   # user_instructions_item.2: @List_Item = phi(user_instructions_item.1, user_instructions_item.5)
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:[rbp-8] 
   .loc 2 1377 12
-  # $3.1: Boolean = user_instructions_item.2 != null
+  # $3.1: bool = user_instructions_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:[rbp-8] $3.1:rax 
@@ -19771,12 +19771,12 @@ is_used_49:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:rax:[rbp-8] $3.1:[rbp-17] user_instruction.1:rbx 
   .loc 2 1379 13
-  # $6.1: Boolean = load_struct_member(user_instruction.1, is_generated)
+  # $6.1: bool = load_struct_member(user_instruction.1, is_generated)
   mov r15b, [rbx+56]
   # [discarded value]: user_instruction.1
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:rax:[rbp-8] $3.1:[rbp-17] $6.1:r15 
   .loc 2 1379 13
-  # $7.1: Boolean = $6.1 == false
+  # $7.1: bool = $6.1 == false
   cmp r15b, 0
   sete bl
   # [discarded value]: $6.1
@@ -19822,7 +19822,7 @@ is_used_49:
   # links_item.2: @List_Item = phi(links_item.1, links_item.5)
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:[rbp-8] $3.1:[rbp-17] links_item.1:[rbp-25] links_item.2:[rbp-25] 
   .loc 2 1385 12
-  # $11.1: Boolean = links_item.2 != null
+  # $11.1: bool = links_item.2 != null
   cmp QWORD PTR [rbp-25], 0
   setne al
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:[rbp-8] $3.1:[rbp-17] links_item.1:[rbp-25] links_item.2:[rbp-25] $11.1:rax 
@@ -19837,7 +19837,7 @@ is_used_49:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:[rbp-8] $3.1:[rbp-17] links_item.1:[rbp-25] links_item.2:rax:[rbp-25] $11.1:[rbp-26] link.1:rbx 
   .loc 2 1387 13
-  # $14.1: Boolean = call(is_389, link.1, IR_Required_By_Value_Link)
+  # $14.1: bool = call(is_389, link.1, IR_Required_By_Value_Link)
   mov rdi, rbx
   mov rsi, IR_Required_By_Value_Link[rip]
   mov [rbp-34], rbx
@@ -19858,13 +19858,13 @@ is_used_49:
   # [discarded value]: link.1
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:[rbp-8] $3.1:[rbp-17] links_item.1:[rbp-25] links_item.2:[rbp-25] $11.1:[rbp-26] link.1:[rbp-34] $14.1:[rbp-35] $16.1:rbx 
   .loc 2 1389 17
-  # $17.1: Boolean = call(is_used_49, $16.1)
+  # $17.1: bool = call(is_used_49, $16.1)
   mov rdi, rbx
   call is_used_49
   # [discarded value]: $16.1
   # [live values]: self.1:[rbp-16] user_instructions_item.1:[rbp-8] user_instructions_item.2:[rbp-8] $3.1:[rbp-17] links_item.1:[rbp-25] links_item.2:[rbp-25] $11.1:[rbp-26] link.1:[rbp-34] $14.1:[rbp-35] $17.1:rax 
   .loc 2 1389 17
-  # $18.1: Boolean = $17.1 == false
+  # $18.1: bool = $17.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $17.1
@@ -19969,11 +19969,11 @@ output_live_values_51:
   # output_file.1: @FILE = load_variable(output_file)
   # [live values]: self.1:rdi output_file.1:rsi 
   .loc 2 1403 9
-  # $1.1: Boolean = load_struct_member(self.1, output_debug_comments)
+  # $1.1: bool = load_struct_member(self.1, output_debug_comments)
   mov al, [rdi+16]
   # [live values]: self.1:rdi output_file.1:rsi $1.1:rax 
   .loc 2 1403 9
-  # $2.1: Boolean = $1.1 == false
+  # $2.1: bool = $1.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $1.1
@@ -20008,7 +20008,7 @@ output_live_values_51:
   # mc_value.2: @MC_Value = phi(mc_value.1, mc_value.9)
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:[rbp-25] 
   .loc 2 1408 12
-  # $5.1: Boolean = mc_value.2 != null
+  # $5.1: bool = mc_value.2 != null
   cmp QWORD PTR [rbp-25], 0
   setne al
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:[rbp-25] $5.1:rax 
@@ -20023,7 +20023,7 @@ output_live_values_51:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:rax:[rbp-25] $5.1:[rbp-26] $6.1:rbx 
   .loc 2 1409 13
-  # $7.1: Boolean = load_struct_member($6.1, is_generated)
+  # $7.1: bool = load_struct_member($6.1, is_generated)
   mov r15b, [rbx+56]
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:rax:[rbp-25] $5.1:[rbp-26] $7.1:r15 
@@ -20067,7 +20067,7 @@ output_live_values_51:
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:rbx:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $12.1:rax $13.1:r15 
   .loc 2 1410 90
-  # $14.1: Int = load_struct_member($13.1, version)
+  # $14.1: isize = load_struct_member($13.1, version)
   mov r14, [r15+56]
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:rbx:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $12.1:rax $14.1:r14 
@@ -20086,7 +20086,7 @@ output_live_values_51:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:rax:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $16.1:rbx 
   .loc 2 1411 17
-  # $17.1: Boolean = $16.1 != null
+  # $17.1: bool = $16.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $16.1
@@ -20129,7 +20129,7 @@ output_live_values_51:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-17] output_file.1:[rbp-9] $2.1:[rbp-1] mc_value.1:[rbp-25] mc_value.2:rax:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $17.1:[rbp-28] $22.1:rbx 
   .loc 2 1414 17
-  # $23.1: Boolean = $22.1 != null
+  # $23.1: bool = $22.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $22.1
@@ -20463,7 +20463,7 @@ output_used_register_53:
   mov rax, [rsi+41]
   # [live values]: self.1:rdi register.1:rsi $1.1:rax 
   .loc 2 1447 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -20546,7 +20546,7 @@ output_used_register_53:
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-17] register.1:rbx:[rbp-9] $2.1:[rbp-1] $12.1:rax $14.1:r14 
   .loc 2 1448 131
-  # $15.1: Int = load_struct_member($14.1, version)
+  # $15.1: isize = load_struct_member($14.1, version)
   mov r15, [r14+56]
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-17] register.1:rbx:[rbp-9] $2.1:[rbp-1] $12.1:rax $15.1:r15 
@@ -20661,7 +20661,7 @@ write_55:
   # address.1: @MC_Address = load_variable(address)
   # [live values]: file.1:rdi address.1:rsi 
   .loc 2 1552 9
-  # $1.1: Boolean = call(is_389, address.1, MC_Global_Variable_Address)
+  # $1.1: bool = call(is_389, address.1, MC_Global_Variable_Address)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -20709,7 +20709,7 @@ write_55:
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__write_55__3:
   .loc 2 1556 9
-  # $7.1: Boolean = call(is_389, address.1, MC_Register_Based_Address)
+  # $7.1: bool = call(is_389, address.1, MC_Register_Based_Address)
   mov rdi, [rbp-16]
   mov rsi, MC_Register_Based_Address[rip]
   call is_389
@@ -20750,12 +20750,12 @@ write_55:
   # [discarded value]: $9.1
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] $7.1:[rbp-18] address.1:[rbp-26] 
   .loc 2 1559 13
-  # $13.1: Int = load_struct_member(address.1, offset)
+  # $13.1: isize = load_struct_member(address.1, offset)
   mov rax, [rbp-26]
   mov rbx, [rax+16]
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] $7.1:[rbp-18] address.1:rax:[rbp-26] $13.1:rbx 
   .loc 2 1559 13
-  # $14.1: Boolean = $13.1 > 0
+  # $14.1: bool = $13.1 > 0
   cmp rbx, 0
   setg r15b
   # [discarded value]: $13.1
@@ -20772,7 +20772,7 @@ write_55:
   call write_385
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] $7.1:[rbp-18] address.1:[rbp-26] $14.1:[rbp-27] $19.1:rax 
   .loc 2 1560 35
-  # $20.1: Int = load_struct_member(address.1, offset)
+  # $20.1: isize = load_struct_member(address.1, offset)
   mov rbx, [rbp-26]
   mov r15, [rbx+16]
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] $7.1:[rbp-18] address.1:rbx:[rbp-26] $14.1:[rbp-27] $19.1:rax $20.1:r15 
@@ -20802,12 +20802,12 @@ write_55:
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] $7.1:[rbp-18] address.1:[rbp-26] $14.1:[rbp-27] 
 .LABEL__write_55__9:
   .loc 2 1561 20
-  # $15.1: Int = load_struct_member(address.1, offset)
+  # $15.1: isize = load_struct_member(address.1, offset)
   mov rax, [rbp-26]
   mov rbx, [rax+16]
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] $7.1:[rbp-18] address.1:rax:[rbp-26] $14.1:[rbp-27] $15.1:rbx 
   .loc 2 1561 20
-  # $16.1: Boolean = $15.1 < 0
+  # $16.1: bool = $15.1 < 0
   cmp rbx, 0
   setl r15b
   # [discarded value]: $15.1
@@ -20818,7 +20818,7 @@ write_55:
   jz .LABEL__write_55__8
 .LABEL__write_55__10:
   .loc 2 1562 24
-  # $17.1: Int = load_struct_member(address.1, offset)
+  # $17.1: isize = load_struct_member(address.1, offset)
   mov rax, [rbp-26]
   mov rbx, [rax+16]
   # [live values]: file.1:[rbp-8] address.1:[rbp-16] $1.1:[rbp-17] $7.1:[rbp-18] address.1:rax:[rbp-26] $14.1:[rbp-27] $16.1:[rbp-28] $17.1:rbx 
@@ -20897,7 +20897,7 @@ get_type_size_56:
   # ir_type.1: @IR_Type = load_variable(ir_type)
   # [live values]: self.1:rdi ir_type.1:rsi 
   .loc 2 1585 9
-  # $1.1: Boolean = call(is_389, ir_type.1, IR_Boolean_Type)
+  # $1.1: bool = call(is_389, ir_type.1, IR_Boolean_Type)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -20916,7 +20916,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__get_type_size_56__3:
   .loc 2 1588 9
-  # $2.1: Boolean = call(is_389, ir_type.1, IR_Function_Type)
+  # $2.1: bool = call(is_389, ir_type.1, IR_Function_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -20933,7 +20933,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] 
 .LABEL__get_type_size_56__6:
   .loc 2 1591 9
-  # $3.1: Boolean = call(is_389, ir_type.1, IR_Int_Type)
+  # $3.1: bool = call(is_389, ir_type.1, IR_Int_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -20950,7 +20950,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] 
 .LABEL__get_type_size_56__9:
   .loc 2 1594 9
-  # $4.1: Boolean = call(is_389, ir_type.1, IR_Int16_Type)
+  # $4.1: bool = call(is_389, ir_type.1, IR_Int16_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Int16_Type[rip]
   call is_389
@@ -20967,7 +20967,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] 
 .LABEL__get_type_size_56__12:
   .loc 2 1597 9
-  # $5.1: Boolean = call(is_389, ir_type.1, IR_Int32_Type)
+  # $5.1: bool = call(is_389, ir_type.1, IR_Int32_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -20984,7 +20984,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] 
 .LABEL__get_type_size_56__15:
   .loc 2 1600 9
-  # $6.1: Boolean = call(is_389, ir_type.1, IR_Int8_Type)
+  # $6.1: bool = call(is_389, ir_type.1, IR_Int8_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -21001,7 +21001,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] 
 .LABEL__get_type_size_56__18:
   .loc 2 1603 9
-  # $7.1: Boolean = call(is_389, ir_type.1, IR_Null_Type)
+  # $7.1: bool = call(is_389, ir_type.1, IR_Null_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Null_Type[rip]
   call is_389
@@ -21018,7 +21018,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] 
 .LABEL__get_type_size_56__21:
   .loc 2 1606 9
-  # $8.1: Boolean = call(is_389, ir_type.1, IR_Pointer_Type)
+  # $8.1: bool = call(is_389, ir_type.1, IR_Pointer_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -21035,7 +21035,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] 
 .LABEL__get_type_size_56__24:
   .loc 2 1609 9
-  # $9.1: Boolean = call(is_389, ir_type.1, IR_Struct_Type)
+  # $9.1: bool = call(is_389, ir_type.1, IR_Struct_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -21050,7 +21050,7 @@ get_type_size_56:
   mov rax, [rbp-16]
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:rax 
   .loc 2 1611 13
-  # size.1: Int = 0
+  # size.1: isize = 0
   xor rbx, rbx
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:rax size.1:rbx 
   .loc 2 1612 13
@@ -21058,7 +21058,7 @@ get_type_size_56:
   mov r15, [rax+16]
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:rax size.1:rbx $11.1:r15 
   .loc 2 1612 13
-  # $12.1: Boolean = $11.1 != null
+  # $12.1: bool = $11.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $11.1
@@ -21076,27 +21076,27 @@ get_type_size_56:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:rax:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] $13.1:rbx 
   .loc 2 1613 27
-  # $14.1: Int = call(get_type_size_56, self.1, $13.1)
+  # $14.1: isize = call(get_type_size_56, self.1, $13.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call get_type_size_56
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] $14.1:rax 
   .loc 2 1613 20
-  # $15.1: Int = size.1 + $14.1
+  # $15.1: isize = size.1 + $14.1
   mov rbx, [rbp-41]
   add rbx, rax
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] $15.1:rbx 
   .loc 2 1613 13
-  # size.3: Int = $15.1
+  # size.3: isize = $15.1
   mov [rbp-50], rbx
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:rbx:[rbp-41] 
   # jump(.LABEL__get_type_size_56__29)
   mov [rbp-41], rbx
 .LABEL__get_type_size_56__29:
-  # size.8: Int = phi(size.1, size.3)
+  # size.8: isize = phi(size.1, size.3)
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:[rbp-41] size.8:[rbp-41] 
   .loc 2 1615 35
   # $16.1: @List = load_struct_member(ir_type.1, members)
@@ -21112,10 +21112,10 @@ get_type_size_56:
   # jump(.LABEL__get_type_size_56__30)
   mov [rbp-50], rax
 .LABEL__get_type_size_56__30:
-  # size.7: Int = phi(size.8, size.5)
+  # size.7: isize = phi(size.8, size.5)
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:[rbp-41] size.8:[rbp-41] struct_type_members.1:[rbp-50] size.7:[rbp-41] 
   .loc 2 1616 16
-  # $18.1: Boolean = call(has_next_378, struct_type_members.1)
+  # $18.1: bool = call(has_next_378, struct_type_members.1)
   mov rdi, [rbp-50]
   call has_next_378
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:[rbp-41] size.8:[rbp-41] struct_type_members.1:[rbp-50] size.7:[rbp-41] $18.1:rax 
@@ -21135,20 +21135,20 @@ get_type_size_56:
   # [discarded value]: struct_type_member.1
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:[rbp-41] size.8:[rbp-41] struct_type_members.1:[rbp-50] size.7:[rbp-41] $18.1:[rbp-51] $21.1:rbx 
   .loc 2 1618 27
-  # $22.1: Int = call(get_type_size_56, self.1, $21.1)
+  # $22.1: isize = call(get_type_size_56, self.1, $21.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call get_type_size_56
   # [discarded value]: $21.1
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:[rbp-41] size.8:[rbp-41] struct_type_members.1:[rbp-50] size.7:[rbp-41] $18.1:[rbp-51] $22.1:rax 
   .loc 2 1618 20
-  # $23.1: Int = size.7 + $22.1
+  # $23.1: isize = size.7 + $22.1
   mov rbx, [rbp-41]
   add rbx, rax
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:[rbp-41] size.8:[rbp-41] struct_type_members.1:[rbp-50] size.7:[rbp-41] $18.1:[rbp-51] $23.1:rbx 
   .loc 2 1618 13
-  # size.5: Int = $23.1
+  # size.5: isize = $23.1
   mov [rbp-59], rbx
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] ir_type.1:[rbp-33] size.1:[rbp-41] $12.1:[rbp-42] size.3:[rbp-41] size.8:[rbp-41] struct_type_members.1:[rbp-50] size.7:[rbp-41] $18.1:[rbp-51] size.5:rbx:[rbp-41] 
@@ -21182,7 +21182,7 @@ get_type_size_56:
   # [live values]: self.1:[rbp-8] ir_type.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:[rbp-20] $5.1:[rbp-21] $6.1:[rbp-22] $7.1:[rbp-23] $8.1:[rbp-24] $9.1:[rbp-25] 
 .LABEL__get_type_size_56__27:
   .loc 2 1622 9
-  # $24.1: Boolean = call(is_389, ir_type.1, IR_Unchecked_Array_Type)
+  # $24.1: bool = call(is_389, ir_type.1, IR_Unchecked_Array_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Unchecked_Array_Type[rip]
   call is_389
@@ -21288,7 +21288,7 @@ convert_string_57:
   # string_item.2: @List_Item = phi(string_item.1, string_item.5)
   # [live values]: self.1:[rbp-24] literal.1:[rbp-16] string_item.1:[rbp-8] string_item.2:[rbp-8] 
   .loc 2 1635 12
-  # $3.1: Boolean = string_item.2 != null
+  # $3.1: bool = string_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-24] literal.1:[rbp-16] string_item.1:[rbp-8] string_item.2:[rbp-8] $3.1:rax 
@@ -21317,7 +21317,7 @@ convert_string_57:
   mov r13, [r15+8]
   # [live values]: self.1:[rbp-24] literal.1:r15:[rbp-16] string_item.1:[rbp-8] string_item.2:rax:[rbp-8] $3.1:[rbp-25] string.1:rbx $7.1:r14 $8.1:r13 
   .loc 2 1637 13
-  # $9.1: Boolean = call(equals_392, $7.1, $8.1)
+  # $9.1: bool = call(equals_392, $7.1, $8.1)
   mov rdi, r14
   mov rsi, r13
   mov [rbp-33], rbx
@@ -21358,7 +21358,7 @@ convert_string_57:
   mov rbx, [rax+169]
   # [live values]: self.1:rax:[rbp-24] literal.1:[rbp-16] string_item.1:[rbp-8] string_item.2:[rbp-8] $3.1:[rbp-25] $11.1:rbx 
   .loc 2 1642 37
-  # $12.1: Int = load_struct_member($11.1, size)
+  # $12.1: isize = load_struct_member($11.1, size)
   mov r15, [rbx+16]
   # [discarded value]: $11.1
   # [live values]: self.1:rax:[rbp-24] literal.1:[rbp-16] string_item.1:[rbp-8] string_item.2:[rbp-8] $3.1:[rbp-25] $12.1:r15 
@@ -21461,7 +21461,7 @@ generate_strings_58:
   # string_item.2: @List_Item = phi(string_item.1, string_item.4)
   # [live values]: self.1:[rbp-8] string_item.1:[rbp-16] string_item.2:[rbp-16] 
   .loc 2 1650 12
-  # $7.1: Boolean = string_item.2 != null
+  # $7.1: bool = string_item.2 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: self.1:[rbp-8] string_item.1:[rbp-16] string_item.2:[rbp-16] $7.1:rax 
@@ -21589,12 +21589,12 @@ generate_strings_58:
   # [discarded value]: $26.1
   # [live values]: self.1:[rbp-8] string_item.1:[rbp-16] string_item.2:[rbp-16] $7.1:[rbp-17] string.1:rbx:[rbp-25] $25.1:rax $27.1:r14 
   .loc 2 1657 50
-  # $28.1: Int = load_struct_member($27.1, length)
+  # $28.1: isize = load_struct_member($27.1, length)
   mov r15, [r14+16]
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] string_item.1:[rbp-16] string_item.2:[rbp-16] $7.1:[rbp-17] string.1:rbx:[rbp-25] $25.1:rax $28.1:r15 
   .loc 2 1657 50
-  # $29.1: Int = $28.1 + 1
+  # $29.1: isize = $28.1 + 1
   mov r14, r15
   add r14, 1
   # [discarded value]: $28.1
@@ -21637,7 +21637,7 @@ generate_strings_58:
   # [discarded value]: $34.1
   # [live values]: self.1:[rbp-8] string_item.1:[rbp-16] string_item.2:[rbp-16] $7.1:[rbp-17] string.1:rbx:[rbp-25] $33.1:rax $35.1:r14 
   .loc 2 1658 50
-  # $36.1: Int = load_struct_member($35.1, length)
+  # $36.1: isize = load_struct_member($35.1, length)
   mov r15, [r14+16]
   # [discarded value]: $35.1
   # [live values]: self.1:[rbp-8] string_item.1:[rbp-16] string_item.2:[rbp-16] $7.1:[rbp-17] string.1:rbx:[rbp-25] $33.1:rax $36.1:r15 
@@ -21751,7 +21751,7 @@ write_string_label_59:
   # [discarded value]: file.1
   # [live values]: string.1:[rbp-8] $1.1:rax 
   .loc 2 1666 48
-  # $2.1: Int = load_struct_member(string.1, id)
+  # $2.1: isize = load_struct_member(string.1, id)
   mov rbx, [rbp-8]
   mov r15, [rbx]
   # [discarded value]: string.1
@@ -21827,7 +21827,7 @@ generate_object_types_60:
   # type_item.2: @List_Item = phi(type_item.1, type_item.5)
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] 
   .loc 2 1672 12
-  # $6.1: Boolean = type_item.2 != null
+  # $6.1: bool = type_item.2 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] $6.1:rax 
@@ -21842,7 +21842,7 @@ generate_object_types_60:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:rax:[rbp-16] $6.1:[rbp-17] type.1:rbx 
   .loc 2 1674 13
-  # $9.1: Boolean = call(is_389, type.1, IR_Struct_Type)
+  # $9.1: bool = call(is_389, type.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   mov [rbp-25], rbx
@@ -21858,7 +21858,7 @@ generate_object_types_60:
   mov rax, [rbp-25]
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] $6.1:[rbp-17] type.1:[rbp-25] $9.1:[rbp-26] type.1:rax 
   .loc 2 1676 17
-  # $11.1: Boolean = call(is_object_type_152, type.1)
+  # $11.1: bool = call(is_object_type_152, type.1)
   mov rdi, rax
   mov [rbp-34], rax
   call is_object_type_152
@@ -22081,12 +22081,12 @@ generate_object_types_60:
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] $6.1:[rbp-17] type.1:[rbp-25] $9.1:[rbp-26] type.1:rbx:[rbp-34] $11.1:[rbp-35] $43.1:rax $44.1:r15 
   .loc 2 1684 58
-  # $45.1: Int = load_struct_member($44.1, length)
+  # $45.1: isize = load_struct_member($44.1, length)
   mov r14, [r15+16]
   # [discarded value]: $44.1
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] $6.1:[rbp-17] type.1:[rbp-25] $9.1:[rbp-26] type.1:rbx:[rbp-34] $11.1:[rbp-35] $43.1:rax $45.1:r14 
   .loc 2 1684 58
-  # $46.1: Int = $45.1 + 1
+  # $46.1: isize = $45.1 + 1
   mov r15, r14
   add r15, 1
   # [discarded value]: $45.1
@@ -22124,7 +22124,7 @@ generate_object_types_60:
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] $6.1:[rbp-17] type.1:[rbp-25] $9.1:[rbp-26] type.1:rbx:[rbp-34] $11.1:[rbp-35] $50.1:rax $51.1:r15 
   .loc 2 1685 58
-  # $52.1: Int = load_struct_member($51.1, length)
+  # $52.1: isize = load_struct_member($51.1, length)
   mov r14, [r15+16]
   # [discarded value]: $51.1
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] $6.1:[rbp-17] type.1:[rbp-25] $9.1:[rbp-26] type.1:rbx:[rbp-34] $11.1:[rbp-35] $50.1:rax $52.1:r14 
@@ -22149,7 +22149,7 @@ generate_object_types_60:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] type_item.1:[rbp-16] type_item.2:[rbp-16] $6.1:[rbp-17] type.1:[rbp-25] $9.1:[rbp-26] type.1:rax:[rbp-34] $11.1:[rbp-35] $55.1:rbx 
   .loc 2 1686 21
-  # $56.1: Boolean = $55.1 != null
+  # $56.1: bool = $55.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $55.1
@@ -22418,7 +22418,7 @@ generate_global_variables_62:
   # variables_item.2: @List_Item = phi(variables_item.1, variables_item.5)
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] 
   .loc 2 1706 12
-  # $6.1: Boolean = variables_item.2 != null
+  # $6.1: bool = variables_item.2 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] $6.1:rax 
@@ -22433,14 +22433,14 @@ generate_global_variables_62:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:rax:[rbp-16] $6.1:[rbp-17] variable.1:rbx 
   .loc 2 1708 13
-  # $9.1: Boolean = call(is_389, variable.1, IR_Global_Variable)
+  # $9.1: bool = call(is_389, variable.1, IR_Global_Variable)
   mov rdi, rbx
   mov rsi, IR_Global_Variable[rip]
   mov [rbp-25], rbx
   call is_389
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] $6.1:[rbp-17] variable.1:[rbp-25] $9.1:rax 
   .loc 2 1708 13
-  # $10.1: Boolean = $9.1 == null
+  # $10.1: bool = $9.1 == null
   cmp al, 0
   sete bl
   # [discarded value]: $9.1
@@ -22462,11 +22462,11 @@ generate_global_variables_62:
   mov rax, [rbp-25]
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] $6.1:[rbp-17] variable.1:[rbp-25] $10.1:[rbp-26] variable.1:rax 
   .loc 2 1712 13
-  # $12.1: Boolean = load_struct_member(variable.1, is_external)
+  # $12.1: bool = load_struct_member(variable.1, is_external)
   mov bl, [rax+48]
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] $6.1:[rbp-17] variable.1:[rbp-25] $10.1:[rbp-26] variable.1:rax $12.1:rbx 
   .loc 2 1712 13
-  # $13.1: Boolean = $12.1 == false
+  # $13.1: bool = $12.1 == false
   cmp bl, 0
   sete r15b
   # [discarded value]: $12.1
@@ -22483,14 +22483,14 @@ generate_global_variables_62:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] $6.1:[rbp-17] variable.1:[rbp-25] $10.1:[rbp-26] variable.1:rax:[rbp-34] $13.1:[rbp-35] $14.1:rbx 
   .loc 2 1713 17
-  # $15.1: Boolean = call(is_389, $14.1, IR_Undefined_Value)
+  # $15.1: bool = call(is_389, $14.1, IR_Undefined_Value)
   mov rdi, rbx
   mov rsi, IR_Undefined_Value[rip]
   call is_389
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] $6.1:[rbp-17] variable.1:[rbp-25] $10.1:[rbp-26] variable.1:[rbp-34] $13.1:[rbp-35] $15.1:rax 
   .loc 2 1713 17
-  # $16.1: Boolean = $15.1 == false
+  # $16.1: bool = $15.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $15.1
@@ -22588,7 +22588,7 @@ generate_global_variables_62:
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-8] variables_item.1:[rbp-16] variables_item.2:[rbp-16] $6.1:[rbp-17] variable.1:[rbp-25] $10.1:[rbp-26] variable.1:rbx:[rbp-34] $13.1:[rbp-35] $16.1:[rbp-36] $28.1:rax $29.1:r15 
   .loc 2 1719 54
-  # $30.1: Int = call(get_type_size_56, self.1, $29.1)
+  # $30.1: isize = call(get_type_size_56, self.1, $29.1)
   mov rdi, [rbp-8]
   mov rsi, r15
   mov [rbp-44], rax
@@ -22765,7 +22765,7 @@ dump_64:
   mov [rbp-16], rax
 .LABEL__dump_64__2:
   .loc 3 23 12
-  # $3.1: Boolean = call(has_next_378, functions.1)
+  # $3.1: bool = call(has_next_378, functions.1)
   mov rdi, [rbp-16]
   call has_next_378
   # [live values]: file.1:[rbp-8] functions.1:[rbp-16] $3.1:rax 
@@ -22780,11 +22780,11 @@ dump_64:
   call next_379
   # [live values]: file.1:[rbp-8] functions.1:[rbp-16] $3.1:[rbp-17] function.1:rax 
   .loc 3 25 13
-  # $6.1: Boolean = load_struct_member(function.1, is_external)
+  # $6.1: bool = load_struct_member(function.1, is_external)
   mov bl, [rax+56]
   # [live values]: file.1:[rbp-8] functions.1:[rbp-16] $3.1:[rbp-17] function.1:rax $6.1:rbx 
   .loc 3 25 13
-  # $7.1: Boolean = $6.1 == false
+  # $7.1: bool = $6.1 == false
   cmp bl, 0
   sete r15b
   # [discarded value]: $6.1
@@ -22873,14 +22873,14 @@ create_ir_builder_65:
   # [discarded value]: $2.1
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] 
   .loc 3 56 18
-  # $3.1: @IR_Boolean_Type = new IR_Boolean_Type(object_type = IR_Boolean_Type, name = "Boolean")
+  # $3.1: @IR_Boolean_Type = new IR_Boolean_Type(object_type = IR_Boolean_Type, name = "bool")
   mov rdi, 16
   call malloc
   #     .object_type = IR_Boolean_Type
   mov rbx, IR_Boolean_Type[rip]
   mov [rax], rbx
-  #     .name = "Boolean"
-  lea rbx, .LABEL__string_177[rip] # "Boolean"
+  #     .name = "bool"
+  lea rbx, .LABEL__string_177[rip] # "bool"
   mov [rax+8], rbx
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] $3.1:rax 
   .loc 3 56 5
@@ -22891,14 +22891,14 @@ create_ir_builder_65:
   # [discarded value]: $3.1
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] 
   .loc 3 57 18
-  # $4.1: @IR_Int_Type = new IR_Int_Type(object_type = IR_Int_Type, name = "Int")
+  # $4.1: @IR_Int_Type = new IR_Int_Type(object_type = IR_Int_Type, name = "isize")
   mov rdi, 16
   call malloc
   #     .object_type = IR_Int_Type
   mov rbx, IR_Int_Type[rip]
   mov [rax], rbx
-  #     .name = "Int"
-  lea rbx, .LABEL__string_178[rip] # "Int"
+  #     .name = "isize"
+  lea rbx, .LABEL__string_178[rip] # "isize"
   mov [rax+8], rbx
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] $4.1:rax 
   .loc 3 57 5
@@ -22909,14 +22909,14 @@ create_ir_builder_65:
   # [discarded value]: $4.1
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] 
   .loc 3 58 18
-  # $5.1: @IR_Int8_Type = new IR_Int8_Type(object_type = IR_Int8_Type, name = "Int8")
+  # $5.1: @IR_Int8_Type = new IR_Int8_Type(object_type = IR_Int8_Type, name = "i8")
   mov rdi, 16
   call malloc
   #     .object_type = IR_Int8_Type
   mov rbx, IR_Int8_Type[rip]
   mov [rax], rbx
-  #     .name = "Int8"
-  lea rbx, .LABEL__string_179[rip] # "Int8"
+  #     .name = "i8"
+  lea rbx, .LABEL__string_179[rip] # "i8"
   mov [rax+8], rbx
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] $5.1:rax 
   .loc 3 58 5
@@ -22927,14 +22927,14 @@ create_ir_builder_65:
   # [discarded value]: $5.1
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] 
   .loc 3 59 18
-  # $6.1: @IR_Int16_Type = new IR_Int16_Type(object_type = IR_Int16_Type, name = "Int16")
+  # $6.1: @IR_Int16_Type = new IR_Int16_Type(object_type = IR_Int16_Type, name = "i16")
   mov rdi, 16
   call malloc
   #     .object_type = IR_Int16_Type
   mov rbx, IR_Int16_Type[rip]
   mov [rax], rbx
-  #     .name = "Int16"
-  lea rbx, .LABEL__string_180[rip] # "Int16"
+  #     .name = "i16"
+  lea rbx, .LABEL__string_180[rip] # "i16"
   mov [rax+8], rbx
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] $6.1:rax 
   .loc 3 59 5
@@ -22945,14 +22945,14 @@ create_ir_builder_65:
   # [discarded value]: $6.1
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] 
   .loc 3 60 18
-  # $7.1: @IR_Int32_Type = new IR_Int32_Type(object_type = IR_Int32_Type, name = "Int32")
+  # $7.1: @IR_Int32_Type = new IR_Int32_Type(object_type = IR_Int32_Type, name = "i32")
   mov rdi, 16
   call malloc
   #     .object_type = IR_Int32_Type
   mov rbx, IR_Int32_Type[rip]
   mov [rax], rbx
-  #     .name = "Int32"
-  lea rbx, .LABEL__string_181[rip] # "Int32"
+  #     .name = "i32"
+  lea rbx, .LABEL__string_181[rip] # "i32"
   mov [rax+8], rbx
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] $7.1:rax 
   .loc 3 60 5
@@ -22963,14 +22963,14 @@ create_ir_builder_65:
   # [discarded value]: $7.1
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] 
   .loc 3 61 18
-  # $8.1: @IR_Int64_Type = new IR_Int64_Type(object_type = IR_Int64_Type, name = "Int64")
+  # $8.1: @IR_Int64_Type = new IR_Int64_Type(object_type = IR_Int64_Type, name = "i64")
   mov rdi, 16
   call malloc
   #     .object_type = IR_Int64_Type
   mov rbx, IR_Int64_Type[rip]
   mov [rax], rbx
-  #     .name = "Int64"
-  lea rbx, .LABEL__string_182[rip] # "Int64"
+  #     .name = "i64"
+  lea rbx, .LABEL__string_182[rip] # "i64"
   mov [rax+8], rbx
   # [live values]: compilation_unit.1:[rbp-8] types.1:[rbp-16] $8.1:rax 
   .loc 3 61 5
@@ -23165,7 +23165,7 @@ get_named_type_66:
   # types_item.2: @List_Item = phi(types_item.1, types_item.5)
   # [live values]: name.1:[rbp-16] types_item.1:[rbp-8] types_item.2:[rbp-8] 
   .loc 3 74 12
-  # $3.1: Boolean = types_item.2 != null
+  # $3.1: bool = types_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: name.1:[rbp-16] types_item.1:[rbp-8] types_item.2:[rbp-8] $3.1:rax 
@@ -23184,7 +23184,7 @@ get_named_type_66:
   mov r15, [rbx+8]
   # [live values]: name.1:[rbp-16] types_item.1:[rbp-8] types_item.2:rax:[rbp-8] $3.1:[rbp-17] type.1:rbx $6.1:r15 
   .loc 3 76 13
-  # $7.1: Boolean = call(equals_392, name.1, $6.1)
+  # $7.1: bool = call(equals_392, name.1, $6.1)
   mov rdi, [rbp-16]
   mov rsi, r15
   mov [rbp-25], rbx
@@ -23272,7 +23272,7 @@ get_struct_statement_67:
   # type_statements_item.2: @List_Item = phi(type_statements_item.1, type_statements_item.5)
   # [live values]: name.1:[rbp-16] type_statements_item.1:[rbp-8] type_statements_item.2:[rbp-8] 
   .loc 3 86 12
-  # $4.1: Boolean = type_statements_item.2 != null
+  # $4.1: bool = type_statements_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: name.1:[rbp-16] type_statements_item.1:[rbp-8] type_statements_item.2:[rbp-8] $4.1:rax 
@@ -23287,7 +23287,7 @@ get_struct_statement_67:
   mov rbx, [rax+16]
   # [live values]: name.1:[rbp-16] type_statements_item.1:[rbp-8] type_statements_item.2:rax:[rbp-8] $4.1:[rbp-17] type_statement.1:rbx 
   .loc 3 88 13
-  # $7.1: Boolean = call(is_389, type_statement.1, AST_Struct_Statement)
+  # $7.1: bool = call(is_389, type_statement.1, AST_Struct_Statement)
   mov rdi, rbx
   mov rsi, AST_Struct_Statement[rip]
   mov [rbp-25], rbx
@@ -23312,7 +23312,7 @@ get_struct_statement_67:
   # [discarded value]: $9.1
   # [live values]: name.1:[rbp-16] type_statements_item.1:[rbp-8] type_statements_item.2:[rbp-8] $4.1:[rbp-17] type_statement.1:[rbp-25] $7.1:[rbp-26] type_statement.1:rax $10.1:r15 
   .loc 3 90 17
-  # $11.1: Boolean = call(equals_392, $10.1, name.1)
+  # $11.1: bool = call(equals_392, $10.1, name.1)
   mov rdi, r15
   mov rsi, [rbp-16]
   mov [rbp-34], rax
@@ -23455,7 +23455,7 @@ get_variable_69:
   mov [rbp-24], rax
 .LABEL__get_variable_69__4:
   .loc 3 108 16
-  # $4.1: Boolean = call(has_next_378, variables.1)
+  # $4.1: bool = call(has_next_378, variables.1)
   mov rdi, [rbp-24]
   call has_next_378
   # [live values]: name.1:[rbp-16] context.1:[rbp-8] context.2:[rbp-8] variables.1:[rbp-24] $4.1:rax 
@@ -23474,7 +23474,7 @@ get_variable_69:
   mov rbx, [rax+16]
   # [live values]: name.1:[rbp-16] context.1:[rbp-8] context.2:[rbp-8] variables.1:[rbp-24] $4.1:[rbp-25] variable.1:rax $7.1:rbx 
   .loc 3 110 17
-  # $8.1: Boolean = call(equals_392, name.1, $7.1)
+  # $8.1: bool = call(equals_392, name.1, $7.1)
   mov rdi, [rbp-16]
   mov rsi, rbx
   mov [rbp-33], rax
@@ -23502,7 +23502,7 @@ get_variable_69:
   mov rbx, [rax]
   # [live values]: name.1:[rbp-16] context.1:[rbp-8] context.2:[rbp-8] variables.1:[rbp-24] $4.1:[rbp-25] context.4:rbx:[rbp-8] 
   .loc 3 115 13
-  # $10.1: Boolean = context.4 == null
+  # $10.1: bool = context.4 == null
   cmp rbx, 0
   sete al
   # [live values]: name.1:[rbp-16] context.1:[rbp-8] context.2:[rbp-8] variables.1:[rbp-24] $4.1:[rbp-25] context.4:rbx:[rbp-8] $10.1:rax 
@@ -23551,7 +23551,7 @@ get_variable_value_70:
   # variable.1: @IR_Variable = load_variable(variable)
   # [live values]: self.1:rdi variable.1:rsi 
   .loc 3 122 9
-  # $1.1: Boolean = call(is_389, variable.1, IR_Global_Variable)
+  # $1.1: bool = call(is_389, variable.1, IR_Global_Variable)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -23644,7 +23644,7 @@ get_variable_value_70:
   # current_block_instruction.2: @IR_Instruction = phi(current_block_instruction.1, current_block_instruction.7)
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:[rbp-25] 
   .loc 3 126 12
-  # $8.1: Boolean = current_block_instruction.2 != null
+  # $8.1: bool = current_block_instruction.2 != null
   cmp QWORD PTR [rbp-25], 0
   setne al
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:[rbp-25] $8.1:rax 
@@ -23659,13 +23659,13 @@ get_variable_value_70:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:rax:[rbp-25] $8.1:[rbp-26] $9.1:rbx 
   .loc 3 127 13
-  # $10.1: Boolean = $9.1 != null
+  # $10.1: bool = $9.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:rax:[rbp-25] $8.1:[rbp-26] $10.1:r15 
   .loc 3 127 13
-  # $11.1: Boolean = $10.1
+  # $11.1: bool = $10.1
   mov [rbp-27], r15b
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:rax:[rbp-25] $8.1:[rbp-26] $11.1:r15 
@@ -23685,13 +23685,13 @@ get_variable_value_70:
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:rax:[rbp-25] $8.1:[rbp-26] $11.1:[rbp-27] $13.1:r15 
   .loc 3 127 63
-  # $14.1: Boolean = $13.1 == variable.1
+  # $14.1: bool = $13.1 == variable.1
   cmp r15, QWORD PTR [rbp-16]
   sete bl
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:rax:[rbp-25] $8.1:[rbp-26] $11.1:[rbp-27] $14.1:rbx 
   .loc 3 127 13
-  # $11.2: Boolean = $14.1
+  # $11.2: bool = $14.1
   mov [rbp-28], bl
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:rax:[rbp-25] $8.1:[rbp-26] $11.1:[rbp-27] $11.2:rbx:[rbp-27] 
@@ -23699,7 +23699,7 @@ get_variable_value_70:
   mov [rbp-27], bl
 .LABEL__get_variable_value_70__9:
   .loc 3 127 13
-  # $11.3: Boolean = phi($11.1, $11.2)
+  # $11.3: bool = phi($11.1, $11.2)
   # [live values]: self.1:[rbp-8] variable.1:[rbp-16] $1.1:[rbp-17] current_block_instruction.1:[rbp-25] current_block_instruction.2:[rbp-25] $8.1:[rbp-26] $11.1:[rbp-27] $11.2:[rbp-27] $11.3:[rbp-27] 
   # jump($11.3, .LABEL__get_variable_value_70__10, .LABEL__get_variable_value_70__11)
   mov al, [rbp-27]
@@ -23915,7 +23915,7 @@ get_named_function_72:
   # [discarded value]: self.1
   # [live values]: name.1:[rbp-8] argument_types.1:[rbp-16] function.1:rax 
   .loc 3 142 9
-  # $3.1: Boolean = function.1 == null
+  # $3.1: bool = function.1 == null
   cmp rax, 0
   sete bl
   # [live values]: name.1:[rbp-8] argument_types.1:[rbp-16] function.1:rax $3.1:rbx 
@@ -23960,7 +23960,7 @@ get_named_function_72:
   mov [rbp-41], rax
 .LABEL__get_named_function_72__4:
   .loc 3 145 16
-  # $9.1: Boolean = call(has_next_378, argument_types.1)
+  # $9.1: bool = call(has_next_378, argument_types.1)
   mov rdi, [rbp-41]
   call has_next_378
   # [live values]: name.1:[rbp-8] argument_types.1:[rbp-16] function.1:[rbp-24] $3.1:[rbp-25] message.1:[rbp-33] argument_types.1:[rbp-41] $9.1:rax 
@@ -23988,7 +23988,7 @@ get_named_function_72:
   # [discarded value]: $12.1
   # [live values]: name.1:[rbp-8] argument_types.1:[rbp-16] function.1:[rbp-24] $3.1:[rbp-25] message.1:[rbp-33] argument_types.1:[rbp-41] $9.1:[rbp-42] 
   .loc 3 148 17
-  # $14.1: Boolean = call(has_next_378, argument_types.1)
+  # $14.1: bool = call(has_next_378, argument_types.1)
   mov rdi, [rbp-41]
   call has_next_378
   # [live values]: name.1:[rbp-8] argument_types.1:[rbp-16] function.1:[rbp-24] $3.1:[rbp-25] message.1:[rbp-33] argument_types.1:[rbp-41] $9.1:[rbp-42] $14.1:rax 
@@ -24092,7 +24092,7 @@ get_named_function_73:
   # function.5: @IR_Function = phi(function.1, function.5, function.3)
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] 
   .loc 3 161 12
-  # $3.1: Boolean = call(has_next_378, named_functions.1)
+  # $3.1: bool = call(has_next_378, named_functions.1)
   mov rdi, [rbp-32]
   call has_next_378
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:rax 
@@ -24111,7 +24111,7 @@ get_named_function_73:
   mov rbx, [rax+24]
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax $6.1:rbx 
   .loc 3 163 13
-  # $7.1: Boolean = call(equals_392, name.1, $6.1)
+  # $7.1: bool = call(equals_392, name.1, $6.1)
   mov rdi, [rbp-24]
   mov rsi, rbx
   mov [rbp-41], rax
@@ -24124,7 +24124,7 @@ get_named_function_73:
   jz .LABEL__get_named_function_73__2
 .LABEL__get_named_function_73__5:
   .loc 3 164 17
-  # is_match.1: Boolean = true
+  # is_match.1: bool = true
   mov al, 1
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:rax 
   .loc 3 165 34
@@ -24149,7 +24149,7 @@ get_named_function_73:
   mov [rbp-59], rax
 .LABEL__get_named_function_73__7:
   .loc 3 167 20
-  # $12.1: Boolean = call(has_next_378, argument_types.1)
+  # $12.1: bool = call(has_next_378, argument_types.1)
   mov rdi, [rbp-51]
   call has_next_378
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:rax 
@@ -24159,7 +24159,7 @@ get_named_function_73:
   jz .LABEL__get_named_function_73__11
 .LABEL__get_named_function_73__10:
   .loc 3 167 49
-  # $12.2: Boolean = call(has_next_378, named_function_parameters.1)
+  # $12.2: bool = call(has_next_378, named_function_parameters.1)
   mov rdi, [rbp-59]
   call has_next_378
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $12.2:rax:[rbp-60] 
@@ -24167,7 +24167,7 @@ get_named_function_73:
   mov [rbp-60], al
 .LABEL__get_named_function_73__11:
   .loc 3 167 20
-  # $12.3: Boolean = phi($12.1, $12.2)
+  # $12.3: bool = phi($12.1, $12.2)
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $12.2:[rbp-60] $12.3:[rbp-60] 
   # jump($12.3, .LABEL__get_named_function_73__8, .LABEL__get_named_function_73__9)
   mov al, [rbp-60]
@@ -24191,7 +24191,7 @@ get_named_function_73:
   # [discarded value]: named_function_parameter.1
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] argument_type.1:[rbp-68] $18.1:rbx $12.2:[rbp-60] $12.3:[rbp-60] 
   .loc 3 170 21
-  # $19.1: Boolean = call(accepts_75, $18.1, argument_type.1)
+  # $19.1: bool = call(accepts_75, $18.1, argument_type.1)
   mov rdi, rbx
   mov rsi, [rbp-68]
   call accepts_75
@@ -24199,7 +24199,7 @@ get_named_function_73:
   # [discarded value]: argument_type.1
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $19.1:rax $12.2:[rbp-60] $12.3:[rbp-60] 
   .loc 3 170 21
-  # $20.1: Boolean = $19.1 == false
+  # $20.1: bool = $19.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $19.1
@@ -24210,13 +24210,13 @@ get_named_function_73:
   jz .LABEL__get_named_function_73__7
 .LABEL__get_named_function_73__12:
   .loc 3 171 21
-  # is_match.2: Boolean = false
+  # is_match.2: bool = false
   mov al, 0
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:rax:[rbp-43] 
   # jump(.LABEL__get_named_function_73__9)
   mov [rbp-43], al
 .LABEL__get_named_function_73__9:
-  # $21.1: Boolean = phi(is_match.2, is_match.1)
+  # $21.1: bool = phi(is_match.2, is_match.1)
   mov al, [rbp-43]
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:rax $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] 
   # jump($21.1, .LABEL__get_named_function_73__17, .LABEL__get_named_function_73__18)
@@ -24225,18 +24225,18 @@ get_named_function_73:
   jz .LABEL__get_named_function_73__18
 .LABEL__get_named_function_73__17:
   .loc 3 175 29
-  # $22.1: Boolean = call(has_next_378, argument_types.1)
+  # $22.1: bool = call(has_next_378, argument_types.1)
   mov rdi, [rbp-51]
   call has_next_378
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $22.1:rax 
   .loc 3 175 29
-  # $23.1: Boolean = $22.1 == false
+  # $23.1: bool = $22.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $22.1
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $23.1:rbx 
   .loc 3 175 17
-  # $21.2: Boolean = $23.1
+  # $21.2: bool = $23.1
   mov [rbp-63], bl
   # [discarded value]: $23.1
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $21.2:rbx:[rbp-62] 
@@ -24244,7 +24244,7 @@ get_named_function_73:
   mov [rbp-62], bl
 .LABEL__get_named_function_73__18:
   .loc 3 175 17
-  # $24.1: Boolean = phi($21.1, $21.2)
+  # $24.1: bool = phi($21.1, $21.2)
   mov al, [rbp-62]
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $21.2:[rbp-62] $24.1:rax 
   # jump($24.1, .LABEL__get_named_function_73__15, .LABEL__get_named_function_73__16)
@@ -24253,18 +24253,18 @@ get_named_function_73:
   jz .LABEL__get_named_function_73__16
 .LABEL__get_named_function_73__15:
   .loc 3 175 67
-  # $25.1: Boolean = call(has_next_378, named_function_parameters.1)
+  # $25.1: bool = call(has_next_378, named_function_parameters.1)
   mov rdi, [rbp-59]
   call has_next_378
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $25.1:rax $21.2:[rbp-62] $24.1:[rbp-63] 
   .loc 3 175 67
-  # $26.1: Boolean = $25.1 == false
+  # $26.1: bool = $25.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $25.1
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $26.1:rbx $21.2:[rbp-62] $24.1:[rbp-63] 
   .loc 3 175 17
-  # $24.2: Boolean = $26.1
+  # $24.2: bool = $26.1
   mov [rbp-64], bl
   # [discarded value]: $26.1
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $24.2:rbx:[rbp-63] $21.2:[rbp-62] $24.1:[rbp-63] 
@@ -24272,7 +24272,7 @@ get_named_function_73:
   mov [rbp-63], bl
 .LABEL__get_named_function_73__16:
   .loc 3 175 17
-  # $24.3: Boolean = phi($24.1, $24.2)
+  # $24.3: bool = phi($24.1, $24.2)
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $24.2:[rbp-63] $24.3:[rbp-63] $21.2:[rbp-62] $24.1:[rbp-63] 
   # jump($24.3, .LABEL__get_named_function_73__19, .LABEL__get_named_function_73__2)
   mov al, [rbp-63]
@@ -24280,7 +24280,7 @@ get_named_function_73:
   jz .LABEL__get_named_function_73__2
 .LABEL__get_named_function_73__19:
   .loc 3 176 21
-  # $27.1: Boolean = function.5 != null
+  # $27.1: bool = function.5 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: name.1:[rbp-24] argument_types.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $7.1:[rbp-42] is_match.1:[rbp-43] argument_types.1:[rbp-51] named_function_parameters.1:[rbp-59] $12.1:[rbp-60] $20.1:[rbp-61] $21.1:[rbp-62] $12.2:[rbp-60] $12.3:[rbp-60] is_match.2:[rbp-43] $24.2:[rbp-63] $24.3:[rbp-63] $21.2:[rbp-62] $24.1:[rbp-63] $27.1:rax 
@@ -24404,7 +24404,7 @@ get_named_function_74:
   # function.5: @IR_Function = phi(function.1, function.3, function.5)
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] 
   .loc 3 189 12
-  # $3.1: Boolean = call(has_next_378, named_functions.1)
+  # $3.1: bool = call(has_next_378, named_functions.1)
   mov rdi, [rbp-32]
   call has_next_378
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:rax 
@@ -24423,7 +24423,7 @@ get_named_function_74:
   mov rbx, [rax+24]
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax $6.1:rbx 
   .loc 3 191 13
-  # $8.1: Boolean = call(equals_392, name.1, $6.1)
+  # $8.1: bool = call(equals_392, name.1, $6.1)
   mov rdi, [rbp-24]
   mov rsi, rbx
   mov [rbp-41], rax
@@ -24446,14 +24446,14 @@ get_named_function_74:
   mov r14, [r15+24]
   # [live values]: name.1:[rbp-24] function_type.1:r15:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $9.1:rbx $10.1:r14 
   .loc 3 191 49
-  # $11.1: Boolean = $9.1 == $10.1
+  # $11.1: bool = $9.1 == $10.1
   cmp rbx, r14
   sete r13b
   # [discarded value]: $10.1
   # [discarded value]: $9.1
   # [live values]: name.1:[rbp-24] function_type.1:r15:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $11.1:r13 
   .loc 3 191 13
-  # $8.2: Boolean = $11.1
+  # $8.2: bool = $11.1
   mov [rbp-43], r13b
   # [discarded value]: $11.1
   # [live values]: name.1:[rbp-24] function_type.1:r15:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $8.2:r13:[rbp-42] 
@@ -24461,7 +24461,7 @@ get_named_function_74:
   mov [rbp-42], r13b
 .LABEL__get_named_function_74__8:
   .loc 3 191 13
-  # $12.1: Boolean = phi($8.1, $8.2)
+  # $12.1: bool = phi($8.1, $8.2)
   mov al, [rbp-42]
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $8.2:[rbp-42] $12.1:rax 
   # jump($12.1, .LABEL__get_named_function_74__5, .LABEL__get_named_function_74__6)
@@ -24475,7 +24475,7 @@ get_named_function_74:
   mov rbx, [rax+32]
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $13.1:rbx $8.2:[rbp-42] $12.1:[rbp-43] 
   .loc 3 191 108
-  # $14.1: Int = load_struct_member($13.1, size)
+  # $14.1: isize = load_struct_member($13.1, size)
   mov r15, [rbx+16]
   # [discarded value]: $13.1
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $14.1:r15 $8.2:[rbp-42] $12.1:[rbp-43] 
@@ -24485,19 +24485,19 @@ get_named_function_74:
   mov r14, [rbx+16]
   # [live values]: name.1:[rbp-24] function_type.1:rbx:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $14.1:r15 $15.1:r14 $8.2:[rbp-42] $12.1:[rbp-43] 
   .loc 3 191 142
-  # $16.1: Int = load_struct_member($15.1, size)
+  # $16.1: isize = load_struct_member($15.1, size)
   mov r13, [r14+16]
   # [discarded value]: $15.1
   # [live values]: name.1:[rbp-24] function_type.1:rbx:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $14.1:r15 $16.1:r13 $8.2:[rbp-42] $12.1:[rbp-43] 
   .loc 3 191 108
-  # $17.1: Boolean = $14.1 == $16.1
+  # $17.1: bool = $14.1 == $16.1
   cmp r15, r13
   sete r14b
   # [discarded value]: $16.1
   # [discarded value]: $14.1
   # [live values]: name.1:[rbp-24] function_type.1:rbx:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $17.1:r14 $8.2:[rbp-42] $12.1:[rbp-43] 
   .loc 3 191 13
-  # $12.2: Boolean = $17.1
+  # $12.2: bool = $17.1
   mov [rbp-44], r14b
   # [discarded value]: $17.1
   # [live values]: name.1:[rbp-24] function_type.1:rbx:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:rax:[rbp-41] $8.1:[rbp-42] $12.2:r14:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] 
@@ -24505,7 +24505,7 @@ get_named_function_74:
   mov [rbp-43], r14b
 .LABEL__get_named_function_74__6:
   .loc 3 191 13
-  # $12.3: Boolean = phi($12.1, $12.2)
+  # $12.3: bool = phi($12.1, $12.2)
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] 
   # jump($12.3, .LABEL__get_named_function_74__9, .LABEL__get_named_function_74__2)
   mov al, [rbp-43]
@@ -24513,7 +24513,7 @@ get_named_function_74:
   jz .LABEL__get_named_function_74__2
 .LABEL__get_named_function_74__9:
   .loc 3 192 17
-  # is_match.1: Boolean = true
+  # is_match.1: bool = true
   mov al, 1
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:rax 
   .loc 3 193 44
@@ -24544,7 +24544,7 @@ get_named_function_74:
   mov [rbp-60], rax
 .LABEL__get_named_function_74__11:
   .loc 3 195 20
-  # $23.1: Boolean = call(has_next_378, function_type_parameters.1)
+  # $23.1: bool = call(has_next_378, function_type_parameters.1)
   mov rdi, [rbp-52]
   call has_next_378
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:rax 
@@ -24554,7 +24554,7 @@ get_named_function_74:
   jz .LABEL__get_named_function_74__15
 .LABEL__get_named_function_74__14:
   .loc 3 195 59
-  # $23.2: Boolean = call(has_next_378, named_function_parameters.1)
+  # $23.2: bool = call(has_next_378, named_function_parameters.1)
   mov rdi, [rbp-60]
   call has_next_378
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $23.2:rax:[rbp-61] 
@@ -24562,7 +24562,7 @@ get_named_function_74:
   mov [rbp-61], al
 .LABEL__get_named_function_74__15:
   .loc 3 195 20
-  # $23.3: Boolean = phi($23.1, $23.2)
+  # $23.3: bool = phi($23.1, $23.2)
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $23.2:[rbp-61] $23.3:[rbp-61] 
   # jump($23.3, .LABEL__get_named_function_74__12, .LABEL__get_named_function_74__13)
   mov al, [rbp-61]
@@ -24592,7 +24592,7 @@ get_named_function_74:
   # [discarded value]: function_type_parameter.1
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $29.1:rbx $30.1:r15 $23.2:[rbp-61] $23.3:[rbp-61] 
   .loc 3 198 21
-  # $31.1: Boolean = $29.1 != $30.1
+  # $31.1: bool = $29.1 != $30.1
   cmp rbx, r15
   setne al
   # [discarded value]: $30.1
@@ -24604,13 +24604,13 @@ get_named_function_74:
   jz .LABEL__get_named_function_74__11
 .LABEL__get_named_function_74__16:
   .loc 3 199 21
-  # is_match.2: Boolean = false
+  # is_match.2: bool = false
   mov al, 0
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:rax:[rbp-44] 
   # jump(.LABEL__get_named_function_74__13)
   mov [rbp-44], al
 .LABEL__get_named_function_74__13:
-  # $32.1: Boolean = phi(is_match.2, is_match.1)
+  # $32.1: bool = phi(is_match.2, is_match.1)
   mov al, [rbp-44]
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:rax $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] 
   # jump($32.1, .LABEL__get_named_function_74__21, .LABEL__get_named_function_74__22)
@@ -24619,18 +24619,18 @@ get_named_function_74:
   jz .LABEL__get_named_function_74__22
 .LABEL__get_named_function_74__21:
   .loc 3 203 29
-  # $33.1: Boolean = call(has_next_378, function_type_parameters.1)
+  # $33.1: bool = call(has_next_378, function_type_parameters.1)
   mov rdi, [rbp-52]
   call has_next_378
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $33.1:rax 
   .loc 3 203 29
-  # $34.1: Boolean = $33.1 == false
+  # $34.1: bool = $33.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $33.1
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $34.1:rbx 
   .loc 3 203 17
-  # $32.2: Boolean = $34.1
+  # $32.2: bool = $34.1
   mov [rbp-64], bl
   # [discarded value]: $34.1
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $32.2:rbx:[rbp-63] 
@@ -24638,7 +24638,7 @@ get_named_function_74:
   mov [rbp-63], bl
 .LABEL__get_named_function_74__22:
   .loc 3 203 17
-  # $35.1: Boolean = phi($32.1, $32.2)
+  # $35.1: bool = phi($32.1, $32.2)
   mov al, [rbp-63]
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $32.2:[rbp-63] $35.1:rax 
   # jump($35.1, .LABEL__get_named_function_74__19, .LABEL__get_named_function_74__20)
@@ -24647,18 +24647,18 @@ get_named_function_74:
   jz .LABEL__get_named_function_74__20
 .LABEL__get_named_function_74__19:
   .loc 3 203 77
-  # $36.1: Boolean = call(has_next_378, named_function_parameters.1)
+  # $36.1: bool = call(has_next_378, named_function_parameters.1)
   mov rdi, [rbp-60]
   call has_next_378
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $36.1:rax $32.2:[rbp-63] $35.1:[rbp-64] 
   .loc 3 203 77
-  # $37.1: Boolean = $36.1 == false
+  # $37.1: bool = $36.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $36.1
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $37.1:rbx $32.2:[rbp-63] $35.1:[rbp-64] 
   .loc 3 203 17
-  # $35.2: Boolean = $37.1
+  # $35.2: bool = $37.1
   mov [rbp-65], bl
   # [discarded value]: $37.1
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $35.2:rbx:[rbp-64] $32.2:[rbp-63] $35.1:[rbp-64] 
@@ -24666,7 +24666,7 @@ get_named_function_74:
   mov [rbp-64], bl
 .LABEL__get_named_function_74__20:
   .loc 3 203 17
-  # $35.3: Boolean = phi($35.1, $35.2)
+  # $35.3: bool = phi($35.1, $35.2)
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $35.2:[rbp-64] $35.3:[rbp-64] $32.2:[rbp-63] $35.1:[rbp-64] 
   # jump($35.3, .LABEL__get_named_function_74__23, .LABEL__get_named_function_74__2)
   mov al, [rbp-64]
@@ -24674,7 +24674,7 @@ get_named_function_74:
   jz .LABEL__get_named_function_74__2
 .LABEL__get_named_function_74__23:
   .loc 3 204 21
-  # $38.1: Boolean = function.5 != null
+  # $38.1: bool = function.5 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: name.1:[rbp-24] function_type.1:[rbp-16] function.1:[rbp-8] named_functions.1:[rbp-32] function.5:[rbp-8] $3.1:[rbp-33] named_function.1:[rbp-41] $8.1:[rbp-42] $12.2:[rbp-43] $12.3:[rbp-43] $8.2:[rbp-42] $12.1:[rbp-43] is_match.1:[rbp-44] function_type_parameters.1:[rbp-52] named_function_parameters.1:[rbp-60] $23.1:[rbp-61] $31.1:[rbp-62] $32.1:[rbp-63] $23.2:[rbp-61] $23.3:[rbp-61] is_match.2:[rbp-44] $35.2:[rbp-64] $35.3:[rbp-64] $32.2:[rbp-63] $35.1:[rbp-64] $38.1:rax 
@@ -24784,12 +24784,12 @@ accepts_75:
   # other.1: @IR_Type = load_variable(other)
   # [live values]: self.1:rdi other.1:rsi 
   .loc 3 215 9
-  # $1.1: Boolean = self.1 == other.1
+  # $1.1: bool = self.1 == other.1
   cmp rdi, rsi
   sete al
   # [live values]: self.1:rdi other.1:rsi $1.1:rax 
   .loc 3 215 9
-  # $2.1: Boolean = $1.1
+  # $2.1: bool = $1.1
   mov [rbp-1], al
   # [discarded value]: $1.1
   # [live values]: self.1:rdi other.1:rsi $2.1:rax 
@@ -24801,7 +24801,7 @@ accepts_75:
   jz .LABEL__accepts_75__2
 .LABEL__accepts_75__3:
   .loc 3 215 9
-  # $2.3: Boolean = phi($2.1, $2.2)
+  # $2.3: bool = phi($2.1, $2.2)
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] 
   # jump($2.3, .LABEL__accepts_75__4, .LABEL__accepts_75__5)
   mov al, [rbp-1]
@@ -24815,7 +24815,7 @@ accepts_75:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] 
 .LABEL__accepts_75__5:
   .loc 3 218 9
-  # $4.1: Boolean = call(is_389, self.1, IR_Pointer_Type)
+  # $4.1: bool = call(is_389, self.1, IR_Pointer_Type)
   mov rdi, [rbp-17]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -24834,7 +24834,7 @@ accepts_75:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:rax $6.1:rbx 
   .loc 3 220 13
-  # $7.1: Boolean = call(is_389, $6.1, IR_Pointer_Type)
+  # $7.1: bool = call(is_389, $6.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-26], rax
@@ -24847,14 +24847,14 @@ accepts_75:
   jz .LABEL__accepts_75__10
 .LABEL__accepts_75__9:
   .loc 3 221 17
-  # stop.1: Boolean = true
+  # stop.1: bool = true
   mov al, 1
   # [discarded value]: stop.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:[rbp-26] $7.1:[rbp-27] 
   # jump(.LABEL__accepts_75__10)
 .LABEL__accepts_75__10:
   .loc 3 223 13
-  # $8.1: Boolean = call(is_389, other.1, IR_Pointer_Type)
+  # $8.1: bool = call(is_389, other.1, IR_Pointer_Type)
   mov rdi, [rbp-9]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -24878,7 +24878,7 @@ accepts_75:
   mov r14, [rax+16]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:rbx:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] other.1:rax $10.1:r15 $11.1:r14 
   .loc 3 225 17
-  # $12.1: Boolean = $10.1 == $11.1
+  # $12.1: bool = $10.1 == $11.1
   cmp r15, r14
   sete r13b
   # [discarded value]: $11.1
@@ -24902,7 +24902,7 @@ accepts_75:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:rax:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] other.1:[rbp-36] $12.1:[rbp-37] $13.1:rbx 
   .loc 3 228 17
-  # $14.1: Boolean = call(is_389, $13.1, IR_Any_Type)
+  # $14.1: bool = call(is_389, $13.1, IR_Any_Type)
   mov rdi, rbx
   mov rsi, IR_Any_Type[rip]
   call is_389
@@ -24925,7 +24925,7 @@ accepts_75:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:rax:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] other.1:[rbp-36] $12.1:[rbp-37] $14.1:[rbp-38] $15.1:rbx 
   .loc 3 231 17
-  # $17.1: Boolean = call(is_389, $15.1, IR_Struct_Type)
+  # $17.1: bool = call(is_389, $15.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -24942,7 +24942,7 @@ accepts_75:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] other.1:rax:[rbp-36] $12.1:[rbp-37] $14.1:[rbp-38] $17.1:[rbp-39] $18.1:rbx 
   .loc 3 231 57
-  # $17.2: Boolean = call(is_389, $18.1, IR_Struct_Type)
+  # $17.2: bool = call(is_389, $18.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -24952,7 +24952,7 @@ accepts_75:
   mov [rbp-39], al
 .LABEL__accepts_75__20:
   .loc 3 231 17
-  # $17.3: Boolean = phi($17.1, $17.2)
+  # $17.3: bool = phi($17.1, $17.2)
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] other.1:[rbp-36] $12.1:[rbp-37] $14.1:[rbp-38] $17.1:[rbp-39] $17.2:[rbp-39] $17.3:[rbp-39] 
   # jump($17.3, .LABEL__accepts_75__21, .LABEL__accepts_75__22)
   mov al, [rbp-39]
@@ -24970,7 +24970,7 @@ accepts_75:
   mov r14, [r15+16]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:rax:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] other.1:r15:[rbp-36] $12.1:[rbp-37] $14.1:[rbp-38] $17.1:[rbp-39] $17.2:[rbp-39] $17.3:[rbp-39] $21.1:rbx $23.1:r14 
   .loc 3 232 24
-  # $24.1: Boolean = call(is_base_type_151, $21.1, $23.1)
+  # $24.1: bool = call(is_base_type_151, $21.1, $23.1)
   mov rdi, rbx
   mov rsi, r14
   call is_base_type_151
@@ -24995,7 +24995,7 @@ accepts_75:
   mov r14, [r15+16]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:rax:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] other.1:r15:[rbp-36] $12.1:[rbp-37] $14.1:[rbp-38] $17.1:[rbp-39] $17.2:[rbp-39] $17.3:[rbp-39] $25.1:rbx $26.1:r14 
   .loc 3 234 20
-  # $27.1: Boolean = call(accepts_75, $25.1, $26.1)
+  # $27.1: bool = call(accepts_75, $25.1, $26.1)
   mov rdi, rbx
   mov rsi, r14
   call accepts_75
@@ -25024,7 +25024,7 @@ accepts_75:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] self.1:[rbp-26] $7.1:[rbp-27] $8.1:[rbp-28] 
 .LABEL__accepts_75__12:
   .loc 3 236 13
-  # $28.1: Boolean = call(is_389, other.1, IR_Null_Type)
+  # $28.1: bool = call(is_389, other.1, IR_Null_Type)
   mov rdi, [rbp-9]
   mov rsi, IR_Null_Type[rip]
   call is_389
@@ -25056,7 +25056,7 @@ accepts_75:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] 
 .LABEL__accepts_75__8:
   .loc 3 241 9
-  # $29.1: Boolean = call(is_389, self.1, IR_Function_Type)
+  # $29.1: bool = call(is_389, self.1, IR_Function_Type)
   mov rdi, [rbp-17]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -25067,7 +25067,7 @@ accepts_75:
   jz .LABEL__accepts_75__30
 .LABEL__accepts_75__29:
   .loc 3 242 13
-  # $30.1: Boolean = call(is_389, other.1, IR_Null_Type)
+  # $30.1: bool = call(is_389, other.1, IR_Null_Type)
   mov rdi, [rbp-9]
   mov rsi, IR_Null_Type[rip]
   call is_389
@@ -25084,7 +25084,7 @@ accepts_75:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] 
 .LABEL__accepts_75__32:
   .loc 3 245 13
-  # $31.1: Boolean = call(is_389, other.1, IR_Function_Type)
+  # $31.1: bool = call(is_389, other.1, IR_Function_Type)
   mov rdi, [rbp-9]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -25131,12 +25131,12 @@ accepts_75:
   # self_parameters_item.2: @List_Item = phi(self_parameters_item.1, self_parameters_item.5)
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] 
   .loc 3 250 20
-  # $38.1: Boolean = self_parameters_item.2 != null
+  # $38.1: bool = self_parameters_item.2 != null
   cmp QWORD PTR [rbp-53], 0
   setne al
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $38.1:rax 
   .loc 3 250 20
-  # $39.1: Boolean = $38.1
+  # $39.1: bool = $38.1
   mov [rbp-54], al
   # [discarded value]: $38.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:rax 
@@ -25146,12 +25146,12 @@ accepts_75:
   jz .LABEL__accepts_75__40
 .LABEL__accepts_75__39:
   .loc 3 250 52
-  # $40.1: Boolean = other_parameters_item.8 != null
+  # $40.1: bool = other_parameters_item.8 != null
   cmp QWORD PTR [rbp-45], 0
   setne al
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $40.1:rax 
   .loc 3 250 20
-  # $39.2: Boolean = $40.1
+  # $39.2: bool = $40.1
   mov [rbp-55], al
   # [discarded value]: $40.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $39.2:rax:[rbp-54] 
@@ -25159,7 +25159,7 @@ accepts_75:
   mov [rbp-54], al
 .LABEL__accepts_75__40:
   .loc 3 250 20
-  # $39.3: Boolean = phi($39.1, $39.2)
+  # $39.3: bool = phi($39.1, $39.2)
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $39.2:[rbp-54] $39.3:[rbp-54] 
   # jump($39.3, .LABEL__accepts_75__37, .LABEL__accepts_75__38)
   mov al, [rbp-54]
@@ -25187,7 +25187,7 @@ accepts_75:
   # [discarded value]: other_parameter.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:r15:[rbp-45] self_parameters_item.2:rax:[rbp-53] $39.1:[rbp-54] $45.1:r13 $46.1:rbx $39.2:[rbp-54] $39.3:[rbp-54] 
   .loc 3 253 21
-  # $47.1: Boolean = call(accepts_75, $45.1, $46.1)
+  # $47.1: bool = call(accepts_75, $45.1, $46.1)
   mov rdi, r13
   mov rsi, rbx
   call accepts_75
@@ -25195,7 +25195,7 @@ accepts_75:
   # [discarded value]: $45.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $47.1:rax $39.2:[rbp-54] $39.3:[rbp-54] 
   .loc 3 253 21
-  # $48.1: Boolean = $47.1 == false
+  # $48.1: bool = $47.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $47.1
@@ -25233,12 +25233,12 @@ accepts_75:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $39.2:[rbp-54] $39.3:[rbp-54] 
 .LABEL__accepts_75__38:
   .loc 3 259 17
-  # $51.1: Boolean = self_parameters_item.2 != null
+  # $51.1: bool = self_parameters_item.2 != null
   cmp QWORD PTR [rbp-53], 0
   setne al
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $51.1:rax $39.2:[rbp-54] $39.3:[rbp-54] 
   .loc 3 259 17
-  # $52.1: Boolean = $51.1
+  # $52.1: bool = $51.1
   mov [rbp-55], al
   # [discarded value]: $51.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $52.1:rax $39.2:[rbp-54] $39.3:[rbp-54] 
@@ -25248,7 +25248,7 @@ accepts_75:
   jz .LABEL__accepts_75__44
 .LABEL__accepts_75__45:
   .loc 3 259 17
-  # $52.3: Boolean = phi($52.1, $52.2)
+  # $52.3: bool = phi($52.1, $52.2)
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $52.1:[rbp-55] $39.2:[rbp-54] $39.3:[rbp-54] $52.3:[rbp-55] 
   # jump($52.3, .LABEL__accepts_75__46, .LABEL__accepts_75__47)
   mov al, [rbp-55]
@@ -25272,7 +25272,7 @@ accepts_75:
   mov r14, [r15+24]
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:rax:[rbp-29] other.1:r15:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $52.1:[rbp-55] $39.2:[rbp-54] $39.3:[rbp-54] $52.3:[rbp-55] $54.1:rbx $55.1:r14 
   .loc 3 262 20
-  # $56.1: Boolean = call(accepts_75, $54.1, $55.1)
+  # $56.1: bool = call(accepts_75, $54.1, $55.1)
   mov rdi, rbx
   mov rsi, r14
   call accepts_75
@@ -25289,12 +25289,12 @@ accepts_75:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $52.1:[rbp-55] $39.2:[rbp-54] $39.3:[rbp-54] 
 .LABEL__accepts_75__44:
   .loc 3 259 49
-  # $53.1: Boolean = other_parameters_item.8 != null
+  # $53.1: bool = other_parameters_item.8 != null
   cmp QWORD PTR [rbp-45], 0
   setne al
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $52.1:[rbp-55] $39.2:[rbp-54] $39.3:[rbp-54] $53.1:rax 
   .loc 3 259 17
-  # $52.2: Boolean = $53.1
+  # $52.2: bool = $53.1
   mov [rbp-56], al
   # [discarded value]: $53.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] $2.3:[rbp-1] $4.1:[rbp-18] $29.1:[rbp-19] $30.1:[rbp-20] $31.1:[rbp-21] self.1:[rbp-29] other.1:[rbp-37] self_parameters_item.1:[rbp-53] other_parameters_item.1:[rbp-45] other_parameters_item.8:[rbp-45] self_parameters_item.2:[rbp-53] $39.1:[rbp-54] $52.1:[rbp-55] $39.2:[rbp-54] $39.3:[rbp-54] $52.2:rax:[rbp-55] 
@@ -25341,7 +25341,7 @@ accepts_75:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $2.1:[rbp-1] 
 .LABEL__accepts_75__2:
   .loc 3 215 26
-  # $2.2: Boolean = call(is_389, other.1, IR_Undefined_Type)
+  # $2.2: bool = call(is_389, other.1, IR_Undefined_Type)
   mov rdi, [rbp-9]
   mov rsi, IR_Undefined_Type[rip]
   call is_389
@@ -25390,7 +25390,7 @@ create_temp_variable_76:
   # [discarded value]: self.1
   # [live values]: type.1:[rbp-16] $1.1:rax $2.1:r15 
   .loc 3 269 70
-  # $3.1: Int = call(next_146, $2.1)
+  # $3.1: isize = call(next_146, $2.1)
   mov rdi, r15
   mov [rbp-24], rax
   call next_146
@@ -25573,7 +25573,7 @@ build_79:
   mov [rbp-16], rax
 .LABEL__build_79__2:
   .loc 3 284 12
-  # $4.1: Boolean = call(has_next_378, types.1)
+  # $4.1: bool = call(has_next_378, types.1)
   mov rdi, [rbp-16]
   call has_next_378
   # [live values]: self.1:[rbp-8] types.1:[rbp-16] $4.1:rax 
@@ -25619,7 +25619,7 @@ build_79:
   mov [rbp-25], rax
 .LABEL__build_79__5:
   .loc 3 290 12
-  # $11.1: Boolean = call(has_next_378, global_variables.1)
+  # $11.1: bool = call(has_next_378, global_variables.1)
   mov rdi, [rbp-25]
   call has_next_378
   # [live values]: self.1:[rbp-8] types.1:[rbp-16] $4.1:[rbp-17] global_variables.1:[rbp-25] $11.1:rax 
@@ -25665,7 +25665,7 @@ build_79:
   mov [rbp-34], rax
 .LABEL__build_79__8:
   .loc 3 296 12
-  # $17.1: Boolean = call(has_next_378, functions.1)
+  # $17.1: bool = call(has_next_378, functions.1)
   mov rdi, [rbp-34]
   call has_next_378
   # [live values]: self.1:[rbp-8] types.1:[rbp-16] $4.1:[rbp-17] global_variables.1:[rbp-25] $11.1:[rbp-26] functions.1:[rbp-34] $17.1:rax 
@@ -25711,7 +25711,7 @@ build_79:
   mov [rbp-43], rax
 .LABEL__build_79__11:
   .loc 3 302 12
-  # $24.1: Boolean = call(has_next_378, functions.1)
+  # $24.1: bool = call(has_next_378, functions.1)
   mov rdi, [rbp-43]
   call has_next_378
   # [live values]: self.1:[rbp-8] types.1:[rbp-16] $4.1:[rbp-17] global_variables.1:[rbp-25] $11.1:[rbp-26] functions.1:[rbp-34] $17.1:[rbp-35] functions.1:[rbp-43] $24.1:rax 
@@ -25780,7 +25780,7 @@ convert_type_statement_80:
   # statement.1: @AST_Statement = load_variable(statement)
   # [live values]: self.1:rdi statement.1:rsi 
   .loc 3 309 9
-  # $1.1: Boolean = call(is_389, statement.1, AST_Struct_Statement)
+  # $1.1: bool = call(is_389, statement.1, AST_Struct_Statement)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -25869,7 +25869,7 @@ convert_struct_statement_81:
   call get_named_type_66
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:rax 
   .loc 3 319 9
-  # $4.1: Boolean = type.1 != null
+  # $4.1: bool = type.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:rax $4.1:rbx 
@@ -25880,7 +25880,7 @@ convert_struct_statement_81:
   jz .LABEL__convert_struct_statement_81__3
 .LABEL__convert_struct_statement_81__2:
   .loc 3 320 13
-  # $5.1: Boolean = call(is_389, type.1, IR_Struct_Type)
+  # $5.1: bool = call(is_389, type.1, IR_Struct_Type)
   mov rdi, [rbp-32]
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -25899,7 +25899,7 @@ convert_struct_statement_81:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] $5.1:[rbp-34] type.1:rax $7.1:rbx 
   .loc 3 322 17
-  # $8.1: Boolean = $7.1 == struct_statement.1
+  # $8.1: bool = $7.1 == struct_statement.1
   cmp rbx, QWORD PTR [rbp-8]
   sete r15b
   # [discarded value]: $7.1
@@ -26000,7 +26000,7 @@ convert_struct_statement_81:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-24] struct_statement.1:rax:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $15.1:rbx 
   .loc 3 335 9
-  # $16.1: Boolean = $15.1 != null
+  # $16.1: bool = $15.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $15.1
@@ -26016,14 +26016,14 @@ convert_struct_statement_81:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-24] struct_statement.1:rax:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:rbx 
   .loc 3 337 13
-  # $18.1: Boolean = call(is_389, base_type.1, AST_Named_Type)
+  # $18.1: bool = call(is_389, base_type.1, AST_Named_Type)
   mov rdi, rbx
   mov rsi, AST_Named_Type[rip]
   mov [rbp-50], rbx
   call is_389
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:[rbp-50] $18.1:rax 
   .loc 3 337 13
-  # $19.1: Boolean = $18.1 == false
+  # $19.1: bool = $18.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $18.1
@@ -26073,7 +26073,7 @@ convert_struct_statement_81:
   # [discarded value]: base_type_name.1
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:[rbp-50] $19.1:[rbp-51] base_struct_statement.1:rax 
   .loc 3 342 13
-  # $26.1: Boolean = base_struct_statement.1 == null
+  # $26.1: bool = base_struct_statement.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:[rbp-50] $19.1:[rbp-51] base_struct_statement.1:rax $26.1:rbx 
@@ -26121,7 +26121,7 @@ convert_struct_statement_81:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-24] struct_statement.1:rax:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:[rbp-50] $19.1:[rbp-51] $30.1:rbx base_struct_statement.1:[rbp-59] $26.1:[rbp-60] 
   .loc 3 348 9
-  # $31.1: Boolean = $30.1 != null
+  # $31.1: bool = $30.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $30.1
@@ -26146,7 +26146,7 @@ convert_struct_statement_81:
   mov [rbp-69], rax
 .LABEL__convert_struct_statement_81__17:
   .loc 3 350 16
-  # $34.1: Boolean = call(has_next_378, struct_members.1)
+  # $34.1: bool = call(has_next_378, struct_members.1)
   mov rdi, [rbp-69]
   call has_next_378
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:[rbp-50] $19.1:[rbp-51] $31.1:[rbp-61] base_struct_statement.1:[rbp-59] $26.1:[rbp-60] struct_members.1:[rbp-69] $34.1:rax 
@@ -26197,7 +26197,7 @@ convert_struct_statement_81:
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:[rbp-50] $19.1:[rbp-51] $31.1:[rbp-61] base_struct_statement.1:[rbp-59] $26.1:[rbp-60] struct_members.1:[rbp-69] $34.1:[rbp-70] 
 .LABEL__convert_struct_statement_81__16:
   .loc 3 358 9
-  # $42.1: Boolean = call(is_object_type_152, type.1)
+  # $42.1: bool = call(is_object_type_152, type.1)
   mov rdi, [rbp-41]
   call is_object_type_152
   # [live values]: self.1:[rbp-24] struct_statement.1:[rbp-8] struct_name.1:[rbp-16] type.1:[rbp-32] $4.1:[rbp-33] type.1:[rbp-41] $16.1:[rbp-42] base_type.1:[rbp-50] $19.1:[rbp-51] $31.1:[rbp-61] base_struct_statement.1:[rbp-59] $26.1:[rbp-60] struct_members.1:[rbp-69] $42.1:rax $34.1:[rbp-70] 
@@ -26345,7 +26345,7 @@ convert_type_82:
   # type.1: @AST_Type = load_variable(type)
   # [live values]: self.1:rdi type.1:rsi 
   .loc 3 376 9
-  # $1.1: Boolean = call(is_389, type.1, AST_Array_Type)
+  # $1.1: bool = call(is_389, type.1, AST_Array_Type)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -26376,7 +26376,7 @@ convert_type_82:
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__convert_type_82__3:
   .loc 3 379 9
-  # $4.1: Boolean = call(is_389, type.1, AST_Function_Type)
+  # $4.1: bool = call(is_389, type.1, AST_Function_Type)
   mov rdi, [rbp-16]
   mov rsi, AST_Function_Type[rip]
   call is_389
@@ -26405,7 +26405,7 @@ convert_type_82:
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $1.1:[rbp-17] $4.1:[rbp-18] 
 .LABEL__convert_type_82__6:
   .loc 3 382 9
-  # $7.1: Boolean = call(is_389, type.1, AST_Named_Type)
+  # $7.1: bool = call(is_389, type.1, AST_Named_Type)
   mov rdi, [rbp-16]
   mov rsi, AST_Named_Type[rip]
   call is_389
@@ -26434,7 +26434,7 @@ convert_type_82:
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $1.1:[rbp-17] $4.1:[rbp-18] $7.1:[rbp-19] 
 .LABEL__convert_type_82__9:
   .loc 3 385 9
-  # $10.1: Boolean = call(is_389, type.1, AST_Embedded_Type)
+  # $10.1: bool = call(is_389, type.1, AST_Embedded_Type)
   mov rdi, [rbp-16]
   mov rsi, AST_Embedded_Type[rip]
   call is_389
@@ -26510,7 +26510,7 @@ convert_array_type_83:
   # type.1: @AST_Array_Type = load_variable(type)
   # [live values]: self.1:rdi type.1:rsi 
   .loc 3 392 9
-  # $1.1: Boolean = load_struct_member(type.1, is_checked)
+  # $1.1: bool = load_struct_member(type.1, is_checked)
   mov al, [rsi+32]
   # [live values]: self.1:rdi type.1:rsi $1.1:rax 
   # jump($1.1, .LABEL__convert_array_type_83__2, .LABEL__convert_array_type_83__3)
@@ -26599,7 +26599,7 @@ create_ir_unchecked_array_type_84:
   # types_item.2: @List_Item = phi(types_item.1, types_item.5)
   # [live values]: self.1:[rbp-24] item_type.1:[rbp-16] types_item.1:[rbp-8] types_item.2:[rbp-8] 
   .loc 3 401 12
-  # $3.1: Boolean = types_item.2 != null
+  # $3.1: bool = types_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-24] item_type.1:[rbp-16] types_item.1:[rbp-8] types_item.2:[rbp-8] $3.1:rax 
@@ -26614,7 +26614,7 @@ create_ir_unchecked_array_type_84:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] item_type.1:[rbp-16] types_item.1:[rbp-8] types_item.2:rax:[rbp-8] $3.1:[rbp-25] type.1:rbx 
   .loc 3 403 13
-  # $6.1: Boolean = call(is_389, type.1, IR_Unchecked_Array_Type)
+  # $6.1: bool = call(is_389, type.1, IR_Unchecked_Array_Type)
   mov rdi, rbx
   mov rsi, IR_Unchecked_Array_Type[rip]
   mov [rbp-33], rbx
@@ -26634,7 +26634,7 @@ create_ir_unchecked_array_type_84:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] item_type.1:[rbp-16] types_item.1:[rbp-8] types_item.2:[rbp-8] $3.1:[rbp-25] type.1:[rbp-33] $6.1:[rbp-34] type.1:rax $8.1:rbx 
   .loc 3 405 17
-  # $9.1: Boolean = $8.1 == item_type.1
+  # $9.1: bool = $8.1 == item_type.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $8.1
@@ -26771,7 +26771,7 @@ convert_embedded_type_85:
   mov rax, [rsi+16]
   # [live values]: self.1:rdi type.1:rsi $1.1:rax 
   .loc 3 423 9
-  # $2.1: Boolean = call(is_389, $1.1, AST_Named_Type)
+  # $2.1: bool = call(is_389, $1.1, AST_Named_Type)
   mov [rbp-8], rdi
   mov rdi, rax
   mov [rbp-16], rsi
@@ -26780,7 +26780,7 @@ convert_embedded_type_85:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $2.1:rax 
   .loc 3 423 9
-  # $3.1: Boolean = $2.1 == false
+  # $3.1: bool = $2.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $2.1
@@ -26826,7 +26826,7 @@ convert_embedded_type_85:
   call get_named_type_66
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $3.1:[rbp-17] embedded_type_name.1:[rbp-25] embedded_type.1:rax 
   .loc 3 428 9
-  # $10.1: Boolean = embedded_type.1 == null
+  # $10.1: bool = embedded_type.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $3.1:[rbp-17] embedded_type_name.1:[rbp-25] embedded_type.1:rax $10.1:rbx 
@@ -26843,7 +26843,7 @@ convert_embedded_type_85:
   call get_struct_statement_67
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $3.1:[rbp-17] embedded_type_name.1:[rbp-25] embedded_type.1:[rbp-33] $10.1:[rbp-34] struct_statement.1:rax 
   .loc 3 430 13
-  # $12.1: Boolean = struct_statement.1 != null
+  # $12.1: bool = struct_statement.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $3.1:[rbp-17] embedded_type_name.1:[rbp-25] embedded_type.1:[rbp-33] $10.1:[rbp-34] struct_statement.1:rax $12.1:rbx 
@@ -26865,7 +26865,7 @@ convert_embedded_type_85:
   # embedded_type.3: @IR_Type = phi(embedded_type.1, embedded_type.2)
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $3.1:[rbp-17] embedded_type_name.1:[rbp-25] embedded_type.1:[rbp-33] $10.1:[rbp-34] struct_statement.1:[rbp-42] $12.1:[rbp-43] embedded_type.3:[rbp-33] embedded_type.2:[rbp-33] 
   .loc 3 434 9
-  # $14.1: Boolean = embedded_type.3 == null
+  # $14.1: bool = embedded_type.3 == null
   cmp QWORD PTR [rbp-33], 0
   sete al
   # [live values]: self.1:[rbp-8] type.1:[rbp-16] $3.1:[rbp-17] embedded_type_name.1:[rbp-25] embedded_type.1:[rbp-33] $10.1:[rbp-34] struct_statement.1:[rbp-42] $12.1:[rbp-43] embedded_type.3:[rbp-33] $14.1:rax embedded_type.2:[rbp-33] 
@@ -26962,7 +26962,7 @@ convert_function_type_86:
   # function_parameters_item.2: @List_Item = phi(function_parameters_item.1, function_parameters_item.4)
   # [live values]: self.1:[rbp-16] type.1:[rbp-8] parameters.1:[rbp-24] function_parameters_item.1:[rbp-32] function_parameters_item.2:[rbp-32] 
   .loc 3 443 12
-  # $4.1: Boolean = function_parameters_item.2 != null
+  # $4.1: bool = function_parameters_item.2 != null
   cmp QWORD PTR [rbp-32], 0
   setne al
   # [live values]: self.1:[rbp-16] type.1:[rbp-8] parameters.1:[rbp-24] function_parameters_item.1:[rbp-32] function_parameters_item.2:[rbp-32] $4.1:rax 
@@ -27103,7 +27103,7 @@ convert_named_type_87:
   call get_named_type_66
   # [live values]: self.1:[rbp-24] type.1:[rbp-8] type_name.1:[rbp-16] named_type.1:rax 
   .loc 3 454 9
-  # $4.1: Boolean = named_type.1 == null
+  # $4.1: bool = named_type.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-24] type.1:[rbp-8] type_name.1:[rbp-16] named_type.1:rax $4.1:rbx 
@@ -27120,7 +27120,7 @@ convert_named_type_87:
   call get_struct_statement_67
   # [live values]: self.1:[rbp-24] type.1:[rbp-8] type_name.1:[rbp-16] named_type.1:[rbp-32] $4.1:[rbp-33] struct_statement.1:rax 
   .loc 3 456 13
-  # $6.1: Boolean = struct_statement.1 != null
+  # $6.1: bool = struct_statement.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-24] type.1:[rbp-8] type_name.1:[rbp-16] named_type.1:[rbp-32] $4.1:[rbp-33] struct_statement.1:rax $6.1:rbx 
@@ -27142,7 +27142,7 @@ convert_named_type_87:
   # named_type.3: @IR_Type = phi(named_type.1, named_type.2)
   # [live values]: self.1:[rbp-24] type.1:[rbp-8] type_name.1:[rbp-16] named_type.1:[rbp-32] $4.1:[rbp-33] struct_statement.1:[rbp-41] $6.1:[rbp-42] named_type.3:[rbp-32] named_type.2:[rbp-32] 
   .loc 3 462 9
-  # $13.1: Boolean = call(is_389, named_type.3, IR_Struct_Type)
+  # $13.1: bool = call(is_389, named_type.3, IR_Struct_Type)
   mov rdi, [rbp-32]
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -27153,7 +27153,7 @@ convert_named_type_87:
   jz .LABEL__convert_named_type_87__7
 .LABEL__convert_named_type_87__8:
   .loc 3 462 9
-  # $13.3: Boolean = phi($13.1, $13.2)
+  # $13.3: bool = phi($13.1, $13.2)
   # [live values]: self.1:[rbp-24] type.1:[rbp-8] type_name.1:[rbp-16] named_type.1:[rbp-32] $4.1:[rbp-33] struct_statement.1:[rbp-41] $6.1:[rbp-42] named_type.3:[rbp-32] $13.1:[rbp-43] named_type.2:[rbp-32] $13.3:[rbp-43] 
   # jump($13.3, .LABEL__convert_named_type_87__9, .LABEL__convert_named_type_87__10)
   mov al, [rbp-43]
@@ -27184,7 +27184,7 @@ convert_named_type_87:
   # [live values]: self.1:[rbp-24] type.1:[rbp-8] type_name.1:[rbp-16] named_type.1:[rbp-32] $4.1:[rbp-33] struct_statement.1:[rbp-41] $6.1:[rbp-42] named_type.3:[rbp-32] $13.1:[rbp-43] named_type.2:[rbp-32] 
 .LABEL__convert_named_type_87__7:
   .loc 3 462 42
-  # $13.2: Boolean = call(is_389, named_type.3, IR_Any_Type)
+  # $13.2: bool = call(is_389, named_type.3, IR_Any_Type)
   mov rdi, [rbp-32]
   mov rsi, IR_Any_Type[rip]
   call is_389
@@ -27265,7 +27265,7 @@ create_ir_pointer_type_88:
   # pointed_type.1: @IR_Type = load_variable(pointed_type)
   # [live values]: self.1:rdi pointed_type.1:rsi 
   .loc 3 469 9
-  # $1.1: Boolean = pointed_type.1 == null
+  # $1.1: bool = pointed_type.1 == null
   cmp rsi, 0
   sete al
   # [live values]: self.1:rdi pointed_type.1:rsi $1.1:rax 
@@ -27298,7 +27298,7 @@ create_ir_pointer_type_88:
   # types_item.2: @List_Item = phi(types_item.1, types_item.5)
   # [live values]: self.1:[rbp-17] pointed_type.1:[rbp-9] $1.1:[rbp-1] types_item.1:[rbp-25] types_item.2:[rbp-25] 
   .loc 3 474 12
-  # $4.1: Boolean = types_item.2 != null
+  # $4.1: bool = types_item.2 != null
   cmp QWORD PTR [rbp-25], 0
   setne al
   # [live values]: self.1:[rbp-17] pointed_type.1:[rbp-9] $1.1:[rbp-1] types_item.1:[rbp-25] types_item.2:[rbp-25] $4.1:rax 
@@ -27313,7 +27313,7 @@ create_ir_pointer_type_88:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] pointed_type.1:[rbp-9] $1.1:[rbp-1] types_item.1:[rbp-25] types_item.2:rax:[rbp-25] $4.1:[rbp-26] type.1:rbx 
   .loc 3 476 13
-  # $7.1: Boolean = call(is_389, type.1, IR_Pointer_Type)
+  # $7.1: bool = call(is_389, type.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-34], rbx
@@ -27333,7 +27333,7 @@ create_ir_pointer_type_88:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-17] pointed_type.1:[rbp-9] $1.1:[rbp-1] types_item.1:[rbp-25] types_item.2:[rbp-25] $4.1:[rbp-26] type.1:[rbp-34] $7.1:[rbp-35] type.1:rax $9.1:rbx 
   .loc 3 478 17
-  # $10.1: Boolean = $9.1 == pointed_type.1
+  # $10.1: bool = $9.1 == pointed_type.1
   cmp rbx, QWORD PTR [rbp-9]
   sete r15b
   # [discarded value]: $9.1
@@ -27459,12 +27459,12 @@ create_function_89:
   mov rax, [rdi+24]
   # [live values]: self.1:rdi function_statement.1:rsi $1.1:rax 
   .loc 3 497 14
-  # $2.1: Int = load_struct_member($1.1, size)
+  # $2.1: isize = load_struct_member($1.1, size)
   mov rbx, [rax+16]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi function_statement.1:rsi $2.1:rbx 
   .loc 3 497 14
-  # $3.1: Int = $2.1 + 1
+  # $3.1: isize = $2.1 + 1
   mov rax, rbx
   add rax, 1
   # [discarded value]: $2.1
@@ -27535,7 +27535,7 @@ create_function_89:
   mov r15, [rbx+40]
   # [live values]: self.1:[rbp-32] function_statement.1:rbx:[rbp-24] $3.1:[rbp-8] $4.1:[rbp-16] $5.1:[rbp-40] $7.1:[rbp-48] $8.1:[rbp-56] $11.1:rax $12.1:r15 
   .loc 3 503 23
-  # $13.1: Boolean = $12.1 == null
+  # $13.1: bool = $12.1 == null
   cmp r15, 0
   sete r14b
   # [discarded value]: $12.1
@@ -27612,7 +27612,7 @@ create_function_89:
   mov [rbp-56], rax
 .LABEL__create_function_89__2:
   .loc 3 509 12
-  # $19.1: Boolean = call(has_next_378, parameters.1)
+  # $19.1: bool = call(has_next_378, parameters.1)
   mov rdi, [rbp-48]
   call has_next_378
   # [live values]: self.1:[rbp-32] function_statement.1:[rbp-24] function.1:[rbp-40] parameters.1:[rbp-48] function_type_parameters.1:[rbp-56] $19.1:rax 
@@ -27801,7 +27801,7 @@ build_function_90:
   mov rax, [rsi+40]
   # [live values]: self.1:rdi function_statement.1:rsi $1.1:rax 
   .loc 3 527 9
-  # $2.1: Boolean = $1.1 == null
+  # $2.1: bool = $1.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $1.1
@@ -27914,7 +27914,7 @@ build_function_90:
   mov [rbp-33], rax
 .LABEL__build_function_90__5:
   .loc 3 539 12
-  # $13.1: Boolean = call(has_next_378, function_parameters.1)
+  # $13.1: bool = call(has_next_378, function_parameters.1)
   mov rdi, [rbp-33]
   call has_next_378
   # [live values]: self.1:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:rax 
@@ -27991,13 +27991,13 @@ build_function_90:
   # [discarded value]: $22.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $23.1:r15 
   .loc 3 546 9
-  # $24.1: Boolean = $23.1 == null
+  # $24.1: bool = $23.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $23.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $24.1:rbx 
   .loc 3 546 9
-  # $25.1: Boolean = $24.1
+  # $25.1: bool = $24.1
   mov [rbp-35], bl
   # [discarded value]: $24.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:rbx 
@@ -28007,7 +28007,7 @@ build_function_90:
   jz .LABEL__build_function_90__8
 .LABEL__build_function_90__9:
   .loc 3 546 9
-  # $25.3: Boolean = phi($25.1, $25.2)
+  # $25.3: bool = phi($25.1, $25.2)
   # [live values]: self.1:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] 
   # jump($25.3, .LABEL__build_function_90__10, .LABEL__build_function_90__11)
   mov al, [rbp-35]
@@ -28025,18 +28025,18 @@ build_function_90:
   # [discarded value]: $30.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $31.1:r15 
   .loc 3 547 13
-  # $32.1: Int = load_struct_member($31.1, size)
+  # $32.1: isize = load_struct_member($31.1, size)
   mov rbx, [r15+16]
   # [discarded value]: $31.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $32.1:rbx 
   .loc 3 547 13
-  # $33.1: Boolean = $32.1 == 0
+  # $33.1: bool = $32.1 == 0
   cmp rbx, 0
   sete r15b
   # [discarded value]: $32.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $33.1:r15 
   .loc 3 547 13
-  # $34.1: Boolean = $33.1
+  # $34.1: bool = $33.1
   mov [rbp-36], r15b
   # [discarded value]: $33.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $34.1:r15 
@@ -28051,18 +28051,18 @@ build_function_90:
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $34.1:[rbp-36] $35.1:rbx 
   .loc 3 547 58
-  # $36.1: Int = load_struct_member($35.1, id)
+  # $36.1: isize = load_struct_member($35.1, id)
   mov r15, [rbx+8]
   # [discarded value]: $35.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $34.1:[rbp-36] $36.1:r15 
   .loc 3 547 58
-  # $37.1: Boolean = $36.1 != 1
+  # $37.1: bool = $36.1 != 1
   cmp r15, 1
   setne bl
   # [discarded value]: $36.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $34.1:[rbp-36] $37.1:rbx 
   .loc 3 547 13
-  # $34.2: Boolean = $37.1
+  # $34.2: bool = $37.1
   mov [rbp-37], bl
   # [discarded value]: $37.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $34.1:[rbp-36] $34.2:rbx:[rbp-36] 
@@ -28070,7 +28070,7 @@ build_function_90:
   mov [rbp-36], bl
 .LABEL__build_function_90__13:
   .loc 3 547 13
-  # $34.3: Boolean = phi($34.1, $34.2)
+  # $34.3: bool = phi($34.1, $34.2)
   # [live values]: self.1:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $34.1:[rbp-36] $34.2:[rbp-36] $34.3:[rbp-36] 
   # jump($34.3, .LABEL__build_function_90__14, .LABEL__build_function_90__16)
   mov al, [rbp-36]
@@ -28159,7 +28159,7 @@ build_function_90:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:rax:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.3:[rbp-35] $34.1:[rbp-36] $34.2:[rbp-36] $34.3:[rbp-36] $38.1:rbx 
   .loc 3 550 20
-  # $39.1: Boolean = call(is_389, $38.1, IR_Nothing_Type)
+  # $39.1: bool = call(is_389, $38.1, IR_Nothing_Type)
   mov rdi, rbx
   mov rsi, IR_Nothing_Type[rip]
   call is_389
@@ -28224,19 +28224,19 @@ build_function_90:
   # [discarded value]: $26.1
   # [live values]: self.1:rax:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $27.1:r15 
   .loc 3 546 56
-  # $28.1: Boolean = call(is_exit_instruction_177, $27.1)
+  # $28.1: bool = call(is_exit_instruction_177, $27.1)
   mov rdi, r15
   call is_exit_instruction_177
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $28.1:rax 
   .loc 3 546 56
-  # $29.1: Boolean = $28.1 == false
+  # $29.1: bool = $28.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $29.1:rbx 
   .loc 3 546 9
-  # $25.2: Boolean = $29.1
+  # $25.2: bool = $29.1
   mov [rbp-36], bl
   # [discarded value]: $29.1
   # [live values]: self.1:[rbp-17] function_statement.1:[rbp-9] $2.1:[rbp-1] function.1:[rbp-25] function_parameters.1:[rbp-33] $13.1:[rbp-34] $25.1:[rbp-35] $25.2:rbx:[rbp-35] 
@@ -28284,7 +28284,7 @@ remove_redundant_blocks_91:
   mov [rbp-8], rsi
 .LABEL__remove_redundant_blocks_91__2:
   .loc 3 568 13
-  # repeat.1: Boolean = false
+  # repeat.1: bool = false
   mov al, 0
   # [live values]: function.1:[rbp-8] repeat.1:rax 
   .loc 3 570 22
@@ -28309,7 +28309,7 @@ remove_redundant_blocks_91:
   mov [rbp-17], rax
 .LABEL__remove_redundant_blocks_91__4:
   .loc 3 572 16
-  # $4.1: Boolean = call(has_next_378, blocks.1)
+  # $4.1: bool = call(has_next_378, blocks.1)
   mov rdi, [rbp-17]
   call has_next_378
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:rax 
@@ -28324,11 +28324,11 @@ remove_redundant_blocks_91:
   call next_379
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax 
   .loc 3 574 17
-  # $7.1: Int = load_struct_member(block.1, id)
+  # $7.1: isize = load_struct_member(block.1, id)
   mov rbx, [rax+8]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax $7.1:rbx 
   .loc 3 574 17
-  # $8.1: Boolean = $7.1 != 1
+  # $8.1: bool = $7.1 != 1
   cmp rbx, 1
   setne r15b
   # [discarded value]: $7.1
@@ -28345,12 +28345,12 @@ remove_redundant_blocks_91:
   mov rbx, [rax+24]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $9.1:rbx 
   .loc 3 575 21
-  # $10.1: Int = load_struct_member($9.1, size)
+  # $10.1: isize = load_struct_member($9.1, size)
   mov r15, [rbx+16]
   # [discarded value]: $9.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $10.1:r15 
   .loc 3 575 21
-  # $11.1: Boolean = $10.1 == 0
+  # $11.1: bool = $10.1 == 0
   cmp r15, 0
   sete bl
   # [discarded value]: $10.1
@@ -28366,7 +28366,7 @@ remove_redundant_blocks_91:
   mov rbx, [rax+40]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $12.1:rbx 
   .loc 3 577 25
-  # $13.1: Boolean = $12.1 == null
+  # $13.1: bool = $12.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $12.1
@@ -28393,14 +28393,14 @@ remove_redundant_blocks_91:
   mov r15, [rax+40]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $32.1:rbx $33.1:r15 
   .loc 3 590 21
-  # $34.1: Boolean = $32.1 == $33.1
+  # $34.1: bool = $32.1 == $33.1
   cmp rbx, r15
   sete r14b
   # [discarded value]: $33.1
   # [discarded value]: $32.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $34.1:r14 
   .loc 3 590 21
-  # $35.1: Boolean = $34.1
+  # $35.1: bool = $34.1
   mov [rbp-30], r14b
   # [discarded value]: $34.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:r14 
@@ -28415,7 +28415,7 @@ remove_redundant_blocks_91:
   mov rbx, [rax+32]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $36.1:rbx 
   .loc 3 590 74
-  # $35.2: Boolean = call(is_389, $36.1, IR_Direct_Jump_Instruction)
+  # $35.2: bool = call(is_389, $36.1, IR_Direct_Jump_Instruction)
   mov rdi, rbx
   mov rsi, IR_Direct_Jump_Instruction[rip]
   call is_389
@@ -28425,7 +28425,7 @@ remove_redundant_blocks_91:
   mov [rbp-30], al
 .LABEL__remove_redundant_blocks_91__21:
   .loc 3 590 21
-  # $35.3: Boolean = phi($35.1, $35.2)
+  # $35.3: bool = phi($35.1, $35.2)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] 
   # jump($35.3, .LABEL__remove_redundant_blocks_91__22, .LABEL__remove_redundant_blocks_91__4)
   mov al, [rbp-30]
@@ -28458,7 +28458,7 @@ remove_redundant_blocks_91:
   mov r15, [rax+40]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rbx:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:rax block_successor.1:r14 $44.1:r15 
   .loc 3 594 25
-  # $45.1: Boolean = call(is_389, $44.1, IR_Conditional_Jump_Instruction)
+  # $45.1: bool = call(is_389, $44.1, IR_Conditional_Jump_Instruction)
   mov rdi, r15
   mov rsi, IR_Conditional_Jump_Instruction[rip]
   mov [rbp-38], rax
@@ -28500,7 +28500,7 @@ remove_redundant_blocks_91:
   mov r15, [rbx+73]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:rax:[rbp-38] block_successor.1:[rbp-46] $45.1:[rbp-47] block_predecessor_instruction.1:rbx $51.1:r15 
   .loc 3 597 29
-  # $52.1: Boolean = $51.1 == block.1
+  # $52.1: bool = $51.1 == block.1
   cmp r15, QWORD PTR [rbp-26]
   sete r14b
   # [discarded value]: $51.1
@@ -28545,16 +28545,16 @@ remove_redundant_blocks_91:
   # [discarded value]: $55.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:[rbp-38] block_successor.1:[rbp-46] $45.1:[rbp-47] block_predecessor_instruction.1:[rbp-55] $52.1:[rbp-56] 
   .loc 3 603 25
-  # repeat.3: Boolean = true
+  # repeat.3: bool = true
   mov al, 1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:[rbp-38] block_successor.1:[rbp-46] $45.1:[rbp-47] block_predecessor_instruction.1:[rbp-55] $52.1:[rbp-56] repeat.3:rax:[rbp-9] 
   # jump(.LABEL__remove_redundant_blocks_91__6)
   mov [rbp-9], al
 .LABEL__remove_redundant_blocks_91__6:
-  # repeat.5: Boolean = phi(repeat.2, repeat.3, repeat.4, repeat.1)
+  # repeat.5: bool = phi(repeat.2, repeat.3, repeat.4, repeat.1)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] repeat.5:[rbp-9] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:[rbp-38] block_successor.1:[rbp-46] $45.1:[rbp-47] block_predecessor_instruction.1:[rbp-55] $52.1:[rbp-56] repeat.3:[rbp-9] 
   .loc 3 618 13
-  # $66.1: Boolean = repeat.5 == false
+  # $66.1: bool = repeat.5 == false
   cmp BYTE PTR [rbp-9], 0
   sete al
   # [discarded value]: repeat.5
@@ -28594,7 +28594,7 @@ remove_redundant_blocks_91:
   mov rbx, [rax+40]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:rax:[rbp-38] block_successor.1:[rbp-46] $45.1:[rbp-47] $56.1:rbx 
   .loc 3 606 25
-  # $57.1: Boolean = call(is_389, $56.1, IR_Direct_Jump_Instruction)
+  # $57.1: bool = call(is_389, $56.1, IR_Direct_Jump_Instruction)
   mov rdi, rbx
   mov rsi, IR_Direct_Jump_Instruction[rip]
   call is_389
@@ -28660,7 +28660,7 @@ remove_redundant_blocks_91:
   # [discarded value]: $65.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:[rbp-38] block_successor.1:[rbp-46] $45.1:[rbp-47] $57.1:[rbp-48] 
   .loc 3 611 25
-  # repeat.4: Boolean = true
+  # repeat.4: bool = true
   mov al, 1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $35.1:[rbp-30] $35.2:[rbp-30] $35.3:[rbp-30] block_predecessor.1:[rbp-38] block_successor.1:[rbp-46] $45.1:[rbp-47] $57.1:[rbp-48] repeat.4:rax:[rbp-9] 
   # jump(.LABEL__remove_redundant_blocks_91__6)
@@ -28696,14 +28696,14 @@ remove_redundant_blocks_91:
   mov r15, [rax+32]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $14.1:rbx $15.1:r15 
   .loc 3 579 32
-  # $16.1: Boolean = $14.1 == $15.1
+  # $16.1: bool = $14.1 == $15.1
   cmp rbx, r15
   sete r14b
   # [discarded value]: $15.1
   # [discarded value]: $14.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $16.1:r14 
   .loc 3 579 32
-  # $17.1: Boolean = $16.1
+  # $17.1: bool = $16.1
   mov [rbp-30], r14b
   # [discarded value]: $16.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $17.1:r14 
@@ -28718,7 +28718,7 @@ remove_redundant_blocks_91:
   mov rbx, [rax+40]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rax:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $17.1:[rbp-30] $18.1:rbx 
   .loc 3 579 85
-  # $17.2: Boolean = call(is_389, $18.1, IR_Direct_Jump_Instruction)
+  # $17.2: bool = call(is_389, $18.1, IR_Direct_Jump_Instruction)
   mov rdi, rbx
   mov rsi, IR_Direct_Jump_Instruction[rip]
   call is_389
@@ -28728,7 +28728,7 @@ remove_redundant_blocks_91:
   mov [rbp-30], al
 .LABEL__remove_redundant_blocks_91__15:
   .loc 3 579 32
-  # $17.3: Boolean = phi($17.1, $17.2)
+  # $17.3: bool = phi($17.1, $17.2)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $17.1:[rbp-30] $17.2:[rbp-30] $17.3:[rbp-30] 
   # jump($17.3, .LABEL__remove_redundant_blocks_91__16, .LABEL__remove_redundant_blocks_91__18)
   mov al, [rbp-30]
@@ -28782,7 +28782,7 @@ remove_redundant_blocks_91:
   call remove_current_377
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $17.1:[rbp-30] $17.2:[rbp-30] $17.3:[rbp-30] 
   .loc 3 584 25
-  # repeat.2: Boolean = true
+  # repeat.2: bool = true
   mov al, 1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $17.1:[rbp-30] $17.2:[rbp-30] $17.3:[rbp-30] repeat.2:rax:[rbp-9] 
   # jump(.LABEL__remove_redundant_blocks_91__6)
@@ -28804,7 +28804,7 @@ remove_redundant_blocks_91:
   call clone_391
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $17.1:[rbp-30] $17.2:[rbp-30] $17.3:[rbp-30] $20.1:[rbp-38] $21.1:rax 
   .loc 3 587 108
-  # $22.1: Int = load_struct_member(block.1, id)
+  # $22.1: isize = load_struct_member(block.1, id)
   mov rbx, [rbp-26]
   mov r15, [rbx+8]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] $4.1:[rbp-18] block.1:rbx:[rbp-26] $8.1:[rbp-27] $11.1:[rbp-28] $13.1:[rbp-29] $17.1:[rbp-30] $17.2:[rbp-30] $17.3:[rbp-30] $20.1:[rbp-38] $21.1:rax $22.1:r15 
@@ -28884,7 +28884,7 @@ populate_phi_instructions_92:
   mov [rbp-16], rax
 .LABEL__populate_phi_instructions_92__2:
   .loc 3 626 12
-  # $3.1: Boolean = call(has_next_378, blocks.1)
+  # $3.1: bool = call(has_next_378, blocks.1)
   mov rdi, [rbp-16]
   call has_next_378
   # [live values]: self.1:[rbp-8] blocks.1:[rbp-16] $3.1:rax 
@@ -28909,12 +28909,12 @@ populate_phi_instructions_92:
   # block_instruction.2: @IR_Instruction = phi(block_instruction.1, block_instruction.6)
   # [live values]: self.1:[rbp-8] blocks.1:[rbp-16] $3.1:[rbp-17] block.1:[rbp-25] block_instruction.1:[rbp-33] block_instruction.2:[rbp-33] 
   .loc 3 629 16
-  # $7.1: Boolean = block_instruction.2 != null
+  # $7.1: bool = block_instruction.2 != null
   cmp QWORD PTR [rbp-33], 0
   setne al
   # [live values]: self.1:[rbp-8] blocks.1:[rbp-16] $3.1:[rbp-17] block.1:[rbp-25] block_instruction.1:[rbp-33] block_instruction.2:[rbp-33] $7.1:rax 
   .loc 3 629 16
-  # $8.1: Boolean = $7.1
+  # $8.1: bool = $7.1
   mov [rbp-34], al
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] blocks.1:[rbp-16] $3.1:[rbp-17] block.1:[rbp-25] block_instruction.1:[rbp-33] block_instruction.2:[rbp-33] $8.1:rax 
@@ -28924,7 +28924,7 @@ populate_phi_instructions_92:
   jz .LABEL__populate_phi_instructions_92__9
 .LABEL__populate_phi_instructions_92__8:
   .loc 3 629 45
-  # $8.2: Boolean = call(is_389, block_instruction.2, IR_Phi_Instruction)
+  # $8.2: bool = call(is_389, block_instruction.2, IR_Phi_Instruction)
   mov rdi, [rbp-33]
   mov rsi, IR_Phi_Instruction[rip]
   call is_389
@@ -28933,7 +28933,7 @@ populate_phi_instructions_92:
   mov [rbp-34], al
 .LABEL__populate_phi_instructions_92__9:
   .loc 3 629 16
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-8] blocks.1:[rbp-16] $3.1:[rbp-17] block.1:[rbp-25] block_instruction.1:[rbp-33] block_instruction.2:[rbp-33] $8.1:[rbp-34] $8.2:[rbp-34] $8.3:[rbp-34] 
   # jump($8.3, .LABEL__populate_phi_instructions_92__6, .LABEL__populate_phi_instructions_92__2)
   mov al, [rbp-34]
@@ -28954,7 +28954,7 @@ populate_phi_instructions_92:
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-8] blocks.1:[rbp-16] $3.1:[rbp-17] block.1:[rbp-25] block_instruction.1:[rbp-33] block_instruction.2:[rbp-33] $8.1:[rbp-34] instruction.1:rax $12.1:r15 $8.2:[rbp-34] $8.3:[rbp-34] 
   .loc 3 631 17
-  # $13.1: Boolean = $12.1 == null
+  # $13.1: bool = $12.1 == null
   cmp r15, 0
   sete bl
   # [discarded value]: $12.1
@@ -28980,7 +28980,7 @@ populate_phi_instructions_92:
   mov [rbp-51], rax
 .LABEL__populate_phi_instructions_92__12:
   .loc 3 633 24
-  # $16.1: Boolean = call(has_next_378, block_predecessors.1)
+  # $16.1: bool = call(has_next_378, block_predecessors.1)
   mov rdi, [rbp-51]
   call has_next_378
   # [live values]: self.1:[rbp-8] blocks.1:[rbp-16] $3.1:[rbp-17] block.1:[rbp-25] block_instruction.1:[rbp-33] block_instruction.2:[rbp-33] $8.1:[rbp-34] instruction.1:[rbp-42] $13.1:[rbp-43] $8.2:[rbp-34] $8.3:[rbp-34] block_predecessors.1:[rbp-51] $16.1:rax 
@@ -29101,7 +29101,7 @@ get_block_variable_value_93:
   # block_instruction.2: @IR_Instruction = phi(block_instruction.1, block_instruction.7)
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:[rbp-8] 
   .loc 3 645 12
-  # $2.1: Boolean = block_instruction.2 != null
+  # $2.1: bool = block_instruction.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:[rbp-8] $2.1:rax 
@@ -29116,13 +29116,13 @@ get_block_variable_value_93:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:rax:[rbp-8] $2.1:[rbp-33] $3.1:rbx 
   .loc 3 646 13
-  # $4.1: Boolean = $3.1 != null
+  # $4.1: bool = $3.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:rax:[rbp-8] $2.1:[rbp-33] $4.1:r15 
   .loc 3 646 13
-  # $5.1: Boolean = $4.1
+  # $5.1: bool = $4.1
   mov [rbp-34], r15b
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:rax:[rbp-8] $2.1:[rbp-33] $5.1:r15 
@@ -29142,13 +29142,13 @@ get_block_variable_value_93:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:rax:[rbp-8] $2.1:[rbp-33] $5.1:[rbp-34] $7.1:r15 
   .loc 3 646 55
-  # $8.1: Boolean = $7.1 == variable.1
+  # $8.1: bool = $7.1 == variable.1
   cmp r15, QWORD PTR [rbp-16]
   sete bl
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:rax:[rbp-8] $2.1:[rbp-33] $5.1:[rbp-34] $8.1:rbx 
   .loc 3 646 13
-  # $5.2: Boolean = $8.1
+  # $5.2: bool = $8.1
   mov [rbp-35], bl
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:rax:[rbp-8] $2.1:[rbp-33] $5.1:[rbp-34] $5.2:rbx:[rbp-34] 
@@ -29156,7 +29156,7 @@ get_block_variable_value_93:
   mov [rbp-34], bl
 .LABEL__get_block_variable_value_93__6:
   .loc 3 646 13
-  # $5.3: Boolean = phi($5.1, $5.2)
+  # $5.3: bool = phi($5.1, $5.2)
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:[rbp-8] $2.1:[rbp-33] $5.1:[rbp-34] $5.2:[rbp-34] $5.3:[rbp-34] 
   # jump($5.3, .LABEL__get_block_variable_value_93__7, .LABEL__get_block_variable_value_93__8)
   mov al, [rbp-34]
@@ -29202,12 +29202,12 @@ get_block_variable_value_93:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-32] block.1:rax:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:[rbp-8] $2.1:[rbp-33] $11.1:rbx 
   .loc 3 651 9
-  # $12.1: Int = load_struct_member($11.1, size)
+  # $12.1: isize = load_struct_member($11.1, size)
   mov r15, [rbx+16]
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-32] block.1:rax:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:[rbp-8] $2.1:[rbp-33] $12.1:r15 
   .loc 3 651 9
-  # $13.1: Boolean = $12.1 == 1
+  # $13.1: bool = $12.1 == 1
   cmp r15, 1
   sete bl
   # [discarded value]: $12.1
@@ -29278,7 +29278,7 @@ get_block_variable_value_93:
   mov [rbp-50], rax
 .LABEL__get_block_variable_value_93__13:
   .loc 3 657 12
-  # $23.1: Boolean = call(has_next_378, block_predecessors.1)
+  # $23.1: bool = call(has_next_378, block_predecessors.1)
   mov rdi, [rbp-50]
   call has_next_378
   # [live values]: self.1:[rbp-32] block.1:[rbp-24] variable.1:[rbp-16] block_instruction.1:[rbp-8] block_instruction.2:[rbp-8] $2.1:[rbp-33] $13.1:[rbp-34] instruction.1:[rbp-42] block_predecessors.1:[rbp-50] $23.1:rax 
@@ -29365,7 +29365,7 @@ remove_trivial_phi_instructions_94:
   mov [rbp-8], rsi
 .LABEL__remove_trivial_phi_instructions_94__2:
   .loc 3 666 13
-  # repeat.1: Boolean = false
+  # repeat.1: bool = false
   mov al, 0
   # [live values]: function.1:[rbp-8] repeat.1:rax 
   .loc 3 668 22
@@ -29395,10 +29395,10 @@ remove_trivial_phi_instructions_94:
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] 
   # jump(.LABEL__remove_trivial_phi_instructions_94__4)
 .LABEL__remove_trivial_phi_instructions_94__4:
-  # repeat.4: Boolean = phi(repeat.1, repeat.6)
+  # repeat.4: bool = phi(repeat.1, repeat.6)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] 
   .loc 3 673 16
-  # $5.1: Boolean = call(has_next_378, blocks.1)
+  # $5.1: bool = call(has_next_378, blocks.1)
   mov rdi, [rbp-17]
   call has_next_378
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:rax 
@@ -29420,17 +29420,17 @@ remove_trivial_phi_instructions_94:
   mov [rbp-26], rax
   mov [rbp-34], rbx
 .LABEL__remove_trivial_phi_instructions_94__7:
-  # repeat.6: Boolean = phi(repeat.4, repeat.7)
+  # repeat.6: bool = phi(repeat.4, repeat.7)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] 
   # block_instruction.2: @IR_Instruction = phi(block_instruction.1, block_instruction.6)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] 
   .loc 3 676 20
-  # $9.1: Boolean = block_instruction.2 != null
+  # $9.1: bool = block_instruction.2 != null
   cmp QWORD PTR [rbp-34], 0
   setne al
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $9.1:rax 
   .loc 3 676 20
-  # $10.1: Boolean = $9.1
+  # $10.1: bool = $9.1
   mov [rbp-35], al
   # [discarded value]: $9.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:rax 
@@ -29440,7 +29440,7 @@ remove_trivial_phi_instructions_94:
   jz .LABEL__remove_trivial_phi_instructions_94__11
 .LABEL__remove_trivial_phi_instructions_94__10:
   .loc 3 676 49
-  # $10.2: Boolean = call(is_389, block_instruction.2, IR_Phi_Instruction)
+  # $10.2: bool = call(is_389, block_instruction.2, IR_Phi_Instruction)
   mov rdi, [rbp-34]
   mov rsi, IR_Phi_Instruction[rip]
   call is_389
@@ -29449,7 +29449,7 @@ remove_trivial_phi_instructions_94:
   mov [rbp-35], al
 .LABEL__remove_trivial_phi_instructions_94__11:
   .loc 3 676 20
-  # $10.3: Boolean = phi($10.1, $10.2)
+  # $10.3: bool = phi($10.1, $10.2)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] $10.2:[rbp-35] $10.3:[rbp-35] 
   # jump($10.3, .LABEL__remove_trivial_phi_instructions_94__8, .LABEL__remove_trivial_phi_instructions_94__4)
   mov al, [rbp-35]
@@ -29461,18 +29461,18 @@ remove_trivial_phi_instructions_94:
   mov rax, [rbp-34]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:rax $10.2:[rbp-35] $10.3:[rbp-35] 
   .loc 3 678 48
-  # instruction_is_redundant.1: Boolean = call(is_redundant_248, instruction.1)
+  # instruction_is_redundant.1: bool = call(is_redundant_248, instruction.1)
   mov rdi, rax
   mov [rbp-43], rax
   call is_redundant_248
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:rax $10.2:[rbp-35] $10.3:[rbp-35] 
   .loc 3 679 21
-  # $14.1: Boolean = instruction_is_redundant.1 == false
+  # $14.1: bool = instruction_is_redundant.1 == false
   cmp al, 0
   sete bl
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:rax $14.1:rbx $10.2:[rbp-35] $10.3:[rbp-35] 
   .loc 3 679 21
-  # $15.1: Boolean = $14.1
+  # $15.1: bool = $14.1
   mov [rbp-44], bl
   # [discarded value]: $14.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:rax $15.1:rbx $10.2:[rbp-35] $10.3:[rbp-35] 
@@ -29483,7 +29483,7 @@ remove_trivial_phi_instructions_94:
   jz .LABEL__remove_trivial_phi_instructions_94__13
 .LABEL__remove_trivial_phi_instructions_94__12:
   .loc 3 679 58
-  # $15.2: Boolean = call(is_trivial_249, instruction.1)
+  # $15.2: bool = call(is_trivial_249, instruction.1)
   mov rdi, [rbp-43]
   call is_trivial_249
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:rax:[rbp-45] 
@@ -29491,7 +29491,7 @@ remove_trivial_phi_instructions_94:
   mov [rbp-45], al
 .LABEL__remove_trivial_phi_instructions_94__13:
   .loc 3 679 21
-  # $15.3: Boolean = phi($15.1, $15.2)
+  # $15.3: bool = phi($15.1, $15.2)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] 
   # jump($15.3, .LABEL__remove_trivial_phi_instructions_94__14, .LABEL__remove_trivial_phi_instructions_94__15)
   mov al, [rbp-45]
@@ -29516,13 +29516,13 @@ remove_trivial_phi_instructions_94:
   # [discarded value]: $17.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] 
   .loc 3 682 21
-  # instruction_is_redundant.2: Boolean = true
+  # instruction_is_redundant.2: bool = true
   mov al, 1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:rax:[rbp-44] 
   # jump(.LABEL__remove_trivial_phi_instructions_94__15)
   mov [rbp-44], al
 .LABEL__remove_trivial_phi_instructions_94__15:
-  # instruction_is_redundant.3: Boolean = phi(instruction_is_redundant.2, instruction_is_redundant.1)
+  # instruction_is_redundant.3: bool = phi(instruction_is_redundant.2, instruction_is_redundant.1)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] 
   # jump(instruction_is_redundant.3, .LABEL__remove_trivial_phi_instructions_94__16, .LABEL__remove_trivial_phi_instructions_94__17)
   mov al, [rbp-44]
@@ -29564,7 +29564,7 @@ remove_trivial_phi_instructions_94:
   mov [rbp-69], rax
 .LABEL__remove_trivial_phi_instructions_94__18:
   .loc 3 689 28
-  # $25.1: Boolean = call(has_next_378, user_instructions.1)
+  # $25.1: bool = call(has_next_378, user_instructions.1)
   mov rdi, [rbp-69]
   call has_next_378
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] old_value.1:[rbp-53] new_value.1:[rbp-61] user_instructions.1:[rbp-69] $25.1:rax 
@@ -29625,7 +29625,7 @@ remove_trivial_phi_instructions_94:
   # old_value_links_item.2: @List_Item = phi(old_value_links_item.1, old_value_links_item.5)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] old_value.1:[rbp-53] new_value.1:[rbp-61] user_instructions.1:[rbp-69] $25.1:[rbp-70] old_value_links_item.1:[rbp-78] old_value_links_item.2:[rbp-78] 
   .loc 3 695 28
-  # $33.1: Boolean = old_value_links_item.2 != null
+  # $33.1: bool = old_value_links_item.2 != null
   cmp QWORD PTR [rbp-78], 0
   setne al
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] old_value.1:[rbp-53] new_value.1:[rbp-61] user_instructions.1:[rbp-69] $25.1:[rbp-70] old_value_links_item.1:[rbp-78] old_value_links_item.2:[rbp-78] $33.1:rax 
@@ -29640,7 +29640,7 @@ remove_trivial_phi_instructions_94:
   mov rbx, [rax+16]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] old_value.1:[rbp-53] new_value.1:[rbp-61] user_instructions.1:[rbp-69] $25.1:[rbp-70] old_value_links_item.1:[rbp-78] old_value_links_item.2:rax:[rbp-78] $33.1:[rbp-79] old_value_link.1:rbx 
   .loc 3 697 29
-  # $36.1: Boolean = call(is_389, old_value_link.1, IR_Required_By_Value_Link)
+  # $36.1: bool = call(is_389, old_value_link.1, IR_Required_By_Value_Link)
   mov rdi, rbx
   mov rsi, IR_Required_By_Value_Link[rip]
   mov [rbp-87], rbx
@@ -29703,13 +29703,13 @@ remove_trivial_phi_instructions_94:
   call remove_171
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] old_value.1:[rbp-53] new_value.1:[rbp-61] user_instructions.1:[rbp-69] $25.1:[rbp-70] old_value_links_item.1:[rbp-78] old_value_links_item.2:[rbp-78] $33.1:[rbp-79] 
   .loc 3 705 21
-  # repeat.2: Boolean = true
+  # repeat.2: bool = true
   mov al, 1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] old_value.1:[rbp-53] new_value.1:[rbp-61] user_instructions.1:[rbp-69] $25.1:[rbp-70] old_value_links_item.1:[rbp-78] old_value_links_item.2:[rbp-78] $33.1:[rbp-79] repeat.2:rax:[rbp-9] 
   # jump(.LABEL__remove_trivial_phi_instructions_94__17)
   mov [rbp-9], al
 .LABEL__remove_trivial_phi_instructions_94__17:
-  # repeat.7: Boolean = phi(repeat.2, repeat.6)
+  # repeat.7: bool = phi(repeat.2, repeat.6)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] repeat.6:[rbp-9] block_instruction.2:[rbp-34] $10.1:[rbp-35] instruction.1:[rbp-43] instruction_is_redundant.1:[rbp-44] $15.1:[rbp-45] $10.2:[rbp-35] $10.3:[rbp-35] $15.2:[rbp-45] $15.3:[rbp-45] instruction_is_redundant.2:[rbp-44] instruction_is_redundant.3:[rbp-44] old_value.1:[rbp-53] new_value.1:[rbp-61] user_instructions.1:[rbp-69] repeat.7:[rbp-9] $25.1:[rbp-70] old_value_links_item.1:[rbp-78] old_value_links_item.2:[rbp-78] $33.1:[rbp-79] repeat.2:[rbp-9] 
   .loc 3 707 37
   # block_instruction.6: @IR_Instruction = load_struct_member(block_instruction.2, next_instruction)
@@ -29771,7 +29771,7 @@ remove_trivial_phi_instructions_94:
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] 
 .LABEL__remove_trivial_phi_instructions_94__6:
   .loc 3 711 13
-  # $42.1: Boolean = repeat.4 == false
+  # $42.1: bool = repeat.4 == false
   cmp BYTE PTR [rbp-9], 0
   sete al
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.4:[rbp-9] $5.1:[rbp-18] $42.1:rax 
@@ -29820,7 +29820,7 @@ remove_redundant_set_instructions_95:
   mov [rbp-8], rsi
 .LABEL__remove_redundant_set_instructions_95__2:
   .loc 3 719 13
-  # repeat.1: Boolean = false
+  # repeat.1: bool = false
   mov al, 0
   # [live values]: function.1:[rbp-8] repeat.1:rax 
   .loc 3 721 22
@@ -29844,10 +29844,10 @@ remove_redundant_set_instructions_95:
   # jump(.LABEL__remove_redundant_set_instructions_95__4)
   mov [rbp-17], rax
 .LABEL__remove_redundant_set_instructions_95__4:
-  # repeat.5: Boolean = phi(repeat.1, repeat.3, repeat.2, repeat.5)
+  # repeat.5: bool = phi(repeat.1, repeat.3, repeat.2, repeat.5)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] 
   .loc 3 722 16
-  # $4.1: Boolean = call(has_next_378, blocks.1)
+  # $4.1: bool = call(has_next_378, blocks.1)
   mov rdi, [rbp-17]
   call has_next_378
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:rax 
@@ -29872,7 +29872,7 @@ remove_redundant_set_instructions_95:
   # block_instruction.2: @IR_Instruction = phi(block_instruction.1, block_instruction.11)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] 
   .loc 3 726 20
-  # $8.1: Boolean = block_instruction.2 != null
+  # $8.1: bool = block_instruction.2 != null
   cmp QWORD PTR [rbp-34], 0
   setne al
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:rax 
@@ -29882,7 +29882,7 @@ remove_redundant_set_instructions_95:
   jz .LABEL__remove_redundant_set_instructions_95__4
 .LABEL__remove_redundant_set_instructions_95__8:
   .loc 3 727 21
-  # $9.1: Boolean = call(is_389, block_instruction.2, IR_Set_Instruction)
+  # $9.1: bool = call(is_389, block_instruction.2, IR_Set_Instruction)
   mov rdi, [rbp-34]
   mov rsi, IR_Set_Instruction[rip]
   call is_389
@@ -29903,7 +29903,7 @@ remove_redundant_set_instructions_95:
   # [discarded value]: $10.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax 
   .loc 3 729 25
-  # $13.1: Boolean = call(is_389, value.1, IR_Undefined_Value)
+  # $13.1: bool = call(is_389, value.1, IR_Undefined_Value)
   mov rdi, rax
   mov rsi, IR_Undefined_Value[rip]
   mov [rbp-44], rax
@@ -29925,18 +29925,18 @@ remove_redundant_set_instructions_95:
   # [discarded value]: $14.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:rax:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $15.1:r15 
   .loc 3 729 57
-  # $16.1: Int = load_struct_member($15.1, size)
+  # $16.1: isize = load_struct_member($15.1, size)
   mov rbx, [r15+16]
   # [discarded value]: $15.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:rax:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $16.1:rbx 
   .loc 3 729 57
-  # $17.1: Boolean = $16.1 == 0
+  # $17.1: bool = $16.1 == 0
   cmp rbx, 0
   sete r15b
   # [discarded value]: $16.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:rax:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $17.1:r15 
   .loc 3 729 25
-  # $13.2: Boolean = $17.1
+  # $13.2: bool = $17.1
   mov [rbp-46], r15b
   # [discarded value]: $17.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:rax:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:r15:[rbp-45] 
@@ -29944,7 +29944,7 @@ remove_redundant_set_instructions_95:
   mov [rbp-45], r15b
 .LABEL__remove_redundant_set_instructions_95__13:
   .loc 3 729 25
-  # $13.3: Boolean = phi($13.1, $13.2)
+  # $13.3: bool = phi($13.1, $13.2)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] 
   # jump($13.3, .LABEL__remove_redundant_set_instructions_95__14, .LABEL__remove_redundant_set_instructions_95__15)
   mov al, [rbp-45]
@@ -29958,7 +29958,7 @@ remove_redundant_set_instructions_95:
   call remove_171
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] 
   .loc 3 731 25
-  # repeat.2: Boolean = true
+  # repeat.2: bool = true
   mov al, 1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] repeat.2:rax:[rbp-9] 
   # jump(.LABEL__remove_redundant_set_instructions_95__4)
@@ -29974,18 +29974,18 @@ remove_redundant_set_instructions_95:
   mov rbx, [rax+24]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $18.1:rbx 
   .loc 3 734 25
-  # $19.1: Int = load_struct_member($18.1, size)
+  # $19.1: isize = load_struct_member($18.1, size)
   mov r15, [rbx+16]
   # [discarded value]: $18.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $19.1:r15 
   .loc 3 734 25
-  # $20.1: Boolean = $19.1 == 1
+  # $20.1: bool = $19.1 == 1
   cmp r15, 1
   sete bl
   # [discarded value]: $19.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $20.1:rbx 
   .loc 3 734 25
-  # $21.1: Boolean = $20.1
+  # $21.1: bool = $20.1
   mov [rbp-46], bl
   # [discarded value]: $20.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:rbx 
@@ -30010,13 +30010,13 @@ remove_redundant_set_instructions_95:
   # [discarded value]: $23.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $25.1:rbx 
   .loc 3 734 62
-  # $26.1: Boolean = $25.1 == block_instruction.2
+  # $26.1: bool = $25.1 == block_instruction.2
   cmp rbx, QWORD PTR [rbp-34]
   sete r15b
   # [discarded value]: $25.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $26.1:r15 
   .loc 3 734 25
-  # $21.2: Boolean = $26.1
+  # $21.2: bool = $26.1
   mov [rbp-47], r15b
   # [discarded value]: $26.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:r15:[rbp-46] 
@@ -30024,7 +30024,7 @@ remove_redundant_set_instructions_95:
   mov [rbp-46], r15b
 .LABEL__remove_redundant_set_instructions_95__18:
   .loc 3 734 25
-  # $21.3: Boolean = phi($21.1, $21.2)
+  # $21.3: bool = phi($21.1, $21.2)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] 
   # jump($21.3, .LABEL__remove_redundant_set_instructions_95__19, .LABEL__remove_redundant_set_instructions_95__11)
   mov al, [rbp-46]
@@ -30037,12 +30037,12 @@ remove_redundant_set_instructions_95:
   mov rbx, [rax+16]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:rbx 
   .loc 3 736 29
-  # $28.1: Boolean = value_creator_instruction.1 != null
+  # $28.1: bool = value_creator_instruction.1 != null
   cmp rbx, 0
   setne r15b
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:rbx $28.1:r15 
   .loc 3 736 29
-  # $29.1: Boolean = $28.1
+  # $29.1: bool = $28.1
   mov [rbp-47], r15b
   # [discarded value]: $28.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:rax:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:rbx $29.1:r15 
@@ -30058,13 +30058,13 @@ remove_redundant_set_instructions_95:
   mov rbx, [rax+32]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:rax:[rbp-54] $29.1:[rbp-55] $30.1:rbx 
   .loc 3 736 66
-  # $31.1: Boolean = $30.1 == block.1
+  # $31.1: bool = $30.1 == block.1
   cmp rbx, QWORD PTR [rbp-26]
   sete r15b
   # [discarded value]: $30.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:rax:[rbp-54] $29.1:[rbp-55] $31.1:r15 
   .loc 3 736 29
-  # $29.2: Boolean = $31.1
+  # $29.2: bool = $31.1
   mov [rbp-56], r15b
   # [discarded value]: $31.1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:rax:[rbp-54] $29.1:[rbp-55] $29.2:r15:[rbp-55] 
@@ -30072,7 +30072,7 @@ remove_redundant_set_instructions_95:
   mov [rbp-55], r15b
 .LABEL__remove_redundant_set_instructions_95__22:
   .loc 3 736 29
-  # $29.3: Boolean = phi($29.1, $29.2)
+  # $29.3: bool = phi($29.1, $29.2)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:[rbp-54] $29.1:[rbp-55] $29.2:[rbp-55] $29.3:[rbp-55] 
   # jump($29.3, .LABEL__remove_redundant_set_instructions_95__23, .LABEL__remove_redundant_set_instructions_95__11)
   mov al, [rbp-55]
@@ -30106,7 +30106,7 @@ remove_redundant_set_instructions_95:
   # redundant_value_links_item.2: @List_Item = phi(redundant_value_links_item.1, redundant_value_links_item.5)
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:[rbp-54] $29.1:[rbp-55] $29.2:[rbp-55] $29.3:[rbp-55] replacement_value.1:[rbp-71] redundant_value_links_item.1:[rbp-63] redundant_value_links_item.2:[rbp-63] 
   .loc 3 740 36
-  # $36.1: Boolean = redundant_value_links_item.2 != null
+  # $36.1: bool = redundant_value_links_item.2 != null
   cmp QWORD PTR [rbp-63], 0
   setne al
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:[rbp-54] $29.1:[rbp-55] $29.2:[rbp-55] $29.3:[rbp-55] replacement_value.1:[rbp-71] redundant_value_links_item.1:[rbp-63] redundant_value_links_item.2:[rbp-63] $36.1:rax 
@@ -30121,7 +30121,7 @@ remove_redundant_set_instructions_95:
   mov rbx, [rax+16]
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:[rbp-54] $29.1:[rbp-55] $29.2:[rbp-55] $29.3:[rbp-55] replacement_value.1:[rbp-71] redundant_value_links_item.1:[rbp-63] redundant_value_links_item.2:rax:[rbp-63] $36.1:[rbp-72] redundant_value_link.1:rbx 
   .loc 3 742 37
-  # $39.1: Boolean = call(is_389, redundant_value_link.1, IR_Requires_Value_Link)
+  # $39.1: bool = call(is_389, redundant_value_link.1, IR_Requires_Value_Link)
   mov rdi, rbx
   mov rsi, IR_Requires_Value_Link[rip]
   mov [rbp-80], rbx
@@ -30204,7 +30204,7 @@ remove_redundant_set_instructions_95:
   call remove_171
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:[rbp-54] $29.1:[rbp-55] $29.2:[rbp-55] $29.3:[rbp-55] replacement_value.1:[rbp-71] redundant_value_links_item.1:[rbp-63] redundant_value_links_item.2:[rbp-63] $36.1:[rbp-72] 
   .loc 3 752 29
-  # repeat.3: Boolean = true
+  # repeat.3: bool = true
   mov al, 1
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] block.1:[rbp-26] block_instruction.1:[rbp-34] block_instruction.2:[rbp-34] $8.1:[rbp-35] $9.1:[rbp-36] value.1:[rbp-44] $13.1:[rbp-45] $13.2:[rbp-45] $13.3:[rbp-45] $21.1:[rbp-46] $21.2:[rbp-46] $21.3:[rbp-46] value_creator_instruction.1:[rbp-54] $29.1:[rbp-55] $29.2:[rbp-55] $29.3:[rbp-55] replacement_value.1:[rbp-71] redundant_value_links_item.1:[rbp-63] redundant_value_links_item.2:[rbp-63] $36.1:[rbp-72] repeat.3:rax:[rbp-9] 
   # jump(.LABEL__remove_redundant_set_instructions_95__4)
@@ -30271,7 +30271,7 @@ remove_redundant_set_instructions_95:
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] 
 .LABEL__remove_redundant_set_instructions_95__6:
   .loc 3 761 13
-  # $47.1: Boolean = repeat.5 == false
+  # $47.1: bool = repeat.5 == false
   cmp BYTE PTR [rbp-9], 0
   sete al
   # [live values]: function.1:[rbp-8] repeat.1:[rbp-9] blocks.1:[rbp-17] repeat.5:[rbp-9] $4.1:[rbp-18] $47.1:rax 
@@ -30320,7 +30320,7 @@ convert_statement_96:
   mov rax, [rdi+32]
   # [live values]: self.1:rdi statement.1:rsi $1.1:rax 
   .loc 3 768 9
-  # $2.1: Boolean = $1.1 == null
+  # $2.1: bool = $1.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $1.1
@@ -30415,7 +30415,7 @@ convert_assignment_statement_97:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi assignment_statement.1:rsi $1.1:rax 
   .loc 3 775 9
-  # $2.1: Boolean = call(is_389, $1.1, AST_Array_Access_Expression)
+  # $2.1: bool = call(is_389, $1.1, AST_Array_Access_Expression)
   mov [rbp-8], rdi
   mov rdi, rax
   mov [rbp-16], rsi
@@ -30438,9 +30438,9 @@ convert_assignment_statement_97:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-8] assignment_statement.1:rax:[rbp-16] $2.1:[rbp-17] array_access_expression.1:rbx $66.1:r15 
   .loc 3 777 104
-  # $67.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $67.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-25], rbx
   mov [rbp-33], r15
   call get_named_type_66
@@ -30473,7 +30473,7 @@ convert_assignment_statement_97:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] array_item_index_value.1:[rbp-25] array_address.1:rax $71.1:rbx 
   .loc 3 779 13
-  # $72.1: Boolean = call(is_389, $71.1, IR_Unchecked_Array_Type)
+  # $72.1: bool = call(is_389, $71.1, IR_Unchecked_Array_Type)
   mov rdi, rbx
   mov rsi, IR_Unchecked_Array_Type[rip]
   mov [rbp-33], rax
@@ -30570,7 +30570,7 @@ convert_assignment_statement_97:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] assignment_statement.1:rax:[rbp-16] $2.1:[rbp-17] $3.1:rbx 
   .loc 3 786 16
-  # $4.1: Boolean = call(is_389, $3.1, AST_Member_Access_Expression)
+  # $4.1: bool = call(is_389, $3.1, AST_Member_Access_Expression)
   mov rdi, rbx
   mov rsi, AST_Member_Access_Expression[rip]
   call is_389
@@ -30603,7 +30603,7 @@ convert_assignment_statement_97:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] member_access_expression.1:[rbp-26] object_address_value.1:rax $30.1:rbx 
   .loc 3 789 13
-  # $31.1: Boolean = call(is_389, $30.1, IR_Pointer_Type)
+  # $31.1: bool = call(is_389, $30.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-34], rax
@@ -30611,7 +30611,7 @@ convert_assignment_statement_97:
   # [discarded value]: $30.1
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] member_access_expression.1:[rbp-26] object_address_value.1:[rbp-34] $31.1:rax 
   .loc 3 789 13
-  # $32.1: Boolean = $31.1 == false
+  # $32.1: bool = $31.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $31.1
@@ -30652,14 +30652,14 @@ convert_assignment_statement_97:
   # [discarded value]: $36.1
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] member_access_expression.1:[rbp-26] object_address_value.1:rax:[rbp-34] $32.1:[rbp-35] object_type.1:r15 
   .loc 3 793 13
-  # $38.1: Boolean = call(is_389, object_type.1, IR_Struct_Type)
+  # $38.1: bool = call(is_389, object_type.1, IR_Struct_Type)
   mov rdi, r15
   mov rsi, IR_Struct_Type[rip]
   mov [rbp-43], r15
   call is_389
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] member_access_expression.1:[rbp-26] object_address_value.1:[rbp-34] $32.1:[rbp-35] object_type.1:[rbp-43] $38.1:rax 
   .loc 3 793 13
-  # $39.1: Boolean = $38.1 == false
+  # $39.1: bool = $38.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $38.1
@@ -30725,7 +30725,7 @@ convert_assignment_statement_97:
   # [discarded value]: $46.1
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] member_access_expression.1:[rbp-26] object_address_value.1:[rbp-34] $32.1:[rbp-35] object_type.1:[rbp-43] $39.1:[rbp-44] struct_type.1:[rbp-52] struct_type_member.1:rax 
   .loc 3 798 13
-  # $48.1: Boolean = struct_type_member.1 == null
+  # $48.1: bool = struct_type_member.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] member_access_expression.1:[rbp-26] object_address_value.1:[rbp-34] $32.1:[rbp-35] object_type.1:[rbp-43] $39.1:[rbp-44] struct_type.1:[rbp-52] struct_type_member.1:rax $48.1:rbx 
@@ -30869,7 +30869,7 @@ convert_assignment_statement_97:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] assignment_statement.1:rax:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] $5.1:rbx 
   .loc 3 804 16
-  # $6.1: Boolean = call(is_389, $5.1, AST_Variable_Expression)
+  # $6.1: bool = call(is_389, $5.1, AST_Variable_Expression)
   mov rdi, rbx
   mov rsi, AST_Variable_Expression[rip]
   call is_389
@@ -30903,7 +30903,7 @@ convert_assignment_statement_97:
   call get_variable_69
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] $6.1:[rbp-19] variable_expression.1:[rbp-27] variable_name.1:[rbp-35] variable.1:rax 
   .loc 3 808 13
-  # $15.1: Boolean = variable.1 == null
+  # $15.1: bool = variable.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] assignment_statement.1:[rbp-16] $2.1:[rbp-17] $4.1:[rbp-18] $6.1:[rbp-19] variable_expression.1:[rbp-27] variable_name.1:[rbp-35] variable.1:rax $15.1:rbx 
@@ -31117,7 +31117,7 @@ convert_block_statement_98:
   mov [rbp-32], rax
 .LABEL__convert_block_statement_98__2:
   .loc 3 821 12
-  # $8.1: Boolean = call(has_next_378, block_statements.1)
+  # $8.1: bool = call(has_next_378, block_statements.1)
   mov rdi, [rbp-32]
   call has_next_378
   # [live values]: self.1:[rbp-24] block_statements.1:[rbp-32] $8.1:rax 
@@ -31190,7 +31190,7 @@ convert_break_statement_99:
   mov rax, [rdi+40]
   # [live values]: self.1:rdi statement.1:rsi $1.1:rax 
   .loc 3 829 9
-  # $2.1: Boolean = $1.1 == null
+  # $2.1: bool = $1.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $1.1
@@ -31330,9 +31330,9 @@ convert_if_statement_101:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi statement.1:rsi $1.1:rax 
   .loc 3 841 83
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -31386,7 +31386,7 @@ convert_if_statement_101:
   mov r15, [rbx+40]
   # [live values]: self.1:[rbp-24] statement.1:rbx:[rbp-8] condition_value.1:[rbp-32] true_block.1:[rbp-40] end_block.1:rax $10.1:r15 
   .loc 3 844 9
-  # $11.1: Boolean = $10.1 != null
+  # $11.1: bool = $10.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $10.1
@@ -31459,13 +31459,13 @@ convert_if_statement_101:
   # [discarded value]: $20.1
   # [live values]: self.1:rax:[rbp-24] statement.1:[rbp-8] condition_value.1:[rbp-32] true_block.1:[rbp-40] end_block.1:[rbp-48] $11.1:[rbp-49] $21.1:r15 
   .loc 3 849 13
-  # $22.1: Boolean = call(is_exit_instruction_177, $21.1)
+  # $22.1: bool = call(is_exit_instruction_177, $21.1)
   mov rdi, r15
   call is_exit_instruction_177
   # [discarded value]: $21.1
   # [live values]: self.1:[rbp-24] statement.1:[rbp-8] condition_value.1:[rbp-32] true_block.1:[rbp-40] end_block.1:[rbp-48] $11.1:[rbp-49] $22.1:rax 
   .loc 3 849 13
-  # $23.1: Boolean = $22.1 == false
+  # $23.1: bool = $22.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $22.1
@@ -31519,13 +31519,13 @@ convert_if_statement_101:
   # [discarded value]: $27.1
   # [live values]: self.1:rax:[rbp-24] statement.1:[rbp-8] condition_value.1:[rbp-32] true_block.1:[rbp-40] end_block.1:[rbp-48] $11.1:[rbp-49] $23.1:[rbp-50] $28.1:r15 
   .loc 3 857 9
-  # $29.1: Boolean = call(is_exit_instruction_177, $28.1)
+  # $29.1: bool = call(is_exit_instruction_177, $28.1)
   mov rdi, r15
   call is_exit_instruction_177
   # [discarded value]: $28.1
   # [live values]: self.1:[rbp-24] statement.1:[rbp-8] condition_value.1:[rbp-32] true_block.1:[rbp-40] end_block.1:[rbp-48] $11.1:[rbp-49] $23.1:[rbp-50] $29.1:rax 
   .loc 3 857 9
-  # $30.1: Boolean = $29.1 == false
+  # $30.1: bool = $29.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $29.1
@@ -31764,7 +31764,7 @@ convert_return_statement_103:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi statement.1:rsi $1.1:rax 
   .loc 3 876 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -31902,7 +31902,7 @@ convert_variable_statement_104:
   # [live values]: self.1:rdi 
   # variable_statement.1: @AST_Variable_Statement = load_variable(variable_statement)
   # [live values]: self.1:rdi variable_statement.1:rsi 
-  # is_global.1: Boolean = load_variable(is_global)
+  # is_global.1: bool = load_variable(is_global)
   # [live values]: self.1:rdi variable_statement.1:rsi is_global.1:rdx 
   .loc 3 886 25
   # $1.1: @Identifier_Token = load_struct_member(variable_statement.1, name)
@@ -31922,7 +31922,7 @@ convert_variable_statement_104:
   mov r15, [rsi+32]
   # [live values]: self.1:rdi variable_statement.1:rsi is_global.1:rdx variable_name.1:rbx variable_type.1:rax $3.1:r15 
   .loc 3 888 9
-  # $4.1: Boolean = $3.1 != null
+  # $4.1: bool = $3.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $3.1
@@ -31964,7 +31964,7 @@ convert_variable_statement_104:
   mov r15, [rbx+40]
   # [live values]: self.1:[rbp-33] variable_statement.1:rbx:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:rax $7.1:r15 
   .loc 3 892 9
-  # $8.1: Boolean = $7.1 != null
+  # $8.1: bool = $7.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $7.1
@@ -31994,12 +31994,12 @@ convert_variable_statement_104:
   # variable_value.14: @IR_Value = phi(variable_value.1, variable_value.2)
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] 
   .loc 3 895 9
-  # $11.1: Boolean = load_struct_member(variable_statement.1, is_external)
+  # $11.1: bool = load_struct_member(variable_statement.1, is_external)
   mov rax, [rbp-25]
   mov bl, [rax+48]
   # [live values]: self.1:[rbp-33] variable_statement.1:rax:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $11.1:rbx 
   .loc 3 895 9
-  # $12.1: Boolean = $11.1 == false
+  # $12.1: bool = $11.1 == false
   cmp bl, 0
   sete r15b
   # [discarded value]: $11.1
@@ -32010,7 +32010,7 @@ convert_variable_statement_104:
   jz .LABEL__convert_variable_statement_104__7
 .LABEL__convert_variable_statement_104__6:
   .loc 3 896 13
-  # $13.1: Boolean = variable_type.16 != null
+  # $13.1: bool = variable_type.16 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:rax 
@@ -32020,7 +32020,7 @@ convert_variable_statement_104:
   jz .LABEL__convert_variable_statement_104__10
 .LABEL__convert_variable_statement_104__8:
   .loc 3 897 17
-  # $21.1: Boolean = variable_value.14 != null
+  # $21.1: bool = variable_value.14 != null
   cmp QWORD PTR [rbp-42], 0
   setne al
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $21.1:rax 
@@ -32035,14 +32035,14 @@ convert_variable_statement_104:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:rax:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $21.1:[rbp-46] $22.1:rbx 
   .loc 3 898 21
-  # $23.1: Boolean = call(accepts_75, variable_type.16, $22.1)
+  # $23.1: bool = call(accepts_75, variable_type.16, $22.1)
   mov rdi, [rbp-8]
   mov rsi, rbx
   call accepts_75
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $21.1:[rbp-46] $23.1:rax 
   .loc 3 898 21
-  # $24.1: Boolean = $23.1 == false
+  # $24.1: bool = $23.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $23.1
@@ -32128,7 +32128,7 @@ convert_variable_statement_104:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:rax:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $21.1:[rbp-46] $24.1:[rbp-47] $35.1:rbx 
   .loc 3 901 21
-  # $36.1: Boolean = variable_type.16 == $35.1
+  # $36.1: bool = variable_type.16 == $35.1
   cmp QWORD PTR [rbp-8], rbx
   sete r15b
   # [discarded value]: $35.1
@@ -32174,7 +32174,7 @@ convert_variable_statement_104:
   # variable_type.18: @IR_Type = phi(variable_type.5, variable_type.16)
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $21.1:[rbp-46] variable_type.18:[rbp-8] $24.1:[rbp-47] $36.1:[rbp-48] 
   .loc 3 914 13
-  # $42.1: Boolean = variable_value.14 == null
+  # $42.1: bool = variable_value.14 == null
   cmp QWORD PTR [rbp-42], 0
   sete al
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:rax $24.1:[rbp-47] $36.1:[rbp-48] 
@@ -32239,7 +32239,7 @@ convert_variable_statement_104:
   # variable_type.10: @IR_Type = phi(variable_type.18, variable_type.16)
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:[rbp-42] variable_type.10:[rbp-8] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] 
   .loc 3 918 9
-  # $47.1: Boolean = call(is_389, variable_type.10, IR_Any_Type)
+  # $47.1: bool = call(is_389, variable_type.10, IR_Any_Type)
   mov rdi, [rbp-8]
   mov rsi, IR_Any_Type[rip]
   call is_389
@@ -32250,7 +32250,7 @@ convert_variable_statement_104:
   jz .LABEL__convert_variable_statement_104__25
 .LABEL__convert_variable_statement_104__26:
   .loc 3 918 9
-  # $49.1: Boolean = phi($47.1, $47.2)
+  # $49.1: bool = phi($47.1, $47.2)
   mov al, [rbp-50]
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:[rbp-42] variable_type.10:[rbp-8] $47.1:[rbp-50] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] $49.1:rax 
   # jump($49.1, .LABEL__convert_variable_statement_104__24, .LABEL__convert_variable_statement_104__23)
@@ -32259,7 +32259,7 @@ convert_variable_statement_104:
   jz .LABEL__convert_variable_statement_104__23
 .LABEL__convert_variable_statement_104__24:
   .loc 3 918 9
-  # $49.3: Boolean = phi($49.1, $49.2)
+  # $49.3: bool = phi($49.1, $49.2)
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:[rbp-42] variable_type.10:[rbp-8] $47.1:[rbp-50] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] $49.3:[rbp-51] $49.1:[rbp-51] 
   # jump($49.3, .LABEL__convert_variable_statement_104__27, .LABEL__convert_variable_statement_104__28)
   mov al, [rbp-51]
@@ -32310,7 +32310,7 @@ convert_variable_statement_104:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-33] variable_statement.1:rax:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:[rbp-42] variable_type.10:[rbp-8] $47.1:[rbp-50] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] $49.3:[rbp-51] $49.1:[rbp-51] $63.1:rbx 
   .loc 3 927 27
-  # $64.1: Boolean = load_struct_member(variable_statement.1, is_external)
+  # $64.1: bool = load_struct_member(variable_statement.1, is_external)
   mov r15b, [rax+48]
   # [live values]: self.1:[rbp-33] variable_statement.1:rax:[rbp-25] is_global.1:[rbp-9] variable_name.1:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:[rbp-42] variable_type.10:[rbp-8] $47.1:[rbp-50] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] $49.3:[rbp-51] $49.1:[rbp-51] $63.1:rbx $64.1:r15 
   .loc 5 463 20
@@ -32362,7 +32362,7 @@ convert_variable_statement_104:
   mov r13, [rbx+32]
   # [live values]: self.1:rbx:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_name.1:r15:[rbp-17] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:r12:[rbp-42] variable_type.10:r14:[rbp-8] $47.1:[rbp-50] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] $49.3:[rbp-51] $49.1:[rbp-51] variable.1:rax $67.1:r13 
   .loc 3 929 13
-  # $68.1: Boolean = $67.1 != null
+  # $68.1: bool = $67.1 != null
   cmp r13, 0
   setne r11b
   # [discarded value]: $67.1
@@ -32490,7 +32490,7 @@ convert_variable_statement_104:
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:[rbp-42] variable_type.10:[rbp-8] $47.1:[rbp-50] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] $49.1:[rbp-51] 
 .LABEL__convert_variable_statement_104__23:
   .loc 3 918 79
-  # $49.2: Boolean = call(is_389, variable_type.10, IR_Undefined_Type)
+  # $49.2: bool = call(is_389, variable_type.10, IR_Undefined_Type)
   mov rdi, [rbp-8]
   mov rsi, IR_Undefined_Type[rip]
   call is_389
@@ -32506,7 +32506,7 @@ convert_variable_statement_104:
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] variable_value.17:[rbp-42] variable_type.10:[rbp-8] $47.1:[rbp-50] $21.1:[rbp-46] variable_type.18:[rbp-8] $42.1:[rbp-49] $24.1:[rbp-47] $36.1:[rbp-48] variable_value.11:[rbp-42] 
 .LABEL__convert_variable_statement_104__25:
   .loc 3 918 42
-  # $47.2: Boolean = call(is_389, variable_type.10, IR_Nothing_Type)
+  # $47.2: bool = call(is_389, variable_type.10, IR_Nothing_Type)
   mov rdi, [rbp-8]
   mov rsi, IR_Nothing_Type[rip]
   call is_389
@@ -32538,7 +32538,7 @@ convert_variable_statement_104:
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] 
 .LABEL__convert_variable_statement_104__10:
   .loc 3 906 17
-  # $14.1: Boolean = variable_value.14 == null
+  # $14.1: bool = variable_value.14 == null
   cmp QWORD PTR [rbp-42], 0
   sete al
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $14.1:rax 
@@ -32566,7 +32566,7 @@ convert_variable_statement_104:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-33] variable_statement.1:[rbp-25] is_global.1:[rbp-9] variable_type.1:[rbp-8] $4.1:[rbp-34] variable_type.2:[rbp-8] variable_type.16:[rbp-8] variable_value.1:[rbp-42] $8.1:[rbp-43] variable_value.2:[rbp-42] variable_value.14:rax:[rbp-42] $12.1:[rbp-44] $13.1:[rbp-45] $14.1:[rbp-46] $16.1:rbx 
   .loc 3 909 17
-  # $17.1: Boolean = call(is_389, $16.1, IR_Null_Type)
+  # $17.1: bool = call(is_389, $16.1, IR_Null_Type)
   mov rdi, rbx
   mov rsi, IR_Null_Type[rip]
   call is_389
@@ -32730,9 +32730,9 @@ convert_while_statement_105:
   mov r14, [r15+24]
   # [live values]: self.1:rax:[rbp-8] statement.1:r15:[rbp-16] condition_block.1:rbx:[rbp-24] loop_block.1:[rbp-32] end_block.1:[rbp-40] $12.1:r14 
   .loc 3 946 83
-  # $13.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $13.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, rax
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-48], r14
   call get_named_type_66
   # [live values]: self.1:[rbp-8] statement.1:[rbp-16] condition_block.1:[rbp-24] loop_block.1:[rbp-32] end_block.1:[rbp-40] $12.1:[rbp-48] $13.1:rax 
@@ -32880,12 +32880,12 @@ convert_expression_106:
   # [discarded value]: self.1
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:rax 
   .loc 3 958 9
-  # $3.1: Boolean = expected_type.1 != null
+  # $3.1: bool = expected_type.1 != null
   cmp QWORD PTR [rbp-24], 0
   setne bl
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:rax $3.1:rbx 
   .loc 3 958 9
-  # $4.1: Boolean = $3.1
+  # $4.1: bool = $3.1
   mov [rbp-25], bl
   # [discarded value]: $3.1
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:rax $4.1:rbx 
@@ -32901,20 +32901,20 @@ convert_expression_106:
   mov rbx, [rax+8]
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:rax:[rbp-32] $4.1:[rbp-33] $5.1:rbx 
   .loc 3 958 34
-  # $6.1: Boolean = call(accepts_75, expected_type.1, $5.1)
+  # $6.1: bool = call(accepts_75, expected_type.1, $5.1)
   mov rdi, [rbp-24]
   mov rsi, rbx
   call accepts_75
   # [discarded value]: $5.1
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:[rbp-32] $4.1:[rbp-33] $6.1:rax 
   .loc 3 958 34
-  # $7.1: Boolean = $6.1 == false
+  # $7.1: bool = $6.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $6.1
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:[rbp-32] $4.1:[rbp-33] $7.1:rbx 
   .loc 3 958 9
-  # $4.2: Boolean = $7.1
+  # $4.2: bool = $7.1
   mov [rbp-34], bl
   # [discarded value]: $7.1
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:[rbp-32] $4.1:[rbp-33] $4.2:rbx:[rbp-33] 
@@ -32922,7 +32922,7 @@ convert_expression_106:
   mov [rbp-33], bl
 .LABEL__convert_expression_106__3:
   .loc 3 958 9
-  # $4.3: Boolean = phi($4.1, $4.2)
+  # $4.3: bool = phi($4.1, $4.2)
   # [live values]: expression.1:[rbp-16] expected_type.1:[rbp-24] value.1:[rbp-32] $4.1:[rbp-33] $4.2:[rbp-33] $4.3:[rbp-33] 
   # jump($4.3, .LABEL__convert_expression_106__4, .LABEL__convert_expression_106__5)
   mov al, [rbp-33]
@@ -33023,7 +33023,7 @@ convert_expression_address_107:
   # expression.1: @AST_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   .loc 3 965 9
-  # $1.1: Boolean = call(is_389, expression.1, AST_Member_Access_Expression)
+  # $1.1: bool = call(is_389, expression.1, AST_Member_Access_Expression)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -33054,7 +33054,7 @@ convert_expression_address_107:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__convert_expression_address_107__3:
   .loc 3 968 9
-  # $4.1: Boolean = call(is_389, expression.1, AST_Variable_Expression)
+  # $4.1: bool = call(is_389, expression.1, AST_Variable_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Variable_Expression[rip]
   call is_389
@@ -33130,9 +33130,9 @@ convert_add_expression_108:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 975 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -33152,9 +33152,9 @@ convert_add_expression_108:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 976 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -33169,7 +33169,7 @@ convert_add_expression_108:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 977 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -33181,7 +33181,7 @@ convert_add_expression_108:
   jz .LABEL__convert_add_expression_108__3
 .LABEL__convert_add_expression_108__2:
   .loc 3 977 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -33190,7 +33190,7 @@ convert_add_expression_108:
   mov [rbp-41], al
 .LABEL__convert_add_expression_108__3:
   .loc 3 977 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_add_expression_108__4, .LABEL__convert_add_expression_108__5)
   mov al, [rbp-41]
@@ -33325,9 +33325,9 @@ convert_array_access_expression_109:
   mov rax, [rsi+32]
   # [live values]: self.1:rdi array_access_expression.1:rsi $1.1:rax 
   .loc 3 984 89
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -33360,7 +33360,7 @@ convert_array_access_expression_109:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] array_access_expression.1:[rbp-8] index_value.1:[rbp-32] object_value.1:rax object_value_type.1:rbx 
   .loc 3 987 10
-  # $7.1: Boolean = call(is_389, object_value_type.1, IR_Unchecked_Array_Type)
+  # $7.1: bool = call(is_389, object_value_type.1, IR_Unchecked_Array_Type)
   mov rdi, rbx
   mov rsi, IR_Unchecked_Array_Type[rip]
   mov [rbp-40], rax
@@ -33488,7 +33488,7 @@ convert_call_expression_110:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi call_expression.1:rsi $1.1:rax 
   .loc 3 995 9
-  # $2.1: Boolean = call(is_389, $1.1, AST_Atomic_Expression)
+  # $2.1: bool = call(is_389, $1.1, AST_Atomic_Expression)
   mov [rbp-8], rdi
   mov rdi, rax
   mov [rbp-16], rsi
@@ -33519,7 +33519,7 @@ convert_call_expression_110:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] callee_value.1:rax $5.1:rbx 
   .loc 3 997 13
-  # $6.1: Boolean = call(is_389, $5.1, IR_Function_Type)
+  # $6.1: bool = call(is_389, $5.1, IR_Function_Type)
   mov rdi, rbx
   mov rsi, IR_Function_Type[rip]
   mov [rbp-25], rax
@@ -33527,7 +33527,7 @@ convert_call_expression_110:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] callee_value.1:[rbp-25] $6.1:rax 
   .loc 3 997 13
-  # $7.1: Boolean = $6.1 == false
+  # $7.1: bool = $6.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $6.1
@@ -33607,7 +33607,7 @@ convert_call_expression_110:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] call_expression.1:rax:[rbp-16] $2.1:[rbp-17] $15.1:rbx 
   .loc 3 1002 9
-  # $16.1: Boolean = call(is_389, $15.1, AST_Member_Access_Expression)
+  # $16.1: bool = call(is_389, $15.1, AST_Member_Access_Expression)
   mov rdi, rbx
   mov rsi, AST_Member_Access_Expression[rip]
   call is_389
@@ -33641,7 +33641,7 @@ convert_call_expression_110:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] callee_expression.1:[rbp-26] callee_value.1:rax callee_value_type.1:rbx 
   .loc 3 1006 13
-  # $22.1: Boolean = call(is_389, callee_value_type.1, IR_Pointer_Type)
+  # $22.1: bool = call(is_389, callee_value_type.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-34], rax
@@ -33662,7 +33662,7 @@ convert_call_expression_110:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] callee_expression.1:[rbp-26] callee_value.1:[rbp-34] callee_value_type.1:[rbp-42] $22.1:[rbp-43] callee_value_type.1:rax $24.1:rbx 
   .loc 3 1008 17
-  # $25.1: Boolean = call(is_389, $24.1, IR_Struct_Type)
+  # $25.1: bool = call(is_389, $24.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   mov [rbp-51], rax
@@ -33698,12 +33698,12 @@ convert_call_expression_110:
   # [discarded value]: $27.1
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] callee_expression.1:[rbp-26] callee_value.1:[rbp-34] callee_value_type.1:[rbp-42] $22.1:[rbp-43] callee_value_type.1:[rbp-51] $25.1:[rbp-52] struct_type_member.1:rax 
   .loc 3 1010 21
-  # $31.1: Boolean = struct_type_member.1 != null
+  # $31.1: bool = struct_type_member.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] callee_expression.1:[rbp-26] callee_value.1:[rbp-34] callee_value_type.1:[rbp-42] $22.1:[rbp-43] callee_value_type.1:[rbp-51] $25.1:[rbp-52] struct_type_member.1:rax $31.1:rbx 
   .loc 3 1010 21
-  # $32.1: Boolean = $31.1
+  # $32.1: bool = $31.1
   mov [rbp-53], bl
   # [discarded value]: $31.1
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] callee_expression.1:[rbp-26] callee_value.1:[rbp-34] callee_value_type.1:[rbp-42] $22.1:[rbp-43] callee_value_type.1:[rbp-51] $25.1:[rbp-52] struct_type_member.1:rax $32.1:rbx 
@@ -33719,7 +33719,7 @@ convert_call_expression_110:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] callee_expression.1:[rbp-26] callee_value.1:[rbp-34] callee_value_type.1:[rbp-42] $22.1:[rbp-43] callee_value_type.1:[rbp-51] $25.1:[rbp-52] struct_type_member.1:rax:[rbp-60] $32.1:[rbp-61] $33.1:rbx 
   .loc 3 1010 51
-  # $32.2: Boolean = call(is_389, $33.1, IR_Function_Type)
+  # $32.2: bool = call(is_389, $33.1, IR_Function_Type)
   mov rdi, rbx
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -33729,7 +33729,7 @@ convert_call_expression_110:
   mov [rbp-61], al
 .LABEL__convert_call_expression_110__14:
   .loc 3 1010 21
-  # $32.3: Boolean = phi($32.1, $32.2)
+  # $32.3: bool = phi($32.1, $32.2)
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] callee_expression.1:[rbp-26] callee_value.1:[rbp-34] callee_value_type.1:[rbp-42] $22.1:[rbp-43] callee_value_type.1:[rbp-51] $25.1:[rbp-52] struct_type_member.1:[rbp-60] $32.1:[rbp-61] $32.2:[rbp-61] $32.3:[rbp-61] 
   # jump($32.3, .LABEL__convert_call_expression_110__15, .LABEL__convert_call_expression_110__10)
   mov al, [rbp-61]
@@ -33833,7 +33833,7 @@ convert_call_expression_110:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] call_expression.1:rax:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] $43.1:rbx 
   .loc 3 1018 9
-  # $44.1: Boolean = call(is_389, $43.1, AST_Variable_Expression)
+  # $44.1: bool = call(is_389, $43.1, AST_Variable_Expression)
   mov rdi, rbx
   mov rsi, AST_Variable_Expression[rip]
   call is_389
@@ -33867,12 +33867,12 @@ convert_call_expression_110:
   # [discarded value]: $48.1
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] $44.1:[rbp-19] callee_expression.1:[rbp-27] variable.1:rax 
   .loc 3 1021 13
-  # $50.1: Boolean = variable.1 != null
+  # $50.1: bool = variable.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] $44.1:[rbp-19] callee_expression.1:[rbp-27] variable.1:rax $50.1:rbx 
   .loc 3 1021 13
-  # $51.1: Boolean = $50.1
+  # $51.1: bool = $50.1
   mov [rbp-28], bl
   # [discarded value]: $50.1
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] $44.1:[rbp-19] callee_expression.1:[rbp-27] variable.1:rax $51.1:rbx 
@@ -33888,7 +33888,7 @@ convert_call_expression_110:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] $44.1:[rbp-19] callee_expression.1:[rbp-27] variable.1:rax:[rbp-35] $51.1:[rbp-36] $52.1:rbx 
   .loc 3 1021 33
-  # $51.2: Boolean = call(is_389, $52.1, IR_Function_Type)
+  # $51.2: bool = call(is_389, $52.1, IR_Function_Type)
   mov rdi, rbx
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -33898,7 +33898,7 @@ convert_call_expression_110:
   mov [rbp-36], al
 .LABEL__convert_call_expression_110__22:
   .loc 3 1021 13
-  # $51.3: Boolean = phi($51.1, $51.2)
+  # $51.3: bool = phi($51.1, $51.2)
   # [live values]: self.1:[rbp-8] call_expression.1:[rbp-16] $2.1:[rbp-17] $16.1:[rbp-18] $44.1:[rbp-19] callee_expression.1:[rbp-27] variable.1:[rbp-35] $51.1:[rbp-36] $51.2:[rbp-36] $51.3:[rbp-36] 
   # jump($51.3, .LABEL__convert_call_expression_110__23, .LABEL__convert_call_expression_110__24)
   mov al, [rbp-36]
@@ -34028,12 +34028,12 @@ convert_direct_call_expression_111:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:rax 
   .loc 3 1032 9
-  # $3.1: Boolean = type.1 != null
+  # $3.1: bool = type.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:rax $3.1:rbx 
   .loc 3 1032 9
-  # $4.1: Boolean = $3.1
+  # $4.1: bool = $3.1
   mov [rbp-33], bl
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:rax $4.1:rbx 
@@ -34044,7 +34044,7 @@ convert_direct_call_expression_111:
   jz .LABEL__convert_direct_call_expression_111__3
 .LABEL__convert_direct_call_expression_111__2:
   .loc 3 1032 25
-  # $4.2: Boolean = call(is_389, type.1, IR_Struct_Type)
+  # $4.2: bool = call(is_389, type.1, IR_Struct_Type)
   mov rdi, [rbp-40]
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -34053,7 +34053,7 @@ convert_direct_call_expression_111:
   mov [rbp-41], al
 .LABEL__convert_direct_call_expression_111__3:
   .loc 3 1032 9
-  # $4.3: Boolean = phi($4.1, $4.2)
+  # $4.3: bool = phi($4.1, $4.2)
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] 
   # jump($4.3, .LABEL__convert_direct_call_expression_111__4, .LABEL__convert_direct_call_expression_111__5)
   mov al, [rbp-41]
@@ -34061,7 +34061,7 @@ convert_direct_call_expression_111:
   jz .LABEL__convert_direct_call_expression_111__5
 .LABEL__convert_direct_call_expression_111__4:
   .loc 3 1033 13
-  # $6.1: Boolean = first_argument.1 != null
+  # $6.1: bool = first_argument.1 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] $6.1:rax 
@@ -34117,7 +34117,7 @@ convert_direct_call_expression_111:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:rax 
   .loc 3 1040 9
-  # $12.1: Boolean = first_argument.1 != null
+  # $12.1: bool = first_argument.1 != null
   cmp QWORD PTR [rbp-16], 0
   setne bl
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:rax $12.1:rbx 
@@ -34169,7 +34169,7 @@ convert_direct_call_expression_111:
   # named_functions_item.2: @List_Item = phi(named_functions_item.1, named_functions_item.5)
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] 
   .loc 3 1046 12
-  # $16.1: Boolean = named_functions_item.2 != null
+  # $16.1: bool = named_functions_item.2 != null
   cmp QWORD PTR [rbp-66], 0
   setne al
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:rax 
@@ -34193,7 +34193,7 @@ convert_direct_call_expression_111:
   mov r13, [r14+8]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:r14:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:rax:[rbp-66] $16.1:[rbp-67] named_function.1:rbx $19.1:r15 $20.1:r13 
   .loc 3 1048 13
-  # $21.1: Boolean = call(equals_392, $19.1, $20.1)
+  # $21.1: bool = call(equals_392, $19.1, $20.1)
   mov rdi, r15
   mov rsi, r13
   mov [rbp-75], rbx
@@ -34212,7 +34212,7 @@ convert_direct_call_expression_111:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] named_function.1:rax:[rbp-75] $21.1:[rbp-76] $22.1:rbx 
   .loc 3 1049 17
-  # $23.1: Boolean = call(accepts_113, $22.1, call_arguments.1)
+  # $23.1: bool = call(accepts_113, $22.1, call_arguments.1)
   mov rdi, rbx
   mov rsi, [rbp-49]
   call accepts_113
@@ -34224,7 +34224,7 @@ convert_direct_call_expression_111:
   jz .LABEL__convert_direct_call_expression_111__15
 .LABEL__convert_direct_call_expression_111__16:
   .loc 3 1050 21
-  # $24.1: Boolean = call_function.8 != null
+  # $24.1: bool = call_function.8 != null
   cmp QWORD PTR [rbp-58], 0
   setne al
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] named_function.1:[rbp-75] $21.1:[rbp-76] $23.1:[rbp-77] $24.1:rax 
@@ -34280,7 +34280,7 @@ convert_direct_call_expression_111:
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] 
 .LABEL__convert_direct_call_expression_111__13:
   .loc 3 1058 9
-  # $27.1: Boolean = call_function.8 == null
+  # $27.1: bool = call_function.8 == null
   cmp QWORD PTR [rbp-58], 0
   sete al
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:rax 
@@ -34305,7 +34305,7 @@ convert_direct_call_expression_111:
   # named_functions_item.2: @List_Item = phi(named_functions_item.1, named_functions_item.5)
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:[rbp-76] 
   .loc 3 1060 16
-  # $30.1: Boolean = named_functions_item.2 != null
+  # $30.1: bool = named_functions_item.2 != null
   cmp QWORD PTR [rbp-76], 0
   setne al
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:[rbp-76] $30.1:rax 
@@ -34329,7 +34329,7 @@ convert_direct_call_expression_111:
   mov r13, [r14+8]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:r14:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:rax:[rbp-76] $30.1:[rbp-77] named_function.1:rbx $33.1:r15 $34.1:r13 
   .loc 3 1062 17
-  # $35.1: Boolean = call(equals_392, $33.1, $34.1)
+  # $35.1: bool = call(equals_392, $33.1, $34.1)
   mov rdi, r15
   mov rsi, r13
   mov [rbp-85], rbx
@@ -34462,7 +34462,7 @@ convert_direct_call_expression_111:
   mov r15, [rbx]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:rbx:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:[rbp-76] $30.1:[rbp-77] message.1:rax call_arguments_item.1:r15 
   .loc 3 1069 13
-  # $53.1: Boolean = call_arguments_item.1 != null
+  # $53.1: bool = call_arguments_item.1 != null
   cmp r15, 0
   setne r14b
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:rbx:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:[rbp-76] $30.1:[rbp-77] message.1:rax call_arguments_item.1:r15 $53.1:r14 
@@ -34485,7 +34485,7 @@ convert_direct_call_expression_111:
   mov r15, [rbx]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:[rbp-76] $30.1:[rbp-77] message.1:[rbp-85] call_arguments_item.1:[rbp-94] $53.1:[rbp-86] call_arguments_item.2:rax:[rbp-94] call_argument.1:rbx $56.1:r15 
   .loc 3 1072 21
-  # $57.1: Boolean = $56.1 != null
+  # $57.1: bool = $56.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $56.1
@@ -34547,7 +34547,7 @@ convert_direct_call_expression_111:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:[rbp-76] $30.1:[rbp-77] message.1:[rbp-85] call_arguments_item.1:[rbp-94] $53.1:[rbp-86] call_arguments_item.2:[rbp-94] call_argument.1:[rbp-102] $57.1:[rbp-103] call_arguments_item.4:rbx:[rbp-94] 
   .loc 3 1077 21
-  # $66.1: Boolean = call_arguments_item.4 == null
+  # $66.1: bool = call_arguments_item.4 == null
   cmp rbx, 0
   sete al
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] named_functions_item.1:[rbp-76] named_functions_item.2:[rbp-76] $30.1:[rbp-77] message.1:[rbp-85] call_arguments_item.1:[rbp-94] $53.1:[rbp-86] call_arguments_item.2:[rbp-94] call_argument.1:[rbp-102] $57.1:[rbp-103] call_arguments_item.4:rbx:[rbp-94] $66.1:rax 
@@ -34620,7 +34620,7 @@ convert_direct_call_expression_111:
   mov r15, [rbx+40]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:rbx:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] result_value.1:rax $70.1:r15 
   .loc 3 1088 9
-  # $71.1: Boolean = call(is_389, $70.1, IR_Nothing_Type)
+  # $71.1: bool = call(is_389, $70.1, IR_Nothing_Type)
   mov rdi, r15
   mov rsi, IR_Nothing_Type[rip]
   mov [rbp-76], rax
@@ -34628,7 +34628,7 @@ convert_direct_call_expression_111:
   # [discarded value]: $70.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] callee_name.1:[rbp-24] first_argument.1:[rbp-16] type.1:[rbp-40] $4.1:[rbp-41] $4.2:[rbp-41] $4.3:[rbp-41] call_arguments.1:[rbp-49] $12.1:[rbp-50] call_function.1:[rbp-58] named_functions_item.1:[rbp-66] call_function.8:[rbp-58] named_functions_item.2:[rbp-66] $16.1:[rbp-67] $27.1:[rbp-68] result_value.1:[rbp-76] $71.1:rax 
   .loc 3 1088 9
-  # $72.1: Boolean = $71.1 == false
+  # $72.1: bool = $71.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $71.1
@@ -34757,7 +34757,7 @@ convert_dynamic_call_expression_112:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:rax 
   .loc 3 1096 9
-  # $3.1: Boolean = first_argument.1 != null
+  # $3.1: bool = first_argument.1 != null
   cmp QWORD PTR [rbp-16], 0
   setne bl
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] first_argument.1:[rbp-16] call_arguments.1:rax $3.1:rbx 
@@ -34793,14 +34793,14 @@ convert_dynamic_call_expression_112:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:rax:[rbp-24] call_arguments.1:[rbp-40] $3.1:[rbp-41] call_function_type.1:rbx 
   .loc 3 1100 9
-  # $7.1: Boolean = call(accepts_113, call_function_type.1, call_arguments.1)
+  # $7.1: bool = call(accepts_113, call_function_type.1, call_arguments.1)
   mov rdi, rbx
   mov rsi, [rbp-40]
   mov [rbp-49], rbx
   call accepts_113
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] call_arguments.1:[rbp-40] $3.1:[rbp-41] call_function_type.1:[rbp-49] $7.1:rax 
   .loc 3 1100 9
-  # $8.1: Boolean = $7.1 == false
+  # $8.1: bool = $7.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $7.1
@@ -34833,7 +34833,7 @@ convert_dynamic_call_expression_112:
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] call_arguments.1:[rbp-40] $3.1:[rbp-41] call_function_type.1:rbx:[rbp-49] $8.1:[rbp-50] result_value.1:rax $10.1:r15 
   .loc 3 1104 9
-  # $11.1: Boolean = call(is_389, $10.1, IR_Nothing_Type)
+  # $11.1: bool = call(is_389, $10.1, IR_Nothing_Type)
   mov rdi, r15
   mov rsi, IR_Nothing_Type[rip]
   mov [rbp-58], rax
@@ -34841,7 +34841,7 @@ convert_dynamic_call_expression_112:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-32] call_expression.1:[rbp-8] call_function.1:[rbp-24] call_arguments.1:[rbp-40] $3.1:[rbp-41] call_function_type.1:[rbp-49] $8.1:[rbp-50] result_value.1:[rbp-58] $11.1:rax 
   .loc 3 1104 9
-  # $12.1: Boolean = $11.1 == false
+  # $12.1: bool = $11.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $11.1
@@ -34963,12 +34963,12 @@ accepts_113:
   # call_arguments_item.2: @List_Item = phi(call_arguments_item.1, call_arguments_item.5)
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] 
   .loc 3 1113 12
-  # $4.1: Boolean = call_arguments_item.2 != null
+  # $4.1: bool = call_arguments_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $4.1:rax 
   .loc 3 1113 12
-  # $5.1: Boolean = $4.1
+  # $5.1: bool = $4.1
   mov [rbp-17], al
   # [discarded value]: $4.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:rax 
@@ -34978,12 +34978,12 @@ accepts_113:
   jz .LABEL__accepts_113__8
 .LABEL__accepts_113__7:
   .loc 3 1113 43
-  # $6.1: Boolean = function_parameters_item.9 != null
+  # $6.1: bool = function_parameters_item.9 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $6.1:rax 
   .loc 3 1113 12
-  # $5.2: Boolean = $6.1
+  # $5.2: bool = $6.1
   mov [rbp-18], al
   # [discarded value]: $6.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $5.2:rax:[rbp-17] 
@@ -34991,7 +34991,7 @@ accepts_113:
   mov [rbp-17], al
 .LABEL__accepts_113__8:
   .loc 3 1113 12
-  # $7.1: Boolean = phi($5.1, $5.2)
+  # $7.1: bool = phi($5.1, $5.2)
   mov al, [rbp-17]
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $5.2:[rbp-17] $7.1:rax 
   # jump($7.1, .LABEL__accepts_113__5, .LABEL__accepts_113__6)
@@ -35025,7 +35025,7 @@ accepts_113:
   # [discarded value]: $13.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:rax:[rbp-16] call_arguments_item.2:rbx:[rbp-8] $5.1:[rbp-17] $10.1:r15 $14.1:r14 $5.2:[rbp-17] $7.1:[rbp-18] 
   .loc 3 1113 79
-  # $7.2: Boolean = call(accepts_75, $10.1, $14.1)
+  # $7.2: bool = call(accepts_75, $10.1, $14.1)
   mov rdi, r15
   mov rsi, r14
   call accepts_75
@@ -35036,7 +35036,7 @@ accepts_113:
   mov [rbp-18], al
 .LABEL__accepts_113__6:
   .loc 3 1113 12
-  # $7.3: Boolean = phi($7.1, $7.2)
+  # $7.3: bool = phi($7.1, $7.2)
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
   # jump($7.3, .LABEL__accepts_113__3, .LABEL__accepts_113__4)
   mov al, [rbp-18]
@@ -35063,12 +35063,12 @@ accepts_113:
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
 .LABEL__accepts_113__4:
   .loc 3 1117 12
-  # $18.1: Boolean = call_arguments_item.2 == null
+  # $18.1: bool = call_arguments_item.2 == null
   cmp QWORD PTR [rbp-8], 0
   sete al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $18.1:rax $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
   .loc 3 1117 12
-  # $19.1: Boolean = $18.1
+  # $19.1: bool = $18.1
   mov [rbp-19], al
   # [discarded value]: $18.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $19.1:rax $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] 
@@ -35078,12 +35078,12 @@ accepts_113:
   jz .LABEL__accepts_113__10
 .LABEL__accepts_113__9:
   .loc 3 1117 43
-  # $20.1: Boolean = function_parameters_item.9 == null
+  # $20.1: bool = function_parameters_item.9 == null
   cmp QWORD PTR [rbp-16], 0
   sete al
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $19.1:[rbp-19] $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] $20.1:rax 
   .loc 3 1117 12
-  # $19.2: Boolean = $20.1
+  # $19.2: bool = $20.1
   mov [rbp-20], al
   # [discarded value]: $20.1
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $19.1:[rbp-19] $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] $19.2:rax:[rbp-19] 
@@ -35091,7 +35091,7 @@ accepts_113:
   mov [rbp-19], al
 .LABEL__accepts_113__10:
   .loc 3 1117 12
-  # $19.3: Boolean = phi($19.1, $19.2)
+  # $19.3: bool = phi($19.1, $19.2)
   # [live values]: call_arguments_item.1:[rbp-8] function_parameters_item.1:[rbp-16] function_parameters_item.9:[rbp-16] call_arguments_item.2:[rbp-8] $5.1:[rbp-17] $19.1:[rbp-19] $7.2:[rbp-18] $7.3:[rbp-18] $5.2:[rbp-17] $7.1:[rbp-18] $19.2:[rbp-19] $19.3:[rbp-19] 
   .loc 3 1117 5
   # return($19.3)
@@ -35145,7 +35145,7 @@ convert_call_arguments_114:
   # ast_call_arguments.1: @List = load_variable(ast_call_arguments)
   # [live values]: self.1:rdi ast_call_arguments.1:rsi 
   .loc 3 1121 9
-  # has_named_arguments.1: Boolean = false
+  # has_named_arguments.1: bool = false
   mov al, 0
   # [live values]: self.1:rdi ast_call_arguments.1:rsi has_named_arguments.1:rax 
   .loc 3 1122 26
@@ -35172,12 +35172,12 @@ convert_call_arguments_114:
   mov [rbp-25], rax
   mov [rbp-33], r15
 .LABEL__convert_call_arguments_114__2:
-  # has_named_arguments.4: Boolean = phi(has_named_arguments.1, has_named_arguments.5)
+  # has_named_arguments.4: bool = phi(has_named_arguments.1, has_named_arguments.5)
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] 
   # ast_call_arguments_item.2: @List_Item = phi(ast_call_arguments_item.1, ast_call_arguments_item.5)
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] 
   .loc 3 1124 12
-  # $3.1: Boolean = ast_call_arguments_item.2 != null
+  # $3.1: bool = ast_call_arguments_item.2 != null
   cmp QWORD PTR [rbp-33], 0
   setne al
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] $3.1:rax 
@@ -35210,7 +35210,7 @@ convert_call_arguments_114:
   mov r15, [rbx]
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] $3.1:[rbp-34] call_argument.1:rbx:[rbp-42] call_argument_value.1:rax $8.1:r15 
   .loc 3 1127 13
-  # $9.1: Boolean = $8.1 != null
+  # $9.1: bool = $8.1 != null
   cmp r15, 0
   setne r14b
   # [discarded value]: $8.1
@@ -35252,13 +35252,13 @@ convert_call_arguments_114:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] $3.1:[rbp-34] call_argument.1:[rbp-42] call_argument_value.1:[rbp-50] $9.1:[rbp-51] 
   .loc 3 1129 13
-  # has_named_arguments.3: Boolean = true
+  # has_named_arguments.3: bool = true
   mov al, 1
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] $3.1:[rbp-34] call_argument.1:[rbp-42] call_argument_value.1:[rbp-50] $9.1:[rbp-51] has_named_arguments.3:rax:[rbp-1] 
   # jump(.LABEL__convert_call_arguments_114__6)
   mov [rbp-1], al
 .LABEL__convert_call_arguments_114__6:
-  # has_named_arguments.5: Boolean = phi(has_named_arguments.3, has_named_arguments.4)
+  # has_named_arguments.5: bool = phi(has_named_arguments.3, has_named_arguments.4)
   # [live values]: self.1:[rbp-17] has_named_arguments.1:[rbp-1] call_arguments.1:[rbp-25] ast_call_arguments_item.1:[rbp-33] has_named_arguments.4:[rbp-1] ast_call_arguments_item.2:[rbp-33] $3.1:[rbp-34] call_argument.1:[rbp-42] call_argument_value.1:[rbp-50] $9.1:[rbp-51] has_named_arguments.3:[rbp-1] has_named_arguments.5:[rbp-1] 
   .loc 3 1136 35
   # ast_call_arguments_item.5: @List_Item = load_struct_member(ast_call_arguments_item.2, next_item)
@@ -35400,7 +35400,7 @@ convert_cast_expression_115:
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rbx:[rbp-24] result_value.1:rax $6.1:r15 
   .loc 3 1144 9
-  # $8.1: Boolean = call(is_389, $6.1, IR_Pointer_Type)
+  # $8.1: bool = call(is_389, $6.1, IR_Pointer_Type)
   mov rdi, r15
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-32], rax
@@ -35418,7 +35418,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $9.1:rbx 
   .loc 3 1144 44
-  # $11.1: Boolean = call(is_389, $9.1, IR_Pointer_Type)
+  # $11.1: bool = call(is_389, $9.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -35430,14 +35430,14 @@ convert_cast_expression_115:
   jz .LABEL__convert_cast_expression_115__4
 .LABEL__convert_cast_expression_115__5:
   .loc 3 1144 44
-  # $8.2: Boolean = phi($11.1, $11.2)
+  # $8.2: bool = phi($11.1, $11.2)
   mov al, [rbp-34]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.2:rax:[rbp-33] 
   # jump(.LABEL__convert_cast_expression_115__3)
   mov [rbp-33], al
 .LABEL__convert_cast_expression_115__3:
   .loc 3 1144 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] 
   # jump($8.3, .LABEL__convert_cast_expression_115__6, .LABEL__convert_cast_expression_115__7)
   mov al, [rbp-33]
@@ -35477,7 +35477,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $17.1:rbx 
   .loc 3 1147 9
-  # $19.1: Boolean = call(is_389, $17.1, IR_Int_Type)
+  # $19.1: bool = call(is_389, $17.1, IR_Int_Type)
   mov rdi, rbx
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -35494,7 +35494,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $20.1:rbx 
   .loc 3 1147 40
-  # $22.1: Boolean = call(is_389, $20.1, IR_Int32_Type)
+  # $22.1: bool = call(is_389, $20.1, IR_Int32_Type)
   mov rdi, rbx
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -35506,14 +35506,14 @@ convert_cast_expression_115:
   jz .LABEL__convert_cast_expression_115__11
 .LABEL__convert_cast_expression_115__12:
   .loc 3 1147 40
-  # $19.2: Boolean = phi($22.1, $22.2)
+  # $19.2: bool = phi($22.1, $22.2)
   mov al, [rbp-36]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.2:rax:[rbp-35] 
   # jump(.LABEL__convert_cast_expression_115__10)
   mov [rbp-35], al
 .LABEL__convert_cast_expression_115__10:
   .loc 3 1147 9
-  # $19.3: Boolean = phi($19.1, $19.2)
+  # $19.3: bool = phi($19.1, $19.2)
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] 
   # jump($19.3, .LABEL__convert_cast_expression_115__13, .LABEL__convert_cast_expression_115__14)
   mov al, [rbp-35]
@@ -35553,7 +35553,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $28.1:rbx 
   .loc 3 1150 9
-  # $30.1: Boolean = call(is_389, $28.1, IR_Int32_Type)
+  # $30.1: bool = call(is_389, $28.1, IR_Int32_Type)
   mov rdi, rbx
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -35570,7 +35570,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $31.1:rbx 
   .loc 3 1150 42
-  # $33.1: Boolean = call(is_389, $31.1, IR_Int_Type)
+  # $33.1: bool = call(is_389, $31.1, IR_Int_Type)
   mov rdi, rbx
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -35582,14 +35582,14 @@ convert_cast_expression_115:
   jz .LABEL__convert_cast_expression_115__18
 .LABEL__convert_cast_expression_115__19:
   .loc 3 1150 42
-  # $30.2: Boolean = phi($33.1, $33.2)
+  # $30.2: bool = phi($33.1, $33.2)
   mov al, [rbp-38]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $30.2:rax:[rbp-37] 
   # jump(.LABEL__convert_cast_expression_115__17)
   mov [rbp-37], al
 .LABEL__convert_cast_expression_115__17:
   .loc 3 1150 9
-  # $30.3: Boolean = phi($30.1, $30.2)
+  # $30.3: bool = phi($30.1, $30.2)
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $30.3:[rbp-37] $30.2:[rbp-37] 
   # jump($30.3, .LABEL__convert_cast_expression_115__20, .LABEL__convert_cast_expression_115__21)
   mov al, [rbp-37]
@@ -35629,7 +35629,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:rax:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $30.3:[rbp-37] $30.2:[rbp-37] $39.1:rbx 
   .loc 3 1153 9
-  # $41.1: Boolean = call(is_389, $39.1, IR_Int8_Type)
+  # $41.1: bool = call(is_389, $39.1, IR_Int8_Type)
   mov rdi, rbx
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -35646,7 +35646,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $30.3:[rbp-37] $30.2:[rbp-37] $41.1:[rbp-39] $42.1:rbx 
   .loc 3 1153 41
-  # $44.1: Boolean = call(is_389, $42.1, IR_Int_Type)
+  # $44.1: bool = call(is_389, $42.1, IR_Int_Type)
   mov rdi, rbx
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -35658,14 +35658,14 @@ convert_cast_expression_115:
   jz .LABEL__convert_cast_expression_115__25
 .LABEL__convert_cast_expression_115__26:
   .loc 3 1153 41
-  # $41.2: Boolean = phi($44.1, $44.2)
+  # $41.2: bool = phi($44.1, $44.2)
   mov al, [rbp-40]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $30.3:[rbp-37] $30.2:[rbp-37] $41.1:[rbp-39] $44.1:[rbp-40] $41.2:rax:[rbp-39] 
   # jump(.LABEL__convert_cast_expression_115__24)
   mov [rbp-39], al
 .LABEL__convert_cast_expression_115__24:
   .loc 3 1153 9
-  # $41.3: Boolean = phi($41.1, $41.2)
+  # $41.3: bool = phi($41.1, $41.2)
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $30.3:[rbp-37] $30.2:[rbp-37] $41.1:[rbp-39] $44.1:[rbp-40] $41.3:[rbp-39] $41.2:[rbp-39] 
   # jump($41.3, .LABEL__convert_cast_expression_115__27, .LABEL__convert_cast_expression_115__28)
   mov al, [rbp-39]
@@ -35773,7 +35773,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $30.3:[rbp-37] $30.2:[rbp-37] $41.1:[rbp-39] $44.1:[rbp-40] $45.1:rbx 
   .loc 3 1153 78
-  # $44.2: Boolean = call(is_389, $45.1, IR_Int32_Type)
+  # $44.2: bool = call(is_389, $45.1, IR_Int32_Type)
   mov rdi, rbx
   mov rsi, IR_Int32_Type[rip]
   call is_389
@@ -35803,7 +35803,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $19.3:[rbp-35] $19.2:[rbp-35] $30.1:[rbp-37] $33.1:[rbp-38] $34.1:rbx 
   .loc 3 1150 79
-  # $33.2: Boolean = call(is_389, $34.1, IR_Int8_Type)
+  # $33.2: bool = call(is_389, $34.1, IR_Int8_Type)
   mov rdi, rbx
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -35833,7 +35833,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $8.2:[rbp-33] $19.1:[rbp-35] $22.1:[rbp-36] $23.1:rbx 
   .loc 3 1147 79
-  # $22.2: Boolean = call(is_389, $23.1, IR_Int8_Type)
+  # $22.2: bool = call(is_389, $23.1, IR_Int8_Type)
   mov rdi, rbx
   mov rsi, IR_Int8_Type[rip]
   call is_389
@@ -35863,7 +35863,7 @@ convert_cast_expression_115:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] cast_expression.1:[rbp-8] value.1:[rbp-24] result_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $12.1:rbx 
   .loc 3 1144 85
-  # $11.2: Boolean = call(is_389, $12.1, IR_Unchecked_Array_Type)
+  # $11.2: bool = call(is_389, $12.1, IR_Unchecked_Array_Type)
   mov rdi, rbx
   mov rsi, IR_Unchecked_Array_Type[rip]
   call is_389
@@ -35909,9 +35909,9 @@ convert_divide_expression_116:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1160 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -35931,9 +35931,9 @@ convert_divide_expression_116:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1161 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -35948,7 +35948,7 @@ convert_divide_expression_116:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1162 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -35960,7 +35960,7 @@ convert_divide_expression_116:
   jz .LABEL__convert_divide_expression_116__3
 .LABEL__convert_divide_expression_116__2:
   .loc 3 1162 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -35969,7 +35969,7 @@ convert_divide_expression_116:
   mov [rbp-41], al
 .LABEL__convert_divide_expression_116__3:
   .loc 3 1162 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_divide_expression_116__4, .LABEL__convert_divide_expression_116__5)
   mov al, [rbp-41]
@@ -36136,14 +36136,14 @@ convert_equals_expression_117:
   mov r14, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $5.1:r15 $6.1:r14 
   .loc 3 1171 9
-  # $7.1: Boolean = $5.1 != $6.1
+  # $7.1: bool = $5.1 != $6.1
   cmp r15, r14
   setne r13b
   # [discarded value]: $6.1
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $7.1:r13 
   .loc 3 1171 9
-  # $8.1: Boolean = $7.1
+  # $8.1: bool = $7.1
   mov [rbp-25], r13b
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $8.1:r13 
@@ -36159,7 +36159,7 @@ convert_equals_expression_117:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $9.1:rbx 
   .loc 3 1171 49
-  # $11.1: Boolean = call(is_389, $9.1, IR_Pointer_Type)
+  # $11.1: bool = call(is_389, $9.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -36176,20 +36176,20 @@ convert_equals_expression_117:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $12.1:rbx 
   .loc 3 1171 88
-  # $13.1: Boolean = call(is_389, $12.1, IR_Null_Type)
+  # $13.1: bool = call(is_389, $12.1, IR_Null_Type)
   mov rdi, rbx
   mov rsi, IR_Null_Type[rip]
   call is_389
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $13.1:rax 
   .loc 3 1171 88
-  # $14.1: Boolean = $13.1 == false
+  # $14.1: bool = $13.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $14.1:rbx 
   .loc 3 1171 49
-  # $11.2: Boolean = $14.1
+  # $11.2: bool = $14.1
   mov [rbp-35], bl
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $11.2:rbx:[rbp-34] 
@@ -36197,14 +36197,14 @@ convert_equals_expression_117:
   mov [rbp-34], bl
 .LABEL__convert_equals_expression_117__5:
   .loc 3 1171 49
-  # $8.2: Boolean = phi($11.1, $11.2)
+  # $8.2: bool = phi($11.1, $11.2)
   mov al, [rbp-34]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $11.2:[rbp-34] $8.2:rax:[rbp-33] 
   # jump(.LABEL__convert_equals_expression_117__3)
   mov [rbp-33], al
 .LABEL__convert_equals_expression_117__3:
   .loc 3 1171 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] 
   # jump($8.3, .LABEL__convert_equals_expression_117__6, .LABEL__convert_equals_expression_117__7)
   mov al, [rbp-33]
@@ -36225,7 +36225,7 @@ convert_equals_expression_117:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] 
 .LABEL__convert_equals_expression_117__7:
   .loc 3 1174 9
-  # $17.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $17.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -36236,7 +36236,7 @@ convert_equals_expression_117:
   jz .LABEL__convert_equals_expression_117__9
 .LABEL__convert_equals_expression_117__8:
   .loc 3 1174 45
-  # $17.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $17.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -36245,7 +36245,7 @@ convert_equals_expression_117:
   mov [rbp-35], al
 .LABEL__convert_equals_expression_117__9:
   .loc 3 1174 9
-  # $17.3: Boolean = phi($17.1, $17.2)
+  # $17.3: bool = phi($17.1, $17.2)
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] 
   # jump($17.3, .LABEL__convert_equals_expression_117__10, .LABEL__convert_equals_expression_117__11)
   mov al, [rbp-35]
@@ -36266,9 +36266,9 @@ convert_equals_expression_117:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] 
 .LABEL__convert_equals_expression_117__11:
   .loc 3 1177 99
-  # $20.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $20.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   call get_named_type_66
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] $20.1:rax 
   .loc 3 1177 76
@@ -36325,7 +36325,7 @@ convert_equals_expression_117:
   call init_231
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] $24.1:rax 
-  .loc 3 1177 163
+  .loc 3 1177 160
   # $25.1: @Source_Location = load_struct_member(expression.1, location)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
@@ -36412,7 +36412,7 @@ convert_function_expression_118:
   # named_functions_item.2: @List_Item = phi(named_functions_item.1, named_functions_item.5)
   # [live values]: expression.1:[rbp-16] function.1:[rbp-8] named_functions_item.1:[rbp-24] named_functions_item.2:[rbp-24] 
   .loc 3 1183 12
-  # $3.1: Boolean = named_functions_item.2 != null
+  # $3.1: bool = named_functions_item.2 != null
   cmp QWORD PTR [rbp-24], 0
   setne al
   # [live values]: expression.1:[rbp-16] function.1:[rbp-8] named_functions_item.1:[rbp-24] named_functions_item.2:[rbp-24] $3.1:rax 
@@ -36446,7 +36446,7 @@ convert_function_expression_118:
   # [discarded value]: $8.1
   # [live values]: expression.1:r14:[rbp-16] function.1:[rbp-8] named_functions_item.1:[rbp-24] named_functions_item.2:rax:[rbp-24] $3.1:[rbp-25] named_function.1:rbx $6.1:r15 $9.1:r13 
   .loc 3 1185 13
-  # $10.1: Boolean = $6.1 == $9.1
+  # $10.1: bool = $6.1 == $9.1
   cmp r15, r13
   sete r12b
   # [discarded value]: $9.1
@@ -36468,7 +36468,7 @@ convert_function_expression_118:
   # function.3: @IR_Function = phi(function.2, function.1)
   # [live values]: expression.1:[rbp-16] function.1:[rbp-8] named_functions_item.1:[rbp-24] named_functions_item.2:[rbp-24] $3.1:[rbp-25] named_function.1:[rbp-33] $10.1:[rbp-34] function.3:[rbp-8] function.2:[rbp-8] 
   .loc 3 1191 9
-  # $12.1: Boolean = function.3 == null
+  # $12.1: bool = function.3 == null
   cmp QWORD PTR [rbp-8], 0
   sete al
   # [live values]: expression.1:[rbp-16] function.1:[rbp-8] named_functions_item.1:[rbp-24] named_functions_item.2:[rbp-24] $3.1:[rbp-25] named_function.1:[rbp-33] $10.1:[rbp-34] function.3:[rbp-8] $12.1:rax function.2:[rbp-8] 
@@ -36603,9 +36603,9 @@ convert_greater_than_expression_119:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1198 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -36625,9 +36625,9 @@ convert_greater_than_expression_119:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1199 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -36642,7 +36642,7 @@ convert_greater_than_expression_119:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1200 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -36654,7 +36654,7 @@ convert_greater_than_expression_119:
   jz .LABEL__convert_greater_than_expression_119__3
 .LABEL__convert_greater_than_expression_119__2:
   .loc 3 1200 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -36663,7 +36663,7 @@ convert_greater_than_expression_119:
   mov [rbp-41], al
 .LABEL__convert_greater_than_expression_119__3:
   .loc 3 1200 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_greater_than_expression_119__4, .LABEL__convert_greater_than_expression_119__5)
   mov al, [rbp-41]
@@ -36684,9 +36684,9 @@ convert_greater_than_expression_119:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
 .LABEL__convert_greater_than_expression_119__5:
   .loc 3 1203 100
-  # $11.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $11.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   call get_named_type_66
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $11.1:rax 
   .loc 3 1203 77
@@ -36743,7 +36743,7 @@ convert_greater_than_expression_119:
   call init_231
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $15.1:rax 
-  .loc 3 1203 164
+  .loc 3 1203 161
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
@@ -36799,9 +36799,9 @@ convert_greater_than_or_equals_expression_120:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1207 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -36821,9 +36821,9 @@ convert_greater_than_or_equals_expression_120:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1208 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -36838,7 +36838,7 @@ convert_greater_than_or_equals_expression_120:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1209 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -36850,7 +36850,7 @@ convert_greater_than_or_equals_expression_120:
   jz .LABEL__convert_greater_than_or_equals_expression_120__3
 .LABEL__convert_greater_than_or_equals_expression_120__2:
   .loc 3 1209 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -36859,7 +36859,7 @@ convert_greater_than_or_equals_expression_120:
   mov [rbp-41], al
 .LABEL__convert_greater_than_or_equals_expression_120__3:
   .loc 3 1209 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_greater_than_or_equals_expression_120__4, .LABEL__convert_greater_than_or_equals_expression_120__5)
   mov al, [rbp-41]
@@ -36880,9 +36880,9 @@ convert_greater_than_or_equals_expression_120:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
 .LABEL__convert_greater_than_or_equals_expression_120__5:
   .loc 3 1212 109
-  # $11.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $11.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   call get_named_type_66
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $11.1:rax 
   .loc 3 1212 86
@@ -36939,7 +36939,7 @@ convert_greater_than_or_equals_expression_120:
   call init_231
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $15.1:rax 
-  .loc 3 1212 173
+  .loc 3 1212 170
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
@@ -36995,9 +36995,9 @@ convert_less_than_expression_121:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1216 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -37017,9 +37017,9 @@ convert_less_than_expression_121:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1217 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -37034,7 +37034,7 @@ convert_less_than_expression_121:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1218 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -37046,7 +37046,7 @@ convert_less_than_expression_121:
   jz .LABEL__convert_less_than_expression_121__3
 .LABEL__convert_less_than_expression_121__2:
   .loc 3 1218 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -37055,7 +37055,7 @@ convert_less_than_expression_121:
   mov [rbp-41], al
 .LABEL__convert_less_than_expression_121__3:
   .loc 3 1218 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_less_than_expression_121__4, .LABEL__convert_less_than_expression_121__5)
   mov al, [rbp-41]
@@ -37076,9 +37076,9 @@ convert_less_than_expression_121:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
 .LABEL__convert_less_than_expression_121__5:
   .loc 3 1221 97
-  # $11.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $11.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   call get_named_type_66
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $11.1:rax 
   .loc 3 1221 74
@@ -37135,7 +37135,7 @@ convert_less_than_expression_121:
   call init_231
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $15.1:rax 
-  .loc 3 1221 161
+  .loc 3 1221 158
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
@@ -37191,9 +37191,9 @@ convert_less_than_or_equals_expression_122:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1225 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -37213,9 +37213,9 @@ convert_less_than_or_equals_expression_122:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1226 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -37230,7 +37230,7 @@ convert_less_than_or_equals_expression_122:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1227 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -37242,7 +37242,7 @@ convert_less_than_or_equals_expression_122:
   jz .LABEL__convert_less_than_or_equals_expression_122__3
 .LABEL__convert_less_than_or_equals_expression_122__2:
   .loc 3 1227 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -37251,7 +37251,7 @@ convert_less_than_or_equals_expression_122:
   mov [rbp-41], al
 .LABEL__convert_less_than_or_equals_expression_122__3:
   .loc 3 1227 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_less_than_or_equals_expression_122__4, .LABEL__convert_less_than_or_equals_expression_122__5)
   mov al, [rbp-41]
@@ -37272,9 +37272,9 @@ convert_less_than_or_equals_expression_122:
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
 .LABEL__convert_less_than_or_equals_expression_122__5:
   .loc 3 1230 106
-  # $11.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $11.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   call get_named_type_66
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $11.1:rax 
   .loc 3 1230 83
@@ -37331,7 +37331,7 @@ convert_less_than_or_equals_expression_122:
   call init_231
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] $15.1:rax 
-  .loc 3 1230 170
+  .loc 3 1230 167
   # $16.1: @Source_Location = load_struct_member(expression.1, location)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
@@ -37387,7 +37387,7 @@ convert_literal_expression_123:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1234 9
-  # $2.1: Boolean = call(is_389, $1.1, Boolean_Token)
+  # $2.1: bool = call(is_389, $1.1, Boolean_Token)
   mov [rbp-8], rdi
   mov rdi, rax
   mov [rbp-16], rsi
@@ -37401,12 +37401,12 @@ convert_literal_expression_123:
   jz .LABEL__convert_literal_expression_123__3
 .LABEL__convert_literal_expression_123__2:
   .loc 3 1235 45
-  # $3.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $3.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   call get_named_type_66
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] $3.1:rax 
-  .loc 3 1235 87
+  .loc 3 1235 84
   # $4.1: @Literal_Token = load_struct_member(expression.1, literal)
   mov rbx, [rbp-16]
   mov r15, [rbx+24]
@@ -37479,7 +37479,7 @@ convert_literal_expression_123:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $2.1:[rbp-17] $8.1:rbx 
   .loc 3 1237 9
-  # $9.1: Boolean = call(is_389, $8.1, Character_Token)
+  # $9.1: bool = call(is_389, $8.1, Character_Token)
   mov rdi, rbx
   mov rsi, Character_Token[rip]
   call is_389
@@ -37491,12 +37491,12 @@ convert_literal_expression_123:
   jz .LABEL__convert_literal_expression_123__6
 .LABEL__convert_literal_expression_123__5:
   .loc 3 1238 45
-  # $10.1: @IR_Type = call(get_named_type_66, self.1, "Int8")
+  # $10.1: @IR_Type = call(get_named_type_66, self.1, "i8")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_179[rip] # "Int8"
+  lea rsi, .LABEL__string_179[rip] # "i8"
   call get_named_type_66
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] $9.1:[rbp-18] $10.1:rax 
-  .loc 3 1238 84
+  .loc 3 1238 82
   # $11.1: @Literal_Token = load_struct_member(expression.1, literal)
   mov rbx, [rbp-16]
   mov r15, [rbx+24]
@@ -37569,7 +37569,7 @@ convert_literal_expression_123:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $2.1:[rbp-17] $9.1:[rbp-18] $15.1:rbx 
   .loc 3 1240 9
-  # $16.1: Boolean = call(is_389, $15.1, Integer_Token)
+  # $16.1: bool = call(is_389, $15.1, Integer_Token)
   mov rdi, rbx
   mov rsi, Integer_Token[rip]
   call is_389
@@ -37581,12 +37581,12 @@ convert_literal_expression_123:
   jz .LABEL__convert_literal_expression_123__9
 .LABEL__convert_literal_expression_123__8:
   .loc 3 1241 45
-  # $17.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $17.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   call get_named_type_66
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] $9.1:[rbp-18] $16.1:[rbp-19] $17.1:rax 
-  .loc 3 1241 83
+  .loc 3 1241 85
   # $18.1: @Literal_Token = load_struct_member(expression.1, literal)
   mov rbx, [rbp-16]
   mov r15, [rbx+24]
@@ -37659,7 +37659,7 @@ convert_literal_expression_123:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $2.1:[rbp-17] $9.1:[rbp-18] $16.1:[rbp-19] $22.1:rbx 
   .loc 3 1243 9
-  # $23.1: Boolean = call(is_389, $22.1, Null_Token)
+  # $23.1: bool = call(is_389, $22.1, Null_Token)
   mov rdi, rbx
   mov rsi, Null_Token[rip]
   call is_389
@@ -37749,7 +37749,7 @@ convert_literal_expression_123:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $2.1:[rbp-17] $9.1:[rbp-18] $16.1:[rbp-19] $23.1:[rbp-20] $29.1:rbx 
   .loc 3 1246 9
-  # $30.1: Boolean = call(is_389, $29.1, String_Token)
+  # $30.1: bool = call(is_389, $29.1, String_Token)
   mov rdi, rbx
   mov rsi, String_Token[rip]
   call is_389
@@ -37846,7 +37846,7 @@ convert_literal_expression_123:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-8] expression.1:rax:[rbp-16] $2.1:[rbp-17] $9.1:[rbp-18] $16.1:[rbp-19] $23.1:[rbp-20] $30.1:[rbp-21] $37.1:rbx 
   .loc 3 1249 9
-  # $38.1: Boolean = call(is_389, $37.1, Undefined_Token)
+  # $38.1: bool = call(is_389, $37.1, Undefined_Token)
   mov rdi, rbx
   mov rsi, Undefined_Token[rip]
   call is_389
@@ -38016,9 +38016,9 @@ convert_logic_and_expression_124:
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] next_block.1:[rbp-24] end_block.1:rax $7.1:r15 
   .loc 3 1258 74
-  # $8.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $8.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -38033,9 +38033,9 @@ convert_logic_and_expression_124:
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:rax 
   .loc 3 1259 53
-  # $10.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $10.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-40], rax
   call get_named_type_66
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] $10.1:rax 
@@ -38105,9 +38105,9 @@ convert_logic_and_expression_124:
   mov r15, [rbx+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:rbx:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:r15 
   .loc 3 1264 76
-  # $19.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $19.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, rax
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-56], r15
   call get_named_type_66
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:[rbp-56] $19.1:rax 
@@ -38264,9 +38264,9 @@ convert_logic_or_expression_125:
   mov r15, [rbx+24]
   # [live values]: self.1:[rbp-8] expression.1:rbx:[rbp-16] next_block.1:[rbp-24] end_block.1:rax $7.1:r15 
   .loc 3 1274 74
-  # $8.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $8.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -38281,9 +38281,9 @@ convert_logic_or_expression_125:
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:rax 
   .loc 3 1275 53
-  # $10.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $10.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-8]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-40], rax
   call get_named_type_66
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] next_block.1:[rbp-24] end_block.1:[rbp-32] left_value.1:[rbp-40] $10.1:rax 
@@ -38353,9 +38353,9 @@ convert_logic_or_expression_125:
   mov r15, [rbx+32]
   # [live values]: self.1:rax:[rbp-8] expression.1:rbx:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:r15 
   .loc 3 1280 76
-  # $19.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $19.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, rax
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   mov [rbp-56], r15
   call get_named_type_66
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] end_block.1:[rbp-32] result_variable.1:[rbp-48] $18.1:[rbp-56] $19.1:rax 
@@ -38490,7 +38490,7 @@ convert_member_access_expression_126:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:rax object_value_type.1:rbx 
   .loc 3 1291 9
-  # $4.1: Boolean = call(is_389, object_value_type.1, IR_Struct_Type)
+  # $4.1: bool = call(is_389, object_value_type.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   mov [rbp-24], rax
@@ -38503,7 +38503,7 @@ convert_member_access_expression_126:
   jz .LABEL__convert_member_access_expression_126__4
 .LABEL__convert_member_access_expression_126__2:
   .loc 3 1292 13
-  # $19.1: Boolean = call(is_389, object_value.1, IR_Variable_Value)
+  # $19.1: bool = call(is_389, object_value.1, IR_Variable_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -38582,7 +38582,7 @@ convert_member_access_expression_126:
   # [discarded value]: $41.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:[rbp-33] $19.1:[rbp-34] object_value.11:[rbp-24] struct_type.5:[rbp-42] struct_type_member.1:rax struct_type.4:[rbp-42] object_value.8:[rbp-24] 
   .loc 3 1320 9
-  # $43.1: Boolean = struct_type_member.1 == null
+  # $43.1: bool = struct_type_member.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:[rbp-33] $19.1:[rbp-34] object_value.11:[rbp-24] struct_type.5:[rbp-42] struct_type_member.1:rax $43.1:rbx struct_type.4:[rbp-42] object_value.8:[rbp-24] 
@@ -38659,7 +38659,7 @@ convert_member_access_expression_126:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:[rbp-33] $19.1:[rbp-34] object_value.11:[rbp-24] struct_type.5:[rbp-42] struct_type_member.1:rax:[rbp-50] $43.1:[rbp-51] struct_type.4:[rbp-42] object_value.8:[rbp-24] $52.1:rbx 
   .loc 3 1324 9
-  # $53.1: Boolean = call(is_389, $52.1, IR_Struct_Type)
+  # $53.1: bool = call(is_389, $52.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -38774,7 +38774,7 @@ convert_member_access_expression_126:
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:[rbp-33] $19.1:[rbp-34] 
 .LABEL__convert_member_access_expression_126__12:
   .loc 3 1301 20
-  # $20.1: Boolean = call(is_389, object_value.1, IR_Global_Variable_Value)
+  # $20.1: bool = call(is_389, object_value.1, IR_Global_Variable_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Global_Variable_Value[rip]
   call is_389
@@ -38911,7 +38911,7 @@ convert_member_access_expression_126:
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:[rbp-33] 
 .LABEL__convert_member_access_expression_126__4:
   .loc 3 1310 16
-  # $5.1: Boolean = call(is_389, object_value_type.1, IR_Pointer_Type)
+  # $5.1: bool = call(is_389, object_value_type.1, IR_Pointer_Type)
   mov rdi, [rbp-32]
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -38931,14 +38931,14 @@ convert_member_access_expression_126:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:[rbp-33] $5.1:[rbp-43] pointed_type.1:rbx 
   .loc 3 1312 13
-  # $12.1: Boolean = call(is_389, pointed_type.1, IR_Struct_Type)
+  # $12.1: bool = call(is_389, pointed_type.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   mov [rbp-51], rbx
   call is_389
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] object_value.1:[rbp-24] object_value_type.1:[rbp-32] $4.1:[rbp-33] $5.1:[rbp-43] pointed_type.1:[rbp-51] $12.1:rax 
   .loc 3 1312 13
-  # $13.1: Boolean = $12.1 == false
+  # $13.1: bool = $12.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $12.1
@@ -39066,7 +39066,7 @@ dump_struct_members_127:
   # struct_type.2: @IR_Struct_Type = phi(struct_type.1, struct_type.6)
   # [live values]: struct_type.1:[rbp-8] struct_type.2:[rbp-8] 
   .loc 3 1332 12
-  # $2.1: Boolean = struct_type.2 != null
+  # $2.1: bool = struct_type.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:rax 
@@ -39096,7 +39096,7 @@ dump_struct_members_127:
   # struct_type_members_item.2: @List_Item = phi(struct_type_members_item.1, struct_type_members_item.4)
   # [live values]: struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:[rbp-9] struct_type_members_item.1:[rbp-17] struct_type_members_item.2:[rbp-17] 
   .loc 3 1334 16
-  # $6.1: Boolean = struct_type_members_item.2 != null
+  # $6.1: bool = struct_type_members_item.2 != null
   cmp QWORD PTR [rbp-17], 0
   setne al
   # [live values]: struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:[rbp-9] struct_type_members_item.1:[rbp-17] struct_type_members_item.2:[rbp-17] $6.1:rax 
@@ -39276,7 +39276,7 @@ convert_member_access_expression_address_128:
   call deduce_expression_type_140
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] result_type.1:rax 
   .loc 3 1347 9
-  # $2.1: Boolean = call(is_389, result_type.1, IR_Pointer_Type)
+  # $2.1: bool = call(is_389, result_type.1, IR_Pointer_Type)
   mov rdi, rax
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-24], rax
@@ -39301,7 +39301,7 @@ convert_member_access_expression_address_128:
   # [live values]: self.1:[rbp-16] member_access_expression.1:[rbp-8] result_type.1:[rbp-24] $2.1:[rbp-25] 
 .LABEL__convert_member_access_expression_address_128__3:
   .loc 3 1350 9
-  # $4.1: Boolean = call(is_389, result_type.1, IR_Unchecked_Array_Type)
+  # $4.1: bool = call(is_389, result_type.1, IR_Unchecked_Array_Type)
   mov rdi, [rbp-24]
   mov rsi, IR_Unchecked_Array_Type[rip]
   call is_389
@@ -39374,9 +39374,9 @@ convert_modulo_expression_129:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1357 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -39396,9 +39396,9 @@ convert_modulo_expression_129:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1358 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -39413,7 +39413,7 @@ convert_modulo_expression_129:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1359 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -39425,7 +39425,7 @@ convert_modulo_expression_129:
   jz .LABEL__convert_modulo_expression_129__3
 .LABEL__convert_modulo_expression_129__2:
   .loc 3 1359 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -39434,7 +39434,7 @@ convert_modulo_expression_129:
   mov [rbp-41], al
 .LABEL__convert_modulo_expression_129__3:
   .loc 3 1359 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_modulo_expression_129__4, .LABEL__convert_modulo_expression_129__5)
   mov al, [rbp-41]
@@ -39569,9 +39569,9 @@ convert_multiply_expression_130:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1366 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -39591,9 +39591,9 @@ convert_multiply_expression_130:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1367 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -39608,7 +39608,7 @@ convert_multiply_expression_130:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1368 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -39620,7 +39620,7 @@ convert_multiply_expression_130:
   jz .LABEL__convert_multiply_expression_130__3
 .LABEL__convert_multiply_expression_130__2:
   .loc 3 1368 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -39629,7 +39629,7 @@ convert_multiply_expression_130:
   mov [rbp-41], al
 .LABEL__convert_multiply_expression_130__3:
   .loc 3 1368 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_multiply_expression_130__4, .LABEL__convert_multiply_expression_130__5)
   mov al, [rbp-41]
@@ -39764,9 +39764,9 @@ convert_negate_expression_131:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1375 64
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -39973,7 +39973,7 @@ convert_new_expression_132:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1389 9
-  # $2.1: Boolean = call(is_389, $1.1, AST_Named_Type)
+  # $2.1: bool = call(is_389, $1.1, AST_Named_Type)
   mov [rbp-8], rdi
   mov rdi, rax
   mov [rbp-16], rsi
@@ -39982,7 +39982,7 @@ convert_new_expression_132:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:rax 
   .loc 3 1389 9
-  # $3.1: Boolean = $2.1 == false
+  # $3.1: bool = $2.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $2.1
@@ -40033,7 +40033,7 @@ convert_new_expression_132:
   call get_struct_statement_67
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] type_name.1:[rbp-25] struct_statement.1:rax 
   .loc 3 1394 9
-  # $11.1: Boolean = struct_statement.1 == null
+  # $11.1: bool = struct_statement.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] type_name.1:[rbp-25] struct_statement.1:rax $11.1:rbx 
@@ -40177,7 +40177,7 @@ convert_struct_literal_expression_133:
   # struct_type.1: @IR_Struct_Type = load_variable(struct_type)
   # [live values]: self.1:rdi expression.1:rsi struct_type.1:rdx 
   .loc 3 1406 9
-  # $1.1: Boolean = call(is_389, expression.1, AST_Call_Expression)
+  # $1.1: bool = call(is_389, expression.1, AST_Call_Expression)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -40263,7 +40263,7 @@ convert_struct_literal_expression_133:
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] struct_type.1:rbx:[rbp-24] $1.1:[rbp-25] call_arguments.3:[rbp-33] call_arguments.5:[rbp-33] struct_literal_value.1:rax 
   .loc 3 1414 9
-  # $16.1: Boolean = call(is_object_type_152, struct_type.1)
+  # $16.1: bool = call(is_object_type_152, struct_type.1)
   mov rdi, rbx
   mov [rbp-41], rax
   call is_object_type_152
@@ -40388,7 +40388,7 @@ convert_struct_literal_expression_133:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] struct_type.1:[rbp-24] $1.1:[rbp-25] 
 .LABEL__convert_struct_literal_expression_133__4:
   .loc 3 1408 16
-  # $2.1: Boolean = call(is_389, expression.1, AST_New_Expression)
+  # $2.1: bool = call(is_389, expression.1, AST_New_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_New_Expression[rip]
   call is_389
@@ -40500,7 +40500,7 @@ convert_struct_literal_value_134:
   # call_arguments_item.2: @List_Item = phi(call_arguments_item.1, call_arguments_item.5)
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] 
   .loc 3 1425 12
-  # $2.1: Boolean = call_arguments_item.2 != null
+  # $2.1: bool = call_arguments_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:rax 
@@ -40519,7 +40519,7 @@ convert_struct_literal_value_134:
   mov r15, [rbx]
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:rax:[rbp-8] $2.1:[rbp-41] call_argument.1:rbx call_argument_name.1:r15 
   .loc 3 1428 13
-  # $6.1: Boolean = call_argument_name.1 == null
+  # $6.1: bool = call_argument_name.1 == null
   cmp r15, 0
   sete r14b
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:rax:[rbp-8] $2.1:[rbp-41] call_argument.1:rbx call_argument_name.1:r15 $6.1:r14 
@@ -40561,7 +40561,7 @@ convert_struct_literal_value_134:
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:[rbp-41] call_argument.1:[rbp-49] call_argument_name.1:[rbp-58] $6.1:[rbp-50] struct_type_member.1:rax 
   .loc 3 1432 13
-  # $11.1: Boolean = struct_type_member.1 == null
+  # $11.1: bool = struct_type_member.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:[rbp-41] call_argument.1:[rbp-49] call_argument_name.1:[rbp-58] $6.1:[rbp-50] struct_type_member.1:rax $11.1:rbx 
@@ -40624,7 +40624,7 @@ convert_struct_literal_value_134:
   call get_member_value_158
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:[rbp-41] call_argument.1:[rbp-49] call_argument_name.1:[rbp-58] $6.1:[rbp-50] struct_type_member.1:[rbp-66] $11.1:[rbp-67] $18.1:rax 
   .loc 3 1435 13
-  # $19.1: Boolean = $18.1 == null
+  # $19.1: bool = $18.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $18.1
@@ -40688,7 +40688,7 @@ convert_struct_literal_value_134:
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:[rbp-41] 
 .LABEL__convert_struct_literal_value_134__4:
   .loc 3 1440 9
-  # $24.1: Boolean = base_type.1 != null
+  # $24.1: bool = base_type.1 != null
   cmp QWORD PTR [rbp-40], 0
   setne al
   # [live values]: self.1:[rbp-32] struct_literal_value.1:[rbp-24] struct_type.1:[rbp-16] base_type.1:[rbp-40] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:[rbp-41] $24.1:rax 
@@ -40772,7 +40772,7 @@ get_named_argument_135:
   # list_item.2: @List_Item = phi(list_item.1, list_item.5)
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] 
   .loc 3 1447 12
-  # $2.1: Boolean = list_item.2 != null
+  # $2.1: bool = list_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:[rbp-8] $2.1:rax 
@@ -40791,7 +40791,7 @@ get_named_argument_135:
   mov r15, [rbx]
   # [live values]: name.1:[rbp-16] list_item.1:[rbp-8] list_item.2:rax:[rbp-8] $2.1:[rbp-17] call_argument.1:rbx $5.1:r15 
   .loc 3 1449 13
-  # $6.1: Boolean = call(equals_392, name.1, $5.1)
+  # $6.1: bool = call(equals_392, name.1, $5.1)
   mov rdi, [rbp-16]
   mov rsi, r15
   mov [rbp-25], rbx
@@ -40894,14 +40894,14 @@ convert_not_equals_expression_136:
   mov r14, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $5.1:r15 $6.1:r14 
   .loc 3 1460 9
-  # $7.1: Boolean = $5.1 != $6.1
+  # $7.1: bool = $5.1 != $6.1
   cmp r15, r14
   setne r13b
   # [discarded value]: $6.1
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $7.1:r13 
   .loc 3 1460 9
-  # $8.1: Boolean = $7.1
+  # $8.1: bool = $7.1
   mov [rbp-25], r13b
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rbx:[rbp-24] right_value.1:rax $8.1:r13 
@@ -40917,7 +40917,7 @@ convert_not_equals_expression_136:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:rax:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $9.1:rbx 
   .loc 3 1460 49
-  # $11.1: Boolean = call(is_389, $9.1, IR_Pointer_Type)
+  # $11.1: bool = call(is_389, $9.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -40934,20 +40934,20 @@ convert_not_equals_expression_136:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:rax:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $12.1:rbx 
   .loc 3 1460 88
-  # $13.1: Boolean = call(is_389, $12.1, IR_Null_Type)
+  # $13.1: bool = call(is_389, $12.1, IR_Null_Type)
   mov rdi, rbx
   mov rsi, IR_Null_Type[rip]
   call is_389
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $13.1:rax 
   .loc 3 1460 88
-  # $14.1: Boolean = $13.1 == false
+  # $14.1: bool = $13.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $14.1:rbx 
   .loc 3 1460 49
-  # $11.2: Boolean = $14.1
+  # $11.2: bool = $14.1
   mov [rbp-35], bl
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $11.2:rbx:[rbp-34] 
@@ -40955,14 +40955,14 @@ convert_not_equals_expression_136:
   mov [rbp-34], bl
 .LABEL__convert_not_equals_expression_136__5:
   .loc 3 1460 49
-  # $8.2: Boolean = phi($11.1, $11.2)
+  # $8.2: bool = phi($11.1, $11.2)
   mov al, [rbp-34]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $11.2:[rbp-34] $8.2:rax:[rbp-33] 
   # jump(.LABEL__convert_not_equals_expression_136__3)
   mov [rbp-33], al
 .LABEL__convert_not_equals_expression_136__3:
   .loc 3 1460 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] 
   # jump($8.3, .LABEL__convert_not_equals_expression_136__6, .LABEL__convert_not_equals_expression_136__7)
   mov al, [rbp-33]
@@ -40983,7 +40983,7 @@ convert_not_equals_expression_136:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] 
 .LABEL__convert_not_equals_expression_136__7:
   .loc 3 1463 9
-  # $17.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $17.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-24]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -40994,7 +40994,7 @@ convert_not_equals_expression_136:
   jz .LABEL__convert_not_equals_expression_136__9
 .LABEL__convert_not_equals_expression_136__8:
   .loc 3 1463 45
-  # $17.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $17.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -41003,7 +41003,7 @@ convert_not_equals_expression_136:
   mov [rbp-35], al
 .LABEL__convert_not_equals_expression_136__9:
   .loc 3 1463 9
-  # $17.3: Boolean = phi($17.1, $17.2)
+  # $17.3: bool = phi($17.1, $17.2)
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] 
   # jump($17.3, .LABEL__convert_not_equals_expression_136__10, .LABEL__convert_not_equals_expression_136__11)
   mov al, [rbp-35]
@@ -41024,9 +41024,9 @@ convert_not_equals_expression_136:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] 
 .LABEL__convert_not_equals_expression_136__11:
   .loc 3 1466 102
-  # $20.1: @IR_Type = call(get_named_type_66, self.1, "Boolean")
+  # $20.1: @IR_Type = call(get_named_type_66, self.1, "bool")
   mov rdi, [rbp-16]
-  lea rsi, .LABEL__string_177[rip] # "Boolean"
+  lea rsi, .LABEL__string_177[rip] # "bool"
   call get_named_type_66
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] $20.1:rax 
   .loc 3 1466 79
@@ -41083,7 +41083,7 @@ convert_not_equals_expression_136:
   call init_231
   # [discarded value]: $23.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] left_value.1:[rbp-24] right_value.1:[rbp-32] $8.1:[rbp-33] $11.1:[rbp-34] $8.3:[rbp-33] $11.2:[rbp-34] $8.2:[rbp-33] $17.1:[rbp-35] $17.2:[rbp-35] $17.3:[rbp-35] $24.1:rax 
-  .loc 3 1466 166
+  .loc 3 1466 163
   # $25.1: @Source_Location = load_struct_member(expression.1, location)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
@@ -41153,9 +41153,9 @@ convert_substract_expression_137:
   mov rax, [rsi+24]
   # [live values]: self.1:rdi expression.1:rsi $1.1:rax 
   .loc 3 1470 74
-  # $2.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $2.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov [rbp-8], rsi
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-16], rax
   mov [rbp-24], rdi
   call get_named_type_66
@@ -41175,9 +41175,9 @@ convert_substract_expression_137:
   mov r15, [rbx+32]
   # [live values]: self.1:[rbp-24] expression.1:rbx:[rbp-8] left_value.1:rax $4.1:r15 
   .loc 3 1471 76
-  # $5.1: @IR_Type = call(get_named_type_66, self.1, "Int")
+  # $5.1: @IR_Type = call(get_named_type_66, self.1, "isize")
   mov rdi, [rbp-24]
-  lea rsi, .LABEL__string_178[rip] # "Int"
+  lea rsi, .LABEL__string_178[rip] # "isize"
   mov [rbp-32], rax
   mov [rbp-40], r15
   call get_named_type_66
@@ -41192,7 +41192,7 @@ convert_substract_expression_137:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:rax 
   .loc 3 1472 9
-  # $8.1: Boolean = call(is_389, left_value.1, IR_Constant_Value)
+  # $8.1: bool = call(is_389, left_value.1, IR_Constant_Value)
   mov rdi, [rbp-32]
   mov rsi, IR_Constant_Value[rip]
   mov [rbp-40], rax
@@ -41204,7 +41204,7 @@ convert_substract_expression_137:
   jz .LABEL__convert_substract_expression_137__3
 .LABEL__convert_substract_expression_137__2:
   .loc 3 1472 45
-  # $8.2: Boolean = call(is_389, right_value.1, IR_Constant_Value)
+  # $8.2: bool = call(is_389, right_value.1, IR_Constant_Value)
   mov rdi, [rbp-40]
   mov rsi, IR_Constant_Value[rip]
   call is_389
@@ -41213,7 +41213,7 @@ convert_substract_expression_137:
   mov [rbp-41], al
 .LABEL__convert_substract_expression_137__3:
   .loc 3 1472 9
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] left_value.1:[rbp-32] right_value.1:[rbp-40] $8.1:[rbp-41] $8.2:[rbp-41] $8.3:[rbp-41] 
   # jump($8.3, .LABEL__convert_substract_expression_137__4, .LABEL__convert_substract_expression_137__5)
   mov al, [rbp-41]
@@ -41364,7 +41364,7 @@ convert_variable_expression_138:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:rax 
   .loc 3 1480 9
-  # $4.1: Boolean = variable.1 == null
+  # $4.1: bool = variable.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:rax $4.1:rbx 
@@ -41375,12 +41375,12 @@ convert_variable_expression_138:
   jz .LABEL__convert_variable_expression_138__3
 .LABEL__convert_variable_expression_138__2:
   .loc 3 1481 13
-  # $5.1: Boolean = expected_type.1 != null
+  # $5.1: bool = expected_type.1 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $4.1:[rbp-33] $5.1:rax 
   .loc 3 1481 13
-  # $6.1: Boolean = $5.1
+  # $6.1: bool = $5.1
   mov [rbp-34], al
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $4.1:[rbp-33] $6.1:rax 
@@ -41390,7 +41390,7 @@ convert_variable_expression_138:
   jz .LABEL__convert_variable_expression_138__5
 .LABEL__convert_variable_expression_138__4:
   .loc 3 1481 38
-  # $6.2: Boolean = call(is_389, expected_type.1, IR_Function_Type)
+  # $6.2: bool = call(is_389, expected_type.1, IR_Function_Type)
   mov rdi, [rbp-16]
   mov rsi, IR_Function_Type[rip]
   call is_389
@@ -41399,7 +41399,7 @@ convert_variable_expression_138:
   mov [rbp-34], al
 .LABEL__convert_variable_expression_138__5:
   .loc 3 1481 13
-  # $6.3: Boolean = phi($6.1, $6.2)
+  # $6.3: bool = phi($6.1, $6.2)
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $4.1:[rbp-33] $6.1:[rbp-34] $6.2:[rbp-34] $6.3:[rbp-34] 
   # jump($6.3, .LABEL__convert_variable_expression_138__6, .LABEL__convert_variable_expression_138__7)
   mov al, [rbp-34]
@@ -41430,7 +41430,7 @@ convert_variable_expression_138:
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $4.1:[rbp-33] $6.1:[rbp-34] $6.2:[rbp-34] $6.3:[rbp-34] function.1:rax 
   .loc 3 1483 17
-  # $12.1: Boolean = function.1 != null
+  # $12.1: bool = function.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $4.1:[rbp-33] $6.1:[rbp-34] $6.2:[rbp-34] $6.3:[rbp-34] function.1:rax $12.1:rbx 
@@ -41554,7 +41554,7 @@ convert_variable_expression_138:
   call get_variable_value_70
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $4.1:[rbp-33] value.1:rax 
   .loc 3 1490 9
-  # $22.1: Boolean = value.1 == null
+  # $22.1: bool = value.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-24] expression.1:[rbp-8] expected_type.1:[rbp-16] variable.1:[rbp-32] $4.1:[rbp-33] value.1:rax $22.1:rbx 
@@ -41655,7 +41655,7 @@ convert_variable_expression_address_139:
   # [discarded value]: $2.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax 
   .loc 3 1498 9
-  # $4.1: Boolean = variable.1 == null
+  # $4.1: bool = variable.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax $4.1:rbx 
@@ -41709,7 +41709,7 @@ convert_variable_expression_address_139:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax:[rbp-24] $4.1:[rbp-25] $10.1:rbx 
   .loc 3 1501 9
-  # $11.1: Boolean = call(is_389, $10.1, IR_Pointer_Type)
+  # $11.1: bool = call(is_389, $10.1, IR_Pointer_Type)
   mov rdi, rbx
   mov rsi, IR_Pointer_Type[rip]
   call is_389
@@ -41734,7 +41734,7 @@ convert_variable_expression_address_139:
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:[rbp-24] $4.1:[rbp-25] $11.1:[rbp-26] 
 .LABEL__convert_variable_expression_address_139__5:
   .loc 3 1504 9
-  # $13.1: Boolean = call(is_389, variable.1, IR_Global_Variable)
+  # $13.1: bool = call(is_389, variable.1, IR_Global_Variable)
   mov rdi, [rbp-24]
   mov rsi, IR_Global_Variable[rip]
   call is_389
@@ -41822,7 +41822,7 @@ convert_variable_expression_address_139:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] variable.1:rax:[rbp-24] $4.1:[rbp-25] $11.1:[rbp-26] $13.1:[rbp-27] $19.1:rbx 
   .loc 3 1507 9
-  # $20.1: Boolean = call(is_389, $19.1, IR_Unchecked_Array_Type)
+  # $20.1: bool = call(is_389, $19.1, IR_Unchecked_Array_Type)
   mov rdi, rbx
   mov rsi, IR_Unchecked_Array_Type[rip]
   call is_389
@@ -41915,7 +41915,7 @@ deduce_expression_type_140:
   # expression.1: @AST_Expression = load_variable(expression)
   # [live values]: self.1:rdi expression.1:rsi 
   .loc 3 1514 9
-  # $1.1: Boolean = call(is_389, expression.1, AST_Call_Expression)
+  # $1.1: bool = call(is_389, expression.1, AST_Call_Expression)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -41946,7 +41946,7 @@ deduce_expression_type_140:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__deduce_expression_type_140__3:
   .loc 3 1517 9
-  # $4.1: Boolean = call(is_389, expression.1, AST_Literal_Expression)
+  # $4.1: bool = call(is_389, expression.1, AST_Literal_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Literal_Expression[rip]
   call is_389
@@ -41975,7 +41975,7 @@ deduce_expression_type_140:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $4.1:[rbp-18] 
 .LABEL__deduce_expression_type_140__6:
   .loc 3 1520 9
-  # $7.1: Boolean = call(is_389, expression.1, AST_Member_Access_Expression)
+  # $7.1: bool = call(is_389, expression.1, AST_Member_Access_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Member_Access_Expression[rip]
   call is_389
@@ -42004,7 +42004,7 @@ deduce_expression_type_140:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $4.1:[rbp-18] $7.1:[rbp-19] 
 .LABEL__deduce_expression_type_140__9:
   .loc 3 1523 9
-  # $10.1: Boolean = call(is_389, expression.1, AST_Variable_Expression)
+  # $10.1: bool = call(is_389, expression.1, AST_Variable_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Variable_Expression[rip]
   call is_389
@@ -42108,7 +42108,7 @@ deduce_call_expression_type_141:
   mov [rbp-32], rax
 .LABEL__deduce_call_expression_type_141__2:
   .loc 3 1532 12
-  # $4.1: Boolean = call(has_next_378, arguments.1)
+  # $4.1: bool = call(has_next_378, arguments.1)
   mov rdi, [rbp-32]
   call has_next_378
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $4.1:rax 
@@ -42146,7 +42146,7 @@ deduce_call_expression_type_141:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-16] expression.1:rax:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $4.1:[rbp-33] $8.1:rbx 
   .loc 3 1537 9
-  # $9.1: Boolean = call(is_389, $8.1, AST_Member_Access_Expression)
+  # $9.1: bool = call(is_389, $8.1, AST_Member_Access_Expression)
   mov rdi, rbx
   mov rsi, AST_Member_Access_Expression[rip]
   call is_389
@@ -42175,7 +42175,7 @@ deduce_call_expression_type_141:
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $4.1:[rbp-33] $9.1:[rbp-34] callee_expression.1:[rbp-42] object_type.1:rax 
   .loc 3 1540 13
-  # $14.1: Boolean = call(is_389, object_type.1, IR_Struct_Type)
+  # $14.1: bool = call(is_389, object_type.1, IR_Struct_Type)
   mov rdi, rax
   mov rsi, IR_Struct_Type[rip]
   mov [rbp-50], rax
@@ -42220,7 +42220,7 @@ deduce_call_expression_type_141:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $4.1:[rbp-33] $9.1:[rbp-34] callee_expression.1:[rbp-42] object_type.1:[rbp-50] $14.1:[rbp-51] function.1:rax 
   .loc 3 1546 13
-  # $19.1: Boolean = function.1 == null
+  # $19.1: bool = function.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] argument_types.1:[rbp-24] arguments.1:[rbp-32] $4.1:[rbp-33] $9.1:[rbp-34] callee_expression.1:[rbp-42] object_type.1:[rbp-50] $14.1:[rbp-51] function.1:rax $19.1:rbx 
@@ -42363,7 +42363,7 @@ deduce_literal_expression_type_142:
   # [discarded value]: expression.1
   # [live values]: self.1:rdi literal.1:rax 
   .loc 3 1556 9
-  # $2.1: Boolean = call(is_389, literal.1, String_Token)
+  # $2.1: bool = call(is_389, literal.1, String_Token)
   mov [rbp-8], rdi
   mov rdi, rax
   mov rsi, String_Token[rip]
@@ -42449,14 +42449,14 @@ deduce_member_access_expression_type_143:
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] object_type.1:rax 
   .loc 3 1564 9
-  # $3.1: Boolean = call(is_389, object_type.1, IR_Pointer_Type)
+  # $3.1: bool = call(is_389, object_type.1, IR_Pointer_Type)
   mov rdi, rax
   mov rsi, IR_Pointer_Type[rip]
   mov [rbp-24], rax
   call is_389
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] object_type.1:[rbp-24] $3.1:rax 
   .loc 3 1564 9
-  # $4.1: Boolean = $3.1 == false
+  # $4.1: bool = $3.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $3.1
@@ -42495,14 +42495,14 @@ deduce_member_access_expression_type_143:
   # [discarded value]: $7.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] object_type.1:[rbp-24] $4.1:[rbp-25] object_type.1:rbx 
   .loc 3 1568 9
-  # $9.1: Boolean = call(is_389, object_type.1, IR_Struct_Type)
+  # $9.1: bool = call(is_389, object_type.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   mov [rbp-33], rbx
   call is_389
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] object_type.1:[rbp-24] $4.1:[rbp-25] object_type.1:[rbp-33] $9.1:rax 
   .loc 3 1568 9
-  # $10.1: Boolean = $9.1 == false
+  # $10.1: bool = $9.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $9.1
@@ -42554,7 +42554,7 @@ deduce_member_access_expression_type_143:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] object_type.1:[rbp-24] $4.1:[rbp-25] object_type.1:[rbp-33] $10.1:[rbp-34] object_type.1:[rbp-42] member.1:rax 
   .loc 3 1573 9
-  # $17.1: Boolean = member.1 == null
+  # $17.1: bool = member.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] object_type.1:[rbp-24] $4.1:[rbp-25] object_type.1:[rbp-33] $10.1:[rbp-34] object_type.1:[rbp-42] member.1:rax $17.1:rbx 
@@ -42626,7 +42626,7 @@ deduce_member_access_expression_type_143:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] expression.1:[rbp-8] object_type.1:[rbp-24] $4.1:[rbp-25] object_type.1:[rbp-33] $10.1:[rbp-34] object_type.1:[rbp-42] member.1:rax:[rbp-50] $17.1:[rbp-51] $26.1:rbx 
   .loc 3 1576 9
-  # $27.1: Boolean = call(is_389, $26.1, IR_Struct_Type)
+  # $27.1: bool = call(is_389, $26.1, IR_Struct_Type)
   mov rdi, rbx
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -42722,7 +42722,7 @@ deduce_variable_expression_type_144:
   # [discarded value]: self.1
   # [live values]: expression.1:[rbp-8] variable.1:rax 
   .loc 3 1584 9
-  # $4.1: Boolean = variable.1 == null
+  # $4.1: bool = variable.1 == null
   cmp rax, 0
   sete bl
   # [live values]: expression.1:[rbp-8] variable.1:rax $4.1:rbx 
@@ -42878,11 +42878,11 @@ next_146:
   # self.1: @Counter = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 4 8 18
-  # $1.1: Int = load_struct_member(self.1, value)
+  # $1.1: isize = load_struct_member(self.1, value)
   mov rax, [rdi]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 4 8 18
-  # $2.1: Int = $1.1 + 1
+  # $2.1: isize = $1.1 + 1
   mov rbx, rax
   add rbx, 1
   # [discarded value]: $1.1
@@ -42893,7 +42893,7 @@ next_146:
   # [discarded value]: $2.1
   # [live values]: self.1:rdi 
   .loc 4 9 12
-  # $3.1: Int = load_struct_member(self.1, value)
+  # $3.1: isize = load_struct_member(self.1, value)
   mov rax, [rdi]
   # [discarded value]: self.1
   # [live values]: $3.1:rax 
@@ -42950,8 +42950,8 @@ create_ir_function_type_148:
   # [live values]: parameters.1:rdi 
   # return_type.1: @IR_Type = load_variable(return_type)
   # [live values]: parameters.1:rdi return_type.1:rsi 
-  .loc 14 4 23
-  # $2.1: [Int8; ?] = call(malloc, 16)
+  .loc 14 4 21
+  # $2.1: [i8; ?] = call(malloc, 16)
   mov [rbp-8], rdi
   mov rdi, 16
   mov [rbp-16], rsi
@@ -42990,7 +42990,7 @@ create_ir_function_type_148:
   # parameters_item.2: @List_Item = phi(parameters_item.1, parameters_item.4)
   # [live values]: parameters.1:[rbp-8] return_type.1:[rbp-16] type_name.1:[rbp-24] parameters_item.1:[rbp-32] parameters_item.2:[rbp-32] 
   .loc 5 72 12
-  # $6.1: Boolean = parameters_item.2 != null
+  # $6.1: bool = parameters_item.2 != null
   cmp QWORD PTR [rbp-32], 0
   setne al
   # [live values]: parameters.1:[rbp-8] return_type.1:[rbp-16] type_name.1:[rbp-24] parameters_item.1:[rbp-32] parameters_item.2:[rbp-32] $6.1:rax 
@@ -43049,7 +43049,7 @@ create_ir_function_type_148:
   mov rbx, [rax+8]
   # [live values]: parameters.1:[rbp-8] return_type.1:[rbp-16] type_name.1:[rbp-24] parameters_item.1:[rbp-32] parameters_item.2:[rbp-32] $6.1:[rbp-33] parameters_item.4:rbx:[rbp-32] 
   .loc 5 76 13
-  # $16.1: Boolean = parameters_item.4 != null
+  # $16.1: bool = parameters_item.4 != null
   cmp rbx, 0
   setne al
   # [live values]: parameters.1:[rbp-8] return_type.1:[rbp-16] type_name.1:[rbp-24] parameters_item.1:[rbp-32] parameters_item.2:[rbp-32] $6.1:[rbp-33] parameters_item.4:rbx:[rbp-32] $16.1:rax 
@@ -43227,7 +43227,7 @@ get_member_150:
   # members_item.2: @List_Item = phi(members_item.1, members_item.5)
   # [live values]: struct_type.1:[rbp-16] name.1:[rbp-8] struct_type.2:[rbp-16] members_item.1:[rbp-24] members_item.2:[rbp-24] 
   .loc 5 108 16
-  # $3.1: Boolean = members_item.2 != null
+  # $3.1: bool = members_item.2 != null
   cmp QWORD PTR [rbp-24], 0
   setne al
   # [live values]: struct_type.1:[rbp-16] name.1:[rbp-8] struct_type.2:[rbp-16] members_item.1:[rbp-24] members_item.2:[rbp-24] $3.1:rax 
@@ -43246,7 +43246,7 @@ get_member_150:
   mov r15, [rbx+8]
   # [live values]: struct_type.1:[rbp-16] name.1:[rbp-8] struct_type.2:[rbp-16] members_item.1:[rbp-24] members_item.2:rax:[rbp-24] $3.1:[rbp-25] member.1:rbx $6.1:r15 
   .loc 5 110 17
-  # $7.1: Boolean = call(equals_392, $6.1, name.1)
+  # $7.1: bool = call(equals_392, $6.1, name.1)
   mov rdi, r15
   mov rsi, [rbp-8]
   mov [rbp-33], rbx
@@ -43286,7 +43286,7 @@ get_member_150:
   mov rbx, [rax+16]
   # [live values]: struct_type.1:[rbp-16] name.1:[rbp-8] struct_type.2:[rbp-16] members_item.1:[rbp-24] members_item.2:[rbp-24] $3.1:[rbp-25] struct_type.4:rbx:[rbp-16] 
   .loc 5 116 13
-  # $10.1: Boolean = struct_type.4 == null
+  # $10.1: bool = struct_type.4 == null
   cmp rbx, 0
   sete al
   # [live values]: struct_type.1:[rbp-16] name.1:[rbp-8] struct_type.2:[rbp-16] members_item.1:[rbp-24] members_item.2:[rbp-24] $3.1:[rbp-25] struct_type.4:rbx:[rbp-16] $10.1:rax 
@@ -43348,7 +43348,7 @@ is_base_type_151:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] struct_type.1:[rbp-8] struct_type.2:rax:[rbp-8] $1.1:rbx 
   .loc 5 125 13
-  # $2.1: Boolean = self.1 == $1.1
+  # $2.1: bool = self.1 == $1.1
   cmp QWORD PTR [rbp-16], rbx
   sete r15b
   # [discarded value]: $1.1
@@ -43370,7 +43370,7 @@ is_base_type_151:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:[rbp-17] struct_type.4:rbx:[rbp-8] 
   .loc 5 129 13
-  # $4.1: Boolean = struct_type.4 == null
+  # $4.1: bool = struct_type.4 == null
   cmp rbx, 0
   sete al
   # [live values]: self.1:[rbp-16] struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:[rbp-17] struct_type.4:rbx:[rbp-8] $4.1:rax 
@@ -43425,7 +43425,7 @@ is_object_type_152:
   mov rbx, [rax+8]
   # [live values]: struct_type.1:[rbp-8] struct_type.2:rax:[rbp-8] $1.1:rbx 
   .loc 5 138 13
-  # $2.1: Boolean = call(equals_392, $1.1, "Object")
+  # $2.1: bool = call(equals_392, $1.1, "Object")
   mov rdi, rbx
   lea rsi, .LABEL__string_248[rip] # "Object"
   call equals_392
@@ -43448,7 +43448,7 @@ is_object_type_152:
   mov rbx, [rax+16]
   # [live values]: struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:[rbp-9] struct_type.4:rbx:[rbp-8] 
   .loc 5 142 13
-  # $4.1: Boolean = struct_type.4 == null
+  # $4.1: bool = struct_type.4 == null
   cmp rbx, 0
   sete al
   # [live values]: struct_type.1:[rbp-8] struct_type.2:[rbp-8] $2.1:[rbp-9] struct_type.4:rbx:[rbp-8] $4.1:rax 
@@ -43551,7 +43551,7 @@ write_154:
   # [live values]: file.1:rdi 
   # value.1: @IR_Value = load_variable(value)
   # [live values]: file.1:rdi value.1:rsi 
-  # $1.1: Boolean = load_variable(check_users)
+  # $1.1: bool = load_variable(check_users)
   # [live values]: file.1:rdi value.1:rsi $1.1:rdx 
   # jump($1.1, .LABEL__write_154__2, .LABEL__write_154__3)
   test dl, dl
@@ -43566,18 +43566,18 @@ write_154:
   mov rbx, [rax+24]
   # [live values]: file.1:[rbp-17] value.1:rax:[rbp-9] $1.1:[rbp-1] $2.1:rbx 
   .loc 5 161 24
-  # $3.1: Int = load_struct_member($2.1, size)
+  # $3.1: isize = load_struct_member($2.1, size)
   mov r15, [rbx+16]
   # [discarded value]: $2.1
   # [live values]: file.1:[rbp-17] value.1:rax:[rbp-9] $1.1:[rbp-1] $3.1:r15 
   .loc 5 161 24
-  # $4.1: Boolean = $3.1 == 0
+  # $4.1: bool = $3.1 == 0
   cmp r15, 0
   sete bl
   # [discarded value]: $3.1
   # [live values]: file.1:[rbp-17] value.1:rax:[rbp-9] $1.1:[rbp-1] $4.1:rbx 
   .loc 5 161 9
-  # $1.2: Boolean = $4.1
+  # $1.2: bool = $4.1
   mov [rbp-18], bl
   # [discarded value]: $4.1
   # [live values]: file.1:[rbp-17] value.1:rax:[rbp-9] $1.1:[rbp-1] $1.2:rbx:[rbp-1] 
@@ -43585,7 +43585,7 @@ write_154:
   mov [rbp-1], bl
 .LABEL__write_154__3:
   .loc 5 161 9
-  # $1.3: Boolean = phi($1.1, $1.2)
+  # $1.3: bool = phi($1.1, $1.2)
   # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] $1.3:[rbp-1] 
   # jump($1.3, .LABEL__write_154__4, .LABEL__write_154__5)
   mov al, [rbp-1]
@@ -43599,7 +43599,7 @@ write_154:
   # [discarded value]: $5.1
   # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] $1.3:[rbp-1] 
   .loc 5 163 13
-  # $6.1: Boolean = call(is_389, value.1, IR_Variable_Value)
+  # $6.1: bool = call(is_389, value.1, IR_Variable_Value)
   mov rdi, [rbp-9]
   mov rsi, IR_Variable_Value[rip]
   call is_389
@@ -43614,7 +43614,7 @@ write_154:
   mov rax, [rbp-9]
   # [live values]: file.1:[rbp-17] value.1:[rbp-9] $1.1:[rbp-1] $1.2:[rbp-1] $1.3:[rbp-1] $6.1:[rbp-18] value.1:rax 
   .loc 5 165 33
-  # value_version.1: Int = load_struct_member(value.1, version)
+  # value_version.1: isize = load_struct_member(value.1, version)
   mov rbx, [rax+56]
   # [discarded value]: value_version.1
   # [discarded value]: value.1
@@ -43844,19 +43844,19 @@ anonymous_function_4_157:
   # [discarded value]: $6.1
   # [live values]: file.1:[rbp-16] value_links_item.1:rax 
   .loc 5 213 17
-  # is_first_value_link.1: Boolean = true
+  # is_first_value_link.1: bool = true
   mov bl, 1
   # [live values]: file.1:[rbp-16] value_links_item.1:rax is_first_value_link.1:rbx 
   # jump(.LABEL__anonymous_function_4_157__2)
   mov [rbp-24], rax
   mov [rbp-25], bl
 .LABEL__anonymous_function_4_157__2:
-  # is_first_value_link.4: Boolean = phi(is_first_value_link.1, is_first_value_link.5)
+  # is_first_value_link.4: bool = phi(is_first_value_link.1, is_first_value_link.5)
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] 
   # value_links_item.2: @List_Item = phi(value_links_item.1, value_links_item.5)
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] value_links_item.2:[rbp-24] 
   .loc 5 214 20
-  # $8.1: Boolean = value_links_item.2 != null
+  # $8.1: bool = value_links_item.2 != null
   cmp QWORD PTR [rbp-24], 0
   setne al
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] value_links_item.2:[rbp-24] $8.1:rax 
@@ -43871,7 +43871,7 @@ anonymous_function_4_157:
   mov rbx, [rax+16]
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] value_links_item.2:rax:[rbp-24] $8.1:[rbp-26] value_link.1:rbx 
   .loc 5 216 21
-  # $11.1: Boolean = call(is_389, value_link.1, IR_Struct_Literal_Member_Value_Link)
+  # $11.1: bool = call(is_389, value_link.1, IR_Struct_Literal_Member_Value_Link)
   mov rdi, rbx
   mov rsi, IR_Struct_Literal_Member_Value_Link[rip]
   mov [rbp-34], rbx
@@ -43893,13 +43893,13 @@ anonymous_function_4_157:
   jz .LABEL__anonymous_function_4_157__9
 .LABEL__anonymous_function_4_157__7:
   .loc 5 219 25
-  # is_first_value_link.3: Boolean = false
+  # is_first_value_link.3: bool = false
   mov al, 0
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] value_links_item.2:[rbp-24] $8.1:[rbp-26] value_link.1:[rbp-34] $11.1:[rbp-35] value_link.1:[rbp-43] is_first_value_link.3:rax:[rbp-25] 
   # jump(.LABEL__anonymous_function_4_157__8)
   mov [rbp-25], al
 .LABEL__anonymous_function_4_157__8:
-  # is_first_value_link.6: Boolean = phi(is_first_value_link.3, is_first_value_link.4)
+  # is_first_value_link.6: bool = phi(is_first_value_link.3, is_first_value_link.4)
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] value_links_item.2:[rbp-24] $8.1:[rbp-26] value_link.1:[rbp-34] $11.1:[rbp-35] value_link.1:[rbp-43] is_first_value_link.3:[rbp-25] is_first_value_link.6:[rbp-25] 
   .loc 5 223 32
   # $14.1: @IR_Struct_Type_Member = load_struct_member(value_link.1, struct_type_member)
@@ -43942,7 +43942,7 @@ anonymous_function_4_157:
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] value_links_item.2:[rbp-24] $8.1:[rbp-26] value_link.1:[rbp-34] $11.1:[rbp-35] value_link.1:[rbp-43] is_first_value_link.3:[rbp-25] is_first_value_link.6:[rbp-25] 
   # jump(.LABEL__anonymous_function_4_157__6)
 .LABEL__anonymous_function_4_157__6:
-  # is_first_value_link.5: Boolean = phi(is_first_value_link.4, is_first_value_link.6)
+  # is_first_value_link.5: bool = phi(is_first_value_link.4, is_first_value_link.6)
   # [live values]: file.1:[rbp-16] value_links_item.1:[rbp-24] is_first_value_link.1:[rbp-25] is_first_value_link.4:[rbp-25] value_links_item.2:[rbp-24] $8.1:[rbp-26] value_link.1:[rbp-34] $11.1:[rbp-35] value_link.1:[rbp-43] is_first_value_link.5:[rbp-25] is_first_value_link.3:[rbp-25] is_first_value_link.6:[rbp-25] 
   .loc 5 225 36
   # value_links_item.5: @List_Item = load_struct_member(value_links_item.2, next_item)
@@ -44039,7 +44039,7 @@ get_member_value_158:
   # links_item.2: @List_Item = phi(links_item.1, links_item.5)
   # [live values]: struct_type_member.1:[rbp-16] links_item.1:[rbp-8] links_item.2:[rbp-8] 
   .loc 5 240 12
-  # $3.1: Boolean = links_item.2 != null
+  # $3.1: bool = links_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: struct_type_member.1:[rbp-16] links_item.1:[rbp-8] links_item.2:[rbp-8] $3.1:rax 
@@ -44054,7 +44054,7 @@ get_member_value_158:
   mov rbx, [rax+16]
   # [live values]: struct_type_member.1:[rbp-16] links_item.1:[rbp-8] links_item.2:rax:[rbp-8] $3.1:[rbp-17] link.1:rbx 
   .loc 5 242 13
-  # $6.1: Boolean = call(is_389, link.1, IR_Struct_Literal_Member_Value_Link)
+  # $6.1: bool = call(is_389, link.1, IR_Struct_Literal_Member_Value_Link)
   mov rdi, rbx
   mov rsi, IR_Struct_Literal_Member_Value_Link[rip]
   mov [rbp-25], rbx
@@ -44074,7 +44074,7 @@ get_member_value_158:
   mov rbx, [rax+24]
   # [live values]: struct_type_member.1:[rbp-16] links_item.1:[rbp-8] links_item.2:[rbp-8] $3.1:[rbp-17] link.1:[rbp-25] $6.1:[rbp-26] link.1:rax $8.1:rbx 
   .loc 5 244 17
-  # $9.1: Boolean = $8.1 == struct_type_member.1
+  # $9.1: bool = $8.1 == struct_type_member.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $8.1
@@ -44367,7 +44367,7 @@ anonymous_function_7_162:
   # [discarded value]: $4.1
   # [live values]: value.1:[rbp-8] $5.1:rax 
   .loc 5 284 69
-  # $6.1: Int = load_struct_member(value.1, version)
+  # $6.1: isize = load_struct_member(value.1, version)
   mov rbx, [rbp-8]
   mov r15, [rbx+56]
   # [discarded value]: value.1
@@ -44414,12 +44414,12 @@ init_163:
   mov rax, [rsi+32]
   # [live values]: self.1:rdi variable.1:rsi $1.1:rax 
   .loc 5 293 20
-  # $2.1: Int = load_struct_member($1.1, size)
+  # $2.1: isize = load_struct_member($1.1, size)
   mov rbx, [rax+16]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi variable.1:rsi $2.1:rbx 
   .loc 5 293 20
-  # $3.1: Int = $2.1 + 1
+  # $3.1: isize = $2.1 + 1
   mov rax, rbx
   add rax, 1
   # [discarded value]: $2.1
@@ -44564,7 +44564,7 @@ has_instructions_166:
   # [discarded value]: self.1
   # [live values]: $1.1:rax 
   .loc 5 330 12
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -44617,7 +44617,7 @@ prepend_167:
   mov rax, [rdi+32]
   # [live values]: self.1:rdi instruction.1:rsi $2.1:rax 
   .loc 5 337 9
-  # $3.1: Boolean = $2.1 == null
+  # $3.1: bool = $2.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $2.1
@@ -44710,7 +44710,7 @@ append_168:
   mov rax, [rdi+40]
   # [live values]: self.1:rdi instruction.1:rsi $2.1:rax 
   .loc 5 350 9
-  # $3.1: Boolean = $2.1 == null
+  # $3.1: bool = $2.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $2.1
@@ -44991,7 +44991,7 @@ remove_171:
   mov rax, [rsi+32]
   # [live values]: self.1:rdi instruction.1:rsi $1.1:rax 
   .loc 5 376 9
-  # $2.1: Boolean = $1.1 != self.1
+  # $2.1: bool = $1.1 != self.1
   cmp rax, rdi
   setne bl
   # [discarded value]: $1.1
@@ -45015,7 +45015,7 @@ remove_171:
   mov rbx, [rax+40]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $3.1:rbx 
   .loc 5 379 9
-  # $4.1: Boolean = $3.1 != null
+  # $4.1: bool = $3.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $3.1
@@ -45048,7 +45048,7 @@ remove_171:
   mov rbx, [rax+48]
   # [live values]: self.1:[rbp-17] instruction.1:rax:[rbp-9] $2.1:[rbp-1] $4.1:[rbp-18] $7.1:rbx 
   .loc 5 382 9
-  # $8.1: Boolean = $7.1 != null
+  # $8.1: bool = $7.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $7.1
@@ -45081,7 +45081,7 @@ remove_171:
   mov rbx, [rax+32]
   # [live values]: self.1:rax:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $4.1:[rbp-18] $8.1:[rbp-19] $11.1:rbx 
   .loc 5 385 9
-  # $12.1: Boolean = $11.1 == instruction.1
+  # $12.1: bool = $11.1 == instruction.1
   cmp rbx, QWORD PTR [rbp-9]
   sete r15b
   # [discarded value]: $11.1
@@ -45110,7 +45110,7 @@ remove_171:
   mov rbx, [rax+40]
   # [live values]: self.1:rax:[rbp-17] instruction.1:[rbp-9] $2.1:[rbp-1] $4.1:[rbp-18] $8.1:[rbp-19] $12.1:[rbp-20] $14.1:rbx 
   .loc 5 388 9
-  # $15.1: Boolean = $14.1 == instruction.1
+  # $15.1: bool = $14.1 == instruction.1
   cmp rbx, QWORD PTR [rbp-9]
   sete r15b
   # [discarded value]: $14.1
@@ -45194,7 +45194,7 @@ dump_172:
   call write_383
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] $1.1:rax 
   .loc 5 397 32
-  # $2.1: Int = load_struct_member(block.1, id)
+  # $2.1: isize = load_struct_member(block.1, id)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: block.1:rbx:[rbp-8] file.1:[rbp-16] $1.1:rax $2.1:r15 
@@ -45219,7 +45219,7 @@ dump_172:
   # [discarded value]: $4.1
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] block_predecessors.1:rax 
   .loc 5 399 9
-  # $6.1: Boolean = call(has_next_378, block_predecessors.1)
+  # $6.1: bool = call(has_next_378, block_predecessors.1)
   mov rdi, rax
   mov [rbp-24], rax
   call has_next_378
@@ -45251,7 +45251,7 @@ dump_172:
   call write_383
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] block_predecessors.1:[rbp-24] $6.1:[rbp-25] block_predecessor.1:[rbp-33] $10.1:rax 
   .loc 5 403 40
-  # $11.1: Int = load_struct_member(block_predecessor.1, id)
+  # $11.1: isize = load_struct_member(block_predecessor.1, id)
   mov rbx, [rbp-33]
   mov r15, [rbx+8]
   # [discarded value]: block_predecessor.1
@@ -45266,7 +45266,7 @@ dump_172:
   # [discarded value]: $10.1
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] block_predecessors.1:[rbp-24] $6.1:[rbp-25] 
   .loc 5 404 17
-  # $13.1: Boolean = call(has_next_378, block_predecessors.1)
+  # $13.1: bool = call(has_next_378, block_predecessors.1)
   mov rdi, [rbp-24]
   call has_next_378
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] block_predecessors.1:[rbp-24] $6.1:[rbp-25] $13.1:rax 
@@ -45319,7 +45319,7 @@ dump_172:
   # block_instruction.2: @IR_Instruction = phi(block_instruction.1, block_instruction.4)
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] block_predecessors.1:[rbp-24] $6.1:[rbp-25] block_instruction.1:[rbp-34] $13.1:[rbp-26] block_instruction.2:[rbp-34] 
   .loc 5 414 12
-  # $19.1: Boolean = block_instruction.2 != null
+  # $19.1: bool = block_instruction.2 != null
   cmp QWORD PTR [rbp-34], 0
   setne al
   # [live values]: block.1:[rbp-8] file.1:[rbp-16] block_predecessors.1:[rbp-24] $6.1:[rbp-25] block_instruction.1:[rbp-34] $13.1:[rbp-26] block_instruction.2:[rbp-34] $19.1:rax 
@@ -45399,12 +45399,12 @@ create_block_173:
   mov rax, [rdi+57]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 5 434 35
-  # $2.1: Int = load_struct_member($1.1, size)
+  # $2.1: isize = load_struct_member($1.1, size)
   mov rbx, [rax+16]
   # [discarded value]: $1.1
   # [live values]: self.1:rdi $2.1:rbx 
   .loc 5 434 35
-  # $3.1: Int = $2.1 + 1
+  # $3.1: isize = $2.1 + 1
   mov rax, rbx
   add rax, 1
   # [discarded value]: $2.1
@@ -45519,7 +45519,7 @@ dump_174:
   mov [rbp-24], rax
 .LABEL__dump_174__2:
   .loc 5 442 12
-  # $5.1: Boolean = call(has_next_378, function_parameters.1)
+  # $5.1: bool = call(has_next_378, function_parameters.1)
   mov rdi, [rbp-24]
   call has_next_378
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] $5.1:rax 
@@ -45573,7 +45573,7 @@ dump_174:
   # [discarded value]: $10.1
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] $5.1:[rbp-25] 
   .loc 5 445 13
-  # $14.1: Boolean = call(has_next_378, function_parameters.1)
+  # $14.1: bool = call(has_next_378, function_parameters.1)
   mov rdi, [rbp-24]
   call has_next_378
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] $5.1:[rbp-25] $14.1:rax 
@@ -45649,7 +45649,7 @@ dump_174:
   # block_item.2: @List_Item = phi(block_item.1, block_item.4)
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] $5.1:[rbp-25] block_item.1:[rbp-33] block_item.2:[rbp-33] 
   .loc 5 451 12
-  # $24.1: Boolean = block_item.2 != null
+  # $24.1: bool = block_item.2 != null
   cmp QWORD PTR [rbp-33], 0
   setne al
   # [live values]: function.1:[rbp-8] file.1:[rbp-16] function_parameters.1:[rbp-24] $5.1:[rbp-25] block_item.1:[rbp-33] block_item.2:[rbp-33] $24.1:rax 
@@ -45811,7 +45811,7 @@ dump_ir_instruction_result_176:
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] file.1:[rbp-16] $2.1:rbx 
   .loc 5 493 9
-  # $3.1: Boolean = $2.1 != null
+  # $3.1: bool = $2.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $2.1
@@ -45901,7 +45901,7 @@ is_exit_instruction_177:
   # self.1: @IR_Instruction = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 5 499 9
-  # $1.1: Boolean = self.1 == null
+  # $1.1: bool = self.1 == null
   cmp rdi, 0
   sete al
   # [live values]: self.1:rdi $1.1:rax 
@@ -45918,7 +45918,7 @@ is_exit_instruction_177:
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] 
 .LABEL__is_exit_instruction_177__3:
   .loc 5 502 9
-  # $3.1: Boolean = call(is_389, self.1, IR_Jump_Instruction)
+  # $3.1: bool = call(is_389, self.1, IR_Jump_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Jump_Instruction[rip]
   call is_389
@@ -45929,7 +45929,7 @@ is_exit_instruction_177:
   jz .LABEL__is_exit_instruction_177__5
 .LABEL__is_exit_instruction_177__6:
   .loc 5 502 9
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] 
   # jump($3.3, .LABEL__is_exit_instruction_177__7, .LABEL__is_exit_instruction_177__8)
   mov al, [rbp-10]
@@ -45943,7 +45943,7 @@ is_exit_instruction_177:
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] 
 .LABEL__is_exit_instruction_177__8:
   .loc 5 505 9
-  # $5.1: Boolean = call(is_389, self.1, IR_Direct_Call_Instruction)
+  # $5.1: bool = call(is_389, self.1, IR_Direct_Call_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Direct_Call_Instruction[rip]
   call is_389
@@ -45967,7 +45967,7 @@ is_exit_instruction_177:
   mov rax, [rbx+24]
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:rbx $8.1:rax 
   .loc 5 508 13
-  # $9.1: Boolean = call(equals_392, $8.1, "abort")
+  # $9.1: bool = call(equals_392, $8.1, "abort")
   mov rdi, rax
   lea rsi, .LABEL__string_258[rip] # "abort"
   mov [rbp-19], rbx
@@ -45991,7 +45991,7 @@ is_exit_instruction_177:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:rax:[rbp-19] $9.1:[rbp-20] $10.1:rbx 
   .loc 5 511 13
-  # $12.1: Boolean = call(equals_392, $10.1, "exit")
+  # $12.1: bool = call(equals_392, $10.1, "exit")
   mov rdi, rbx
   lea rsi, .LABEL__string_259[rip] # "exit"
   call equals_392
@@ -46008,18 +46008,18 @@ is_exit_instruction_177:
   mov rbx, [rax+32]
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:rax:[rbp-19] $9.1:[rbp-20] $12.1:[rbp-21] $13.1:rbx 
   .loc 5 511 45
-  # $14.1: Int = load_struct_member($13.1, size)
+  # $14.1: isize = load_struct_member($13.1, size)
   mov r15, [rbx+16]
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:rax:[rbp-19] $9.1:[rbp-20] $12.1:[rbp-21] $14.1:r15 
   .loc 5 511 45
-  # $15.1: Boolean = $14.1 == 1
+  # $15.1: bool = $14.1 == 1
   cmp r15, 1
   sete bl
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:rax:[rbp-19] $9.1:[rbp-20] $12.1:[rbp-21] $15.1:rbx 
   .loc 5 511 13
-  # $12.2: Boolean = $15.1
+  # $12.2: bool = $15.1
   mov [rbp-22], bl
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:rax:[rbp-19] $9.1:[rbp-20] $12.1:[rbp-21] $12.2:rbx:[rbp-21] 
@@ -46027,7 +46027,7 @@ is_exit_instruction_177:
   mov [rbp-21], bl
 .LABEL__is_exit_instruction_177__16:
   .loc 5 511 13
-  # $12.3: Boolean = phi($12.1, $12.2)
+  # $12.3: bool = phi($12.1, $12.2)
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:[rbp-19] $9.1:[rbp-20] $12.1:[rbp-21] $12.2:[rbp-21] $12.3:[rbp-21] 
   # jump($12.3, .LABEL__is_exit_instruction_177__17, .LABEL__is_exit_instruction_177__11)
   mov al, [rbp-21]
@@ -46052,7 +46052,7 @@ is_exit_instruction_177:
   # [discarded value]: function_parameter.1
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:[rbp-11] function.1:[rbp-19] $9.1:[rbp-20] $12.1:[rbp-21] $12.2:[rbp-21] $12.3:[rbp-21] $19.1:rbx 
   .loc 5 513 17
-  # $20.1: Boolean = call(is_389, $19.1, IR_Int_Type)
+  # $20.1: bool = call(is_389, $19.1, IR_Int_Type)
   mov rdi, rbx
   mov rsi, IR_Int_Type[rip]
   call is_389
@@ -46094,7 +46094,7 @@ is_exit_instruction_177:
   # [live values]: self.1:[rbp-9] $1.1:[rbp-1] $3.1:[rbp-10] 
 .LABEL__is_exit_instruction_177__5:
   .loc 5 502 41
-  # $3.2: Boolean = call(is_389, self.1, IR_Return_Instruction)
+  # $3.2: bool = call(is_389, self.1, IR_Return_Instruction)
   mov rdi, [rbp-9]
   mov rsi, IR_Return_Instruction[rip]
   call is_389
@@ -46219,7 +46219,7 @@ replace_operand_value_179:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] old_value.1:[rbp-16] new_value.1:[rbp-24] 
   .loc 5 529 9
-  # $5.1: Boolean = call(is_389, self.1, IR_Phi_Instruction)
+  # $5.1: bool = call(is_389, self.1, IR_Phi_Instruction)
   mov rdi, [rbp-8]
   mov rsi, IR_Phi_Instruction[rip]
   call is_389
@@ -46316,7 +46316,7 @@ get_180:
   # entry.2: @IR_Values_Map_Entry = phi(entry.1, entry.6)
   # [live values]: key.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] 
   .loc 6 15 12
-  # $2.1: Boolean = entry.2 != null
+  # $2.1: bool = entry.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: key.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] $2.1:rax 
@@ -46331,7 +46331,7 @@ get_180:
   mov rbx, [rax]
   # [live values]: key.1:[rbp-16] entry.1:[rbp-8] entry.2:rax:[rbp-8] $2.1:[rbp-17] $3.1:rbx 
   .loc 6 16 13
-  # $4.1: Boolean = $3.1 == key.1
+  # $4.1: bool = $3.1 == key.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $3.1
@@ -46415,7 +46415,7 @@ put_181:
   # entry.2: @IR_Values_Map_Entry = phi(entry.1, entry.6)
   # [live values]: self.1:[rbp-32] key.1:[rbp-24] value.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] 
   .loc 6 26 12
-  # $2.1: Boolean = entry.2 != null
+  # $2.1: bool = entry.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-32] key.1:[rbp-24] value.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] $2.1:rax 
@@ -46430,7 +46430,7 @@ put_181:
   mov rbx, [rax]
   # [live values]: self.1:[rbp-32] key.1:[rbp-24] value.1:[rbp-16] entry.1:[rbp-8] entry.2:rax:[rbp-8] $2.1:[rbp-33] $3.1:rbx 
   .loc 6 27 13
-  # $4.1: Boolean = $3.1 == key.1
+  # $4.1: bool = $3.1 == key.1
   cmp rbx, QWORD PTR [rbp-24]
   sete r15b
   # [discarded value]: $3.1
@@ -46501,7 +46501,7 @@ put_181:
   mov r13, [r14+8]
   # [live values]: self.1:r14:[rbp-32] key.1:rbx:[rbp-24] value.1:r15:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] $2.1:[rbp-33] entry.7:rax:[rbp-8] $9.1:r13 
   .loc 6 35 9
-  # $10.1: Boolean = $9.1 == null
+  # $10.1: bool = $9.1 == null
   cmp r13, 0
   sete r12b
   # [discarded value]: $9.1
@@ -46592,7 +46592,7 @@ remove_182:
   # entry.2: @IR_Values_Map_Entry = phi(entry.1, entry.6)
   # [live values]: self.1:[rbp-24] key.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] 
   .loc 6 46 12
-  # $2.1: Boolean = entry.2 != null
+  # $2.1: bool = entry.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-24] key.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] $2.1:rax 
@@ -46607,7 +46607,7 @@ remove_182:
   mov rbx, [rax]
   # [live values]: self.1:[rbp-24] key.1:[rbp-16] entry.1:[rbp-8] entry.2:rax:[rbp-8] $2.1:[rbp-25] $3.1:rbx 
   .loc 6 47 13
-  # $4.1: Boolean = $3.1 == key.1
+  # $4.1: bool = $3.1 == key.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $3.1
@@ -46695,7 +46695,7 @@ remove_values_183:
   # entry.2: @IR_Values_Map_Entry = phi(entry.1, entry.6)
   # [live values]: self.1:[rbp-24] value.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] 
   .loc 6 57 12
-  # $2.1: Boolean = entry.2 != null
+  # $2.1: bool = entry.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-24] value.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] $2.1:rax 
@@ -46710,7 +46710,7 @@ remove_values_183:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-24] value.1:[rbp-16] entry.1:[rbp-8] entry.2:rax:[rbp-8] $2.1:[rbp-25] $3.1:rbx 
   .loc 6 58 13
-  # $4.1: Boolean = $3.1 == value.1
+  # $4.1: bool = $3.1 == value.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $3.1
@@ -46780,7 +46780,7 @@ unlink_184:
   mov rax, [rsi+16]
   # [live values]: self.1:rdi entry.1:rsi $1.1:rax 
   .loc 6 66 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -46815,7 +46815,7 @@ unlink_184:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-17] entry.1:rax:[rbp-9] $2.1:[rbp-1] $6.1:rbx 
   .loc 6 71 9
-  # $7.1: Boolean = $6.1 != null
+  # $7.1: bool = $6.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $6.1
@@ -46920,7 +46920,7 @@ replace_values_185:
   # entry.2: @IR_Values_Map_Entry = phi(entry.1, entry.6)
   # [live values]: old_value.1:[rbp-24] new_value.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] 
   .loc 6 81 12
-  # $2.1: Boolean = entry.2 != null
+  # $2.1: bool = entry.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: old_value.1:[rbp-24] new_value.1:[rbp-16] entry.1:[rbp-8] entry.2:[rbp-8] $2.1:rax 
@@ -46935,7 +46935,7 @@ replace_values_185:
   mov rbx, [rax+8]
   # [live values]: old_value.1:[rbp-24] new_value.1:[rbp-16] entry.1:[rbp-8] entry.2:rax:[rbp-8] $2.1:[rbp-25] $3.1:rbx 
   .loc 6 82 13
-  # $4.1: Boolean = $3.1 == old_value.1
+  # $4.1: bool = $3.1 == old_value.1
   cmp rbx, QWORD PTR [rbp-24]
   sete r15b
   # [discarded value]: $3.1
@@ -47000,7 +47000,7 @@ dump_ir_call_instruction_arguments_186:
   # file.1: @FILE = load_variable(file)
   # [live values]: instruction.1:rdi file.1:rsi 
   .loc 5 545 9
-  # call_argument_index.1: Int = 0
+  # call_argument_index.1: isize = 0
   xor rax, rax
   # [live values]: instruction.1:rdi file.1:rsi call_argument_index.1:rax 
   # jump(.LABEL__dump_ir_call_instruction_arguments_186__2)
@@ -47008,15 +47008,15 @@ dump_ir_call_instruction_arguments_186:
   mov [rbp-16], rsi
   mov [rbp-24], rdi
 .LABEL__dump_ir_call_instruction_arguments_186__2:
-  # call_argument_index.2: Int = phi(call_argument_index.1, call_argument_index.4)
+  # call_argument_index.2: isize = phi(call_argument_index.1, call_argument_index.4)
   # [live values]: instruction.1:[rbp-24] file.1:[rbp-16] call_argument_index.1:[rbp-8] call_argument_index.2:[rbp-8] 
   .loc 5 546 34
-  # $1.1: Int = load_struct_member(instruction.1, arguments_size)
+  # $1.1: isize = load_struct_member(instruction.1, arguments_size)
   mov rax, [rbp-24]
   mov rbx, [rax+65]
   # [live values]: instruction.1:rax:[rbp-24] file.1:[rbp-16] call_argument_index.1:[rbp-8] call_argument_index.2:[rbp-8] $1.1:rbx 
   .loc 5 546 12
-  # $2.1: Boolean = call_argument_index.2 < $1.1
+  # $2.1: bool = call_argument_index.2 < $1.1
   cmp QWORD PTR [rbp-8], rbx
   setl r15b
   # [discarded value]: $1.1
@@ -47050,12 +47050,12 @@ dump_ir_call_instruction_arguments_186:
   # [discarded value]: $3.1
   # [live values]: instruction.1:[rbp-24] file.1:[rbp-16] call_argument_index.1:[rbp-8] call_argument_index.2:[rbp-8] $2.1:[rbp-25] 
   .loc 5 548 31
-  # $6.1: Int = call_argument_index.2 + 1
+  # $6.1: isize = call_argument_index.2 + 1
   mov rax, [rbp-8]
   add rax, 1
   # [live values]: instruction.1:[rbp-24] file.1:[rbp-16] call_argument_index.1:[rbp-8] call_argument_index.2:[rbp-8] $2.1:[rbp-25] $6.1:rax 
   .loc 5 548 9
-  # call_argument_index.4: Int = $6.1
+  # call_argument_index.4: isize = $6.1
   mov [rbp-33], rax
   # [discarded value]: $6.1
   # [live values]: instruction.1:[rbp-24] file.1:[rbp-16] call_argument_index.1:[rbp-8] call_argument_index.2:[rbp-8] $2.1:[rbp-25] call_argument_index.4:rax:[rbp-8] 
@@ -47109,7 +47109,7 @@ add_arguments_187:
   # call_arguments_item.2: @List_Item = phi(call_arguments_item.1, call_arguments_item.4)
   # [live values]: self.1:[rbp-16] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] 
   .loc 5 559 12
-  # $2.1: Boolean = call_arguments_item.2 != null
+  # $2.1: bool = call_arguments_item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-16] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:rax 
@@ -47124,7 +47124,7 @@ add_arguments_187:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] call_arguments_item.1:[rbp-8] call_arguments_item.2:rax:[rbp-8] $2.1:[rbp-17] call_argument.1:rbx 
   .loc 5 561 49
-  # $5.1: Int = load_struct_member(self.1, arguments_size)
+  # $5.1: isize = load_struct_member(self.1, arguments_size)
   mov r15, [rbp-16]
   mov r14, [r15+65]
   # [live values]: self.1:r15:[rbp-16] call_arguments_item.1:[rbp-8] call_arguments_item.2:rax:[rbp-8] $2.1:[rbp-17] call_argument.1:rbx $5.1:r14 
@@ -47151,12 +47151,12 @@ add_arguments_187:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-16] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:[rbp-17] 
   .loc 5 562 31
-  # $8.1: Int = load_struct_member(self.1, arguments_size)
+  # $8.1: isize = load_struct_member(self.1, arguments_size)
   mov rax, [rbp-16]
   mov rbx, [rax+65]
   # [live values]: self.1:rax:[rbp-16] call_arguments_item.1:[rbp-8] call_arguments_item.2:[rbp-8] $2.1:[rbp-17] $8.1:rbx 
   .loc 5 562 31
-  # $9.1: Int = $8.1 + 1
+  # $9.1: isize = $8.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $8.1
@@ -47208,7 +47208,7 @@ get_argument_value_188:
 .LABEL__get_argument_value_188__1:
   # self.1: @IR_Call_Instruction = load_variable(self)
   # [live values]: self.1:rdi 
-  # index.1: Int = load_variable(index)
+  # index.1: isize = load_variable(index)
   # [live values]: self.1:rdi index.1:rsi 
   .loc 5 569 12
   # $1.1: @IR_Values_Map = load_struct_member(self.1, operand_values)
@@ -47251,10 +47251,10 @@ get_argument_key_189:
   movsx rax, WORD PTR get_argument_key_189__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__get_argument_key_189__1:
-  # index.1: Int = load_variable(index)
+  # index.1: isize = load_variable(index)
   # [live values]: index.1:rdi 
   .loc 5 573 9
-  # $1.1: Boolean = index.1 == 0
+  # $1.1: bool = index.1 == 0
   cmp rdi, 0
   sete al
   # [live values]: index.1:rdi $1.1:rax 
@@ -47271,7 +47271,7 @@ get_argument_key_189:
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] 
 .LABEL__get_argument_key_189__4:
   .loc 5 575 16
-  # $2.1: Boolean = index.1 == 1
+  # $2.1: bool = index.1 == 1
   cmp QWORD PTR [rbp-9], 1
   sete al
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:rax 
@@ -47287,7 +47287,7 @@ get_argument_key_189:
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] 
 .LABEL__get_argument_key_189__7:
   .loc 5 577 16
-  # $3.1: Boolean = index.1 == 2
+  # $3.1: bool = index.1 == 2
   cmp QWORD PTR [rbp-9], 2
   sete al
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] $3.1:rax 
@@ -47303,7 +47303,7 @@ get_argument_key_189:
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] $3.1:[rbp-11] 
 .LABEL__get_argument_key_189__10:
   .loc 5 579 16
-  # $4.1: Boolean = index.1 == 3
+  # $4.1: bool = index.1 == 3
   cmp QWORD PTR [rbp-9], 3
   sete al
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] $3.1:[rbp-11] $4.1:rax 
@@ -47319,7 +47319,7 @@ get_argument_key_189:
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] $3.1:[rbp-11] $4.1:[rbp-12] 
 .LABEL__get_argument_key_189__13:
   .loc 5 581 16
-  # $5.1: Boolean = index.1 == 4
+  # $5.1: bool = index.1 == 4
   cmp QWORD PTR [rbp-9], 4
   sete al
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] $3.1:[rbp-11] $4.1:[rbp-12] $5.1:rax 
@@ -47335,7 +47335,7 @@ get_argument_key_189:
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] $3.1:[rbp-11] $4.1:[rbp-12] $5.1:[rbp-13] 
 .LABEL__get_argument_key_189__16:
   .loc 5 583 16
-  # $6.1: Boolean = index.1 == 5
+  # $6.1: bool = index.1 == 5
   cmp QWORD PTR [rbp-9], 5
   sete al
   # [live values]: index.1:[rbp-9] $1.1:[rbp-1] $2.1:[rbp-10] $3.1:[rbp-11] $4.1:[rbp-12] $5.1:[rbp-13] $6.1:rax 
@@ -47546,7 +47546,7 @@ create_ir_direct_call_instruction_191:
   # [discarded value]: call_arguments.1
   # [live values]: result_value.1:[rbp-24] instruction.1:[rbp-32] 
   .loc 5 605 9
-  # $4.1: Boolean = result_value.1 != null
+  # $4.1: bool = result_value.1 != null
   cmp QWORD PTR [rbp-24], 0
   setne al
   # [live values]: result_value.1:[rbp-24] instruction.1:[rbp-32] $4.1:rax 
@@ -47653,7 +47653,7 @@ anonymous_function_12_192:
   # [discarded value]: $7.1
   # [live values]: file.1:[rbp-8] instruction.1:[rbp-16] function_address.1:[rbp-24] $8.1:rax 
   .loc 5 617 98
-  # $9.1: Int = load_struct_member(function_address.1, version)
+  # $9.1: isize = load_struct_member(function_address.1, version)
   mov rbx, [rbp-24]
   mov r15, [rbx+56]
   # [discarded value]: function_address.1
@@ -47774,7 +47774,7 @@ create_ir_dynamic_call_instruction_193:
   # [discarded value]: function_address.1
   # [live values]: result_value.1:[rbp-24] instruction.1:[rbp-32] 
   .loc 5 628 9
-  # $4.1: Boolean = result_value.1 != null
+  # $4.1: bool = result_value.1 != null
   cmp QWORD PTR [rbp-24], 0
   setne al
   # [live values]: result_value.1:[rbp-24] instruction.1:[rbp-32] $4.1:rax 
@@ -48574,7 +48574,7 @@ anonymous_function_17_205:
   # [discarded value]: instruction.1
   # [live values]: file.1:[rbp-8] instruction.1:rax 
   .loc 5 721 17
-  # $2.1: Boolean = load_struct_member(instruction.1, load_address)
+  # $2.1: bool = load_struct_member(instruction.1, load_address)
   mov bl, [rax+73]
   # [live values]: file.1:[rbp-8] instruction.1:rax $2.1:rbx 
   # jump($2.1, .LABEL__anonymous_function_17_205__2, .LABEL__anonymous_function_17_205__4)
@@ -48695,7 +48695,7 @@ create_ir_load_struct_member_instruction_206:
   # [live values]: result_value.1:rdi struct_pointer_value.1:rsi 
   # struct_type_member.1: @IR_Struct_Type_Member = load_variable(struct_type_member)
   # [live values]: result_value.1:rdi struct_pointer_value.1:rsi struct_type_member.1:rdx 
-  # load_address.1: Boolean = load_variable(load_address)
+  # load_address.1: bool = load_variable(load_address)
   # [live values]: result_value.1:rdi struct_pointer_value.1:rsi struct_type_member.1:rdx load_address.1:rcx 
   .loc 5 480 37
   # $1.1: @IR_Values_Map = new IR_Values_Map(first_entry = null, last_entry = null)
@@ -48766,7 +48766,7 @@ create_ir_load_struct_member_instruction_206:
   # [discarded value]: struct_type_member.1
   # [live values]: result_value.1:rax:[rbp-25] struct_pointer_value.1:[rbp-17] instruction.1:rbx:[rbp-33] $3.1:r14 
   .loc 5 738 9
-  # $4.1: Boolean = call(is_389, $3.1, IR_Struct_Type)
+  # $4.1: bool = call(is_389, $3.1, IR_Struct_Type)
   mov rdi, r14
   mov rsi, IR_Struct_Type[rip]
   call is_389
@@ -49545,7 +49545,7 @@ anonymous_function_21_216:
   call get_return_value_218
   # [live values]: file.1:[rbp-8] instruction.1:[rbp-16] $2.1:rax 
   .loc 5 822 17
-  # $3.1: Boolean = $2.1 == null
+  # $3.1: bool = $2.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $2.1
@@ -49695,7 +49695,7 @@ create_ir_return_instruction_217:
   # [discarded value]: $1.1
   # [live values]: return_value.1:[rbp-8] instruction.1:rax 
   .loc 5 832 9
-  # $3.1: Boolean = return_value.1 != null
+  # $3.1: bool = return_value.1 != null
   cmp QWORD PTR [rbp-8], 0
   setne bl
   # [live values]: return_value.1:[rbp-8] instruction.1:rax $3.1:rbx 
@@ -51627,7 +51627,7 @@ anonymous_function_36_245:
   # [discarded value]: $4.1
   # [live values]: file.1:[rbp-8] operand_values_entry.1:rax 
   .loc 5 1058 17
-  # $6.1: Boolean = operand_values_entry.1 != null
+  # $6.1: bool = operand_values_entry.1 != null
   cmp rax, 0
   setne bl
   # [live values]: file.1:[rbp-8] operand_values_entry.1:rax $6.1:rbx 
@@ -51660,7 +51660,7 @@ anonymous_function_36_245:
   # [discarded value]: operand_values_entry.2
   # [live values]: file.1:[rbp-8] operand_values_entry.1:[rbp-16] $6.1:[rbp-17] operand_values_entry.3:rbx:[rbp-16] 
   .loc 5 1062 25
-  # $10.1: Boolean = operand_values_entry.3 == null
+  # $10.1: bool = operand_values_entry.3 == null
   cmp rbx, 0
   sete al
   mov [rbp-16], rbx
@@ -51830,7 +51830,7 @@ is_redundant_248:
   # [discarded value]: $1.1
   # [live values]: operand_values_entry.1:rbx 
   .loc 5 1088 9
-  # $3.1: Boolean = operand_values_entry.1 == null
+  # $3.1: bool = operand_values_entry.1 == null
   cmp rbx, 0
   sete al
   # [live values]: operand_values_entry.1:rbx $3.1:rax 
@@ -51861,7 +51861,7 @@ is_redundant_248:
   # operand_values_entry.4: @IR_Values_Map_Entry = phi(operand_values_entry.3, operand_values_entry.7)
   # [live values]: operand_values_entry.1:[rbp-9] $3.1:[rbp-1] other_value.1:[rbp-17] operand_values_entry.3:[rbp-9] operand_values_entry.4:[rbp-9] 
   .loc 5 1093 12
-  # $6.1: Boolean = operand_values_entry.4 != null
+  # $6.1: bool = operand_values_entry.4 != null
   cmp QWORD PTR [rbp-9], 0
   setne al
   # [live values]: operand_values_entry.1:[rbp-9] $3.1:[rbp-1] other_value.1:[rbp-17] operand_values_entry.3:[rbp-9] operand_values_entry.4:[rbp-9] $6.1:rax 
@@ -51876,7 +51876,7 @@ is_redundant_248:
   mov rbx, [rax+8]
   # [live values]: operand_values_entry.1:[rbp-9] $3.1:[rbp-1] other_value.1:[rbp-17] operand_values_entry.3:[rbp-9] operand_values_entry.4:rax:[rbp-9] $6.1:[rbp-18] $7.1:rbx 
   .loc 5 1094 13
-  # $8.1: Boolean = $7.1 != other_value.1
+  # $8.1: bool = $7.1 != other_value.1
   cmp rbx, QWORD PTR [rbp-17]
   setne r15b
   # [discarded value]: $7.1
@@ -51950,7 +51950,7 @@ is_trivial_249:
   # [discarded value]: $1.1
   # [live values]: self.1:rdi operand_values_entry.1:rbx 
   .loc 5 1108 9
-  # $3.1: Boolean = operand_values_entry.1 == null
+  # $3.1: bool = operand_values_entry.1 == null
   cmp rbx, 0
   sete al
   # [live values]: self.1:rdi operand_values_entry.1:rbx $3.1:rax 
@@ -51984,7 +51984,7 @@ is_trivial_249:
   # operand_values_entry.2: @IR_Values_Map_Entry = phi(operand_values_entry.1, operand_values_entry.5)
   # [live values]: self.1:[rbp-17] operand_values_entry.1:[rbp-9] $3.1:[rbp-1] result_value.1:[rbp-25] other_value.1:[rbp-33] other_value.5:[rbp-33] operand_values_entry.2:[rbp-9] 
   .loc 5 1113 12
-  # $5.1: Boolean = operand_values_entry.2 != null
+  # $5.1: bool = operand_values_entry.2 != null
   cmp QWORD PTR [rbp-9], 0
   setne al
   # [live values]: self.1:[rbp-17] operand_values_entry.1:[rbp-9] $3.1:[rbp-1] result_value.1:[rbp-25] other_value.1:[rbp-33] other_value.5:[rbp-33] operand_values_entry.2:[rbp-9] $5.1:rax 
@@ -51999,7 +51999,7 @@ is_trivial_249:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-17] operand_values_entry.1:[rbp-9] $3.1:[rbp-1] result_value.1:[rbp-25] other_value.1:[rbp-33] other_value.5:[rbp-33] operand_values_entry.2:rax:[rbp-9] $5.1:[rbp-34] value.1:rbx 
   .loc 5 1115 13
-  # $7.1: Boolean = value.1 != result_value.1
+  # $7.1: bool = value.1 != result_value.1
   cmp rbx, QWORD PTR [rbp-25]
   setne r15b
   # [live values]: self.1:[rbp-17] operand_values_entry.1:[rbp-9] $3.1:[rbp-1] result_value.1:[rbp-25] other_value.1:[rbp-33] other_value.5:[rbp-33] operand_values_entry.2:rax:[rbp-9] $5.1:[rbp-34] value.1:rbx $7.1:r15 
@@ -52010,7 +52010,7 @@ is_trivial_249:
   jz .LABEL__is_trivial_249__8
 .LABEL__is_trivial_249__7:
   .loc 5 1116 17
-  # $8.1: Boolean = value.1 != other_value.5
+  # $8.1: bool = value.1 != other_value.5
   mov rax, [rbp-42]
   cmp rax, QWORD PTR [rbp-33]
   setne bl
@@ -52021,7 +52021,7 @@ is_trivial_249:
   jz .LABEL__is_trivial_249__8
 .LABEL__is_trivial_249__9:
   .loc 5 1117 21
-  # $9.1: Boolean = other_value.5 != null
+  # $9.1: bool = other_value.5 != null
   cmp QWORD PTR [rbp-33], 0
   setne al
   # [live values]: self.1:[rbp-17] operand_values_entry.1:[rbp-9] $3.1:[rbp-1] result_value.1:[rbp-25] other_value.1:[rbp-33] other_value.5:[rbp-33] operand_values_entry.2:[rbp-9] $5.1:[rbp-34] value.1:[rbp-42] $7.1:[rbp-43] $8.1:[rbp-44] $9.1:rax 
@@ -52260,7 +52260,7 @@ parse_251:
   call create_source_362
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:rax 
   .loc 7 18 9
-  # $2.1: Boolean = source.1 == null
+  # $2.1: bool = source.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:rax $2.1:rbx 
@@ -52283,7 +52283,7 @@ parse_251:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] message.1:rax 
   .loc 7 20 13
-  # $5.1: Boolean = location.1 != null
+  # $5.1: bool = location.1 != null
   cmp QWORD PTR [rbp-16], 0
   setne bl
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] message.1:rax $5.1:rbx 
@@ -52338,7 +52338,7 @@ parse_251:
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $9.1:r15 
   .loc 7 27 17
-  # $10.1: Int = load_struct_member($9.1, size)
+  # $10.1: isize = load_struct_member($9.1, size)
   mov rbx, [r15+16]
   # [discarded value]: $9.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] $10.1:rbx 
@@ -52391,14 +52391,14 @@ parse_251:
   # [discarded value]: $15.1
   # [live values]: self.1:rax:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:r15 
   .loc 7 34 9
-  # $17.1: Boolean = call(is_389, token.1, End_Of_File_Token)
+  # $17.1: bool = call(is_389, token.1, End_Of_File_Token)
   mov rdi, r15
   mov rsi, End_Of_File_Token[rip]
   mov [rbp-49], r15
   call is_389
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $17.1:rax 
   .loc 7 34 9
-  # $18.1: Boolean = $17.1 == false
+  # $18.1: bool = $17.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $17.1
@@ -52435,12 +52435,12 @@ parse_251:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:rax $22.1:rbx 
   .loc 7 38 9
-  # $23.1: Int = load_struct_member($22.1, column)
+  # $23.1: isize = load_struct_member($22.1, column)
   mov r15, [rbx+16]
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-8] file_path.1:[rbp-24] location.1:[rbp-16] source.1:[rbp-32] $2.1:[rbp-33] other_scanner.1:[rbp-41] token.1:[rbp-49] $18.1:[rbp-50] token.1:rax $23.1:r15 
   .loc 7 38 9
-  # $24.1: Boolean = $23.1 != 1
+  # $24.1: bool = $23.1 != 1
   cmp r15, 1
   setne bl
   # [discarded value]: $23.1
@@ -52534,7 +52534,7 @@ parse_statements_252:
   call parse_statement_254
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:rax 
   .loc 7 50 13
-  # $2.1: Boolean = statement.1 == null
+  # $2.1: bool = statement.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:rax $2.1:rbx 
@@ -52554,7 +52554,7 @@ parse_statements_252:
   call consume_end_of_line_280
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] 
   .loc 7 54 13
-  # $3.1: Boolean = call(is_389, statement.1, AST_Include_Statement)
+  # $3.1: bool = call(is_389, statement.1, AST_Include_Statement)
   mov rdi, [rbp-24]
   mov rsi, AST_Include_Statement[rip]
   call is_389
@@ -52596,7 +52596,7 @@ parse_statements_252:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:rax 
   .loc 7 58 17
-  # $10.1: Boolean = statement_file_path.1 == null
+  # $10.1: bool = statement_file_path.1 == null
   cmp rax, 0
   sete bl
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:rax $10.1:rbx 
@@ -52660,7 +52660,7 @@ parse_statements_252:
   # compilation_unit_sources_item.2: @List_Item = phi(compilation_unit_sources_item.1, compilation_unit_sources_item.5)
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:[rbp-51] 
   .loc 7 63 20
-  # $18.1: Boolean = compilation_unit_sources_item.2 != null
+  # $18.1: bool = compilation_unit_sources_item.2 != null
   cmp QWORD PTR [rbp-51], 0
   setne al
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:[rbp-51] $18.1:rax 
@@ -52680,7 +52680,7 @@ parse_statements_252:
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:rax:[rbp-51] $18.1:[rbp-52] $21.1:r15 
   .loc 7 64 21
-  # $22.1: Boolean = call(equals_392, $21.1, statement_file_path.1)
+  # $22.1: bool = call(equals_392, $21.1, statement_file_path.1)
   mov rdi, r15
   mov rsi, [rbp-42]
   call equals_392
@@ -52692,7 +52692,7 @@ parse_statements_252:
   jz .LABEL__parse_statements_252__16
 .LABEL__parse_statements_252__14:
   .loc 7 70 17
-  # $24.1: Boolean = compilation_unit_sources_item.2 == null
+  # $24.1: bool = compilation_unit_sources_item.2 == null
   cmp QWORD PTR [rbp-51], 0
   sete al
   # [live values]: self.1:[rbp-16] statements.1:[rbp-8] statement.1:[rbp-24] $2.1:[rbp-25] $3.1:[rbp-26] statement.1:[rbp-34] statement_file_path.1:[rbp-42] $10.1:[rbp-43] compilation_unit_sources_item.1:[rbp-51] compilation_unit_sources_item.2:[rbp-51] $18.1:[rbp-52] $22.1:[rbp-53] $24.1:rax 
@@ -52785,7 +52785,7 @@ make_relative_path_253:
   # base_file_path.1: @String = load_variable(base_file_path)
   # [live values]: file_path.1:rdi base_file_path.1:rsi 
   .loc 7 80 9
-  # $1.1: Boolean = call(starts_with_394, file_path.1, "./")
+  # $1.1: bool = call(starts_with_394, file_path.1, "./")
   mov [rbp-8], rsi
   lea rsi, .LABEL__string_304[rip] # "./"
   mov [rbp-16], rdi
@@ -52809,25 +52809,25 @@ make_relative_path_253:
   # [discarded value]: $2.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $3.1:rax 
   .loc 7 81 76
-  # $4.1: Int = call(last_index_of_396, base_file_path.1, '/')
+  # $4.1: isize = call(last_index_of_396, base_file_path.1, '/')
   mov rdi, [rbp-8]
   mov sil, 47
   mov [rbp-25], rax
   call last_index_of_396
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $3.1:[rbp-25] $4.1:rax 
   .loc 7 81 76
-  # $5.1: Int = $4.1 + 1
+  # $5.1: isize = $4.1 + 1
   mov rbx, rax
   add rbx, 1
   # [discarded value]: $4.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $3.1:[rbp-25] $5.1:rbx 
   .loc 7 81 115
-  # $6.1: Int = load_struct_member(base_file_path.1, length)
+  # $6.1: isize = load_struct_member(base_file_path.1, length)
   mov rax, [rbp-8]
   mov r15, [rax+16]
   # [live values]: file_path.1:[rbp-16] base_file_path.1:rax:[rbp-8] $1.1:[rbp-17] $3.1:[rbp-25] $5.1:rbx $6.1:r15 
   .loc 7 81 115
-  # $7.1: Int = $6.1 + 2
+  # $7.1: isize = $6.1 + 2
   mov r14, r15
   add r14, 2
   # [discarded value]: $6.1
@@ -52850,7 +52850,7 @@ make_relative_path_253:
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] 
 .LABEL__make_relative_path_253__3:
   .loc 7 84 9
-  # $9.1: Boolean = call(starts_with_394, file_path.1, "../")
+  # $9.1: bool = call(starts_with_394, file_path.1, "../")
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_305[rip] # "../"
   call starts_with_394
@@ -52873,20 +52873,20 @@ make_relative_path_253:
   # [discarded value]: $10.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:rax 
   .loc 7 85 76
-  # $12.1: Int = call(last_index_of_396, base_file_path.1, '/')
+  # $12.1: isize = call(last_index_of_396, base_file_path.1, '/')
   mov rdi, [rbp-8]
   mov sil, 47
   mov [rbp-26], rax
   call last_index_of_396
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:[rbp-26] $12.1:rax 
   .loc 7 85 76
-  # $13.1: Int = $12.1 + 1
+  # $13.1: isize = $12.1 + 1
   mov rbx, rax
   add rbx, 1
   # [discarded value]: $12.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:[rbp-26] $13.1:rbx 
   .loc 7 85 115
-  # $14.1: Int = load_struct_member(base_file_path.1, length)
+  # $14.1: isize = load_struct_member(base_file_path.1, length)
   mov rax, [rbp-8]
   mov r15, [rax+16]
   # [live values]: file_path.1:[rbp-16] base_file_path.1:rax:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $11.1:[rbp-26] $13.1:rbx $14.1:r15 
@@ -52904,13 +52904,13 @@ make_relative_path_253:
   mov [rbp-26], rax
 .LABEL__make_relative_path_253__7:
   .loc 7 87 25
-  # index.1: Int = call(index_of_393, relative_path.1, "/../")
+  # index.1: isize = call(index_of_393, relative_path.1, "/../")
   mov rdi, [rbp-26]
   lea rsi, .LABEL__string_306[rip] # "/../"
   call index_of_393
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:rax 
   .loc 7 88 17
-  # $17.1: Boolean = index.1 <= 0
+  # $17.1: bool = index.1 <= 0
   cmp rax, 0
   setle bl
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:rax $17.1:rbx 
@@ -52927,12 +52927,12 @@ make_relative_path_253:
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] 
 .LABEL__make_relative_path_253__10:
   .loc 7 91 67
-  # $18.1: Int = index.1 - 1
+  # $18.1: isize = index.1 - 1
   mov rax, [rbp-34]
   dec rax
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] $18.1:rax 
   .loc 7 91 34
-  # $19.1: Int = call(last_index_of_397, relative_path.1, '/', $18.1)
+  # $19.1: isize = call(last_index_of_397, relative_path.1, '/', $18.1)
   mov rdi, [rbp-26]
   mov sil, 47
   mov rdx, rax
@@ -52940,7 +52940,7 @@ make_relative_path_253:
   # [discarded value]: $18.1
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] $19.1:rax 
   .loc 7 91 79
-  # $20.1: Int = index.1 + 3
+  # $20.1: isize = index.1 + 3
   mov rbx, [rbp-34]
   add rbx, 3
   # [live values]: file_path.1:[rbp-16] base_file_path.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] relative_path.1:[rbp-26] index.1:[rbp-34] $17.1:[rbp-35] $19.1:rax $20.1:rbx 
@@ -52998,7 +52998,7 @@ parse_statement_254:
   mov [rbp-8], rdi
 .LABEL__parse_statement_254__2:
   .loc 7 108 12
-  # $1.1: Boolean = call(consume_empty_line_281, self.1)
+  # $1.1: bool = call(consume_empty_line_281, self.1)
   mov rdi, [rbp-8]
   call consume_empty_line_281
   # [live values]: self.1:[rbp-8] $1.1:rax 
@@ -53008,7 +53008,7 @@ parse_statement_254:
   jnz .LABEL__parse_statement_254__2
 .LABEL__parse_statement_254__4:
   .loc 7 111 9
-  # $3.1: Boolean = call(matches_288, self.1, optional_space, required_close_brace)
+  # $3.1: bool = call(matches_288, self.1, optional_space, required_close_brace)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_close_brace[rip]
@@ -53020,7 +53020,7 @@ parse_statement_254:
   jz .LABEL__parse_statement_254__5
 .LABEL__parse_statement_254__6:
   .loc 7 111 9
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] 
   # jump($3.3, .LABEL__parse_statement_254__7, .LABEL__parse_statement_254__8)
   mov al, [rbp-10]
@@ -53034,12 +53034,12 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] 
 .LABEL__parse_statement_254__8:
   .loc 7 115 24
-  # $5.1: Int = load_struct_member(self.1, current_alignment)
+  # $5.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $5.1:rbx 
   .loc 7 115 24
-  # $6.1: Int = $5.1 * 4
+  # $6.1: isize = $5.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $5.1
@@ -53052,7 +53052,7 @@ parse_statement_254:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] 
   .loc 7 117 9
-  # $7.1: Boolean = call(matches_287, self.1, required_define)
+  # $7.1: bool = call(matches_287, self.1, required_define)
   mov rdi, [rbp-8]
   mov rsi, required_define[rip]
   call matches_287
@@ -53075,7 +53075,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] 
 .LABEL__parse_statement_254__11:
   .loc 7 120 9
-  # $9.1: Boolean = call(matches_287, self.1, required_let)
+  # $9.1: bool = call(matches_287, self.1, required_let)
   mov rdi, [rbp-8]
   mov rsi, required_let[rip]
   call matches_287
@@ -53098,7 +53098,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] 
 .LABEL__parse_statement_254__14:
   .loc 7 123 9
-  # $11.1: Boolean = call(matches_287, self.1, required_if)
+  # $11.1: bool = call(matches_287, self.1, required_if)
   mov rdi, [rbp-8]
   mov rsi, required_if[rip]
   call matches_287
@@ -53121,7 +53121,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] 
 .LABEL__parse_statement_254__17:
   .loc 7 126 9
-  # $13.1: Boolean = call(matches_287, self.1, required_return)
+  # $13.1: bool = call(matches_287, self.1, required_return)
   mov rdi, [rbp-8]
   mov rsi, required_return[rip]
   call matches_287
@@ -53142,14 +53142,14 @@ parse_statement_254:
   xor rbx, rbx
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] token.1:rax value_expression.1:rbx 
   .loc 7 129 13
-  # $15.1: Boolean = call(matches_end_of_line_286, self.1)
+  # $15.1: bool = call(matches_end_of_line_286, self.1)
   mov rdi, [rbp-8]
   mov [rbp-22], rax
   mov [rbp-30], rbx
   call matches_end_of_line_286
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] token.1:[rbp-22] value_expression.1:[rbp-30] $15.1:rax 
   .loc 7 129 13
-  # $16.1: Boolean = $15.1 == false
+  # $16.1: bool = $15.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $15.1
@@ -53216,7 +53216,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] 
 .LABEL__parse_statement_254__20:
   .loc 7 135 9
-  # $20.1: Boolean = call(matches_287, self.1, required_loop)
+  # $20.1: bool = call(matches_287, self.1, required_loop)
   mov rdi, [rbp-8]
   mov rsi, required_loop[rip]
   call matches_287
@@ -53239,7 +53239,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] $20.1:[rbp-15] 
 .LABEL__parse_statement_254__25:
   .loc 7 138 9
-  # $22.1: Boolean = call(matches_287, self.1, required_while)
+  # $22.1: bool = call(matches_287, self.1, required_while)
   mov rdi, [rbp-8]
   mov rsi, required_while[rip]
   call matches_287
@@ -53262,7 +53262,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] $20.1:[rbp-15] $22.1:[rbp-16] 
 .LABEL__parse_statement_254__28:
   .loc 7 141 9
-  # $24.1: Boolean = call(matches_287, self.1, required_break)
+  # $24.1: bool = call(matches_287, self.1, required_break)
   mov rdi, [rbp-8]
   mov rsi, required_break[rip]
   call matches_287
@@ -53307,7 +53307,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] $20.1:[rbp-15] $22.1:[rbp-16] $24.1:[rbp-17] 
 .LABEL__parse_statement_254__31:
   .loc 7 145 9
-  # $28.1: Boolean = call(matches_287, self.1, required_include)
+  # $28.1: bool = call(matches_287, self.1, required_include)
   mov rdi, [rbp-8]
   mov rsi, required_include[rip]
   call matches_287
@@ -53335,7 +53335,7 @@ parse_statement_254:
   call parse_expression_267
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] $20.1:[rbp-15] $22.1:[rbp-16] $24.1:[rbp-17] $28.1:[rbp-18] expression.1:rax 
   .loc 7 151 9
-  # $31.1: Boolean = call(matches_289, self.1, optional_space, optional_comment, required_end_of_line)
+  # $31.1: bool = call(matches_289, self.1, optional_space, optional_comment, required_end_of_line)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, optional_comment[rip]
@@ -53380,7 +53380,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] $3.3:[rbp-10] $7.1:[rbp-11] $9.1:[rbp-12] $11.1:[rbp-13] $13.1:[rbp-14] $20.1:[rbp-15] $22.1:[rbp-16] $24.1:[rbp-17] $28.1:[rbp-18] expression.1:[rbp-26] $31.1:[rbp-27] 
 .LABEL__parse_statement_254__37:
   .loc 7 155 9
-  # $34.1: Boolean = call(matches_288, self.1, optional_space, required_equals)
+  # $34.1: bool = call(matches_288, self.1, optional_space, required_equals)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_equals[rip]
@@ -53486,7 +53486,7 @@ parse_statement_254:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:[rbp-10] 
 .LABEL__parse_statement_254__5:
   .loc 7 111 63
-  # $3.2: Boolean = call(matches_287, self.1, required_end_of_file)
+  # $3.2: bool = call(matches_287, self.1, required_end_of_file)
   mov rdi, [rbp-8]
   mov rsi, required_end_of_file[rip]
   call matches_287
@@ -53635,7 +53635,7 @@ parse_define_256:
   call consume_space_282
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] 
   .loc 7 183 9
-  # $5.1: Boolean = call(matches_289, self.1, required_unknown, optional_space, required_struct)
+  # $5.1: bool = call(matches_289, self.1, required_unknown, optional_space, required_struct)
   mov rdi, [rbp-8]
   mov rsi, required_unknown[rip]
   mov rdx, optional_space[rip]
@@ -53723,7 +53723,7 @@ parse_define_256:
   # [live values]: self.1:[rbp-8] name.1:[rbp-16] $5.1:[rbp-17] 
 .LABEL__parse_define_256__3:
   .loc 7 191 9
-  # $12.1: Boolean = call(matches_287, self.1, required_struct)
+  # $12.1: bool = call(matches_287, self.1, required_struct)
   mov rdi, [rbp-8]
   mov rsi, required_struct[rip]
   call matches_287
@@ -53824,12 +53824,12 @@ parse_struct_257:
   call consume_end_of_line_280
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] 
   .loc 7 205 30
-  # $4.1: Int = load_struct_member(self.1, current_alignment)
+  # $4.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] $4.1:rbx 
   .loc 7 205 30
-  # $5.1: Int = $4.1 + 1
+  # $5.1: isize = $4.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $4.1
@@ -53844,7 +53844,7 @@ parse_struct_257:
   xor rbx, rbx
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:rbx 
   .loc 7 207 9
-  # $6.1: Boolean = call(matches_288, self.1, optional_space, required_extends)
+  # $6.1: bool = call(matches_288, self.1, optional_space, required_extends)
   mov rdi, rax
   mov rsi, optional_space[rip]
   mov rdx, required_extends[rip]
@@ -53857,12 +53857,12 @@ parse_struct_257:
   jz .LABEL__parse_struct_257__3
 .LABEL__parse_struct_257__2:
   .loc 7 208 28
-  # $7.1: Int = load_struct_member(self.1, current_alignment)
+  # $7.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] $7.1:rbx 
   .loc 7 208 28
-  # $8.1: Int = $7.1 * 4
+  # $8.1: isize = $7.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $7.1
@@ -53893,7 +53893,7 @@ parse_struct_257:
   call parse_type_266
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:rax:[rbp-32] 
   .loc 7 212 13
-  # $11.1: Boolean = call(matches_288, self.1, optional_space, required_open_paren)
+  # $11.1: bool = call(matches_288, self.1, optional_space, required_open_paren)
   mov rdi, [rbp-16]
   mov rsi, optional_space[rip]
   mov rdx, required_open_paren[rip]
@@ -53963,14 +53963,14 @@ parse_struct_257:
   mov [rbp-42], rax
 .LABEL__parse_struct_257__6:
   .loc 7 222 12
-  # $15.1: Boolean = call(matches_288, self.1, optional_space, required_close_brace)
+  # $15.1: bool = call(matches_288, self.1, optional_space, required_close_brace)
   mov rdi, [rbp-16]
   mov rsi, optional_space[rip]
   mov rdx, required_close_brace[rip]
   call matches_288
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $15.1:rax 
   .loc 7 222 12
-  # $16.1: Boolean = $15.1 == false
+  # $16.1: bool = $15.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $15.1
@@ -53981,12 +53981,12 @@ parse_struct_257:
   jz .LABEL__parse_struct_257__8
 .LABEL__parse_struct_257__7:
   .loc 7 223 13
-  # $17.1: Boolean = call(consume_empty_line_281, self.1)
+  # $17.1: bool = call(consume_empty_line_281, self.1)
   mov rdi, [rbp-16]
   call consume_empty_line_281
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $16.1:[rbp-43] $17.1:rax 
   .loc 7 223 13
-  # $18.1: Boolean = $17.1 == false
+  # $18.1: bool = $17.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $17.1
@@ -53997,12 +53997,12 @@ parse_struct_257:
   jz .LABEL__parse_struct_257__6
 .LABEL__parse_struct_257__9:
   .loc 7 224 32
-  # $19.1: Int = load_struct_member(self.1, current_alignment)
+  # $19.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $16.1:[rbp-43] $18.1:[rbp-44] $19.1:rbx 
   .loc 7 224 32
-  # $20.1: Int = $19.1 * 4
+  # $20.1: isize = $19.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $19.1
@@ -54046,7 +54046,7 @@ parse_struct_257:
   call parse_type_266
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $16.1:[rbp-43] $18.1:[rbp-44] struct_member_name.1:[rbp-52] struct_member_value_type.1:rax 
   .loc 7 230 17
-  # $25.1: Boolean = call(matches_288, self.1, optional_space, required_equals)
+  # $25.1: bool = call(matches_288, self.1, optional_space, required_equals)
   mov rdi, [rbp-16]
   mov rsi, optional_space[rip]
   mov rdx, required_equals[rip]
@@ -54150,12 +54150,12 @@ parse_struct_257:
   # [live values]: self.1:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $16.1:[rbp-43] 
 .LABEL__parse_struct_257__8:
   .loc 7 241 30
-  # $31.1: Int = load_struct_member(self.1, current_alignment)
+  # $31.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $16.1:[rbp-43] $31.1:rbx 
   .loc 7 241 30
-  # $32.1: Int = $31.1 - 1
+  # $32.1: isize = $31.1 - 1
   mov r15, rbx
   dec r15
   # [discarded value]: $31.1
@@ -54166,11 +54166,11 @@ parse_struct_257:
   # [discarded value]: $32.1
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $16.1:[rbp-43] 
   .loc 7 242 24
-  # $33.1: Int = load_struct_member(self.1, current_alignment)
+  # $33.1: isize = load_struct_member(self.1, current_alignment)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] struct_name.1:[rbp-8] struct_init_arguments.1:[rbp-24] base_type.1:[rbp-32] $6.1:[rbp-33] base_type.2:[rbp-32] $11.1:[rbp-34] base_type.5:[rbp-32] struct_members.1:[rbp-42] $16.1:[rbp-43] $33.1:rbx 
   .loc 7 242 24
-  # $34.1: Int = $33.1 * 4
+  # $34.1: isize = $33.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $33.1
@@ -54285,7 +54285,7 @@ parse_function_258:
   # function_name.1: @Identifier_Token = load_variable(function_name)
   # [live values]: self.1:rdi function_name.1:rsi 
   .loc 7 252 33
-  # function_is_anonymous.1: Boolean = call(is_389, function_name.1, Generated_Identifier_Token)
+  # function_is_anonymous.1: bool = call(is_389, function_name.1, Generated_Identifier_Token)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -54299,7 +54299,7 @@ parse_function_258:
   call parse_function_type_259
   # [live values]: self.1:[rbp-8] function_name.1:[rbp-16] function_is_anonymous.1:[rbp-17] function_type.1:rax 
   .loc 7 255 9
-  # $3.1: Boolean = call(matches_288, self.1, optional_space, required_open_brace)
+  # $3.1: bool = call(matches_288, self.1, optional_space, required_open_brace)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_open_brace[rip]
@@ -54487,14 +54487,14 @@ parse_function_type_259:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:rax 
   .loc 7 277 9
-  # $5.1: Boolean = call(matches_287, self.1, required_close_paren)
+  # $5.1: bool = call(matches_287, self.1, required_close_paren)
   mov rdi, [rbp-8]
   mov rsi, required_close_paren[rip]
   mov [rbp-24], rax
   call matches_287
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $5.1:rax 
   .loc 7 277 9
-  # $6.1: Boolean = $5.1 == false
+  # $6.1: bool = $5.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $5.1
@@ -54519,14 +54519,14 @@ parse_function_type_259:
   # jump(.LABEL__parse_function_type_259__4)
 .LABEL__parse_function_type_259__4:
   .loc 7 279 16
-  # $8.1: Boolean = call(matches_288, self.1, optional_space, required_close_paren)
+  # $8.1: bool = call(matches_288, self.1, optional_space, required_close_paren)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_close_paren[rip]
   call matches_288
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] function_parameters.1:[rbp-24] $6.1:[rbp-25] $8.1:rax 
   .loc 7 279 16
-  # $9.1: Boolean = $8.1 == false
+  # $9.1: bool = $8.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $8.1
@@ -54751,12 +54751,12 @@ parse_block_261:
   call consume_end_of_line_280
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] 
   .loc 7 310 30
-  # $3.1: Int = load_struct_member(self.1, current_alignment)
+  # $3.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] $3.1:rbx 
   .loc 7 310 30
-  # $4.1: Int = $3.1 + 1
+  # $4.1: isize = $3.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $3.1
@@ -54785,12 +54785,12 @@ parse_block_261:
   call parse_statements_252
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] 
   .loc 7 313 30
-  # $6.1: Int = load_struct_member(self.1, current_alignment)
+  # $6.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] $6.1:rbx 
   .loc 7 313 30
-  # $7.1: Int = $6.1 - 1
+  # $7.1: isize = $6.1 - 1
   mov r15, rbx
   dec r15
   # [discarded value]: $6.1
@@ -54801,11 +54801,11 @@ parse_block_261:
   # [discarded value]: $7.1
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] 
   .loc 7 314 24
-  # $8.1: Int = load_struct_member(self.1, current_alignment)
+  # $8.1: isize = load_struct_member(self.1, current_alignment)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] location.1:[rbp-16] statements.1:[rbp-24] $8.1:rbx 
   .loc 7 314 24
-  # $9.1: Int = $8.1 * 4
+  # $9.1: isize = $8.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $8.1
@@ -54900,27 +54900,27 @@ parse_let_262:
   xor r15, r15
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:rax variable_value_type.1:rbx variable_value_expression.1:r15 
   .loc 7 327 30
-  # $5.1: Int = load_struct_member(self.1, current_alignment)
+  # $5.1: isize = load_struct_member(self.1, current_alignment)
   mov r14, [rbp-8]
   mov r13, [r14+16]
   # [live values]: self.1:r14:[rbp-8] location.1:[rbp-16] variable_name.1:rax variable_value_type.1:rbx variable_value_expression.1:r15 $5.1:r13 
   .loc 7 327 30
-  # $6.1: Boolean = $5.1 == 0
+  # $6.1: bool = $5.1 == 0
   cmp r13, 0
   sete r12b
   # [discarded value]: $5.1
   # [live values]: self.1:r14:[rbp-8] location.1:[rbp-16] variable_name.1:rax variable_value_type.1:rbx variable_value_expression.1:r15 $6.1:r12 
   .loc 7 327 9
-  # variable_is_global.1: Boolean = $6.1
+  # variable_is_global.1: bool = $6.1
   mov [rbp-17], r12b
   # [discarded value]: $6.1
   # [live values]: self.1:r14:[rbp-8] location.1:[rbp-16] variable_name.1:rax variable_value_type.1:rbx variable_value_expression.1:r15 variable_is_global.1:r12 
   .loc 7 328 9
-  # variable_is_external.1: Boolean = false
+  # variable_is_external.1: bool = false
   mov r13b, 0
   # [live values]: self.1:r14:[rbp-8] location.1:[rbp-16] variable_name.1:rax variable_value_type.1:rbx variable_value_expression.1:r15 variable_is_global.1:r12 variable_is_external.1:r13 
   .loc 7 329 9
-  # $7.1: Boolean = call(matches_288, self.1, optional_space, required_colon)
+  # $7.1: bool = call(matches_288, self.1, optional_space, required_colon)
   mov rdi, r14
   mov rsi, optional_space[rip]
   mov rdx, required_colon[rip]
@@ -54966,7 +54966,7 @@ parse_let_262:
   # variable_value_type.5: @AST_Type = phi(variable_value_type.1, variable_value_type.2)
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] 
   .loc 7 335 9
-  # $10.1: Boolean = call(matches_288, self.1, optional_space, required_equals)
+  # $10.1: bool = call(matches_288, self.1, optional_space, required_equals)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_equals[rip]
@@ -54997,7 +54997,7 @@ parse_let_262:
   call consume_space_282
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] 
   .loc 7 339 13
-  # $12.1: Boolean = call(matches_287, self.1, required_external)
+  # $12.1: bool = call(matches_287, self.1, required_external)
   mov rdi, [rbp-8]
   mov rsi, required_external[rip]
   call matches_287
@@ -55015,7 +55015,7 @@ parse_let_262:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] 
   .loc 7 341 17
-  # $15.1: Boolean = variable_is_global.1 == false
+  # $15.1: bool = variable_is_global.1 == false
   cmp BYTE PTR [rbp-33], 0
   sete al
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] $15.1:rax 
@@ -55032,7 +55032,7 @@ parse_let_262:
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] $15.1:[rbp-46] 
 .LABEL__parse_let_262__10:
   .loc 7 344 17
-  # $16.1: Boolean = variable_value_type.5 == null
+  # $16.1: bool = variable_value_type.5 == null
   cmp QWORD PTR [rbp-32], 0
   sete al
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] $15.1:[rbp-46] $16.1:rax 
@@ -55049,13 +55049,13 @@ parse_let_262:
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] $15.1:[rbp-46] $16.1:[rbp-47] 
 .LABEL__parse_let_262__12:
   .loc 7 347 13
-  # variable_is_external.2: Boolean = true
+  # variable_is_external.2: bool = true
   mov al, 1
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] $15.1:[rbp-46] $16.1:[rbp-47] variable_is_external.2:rax:[rbp-34] 
   # jump(.LABEL__parse_let_262__5)
   mov [rbp-34], al
 .LABEL__parse_let_262__5:
-  # variable_is_external.3: Boolean = phi(variable_is_external.2, variable_is_external.1)
+  # variable_is_external.3: bool = phi(variable_is_external.2, variable_is_external.1)
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] variable_is_external.3:[rbp-34] $15.1:[rbp-46] $16.1:[rbp-47] variable_is_external.2:[rbp-34] 
   # variable_value_expression.3: @AST_Expression = phi(variable_value_expression.2, variable_value_expression.1)
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] variable_name.1:[rbp-24] variable_value_type.1:[rbp-32] variable_value_expression.1:[rbp-42] variable_is_global.1:[rbp-33] variable_is_external.1:[rbp-34] $7.1:[rbp-43] variable_value_type.2:[rbp-32] variable_value_type.5:[rbp-32] $10.1:[rbp-44] $12.1:[rbp-45] variable_is_external.3:[rbp-34] variable_value_expression.3:[rbp-42] $15.1:[rbp-46] $16.1:[rbp-47] variable_is_external.2:[rbp-34] 
@@ -55249,7 +55249,7 @@ parse_if_263:
   xor rbx, rbx
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:rax false_statement.1:rbx 
   .loc 7 372 9
-  # $7.1: Boolean = call(matches_288, self.1, optional_space, required_else)
+  # $7.1: bool = call(matches_288, self.1, optional_space, required_else)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_else[rip]
@@ -55282,7 +55282,7 @@ parse_if_263:
   call consume_space_282
   # [live values]: self.1:[rbp-8] location.1:[rbp-16] condition_expression.1:[rbp-24] true_statement.1:[rbp-32] false_statement.1:[rbp-40] $7.1:[rbp-41] 
   .loc 7 376 13
-  # $9.1: Boolean = call(matches_287, self.1, required_if)
+  # $9.1: bool = call(matches_287, self.1, required_if)
   mov rdi, [rbp-8]
   mov rsi, required_if[rip]
   call matches_287
@@ -55551,7 +55551,7 @@ parse_type_266:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 7 412 9
-  # is_embedded_type.1: Boolean = false
+  # is_embedded_type.1: bool = false
   mov al, 0
   # [live values]: self.1:rdi is_embedded_type.1:rax 
   .loc 7 413 9
@@ -55559,7 +55559,7 @@ parse_type_266:
   xor rbx, rbx
   # [live values]: self.1:rdi is_embedded_type.1:rax location.1:rbx 
   .loc 7 414 9
-  # $1.1: Boolean = call(matches_287, self.1, required_exclamation_mark)
+  # $1.1: bool = call(matches_287, self.1, required_exclamation_mark)
   mov rsi, required_exclamation_mark[rip]
   mov [rbp-1], al
   mov [rbp-9], rbx
@@ -55590,7 +55590,7 @@ parse_type_266:
   call consume_space_282
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] 
   .loc 7 417 9
-  # is_embedded_type.2: Boolean = true
+  # is_embedded_type.2: bool = true
   mov al, 1
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:rax:[rbp-1] 
   # jump(.LABEL__parse_type_266__3)
@@ -55598,10 +55598,10 @@ parse_type_266:
 .LABEL__parse_type_266__3:
   # location.6: @Source_Location = phi(location.1, location.2)
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] 
-  # is_embedded_type.5: Boolean = phi(is_embedded_type.1, is_embedded_type.2)
+  # is_embedded_type.5: bool = phi(is_embedded_type.1, is_embedded_type.2)
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] 
   .loc 7 420 9
-  # $4.1: Boolean = call(matches_287, self.1, required_open_bracket)
+  # $4.1: bool = call(matches_287, self.1, required_open_bracket)
   mov rdi, [rbp-17]
   mov rsi, required_open_bracket[rip]
   call matches_287
@@ -55630,7 +55630,7 @@ parse_type_266:
   call parse_type_266
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:rax 
   .loc 7 424 13
-  # array_is_checked.1: Boolean = true
+  # array_is_checked.1: bool = true
   mov bl, 1
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:rax array_is_checked.1:rbx 
   .loc 7 425 13
@@ -55638,7 +55638,7 @@ parse_type_266:
   xor r15, r15
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:rax array_is_checked.1:rbx array_size_expression.1:r15 
   .loc 7 426 13
-  # $13.1: Boolean = call(matches_288, self.1, optional_space, required_column)
+  # $13.1: bool = call(matches_288, self.1, optional_space, required_column)
   mov rdi, [rbp-17]
   mov rsi, optional_space[rip]
   mov rdx, required_column[rip]
@@ -55672,7 +55672,7 @@ parse_type_266:
   call consume_space_282
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:[rbp-35] array_is_checked.1:[rbp-36] array_size_expression.1:[rbp-44] $13.1:[rbp-45] 
   .loc 7 430 17
-  # $15.1: Boolean = call(matches_287, self.1, required_question_mark)
+  # $15.1: bool = call(matches_287, self.1, required_question_mark)
   mov rdi, [rbp-17]
   mov rsi, required_question_mark[rip]
   call matches_287
@@ -55690,7 +55690,7 @@ parse_type_266:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:[rbp-35] array_is_checked.1:[rbp-36] array_size_expression.1:[rbp-44] $13.1:[rbp-45] $15.1:[rbp-46] 
   .loc 7 432 17
-  # array_is_checked.2: Boolean = false
+  # array_is_checked.2: bool = false
   mov al, 0
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:[rbp-35] array_is_checked.1:[rbp-36] array_size_expression.1:[rbp-44] $13.1:[rbp-45] $15.1:[rbp-46] array_is_checked.2:rax:[rbp-36] 
   # jump(.LABEL__parse_type_266__11)
@@ -55698,7 +55698,7 @@ parse_type_266:
 .LABEL__parse_type_266__11:
   # array_size_expression.3: @AST_Expression = phi(array_size_expression.1, array_size_expression.2)
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:[rbp-35] array_is_checked.1:[rbp-36] array_size_expression.1:[rbp-44] $13.1:[rbp-45] $15.1:[rbp-46] array_size_expression.3:[rbp-44] array_is_checked.2:[rbp-36] 
-  # array_is_checked.3: Boolean = phi(array_is_checked.1, array_is_checked.2)
+  # array_is_checked.3: bool = phi(array_is_checked.1, array_is_checked.2)
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] location.6:[rbp-9] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] token.1:[rbp-27] array_item_type.1:[rbp-35] array_is_checked.1:[rbp-36] array_size_expression.1:[rbp-44] $13.1:[rbp-45] $15.1:[rbp-46] array_size_expression.3:[rbp-44] array_is_checked.3:[rbp-36] array_is_checked.2:[rbp-36] 
   .loc 7 437 9
   # call(consume_space_282, self.1, 0)
@@ -55811,7 +55811,7 @@ parse_type_266:
   # [live values]: self.1:[rbp-17] is_embedded_type.1:[rbp-1] location.1:[rbp-9] $1.1:[rbp-18] location.2:[rbp-9] is_embedded_type.2:[rbp-1] is_embedded_type.5:[rbp-1] $4.1:[rbp-19] 
 .LABEL__parse_type_266__6:
   .loc 7 440 16
-  # $5.1: Boolean = call(matches_287, self.1, required_func)
+  # $5.1: bool = call(matches_287, self.1, required_func)
   mov rdi, [rbp-17]
   mov rsi, required_func[rip]
   call matches_287
@@ -55939,7 +55939,7 @@ parse_logic_or_expression_268:
   # expression.5: @AST_Expression = phi(expression.1, expression.3)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] 
   .loc 7 460 12
-  # $2.1: Boolean = call(matches_289, self.1, optional_space, required_vertical_bar, required_vertical_bar)
+  # $2.1: bool = call(matches_289, self.1, optional_space, required_vertical_bar, required_vertical_bar)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_vertical_bar[rip]
@@ -56053,7 +56053,7 @@ parse_logic_and_expression_269:
   # expression.5: @AST_Expression = phi(expression.1, expression.3)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.5:[rbp-16] 
   .loc 7 473 12
-  # $2.1: Boolean = call(matches_289, self.1, optional_space, required_ampersand, required_ampersand)
+  # $2.1: bool = call(matches_289, self.1, optional_space, required_ampersand, required_ampersand)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_ampersand[rip]
@@ -56162,7 +56162,7 @@ parse_equality_expression_270:
   call parse_comparison_expression_271
   # [live values]: self.1:[rbp-8] expression.1:rax 
   .loc 7 486 9
-  # $3.1: Boolean = call(matches_289, self.1, optional_space, required_equals, required_equals)
+  # $3.1: bool = call(matches_289, self.1, optional_space, required_equals, required_equals)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_equals[rip]
@@ -56176,7 +56176,7 @@ parse_equality_expression_270:
   jz .LABEL__parse_equality_expression_270__2
 .LABEL__parse_equality_expression_270__3:
   .loc 7 486 9
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   # jump($3.3, .LABEL__parse_equality_expression_270__4, .LABEL__parse_equality_expression_270__5)
   mov al, [rbp-17]
@@ -56190,7 +56190,7 @@ parse_equality_expression_270:
   call consume_space_282
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   .loc 7 488 13
-  # $5.1: Boolean = call(matches_287, self.1, required_equals)
+  # $5.1: bool = call(matches_287, self.1, required_equals)
   mov rdi, [rbp-8]
   mov rsi, required_equals[rip]
   call matches_287
@@ -56323,7 +56323,7 @@ parse_equality_expression_270:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] 
 .LABEL__parse_equality_expression_270__2:
   .loc 7 486 75
-  # $3.2: Boolean = call(matches_289, self.1, optional_space, required_exclamation_mark, required_equals)
+  # $3.2: bool = call(matches_289, self.1, optional_space, required_exclamation_mark, required_equals)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_exclamation_mark[rip]
@@ -56364,7 +56364,7 @@ parse_comparison_expression_271:
   call parse_addition_expression_272
   # [live values]: self.1:[rbp-8] expression.1:rax 
   .loc 7 505 9
-  # $3.1: Boolean = call(matches_288, self.1, optional_space, required_less_than)
+  # $3.1: bool = call(matches_288, self.1, optional_space, required_less_than)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_less_than[rip]
@@ -56377,7 +56377,7 @@ parse_comparison_expression_271:
   jz .LABEL__parse_comparison_expression_271__2
 .LABEL__parse_comparison_expression_271__3:
   .loc 7 505 9
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   # jump($3.3, .LABEL__parse_comparison_expression_271__4, .LABEL__parse_comparison_expression_271__5)
   mov al, [rbp-17]
@@ -56391,7 +56391,7 @@ parse_comparison_expression_271:
   call consume_space_282
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   .loc 7 507 13
-  # $5.1: Boolean = call(matches_287, self.1, required_less_than)
+  # $5.1: bool = call(matches_287, self.1, required_less_than)
   mov rdi, [rbp-8]
   mov rsi, required_less_than[rip]
   call matches_287
@@ -56409,7 +56409,7 @@ parse_comparison_expression_271:
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] $5.1:[rbp-18] 
   .loc 7 509 17
-  # $16.1: Boolean = call(matches_287, self.1, required_equals)
+  # $16.1: bool = call(matches_287, self.1, required_equals)
   mov rdi, [rbp-8]
   mov rsi, required_equals[rip]
   call matches_287
@@ -56538,7 +56538,7 @@ parse_comparison_expression_271:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] $5.1:[rbp-18] 
   .loc 7 519 17
-  # $7.1: Boolean = call(matches_287, self.1, required_equals)
+  # $7.1: bool = call(matches_287, self.1, required_equals)
   mov rdi, [rbp-8]
   mov rsi, required_equals[rip]
   call matches_287
@@ -56656,7 +56656,7 @@ parse_comparison_expression_271:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $3.1:[rbp-17] 
 .LABEL__parse_comparison_expression_271__2:
   .loc 7 505 61
-  # $3.2: Boolean = call(matches_288, self.1, optional_space, required_greater_than)
+  # $3.2: bool = call(matches_288, self.1, optional_space, required_greater_than)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_greater_than[rip]
@@ -56701,7 +56701,7 @@ parse_addition_expression_272:
   # expression.8: @AST_Expression = phi(expression.1, expression.5, expression.3)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] 
   .loc 7 536 12
-  # $3.1: Boolean = call(matches_288, self.1, optional_space, required_plus)
+  # $3.1: bool = call(matches_288, self.1, optional_space, required_plus)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_plus[rip]
@@ -56713,7 +56713,7 @@ parse_addition_expression_272:
   jz .LABEL__parse_addition_expression_272__5
 .LABEL__parse_addition_expression_272__6:
   .loc 7 536 12
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   # jump($3.3, .LABEL__parse_addition_expression_272__3, .LABEL__parse_addition_expression_272__4)
   mov al, [rbp-17]
@@ -56727,7 +56727,7 @@ parse_addition_expression_272:
   call consume_space_282
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   .loc 7 539 13
-  # $5.1: Boolean = call(matches_287, self.1, required_plus)
+  # $5.1: bool = call(matches_287, self.1, required_plus)
   mov rdi, [rbp-8]
   mov rsi, required_plus[rip]
   call matches_287
@@ -56856,7 +56856,7 @@ parse_addition_expression_272:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.8:[rbp-16] $3.1:[rbp-17] 
 .LABEL__parse_addition_expression_272__5:
   .loc 7 536 59
-  # $3.2: Boolean = call(matches_288, self.1, optional_space, required_hyphen)
+  # $3.2: bool = call(matches_288, self.1, optional_space, required_hyphen)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_hyphen[rip]
@@ -56904,7 +56904,7 @@ parse_multiplication_expression_273:
   # expression.10: @AST_Expression = phi(expression.1, expression.3, expression.7, expression.5)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] 
   .loc 7 556 12
-  # $3.1: Boolean = call(matches_288, self.1, optional_space, required_asterisk)
+  # $3.1: bool = call(matches_288, self.1, optional_space, required_asterisk)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_asterisk[rip]
@@ -56916,7 +56916,7 @@ parse_multiplication_expression_273:
   jz .LABEL__parse_multiplication_expression_273__5
 .LABEL__parse_multiplication_expression_273__6:
   .loc 7 556 12
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   # jump($3.3, .LABEL__parse_multiplication_expression_273__3, .LABEL__parse_multiplication_expression_273__4)
   mov al, [rbp-17]
@@ -56930,7 +56930,7 @@ parse_multiplication_expression_273:
   call consume_space_282
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $3.1:[rbp-17] $3.3:[rbp-17] 
   .loc 7 558 13
-  # $5.1: Boolean = call(matches_287, self.1, required_slash)
+  # $5.1: bool = call(matches_287, self.1, required_slash)
   mov rdi, [rbp-8]
   mov rsi, required_slash[rip]
   call matches_287
@@ -56948,7 +56948,7 @@ parse_multiplication_expression_273:
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $3.1:[rbp-17] $5.1:[rbp-18] $3.3:[rbp-17] 
   .loc 7 560 17
-  # $11.1: Boolean = call(matches_287, self.1, required_slash)
+  # $11.1: bool = call(matches_287, self.1, required_slash)
   mov rdi, [rbp-8]
   mov rsi, required_slash[rip]
   call matches_287
@@ -57126,7 +57126,7 @@ parse_multiplication_expression_273:
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] expression.10:[rbp-16] $3.1:[rbp-17] 
 .LABEL__parse_multiplication_expression_273__5:
   .loc 7 556 63
-  # $3.2: Boolean = call(matches_288, self.1, optional_space, required_slash)
+  # $3.2: bool = call(matches_288, self.1, optional_space, required_slash)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_slash[rip]
@@ -57164,7 +57164,7 @@ parse_unary_expression_274:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 7 580 9
-  # $1.1: Boolean = call(matches_287, self.1, required_hyphen)
+  # $1.1: bool = call(matches_287, self.1, required_hyphen)
   mov rsi, required_hyphen[rip]
   mov [rbp-8], rdi
   call matches_287
@@ -57262,7 +57262,7 @@ parse_cast_expression_275:
   call parse_access_expression_276
   # [live values]: self.1:[rbp-8] expression.1:rax 
   .loc 7 592 9
-  # $2.1: Boolean = call(matches_288, self.1, optional_space, required_as)
+  # $2.1: bool = call(matches_288, self.1, optional_space, required_as)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_as[rip]
@@ -57367,7 +57367,7 @@ parse_access_expression_276:
   call parse_primary_expression_279
   # [live values]: self.1:[rbp-8] expression.1:rax 
   .loc 7 606 9
-  # $2.1: Boolean = expression.1 != null
+  # $2.1: bool = expression.1 != null
   cmp rax, 0
   setne bl
   # [live values]: self.1:[rbp-8] expression.1:rax $2.1:rbx 
@@ -57384,7 +57384,7 @@ parse_access_expression_276:
   mov rax, [rbp-16]
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:rax 
   .loc 7 609 17
-  # $3.1: Boolean = call(matches_288, self.1, optional_space, required_dot)
+  # $3.1: bool = call(matches_288, self.1, optional_space, required_dot)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_dot[rip]
@@ -57456,7 +57456,7 @@ parse_access_expression_276:
   # expression.11: @AST_Expression = phi(expression.2, expression.4)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $3.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] 
   .loc 7 615 17
-  # $9.1: Boolean = call(matches_288, self.1, optional_space, required_open_paren)
+  # $9.1: bool = call(matches_288, self.1, optional_space, required_open_paren)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_open_paren[rip]
@@ -57498,7 +57498,7 @@ parse_access_expression_276:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $3.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $9.1:[rbp-27] call_arguments.1:rax 
   .loc 7 620 21
-  # $12.1: Boolean = call(matches_288, self.1, optional_space, required_close_paren)
+  # $12.1: bool = call(matches_288, self.1, optional_space, required_close_paren)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_close_paren[rip]
@@ -57506,7 +57506,7 @@ parse_access_expression_276:
   call matches_288
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $3.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $9.1:[rbp-27] call_arguments.1:[rbp-35] $12.1:rax 
   .loc 7 620 21
-  # $13.1: Boolean = $12.1 == false
+  # $13.1: bool = $12.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $12.1
@@ -57570,7 +57570,7 @@ parse_access_expression_276:
   # expression.12: @AST_Expression = phi(expression.11, expression.6)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $3.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $9.1:[rbp-27] call_arguments.1:[rbp-35] $13.1:[rbp-36] expression.12:[rbp-16] expression.6:[rbp-16] 
   .loc 7 627 17
-  # $17.1: Boolean = call(matches_288, self.1, optional_space, required_open_bracket)
+  # $17.1: bool = call(matches_288, self.1, optional_space, required_open_bracket)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_open_bracket[rip]
@@ -57653,7 +57653,7 @@ parse_access_expression_276:
   # expression.9: @AST_Expression = phi(expression.12, expression.8)
   # [live values]: self.1:[rbp-8] expression.1:[rbp-16] $2.1:[rbp-17] expression.2:[rbp-16] old_expression.1:[rbp-25] $3.1:[rbp-26] expression.4:[rbp-16] expression.11:[rbp-16] $9.1:[rbp-27] call_arguments.1:[rbp-35] $13.1:[rbp-36] expression.12:[rbp-16] $17.1:[rbp-37] expression.6:[rbp-16] expression.8:[rbp-16] expression.9:[rbp-16] 
   .loc 7 636 17
-  # $23.1: Boolean = expression.9 == old_expression.1
+  # $23.1: bool = expression.9 == old_expression.1
   mov rax, [rbp-16]
   cmp rax, QWORD PTR [rbp-25]
   sete bl
@@ -57727,7 +57727,7 @@ parse_call_arguments_277:
   # call_arguments.1: @List = load_variable(call_arguments)
   # [live values]: self.1:rdi call_arguments.1:rsi 
   .loc 7 648 9
-  # $1.1: Boolean = call(matches_end_of_line_286, self.1)
+  # $1.1: bool = call(matches_end_of_line_286, self.1)
   mov [rbp-8], rsi
   mov [rbp-16], rdi
   call matches_end_of_line_286
@@ -57743,12 +57743,12 @@ parse_call_arguments_277:
   call consume_end_of_line_280
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] 
   .loc 7 650 34
-  # $6.1: Int = load_struct_member(self.1, current_alignment)
+  # $6.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $6.1:rbx 
   .loc 7 650 34
-  # $7.1: Int = $6.1 + 1
+  # $7.1: isize = $6.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $6.1
@@ -57761,14 +57761,14 @@ parse_call_arguments_277:
   # jump(.LABEL__parse_call_arguments_277__8)
 .LABEL__parse_call_arguments_277__8:
   .loc 7 651 16
-  # $8.1: Boolean = call(matches_288, self.1, optional_space, required_close_paren)
+  # $8.1: bool = call(matches_288, self.1, optional_space, required_close_paren)
   mov rdi, [rbp-16]
   mov rsi, optional_space[rip]
   mov rdx, required_close_paren[rip]
   call matches_288
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $8.1:rax 
   .loc 7 651 16
-  # $9.1: Boolean = $8.1 == false
+  # $9.1: bool = $8.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $8.1
@@ -57779,12 +57779,12 @@ parse_call_arguments_277:
   jz .LABEL__parse_call_arguments_277__10
 .LABEL__parse_call_arguments_277__9:
   .loc 7 652 32
-  # $10.1: Int = load_struct_member(self.1, current_alignment)
+  # $10.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $10.1:rbx 
   .loc 7 652 32
-  # $11.1: Int = $10.1 * 4
+  # $11.1: isize = $10.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $10.1
@@ -57818,12 +57818,12 @@ parse_call_arguments_277:
   # [live values]: self.1:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] 
 .LABEL__parse_call_arguments_277__10:
   .loc 7 656 34
-  # $13.1: Int = load_struct_member(self.1, current_alignment)
+  # $13.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $13.1:rbx 
   .loc 7 656 34
-  # $14.1: Int = $13.1 - 1
+  # $14.1: isize = $13.1 - 1
   mov r15, rbx
   dec r15
   # [discarded value]: $13.1
@@ -57834,11 +57834,11 @@ parse_call_arguments_277:
   # [discarded value]: $14.1
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] 
   .loc 7 657 28
-  # $15.1: Int = load_struct_member(self.1, current_alignment)
+  # $15.1: isize = load_struct_member(self.1, current_alignment)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] call_arguments.1:[rbp-8] $1.1:[rbp-17] $9.1:[rbp-18] $15.1:rbx 
   .loc 7 657 28
-  # $16.1: Int = $15.1 * 4
+  # $16.1: isize = $15.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $15.1
@@ -57875,7 +57875,7 @@ parse_call_arguments_277:
   # jump(.LABEL__parse_call_arguments_277__5)
 .LABEL__parse_call_arguments_277__5:
   .loc 7 660 16
-  # $3.1: Boolean = call(matches_288, self.1, optional_space, required_comma)
+  # $3.1: bool = call(matches_288, self.1, optional_space, required_comma)
   mov rdi, [rbp-16]
   mov rsi, optional_space[rip]
   mov rdx, required_comma[rip]
@@ -57946,7 +57946,7 @@ parse_call_argument_278:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 7 672 9
-  # $1.1: Boolean = call(matches_289, self.1, required_identifier, optional_space, required_equals)
+  # $1.1: bool = call(matches_289, self.1, required_identifier, optional_space, required_equals)
   mov rsi, required_identifier[rip]
   mov rdx, optional_space[rip]
   mov rcx, required_equals[rip]
@@ -58055,7 +58055,7 @@ parse_primary_expression_279:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 7 697 9
-  # $1.1: Boolean = call(matches_287, self.1, required_new)
+  # $1.1: bool = call(matches_287, self.1, required_new)
   mov rsi, required_new[rip]
   mov [rbp-8], rdi
   call matches_287
@@ -58096,7 +58096,7 @@ parse_primary_expression_279:
   mov QWORD PTR [rax+16], 0
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:rax 
   .loc 7 702 13
-  # $5.1: Boolean = call(matches_288, self.1, optional_space, required_open_paren)
+  # $5.1: bool = call(matches_288, self.1, optional_space, required_open_paren)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_open_paren[rip]
@@ -58122,14 +58122,14 @@ parse_primary_expression_279:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $5.1:[rbp-34] 
   .loc 7 705 17
-  # $7.1: Boolean = call(matches_288, self.1, optional_space, required_close_paren)
+  # $7.1: bool = call(matches_288, self.1, optional_space, required_close_paren)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_close_paren[rip]
   call matches_288
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] token.1:[rbp-17] type.1:[rbp-25] call_arguments.1:[rbp-33] $5.1:[rbp-34] $7.1:rax 
   .loc 7 705 17
-  # $8.1: Boolean = $7.1 == false
+  # $8.1: bool = $7.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $7.1
@@ -58207,7 +58207,7 @@ parse_primary_expression_279:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] 
 .LABEL__parse_primary_expression_279__3:
   .loc 7 713 9
-  # $12.1: Boolean = call(matches_287, self.1, required_literal)
+  # $12.1: bool = call(matches_287, self.1, required_literal)
   mov rdi, [rbp-8]
   mov rsi, required_literal[rip]
   call matches_287
@@ -58256,7 +58256,7 @@ parse_primary_expression_279:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $12.1:[rbp-10] 
 .LABEL__parse_primary_expression_279__10:
   .loc 7 717 9
-  # $17.1: Boolean = call(matches_287, self.1, required_func)
+  # $17.1: bool = call(matches_287, self.1, required_func)
   mov rdi, [rbp-8]
   mov rsi, required_func[rip]
   call matches_287
@@ -58278,7 +58278,7 @@ parse_primary_expression_279:
   add r15, 24
   # [live values]: self.1:rbx:[rbp-8] $1.1:[rbp-9] $12.1:[rbp-10] $17.1:[rbp-11] $18.1:rax $19.1:r15 
   .loc 7 718 65
-  # $20.1: Int = call(next_146, $19.1)
+  # $20.1: isize = call(next_146, $19.1)
   mov rdi, r15
   mov [rbp-19], rax
   call next_146
@@ -58367,7 +58367,7 @@ parse_primary_expression_279:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $12.1:[rbp-10] $17.1:[rbp-11] 
 .LABEL__parse_primary_expression_279__13:
   .loc 7 722 9
-  # $29.1: Boolean = call(matches_287, self.1, required_identifier)
+  # $29.1: bool = call(matches_287, self.1, required_identifier)
   mov rdi, [rbp-8]
   mov rsi, required_identifier[rip]
   call matches_287
@@ -58416,7 +58416,7 @@ parse_primary_expression_279:
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $12.1:[rbp-10] $17.1:[rbp-11] $29.1:[rbp-12] 
 .LABEL__parse_primary_expression_279__16:
   .loc 7 726 9
-  # $34.1: Boolean = call(matches_287, self.1, required_open_paren)
+  # $34.1: bool = call(matches_287, self.1, required_open_paren)
   mov rdi, [rbp-8]
   mov rsi, required_open_paren[rip]
   call matches_287
@@ -58524,7 +58524,7 @@ consume_end_of_line_280:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 7 742 9
-  # $1.1: Boolean = call(matches_288, self.1, optional_space, required_comment)
+  # $1.1: bool = call(matches_288, self.1, optional_space, required_comment)
   mov rsi, optional_space[rip]
   mov rdx, required_comment[rip]
   mov [rbp-8], rdi
@@ -58551,13 +58551,13 @@ consume_end_of_line_280:
   # jump(.LABEL__consume_end_of_line_280__3)
 .LABEL__consume_end_of_line_280__3:
   .loc 7 748 9
-  # $3.1: Boolean = call(matches_287, self.1, required_end_of_file)
+  # $3.1: bool = call(matches_287, self.1, required_end_of_file)
   mov rdi, [rbp-8]
   mov rsi, required_end_of_file[rip]
   call matches_287
   # [live values]: self.1:[rbp-8] $1.1:[rbp-9] $3.1:rax 
   .loc 7 748 9
-  # $4.1: Boolean = $3.1 == false
+  # $4.1: bool = $3.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $3.1
@@ -58615,7 +58615,7 @@ consume_empty_line_281:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 7 754 9
-  # $1.1: Boolean = call(matches_289, self.1, optional_space, optional_comment, required_end_of_line)
+  # $1.1: bool = call(matches_289, self.1, optional_space, optional_comment, required_end_of_line)
   mov rsi, optional_space[rip]
   mov rdx, optional_comment[rip]
   mov rcx, required_end_of_line[rip]
@@ -58628,7 +58628,7 @@ consume_empty_line_281:
   jz .LABEL__consume_empty_line_281__3
 .LABEL__consume_empty_line_281__2:
   .loc 7 755 13
-  # $2.1: Boolean = call(matches_288, self.1, optional_space, required_comment)
+  # $2.1: bool = call(matches_288, self.1, optional_space, required_comment)
   mov rdi, [rbp-8]
   mov rsi, optional_space[rip]
   mov rdx, required_comment[rip]
@@ -58640,12 +58640,12 @@ consume_empty_line_281:
   jz .LABEL__consume_empty_line_281__6
 .LABEL__consume_empty_line_281__4:
   .loc 7 756 32
-  # $3.1: Int = load_struct_member(self.1, current_alignment)
+  # $3.1: isize = load_struct_member(self.1, current_alignment)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-8] $1.1:[rbp-9] $2.1:[rbp-10] $3.1:rbx 
   .loc 7 756 32
-  # $4.1: Int = $3.1 * 4
+  # $4.1: isize = $3.1 * 4
   mov r15, rbx
   imul r15, 4
   # [discarded value]: $3.1
@@ -58718,7 +58718,7 @@ consume_space_282:
 .LABEL__consume_space_282__1:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
-  # expected_space_count.1: Int = load_variable(expected_space_count)
+  # expected_space_count.1: isize = load_variable(expected_space_count)
   # [live values]: self.1:rdi expected_space_count.1:rsi 
   .loc 7 769 17
   # $1.1: @Scanner = load_struct_member(self.1, scanner)
@@ -58730,7 +58730,7 @@ consume_space_282:
   # [discarded value]: $1.1
   # [live values]: self.1:rdi expected_space_count.1:rsi token.1:rbx 
   .loc 7 770 9
-  # $3.1: Boolean = call(is_389, token.1, Space_Token)
+  # $3.1: bool = call(is_389, token.1, Space_Token)
   mov [rbp-8], rdi
   mov rdi, rbx
   mov [rbp-16], rsi
@@ -58760,17 +58760,17 @@ consume_space_282:
   mov rax, [rbp-24]
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space.1:rax 
   .loc 7 773 23
-  # space_count.3: Int = load_struct_member(space.1, count)
+  # space_count.3: isize = load_struct_member(space.1, count)
   mov rbx, [rax+32]
   # [discarded value]: space.1
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:rbx 
   # jump(.LABEL__consume_space_282__3)
   mov [rbp-33], rbx
 .LABEL__consume_space_282__3:
-  # space_count.4: Int = phi(space_count.2, space_count.3)
+  # space_count.4: isize = phi(space_count.2, space_count.3)
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.3:[rbp-33] space_count.4:[rbp-33] 
   .loc 7 777 9
-  # $8.1: Boolean = space_count.4 != expected_space_count.1
+  # $8.1: bool = space_count.4 != expected_space_count.1
   mov rax, [rbp-33]
   cmp rax, QWORD PTR [rbp-16]
   setne bl
@@ -58849,7 +58849,7 @@ consume_space_282:
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] 
 .LABEL__consume_space_282__4:
   .loc 7 775 9
-  # space_count.2: Int = 0
+  # space_count.2: isize = 0
   xor rax, rax
   # [live values]: self.1:[rbp-8] expected_space_count.1:[rbp-16] token.1:[rbp-24] $3.1:[rbp-25] space_count.2:rax:[rbp-33] 
   # jump(.LABEL__consume_space_282__3)
@@ -58968,11 +58968,11 @@ consume_285:
   mov [rbp-8], rbx
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:[rbp-8] first_token.1:rbx 
   .loc 7 793 9
-  # $3.1: func (self: @Matcher, token: @Token) -> Boolean = load_struct_member(first_matcher.1, accepts)
+  # $3.1: func (self: @Matcher, token: @Token) -> bool = load_struct_member(first_matcher.1, accepts)
   mov rax, [rsi+9]
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:[rbp-8] first_token.1:rbx $3.1:rax 
   .loc 7 793 9
-  # $4.1: Boolean = call($3.1, first_matcher.1, token.1)
+  # $4.1: bool = call($3.1, first_matcher.1, token.1)
   mov [rbp-16], rdi
   mov rdi, rsi
   mov [rbp-24], rsi
@@ -59005,7 +59005,7 @@ consume_285:
   # token.10: @Token = phi(token.3, token.1)
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] 
   .loc 7 800 9
-  # $8.1: Boolean = second_matcher.1 != null
+  # $8.1: bool = second_matcher.1 != null
   cmp QWORD PTR [rbp-40], 0
   setne al
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:rax 
@@ -59015,12 +59015,12 @@ consume_285:
   jz .LABEL__consume_285__8
 .LABEL__consume_285__7:
   .loc 7 801 13
-  # $9.1: func (self: @Matcher, token: @Token) -> Boolean = load_struct_member(second_matcher.1, accepts)
+  # $9.1: func (self: @Matcher, token: @Token) -> bool = load_struct_member(second_matcher.1, accepts)
   mov rax, [rbp-40]
   mov rbx, [rax+9]
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:rax:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $9.1:rbx 
   .loc 7 801 13
-  # $10.1: Boolean = call($9.1, second_matcher.1, token.10)
+  # $10.1: bool = call($9.1, second_matcher.1, token.10)
   mov rdi, rax
   mov rsi, [rbp-8]
   mov rax, rbx
@@ -59049,7 +59049,7 @@ consume_285:
   # token.11: @Token = phi(token.10, token.6)
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $10.1:[rbp-51] token.11:[rbp-8] token.6:[rbp-8] 
   .loc 7 809 9
-  # $14.1: Boolean = third_matcher.1 != null
+  # $14.1: bool = third_matcher.1 != null
   cmp QWORD PTR [rbp-32], 0
   setne al
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $10.1:[rbp-51] token.11:[rbp-8] $14.1:rax token.6:[rbp-8] 
@@ -59059,12 +59059,12 @@ consume_285:
   jz .LABEL__consume_285__15
 .LABEL__consume_285__14:
   .loc 7 810 13
-  # $15.1: func (self: @Matcher, token: @Token) -> Boolean = load_struct_member(third_matcher.1, accepts)
+  # $15.1: func (self: @Matcher, token: @Token) -> bool = load_struct_member(third_matcher.1, accepts)
   mov rax, [rbp-32]
   mov rbx, [rax+9]
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:rax:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $10.1:[rbp-51] token.11:[rbp-8] $14.1:[rbp-52] token.6:[rbp-8] $15.1:rbx 
   .loc 7 810 13
-  # $16.1: Boolean = call($15.1, third_matcher.1, token.11)
+  # $16.1: bool = call($15.1, third_matcher.1, token.11)
   mov rdi, rax
   mov rsi, [rbp-8]
   mov rax, rbx
@@ -59098,7 +59098,7 @@ consume_285:
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $10.1:[rbp-51] token.11:[rbp-8] $14.1:[rbp-52] token.6:[rbp-8] $16.1:[rbp-53] 
 .LABEL__consume_285__18:
   .loc 7 813 17
-  # $17.1: Boolean = load_struct_member(third_matcher.1, is_required)
+  # $17.1: bool = load_struct_member(third_matcher.1, is_required)
   mov rax, [rbp-32]
   mov bl, [rax+8]
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:rax:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $10.1:[rbp-51] token.11:[rbp-8] $14.1:[rbp-52] token.6:[rbp-8] $16.1:[rbp-53] $17.1:rbx 
@@ -59126,7 +59126,7 @@ consume_285:
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $10.1:[rbp-51] 
 .LABEL__consume_285__11:
   .loc 7 804 17
-  # $11.1: Boolean = load_struct_member(second_matcher.1, is_required)
+  # $11.1: bool = load_struct_member(second_matcher.1, is_required)
   mov rax, [rbp-40]
   mov bl, [rax+8]
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:rax:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] token.3:[rbp-8] token.10:[rbp-8] $8.1:[rbp-50] $10.1:[rbp-51] $11.1:rbx 
@@ -59154,7 +59154,7 @@ consume_285:
   # [live values]: self.1:[rbp-16] first_matcher.1:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] 
 .LABEL__consume_285__4:
   .loc 7 796 13
-  # $5.1: Boolean = load_struct_member(first_matcher.1, is_required)
+  # $5.1: bool = load_struct_member(first_matcher.1, is_required)
   mov rax, [rbp-24]
   mov bl, [rax+8]
   # [live values]: self.1:[rbp-16] first_matcher.1:rax:[rbp-24] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-8] first_token.1:[rbp-48] $4.1:[rbp-49] $5.1:rbx 
@@ -59198,7 +59198,7 @@ matches_end_of_line_286:
   # self.1: @Parser = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 7 822 12
-  # $1.1: Boolean = call(matches_289, self.1, optional_space, optional_comment, required_end_of_line)
+  # $1.1: bool = call(matches_289, self.1, optional_space, optional_comment, required_end_of_line)
   mov rsi, optional_space[rip]
   mov rdx, optional_comment[rip]
   mov rcx, required_end_of_line[rip]
@@ -59231,7 +59231,7 @@ matches_287:
   # first_matcher.1: @Matcher = load_variable(first_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi 
   .loc 7 826 12
-  # $1.1: Boolean = call(matches_288, self.1, first_matcher.1, null)
+  # $1.1: bool = call(matches_288, self.1, first_matcher.1, null)
   xor rdx, rdx
   call matches_288
   # [discarded value]: first_matcher.1
@@ -59265,7 +59265,7 @@ matches_288:
   # second_matcher.1: @Matcher = load_variable(second_matcher)
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx 
   .loc 7 830 12
-  # $1.1: Boolean = call(matches_289, self.1, first_matcher.1, second_matcher.1, null)
+  # $1.1: bool = call(matches_289, self.1, first_matcher.1, second_matcher.1, null)
   xor rcx, rcx
   call matches_289
   # [discarded value]: second_matcher.1
@@ -59311,15 +59311,15 @@ matches_289:
   # [discarded value]: $1.1
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:rbx 
   .loc 7 835 9
-  # peek_offset.1: Int = 0
+  # peek_offset.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:rbx peek_offset.1:rax 
   .loc 7 836 9
-  # $3.1: func (self: @Matcher, token: @Token) -> Boolean = load_struct_member(first_matcher.1, accepts)
+  # $3.1: func (self: @Matcher, token: @Token) -> bool = load_struct_member(first_matcher.1, accepts)
   mov r15, [rsi+9]
   # [live values]: self.1:rdi first_matcher.1:rsi second_matcher.1:rdx third_matcher.1:rcx token.1:rbx peek_offset.1:rax $3.1:r15 
   .loc 7 836 9
-  # $4.1: Boolean = call($3.1, first_matcher.1, token.1)
+  # $4.1: bool = call($3.1, first_matcher.1, token.1)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -59350,12 +59350,12 @@ matches_289:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:rax:[rbp-48] 
   .loc 7 838 23
-  # $8.1: Int = peek_offset.1 + 1
+  # $8.1: isize = peek_offset.1 + 1
   mov rbx, [rbp-24]
   add rbx, 1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:rax:[rbp-48] $8.1:rbx 
   .loc 7 838 9
-  # peek_offset.3: Int = $8.1
+  # peek_offset.3: isize = $8.1
   mov [rbp-57], rbx
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:rax:[rbp-48] peek_offset.3:rbx:[rbp-24] 
@@ -59363,12 +59363,12 @@ matches_289:
   mov [rbp-48], rax
   mov [rbp-24], rbx
 .LABEL__matches_289__3:
-  # peek_offset.8: Int = phi(peek_offset.3, peek_offset.1)
+  # peek_offset.8: isize = phi(peek_offset.3, peek_offset.1)
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] 
   # token.7: @Token = phi(token.2, token.1)
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] 
   .loc 7 842 9
-  # $9.1: Boolean = second_matcher.1 != null
+  # $9.1: bool = second_matcher.1 != null
   cmp QWORD PTR [rbp-40], 0
   setne al
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:rax 
@@ -59378,12 +59378,12 @@ matches_289:
   jz .LABEL__matches_289__9
 .LABEL__matches_289__8:
   .loc 7 843 13
-  # $10.1: func (self: @Matcher, token: @Token) -> Boolean = load_struct_member(second_matcher.1, accepts)
+  # $10.1: func (self: @Matcher, token: @Token) -> bool = load_struct_member(second_matcher.1, accepts)
   mov rax, [rbp-40]
   mov rbx, [rax+9]
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:rax:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $10.1:rbx 
   .loc 7 843 13
-  # $11.1: Boolean = call($10.1, second_matcher.1, token.7)
+  # $11.1: bool = call($10.1, second_matcher.1, token.7)
   mov rdi, rax
   mov rsi, [rbp-48]
   mov rax, rbx
@@ -59408,12 +59408,12 @@ matches_289:
   # [discarded value]: $13.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] token.4:rax:[rbp-48] 
   .loc 7 845 27
-  # $15.1: Int = peek_offset.8 + 1
+  # $15.1: isize = peek_offset.8 + 1
   mov rbx, [rbp-24]
   add rbx, 1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] token.4:rax:[rbp-48] $15.1:rbx 
   .loc 7 845 13
-  # peek_offset.5: Int = $15.1
+  # peek_offset.5: isize = $15.1
   mov [rbp-59], rbx
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] token.4:rax:[rbp-48] peek_offset.5:rbx:[rbp-24] 
@@ -59421,12 +59421,12 @@ matches_289:
   mov [rbp-48], rax
   mov [rbp-24], rbx
 .LABEL__matches_289__9:
-  # peek_offset.9: Int = phi(peek_offset.8, peek_offset.5)
+  # peek_offset.9: isize = phi(peek_offset.8, peek_offset.5)
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.4:[rbp-48] peek_offset.5:[rbp-24] 
   # token.8: @Token = phi(token.7, token.4)
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] token.4:[rbp-48] peek_offset.5:[rbp-24] 
   .loc 7 850 9
-  # $16.1: Boolean = third_matcher.1 != null
+  # $16.1: bool = third_matcher.1 != null
   cmp QWORD PTR [rbp-32], 0
   setne al
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $16.1:rax token.4:[rbp-48] peek_offset.5:[rbp-24] 
@@ -59436,12 +59436,12 @@ matches_289:
   jz .LABEL__matches_289__17
 .LABEL__matches_289__16:
   .loc 7 851 13
-  # $17.1: func (self: @Matcher, token: @Token) -> Boolean = load_struct_member(third_matcher.1, accepts)
+  # $17.1: func (self: @Matcher, token: @Token) -> bool = load_struct_member(third_matcher.1, accepts)
   mov rax, [rbp-32]
   mov rbx, [rax+9]
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:rax:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $16.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $17.1:rbx 
   .loc 7 851 13
-  # $18.1: Boolean = call($17.1, third_matcher.1, token.8)
+  # $18.1: bool = call($17.1, third_matcher.1, token.8)
   mov rdi, rax
   mov rsi, [rbp-48]
   mov rax, rbx
@@ -59467,12 +59467,12 @@ matches_289:
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $16.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $18.1:[rbp-53] 
   .loc 7 853 27
-  # $22.1: Int = peek_offset.9 + 1
+  # $22.1: isize = peek_offset.9 + 1
   mov rax, [rbp-24]
   add rax, 1
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $16.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $18.1:[rbp-53] $22.1:rax 
   .loc 7 853 13
-  # peek_offset.7: Int = $22.1
+  # peek_offset.7: isize = $22.1
   mov [rbp-61], rax
   # [discarded value]: peek_offset.7
   # [discarded value]: $22.1
@@ -59487,7 +59487,7 @@ matches_289:
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $16.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $18.1:[rbp-53] 
 .LABEL__matches_289__20:
   .loc 7 854 20
-  # $19.1: Boolean = load_struct_member(third_matcher.1, is_required)
+  # $19.1: bool = load_struct_member(third_matcher.1, is_required)
   mov rax, [rbp-32]
   mov bl, [rax+8]
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:rax:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] peek_offset.9:[rbp-24] token.8:[rbp-48] $16.1:[rbp-52] token.4:[rbp-48] peek_offset.5:[rbp-24] $18.1:[rbp-53] $19.1:rbx 
@@ -59516,7 +59516,7 @@ matches_289:
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] 
 .LABEL__matches_289__12:
   .loc 7 846 20
-  # $12.1: Boolean = load_struct_member(second_matcher.1, is_required)
+  # $12.1: bool = load_struct_member(second_matcher.1, is_required)
   mov rax, [rbp-40]
   mov bl, [rax+8]
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:rax:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] token.2:[rbp-48] peek_offset.3:[rbp-24] peek_offset.8:[rbp-24] token.7:[rbp-48] $9.1:[rbp-50] $11.1:[rbp-51] $12.1:rbx 
@@ -59545,7 +59545,7 @@ matches_289:
   # [live values]: self.1:[rbp-8] first_matcher.1:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] 
 .LABEL__matches_289__4:
   .loc 7 839 16
-  # $5.1: Boolean = load_struct_member(first_matcher.1, is_required)
+  # $5.1: bool = load_struct_member(first_matcher.1, is_required)
   mov rax, [rbp-16]
   mov bl, [rax+8]
   # [live values]: self.1:[rbp-8] first_matcher.1:rax:[rbp-16] second_matcher.1:[rbp-40] third_matcher.1:[rbp-32] token.1:[rbp-48] peek_offset.1:[rbp-24] $4.1:[rbp-49] $5.1:rbx 
@@ -59577,7 +59577,7 @@ matches_289:
 
 matches_289__stack_frame_size: .word 64
 
-  .loc 7 864 62
+  .loc 7 864 59
   .text
 anonymous_function_37_290:
   push rbp
@@ -59623,7 +59623,7 @@ anonymous_function_38_291:
   # token.1: @Token = load_variable(token)
   # [live values]: token.1:rsi 
   .loc 7 872 20
-  # $1.1: Boolean = call(is_389, token.1, Comment_Token)
+  # $1.1: bool = call(is_389, token.1, Comment_Token)
   mov rdi, rsi
   mov [rbp-8], rsi
   mov rsi, Comment_Token[rip]
@@ -59657,7 +59657,7 @@ anonymous_function_39_292:
   # token.1: @Token = load_variable(token)
   # [live values]: token.1:rsi 
   .loc 7 880 20
-  # $1.1: Boolean = call(is_389, token.1, End_Of_File_Token)
+  # $1.1: bool = call(is_389, token.1, End_Of_File_Token)
   mov rdi, rsi
   mov [rbp-8], rsi
   mov rsi, End_Of_File_Token[rip]
@@ -59691,7 +59691,7 @@ anonymous_function_40_293:
   # token.1: @Token = load_variable(token)
   # [live values]: token.1:rsi 
   .loc 7 888 20
-  # $1.1: Boolean = call(is_389, token.1, End_Of_Line_Token)
+  # $1.1: bool = call(is_389, token.1, End_Of_Line_Token)
   mov rdi, rsi
   mov [rbp-8], rsi
   mov rsi, End_Of_Line_Token[rip]
@@ -59725,7 +59725,7 @@ anonymous_function_41_294:
   # token.1: @Token = load_variable(token)
   # [live values]: token.1:rsi 
   .loc 7 896 20
-  # $1.1: Boolean = call(is_389, token.1, Identifier_Token)
+  # $1.1: bool = call(is_389, token.1, Identifier_Token)
   mov rdi, rsi
   mov [rbp-8], rsi
   mov rsi, Identifier_Token[rip]
@@ -59758,7 +59758,7 @@ anonymous_function_42_295:
   # token.1: @Token = load_variable(token)
   # [live values]: self.1:rdi token.1:rsi 
   .loc 7 904 17
-  # $1.1: Boolean = call(is_389, token.1, Identifier_Token)
+  # $1.1: bool = call(is_389, token.1, Identifier_Token)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -59785,7 +59785,7 @@ anonymous_function_42_295:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] token.1:rax:[rbp-16] $1.1:[rbp-17] $2.1:rbx $4.1:r14 
   .loc 7 905 24
-  # $5.1: Boolean = call(equals_392, $2.1, $4.1)
+  # $5.1: bool = call(equals_392, $2.1, $4.1)
   mov rdi, rbx
   mov rsi, r14
   call equals_392
@@ -59830,7 +59830,7 @@ anonymous_function_43_296:
   # token.1: @Token = load_variable(token)
   # [live values]: token.1:rsi 
   .loc 7 916 20
-  # $2.1: Boolean = call(is_389, token.1, Integer_Token)
+  # $2.1: bool = call(is_389, token.1, Integer_Token)
   mov rdi, rsi
   mov [rbp-8], rsi
   mov rsi, Integer_Token[rip]
@@ -59842,7 +59842,7 @@ anonymous_function_43_296:
   jz .LABEL__anonymous_function_43_296__10
 .LABEL__anonymous_function_43_296__11:
   .loc 7 916 20
-  # $4.1: Boolean = phi($2.1, $2.2)
+  # $4.1: bool = phi($2.1, $2.2)
   mov al, [rbp-9]
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $4.1:rax 
   # jump($4.1, .LABEL__anonymous_function_43_296__9, .LABEL__anonymous_function_43_296__8)
@@ -59851,7 +59851,7 @@ anonymous_function_43_296:
   jz .LABEL__anonymous_function_43_296__8
 .LABEL__anonymous_function_43_296__9:
   .loc 7 916 20
-  # $6.1: Boolean = phi($4.1, $4.2)
+  # $6.1: bool = phi($4.1, $4.2)
   mov al, [rbp-10]
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $6.1:rax $4.1:[rbp-10] 
   # jump($6.1, .LABEL__anonymous_function_43_296__7, .LABEL__anonymous_function_43_296__6)
@@ -59860,7 +59860,7 @@ anonymous_function_43_296:
   jz .LABEL__anonymous_function_43_296__6
 .LABEL__anonymous_function_43_296__7:
   .loc 7 916 20
-  # $8.1: Boolean = phi($6.1, $6.2)
+  # $8.1: bool = phi($6.1, $6.2)
   mov al, [rbp-11]
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $8.1:rax $6.1:[rbp-11] $4.1:[rbp-10] 
   # jump($8.1, .LABEL__anonymous_function_43_296__5, .LABEL__anonymous_function_43_296__4)
@@ -59869,7 +59869,7 @@ anonymous_function_43_296:
   jz .LABEL__anonymous_function_43_296__4
 .LABEL__anonymous_function_43_296__5:
   .loc 7 916 20
-  # $10.1: Boolean = phi($8.1, $8.2)
+  # $10.1: bool = phi($8.1, $8.2)
   mov al, [rbp-12]
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $10.1:rax $8.1:[rbp-12] $6.1:[rbp-11] $4.1:[rbp-10] 
   # jump($10.1, .LABEL__anonymous_function_43_296__3, .LABEL__anonymous_function_43_296__2)
@@ -59878,7 +59878,7 @@ anonymous_function_43_296:
   jz .LABEL__anonymous_function_43_296__2
 .LABEL__anonymous_function_43_296__3:
   .loc 7 916 20
-  # $10.3: Boolean = phi($10.1, $10.2)
+  # $10.3: bool = phi($10.1, $10.2)
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $10.3:[rbp-13] $10.1:[rbp-13] $8.1:[rbp-12] $6.1:[rbp-11] $4.1:[rbp-10] 
   .loc 7 916 13
   # return($10.3)
@@ -59888,7 +59888,7 @@ anonymous_function_43_296:
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $10.1:[rbp-13] $8.1:[rbp-12] $6.1:[rbp-11] $4.1:[rbp-10] 
 .LABEL__anonymous_function_43_296__2:
   .loc 7 916 153
-  # $10.2: Boolean = call(is_389, token.1, Undefined_Token)
+  # $10.2: bool = call(is_389, token.1, Undefined_Token)
   mov rdi, [rbp-8]
   mov rsi, Undefined_Token[rip]
   call is_389
@@ -59904,7 +59904,7 @@ anonymous_function_43_296:
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $8.1:[rbp-12] $6.1:[rbp-11] $4.1:[rbp-10] 
 .LABEL__anonymous_function_43_296__4:
   .loc 7 916 129
-  # $8.2: Boolean = call(is_389, token.1, Null_Token)
+  # $8.2: bool = call(is_389, token.1, Null_Token)
   mov rdi, [rbp-8]
   mov rsi, Null_Token[rip]
   call is_389
@@ -59920,7 +59920,7 @@ anonymous_function_43_296:
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $6.1:[rbp-11] $4.1:[rbp-10] 
 .LABEL__anonymous_function_43_296__6:
   .loc 7 916 102
-  # $6.2: Boolean = call(is_389, token.1, Boolean_Token)
+  # $6.2: bool = call(is_389, token.1, Boolean_Token)
   mov rdi, [rbp-8]
   mov rsi, Boolean_Token[rip]
   call is_389
@@ -59936,7 +59936,7 @@ anonymous_function_43_296:
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] $4.1:[rbp-10] 
 .LABEL__anonymous_function_43_296__8:
   .loc 7 916 73
-  # $4.2: Boolean = call(is_389, token.1, Character_Token)
+  # $4.2: bool = call(is_389, token.1, Character_Token)
   mov rdi, [rbp-8]
   mov rsi, Character_Token[rip]
   call is_389
@@ -59952,7 +59952,7 @@ anonymous_function_43_296:
   # [live values]: token.1:[rbp-8] $2.1:[rbp-9] 
 .LABEL__anonymous_function_43_296__10:
   .loc 7 916 47
-  # $2.2: Boolean = call(is_389, token.1, String_Token)
+  # $2.2: bool = call(is_389, token.1, String_Token)
   mov rdi, [rbp-8]
   mov rsi, String_Token[rip]
   call is_389
@@ -59987,7 +59987,7 @@ anonymous_function_44_297:
   # token.1: @Token = load_variable(token)
   # [live values]: self.1:rdi token.1:rsi 
   .loc 7 924 17
-  # $1.1: Boolean = call(is_389, token.1, Other_Token)
+  # $1.1: bool = call(is_389, token.1, Other_Token)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -60014,7 +60014,7 @@ anonymous_function_44_297:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-8] token.1:rax:[rbp-16] $1.1:[rbp-17] $2.1:rbx $4.1:r14 
   .loc 7 925 24
-  # $5.1: Boolean = call(equals_392, $2.1, $4.1)
+  # $5.1: bool = call(equals_392, $2.1, $4.1)
   mov rdi, rbx
   mov rsi, r14
   call equals_392
@@ -60059,7 +60059,7 @@ anonymous_function_45_298:
   # token.1: @Token = load_variable(token)
   # [live values]: token.1:rsi 
   .loc 7 936 20
-  # $1.1: Boolean = call(is_389, token.1, Space_Token)
+  # $1.1: bool = call(is_389, token.1, Space_Token)
   mov rdi, rsi
   mov [rbp-8], rsi
   mov rsi, Space_Token[rip]
@@ -60093,7 +60093,7 @@ anonymous_function_46_299:
   # token.1: @Token = load_variable(token)
   # [live values]: token.1:rsi 
   .loc 7 944 20
-  # $1.1: Boolean = call(is_389, token.1, String_Token)
+  # $1.1: bool = call(is_389, token.1, String_Token)
   mov rdi, rsi
   mov [rbp-8], rsi
   mov rsi, String_Token[rip]
@@ -62343,7 +62343,7 @@ write_336:
   mov [rbp-16], rax
 .LABEL__write_336__2:
   .loc 1 70 12
-  # $3.1: Boolean = call(has_next_378, statements.1)
+  # $3.1: bool = call(has_next_378, statements.1)
   mov rdi, [rbp-16]
   call has_next_378
   # [live values]: file.1:[rbp-8] statements.1:[rbp-16] $3.1:rax 
@@ -62420,10 +62420,10 @@ write_337:
   # [live values]: file.1:rdi 
   # statement.1: @AST_Statement = load_variable(statement)
   # [live values]: file.1:rdi statement.1:rsi 
-  # alignment.1: Int = load_variable(alignment)
+  # alignment.1: isize = load_variable(alignment)
   # [live values]: file.1:rdi statement.1:rsi alignment.1:rdx 
   .loc 1 78 9
-  # $1.1: Boolean = call(is_389, statement.1, AST_Assignment_Statement)
+  # $1.1: bool = call(is_389, statement.1, AST_Assignment_Statement)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -62501,7 +62501,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] 
 .LABEL__write_337__3:
   .loc 1 83 9
-  # $11.1: Boolean = call(is_389, statement.1, AST_Block_Statement)
+  # $11.1: bool = call(is_389, statement.1, AST_Block_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Block_Statement[rip]
   call is_389
@@ -62543,7 +62543,7 @@ write_337:
   mov [rbp-34], rax
 .LABEL__write_337__7:
   .loc 1 86 16
-  # $17.1: Boolean = call(has_next_378, block_statements.1)
+  # $17.1: bool = call(has_next_378, block_statements.1)
   mov rdi, [rbp-34]
   call has_next_378
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] block_statements.1:[rbp-34] $17.1:rax 
@@ -62562,7 +62562,7 @@ write_337:
   mov rbx, [rax+8]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] block_statements.1:[rbp-34] $17.1:[rbp-35] block_statement.1:rax $20.1:rbx 
   .loc 1 88 62
-  # $21.1: Int = alignment.1 + 1
+  # $21.1: isize = alignment.1 + 1
   mov r15, [rbp-24]
   add r15, 1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] block_statements.1:[rbp-34] $17.1:[rbp-35] block_statement.1:rax $20.1:rbx $21.1:r15 
@@ -62577,7 +62577,7 @@ write_337:
   # [discarded value]: $20.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] block_statements.1:[rbp-34] $17.1:[rbp-35] block_statement.1:[rbp-43] $22.1:rax 
   .loc 1 88 100
-  # $23.1: Int = alignment.1 + 1
+  # $23.1: isize = alignment.1 + 1
   mov rbx, [rbp-24]
   add rbx, 1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] block_statements.1:[rbp-34] $17.1:[rbp-35] block_statement.1:[rbp-43] $22.1:rax $23.1:rbx 
@@ -62635,7 +62635,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] 
 .LABEL__write_337__6:
   .loc 1 93 9
-  # $29.1: Boolean = call(is_389, statement.1, AST_Break_Statement)
+  # $29.1: bool = call(is_389, statement.1, AST_Break_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Break_Statement[rip]
   call is_389
@@ -62659,7 +62659,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] 
 .LABEL__write_337__12:
   .loc 1 97 9
-  # $31.1: Boolean = call(is_389, statement.1, AST_Expression_Statement)
+  # $31.1: bool = call(is_389, statement.1, AST_Expression_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Expression_Statement[rip]
   call is_389
@@ -62693,7 +62693,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] 
 .LABEL__write_337__15:
   .loc 1 101 9
-  # $35.1: Boolean = call(is_389, statement.1, AST_Function_Statement)
+  # $35.1: bool = call(is_389, statement.1, AST_Function_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Function_Statement[rip]
   call is_389
@@ -62744,7 +62744,7 @@ write_337:
   # [discarded value]: $41.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] statement.1:[rbp-37] function_parameters.1:rax 
   .loc 1 105 13
-  # $43.1: Boolean = call(has_next_378, function_parameters.1)
+  # $43.1: bool = call(has_next_378, function_parameters.1)
   mov rdi, rax
   mov [rbp-45], rax
   call has_next_378
@@ -62768,7 +62768,7 @@ write_337:
   # [discarded value]: $45.1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] statement.1:[rbp-37] function_parameters.1:[rbp-45] $43.1:[rbp-46] 
   .loc 1 108 21
-  # $47.1: Boolean = call(has_next_378, function_parameters.1)
+  # $47.1: bool = call(has_next_378, function_parameters.1)
   mov rdi, [rbp-45]
   call has_next_378
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] statement.1:[rbp-37] function_parameters.1:[rbp-45] $43.1:[rbp-46] $47.1:rax 
@@ -62819,7 +62819,7 @@ write_337:
   mov rbx, [rax+40]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] statement.1:rax:[rbp-37] function_parameters.1:[rbp-45] $43.1:[rbp-46] $53.1:rbx $47.1:[rbp-47] 
   .loc 1 116 13
-  # $54.1: Boolean = $53.1 == null
+  # $54.1: bool = $53.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $53.1
@@ -62872,7 +62872,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] 
 .LABEL__write_337__18:
   .loc 1 122 9
-  # $58.1: Boolean = call(is_389, statement.1, AST_If_Statement)
+  # $58.1: bool = call(is_389, statement.1, AST_If_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_If_Statement[rip]
   call is_389
@@ -62934,7 +62934,7 @@ write_337:
   mov rbx, [rax+40]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] statement.1:rax:[rbp-38] $66.1:rbx 
   .loc 1 125 13
-  # $67.1: Boolean = $66.1 != null
+  # $67.1: bool = $66.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $66.1
@@ -62979,7 +62979,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] 
 .LABEL__write_337__32:
   .loc 1 131 9
-  # $71.1: Boolean = call(is_389, statement.1, AST_Loop_Statement)
+  # $71.1: bool = call(is_389, statement.1, AST_Loop_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Loop_Statement[rip]
   call is_389
@@ -63023,7 +63023,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] 
 .LABEL__write_337__37:
   .loc 1 136 9
-  # $76.1: Boolean = call(is_389, statement.1, AST_Return_Statement)
+  # $76.1: bool = call(is_389, statement.1, AST_Return_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Return_Statement[rip]
   call is_389
@@ -63051,7 +63051,7 @@ write_337:
   mov rbx, [rax+24]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] statement.1:rax:[rbp-40] $79.1:rbx 
   .loc 1 139 13
-  # $80.1: Boolean = $79.1 != null
+  # $80.1: bool = $79.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $79.1
@@ -63095,7 +63095,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] 
 .LABEL__write_337__40:
   .loc 1 145 9
-  # $84.1: Boolean = call(is_389, statement.1, AST_Struct_Statement)
+  # $84.1: bool = call(is_389, statement.1, AST_Struct_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Struct_Statement[rip]
   call is_389
@@ -63135,7 +63135,7 @@ write_337:
   mov rbx, [rax+32]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] statement.1:rax:[rbp-41] $89.1:rbx 
   .loc 1 148 13
-  # $90.1: Boolean = $89.1 != null
+  # $90.1: bool = $89.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $89.1
@@ -63173,7 +63173,7 @@ write_337:
   mov rbx, [rax+40]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] statement.1:rax:[rbp-41] $90.1:[rbp-42] $94.1:rbx 
   .loc 1 151 13
-  # $95.1: Boolean = $94.1 == null
+  # $95.1: bool = $94.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $94.1
@@ -63217,7 +63217,7 @@ write_337:
   mov [rbp-51], rax
 .LABEL__write_337__51:
   .loc 1 156 16
-  # $100.1: Boolean = call(has_next_378, members.1)
+  # $100.1: bool = call(has_next_378, members.1)
   mov rdi, [rbp-51]
   call has_next_378
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] statement.1:[rbp-41] $90.1:[rbp-42] $95.1:[rbp-43] members.1:[rbp-51] $100.1:rax 
@@ -63236,7 +63236,7 @@ write_337:
   mov rbx, [rax]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] statement.1:[rbp-41] $90.1:[rbp-42] $95.1:[rbp-43] members.1:[rbp-51] $100.1:[rbp-52] member.1:rax $103.1:rbx 
   .loc 1 158 53
-  # $104.1: Int = alignment.1 + 1
+  # $104.1: isize = alignment.1 + 1
   mov r15, [rbp-24]
   add r15, 1
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] statement.1:[rbp-41] $90.1:[rbp-42] $95.1:[rbp-43] members.1:[rbp-51] $100.1:[rbp-52] member.1:rax $103.1:rbx $104.1:r15 
@@ -63335,7 +63335,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] 
 .LABEL__write_337__45:
   .loc 1 163 9
-  # $115.1: Boolean = call(is_389, statement.1, AST_Variable_Statement)
+  # $115.1: bool = call(is_389, statement.1, AST_Variable_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_Variable_Statement[rip]
   call is_389
@@ -63372,7 +63372,7 @@ write_337:
   mov rbx, [rax+32]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] $115.1:[rbp-34] statement.1:rax:[rbp-42] $120.1:rbx 
   .loc 1 166 13
-  # $121.1: Boolean = $120.1 != null
+  # $121.1: bool = $120.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $120.1
@@ -63408,7 +63408,7 @@ write_337:
   mov rbx, [rax+40]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] $115.1:[rbp-34] statement.1:rax:[rbp-42] $121.1:[rbp-43] $128.1:rbx 
   .loc 1 168 17
-  # $129.1: Boolean = $128.1 != null
+  # $129.1: bool = $128.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $128.1
@@ -63441,7 +63441,7 @@ write_337:
   # jump(.LABEL__write_337__61)
 .LABEL__write_337__61:
   .loc 1 171 17
-  # $133.1: Boolean = load_struct_member(statement.1, is_external)
+  # $133.1: bool = load_struct_member(statement.1, is_external)
   mov rax, [rbp-42]
   mov bl, [rax+48]
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] $115.1:[rbp-34] statement.1:rax:[rbp-42] $121.1:[rbp-43] $129.1:[rbp-44] $133.1:rbx 
@@ -63500,7 +63500,7 @@ write_337:
   # [live values]: file.1:[rbp-8] statement.1:[rbp-16] alignment.1:[rbp-24] $1.1:[rbp-25] $11.1:[rbp-26] $29.1:[rbp-27] $31.1:[rbp-28] $35.1:[rbp-29] $58.1:[rbp-30] $71.1:[rbp-31] $76.1:[rbp-32] $84.1:[rbp-33] $115.1:[rbp-34] 
 .LABEL__write_337__56:
   .loc 1 180 9
-  # $135.1: Boolean = call(is_389, statement.1, AST_While_Statement)
+  # $135.1: bool = call(is_389, statement.1, AST_While_Statement)
   mov rdi, [rbp-16]
   mov rsi, AST_While_Statement[rip]
   call is_389
@@ -63652,7 +63652,7 @@ write_source_line_338:
   # [live values]: file.1:rdi 
   # location.1: @Source_Location = load_variable(location)
   # [live values]: file.1:rdi location.1:rsi 
-  # alignment.1: Int = load_variable(alignment)
+  # alignment.1: isize = load_variable(alignment)
   # [live values]: file.1:rdi location.1:rsi alignment.1:rdx 
   .loc 1 190 16
   # $1.1: @Source = load_struct_member(location.1, source)
@@ -63681,13 +63681,13 @@ write_source_line_338:
   # [discarded value]: $3.1
   # [live values]: file.1:[rbp-24] location.1:[rbp-8] alignment.1:[rbp-16] 
   .loc 1 191 16
-  # line.1: Int = load_struct_member(location.1, line)
+  # line.1: isize = load_struct_member(location.1, line)
   mov rax, [rbp-8]
   mov rbx, [rax+8]
   # [discarded value]: location.1
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:rbx 
   .loc 1 192 9
-  # $6.1: Boolean = line.1 < 1000
+  # $6.1: bool = line.1 < 1000
   cmp rbx, 1000
   setl al
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:rbx $6.1:rax 
@@ -63707,7 +63707,7 @@ write_source_line_338:
   # jump(.LABEL__write_source_line_338__3)
 .LABEL__write_source_line_338__3:
   .loc 1 195 9
-  # $8.1: Boolean = line.1 < 100
+  # $8.1: bool = line.1 < 100
   cmp QWORD PTR [rbp-33], 100
   setl al
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:rax 
@@ -63726,7 +63726,7 @@ write_source_line_338:
   # jump(.LABEL__write_source_line_338__5)
 .LABEL__write_source_line_338__5:
   .loc 1 198 9
-  # $10.1: Boolean = line.1 < 10
+  # $10.1: bool = line.1 < 10
   cmp QWORD PTR [rbp-33], 10
   setl al
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:rax 
@@ -63759,22 +63759,22 @@ write_source_line_338:
   # [discarded value]: $12.1
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] 
   .loc 1 203 23
-  # $14.1: Int = alignment.1 * 2
+  # $14.1: isize = alignment.1 * 2
   mov rax, [rbp-16]
   imul rax, 2
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] $14.1:rax 
   .loc 1 203 9
-  # space_count.1: Int = $14.1
+  # space_count.1: isize = $14.1
   mov [rbp-43], rax
   # [discarded value]: $14.1
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] space_count.1:rax 
   # jump(.LABEL__write_source_line_338__8)
   mov [rbp-43], rax
 .LABEL__write_source_line_338__8:
-  # space_count.2: Int = phi(space_count.1, space_count.4)
+  # space_count.2: isize = phi(space_count.1, space_count.4)
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] space_count.1:[rbp-43] space_count.2:[rbp-43] 
   .loc 1 204 12
-  # $15.1: Boolean = space_count.2 > 0
+  # $15.1: bool = space_count.2 > 0
   cmp QWORD PTR [rbp-43], 0
   setg al
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] space_count.1:[rbp-43] space_count.2:[rbp-43] $15.1:rax 
@@ -63791,12 +63791,12 @@ write_source_line_338:
   # [discarded value]: $16.1
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] space_count.1:[rbp-43] space_count.2:[rbp-43] $15.1:[rbp-44] 
   .loc 1 206 23
-  # $17.1: Int = space_count.2 - 1
+  # $17.1: isize = space_count.2 - 1
   mov rax, [rbp-43]
   dec rax
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] space_count.1:[rbp-43] space_count.2:[rbp-43] $15.1:[rbp-44] $17.1:rax 
   .loc 1 206 9
-  # space_count.4: Int = $17.1
+  # space_count.4: isize = $17.1
   mov [rbp-52], rax
   # [discarded value]: $17.1
   # [live values]: file.1:[rbp-24] alignment.1:[rbp-16] line.1:[rbp-33] $6.1:[rbp-25] $8.1:[rbp-34] $10.1:[rbp-35] space_count.1:[rbp-43] space_count.2:[rbp-43] $15.1:[rbp-44] space_count.4:rax:[rbp-43] 
@@ -63910,7 +63910,7 @@ write_340:
   # type.1: @AST_Type = load_variable(type)
   # [live values]: file.1:rdi type.1:rsi 
   .loc 1 217 9
-  # $1.1: Boolean = call(is_389, type.1, AST_Array_Type)
+  # $1.1: bool = call(is_389, type.1, AST_Array_Type)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -63931,7 +63931,7 @@ write_340:
   mov rbx, [rax+24]
   # [live values]: file.1:[rbp-8] type.1:[rbp-16] $1.1:[rbp-17] type.1:rax $3.1:rbx 
   .loc 1 219 13
-  # $4.1: Boolean = $3.1 != null
+  # $4.1: bool = $3.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $3.1
@@ -64033,7 +64033,7 @@ write_340:
   # [live values]: file.1:[rbp-8] type.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__write_340__3:
   .loc 1 225 9
-  # $16.1: Boolean = call(is_389, type.1, AST_Named_Type)
+  # $16.1: bool = call(is_389, type.1, AST_Named_Type)
   mov rdi, [rbp-16]
   mov rsi, AST_Named_Type[rip]
   call is_389
@@ -64067,7 +64067,7 @@ write_340:
   # [live values]: file.1:[rbp-8] type.1:[rbp-16] $1.1:[rbp-17] $16.1:[rbp-18] 
 .LABEL__write_340__9:
   .loc 1 229 9
-  # $20.1: Boolean = call(is_389, type.1, AST_Embedded_Type)
+  # $20.1: bool = call(is_389, type.1, AST_Embedded_Type)
   mov rdi, [rbp-16]
   mov rsi, AST_Embedded_Type[rip]
   call is_389
@@ -64180,7 +64180,7 @@ write_341:
   # expression.1: @AST_Expression = load_variable(expression)
   # [live values]: file.1:rdi expression.1:rsi 
   .loc 1 238 9
-  # $1.1: Boolean = call(is_389, expression.1, AST_Array_Access_Expression)
+  # $1.1: bool = call(is_389, expression.1, AST_Array_Access_Expression)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -64247,7 +64247,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__write_341__3:
   .loc 1 242 9
-  # $10.1: Boolean = call(is_389, expression.1, AST_Binary_Expression)
+  # $10.1: bool = call(is_389, expression.1, AST_Binary_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Binary_Expression[rip]
   call is_389
@@ -64282,7 +64282,7 @@ write_341:
   # [discarded value]: $11.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] 
   .loc 1 244 13
-  # $15.1: Boolean = call(is_389, expression.1, AST_Add_Expression)
+  # $15.1: bool = call(is_389, expression.1, AST_Add_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Add_Expression[rip]
   call is_389
@@ -64330,7 +64330,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] 
 .LABEL__write_341__8:
   .loc 1 247 13
-  # $21.1: Boolean = call(is_389, expression.1, AST_Divide_Expression)
+  # $21.1: bool = call(is_389, expression.1, AST_Divide_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Divide_Expression[rip]
   call is_389
@@ -64378,7 +64378,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] 
 .LABEL__write_341__11:
   .loc 1 250 13
-  # $27.1: Boolean = call(is_389, expression.1, AST_Equals_Expression)
+  # $27.1: bool = call(is_389, expression.1, AST_Equals_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Equals_Expression[rip]
   call is_389
@@ -64426,7 +64426,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] 
 .LABEL__write_341__14:
   .loc 1 253 13
-  # $33.1: Boolean = call(is_389, expression.1, AST_Greater_Than_Expression)
+  # $33.1: bool = call(is_389, expression.1, AST_Greater_Than_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Greater_Than_Expression[rip]
   call is_389
@@ -64474,7 +64474,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] 
 .LABEL__write_341__17:
   .loc 1 256 13
-  # $39.1: Boolean = call(is_389, expression.1, AST_Greater_Than_Or_Equals_Expression)
+  # $39.1: bool = call(is_389, expression.1, AST_Greater_Than_Or_Equals_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Greater_Than_Or_Equals_Expression[rip]
   call is_389
@@ -64522,7 +64522,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] 
 .LABEL__write_341__20:
   .loc 1 259 13
-  # $45.1: Boolean = call(is_389, expression.1, AST_Less_Than_Expression)
+  # $45.1: bool = call(is_389, expression.1, AST_Less_Than_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Less_Than_Expression[rip]
   call is_389
@@ -64570,7 +64570,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] 
 .LABEL__write_341__23:
   .loc 1 262 13
-  # $51.1: Boolean = call(is_389, expression.1, AST_Less_Than_Or_Equals_Expression)
+  # $51.1: bool = call(is_389, expression.1, AST_Less_Than_Or_Equals_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Less_Than_Or_Equals_Expression[rip]
   call is_389
@@ -64618,7 +64618,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] 
 .LABEL__write_341__26:
   .loc 1 265 13
-  # $57.1: Boolean = call(is_389, expression.1, AST_Logic_And_Expression)
+  # $57.1: bool = call(is_389, expression.1, AST_Logic_And_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Logic_And_Expression[rip]
   call is_389
@@ -64666,7 +64666,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] 
 .LABEL__write_341__29:
   .loc 1 268 13
-  # $63.1: Boolean = call(is_389, expression.1, AST_Logic_Or_Expression)
+  # $63.1: bool = call(is_389, expression.1, AST_Logic_Or_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Logic_Or_Expression[rip]
   call is_389
@@ -64714,7 +64714,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] 
 .LABEL__write_341__32:
   .loc 1 271 13
-  # $69.1: Boolean = call(is_389, expression.1, AST_Modulo_Expression)
+  # $69.1: bool = call(is_389, expression.1, AST_Modulo_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Modulo_Expression[rip]
   call is_389
@@ -64762,7 +64762,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] 
 .LABEL__write_341__35:
   .loc 1 274 13
-  # $75.1: Boolean = call(is_389, expression.1, AST_Multiply_Expression)
+  # $75.1: bool = call(is_389, expression.1, AST_Multiply_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Multiply_Expression[rip]
   call is_389
@@ -64810,7 +64810,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] 
 .LABEL__write_341__38:
   .loc 1 277 13
-  # $81.1: Boolean = call(is_389, expression.1, AST_Not_Equals_Expression)
+  # $81.1: bool = call(is_389, expression.1, AST_Not_Equals_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Not_Equals_Expression[rip]
   call is_389
@@ -64858,7 +64858,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] 
 .LABEL__write_341__41:
   .loc 1 280 13
-  # $87.1: Boolean = call(is_389, expression.1, AST_Substract_Expression)
+  # $87.1: bool = call(is_389, expression.1, AST_Substract_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Substract_Expression[rip]
   call is_389
@@ -64906,7 +64906,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] 
 .LABEL__write_341__6:
   .loc 1 285 9
-  # $93.1: Boolean = call(is_389, expression.1, AST_Call_Expression)
+  # $93.1: bool = call(is_389, expression.1, AST_Call_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Call_Expression[rip]
   call is_389
@@ -64956,7 +64956,7 @@ write_341:
   # [discarded value]: $99.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] call_arguments.1:rax 
   .loc 1 288 13
-  # $101.1: Boolean = call(has_next_378, call_arguments.1)
+  # $101.1: bool = call(has_next_378, call_arguments.1)
   mov rdi, rax
   mov [rbp-40], rax
   call has_next_378
@@ -64980,7 +64980,7 @@ write_341:
   # [discarded value]: $103.1
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] call_arguments.1:[rbp-40] $101.1:[rbp-41] 
   .loc 1 291 21
-  # $105.1: Boolean = call(has_next_378, call_arguments.1)
+  # $105.1: bool = call(has_next_378, call_arguments.1)
   mov rdi, [rbp-40]
   call has_next_378
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] call_arguments.1:[rbp-40] $101.1:[rbp-41] $105.1:rax 
@@ -65020,7 +65020,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] 
 .LABEL__write_341__47:
   .loc 1 301 9
-  # $108.1: Boolean = call(is_389, expression.1, AST_Cast_Expression)
+  # $108.1: bool = call(is_389, expression.1, AST_Cast_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Cast_Expression[rip]
   call is_389
@@ -65078,7 +65078,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] $108.1:[rbp-33] 
 .LABEL__write_341__58:
   .loc 1 305 9
-  # $116.1: Boolean = call(is_389, expression.1, AST_Literal_Expression)
+  # $116.1: bool = call(is_389, expression.1, AST_Literal_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Literal_Expression[rip]
   call is_389
@@ -65112,7 +65112,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] $108.1:[rbp-33] $116.1:[rbp-34] 
 .LABEL__write_341__61:
   .loc 1 309 9
-  # $120.1: Boolean = call(is_389, expression.1, AST_New_Expression)
+  # $120.1: bool = call(is_389, expression.1, AST_New_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_New_Expression[rip]
   call is_389
@@ -65153,7 +65153,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] $108.1:[rbp-33] $116.1:[rbp-34] $120.1:[rbp-35] 
 .LABEL__write_341__64:
   .loc 1 313 9
-  # $125.1: Boolean = call(is_389, expression.1, AST_Member_Access_Expression)
+  # $125.1: bool = call(is_389, expression.1, AST_Member_Access_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Member_Access_Expression[rip]
   call is_389
@@ -65211,7 +65211,7 @@ write_341:
   # [live values]: file.1:[rbp-8] expression.1:[rbp-16] $1.1:[rbp-17] $10.1:[rbp-18] $15.1:[rbp-19] $93.1:[rbp-32] $21.1:[rbp-20] $27.1:[rbp-21] $33.1:[rbp-22] $39.1:[rbp-23] $45.1:[rbp-24] $51.1:[rbp-25] $57.1:[rbp-26] $63.1:[rbp-27] $69.1:[rbp-28] $75.1:[rbp-29] $81.1:[rbp-30] $87.1:[rbp-31] $108.1:[rbp-33] $116.1:[rbp-34] $120.1:[rbp-35] $125.1:[rbp-36] 
 .LABEL__write_341__67:
   .loc 1 317 9
-  # $133.1: Boolean = call(is_389, expression.1, AST_Variable_Expression)
+  # $133.1: bool = call(is_389, expression.1, AST_Variable_Expression)
   mov rdi, [rbp-16]
   mov rsi, AST_Variable_Expression[rip]
   call is_389
@@ -65402,10 +65402,10 @@ peek_token_343:
 .LABEL__peek_token_343__1:
   # self.1: @Scanner = load_variable(self)
   # [live values]: self.1:rdi 
-  # offset.1: Int = load_variable(offset)
+  # offset.1: isize = load_variable(offset)
   # [live values]: self.1:rdi offset.1:rsi 
   .loc 9 18 9
-  # $1.1: Boolean = offset.1 < 0
+  # $1.1: bool = offset.1 < 0
   cmp rsi, 0
   setl al
   # [live values]: self.1:rdi offset.1:rsi $1.1:rax 
@@ -65430,7 +65430,7 @@ peek_token_343:
   # jump(.LABEL__peek_token_343__4)
   mov [rbp-25], rbx
 .LABEL__peek_token_343__4:
-  # offset.5: Int = phi(offset.1, offset.4)
+  # offset.5: isize = phi(offset.1, offset.4)
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] 
   # token.2: @Token = phi(token.1, token.5)
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] token.2:[rbp-25] 
@@ -65440,7 +65440,7 @@ peek_token_343:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] token.2:rax:[rbp-25] $3.1:rbx 
   .loc 9 23 13
-  # $4.1: Boolean = $3.1 == null
+  # $4.1: bool = $3.1 == null
   cmp rbx, 0
   sete r15b
   # [discarded value]: $3.1
@@ -65469,7 +65469,7 @@ peek_token_343:
   mov rbx, [rax+24]
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] token.2:[rbp-25] $4.1:[rbp-26] token.5:rbx:[rbp-25] 
   .loc 9 27 13
-  # $7.1: Boolean = offset.5 == 0
+  # $7.1: bool = offset.5 == 0
   cmp QWORD PTR [rbp-9], 0
   sete al
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] token.2:[rbp-25] $4.1:[rbp-26] token.5:rbx:[rbp-25] $7.1:rax 
@@ -65486,12 +65486,12 @@ peek_token_343:
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] token.2:[rbp-25] $4.1:[rbp-26] token.5:[rbp-25] $7.1:[rbp-27] 
 .LABEL__peek_token_343__9:
   .loc 9 30 18
-  # $8.1: Int = offset.5 - 1
+  # $8.1: isize = offset.5 - 1
   mov rax, [rbp-9]
   dec rax
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] token.2:[rbp-25] $4.1:[rbp-26] token.5:[rbp-25] $7.1:[rbp-27] $8.1:rax 
   .loc 9 30 9
-  # offset.4: Int = $8.1
+  # offset.4: isize = $8.1
   mov [rbp-35], rax
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-17] offset.1:[rbp-9] $1.1:[rbp-1] token.1:[rbp-25] offset.5:[rbp-9] token.2:[rbp-25] $4.1:[rbp-26] token.5:[rbp-25] $7.1:[rbp-27] offset.4:rax:[rbp-9] 
@@ -65546,7 +65546,7 @@ next_token_344:
   # [discarded value]: $1.1
   # [live values]: self.1:rdi $2.1:rbx 
   .loc 9 35 9
-  # $3.1: Boolean = $2.1 == null
+  # $3.1: bool = $2.1 == null
   cmp rbx, 0
   sete al
   # [discarded value]: $2.1
@@ -65626,7 +65626,7 @@ peek_char_345:
   # self.1: @Scanner = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 9 43 32
-  # $1.1: Int = load_struct_member(self.1, current_char_index)
+  # $1.1: isize = load_struct_member(self.1, current_char_index)
   mov rax, [rdi+8]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 9 43 12
@@ -65635,12 +65635,12 @@ peek_char_345:
   # [discarded value]: self.1
   # [live values]: $1.1:rax $2.1:rbx 
   .loc 9 43 12
-  # $3.1: [Int8; ?] = load_struct_member($2.1, content)
+  # $3.1: [i8; ?] = load_struct_member($2.1, content)
   mov r15, [rbx+16]
   # [discarded value]: $2.1
   # [live values]: $1.1:rax $3.1:r15 
   .loc 9 43 12
-  # $4.1: Int8 = load_array_item($3.1, $1.1)
+  # $4.1: i8 = load_array_item($3.1, $1.1)
   mov rbx, r15
   mov r14, rax
   add rbx, r14
@@ -65673,7 +65673,7 @@ next_char_346:
   # self.1: @Scanner = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 9 47 41
-  # $1.1: Int = load_struct_member(self.1, current_char_index)
+  # $1.1: isize = load_struct_member(self.1, current_char_index)
   mov rax, [rdi+8]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 9 47 21
@@ -65681,12 +65681,12 @@ next_char_346:
   mov rbx, [rdi]
   # [live values]: self.1:rdi $1.1:rax $2.1:rbx 
   .loc 9 47 21
-  # $3.1: [Int8; ?] = load_struct_member($2.1, content)
+  # $3.1: [i8; ?] = load_struct_member($2.1, content)
   mov r15, [rbx+16]
   # [discarded value]: $2.1
   # [live values]: self.1:rdi $1.1:rax $3.1:r15 
   .loc 9 47 21
-  # next_char.1: Int8 = load_array_item($3.1, $1.1)
+  # next_char.1: i8 = load_array_item($3.1, $1.1)
   mov rbx, r15
   mov r14, rax
   add rbx, r14
@@ -65695,7 +65695,7 @@ next_char_346:
   # [discarded value]: $1.1
   # [live values]: self.1:rdi next_char.1:rbx 
   .loc 9 48 9
-  # $5.1: Boolean = next_char.1 != '\0'
+  # $5.1: bool = next_char.1 != '\0'
   cmp bl, 0
   setne al
   # [live values]: self.1:rdi next_char.1:rbx $5.1:rax 
@@ -65707,12 +65707,12 @@ next_char_346:
   jz .LABEL__next_char_346__3
 .LABEL__next_char_346__2:
   .loc 9 49 35
-  # $6.1: Int = load_struct_member(self.1, current_char_index)
+  # $6.1: isize = load_struct_member(self.1, current_char_index)
   mov rax, [rbp-10]
   mov rbx, [rax+8]
   # [live values]: self.1:rax:[rbp-10] next_char.1:[rbp-2] $5.1:[rbp-1] $6.1:rbx 
   .loc 9 49 35
-  # $7.1: Int = $6.1 + 1
+  # $7.1: isize = $6.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $6.1
@@ -65723,7 +65723,7 @@ next_char_346:
   # [discarded value]: $7.1
   # [live values]: self.1:rax:[rbp-10] next_char.1:[rbp-2] $5.1:[rbp-1] 
   .loc 9 50 13
-  # $8.1: Boolean = next_char.1 == '\n'
+  # $8.1: bool = next_char.1 == '\n'
   cmp BYTE PTR [rbp-2], 10
   sete bl
   # [live values]: self.1:rax:[rbp-10] next_char.1:[rbp-2] $5.1:[rbp-1] $8.1:rbx 
@@ -65733,12 +65733,12 @@ next_char_346:
   jz .LABEL__next_char_346__6
 .LABEL__next_char_346__4:
   .loc 9 51 33
-  # $11.1: Int = load_struct_member(self.1, current_line)
+  # $11.1: isize = load_struct_member(self.1, current_line)
   mov rax, [rbp-10]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-10] next_char.1:[rbp-2] $5.1:[rbp-1] $8.1:[rbp-11] $11.1:rbx 
   .loc 9 51 33
-  # $12.1: Int = $11.1 + 1
+  # $12.1: isize = $11.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $11.1
@@ -65762,12 +65762,12 @@ next_char_346:
   # [live values]: self.1:[rbp-10] next_char.1:[rbp-2] $5.1:[rbp-1] $8.1:[rbp-11] 
 .LABEL__next_char_346__6:
   .loc 9 54 35
-  # $9.1: Int = load_struct_member(self.1, current_column)
+  # $9.1: isize = load_struct_member(self.1, current_column)
   mov rax, [rbp-10]
   mov rbx, [rax+24]
   # [live values]: self.1:rax:[rbp-10] next_char.1:[rbp-2] $5.1:[rbp-1] $8.1:[rbp-11] $9.1:rbx 
   .loc 9 54 35
-  # $10.1: Int = $9.1 + 1
+  # $10.1: isize = $9.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $9.1
@@ -65804,8 +65804,8 @@ scan_token_347:
 .LABEL__scan_token_347__1:
   # self.1: @Scanner = load_variable(self)
   # [live values]: self.1:rdi 
-  .loc 14 4 23
-  # $2.1: [Int8; ?] = call(malloc, 16)
+  .loc 14 4 21
+  # $2.1: [i8; ?] = call(malloc, 16)
   mov [rbp-8], rdi
   mov rdi, 16
   call malloc
@@ -65830,11 +65830,11 @@ scan_token_347:
   mov r15, [rbx]
   # [live values]: self.1:rbx:[rbp-8] token_lexeme.1:rax $4.1:r15 
   .loc 9 62 75
-  # $5.1: Int = load_struct_member(self.1, current_line)
+  # $5.1: isize = load_struct_member(self.1, current_line)
   mov r14, [rbx+16]
   # [live values]: self.1:rbx:[rbp-8] token_lexeme.1:rax $4.1:r15 $5.1:r14 
   .loc 9 62 103
-  # $6.1: Int = load_struct_member(self.1, current_column)
+  # $6.1: isize = load_struct_member(self.1, current_column)
   mov r13, [rbx+24]
   # [live values]: self.1:rbx:[rbp-8] token_lexeme.1:rax $4.1:r15 $5.1:r14 $6.1:r13 
   .loc 9 62 26
@@ -65859,13 +65859,13 @@ scan_token_347:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:rax 
   .loc 9 64 21
-  # next_char.1: Int8 = call(peek_char_345, self.1)
+  # next_char.1: i8 = call(peek_char_345, self.1)
   mov rdi, [rbp-8]
   mov [rbp-24], rax
   call peek_char_345
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:rax 
   .loc 9 65 9
-  # $9.1: Boolean = call(is_identifier_start_349, next_char.1)
+  # $9.1: bool = call(is_identifier_start_349, next_char.1)
   mov dil, al
   mov [rbp-25], al
   call is_identifier_start_349
@@ -65890,7 +65890,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] 
 .LABEL__scan_token_347__3:
   .loc 9 68 9
-  # $11.1: Boolean = call(is_digit_348, next_char.1)
+  # $11.1: bool = call(is_digit_348, next_char.1)
   mov dil, [rbp-25]
   call is_digit_348
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:rax 
@@ -65914,7 +65914,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] 
 .LABEL__scan_token_347__6:
   .loc 9 71 9
-  # $13.1: Boolean = next_char.1 == '\''
+  # $13.1: bool = next_char.1 == '\''
   cmp BYTE PTR [rbp-25], 39
   sete al
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:rax 
@@ -65938,7 +65938,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] 
 .LABEL__scan_token_347__9:
   .loc 9 74 9
-  # $15.1: Boolean = next_char.1 == '"'
+  # $15.1: bool = next_char.1 == '"'
   cmp BYTE PTR [rbp-25], 34
   sete al
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:rax 
@@ -65962,7 +65962,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] 
 .LABEL__scan_token_347__12:
   .loc 9 77 9
-  # $17.1: Boolean = next_char.1 == '\\'
+  # $17.1: bool = next_char.1 == '\\'
   cmp BYTE PTR [rbp-25], 92
   sete al
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:rax 
@@ -65986,7 +65986,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] 
 .LABEL__scan_token_347__15:
   .loc 9 80 9
-  # $19.1: Boolean = call(is_space_352, next_char.1)
+  # $19.1: bool = call(is_space_352, next_char.1)
   mov dil, [rbp-25]
   call is_space_352
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] $19.1:rax 
@@ -66010,7 +66010,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] $19.1:[rbp-31] 
 .LABEL__scan_token_347__18:
   .loc 9 83 9
-  # $21.1: Boolean = next_char.1 == '\n'
+  # $21.1: bool = next_char.1 == '\n'
   cmp BYTE PTR [rbp-25], 10
   sete al
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] $19.1:[rbp-31] $21.1:rax 
@@ -66020,7 +66020,7 @@ scan_token_347:
   jz .LABEL__scan_token_347__21
 .LABEL__scan_token_347__20:
   .loc 9 84 9
-  # $22.1: Int8 = call(next_char_346, self.1)
+  # $22.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-8]
   call next_char_346
   # [discarded value]: $22.1
@@ -66049,7 +66049,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] $19.1:[rbp-31] $21.1:[rbp-32] 
 .LABEL__scan_token_347__21:
   .loc 9 87 9
-  # $24.1: Boolean = next_char.1 == '\0'
+  # $24.1: bool = next_char.1 == '\0'
   cmp BYTE PTR [rbp-25], 0
   sete al
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] $19.1:[rbp-31] $21.1:[rbp-32] $24.1:rax 
@@ -66059,7 +66059,7 @@ scan_token_347:
   jz .LABEL__scan_token_347__24
 .LABEL__scan_token_347__23:
   .loc 9 88 9
-  # $25.1: Int8 = call(next_char_346, self.1)
+  # $25.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-8]
   call next_char_346
   # [discarded value]: $25.1
@@ -66088,7 +66088,7 @@ scan_token_347:
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] $19.1:[rbp-31] $21.1:[rbp-32] $24.1:[rbp-33] 
 .LABEL__scan_token_347__24:
   .loc 9 91 25
-  # $27.1: Int8 = call(next_char_346, self.1)
+  # $27.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-8]
   call next_char_346
   # [live values]: self.1:[rbp-8] token_lexeme.1:[rbp-16] token_location.1:[rbp-24] next_char.1:[rbp-25] $9.1:[rbp-26] $11.1:[rbp-27] $13.1:[rbp-28] $15.1:[rbp-29] $17.1:[rbp-30] $19.1:[rbp-31] $21.1:[rbp-32] $24.1:[rbp-33] $27.1:rax 
@@ -66158,27 +66158,27 @@ is_digit_348:
   movsx rax, WORD PTR is_digit_348__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__is_digit_348__1:
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: char.1:rdi 
   .loc 9 96 12
-  # $1.1: Int = cast(char.1)
+  # $1.1: isize = cast(char.1)
   mov al, dil
   movsx rax, al
   # [live values]: char.1:rdi $1.1:rax 
-  .loc 9 96 27
-  # $2.1: Int = cast('0')
+  .loc 9 96 29
+  # $2.1: isize = cast('0')
   mov bl, 48
   movsx rbx, bl
   # [live values]: char.1:rdi $1.1:rax $2.1:rbx 
   .loc 9 96 12
-  # $3.1: Boolean = $1.1 >= $2.1
+  # $3.1: bool = $1.1 >= $2.1
   cmp rax, rbx
   setge r15b
   # [discarded value]: $2.1
   # [discarded value]: $1.1
   # [live values]: char.1:rdi $3.1:r15 
   .loc 9 96 12
-  # $4.1: Boolean = $3.1
+  # $4.1: bool = $3.1
   mov [rbp-1], r15b
   # [discarded value]: $3.1
   # [live values]: char.1:rdi $4.1:r15 
@@ -66188,25 +66188,25 @@ is_digit_348:
   mov [rbp-2], r15b
   jz .LABEL__is_digit_348__3
 .LABEL__is_digit_348__2:
-  .loc 9 96 41
-  # $5.1: Int = cast(char.1)
+  .loc 9 96 45
+  # $5.1: isize = cast(char.1)
   mov al, [rbp-1]
   movsx rax, al
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $5.1:rax 
-  .loc 9 96 56
-  # $6.1: Int = cast('9')
+  .loc 9 96 62
+  # $6.1: isize = cast('9')
   mov bl, 57
   movsx rbx, bl
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $5.1:rax $6.1:rbx 
-  .loc 9 96 41
-  # $7.1: Boolean = $5.1 <= $6.1
+  .loc 9 96 45
+  # $7.1: bool = $5.1 <= $6.1
   cmp rax, rbx
   setle r15b
   # [discarded value]: $6.1
   # [discarded value]: $5.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $7.1:r15 
   .loc 9 96 12
-  # $4.2: Boolean = $7.1
+  # $4.2: bool = $7.1
   mov [rbp-3], r15b
   # [discarded value]: $7.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $4.2:r15:[rbp-2] 
@@ -66214,7 +66214,7 @@ is_digit_348:
   mov [rbp-2], r15b
 .LABEL__is_digit_348__3:
   .loc 9 96 12
-  # $4.3: Boolean = phi($4.1, $4.2)
+  # $4.3: bool = phi($4.1, $4.2)
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $4.2:[rbp-2] $4.3:[rbp-2] 
   .loc 9 96 5
   # return($4.3)
@@ -66244,10 +66244,10 @@ is_identifier_start_349:
   movsx rax, WORD PTR is_identifier_start_349__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__is_identifier_start_349__1:
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: char.1:rdi 
   .loc 9 100 12
-  # $2.1: Boolean = call(is_letter_351, char.1)
+  # $2.1: bool = call(is_letter_351, char.1)
   mov [rbp-1], dil
   call is_letter_351
   # [live values]: char.1:[rbp-1] $2.1:rax 
@@ -66257,7 +66257,7 @@ is_identifier_start_349:
   jz .LABEL__is_identifier_start_349__2
 .LABEL__is_identifier_start_349__3:
   .loc 9 100 12
-  # $2.3: Boolean = phi($2.1, $2.2)
+  # $2.3: bool = phi($2.1, $2.2)
   # [live values]: char.1:[rbp-1] $2.1:[rbp-2] $2.3:[rbp-2] 
   .loc 9 100 5
   # return($2.3)
@@ -66267,12 +66267,12 @@ is_identifier_start_349:
   # [live values]: char.1:[rbp-1] $2.1:[rbp-2] 
 .LABEL__is_identifier_start_349__2:
   .loc 9 100 32
-  # $3.1: Boolean = char.1 == '_'
+  # $3.1: bool = char.1 == '_'
   cmp BYTE PTR [rbp-1], 95
   sete al
   # [live values]: char.1:[rbp-1] $2.1:[rbp-2] $3.1:rax 
   .loc 9 100 12
-  # $2.2: Boolean = $3.1
+  # $2.2: bool = $3.1
   mov [rbp-3], al
   # [discarded value]: $3.1
   # [live values]: char.1:[rbp-1] $2.1:[rbp-2] $2.2:rax:[rbp-2] 
@@ -66301,10 +66301,10 @@ is_identifier_body_350:
   movsx rax, WORD PTR is_identifier_body_350__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__is_identifier_body_350__1:
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: char.1:rdi 
   .loc 9 104 9
-  # $1.1: Boolean = call(is_identifier_start_349, char.1)
+  # $1.1: bool = call(is_identifier_start_349, char.1)
   mov [rbp-1], dil
   call is_identifier_start_349
   # [live values]: char.1:[rbp-1] $1.1:rax 
@@ -66320,7 +66320,7 @@ is_identifier_body_350:
   # [live values]: char.1:[rbp-1] $1.1:[rbp-2] 
 .LABEL__is_identifier_body_350__3:
   .loc 9 107 12
-  # $2.1: Boolean = call(is_digit_348, char.1)
+  # $2.1: bool = call(is_digit_348, char.1)
   mov dil, [rbp-1]
   call is_digit_348
   # [live values]: char.1:[rbp-1] $1.1:[rbp-2] $2.1:rax 
@@ -66349,27 +66349,27 @@ is_letter_351:
   movsx rax, WORD PTR is_letter_351__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__is_letter_351__1:
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: char.1:rdi 
   .loc 9 111 13
-  # $1.1: Int = cast(char.1)
+  # $1.1: isize = cast(char.1)
   mov al, dil
   movsx rax, al
   # [live values]: char.1:rdi $1.1:rax 
-  .loc 9 111 28
-  # $2.1: Int = cast('a')
+  .loc 9 111 30
+  # $2.1: isize = cast('a')
   mov bl, 97
   movsx rbx, bl
   # [live values]: char.1:rdi $1.1:rax $2.1:rbx 
   .loc 9 111 13
-  # $3.1: Boolean = $1.1 >= $2.1
+  # $3.1: bool = $1.1 >= $2.1
   cmp rax, rbx
   setge r15b
   # [discarded value]: $2.1
   # [discarded value]: $1.1
   # [live values]: char.1:rdi $3.1:r15 
   .loc 9 111 13
-  # $4.1: Boolean = $3.1
+  # $4.1: bool = $3.1
   mov [rbp-1], r15b
   # [discarded value]: $3.1
   # [live values]: char.1:rdi $4.1:r15 
@@ -66379,25 +66379,25 @@ is_letter_351:
   mov [rbp-2], r15b
   jz .LABEL__is_letter_351__5
 .LABEL__is_letter_351__4:
-  .loc 9 111 42
-  # $5.1: Int = cast(char.1)
+  .loc 9 111 46
+  # $5.1: isize = cast(char.1)
   mov al, [rbp-1]
   movsx rax, al
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $5.1:rax 
-  .loc 9 111 57
-  # $6.1: Int = cast('z')
+  .loc 9 111 63
+  # $6.1: isize = cast('z')
   mov bl, 122
   movsx rbx, bl
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $5.1:rax $6.1:rbx 
-  .loc 9 111 42
-  # $7.1: Boolean = $5.1 <= $6.1
+  .loc 9 111 46
+  # $7.1: bool = $5.1 <= $6.1
   cmp rax, rbx
   setle r15b
   # [discarded value]: $6.1
   # [discarded value]: $5.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $7.1:r15 
   .loc 9 111 13
-  # $4.2: Boolean = $7.1
+  # $4.2: bool = $7.1
   mov [rbp-3], r15b
   # [discarded value]: $7.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $4.2:r15:[rbp-2] 
@@ -66405,7 +66405,7 @@ is_letter_351:
   mov [rbp-2], r15b
 .LABEL__is_letter_351__5:
   .loc 9 111 13
-  # $8.1: Boolean = phi($4.1, $4.2)
+  # $8.1: bool = phi($4.1, $4.2)
   mov al, [rbp-2]
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $4.2:[rbp-2] $8.1:rax 
   # jump($8.1, .LABEL__is_letter_351__3, .LABEL__is_letter_351__2)
@@ -66414,7 +66414,7 @@ is_letter_351:
   jz .LABEL__is_letter_351__2
 .LABEL__is_letter_351__3:
   .loc 9 111 12
-  # $8.3: Boolean = phi($8.1, $8.2)
+  # $8.3: bool = phi($8.1, $8.2)
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $8.3:[rbp-3] $4.2:[rbp-2] $8.1:[rbp-3] 
   .loc 9 111 5
   # return($8.3)
@@ -66423,25 +66423,25 @@ is_letter_351:
   # [discarded value]: $8.3
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $4.2:[rbp-2] $8.1:[rbp-3] 
 .LABEL__is_letter_351__2:
-  .loc 9 111 73
-  # $9.1: Int = cast(char.1)
+  .loc 9 111 81
+  # $9.1: isize = cast(char.1)
   mov al, [rbp-1]
   movsx rax, al
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $9.1:rax $4.2:[rbp-2] $8.1:[rbp-3] 
-  .loc 9 111 88
-  # $10.1: Int = cast('A')
+  .loc 9 111 98
+  # $10.1: isize = cast('A')
   mov bl, 65
   movsx rbx, bl
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $9.1:rax $10.1:rbx $4.2:[rbp-2] $8.1:[rbp-3] 
-  .loc 9 111 73
-  # $11.1: Boolean = $9.1 >= $10.1
+  .loc 9 111 81
+  # $11.1: bool = $9.1 >= $10.1
   cmp rax, rbx
   setge r15b
   # [discarded value]: $10.1
   # [discarded value]: $9.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $11.1:r15 $4.2:[rbp-2] $8.1:[rbp-3] 
-  .loc 9 111 73
-  # $12.1: Boolean = $11.1
+  .loc 9 111 81
+  # $12.1: bool = $11.1
   mov [rbp-4], r15b
   # [discarded value]: $11.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $12.1:r15 $4.2:[rbp-2] $8.1:[rbp-3] 
@@ -66450,33 +66450,33 @@ is_letter_351:
   mov [rbp-4], r15b
   jz .LABEL__is_letter_351__7
 .LABEL__is_letter_351__6:
-  .loc 9 111 102
-  # $13.1: Int = cast(char.1)
+  .loc 9 111 114
+  # $13.1: isize = cast(char.1)
   mov al, [rbp-1]
   movsx rax, al
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $12.1:[rbp-4] $4.2:[rbp-2] $8.1:[rbp-3] $13.1:rax 
-  .loc 9 111 117
-  # $14.1: Int = cast('Z')
+  .loc 9 111 131
+  # $14.1: isize = cast('Z')
   mov bl, 90
   movsx rbx, bl
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $12.1:[rbp-4] $4.2:[rbp-2] $8.1:[rbp-3] $13.1:rax $14.1:rbx 
-  .loc 9 111 102
-  # $15.1: Boolean = $13.1 <= $14.1
+  .loc 9 111 114
+  # $15.1: bool = $13.1 <= $14.1
   cmp rax, rbx
   setle r15b
   # [discarded value]: $14.1
   # [discarded value]: $13.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $12.1:[rbp-4] $4.2:[rbp-2] $8.1:[rbp-3] $15.1:r15 
-  .loc 9 111 73
-  # $12.2: Boolean = $15.1
+  .loc 9 111 81
+  # $12.2: bool = $15.1
   mov [rbp-5], r15b
   # [discarded value]: $15.1
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $12.1:[rbp-4] $4.2:[rbp-2] $8.1:[rbp-3] $12.2:r15:[rbp-4] 
   # jump(.LABEL__is_letter_351__7)
   mov [rbp-4], r15b
 .LABEL__is_letter_351__7:
-  .loc 9 111 73
-  # $8.2: Boolean = phi($12.1, $12.2)
+  .loc 9 111 81
+  # $8.2: bool = phi($12.1, $12.2)
   mov al, [rbp-4]
   # [live values]: char.1:[rbp-1] $4.1:[rbp-2] $12.1:[rbp-4] $4.2:[rbp-2] $8.1:[rbp-3] $12.2:[rbp-4] $8.2:rax:[rbp-3] 
   # jump(.LABEL__is_letter_351__3)
@@ -66516,10 +66516,10 @@ is_space_352:
   movsx rax, WORD PTR is_space_352__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__is_space_352__1:
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: char.1:rdi 
   .loc 9 115 12
-  # $1.1: Boolean = char.1 == ' '
+  # $1.1: bool = char.1 == ' '
   cmp dil, 32
   sete al
   # [discarded value]: char.1
@@ -66552,14 +66552,14 @@ scan_character_token_353:
   # token_location.1: @Source_Location = load_variable(token_location)
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx 
   .loc 9 119 9
-  # $1.1: Int8 = call(peek_char_345, self.1)
+  # $1.1: i8 = call(peek_char_345, self.1)
   mov [rbp-8], rdx
   mov [rbp-16], rsi
   mov [rbp-24], rdi
   call peek_char_345
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $1.1:rax 
   .loc 9 119 9
-  # $2.1: Boolean = $1.1 != '\''
+  # $2.1: bool = $1.1 != '\''
   cmp al, 39
   setne bl
   # [discarded value]: $1.1
@@ -66576,7 +66576,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] 
 .LABEL__scan_character_token_353__3:
   .loc 9 124 25
-  # $3.1: Int8 = call(next_char_346, self.1)
+  # $3.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $3.1:rax 
@@ -66589,7 +66589,7 @@ scan_character_token_353:
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] 
   .loc 9 125 16
-  # char.1: Int8 = call(next_char_346, self.1)
+  # char.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:rax 
@@ -66602,7 +66602,7 @@ scan_character_token_353:
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] 
   .loc 9 127 9
-  # $7.1: Boolean = char.1 == '\''
+  # $7.1: bool = char.1 == '\''
   cmp BYTE PTR [rbp-26], 39
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:rax 
@@ -66635,7 +66635,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] 
 .LABEL__scan_character_token_353__5:
   .loc 9 130 9
-  # $9.1: Boolean = char.1 == '\\'
+  # $9.1: bool = char.1 == '\\'
   cmp BYTE PTR [rbp-26], 92
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:rax 
@@ -66645,7 +66645,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__9
 .LABEL__scan_character_token_353__7:
   .loc 9 131 16
-  # char.8: Int8 = call(next_char_346, self.1)
+  # char.8: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:rax:[rbp-26] 
@@ -66658,12 +66658,12 @@ scan_character_token_353:
   # [discarded value]: $21.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] 
   .loc 9 133 13
-  # $22.1: Boolean = call(is_escape_354, char.8)
+  # $22.1: bool = call(is_escape_354, char.8)
   mov dil, [rbp-26]
   call is_escape_354
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $22.1:rax 
   .loc 9 133 13
-  # $23.1: Boolean = $22.1 == false
+  # $23.1: bool = $22.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $22.1
@@ -66697,7 +66697,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] 
 .LABEL__scan_character_token_353__21:
   .loc 9 136 13
-  # $25.1: Boolean = char.8 == 'n'
+  # $25.1: bool = char.8 == 'n'
   cmp BYTE PTR [rbp-26], 110
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:rax 
@@ -66707,16 +66707,16 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__25
 .LABEL__scan_character_token_353__23:
   .loc 9 137 13
-  # value.8: Int8 = '\n'
+  # value.8: i8 = '\n'
   mov al, 10
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] value.8:rax 
   # jump(.LABEL__scan_character_token_353__24)
   mov [rbp-31], al
 .LABEL__scan_character_token_353__24:
-  # value.10: Int8 = phi(value.8, value.7, value.6, value.5, value.4, value.3)
+  # value.10: i8 = phi(value.8, value.7, value.6, value.5, value.4, value.3)
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] value.8:[rbp-31] value.10:[rbp-31] 
   .loc 9 151 16
-  # char.18: Int8 = call(next_char_346, self.1)
+  # char.18: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] value.8:[rbp-31] value.10:[rbp-31] char.18:rax:[rbp-26] 
@@ -66729,7 +66729,7 @@ scan_character_token_353:
   # [discarded value]: $32.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] value.8:[rbp-31] value.10:[rbp-31] char.18:[rbp-26] 
   .loc 9 153 13
-  # $33.1: Boolean = char.18 != '\''
+  # $33.1: bool = char.18 != '\''
   cmp BYTE PTR [rbp-26], 39
   setne al
   # [discarded value]: char.18
@@ -66762,7 +66762,7 @@ scan_character_token_353:
   # [discarded value]: $34.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] value.8:[rbp-31] value.10:[rbp-31] $33.1:[rbp-32] 
 .LABEL__scan_character_token_353__8:
-  # value.9: Int8 = phi(value.2, value.10)
+  # value.9: i8 = phi(value.2, value.10)
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] value.9:[rbp-31] $25.1:[rbp-30] value.8:[rbp-31] value.10:[rbp-31] $33.1:[rbp-32] 
   .loc 9 167 12
   # $35.1: @Character_Token = new Character_Token(object_type = Character_Token, lexeme = token_lexeme.1, location = token_location.1, value = value.9, next_token = null)
@@ -66799,7 +66799,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] 
 .LABEL__scan_character_token_353__25:
   .loc 9 138 20
-  # $26.1: Boolean = char.8 == '\"'
+  # $26.1: bool = char.8 == '\"'
   cmp BYTE PTR [rbp-26], 34
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:rax 
@@ -66809,7 +66809,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__28
 .LABEL__scan_character_token_353__26:
   .loc 9 139 13
-  # value.7: Int8 = char.8
+  # value.7: i8 = char.8
   mov al, [rbp-26]
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] value.7:rax:[rbp-31] 
   # jump(.LABEL__scan_character_token_353__24)
@@ -66820,7 +66820,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] 
 .LABEL__scan_character_token_353__28:
   .loc 9 140 20
-  # $27.1: Boolean = char.8 == '\''
+  # $27.1: bool = char.8 == '\''
   cmp BYTE PTR [rbp-26], 39
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:rax 
@@ -66830,7 +66830,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__31
 .LABEL__scan_character_token_353__29:
   .loc 9 141 13
-  # value.6: Int8 = char.8
+  # value.6: i8 = char.8
   mov al, [rbp-26]
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] value.6:rax:[rbp-31] 
   # jump(.LABEL__scan_character_token_353__24)
@@ -66841,7 +66841,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] 
 .LABEL__scan_character_token_353__31:
   .loc 9 142 20
-  # $28.1: Boolean = char.8 == '\\'
+  # $28.1: bool = char.8 == '\\'
   cmp BYTE PTR [rbp-26], 92
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:rax 
@@ -66851,7 +66851,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__34
 .LABEL__scan_character_token_353__32:
   .loc 9 143 13
-  # value.5: Int8 = char.8
+  # value.5: i8 = char.8
   mov al, [rbp-26]
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:[rbp-34] value.5:rax:[rbp-31] 
   # jump(.LABEL__scan_character_token_353__24)
@@ -66862,7 +66862,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:[rbp-34] 
 .LABEL__scan_character_token_353__34:
   .loc 9 144 20
-  # $29.1: Boolean = char.8 == 't'
+  # $29.1: bool = char.8 == 't'
   cmp BYTE PTR [rbp-26], 116
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:[rbp-34] $29.1:rax 
@@ -66872,7 +66872,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__37
 .LABEL__scan_character_token_353__35:
   .loc 9 145 13
-  # value.4: Int8 = '\t'
+  # value.4: i8 = '\t'
   mov al, 9
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:[rbp-34] $29.1:[rbp-35] value.4:rax:[rbp-31] 
   # jump(.LABEL__scan_character_token_353__24)
@@ -66883,7 +66883,7 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:[rbp-34] $29.1:[rbp-35] 
 .LABEL__scan_character_token_353__37:
   .loc 9 146 20
-  # $30.1: Boolean = char.8 == '0'
+  # $30.1: bool = char.8 == '0'
   cmp BYTE PTR [rbp-26], 48
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:[rbp-34] $29.1:[rbp-35] $30.1:rax 
@@ -66893,7 +66893,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__40
 .LABEL__scan_character_token_353__38:
   .loc 9 147 13
-  # value.3: Int8 = '\0'
+  # value.3: i8 = '\0'
   mov al, 0
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] char.8:[rbp-26] $23.1:[rbp-29] $25.1:[rbp-30] $26.1:[rbp-32] $27.1:[rbp-33] $28.1:[rbp-34] $29.1:[rbp-35] $30.1:[rbp-36] value.3:rax:[rbp-31] 
   # jump(.LABEL__scan_character_token_353__24)
@@ -66926,12 +66926,12 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] 
 .LABEL__scan_character_token_353__9:
   .loc 9 157 13
-  # $10.1: Boolean = char.1 == '\0'
+  # $10.1: bool = char.1 == '\0'
   cmp BYTE PTR [rbp-26], 0
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $10.1:rax 
   .loc 9 157 13
-  # $11.1: Boolean = $10.1
+  # $11.1: bool = $10.1
   mov [rbp-32], al
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:rax 
@@ -66941,7 +66941,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__12
 .LABEL__scan_character_token_353__13:
   .loc 9 157 13
-  # $13.1: Boolean = phi($11.1, $11.2)
+  # $13.1: bool = phi($11.1, $11.2)
   mov al, [rbp-32]
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $13.1:rax 
   # jump($13.1, .LABEL__scan_character_token_353__11, .LABEL__scan_character_token_353__10)
@@ -66950,7 +66950,7 @@ scan_character_token_353:
   jz .LABEL__scan_character_token_353__10
 .LABEL__scan_character_token_353__11:
   .loc 9 157 13
-  # $13.3: Boolean = phi($13.1, $13.2)
+  # $13.3: bool = phi($13.1, $13.2)
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $13.3:[rbp-33] $13.1:[rbp-33] 
   # jump($13.3, .LABEL__scan_character_token_353__14, .LABEL__scan_character_token_353__15)
   mov al, [rbp-33]
@@ -66981,11 +66981,11 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $13.3:[rbp-33] $13.1:[rbp-33] 
 .LABEL__scan_character_token_353__15:
   .loc 9 160 9
-  # value.2: Int8 = char.1
+  # value.2: i8 = char.1
   mov al, [rbp-26]
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $13.3:[rbp-33] $13.1:[rbp-33] value.2:rax:[rbp-31] 
   .loc 9 161 16
-  # char.7: Int8 = call(next_char_346, self.1)
+  # char.7: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   mov [rbp-31], al
   call next_char_346
@@ -66999,7 +66999,7 @@ scan_character_token_353:
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $13.3:[rbp-33] $13.1:[rbp-33] value.2:[rbp-31] char.7:[rbp-26] 
   .loc 9 163 13
-  # $18.1: Boolean = char.7 != '\''
+  # $18.1: bool = char.7 != '\''
   cmp BYTE PTR [rbp-26], 39
   setne al
   # [discarded value]: char.7
@@ -67040,12 +67040,12 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $13.1:[rbp-33] 
 .LABEL__scan_character_token_353__10:
   .loc 9 157 45
-  # $14.1: Boolean = char.1 == '\t'
+  # $14.1: bool = char.1 == '\t'
   cmp BYTE PTR [rbp-26], 9
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $14.1:rax $13.1:[rbp-33] 
   .loc 9 157 13
-  # $13.2: Boolean = $14.1
+  # $13.2: bool = $14.1
   mov [rbp-34], al
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $13.2:rax:[rbp-33] $13.1:[rbp-33] 
@@ -67060,12 +67060,12 @@ scan_character_token_353:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] 
 .LABEL__scan_character_token_353__12:
   .loc 9 157 29
-  # $12.1: Boolean = char.1 == '\n'
+  # $12.1: bool = char.1 == '\n'
   cmp BYTE PTR [rbp-26], 10
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $12.1:rax 
   .loc 9 157 13
-  # $11.2: Boolean = $12.1
+  # $11.2: bool = $12.1
   mov [rbp-33], al
   # [discarded value]: $12.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] char.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] $11.1:[rbp-32] $11.2:rax:[rbp-32] 
@@ -67104,15 +67104,15 @@ is_escape_354:
   movsx rax, WORD PTR is_escape_354__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__is_escape_354__1:
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: char.1:rdi 
   .loc 9 171 12
-  # $1.1: Boolean = char.1 == 'n'
+  # $1.1: bool = char.1 == 'n'
   cmp dil, 110
   sete al
   # [live values]: char.1:rdi $1.1:rax 
   .loc 9 171 12
-  # $2.1: Boolean = $1.1
+  # $2.1: bool = $1.1
   mov [rbp-1], al
   # [discarded value]: $1.1
   # [live values]: char.1:rdi $2.1:rax 
@@ -67123,7 +67123,7 @@ is_escape_354:
   jz .LABEL__is_escape_354__10
 .LABEL__is_escape_354__11:
   .loc 9 171 12
-  # $4.1: Boolean = phi($2.1, $2.2)
+  # $4.1: bool = phi($2.1, $2.2)
   mov al, [rbp-1]
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $4.1:rax 
   # jump($4.1, .LABEL__is_escape_354__9, .LABEL__is_escape_354__8)
@@ -67132,7 +67132,7 @@ is_escape_354:
   jz .LABEL__is_escape_354__8
 .LABEL__is_escape_354__9:
   .loc 9 171 12
-  # $6.1: Boolean = phi($4.1, $4.2)
+  # $6.1: bool = phi($4.1, $4.2)
   mov al, [rbp-3]
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $6.1:rax $4.1:[rbp-3] 
   # jump($6.1, .LABEL__is_escape_354__7, .LABEL__is_escape_354__6)
@@ -67141,7 +67141,7 @@ is_escape_354:
   jz .LABEL__is_escape_354__6
 .LABEL__is_escape_354__7:
   .loc 9 171 12
-  # $8.1: Boolean = phi($6.1, $6.2)
+  # $8.1: bool = phi($6.1, $6.2)
   mov al, [rbp-4]
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $8.1:rax $6.1:[rbp-4] $4.1:[rbp-3] 
   # jump($8.1, .LABEL__is_escape_354__5, .LABEL__is_escape_354__4)
@@ -67150,7 +67150,7 @@ is_escape_354:
   jz .LABEL__is_escape_354__4
 .LABEL__is_escape_354__5:
   .loc 9 171 12
-  # $10.1: Boolean = phi($8.1, $8.2)
+  # $10.1: bool = phi($8.1, $8.2)
   mov al, [rbp-5]
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $10.1:rax $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
   # jump($10.1, .LABEL__is_escape_354__3, .LABEL__is_escape_354__2)
@@ -67159,7 +67159,7 @@ is_escape_354:
   jz .LABEL__is_escape_354__2
 .LABEL__is_escape_354__3:
   .loc 9 171 12
-  # $10.3: Boolean = phi($10.1, $10.2)
+  # $10.3: bool = phi($10.1, $10.2)
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $10.3:[rbp-6] $10.1:[rbp-6] $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
   .loc 9 171 5
   # return($10.3)
@@ -67169,12 +67169,12 @@ is_escape_354:
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $10.1:[rbp-6] $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
 .LABEL__is_escape_354__2:
   .loc 9 171 90
-  # $11.1: Boolean = char.1 == '0'
+  # $11.1: bool = char.1 == '0'
   cmp BYTE PTR [rbp-2], 48
   sete al
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $11.1:rax $10.1:[rbp-6] $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
   .loc 9 171 12
-  # $10.2: Boolean = $11.1
+  # $10.2: bool = $11.1
   mov [rbp-7], al
   # [discarded value]: $11.1
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $10.2:rax:[rbp-6] $10.1:[rbp-6] $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
@@ -67189,12 +67189,12 @@ is_escape_354:
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
 .LABEL__is_escape_354__4:
   .loc 9 171 74
-  # $9.1: Boolean = char.1 == '\\'
+  # $9.1: bool = char.1 == '\\'
   cmp BYTE PTR [rbp-2], 92
   sete al
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $9.1:rax $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
   .loc 9 171 12
-  # $8.2: Boolean = $9.1
+  # $8.2: bool = $9.1
   mov [rbp-6], al
   # [discarded value]: $9.1
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $8.2:rax:[rbp-5] $8.1:[rbp-5] $6.1:[rbp-4] $4.1:[rbp-3] 
@@ -67209,12 +67209,12 @@ is_escape_354:
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $6.1:[rbp-4] $4.1:[rbp-3] 
 .LABEL__is_escape_354__6:
   .loc 9 171 58
-  # $7.1: Boolean = char.1 == '\''
+  # $7.1: bool = char.1 == '\''
   cmp BYTE PTR [rbp-2], 39
   sete al
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $7.1:rax $6.1:[rbp-4] $4.1:[rbp-3] 
   .loc 9 171 12
-  # $6.2: Boolean = $7.1
+  # $6.2: bool = $7.1
   mov [rbp-5], al
   # [discarded value]: $7.1
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $6.2:rax:[rbp-4] $6.1:[rbp-4] $4.1:[rbp-3] 
@@ -67229,12 +67229,12 @@ is_escape_354:
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $4.1:[rbp-3] 
 .LABEL__is_escape_354__8:
   .loc 9 171 42
-  # $5.1: Boolean = char.1 == '\"'
+  # $5.1: bool = char.1 == '\"'
   cmp BYTE PTR [rbp-2], 34
   sete al
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $5.1:rax $4.1:[rbp-3] 
   .loc 9 171 12
-  # $4.2: Boolean = $5.1
+  # $4.2: bool = $5.1
   mov [rbp-4], al
   # [discarded value]: $5.1
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $4.2:rax:[rbp-3] $4.1:[rbp-3] 
@@ -67249,12 +67249,12 @@ is_escape_354:
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] 
 .LABEL__is_escape_354__10:
   .loc 9 171 27
-  # $3.1: Boolean = char.1 == 't'
+  # $3.1: bool = char.1 == 't'
   cmp BYTE PTR [rbp-2], 116
   sete al
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $3.1:rax 
   .loc 9 171 12
-  # $2.2: Boolean = $3.1
+  # $2.2: bool = $3.1
   mov [rbp-3], al
   # [discarded value]: $3.1
   # [live values]: char.1:[rbp-2] $2.1:[rbp-1] $2.2:rax:[rbp-1] 
@@ -67295,12 +67295,12 @@ scan_comment_token_355:
   mov [rbp-24], rdi
 .LABEL__scan_comment_token_355__2:
   .loc 9 175 12
-  # $1.1: Int8 = call(peek_char_345, self.1)
+  # $1.1: i8 = call(peek_char_345, self.1)
   mov rdi, [rbp-24]
   call peek_char_345
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $1.1:rax 
   .loc 9 175 12
-  # $2.1: Boolean = $1.1 != '\n'
+  # $2.1: bool = $1.1 != '\n'
   cmp al, 10
   setne bl
   # [discarded value]: $1.1
@@ -67311,7 +67311,7 @@ scan_comment_token_355:
   jz .LABEL__scan_comment_token_355__4
 .LABEL__scan_comment_token_355__3:
   .loc 9 176 29
-  # $3.1: Int8 = call(next_char_346, self.1)
+  # $3.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $3.1:rax 
@@ -67383,12 +67383,12 @@ scan_identifier_token_356:
   mov [rbp-24], rdi
 .LABEL__scan_identifier_token_356__2:
   .loc 9 182 12
-  # $1.1: Int8 = call(peek_char_345, self.1)
+  # $1.1: i8 = call(peek_char_345, self.1)
   mov rdi, [rbp-24]
   call peek_char_345
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $1.1:rax 
   .loc 9 182 12
-  # $2.1: Boolean = call(is_identifier_body_350, $1.1)
+  # $2.1: bool = call(is_identifier_body_350, $1.1)
   mov dil, al
   call is_identifier_body_350
   # [discarded value]: $1.1
@@ -67399,7 +67399,7 @@ scan_identifier_token_356:
   jz .LABEL__scan_identifier_token_356__4
 .LABEL__scan_identifier_token_356__3:
   .loc 9 183 29
-  # $3.1: Int8 = call(next_char_346, self.1)
+  # $3.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $3.1:rax 
@@ -67416,7 +67416,7 @@ scan_identifier_token_356:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] 
 .LABEL__scan_identifier_token_356__4:
   .loc 9 185 9
-  # $5.1: Boolean = call(equals_392, token_lexeme.1, "false")
+  # $5.1: bool = call(equals_392, token_lexeme.1, "false")
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_364[rip] # "false"
   call equals_392
@@ -67452,7 +67452,7 @@ scan_identifier_token_356:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] 
 .LABEL__scan_identifier_token_356__6:
   .loc 9 188 9
-  # $7.1: Boolean = call(equals_392, token_lexeme.1, "null")
+  # $7.1: bool = call(equals_392, token_lexeme.1, "null")
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_365[rip] # "null"
   call equals_392
@@ -67486,7 +67486,7 @@ scan_identifier_token_356:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] 
 .LABEL__scan_identifier_token_356__9:
   .loc 9 191 9
-  # $9.1: Boolean = call(equals_392, token_lexeme.1, "true")
+  # $9.1: bool = call(equals_392, token_lexeme.1, "true")
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_366[rip] # "true"
   call equals_392
@@ -67522,7 +67522,7 @@ scan_identifier_token_356:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $5.1:[rbp-26] $7.1:[rbp-27] $9.1:[rbp-28] 
 .LABEL__scan_identifier_token_356__12:
   .loc 9 194 9
-  # $11.1: Boolean = call(equals_392, token_lexeme.1, "undefined")
+  # $11.1: bool = call(equals_392, token_lexeme.1, "undefined")
   mov rdi, [rbp-16]
   lea rsi, .LABEL__string_251[rip] # "undefined"
   call equals_392
@@ -67614,7 +67614,7 @@ scan_integer_token_357:
   # token_location.1: @Source_Location = load_variable(token_location)
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx 
   .loc 9 201 9
-  # value.1: Int = 0
+  # value.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx value.1:rax 
   # jump(.LABEL__scan_integer_token_357__2)
@@ -67623,15 +67623,15 @@ scan_integer_token_357:
   mov [rbp-24], rsi
   mov [rbp-32], rdi
 .LABEL__scan_integer_token_357__2:
-  # value.5: Int = phi(value.1, value.3)
+  # value.5: isize = phi(value.1, value.3)
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] 
   .loc 9 202 12
-  # $1.1: Int8 = call(peek_char_345, self.1)
+  # $1.1: i8 = call(peek_char_345, self.1)
   mov rdi, [rbp-32]
   call peek_char_345
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $1.1:rax 
   .loc 9 202 12
-  # $2.1: Boolean = call(is_digit_348, $1.1)
+  # $2.1: bool = call(is_digit_348, $1.1)
   mov dil, al
   call is_digit_348
   # [discarded value]: $1.1
@@ -67642,41 +67642,41 @@ scan_integer_token_357:
   jz .LABEL__scan_integer_token_357__4
 .LABEL__scan_integer_token_357__3:
   .loc 9 203 20
-  # char.1: Int8 = call(next_char_346, self.1)
+  # char.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-32]
   call next_char_346
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax 
   .loc 9 204 17
-  # $4.1: Int = value.5 * 10
+  # $4.1: isize = value.5 * 10
   mov rbx, [rbp-8]
   imul rbx, 10
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx 
   .loc 9 204 31
-  # $5.1: Int = cast(char.1)
+  # $5.1: isize = cast(char.1)
   mov r15b, al
   movsx r15, r15b
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx $5.1:r15 
-  .loc 9 204 45
-  # $6.1: Int = cast('0')
+  .loc 9 204 47
+  # $6.1: isize = cast('0')
   mov r14b, 48
   movsx r14, r14b
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx $5.1:r15 $6.1:r14 
   .loc 9 204 31
-  # $7.1: Int = $5.1 - $6.1
+  # $7.1: isize = $5.1 - $6.1
   mov r13, r15
   sub r13, r14
   # [discarded value]: $6.1
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx $7.1:r13 
   .loc 9 204 17
-  # $8.1: Int = $4.1 + $7.1
+  # $8.1: isize = $4.1 + $7.1
   mov r15, rbx
   add r15, r13
   # [discarded value]: $7.1
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax $8.1:r15 
   .loc 9 204 9
-  # value.3: Int = $8.1
+  # value.3: isize = $8.1
   mov [rbp-41], r15
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] value.1:[rbp-8] value.5:[rbp-8] $2.1:[rbp-33] char.1:rax value.3:r15:[rbp-8] 
@@ -67752,7 +67752,7 @@ scan_space_token_358:
   # token_location.1: @Source_Location = load_variable(token_location)
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx 
   .loc 9 211 9
-  # count.1: Int = 0
+  # count.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx count.1:rax 
   # jump(.LABEL__scan_space_token_358__2)
@@ -67761,15 +67761,15 @@ scan_space_token_358:
   mov [rbp-24], rsi
   mov [rbp-32], rdi
 .LABEL__scan_space_token_358__2:
-  # count.5: Int = phi(count.1, count.3)
+  # count.5: isize = phi(count.1, count.3)
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] 
   .loc 9 212 12
-  # $1.1: Int8 = call(peek_char_345, self.1)
+  # $1.1: i8 = call(peek_char_345, self.1)
   mov rdi, [rbp-32]
   call peek_char_345
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $1.1:rax 
   .loc 9 212 12
-  # $2.1: Boolean = $1.1 == ' '
+  # $2.1: bool = $1.1 == ' '
   cmp al, 32
   sete bl
   # [discarded value]: $1.1
@@ -67780,17 +67780,17 @@ scan_space_token_358:
   jz .LABEL__scan_space_token_358__4
 .LABEL__scan_space_token_358__3:
   .loc 9 213 20
-  # char.1: Int8 = call(next_char_346, self.1)
+  # char.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-32]
   call next_char_346
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $2.1:[rbp-33] char.1:rax 
   .loc 9 214 17
-  # $4.1: Int = count.5 + 1
+  # $4.1: isize = count.5 + 1
   mov rbx, [rbp-8]
   add rbx, 1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $2.1:[rbp-33] char.1:rax $4.1:rbx 
   .loc 9 214 9
-  # count.3: Int = $4.1
+  # count.3: isize = $4.1
   mov [rbp-41], rbx
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-32] token_lexeme.1:[rbp-24] token_location.1:[rbp-16] count.1:[rbp-8] count.5:[rbp-8] $2.1:[rbp-33] char.1:rax count.3:rbx:[rbp-8] 
@@ -67866,14 +67866,14 @@ scan_string_token_359:
   # token_location.1: @Source_Location = load_variable(token_location)
   # [live values]: self.1:rdi token_lexeme.1:rsi token_location.1:rdx 
   .loc 9 221 9
-  # $1.1: Int8 = call(peek_char_345, self.1)
+  # $1.1: i8 = call(peek_char_345, self.1)
   mov [rbp-8], rdx
   mov [rbp-16], rsi
   mov [rbp-24], rdi
   call peek_char_345
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $1.1:rax 
   .loc 9 221 9
-  # $2.1: Boolean = $1.1 != '"'
+  # $2.1: bool = $1.1 != '"'
   cmp al, 34
   setne bl
   # [discarded value]: $1.1
@@ -67889,8 +67889,8 @@ scan_string_token_359:
   call abort_388
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] 
 .LABEL__scan_string_token_359__3:
-  .loc 14 4 23
-  # $4.1: [Int8; ?] = call(malloc, 16)
+  .loc 14 4 21
+  # $4.1: [i8; ?] = call(malloc, 16)
   mov rdi, 16
   call malloc
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] $4.1:rax 
@@ -67909,7 +67909,7 @@ scan_string_token_359:
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:rax 
   .loc 9 227 25
-  # $6.1: Int8 = call(next_char_346, self.1)
+  # $6.1: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   mov [rbp-33], rax
   call next_char_346
@@ -67925,17 +67925,17 @@ scan_string_token_359:
   # jump(.LABEL__scan_string_token_359__4)
 .LABEL__scan_string_token_359__4:
   .loc 9 229 20
-  # char.1: Int8 = call(peek_char_345, self.1)
+  # char.1: i8 = call(peek_char_345, self.1)
   mov rdi, [rbp-24]
   call peek_char_345
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:rax 
   .loc 9 230 13
-  # $9.1: Boolean = char.1 == '\0'
+  # $9.1: bool = char.1 == '\0'
   cmp al, 0
   sete bl
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:rax $9.1:rbx 
   .loc 9 230 13
-  # $10.1: Boolean = $9.1
+  # $10.1: bool = $9.1
   mov [rbp-34], bl
   # [discarded value]: $9.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:rax $10.1:rbx 
@@ -67946,7 +67946,7 @@ scan_string_token_359:
   jz .LABEL__scan_string_token_359__6
 .LABEL__scan_string_token_359__7:
   .loc 9 230 13
-  # $10.3: Boolean = phi($10.1, $10.2)
+  # $10.3: bool = phi($10.1, $10.2)
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] 
   # jump($10.3, .LABEL__scan_string_token_359__8, .LABEL__scan_string_token_359__9)
   mov al, [rbp-35]
@@ -67977,7 +67977,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] 
 .LABEL__scan_string_token_359__9:
   .loc 9 233 16
-  # char.3: Int8 = call(next_char_346, self.1)
+  # char.3: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:rax:[rbp-34] 
@@ -67990,7 +67990,7 @@ scan_string_token_359:
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] 
   .loc 9 235 13
-  # $15.1: Boolean = char.3 == '"'
+  # $15.1: bool = char.3 == '"'
   cmp BYTE PTR [rbp-34], 34
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:rax 
@@ -68026,7 +68026,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] 
 .LABEL__scan_string_token_359__12:
   .loc 9 238 13
-  # $17.1: Boolean = char.3 == '\\'
+  # $17.1: bool = char.3 == '\\'
   cmp BYTE PTR [rbp-34], 92
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:rax 
@@ -68036,17 +68036,17 @@ scan_string_token_359:
   jz .LABEL__scan_string_token_359__16
 .LABEL__scan_string_token_359__14:
   .loc 9 239 20
-  # char.6: Int8 = call(peek_char_345, self.1)
+  # char.6: i8 = call(peek_char_345, self.1)
   mov rdi, [rbp-24]
   call peek_char_345
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:rax:[rbp-34] 
   .loc 9 240 17
-  # $20.1: Boolean = char.6 == '\0'
+  # $20.1: bool = char.6 == '\0'
   cmp al, 0
   sete bl
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:rax:[rbp-34] $20.1:rbx 
   .loc 9 240 17
-  # $21.1: Boolean = $20.1
+  # $21.1: bool = $20.1
   mov [rbp-38], bl
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:rax:[rbp-34] $21.1:rbx 
@@ -68057,7 +68057,7 @@ scan_string_token_359:
   jz .LABEL__scan_string_token_359__17
 .LABEL__scan_string_token_359__18:
   .loc 9 240 17
-  # $21.3: Boolean = phi($21.1, $21.2)
+  # $21.3: bool = phi($21.1, $21.2)
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] 
   # jump($21.3, .LABEL__scan_string_token_359__19, .LABEL__scan_string_token_359__20)
   mov al, [rbp-38]
@@ -68088,7 +68088,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] 
 .LABEL__scan_string_token_359__20:
   .loc 9 243 20
-  # char.8: Int8 = call(next_char_346, self.1)
+  # char.8: i8 = call(next_char_346, self.1)
   mov rdi, [rbp-24]
   call next_char_346
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:rax:[rbp-34] 
@@ -68101,12 +68101,12 @@ scan_string_token_359:
   # [discarded value]: $25.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] 
   .loc 9 245 17
-  # $26.1: Boolean = call(is_escape_354, char.8)
+  # $26.1: bool = call(is_escape_354, char.8)
   mov dil, [rbp-34]
   call is_escape_354
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] token_location.1:[rbp-8] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $26.1:rax 
   .loc 9 245 17
-  # $27.1: Boolean = $26.1 == false
+  # $27.1: bool = $26.1 == false
   cmp al, 0
   sete bl
   # [discarded value]: $26.1
@@ -68141,7 +68141,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] 
 .LABEL__scan_string_token_359__23:
   .loc 9 248 17
-  # $29.1: Boolean = char.8 == 'n'
+  # $29.1: bool = char.8 == 'n'
   cmp BYTE PTR [rbp-34], 110
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:rax 
@@ -68162,7 +68162,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] 
 .LABEL__scan_string_token_359__27:
   .loc 9 250 24
-  # $30.1: Boolean = char.8 == '\"'
+  # $30.1: bool = char.8 == '\"'
   cmp BYTE PTR [rbp-34], 34
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:rax 
@@ -68183,7 +68183,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] 
 .LABEL__scan_string_token_359__30:
   .loc 9 252 24
-  # $31.1: Boolean = char.8 == '\''
+  # $31.1: bool = char.8 == '\''
   cmp BYTE PTR [rbp-34], 39
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:rax 
@@ -68204,7 +68204,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] 
 .LABEL__scan_string_token_359__33:
   .loc 9 254 24
-  # $32.1: Boolean = char.8 == '\\'
+  # $32.1: bool = char.8 == '\\'
   cmp BYTE PTR [rbp-34], 92
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:rax 
@@ -68225,7 +68225,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:[rbp-43] 
 .LABEL__scan_string_token_359__36:
   .loc 9 256 24
-  # $33.1: Boolean = char.8 == 't'
+  # $33.1: bool = char.8 == 't'
   cmp BYTE PTR [rbp-34], 116
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:[rbp-43] $33.1:rax 
@@ -68246,7 +68246,7 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:[rbp-43] $33.1:[rbp-44] 
 .LABEL__scan_string_token_359__39:
   .loc 9 258 24
-  # $34.1: Boolean = char.8 == '0'
+  # $34.1: bool = char.8 == '0'
   cmp BYTE PTR [rbp-34], 48
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.3:[rbp-38] char.8:[rbp-34] $27.1:[rbp-39] $29.1:[rbp-40] $30.1:[rbp-41] $31.1:[rbp-42] $32.1:[rbp-43] $33.1:[rbp-44] $34.1:rax 
@@ -68291,12 +68291,12 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] 
 .LABEL__scan_string_token_359__17:
   .loc 9 240 33
-  # $22.1: Boolean = char.6 == '\n'
+  # $22.1: bool = char.6 == '\n'
   cmp BYTE PTR [rbp-34], 10
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $22.1:rax 
   .loc 9 240 17
-  # $21.2: Boolean = $22.1
+  # $21.2: bool = $22.1
   mov [rbp-39], al
   # [discarded value]: $22.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.3:[rbp-35] char.3:[rbp-34] $15.1:[rbp-36] $17.1:[rbp-37] char.6:[rbp-34] $21.1:[rbp-38] $21.2:rax:[rbp-38] 
@@ -68331,12 +68331,12 @@ scan_string_token_359:
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] 
 .LABEL__scan_string_token_359__6:
   .loc 9 230 29
-  # $11.1: Boolean = char.1 == '\n'
+  # $11.1: bool = char.1 == '\n'
   cmp BYTE PTR [rbp-34], 10
   sete al
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $11.1:rax 
   .loc 9 230 13
-  # $10.2: Boolean = $11.1
+  # $10.2: bool = $11.1
   mov [rbp-36], al
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-24] token_lexeme.1:[rbp-16] $2.1:[rbp-25] value.1:[rbp-33] char.1:[rbp-34] $10.1:[rbp-35] $10.2:rax:[rbp-35] 
@@ -68438,7 +68438,7 @@ write_361:
   # token.1: @Token = load_variable(token)
   # [live values]: file.1:rdi token.1:rsi 
   .loc 1 335 9
-  # $1.1: Boolean = call(is_389, token.1, Other_Token)
+  # $1.1: bool = call(is_389, token.1, Other_Token)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -68451,7 +68451,7 @@ write_361:
   jz .LABEL__write_361__4
 .LABEL__write_361__2:
   .loc 1 336 20
-  # $10.1: Int8 = cast(27)
+  # $10.1: i8 = cast(27)
   mov rax, 27
   # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $10.1:rax 
   .loc 1 336 9
@@ -68485,7 +68485,7 @@ write_361:
   # [discarded value]: $13.1
   # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
   .loc 1 343 16
-  # $15.1: Int8 = cast(27)
+  # $15.1: i8 = cast(27)
   mov rax, 27
   # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $15.1:rax 
   .loc 1 343 5
@@ -68511,7 +68511,7 @@ write_361:
   # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] 
 .LABEL__write_361__4:
   .loc 1 337 16
-  # $2.1: Boolean = call(is_389, token.1, Literal_Token)
+  # $2.1: bool = call(is_389, token.1, Literal_Token)
   mov rdi, [rbp-16]
   mov rsi, Literal_Token[rip]
   call is_389
@@ -68522,7 +68522,7 @@ write_361:
   jz .LABEL__write_361__7
 .LABEL__write_361__5:
   .loc 1 338 20
-  # $7.1: Int8 = cast(27)
+  # $7.1: i8 = cast(27)
   mov rax, 27
   # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $7.1:rax 
   .loc 1 338 9
@@ -68545,7 +68545,7 @@ write_361:
   # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] 
 .LABEL__write_361__7:
   .loc 1 339 16
-  # $3.1: Boolean = call(is_389, token.1, Comment_Token)
+  # $3.1: bool = call(is_389, token.1, Comment_Token)
   mov rdi, [rbp-16]
   mov rsi, Comment_Token[rip]
   call is_389
@@ -68556,7 +68556,7 @@ write_361:
   jz .LABEL__write_361__3
 .LABEL__write_361__8:
   .loc 1 340 20
-  # $4.1: Int8 = cast(27)
+  # $4.1: i8 = cast(27)
   mov rax, 27
   # [live values]: file.1:[rbp-8] token.1:[rbp-16] $1.1:[rbp-17] $2.1:[rbp-18] $3.1:[rbp-19] $4.1:rax 
   .loc 1 340 9
@@ -68604,11 +68604,11 @@ create_source_362:
   # file_path.1: @String = load_variable(file_path)
   # [live values]: file_path.1:rdi 
   .loc 11 16 22
-  # $1.1: [Int8; ?] = load_struct_member(file_path.1, data)
+  # $1.1: [i8; ?] = load_struct_member(file_path.1, data)
   mov rax, [rdi]
   # [live values]: file_path.1:rdi $1.1:rax 
   .loc 11 16 38
-  # $2.1: [Int8; ?] = load_struct_member("r", data)
+  # $2.1: [i8; ?] = load_struct_member("r", data)
   lea rbx, .LABEL__string_371[rip] # "r"
   mov r15, [rbx]
   # [live values]: file_path.1:rdi $1.1:rax $2.1:r15 
@@ -68622,7 +68622,7 @@ create_source_362:
   # [discarded value]: $1.1
   # [live values]: file_path.1:[rbp-8] file.1:rax 
   .loc 11 17 9
-  # $4.1: Boolean = file.1 == null
+  # $4.1: bool = file.1 == null
   cmp rax, 0
   sete bl
   # [live values]: file_path.1:[rbp-8] file.1:rax $4.1:rbx 
@@ -68639,48 +68639,48 @@ create_source_362:
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] 
 .LABEL__create_source_362__3:
   .loc 11 21 9
-  # content_size.1: Int = 1024
+  # content_size.1: isize = 1024
   mov rax, 1024
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:rax 
   .loc 11 22 19
-  # content.1: [Int8; ?] = call(malloc, content_size.1)
+  # content.1: [i8; ?] = call(malloc, content_size.1)
   mov rdi, rax
   mov [rbp-25], rax
   call malloc
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:rax 
   .loc 11 23 9
-  # content_length.1: Int = 0
+  # content_length.1: isize = 0
   xor rbx, rbx
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:rax content_length.1:rbx 
   # jump(.LABEL__create_source_362__5)
   mov [rbp-33], rax
   mov [rbp-41], rbx
 .LABEL__create_source_362__5:
-  # content_size.5: Int = phi(content_size.1, content_size.6)
+  # content_size.5: isize = phi(content_size.1, content_size.6)
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] 
-  # content_length.6: Int = phi(content_length.1, content_length.4)
+  # content_length.6: isize = phi(content_length.1, content_length.4)
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] 
-  # content.6: [Int8; ?] = phi(content.1, content.4)
+  # content.6: [i8; ?] = phi(content.1, content.4)
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] 
   .loc 11 25 20
-  # char.1: Int32 = call(fgetc, file.1)
+  # char.1: i32 = call(fgetc, file.1)
   mov rdi, [rbp-16]
   call fgetc
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:rax 
   .loc 11 26 13
-  # $8.1: Int32 = call(feof, file.1)
+  # $8.1: i32 = call(feof, file.1)
   mov rdi, [rbp-16]
   mov [rbp-45], eax
   call feof
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $8.1:rax 
   .loc 11 26 13
-  # $9.1: Int = cast($8.1)
+  # $9.1: isize = cast($8.1)
   mov ebx, eax
   movsx rbx, ebx
   # [discarded value]: $8.1
   # [live values]: file_path.1:[rbp-8] file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $9.1:rbx 
   .loc 11 26 13
-  # $10.1: Boolean = $9.1 != 0
+  # $10.1: bool = $9.1 != 0
   cmp rbx, 0
   setne al
   # [discarded value]: $9.1
@@ -68718,17 +68718,17 @@ create_source_362:
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] 
 .LABEL__create_source_362__8:
   .loc 11 29 13
-  # $11.1: Int = content_length.6 + 1
+  # $11.1: isize = content_length.6 + 1
   mov rax, [rbp-41]
   add rax, 1
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $11.1:rax 
   .loc 11 29 34
-  # $12.1: Int = content_size.5 - 1
+  # $12.1: isize = content_size.5 - 1
   mov rbx, [rbp-25]
   dec rbx
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $11.1:rax $12.1:rbx 
   .loc 11 29 13
-  # $13.1: Boolean = $11.1 > $12.1
+  # $13.1: bool = $11.1 > $12.1
   cmp rax, rbx
   setg r15b
   # [discarded value]: $12.1
@@ -68740,17 +68740,17 @@ create_source_362:
   jz .LABEL__create_source_362__11
 .LABEL__create_source_362__10:
   .loc 11 30 28
-  # $14.1: Int = content_size.5 + 1024
+  # $14.1: isize = content_size.5 + 1024
   mov rax, [rbp-25]
   add rax, 1024
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] $14.1:rax 
   .loc 11 30 13
-  # content_size.4: Int = $14.1
+  # content_size.4: isize = $14.1
   mov [rbp-55], rax
   # [discarded value]: $14.1
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] content_size.4:rax:[rbp-25] 
   .loc 11 31 23
-  # content.3: [Int8; ?] = call(realloc, content.6, content_size.4)
+  # content.3: [i8; ?] = call(realloc, content.6, content_size.4)
   mov rdi, [rbp-33]
   mov rsi, rax
   mov [rbp-25], rax
@@ -68759,12 +68759,12 @@ create_source_362:
   # jump(.LABEL__create_source_362__11)
   mov [rbp-33], rax
 .LABEL__create_source_362__11:
-  # content_size.6: Int = phi(content_size.4, content_size.5)
+  # content_size.6: isize = phi(content_size.4, content_size.5)
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] content_size.4:[rbp-25] content.3:[rbp-33] content_size.6:[rbp-25] 
-  # content.4: [Int8; ?] = phi(content.6, content.3)
+  # content.4: [i8; ?] = phi(content.6, content.3)
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] content_size.4:[rbp-25] content.3:[rbp-33] content_size.6:[rbp-25] content.4:[rbp-33] 
   .loc 11 33 35
-  # $17.1: Int8 = cast(char.1)
+  # $17.1: i8 = cast(char.1)
   mov eax, [rbp-45]
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] content_size.4:[rbp-25] content.3:[rbp-33] content_size.6:[rbp-25] content.4:[rbp-33] $17.1:rax 
   .loc 11 33 9
@@ -68776,12 +68776,12 @@ create_source_362:
   # [discarded value]: $17.1
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] content_size.4:[rbp-25] content.3:[rbp-33] content_size.6:[rbp-25] content.4:[rbp-33] 
   .loc 11 34 26
-  # $18.1: Int = content_length.6 + 1
+  # $18.1: isize = content_length.6 + 1
   mov rax, [rbp-41]
   add rax, 1
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] content_size.4:[rbp-25] content.3:[rbp-33] content_size.6:[rbp-25] content.4:[rbp-33] $18.1:rax 
   .loc 11 34 9
-  # content_length.4: Int = $18.1
+  # content_length.4: isize = $18.1
   mov [rbp-55], rax
   # [discarded value]: $18.1
   # [live values]: file.1:[rbp-16] $4.1:[rbp-17] content_size.1:[rbp-25] content.1:[rbp-33] content_length.1:[rbp-41] content_size.5:[rbp-25] content_length.6:[rbp-41] content.6:[rbp-33] char.1:[rbp-45] $10.1:[rbp-46] $13.1:[rbp-47] content_size.4:[rbp-25] content.3:[rbp-33] content_size.6:[rbp-25] content.4:[rbp-33] content_length.4:rax:[rbp-41] 
@@ -68835,7 +68835,7 @@ write_363:
   # location.1: @Source_Location = load_variable(location)
   # [live values]: self.1:rdi location.1:rsi 
   .loc 1 350 9
-  # $1.1: Boolean = location.1 == null
+  # $1.1: bool = location.1 == null
   cmp rsi, 0
   sete al
   # [live values]: self.1:rdi location.1:rsi $1.1:rax 
@@ -68884,7 +68884,7 @@ write_363:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-17] location.1:[rbp-9] $1.1:[rbp-1] $6.1:rax 
   .loc 1 353 67
-  # $7.1: Int = load_struct_member(location.1, line)
+  # $7.1: isize = load_struct_member(location.1, line)
   mov rbx, [rbp-9]
   mov r15, [rbx+8]
   # [live values]: self.1:[rbp-17] location.1:rbx:[rbp-9] $1.1:[rbp-1] $6.1:rax $7.1:r15 
@@ -68904,7 +68904,7 @@ write_363:
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-17] location.1:[rbp-9] $1.1:[rbp-1] $9.1:rax 
   .loc 1 353 99
-  # $10.1: Int = load_struct_member(location.1, column)
+  # $10.1: isize = load_struct_member(location.1, column)
   mov rbx, [rbp-9]
   mov r15, [rbx+16]
   # [live values]: self.1:[rbp-17] location.1:rbx:[rbp-9] $1.1:[rbp-1] $9.1:rax $10.1:r15 
@@ -68976,7 +68976,7 @@ append_364:
   mov r15, [rbx+8]
   # [live values]: self.1:rbx:[rbp-24] item.1:rax $3.1:r15 
   .loc 12 11 9
-  # $4.1: Boolean = $3.1 == null
+  # $4.1: bool = $3.1 == null
   cmp r15, 0
   sete r14b
   # [discarded value]: $3.1
@@ -69002,11 +69002,11 @@ append_364:
   mov QWORD PTR [rax+8], rbx
   # [live values]: self.1:rax:[rbp-24] item.1:rbx:[rbp-32] $4.1:[rbp-33] 
   .loc 12 17 17
-  # $6.1: Int = load_struct_member(self.1, size)
+  # $6.1: isize = load_struct_member(self.1, size)
   mov r15, [rax+16]
   # [live values]: self.1:rax:[rbp-24] item.1:rbx:[rbp-32] $4.1:[rbp-33] $6.1:r15 
   .loc 12 17 17
-  # $7.1: Int = $6.1 + 1
+  # $7.1: isize = $6.1 + 1
   mov r14, r15
   add r14, 1
   # [discarded value]: $6.1
@@ -69089,7 +69089,7 @@ prepend_365:
   mov r15, [rbx]
   # [live values]: self.1:rbx:[rbp-24] item.1:rax $3.1:r15 
   .loc 12 22 9
-  # $4.1: Boolean = $3.1 == null
+  # $4.1: bool = $3.1 == null
   cmp r15, 0
   sete r14b
   # [discarded value]: $3.1
@@ -69115,11 +69115,11 @@ prepend_365:
   mov QWORD PTR [rax], rbx
   # [live values]: self.1:rax:[rbp-24] item.1:rbx:[rbp-32] $4.1:[rbp-33] 
   .loc 12 28 17
-  # $6.1: Int = load_struct_member(self.1, size)
+  # $6.1: isize = load_struct_member(self.1, size)
   mov r15, [rax+16]
   # [live values]: self.1:rax:[rbp-24] item.1:rbx:[rbp-32] $4.1:[rbp-33] $6.1:r15 
   .loc 12 28 17
-  # $7.1: Int = $6.1 + 1
+  # $7.1: isize = $6.1 + 1
   mov r14, r15
   add r14, 1
   # [discarded value]: $6.1
@@ -69184,7 +69184,7 @@ remove_366:
   # item.2: @List_Item = phi(item.1, item.6)
   # [live values]: self.1:[rbp-24] data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] 
   .loc 12 33 12
-  # $2.1: Boolean = item.2 != null
+  # $2.1: bool = item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-24] data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:rax 
@@ -69199,7 +69199,7 @@ remove_366:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] data.1:[rbp-16] item.1:[rbp-8] item.2:rax:[rbp-8] $2.1:[rbp-25] $3.1:rbx 
   .loc 12 34 13
-  # $4.1: Boolean = $3.1 == data.1
+  # $4.1: bool = $3.1 == data.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $3.1
@@ -69276,7 +69276,7 @@ remove_all_367:
   # item.2: @List_Item = phi(item.1, item.6)
   # [live values]: self.1:[rbp-24] data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] 
   .loc 12 45 12
-  # $2.1: Boolean = item.2 != null
+  # $2.1: bool = item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-24] data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:rax 
@@ -69291,7 +69291,7 @@ remove_all_367:
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] data.1:[rbp-16] item.1:[rbp-8] item.2:rax:[rbp-8] $2.1:[rbp-25] $3.1:rbx 
   .loc 12 46 13
-  # $4.1: Boolean = $3.1 == data.1
+  # $4.1: bool = $3.1 == data.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $3.1
@@ -69365,7 +69365,7 @@ prune_368:
   # item.2: @List_Item = phi(item.1, item.13)
   # [live values]: self.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] 
   .loc 12 56 12
-  # $2.1: Boolean = item.2 != null
+  # $2.1: bool = item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: self.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:rax 
@@ -69375,7 +69375,7 @@ prune_368:
   jz .LABEL__prune_368__4
 .LABEL__prune_368__3:
   .loc 12 57 13
-  # $3.1: Boolean = load_struct_member(item.2, is_removed)
+  # $3.1: bool = load_struct_member(item.2, is_removed)
   mov rax, [rbp-8]
   mov bl, [rax+24]
   # [live values]: self.1:[rbp-16] item.1:[rbp-8] item.2:rax:[rbp-8] $2.1:[rbp-17] $3.1:rbx 
@@ -69390,7 +69390,7 @@ prune_368:
   mov rbx, [rax]
   # [live values]: self.1:[rbp-16] item.1:[rbp-8] item.2:rax:[rbp-8] $2.1:[rbp-17] $3.1:[rbp-18] $4.1:rbx 
   .loc 12 58 17
-  # $5.1: Boolean = $4.1 != null
+  # $5.1: bool = $4.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $4.1
@@ -69423,7 +69423,7 @@ prune_368:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-16] item.1:[rbp-8] item.2:rax:[rbp-8] $2.1:[rbp-17] $3.1:[rbp-18] $5.1:[rbp-19] $8.1:rbx 
   .loc 12 61 17
-  # $9.1: Boolean = $8.1 != null
+  # $9.1: bool = $8.1 != null
   cmp rbx, 0
   setne r15b
   # [discarded value]: $8.1
@@ -69456,7 +69456,7 @@ prune_368:
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:[rbp-17] $3.1:[rbp-18] $5.1:[rbp-19] $9.1:[rbp-20] $12.1:rbx 
   .loc 12 64 17
-  # $13.1: Boolean = $12.1 == item.2
+  # $13.1: bool = $12.1 == item.2
   cmp rbx, QWORD PTR [rbp-8]
   sete r15b
   # [discarded value]: $12.1
@@ -69485,7 +69485,7 @@ prune_368:
   mov rbx, [rax+8]
   # [live values]: self.1:rax:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:[rbp-17] $3.1:[rbp-18] $5.1:[rbp-19] $9.1:[rbp-20] $13.1:[rbp-21] $15.1:rbx 
   .loc 12 67 17
-  # $16.1: Boolean = $15.1 == item.2
+  # $16.1: bool = $15.1 == item.2
   cmp rbx, QWORD PTR [rbp-8]
   sete r15b
   # [discarded value]: $15.1
@@ -69509,12 +69509,12 @@ prune_368:
   # jump(.LABEL__prune_368__14)
 .LABEL__prune_368__14:
   .loc 12 70 25
-  # $18.1: Int = load_struct_member(self.1, size)
+  # $18.1: isize = load_struct_member(self.1, size)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:[rbp-17] $3.1:[rbp-18] $5.1:[rbp-19] $9.1:[rbp-20] $13.1:[rbp-21] $16.1:[rbp-22] $18.1:rbx 
   .loc 12 70 25
-  # $19.1: Int = $18.1 - 1
+  # $19.1: isize = $18.1 - 1
   mov r15, rbx
   dec r15
   # [discarded value]: $18.1
@@ -69600,7 +69600,7 @@ replace_369:
   # item.2: @List_Item = phi(item.1, item.6)
   # [live values]: data.1:[rbp-24] new_data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] 
   .loc 12 79 12
-  # $2.1: Boolean = item.2 != null
+  # $2.1: bool = item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: data.1:[rbp-24] new_data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:rax 
@@ -69615,7 +69615,7 @@ replace_369:
   mov rbx, [rax+16]
   # [live values]: data.1:[rbp-24] new_data.1:[rbp-16] item.1:[rbp-8] item.2:rax:[rbp-8] $2.1:[rbp-25] $3.1:rbx 
   .loc 12 80 13
-  # $4.1: Boolean = $3.1 == data.1
+  # $4.1: bool = $3.1 == data.1
   cmp rbx, QWORD PTR [rbp-24]
   sete r15b
   # [discarded value]: $3.1
@@ -69691,7 +69691,7 @@ contains_370:
   # item.2: @List_Item = phi(item.1, item.5)
   # [live values]: data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] 
   .loc 12 89 12
-  # $2.1: Boolean = item.2 != null
+  # $2.1: bool = item.2 != null
   cmp QWORD PTR [rbp-8], 0
   setne al
   # [live values]: data.1:[rbp-16] item.1:[rbp-8] item.2:[rbp-8] $2.1:rax 
@@ -69706,7 +69706,7 @@ contains_370:
   mov rbx, [rax+16]
   # [live values]: data.1:[rbp-16] item.1:[rbp-8] item.2:rax:[rbp-8] $2.1:[rbp-17] $3.1:rbx 
   .loc 12 90 13
-  # $4.1: Boolean = $3.1 == data.1
+  # $4.1: bool = $3.1 == data.1
   cmp rbx, QWORD PTR [rbp-16]
   sete r15b
   # [discarded value]: $3.1
@@ -69769,7 +69769,7 @@ index_of_371:
   # data.1: @Any = load_variable(data)
   # [live values]: self.1:rdi data.1:rsi 
   .loc 12 99 9
-  # index.1: Int = 0
+  # index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi data.1:rsi index.1:rax 
   .loc 12 100 16
@@ -69782,12 +69782,12 @@ index_of_371:
   mov [rbp-16], rbx
   mov [rbp-24], rsi
 .LABEL__index_of_371__2:
-  # index.5: Int = phi(index.1, index.4)
+  # index.5: isize = phi(index.1, index.4)
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] 
   # item.2: @List_Item = phi(item.1, item.5)
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:[rbp-16] 
   .loc 12 101 12
-  # $2.1: Boolean = item.2 != null
+  # $2.1: bool = item.2 != null
   cmp QWORD PTR [rbp-16], 0
   setne al
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:[rbp-16] $2.1:rax 
@@ -69802,7 +69802,7 @@ index_of_371:
   mov rbx, [rax+16]
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:rax:[rbp-16] $2.1:[rbp-25] $3.1:rbx 
   .loc 12 102 13
-  # $4.1: Boolean = $3.1 == data.1
+  # $4.1: bool = $3.1 == data.1
   cmp rbx, QWORD PTR [rbp-24]
   sete r15b
   # [discarded value]: $3.1
@@ -69824,12 +69824,12 @@ index_of_371:
   mov rbx, [rax+8]
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:[rbp-16] $2.1:[rbp-25] $4.1:[rbp-26] item.5:rbx:[rbp-16] 
   .loc 12 106 17
-  # $6.1: Int = index.5 + 1
+  # $6.1: isize = index.5 + 1
   mov rax, [rbp-8]
   add rax, 1
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:[rbp-16] $2.1:[rbp-25] $4.1:[rbp-26] item.5:rbx:[rbp-16] $6.1:rax 
   .loc 12 106 9
-  # index.4: Int = $6.1
+  # index.4: isize = $6.1
   mov [rbp-34], rax
   # [discarded value]: $6.1
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:[rbp-16] $2.1:[rbp-25] $4.1:[rbp-26] item.5:rbx:[rbp-16] index.4:rax:[rbp-8] 
@@ -69845,7 +69845,7 @@ index_of_371:
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:[rbp-16] $2.1:[rbp-25] 
 .LABEL__index_of_371__4:
   .loc 12 108 12
-  # $7.1: Int =  - 1
+  # $7.1: isize =  - 1
   mov rax, 1
   neg rax
   # [live values]: data.1:[rbp-24] index.1:[rbp-8] item.1:[rbp-16] index.5:[rbp-8] item.2:[rbp-16] $2.1:[rbp-25] $7.1:rax 
@@ -69882,20 +69882,20 @@ get_372:
 .LABEL__get_372__1:
   # self.1: @List = load_variable(self)
   # [live values]: self.1:rdi 
-  # index.1: Int = load_variable(index)
+  # index.1: isize = load_variable(index)
   # [live values]: self.1:rdi index.1:rsi 
   .loc 12 112 18
-  # $1.1: Int = load_struct_member(self.1, size)
+  # $1.1: isize = load_struct_member(self.1, size)
   mov rax, [rdi+16]
   # [live values]: self.1:rdi index.1:rsi $1.1:rax 
   .loc 12 112 9
-  # $2.1: Boolean = index.1 >= $1.1
+  # $2.1: bool = index.1 >= $1.1
   cmp rsi, rax
   setge bl
   # [discarded value]: $1.1
   # [live values]: self.1:rdi index.1:rsi $2.1:rbx 
   .loc 12 112 9
-  # $3.1: Boolean = $2.1
+  # $3.1: bool = $2.1
   mov [rbp-1], bl
   # [discarded value]: $2.1
   # [live values]: self.1:rdi index.1:rsi $3.1:rbx 
@@ -69907,7 +69907,7 @@ get_372:
   jz .LABEL__get_372__2
 .LABEL__get_372__3:
   .loc 12 112 9
-  # $3.3: Boolean = phi($3.1, $3.2)
+  # $3.3: bool = phi($3.1, $3.2)
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.3:[rbp-1] 
   # jump($3.3, .LABEL__get_372__4, .LABEL__get_372__5)
   mov al, [rbp-1]
@@ -69930,10 +69930,10 @@ get_372:
 .LABEL__get_372__7:
   # item.5: @List_Item = phi(item.1, item.3)
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.3:[rbp-1] item.1:[rbp-25] item.5:[rbp-25] 
-  # index.3: Int = phi(index.5, index.1)
+  # index.3: isize = phi(index.5, index.1)
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.3:[rbp-1] item.1:[rbp-25] item.5:[rbp-25] index.3:[rbp-9] 
   .loc 12 116 12
-  # $6.1: Boolean = index.3 > 0
+  # $6.1: bool = index.3 > 0
   cmp QWORD PTR [rbp-9], 0
   setg al
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.3:[rbp-1] item.1:[rbp-25] item.5:[rbp-25] index.3:[rbp-9] $6.1:rax 
@@ -69948,12 +69948,12 @@ get_372:
   mov rbx, [rax+8]
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.3:[rbp-1] item.1:[rbp-25] item.5:[rbp-25] index.3:[rbp-9] $6.1:[rbp-26] item.3:rbx:[rbp-25] 
   .loc 12 118 17
-  # $8.1: Int = index.3 - 1
+  # $8.1: isize = index.3 - 1
   mov rax, [rbp-9]
   dec rax
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.3:[rbp-1] item.1:[rbp-25] item.5:[rbp-25] index.3:[rbp-9] $6.1:[rbp-26] item.3:rbx:[rbp-25] $8.1:rax 
   .loc 12 118 9
-  # index.5: Int = $8.1
+  # index.5: isize = $8.1
   mov [rbp-34], rax
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.3:[rbp-1] item.1:[rbp-25] item.5:[rbp-25] index.3:[rbp-9] $6.1:[rbp-26] item.3:rbx:[rbp-25] index.5:rax:[rbp-9] 
@@ -69990,12 +69990,12 @@ get_372:
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] 
 .LABEL__get_372__2:
   .loc 12 112 31
-  # $4.1: Boolean = index.1 < 0
+  # $4.1: bool = index.1 < 0
   cmp QWORD PTR [rbp-9], 0
   setl al
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $4.1:rax 
   .loc 12 112 9
-  # $3.2: Boolean = $4.1
+  # $3.2: bool = $4.1
   mov [rbp-18], al
   # [discarded value]: $4.1
   # [live values]: self.1:[rbp-17] index.1:[rbp-9] $3.1:[rbp-1] $3.2:rax:[rbp-1] 
@@ -70032,7 +70032,7 @@ first_373:
   mov rax, [rdi]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 12 124 9
-  # $2.1: Boolean = $1.1 == null
+  # $2.1: bool = $1.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $1.1
@@ -70092,7 +70092,7 @@ last_374:
   mov rax, [rdi+8]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 12 131 9
-  # $2.1: Boolean = $1.1 == null
+  # $2.1: bool = $1.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $1.1
@@ -70192,7 +70192,7 @@ current_376:
   mov rax, [rdi]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 12 154 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -70283,7 +70283,7 @@ has_next_378:
   # [discarded value]: self.1
   # [live values]: $1.1:rax 
   .loc 12 165 12
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -70317,7 +70317,7 @@ next_379:
   mov rax, [rdi+8]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 12 169 9
-  # $2.1: Boolean = $1.1 == null
+  # $2.1: bool = $1.1 == null
   cmp rax, 0
   sete bl
   # [discarded value]: $1.1
@@ -70402,7 +70402,7 @@ change_380:
   mov rax, [rdi]
   # [live values]: self.1:rdi data.1:rsi $1.1:rax 
   .loc 12 178 9
-  # $2.1: Boolean = $1.1 != null
+  # $2.1: bool = $1.1 != null
   cmp rax, 0
   setne bl
   # [discarded value]: $1.1
@@ -70492,10 +70492,10 @@ write_382:
 .LABEL__write_382__1:
   # self.1: @FILE = load_variable(self)
   # [live values]: self.1:rdi 
-  # number.1: Int = load_variable(number)
+  # number.1: isize = load_variable(number)
   # [live values]: self.1:rdi number.1:rsi 
   .loc 1 363 9
-  # $1.1: Boolean = number.1 < 0
+  # $1.1: bool = number.1 < 0
   cmp rsi, 0
   setl al
   # [live values]: self.1:rdi number.1:rsi $1.1:rax 
@@ -70513,7 +70513,7 @@ write_382:
   call write_385
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $2.1:rax 
   .loc 1 364 38
-  # $3.1: Int =  - number.1
+  # $3.1: isize =  - number.1
   mov rbx, [rbp-9]
   neg rbx
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $2.1:rax $3.1:rbx 
@@ -70533,7 +70533,7 @@ write_382:
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] 
 .LABEL__write_382__3:
   .loc 1 366 9
-  # $5.1: Boolean = number.1 >= 10
+  # $5.1: bool = number.1 >= 10
   cmp QWORD PTR [rbp-9], 10
   setge al
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:rax 
@@ -70543,7 +70543,7 @@ write_382:
   jz .LABEL__write_382__6
 .LABEL__write_382__5:
   .loc 1 367 20
-  # $6.1: Int = number.1 / 10
+  # $6.1: isize = number.1 / 10
   mov rax, [rbp-9]
   cqto
   mov rbx, 10
@@ -70560,31 +70560,31 @@ write_382:
   # jump(.LABEL__write_382__6)
 .LABEL__write_382__6:
   .loc 1 369 12
-  # $8.1: Int = number.1 // 10
+  # $8.1: isize = number.1 // 10
   mov rax, [rbp-9]
   cqto
   mov rbx, 10
   idiv rbx
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $8.1:rdx 
   .loc 1 369 27
-  # $9.1: Int = cast('0')
+  # $9.1: isize = cast('0')
   mov al, 48
   movsx rax, al
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $8.1:rdx $9.1:rax 
   .loc 1 369 12
-  # $10.1: Int = $8.1 + $9.1
+  # $10.1: isize = $8.1 + $9.1
   mov rbx, rdx
   add rbx, rax
   # [discarded value]: $9.1
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $10.1:rbx 
   .loc 1 369 11
-  # $11.1: Int32 = cast($10.1)
+  # $11.1: i32 = cast($10.1)
   mov rax, rbx
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $11.1:rax 
   .loc 1 369 5
-  # $12.1: Int32 = call(fputc, $11.1, self.1)
+  # $12.1: i32 = call(fputc, $11.1, self.1)
   mov edi, eax
   mov rsi, [rbp-17]
   call fputc
@@ -70624,7 +70624,7 @@ write_383:
   # string.1: @String = load_variable(string)
   # [live values]: self.1:rdi string.1:rsi 
   .loc 1 374 23
-  # $1.1: [Int8; ?] = load_struct_member(string.1, data)
+  # $1.1: [i8; ?] = load_struct_member(string.1, data)
   mov rax, [rsi]
   # [discarded value]: string.1
   # [live values]: self.1:rdi $1.1:rax 
@@ -70658,10 +70658,10 @@ write_384:
 .LABEL__write_384__1:
   # self.1: @FILE = load_variable(self)
   # [live values]: self.1:rdi 
-  # chars.1: [Int8; ?] = load_variable(chars)
+  # chars.1: [i8; ?] = load_variable(chars)
   # [live values]: self.1:rdi chars.1:rsi 
   .loc 1 378 9
-  # $1.1: Int32 = call(fputs, chars.1, self.1)
+  # $1.1: i32 = call(fputs, chars.1, self.1)
   mov [rbp-8], rdi
   mov rdi, rsi
   mov [rbp-16], rsi
@@ -70670,13 +70670,13 @@ write_384:
   # [discarded value]: chars.1
   # [live values]: self.1:[rbp-8] $1.1:rax 
   .loc 1 378 9
-  # $2.1: Int = cast($1.1)
+  # $2.1: isize = cast($1.1)
   mov ebx, eax
   movsx rbx, ebx
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $2.1:rbx 
   .loc 1 378 9
-  # $3.1: Boolean = $2.1 < 0
+  # $3.1: bool = $2.1 < 0
   cmp rbx, 0
   setl al
   # [discarded value]: $2.1
@@ -70742,16 +70742,16 @@ write_385:
 .LABEL__write_385__1:
   # self.1: @FILE = load_variable(self)
   # [live values]: self.1:rdi 
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: self.1:rdi char.1:rsi 
   .loc 1 386 13
-  # c.1: Int32 = cast(char.1)
+  # c.1: i32 = cast(char.1)
   mov al, sil
   movsx eax, al
   # [discarded value]: char.1
   # [live values]: self.1:rdi c.1:rax 
   .loc 1 387 9
-  # $2.1: Int32 = call(fputc, c.1, self.1)
+  # $2.1: i32 = call(fputc, c.1, self.1)
   mov [rbp-8], rdi
   mov edi, eax
   mov rsi, [rbp-8]
@@ -70759,7 +70759,7 @@ write_385:
   call fputc
   # [live values]: self.1:[rbp-8] c.1:[rbp-12] $2.1:rax 
   .loc 1 387 9
-  # $3.1: Boolean = $2.1 != c.1
+  # $3.1: bool = $2.1 != c.1
   cmp eax, DWORD PTR [rbp-12]
   setne bl
   # [discarded value]: $2.1
@@ -70788,7 +70788,7 @@ write_385:
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-8] c.1:[rbp-12] $3.1:[rbp-13] $6.1:rax 
   .loc 1 388 81
-  # $7.1: Int = cast(c.1)
+  # $7.1: isize = cast(c.1)
   mov ebx, [rbp-12]
   movsx rbx, ebx
   # [live values]: self.1:[rbp-8] c.1:[rbp-12] $3.1:[rbp-13] $6.1:rax $7.1:rbx 
@@ -70869,7 +70869,7 @@ flush_387:
   # file.1: @FILE = load_variable(file)
   # [live values]: file.1:rdi 
   .loc 1 399 5
-  # $1.1: Int32 = call(fflush, file.1)
+  # $1.1: i32 = call(fflush, file.1)
   mov [rbp-8], rdi
   call fflush
   # [discarded value]: $1.1
@@ -70959,7 +70959,7 @@ is_389:
   # self_type.2: @Object_Type = phi(self_type.1, self_type.4)
   # [live values]: object_type.1:[rbp-16] self_type.1:[rbp-8] self_type.2:[rbp-8] 
   .loc 13 16 13
-  # $2.1: Boolean = self_type.2 == object_type.1
+  # $2.1: bool = self_type.2 == object_type.1
   mov rax, [rbp-8]
   cmp rax, QWORD PTR [rbp-16]
   sete bl
@@ -70981,7 +70981,7 @@ is_389:
   mov rbx, [rax+32]
   # [live values]: object_type.1:[rbp-16] self_type.1:[rbp-8] self_type.2:[rbp-8] $2.1:[rbp-17] self_type.4:rbx:[rbp-8] 
   .loc 13 20 13
-  # $4.1: Boolean = self_type.4 == null
+  # $4.1: bool = self_type.4 == null
   cmp rbx, 0
   sete al
   # [live values]: object_type.1:[rbp-16] self_type.1:[rbp-8] self_type.2:[rbp-8] $2.1:[rbp-17] self_type.4:rbx:[rbp-8] $4.1:rax 
@@ -71023,27 +71023,27 @@ create_string_390:
   movsx rax, WORD PTR create_string_390__stack_frame_size[rip]
   sub rsp, rax
 .LABEL__create_string_390__1:
-  # data.1: [Int8; ?] = load_variable(data)
+  # data.1: [i8; ?] = load_variable(data)
   # [live values]: data.1:rdi 
   .loc 14 10 9
-  # data_length.1: Int = 0
+  # data_length.1: isize = 0
   xor rax, rax
   # [live values]: data.1:rdi data_length.1:rax 
   # jump(.LABEL__create_string_390__2)
   mov [rbp-8], rax
   mov [rbp-16], rdi
 .LABEL__create_string_390__2:
-  # data_length.2: Int = phi(data_length.1, data_length.4)
+  # data_length.2: isize = phi(data_length.1, data_length.4)
   # [live values]: data.1:[rbp-16] data_length.1:[rbp-8] data_length.2:[rbp-8] 
   .loc 14 12 20
-  # char.1: Int8 = load_array_item(data.1, data_length.2)
+  # char.1: i8 = load_array_item(data.1, data_length.2)
   mov rax, [rbp-16]
   mov rbx, [rbp-8]
   add rax, rbx
   mov al, [rax]
   # [live values]: data.1:[rbp-16] data_length.1:[rbp-8] data_length.2:[rbp-8] char.1:rax 
   .loc 14 13 13
-  # $2.1: Boolean = char.1 == '\0'
+  # $2.1: bool = char.1 == '\0'
   cmp al, 0
   sete bl
   # [discarded value]: char.1
@@ -71054,7 +71054,7 @@ create_string_390:
   jz .LABEL__create_string_390__5
 .LABEL__create_string_390__3:
   .loc 14 19 48
-  # $4.1: Int = data_length.2 + 1
+  # $4.1: isize = data_length.2 + 1
   mov rax, [rbp-8]
   add rax, 1
   # [live values]: data.1:[rbp-16] data_length.1:[rbp-8] data_length.2:[rbp-8] $2.1:[rbp-17] $4.1:rax 
@@ -71082,12 +71082,12 @@ create_string_390:
   # [live values]: data.1:[rbp-16] data_length.1:[rbp-8] data_length.2:[rbp-8] $2.1:[rbp-17] 
 .LABEL__create_string_390__5:
   .loc 14 16 23
-  # $3.1: Int = data_length.2 + 1
+  # $3.1: isize = data_length.2 + 1
   mov rax, [rbp-8]
   add rax, 1
   # [live values]: data.1:[rbp-16] data_length.1:[rbp-8] data_length.2:[rbp-8] $2.1:[rbp-17] $3.1:rax 
   .loc 14 16 9
-  # data_length.4: Int = $3.1
+  # data_length.4: isize = $3.1
   mov [rbp-25], rax
   # [discarded value]: $3.1
   # [live values]: data.1:[rbp-16] data_length.1:[rbp-8] data_length.2:[rbp-8] $2.1:[rbp-17] data_length.4:rax:[rbp-8] 
@@ -71123,18 +71123,18 @@ clone_391:
   # self.1: @String = load_variable(self)
   # [live values]: self.1:rdi 
   .loc 14 23 42
-  # $1.1: Int = load_struct_member(self.1, data_size)
+  # $1.1: isize = load_struct_member(self.1, data_size)
   mov rax, [rdi+8]
   # [live values]: self.1:rdi $1.1:rax 
   .loc 14 23 35
-  # $3.1: [Int8; ?] = call(malloc, $1.1)
+  # $3.1: [i8; ?] = call(malloc, $1.1)
   mov [rbp-8], rdi
   mov rdi, rax
   call malloc
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-8] $3.1:rax 
-  .loc 14 23 84
-  # $4.1: Int = load_struct_member(self.1, data_size)
+  .loc 14 23 82
+  # $4.1: isize = load_struct_member(self.1, data_size)
   mov rbx, [rbp-8]
   mov r15, [rbx+8]
   # [live values]: self.1:rbx:[rbp-8] $3.1:rax $4.1:r15 
@@ -71190,15 +71190,15 @@ equals_392:
   # other.1: @String = load_variable(other)
   # [live values]: self.1:rdi other.1:rsi 
   .loc 14 29 9
-  # $1.1: Int = load_struct_member(self.1, length)
+  # $1.1: isize = load_struct_member(self.1, length)
   mov rax, [rdi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax 
   .loc 14 29 24
-  # $2.1: Int = load_struct_member(other.1, length)
+  # $2.1: isize = load_struct_member(other.1, length)
   mov rbx, [rsi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax $2.1:rbx 
   .loc 14 29 9
-  # $3.1: Boolean = $1.1 == $2.1
+  # $3.1: bool = $1.1 == $2.1
   cmp rax, rbx
   sete r15b
   # [discarded value]: $2.1
@@ -71212,21 +71212,21 @@ equals_392:
   jz .LABEL__equals_392__3
 .LABEL__equals_392__2:
   .loc 14 30 13
-  # index.1: Int = 0
+  # index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:rax 
   # jump(.LABEL__equals_392__4)
   mov [rbp-25], rax
 .LABEL__equals_392__4:
-  # index.2: Int = phi(index.1, index.5)
+  # index.2: isize = phi(index.1, index.5)
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] 
   .loc 14 31 24
-  # $4.1: Int = load_struct_member(self.1, length)
+  # $4.1: isize = load_struct_member(self.1, length)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $4.1:rbx 
   .loc 14 31 16
-  # $5.1: Boolean = index.2 < $4.1
+  # $5.1: bool = index.2 < $4.1
   cmp QWORD PTR [rbp-25], rbx
   setl r15b
   # [discarded value]: $4.1
@@ -71237,12 +71237,12 @@ equals_392:
   jz .LABEL__equals_392__6
 .LABEL__equals_392__5:
   .loc 14 32 17
-  # $6.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $6.1: [i8; ?] = load_struct_member(self.1, data)
   mov rax, [rbp-16]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $6.1:rbx 
   .loc 14 32 17
-  # $7.1: Int8 = load_array_item($6.1, index.2)
+  # $7.1: i8 = load_array_item($6.1, index.2)
   mov r15, rbx
   mov r14, [rbp-25]
   add r15, r14
@@ -71250,12 +71250,12 @@ equals_392:
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $7.1:r15 
   .loc 14 32 37
-  # $8.1: [Int8; ?] = load_struct_member(other.1, data)
+  # $8.1: [i8; ?] = load_struct_member(other.1, data)
   mov rbx, [rbp-8]
   mov r14, [rbx]
   # [live values]: self.1:rax:[rbp-16] other.1:rbx:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $7.1:r15 $8.1:r14 
   .loc 14 32 37
-  # $9.1: Int8 = load_array_item($8.1, index.2)
+  # $9.1: i8 = load_array_item($8.1, index.2)
   mov r13, r14
   mov r12, [rbp-25]
   add r13, r12
@@ -71263,7 +71263,7 @@ equals_392:
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-16] other.1:rbx:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $7.1:r15 $9.1:r13 
   .loc 14 32 17
-  # $10.1: Boolean = $7.1 != $9.1
+  # $10.1: bool = $7.1 != $9.1
   cmp r15b, r13b
   setne r14b
   # [discarded value]: $9.1
@@ -71281,12 +71281,12 @@ equals_392:
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $10.1:[rbp-27] 
 .LABEL__equals_392__8:
   .loc 14 35 21
-  # $11.1: Int = index.2 + 1
+  # $11.1: isize = index.2 + 1
   mov rax, [rbp-25]
   add rax, 1
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $10.1:[rbp-27] $11.1:rax 
   .loc 14 35 13
-  # index.5: Int = $11.1
+  # index.5: isize = $11.1
   mov [rbp-35], rax
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $10.1:[rbp-27] index.5:rax:[rbp-25] 
@@ -71342,7 +71342,7 @@ index_of_393:
   # other.1: @String = load_variable(other)
   # [live values]: self.1:rdi other.1:rsi 
   .loc 14 43 9
-  # self_index.1: Int = 0
+  # self_index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:rdi other.1:rsi self_index.1:rax 
   # jump(.LABEL__index_of_393__2)
@@ -71350,27 +71350,27 @@ index_of_393:
   mov [rbp-16], rsi
   mov [rbp-24], rdi
 .LABEL__index_of_393__2:
-  # self_index.2: Int = phi(self_index.1, self_index.6)
+  # self_index.2: isize = phi(self_index.1, self_index.6)
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] 
   .loc 14 44 26
-  # $1.1: Int = load_struct_member(self.1, length)
+  # $1.1: isize = load_struct_member(self.1, length)
   mov rax, [rbp-24]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $1.1:rbx 
   .loc 14 44 40
-  # $2.1: Int = load_struct_member(other.1, length)
+  # $2.1: isize = load_struct_member(other.1, length)
   mov r15, [rbp-16]
   mov r14, [r15+16]
   # [live values]: self.1:rax:[rbp-24] other.1:r15:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $1.1:rbx $2.1:r14 
   .loc 14 44 26
-  # $3.1: Int = $1.1 - $2.1
+  # $3.1: isize = $1.1 - $2.1
   mov r13, rbx
   sub r13, r14
   # [discarded value]: $2.1
   # [discarded value]: $1.1
   # [live values]: self.1:rax:[rbp-24] other.1:r15:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $3.1:r13 
   .loc 14 44 12
-  # $4.1: Boolean = self_index.2 <= $3.1
+  # $4.1: bool = self_index.2 <= $3.1
   cmp QWORD PTR [rbp-8], r13
   setle bl
   # [discarded value]: $3.1
@@ -71381,27 +71381,27 @@ index_of_393:
   jz .LABEL__index_of_393__4
 .LABEL__index_of_393__3:
   .loc 14 45 13
-  # other_index.1: Int = 0
+  # other_index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:rax 
   # jump(.LABEL__index_of_393__5)
   mov [rbp-33], rax
 .LABEL__index_of_393__5:
-  # other_index.2: Int = phi(other_index.1, other_index.5)
+  # other_index.2: isize = phi(other_index.1, other_index.5)
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] 
   .loc 14 46 30
-  # $5.1: Int = load_struct_member(other.1, length)
+  # $5.1: isize = load_struct_member(other.1, length)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $5.1:rbx 
   .loc 14 46 16
-  # $6.1: Boolean = other_index.2 < $5.1
+  # $6.1: bool = other_index.2 < $5.1
   cmp QWORD PTR [rbp-33], rbx
   setl r15b
   # [discarded value]: $5.1
   # [live values]: self.1:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $6.1:r15 
   .loc 14 46 16
-  # $7.1: Boolean = $6.1
+  # $7.1: bool = $6.1
   mov [rbp-34], r15b
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:r15 
@@ -71411,17 +71411,17 @@ index_of_393:
   jz .LABEL__index_of_393__9
 .LABEL__index_of_393__8:
   .loc 14 46 56
-  # $8.1: Int = self_index.2 + other_index.2
+  # $8.1: isize = self_index.2 + other_index.2
   mov rax, [rbp-8]
   add rax, QWORD PTR [rbp-33]
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $8.1:rax 
   .loc 14 46 46
-  # $9.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $9.1: [i8; ?] = load_struct_member(self.1, data)
   mov rbx, [rbp-24]
   mov r15, [rbx]
   # [live values]: self.1:rbx:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $8.1:rax $9.1:r15 
   .loc 14 46 46
-  # $10.1: Int8 = load_array_item($9.1, $8.1)
+  # $10.1: i8 = load_array_item($9.1, $8.1)
   mov r14, r15
   mov r13, rax
   add r14, r13
@@ -71430,12 +71430,12 @@ index_of_393:
   # [discarded value]: $8.1
   # [live values]: self.1:rbx:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $10.1:r14 
   .loc 14 46 85
-  # $11.1: [Int8; ?] = load_struct_member(other.1, data)
+  # $11.1: [i8; ?] = load_struct_member(other.1, data)
   mov rax, [rbp-16]
   mov r15, [rax]
   # [live values]: self.1:rbx:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $10.1:r14 $11.1:r15 
   .loc 14 46 85
-  # $12.1: Int8 = load_array_item($11.1, other_index.2)
+  # $12.1: i8 = load_array_item($11.1, other_index.2)
   mov r13, r15
   mov r12, [rbp-33]
   add r13, r12
@@ -71443,14 +71443,14 @@ index_of_393:
   # [discarded value]: $11.1
   # [live values]: self.1:rbx:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $10.1:r14 $12.1:r13 
   .loc 14 46 46
-  # $13.1: Boolean = $10.1 == $12.1
+  # $13.1: bool = $10.1 == $12.1
   cmp r14b, r13b
   sete r15b
   # [discarded value]: $12.1
   # [discarded value]: $10.1
   # [live values]: self.1:rbx:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $13.1:r15 
   .loc 14 46 16
-  # $7.2: Boolean = $13.1
+  # $7.2: bool = $13.1
   mov [rbp-35], r15b
   # [discarded value]: $13.1
   # [live values]: self.1:rbx:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $7.2:r15:[rbp-34] 
@@ -71458,7 +71458,7 @@ index_of_393:
   mov [rbp-34], r15b
 .LABEL__index_of_393__9:
   .loc 14 46 16
-  # $7.3: Boolean = phi($7.1, $7.2)
+  # $7.3: bool = phi($7.1, $7.2)
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $7.2:[rbp-34] $7.3:[rbp-34] 
   # jump($7.3, .LABEL__index_of_393__6, .LABEL__index_of_393__7)
   mov al, [rbp-34]
@@ -71466,12 +71466,12 @@ index_of_393:
   jz .LABEL__index_of_393__7
 .LABEL__index_of_393__6:
   .loc 14 47 27
-  # $14.1: Int = other_index.2 + 1
+  # $14.1: isize = other_index.2 + 1
   mov rax, [rbp-33]
   add rax, 1
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $14.1:rax $7.2:[rbp-34] $7.3:[rbp-34] 
   .loc 14 47 13
-  # other_index.5: Int = $14.1
+  # other_index.5: isize = $14.1
   mov [rbp-42], rax
   # [discarded value]: $14.1
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] other_index.5:rax:[rbp-33] $7.2:[rbp-34] $7.3:[rbp-34] 
@@ -71483,12 +71483,12 @@ index_of_393:
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $7.2:[rbp-34] $7.3:[rbp-34] 
 .LABEL__index_of_393__7:
   .loc 14 49 28
-  # $15.1: Int = load_struct_member(other.1, length)
+  # $15.1: isize = load_struct_member(other.1, length)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-24] other.1:rax:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $15.1:rbx $7.2:[rbp-34] $7.3:[rbp-34] 
   .loc 14 49 13
-  # $16.1: Boolean = other_index.2 == $15.1
+  # $16.1: bool = other_index.2 == $15.1
   cmp QWORD PTR [rbp-33], rbx
   sete r15b
   # [discarded value]: $15.1
@@ -71505,12 +71505,12 @@ index_of_393:
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $16.1:[rbp-35] $7.2:[rbp-34] $7.3:[rbp-34] 
 .LABEL__index_of_393__11:
   .loc 14 52 22
-  # $17.1: Int = self_index.2 + 1
+  # $17.1: isize = self_index.2 + 1
   mov rax, [rbp-8]
   add rax, 1
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $16.1:[rbp-35] $7.2:[rbp-34] $7.3:[rbp-34] $17.1:rax 
   .loc 14 52 9
-  # self_index.6: Int = $17.1
+  # self_index.6: isize = $17.1
   mov [rbp-43], rax
   # [discarded value]: $17.1
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] other_index.1:[rbp-33] other_index.2:[rbp-33] $7.1:[rbp-34] $16.1:[rbp-35] $7.2:[rbp-34] $7.3:[rbp-34] self_index.6:rax:[rbp-8] 
@@ -71536,7 +71536,7 @@ index_of_393:
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] 
 .LABEL__index_of_393__4:
   .loc 14 54 12
-  # $18.1: Int =  - 1
+  # $18.1: isize =  - 1
   mov rax, 1
   neg rax
   # [live values]: self.1:[rbp-24] other.1:[rbp-16] self_index.1:[rbp-8] self_index.2:[rbp-8] $4.1:[rbp-25] $18.1:rax 
@@ -71575,15 +71575,15 @@ starts_with_394:
   # other.1: @String = load_variable(other)
   # [live values]: self.1:rdi other.1:rsi 
   .loc 14 58 9
-  # $1.1: Int = load_struct_member(self.1, length)
+  # $1.1: isize = load_struct_member(self.1, length)
   mov rax, [rdi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax 
   .loc 14 58 23
-  # $2.1: Int = load_struct_member(other.1, length)
+  # $2.1: isize = load_struct_member(other.1, length)
   mov rbx, [rsi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax $2.1:rbx 
   .loc 14 58 9
-  # $3.1: Boolean = $1.1 < $2.1
+  # $3.1: bool = $1.1 < $2.1
   cmp rax, rbx
   setl r15b
   # [discarded value]: $2.1
@@ -71603,21 +71603,21 @@ starts_with_394:
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] 
 .LABEL__starts_with_394__3:
   .loc 14 61 9
-  # index.1: Int = 0
+  # index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:rax 
   # jump(.LABEL__starts_with_394__5)
   mov [rbp-25], rax
 .LABEL__starts_with_394__5:
-  # index.2: Int = phi(index.1, index.5)
+  # index.2: isize = phi(index.1, index.5)
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] 
   .loc 14 62 20
-  # $4.1: Int = load_struct_member(other.1, length)
+  # $4.1: isize = load_struct_member(other.1, length)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] other.1:rax:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $4.1:rbx 
   .loc 14 62 12
-  # $5.1: Boolean = index.2 < $4.1
+  # $5.1: bool = index.2 < $4.1
   cmp QWORD PTR [rbp-25], rbx
   setl r15b
   # [discarded value]: $4.1
@@ -71628,12 +71628,12 @@ starts_with_394:
   jz .LABEL__starts_with_394__7
 .LABEL__starts_with_394__6:
   .loc 14 63 13
-  # $6.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $6.1: [i8; ?] = load_struct_member(self.1, data)
   mov rax, [rbp-16]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $6.1:rbx 
   .loc 14 63 13
-  # $7.1: Int8 = load_array_item($6.1, index.2)
+  # $7.1: i8 = load_array_item($6.1, index.2)
   mov r15, rbx
   mov r14, [rbp-25]
   add r15, r14
@@ -71641,12 +71641,12 @@ starts_with_394:
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $7.1:r15 
   .loc 14 63 33
-  # $8.1: [Int8; ?] = load_struct_member(other.1, data)
+  # $8.1: [i8; ?] = load_struct_member(other.1, data)
   mov rbx, [rbp-8]
   mov r14, [rbx]
   # [live values]: self.1:rax:[rbp-16] other.1:rbx:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $7.1:r15 $8.1:r14 
   .loc 14 63 33
-  # $9.1: Int8 = load_array_item($8.1, index.2)
+  # $9.1: i8 = load_array_item($8.1, index.2)
   mov r13, r14
   mov r12, [rbp-25]
   add r13, r12
@@ -71654,7 +71654,7 @@ starts_with_394:
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-16] other.1:rbx:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $7.1:r15 $9.1:r13 
   .loc 14 63 13
-  # $10.1: Boolean = $7.1 != $9.1
+  # $10.1: bool = $7.1 != $9.1
   cmp r15b, r13b
   setne r14b
   # [discarded value]: $9.1
@@ -71672,12 +71672,12 @@ starts_with_394:
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $10.1:[rbp-27] 
 .LABEL__starts_with_394__9:
   .loc 14 66 17
-  # $11.1: Int = index.2 + 1
+  # $11.1: isize = index.2 + 1
   mov rax, [rbp-25]
   add rax, 1
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $10.1:[rbp-27] $11.1:rax 
   .loc 14 66 9
-  # index.5: Int = $11.1
+  # index.5: isize = $11.1
   mov [rbp-35], rax
   # [discarded value]: $11.1
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $10.1:[rbp-27] index.5:rax:[rbp-25] 
@@ -71727,15 +71727,15 @@ ends_with_395:
   # other.1: @String = load_variable(other)
   # [live values]: self.1:rdi other.1:rsi 
   .loc 14 72 9
-  # $1.1: Int = load_struct_member(self.1, length)
+  # $1.1: isize = load_struct_member(self.1, length)
   mov rax, [rdi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax 
   .loc 14 72 23
-  # $2.1: Int = load_struct_member(other.1, length)
+  # $2.1: isize = load_struct_member(other.1, length)
   mov rbx, [rsi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax $2.1:rbx 
   .loc 14 72 9
-  # $3.1: Boolean = $1.1 < $2.1
+  # $3.1: bool = $1.1 < $2.1
   cmp rax, rbx
   setl r15b
   # [discarded value]: $2.1
@@ -71755,21 +71755,21 @@ ends_with_395:
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] 
 .LABEL__ends_with_395__3:
   .loc 14 75 9
-  # index.1: Int = 0
+  # index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:rax 
   # jump(.LABEL__ends_with_395__5)
   mov [rbp-25], rax
 .LABEL__ends_with_395__5:
-  # index.2: Int = phi(index.1, index.5)
+  # index.2: isize = phi(index.1, index.5)
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] 
   .loc 14 76 20
-  # $4.1: Int = load_struct_member(other.1, length)
+  # $4.1: isize = load_struct_member(other.1, length)
   mov rax, [rbp-8]
   mov rbx, [rax+16]
   # [live values]: self.1:[rbp-16] other.1:rax:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $4.1:rbx 
   .loc 14 76 12
-  # $5.1: Boolean = index.2 < $4.1
+  # $5.1: bool = index.2 < $4.1
   cmp QWORD PTR [rbp-25], rbx
   setl r15b
   # [discarded value]: $4.1
@@ -71780,34 +71780,34 @@ ends_with_395:
   jz .LABEL__ends_with_395__7
 .LABEL__ends_with_395__6:
   .loc 14 77 23
-  # $6.1: Int = load_struct_member(self.1, length)
+  # $6.1: isize = load_struct_member(self.1, length)
   mov rax, [rbp-16]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $6.1:rbx 
   .loc 14 77 37
-  # $7.1: Int = load_struct_member(other.1, length)
+  # $7.1: isize = load_struct_member(other.1, length)
   mov r15, [rbp-8]
   mov r14, [r15+16]
   # [live values]: self.1:rax:[rbp-16] other.1:r15:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $6.1:rbx $7.1:r14 
   .loc 14 77 23
-  # $8.1: Int = $6.1 - $7.1
+  # $8.1: isize = $6.1 - $7.1
   mov r13, rbx
   sub r13, r14
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-16] other.1:r15:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $8.1:r13 
   .loc 14 77 23
-  # $9.1: Int = $8.1 + index.2
+  # $9.1: isize = $8.1 + index.2
   mov rbx, r13
   add rbx, QWORD PTR [rbp-25]
   # [discarded value]: $8.1
   # [live values]: self.1:rax:[rbp-16] other.1:r15:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $9.1:rbx 
   .loc 14 77 13
-  # $10.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $10.1: [i8; ?] = load_struct_member(self.1, data)
   mov r14, [rax]
   # [live values]: self.1:rax:[rbp-16] other.1:r15:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $9.1:rbx $10.1:r14 
   .loc 14 77 13
-  # $11.1: Int8 = load_array_item($10.1, $9.1)
+  # $11.1: i8 = load_array_item($10.1, $9.1)
   mov r13, r14
   mov r12, rbx
   add r13, r12
@@ -71816,11 +71816,11 @@ ends_with_395:
   # [discarded value]: $9.1
   # [live values]: self.1:rax:[rbp-16] other.1:r15:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $11.1:r13 
   .loc 14 77 62
-  # $12.1: [Int8; ?] = load_struct_member(other.1, data)
+  # $12.1: [i8; ?] = load_struct_member(other.1, data)
   mov rbx, [r15]
   # [live values]: self.1:rax:[rbp-16] other.1:r15:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $11.1:r13 $12.1:rbx 
   .loc 14 77 62
-  # $13.1: Int8 = load_array_item($12.1, index.2)
+  # $13.1: i8 = load_array_item($12.1, index.2)
   mov r14, rbx
   mov r12, [rbp-25]
   add r14, r12
@@ -71828,7 +71828,7 @@ ends_with_395:
   # [discarded value]: $12.1
   # [live values]: self.1:rax:[rbp-16] other.1:r15:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $11.1:r13 $13.1:r14 
   .loc 14 77 13
-  # $14.1: Boolean = $11.1 != $13.1
+  # $14.1: bool = $11.1 != $13.1
   cmp r13b, r14b
   setne bl
   # [discarded value]: $13.1
@@ -71846,12 +71846,12 @@ ends_with_395:
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $14.1:[rbp-27] 
 .LABEL__ends_with_395__9:
   .loc 14 80 17
-  # $15.1: Int = index.2 + 1
+  # $15.1: isize = index.2 + 1
   mov rax, [rbp-25]
   add rax, 1
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $14.1:[rbp-27] $15.1:rax 
   .loc 14 80 9
-  # index.5: Int = $15.1
+  # index.5: isize = $15.1
   mov [rbp-35], rax
   # [discarded value]: $15.1
   # [live values]: self.1:[rbp-16] other.1:[rbp-8] $3.1:[rbp-17] index.1:[rbp-25] index.2:[rbp-25] $5.1:[rbp-26] $14.1:[rbp-27] index.5:rax:[rbp-25] 
@@ -71898,20 +71898,20 @@ last_index_of_396:
 .LABEL__last_index_of_396__1:
   # self.1: @String = load_variable(self)
   # [live values]: self.1:rdi 
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: self.1:rdi char.1:rsi 
   .loc 14 86 37
-  # $1.1: Int = load_struct_member(self.1, length)
+  # $1.1: isize = load_struct_member(self.1, length)
   mov rax, [rdi+16]
   # [live values]: self.1:rdi char.1:rsi $1.1:rax 
   .loc 14 86 37
-  # $2.1: Int = $1.1 - 1
+  # $2.1: isize = $1.1 - 1
   mov rbx, rax
   dec rbx
   # [discarded value]: $1.1
   # [live values]: self.1:rdi char.1:rsi $2.1:rbx 
   .loc 14 86 12
-  # $3.1: Int = call(last_index_of_397, self.1, char.1, $2.1)
+  # $3.1: isize = call(last_index_of_397, self.1, char.1, $2.1)
   mov rdx, rbx
   call last_index_of_397
   # [discarded value]: $2.1
@@ -71941,24 +71941,24 @@ last_index_of_397:
 .LABEL__last_index_of_397__1:
   # self.1: @String = load_variable(self)
   # [live values]: self.1:rdi 
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: self.1:rdi char.1:rsi 
-  # index.1: Int = load_variable(from_index)
+  # index.1: isize = load_variable(from_index)
   # [live values]: self.1:rdi char.1:rsi index.1:rdx 
   # jump(.LABEL__last_index_of_397__2)
   mov [rbp-8], rdx
   mov [rbp-9], sil
   mov [rbp-17], rdi
 .LABEL__last_index_of_397__2:
-  # index.2: Int = phi(index.1, index.5)
+  # index.2: isize = phi(index.1, index.5)
   # [live values]: self.1:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] 
   .loc 14 91 12
-  # $1.1: Boolean = index.2 >= 0
+  # $1.1: bool = index.2 >= 0
   cmp QWORD PTR [rbp-8], 0
   setge al
   # [live values]: self.1:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $1.1:rax 
   .loc 14 91 12
-  # $2.1: Boolean = $1.1
+  # $2.1: bool = $1.1
   mov [rbp-18], al
   # [discarded value]: $1.1
   # [live values]: self.1:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:rax 
@@ -71968,12 +71968,12 @@ last_index_of_397:
   jz .LABEL__last_index_of_397__6
 .LABEL__last_index_of_397__5:
   .loc 14 91 26
-  # $3.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $3.1: [i8; ?] = load_struct_member(self.1, data)
   mov rax, [rbp-17]
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:[rbp-18] $3.1:rbx 
   .loc 14 91 26
-  # $4.1: Int8 = load_array_item($3.1, index.2)
+  # $4.1: i8 = load_array_item($3.1, index.2)
   mov r15, rbx
   mov r14, [rbp-8]
   add r15, r14
@@ -71981,13 +71981,13 @@ last_index_of_397:
   # [discarded value]: $3.1
   # [live values]: self.1:rax:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:[rbp-18] $4.1:r15 
   .loc 14 91 26
-  # $5.1: Boolean = $4.1 != char.1
+  # $5.1: bool = $4.1 != char.1
   cmp r15b, BYTE PTR [rbp-9]
   setne bl
   # [discarded value]: $4.1
   # [live values]: self.1:rax:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:[rbp-18] $5.1:rbx 
   .loc 14 91 12
-  # $2.2: Boolean = $5.1
+  # $2.2: bool = $5.1
   mov [rbp-19], bl
   # [discarded value]: $5.1
   # [live values]: self.1:rax:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:[rbp-18] $2.2:rbx:[rbp-18] 
@@ -71995,7 +71995,7 @@ last_index_of_397:
   mov [rbp-18], bl
 .LABEL__last_index_of_397__6:
   .loc 14 91 12
-  # $2.3: Boolean = phi($2.1, $2.2)
+  # $2.3: bool = phi($2.1, $2.2)
   # [live values]: self.1:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:[rbp-18] $2.2:[rbp-18] $2.3:[rbp-18] 
   # jump($2.3, .LABEL__last_index_of_397__3, .LABEL__last_index_of_397__4)
   mov al, [rbp-18]
@@ -72003,12 +72003,12 @@ last_index_of_397:
   jz .LABEL__last_index_of_397__4
 .LABEL__last_index_of_397__3:
   .loc 14 92 17
-  # $6.1: Int = index.2 - 1
+  # $6.1: isize = index.2 - 1
   mov rax, [rbp-8]
   dec rax
   # [live values]: self.1:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:[rbp-18] $6.1:rax $2.2:[rbp-18] $2.3:[rbp-18] 
   .loc 14 92 9
-  # index.5: Int = $6.1
+  # index.5: isize = $6.1
   mov [rbp-26], rax
   # [discarded value]: $6.1
   # [live values]: self.1:[rbp-17] char.1:[rbp-9] index.1:[rbp-8] index.2:[rbp-8] $2.1:[rbp-18] index.5:rax:[rbp-8] $2.2:[rbp-18] $2.3:[rbp-18] 
@@ -72055,24 +72055,24 @@ append_398:
 .LABEL__append_398__1:
   # self.1: @String = load_variable(self)
   # [live values]: self.1:rdi 
-  # char.1: Int8 = load_variable(char)
+  # char.1: i8 = load_variable(char)
   # [live values]: self.1:rdi char.1:rsi 
   .loc 14 98 9
-  # $1.1: Int = load_struct_member(self.1, length)
+  # $1.1: isize = load_struct_member(self.1, length)
   mov rax, [rdi+16]
   # [live values]: self.1:rdi char.1:rsi $1.1:rax 
   .loc 14 98 9
-  # $2.1: Int = $1.1 + 1
+  # $2.1: isize = $1.1 + 1
   mov rbx, rax
   add rbx, 1
   # [discarded value]: $1.1
   # [live values]: self.1:rdi char.1:rsi $2.1:rbx 
   .loc 14 98 28
-  # $3.1: Int = load_struct_member(self.1, data_size)
+  # $3.1: isize = load_struct_member(self.1, data_size)
   mov rax, [rdi+8]
   # [live values]: self.1:rdi char.1:rsi $2.1:rbx $3.1:rax 
   .loc 14 98 9
-  # $4.1: Boolean = $2.1 >= $3.1
+  # $4.1: bool = $2.1 >= $3.1
   cmp rbx, rax
   setge r15b
   # [discarded value]: $3.1
@@ -72086,12 +72086,12 @@ append_398:
   jz .LABEL__append_398__3
 .LABEL__append_398__2:
   .loc 14 99 26
-  # $5.1: Int = load_struct_member(self.1, data_size)
+  # $5.1: isize = load_struct_member(self.1, data_size)
   mov rax, [rbp-9]
   mov rbx, [rax+8]
   # [live values]: self.1:rax:[rbp-9] char.1:[rbp-1] $4.1:[rbp-10] $5.1:rbx 
   .loc 14 99 26
-  # $6.1: Int = $5.1 + 16
+  # $6.1: isize = $5.1 + 16
   mov r15, rbx
   add r15, 16
   # [discarded value]: $5.1
@@ -72102,15 +72102,15 @@ append_398:
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-9] char.1:[rbp-1] $4.1:[rbp-10] 
   .loc 14 100 29
-  # $7.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $7.1: [i8; ?] = load_struct_member(self.1, data)
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-9] char.1:[rbp-1] $4.1:[rbp-10] $7.1:rbx 
   .loc 14 100 40
-  # $8.1: Int = load_struct_member(self.1, data_size)
+  # $8.1: isize = load_struct_member(self.1, data_size)
   mov r15, [rax+8]
   # [live values]: self.1:rax:[rbp-9] char.1:[rbp-1] $4.1:[rbp-10] $7.1:rbx $8.1:r15 
   .loc 14 100 21
-  # $10.1: [Int8; ?] = call(realloc, $7.1, $8.1)
+  # $10.1: [i8; ?] = call(realloc, $7.1, $8.1)
   mov rdi, rbx
   mov rsi, r15
   call realloc
@@ -72126,12 +72126,12 @@ append_398:
   # jump(.LABEL__append_398__3)
 .LABEL__append_398__3:
   .loc 14 102 15
-  # $11.1: Int = load_struct_member(self.1, length)
+  # $11.1: isize = load_struct_member(self.1, length)
   mov rax, [rbp-9]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-9] char.1:[rbp-1] $4.1:[rbp-10] $11.1:rbx 
   .loc 14 102 5
-  # $12.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $12.1: [i8; ?] = load_struct_member(self.1, data)
   mov r15, [rax]
   # [live values]: self.1:rax:[rbp-9] char.1:[rbp-1] $4.1:[rbp-10] $11.1:rbx $12.1:r15 
   .loc 14 102 5
@@ -72145,11 +72145,11 @@ append_398:
   # [discarded value]: $11.1
   # [live values]: self.1:rax:[rbp-9] char.1:r13:[rbp-1] $4.1:[rbp-10] 
   .loc 14 103 19
-  # $13.1: Int = load_struct_member(self.1, length)
+  # $13.1: isize = load_struct_member(self.1, length)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-9] char.1:r13:[rbp-1] $4.1:[rbp-10] $13.1:rbx 
   .loc 14 103 19
-  # $14.1: Int = $13.1 + 1
+  # $14.1: isize = $13.1 + 1
   mov r15, rbx
   add r15, 1
   # [discarded value]: $13.1
@@ -72160,11 +72160,11 @@ append_398:
   # [discarded value]: $14.1
   # [live values]: self.1:rax:[rbp-9] char.1:r13:[rbp-1] $4.1:[rbp-10] 
   .loc 14 104 15
-  # $15.1: Int = load_struct_member(self.1, length)
+  # $15.1: isize = load_struct_member(self.1, length)
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-9] char.1:r13:[rbp-1] $4.1:[rbp-10] $15.1:rbx 
   .loc 14 104 5
-  # $16.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $16.1: [i8; ?] = load_struct_member(self.1, data)
   mov r15, [rax]
   # [live values]: self.1:rax:[rbp-9] char.1:r13:[rbp-1] $4.1:[rbp-10] $15.1:rbx $16.1:r15 
   .loc 14 104 5
@@ -72203,10 +72203,10 @@ append_399:
 .LABEL__append_399__1:
   # self.1: @String = load_variable(self)
   # [live values]: self.1:rdi 
-  # number.1: Int = load_variable(number)
+  # number.1: isize = load_variable(number)
   # [live values]: self.1:rdi number.1:rsi 
   .loc 14 109 9
-  # $1.1: Boolean = number.1 < 0
+  # $1.1: bool = number.1 < 0
   cmp rsi, 0
   setl al
   # [live values]: self.1:rdi number.1:rsi $1.1:rax 
@@ -72224,7 +72224,7 @@ append_399:
   call append_398
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $2.1:rax 
   .loc 14 110 40
-  # $3.1: Int =  - number.1
+  # $3.1: isize =  - number.1
   mov rbx, [rbp-9]
   neg rbx
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $2.1:rax $3.1:rbx 
@@ -72244,7 +72244,7 @@ append_399:
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] 
 .LABEL__append_399__3:
   .loc 14 112 9
-  # $5.1: Boolean = number.1 >= 10
+  # $5.1: bool = number.1 >= 10
   cmp QWORD PTR [rbp-9], 10
   setge al
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:rax 
@@ -72254,7 +72254,7 @@ append_399:
   jz .LABEL__append_399__6
 .LABEL__append_399__5:
   .loc 14 113 21
-  # $6.1: Int = number.1 / 10
+  # $6.1: isize = number.1 / 10
   mov rax, [rbp-9]
   cqto
   mov rbx, 10
@@ -72271,26 +72271,26 @@ append_399:
   # jump(.LABEL__append_399__6)
 .LABEL__append_399__6:
   .loc 14 115 25
-  # $8.1: Int = number.1 // 10
+  # $8.1: isize = number.1 // 10
   mov rax, [rbp-9]
   cqto
   mov rbx, 10
   idiv rbx
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $8.1:rdx 
   .loc 14 115 40
-  # $9.1: Int = cast('0')
+  # $9.1: isize = cast('0')
   mov al, 48
   movsx rax, al
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $8.1:rdx $9.1:rax 
   .loc 14 115 25
-  # $10.1: Int = $8.1 + $9.1
+  # $10.1: isize = $8.1 + $9.1
   mov rbx, rdx
   add rbx, rax
   # [discarded value]: $9.1
   # [discarded value]: $8.1
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $10.1:rbx 
   .loc 14 115 24
-  # $11.1: Int8 = cast($10.1)
+  # $11.1: i8 = cast($10.1)
   mov rax, rbx
   # [discarded value]: $10.1
   # [live values]: self.1:[rbp-17] number.1:[rbp-9] $1.1:[rbp-1] $5.1:[rbp-18] $11.1:rax 
@@ -72335,26 +72335,26 @@ append_400:
   # other.1: @String = load_variable(other)
   # [live values]: self.1:rdi other.1:rsi 
   .loc 14 119 9
-  # $1.1: Int = load_struct_member(self.1, length)
+  # $1.1: isize = load_struct_member(self.1, length)
   mov rax, [rdi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax 
   .loc 14 119 23
-  # $2.1: Int = load_struct_member(other.1, length)
+  # $2.1: isize = load_struct_member(other.1, length)
   mov rbx, [rsi+16]
   # [live values]: self.1:rdi other.1:rsi $1.1:rax $2.1:rbx 
   .loc 14 119 9
-  # $3.1: Int = $1.1 + $2.1
+  # $3.1: isize = $1.1 + $2.1
   mov r15, rax
   add r15, rbx
   # [discarded value]: $2.1
   # [discarded value]: $1.1
   # [live values]: self.1:rdi other.1:rsi $3.1:r15 
   .loc 14 119 39
-  # $4.1: Int = load_struct_member(self.1, data_size)
+  # $4.1: isize = load_struct_member(self.1, data_size)
   mov rax, [rdi+8]
   # [live values]: self.1:rdi other.1:rsi $3.1:r15 $4.1:rax 
   .loc 14 119 9
-  # $5.1: Boolean = $3.1 >= $4.1
+  # $5.1: bool = $3.1 >= $4.1
   cmp r15, rax
   setge bl
   # [discarded value]: $4.1
@@ -72368,24 +72368,24 @@ append_400:
   jz .LABEL__append_400__3
 .LABEL__append_400__2:
   .loc 14 120 26
-  # $6.1: Int = load_struct_member(self.1, length)
+  # $6.1: isize = load_struct_member(self.1, length)
   mov rax, [rbp-17]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] $6.1:rbx 
   .loc 14 120 40
-  # $7.1: Int = load_struct_member(other.1, length)
+  # $7.1: isize = load_struct_member(other.1, length)
   mov r15, [rbp-9]
   mov r14, [r15+16]
   # [live values]: self.1:rax:[rbp-17] other.1:r15:[rbp-9] $5.1:[rbp-1] $6.1:rbx $7.1:r14 
   .loc 14 120 26
-  # $8.1: Int = $6.1 + $7.1
+  # $8.1: isize = $6.1 + $7.1
   mov r13, rbx
   add r13, r14
   # [discarded value]: $7.1
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-17] other.1:r15:[rbp-9] $5.1:[rbp-1] $8.1:r13 
   .loc 14 120 26
-  # $9.1: Int = $8.1 + 1
+  # $9.1: isize = $8.1 + 1
   mov rbx, r13
   add rbx, 1
   # [discarded value]: $8.1
@@ -72396,15 +72396,15 @@ append_400:
   # [discarded value]: $9.1
   # [live values]: self.1:rax:[rbp-17] other.1:r15:[rbp-9] $5.1:[rbp-1] 
   .loc 14 121 29
-  # $10.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $10.1: [i8; ?] = load_struct_member(self.1, data)
   mov rbx, [rax]
   # [live values]: self.1:rax:[rbp-17] other.1:r15:[rbp-9] $5.1:[rbp-1] $10.1:rbx 
   .loc 14 121 40
-  # $11.1: Int = load_struct_member(self.1, data_size)
+  # $11.1: isize = load_struct_member(self.1, data_size)
   mov r14, [rax+8]
   # [live values]: self.1:rax:[rbp-17] other.1:r15:[rbp-9] $5.1:[rbp-1] $10.1:rbx $11.1:r14 
   .loc 14 121 21
-  # $13.1: [Int8; ?] = call(realloc, $10.1, $11.1)
+  # $13.1: [i8; ?] = call(realloc, $10.1, $11.1)
   mov rdi, rbx
   mov rsi, r14
   call realloc
@@ -72420,21 +72420,21 @@ append_400:
   # jump(.LABEL__append_400__3)
 .LABEL__append_400__3:
   .loc 14 123 9
-  # index.1: Int = 0
+  # index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:rax 
   .loc 14 124 22
-  # other_data.1: [Int8; ?] = load_struct_member(other.1, data)
+  # other_data.1: [i8; ?] = load_struct_member(other.1, data)
   mov rbx, [rbp-9]
   mov r15, [rbx]
   # [live values]: self.1:[rbp-17] other.1:rbx:[rbp-9] $5.1:[rbp-1] index.1:rax other_data.1:r15 
   .loc 14 125 21
-  # self_data.1: [Int8; ?] = load_struct_member(self.1, data)
+  # self_data.1: [i8; ?] = load_struct_member(self.1, data)
   mov r14, [rbp-17]
   mov r13, [r14]
   # [live values]: self.1:r14:[rbp-17] other.1:rbx:[rbp-9] $5.1:[rbp-1] index.1:rax other_data.1:r15 self_data.1:r13 
   .loc 14 126 23
-  # self_length.1: Int = load_struct_member(self.1, length)
+  # self_length.1: isize = load_struct_member(self.1, length)
   mov r12, [r14+16]
   # [live values]: self.1:r14:[rbp-17] other.1:rbx:[rbp-9] $5.1:[rbp-1] index.1:rax other_data.1:r15 self_data.1:r13 self_length.1:r12 
   # jump(.LABEL__append_400__4)
@@ -72443,12 +72443,12 @@ append_400:
   mov [rbp-41], r13
   mov [rbp-49], r15
 .LABEL__append_400__4:
-  # self_length.2: Int = phi(self_length.1, self_length.4)
+  # self_length.2: isize = phi(self_length.1, self_length.4)
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] 
-  # index.2: Int = phi(index.1, index.4)
+  # index.2: isize = phi(index.1, index.4)
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] index.2:[rbp-25] 
   .loc 14 128 20
-  # char.1: Int8 = load_array_item(other_data.1, index.2)
+  # char.1: i8 = load_array_item(other_data.1, index.2)
   mov rax, [rbp-49]
   mov rbx, [rbp-25]
   add rax, rbx
@@ -72462,7 +72462,7 @@ append_400:
   mov BYTE PTR [rbx], al
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] index.2:[rbp-25] char.1:rax 
   .loc 14 130 13
-  # $18.1: Boolean = char.1 == '\0'
+  # $18.1: bool = char.1 == '\0'
   cmp al, 0
   sete bl
   # [discarded value]: char.1
@@ -72484,22 +72484,22 @@ append_400:
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] index.2:[rbp-25] $18.1:[rbp-50] 
 .LABEL__append_400__7:
   .loc 14 133 23
-  # $19.1: Int = self_length.2 + 1
+  # $19.1: isize = self_length.2 + 1
   mov rax, [rbp-33]
   add rax, 1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] index.2:[rbp-25] $18.1:[rbp-50] $19.1:rax 
   .loc 14 133 9
-  # self_length.4: Int = $19.1
+  # self_length.4: isize = $19.1
   mov [rbp-58], rax
   # [discarded value]: $19.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] index.2:[rbp-25] $18.1:[rbp-50] self_length.4:rax:[rbp-33] 
   .loc 14 134 17
-  # $20.1: Int = index.2 + 1
+  # $20.1: isize = index.2 + 1
   mov rbx, [rbp-25]
   add rbx, 1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] index.2:[rbp-25] $18.1:[rbp-50] self_length.4:rax:[rbp-33] $20.1:rbx 
   .loc 14 134 9
-  # index.4: Int = $20.1
+  # index.4: isize = $20.1
   mov [rbp-58], rbx
   # [discarded value]: $20.1
   # [live values]: self.1:[rbp-17] other.1:[rbp-9] $5.1:[rbp-1] index.1:[rbp-25] other_data.1:[rbp-49] self_data.1:[rbp-41] self_length.1:[rbp-33] self_length.2:[rbp-33] index.2:[rbp-25] $18.1:[rbp-50] self_length.4:rax:[rbp-33] index.4:rbx:[rbp-25] 
@@ -72545,17 +72545,17 @@ remove_401:
 .LABEL__remove_401__1:
   # self.1: @String = load_variable(self)
   # [live values]: self.1:rdi 
-  # begin_index.1: Int = load_variable(begin_index)
+  # begin_index.1: isize = load_variable(begin_index)
   # [live values]: self.1:rdi begin_index.1:rsi 
-  # end_index.1: Int = load_variable(end_index)
+  # end_index.1: isize = load_variable(end_index)
   # [live values]: self.1:rdi begin_index.1:rsi end_index.1:rdx 
   .loc 14 141 9
-  # $1.1: Boolean = begin_index.1 < 0
+  # $1.1: bool = begin_index.1 < 0
   cmp rsi, 0
   setl al
   # [live values]: self.1:rdi begin_index.1:rsi end_index.1:rdx $1.1:rax 
   .loc 14 141 9
-  # $2.1: Boolean = $1.1
+  # $2.1: bool = $1.1
   mov [rbp-1], al
   # [discarded value]: $1.1
   # [live values]: self.1:rdi begin_index.1:rsi end_index.1:rdx $2.1:rax 
@@ -72568,7 +72568,7 @@ remove_401:
   jz .LABEL__remove_401__4
 .LABEL__remove_401__5:
   .loc 14 141 9
-  # $4.1: Boolean = phi($2.1, $2.2)
+  # $4.1: bool = phi($2.1, $2.2)
   mov al, [rbp-1]
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.1:rax 
   # jump($4.1, .LABEL__remove_401__3, .LABEL__remove_401__2)
@@ -72577,7 +72577,7 @@ remove_401:
   jz .LABEL__remove_401__2
 .LABEL__remove_401__3:
   .loc 14 141 9
-  # $4.3: Boolean = phi($4.1, $4.2)
+  # $4.3: bool = phi($4.1, $4.2)
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] 
   # jump($4.3, .LABEL__remove_401__6, .LABEL__remove_401__7)
   mov al, [rbp-26]
@@ -72591,26 +72591,26 @@ remove_401:
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] 
 .LABEL__remove_401__7:
   .loc 14 144 9
-  # index.1: Int = 0
+  # index.1: isize = 0
   xor rax, rax
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:rax 
   # jump(.LABEL__remove_401__8)
   mov [rbp-34], rax
 .LABEL__remove_401__8:
-  # index.2: Int = phi(index.1, index.4)
+  # index.2: isize = phi(index.1, index.4)
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] 
   .loc 14 145 12
-  # $7.1: Int = index.2 + end_index.1
+  # $7.1: isize = index.2 + end_index.1
   mov rax, [rbp-34]
   add rax, QWORD PTR [rbp-9]
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $7.1:rax 
   .loc 14 145 33
-  # $8.1: Int = load_struct_member(self.1, length)
+  # $8.1: isize = load_struct_member(self.1, length)
   mov rbx, [rbp-25]
   mov r15, [rbx+16]
   # [live values]: self.1:rbx:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $7.1:rax $8.1:r15 
   .loc 14 145 12
-  # $9.1: Boolean = $7.1 <= $8.1
+  # $9.1: bool = $7.1 <= $8.1
   cmp rax, r15
   setle r14b
   # [discarded value]: $8.1
@@ -72622,26 +72622,26 @@ remove_401:
   jz .LABEL__remove_401__10
 .LABEL__remove_401__9:
   .loc 14 146 19
-  # $10.1: Int = begin_index.1 + index.2
+  # $10.1: isize = begin_index.1 + index.2
   mov rax, [rbp-17]
   add rax, QWORD PTR [rbp-34]
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] $10.1:rax 
   .loc 14 146 9
-  # $11.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $11.1: [i8; ?] = load_struct_member(self.1, data)
   mov rbx, [rbp-25]
   mov r15, [rbx]
   # [live values]: self.1:rbx:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] $10.1:rax $11.1:r15 
   .loc 14 146 52
-  # $12.1: Int = end_index.1 + index.2
+  # $12.1: isize = end_index.1 + index.2
   mov r14, [rbp-9]
   add r14, QWORD PTR [rbp-34]
   # [live values]: self.1:rbx:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] $10.1:rax $11.1:r15 $12.1:r14 
   .loc 14 146 42
-  # $13.1: [Int8; ?] = load_struct_member(self.1, data)
+  # $13.1: [i8; ?] = load_struct_member(self.1, data)
   mov r13, [rbx]
   # [live values]: self.1:rbx:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] $10.1:rax $11.1:r15 $12.1:r14 $13.1:r13 
   .loc 14 146 42
-  # $14.1: Int8 = load_array_item($13.1, $12.1)
+  # $14.1: i8 = load_array_item($13.1, $12.1)
   mov r12, r13
   mov r11, r14
   add r12, r11
@@ -72660,12 +72660,12 @@ remove_401:
   # [discarded value]: $10.1
   # [live values]: self.1:rbx:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] 
   .loc 14 147 17
-  # $15.1: Int = index.2 + 1
+  # $15.1: isize = index.2 + 1
   mov rax, [rbp-34]
   add rax, 1
   # [live values]: self.1:rbx:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] $15.1:rax 
   .loc 14 147 9
-  # index.4: Int = $15.1
+  # index.4: isize = $15.1
   mov [rbp-43], rax
   # [discarded value]: $15.1
   # [live values]: self.1:rbx:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] index.4:rax:[rbp-34] 
@@ -72677,12 +72677,12 @@ remove_401:
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] 
 .LABEL__remove_401__10:
   .loc 14 149 19
-  # $16.1: Int = begin_index.1 + index.2
+  # $16.1: isize = begin_index.1 + index.2
   mov rax, [rbp-17]
   add rax, QWORD PTR [rbp-34]
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.3:[rbp-26] $4.1:[rbp-26] index.1:[rbp-34] index.2:[rbp-34] $9.1:[rbp-35] $16.1:rax 
   .loc 14 149 19
-  # $17.1: Int = $16.1 - 1
+  # $17.1: isize = $16.1 - 1
   mov rbx, rax
   dec rbx
   # [discarded value]: $16.1
@@ -72708,18 +72708,18 @@ remove_401:
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.1:[rbp-26] 
 .LABEL__remove_401__2:
   .loc 14 141 68
-  # $5.1: Int = load_struct_member(self.1, length)
+  # $5.1: isize = load_struct_member(self.1, length)
   mov rax, [rbp-25]
   mov rbx, [rax+16]
   # [live values]: self.1:rax:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $5.1:rbx $4.1:[rbp-26] 
   .loc 14 141 55
-  # $6.1: Boolean = end_index.1 >= $5.1
+  # $6.1: bool = end_index.1 >= $5.1
   cmp QWORD PTR [rbp-9], rbx
   setge r15b
   # [discarded value]: $5.1
   # [live values]: self.1:rax:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $6.1:r15 $4.1:[rbp-26] 
   .loc 14 141 9
-  # $4.2: Boolean = $6.1
+  # $4.2: bool = $6.1
   mov [rbp-27], r15b
   # [discarded value]: $6.1
   # [live values]: self.1:rax:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $4.2:r15:[rbp-26] $4.1:[rbp-26] 
@@ -72734,13 +72734,13 @@ remove_401:
   # [live values]: self.1:[rbp-25] begin_index.1:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] 
 .LABEL__remove_401__4:
   .loc 14 141 28
-  # $3.1: Boolean = begin_index.1 > end_index.1
+  # $3.1: bool = begin_index.1 > end_index.1
   mov rax, [rbp-17]
   cmp rax, QWORD PTR [rbp-9]
   setg bl
   # [live values]: self.1:[rbp-25] begin_index.1:rax:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $3.1:rbx 
   .loc 14 141 9
-  # $2.2: Boolean = $3.1
+  # $2.2: bool = $3.1
   mov [rbp-26], bl
   # [discarded value]: $3.1
   # [live values]: self.1:[rbp-25] begin_index.1:rax:[rbp-17] end_index.1:[rbp-9] $2.1:[rbp-1] $2.2:rbx:[rbp-1] 
@@ -74007,44 +74007,44 @@ remove_401__stack_frame_size: .word 48
   .align 8
 .LABEL__string_177:
   .quad .LABEL__string_177__data
-  .quad 8
-  .quad 7
-.LABEL__string_177__data: .string "Boolean"
+  .quad 5
+  .quad 4
+.LABEL__string_177__data: .string "bool"
 
   .align 8
 .LABEL__string_178:
   .quad .LABEL__string_178__data
-  .quad 4
-  .quad 3
-.LABEL__string_178__data: .string "Int"
+  .quad 6
+  .quad 5
+.LABEL__string_178__data: .string "isize"
 
   .align 8
 .LABEL__string_179:
   .quad .LABEL__string_179__data
-  .quad 5
-  .quad 4
-.LABEL__string_179__data: .string "Int8"
+  .quad 3
+  .quad 2
+.LABEL__string_179__data: .string "i8"
 
   .align 8
 .LABEL__string_180:
   .quad .LABEL__string_180__data
-  .quad 6
-  .quad 5
-.LABEL__string_180__data: .string "Int16"
+  .quad 4
+  .quad 3
+.LABEL__string_180__data: .string "i16"
 
   .align 8
 .LABEL__string_181:
   .quad .LABEL__string_181__data
-  .quad 6
-  .quad 5
-.LABEL__string_181__data: .string "Int32"
+  .quad 4
+  .quad 3
+.LABEL__string_181__data: .string "i32"
 
   .align 8
 .LABEL__string_182:
   .quad .LABEL__string_182__data
-  .quad 6
-  .quad 5
-.LABEL__string_182__data: .string "Int64"
+  .quad 4
+  .quad 3
+.LABEL__string_182__data: .string "i64"
 
   .align 8
 .LABEL__string_183:

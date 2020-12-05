@@ -3,7 +3,7 @@
 define Parser = struct {
     scanner: Scanner = null
     compilation_unit: Compilation_Unit = new Compilation_Unit()
-    current_alignment: Int = 0
+    current_alignment: isize = 0
     anonymous_functions_counter: !Counter = Counter()
 }
 
@@ -750,7 +750,7 @@ define consume_end_of_line = func (self: Parser) -> Nothing {
     }
 }
 
-define consume_empty_line = func (self: Parser) -> Boolean {
+define consume_empty_line = func (self: Parser) -> bool {
     if (self.matches(optional_space, optional_comment, required_end_of_line)) {
         if (self.matches(optional_space, required_comment)) {
             self.consume_space(self.current_alignment * 4)
@@ -764,8 +764,8 @@ define consume_empty_line = func (self: Parser) -> Boolean {
     return false
 }
 
-define consume_space = func (self: Parser, expected_space_count: Int) -> Nothing {
-    let space_count: Int
+define consume_space = func (self: Parser, expected_space_count: isize) -> Nothing {
+    let space_count: isize
     let token = self.scanner.current_token
     if (token.is(Space_Token)) {
         self.scanner.next_token()
@@ -818,19 +818,19 @@ define consume = func (self: Parser, first_matcher: Matcher, second_matcher: Mat
     return first_token
 }
 
-define matches_end_of_line = func (self: Parser) -> Boolean {
+define matches_end_of_line = func (self: Parser) -> bool {
     return self.matches(optional_space, optional_comment, required_end_of_line)
 }
 
-define matches = func (self: Parser, first_matcher: Matcher) -> Boolean {
+define matches = func (self: Parser, first_matcher: Matcher) -> bool {
     return self.matches(first_matcher, null)
 }
 
-define matches = func (self: Parser, first_matcher: Matcher, second_matcher: Matcher) -> Boolean {
+define matches = func (self: Parser, first_matcher: Matcher, second_matcher: Matcher) -> bool {
     return self.matches(first_matcher, second_matcher, null)
 }
 
-define matches = func (self: Parser, first_matcher: Matcher, second_matcher: Matcher, third_matcher: Matcher) -> Boolean {
+define matches = func (self: Parser, first_matcher: Matcher, second_matcher: Matcher, third_matcher: Matcher) -> bool {
     let token = self.scanner.current_token
     let peek_offset = 0
     if (first_matcher.accepts(token)) {
@@ -860,15 +860,15 @@ define matches = func (self: Parser, first_matcher: Matcher, second_matcher: Mat
 
 define Matcher = struct {
     extends Object
-    is_required: Boolean
-    accepts: func (self: Matcher, token: Token) -> Boolean = func (self: Matcher, token: Token) -> Boolean {
+    is_required: bool
+    accepts: func (self: Matcher, token: Token) -> bool = func (self: Matcher, token: Token) -> bool {
         abort(token.location, "Invalid state")
     }
 }
 
 define Comment_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             return token.is(Comment_Token)
         }
     )
@@ -876,7 +876,7 @@ define Comment_Matcher = struct {
 
 define End_Of_File_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             return token.is(End_Of_File_Token)
         }
     )
@@ -884,7 +884,7 @@ define End_Of_File_Matcher = struct {
 
 define End_Of_Line_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             return token.is(End_Of_Line_Token)
         }
     )
@@ -892,7 +892,7 @@ define End_Of_Line_Matcher = struct {
 
 define Identifier_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             return token.is(Identifier_Token)
         }
     )
@@ -900,7 +900,7 @@ define Identifier_Matcher = struct {
 
 define Keyword_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             if (token.is(Identifier_Token)) {
                 return token.lexeme.equals((self as Keyword_Matcher).lexeme)
             }
@@ -912,7 +912,7 @@ define Keyword_Matcher = struct {
 
 define Literal_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token) || token.is(Undefined_Token)
         }
     )
@@ -920,7 +920,7 @@ define Literal_Matcher = struct {
 
 define Other_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             if (token.is(Other_Token)) {
                 return token.lexeme.equals((self as Other_Matcher).lexeme)
             }
@@ -932,7 +932,7 @@ define Other_Matcher = struct {
 
 define Space_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             return token.is(Space_Token)
         }
     )
@@ -940,7 +940,7 @@ define Space_Matcher = struct {
 
 define String_Literal_Matcher = struct {
     extends Matcher(
-        accepts = func (self: Matcher, token: Token) -> Boolean {
+        accepts = func (self: Matcher, token: Token) -> bool {
             return token.is(String_Token)
         }
     )

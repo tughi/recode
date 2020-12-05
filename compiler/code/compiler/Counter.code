@@ -1,10 +1,10 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define Counter = struct {
-    value: Int = 0
+    value: isize = 0
 }
 
-define next = func (self: Counter) -> Int {
+define next = func (self: Counter) -> isize {
     self.value = self.value + 1
     return self.value
 }

@@ -2,9 +2,9 @@
 
 define Scanner = struct {
     source: Source
-    current_char_index: Int = 0
-    current_line: Int = 1
-    current_column: Int = 1
+    current_char_index: isize = 0
+    current_line: isize = 1
+    current_column: isize = 1
     current_token: Token = undefined
 }
 
@@ -14,7 +14,7 @@ define create_scanner = func (source: Source) -> Scanner {
     return scanner
 }
 
-define peek_token = func (self: Scanner, offset: Int) -> Token {
+define peek_token = func (self: Scanner, offset: isize) -> Token {
     if (offset < 0) {
         abort("Invalid state")
     }
@@ -39,11 +39,11 @@ define next_token = func (self: Scanner) -> Token {
     return self.current_token
 }
 
-define peek_char = func (self: Scanner) -> Int8 {
+define peek_char = func (self: Scanner) -> i8 {
     return self.source.content[self.current_char_index]
 }
 
-define next_char = func (self: Scanner) -> Int8 {
+define next_char = func (self: Scanner) -> i8 {
     let next_char = self.source.content[self.current_char_index]
     if (next_char != '\0') {
         self.current_char_index = self.current_char_index + 1
@@ -92,26 +92,26 @@ define scan_token = func (self: Scanner) -> Token {
     return new Other_Token(lexeme = token_lexeme, location = token_location)
 }
 
-define is_digit = func (char: Int8) -> Boolean {
-    return char as Int >= '0' as Int && char as Int <= '9' as Int
+define is_digit = func (char: i8) -> bool {
+    return char as isize >= '0' as isize && char as isize <= '9' as isize
 }
 
-define is_identifier_start = func (char: Int8) -> Boolean {
+define is_identifier_start = func (char: i8) -> bool {
     return char.is_letter() || char == '_'
 }
 
-define is_identifier_body = func (char: Int8) -> Boolean {
+define is_identifier_body = func (char: i8) -> bool {
     if (char.is_identifier_start()) {
         return true
     }
     return char.is_digit()
 }
 
-define is_letter = func (char: Int8) -> Boolean {
-    return (char as Int >= 'a' as Int && char as Int <= 'z' as Int) || (char as Int >= 'A' as Int && char as Int <= 'Z' as Int)
+define is_letter = func (char: i8) -> bool {
+    return (char as isize >= 'a' as isize && char as isize <= 'z' as isize) || (char as isize >= 'A' as isize && char as isize <= 'Z' as isize)
 }
 
-define is_space = func (char: Int8) -> Boolean {
+define is_space = func (char: i8) -> bool {
     return char == ' '
 }
 
@@ -120,7 +120,7 @@ define scan_character_token = func (self: Scanner, token_lexeme: String, token_l
         abort("Invalid state")
     }
 
-    let value: Int8
+    let value: i8
     token_lexeme.append(self.next_char())
     let char = self.next_char()
     token_lexeme.append(char)
@@ -167,7 +167,7 @@ define scan_character_token = func (self: Scanner, token_lexeme: String, token_l
     return new Character_Token(lexeme = token_lexeme, location = token_location, value = value)
 }
 
-define is_escape = func (char: Int8) -> Boolean {
+define is_escape = func (char: i8) -> bool {
     return char == 'n' || char == 't' || char == '\"' || char == '\'' || char == '\\' || char == '0'
 }
 
@@ -201,7 +201,7 @@ define scan_integer_token = func (self: Scanner, token_lexeme: String, token_loc
     let value = 0
     while (self.peek_char().is_digit()) {
         let char = self.next_char()
-        value = value * 10 + (char as Int - '0' as Int)
+        value = value * 10 + (char as isize - '0' as isize)
         token_lexeme.append(char)
     }
     return new Integer_Token(lexeme = token_lexeme, location = token_location, value = value)

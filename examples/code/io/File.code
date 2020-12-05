@@ -4,7 +4,7 @@ define write = func (self: FILE, string: String) -> FILE {
 
 include "../lang/String.code"
 
-define write = func (file: FILE, chars: [Int8; ?]) -> FILE {
+define write = func (file: FILE, chars: [i8; ?]) -> FILE {
     let index = 0
     loop {
         let char = chars[index]
@@ -16,18 +16,18 @@ define write = func (file: FILE, chars: [Int8; ?]) -> FILE {
     }
 }
 
-define write = func (file: FILE, number: Int) -> FILE {
+define write = func (file: FILE, number: isize) -> FILE {
     if (number < 0) {
         return file.write('-').write(-number)
     }
     if (number >= 10) {
         file.write(number / 10)
     }
-    return file.write((number // 10 + '0' as Int) as Int8)
+    return file.write((number // 10 + '0' as isize) as i8)
 }
 
-define write = func (file: FILE, char: Int8) -> FILE {
-    fputc(char as Int32, file)
+define write = func (file: FILE, char: i8) -> FILE {
+    fputc(char as i32, file)
     return file
 }
 
@@ -39,4 +39,4 @@ define FILE = unknown struct
 
 let stdout: FILE = external
 
-define fputc = func (char: Int32, file: FILE) -> Int32
+define fputc = func (char: i32, file: FILE) -> i32

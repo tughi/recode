@@ -1,6 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-define main = func (argc: Int, argv: [[Int8; ?]; ?]) -> Nothing {
+define main = func (argc: isize, argv: [[i8; ?]; ?]) -> Nothing {
     if (argc < 3) {
         stdout.write("Usage:").end_line()
         stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").end_line()
@@ -74,7 +74,7 @@ define write = func (file: FILE, compilation_unit: Compilation_Unit) -> FILE {
     return file
 }
 
-define write = func (file: FILE, statement: AST_Statement, alignment: Int) -> FILE {
+define write = func (file: FILE, statement: AST_Statement, alignment: isize) -> FILE {
     if (statement.is(AST_Assignment_Statement)) {
         let statement = statement as AST_Assignment_Statement
         return file.write(statement.storage_expression).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
@@ -186,7 +186,7 @@ define write = func (file: FILE, statement: AST_Statement, alignment: Int) -> FI
     abort(statement.location, "Unsupported AST_Statement type: ".clone().append(statement.object_type.name))
 }
 
-define write_source_line = func (file: FILE, location: Source_Location, alignment: Int) -> FILE {
+define write_source_line = func (file: FILE, location: Source_Location, alignment: isize) -> FILE {
     file.write(location.source.file_path).write(':')
     let line = location.line
     if (line < 1000) {
@@ -333,14 +333,14 @@ include "./code/compiler/Token.code"
 
 define write = func (file: FILE, token: Token) -> FILE {
     if (token.is(Other_Token)) {
-        file.write(27 as Int8).write("[2;37m")
+        file.write(27 as i8).write("[2;37m")
     } else if (token.is(Literal_Token)) {
-        file.write(27 as Int8).write("[1;33m")
+        file.write(27 as i8).write("[1;33m")
     } else if (token.is(Comment_Token)) {
-        file.write(27 as Int8).write("[2;33m")
+        file.write(27 as i8).write("[2;33m")
     }
     file.write(token.lexeme)
-    file.write(27 as Int8).write("[0m")
+    file.write(27 as i8).write("[0m")
     return file
 }
 
@@ -359,14 +359,14 @@ define write_line = func (file: FILE, string: String) -> FILE {
     return file.end_line().write(string)
 }
 
-define write = func (self: FILE, number: Int) -> FILE {
+define write = func (self: FILE, number: isize) -> FILE {
     if (number < 0) {
         return self.write('-').write(-number)
     }
     if (number >= 10) {
         self.write(number / 10)
     }
-    fputc((number // 10 + '0' as Int) as Int32, self)
+    fputc((number // 10 + '0' as isize) as i32, self)
     return self
 }
 
@@ -374,18 +374,18 @@ define write = func (self: FILE, string: String) -> FILE {
     return self.write(string.data)
 }
 
-define write = func (self: FILE, chars: [Int8; ?]) -> FILE {
-    if (fputs(chars, self) as Int < 0) {
+define write = func (self: FILE, chars: [i8; ?]) -> FILE {
+    if (fputs(chars, self) as isize < 0) {
         stderr.end_line().end_line().write("Failed to write text").end_line()
         abort()
     }
     return self
 }
 
-define write = func (self: FILE, char: Int8) -> FILE {
-    let c = char as Int32
+define write = func (self: FILE, char: i8) -> FILE {
+    let c = char as i32
     if (fputc(c, self) != c) {
-        stderr.end_line().end_line().write("Failed to write character: ").write(c as Int).end_line()
+        stderr.end_line().end_line().write("Failed to write character: ").write(c as isize).end_line()
         abort()
     }
     return self

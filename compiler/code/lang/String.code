@@ -1,12 +1,12 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define String = struct {
-    data: [Int8; ?] = malloc(16) as [Int8; ?]
-    data_size: Int = 16
-    length: Int = 0
+    data: [i8; ?] = malloc(16) as [i8; ?]
+    data_size: isize = 16
+    length: isize = 0
 }
 
-define create_string = func (data: [Int8; ?]) -> String {
+define create_string = func (data: [i8; ?]) -> String {
     let data_length = 0
     loop {
         let char = data[data_length]
@@ -20,12 +20,12 @@ define create_string = func (data: [Int8; ?]) -> String {
 }
 
 define clone = func (self: String) -> String {
-    let clone = new String(data = malloc(self.data_size) as [Int8; ?], data_size = self.data_size)
+    let clone = new String(data = malloc(self.data_size) as [i8; ?], data_size = self.data_size)
     clone.append(self)
     return clone
 }
 
-define equals = func (self: String, other: String) -> Boolean {
+define equals = func (self: String, other: String) -> bool {
     if (self.length == other.length) {
         let index = 0
         while (index < self.length) {
@@ -39,7 +39,7 @@ define equals = func (self: String, other: String) -> Boolean {
     return false
 }
 
-define index_of = func (self: String, other: String) -> Int {
+define index_of = func (self: String, other: String) -> isize {
     let self_index = 0
     while (self_index <= self.length - other.length) {
         let other_index = 0
@@ -54,7 +54,7 @@ define index_of = func (self: String, other: String) -> Int {
     return -1
 }
 
-define starts_with = func (self: String, other: String) -> Boolean {
+define starts_with = func (self: String, other: String) -> bool {
     if (self.length < other.length) {
         return false
     }
@@ -68,7 +68,7 @@ define starts_with = func (self: String, other: String) -> Boolean {
     return true
 }
 
-define ends_with = func (self: String, other: String) -> Boolean {
+define ends_with = func (self: String, other: String) -> bool {
     if (self.length < other.length) {
         return false
     }
@@ -82,11 +82,11 @@ define ends_with = func (self: String, other: String) -> Boolean {
     return true
 }
 
-define last_index_of = func (self: String, char: Int8) -> Int {
+define last_index_of = func (self: String, char: i8) -> isize {
     return self.last_index_of(char, self.length - 1)
 }
 
-define last_index_of = func (self: String, char: Int8, from_index: Int) -> Int {
+define last_index_of = func (self: String, char: i8, from_index: isize) -> isize {
     let index = from_index
     while (index >= 0 && self.data[index] != char) {
         index = index - 1
@@ -94,10 +94,10 @@ define last_index_of = func (self: String, char: Int8, from_index: Int) -> Int {
     return index
 }
 
-define append = func (self: String, char: Int8) -> String {
+define append = func (self: String, char: i8) -> String {
     if (self.length + 1 >= self.data_size) {
         self.data_size = self.data_size + 16
-        self.data = realloc(self.data, self.data_size) as [Int8; ?]
+        self.data = realloc(self.data, self.data_size) as [i8; ?]
     }
     self.data[self.length] = char
     self.length = self.length + 1
@@ -105,20 +105,20 @@ define append = func (self: String, char: Int8) -> String {
     return self
 }
 
-define append = func (self: String, number: Int) -> String {
+define append = func (self: String, number: isize) -> String {
     if (number < 0) {
         return self.append('-').append(-number)
     }
     if (number >= 10) {
         self.append(number / 10)
     }
-    return self.append((number // 10 + '0' as Int) as Int8)
+    return self.append((number // 10 + '0' as isize) as i8)
 }
 
 define append = func (self: String, other: String) -> String {
     if (self.length + other.length >= self.data_size) {
         self.data_size = self.length + other.length + 1
-        self.data = realloc(self.data, self.data_size) as [Int8; ?]
+        self.data = realloc(self.data, self.data_size) as [i8; ?]
     }
     let index = 0
     let other_data = other.data
@@ -137,7 +137,7 @@ define append = func (self: String, other: String) -> String {
     return self
 }
 
-define remove = func (self: String, begin_index: Int, end_index: Int) -> String {
+define remove = func (self: String, begin_index: isize, end_index: isize) -> String {
     if (begin_index < 0 || begin_index > end_index || end_index >= self.length) {
         abort("Invalid state")
     }

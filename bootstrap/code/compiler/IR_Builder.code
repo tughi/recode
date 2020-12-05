@@ -53,12 +53,12 @@ define IR_Loop = struct {
 define create_ir_builder = func (compilation_unit: Compilation_Unit) -> IR_Builder {
     let types = new List()
     types.append(new IR_Any_Type(name = "Any"))
-    types.append(new IR_Boolean_Type(name = "Boolean"))
-    types.append(new IR_Int_Type(name = "Int"))
-    types.append(new IR_Int8_Type(name = "Int8"))
-    types.append(new IR_Int16_Type(name = "Int16"))
-    types.append(new IR_Int32_Type(name = "Int32"))
-    types.append(new IR_Int64_Type(name = "Int64"))
+    types.append(new IR_Boolean_Type(name = "bool"))
+    types.append(new IR_Int_Type(name = "isize"))
+    types.append(new IR_Int8_Type(name = "i8"))
+    types.append(new IR_Int16_Type(name = "i16"))
+    types.append(new IR_Int32_Type(name = "i32"))
+    types.append(new IR_Int64_Type(name = "i64"))
     types.append(new IR_Nothing_Type(name = "Nothing"))
     types.append(new IR_Null_Type(name = "Null"))
     types.append(new IR_Undefined_Type(name = "Undefined"))
@@ -211,7 +211,7 @@ define get_named_function = func (self: IR_Builder, name: String, function_type:
     return function
 }
 
-define accepts = func (self: IR_Type, other: IR_Type) -> Boolean {
+define accepts = func (self: IR_Type, other: IR_Type) -> bool {
     if (self == other || other.is(IR_Undefined_Type)) {
         return true
     }
@@ -774,7 +774,7 @@ define convert_statement = func (self: IR_Builder, statement: AST_Statement) -> 
 define convert_assignment_statement = func (self: IR_Builder, assignment_statement: AST_Assignment_Statement) -> Nothing {
     if (assignment_statement.storage_expression.is(AST_Array_Access_Expression)) {
         let array_access_expression = assignment_statement.storage_expression as AST_Array_Access_Expression
-        let array_item_index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("Int"))
+        let array_item_index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("isize"))
         let array_address = self.convert_expression_address(array_access_expression.array_expression)
         if (array_address.type.is(IR_Unchecked_Array_Type)) {
             let array_item_type = (array_address.type as IR_Unchecked_Array_Type).item_type
@@ -838,7 +838,7 @@ define convert_expression_statement = func (self: IR_Builder, statement: AST_Exp
 }
 
 define convert_if_statement = func (self: IR_Builder, statement: AST_If_Statement) -> Nothing {
-    let condition_value = self.convert_expression(statement.condition_expression, self.get_named_type("Boolean"))
+    let condition_value = self.convert_expression(statement.condition_expression, self.get_named_type("bool"))
     let true_block = self.current_block.function.create_block()
     let end_block = self.current_block.function.create_block()
     if (statement.false_statement != null) {
@@ -882,7 +882,7 @@ define convert_return_statement = func (self: IR_Builder, statement: AST_Return_
     self.current_block = self.current_block.function.create_block()
 }
 
-define convert_variable_statement = func (self: IR_Builder, variable_statement: AST_Variable_Statement, is_global: Boolean) -> Nothing {
+define convert_variable_statement = func (self: IR_Builder, variable_statement: AST_Variable_Statement, is_global: bool) -> Nothing {
     let variable_name = variable_statement.name.lexeme
     let variable_type: IR_Type = null
     if (variable_statement.type != null) {
@@ -943,7 +943,7 @@ define convert_while_statement = func (self: IR_Builder, statement: AST_While_St
     let end_block = self.current_block.function.create_block()
     self.current_block.append_jump(condition_block)
     self.current_block = condition_block
-    let condition_value = self.convert_expression(statement.condition_expression, self.get_named_type("Boolean"))
+    let condition_value = self.convert_expression(statement.condition_expression, self.get_named_type("bool"))
     self.current_block.append_jump(condition_value, loop_block, end_block)
     self.current_block = loop_block
     self.current_loop = new IR_Loop(parent = self.current_loop, end_block = end_block)
@@ -972,8 +972,8 @@ define convert_expression_address = func (self: IR_Builder, expression: AST_Expr
 }
 
 define convert_add_expression = func (self: IR_Builder, expression: AST_Add_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -981,7 +981,7 @@ define convert_add_expression = func (self: IR_Builder, expression: AST_Add_Expr
 }
 
 define convert_array_access_expression = func (self: IR_Builder, array_access_expression: AST_Array_Access_Expression) -> IR_Value {
-    let index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("Int"))
+    let index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("isize"))
     let object_value = self.convert_expression(array_access_expression.array_expression, null)
     let object_value_type = object_value.type
     if ((object_value_type.is(IR_Unchecked_Array_Type))) {
@@ -1107,7 +1107,7 @@ define convert_dynamic_call_expression = func (self: IR_Builder, call_expression
     return self.append(create_ir_dynamic_call_instruction(result_value, call_arguments, call_function as IR_Variable_Value), call_expression.location)
 }
 
-define accepts = func (self: IR_Function_Type, call_arguments: List) -> Boolean {
+define accepts = func (self: IR_Function_Type, call_arguments: List) -> bool {
     let call_arguments_item = call_arguments.first_item
     let function_parameters_item = self.parameters.first_item
     while (call_arguments_item != null && function_parameters_item != null && (function_parameters_item.data as IR_Function_Type_Parameter).type.accepts((call_arguments_item.data as IR_Call_Argument).value.type)) {
@@ -1157,8 +1157,8 @@ define convert_cast_expression = func (self: IR_Builder, cast_expression: AST_Ca
 }
 
 define convert_divide_expression = func (self: IR_Builder, expression: AST_Divide_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1174,7 +1174,7 @@ define convert_equals_expression = func (self: IR_Builder, expression: AST_Equal
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
 define convert_function_expression = func (self: IR_Builder, expression: AST_Function_Expression) -> IR_Value {
@@ -1195,50 +1195,50 @@ define convert_function_expression = func (self: IR_Builder, expression: AST_Fun
 }
 
 define convert_greater_than_expression = func (self: IR_Builder, expression: AST_Greater_Than_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
 define convert_greater_than_or_equals_expression = func (self: IR_Builder, expression: AST_Greater_Than_Or_Equals_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Greater_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Greater_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
 define convert_less_than_expression = func (self: IR_Builder, expression: AST_Less_Than_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Less_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
 define convert_less_than_or_equals_expression = func (self: IR_Builder, expression: AST_Less_Than_Or_Equals_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
 define convert_literal_expression = func (self: IR_Builder, expression: AST_Literal_Expression) -> IR_Value {
     if (expression.literal.is(Boolean_Token)) {
-        return new IR_Constant_Value(type = self.get_named_type("Boolean"), literal = expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("bool"), literal = expression.literal)
     }
     if (expression.literal.is(Character_Token)) {
-        return new IR_Constant_Value(type = self.get_named_type("Int8"), literal = expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("i8"), literal = expression.literal)
     }
     if (expression.literal.is(Integer_Token)) {
-        return new IR_Constant_Value(type = self.get_named_type("Int"), literal = expression.literal)
+        return new IR_Constant_Value(type = self.get_named_type("isize"), literal = expression.literal)
     }
     if (expression.literal.is(Null_Token)) {
         return new IR_Constant_Value(type = self.get_named_type("Null"), literal = expression.literal)
@@ -1255,13 +1255,13 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
 define convert_logic_and_expression = func (self: IR_Builder, expression: AST_Logic_And_Expression) -> IR_Value {
     let next_block = self.current_block.function.create_block()
     let end_block = self.current_block.function.create_block()
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Boolean"))
-    let result_variable = self.create_temp_variable(self.get_named_type("Boolean"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("bool"))
+    let result_variable = self.create_temp_variable(self.get_named_type("bool"))
     let result_value_left = self.create_variable_value(result_variable)
     self.append(create_ir_set_instruction(result_value_left, left_value), expression.location)
     self.current_block.append_jump(result_value_left, next_block, end_block)
     self.current_block = next_block
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Boolean"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("bool"))
     self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), expression.location)
     self.current_block.append_jump(end_block)
     self.current_block = end_block
@@ -1271,13 +1271,13 @@ define convert_logic_and_expression = func (self: IR_Builder, expression: AST_Lo
 define convert_logic_or_expression = func (self: IR_Builder, expression: AST_Logic_Or_Expression) -> IR_Value {
     let next_block = self.current_block.function.create_block()
     let end_block = self.current_block.function.create_block()
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Boolean"))
-    let result_variable = self.create_temp_variable(self.get_named_type("Boolean"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("bool"))
+    let result_variable = self.create_temp_variable(self.get_named_type("bool"))
     let result_value_left = self.create_variable_value(result_variable)
     self.append(create_ir_set_instruction(result_value_left, left_value), expression.location)
     self.current_block.append_jump(result_value_left, end_block, next_block)
     self.current_block = next_block
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Boolean"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("bool"))
     self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), expression.location)
     self.current_block.append_jump(end_block)
     self.current_block = end_block
@@ -1354,8 +1354,8 @@ define convert_member_access_expression_address = func (self: IR_Builder, member
 }
 
 define convert_modulo_expression = func (self: IR_Builder, expression: AST_Modulo_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1363,8 +1363,8 @@ define convert_modulo_expression = func (self: IR_Builder, expression: AST_Modul
 }
 
 define convert_multiply_expression = func (self: IR_Builder, expression: AST_Multiply_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1372,7 +1372,7 @@ define convert_multiply_expression = func (self: IR_Builder, expression: AST_Mul
 }
 
 define convert_negate_expression = func (self: IR_Builder, expression: AST_Negate_Expression) -> IR_Value {
-    let value = self.convert_expression(expression.expression, self.get_named_type("Int"))
+    let value = self.convert_expression(expression.expression, self.get_named_type("isize"))
     return self.append(
         new IR_Substract_Instruction(result_value = self.create_temp_value(value.type)).init(
             new IR_Constant_Value(
@@ -1463,12 +1463,12 @@ define convert_not_equals_expression = func (self: IR_Builder, expression: AST_N
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
-    return self.append(new IR_Not_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("Boolean"))).init(left_value, right_value), expression.location)
+    return self.append(new IR_Not_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
 define convert_substract_expression = func (self: IR_Builder, expression: AST_Substract_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("Int"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("Int"))
+    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
+    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }

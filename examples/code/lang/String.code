@@ -1,5 +1,5 @@
 define String = struct {
-    data: [Int8; ?] = undefined
-    data_size: Int = undefined
-    length: Int = undefined
+    data: [i8; ?] = undefined
+    data_size: isize = undefined
+    length: isize = undefined
 }

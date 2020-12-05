@@ -1,4 +1,4 @@
-define main = func () -> Int {
+define main = func () -> isize {
     let value: Any = "String"
     return (value as String).length - 6
 }

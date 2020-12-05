@@ -2,12 +2,12 @@ include "./code/io/File.code"
 
 define Expression = struct {
     dump: func (self: Expression) -> Nothing
-    evaluate: func (self: Expression) -> Int = null
+    evaluate: func (self: Expression) -> isize = null
 }
 
 define Int_Expression = struct {
     extends Expression(dump = dump_int, evaluate = evaluate_int)
-    value: Int
+    value: isize
 }
 
 define dump_int = func (self: Expression) -> Nothing {
@@ -15,7 +15,7 @@ define dump_int = func (self: Expression) -> Nothing {
     stdout.write(self.value)
 }
 
-define evaluate_int = func (self: Expression) -> Int {
+define evaluate_int = func (self: Expression) -> isize {
     let self = self as Int_Expression
     return self.value
 }
@@ -40,7 +40,7 @@ define Addition_Expression = struct {
     extends Binary_Expression(operator = "+", evaluate = evaluate_addition)
 }
 
-define evaluate_addition = func (self: Expression) -> Int {
+define evaluate_addition = func (self: Expression) -> isize {
     let self = self as Addition_Expression
     return self.left_expression.evaluate() + self.right_expression.evaluate()
 }
@@ -49,7 +49,7 @@ define Substraction_Expression = struct {
     extends Binary_Expression(operator = "-", evaluate = evaluate_substraction)
 }
 
-define evaluate_substraction = func (self: Expression) -> Int {
+define evaluate_substraction = func (self: Expression) -> isize {
     let self = self as Substraction_Expression
     return self.left_expression.evaluate() - self.right_expression.evaluate()
 }

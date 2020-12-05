@@ -13,12 +13,12 @@ define Literal_Token = struct {
 
 define Character_Token = struct {
     extends Literal_Token
-    value: Int8
+    value: i8
 }
 
 define Boolean_Token = struct {
     extends Literal_Token
-    value: Boolean
+    value: bool
 }
 
 define Comment_Token = struct {
@@ -43,7 +43,7 @@ define Identifier_Token = struct {
 
 define Integer_Token = struct {
     extends Literal_Token
-    value: Int
+    value: isize
 }
 
 define Null_Token = struct {
@@ -56,7 +56,7 @@ define Other_Token = struct {
 
 define Space_Token = struct {
     extends Token
-    count: Int
+    count: isize
 }
 
 define String_Token = struct {

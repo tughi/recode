@@ -119,7 +119,7 @@ define get_member = func (self: IR_Struct_Type, name: String) -> IR_Struct_Type_
     }
 }
 
-define is_base_type = func (self: IR_Struct_Type, other: IR_Struct_Type) -> Boolean {
+define is_base_type = func (self: IR_Struct_Type, other: IR_Struct_Type) -> bool {
     let struct_type = other
     loop {
         if (self == struct_type.base_type) {
@@ -132,7 +132,7 @@ define is_base_type = func (self: IR_Struct_Type, other: IR_Struct_Type) -> Bool
     }
 }
 
-define is_object_type = func (self: IR_Struct_Type) -> Boolean {
+define is_object_type = func (self: IR_Struct_Type) -> bool {
     let struct_type = self
     loop {
         if (struct_type.name.equals("Object")) {
@@ -157,7 +157,7 @@ define IR_Value = struct {
     }
 }
 
-define write = func (file: FILE, value: IR_Value, check_users: Boolean) -> FILE {
+define write = func (file: FILE, value: IR_Value, check_users: bool) -> FILE {
     if (check_users && value.user_instructions.size == 0) {
         file.flush()
         if (value.is(IR_Variable_Value)) {
@@ -285,7 +285,7 @@ define IR_Variable_Value = struct {
         }
     )
     variable: IR_Variable
-    version: Int
+    version: isize
 }
 
 define init = func (self: IR_Variable_Value, variable: IR_Variable) -> IR_Variable_Value {
@@ -317,16 +317,16 @@ define IR_Function_Address_Value = struct {
 
 define IR_Block = struct {
     extends Object
-    id: Int
+    id: isize
     function: IR_Function
     predecessors: List = new List()
     first_instruction: IR_Instruction = null
     last_instruction: IR_Instruction = null
-    is_being_generated: Boolean = false
-    is_generated: Boolean = false
+    is_being_generated: bool = false
+    is_generated: bool = false
 }
 
-define has_instructions = func (self: IR_Block) -> Boolean {
+define has_instructions = func (self: IR_Block) -> bool {
     return self.first_instruction != null
 }
 
@@ -420,13 +420,13 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
 
 define IR_Function = struct {
     extends Object
-    id: Int
+    id: isize
     location: Source_Location
     name: String
     parameters: List
     return_type: IR_Type
     type: IR_Function_Type
-    is_external: Boolean
+    is_external: bool
     blocks: List
 }
 
@@ -466,7 +466,7 @@ define IR_Variable = struct {
 define IR_Global_Variable = struct {
     extends IR_Variable
     value: IR_Value
-    is_external: Boolean
+    is_external: bool
 }
 
 define IR_Function_Parameter = struct {
@@ -481,7 +481,7 @@ define IR_Instruction = struct {
     parent_block: IR_Block = undefined
     prev_instruction: IR_Instruction = null
     next_instruction: IR_Instruction = null
-    is_generated: Boolean = false
+    is_generated: bool = false
     dump: func (self: IR_Instruction, file: FILE, prefix: String) -> FILE = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(instruction.object_type.name))
@@ -495,7 +495,7 @@ define dump_ir_instruction_result = func (self: IR_Instruction, file: FILE, pref
     }
 }
 
-define is_exit_instruction = func (self: IR_Instruction) -> Boolean {
+define is_exit_instruction = func (self: IR_Instruction) -> bool {
     if (self == null) {
         return false
     }
@@ -538,7 +538,7 @@ include "./IR_Values_Map.code"
 
 define IR_Call_Instruction = struct {
     extends IR_Instruction
-    arguments_size: Int = 0
+    arguments_size: isize = 0
 }
 
 define dump_ir_call_instruction_arguments = func (instruction: IR_Call_Instruction, file: FILE) -> Nothing {
@@ -565,11 +565,11 @@ define add_arguments = func (self: IR_Call_Instruction, call_arguments: List) ->
     return self
 }
 
-define get_argument_value = func (self: IR_Call_Instruction, index: Int) -> IR_Value {
+define get_argument_value = func (self: IR_Call_Instruction, index: isize) -> IR_Value {
     return self.operand_values.get(get_argument_key(index))
 }
 
-define get_argument_key = func (index: Int) -> String {
+define get_argument_key = func (index: isize) -> String {
     if (index == 0) {
         return "argument-0-value"
     } else if (index == 1) {
@@ -727,10 +727,10 @@ define IR_Load_Struct_Member_Instruction = struct {
         }
     )
     struct_type_member: IR_Struct_Type_Member
-    load_address: Boolean
+    load_address: bool
 }
 
-define create_ir_load_struct_member_instruction = func (result_value: IR_Variable_Value, struct_pointer_value: IR_Value, struct_type_member: IR_Struct_Type_Member, load_address: Boolean) -> IR_Load_Struct_Member_Instruction {
+define create_ir_load_struct_member_instruction = func (result_value: IR_Variable_Value, struct_pointer_value: IR_Value, struct_type_member: IR_Struct_Type_Member, load_address: bool) -> IR_Load_Struct_Member_Instruction {
     let instruction = new IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     result_value.creator_instruction = instruction
@@ -1080,7 +1080,7 @@ define append = func (self: IR_Phi_Instruction, value: IR_Value) -> Nothing {
     self.set_operand_value(value, value)
 }
 
-define is_redundant = func (self: IR_Phi_Instruction) -> Boolean {
+define is_redundant = func (self: IR_Phi_Instruction) -> bool {
     \ redundant phi instruction:
     \   v.1 = phi(v.2)
 
@@ -1099,7 +1099,7 @@ define is_redundant = func (self: IR_Phi_Instruction) -> Boolean {
     return true
 }
 
-define is_trivial = func (self: IR_Phi_Instruction) -> Boolean {
+define is_trivial = func (self: IR_Phi_Instruction) -> bool {
     \ trivial phi instructions:
     \   v.1 = phi(v.1)
     \   v.1 = phi(v.1, v.2)

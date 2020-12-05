@@ -3,7 +3,7 @@
 define List = struct {
     first_item: List_Item = null
     last_item: List_Item = null
-    size: Int = 0
+    size: isize = 0
 }
 
 define append = func (self: List, data: Any) -> Nothing {
@@ -84,7 +84,7 @@ define replace = func (self: List, data: Any, new_data: Any) -> Nothing {
     }
 }
 
-define contains = func (self: List, data: Any) -> Boolean {
+define contains = func (self: List, data: Any) -> bool {
     let item = self.first_item
     while (item != null) {
         if (item.data == data) {
@@ -95,7 +95,7 @@ define contains = func (self: List, data: Any) -> Boolean {
     return false
 }
 
-define index_of = func (self: List, data: Any) -> Int {
+define index_of = func (self: List, data: Any) -> isize {
     let index = 0
     let item = self.first_item
     while (item != null) {
@@ -108,7 +108,7 @@ define index_of = func (self: List, data: Any) -> Int {
     return -1
 }
 
-define get = func (self: List, index: Int) -> Any {
+define get = func (self: List, index: isize) -> Any {
     if (index >= self.size || index < 0) {
         return null
     }
@@ -138,7 +138,7 @@ define List_Item = struct {
     prev_item: List_Item = null
     next_item: List_Item = null
     data: Any
-    is_removed: Boolean = false
+    is_removed: bool = false
 }
 
 define List_Iterator = struct {
@@ -161,7 +161,7 @@ define remove_current = func (self: List_Iterator) -> Nothing {
     self.current_item.is_removed = true
 }
 
-define has_next = func (self: List_Iterator) -> Boolean {
+define has_next = func (self: List_Iterator) -> bool {
     return self.next_item != null
 }
 

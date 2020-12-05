@@ -737,7 +737,7 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(0).end_line()
             }
         } else if (ir_value.literal.is(Character_Token)) {
-            self.output_file.write("  mov ").write(register.name_b).write(", ").write((ir_value.literal as Character_Token).value as Int).end_line()
+            self.output_file.write("  mov ").write(register.name_b).write(", ").write((ir_value.literal as Character_Token).value as isize).end_line()
         } else if (ir_value.literal.is(Integer_Token)) {
             let literal = ir_value.literal as Integer_Token
             if (literal.value == 0) {
@@ -873,7 +873,7 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
         let struct_type = ir_value_type as IR_Struct_Type
         let destination_register: MC_Register
         let destination_address: MC_Register_Based_Address
-        let destination_address_extra_offset: Int
+        let destination_address_extra_offset: isize
         if (address.is(MC_Register_Based_Address)) {
             let address = address as MC_Register_Based_Address
             destination_register = null
@@ -894,7 +894,7 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
             }
             let source_register: MC_Register
             let source_address: MC_Register_Based_Address
-            let source_address_extra_offset: Int
+            let source_address_extra_offset: isize
             let mc_value_address = mc_value.address
             if (mc_value_address.is(MC_Register_Based_Address)) {
                 let mc_value_address = mc_value_address as MC_Register_Based_Address
@@ -985,7 +985,7 @@ define generate_store_struct_literal_value = func (self: MC_Generator, ir_value:
     }
 }
 
-define get_offset = func (self: MC_Generator, struct_type_member: IR_Struct_Type_Member) -> Int {
+define get_offset = func (self: MC_Generator, struct_type_member: IR_Struct_Type_Member) -> isize {
     let offset = 0
     let struct_type = struct_type_member.struct_type
     if (struct_type.base_type != null) {
@@ -1013,7 +1013,7 @@ define write_operand = func (file: FILE, generator: MC_Generator, ir_value: IR_V
             return file.write(0)
         }
         if (ir_value.literal.is(Character_Token)) {
-            return file.write((ir_value.literal as Character_Token).value as Int)
+            return file.write((ir_value.literal as Character_Token).value as isize)
         }
         if (ir_value.literal.is(Integer_Token)) {
             return file.write((ir_value.literal as Integer_Token).value)
@@ -1073,7 +1073,7 @@ define abort = func (self: MC_Generator, message: String) -> Nothing {
 define MC_Generator = struct {
     output_file_path: String
     output_file: FILE
-    output_debug_comments: Boolean
+    output_debug_comments: bool
     register_rax: MC_Register = new MC_Register_RAX(name_q = "rax", name_d = "eax", name_w = "ax", name_b = "al")
     register_rcx: MC_Register = new MC_Register_RCX(name_q = "rcx", name_d = "ecx", name_w = "cx", name_b = "cl")
     register_rdx: MC_Register = new MC_Register_RDX(name_q = "rdx", name_d = "edx", name_w = "dx", name_b = "dl")
@@ -1092,7 +1092,7 @@ define MC_Generator = struct {
     register_r15: MC_Register = new MC_Register_R15(name_q = "r15", name_d = "r15d", name_w = "r15w", name_b = "r15b")
     first_value: MC_Value = null
     last_value: MC_Value = null
-    stack_frame_size: Int = 0
+    stack_frame_size: isize = 0
     strings: List = new List()
 }
 
@@ -1241,7 +1241,7 @@ define spill_local_variable = func (self: MC_Generator, mc_value: MC_Value) -> N
     }
 }
 
-define create_local_variable_address = func (self: MC_Generator, variable_type_size: Int) -> MC_Local_Variable_Address {
+define create_local_variable_address = func (self: MC_Generator, variable_type_size: isize) -> MC_Local_Variable_Address {
     let offset = 0
     let mc_value = self.first_value
     while (mc_value != null) {
@@ -1312,7 +1312,7 @@ define release_register = func (self: MC_Generator, register: MC_Register) -> No
     }
 }
 
-define discard_used_values = func (self: MC_Generator) -> Int {
+define discard_used_values = func (self: MC_Generator) -> isize {
     let removed_values = 0
 
     let mc_value = self.last_value
@@ -1372,7 +1372,7 @@ define discard_used_values = func (self: MC_Generator) -> Int {
     return removed_values
 }
 
-define is_used = func (self: IR_Value) -> Boolean {
+define is_used = func (self: IR_Value) -> bool {
     let user_instructions_item = self.user_instructions.first_item
     while (user_instructions_item != null) {
         let user_instruction = user_instructions_item.data as IR_Instruction
@@ -1464,7 +1464,7 @@ define MC_Register = struct {
     name_d: String
     name_w: String
     name_b: String
-    is_reserved: Boolean = false
+    is_reserved: bool = false
     value: MC_Value = null
     loaded_value: MC_Value = null
 }
@@ -1574,14 +1574,14 @@ define MC_Global_Variable_Address = struct {
 define MC_Register_Based_Address = struct {
     extends MC_Address
     register: MC_Register
-    offset: Int = 0
+    offset: isize = 0
 }
 
 define MC_Local_Variable_Address = struct {
     extends MC_Register_Based_Address
 }
 
-define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> Int {
+define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> isize {
     if (ir_type.is(IR_Boolean_Type)) {
         return 1
     }
@@ -1626,7 +1626,7 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> Int {
 }
 
 define MC_String = struct {
-    id: Int
+    id: isize
     literal: String_Token
 }
 
