@@ -972,8 +972,11 @@ define convert_expression_address = func (self: IR_Builder, expression: AST_Expr
 }
 
 define convert_add_expression = func (self: IR_Builder, expression: AST_Add_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1144,21 +1147,18 @@ define convert_cast_expression = func (self: IR_Builder, cast_expression: AST_Ca
     if (value.type.is(IR_Pointer_Type) && (result_value.type.is(IR_Pointer_Type) || result_value.type.is(IR_Unchecked_Array_Type))) {
         return self.append(create_ir_set_instruction(result_value, value), cast_expression.location)
     }
-    if (value.type.is(IR_Int_Type) && (result_value.type.is(IR_Int32_Type) || result_value.type.is(IR_Int8_Type))) {
-        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
-    }
-    if (value.type.is(IR_Int32_Type) && (result_value.type.is(IR_Int_Type) || result_value.type.is(IR_Int8_Type))) {
-        return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
-    }
-    if (value.type.is(IR_Int8_Type) && (result_value.type.is(IR_Int_Type) || result_value.type.is(IR_Int32_Type))) {
+    if (value.type.is(IR_Integer_Type) && result_value.type.is(IR_Integer_Type)) {
         return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
     }
     abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
 }
 
 define convert_divide_expression = func (self: IR_Builder, expression: AST_Divide_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1168,7 +1168,7 @@ define convert_divide_expression = func (self: IR_Builder, expression: AST_Divid
 define convert_equals_expression = func (self: IR_Builder, expression: AST_Equals_Expression) -> IR_Value {
     let left_value = self.convert_expression(expression.left_expression, null)
     let right_value = self.convert_expression(expression.right_expression, null)
-    if (left_value.type != right_value.type && (left_value.type.is(IR_Pointer_Type) && right_value.type.is(IR_Null_Type) == false)) {
+    if (left_value.type != right_value.type && (left_value.type.is(IR_Pointer_Type) == false || right_value.type.is(IR_Null_Type) == false)) {
         abort(expression.location, "Operands are not the same type")
     }
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
@@ -1195,8 +1195,11 @@ define convert_function_expression = func (self: IR_Builder, expression: AST_Fun
 }
 
 define convert_greater_than_expression = func (self: IR_Builder, expression: AST_Greater_Than_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1204,8 +1207,11 @@ define convert_greater_than_expression = func (self: IR_Builder, expression: AST
 }
 
 define convert_greater_than_or_equals_expression = func (self: IR_Builder, expression: AST_Greater_Than_Or_Equals_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1213,8 +1219,11 @@ define convert_greater_than_or_equals_expression = func (self: IR_Builder, expre
 }
 
 define convert_less_than_expression = func (self: IR_Builder, expression: AST_Less_Than_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1222,8 +1231,11 @@ define convert_less_than_expression = func (self: IR_Builder, expression: AST_Le
 }
 
 define convert_less_than_or_equals_expression = func (self: IR_Builder, expression: AST_Less_Than_Or_Equals_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1354,8 +1366,11 @@ define convert_member_access_expression_address = func (self: IR_Builder, member
 }
 
 define convert_modulo_expression = func (self: IR_Builder, expression: AST_Modulo_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1363,8 +1378,11 @@ define convert_modulo_expression = func (self: IR_Builder, expression: AST_Modul
 }
 
 define convert_multiply_expression = func (self: IR_Builder, expression: AST_Multiply_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
@@ -1372,7 +1390,10 @@ define convert_multiply_expression = func (self: IR_Builder, expression: AST_Mul
 }
 
 define convert_negate_expression = func (self: IR_Builder, expression: AST_Negate_Expression) -> IR_Value {
-    let value = self.convert_expression(expression.expression, self.get_named_type("isize"))
+    let value = self.convert_expression(expression.expression, null)
+    if (value.type.is(IR_Integer_Type) == false) {
+        abort(expression.expression.location, "Not an integer value")
+    }
     return self.append(
         new IR_Substract_Instruction(result_value = self.create_temp_value(value.type)).init(
             new IR_Constant_Value(
@@ -1457,7 +1478,7 @@ define get_named_argument = func (list: List, name: String) -> IR_Call_Argument 
 define convert_not_equals_expression = func (self: IR_Builder, expression: AST_Not_Equals_Expression) -> IR_Value {
     let left_value = self.convert_expression(expression.left_expression, null)
     let right_value = self.convert_expression(expression.right_expression, null)
-    if (left_value.type != right_value.type && (left_value.type.is(IR_Pointer_Type) && right_value.type.is(IR_Null_Type) == false)) {
+    if (left_value.type != right_value.type && (left_value.type.is(IR_Pointer_Type) == false || right_value.type.is(IR_Null_Type) == false)) {
         abort(expression.location, "Operands are not the same type")
     }
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
@@ -1467,8 +1488,11 @@ define convert_not_equals_expression = func (self: IR_Builder, expression: AST_N
 }
 
 define convert_substract_expression = func (self: IR_Builder, expression: AST_Substract_Expression) -> IR_Value {
-    let left_value = self.convert_expression(expression.left_expression, self.get_named_type("isize"))
-    let right_value = self.convert_expression(expression.right_expression, self.get_named_type("isize"))
+    let left_value = self.convert_expression(expression.left_expression, null)
+    if (left_value.type.is(IR_Integer_Type) == false) {
+        abort(expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.is(IR_Constant_Value) && right_value.is(IR_Constant_Value)) {
         abort(expression.location, "TODO: Evaluate constant expression")
     }
