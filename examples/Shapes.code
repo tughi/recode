@@ -2,7 +2,7 @@ let shape: Shape = undefined
 
 let polygon: !Polygon
 
-define main = func () -> isize {
+define main = func () -> i32 {
     shape = new Rectangle()
     if (shape.is(Polygon) == false) {
         return 1
@@ -29,7 +29,7 @@ define Circle = struct {
 
 define Polygon = struct {
     extends Shape
-    sides: isize
+    sides: i32
 }
 
 define Triangle = struct {

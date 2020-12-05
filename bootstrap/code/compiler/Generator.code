@@ -188,7 +188,40 @@ define generate_add_instruction = func (self: MC_Generator, instruction: IR_Add_
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, instruction.get_left_value())
     self.map_variable_value(instruction.result_value, result_register)
-    self.output_file.write("  add ").write(result_register.name_q).write(", ").write_operand(self, instruction.get_right_value()).end_line()
+    let type_size = self.get_type_size(instruction.result_value.type)
+    let right_value = instruction.get_right_value()
+    if (right_value.is(IR_Constant_Value)) {
+        let right_value = right_value as IR_Constant_Value
+        if ((right_value.literal as Integer_Token).value == 1) {
+            self.output_file.write("  inc ")
+            if (type_size == 8) {
+                self.output_file.write(result_register.name_q)
+            } else if (type_size == 4) {
+                self.output_file.write(result_register.name_d)
+            } else if (type_size == 2) {
+                self.output_file.write(result_register.name_w)
+            } else if (type_size == 1) {
+                self.output_file.write(result_register.name_b)
+            } else {
+                self.abort(clone("Unsupported type size: ").append(type_size))
+            }
+            self.output_file.end_line()
+            return
+        }
+    }
+    self.output_file.write("  add ")
+    if (type_size == 8) {
+        self.output_file.write(result_register.name_q)
+    } else if (type_size == 4) {
+        self.output_file.write(result_register.name_d)
+    } else if (type_size == 2) {
+        self.output_file.write(result_register.name_w)
+    } else if (type_size == 1) {
+        self.output_file.write(result_register.name_b)
+    } else {
+        self.abort(clone("Unsupported type size: ").append(type_size))
+    }
+    self.output_file.write(", ").write_operand(self, instruction.get_right_value()).end_line()
 }
 
 define generate_call_instruction = func (self: MC_Generator, instruction: IR_Call_Instruction) -> Nothing {
@@ -233,31 +266,85 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
     self.generate_load_value(result_register, ir_value)
     self.map_variable_value(instruction.result_value, result_register)
     if (instruction.result_value.type.is(IR_Int_Type)) {
+        if (ir_value.type.is(IR_Int_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int16_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_w).end_line()
+            return
+        }
         if (ir_value.type.is(IR_Int32_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int64_Type)) {
             return
         }
         if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
             return
         }
+        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
     }
-    if (instruction.result_value.type.is(IR_Int32_Type)) {
+    if (instruction.result_value.type.is(IR_Int16_Type)) {
         if (ir_value.type.is(IR_Int_Type)) {
+            return
+        }
+        if (ir_value.type.is(IR_Int16_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int32_Type)) {
+            return
+        }
+        if (ir_value.type.is(IR_Int64_Type)) {
             return
         }
         if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
             return
         }
+        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
+    }
+    if (instruction.result_value.type.is(IR_Int32_Type)) {
+        if (ir_value.type.is(IR_Int_Type)) {
+            return
+        }
+        if (ir_value.type.is(IR_Int16_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_w).end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int32_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int64_Type)) {
+            return
+        }
+        if (ir_value.type.is(IR_Int8_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
+            return
+        }
+        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
     }
     if (instruction.result_value.type.is(IR_Int8_Type)) {
         if (ir_value.type.is(IR_Int_Type)) {
             return
         }
+        if (ir_value.type.is(IR_Int16_Type)) {
+            return
+        }
         if (ir_value.type.is(IR_Int32_Type)) {
             return
         }
+        if (ir_value.type.is(IR_Int64_Type)) {
+            return
+        }
+        if (ir_value.type.is(IR_Int8_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+        }
+        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
     }
     self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
 }
@@ -354,13 +441,34 @@ define generate_divide_instruction = func (self: MC_Generator, instruction: IR_D
     self.register_rax.is_reserved = true
     self.release_register(self.register_rdx)
     self.register_rdx.is_reserved = true
-    self.output_file.write("  cqto").end_line()
+
+    let type_size = self.get_type_size(instruction.result_value.type)
+    if (type_size == 8) {
+        self.output_file.write("  cqo").end_line()
+    } else if (type_size == 4) {
+        self.output_file.write("  cdq").end_line()
+    } else if (type_size == 2) {
+        self.output_file.write("  cwd").end_line()
+    } else {
+        self.abort(clone("Unsupported type size: ").append(type_size))
+    }
+
     let right_value = instruction.get_right_value()
     if (right_value.is(IR_Constant_Value)) {
         let register = self.find_unused_register()
         register.is_reserved = true
         self.generate_load_value(register, right_value)
-        self.output_file.write("  idiv ").write(register.name_q).end_line()
+        self.output_file.write("  idiv ")
+        if (type_size == 8) {
+            self.output_file.write(register.name_q)
+        } else if (type_size == 4) {
+            self.output_file.write(register.name_d)
+        } else if (type_size == 2) {
+            self.output_file.write(register.name_w)
+        } else {
+            self.abort(clone("Unsupported type size: ").append(type_size))
+        }
+        self.output_file.end_line()
         register.is_reserved = false
     } else {
         self.output_file.write("  idiv ").write_operand(self, right_value).end_line()
@@ -506,13 +614,34 @@ define generate_modulo_instruction = func (self: MC_Generator, instruction: IR_M
     self.register_rax.is_reserved = true
     self.release_register(self.register_rdx)
     self.register_rdx.is_reserved = true
-    self.output_file.write("  cqto").end_line()
+
+    let type_size = self.get_type_size(instruction.result_value.type)
+    if (type_size == 8) {
+        self.output_file.write("  cqo").end_line()
+    } else if (type_size == 4) {
+        self.output_file.write("  cdq").end_line()
+    } else if (type_size == 2) {
+        self.output_file.write("  cwd").end_line()
+    } else {
+        self.abort(clone("Unsupported type size: ").append(type_size))
+    }
+
     let right_value = instruction.get_right_value()
     if (right_value.is(IR_Constant_Value)) {
         let register = self.find_unused_register()
         register.is_reserved = true
         self.generate_load_value(register, right_value)
-        self.output_file.write("  idiv ").write(register.name_q).end_line()
+        self.output_file.write("  idiv ")
+        if (type_size == 8) {
+            self.output_file.write(register.name_q)
+        } else if (type_size == 4) {
+            self.output_file.write(register.name_d)
+        } else if (type_size == 2) {
+            self.output_file.write(register.name_w)
+        } else {
+            self.abort(clone("Unsupported type size: ").append(type_size))
+        }
+        self.output_file.end_line()
         register.is_reserved = false
     } else {
         self.output_file.write("  idiv ").write_operand(self, right_value).end_line()
@@ -526,7 +655,20 @@ define generate_multiply_instruction = func (self: MC_Generator, instruction: IR
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, instruction.get_left_value())
     self.map_variable_value(instruction.result_value, result_register)
-    self.output_file.write("  imul ").write(result_register.name_q).write(", ").write_operand(self, instruction.get_right_value()).end_line()
+    self.output_file.write("  imul ")
+    let type_size = self.get_type_size(instruction.result_value.type)
+    if (type_size == 8) {
+        self.output_file.write(result_register.name_q)
+    } else if (type_size == 4) {
+        self.output_file.write(result_register.name_d)
+    } else if (type_size == 2) {
+        self.output_file.write(result_register.name_w)
+    } else if (type_size == 1) {
+        self.output_file.write(result_register.name_b)
+    } else {
+        self.abort(clone("Unsupported type size: ").append(type_size))
+    }
+    self.output_file.write(", ").write_operand(self, instruction.get_right_value()).end_line()
 }
 
 define generate_new_instruction = func (self: MC_Generator, instruction: IR_New_Instruction) -> Nothing {
@@ -694,13 +836,26 @@ define generate_store_struct_member_instruction = func (self: MC_Generator, inst
 
 define generate_substract_instruction = func (self: MC_Generator, instruction: IR_Substract_Instruction) -> Nothing {
     let result_register = self.find_unused_register()
+    let type_size = self.get_type_size(instruction.result_value.type)
     let left_value = instruction.get_left_value()
     let right_value = instruction.get_right_value()
     if (left_value.is(IR_Constant_Value)) {
         let left_value = left_value as IR_Constant_Value
         if ((left_value.literal as Integer_Token).value == 0) {
             self.generate_load_value(result_register, right_value)
-            self.output_file.write("  neg ").write(result_register.name_q).end_line()
+            self.output_file.write("  neg ")
+            if (type_size == 8) {
+                self.output_file.write(result_register.name_q)
+            } else if (type_size == 4) {
+                self.output_file.write(result_register.name_d)
+            } else if (type_size == 2) {
+                self.output_file.write(result_register.name_w)
+            } else if (type_size == 1) {
+                self.output_file.write(result_register.name_b)
+            } else {
+                self.abort(clone("Unsupported type size: ").append(type_size))
+            }
+            self.output_file.end_line()
             self.map_variable_value(instruction.result_value, result_register)
             return
         }
@@ -710,11 +865,35 @@ define generate_substract_instruction = func (self: MC_Generator, instruction: I
     if (right_value.is(IR_Constant_Value)) {
         let right_value = right_value as IR_Constant_Value
         if ((right_value.literal as Integer_Token).value == 1) {
-            self.output_file.write("  dec ").write(result_register.name_q).end_line()
+            self.output_file.write("  dec ")
+            if (type_size == 8) {
+                self.output_file.write(result_register.name_q)
+            } else if (type_size == 4) {
+                self.output_file.write(result_register.name_d)
+            } else if (type_size == 2) {
+                self.output_file.write(result_register.name_w)
+            } else if (type_size == 1) {
+                self.output_file.write(result_register.name_b)
+            } else {
+                self.abort(clone("Unsupported type size: ").append(type_size))
+            }
+            self.output_file.end_line()
             return
         }
     }
-    self.output_file.write("  sub ").write(result_register.name_q).write(", ").write_operand(self, right_value).end_line()
+    self.output_file.write("  sub ")
+    if (type_size == 8) {
+        self.output_file.write(result_register.name_q)
+    } else if (type_size == 4) {
+        self.output_file.write(result_register.name_d)
+    } else if (type_size == 2) {
+        self.output_file.write(result_register.name_w)
+    } else if (type_size == 1) {
+        self.output_file.write(result_register.name_b)
+    } else {
+        self.abort(clone("Unsupported type size: ").append(type_size))
+    }
+    self.output_file.write(", ").write_operand(self, right_value).end_line()
 }
 
 define generate_load_value = func (self: MC_Generator, register: MC_Register, ir_value: IR_Value) -> Nothing {
@@ -770,6 +949,8 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Int_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
+            } else if (ir_value_type.is(IR_Int16_Type)) {
+                self.output_file.write("  mov ").write(register.name_w).write(", ").write(mc_value.register.name_w).end_line()
             } else if (ir_value_type.is(IR_Int32_Type)) {
                 self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.register.name_d).end_line()
             } else if (ir_value_type.is(IR_Int8_Type)) {
@@ -860,6 +1041,12 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
     } else if (ir_value_type.is(IR_Int_Type)) {
+        self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Int16_Type)) {
+        self.output_file.write("  mov WORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Int32_Type)) {
+        self.output_file.write("  mov DWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_Int64_Type)) {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else if (ir_value_type.is(IR_Int8_Type)) {
         self.output_file.write("  mov BYTE PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
@@ -1705,7 +1892,7 @@ define generate_global_variables = func (self: MC_Generator, variables: List) ->
     let variables_item = variables.last_item
     while (variables_item != null) {
         let variable = variables_item.data as IR_Variable
-        if (variable.is(IR_Global_Variable) == null) {
+        if (variable.is(IR_Global_Variable) == false) {
             self.abort("Invalid state")
         }
         let variable = variable as IR_Global_Variable

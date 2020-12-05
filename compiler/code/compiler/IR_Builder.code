@@ -1242,7 +1242,7 @@ define convert_less_than_or_equals_expression = func (self: IR_Builder, expressi
     return self.append(new IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
-define convert_literal_expression = func (self: IR_Builder, expression: AST_Literal_Expression) -> IR_Value {
+define convert_literal_expression = func (self: IR_Builder, expression: AST_Literal_Expression, expected_type: IR_Type) -> IR_Value {
     if (expression.literal.is(Boolean_Token)) {
         return new IR_Constant_Value(type = self.get_named_type("bool"), literal = expression.literal)
     }
@@ -1250,7 +1250,10 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
         return new IR_Constant_Value(type = self.get_named_type("i8"), literal = expression.literal)
     }
     if (expression.literal.is(Integer_Token)) {
-        return new IR_Constant_Value(type = self.get_named_type("isize"), literal = expression.literal)
+        if (expected_type == null || expected_type.is(IR_Integer_Type) == false) {
+            expected_type = self.get_named_type("isize")
+        }
+        return new IR_Constant_Value(type = expected_type, literal = expression.literal)
     }
     if (expression.literal.is(Null_Token)) {
         return new IR_Constant_Value(type = self.get_named_type("Null"), literal = expression.literal)

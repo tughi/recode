@@ -13,24 +13,28 @@ define IR_Boolean_Type = struct {
     extends IR_Type
 }
 
-define IR_Int_Type = struct {
+define IR_Integer_Type = struct {
     extends IR_Type
+}
+
+define IR_Int_Type = struct {
+    extends IR_Integer_Type
 }
 
 define IR_Int8_Type = struct {
-    extends IR_Type
+    extends IR_Integer_Type
 }
 
 define IR_Int16_Type = struct {
-    extends IR_Type
+    extends IR_Integer_Type
 }
 
 define IR_Int32_Type = struct {
-    extends IR_Type
+    extends IR_Integer_Type
 }
 
 define IR_Int64_Type = struct {
-    extends IR_Type
+    extends IR_Integer_Type
 }
 
 define IR_Nothing_Type = struct {

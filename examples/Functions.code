@@ -21,12 +21,12 @@ define Value = struct {
 define Int_Value = struct {
     extends Value(dump = dump_int)
 
-    value: isize
+    value: i32
 }
 
 define dump_int = func (self: Value, file: FILE) -> Nothing {
     let self = self as Int_Value
-    file.write("isize: ").write(self.value).end_line()
+    file.write("Int: ").write(self.value).end_line()
 }
 
 define String_Value = struct {

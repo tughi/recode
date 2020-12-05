@@ -17,13 +17,13 @@ define write = func (file: FILE, chars: [i8; ?]) -> FILE {
 }
 
 define write = func (file: FILE, number: i32) -> FILE {
-    if (number < 0 as i32) {
+    if (number < 0) {
         return file.write('-').write(-number)
     }
-    if (number >= 10 as i32) {
-        file.write(number / 10 as i32)
+    if (number >= 10) {
+        file.write(number / 10)
     }
-    fputc(number // 10 as i32 + '0' as i32, file)
+    fputc(number // 10 + '0' as i32, file)
     return file
 }
 
