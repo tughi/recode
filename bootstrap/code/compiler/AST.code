@@ -148,11 +148,6 @@ define AST_Named_Type = struct {
     name: Identifier_Token
 }
 
-define AST_Pointer_Type = struct {
-    extends AST_Type
-    pointed_type: AST_Type
-}
-
 define AST_Embedded_Type = struct {
     extends AST_Type
     embedded_type: AST_Type

@@ -382,9 +382,6 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     if (type.is(AST_Named_Type)) {
         return self.convert_named_type(type as AST_Named_Type)
     }
-    if (type.is(AST_Pointer_Type)) {
-        return self.convert_pointer_type(type as AST_Pointer_Type)
-    }
     if (type.is(AST_Embedded_Type)) {
         return self.convert_embedded_type(type as AST_Embedded_Type)
     }
@@ -466,24 +463,6 @@ define convert_named_type = func (self: IR_Builder, type: AST_Named_Type) -> IR_
         named_type = self.create_ir_pointer_type(named_type)
     }
     return named_type
-}
-
-define convert_pointer_type = func (self: IR_Builder, type: AST_Pointer_Type) -> IR_Pointer_Type {
-    if (type.pointed_type.is(AST_Named_Type) == false) {
-        abort(type.location, "Unsupported type")
-    }
-    let pointed_type_name = (type.pointed_type as AST_Named_Type).name.lexeme
-    let pointed_type = self.get_named_type(pointed_type_name)
-    if (pointed_type == null) {
-        let struct_statement = self.get_struct_statement(pointed_type_name)
-        if (struct_statement != null) {
-            pointed_type = self.convert_struct_statement(struct_statement)
-        }
-    }
-    if (pointed_type == null) {
-        abort(type.location, "Unsupported type")
-    }
-    return self.create_ir_pointer_type(pointed_type)
 }
 
 define create_ir_pointer_type = func (self: IR_Builder, pointed_type: IR_Type) -> IR_Pointer_Type {
