@@ -1,15 +1,15 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define Source = struct {
-    id: isize = undefined
+    id: i64 = undefined
     file_path: String
     content: [i8; ?]
 }
 
 define Source_Location = struct {
     source: Source
-    line: isize
-    column: isize
+    line: i64
+    column: i64
 }
 
 define create_source = func (file_path: String) -> Source {
@@ -18,22 +18,22 @@ define create_source = func (file_path: String) -> Source {
         return null
     }
 
-    let content_size = 1024
+    let content_size = 1024 as i64
     let content = malloc(content_size) as [i8; ?]
-    let content_length = 0
+    let content_length = 0 as i64
     loop {
         let char = fgetc(file)
-        if (feof(file) as isize != 0) {
+        if (feof(file) != 0 as i32) {
             break
         }
         if (content_length + 1 > content_size - 1) {
             content_size = content_size + 1024
             content = realloc(content, content_size) as [i8; ?]
         }
-        content[content_length] = char as i8
+        content[content_length as isize] = char as i8
         content_length = content_length + 1
     }
-    content[content_length] = '\0'
+    content[content_length as isize] = '\0'
 
     return new Source(file_path = file_path, content = content)
 }

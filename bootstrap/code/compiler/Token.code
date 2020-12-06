@@ -43,7 +43,7 @@ define Identifier_Token = struct {
 
 define Integer_Token = struct {
     extends Literal_Token
-    value: isize
+    value: i64
 }
 
 define Null_Token = struct {
@@ -56,7 +56,7 @@ define Other_Token = struct {
 
 define Space_Token = struct {
     extends Token
-    count: isize
+    count: i64
 }
 
 define String_Token = struct {

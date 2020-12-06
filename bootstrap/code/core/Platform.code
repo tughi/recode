@@ -20,5 +20,5 @@ define fputs = func (chars: [i8; ?], file: FILE) -> i32
 define abort = func () -> Nothing
 define exit = func (code: isize) -> Nothing
 define free = func (block: Any) -> Nothing
-define malloc = func (size: isize) -> Any
-define realloc = func (block: [i8; ?], size: isize) -> Any
+define malloc = func (size: i64) -> Any
+define realloc = func (block: [i8; ?], size: i64) -> Any

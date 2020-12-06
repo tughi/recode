@@ -544,7 +544,7 @@ define build_function = func (self: IR_Builder, function_statement: AST_Function
 
     self.convert_block_statement(function_statement.body)
     if (self.current_block.last_instruction == null || self.current_block.last_instruction.is_exit_instruction() == false) {
-        if (self.current_block.predecessors.size == 0 && self.current_block.id != 1) {
+        if (self.current_block.predecessors.size == 0 as i64 && self.current_block.id != 1 as i64) {
             \ this block is unreachable
             function.blocks.remove(self.current_block).prune()
         } else if (function.return_type.is(IR_Nothing_Type)) {
@@ -571,8 +571,8 @@ define remove_redundant_blocks = func (self: IR_Builder, function: IR_Function) 
 
         while (blocks.has_next()) {
             let block = blocks.next() as IR_Block
-            if (block.id != 1) {
-                if (block.predecessors.size == 0) {
+            if (block.id != 1 as i64) {
+                if (block.predecessors.size == 0 as i64) {
                     \ found unreachable block
                     if (block.last_instruction == null) {
                         blocks.remove_current()
@@ -648,7 +648,7 @@ define get_block_variable_value = func (self: IR_Builder, block: IR_Block, varia
         }
         block_instruction = block_instruction.prev_instruction
     }
-    if (block.predecessors.size == 1) {
+    if (block.predecessors.size == 1 as i64) {
         return self.get_block_variable_value(block.predecessors.last() as IR_Block, variable)
     }
     let instruction = create_ir_phi_instruction(self.create_variable_value(variable))
@@ -726,12 +726,12 @@ define remove_redundant_set_instructions = func (self: IR_Builder, function: IR_
             while (block_instruction != null) {
                 if (block_instruction.is(IR_Set_Instruction)) {
                     let value = (block_instruction as IR_Set_Instruction).get_value()
-                    if (value.is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0) {
+                    if (value.is(IR_Undefined_Value) && block_instruction.result_value.user_instructions.size == 0 as i64) {
                         block.remove(block_instruction)
                         repeat = true
                         break
                     }
-                    if (value.user_instructions.size == 1 && value.user_instructions.first_item.data as IR_Instruction == block_instruction) {
+                    if (value.user_instructions.size == 1 as i64 && value.user_instructions.first_item.data as IR_Instruction == block_instruction) {
                         let value_creator_instruction = value.creator_instruction
                         if (value_creator_instruction != null && value_creator_instruction.parent_block == block) {
                             let redundant_value = value_creator_instruction.result_value

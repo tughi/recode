@@ -5,7 +5,7 @@ define Object = struct {
 }
 
 define Object_Type = struct {
-    id: isize
+    id: i64
     name: !String
     base_type: Object_Type
 }

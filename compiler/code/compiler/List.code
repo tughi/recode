@@ -3,7 +3,7 @@
 define List = struct {
     first_item: List_Item = null
     last_item: List_Item = null
-    size: isize = 0
+    size: i64 = 0
 }
 
 define append = func (self: List, data: Any) -> Nothing {
@@ -95,8 +95,8 @@ define contains = func (self: List, data: Any) -> bool {
     return false
 }
 
-define index_of = func (self: List, data: Any) -> isize {
-    let index = 0
+define index_of = func (self: List, data: Any) -> i64 {
+    let index = 0 as i64
     let item = self.first_item
     while (item != null) {
         if (item.data == data) {
@@ -105,10 +105,10 @@ define index_of = func (self: List, data: Any) -> isize {
         item = item.next_item
         index = index + 1
     }
-    return -1
+    return -1 as i64
 }
 
-define get = func (self: List, index: isize) -> Any {
+define get = func (self: List, index: i64) -> Any {
     if (index >= self.size || index < 0) {
         return null
     }

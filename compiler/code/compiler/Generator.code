@@ -68,7 +68,7 @@ define generate_function = func (self: MC_Generator, function: IR_Function) -> N
     self.output_file.write("  ret").end_line().end_line()
 
     let stack_frame_size = self.stack_frame_size
-    if (stack_frame_size // 16 != 0) {
+    if (stack_frame_size // 16 != 0 as i64) {
         stack_frame_size = stack_frame_size + 16 - stack_frame_size // 16
     }
     self.output_file.write_function_label(function).write("__stack_frame_size").write(": .word ").write(stack_frame_size).end_line()
@@ -192,15 +192,15 @@ define generate_add_instruction = func (self: MC_Generator, instruction: IR_Add_
     let right_value = instruction.get_right_value()
     if (right_value.is(IR_Constant_Value)) {
         let right_value = right_value as IR_Constant_Value
-        if ((right_value.literal as Integer_Token).value == 1) {
+        if ((right_value.literal as Integer_Token).value == 1 as i64) {
             self.output_file.write("  inc ")
-            if (type_size == 8) {
+            if (type_size == 8 as i64) {
                 self.output_file.write(result_register.name_q)
-            } else if (type_size == 4) {
+            } else if (type_size == 4 as i64) {
                 self.output_file.write(result_register.name_d)
-            } else if (type_size == 2) {
+            } else if (type_size == 2 as i64) {
                 self.output_file.write(result_register.name_w)
-            } else if (type_size == 1) {
+            } else if (type_size == 1 as i64) {
                 self.output_file.write(result_register.name_b)
             } else {
                 self.abort(clone("Unsupported type size: ").append(type_size))
@@ -210,13 +210,13 @@ define generate_add_instruction = func (self: MC_Generator, instruction: IR_Add_
         }
     }
     self.output_file.write("  add ")
-    if (type_size == 8) {
+    if (type_size == 8 as i64) {
         self.output_file.write(result_register.name_q)
-    } else if (type_size == 4) {
+    } else if (type_size == 4 as i64) {
         self.output_file.write(result_register.name_d)
-    } else if (type_size == 2) {
+    } else if (type_size == 2 as i64) {
         self.output_file.write(result_register.name_w)
-    } else if (type_size == 1) {
+    } else if (type_size == 1 as i64) {
         self.output_file.write(result_register.name_b)
     } else {
         self.abort(clone("Unsupported type size: ").append(type_size))
@@ -226,17 +226,17 @@ define generate_add_instruction = func (self: MC_Generator, instruction: IR_Add_
 
 define generate_call_instruction = func (self: MC_Generator, instruction: IR_Call_Instruction) -> Nothing {
     if (instruction.arguments_size > 0) {
-        self.generate_load_value(self.register_rdi, instruction.get_argument_value(0))
+        self.generate_load_value(self.register_rdi, instruction.get_argument_value(0 as i64))
         if (instruction.arguments_size > 1) {
-            self.generate_load_value(self.register_rsi, instruction.get_argument_value(1))
+            self.generate_load_value(self.register_rsi, instruction.get_argument_value(1 as i64))
             if (instruction.arguments_size > 2) {
-                self.generate_load_value(self.register_rdx, instruction.get_argument_value(2))
+                self.generate_load_value(self.register_rdx, instruction.get_argument_value(2 as i64))
                 if (instruction.arguments_size > 3) {
-                    self.generate_load_value(self.register_rcx, instruction.get_argument_value(3))
+                    self.generate_load_value(self.register_rcx, instruction.get_argument_value(3 as i64))
                     if (instruction.arguments_size > 4) {
-                        self.generate_load_value(self.register_r8, instruction.get_argument_value(4))
+                        self.generate_load_value(self.register_r8, instruction.get_argument_value(4 as i64))
                         if (instruction.arguments_size > 5) {
-                            self.generate_load_value(self.register_r9, instruction.get_argument_value(5))
+                            self.generate_load_value(self.register_r9, instruction.get_argument_value(5 as i64))
                         }
                     }
                 }
@@ -285,7 +285,6 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
             return
         }
-        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
     }
     if (instruction.result_value.type.is(IR_Int16_Type)) {
         if (ir_value.type.is(IR_Int_Type)) {
@@ -302,10 +301,9 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
             return
         }
         if (ir_value.type.is(IR_Int8_Type)) {
-            self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
+            self.output_file.write("  movsx ").write(result_register.name_w).write(", ").write(result_register.name_b).end_line()
             return
         }
-        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
     }
     if (instruction.result_value.type.is(IR_Int32_Type)) {
         if (ir_value.type.is(IR_Int_Type)) {
@@ -326,7 +324,27 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
             return
         }
-        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
+    }
+    if (instruction.result_value.type.is(IR_Int64_Type)) {
+        if (ir_value.type.is(IR_Int_Type)) {
+            return
+        }
+        if (ir_value.type.is(IR_Int16_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_w).end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int32_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int64_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+            return
+        }
+        if (ir_value.type.is(IR_Int8_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
+            return
+        }
     }
     if (instruction.result_value.type.is(IR_Int8_Type)) {
         if (ir_value.type.is(IR_Int_Type)) {
@@ -343,8 +361,8 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         }
         if (ir_value.type.is(IR_Int8_Type)) {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
+            return
         }
-        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
     }
     self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
 }
@@ -443,11 +461,11 @@ define generate_divide_instruction = func (self: MC_Generator, instruction: IR_D
     self.register_rdx.is_reserved = true
 
     let type_size = self.get_type_size(instruction.result_value.type)
-    if (type_size == 8) {
+    if (type_size == 8 as i64) {
         self.output_file.write("  cqo").end_line()
-    } else if (type_size == 4) {
+    } else if (type_size == 4 as i64) {
         self.output_file.write("  cdq").end_line()
-    } else if (type_size == 2) {
+    } else if (type_size == 2 as i64) {
         self.output_file.write("  cwd").end_line()
     } else {
         self.abort(clone("Unsupported type size: ").append(type_size))
@@ -459,11 +477,11 @@ define generate_divide_instruction = func (self: MC_Generator, instruction: IR_D
         register.is_reserved = true
         self.generate_load_value(register, right_value)
         self.output_file.write("  idiv ")
-        if (type_size == 8) {
+        if (type_size == 8 as i64) {
             self.output_file.write(register.name_q)
-        } else if (type_size == 4) {
+        } else if (type_size == 4 as i64) {
             self.output_file.write(register.name_d)
-        } else if (type_size == 2) {
+        } else if (type_size == 2 as i64) {
             self.output_file.write(register.name_w)
         } else {
             self.abort(clone("Unsupported type size: ").append(type_size))
@@ -491,7 +509,7 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
             self.abort("Invalid state")
         }
         let index_value = (index_value.literal as Integer_Token).value
-        if (index_value != 0) {
+        if (index_value != 0 as i64) {
             if (index_value < 0) {
                 self.abort("Invalid state")
             }
@@ -507,11 +525,11 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
     }
 
     let address = new MC_Register_Based_Address(register = result_register)
-    if (result_value_type_size == 8) {
+    if (result_value_type_size == 8 as i64) {
         self.output_file.write("  mov ").write(result_register.name_q).write(", ").write(address).end_line()
-    } else if (result_value_type_size == 4) {
+    } else if (result_value_type_size == 4 as i64) {
         self.output_file.write("  mov ").write(result_register.name_d).write(", ").write(address).end_line()
-    } else if (result_value_type_size == 2) {
+    } else if (result_value_type_size == 2 as i64) {
         self.output_file.write("  mov ").write(result_register.name_w).write(", ").write(address).end_line()
     } else {
         self.output_file.write("  mov ").write(result_register.name_b).write(", ").write(address).end_line()
@@ -537,17 +555,17 @@ define generate_load_variable_instruction = func (self: MC_Generator, instructio
         if (parameter_index < 0) {
             self.abort("Invalid state")
         }
-        if (parameter_index == 0) {
+        if (parameter_index == 0 as i64) {
             self.map_variable_value(instruction.result_value, self.register_rdi)
-        } else if (parameter_index == 1) {
+        } else if (parameter_index == 1 as i64) {
             self.map_variable_value(instruction.result_value, self.register_rsi)
-        } else if (parameter_index == 2) {
+        } else if (parameter_index == 2 as i64) {
             self.map_variable_value(instruction.result_value, self.register_rdx)
-        } else if (parameter_index == 3) {
+        } else if (parameter_index == 3 as i64) {
             self.map_variable_value(instruction.result_value, self.register_rcx)
-        } else if (parameter_index == 4) {
+        } else if (parameter_index == 4 as i64) {
             self.map_variable_value(instruction.result_value, self.register_r8)
-        } else if (parameter_index == 5) {
+        } else if (parameter_index == 5 as i64) {
             self.map_variable_value(instruction.result_value, self.register_r9)
         } else {
             self.abort(clone("Invalid state"))
@@ -592,13 +610,13 @@ define generate_load_struct_member_instruction = func (self: MC_Generator, instr
     } else {
         let result_value_type_size = self.get_type_size(instruction.result_value.type)
         self.output_file.write("  mov ")
-        if (result_value_type_size == 8) {
+        if (result_value_type_size == 8 as i64) {
             self.output_file.write(result_register.name_q)
-        } else if (result_value_type_size == 4) {
+        } else if (result_value_type_size == 4 as i64) {
             self.output_file.write(result_register.name_d)
-        } else if (result_value_type_size == 2) {
+        } else if (result_value_type_size == 2 as i64) {
             self.output_file.write(result_register.name_w)
-        } else if (result_value_type_size == 1) {
+        } else if (result_value_type_size == 1 as i64) {
             self.output_file.write(result_register.name_b)
         } else {
             self.abort("Invalid state")
@@ -616,11 +634,11 @@ define generate_modulo_instruction = func (self: MC_Generator, instruction: IR_M
     self.register_rdx.is_reserved = true
 
     let type_size = self.get_type_size(instruction.result_value.type)
-    if (type_size == 8) {
+    if (type_size == 8 as i64) {
         self.output_file.write("  cqo").end_line()
-    } else if (type_size == 4) {
+    } else if (type_size == 4 as i64) {
         self.output_file.write("  cdq").end_line()
-    } else if (type_size == 2) {
+    } else if (type_size == 2 as i64) {
         self.output_file.write("  cwd").end_line()
     } else {
         self.abort(clone("Unsupported type size: ").append(type_size))
@@ -632,11 +650,11 @@ define generate_modulo_instruction = func (self: MC_Generator, instruction: IR_M
         register.is_reserved = true
         self.generate_load_value(register, right_value)
         self.output_file.write("  idiv ")
-        if (type_size == 8) {
+        if (type_size == 8 as i64) {
             self.output_file.write(register.name_q)
-        } else if (type_size == 4) {
+        } else if (type_size == 4 as i64) {
             self.output_file.write(register.name_d)
-        } else if (type_size == 2) {
+        } else if (type_size == 2 as i64) {
             self.output_file.write(register.name_w)
         } else {
             self.abort(clone("Unsupported type size: ").append(type_size))
@@ -657,13 +675,13 @@ define generate_multiply_instruction = func (self: MC_Generator, instruction: IR
     self.map_variable_value(instruction.result_value, result_register)
     self.output_file.write("  imul ")
     let type_size = self.get_type_size(instruction.result_value.type)
-    if (type_size == 8) {
+    if (type_size == 8 as i64) {
         self.output_file.write(result_register.name_q)
-    } else if (type_size == 4) {
+    } else if (type_size == 4 as i64) {
         self.output_file.write(result_register.name_d)
-    } else if (type_size == 2) {
+    } else if (type_size == 2 as i64) {
         self.output_file.write(result_register.name_w)
-    } else if (type_size == 1) {
+    } else if (type_size == 1 as i64) {
         self.output_file.write(result_register.name_b)
     } else {
         self.abort(clone("Unsupported type size: ").append(type_size))
@@ -750,7 +768,7 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
             self.abort("Invalid state")
         }
         let index_value = (index_value.literal as Integer_Token).value
-        if (index_value != 0) {
+        if (index_value != 0 as i64) {
             if (index_value < 0) {
                 self.abort("Invalid state")
             }
@@ -778,13 +796,13 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
     }
 
     self.output_file.write("  mov ")
-    if (ir_value_type_size == 8) {
+    if (ir_value_type_size == 8 as i64) {
         self.output_file.write("QWORD PTR ")
-    } else if (ir_value_type_size == 4) {
+    } else if (ir_value_type_size == 4 as i64) {
         self.output_file.write("DWORD PTR ")
-    } else if (ir_value_type_size == 2) {
+    } else if (ir_value_type_size == 2 as i64) {
         self.output_file.write("WORD PTR ")
-    } else if (ir_value_type_size == 1) {
+    } else if (ir_value_type_size == 1 as i64) {
         self.output_file.write("BYTE PTR ")
     } else {
         self.abort("Invalid state")
@@ -841,16 +859,16 @@ define generate_substract_instruction = func (self: MC_Generator, instruction: I
     let right_value = instruction.get_right_value()
     if (left_value.is(IR_Constant_Value)) {
         let left_value = left_value as IR_Constant_Value
-        if ((left_value.literal as Integer_Token).value == 0) {
+        if ((left_value.literal as Integer_Token).value == 0 as i64) {
             self.generate_load_value(result_register, right_value)
             self.output_file.write("  neg ")
-            if (type_size == 8) {
+            if (type_size == 8 as i64) {
                 self.output_file.write(result_register.name_q)
-            } else if (type_size == 4) {
+            } else if (type_size == 4 as i64) {
                 self.output_file.write(result_register.name_d)
-            } else if (type_size == 2) {
+            } else if (type_size == 2 as i64) {
                 self.output_file.write(result_register.name_w)
-            } else if (type_size == 1) {
+            } else if (type_size == 1 as i64) {
                 self.output_file.write(result_register.name_b)
             } else {
                 self.abort(clone("Unsupported type size: ").append(type_size))
@@ -864,15 +882,15 @@ define generate_substract_instruction = func (self: MC_Generator, instruction: I
     self.map_variable_value(instruction.result_value, result_register)
     if (right_value.is(IR_Constant_Value)) {
         let right_value = right_value as IR_Constant_Value
-        if ((right_value.literal as Integer_Token).value == 1) {
+        if ((right_value.literal as Integer_Token).value == 1 as i64) {
             self.output_file.write("  dec ")
-            if (type_size == 8) {
+            if (type_size == 8 as i64) {
                 self.output_file.write(result_register.name_q)
-            } else if (type_size == 4) {
+            } else if (type_size == 4 as i64) {
                 self.output_file.write(result_register.name_d)
-            } else if (type_size == 2) {
+            } else if (type_size == 2 as i64) {
                 self.output_file.write(result_register.name_w)
-            } else if (type_size == 1) {
+            } else if (type_size == 1 as i64) {
                 self.output_file.write(result_register.name_b)
             } else {
                 self.abort(clone("Unsupported type size: ").append(type_size))
@@ -882,13 +900,13 @@ define generate_substract_instruction = func (self: MC_Generator, instruction: I
         }
     }
     self.output_file.write("  sub ")
-    if (type_size == 8) {
+    if (type_size == 8 as i64) {
         self.output_file.write(result_register.name_q)
-    } else if (type_size == 4) {
+    } else if (type_size == 4 as i64) {
         self.output_file.write(result_register.name_d)
-    } else if (type_size == 2) {
+    } else if (type_size == 2 as i64) {
         self.output_file.write(result_register.name_w)
-    } else if (type_size == 1) {
+    } else if (type_size == 1 as i64) {
         self.output_file.write(result_register.name_b)
     } else {
         self.abort(clone("Unsupported type size: ").append(type_size))
@@ -911,15 +929,15 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
         if (ir_value.literal.is(Boolean_Token)) {
             let literal = ir_value.literal as Boolean_Token
             if (literal.value) {
-                self.output_file.write("  mov ").write(register.name_b).write(", ").write(1).end_line()
+                self.output_file.write("  mov ").write(register.name_b).write(", ").write(1 as i64).end_line()
             } else {
-                self.output_file.write("  mov ").write(register.name_b).write(", ").write(0).end_line()
+                self.output_file.write("  mov ").write(register.name_b).write(", ").write(0 as i64).end_line()
             }
         } else if (ir_value.literal.is(Character_Token)) {
-            self.output_file.write("  mov ").write(register.name_b).write(", ").write((ir_value.literal as Character_Token).value as isize).end_line()
+            self.output_file.write("  mov ").write(register.name_b).write(", ").write((ir_value.literal as Character_Token).value as i64).end_line()
         } else if (ir_value.literal.is(Integer_Token)) {
             let literal = ir_value.literal as Integer_Token
-            if (literal.value == 0) {
+            if (literal.value == 0 as i64) {
                 self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
             } else {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(literal.value).end_line()
@@ -953,6 +971,8 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
                 self.output_file.write("  mov ").write(register.name_w).write(", ").write(mc_value.register.name_w).end_line()
             } else if (ir_value_type.is(IR_Int32_Type)) {
                 self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.register.name_d).end_line()
+            } else if (ir_value_type.is(IR_Int64_Type)) {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Int8_Type)) {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
             } else if (ir_value_type.is(IR_Pointer_Type)) {
@@ -972,6 +992,8 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Int32_Type)) {
             self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.address).end_line()
+        } else if (ir_value_type.is(IR_Int64_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Int8_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Pointer_Type)) {
@@ -1060,7 +1082,7 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
         let struct_type = ir_value_type as IR_Struct_Type
         let destination_register: MC_Register
         let destination_address: MC_Register_Based_Address
-        let destination_address_extra_offset: isize
+        let destination_address_extra_offset: i64
         if (address.is(MC_Register_Based_Address)) {
             let address = address as MC_Register_Based_Address
             destination_register = null
@@ -1081,7 +1103,7 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
             }
             let source_register: MC_Register
             let source_address: MC_Register_Based_Address
-            let source_address_extra_offset: isize
+            let source_address_extra_offset: i64
             let mc_value_address = mc_value.address
             if (mc_value_address.is(MC_Register_Based_Address)) {
                 let mc_value_address = mc_value_address as MC_Register_Based_Address
@@ -1098,7 +1120,7 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
             let ir_value_type_size = self.get_type_size(ir_value_type)
             let data_register = self.find_unused_register()
             data_register.is_reserved = true
-            let copied_bytes = 0
+            let copied_bytes = 0 as i64
             while (ir_value_type_size - copied_bytes >= 8) {
                 source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_q).write(", ").write(source_address).end_line()
@@ -1120,7 +1142,7 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_w).end_line()
                 copied_bytes = copied_bytes + 2
             }
-            if (ir_value_type_size - copied_bytes == 1) {
+            if (ir_value_type_size - copied_bytes == 1 as i64) {
                 source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_b).write(", ").write(source_address).end_line()
                 destination_address.offset = destination_address_extra_offset + copied_bytes
@@ -1172,8 +1194,8 @@ define generate_store_struct_literal_value = func (self: MC_Generator, ir_value:
     }
 }
 
-define get_offset = func (self: MC_Generator, struct_type_member: IR_Struct_Type_Member) -> isize {
-    let offset = 0
+define get_offset = func (self: MC_Generator, struct_type_member: IR_Struct_Type_Member) -> i64 {
+    let offset = 0 as i64
     let struct_type = struct_type_member.struct_type
     if (struct_type.base_type != null) {
         offset = self.get_type_size(struct_type.base_type)
@@ -1218,31 +1240,31 @@ define write_operand = func (file: FILE, generator: MC_Generator, ir_value: IR_V
         }
         let value_type_size = generator.get_type_size(ir_value.type)
         if (mc_value.register != null) {
-            if (value_type_size == 8) {
+            if (value_type_size == 8 as i64) {
                 return file.write(mc_value.register.name_q)
             }
-            if (value_type_size == 4) {
+            if (value_type_size == 4 as i64) {
                 return file.write(mc_value.register.name_d)
             }
-            if (value_type_size == 2) {
+            if (value_type_size == 2 as i64) {
                 return file.write(mc_value.register.name_w)
             }
-            if (value_type_size == 1) {
+            if (value_type_size == 1 as i64) {
                 return file.write(mc_value.register.name_b)
             }
             generator.abort(clone("Unsupported type size: ").append(value_type_size))
         }
         if (mc_value.address != null) {
-            if (value_type_size == 8) {
+            if (value_type_size == 8 as i64) {
                 return file.write("QWORD PTR ").write(mc_value.address)
             }
-            if (value_type_size == 4) {
+            if (value_type_size == 4 as i64) {
                 return file.write("DWORD PTR ").write(mc_value.address)
             }
-            if (value_type_size == 2) {
+            if (value_type_size == 2 as i64) {
                 return file.write("WORD PTR ").write(mc_value.address)
             }
-            if (value_type_size == 1) {
+            if (value_type_size == 1 as i64) {
                 return file.write("BYTE PTR ").write(mc_value.address)
             }
             generator.abort(clone("Unsupported type size: ").append(value_type_size))
@@ -1279,7 +1301,7 @@ define MC_Generator = struct {
     register_r15: MC_Register = new MC_Register_R15(name_q = "r15", name_d = "r15d", name_w = "r15w", name_b = "r15b")
     first_value: MC_Value = null
     last_value: MC_Value = null
-    stack_frame_size: isize = 0
+    stack_frame_size: i64 = 0
     strings: List = new List()
 }
 
@@ -1417,19 +1439,19 @@ define spill_local_variable = func (self: MC_Generator, mc_value: MC_Value) -> N
     if (mc_value.address == null) {
         self.map_variable_value(mc_value.ir_variable_value, self.create_local_variable_address(variable_type_size))
     }
-    if (variable_type_size == 8) {
+    if (variable_type_size == 8 as i64) {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_q).end_line()
-    } else if (variable_type_size == 4) {
+    } else if (variable_type_size == 4 as i64) {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_d).end_line()
-    } else if (variable_type_size == 2) {
+    } else if (variable_type_size == 2 as i64) {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_w).end_line()
-    } else if (variable_type_size == 1) {
+    } else if (variable_type_size == 1 as i64) {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_b).end_line()
     }
 }
 
-define create_local_variable_address = func (self: MC_Generator, variable_type_size: isize) -> MC_Local_Variable_Address {
-    let offset = 0
+define create_local_variable_address = func (self: MC_Generator, variable_type_size: i64) -> MC_Local_Variable_Address {
+    let offset = 0 as i64
     let mc_value = self.first_value
     while (mc_value != null) {
         let mc_value_address = mc_value.address
@@ -1499,8 +1521,8 @@ define release_register = func (self: MC_Generator, register: MC_Register) -> No
     }
 }
 
-define discard_used_values = func (self: MC_Generator) -> isize {
-    let removed_values = 0
+define discard_used_values = func (self: MC_Generator) -> i64 {
+    let removed_values = 0 as i64
 
     let mc_value = self.last_value
     while (mc_value != null) {
@@ -1761,14 +1783,14 @@ define MC_Global_Variable_Address = struct {
 define MC_Register_Based_Address = struct {
     extends MC_Address
     register: MC_Register
-    offset: isize = 0
+    offset: i64 = 0
 }
 
 define MC_Local_Variable_Address = struct {
     extends MC_Register_Based_Address
 }
 
-define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> isize {
+define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> i64 {
     if (ir_type.is(IR_Boolean_Type)) {
         return 1
     }
@@ -1784,6 +1806,9 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> isize {
     if (ir_type.is(IR_Int32_Type)) {
         return 4
     }
+    if (ir_type.is(IR_Int64_Type)) {
+        return 8
+    }
     if (ir_type.is(IR_Int8_Type)) {
         return 1
     }
@@ -1795,7 +1820,7 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> isize {
     }
     if (ir_type.is(IR_Struct_Type)) {
         let ir_type = ir_type as IR_Struct_Type
-        let size = 0
+        let size = 0 as i64
         if (ir_type.base_type != null) {
             size = size + self.get_type_size(ir_type.base_type)
         }
@@ -1813,7 +1838,7 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> isize {
 }
 
 define MC_String = struct {
-    id: isize
+    id: i64
     literal: String_Token
 }
 
