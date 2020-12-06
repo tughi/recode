@@ -23,7 +23,7 @@ define create_source = func (file_path: String) -> Source {
     let content_length = 0 as i64
     loop {
         let char = fgetc(file)
-        if (feof(file) != 0 as i32) {
+        if (feof(file) != 0) {
             break
         }
         if (content_length + 1 > content_size - 1) {

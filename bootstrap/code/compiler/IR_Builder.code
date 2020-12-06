@@ -1251,7 +1251,7 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
     }
     if (expression.literal.is(Integer_Token)) {
         if (expected_type == null || expected_type.is(IR_Integer_Type) == false) {
-            expected_type = self.get_named_type("isize")
+            expected_type = self.get_named_type("i32")
         }
         return new IR_Constant_Value(type = expected_type, literal = expression.literal)
     }

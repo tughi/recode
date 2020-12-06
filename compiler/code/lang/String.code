@@ -120,7 +120,7 @@ define append = func (self: String, other: String) -> String {
         self.data_size = self.length + other.length + 1
         self.data = realloc(self.data, self.data_size) as [i8; ?]
     }
-    let index = 0
+    let index = 0 as isize
     let other_data = other.data
     let self_data = self.data
     let self_length = self.length

@@ -5,14 +5,14 @@ define write = func (self: FILE, string: String) -> FILE {
 include "../lang/String.code"
 
 define write = func (file: FILE, chars: [i8; ?]) -> FILE {
-    let index = 0
+    let index = 0 as isize
     loop {
         let char = chars[index]
         if (char == '\0') {
             return file
         }
         file.write(char)
-        index = 1 + index
+        index = index + 1
     }
 }
 
@@ -34,7 +34,7 @@ define write = func (file: FILE, number: isize) -> FILE {
     if (number >= 10) {
         file.write(number / 10)
     }
-    return file.write((number // 10 + '0' as isize) as i8)
+    return file.write((number // 10) as i8 + '0')
 }
 
 define write = func (file: FILE, char: i8) -> FILE {
