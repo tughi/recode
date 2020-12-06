@@ -198,11 +198,33 @@ define scan_identifier_token = func (self: Scanner, token_lexeme: String, token_
 }
 
 define scan_integer_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
-    let value = 0 as i64
-    while (self.peek_char().is_digit()) {
-        let char = self.next_char()
-        value = value * 10 + (char - '0') as i64
-        token_lexeme.append(char)
+    let char = self.next_char()
+    token_lexeme.append(char)
+    let value = (char - '0') as i64 \ TODO: compute value as u64
+    loop {
+        char = self.peek_char()
+        if (char.is_digit()) {
+            value = value * 10 + (char - '0') as i64
+        } else if (char != '_') {
+            break
+        }
+        token_lexeme.append(self.next_char())
+    }
+    if (self.peek_char() == 'i' || self.peek_char() == 'u') {
+        let type = new String()
+        loop {
+            char = self.peek_char()
+            if (char.is_digit() == false && char.is_letter() == false) {
+                break
+            }
+            token_lexeme.append(char)
+            type.append(char)
+            self.next_char()
+        }
+        if (type.equals("i16") || type.equals("i32") || type.equals("i64") || type.equals("i8") || type.equals("isize") || type.equals("u16") || type.equals("u32") || type.equals("u64") || type.equals("u8") || type.equals("usize")) {
+            return new Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = type)
+        }
+        return new Error_Token(lexeme = token_lexeme, location = token_location)
     }
     return new Integer_Token(lexeme = token_lexeme, location = token_location, value = value)
 }

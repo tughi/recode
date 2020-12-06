@@ -105,6 +105,16 @@ define append = func (self: String, char: i8) -> String {
     return self
 }
 
+define append = func (self: String, number: i32) -> String {
+    if (number < 0) {
+        return self.append('-').append(-number)
+    }
+    if (number >= 10) {
+        self.append(number / 10)
+    }
+    return self.append((number // 10) as i8 + '0')
+}
+
 define append = func (self: String, number: i64) -> String {
     if (number < 0) {
         return self.append('-').append(-number)
