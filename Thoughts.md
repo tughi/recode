@@ -12,6 +12,13 @@ There is a fixed set of integer types:
 - `isize` - platform dependent signed integer
 - `usize` - platform dependent unsigned integer
 
+Integer literals have the `i32` type implicitly. The type can be changed with a type suffix
+(e.g. `42i64`).
+
+To improve readability, integer literals can also include underscores (e.g. `1_000_000`).
+
+> NOTE: Unsigned integers are not supported yet.
+
 ## Boolean
 
 The `bool` values can be either `true` or `false`.
@@ -20,11 +27,11 @@ You cannot cast a `bool` to an integer value.
 
 ## Floats
 
-There is no support for floats yet.
-
 There will be a fixed set of float types:
 - `f32` - 32 bit float
 - `f64` - 64 bit float
+
+> NOTE: Floats are not supported yet.
 
 ## Structs
 
