@@ -1256,6 +1256,29 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
         } else if (expected_type == null || expected_type.is(IR_Integer_Type) == false) {
             expected_type = self.get_named_type("i32")
         }
+        if (expected_type.is(IR_Int16_Type)) {
+            let max = 32_767i64
+            let min = -32_768i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
+            }
+        } else if (expected_type.is(IR_Int32_Type)) {
+            let max = 2_147_483_647i64
+            let min = -2_147_483_648i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
+            }
+        } else if (expected_type.is(IR_Int64_Type) || expected_type.is(IR_Int_Type)) {
+            \ TODO: validate i64 value
+        } else if (expected_type.is(IR_Int8_Type)) {
+            let max = 127i64
+            let min = -128i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
+            }
+        } else {
+            abort(expression.location, clone("Unsupported integer type: ").append(expected_type.name))
+        }
         return new IR_Constant_Value(type = expected_type, literal = expression.literal)
     }
     if (expression.literal.is(Null_Token)) {

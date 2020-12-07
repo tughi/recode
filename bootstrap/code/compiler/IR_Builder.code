@@ -1256,6 +1256,23 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
         } else if (expected_type == null || expected_type.is(IR_Integer_Type) == false) {
             expected_type = self.get_named_type("i32")
         }
+        if (expected_type.is(IR_Int16_Type)) {
+            if (integer_literal.value < -32_768i64 || integer_literal.value > 32_767i64) {
+                abort(expression.location, clone("Invalid ").append(expected_type.name).append(" literal"))
+            }
+        } else if (expected_type.is(IR_Int32_Type)) {
+            if (integer_literal.value < -2_147_483_648i64 || integer_literal.value > 2_147_483_647i64) {
+                abort(expression.location, clone("Invalid ").append(expected_type.name).append(" literal"))
+            }
+        } else if (expected_type.is(IR_Int64_Type) || expected_type.is(IR_Int_Type)) {
+            \ TODO: validate i64 value
+        } else if (expected_type.is(IR_Int8_Type)) {
+            if (integer_literal.value < -128i64 || integer_literal.value > 127i64) {
+                abort(expression.location, clone("Invalid ").append(expected_type.name).append(" literal"))
+            }
+        } else {
+            abort(expression.location, clone("Unsupported integer type: ").append(expected_type.name))
+        }
         return new IR_Constant_Value(type = expected_type, literal = expression.literal)
     }
     if (expression.literal.is(Null_Token)) {
