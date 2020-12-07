@@ -44,7 +44,7 @@ define Identifier_Token = struct {
 define Integer_Token = struct {
     extends Literal_Token
     value: i64
-    type: String = "i32"
+    type: String
 }
 
 define Null_Token = struct {

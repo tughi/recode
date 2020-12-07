@@ -1,6 +1,7 @@
 define main = func () -> Nothing {
+    let char = -'0'
     let hello = new String_Value(value = "Hello")
-    let forty_two = new Int_Value(value = 42_000_000i8)
+    let forty_two = new Int_Value(value = ---42_000_000i32)
 
     hello.dump(stdout)
     (forty_two.dump)(forty_two, ((stdout)))

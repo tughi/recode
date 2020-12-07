@@ -575,12 +575,25 @@ define parse_multiplication_expression = func (self: Parser) -> AST_Expression {
 }
 
 \ unary_expression
-\   : "-"? cast_expression
+\   : "-" unary_expression
+\   | cast_expression
 define parse_unary_expression = func (self: Parser) -> AST_Expression {
     if (self.matches(required_hyphen)) {
         let location = self.consume(required_hyphen).location
         self.consume_space(0 as i64)
-        return new AST_Negate_Expression(location = location, expression = self.parse_cast_expression())
+        let expression = self.parse_unary_expression()
+        if (expression.is(AST_Literal_Expression) && (expression as AST_Literal_Expression).literal.is(Integer_Token)) {
+            let old_literal = (expression as AST_Literal_Expression).literal as Integer_Token
+            let new_literal = new Integer_Token(location = location, lexeme = clone("-").append(old_literal.lexeme), value = -old_literal.value, type = old_literal.type)
+            return new AST_Wrapped_Expression(
+                location = location
+                expression = new AST_Literal_Expression(
+                    location = location
+                    literal = new_literal
+                )
+            )
+        }
+        return new AST_Negate_Expression(location = location, expression = expression)
     }
     return self.parse_cast_expression()
 }
@@ -729,7 +742,7 @@ define parse_primary_expression = func (self: Parser) -> AST_Expression {
         let expression = self.parse_expression()
         self.consume_space(0 as i64)
         self.consume(required_close_paren)
-        return new AST_Atomic_Expression(location = location, expression = expression)
+        return new AST_Paren_Expression(location = location, expression = expression)
     }
     return null
 }

@@ -174,10 +174,10 @@ define AST_Expression = struct {
     }
 }
 
-define AST_Atomic_Expression = struct {
+define AST_Paren_Expression = struct {
     extends AST_Expression(
         convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return (expression as AST_Atomic_Expression).expression.convert(builder, expected_type)
+            return (expression as AST_Paren_Expression).expression.convert(builder, expected_type)
         }
     )
     expression: AST_Expression
@@ -390,4 +390,13 @@ define AST_Array_Access_Expression = struct {
     )
     array_expression: AST_Expression
     index_expression: AST_Expression
+}
+
+define AST_Wrapped_Expression = struct {
+    extends AST_Expression(
+        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
+            return (expression as AST_Wrapped_Expression).expression.convert(builder, expected_type)
+        }
+    )
+    expression: AST_Expression
 }

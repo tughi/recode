@@ -314,8 +314,16 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
         return file.write((expression as AST_Member_Access_Expression).object_expression).write('.').write((expression as AST_Member_Access_Expression).member_name)
     }
 
+    if (expression.is(AST_Paren_Expression)) {
+        return file.write('(').write((expression as AST_Paren_Expression).expression).write(')')
+    }
+
     if (expression.is(AST_Variable_Expression)) {
         return file.write((expression as AST_Variable_Expression).name)
+    }
+
+    if (expression.is(AST_Wrapped_Expression)) {
+        return file.write((expression as AST_Wrapped_Expression).expression)
     }
 
     file.flush()
