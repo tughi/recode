@@ -226,7 +226,7 @@ define scan_integer_token = func (self: Scanner, token_lexeme: String, token_loc
         }
         return new Error_Token(lexeme = token_lexeme, location = token_location)
     }
-    return new Integer_Token(lexeme = token_lexeme, location = token_location, value = value)
+    return new Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = null)
 }
 
 define scan_space_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {

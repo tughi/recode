@@ -1250,7 +1250,10 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
         return new IR_Constant_Value(type = self.get_named_type("i8"), literal = expression.literal)
     }
     if (expression.literal.is(Integer_Token)) {
-        if (expected_type == null || expected_type.is(IR_Integer_Type) == false) {
+        let integer_literal = expression.literal as Integer_Token
+        if (integer_literal.type != null) {
+            expected_type = self.get_named_type(integer_literal.type)
+        } else if (expected_type == null || expected_type.is(IR_Integer_Type) == false) {
             expected_type = self.get_named_type("i32")
         }
         return new IR_Constant_Value(type = expected_type, literal = expression.literal)
