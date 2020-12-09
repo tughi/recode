@@ -40,11 +40,11 @@ define next_token = func (self: Scanner) -> Token {
 }
 
 define peek_char = func (self: Scanner) -> i8 {
-    return self.source.content[self.current_char_index as isize]
+    return self.source.content[self.current_char_index]
 }
 
 define next_char = func (self: Scanner) -> i8 {
-    let next_char = self.source.content[self.current_char_index as isize]
+    let next_char = self.source.content[self.current_char_index]
     if (next_char != '\0') {
         self.current_char_index = self.current_char_index + 1
         if (next_char == '\n') {

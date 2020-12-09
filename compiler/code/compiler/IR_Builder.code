@@ -774,7 +774,10 @@ define convert_statement = func (self: IR_Builder, statement: AST_Statement) -> 
 define convert_assignment_statement = func (self: IR_Builder, assignment_statement: AST_Assignment_Statement) -> Nothing {
     if (assignment_statement.storage_expression.is(AST_Array_Access_Expression)) {
         let array_access_expression = assignment_statement.storage_expression as AST_Array_Access_Expression
-        let array_item_index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("isize"))
+        let array_item_index_value = self.convert_expression(array_access_expression.index_expression, null)
+        if (array_item_index_value.type.is(IR_Integer_Type) == false) {
+            abort(array_access_expression.index_expression.location, "Not an integer expression")
+        }
         let array_address = self.convert_expression_address(array_access_expression.array_expression)
         if (array_address.type.is(IR_Unchecked_Array_Type)) {
             let array_item_type = (array_address.type as IR_Unchecked_Array_Type).item_type
@@ -984,7 +987,10 @@ define convert_add_expression = func (self: IR_Builder, expression: AST_Add_Expr
 }
 
 define convert_array_access_expression = func (self: IR_Builder, array_access_expression: AST_Array_Access_Expression) -> IR_Value {
-    let index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("isize"))
+    let index_value = self.convert_expression(array_access_expression.index_expression, null)
+    if (index_value.type.is(IR_Integer_Type) == false) {
+        abort(array_access_expression.index_expression.location, "Not an integer expression")
+    }
     let object_value = self.convert_expression(array_access_expression.array_expression, null)
     let object_value_type = object_value.type
     if ((object_value_type.is(IR_Unchecked_Array_Type))) {

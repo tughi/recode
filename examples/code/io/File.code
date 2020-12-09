@@ -5,7 +5,7 @@ define write = func (self: FILE, string: String) -> FILE {
 include "../lang/String.code"
 
 define write = func (file: FILE, chars: [i8; ?]) -> FILE {
-    let index = 0 as isize
+    let index = 0isize
     loop {
         let char = chars[index]
         if (char == '\0') {

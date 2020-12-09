@@ -30,10 +30,10 @@ define create_source = func (file_path: String) -> Source {
             content_size = content_size + 1024
             content = realloc(content, content_size) as [i8; ?]
         }
-        content[content_length as isize] = char as i8
+        content[content_length] = char as i8
         content_length = content_length + 1
     }
-    content[content_length as isize] = '\0'
+    content[content_length] = '\0'
 
     return new Source(file_path = file_path, content = content)
 }

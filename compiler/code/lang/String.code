@@ -9,7 +9,7 @@ define String = struct {
 define create_string = func (data: [i8; ?]) -> String {
     let data_length = 0 as i64
     loop {
-        let char = data[data_length as isize]
+        let char = data[data_length]
         if (char == '\0') {
             break
         }
@@ -29,7 +29,7 @@ define equals = func (self: String, other: String) -> bool {
     if (self.length == other.length) {
         let index = 0 as i64
         while (index < self.length) {
-            if (self.data[index as isize] != other.data[index as isize]) {
+            if (self.data[index] != other.data[index]) {
                 return false
             }
             index = index + 1
@@ -43,7 +43,7 @@ define index_of = func (self: String, other: String) -> i64 {
     let self_index = 0 as i64
     while (self_index <= self.length - other.length) {
         let other_index = 0 as i64
-        while (other_index < other.length && self.data[(self_index + other_index) as isize] == other.data[other_index as isize]) {
+        while (other_index < other.length && self.data[self_index + other_index] == other.data[other_index]) {
             other_index = other_index + 1
         }
         if (other_index == other.length) {
@@ -60,7 +60,7 @@ define starts_with = func (self: String, other: String) -> bool {
     }
     let index = 0 as i64
     while (index < other.length) {
-        if (self.data[index as isize] != other.data[index as isize]) {
+        if (self.data[index] != other.data[index]) {
             return false
         }
         index = index + 1
@@ -74,7 +74,7 @@ define ends_with = func (self: String, other: String) -> bool {
     }
     let index = 0 as i64
     while (index < other.length) {
-        if (self.data[(self.length - other.length + index) as isize] != other.data[index as isize]) {
+        if (self.data[self.length - other.length + index] != other.data[index]) {
             return false
         }
         index = index + 1
@@ -88,7 +88,7 @@ define last_index_of = func (self: String, char: i8) -> i64 {
 
 define last_index_of = func (self: String, char: i8, from_index: i64) -> i64 {
     let index = from_index
-    while (index >= 0 && self.data[index as isize] != char) {
+    while (index >= 0 && self.data[index] != char) {
         index = index - 1
     }
     return index
@@ -99,9 +99,9 @@ define append = func (self: String, char: i8) -> String {
         self.data_size = self.data_size + 16
         self.data = realloc(self.data, self.data_size) as [i8; ?]
     }
-    self.data[self.length as isize] = char
+    self.data[self.length] = char
     self.length = self.length + 1
-    self.data[self.length as isize] = '\0'
+    self.data[self.length] = '\0'
     return self
 }
 
@@ -136,7 +136,7 @@ define append = func (self: String, other: String) -> String {
     let self_length = self.length
     loop {
         let char = other_data[index]
-        self_data[self_length as isize] = char
+        self_data[self_length] = char
         if (char == '\0') {
             break
         }
@@ -153,7 +153,7 @@ define remove = func (self: String, begin_index: i64, end_index: i64) -> String 
     }
     let index = 0 as i64
     while (index + end_index <= self.length) {
-        self.data[(begin_index + index) as isize] = self.data[(end_index + index) as isize]
+        self.data[begin_index + index] = self.data[end_index + index]
         index = index + 1
     }
     self.length = begin_index + index - 1

@@ -774,7 +774,10 @@ define convert_statement = func (self: IR_Builder, statement: AST_Statement) -> 
 define convert_assignment_statement = func (self: IR_Builder, assignment_statement: AST_Assignment_Statement) -> Nothing {
     if (assignment_statement.storage_expression.is(AST_Array_Access_Expression)) {
         let array_access_expression = assignment_statement.storage_expression as AST_Array_Access_Expression
-        let array_item_index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("isize"))
+        let array_item_index_value = self.convert_expression(array_access_expression.index_expression, null)
+        if (array_item_index_value.type.is(IR_Integer_Type) == false) {
+            abort(array_access_expression.index_expression.location, "Not an integer expression")
+        }
         let array_address = self.convert_expression_address(array_access_expression.array_expression)
         if (array_address.type.is(IR_Unchecked_Array_Type)) {
             let array_item_type = (array_address.type as IR_Unchecked_Array_Type).item_type
@@ -984,7 +987,10 @@ define convert_add_expression = func (self: IR_Builder, expression: AST_Add_Expr
 }
 
 define convert_array_access_expression = func (self: IR_Builder, array_access_expression: AST_Array_Access_Expression) -> IR_Value {
-    let index_value = self.convert_expression(array_access_expression.index_expression, self.get_named_type("isize"))
+    let index_value = self.convert_expression(array_access_expression.index_expression, null)
+    if (index_value.type.is(IR_Integer_Type) == false) {
+        abort(array_access_expression.index_expression.location, "Not an integer expression")
+    }
     let object_value = self.convert_expression(array_access_expression.array_expression, null)
     let object_value_type = object_value.type
     if ((object_value_type.is(IR_Unchecked_Array_Type))) {
@@ -1257,18 +1263,24 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
             expected_type = self.get_named_type("i32")
         }
         if (expected_type.is(IR_Int16_Type)) {
-            if (integer_literal.value < -32_768i64 || integer_literal.value > 32_767i64) {
-                abort(expression.location, clone("Invalid ").append(expected_type.name).append(" literal"))
+            let max = 32_767i64
+            let min = -32_768i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
             }
         } else if (expected_type.is(IR_Int32_Type)) {
-            if (integer_literal.value < -2_147_483_648i64 || integer_literal.value > 2_147_483_647i64) {
-                abort(expression.location, clone("Invalid ").append(expected_type.name).append(" literal"))
+            let max = 2_147_483_647i64
+            let min = -2_147_483_648i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
             }
         } else if (expected_type.is(IR_Int64_Type) || expected_type.is(IR_Int_Type)) {
             \ TODO: validate i64 value
         } else if (expected_type.is(IR_Int8_Type)) {
-            if (integer_literal.value < -128i64 || integer_literal.value > 127i64) {
-                abort(expression.location, clone("Invalid ").append(expected_type.name).append(" literal"))
+            let max = 127i64
+            let min = -128i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
             }
         } else {
             abort(expression.location, clone("Unsupported integer type: ").append(expected_type.name))

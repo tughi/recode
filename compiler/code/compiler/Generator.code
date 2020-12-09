@@ -517,7 +517,16 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
         }
     } else {
         let index_register = self.find_unused_register()
-        self.generate_load_value(index_register, instruction.get_index_value())
+        self.generate_load_value(index_register, index_value)
+        if (index_value.type.is(IR_Int16_Type)) {
+            self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
+        } else if (index_value.type.is(IR_Int32_Type)) {
+            self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
+        } else if (index_value.type.is(IR_Int8_Type)) {
+            self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
+        } else if (index_value.type.is(IR_Int_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
+            self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
+        }
         if (result_value_type_size > 1) {
             self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(result_value_type_size).end_line()
         }
@@ -777,7 +786,16 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
     } else {
         let index_register = self.find_unused_register()
         index_register.is_reserved = true
-        self.generate_load_value(index_register, instruction.get_index_value())
+        self.generate_load_value(index_register, index_value)
+        if (index_value.type.is(IR_Int16_Type)) {
+            self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
+        } else if (index_value.type.is(IR_Int32_Type)) {
+            self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
+        } else if (index_value.type.is(IR_Int8_Type)) {
+            self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
+        } else if (index_value.type.is(IR_Int_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
+            self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
+        }
         if (ir_value_type_size > 1) {
             self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(ir_value_type_size).end_line()
         }
