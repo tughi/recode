@@ -56,6 +56,22 @@ def build_stage(n):
         execute(f'gcc -no-pie -g -o build/stage{n}/ReCode {output_file}', echo=True)
 
 
+def editor():
+    bootstrap()
+    build_stage(1)
+
+    if not os.path.exists(f'build/editor'):
+        execute(f'mkdir build/editor')
+
+    args = f'editor/Editor.code build/editor/Editor.s'
+    if execute(f'build/stage1/ReCode {args}', exit_on_error=False) != 0:
+        subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args} &> /dev/null' -ex=bt -ex=quit --args build/stage1/ReCode''', shell=True)
+        print()
+        exit(1)
+    execute(f'gcc build/editor/Editor.s -o build/editor/Editor -no-pie -g -lSDL2', echo=True)
+    execute(f'build/editor/Editor', echo=True)
+
+
 def examples():
     if not os.path.exists(f'build/examples'):
         execute(f'mkdir build/examples')
@@ -104,6 +120,7 @@ def stage():
 TASKS = OrderedDict(
     clean=clean,
     build=build,
+    editor=editor,
     stage=stage,
 )
 
