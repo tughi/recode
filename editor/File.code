@@ -1,0 +1,54 @@
+define write = func (self: FILE, string: String) -> FILE {
+    return self.write(string.data)
+}
+
+include "./String.code"
+
+define write = func (file: FILE, chars: [i8; ?]) -> FILE {
+    let index = 0isize
+    loop {
+        let char = chars[index]
+        if (char == '\0') {
+            return file
+        }
+        file.write(char)
+        index = index + 1
+    }
+}
+
+define write = func (file: FILE, number: i32) -> FILE {
+    if (number < 0) {
+        return file.write('-').write(-number)
+    }
+    if (number >= 10) {
+        file.write(number / 10)
+    }
+    fputc(number // 10 + '0' as i32, file)
+    return file
+}
+
+define write = func (file: FILE, number: isize) -> FILE {
+    if (number < 0) {
+        return file.write('-').write(-number)
+    }
+    if (number >= 10) {
+        file.write(number / 10)
+    }
+    return file.write((number // 10) as i8 + '0')
+}
+
+define write = func (file: FILE, char: i8) -> FILE {
+    fputc(char as i32, file)
+    return file
+}
+
+define end_line = func (file: FILE) -> FILE {
+    return file.write('\n')
+}
+
+define FILE = unknown struct
+
+let stdout: FILE = external
+let stderr: FILE = external
+
+define fputc = func (char: i32, file: FILE) -> i32

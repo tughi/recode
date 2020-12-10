@@ -1,0 +1,120 @@
+define main = func () -> i32 {
+    let SDL_INIT_VIDEO = 32
+
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
+        return 1
+    }
+
+    let window_width = 800
+    let window_height = 600
+
+    \ let SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
+    \ let SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK | 0
+
+    let window = SDL_CreateWindow("ReCode".data, 536_805_376, 536_805_376, window_width, window_height, 0)
+    if (window == null) {
+        stderr.write("Failed to create window: ").write(SDL_GetError()).end_line()
+        return 2
+    }
+
+    let renderer = SDL_CreateRenderer(window, -1, 0)
+    if (renderer == null) {
+        stderr.write("Failed to create renderer: ").write(SDL_GetError()).end_line()
+        return 3
+    }
+
+    let x = 0
+    while (x < window_width) {
+        renderer.SDL_SetRenderDrawColor(0i8, 0i8, 0i8, 0i8)
+        renderer.SDL_RenderClear()
+
+        renderer.SDL_SetRenderDrawColor(-128i8, 0i8, 0i8, 0i8)
+        renderer.draw_line(x, 0, window_width - x, window_height)
+        renderer.SDL_RenderPresent()
+
+        SDL_Delay(1)
+
+        x = x + 1
+    }
+
+    let y = 0
+    while (y < window_height) {
+        renderer.SDL_SetRenderDrawColor(0i8, 0i8, 0i8, 0i8)
+        renderer.SDL_RenderClear()
+
+        renderer.SDL_SetRenderDrawColor(-128i8, 0i8, 0i8, 0i8)
+        renderer.draw_line(window_width, y, 0, window_height - y)
+        renderer.SDL_RenderPresent()
+
+        SDL_Delay(1)
+
+        y = y + 1
+    }
+
+    SDL_Delay(1000)
+
+    SDL_DestroyRenderer(renderer)
+    SDL_DestroyWindow(window)
+
+    SDL_Quit()
+    return 0
+}
+
+define draw_line = func (renderer: SDL_Renderer, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
+    let dx: i32
+    let sx: i32
+    if (x1 < x2) {
+        dx = x2 - x1
+        sx = 1
+    } else {
+        dx = x1 - x2
+        sx = -1
+    }
+    let dy: i32
+    let sy: i32
+    if (y1 < y2) {
+        dy = y1 - y2
+        sy = 1
+    } else {
+        dy = y2 - y1
+        sy = -1
+    }
+    let err = dx + dy
+    let x = x1
+    let y = y1
+    loop {
+        renderer.SDL_RenderDrawPoint(x, y)
+        if (x == x2 && y == y2) {
+            return
+        }
+        let err2 = err * 2
+        if (err2 >= dy) {
+            err = err + dy
+            x = x + sx
+        }
+        if (err2 <= dx) {
+            err = err + dx
+            y = y + sy
+        }
+    }
+}
+
+include "./File.code"
+
+define SDL_Init = func (flags: i32) -> i32
+define SDL_Delay = func (ms: i32) -> Nothing
+define SDL_GetError = func () -> [i8; ?]
+define SDL_Quit = func () -> Nothing
+
+define SDL_Window = unknown struct
+define SDL_CreateWindow = func (title: [i8; ?], x: i32, y: i32, w: i32, h: i32, flags: i32) -> SDL_Window
+define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
+
+define SDL_Renderer = unknown struct
+define SDL_CreateRenderer = func (window: SDL_Window, index: i32, flags: i32) -> SDL_Renderer
+define SDL_DestroyRenderer = func (renderer: SDL_Renderer) -> Nothing
+define SDL_RenderClear = func (renderer: SDL_Renderer) -> i32
+define SDL_RenderDrawPoint = func (renderer: SDL_Renderer, x: i32, y: i32) -> i32
+define SDL_RenderPresent = func (renderer: SDL_Renderer) -> i32
+define SDL_SetRenderDrawColor = func (renderer: SDL_Renderer, r: i8, green: i8, b: i8, a: i8) -> i32
