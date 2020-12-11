@@ -1,7 +1,7 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define main = func () -> i32 {
-    let SDL_INIT_VIDEO = 32u32 \ 0x200u32
+    let SDL_INIT_VIDEO = 0x20u32
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
@@ -11,10 +11,10 @@ define main = func () -> i32 {
     let window_width = 800
     let window_height = 600
 
-    \ let SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
-    \ let SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK | 0
+    let SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
+    let SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK \| 0
 
-    let window = SDL_CreateWindow("ReCode".data, 536_805_376, 536_805_376, window_width, window_height, 0u32)
+    let window = SDL_CreateWindow("ReCode".data, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0u32)
     if (window == null) {
         stderr.write("Failed to create window: ").write(SDL_GetError()).end_line()
         return 2

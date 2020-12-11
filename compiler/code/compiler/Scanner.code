@@ -93,7 +93,7 @@ define scan_token = func (self: Scanner) -> Token {
 }
 
 define is_digit = func (char: i8) -> bool {
-    return char as isize >= '0' as isize && char as isize <= '9' as isize
+    return char >= '0' && char <= '9'
 }
 
 define is_identifier_start = func (char: i8) -> bool {
@@ -108,7 +108,7 @@ define is_identifier_body = func (char: i8) -> bool {
 }
 
 define is_letter = func (char: i8) -> bool {
-    return (char as isize >= 'a' as isize && char as isize <= 'z' as isize) || (char as isize >= 'A' as isize && char as isize <= 'Z' as isize)
+    return (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z')
 }
 
 define is_space = func (char: i8) -> bool {
@@ -201,18 +201,40 @@ define scan_integer_token = func (self: Scanner, token_lexeme: String, token_loc
     let char = self.next_char()
     token_lexeme.append(char)
     let value = (char - '0') as i64 \ TODO: compute value as u64
-    loop {
-        char = self.peek_char()
-        if (char.is_digit()) {
+    char = self.peek_char()
+    if (value == 0i64 && char == 'x') {
+        token_lexeme.append(self.next_char())
+        loop {
             let old_value = value
-            value = value * 10 + (char - '0') as i64
+            char = self.peek_char()
+            if (char.is_digit()) {
+                value = value * 16 + (char - '0') as i64
+            } else if (char >= 'A' && char <= 'F') {
+                value = value * 16 + (char - 'A') as i64 + 10
+            } else if (char >= 'a' && char <= 'f') {
+                value = value * 16 + (char - 'a') as i64 + 10
+            } else if (char != '_') {
+                break
+            }
             if (old_value > value) {
                 abort(token_location, "Integer literal is too large")
             }
-        } else if (char != '_') {
-            break
+            token_lexeme.append(self.next_char())
         }
-        token_lexeme.append(self.next_char())
+    } else {
+        loop {
+            char = self.peek_char()
+            if (char.is_digit()) {
+                let old_value = value
+                value = value * 10 + (char - '0') as i64
+                if (old_value > value) {
+                    abort(token_location, "Integer literal is too large")
+                }
+            } else if (char != '_') {
+                break
+            }
+            token_lexeme.append(self.next_char())
+        }
     }
     if (self.peek_char() == 'i' || self.peek_char() == 'u') {
         let type = new String()
