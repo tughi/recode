@@ -384,9 +384,10 @@ define generate_conditional_jump_instruction = func (self: MC_Generator, instruc
     if (instruction.true_block.is_being_generated) {
         self.output_file.write("  jnz ").write_block_label(instruction.true_block).end_line()
         if (instruction.false_block.is_being_generated) {
-            self.abort("Invalid state")
+            self.output_file.write("  jmp ").write_block_label(instruction.false_block).end_line()
+        } else {
+            self.generate_block(instruction.false_block)
         }
-        self.generate_block(instruction.false_block)
     } else {
         self.output_file.write("  jz ").write_block_label(instruction.false_block).end_line()
         self.generate_block(instruction.true_block)
