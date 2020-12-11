@@ -54,11 +54,11 @@ define create_ir_builder = func (compilation_unit: Compilation_Unit) -> IR_Build
     let types = new List()
     types.append(new IR_Any_Type(name = "Any"))
     types.append(new IR_Boolean_Type(name = "bool"))
-    types.append(new IR_Int_Type(name = "isize"))
     types.append(new IR_Int8_Type(name = "i8"))
     types.append(new IR_Int16_Type(name = "i16"))
     types.append(new IR_Int32_Type(name = "i32"))
     types.append(new IR_Int64_Type(name = "i64"))
+    types.append(new IR_IntMax_Type(name = "isize"))
     types.append(new IR_Nothing_Type(name = "Nothing"))
     types.append(new IR_Null_Type(name = "Null"))
     types.append(new IR_Undefined_Type(name = "Undefined"))
@@ -1274,7 +1274,7 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
             if (integer_literal.value < min || integer_literal.value > max) {
                 abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
             }
-        } else if (expected_type.is(IR_Int64_Type) || expected_type.is(IR_Int_Type)) {
+        } else if (expected_type.is(IR_Int64_Type) || expected_type.is(IR_IntMax_Type)) {
             \ TODO: validate i64 value
         } else if (expected_type.is(IR_Int8_Type)) {
             let max = 127i64

@@ -17,7 +17,7 @@ define IR_Integer_Type = struct {
     extends IR_Type
 }
 
-define IR_Int_Type = struct {
+define IR_IntMax_Type = struct {
     extends IR_Integer_Type
 }
 
@@ -514,7 +514,7 @@ define is_exit_instruction = func (self: IR_Instruction) -> bool {
         }
         if (function.name.equals("exit") && function.parameters.size == 1 as i64) {
             let function_parameter = function.parameters.get(0 as i64) as IR_Function_Parameter
-            if (function_parameter.type.is(IR_Int_Type)) {
+            if (function_parameter.type.is(IR_IntMax_Type)) {
                 return true
             }
         }

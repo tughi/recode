@@ -265,8 +265,8 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, ir_value)
     self.map_variable_value(instruction.result_value, result_register)
-    if (instruction.result_value.type.is(IR_Int_Type)) {
-        if (ir_value.type.is(IR_Int_Type)) {
+    if (instruction.result_value.type.is(IR_IntMax_Type)) {
+        if (ir_value.type.is(IR_IntMax_Type)) {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
             return
         }
@@ -287,7 +287,7 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         }
     }
     if (instruction.result_value.type.is(IR_Int16_Type)) {
-        if (ir_value.type.is(IR_Int_Type)) {
+        if (ir_value.type.is(IR_IntMax_Type)) {
             return
         }
         if (ir_value.type.is(IR_Int16_Type)) {
@@ -306,7 +306,7 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         }
     }
     if (instruction.result_value.type.is(IR_Int32_Type)) {
-        if (ir_value.type.is(IR_Int_Type)) {
+        if (ir_value.type.is(IR_IntMax_Type)) {
             return
         }
         if (ir_value.type.is(IR_Int16_Type)) {
@@ -326,7 +326,7 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         }
     }
     if (instruction.result_value.type.is(IR_Int64_Type)) {
-        if (ir_value.type.is(IR_Int_Type)) {
+        if (ir_value.type.is(IR_IntMax_Type)) {
             return
         }
         if (ir_value.type.is(IR_Int16_Type)) {
@@ -347,7 +347,7 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         }
     }
     if (instruction.result_value.type.is(IR_Int8_Type)) {
-        if (ir_value.type.is(IR_Int_Type)) {
+        if (ir_value.type.is(IR_IntMax_Type)) {
             return
         }
         if (ir_value.type.is(IR_Int16_Type)) {
@@ -524,7 +524,7 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
         } else if (index_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
-        } else if (index_value.type.is(IR_Int_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
+        } else if (index_value.type.is(IR_IntMax_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
             self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
         }
         if (result_value_type_size > 1) {
@@ -793,7 +793,7 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
         } else if (index_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
-        } else if (index_value.type.is(IR_Int_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
+        } else if (index_value.type.is(IR_IntMax_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
             self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
         }
         if (ir_value_type_size > 1) {
@@ -983,7 +983,7 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
             } else if (ir_value_type.is(IR_Function_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type.is(IR_Int_Type)) {
+            } else if (ir_value_type.is(IR_IntMax_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Int16_Type)) {
                 self.output_file.write("  mov ").write(register.name_w).write(", ").write(mc_value.register.name_w).end_line()
@@ -1006,7 +1006,7 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Function_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type.is(IR_Int_Type)) {
+        } else if (ir_value_type.is(IR_IntMax_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Int32_Type)) {
             self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.address).end_line()
@@ -1080,7 +1080,7 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
-    } else if (ir_value_type.is(IR_Int_Type)) {
+    } else if (ir_value_type.is(IR_IntMax_Type)) {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else if (ir_value_type.is(IR_Int16_Type)) {
         self.output_file.write("  mov WORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
@@ -1815,7 +1815,7 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> i64 {
     if (ir_type.is(IR_Function_Type)) {
         return 8
     }
-    if (ir_type.is(IR_Int_Type)) {
+    if (ir_type.is(IR_IntMax_Type)) {
         return 8
     }
     if (ir_type.is(IR_Int16_Type)) {
