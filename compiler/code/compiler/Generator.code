@@ -265,106 +265,97 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, ir_value)
     self.map_variable_value(instruction.result_value, result_register)
-    if (instruction.result_value.type.is(IR_IntMax_Type)) {
-        if (ir_value.type.is(IR_IntMax_Type)) {
-            stderr.write(instruction.location).write(": Redundant cast").end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int16_Type)) {
-            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_w).end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int32_Type)) {
-            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int64_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int8_Type)) {
-            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
-            return
-        }
-    }
+    let is_supported = true
     if (instruction.result_value.type.is(IR_Int16_Type)) {
-        if (ir_value.type.is(IR_IntMax_Type)) {
-            return
-        }
         if (ir_value.type.is(IR_Int16_Type)) {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int32_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int64_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int8_Type)) {
+        } else if (ir_value.type.is(IR_Int32_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int64_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_w).write(", ").write(result_register.name_b).end_line()
-            return
+        } else if (ir_value.type.is(IR_IntMax_Type)) {
+            \ nothing to do
+        } else {
+            is_supported = false
         }
-    }
-    if (instruction.result_value.type.is(IR_Int32_Type)) {
+    } else if (instruction.result_value.type.is(IR_Int32_Type)) {
         if (ir_value.type.is(IR_IntMax_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int16_Type)) {
+        } else if (ir_value.type.is(IR_Int16_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_w).end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int32_Type)) {
+        } else if (ir_value.type.is(IR_Int32_Type)) {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int64_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int8_Type)) {
+        } else if (ir_value.type.is(IR_Int64_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
-            return
+        } else if (ir_value.type.is(IR_UInt8_Type)) {
+            \ nothing to do
+        } else {
+            is_supported = false
         }
-    }
-    if (instruction.result_value.type.is(IR_Int64_Type)) {
+    } else if (instruction.result_value.type.is(IR_Int64_Type)) {
         if (ir_value.type.is(IR_IntMax_Type)) {
-            return
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int16_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_w).end_line()
+        } else if (ir_value.type.is(IR_Int32_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
+        } else if (ir_value.type.is(IR_Int64_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+        } else if (ir_value.type.is(IR_Int8_Type)) {
+            self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
+        } else {
+            is_supported = false
         }
+    } else if (instruction.result_value.type.is(IR_Int8_Type)) {
+        if (ir_value.type.is(IR_IntMax_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int16_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int32_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int64_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int8_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+        } else {
+            is_supported = false
+        }
+    } else if (instruction.result_value.type.is(IR_IntMax_Type)) {
         if (ir_value.type.is(IR_Int16_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_w).end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int32_Type)) {
+        } else if (ir_value.type.is(IR_Int32_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int64_Type)) {
-            stderr.write(instruction.location).write(": Redundant cast").end_line()
-            return
-        }
-        if (ir_value.type.is(IR_Int8_Type)) {
+        } else if (ir_value.type.is(IR_Int64_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
-            return
-        }
-    }
-    if (instruction.result_value.type.is(IR_Int8_Type)) {
-        if (ir_value.type.is(IR_IntMax_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int16_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int32_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int64_Type)) {
-            return
-        }
-        if (ir_value.type.is(IR_Int8_Type)) {
+        } else if (ir_value.type.is(IR_IntMax_Type)) {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
-            return
+        } else {
+            is_supported = false
         }
+    } else if (instruction.result_value.type.is(IR_UInt8_Type)) {
+        if (ir_value.type.is(IR_Int32_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_Int8_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_IntMax_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_UInt8_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+        } else {
+            is_supported = false
+        }
+    } else {
+        is_supported = false
     }
-    self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
+    if (is_supported == false) {
+        stderr.end_line().write(instruction.location).end_line()
+        self.abort(clone("Cannot cast ").append(ir_value.type.object_type.name).append(" to ").append(instruction.result_value.type.object_type.name))
+    }
 }
 
 define generate_conditional_jump_instruction = func (self: MC_Generator, instruction: IR_Conditional_Jump_Instruction) -> Nothing {
@@ -983,16 +974,16 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
             } else if (ir_value_type.is(IR_Function_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type.is(IR_IntMax_Type)) {
-                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type.is(IR_Int16_Type)) {
+            } else if (ir_value_type.is(IR_Int16_Type) || ir_value_type.is(IR_UInt16_Type)) {
                 self.output_file.write("  mov ").write(register.name_w).write(", ").write(mc_value.register.name_w).end_line()
-            } else if (ir_value_type.is(IR_Int32_Type)) {
+            } else if (ir_value_type.is(IR_Int32_Type) || ir_value_type.is(IR_UInt32_Type)) {
                 self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.register.name_d).end_line()
-            } else if (ir_value_type.is(IR_Int64_Type)) {
+            } else if (ir_value_type.is(IR_Int64_Type) || ir_value_type.is(IR_UInt64_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type.is(IR_Int8_Type)) {
+            } else if (ir_value_type.is(IR_Int8_Type) || ir_value_type.is(IR_UInt8_Type)) {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
+            } else if (ir_value_type.is(IR_IntMax_Type) || ir_value_type.is(IR_UIntMax_Type)) {
+                self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Pointer_Type)) {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else if (ir_value_type.is(IR_Unchecked_Array_Type)) {
@@ -1006,14 +997,14 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Function_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type.is(IR_IntMax_Type)) {
-            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type.is(IR_Int32_Type)) {
+        } else if (ir_value_type.is(IR_Int32_Type) || ir_value_type.is(IR_UInt32_Type)) {
             self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type.is(IR_Int64_Type)) {
+        } else if (ir_value_type.is(IR_Int64_Type) || ir_value_type.is(IR_UInt64_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type.is(IR_Int8_Type)) {
+        } else if (ir_value_type.is(IR_Int8_Type) || ir_value_type.is(IR_UInt8_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
+        } else if (ir_value_type.is(IR_IntMax_Type) || ir_value_type.is(IR_UIntMax_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Pointer_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else if (ir_value_type.is(IR_Unchecked_Array_Type)) {
@@ -1811,32 +1802,23 @@ define MC_Local_Variable_Address = struct {
 define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> i64 {
     if (ir_type.is(IR_Boolean_Type)) {
         return 1
-    }
-    if (ir_type.is(IR_Function_Type)) {
+    } else if (ir_type.is(IR_Function_Type)) {
         return 8
-    }
-    if (ir_type.is(IR_IntMax_Type)) {
-        return 8
-    }
-    if (ir_type.is(IR_Int16_Type)) {
+    } else if (ir_type.is(IR_Int16_Type) || ir_type.is(IR_UInt16_Type)) {
         return 2
-    }
-    if (ir_type.is(IR_Int32_Type)) {
+    } else if (ir_type.is(IR_Int32_Type) || ir_type.is(IR_UInt32_Type)) {
         return 4
-    }
-    if (ir_type.is(IR_Int64_Type)) {
+    } else if (ir_type.is(IR_Int64_Type) || ir_type.is(IR_UInt64_Type)) {
         return 8
-    }
-    if (ir_type.is(IR_Int8_Type)) {
+    } else if (ir_type.is(IR_Int8_Type) || ir_type.is(IR_UInt8_Type)) {
         return 1
-    }
-    if (ir_type.is(IR_Null_Type)) {
+    } else if (ir_type.is(IR_IntMax_Type) || ir_type.is(IR_UIntMax_Type)) {
         return 8
-    }
-    if (ir_type.is(IR_Pointer_Type)) {
+    } else if (ir_type.is(IR_Null_Type)) {
         return 8
-    }
-    if (ir_type.is(IR_Struct_Type)) {
+    } else if (ir_type.is(IR_Pointer_Type)) {
+        return 8
+    } else if (ir_type.is(IR_Struct_Type)) {
         let ir_type = ir_type as IR_Struct_Type
         let size = 0 as i64
         if (ir_type.base_type != null) {
@@ -1848,8 +1830,7 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> i64 {
             size = size + self.get_type_size(struct_type_member.type)
         }
         return size
-    }
-    if (ir_type.is(IR_Unchecked_Array_Type)) {
+    } else if (ir_type.is(IR_Unchecked_Array_Type)) {
         return 8
     }
     self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))

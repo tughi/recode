@@ -61,6 +61,11 @@ define create_ir_builder = func (compilation_unit: Compilation_Unit) -> IR_Build
     types.append(new IR_IntMax_Type(name = "isize"))
     types.append(new IR_Nothing_Type(name = "Nothing"))
     types.append(new IR_Null_Type(name = "Null"))
+    types.append(new IR_UInt8_Type(name = "u8"))
+    types.append(new IR_UInt16_Type(name = "u16"))
+    types.append(new IR_UInt32_Type(name = "u32"))
+    types.append(new IR_UInt64_Type(name = "u64"))
+    types.append(new IR_UIntMax_Type(name = "usize"))
     types.append(new IR_Undefined_Type(name = "Undefined"))
     return new IR_Builder(
         context = new IR_Builder_Context(parent = null)
@@ -1279,6 +1284,26 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
         } else if (expected_type.is(IR_Int8_Type)) {
             let max = 127i64
             let min = -128i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
+            }
+        } else if (expected_type.is(IR_UInt16_Type)) {
+            let max = 65_535i64
+            let min = 0i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
+            }
+        } else if (expected_type.is(IR_UInt32_Type)) {
+            let max = 4_294_967_295i64
+            let min = 0i64
+            if (integer_literal.value < min || integer_literal.value > max) {
+                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
+            }
+        } else if (expected_type.is(IR_UInt64_Type) || expected_type.is(IR_UIntMax_Type)) {
+            \ TODO: validate u64 value
+        } else if (expected_type.is(IR_UInt8_Type)) {
+            let max = 255i64
+            let min = 0i64
             if (integer_literal.value < min || integer_literal.value > max) {
                 abort(expression.location, clone("Value out of ").append(expected_type.name).append(" bounds: ").append(min).append(" .. ").append(max))
             }

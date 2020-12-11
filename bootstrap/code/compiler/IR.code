@@ -17,24 +17,52 @@ define IR_Integer_Type = struct {
     extends IR_Type
 }
 
-define IR_IntMax_Type = struct {
-    extends IR_Integer_Type
-}
-
-define IR_Int8_Type = struct {
+define IR_Int_Type = struct {
     extends IR_Integer_Type
 }
 
 define IR_Int16_Type = struct {
-    extends IR_Integer_Type
+    extends IR_Int_Type
 }
 
 define IR_Int32_Type = struct {
-    extends IR_Integer_Type
+    extends IR_Int_Type
 }
 
 define IR_Int64_Type = struct {
+    extends IR_Int_Type
+}
+
+define IR_Int8_Type = struct {
+    extends IR_Int_Type
+}
+
+define IR_IntMax_Type = struct {
+    extends IR_Int_Type
+}
+
+define IR_UInt_Type = struct {
     extends IR_Integer_Type
+}
+
+define IR_UInt16_Type = struct {
+    extends IR_UInt_Type
+}
+
+define IR_UInt32_Type = struct {
+    extends IR_UInt_Type
+}
+
+define IR_UInt64_Type = struct {
+    extends IR_UInt_Type
+}
+
+define IR_UInt8_Type = struct {
+    extends IR_UInt_Type
+}
+
+define IR_UIntMax_Type = struct {
+    extends IR_UInt_Type
 }
 
 define IR_Nothing_Type = struct {
