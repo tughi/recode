@@ -1,3 +1,5 @@
+\ Copyright (c) 2020, Stefan Selariu
+
 define main = func () -> i32 {
     let SDL_INIT_VIDEO = 32
 
@@ -101,20 +103,4 @@ define draw_line = func (renderer: SDL_Renderer, x1: i32, y1: i32, x2: i32, y2: 
 }
 
 include "./File.code"
-
-define SDL_Init = func (flags: i32) -> i32
-define SDL_Delay = func (ms: i32) -> Nothing
-define SDL_GetError = func () -> [i8; ?]
-define SDL_Quit = func () -> Nothing
-
-define SDL_Window = unknown struct
-define SDL_CreateWindow = func (title: [i8; ?], x: i32, y: i32, w: i32, h: i32, flags: i32) -> SDL_Window
-define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
-
-define SDL_Renderer = unknown struct
-define SDL_CreateRenderer = func (window: SDL_Window, index: i32, flags: i32) -> SDL_Renderer
-define SDL_DestroyRenderer = func (renderer: SDL_Renderer) -> Nothing
-define SDL_RenderClear = func (renderer: SDL_Renderer) -> i32
-define SDL_RenderDrawPoint = func (renderer: SDL_Renderer, x: i32, y: i32) -> i32
-define SDL_RenderPresent = func (renderer: SDL_Renderer) -> i32
-define SDL_SetRenderDrawColor = func (renderer: SDL_Renderer, r: i8, green: i8, b: i8, a: i8) -> i32
+include "./SDL.code"

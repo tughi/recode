@@ -1,3 +1,5 @@
+\ Copyright (c) 2020, Stefan Selariu
+
 define write = func (self: FILE, string: String) -> FILE {
     return self.write(string.data)
 }
