@@ -1,18 +1,18 @@
 \ Copyright (c) 2020, Stefan Selariu
 
-define SDL_Init = func (flags: i32) -> i32
-define SDL_Delay = func (ms: i32) -> Nothing
-define SDL_GetError = func () -> [i8; ?]
-define SDL_Quit = func () -> Nothing
-
-define SDL_Window = unknown struct
-define SDL_CreateWindow = func (title: [i8; ?], x: i32, y: i32, w: i32, h: i32, flags: i32) -> SDL_Window
-define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
-
-define SDL_Renderer = unknown struct
-define SDL_CreateRenderer = func (window: SDL_Window, index: i32, flags: i32) -> SDL_Renderer
+define SDL_CreateRenderer = func (window: SDL_Window, index: i32, flags: u32) -> SDL_Renderer
+define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
+define SDL_Delay = func (ms: u32) -> Nothing
 define SDL_DestroyRenderer = func (renderer: SDL_Renderer) -> Nothing
+define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
+define SDL_GetError = func () -> [u8; ?]
+define SDL_Init = func (flags: u32) -> i32
+define SDL_Quit = func () -> Nothing
 define SDL_RenderClear = func (renderer: SDL_Renderer) -> i32
 define SDL_RenderDrawPoint = func (renderer: SDL_Renderer, x: i32, y: i32) -> i32
 define SDL_RenderPresent = func (renderer: SDL_Renderer) -> i32
-define SDL_SetRenderDrawColor = func (renderer: SDL_Renderer, r: i8, green: i8, b: i8, a: i8) -> i32
+define SDL_SetRenderDrawColor = func (renderer: SDL_Renderer, r: u8, green: u8, b: u8, a: u8) -> i32
+
+define SDL_Renderer = unknown struct
+
+define SDL_Window = unknown struct

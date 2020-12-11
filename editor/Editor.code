@@ -1,7 +1,7 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define main = func () -> i32 {
-    let SDL_INIT_VIDEO = 32
+    let SDL_INIT_VIDEO = 32u32 \ 0x200u32
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
@@ -14,13 +14,13 @@ define main = func () -> i32 {
     \ let SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
     \ let SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK | 0
 
-    let window = SDL_CreateWindow("ReCode".data, 536_805_376, 536_805_376, window_width, window_height, 0)
+    let window = SDL_CreateWindow("ReCode".data, 536_805_376, 536_805_376, window_width, window_height, 0u32)
     if (window == null) {
         stderr.write("Failed to create window: ").write(SDL_GetError()).end_line()
         return 2
     }
 
-    let renderer = SDL_CreateRenderer(window, -1, 0)
+    let renderer = SDL_CreateRenderer(window, -1, 0u32)
     if (renderer == null) {
         stderr.write("Failed to create renderer: ").write(SDL_GetError()).end_line()
         return 3
@@ -28,33 +28,33 @@ define main = func () -> i32 {
 
     let x = 0
     while (x < window_width) {
-        renderer.SDL_SetRenderDrawColor(0i8, 0i8, 0i8, 0i8)
+        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
         renderer.SDL_RenderClear()
 
-        renderer.SDL_SetRenderDrawColor(-128i8, 0i8, 0i8, 0i8)
+        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
         renderer.draw_line(x, 0, window_width - x, window_height)
         renderer.SDL_RenderPresent()
 
-        SDL_Delay(1)
+        SDL_Delay(1u32)
 
         x = x + 1
     }
 
     let y = 0
     while (y < window_height) {
-        renderer.SDL_SetRenderDrawColor(0i8, 0i8, 0i8, 0i8)
+        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
         renderer.SDL_RenderClear()
 
-        renderer.SDL_SetRenderDrawColor(-128i8, 0i8, 0i8, 0i8)
+        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
         renderer.draw_line(window_width, y, 0, window_height - y)
         renderer.SDL_RenderPresent()
 
-        SDL_Delay(1)
+        SDL_Delay(1u32)
 
         y = y + 1
     }
 
-    SDL_Delay(1000)
+    SDL_Delay(1000u32)
 
     SDL_DestroyRenderer(renderer)
     SDL_DestroyWindow(window)

@@ -6,11 +6,11 @@ define write = func (self: FILE, string: String) -> FILE {
 
 include "./String.code"
 
-define write = func (file: FILE, chars: [i8; ?]) -> FILE {
+define write = func (file: FILE, chars: [u8; ?]) -> FILE {
     let index = 0isize
     loop {
         let char = chars[index]
-        if (char == '\0') {
+        if (char == '\0' as u8) {
             return file
         }
         file.write(char)
@@ -20,7 +20,7 @@ define write = func (file: FILE, chars: [i8; ?]) -> FILE {
 
 define write = func (file: FILE, number: i32) -> FILE {
     if (number < 0) {
-        return file.write('-').write(-number)
+        return file.write('-' as u8).write(-number)
     }
     if (number >= 10) {
         file.write(number / 10)
@@ -31,21 +31,21 @@ define write = func (file: FILE, number: i32) -> FILE {
 
 define write = func (file: FILE, number: isize) -> FILE {
     if (number < 0) {
-        return file.write('-').write(-number)
+        return file.write('-' as u8).write(-number)
     }
     if (number >= 10) {
         file.write(number / 10)
     }
-    return file.write((number // 10) as i8 + '0')
+    return file.write((number // 10) as u8 + '0' as u8)
 }
 
-define write = func (file: FILE, char: i8) -> FILE {
+define write = func (file: FILE, char: u8) -> FILE {
     fputc(char as i32, file)
     return file
 }
 
 define end_line = func (file: FILE) -> FILE {
-    return file.write('\n')
+    return file.write('\n' as u8)
 }
 
 define FILE = unknown struct
