@@ -291,7 +291,7 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         } else if (ir_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
         } else if (ir_value.type.is(IR_UInt8_Type)) {
-            \ nothing to do
+            self.output_file.write("  movzx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
         } else {
             is_supported = false
         }
@@ -1213,10 +1213,15 @@ define get_offset = func (self: MC_Generator, struct_type_member: IR_Struct_Type
     let current_struct_type_member_item = struct_type.members.first_item
     while (current_struct_type_member_item != null) {
         let current_struct_type_member = current_struct_type_member_item.data as IR_Struct_Type_Member
+        let current_struct_type_member_type_size = self.get_type_size(current_struct_type_member.type)
+        let current_struct_type_member_alignment = self.get_type_alignment(current_struct_type_member_type_size)
+        if (current_struct_type_member_alignment > 1 && offset // current_struct_type_member_alignment != 0i64) {
+            offset = offset + current_struct_type_member_alignment - offset // current_struct_type_member_alignment
+        }
         if (current_struct_type_member == struct_type_member) {
             return offset
         }
-        offset = offset + self.get_type_size(current_struct_type_member.type)
+        offset = offset + current_struct_type_member_type_size
         current_struct_type_member_item = current_struct_type_member_item.next_item
     }
     self.abort("Invalid state")
@@ -1828,13 +1833,35 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> i64 {
         let struct_type_members = ir_type.members.create_iterator()
         while (struct_type_members.has_next()) {
             let struct_type_member = struct_type_members.next() as IR_Struct_Type_Member
-            size = size + self.get_type_size(struct_type_member.type)
+            let struct_type_member_type_size = self.get_type_size(struct_type_member.type)
+            let struct_type_member_alignment = self.get_type_alignment(struct_type_member_type_size)
+            if (struct_type_member_alignment > 1 && size // struct_type_member_alignment != 0i64) {
+                size = size + struct_type_member_alignment - size // struct_type_member_alignment
+            }
+            size = size + struct_type_member_type_size
+        }
+        let type_alignment = self.get_type_alignment(size)
+        if (type_alignment > 1 && size // type_alignment != 0i64) {
+            size = size + type_alignment - size // type_alignment
         }
         return size
     } else if (ir_type.is(IR_Unchecked_Array_Type)) {
         return 8
     }
     self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))
+}
+
+define get_type_alignment = func (self: MC_Generator, type_size: i64) -> i64 {
+    if (type_size == 1i64) {
+        return 1
+    }
+    if (type_size == 2i64) {
+        return 2
+    }
+    if (type_size <= 4i64) {
+        return 4
+    }
+    return 8
 }
 
 define MC_String = struct {
