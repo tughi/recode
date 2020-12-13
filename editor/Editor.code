@@ -8,8 +8,8 @@ define main = func () -> i32 {
         return 1
     }
 
-    let window_width = 800
-    let window_height = 600
+    let window_width = 801
+    let window_height = 601
 
     let SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
     let SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK \| 0
@@ -48,49 +48,40 @@ define main = func () -> i32 {
         stderr.write("Failed to lock window surface: ").write(SDL_GetError()).end_line()
     }
 
-    let window_buffer = window_surface.pixels as [u8; ?]
+    let canvas = new Canvas(
+        pixels = window_surface.pixels
+        width = window_surface.width as u32
+        height = window_surface.height as u32
+        bits_per_pixel = window_surface.format.bits_per_pixel
+    )
 
-    window_buffer[4] = 255
-    window_buffer[5] = 255
-    window_buffer[6] = 255
+    let x = 0
+    while (x < window_width) {
+        canvas.clear()
+
+        canvas.draw_line(x, 0, window_width - x, window_height)
+        SDL_UpdateWindowSurface(window)
+
+        \ SDL_Delay(1u32)
+
+        x = x + 1
+    }
+
+    let y = 0
+    while (y < window_height) {
+        canvas.clear()
+
+        canvas.draw_line(window_width, y, 0, window_height - y)
+        SDL_UpdateWindowSurface(window)
+
+        \ SDL_Delay(1u32)
+
+        y = y + 1
+    }
 
     SDL_UnlockSurface(window_surface)
 
     SDL_UpdateWindowSurface(window)
-
-    \    let renderer = SDL_CreateRenderer(window, -1, 0u32)
-    \    if (renderer == null) {
-    \        stderr.write("Failed to create renderer: ").write(SDL_GetError()).end_line()
-    \        return 4
-    \    }
-    \
-    \    let x = 0
-    \    while (x < window_width) {
-    \        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
-    \        renderer.SDL_RenderClear()
-    \
-    \        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
-    \        renderer.draw_line(x, 0, window_width - x, window_height)
-    \        renderer.SDL_RenderPresent()
-    \
-    \        SDL_Delay(1u32)
-    \
-    \        x = x + 1
-    \    }
-    \
-    \    let y = 0
-    \    while (y < window_height) {
-    \        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
-    \        renderer.SDL_RenderClear()
-    \
-    \        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
-    \        renderer.draw_line(window_width, y, 0, window_height - y)
-    \        renderer.SDL_RenderPresent()
-    \
-    \        SDL_Delay(1u32)
-    \
-    \        y = y + 1
-    \    }
 
     SDL_Delay(1000u32)
 

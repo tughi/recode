@@ -42,8 +42,6 @@ define SDL_Rect = struct {
     height: i32
 }
 
-define SDL_Renderer = unknown struct
-
 define SDL_Surface = struct {
     _flags: u32
     format: SDL_PixelFormat
@@ -61,19 +59,13 @@ define SDL_Surface = struct {
 
 define SDL_Window = unknown struct
 
-define SDL_CreateRenderer = func (window: SDL_Window, index: i32, flags: u32) -> SDL_Renderer
 define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
 define SDL_Delay = func (ms: u32) -> Nothing
-define SDL_DestroyRenderer = func (renderer: SDL_Renderer) -> Nothing
 define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
 define SDL_GetError = func () -> [u8; ?]
 define SDL_GetWindowSurface = func (window: SDL_Window) -> SDL_Surface
 define SDL_Init = func (flags: u32) -> i32
 define SDL_LockSurface = func (surface: SDL_Surface) -> i32
 define SDL_Quit = func () -> Nothing
-define SDL_RenderClear = func (renderer: SDL_Renderer) -> i32
-define SDL_RenderDrawPoint = func (renderer: SDL_Renderer, x: i32, y: i32) -> i32
-define SDL_RenderPresent = func (renderer: SDL_Renderer) -> i32
-define SDL_SetRenderDrawColor = func (renderer: SDL_Renderer, r: u8, green: u8, b: u8, a: u8) -> i32
 define SDL_UnlockSurface = func (surface: SDL_Surface) -> Nothing
 define SDL_UpdateWindowSurface = func (window: SDL_Window) -> i32
