@@ -7,6 +7,21 @@ define SDL_Color = struct {
     alpha: u8
 }
 
+define SDL_Event = struct {
+    type: u32
+}
+
+define SDL_Unknown_Event = struct {
+    extends SDL_Event
+    _0: u32 \ padding
+    _1: u64 \ padding
+    _2: u64 \ padding
+    _3: u64 \ padding
+    _4: u64 \ padding
+    _5: u64 \ padding
+    _6: u64 \ padding
+}
+
 define SDL_Palette = struct {
     colors_count: i32
     colors: [!SDL_Color; ?]
@@ -63,9 +78,11 @@ define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, 
 define SDL_Delay = func (ms: u32) -> Nothing
 define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
 define SDL_GetError = func () -> [u8; ?]
+define SDL_GetTicks = func () -> u32
 define SDL_GetWindowSurface = func (window: SDL_Window) -> SDL_Surface
 define SDL_Init = func (flags: u32) -> i32
 define SDL_LockSurface = func (surface: SDL_Surface) -> i32
+define SDL_PollEvent = func (event: SDL_Event) -> i32
 define SDL_Quit = func () -> Nothing
 define SDL_UnlockSurface = func (surface: SDL_Surface) -> Nothing
 define SDL_UpdateWindowSurface = func (window: SDL_Window) -> i32

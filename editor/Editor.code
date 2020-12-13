@@ -44,39 +44,48 @@ define main = func () -> i32 {
         )
     )
 
-    let x = 0
-    while (x < window_width) {
+    let event: SDL_Event = new SDL_Unknown_Event()
+    let SDL_QUIT = 0x100u32
+
+    let frames = 0
+    let start_ticks = SDL_GetTicks()
+    let frame_ticks = start_ticks + 1000
+
+    let quit = false
+    while (quit == false) {
+        while (SDL_PollEvent(event) != 0) {
+            if (event.type == SDL_QUIT) {
+                quit = true
+            }
+        }
+
         canvas.set_color(255u8, 0u8, 0u8, 0u8)
         canvas.clear()
 
         canvas.set_color(255u8, 255u8, 0u8, 0u8)
-        canvas.draw_line(x, 0, window_width - x, window_height)
+        let position = frames // (window_width + window_height)
+        if (position < window_width) {
+            canvas.draw_line(position, 0, window_width - position, window_height)
+        } else {
+            canvas.draw_line(window_width, position - window_width, 0, window_height - position + window_width)
+        }
 
-        canvas.draw_rect(window_width / 2 - x / 2, window_height / 2 - x / 2, window_width / 2 + x / 2, window_height / 2 + x / 2)
-
-        SDL_UpdateWindowSurface(window)
-        \ SDL_Delay(1u32)
-
-        x = x + 1
-    }
-
-    let y = 0
-    while (y < window_height) {
-        canvas.set_color(255u8, 0u8, 0u8, 0u8)
-        canvas.clear()
-
-        canvas.set_color(255u8, 255u8, 0u8, 0u8)
-        canvas.draw_line(window_width, y, 0, window_height - y)
-
-        canvas.draw_rect(window_width / 2 - y / 2, window_height / 2 - y / 2, window_width / 2 + y / 2, window_height / 2 + y / 2)
+        canvas.set_color(0u8, 0u8, 255u8, 0u8)
+        let rect_size = frames // window_height - window_height / 2
+        canvas.draw_rect((window_width - rect_size) / 2, (window_height - rect_size) / 2, (window_width + rect_size) / 2, (window_height + rect_size) / 2)
 
         SDL_UpdateWindowSurface(window)
+
+        let ticks = SDL_GetTicks()
+        if (ticks > frame_ticks) {
+            stdout.write("fps: ").write(frames / ((ticks - start_ticks) / 1000) as i32).end_line()
+            frame_ticks = frame_ticks + 1000
+        }
+
         \ SDL_Delay(1u32)
 
-        y = y + 1
+        frames = frames + 1
     }
-
-    \ SDL_Delay(1000u32)
 
     SDL_DestroyWindow(window)
 
