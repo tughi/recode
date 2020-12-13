@@ -71,7 +71,9 @@ def editor():
         print()
         exit(1)
     execute(f'gcc build/editor/Editor.s -o build/editor/Editor -no-pie -g -lSDL2', echo=True)
-    execute(f'build/editor/Editor', echo=True)
+    if execute(f'build/editor/Editor', exit_on_error=False, echo=True) != 0:
+        subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run &> /dev/null' -ex=bt -ex=quit --args build/editor/Editor''', shell=True)
+        exit(1)
 
 
 def examples():
