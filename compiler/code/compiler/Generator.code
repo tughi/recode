@@ -1547,7 +1547,7 @@ define spill_local_variable = func (self: MC_Generator, mc_value: MC_Value) -> N
 }
 
 define create_local_variable_address = func (self: MC_Generator, variable_type_size: i64) -> MC_Local_Variable_Address {
-    let offset = 0 as i64
+    let offset = 0i64
     let mc_value = self.first_value
     while (mc_value != null) {
         let mc_value_address = mc_value.address
@@ -1560,6 +1560,10 @@ define create_local_variable_address = func (self: MC_Generator, variable_type_s
         mc_value = mc_value.next_value
     }
     offset = offset - variable_type_size
+    let variable_alignment = self.get_type_alignment(variable_type_size)
+    if (variable_alignment > 1 && offset // variable_alignment != 0i64) {
+        offset = offset - variable_alignment - offset // variable_alignment
+    }
     if (-offset > self.stack_frame_size) {
         self.stack_frame_size = -offset
     }
