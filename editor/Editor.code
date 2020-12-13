@@ -20,87 +20,88 @@ define main = func () -> i32 {
         return 2
     }
 
-    let renderer = SDL_CreateRenderer(window, -1, 0u32)
-    if (renderer == null) {
-        stderr.write("Failed to create renderer: ").write(SDL_GetError()).end_line()
+    let window_surface = SDL_GetWindowSurface(window)
+    if (window_surface == null) {
+        stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
         return 3
     }
 
-    let x = 0
-    while (x < window_width) {
-        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
-        renderer.SDL_RenderClear()
-
-        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
-        renderer.draw_line(x, 0, window_width - x, window_height)
-        renderer.SDL_RenderPresent()
-
-        SDL_Delay(1u32)
-
-        x = x + 1
+    stdout.write("surface width: ").write(window_surface.width).end_line()
+    stdout.write("surface height: ").write(window_surface.height).end_line()
+    if (window_surface.format != null) {
+        stdout.write("surface bits_per_pixel: ").write(window_surface.format.bits_per_pixel as i32).end_line()
+        stdout.write("surface bytes_per_pixel: ").write(window_surface.format.bytes_per_pixel as i32).end_line()
+        stdout.write("surface red_mask: ").write(window_surface.format.red_mask, 16u8).end_line()
+        stdout.write("surface green_mask: ").write(window_surface.format.green_mask, 16u8).end_line()
+        stdout.write("surface blue_mask: ").write(window_surface.format.blue_mask, 16u8).end_line()
+        stdout.write("surface alpha_mask: ").write(window_surface.format.alpha_mask, 16u8).end_line()
+        if (window_surface.format.palette == null) {
+            stdout.write("surface without palette").end_line()
+        }
+        stdout.write("surface clip_rect x: ").write(window_surface.clip_rect.x).end_line()
+        stdout.write("surface clip_rect y: ").write(window_surface.clip_rect.y).end_line()
+        stdout.write("surface clip_rect width: ").write(window_surface.clip_rect.width).end_line()
+        stdout.write("surface clip_rect height: ").write(window_surface.clip_rect.height).end_line()
     }
 
-    let y = 0
-    while (y < window_height) {
-        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
-        renderer.SDL_RenderClear()
-
-        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
-        renderer.draw_line(window_width, y, 0, window_height - y)
-        renderer.SDL_RenderPresent()
-
-        SDL_Delay(1u32)
-
-        y = y + 1
+    if (SDL_LockSurface(window_surface) != 0) {
+        stderr.write("Failed to lock window surface: ").write(SDL_GetError()).end_line()
     }
+
+    let window_buffer = window_surface.pixels as [u8; ?]
+
+    window_buffer[4] = 255
+    window_buffer[5] = 255
+    window_buffer[6] = 255
+
+    SDL_UnlockSurface(window_surface)
+
+    SDL_UpdateWindowSurface(window)
+
+    \    let renderer = SDL_CreateRenderer(window, -1, 0u32)
+    \    if (renderer == null) {
+    \        stderr.write("Failed to create renderer: ").write(SDL_GetError()).end_line()
+    \        return 4
+    \    }
+    \
+    \    let x = 0
+    \    while (x < window_width) {
+    \        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
+    \        renderer.SDL_RenderClear()
+    \
+    \        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
+    \        renderer.draw_line(x, 0, window_width - x, window_height)
+    \        renderer.SDL_RenderPresent()
+    \
+    \        SDL_Delay(1u32)
+    \
+    \        x = x + 1
+    \    }
+    \
+    \    let y = 0
+    \    while (y < window_height) {
+    \        renderer.SDL_SetRenderDrawColor(0u8, 0u8, 0u8, 0u8)
+    \        renderer.SDL_RenderClear()
+    \
+    \        renderer.SDL_SetRenderDrawColor(255u8, 0u8, 0u8, 0u8)
+    \        renderer.draw_line(window_width, y, 0, window_height - y)
+    \        renderer.SDL_RenderPresent()
+    \
+    \        SDL_Delay(1u32)
+    \
+    \        y = y + 1
+    \    }
 
     SDL_Delay(1000u32)
 
-    SDL_DestroyRenderer(renderer)
+    \    SDL_DestroyRenderer(renderer)
     SDL_DestroyWindow(window)
 
     SDL_Quit()
     return 0
 }
 
-define draw_line = func (renderer: SDL_Renderer, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
-    let dx: i32
-    let sx: i32
-    if (x1 < x2) {
-        dx = x2 - x1
-        sx = 1
-    } else {
-        dx = x1 - x2
-        sx = -1
-    }
-    let dy: i32
-    let sy: i32
-    if (y1 < y2) {
-        dy = y1 - y2
-        sy = 1
-    } else {
-        dy = y2 - y1
-        sy = -1
-    }
-    let err = dx + dy
-    let x = x1
-    let y = y1
-    loop {
-        renderer.SDL_RenderDrawPoint(x, y)
-        if (x == x2 && y == y2) {
-            return
-        }
-        let err2 = err * 2
-        if (err2 >= dy) {
-            err = err + dy
-            x = x + sx
-        }
-        if (err2 <= dx) {
-            err = err + dx
-            y = y + sy
-        }
-    }
-}
+define abort = func () -> Nothing
 
 include "./File.code"
-include "./SDL.code"
+include "./Canvas.code"

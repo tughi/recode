@@ -29,6 +29,27 @@ define write = func (file: FILE, number: i32) -> FILE {
     return file
 }
 
+define write = func (file: FILE, number: u32) -> FILE {
+    if (number >= 10) {
+        file.write(number / 10)
+    }
+    fputc((number // 10) as i32 + '0' as i32, file)
+    return file
+}
+
+define write = func (file: FILE, number: u32, base: u8) -> FILE {
+    if (number >= base as u32) {
+        file.write(number / base as u32, base)
+    }
+    let digit = (number // base as u32 * 1) as i32
+    if (digit > 10) {
+        fputc(digit - 10 + 'A' as i32, file)
+    } else {
+        fputc(digit + '0' as i32, file)
+    }
+    return file
+}
+
 define write = func (file: FILE, number: isize) -> FILE {
     if (number < 0) {
         return file.write('-' as u8).write(-number)

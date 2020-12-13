@@ -1,0 +1,50 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+define Canvas = struct {
+    surface: SDL_Surface
+}
+
+define draw_pixel = func (renderer: SDL_Renderer, x: i32, y: i32) -> Nothing {
+    SDL_RenderDrawPoint(renderer, x, y)
+}
+
+define draw_line = func (renderer: SDL_Renderer, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
+    let dx: i32
+    let sx: i32
+    if (x1 < x2) {
+        dx = x2 - x1
+        sx = 1
+    } else {
+        dx = x1 - x2
+        sx = -1
+    }
+    let dy: i32
+    let sy: i32
+    if (y1 < y2) {
+        dy = y1 - y2
+        sy = 1
+    } else {
+        dy = y2 - y1
+        sy = -1
+    }
+    let err = dx + dy
+    let x = x1
+    let y = y1
+    loop {
+        renderer.draw_pixel(x, y)
+        if (x == x2 && y == y2) {
+            return
+        }
+        let err2 = err * 2
+        if (err2 >= dy) {
+            err = err + dy
+            x = x + sx
+        }
+        if (err2 <= dx) {
+            err = err + dx
+            y = y + sy
+        }
+    }
+}
+
+include "./SDL.code"
