@@ -8,8 +8,8 @@ define main = func () -> i32 {
         return 1
     }
 
-    let window_width = 801
-    let window_height = 601
+    let window_width = 1024
+    let window_height = 768
 
     let SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
     let SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK \| 0
@@ -17,51 +17,44 @@ define main = func () -> i32 {
     let window = SDL_CreateWindow("ReCode".data, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0u32)
     if (window == null) {
         stderr.write("Failed to create window: ").write(SDL_GetError()).end_line()
-        return 2
+        return 1
     }
 
     let window_surface = SDL_GetWindowSurface(window)
     if (window_surface == null) {
         stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
-        return 3
+        return 1
     }
 
-    stdout.write("surface width: ").write(window_surface.width).end_line()
-    stdout.write("surface height: ").write(window_surface.height).end_line()
-    if (window_surface.format != null) {
-        stdout.write("surface bits_per_pixel: ").write(window_surface.format.bits_per_pixel as i32).end_line()
-        stdout.write("surface bytes_per_pixel: ").write(window_surface.format.bytes_per_pixel as i32).end_line()
-        stdout.write("surface red_mask: ").write(window_surface.format.red_mask, 16u8).end_line()
-        stdout.write("surface green_mask: ").write(window_surface.format.green_mask, 16u8).end_line()
-        stdout.write("surface blue_mask: ").write(window_surface.format.blue_mask, 16u8).end_line()
-        stdout.write("surface alpha_mask: ").write(window_surface.format.alpha_mask, 16u8).end_line()
-        if (window_surface.format.palette == null) {
-            stdout.write("surface without palette").end_line()
-        }
-        stdout.write("surface clip_rect x: ").write(window_surface.clip_rect.x).end_line()
-        stdout.write("surface clip_rect y: ").write(window_surface.clip_rect.y).end_line()
-        stdout.write("surface clip_rect width: ").write(window_surface.clip_rect.width).end_line()
-        stdout.write("surface clip_rect height: ").write(window_surface.clip_rect.height).end_line()
+    if (window_surface.format.bits_per_pixel != 32u8) {
+        stderr.write("Unsupported surface format").end_line()
+        return 1
     }
 
-    if (SDL_LockSurface(window_surface) != 0) {
-        stderr.write("Failed to lock window surface: ").write(SDL_GetError()).end_line()
-    }
-
+    let clip_size = 300
     let canvas = new Canvas(
         pixels = window_surface.pixels
-        width = window_surface.width as u32
-        height = window_surface.height as u32
-        bits_per_pixel = window_surface.format.bits_per_pixel
+        width = window_surface.width
+        height = window_surface.height
+        clip_rect = Rect(
+            x = (window_surface.width - clip_size) / 2
+            y = (window_surface.height - clip_size) / 2
+            width = clip_size
+            height = clip_size
+        )
     )
 
     let x = 0
     while (x < window_width) {
+        canvas.set_color(255u8, 0u8, 0u8, 0u8)
         canvas.clear()
 
+        canvas.set_color(255u8, 255u8, 0u8, 0u8)
         canvas.draw_line(x, 0, window_width - x, window_height)
-        SDL_UpdateWindowSurface(window)
 
+        canvas.draw_rect(window_width / 2 - x / 2, window_height / 2 - x / 2, window_width / 2 + x / 2, window_height / 2 + x / 2)
+
+        SDL_UpdateWindowSurface(window)
         \ SDL_Delay(1u32)
 
         x = x + 1
@@ -69,23 +62,22 @@ define main = func () -> i32 {
 
     let y = 0
     while (y < window_height) {
+        canvas.set_color(255u8, 0u8, 0u8, 0u8)
         canvas.clear()
 
+        canvas.set_color(255u8, 255u8, 0u8, 0u8)
         canvas.draw_line(window_width, y, 0, window_height - y)
-        SDL_UpdateWindowSurface(window)
 
+        canvas.draw_rect(window_width / 2 - y / 2, window_height / 2 - y / 2, window_width / 2 + y / 2, window_height / 2 + y / 2)
+
+        SDL_UpdateWindowSurface(window)
         \ SDL_Delay(1u32)
 
         y = y + 1
     }
 
-    SDL_UnlockSurface(window_surface)
+    \ SDL_Delay(1000u32)
 
-    SDL_UpdateWindowSurface(window)
-
-    SDL_Delay(1000u32)
-
-    \    SDL_DestroyRenderer(renderer)
     SDL_DestroyWindow(window)
 
     SDL_Quit()
@@ -94,5 +86,5 @@ define main = func () -> i32 {
 
 define abort = func () -> Nothing
 
-include "./File.code"
 include "./Canvas.code"
+include "./File.code"

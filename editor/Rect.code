@@ -1,0 +1,12 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+define Rect = struct {
+    x: i32
+    y: i32
+    width: i32
+    height: i32
+}
+
+define contains = func (self: Rect, x: i32, y: i32) -> bool {
+    return self.x <= x && x < self.x + self.width && self.y <= y && y < self.y + self.height
+}
