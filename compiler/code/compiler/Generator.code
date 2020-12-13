@@ -347,6 +347,14 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         } else {
             is_supported = false
         }
+    } else if (instruction.result_value.type.is(IR_UInt64_Type)) {
+        if (ir_value.type.is(IR_UInt32_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_UInt8_Type)) {
+            self.output_file.write("  movzx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
+        } else {
+            is_supported = false
+        }
     } else if (instruction.result_value.type.is(IR_UInt8_Type)) {
         if (ir_value.type.is(IR_Int32_Type)) {
             \ nothing to do
