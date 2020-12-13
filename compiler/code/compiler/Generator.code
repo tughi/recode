@@ -850,6 +850,8 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
         } else if (index_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
+        } else if (index_value.type.is(IR_UInt32_Type)) {
+            \ nothing to do
         } else if (index_value.type.is(IR_IntMax_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
             self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
         }
@@ -1137,16 +1139,16 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
-    } else if (ir_value_type.is(IR_IntMax_Type)) {
-        self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type.is(IR_Int16_Type)) {
+    } else if (ir_value_type.is(IR_Int16_Type) || ir_value_type.is(IR_UInt16_Type)) {
         self.output_file.write("  mov WORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type.is(IR_Int32_Type)) {
+    } else if (ir_value_type.is(IR_Int32_Type) || ir_value_type.is(IR_UInt32_Type)) {
         self.output_file.write("  mov DWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type.is(IR_Int64_Type)) {
+    } else if (ir_value_type.is(IR_Int64_Type) || ir_value_type.is(IR_UInt64_Type)) {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type.is(IR_Int8_Type)) {
+    } else if (ir_value_type.is(IR_Int8_Type) || ir_value_type.is(IR_UInt8_Type)) {
         self.output_file.write("  mov BYTE PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
+    } else if (ir_value_type.is(IR_IntMax_Type) || ir_value_type.is(IR_UIntMax_Type)) {
+        self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else if (ir_value_type.is(IR_Pointer_Type)) {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else if (ir_value_type.is(IR_Null_Type)) {
