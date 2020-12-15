@@ -100,6 +100,15 @@ define SDL_Undefined_Event = struct {
 
 define SDL_Window = unknown struct
 
+define SDL_WindowEvent = struct {
+    extends SDL_Event
+    timestamp: u32
+    window_id: u32
+    event: u8
+    data1: i32
+    data2: i32
+}
+
 define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
 define SDL_Delay = func (ms: u32) -> Nothing
 define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing

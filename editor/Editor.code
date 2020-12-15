@@ -16,7 +16,9 @@ define main = func () -> i32 {
     let SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
     let SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK \| 0
 
-    let window = SDL_CreateWindow("ReCode".data, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, 0u32)
+    let SDL_WINDOW_RESIZABLE = 0x0000_0020u32
+
+    let window = SDL_CreateWindow("ReCode".data, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_RESIZABLE)
     if (window == null) {
         stderr.write("Failed to create window: ").write(SDL_GetError()).end_line()
         return 1
@@ -43,7 +45,25 @@ define main = func () -> i32 {
     let event: SDL_Event = new SDL_Undefined_Event()
     let SDL_QUIT = 0x100u32
     let SDL_MOUSEMOTION = 0x400u32
+    let SDL_WINDOWEVENT = 0x200u32
 
+    let SDL_WINDOWEVENT_SHOWN = 1u8 \ Window has been shown
+    let SDL_WINDOWEVENT_HIDDEN = 2u8 \ Window has been hidden
+    let SDL_WINDOWEVENT_EXPOSED = 3u8 \ Window has been exposed and should be redrawn
+    let SDL_WINDOWEVENT_MOVED = 4u8 \ Window has been moved to data1, data2
+    let SDL_WINDOWEVENT_RESIZED = 5u8 \ Window has been resized to data1xdata2
+    let SDL_WINDOWEVENT_SIZE_CHANGED = 6u8 \ The window size has changed, either as a result of an API call or through the system or user changing the window size.
+    let SDL_WINDOWEVENT_MINIMIZED = 7u8 \ Window has been minimized
+    let SDL_WINDOWEVENT_MAXIMIZED = 8u8 \ Window has been maximized
+    let SDL_WINDOWEVENT_RESTORED = 9u8 \ Window has been restored to normal size and position
+    let SDL_WINDOWEVENT_ENTER = 10u8 \ Window has gained mouse focus
+    let SDL_WINDOWEVENT_LEAVE = 11u8 \ Window has lost mouse focus
+    let SDL_WINDOWEVENT_FOCUS_GAINED = 12u8 \ Window has gained keyboard focus
+    let SDL_WINDOWEVENT_FOCUS_LOST = 13u8 \ Window has lost keyboard focus
+    let SDL_WINDOWEVENT_CLOSE = 14u8 \ The window manager requests that the window be closed
+    let SDL_WINDOWEVENT_TAKE_FOCUS = 15u8 \ Window is being offered a focus (should SetWindowInputFocus() on itself or a subwindow, or ignore)
+    let SDL_WINDOWEVENT_HIT_TEST = 16u8 \ Window had a hit test that wasn't SDL_HITTEST_NORMAL.
+   
     let frames = 0
     let start_ticks = SDL_GetTicks()
     let frame_ticks = start_ticks + 1000
@@ -60,6 +80,20 @@ define main = func () -> i32 {
                 let event = event as SDL_MouseMotionEvent
                 cursor_x = event.x
                 cursor_y = event.y
+            } else if (event.type == SDL_WINDOWEVENT) {
+                let event = event as SDL_WindowEvent
+                stdout.write("window event: ").write(event.event as u32).end_line()
+                if (event.event == SDL_WINDOWEVENT_RESIZED) {
+                    let window_surface = SDL_GetWindowSurface(window)
+                    if (window_surface == null) {
+                        stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
+                        return 1
+                    }
+                    canvas.pixels = window_surface.pixels
+                    canvas.width = window_surface.width
+                    canvas.height = window_surface.height
+                    canvas.clip_rect = Rect(x = 0, y = 0, width = window_surface.width, height = window_surface.height)
+                }
             }
         }
 
@@ -74,18 +108,18 @@ define main = func () -> i32 {
 
         canvas.set_color(255u8, 255u8, 0u8, 0u8)
         let factor = 1
-        while (factor < 10) {
-            let position = frames * factor // (window_width + window_height)
-            if (position < window_width) {
-                canvas.draw_line(position, 0, window_width - position, window_height)
+        while (factor < 42) {
+            let position = frames * factor // (canvas.width + canvas.height)
+            if (position < canvas.width) {
+                canvas.draw_line(position, 0, canvas.width - position, canvas.height)
             } else {
-                canvas.draw_line(window_width, position - window_width, 0, window_height - position + window_width)
+                canvas.draw_line(canvas.width, position - canvas.width, 0, canvas.height - position + canvas.width)
             }
             factor = factor + 1
         }
         canvas.set_color(0u8, 0u8, 255u8, 0u8)
-        let rect_size = frames // window_height - window_height / 2
-        canvas.fill_rect((window_width - rect_size) / 2, (window_height - rect_size) / 2, (window_width + rect_size) / 2, (window_height + rect_size) / 2)
+        let rect_size = frames // canvas.height - canvas.height / 2
+        canvas.fill_rect((canvas.width - rect_size) / 2, (canvas.height - rect_size) / 2, (canvas.width + rect_size) / 2, (canvas.height + rect_size) / 2)
 
         canvas.set_color(0x99u8, 0x66u8, 0x33u8, 0u8)
         canvas.fill_rect(canvas.width - cursor_x, canvas.height - cursor_y, canvas.width - cursor_x + 32, canvas.height - cursor_y + 32)
