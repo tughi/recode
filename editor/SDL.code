@@ -11,15 +11,28 @@ define SDL_Event = struct {
     type: u32
 }
 
-define SDL_Unknown_Event = struct {
+define SDL_MouseButtonEvent = struct {
     extends SDL_Event
-    _0: u32 \ padding
-    _1: u64 \ padding
-    _2: u64 \ padding
-    _3: u64 \ padding
-    _4: u64 \ padding
-    _5: u64 \ padding
-    _6: u64 \ padding
+    timestamp: u32
+    window_id: u32
+    which: u32
+    button: u8
+    state: u8
+    clicks: u8
+    x: i32
+    y: i32
+}
+
+define SDL_MouseMotionEvent = struct {
+    extends SDL_Event
+    timestamp: u32
+    window_id: u32
+    which: u32
+    state: u32
+    x: i32
+    y: i32
+    relative_x: i32
+    relative_y: i32
 }
 
 define SDL_Palette = struct {
@@ -72,6 +85,19 @@ define SDL_Surface = struct {
     refcount: i32
 }
 
+define SDL_Undefined_Event = struct {
+    extends SDL_Event(
+        type = undefined
+    )
+    _0: u32 = undefined \ padding
+    _1: u64 = undefined \ padding
+    _2: u64 = undefined \ padding
+    _3: u64 = undefined \ padding
+    _4: u64 = undefined \ padding
+    _5: u64 = undefined \ padding
+    _6: u64 = undefined \ padding
+}
+
 define SDL_Window = unknown struct
 
 define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
@@ -84,5 +110,6 @@ define SDL_Init = func (flags: u32) -> i32
 define SDL_LockSurface = func (surface: SDL_Surface) -> i32
 define SDL_PollEvent = func (event: SDL_Event) -> i32
 define SDL_Quit = func () -> Nothing
+define SDL_ShowCursor = func (toggle: i32) -> i32
 define SDL_UnlockSurface = func (surface: SDL_Surface) -> Nothing
 define SDL_UpdateWindowSurface = func (window: SDL_Window) -> i32

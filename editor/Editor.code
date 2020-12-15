@@ -8,6 +8,8 @@ define main = func () -> i32 {
         return 1
     }
 
+    SDL_ShowCursor(0)
+
     let window_width = 1024
     let window_height = 768
 
@@ -31,48 +33,74 @@ define main = func () -> i32 {
         return 1
     }
 
-    let clip_size = 300
     let canvas = new Canvas(
         pixels = window_surface.pixels
         width = window_surface.width
         height = window_surface.height
-        clip_rect = Rect(
-            x = (window_surface.width - clip_size) / 2
-            y = (window_surface.height - clip_size) / 2
-            width = clip_size
-            height = clip_size
-        )
+        clip_rect = Rect(x = 0, y = 0, width = window_surface.width, height = window_surface.height)
     )
 
-    let event: SDL_Event = new SDL_Unknown_Event()
+    let event: SDL_Event = new SDL_Undefined_Event()
     let SDL_QUIT = 0x100u32
+    let SDL_MOUSEMOTION = 0x400u32
 
     let frames = 0
     let start_ticks = SDL_GetTicks()
     let frame_ticks = start_ticks + 1000
+
+    let cursor_x = 0
+    let cursor_y = 0
 
     let quit = false
     while (quit == false) {
         while (SDL_PollEvent(event) != 0) {
             if (event.type == SDL_QUIT) {
                 quit = true
+            } else if (event.type == SDL_MOUSEMOTION) {
+                let event = event as SDL_MouseMotionEvent
+                cursor_x = event.x
+                cursor_y = event.y
             }
         }
 
-        canvas.set_color(255u8, 0u8, 0u8, 0u8)
+        canvas.set_color(0x4eu8, 0x9au8, 0x06u8, 0u8)
         canvas.clear()
 
-        canvas.set_color(255u8, 255u8, 0u8, 0u8)
-        let position = frames // (window_width + window_height)
-        if (position < window_width) {
-            canvas.draw_line(position, 0, window_width - position, window_height)
-        } else {
-            canvas.draw_line(window_width, position - window_width, 0, window_height - position + window_width)
-        }
+        let margin = 32
+        canvas.clip_rect.x = margin
+        canvas.clip_rect.y = margin
+        canvas.clip_rect.width = canvas.width - margin - margin
+        canvas.clip_rect.height = canvas.height - margin - margin
 
+        canvas.set_color(255u8, 255u8, 0u8, 0u8)
+        let factor = 1
+        while (factor < 10) {
+            let position = frames * factor // (window_width + window_height)
+            if (position < window_width) {
+                canvas.draw_line(position, 0, window_width - position, window_height)
+            } else {
+                canvas.draw_line(window_width, position - window_width, 0, window_height - position + window_width)
+            }
+            factor = factor + 1
+        }
         canvas.set_color(0u8, 0u8, 255u8, 0u8)
         let rect_size = frames // window_height - window_height / 2
-        canvas.draw_rect((window_width - rect_size) / 2, (window_height - rect_size) / 2, (window_width + rect_size) / 2, (window_height + rect_size) / 2)
+        canvas.fill_rect((window_width - rect_size) / 2, (window_height - rect_size) / 2, (window_width + rect_size) / 2, (window_height + rect_size) / 2)
+
+        canvas.set_color(0x99u8, 0x66u8, 0x33u8, 0u8)
+        canvas.fill_rect(canvas.width - cursor_x, canvas.height - cursor_y, canvas.width - cursor_x + 32, canvas.height - cursor_y + 32)
+
+        canvas.clip_rect.x = 0
+        canvas.clip_rect.y = 0
+        canvas.clip_rect.width = canvas.width
+        canvas.clip_rect.height = canvas.height
+
+        canvas.set_color(0x66u8, 0x66u8, 0x66u8, 0u8)
+        canvas.draw_vertical_line(cursor_x + 1, cursor_y - 11, cursor_y + 13)
+        canvas.draw_horizontal_line(cursor_x - 11, cursor_x + 13, cursor_y + 1)
+        canvas.set_color(0xffu8, 0xffu8, 0xffu8, 0u8)
+        canvas.draw_vertical_line(cursor_x, cursor_y - 12, cursor_y + 12)
+        canvas.draw_horizontal_line(cursor_x - 12, cursor_x + 12, cursor_y)
 
         SDL_UpdateWindowSurface(window)
 

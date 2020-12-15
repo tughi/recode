@@ -89,9 +89,9 @@ define draw_horizontal_line = func (self: Canvas, x1: i32, x2: i32, y: i32) -> N
 define draw_vertical_line = func (self: Canvas, x: i32, y1: i32, y2: i32) -> Nothing {
     let y = y1
     if (y2 < y1) {
-        y = y2
-        y2 = y1
-        y1 = y
+        y1 = y2
+        y2 = y
+        y = y1
     }
     while (y <= y2) {
         self.draw_pixel(x, y)
@@ -104,6 +104,19 @@ define draw_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> No
     self.draw_horizontal_line(x1, x2, y2)
     self.draw_vertical_line(x1, y1, y2)
     self.draw_vertical_line(x2, y1, y2)
+}
+
+define fill_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
+    let y = y1
+    if (y2 < y1) {
+        y1 = y2
+        y2 = y
+        y = y1
+    }
+    while (y <= y2) {
+        self.draw_horizontal_line(x1, x2, y)
+        y = y + 1
+    }
 }
 
 include "./SDL.code"
