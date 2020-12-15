@@ -172,7 +172,7 @@ define parse_include = func (self: Parser) -> AST_Include_Statement {
 }
 
 \ define
-\   : "define" IDENTIFIER "=" ( struct )
+\   : "define" IDENTIFIER "=" ( struct | function | expression )
 define parse_define = func (self: Parser) -> AST_Statement {
     self.consume(required_define)
     self.consume_space(1 as i64)
@@ -191,7 +191,11 @@ define parse_define = func (self: Parser) -> AST_Statement {
     if (self.matches(required_struct)) {
         return self.parse_struct(name)
     }
-    return self.parse_function(name)
+    if (self.matches(required_func)) {
+        return self.parse_function(name)
+    }
+    let expression = self.parse_expression()
+    return new AST_Constant_Statement(location = name.location, name = name, expression = expression)
 }
 
 \ struct

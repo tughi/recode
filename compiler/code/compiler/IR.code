@@ -487,10 +487,14 @@ define dump = func (function: IR_Function, file: FILE) -> Nothing {
     file.write('}').end_line()
 }
 
-define IR_Variable = struct {
+define IR_Symbol = struct {
     extends Object
-    location: Source_Location
     name: String
+    location: Source_Location
+}
+
+define IR_Variable = struct {
+    extends IR_Symbol
     type: IR_Type
     values: List = new List()
 }
@@ -503,6 +507,11 @@ define IR_Global_Variable = struct {
 
 define IR_Function_Parameter = struct {
     extends IR_Variable
+}
+
+define IR_Constant = struct {
+    extends IR_Symbol
+    value: IR_Constant_Value
 }
 
 define IR_Instruction = struct {
