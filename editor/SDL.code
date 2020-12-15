@@ -1,5 +1,71 @@
 \ Copyright (c) 2020, Stefan Selariu
 
+define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
+define SDL_Delay = func (ms: u32) -> Nothing
+define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
+define SDL_GetError = func () -> [u8; ?]
+define SDL_GetTicks = func () -> u32
+define SDL_GetWindowSurface = func (window: SDL_Window) -> SDL_Surface
+define SDL_Init = func (flags: u32) -> i32
+define SDL_LockSurface = func (surface: SDL_Surface) -> i32
+define SDL_PollEvent = func (event: SDL_Event) -> i32
+define SDL_Quit = func () -> Nothing
+define SDL_ShowCursor = func (toggle: i32) -> i32
+define SDL_UnlockSurface = func (surface: SDL_Surface) -> Nothing
+define SDL_UpdateWindowSurface = func (window: SDL_Window) -> i32
+
+define SDL_INIT_VIDEO = 0x20u32
+
+define SDL_Window = unknown struct
+
+define SDL_WINDOW_RESIZABLE = 0x0000_0020u32
+
+define SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
+define SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK \| 0
+
+define SDL_Surface = struct {
+    _flags: u32
+    format: SDL_PixelFormat
+    width: i32
+    height: i32
+    pitch: i32
+    pixels: Any
+    user_data: Any
+    _locked: i32
+    _lock_data: Any
+    clip_rect: !SDL_Rect
+    _map: Any
+    refcount: i32
+}
+
+define SDL_PixelFormat = struct {
+    format: u32
+    palette: SDL_Palette
+    bits_per_pixel: u8
+    bytes_per_pixel: u8
+    red_mask: u32
+    green_mask: u32
+    blue_mask: u32
+    alpha_mask: u32
+    _red_loss: u8
+    _green_loss: u8
+    _blue_loss: u8
+    _alpha_loss: u8
+    _red_shift: u8
+    _green_shift: u8
+    _blue_shift: u8
+    _alpha_shift: u8
+    _refcount: i32
+    _next: SDL_PixelFormat
+}
+
+define SDL_Palette = struct {
+    colors_count: i32
+    colors: [!SDL_Color; ?]
+    _version: u32
+    _refcount: i32
+}
+
 define SDL_Color = struct {
     red: u8
     green: u8
@@ -7,9 +73,20 @@ define SDL_Color = struct {
     alpha: u8
 }
 
+define SDL_Rect = struct {
+    x: i32
+    y: i32
+    width: i32
+    height: i32
+}
+
 define SDL_Event = struct {
     type: u32
 }
+
+define SDL_QUIT = 0x100u32
+define SDL_MOUSEMOTION = 0x400u32
+define SDL_WINDOWEVENT = 0x200u32
 
 define SDL_MouseButtonEvent = struct {
     extends SDL_Event
@@ -35,56 +112,6 @@ define SDL_MouseMotionEvent = struct {
     relative_y: i32
 }
 
-define SDL_Palette = struct {
-    colors_count: i32
-    colors: [!SDL_Color; ?]
-    _version: u32
-    _refcount: i32
-}
-
-define SDL_PixelFormat = struct {
-    format: u32
-    palette: SDL_Palette
-    bits_per_pixel: u8
-    bytes_per_pixel: u8
-    red_mask: u32
-    green_mask: u32
-    blue_mask: u32
-    alpha_mask: u32
-    _red_loss: u8
-    _green_loss: u8
-    _blue_loss: u8
-    _alpha_loss: u8
-    _red_shift: u8
-    _green_shift: u8
-    _blue_shift: u8
-    _alpha_shift: u8
-    _refcount: i32
-    _next: SDL_PixelFormat
-}
-
-define SDL_Rect = struct {
-    x: i32
-    y: i32
-    width: i32
-    height: i32
-}
-
-define SDL_Surface = struct {
-    _flags: u32
-    format: SDL_PixelFormat
-    width: i32
-    height: i32
-    pitch: i32
-    pixels: Any
-    user_data: Any
-    _locked: i32
-    _lock_data: Any
-    clip_rect: !SDL_Rect
-    _map: Any
-    refcount: i32
-}
-
 define SDL_Undefined_Event = struct {
     extends SDL_Event(
         type = undefined
@@ -98,8 +125,6 @@ define SDL_Undefined_Event = struct {
     _6: u64 = undefined \ padding
 }
 
-define SDL_Window = unknown struct
-
 define SDL_WindowEvent = struct {
     extends SDL_Event
     timestamp: u32
@@ -109,16 +134,19 @@ define SDL_WindowEvent = struct {
     data2: i32
 }
 
-define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
-define SDL_Delay = func (ms: u32) -> Nothing
-define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
-define SDL_GetError = func () -> [u8; ?]
-define SDL_GetTicks = func () -> u32
-define SDL_GetWindowSurface = func (window: SDL_Window) -> SDL_Surface
-define SDL_Init = func (flags: u32) -> i32
-define SDL_LockSurface = func (surface: SDL_Surface) -> i32
-define SDL_PollEvent = func (event: SDL_Event) -> i32
-define SDL_Quit = func () -> Nothing
-define SDL_ShowCursor = func (toggle: i32) -> i32
-define SDL_UnlockSurface = func (surface: SDL_Surface) -> Nothing
-define SDL_UpdateWindowSurface = func (window: SDL_Window) -> i32
+define SDL_WINDOWEVENT_SHOWN = 1u8 \ window has been shown
+define SDL_WINDOWEVENT_HIDDEN = 2u8 \ window has been hidden
+define SDL_WINDOWEVENT_EXPOSED = 3u8 \ window has been exposed and should be redrawn
+define SDL_WINDOWEVENT_MOVED = 4u8 \ window has been moved to data1 x data2
+define SDL_WINDOWEVENT_RESIZED = 5u8 \ window has been resized to data1 x data2
+define SDL_WINDOWEVENT_SIZE_CHANGED = 6u8 \ window size has changed
+define SDL_WINDOWEVENT_MINIMIZED = 7u8 \ window has been minimized
+define SDL_WINDOWEVENT_MAXIMIZED = 8u8 \ window has been maximized
+define SDL_WINDOWEVENT_RESTORED = 9u8 \ window has been restored to normal size and position
+define SDL_WINDOWEVENT_ENTER = 10u8 \ window has gained mouse focus
+define SDL_WINDOWEVENT_LEAVE = 11u8 \ window has lost mouse focus
+define SDL_WINDOWEVENT_FOCUS_GAINED = 12u8 \ window has gained keyboard focus
+define SDL_WINDOWEVENT_FOCUS_LOST = 13u8 \ window has lost keyboard focus
+define SDL_WINDOWEVENT_CLOSE = 14u8 \ whe window manager requests that the window be closed
+define SDL_WINDOWEVENT_TAKE_FOCUS = 15u8 \ window is being offered a focus
+define SDL_WINDOWEVENT_HIT_TEST = 16u8 \ window had a hit test that wasn't SDL_HITTEST_NORMAL

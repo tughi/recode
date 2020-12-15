@@ -7,7 +7,7 @@ define build = func (compilation_unit: Compilation_Unit) -> IR_Build {
         sources = compilation_unit.sources
         named_functions = builder.named_functions
         named_types = builder.types
-        global_variables = builder.context.symbols
+        global_symbols = builder.context.symbols
     )
 }
 
@@ -15,7 +15,7 @@ define IR_Build = struct {
     sources: List
     named_functions: List
     named_types: List
-    global_variables: List
+    global_symbols: List
 }
 
 define dump = func (build: IR_Build, file: FILE) -> Nothing {
@@ -86,16 +86,16 @@ define get_named_type = func (self: IR_Builder, name: String) -> IR_Type {
 }
 
 define get_struct_statement = func (self: IR_Builder, name: String) -> AST_Struct_Statement {
-    let type_statements_item = self.compilation_unit.types.first_item
-    while (type_statements_item != null) {
-        let type_statement = type_statements_item.data as AST_Statement
-        if (type_statement.is(AST_Struct_Statement)) {
-            let type_statement = type_statement as AST_Struct_Statement
-            if (type_statement.name.lexeme.equals(name)) {
-                return type_statement as AST_Struct_Statement
+    let statements_item = self.compilation_unit.statements.first_item
+    while (statements_item != null) {
+        let statement = statements_item.data as AST_Statement
+        if (statement.is(AST_Struct_Statement)) {
+            let statement = statement as AST_Struct_Statement
+            if (statement.name.lexeme.equals(name)) {
+                return statement as AST_Struct_Statement
             }
         }
-        type_statements_item = type_statements_item.next_item
+        statements_item = statements_item.next_item
     }
     return null
 }
@@ -306,28 +306,48 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
-    let types = self.compilation_unit.types.create_iterator()
-    while (types.has_next()) {
-        let statement = types.next() as AST_Statement
-        self.convert_type_statement(statement)
+    let statements_item = self.compilation_unit.statements.first_item
+    while (statements_item != null) {
+        let statement = statements_item.data as AST_Statement
+        if (statement.is(AST_Struct_Statement)) {
+            self.convert_type_statement(statement as AST_Struct_Statement)
+        }
+        statements_item = statements_item.next_item
     }
 
-    let global_variables = self.compilation_unit.global_variables.create_iterator()
-    while (global_variables.has_next()) {
-        let variable_statement = global_variables.next() as AST_Variable_Statement
-        self.convert_variable_statement(variable_statement, true)
+    let function_statements_item = self.compilation_unit.function_statements.first_item
+    while (function_statements_item != null) {
+        let function_statement = function_statements_item.data as AST_Statement
+        if (function_statement.is(AST_Function_Statement)) {
+            self.create_function(function_statement as AST_Function_Statement)
+        }
+        function_statements_item = function_statements_item.next_item
     }
 
-    let functions = self.compilation_unit.functions.create_iterator()
-    while (functions.has_next()) {
-        let function_statement = functions.next() as AST_Function_Statement
-        self.create_function(function_statement)
+    let statements_item = self.compilation_unit.statements.first_item
+    while (statements_item != null) {
+        let statement = statements_item.data as AST_Statement
+        if (statement.is(AST_Constant_Statement)) {
+            self.convert_constant_statement(statement as AST_Constant_Statement)
+        } else if (statement.is(AST_Function_Statement)) {
+            \ nothing to do
+        } else if (statement.is(AST_Struct_Statement)) {
+            \ nothing to do
+        } else if (statement.is(AST_Variable_Statement)) {
+            self.convert_variable_statement(statement as AST_Variable_Statement, true)
+        } else {
+            abort(statement.location, clone("Unsupported statement type: ").append(statement.object_type.name))
+        }
+        statements_item = statements_item.next_item
     }
 
-    let functions = self.compilation_unit.functions.create_iterator()
-    while (functions.has_next()) {
-        let function_statement = functions.next() as AST_Function_Statement
-        self.build_function(function_statement)
+    let function_statements_item = self.compilation_unit.function_statements.first_item
+    while (function_statements_item != null) {
+        let function_statement = function_statements_item.data as AST_Statement
+        if (function_statement.is(AST_Function_Statement)) {
+            self.build_function(function_statement as AST_Function_Statement)
+        }
+        function_statements_item = function_statements_item.next_item
     }
 }
 
@@ -1229,7 +1249,7 @@ define convert_function_expression = func (self: IR_Builder, expression: AST_Fun
         named_functions_item = named_functions_item.next_item
     }
     if (function == null) {
-        abort("Invalid state")
+        abort(expression.location, "Invalid state")
     }
     return new IR_Function_Address_Value(type = function.type, function = function)
 }
@@ -1597,7 +1617,7 @@ define convert_variable_expression = func (self: IR_Builder, expression: AST_Var
                 return new IR_Function_Address_Value(type = expected_type, function = function)
             }
         }
-        abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))
+        abort(expression.location, clone("Undeclared symbol: ").append(expression.name.lexeme))
     }
     if (symbol.is(IR_Variable)) {
         let value = self.get_variable_value(symbol as IR_Variable)

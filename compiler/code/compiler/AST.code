@@ -2,9 +2,7 @@
 
 define Compilation_Unit = struct {
     sources: List = new List()
-    types: List = new List()
-    global_variables: List = new List()
-    functions: List = new List()
+    function_statements: List = new List()
     statements: List = new List()
 }
 

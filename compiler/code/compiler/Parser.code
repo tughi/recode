@@ -184,9 +184,7 @@ define parse_define = func (self: Parser) -> AST_Statement {
         self.consume(required_unknown)
         self.consume_space(1 as i64)
         self.consume(required_struct)
-        let type_statement = new AST_Struct_Statement(location = name.location, name = name, base_type = null, members = null, init_arguments = null)
-        self.compilation_unit.types.append(type_statement)
-        return type_statement
+        return new AST_Struct_Statement(location = name.location, name = name, base_type = null, members = null, init_arguments = null)
     }
     if (self.matches(required_struct)) {
         return self.parse_struct(name)
@@ -245,9 +243,7 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(required_close_brace)
-    let struct_statement = new AST_Struct_Statement(location = struct_name.location, name = struct_name, base_type = base_type, members = struct_members, init_arguments = struct_init_arguments)
-    self.compilation_unit.types.append(struct_statement)
-    return struct_statement
+    return new AST_Struct_Statement(location = struct_name.location, name = struct_name, base_type = base_type, members = struct_members, init_arguments = struct_init_arguments)
 }
 
 \ function
@@ -266,7 +262,7 @@ define parse_function = func (self: Parser, function_name: Identifier_Token) -> 
         function_body = null
     }
     let function_statement = new AST_Function_Statement(location = function_name.location, name = function_name, type = function_type, body = function_body, is_anonymous = function_is_anonymous)
-    self.compilation_unit.functions.append(function_statement)
+    self.compilation_unit.function_statements.append(function_statement)
     return function_statement
 }
 
@@ -353,11 +349,7 @@ define parse_let = func (self: Parser) -> AST_Variable_Statement {
             variable_value_expression = self.parse_expression()
         }
     }
-    let variable_statement = new AST_Variable_Statement(location = variable_name.location, name = variable_name, type = variable_value_type, value_expression = variable_value_expression, is_external = variable_is_external)
-    if (variable_is_global) {
-        self.compilation_unit.global_variables.append(variable_statement)
-    }
-    return variable_statement
+    return new AST_Variable_Statement(location = variable_name.location, name = variable_name, type = variable_value_type, value_expression = variable_value_expression, is_external = variable_is_external)
 }
 
 \ if

@@ -12,7 +12,7 @@ define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
 
     generator.output_file.write_line("  .intel_syntax noprefix").end_line()
 
-    generator.generate_global_variables(build.global_variables)
+    generator.generate_global_variables(build.global_symbols)
 
     let functions = build.named_functions.create_iterator()
     while (functions.has_next()) {
@@ -2023,26 +2023,29 @@ define write_type_label = func (file: FILE, type: IR_Type) -> FILE {
     return file.write(type.name)
 }
 
-define generate_global_variables = func (self: MC_Generator, variables: List) -> Nothing {
+define generate_global_variables = func (self: MC_Generator, symbols: List) -> Nothing {
     self.output_file.end_line().write("  .bss").end_line()
 
-    let variables_item = variables.last_item
-    while (variables_item != null) {
-        let variable = variables_item.data as IR_Variable
-        if (variable.is(IR_Global_Variable) == false) {
-            self.abort("Invalid state")
-        }
-        let variable = variable as IR_Global_Variable
-        if (variable.is_external == false) {
-            if (variable.value.is(IR_Undefined_Value) == false) {
-                self.abort("Global variables must be declared as undefined for now")
+    let symbols_item = symbols.last_item
+    while (symbols_item != null) {
+        let symbol = symbols_item.data as IR_Symbol
+        if (symbol.is(IR_Variable)) {
+            let variable = symbol as IR_Variable
+            if (variable.is(IR_Global_Variable) == false) {
+                self.abort(variable.location, "Invalid state")
             }
-            self.output_file.end_line()
-            self.output_file.write("  .align 8").end_line()
-            self.output_file.write(variable.name).write(':').end_line()
-            self.output_file.write("  .skip ").write(self.get_type_size(variable.type)).end_line()
+            let variable = variable as IR_Global_Variable
+            if (variable.is_external == false) {
+                if (variable.value.is(IR_Undefined_Value) == false) {
+                    self.abort("Global variables must be declared as undefined for now")
+                }
+                self.output_file.end_line()
+                self.output_file.write("  .align 8").end_line()
+                self.output_file.write(variable.name).write(':').end_line()
+                self.output_file.write("  .skip ").write(self.get_type_size(variable.type)).end_line()
+            }
         }
-        variables_item = variables_item.prev_item
+        symbols_item = symbols_item.prev_item
     }
 }
 
