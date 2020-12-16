@@ -42,7 +42,7 @@ define write = func (file: FILE, number: u32, base: u8) -> FILE {
         file.write(number / base as u32, base)
     }
     let digit = (number // base as u32 * 1) as i32
-    if (digit > 10) {
+    if (digit >= 10) {
         fputc(digit - 10 + 'A' as i32, file)
     } else {
         fputc(digit + '0' as i32, file)

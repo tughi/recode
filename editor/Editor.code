@@ -32,8 +32,20 @@ define main = func () -> i32 {
         pixels = window_surface.pixels
         width = window_surface.width
         height = window_surface.height
-        clip_rect = Rect(x = 0, y = 0, width = window_surface.width, height = window_surface.height)
+        clip_rect = Rect(
+            left = 0
+            top = 0
+            right = window_surface.width - 1
+            bottom = window_surface.height - 1
+            width = window_surface.width
+            height = window_surface.height
+        )
     )
+
+    init_gui()
+
+    let button = new Button()
+    button.set_size(200, 50)
 
     let event: SDL_Event = new SDL_Undefined_Event()
 
@@ -65,7 +77,14 @@ define main = func () -> i32 {
                     canvas.pixels = window_surface.pixels
                     canvas.width = window_surface.width
                     canvas.height = window_surface.height
-                    canvas.clip_rect = Rect(x = 0, y = 0, width = window_surface.width, height = window_surface.height)
+                    canvas.clip_rect = Rect(
+                        left = 0
+                        top = 0
+                        right = window_surface.width - 1
+                        bottom = window_surface.height - 1
+                        width = window_surface.width
+                        height = window_surface.height
+                    )
                 }
             }
         }
@@ -74,10 +93,7 @@ define main = func () -> i32 {
         canvas.clear()
 
         let margin = 32
-        canvas.clip_rect.x = margin
-        canvas.clip_rect.y = margin
-        canvas.clip_rect.width = canvas.width - margin - margin
-        canvas.clip_rect.height = canvas.height - margin - margin
+        canvas.clip_rect.set(margin, margin, canvas.width - 1 - margin, canvas.height - 1 - margin)
 
         canvas.set_color(255u8, 255u8, 0u8, 0u8)
         let factor = 1
@@ -97,10 +113,10 @@ define main = func () -> i32 {
         canvas.set_color(0x99u8, 0x66u8, 0x33u8, 0u8)
         canvas.fill_rect(canvas.width - cursor_x, canvas.height - cursor_y, canvas.width - cursor_x + 32, canvas.height - cursor_y + 32)
 
-        canvas.clip_rect.x = 0
-        canvas.clip_rect.y = 0
-        canvas.clip_rect.width = canvas.width
-        canvas.clip_rect.height = canvas.height
+        canvas.clip_rect.set(0, 0, canvas.width - 1, canvas.height - 1)
+
+        button.set_location(canvas.width - button.bounds.width - margin - margin, canvas.height - button.bounds.height - margin - margin)
+        button.draw_button(canvas)
 
         canvas.set_color(0x66u8, 0x66u8, 0x66u8, 0u8)
         canvas.draw_vertical_line(cursor_x + 1, cursor_y - 11, cursor_y + 13)
@@ -130,5 +146,5 @@ define main = func () -> i32 {
 
 define abort = func () -> Nothing
 
-include "./Canvas.code"
+include "./GUI.code"
 include "./File.code"

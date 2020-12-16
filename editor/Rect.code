@@ -1,12 +1,47 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define Rect = struct {
-    x: i32
-    y: i32
+    left: i32
+    top: i32
+    right: i32
+    bottom: i32
     width: i32
     height: i32
 }
 
 define contains = func (self: Rect, x: i32, y: i32) -> bool {
-    return self.x <= x && x < self.x + self.width && self.y <= y && y < self.y + self.height
+    return self.left <= x && x <= self.right && self.top <= y && y <= self.bottom
+}
+
+define set = func (self: Rect, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    self.left = left
+    self.top = top
+    self.right = right
+    self.bottom = bottom
+    self.width = right - left + 1
+    self.height = bottom - top + 1
+}
+
+define set_location = func (self: Rect, left: i32, top: i32) -> Nothing {
+    self.left = left
+    self.top = top
+    self.right = left + self.width - 1
+    self.bottom = top + self.height - 1
+}
+
+define set_size = func (self: Rect, width: i32, height: i32) -> Nothing {
+    if (width < 1) {
+        self.width = 1
+        self.right = self.left
+    } else {
+        self.width = width
+        self.right = self.left + width - 1
+    }
+    if (height < 1) {
+        self.height = 1
+        self.bottom = self.top
+    } else {
+        self.height = height
+        self.bottom = self.top + height - 1
+    }
 }

@@ -1,0 +1,43 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+let background_color: u32
+let border_high_color: u32
+let border_low_color: u32
+
+define init_gui = func () -> Nothing {
+    background_color = 0x336699u32
+    border_high_color = background_color + 0x101010u32
+    border_low_color = background_color - 0x101010u32
+}
+
+define View = struct {
+    parent: View = null
+    bounds: !Rect = undefined
+}
+
+define set_location = func (self: View, left: i32, top: i32) -> Nothing {
+    self.bounds.set_location(left, top)
+}
+
+define set_size = func (self: View, width: i32, height: i32) -> Nothing {
+    self.bounds.set_size(width, height)
+}
+
+define Button = struct {
+    extends View
+}
+
+define draw_button = func (self: Button, canvas: Canvas) -> Nothing {
+    canvas.set_color(background_color)
+    canvas.fill_rect(self.bounds.left, self.bounds.top, self.bounds.right, self.bounds.bottom)
+
+    canvas.set_color(border_low_color)
+    canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.bottom)
+    canvas.draw_vertical_line(self.bounds.right, self.bounds.top, self.bounds.bottom)
+
+    canvas.set_color(border_high_color)
+    canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top)
+    canvas.draw_vertical_line(self.bounds.left, self.bounds.top, self.bounds.bottom)
+}
+
+include "./Canvas.code"
