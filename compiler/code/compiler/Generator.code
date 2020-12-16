@@ -1099,8 +1099,22 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
     } else if (ir_value.is(IR_Global_Variable_Value)) {
         let ir_value = ir_value as IR_Global_Variable_Value
         let ir_value_type = ir_value.type
-        if (ir_value_type.is(IR_Pointer_Type)) {
-            let variable_address = new MC_Global_Variable_Address(ir_variable = ir_value.variable)
+        let variable_address = new MC_Global_Variable_Address(ir_variable = ir_value.variable)
+        if (ir_value_type.is(IR_Boolean_Type)) {
+            self.output_file.write("  mov ").write(register.name_b).write(", ").write(variable_address).end_line()
+        } else if (ir_value_type.is(IR_Function_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
+        } else if (ir_value_type.is(IR_Int32_Type) || ir_value_type.is(IR_UInt32_Type)) {
+            self.output_file.write("  mov ").write(register.name_d).write(", ").write(variable_address).end_line()
+        } else if (ir_value_type.is(IR_Int64_Type) || ir_value_type.is(IR_UInt64_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
+        } else if (ir_value_type.is(IR_Int8_Type) || ir_value_type.is(IR_UInt8_Type)) {
+            self.output_file.write("  mov ").write(register.name_b).write(", ").write(variable_address).end_line()
+        } else if (ir_value_type.is(IR_IntMax_Type) || ir_value_type.is(IR_UIntMax_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
+        } else if (ir_value_type.is(IR_Pointer_Type)) {
+            self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
+        } else if (ir_value_type.is(IR_Unchecked_Array_Type)) {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
