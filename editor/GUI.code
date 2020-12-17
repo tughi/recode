@@ -8,6 +8,8 @@ define init_gui = func () -> Nothing {
     background_color = 0x336699u32
     border_high_color = background_color + 0x101010u32
     border_low_color = background_color - 0x101010u32
+
+    init_font()
 }
 
 define View = struct {

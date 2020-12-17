@@ -1,0 +1,41 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+let font_glyphs: [!Glyph; 256]
+
+define Glyph = struct {
+    mask: [[u8; 9]; 19]
+    base_line: i32
+}
+
+define init_font = func () -> Nothing {
+    \ ' '
+    font_glyphs[0x20].base_line = 14
+
+    let index = 0isize
+    while (index < font_glyphs.length) {
+        if (font_glyphs[index].base_line == 0) {
+            let glyph_mask = font_glyphs[index].mask
+            let glyph_line = 0isize
+            while (glyph_line < glyph_mask.length) {
+                let glyph_line_mask = glyph_mask[glyph_line]
+                glyph_line_mask[1] = 255
+                glyph_line_mask[3] = 255
+                glyph_line_mask[5] = 255
+                glyph_line_mask[7] = 255
+                glyph_line = glyph_line + 1
+            }
+            let glyph_line = 1isize
+            while (glyph_line < glyph_mask.length) {
+                let glyph_line_mask = glyph_mask[glyph_line]
+                glyph_line_mask[0] = 255
+                glyph_line_mask[2] = 255
+                glyph_line_mask[4] = 255
+                glyph_line_mask[6] = 255
+                glyph_line_mask[8] = 255
+                glyph_line = glyph_line + 2
+            }
+            \ font_glyphs[index].mask[0] = [u8; 8](255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8)
+        }
+        index = index + 1
+    }
+}

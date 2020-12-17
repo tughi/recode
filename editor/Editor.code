@@ -1,6 +1,12 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define main = func () -> i32 {
+    let char = 0x20u8
+    while (char < 0x7fu8) {
+        stdout.write("0x").write(char as u32, 16u8).write("u8 -> ").write(char).end_line()
+        char = char + 1u8
+    }
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
         return 1
@@ -117,6 +123,9 @@ define main = func () -> i32 {
 
         button.set_location(canvas.width - button.bounds.width - margin - margin, canvas.height - button.bounds.height - margin - margin)
         button.draw_button(canvas)
+
+        canvas.set_color(0x66u8, 0x66u8, 0x66u8, 0u8)
+        canvas.draw_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ\nSecond line...", 100, 100)
 
         canvas.set_color(0x66u8, 0x66u8, 0x66u8, 0u8)
         canvas.draw_vertical_line(cursor_x + 1, cursor_y - 11, cursor_y + 13)
