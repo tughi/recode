@@ -122,7 +122,7 @@ An `[i8]` array has the following in-memory structure:
 
     define Int8_Array = struct {
         data: [i8; ?]       \ reference to an unchecked array
-        size: i32
+        size: isize
     }
 
 For checked arrays, the compiler makes sure that each access has a bounds-check, similar to a null-
@@ -132,11 +132,21 @@ check like in the case of nullable types.
 
 Unchecked arrays are unsafe. Avoid using them as much as possible.
 
-#### Fixed size arrays
+#### Fixed arrays
 
-Fixed size arrays, like `[i8; 42]` are arrays for which the compiler knows their size.
+Fixed arrays, like `[i8; 42]` are arrays for which the compiler knows their size.
 
-The compliter can do some bounds-checks at compile time.
+An `[i32; 7]` array has the following in-memory structure:
+
+    define I32_7_Array = struct {
+        _0: i32
+        _1: i32
+        _2: i32
+        _3: i32
+        _4: i32
+        _5: i32
+        _6: i32
+    }
 
 ## Strings
 

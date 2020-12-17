@@ -526,7 +526,9 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, instruction.get_array_value())
     self.map_variable_value(instruction.result_value, result_register)
-    let result_value_type_size = self.get_type_size(instruction.result_value.type)
+    \ let result_value_type_size = self.get_type_size(instruction.result_value.type)
+
+    let array_item_type_size = self.get_type_size(instruction.array_item_type)
 
     let index_value = instruction.get_index_value()
     if (index_value.is(IR_Constant_Value)) {
@@ -539,7 +541,7 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
             if (index_value < 0) {
                 self.abort("Invalid state")
             }
-            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * result_value_type_size).end_line()
+            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * array_item_type_size).end_line()
         }
     } else {
         let index_register = self.find_unused_register()
@@ -548,26 +550,37 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
         } else if (index_value.type.is(IR_Int32_Type)) {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
+        } else if (index_value.type.is(IR_Int64_Type)) {
+            \ nothing to do
         } else if (index_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
-        } else if (index_value.type.is(IR_IntMax_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
+        } else if (index_value.type.is(IR_IntMax_Type)) {
+            \ nothing to do
+        } else if (index_value.type.is(IR_UInt8_Type)) {
+            self.output_file.write("  movzx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
+        } else if (index_value.type.is(IR_UIntMax_Type)) {
+            \ nothing to do
+        } else {
             self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
         }
-        if (result_value_type_size > 1) {
-            self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(result_value_type_size).end_line()
+        if (array_item_type_size > 1) {
+            self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(array_item_type_size).end_line()
         }
         self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_register.name_q).end_line()
     }
-
-    let address = new MC_Register_Based_Address(register = result_register)
-    if (result_value_type_size == 8 as i64) {
-        self.output_file.write("  mov ").write(result_register.name_q).write(", ").write(address).end_line()
-    } else if (result_value_type_size == 4 as i64) {
-        self.output_file.write("  mov ").write(result_register.name_d).write(", ").write(address).end_line()
-    } else if (result_value_type_size == 2 as i64) {
-        self.output_file.write("  mov ").write(result_register.name_w).write(", ").write(address).end_line()
-    } else {
-        self.output_file.write("  mov ").write(result_register.name_b).write(", ").write(address).end_line()
+    if (instruction.load_address == false) {
+        let address = new MC_Register_Based_Address(register = result_register)
+        if (array_item_type_size == 8i64) {
+            self.output_file.write("  mov ").write(result_register.name_q).write(", ").write(address).end_line()
+        } else if (array_item_type_size == 4i64) {
+            self.output_file.write("  mov ").write(result_register.name_d).write(", ").write(address).end_line()
+        } else if (array_item_type_size == 2i64) {
+            self.output_file.write("  mov ").write(result_register.name_w).write(", ").write(address).end_line()
+        } else if (array_item_type_size == 1i64) {
+            self.output_file.write("  mov ").write(result_register.name_b).write(", ").write(address).end_line()
+        } else {
+            self.abort(instruction.location, clone("Unsupported array-item type size: ").append(array_item_type_size))
+        }
     }
 }
 
@@ -870,29 +883,8 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
         index_register.is_reserved = false
     }
 
-    if (ir_value.is(IR_Variable_Value)) {
-        let ir_value = ir_value as IR_Variable_Value
-        let mc_value = self.get_value(ir_value)
-        if (mc_value.register == null) {
-            let register = self.find_unused_register()
-            self.generate_load_value(register, ir_value)
-            self.map_variable_value(ir_value, register)
-        }
-    }
+    self.generate_store_value(ir_value, new MC_Register_Based_Address(register = address_register))
 
-    self.output_file.write("  mov ")
-    if (ir_value_type_size == 8 as i64) {
-        self.output_file.write("QWORD PTR ")
-    } else if (ir_value_type_size == 4 as i64) {
-        self.output_file.write("DWORD PTR ")
-    } else if (ir_value_type_size == 2 as i64) {
-        self.output_file.write("WORD PTR ")
-    } else if (ir_value_type_size == 1 as i64) {
-        self.output_file.write("BYTE PTR ")
-    } else {
-        self.abort("Invalid state")
-    }
-    self.output_file.write(new MC_Register_Based_Address(register = address_register)).write(", ").write_operand(self, ir_value).end_line()
     address_register.is_reserved = false
 }
 
@@ -1946,8 +1938,11 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> i64 {
         return size
     } else if (ir_type.is(IR_Unchecked_Array_Type)) {
         return 8
+    } else if (ir_type.is(IR_Fixed_Array_Type)) {
+        let ir_type = ir_type as IR_Fixed_Array_Type
+        return self.get_type_size(ir_type.item_type) * ir_type.size
     }
-    self.abort(clone("Unsupported type: ").append(ir_type.object_type.name))
+    self.abort(clone("Unsupported type: ").append(ir_type.name))
 }
 
 define get_type_alignment = func (self: MC_Generator, type_size: i64) -> i64 {

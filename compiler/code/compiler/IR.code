@@ -87,6 +87,12 @@ define IR_Unchecked_Array_Type = struct {
     item_type: IR_Type
 }
 
+define IR_Fixed_Array_Type = struct {
+    extends IR_Type
+    item_type: IR_Type
+    size: i64
+}
+
 define IR_Function_Type = struct {
     extends IR_Type
     parameters: List
@@ -736,10 +742,12 @@ define IR_Load_Array_Item_Instruction = struct {
             return file.write("load_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(')').end_line()
         }
     )
+    array_item_type: IR_Type
+    load_address: bool
 }
 
-define create_ir_load_array_item_instruction = func (result_value: IR_Variable_Value, array_value: IR_Value, index_value: IR_Value) -> IR_Load_Array_Item_Instruction {
-    let instruction = new IR_Load_Array_Item_Instruction(result_value = result_value)
+define create_ir_load_array_item_instruction = func (result_value: IR_Variable_Value, array_value: IR_Value, index_value: IR_Value, array_item_type: IR_Type, load_address: bool) -> IR_Load_Array_Item_Instruction {
+    let instruction = new IR_Load_Array_Item_Instruction(result_value = result_value, array_item_type = array_item_type, load_address = load_address)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
     result_value.creator_instruction = instruction

@@ -435,11 +435,46 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
 }
 
 define convert_array_type = func (self: IR_Builder, type: AST_Array_Type) -> IR_Type {
+    let item_type = self.convert_type(type.item_type)
     if (type.is_checked) {
+        if (type.size_expression != null) {
+            let size_value = self.convert_expression(type.size_expression, null)
+            if (size_value.type.is(IR_Integer_Type) == false) {
+                abort(type.size_expression.location, "Not an integer expression")
+            }
+            if (size_value.is(IR_Constant_Value) == false) {
+                abort(type.size_expression.location, "Not an constant expression")
+            }
+            let size_value = size_value as IR_Constant_Value
+            return self.create_ir_fixed_array_type(item_type, (size_value.literal as Integer_Token).value)
+        }
         abort(type.location, "Checked array types are not supported yet")
     }
-    let item_type = self.convert_type(type.item_type)
     return self.create_ir_unchecked_array_type(item_type)
+}
+
+define create_ir_fixed_array_type = func (self: IR_Builder, item_type: IR_Type, array_size: i64) -> IR_Fixed_Array_Type {
+    let types_item = self.types.first_item
+    while (types_item != null) {
+        let type = types_item.data as IR_Type
+        if (type.is(IR_Fixed_Array_Type)) {
+            let type = type as IR_Fixed_Array_Type
+            if (type.item_type == item_type && type.size == array_size) {
+                return type
+            }
+        }
+        types_item = types_item.next_item
+    }
+
+    let array_type = new IR_Fixed_Array_Type(
+        name = clone("[").append(item_type.name).append("; ").append(array_size).append("]")
+        item_type = item_type
+        size = array_size
+    )
+
+    self.types.append(array_type)
+
+    return array_type
 }
 
 define create_ir_unchecked_array_type = func (self: IR_Builder, item_type: IR_Type) -> IR_Unchecked_Array_Type {
@@ -829,8 +864,12 @@ define convert_assignment_statement = func (self: IR_Builder, assignment_stateme
             let array_item_type = (array_address.type as IR_Unchecked_Array_Type).item_type
             let value = self.convert_expression(assignment_statement.value_expression, array_item_type)
             self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
+        } else if (array_address.type.is(IR_Pointer_Type) && (array_address.type as IR_Pointer_Type).pointed_type.is(IR_Fixed_Array_Type)) {
+            let array_item_type = ((array_address.type as IR_Pointer_Type).pointed_type as IR_Fixed_Array_Type).item_type
+            let value = self.convert_expression(assignment_statement.value_expression, array_item_type)
+            self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
         } else {
-            abort(assignment_statement.location, clone("Not an array value"))
+            abort(assignment_statement.location, clone("Not an array reference. Unexpected value type: ").append(array_address.type.name))
         }
     } else if (assignment_statement.storage_expression.is(AST_Member_Access_Expression)) {
         let member_access_expression = assignment_statement.storage_expression as AST_Member_Access_Expression
@@ -1019,6 +1058,9 @@ define convert_expression = func (self: IR_Builder, expression: AST_Expression, 
 }
 
 define convert_expression_address = func (self: IR_Builder, expression: AST_Expression) -> IR_Value {
+    if (expression.is(AST_Array_Access_Expression)) {
+        return self.convert_array_access_expression_address(expression as AST_Array_Access_Expression)
+    }
     if (expression.is(AST_Member_Access_Expression)) {
         return self.convert_member_access_expression_address(expression as AST_Member_Access_Expression)
     }
@@ -1047,11 +1089,66 @@ define convert_array_access_expression = func (self: IR_Builder, array_access_ex
     }
     let object_value = self.convert_expression(array_access_expression.array_expression, null)
     let object_value_type = object_value.type
-    if ((object_value_type.is(IR_Unchecked_Array_Type))) {
-        let object_value_type = object_value_type as IR_Unchecked_Array_Type
-        return self.append(create_ir_load_array_item_instruction(self.create_temp_value(object_value_type.item_type), object_value, index_value), array_access_expression.location)
+    let array_value: IR_Value
+    let array_item_type: IR_Type
+    if (object_value_type.is(IR_Unchecked_Array_Type)) {
+        array_value = object_value
+        array_item_type = (object_value_type as IR_Unchecked_Array_Type).item_type
+    } else if (object_value_type.is(IR_Pointer_Type) && (object_value_type as IR_Pointer_Type).pointed_type.is(IR_Fixed_Array_Type)) {
+        array_value = object_value
+        array_item_type = ((object_value_type as IR_Pointer_Type).pointed_type as IR_Fixed_Array_Type).item_type
+    } else if (object_value_type.is(IR_Fixed_Array_Type)) {
+        let array_type = object_value_type as IR_Fixed_Array_Type
+        array_item_type = array_type.item_type
+        if (object_value.is(IR_Variable_Value)) {
+            array_value = self.append(
+                create_ir_load_variable_address_instruction(
+                    self.create_temp_value(self.create_ir_pointer_type(array_type))
+                    object_value as IR_Variable_Value
+                )
+                array_access_expression.location
+            )
+        } else if (object_value.is(IR_Global_Variable_Value)) {
+            array_value = new IR_Global_Variable_Address_Value(
+                type = self.create_ir_pointer_type(array_type)
+                variable = (object_value as IR_Global_Variable_Value).variable
+            )
+        } else {
+            abort(array_access_expression.location, clone("Unsupported value type: ").append(object_value.object_type.name))
+        }
+    } else {
+        abort(array_access_expression.location, clone("Got ").append(object_value_type.name).append(" value instead of an array reference"))
     }
-    abort(array_access_expression.location, clone("Got ").append(object_value_type.name).append(" value instead of an array"))
+    if (array_item_type.is(IR_Struct_Type) || array_item_type.is(IR_Fixed_Array_Type)) {
+        return self.append(
+            create_ir_load_array_item_instruction(
+                self.create_temp_value(self.create_ir_pointer_type(array_item_type))
+                array_value
+                index_value
+                array_item_type
+                true
+            )
+            array_access_expression.location
+        )
+    }
+    return self.append(
+        create_ir_load_array_item_instruction(
+            self.create_temp_value(array_item_type)
+            array_value
+            index_value
+            array_item_type
+            false
+        )
+        array_access_expression.location
+    )
+}
+
+define convert_array_access_expression_address = func (self: IR_Builder, array_access_expression: AST_Array_Access_Expression) -> IR_Value {
+    let result_type = self.deduce_expression_type(array_access_expression)
+    if (result_type.is(IR_Pointer_Type)) {
+        return self.convert_array_access_expression(array_access_expression)
+    }
+    abort(array_access_expression.location, clone("Cannot get address of expression of ").append(result_type.name).append(" type"))
 }
 
 define convert_call_expression = func (self: IR_Builder, call_expression: AST_Call_Expression) -> IR_Value {
@@ -1426,26 +1523,70 @@ define convert_member_access_expression = func (self: IR_Builder, member_access_
                 variable = (object_value as IR_Global_Variable_Value).variable
             )
         } else {
-            abort(member_access_expression.location, clone("Unuspported value type: ").append(object_value.object_type.name))
+            abort(member_access_expression.location, clone("Unsupported value type: ").append(object_value.object_type.name))
         }
     } else if (object_value_type.is(IR_Pointer_Type)) {
         let pointed_type = (object_value_type as IR_Pointer_Type).pointed_type
-        if (pointed_type.is(IR_Struct_Type) == false) {
-            abort(member_access_expression.location, clone("Not a IR_Struct_Type pointer value: ").append(object_value_type.name))
+        if (pointed_type.is(IR_Fixed_Array_Type)) {
+            let array_type = pointed_type as IR_Fixed_Array_Type
+            if (member_access_expression.member_name.lexeme.equals("length") == false) {
+                abort(member_access_expression.location, "Did you mean length?")
+            }
+            return new IR_Constant_Value(
+                type = self.get_named_type("isize")
+                literal = new Integer_Token(
+                    location = null
+                    lexeme = clone(array_type.name).append('.').append("length")
+                    value = array_type.size
+                    type = null
+                )
+            )
+        } else if (pointed_type.is(IR_Struct_Type) == false) {
+            abort(member_access_expression.location, clone("Not a struct pointer value: ").append(object_value_type.name))
         }
         struct_type = pointed_type as IR_Struct_Type
+    } else if (object_value_type.is(IR_Fixed_Array_Type)) {
+        let array_type = object_value_type as IR_Fixed_Array_Type
+        if (member_access_expression.member_name.lexeme.equals("length") == false) {
+            abort(member_access_expression.location, "Did you mean length?")
+        }
+        return new IR_Constant_Value(
+            type = self.get_named_type("isize")
+            literal = new Integer_Token(
+                location = null
+                lexeme = clone(array_type.name).append('.').append("length")
+                value = array_type.size
+                type = null
+            )
+        )
     } else {
-        abort(member_access_expression.location, clone("Not an IR_Pointer_Type value: ").append(object_value_type.name))
+        abort(member_access_expression.location, clone("Not a reference type: ").append(object_value_type.name))
     }
     let struct_type_member = struct_type.get_member(member_access_expression.member_name.lexeme)
     if (struct_type_member == null) {
         struct_type.dump_struct_members()
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
     }
-    if (struct_type_member.type.is(IR_Struct_Type)) {
-        return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(self.create_ir_pointer_type(struct_type_member.type)), object_value, struct_type_member, true), member_access_expression.location)
+    if (struct_type_member.type.is(IR_Struct_Type) || struct_type_member.type.is(IR_Fixed_Array_Type)) {
+        return self.append(
+            create_ir_load_struct_member_instruction(
+                self.create_temp_value(self.create_ir_pointer_type(struct_type_member.type))
+                object_value
+                struct_type_member
+                true
+            )
+            member_access_expression.location
+        )
     }
-    return self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), object_value, struct_type_member, false), member_access_expression.location)
+    return self.append(
+        create_ir_load_struct_member_instruction(
+            self.create_temp_value(struct_type_member.type)
+            object_value
+            struct_type_member
+            false
+        )
+        member_access_expression.location
+    )
 }
 
 define dump_struct_members = func (struct_type: IR_Struct_Type) -> Nothing {
@@ -1517,7 +1658,7 @@ define convert_negate_expression = func (self: IR_Builder, expression: AST_Negat
 
 define convert_new_expression = func (self: IR_Builder, expression: AST_New_Expression) -> IR_Value {
     if (expression.type.is(AST_Named_Type) == false) {
-        abort(expression.type.location, "Unuspported type")
+        abort(expression.type.location, "Unsupported type")
     }
     let type_name = (expression.type as AST_Named_Type).name.lexeme
     let struct_statement = self.get_struct_statement(type_name)
@@ -1650,6 +1791,9 @@ define convert_variable_expression_address = func (self: IR_Builder, expression:
 }
 
 define deduce_expression_type = func (self: IR_Builder, expression: AST_Expression) -> IR_Type {
+    if (expression.is(AST_Array_Access_Expression)) {
+        return self.deduce_array_access_expression_type(expression as AST_Array_Access_Expression)
+    }
     if (expression.is(AST_Call_Expression)) {
         return self.deduce_call_expression_type(expression as AST_Call_Expression)
     }
@@ -1663,6 +1807,18 @@ define deduce_expression_type = func (self: IR_Builder, expression: AST_Expressi
         return self.deduce_variable_expression_type(expression as AST_Variable_Expression)
     }
     abort(expression.location, expression.object_type)
+}
+
+define deduce_array_access_expression_type = func (self: IR_Builder, expression: AST_Array_Access_Expression) -> IR_Type {
+    let array_type = self.deduce_expression_type(expression.array_expression)
+    if (array_type.is(IR_Fixed_Array_Type)) {
+        let array_item_type = (array_type as IR_Fixed_Array_Type).item_type
+        if (array_item_type.is(IR_Struct_Type) || array_item_type.is(IR_Fixed_Array_Type)) {
+            return self.create_ir_pointer_type(array_item_type)
+        }
+        return array_item_type
+    }
+    abort(expression.array_expression.location, array_type.object_type)
 }
 
 define deduce_call_expression_type = func (self: IR_Builder, expression: AST_Call_Expression) -> IR_Type {
