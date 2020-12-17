@@ -1,12 +1,6 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define main = func () -> i32 {
-    let char = 0x20u8
-    while (char < 0x7fu8) {
-        stdout.write("0x").write(char as u32, 16u8).write("u8 -> ").write(char).end_line()
-        char = char + 1u8
-    }
-
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
         return 1
@@ -50,30 +44,33 @@ define main = func () -> i32 {
 
     init_gui()
 
-    let button = new Button()
-    button.set_size(200, 50)
-
     let event: SDL_Event = new SDL_Undefined_Event()
-
-    let frames = 0
-    let start_ticks = SDL_GetTicks()
-    let frame_ticks = start_ticks + 1000
 
     let cursor_x = 0
     let cursor_y = 0
 
+    let glyph = font_glyphs['A' as i32]
+    glyph.base_line = 12
+
+    let gui = new View(
+        context = new View_Context()
+        canvas = canvas
+    )
+
     let quit = false
     while (quit == false) {
-        while (SDL_PollEvent(event) != 0) {
+        if (SDL_WaitEvent(event) != 0) {
             if (event.type == SDL_QUIT) {
                 quit = true
             } else if (event.type == SDL_MOUSEMOTION) {
                 let event = event as SDL_MouseMotionEvent
                 cursor_x = event.x
                 cursor_y = event.y
+
+                gui.context.hovered_view = gui.on_mouse_moved(cursor_x, cursor_y)
             } else if (event.type == SDL_WINDOWEVENT) {
                 let event = event as SDL_WindowEvent
-                stdout.write("window event: ").write(event.event as u32).end_line()
+                \ stdout.write("window event: ").write(event.event as u32).end_line()
                 if (event.event == SDL_WINDOWEVENT_RESIZED) {
                     let window_surface = SDL_GetWindowSurface(window)
                     if (window_surface == null) {
@@ -98,59 +95,75 @@ define main = func () -> i32 {
         canvas.set_color(0x4eu8, 0x9au8, 0x06u8, 0u8)
         canvas.clear()
 
-        let margin = 32
-        canvas.clip_rect.set(margin, margin, canvas.width - 1 - margin, canvas.height - 1 - margin)
+        canvas.set_color(0x000000u32)
+        canvas.draw_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, 8)
 
-        canvas.set_color(255u8, 255u8, 0u8, 0u8)
-        let factor = 1
-        while (factor < 42) {
-            let position = frames * factor // (canvas.width + canvas.height)
-            if (position < canvas.width) {
-                canvas.draw_line(position, 0, canvas.width - position, canvas.height)
-            } else {
-                canvas.draw_line(canvas.width, position - canvas.width, 0, canvas.height - position + canvas.width)
-            }
-            factor = factor + 1
+        let gui_action = GUI_ACTION_FIRST
+        while (gui_action <= GUI_ACTION_LAST) {
+            gui.action = gui_action
+            gui.next_annon_child = gui.first_annon_child
+
+            gui.glyph_editor(glyph, 32)
+
+            gui_action = gui_action + 1
         }
-        canvas.set_color(0u8, 0u8, 255u8, 0u8)
-        let rect_size = frames // canvas.height - canvas.height / 2
-        canvas.fill_rect((canvas.width - rect_size) / 2, (canvas.height - rect_size) / 2, (canvas.width + rect_size) / 2, (canvas.height + rect_size) / 2)
 
-        canvas.set_color(0x99u8, 0x66u8, 0x33u8, 0u8)
-        canvas.fill_rect(canvas.width - cursor_x, canvas.height - cursor_y, canvas.width - cursor_x + 32, canvas.height - cursor_y + 32)
-
-        canvas.clip_rect.set(0, 0, canvas.width - 1, canvas.height - 1)
-
-        button.set_location(canvas.width - button.bounds.width - margin - margin, canvas.height - button.bounds.height - margin - margin)
-        button.draw_button(canvas)
-
-        canvas.set_color(0x66u8, 0x66u8, 0x66u8, 0u8)
-        canvas.draw_text("ABCDEFGHIJKLMNOPQRSTUVWXYZ\nSecond line...", 100, 100)
-
-        canvas.set_color(0x66u8, 0x66u8, 0x66u8, 0u8)
-        canvas.draw_vertical_line(cursor_x + 1, cursor_y - 11, cursor_y + 13)
-        canvas.draw_horizontal_line(cursor_x - 11, cursor_x + 13, cursor_y + 1)
-        canvas.set_color(0xffu8, 0xffu8, 0xffu8, 0u8)
-        canvas.draw_vertical_line(cursor_x, cursor_y - 12, cursor_y + 12)
-        canvas.draw_horizontal_line(cursor_x - 12, cursor_x + 12, cursor_y)
+        canvas.draw_cursor(cursor_x, cursor_y)
 
         SDL_UpdateWindowSurface(window)
-
-        let ticks = SDL_GetTicks()
-        if (ticks > frame_ticks) {
-            stdout.write("fps: ").write(frames / ((ticks - start_ticks) / 1000) as i32).end_line()
-            frame_ticks = frame_ticks + 1000
-        }
-
-        \ SDL_Delay(1u32)
-
-        frames = frames + 1
     }
 
     SDL_DestroyWindow(window)
 
     SDL_Quit()
     return 0
+}
+
+define draw_cursor = func (canvas: Canvas, x: i32, y: i32) -> Nothing {
+    canvas.set_color(0x66u8, 0x66u8, 0x66u8, 0u8)
+    canvas.draw_vertical_line(x + 1, y - 11, y + 13)
+    canvas.draw_horizontal_line(x - 11, x + 13, y + 1)
+    canvas.set_color(0xffu8, 0xffu8, 0xffu8, 0u8)
+    canvas.draw_vertical_line(x, y - 12, y + 12)
+    canvas.draw_horizontal_line(x - 12, x + 12, y)
+}
+
+define glyph_editor = func (context: View, glyph: Glyph, cell_size: i32) -> Nothing {
+    let view = context.view(null)
+
+    let rows = glyph.mask.length as i32
+    let columns = glyph.mask[0].length as i32
+
+    if (view.action == GUI_ACTION_LAYOUT) {
+        view.bounds.set_location(cell_size, cell_size)
+        view.bounds.set_size(1 + (cell_size + 1) * columns, 1 + (cell_size + 1) * rows)
+    } else if (view.action == GUI_ACTION_DRAW) {
+        view.canvas.set_color(0x000000u32)
+        view.canvas.fill_rect(view.bounds.left, view.bounds.top, view.bounds.right, view.bounds.bottom)
+    }
+
+    let row = 0
+    while (row < rows) {
+        let column = 0
+        while (column < columns) {
+            let cell_view = view.view(null)
+            if (cell_view.action == GUI_ACTION_LAYOUT) {
+                cell_view.bounds.set_size(cell_size, cell_size)
+                cell_view.bounds.set_location(view.bounds.left + 1 + column * (cell_size + 1), view.bounds.top + 1 + row * (cell_size + 1))
+            } else if (cell_view.action == GUI_ACTION_DRAW) {
+                if (cell_view.context.hovered_view == cell_view) {
+                    cell_view.canvas.set_color(0xffff00u32)
+                } else if (glyph.mask[row][column] == 0u8) {
+                    cell_view.canvas.set_color(0xffffffu32)
+                } else {
+                    cell_view.canvas.set_color(0x000000u32)
+                }
+                cell_view.canvas.fill_rect(cell_view.bounds.left, cell_view.bounds.top, cell_view.bounds.right, cell_view.bounds.bottom)
+            }
+            column = column + 1
+        }
+        row = row + 1
+    }
 }
 
 define abort = func () -> Nothing

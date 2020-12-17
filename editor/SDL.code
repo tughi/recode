@@ -13,6 +13,7 @@ define SDL_Quit = func () -> Nothing
 define SDL_ShowCursor = func (toggle: i32) -> i32
 define SDL_UnlockSurface = func (surface: SDL_Surface) -> Nothing
 define SDL_UpdateWindowSurface = func (window: SDL_Window) -> i32
+define SDL_WaitEvent = func (event: SDL_Event) -> i32
 
 define SDL_INIT_VIDEO = 0x20u32
 

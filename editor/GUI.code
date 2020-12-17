@@ -1,5 +1,7 @@
 \ Copyright (c) 2020, Stefan Selariu
 
+include "./Canvas.code"
+
 let background_color: u32
 let border_high_color: u32
 let border_low_color: u32
@@ -13,33 +15,94 @@ define init_gui = func () -> Nothing {
 }
 
 define View = struct {
-    parent: View = null
+    context: View_Context
+    key: String = null
+    canvas: Canvas
     bounds: !Rect = undefined
+    action: u8 = undefined
+    first_annon_child: View = null
+    last_annon_child: View = null
+    next_annon_child: View = null
+    first_keyed_child: View = null
+    next_view: View = null
 }
 
-define set_location = func (self: View, left: i32, top: i32) -> Nothing {
-    self.bounds.set_location(left, top)
-}
-
-define set_size = func (self: View, width: i32, height: i32) -> Nothing {
-    self.bounds.set_size(width, height)
+define View_Context = struct {
+    hovered_view: View = null
 }
 
 define Button = struct {
     extends View
 }
 
-define draw_button = func (self: Button, canvas: Canvas) -> Nothing {
-    canvas.set_color(background_color)
-    canvas.fill_rect(self.bounds.left, self.bounds.top, self.bounds.right, self.bounds.bottom)
+define GUI_ACTION_FIRST = 1u8
+define GUI_ACTION_INIT = 1u8
+define GUI_ACTION_LAYOUT = 2u8
+define GUI_ACTION_DRAW = 3u8
+define GUI_ACTION_LAST = 3u8
 
-    canvas.set_color(border_low_color)
-    canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.bottom)
-    canvas.draw_vertical_line(self.bounds.right, self.bounds.top, self.bounds.bottom)
-
-    canvas.set_color(border_high_color)
-    canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top)
-    canvas.draw_vertical_line(self.bounds.left, self.bounds.top, self.bounds.bottom)
+define view = func (context: View, key: String) -> View {
+    let child: View
+    if (key != null) {
+        child = context.first_keyed_child
+        while (child != null && child.key == key) {
+            child = child.next_view
+        }
+        if (child == null) {
+            child = new View(
+                context = context.context
+                key = key
+                canvas = context.canvas
+                next_view = context.first_keyed_child
+            )
+            context.first_keyed_child = child
+        }
+    } else if (context.first_annon_child == null) {
+        child = new View(
+            context = context.context
+            canvas = context.canvas
+        )
+        context.first_annon_child = child
+        context.last_annon_child = child
+    } else {
+        child = context.next_annon_child
+        if (child == null) {
+            child = new View(
+                context = context.context
+                canvas = context.canvas
+            )
+            context.last_annon_child.next_view = child
+            context.last_annon_child = child
+        } else {
+            context.next_annon_child = child.next_view
+        }
+    }
+    child.action = context.action
+    child.next_annon_child = child.first_annon_child
+    return child
 }
 
-include "./Canvas.code"
+define on_mouse_moved = func (self: View, mouse_x: i32, mouse_y: i32) -> View {
+    let hovered_view: View = null
+    let child = self.first_annon_child
+    while (child != null) {
+        if (child.bounds.contains(mouse_x, mouse_y)) {
+            hovered_view = child.on_mouse_moved(mouse_x, mouse_y)
+        }
+        child = child.next_view
+    }
+    if (hovered_view != null) {
+        return hovered_view
+    }
+    return self
+}
+
+define button = func (context: View, key: String, label: String) -> Button {
+    let view = context.view(key) as Button
+    if (view.action == GUI_ACTION_DRAW) {
+        let canvas = view.canvas
+        canvas.set_color(background_color)
+        canvas.fill_rect(view.bounds.left, view.bounds.top, view.bounds.right, view.bounds.bottom)
+    }
+    return view
+}
