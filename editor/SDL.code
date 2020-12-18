@@ -87,6 +87,8 @@ define SDL_Event = struct {
 
 define SDL_QUIT = 0x100u32
 define SDL_MOUSEMOTION = 0x400u32
+define SDL_MOUSEBUTTONDOWN = 0x401u32
+define SDL_MOUSEBUTTONUP = 0x402u32
 define SDL_WINDOWEVENT = 0x200u32
 
 define SDL_MouseButtonEvent = struct {
