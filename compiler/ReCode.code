@@ -284,15 +284,16 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
 
     if (expression.is(AST_Call_Expression)) {
         file.write((expression as AST_Call_Expression).callee_expression).write('(')
-        let call_arguments = (expression as AST_Call_Expression).arguments.create_iterator()
-        if (call_arguments.has_next()) {
-            loop {
-                file.write(call_arguments.next() as AST_Expression)
-                if (call_arguments.has_next()) {
-                    file.write(", ")
-                } else {
-                    break
-                }
+        let call_arguments_item = (expression as AST_Call_Expression).arguments.first_item
+        while (call_arguments_item != null) {
+            let call_argument = call_arguments_item.data as AST_Call_Argument
+            if (call_argument.name != null) {
+                file.write(call_argument.name).write(" = ")
+            }
+            file.write(call_argument.value_expression)
+            call_arguments_item = call_arguments_item.next_item
+            if (call_arguments_item != null) {
+                file.write(", ")
             }
         }
         return file.write(')')

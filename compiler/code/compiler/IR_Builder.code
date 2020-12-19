@@ -1198,6 +1198,17 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
 
     let call_arguments = self.convert_call_arguments(call_expression.arguments)
     if (first_argument != null) {
+        if (first_argument.type.is(IR_Struct_Type)) {
+            if (first_argument.is(IR_Variable_Value)) {
+                first_argument = self.append(
+                    create_ir_load_variable_address_instruction(
+                        self.create_temp_value(self.create_ir_pointer_type(first_argument.type))
+                        first_argument as IR_Variable_Value
+                    )
+                    call_expression.callee_expression.location
+                )
+            }
+        }
         call_arguments.prepend(new IR_Call_Argument(value = first_argument))
     }
 

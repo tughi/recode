@@ -179,6 +179,13 @@ The variable names are symbols used by the compiler to know where the value are 
 
 Functions that don't return a value are missing the `-> type` part.
 
+Functions can be called using the Uniform Function Call Syntax (UFCS). In this case, if the
+_receiver_ is a struct variable, it is passed by reference.
+
+UFCS is useful to chain function calls.
+
+    file.write("An example of ").write(4).write(" chained calls").end_line()
+
 ## Templates
 
 Templates look like functions but they are always inlined where _invoked_.
