@@ -113,6 +113,10 @@ define draw_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> No
     self.draw_vertical_line(x2, y1, y2)
 }
 
+define draw_rect = func (self: Canvas, rect: Rect) -> Nothing {
+    self.draw_rect(rect.left, rect.top, rect.right, rect.bottom)
+}
+
 define fill_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
     let y = y1
     if (y2 < y1) {
@@ -124,6 +128,10 @@ define fill_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> No
         self.draw_horizontal_line(x1, x2, y)
         y = y + 1
     }
+}
+
+define fill_rect = func (self: Canvas, rect: Rect) -> Nothing {
+    self.fill_rect(rect.left, rect.top, rect.right, rect.bottom)
 }
 
 define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) -> Nothing {
@@ -152,6 +160,23 @@ define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) 
             char_left = char_left + glyph_mask[0].length as i32
         }
         char_index = char_index + 1
+    }
+}
+
+define draw_char = func (self: Canvas, char: u8, left: i32, base_line: i32) -> Nothing {
+    let glyph_mask = font_glyphs[char].mask
+    let glyph_line = 0isize
+    while (glyph_line < glyph_mask.length) {
+        let glyph_line_mask = glyph_mask[glyph_line]
+        let glyph_cell = 0isize
+        while (glyph_cell < glyph_line_mask.length) {
+            let glyph_cell_mask = glyph_line_mask[glyph_cell]
+            if (glyph_cell_mask != 0u8) {
+                self.draw_pixel(left + glyph_cell as i32, base_line + glyph_line as i32)
+            }
+            glyph_cell = glyph_cell + 1
+        }
+        glyph_line = glyph_line + 1
     }
 }
 

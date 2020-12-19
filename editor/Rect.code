@@ -1,12 +1,16 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define Rect = struct {
-    left: i32
-    top: i32
-    right: i32
-    bottom: i32
-    width: i32
-    height: i32
+    left: i32 = 0
+    top: i32 = 0
+    right: i32 = 0
+    bottom: i32 = 0
+    width: i32 = 0
+    height: i32 = 0
+}
+
+define reference = func (self: Rect) -> Rect {
+    return self
 }
 
 define contains = func (self: Rect, x: i32, y: i32) -> bool {
