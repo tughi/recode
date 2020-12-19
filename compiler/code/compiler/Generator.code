@@ -869,11 +869,23 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
         } else if (index_value.type.is(IR_Int32_Type)) {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
+        } else if (index_value.type.is(IR_Int64_Type)) {
+            \ nothing to do
         } else if (index_value.type.is(IR_Int8_Type)) {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
+        } else if (index_value.type.is(IR_IntMax_Type)) {
+            \ nothing to do
+        } else if (index_value.type.is(IR_UInt16_Type)) {
+            self.output_file.write("  movzx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
         } else if (index_value.type.is(IR_UInt32_Type)) {
             \ nothing to do
-        } else if (index_value.type.is(IR_IntMax_Type) == false && index_value.type.is(IR_Int64_Type) == false) {
+        } else if (index_value.type.is(IR_UInt64_Type)) {
+            \ nothing to do
+        } else if (index_value.type.is(IR_UInt8_Type)) {
+            self.output_file.write("  movzx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
+        } else if (index_value.type.is(IR_UIntMax_Type)) {
+            \ nothing to do
+        } else {
             self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
         }
         if (ir_value_type_size > 1) {
