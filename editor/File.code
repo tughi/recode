@@ -69,9 +69,48 @@ define end_line = func (file: FILE) -> FILE {
     return file.write('\n' as u8)
 }
 
-define FILE = unknown struct
+define read_file = func (file_path: String) -> String {
+    let file = open_file(file_path, "r")
+    let content = file.read_all()
+    file.close()
+    return content
+}
 
-let stdout: FILE = external
-let stderr: FILE = external
+define open_file = func (file_path: String, mode: String) -> FILE {
+    return fopen(file_path.data, mode.data)
+}
 
-define fputc = func (char: i32, file: FILE) -> i32
+define close = func (file: FILE) -> Nothing {
+    fclose(file)
+}
+
+define read_all = func (file: FILE) -> String {
+    if (feof(file) != 0) {
+        return null
+    }
+    let content = new String()
+    loop {
+        content.append(fgetc(file) as u8)
+        if (feof(file) != 0) {
+            break
+        }
+    }
+    return content
+}
+
+define read_line = func (file: FILE) -> String {
+    if (feof(file) != 0) {
+        return null
+    }
+    let line = new String()
+    loop {
+        let char = fgetc(file) as u8
+        line.append(char)
+        if (char == '\n' as u8 || feof(file) != 0) {
+            break
+        }
+    }
+    return line
+}
+
+include "./LibC.code"

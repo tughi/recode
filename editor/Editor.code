@@ -1,6 +1,10 @@
 \ Copyright (c) 2020, Stefan Selariu
 
+let text: String
+
 define main = func () -> i32 {
+    text = read_file("editor/Editor.code")
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
         return 1
@@ -214,8 +218,7 @@ define draw_glyph_editor = func (canvas: Canvas, glyph: Glyph, cell_size: i32, m
         }
     }
 
-    canvas.draw_text("abcdefghijklmnopqrstuvwxyz\nABCDEFGHIJKLMNOPQRSTUVWXYZ\n0123456789", margin * 2 + cell_size * columns + 2, char_bounds.bottom + MARGIN)
-    canvas.draw_text("The quick brown fox jumps over the lazy dog", margin * 2 + cell_size * columns + 2, MARGIN + char_bounds.bottom + margin * 10)
+    canvas.draw_text(text, margin * 2 + cell_size * columns + 2, char_bounds.bottom + MARGIN)
 }
 
 define abort = func () -> Nothing

@@ -1,7 +1,20 @@
 \ Copyright (c) 2020, Stefan Selariu
 
 define String = struct {
-    data: [u8; ?] = undefined
+    data: [u8; ?] = malloc(16usize) as [u8; ?]
     data_size: usize = undefined
     length: usize = undefined
 }
+
+define append = func (self: String, char: u8) -> String {
+    if (self.length + 1 >= self.data_size) {
+        self.data_size = self.data_size + 16
+        self.data = realloc(self.data, self.data_size) as [u8; ?]
+    }
+    self.data[self.length] = char
+    self.length = self.length + 1
+    self.data[self.length] = '\0' as u8
+    return self
+}
+
+include "./LibC.code"
