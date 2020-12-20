@@ -137,27 +137,29 @@ define fill_rect = func (self: Canvas, rect: Rect) -> Nothing {
 define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) -> Nothing {
     let char_left = left
     let char_index = 0usize
-    while (char_index < text.length) {
+    while (char_index < text.length && base_line < self.height) {
         let char = text.data[char_index]
         let glyph_mask = font_glyphs[char].mask
         if (char == '\n' as u8) {
             char_left = left
             base_line = base_line + glyph_mask.length as i32
         } else {
-            let glyph_line = 0isize
-            while (glyph_line < glyph_mask.length) {
-                let glyph_line_mask = glyph_mask[glyph_line]
-                let glyph_cell = 0isize
-                while (glyph_cell < glyph_line_mask.length) {
-                    let glyph_cell_mask = glyph_line_mask[glyph_cell]
-                    if (glyph_cell_mask != 0u8) {
-                        self.draw_pixel(char_left + glyph_cell as i32, base_line + glyph_line as i32)
+            if (char_left < self.width) {
+                let glyph_line = 0isize
+                while (glyph_line < glyph_mask.length) {
+                    let glyph_line_mask = glyph_mask[glyph_line]
+                    let glyph_cell = 0isize
+                    while (glyph_cell < glyph_line_mask.length) {
+                        let glyph_cell_mask = glyph_line_mask[glyph_cell]
+                        if (glyph_cell_mask != 0u8) {
+                            self.draw_pixel(char_left + glyph_cell as i32, base_line + glyph_line as i32)
+                        }
+                        glyph_cell = glyph_cell + 1
                     }
-                    glyph_cell = glyph_cell + 1
+                    glyph_line = glyph_line + 1
                 }
-                glyph_line = glyph_line + 1
+                char_left = char_left + glyph_mask[0].length as i32
             }
-            char_left = char_left + glyph_mask[0].length as i32
         }
         char_index = char_index + 1
     }
