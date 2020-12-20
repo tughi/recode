@@ -13,28 +13,25 @@ define init_font = func () -> Nothing {
 
     let index = 0isize
     while (index < font_glyphs.length) {
-        if (font_glyphs[index].base_line == 0) {
-            let glyph_mask = font_glyphs[index].mask
-            let glyph_line = 0isize
-            while (glyph_line < glyph_mask.length) {
-                let glyph_line_mask = glyph_mask[glyph_line]
-                glyph_line_mask[1] = 255
-                glyph_line_mask[3] = 255
-                glyph_line_mask[5] = 255
-                glyph_line_mask[7] = 255
-                glyph_line = glyph_line + 1
+        let font_glyph = font_glyphs[index]
+        if (font_glyph.base_line == 0) {
+            font_glyphs[index].base_line = 14
+            let left = 1
+            let top = 3
+            let right = font_glyph.mask[0].length as i32 - 2
+            let bottom = font_glyph.base_line - 1
+            let x = left
+            while (x <= right) {
+                font_glyph.mask[top][x] = 255u8
+                font_glyph.mask[bottom][x] = 255u8
+                x = x + 1
             }
-            let glyph_line = 1isize
-            while (glyph_line < glyph_mask.length) {
-                let glyph_line_mask = glyph_mask[glyph_line]
-                glyph_line_mask[0] = 255
-                glyph_line_mask[2] = 255
-                glyph_line_mask[4] = 255
-                glyph_line_mask[6] = 255
-                glyph_line_mask[8] = 255
-                glyph_line = glyph_line + 2
+            let y = top + 1
+            while (y < bottom) {
+                font_glyph.mask[y][left] = 255u8
+                font_glyph.mask[y][right] = 255u8
+                y = y + 1
             }
-            \ font_glyphs[index].mask[0] = [u8; 8](255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8, 255u8)
         }
         index = index + 1
     }
