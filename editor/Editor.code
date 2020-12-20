@@ -54,7 +54,9 @@ define main = func () -> i32 {
     let mouse_y = 0
     let mouse_button = 0u8
 
-    let glyph = font_glyphs['A' as i32]
+    let edited_glyph = Edited_Glyph(
+       glyph = font_glyphs['A' as i32]
+    )
 
     loop {
         if (SDL_WaitEvent(event) != 0) {
@@ -101,7 +103,7 @@ define main = func () -> i32 {
         \ canvas.set_color(COLOR_TEXT)
         \ canvas.draw_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, 8)
 
-        canvas.draw_glyph_editor(glyph, 32, mouse_x, mouse_y, mouse_button)
+        canvas.draw_glyph_editor(edited_glyph.reference(), 32, mouse_x, mouse_y, mouse_button)
 
         canvas.draw_cursor(mouse_x, mouse_y)
 
@@ -126,7 +128,8 @@ define draw_cursor = func (canvas: Canvas, x: i32, y: i32) -> Nothing {
     canvas.draw_horizontal_line(x - 12, x + 12, y)
 }
 
-define draw_glyph_editor = func (canvas: Canvas, glyph: Glyph, cell_size: i32, mouse_x: i32, mouse_y: i32, mouse_button: u8) -> Nothing {
+define draw_glyph_editor = func (canvas: Canvas, edited_glyph: Edited_Glyph, cell_size: i32, mouse_x: i32, mouse_y: i32, mouse_button: u8) -> Nothing {
+    let glyph = edited_glyph.glyph
     let rows = glyph.mask.length as i32
     let columns = glyph.mask[0].length as i32
 
@@ -195,8 +198,11 @@ define draw_glyph_editor = func (canvas: Canvas, glyph: Glyph, cell_size: i32, m
     let margin = MARGIN
     char_bounds.set_location(margin * 2 + cell_size * columns + 2, MARGIN) \ TODO: replace margin with MARGIN
     while (char < 127) {
-        let is_selected = font_glyphs[char] == glyph
         let is_hovered = char_bounds.contains(mouse_x, mouse_y)
+        if (is_hovered && mouse_button == 1u8) {
+            edited_glyph.glyph = font_glyphs[char]
+        }
+        let is_selected = font_glyphs[char] == glyph
         if (is_selected) {
             canvas.set_color(0x0000ffu32)
             canvas.fill_rect(char_bounds)
@@ -219,6 +225,14 @@ define draw_glyph_editor = func (canvas: Canvas, glyph: Glyph, cell_size: i32, m
     }
 
     canvas.draw_text(text, margin * 2 + cell_size * columns + 2, char_bounds.bottom + MARGIN)
+}
+
+define Edited_Glyph = struct {
+    glyph: Glyph
+}
+
+define reference = func (self: Edited_Glyph) -> Edited_Glyph {
+    return self
 }
 
 define abort = func () -> Nothing
