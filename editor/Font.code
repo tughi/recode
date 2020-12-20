@@ -3,21 +3,21 @@
 let font_glyphs: [!Glyph; 256]
 
 define Glyph = struct {
-    mask: [[u8; 9]; 19]
+    mask: [[u8; 9]; 18]
     base_line: i32
 }
 
 define init_font = func () -> Nothing {
     \ ' '
-    font_glyphs[0x20].base_line = 14
+    font_glyphs[0x20].base_line = 13
 
     let index = 0isize
     while (index < font_glyphs.length) {
         let font_glyph = font_glyphs[index]
         if (font_glyph.base_line == 0) {
-            font_glyphs[index].base_line = 14
+            font_glyphs[index].base_line = 13
             let left = 1
-            let top = 3
+            let top = 2
             let right = font_glyph.mask[0].length as i32 - 2
             let bottom = font_glyph.base_line - 1
             let x = left
