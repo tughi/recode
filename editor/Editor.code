@@ -54,25 +54,68 @@ define main = func () -> i32 {
     let mouse_y = 0
     let mouse_button = 0u8
 
-    let edited_glyph = Edited_Glyph(
-       glyph = font_glyphs['A' as i32]
+    let glyph_editor = Glyph_Editor(
+        cell_size = 24
+        select_glyph_buttons = undefined
+        selected_glyph = 'A' as u8
+        save_button = Button(
+            bounds = undefined
+            text = "Save"
+        )
+    )
+    let glyph_editor = glyph_editor.reference()
+    let char = ' ' as i32
+    while (char < 127) {
+        glyph_editor.select_glyph_buttons[char].text = new String().append(char as u8)
+        glyph_editor.select_glyph_buttons[char].bounds.set_size(0, 0)
+        char = char + 1
+    }
+
+    let gui_event_init = new GUI_Event_Init()
+    let gui_event_mouse_button_pressed = new GUI_Event_Mouse_Button_Pressed(which = undefined)
+    let gui_event_mouse_button_released = new GUI_Event_Mouse_Button_Released(which = undefined)
+    let gui_event_mouse_moved = new GUI_Event_Mouse_Moved(x = undefined, y = undefined)
+
+    let gui_context = new GUI_Context(
+        canvas = canvas
+        event = gui_event_init
     )
 
     loop {
+        if (gui_context.event != null) {
+            canvas.set_color(COLOR_BACKGROUND)
+            canvas.clear()
+
+            \ canvas.set_color(COLOR_TEXT)
+            \ canvas.draw_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, 8)
+
+            gui_context.glyph_editor(glyph_editor)
+
+            canvas.draw_cursor(mouse_x, mouse_y)
+
+            SDL_UpdateWindowSurface(window)
+        }
+
         if (SDL_WaitEvent(event) != 0) {
+            gui_context.event = null
+
             if (event.type == SDL_QUIT) {
                 break
             } else if (event.type == SDL_MOUSEMOTION) {
                 let event = event as SDL_MouseMotionEvent
                 mouse_x = event.x
                 mouse_y = event.y
-                \ stdout.write("mouse moved event -- state").write(event.state, 2u8).end_line()
+                gui_event_mouse_moved.x = event.x
+                gui_event_mouse_moved.y = event.y
+                gui_context.event = gui_event_mouse_moved
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {
                 let event = event as SDL_MouseButtonEvent
-                mouse_button = event.button
+                gui_event_mouse_button_pressed.which = event.button
+                gui_context.event = gui_event_mouse_button_pressed
             } else if (event.type == SDL_MOUSEBUTTONUP) {
                 let event = event as SDL_MouseButtonEvent
-                mouse_button = 0
+                gui_event_mouse_button_released.which = event.button
+                gui_context.event = gui_event_mouse_button_released
             } else if (event.type == SDL_WINDOWEVENT) {
                 let event = event as SDL_WindowEvent
                 \ stdout.write("window event: ").write(event.event as u32).end_line()
@@ -93,21 +136,10 @@ define main = func () -> i32 {
                         width = window_surface.width
                         height = window_surface.height
                     )
+                    gui_context.event = gui_event_init
                 }
             }
         }
-
-        canvas.set_color(COLOR_BACKGROUND)
-        canvas.clear()
-
-        \ canvas.set_color(COLOR_TEXT)
-        \ canvas.draw_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, 8)
-
-        canvas.draw_glyph_editor(edited_glyph.reference(), 32, mouse_x, mouse_y, mouse_button)
-
-        canvas.draw_cursor(mouse_x, mouse_y)
-
-        SDL_UpdateWindowSurface(window)
     }
 
     SDL_DestroyWindow(window)
@@ -128,15 +160,57 @@ define draw_cursor = func (canvas: Canvas, x: i32, y: i32) -> Nothing {
     canvas.draw_horizontal_line(x - 12, x + 12, y)
 }
 
-define draw_glyph_editor = func (canvas: Canvas, edited_glyph: Edited_Glyph, cell_size: i32, mouse_x: i32, mouse_y: i32, mouse_button: u8) -> Nothing {
-    let glyph = edited_glyph.glyph
+define glyph_editor = func (context: GUI_Context, glyph_editor: Glyph_Editor) -> Nothing {
+    let cell_size = glyph_editor.cell_size
+    let glyph = font_glyphs[glyph_editor.selected_glyph]
     let rows = glyph.mask.length as i32
     let columns = glyph.mask[0].length as i32
 
     define MARGIN = 32
 
+    let canvas = context.canvas
+
+    let is_reset = false
+
+    let context_event = context.event
+    let context_event_type = context_event.type
+    if (context_event_type == GUI_EVENT_TYPE_INIT) {
+        glyph_editor.bounds.set_size(cell_size * columns + 2, cell_size * rows + 2)
+        glyph_editor.bounds.set_location(MARGIN, MARGIN)
+    } else if (context_event_type == GUI_EVENT_TYPE_MOUSE_MOVED) {
+        let context_event = context_event as GUI_Event_Mouse_Moved
+        if (glyph_editor.bounds.contains(context_event.x, context_event.y)) {
+            context.hovered_view = glyph_editor
+            glyph_editor.hovered_row = (context_event.y - MARGIN - 1) / glyph_editor.cell_size
+            glyph_editor.hovered_column = (context_event.x - MARGIN - 1) / glyph_editor.cell_size
+        }
+    } else if (context_event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_PRESSED) {
+        if (context.hovered_view == glyph_editor as GUI_View) {
+            let context_event = context.event as GUI_Event_Mouse_Button_Pressed
+            if (context_event.which == 1u8) {
+                glyph_editor.is_drawing = true
+            } else if (context_event.which == 3u8) {
+                glyph_editor.is_erasing = true
+            } else if (context_event.which == 2u8) {
+                glyph_editor.is_resetting = true
+            }
+        }
+    } else if (context_event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_RELEASED) {
+        let context_event = context.event as GUI_Event_Mouse_Button_Released
+        if (context_event.which == 1u8) {
+            glyph_editor.is_drawing = false
+        } else if (context_event.which == 3u8) {
+            glyph_editor.is_erasing = false
+        } else if (context_event.which == 2u8) {
+            if (context.hovered_view == glyph_editor as GUI_View) {
+                is_reset = true
+                glyph_editor.is_resetting = false
+            }
+        }
+    }
+
     canvas.set_color(COLOR_TEXT)
-    canvas.draw_rect(MARGIN, MARGIN, MARGIN + cell_size * columns + 1, MARGIN + cell_size * rows + 1)
+    canvas.draw_rect(glyph_editor.bounds)
 
     canvas.set_color(COLOR_TEXT)
     let row = 0
@@ -152,18 +226,19 @@ define draw_glyph_editor = func (canvas: Canvas, edited_glyph: Edited_Glyph, cel
                 height = undefined
             )
 
-            let is_hovered = cell_bounds.contains(mouse_x, mouse_y)
+            let is_hovered = glyph_editor.hovered_row == row && glyph_editor.hovered_column == column
 
             let is_filled = glyph.mask[row][column] != 0u8
-            if (is_filled && mouse_button == 2u8) {
+            if (is_filled && is_reset) {
                 glyph.mask[row][column] = 0u8
                 is_filled = false
             }
+
             if (is_hovered) {
-                if (is_filled == false && mouse_button == 1u8) {
+                if (is_filled == false && glyph_editor.is_drawing) {
                     glyph.mask[row][column] = 255u8
                     is_filled = true
-                } else if (is_filled == true && mouse_button == 3u8) {
+                } else if (is_filled == true && glyph_editor.is_erasing) {
                     glyph.mask[row][column] = 0u8
                     is_filled = false
                 }
@@ -190,52 +265,221 @@ define draw_glyph_editor = func (canvas: Canvas, edited_glyph: Edited_Glyph, cel
     canvas.set_color(0x0000ffu32)
     canvas.draw_horizontal_line(MARGIN, MARGIN + cell_size * columns + 1, MARGIN + cell_size * glyph.base_line + 1)
 
-    canvas.set_color(COLOR_TEXT)
-    let char = ' ' as u8
-    let char_bounds = Rect()
-    let char_bounds = char_bounds.reference()
-    char_bounds.set_size(glyph.mask[0].length as i32, glyph.mask.length as i32)
-    let margin = MARGIN
-    char_bounds.set_location(margin * 2 + cell_size * columns + 2, MARGIN) \ TODO: replace margin with MARGIN
+    let char = ' ' as i32
     while (char < 127) {
-        let is_hovered = char_bounds.contains(mouse_x, mouse_y)
-        if (is_hovered && mouse_button == 1u8) {
-            edited_glyph.glyph = font_glyphs[char]
-        }
-        let is_selected = font_glyphs[char] == glyph
-        if (is_selected) {
+        if (glyph_editor.selected_glyph == char as u8) {
             canvas.set_color(0x0000ffu32)
-            canvas.fill_rect(char_bounds)
-            canvas.set_color(COLOR_TEXT)
-        } else if (is_hovered) {
-            let hover_color_delta = 0x070707u32
-            canvas.set_color(COLOR_BACKGROUND + hover_color_delta)
-            canvas.fill_rect(char_bounds)
-            canvas.set_color(COLOR_TEXT)
+            canvas.fill_rect(glyph_editor.select_glyph_buttons[char].bounds)
         }
-
-        canvas.draw_char(char, char_bounds.left, char_bounds.top)
-
+        if (context.button(glyph_editor.select_glyph_buttons[char])) {
+            glyph_editor.selected_glyph = char as u8
+        }
         char = char + 1
-        if (char_bounds.right < canvas.width - MARGIN) {
-            char_bounds.set_location(char_bounds.left + glyph.mask[0].length as i32, char_bounds.top)
-        } else {
-            char_bounds.set_location(margin * 2 + cell_size * columns + 2, char_bounds.top + glyph.mask.length as i32) \ TODO: replace margin with MARGIN
-        }
     }
 
-    canvas.draw_text(text, margin * 2 + cell_size * columns + 2, char_bounds.bottom + MARGIN)
+    let margin = MARGIN
+    canvas.set_color(COLOR_TEXT)
+    canvas.draw_text(text, glyph_editor.bounds.right + MARGIN, glyph_editor.select_glyph_buttons[126].bounds.bottom + MARGIN)
+
+    if (context.button(glyph_editor.save_button)) {
+        dump_font()
+    }
+
+    if (context_event_type == GUI_EVENT_TYPE_INIT) {
+        let char_left = glyph_editor.bounds.right + MARGIN
+        let char_top = glyph_editor.bounds.top
+        let char = ' ' as i32
+        while (char < 127) {
+            glyph_editor.select_glyph_buttons[char].bounds.set_location(char_left, char_top)
+            char_left = char_left + glyph_editor.select_glyph_buttons[char].bounds.width + 2
+            if (char_left > canvas.width - 2 - MARGIN) {
+                char_left = glyph_editor.bounds.right + MARGIN
+                char_top = glyph_editor.select_glyph_buttons[char].bounds.bottom + 2
+            }
+            char = char + 1
+        }
+
+        glyph_editor.save_button.bounds.set_location(MARGIN, glyph_editor.bounds.bottom + MARGIN)
+        glyph_editor.save_button.bounds.set_size(glyph_editor.bounds.width, glyph_editor.save_button.bounds.height)
+    }
 }
 
-define Edited_Glyph = struct {
-    glyph: Glyph
+define Glyph_Editor = struct {
+    extends GUI_View
+    cell_size: i32
+    selected_glyph: u8
+    select_glyph_buttons: [!Button; 128]
+    save_button: !Button
+    hovered_row: i32 = undefined
+    hovered_column: i32 = undefined
+    is_drawing: bool = false
+    is_erasing: bool = false
+    is_resetting: bool = false
 }
 
-define reference = func (self: Edited_Glyph) -> Edited_Glyph {
+define GUI_Context = struct {
+    canvas: Canvas
+    event: GUI_Event
+    hovered_view: GUI_View = null
+}
+
+define GUI_View = struct {
+    bounds: !Rect = undefined
+    is_hovered: bool = false
+}
+
+define reference = func (self: Glyph_Editor) -> Glyph_Editor {
     return self
 }
 
-define abort = func () -> Nothing
+define button = func (gui: GUI_Context, button: Button) -> bool {
+    let is_clicked = false
+
+    let canvas = gui.canvas
+    let char_width = font_glyphs[0].mask[0].length as i32
+    let char_height = font_glyphs[0].mask.length as i32
+
+    let event = gui.event
+    let event_type = event.type
+    if (event_type == GUI_EVENT_TYPE_INIT) {
+        button.bounds.set_size(char_width * button.text.length as i32 + char_height, char_height + char_width)
+    } else if (event_type == GUI_EVENT_TYPE_MOUSE_MOVED) {
+        let event = event as GUI_Event_Mouse_Moved
+        if (button.bounds.contains(event.x, event.y)) {
+            gui.hovered_view = button
+        }
+    } else if (event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_PRESSED) {
+        if (gui.hovered_view == button as GUI_View) {
+            let event = event as GUI_Event_Mouse_Button_Pressed
+            if (event.which == 1u8) {
+                button.is_pressed = true
+            }
+        }
+    } else if (event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_RELEASED) {
+        let event = event as GUI_Event_Mouse_Button_Released
+        if (event.which == 1u8) {
+            button.is_pressed = false
+            if (gui.hovered_view == button as GUI_View) {
+                is_clicked = true
+            }
+        }
+    }
+
+    if (gui.hovered_view == button as GUI_View) {
+        if (button.is_pressed) {
+            let delta = 0x070707u32
+            canvas.set_color(COLOR_BACKGROUND - delta)
+            canvas.fill_rect(button.bounds)
+        }
+        canvas.set_color(0xffffffu32)
+    } else {
+        canvas.set_color(COLOR_TEXT)
+    }
+    canvas.draw_rect(button.bounds)
+
+    canvas.draw_text(button.text, button.bounds.left + (button.bounds.width - char_width * button.text.length as i32) / 2, button.bounds.top + 4)
+
+    return is_clicked
+}
+
+define Button = struct {
+    extends GUI_View
+    text: String
+    is_pressed: bool = false
+}
+
+define GUI_Event = struct {
+    type: u8
+}
+
+define GUI_EVENT_TYPE_INIT = 0x00u8
+define GUI_EVENT_TYPE_MOUSE_BUTTON_PRESSED = 0x11u8
+define GUI_EVENT_TYPE_MOUSE_BUTTON_RELEASED = 0x12u8
+define GUI_EVENT_TYPE_MOUSE_MOVED = 0x13u8
+
+define GUI_Event_Init = struct {
+    extends GUI_Event(type = GUI_EVENT_TYPE_INIT)
+}
+
+define GUI_Event_Mouse_Button_Pressed = struct {
+    extends GUI_Event(type = GUI_EVENT_TYPE_MOUSE_BUTTON_PRESSED)
+    which: u8
+}
+
+define GUI_Event_Mouse_Button_Released = struct {
+    extends GUI_Event(type = GUI_EVENT_TYPE_MOUSE_BUTTON_RELEASED)
+    which: u8
+}
+
+define GUI_Event_Mouse_Moved = struct {
+    extends GUI_Event(type = GUI_EVENT_TYPE_MOUSE_MOVED)
+    x: i32
+    y: i32
+}
+
+define dump_font = func () -> Nothing {
+    let file = open_file("editor/Font.code", "w")
+
+    file.write("\\ Copyright (c) 2020, Stefan Selariu").end_line()
+    file.end_line()
+    file.write("let font_glyphs: [!Glyph; 256]").end_line()
+    file.end_line()
+    file.write("define Glyph = struct {").end_line()
+    file.write("    mask: [[u8; 9]; 18]").end_line()
+    file.write("    base_line: i32").end_line()
+    file.write("}").end_line()
+    file.end_line()
+    file.write("define init_font = func () -> Nothing {").end_line()
+    file.write("    let index = 0isize").end_line()
+    file.write("    while (index < font_glyphs.length) {").end_line()
+    file.write("        if (index < ' ' as isize || index >= 127) {").end_line()
+    file.write("            let font_glyph = font_glyphs[index]").end_line()
+    file.write("            font_glyphs[index].base_line = 13").end_line()
+    file.write("            let left = 1").end_line()
+    file.write("            let top = 2").end_line()
+    file.write("            let right = font_glyph.mask[0].length as i32 - 2").end_line()
+    file.write("            let bottom = font_glyph.base_line - 1").end_line()
+    file.write("            let x = left").end_line()
+    file.write("            while (x <= right) {").end_line()
+    file.write("                font_glyph.mask[top][x] = 255u8").end_line()
+    file.write("                font_glyph.mask[bottom][x] = 255u8").end_line()
+    file.write("                x = x + 1").end_line()
+    file.write("            }").end_line()
+    file.write("            let y = top + 1").end_line()
+    file.write("            while (y < bottom) {").end_line()
+    file.write("                font_glyph.mask[y][left] = 255u8").end_line()
+    file.write("                font_glyph.mask[y][right] = 255u8").end_line()
+    file.write("                y = y + 1").end_line()
+    file.write("            }").end_line()
+    file.write("        }").end_line()
+    file.write("        index = index + 1").end_line()
+    file.write("    }").end_line()
+
+    let char = ' ' as i32
+    while (char < 127) {
+        file.end_line()
+        file.write("    \\ ").write(char as u8).end_line()
+        let glyph = font_glyphs[char]
+        file.write("    font_glyphs[0x").write(char as u32, 16u8).write("].base_line = ").write(glyph.base_line).end_line()
+        let row = 0isize
+        while (row < glyph.mask.length) {
+            let column = 0isize
+            while (column < glyph.mask[0].length) {
+                if (glyph.mask[row][column] != 0u8) {
+                    file.write("    font_glyphs[0x").write(char as u32, 16u8).write("].mask[").write(row).write("][").write(column).write("] = ").write(glyph.mask[row][column] as i32).end_line()
+                }
+                column = column + 1
+            }
+            row = row + 1
+        }
+
+        char = char + 1
+    }
+
+    file.write("}").end_line()
+
+    file.close()
+}
 
 include "./Canvas.code"
 include "./File.code"

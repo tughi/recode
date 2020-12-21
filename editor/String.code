@@ -2,8 +2,8 @@
 
 define String = struct {
     data: [u8; ?] = malloc(16usize) as [u8; ?]
-    data_size: usize = undefined
-    length: usize = undefined
+    data_size: usize = 16
+    length: usize = 0
 }
 
 define append = func (self: String, char: u8) -> String {
