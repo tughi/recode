@@ -294,6 +294,10 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
             \ nothing to do
         } else if (ir_value.type.is(IR_UInt8_Type)) {
             self.output_file.write("  movzx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
+        } else if (ir_value.type.is(IR_UInt64_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_UIntMax_Type)) {
+            \ nothing to do
         } else {
             is_supported = false
         }
