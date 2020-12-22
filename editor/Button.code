@@ -13,7 +13,7 @@ define button = func (gui: GUI_Context, button: Button) -> bool {
     let event = gui.event
     let event_type = event.type
     if (event_type == GUI_EVENT_TYPE_INIT) {
-        button.bounds.set_size(char_width * button.text.length as i32 + char_height, char_height + char_width)
+        button.bounds.set_size(char_width * button.text.length as i32 + char_height, char_height + char_width + char_width // 2)
     } else if (event_type == GUI_EVENT_TYPE_MOUSE_MOVED) {
         let event = event as GUI_Event_Mouse_Moved
         if (button.bounds.contains(event.x, event.y)) {
@@ -48,7 +48,7 @@ define button = func (gui: GUI_Context, button: Button) -> bool {
     }
     canvas.draw_rect(button.bounds)
 
-    canvas.draw_text(button.text, button.bounds.left + (button.bounds.width - char_width * button.text.length as i32) / 2, button.bounds.top + 4)
+    canvas.draw_text(button.text, button.bounds.left + (button.bounds.width - char_width * button.text.length as i32) / 2, button.bounds.top + (button.bounds.height - char_height) / 2)
 
     return is_clicked
 }
