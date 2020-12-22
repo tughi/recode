@@ -1,0 +1,60 @@
+\ Copyright (c) 2020, Stefan Selariu
+
+include "./GUI.code"
+include "./String.code"
+
+define button = func (gui: GUI_Context, button: Button) -> bool {
+    let is_clicked = false
+
+    let canvas = gui.canvas
+    let char_width = font_glyphs[0].mask[0].length as i32
+    let char_height = font_glyphs[0].mask.length as i32
+
+    let event = gui.event
+    let event_type = event.type
+    if (event_type == GUI_EVENT_TYPE_INIT) {
+        button.bounds.set_size(char_width * button.text.length as i32 + char_height, char_height + char_width)
+    } else if (event_type == GUI_EVENT_TYPE_MOUSE_MOVED) {
+        let event = event as GUI_Event_Mouse_Moved
+        if (button.bounds.contains(event.x, event.y)) {
+            gui.hovered_view = button
+        }
+    } else if (event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_PRESSED) {
+        if (gui.hovered_view == button as GUI_View) {
+            let event = event as GUI_Event_Mouse_Button_Pressed
+            if (event.which == 1u8) {
+                button.is_pressed = true
+            }
+        }
+    } else if (event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_RELEASED) {
+        let event = event as GUI_Event_Mouse_Button_Released
+        if (event.which == 1u8) {
+            button.is_pressed = false
+            if (gui.hovered_view == button as GUI_View) {
+                is_clicked = true
+            }
+        }
+    }
+
+    if (gui.hovered_view == button as GUI_View) {
+        if (button.is_pressed) {
+            let delta = 0x070707u32
+            canvas.set_color(COLOR_BACKGROUND - delta)
+            canvas.fill_rect(button.bounds)
+        }
+        canvas.set_color(0xffffffu32)
+    } else {
+        canvas.set_color(COLOR_TEXT)
+    }
+    canvas.draw_rect(button.bounds)
+
+    canvas.draw_text(button.text, button.bounds.left + (button.bounds.width - char_width * button.text.length as i32) / 2, button.bounds.top + 4)
+
+    return is_clicked
+}
+
+define Button = struct {
+    extends GUI_View
+    text: String
+    is_pressed: bool = false
+}
