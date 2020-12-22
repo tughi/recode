@@ -12,8 +12,6 @@ define main = func () -> i32 {
         return 1
     }
 
-    SDL_ShowCursor(0)
-
     let window_width = 1024
     let window_height = 768
 
@@ -52,10 +50,6 @@ define main = func () -> i32 {
 
     let event: SDL_Event = new SDL_Undefined_Event()
 
-    let mouse_x = 0
-    let mouse_y = 0
-    let mouse_button = 0u8
-
     let glyph_editor = Glyph_Editor(
         cell_size = 24
         select_glyph_buttons = undefined
@@ -88,12 +82,7 @@ define main = func () -> i32 {
             canvas.set_color(COLOR_BACKGROUND)
             canvas.clear()
 
-            \ canvas.set_color(COLOR_TEXT)
-            \ canvas.draw_text(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~", 32, 8)
-
             gui_context.glyph_editor(glyph_editor)
-
-            canvas.draw_cursor(mouse_x, mouse_y)
 
             SDL_UpdateWindowSurface(window)
         }
@@ -105,8 +94,6 @@ define main = func () -> i32 {
                 break
             } else if (event.type == SDL_MOUSEMOTION) {
                 let event = event as SDL_MouseMotionEvent
-                mouse_x = event.x
-                mouse_y = event.y
                 gui_event_mouse_moved.x = event.x
                 gui_event_mouse_moved.y = event.y
                 gui_context.event = gui_event_mouse_moved
@@ -148,13 +135,4 @@ define main = func () -> i32 {
 
     SDL_Quit()
     return 0
-}
-
-define draw_cursor = func (canvas: Canvas, x: i32, y: i32) -> Nothing {
-    canvas.set_color(0x666666u32)
-    canvas.draw_vertical_line(x + 1, y - 11, y + 13)
-    canvas.draw_horizontal_line(x - 11, x + 13, y + 1)
-    canvas.set_color(0xffffffu32)
-    canvas.draw_vertical_line(x, y - 12, y + 12)
-    canvas.draw_horizontal_line(x - 12, x + 12, y)
 }
