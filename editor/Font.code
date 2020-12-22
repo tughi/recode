@@ -1700,6 +1700,7 @@ define init_font = func () -> Nothing {
 
     \ l
     font_glyphs[0x6C].base_line = 13
+    font_glyphs[0x6C].mask[2][2] = 255
     font_glyphs[0x6C].mask[2][3] = 255
     font_glyphs[0x6C].mask[2][4] = 255
     font_glyphs[0x6C].mask[3][4] = 255
