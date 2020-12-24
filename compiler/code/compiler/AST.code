@@ -28,20 +28,11 @@ define AST_Function_Statement = struct {
     ir_function: IR_Function = null
 }
 
-define AST_Constant_Statement = struct {
-    extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_constant_statement(statement as AST_Constant_Statement)
-        }
-    )
+define AST_Macro_Statement = struct {
+    extends AST_Statement
     name: Identifier_Token
-    expression: AST_Expression
-}
-
-define AST_Function_Parameter = struct {
-    location: Source_Location
-    name: Identifier_Token
-    type: AST_Type
+    type: AST_Macro_Type
+    body: AST_Block_Statement
 }
 
 define AST_Block_Statement = struct {
@@ -51,6 +42,16 @@ define AST_Block_Statement = struct {
         }
     )
     statements: List
+}
+
+define AST_Constant_Statement = struct {
+    extends AST_Statement(
+        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
+            builder.convert_constant_statement(statement as AST_Constant_Statement)
+        }
+    )
+    name: Identifier_Token
+    expression: AST_Expression
 }
 
 define AST_Expression_Statement = struct {
@@ -172,6 +173,17 @@ define AST_Function_Type = struct {
     extends AST_Type
     parameters: List
     return_type: AST_Type
+}
+
+define AST_Macro_Type = struct {
+    extends AST_Type
+    parameters: List
+}
+
+define AST_Parameter = struct {
+    location: Source_Location
+    name: Identifier_Token
+    type: AST_Type
 }
 
 define AST_Expression = struct {

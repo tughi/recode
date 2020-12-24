@@ -104,7 +104,7 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
         let function_parameters = statement.type.parameters.create_iterator()
         if (function_parameters.has_next()) {
             loop {
-                file.write(function_parameters.next() as AST_Function_Parameter)
+                file.write(function_parameters.next() as AST_Parameter)
                 if (function_parameters.has_next()) {
                     file.write(", ")
                 } else {
@@ -209,7 +209,7 @@ define write_source_line = func (file: FILE, location: Source_Location, alignmen
     return file
 }
 
-define write = func (file: FILE, parameter: AST_Function_Parameter) -> FILE {
+define write = func (file: FILE, parameter: AST_Parameter) -> FILE {
     return file.write(parameter.name).write(": ").write(parameter.type)
 }
 

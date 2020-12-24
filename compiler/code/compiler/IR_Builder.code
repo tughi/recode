@@ -522,7 +522,7 @@ define convert_function_type = func (self: IR_Builder, type: AST_Function_Type) 
     let parameters = new List()
     let function_parameters_item = type.parameters.first_item
     while (function_parameters_item != null) {
-        let function_parameter = function_parameters_item.data as AST_Function_Parameter
+        let function_parameter = function_parameters_item.data as AST_Parameter
         parameters.append(new IR_Function_Type_Parameter(name = function_parameter.name.lexeme, type = self.convert_type(function_parameter.type)))
         function_parameters_item = function_parameters_item.next_item
     }
@@ -588,7 +588,7 @@ define create_function = func (self: IR_Builder, function_statement: AST_Functio
     let parameters = function_statement.type.parameters.create_iterator()
     let function_type_parameters = new List()
     while (parameters.has_next()) {
-        let parameter = parameters.next() as AST_Function_Parameter
+        let parameter = parameters.next() as AST_Parameter
         let parameter_type = self.convert_type(parameter.type)
         let parameter_name = parameter.name.lexeme
         let function_parameter = new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)

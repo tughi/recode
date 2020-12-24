@@ -192,6 +192,9 @@ define parse_define = func (self: Parser) -> AST_Statement {
     if (self.matches(required_func)) {
         return self.parse_function(name)
     }
+    if (self.matches(required_macro)) {
+        return self.parse_macro(name)
+    }
     let expression = self.parse_expression()
     return new AST_Constant_Statement(location = name.location, name = name, expression = expression)
 }
@@ -267,23 +270,11 @@ define parse_function = func (self: Parser, function_name: Identifier_Token) -> 
 }
 
 \ function_type
-\   : "func" "(" ( function_parameter ( "," function_parameter )* )? ")" "->" type
+\   : "func" parameters "->" type
 define parse_function_type = func (self: Parser) -> AST_Function_Type {
     let location = self.consume(required_func).location
     self.consume_space(1 as i64)
-    self.consume(required_open_paren)
-    self.consume_space(0 as i64)
-    let function_parameters = new List()
-    if (self.matches(required_close_paren) == false) {
-        function_parameters.append(self.parse_function_parameter())
-        while (self.matches(optional_space, required_close_paren) == false) {
-            self.consume_space(0 as i64)
-            self.consume(required_comma)
-            self.consume_space(1 as i64)
-            function_parameters.append(self.parse_function_parameter())
-        }
-    }
-    self.consume(required_close_paren)
+    let function_parameters = self.parse_parameters()
     self.consume_space(1 as i64)
     self.consume(required_hyphen, required_greater_than)
     self.consume_space(1 as i64)
@@ -291,15 +282,54 @@ define parse_function_type = func (self: Parser) -> AST_Function_Type {
     return new AST_Function_Type(location = location, parameters = function_parameters, return_type = function_return_type)
 }
 
-\ function_parameter
+\ parameters
+\   : "(" ( parameter ( "," parameter )* )? ")"
+define parse_parameters = func (self: Parser) -> List {
+    let parameters = new List()
+    self.consume(required_open_paren)
+    self.consume_space(0 as i64)
+    if (self.matches(required_close_paren) == false) {
+        parameters.append(self.parse_parameter())
+        while (self.matches(optional_space, required_close_paren) == false) {
+            self.consume_space(0 as i64)
+            self.consume(required_comma)
+            self.consume_space(1 as i64)
+            parameters.append(self.parse_parameter())
+        }
+    }
+    self.consume(required_close_paren)
+    return parameters
+}
+
+\ parameter
 \   : IDENTIFIER ":" type
-define parse_function_parameter = func (self: Parser) -> AST_Function_Parameter {
+define parse_parameter = func (self: Parser) -> AST_Parameter {
     let parameter_name = self.consume(required_identifier) as Identifier_Token
     self.consume_space(0 as i64)
     self.consume(required_colon)
     self.consume_space(1 as i64)
     let parameter_type = self.parse_type()
-    return new AST_Function_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
+    return new AST_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
+}
+
+\ macro
+\   : macro_type block
+define parse_macro = func (self: Parser, macro_name: Identifier_Token) -> AST_Macro_Statement {
+    let macro_type = self.parse_macro_type()
+    self.consume_space(1 as i64)
+    let macro_body = self.parse_block()
+    let macro_statement = new AST_Macro_Statement(location = macro_name.location, name = macro_name, type = macro_type, body = macro_body)
+    \ TODO: self.compilation_unit.macro_statements.append(macro_statement)
+    return macro_statement
+}
+
+\ macro_type
+\   : "macro" parameters
+define parse_macro_type = func (self: Parser) -> AST_Macro_Type {
+    let location = self.consume(required_macro).location
+    self.consume_space(1 as i64)
+    let macro_parameters = self.parse_parameters()
+    return new AST_Macro_Type(location = location, parameters = macro_parameters)
 }
 
 \ block
@@ -403,7 +433,7 @@ define parse_while = func (self: Parser) -> AST_Statement {
 }
 
 \ type
-\   : "!"? ( IDENTIFIER | "[" type ( ";" expression )? "]" | function_type )
+\   : "!"? ( IDENTIFIER | "[" type ( ";" expression )? "]" | function_type | macro_type )
 define parse_type = func (self: Parser) -> AST_Type {
     let is_embedded_type = false
     let location: Source_Location = null
@@ -435,6 +465,8 @@ define parse_type = func (self: Parser) -> AST_Type {
         type = new AST_Array_Type(location = token.location, item_type = array_item_type, is_checked = array_is_checked, size_expression = array_size_expression)
     } else if (self.matches(required_func)) {
         type = self.parse_function_type()
+    } else if (self.matches(required_macro)) {
+        type = self.parse_macro_type()
     } else {
         let type_name = self.consume(required_identifier) as Identifier_Token
         type = new AST_Named_Type(location = type_name.location, name = type_name)
@@ -988,6 +1020,7 @@ let required_less_than: Matcher = undefined
 let required_let: Matcher = undefined
 let required_literal: Matcher = undefined
 let required_loop: Matcher = undefined
+let required_macro: Matcher = undefined
 let required_new: Matcher = undefined
 let required_open_brace: Matcher = undefined
 let required_open_bracket: Matcher = undefined
@@ -1037,6 +1070,7 @@ define init_matchers = func () -> Nothing {
     required_literal = new Literal_Matcher(is_required = true)
     required_loop = new Keyword_Matcher(is_required = true, lexeme = "loop")
     required_new = new Keyword_Matcher(is_required = true, lexeme = "new")
+    required_macro = new Keyword_Matcher(is_required = true, lexeme = "macro")
     required_open_brace = new Other_Matcher(is_required = true, lexeme = "{")
     required_open_bracket = new Other_Matcher(is_required = true, lexeme = "[")
     required_open_paren = new Other_Matcher(is_required = true, lexeme = "(")
