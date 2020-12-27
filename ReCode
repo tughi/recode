@@ -65,7 +65,7 @@ def editor():
     if not os.path.exists(f'build/editor'):
         execute(f'mkdir build/editor')
 
-    args = f'editor/Editor.code build/editor/Editor.s'
+    args = f'editor/Editor.code build/editor/Editor.s build/editor/Editor.ir'
     if execute(f'build/stage3/ReCode {args}', exit_on_error=False) != 0:
         subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args} &> /dev/null' -ex=bt -ex=quit --args build/stage3/ReCode''', shell=True)
         print()
