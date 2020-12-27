@@ -493,6 +493,18 @@ define dump = func (function: IR_Function, file: FILE) -> Nothing {
     file.write('}').end_line()
 }
 
+define IR_Parameter = struct {
+    extends IR_Function_Parameter
+}
+
+define IR_Macro = struct {
+    extends Object
+    location: Source_Location
+    name: String
+    parameters: List
+    statement: AST_Macro_Statement
+}
+
 define IR_Symbol = struct {
     extends Object
     name: String

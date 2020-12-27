@@ -34,6 +34,7 @@ define IR_Builder = struct {
     context: IR_Builder_Context
     types: List
     named_functions: List = new List()
+    named_macros: List = new List()
     current_block: IR_Block = null
     current_loop: IR_Loop = null
     counter: Counter = new Counter()
@@ -317,11 +318,14 @@ define build = func (self: IR_Builder) -> Nothing {
 
     let function_statements_item = self.compilation_unit.function_statements.first_item
     while (function_statements_item != null) {
-        let function_statement = function_statements_item.data as AST_Statement
-        if (function_statement.is(AST_Function_Statement)) {
-            self.create_function(function_statement as AST_Function_Statement)
-        }
+        self.create_function(function_statements_item.data as AST_Function_Statement)
         function_statements_item = function_statements_item.next_item
+    }
+
+    let macro_statements_item = self.compilation_unit.macro_statements.first_item
+    while (macro_statements_item != null) {
+        self.create_macro(macro_statements_item.data as AST_Macro_Statement)
+        macro_statements_item = macro_statements_item.next_item
     }
 
     let statements_item = self.compilation_unit.statements.first_item
@@ -330,6 +334,8 @@ define build = func (self: IR_Builder) -> Nothing {
         if (statement.is(AST_Constant_Statement)) {
             self.convert_constant_statement(statement as AST_Constant_Statement)
         } else if (statement.is(AST_Function_Statement)) {
+            \ nothing to do
+        } else if (statement.is(AST_Macro_Statement)) {
             \ nothing to do
         } else if (statement.is(AST_Struct_Statement)) {
             \ nothing to do
@@ -571,6 +577,32 @@ define create_ir_pointer_type = func (self: IR_Builder, pointed_type: IR_Type) -
     self.types.append(pointer_type)
 
     return pointer_type
+}
+
+define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Statement) -> IR_Macro {
+    let ir_macro = new IR_Macro(
+        location = macro_statement.location
+        name = macro_statement.name.lexeme
+        parameters = new List()
+        statement = macro_statement
+    )
+
+    let ast_parameters_item = macro_statement.type.parameters.first_item
+    let function_type_parameters = new List()
+    while (ast_parameters_item != null) {
+        let parameter = ast_parameters_item.data as AST_Parameter
+        let parameter_type = self.convert_type(parameter.type)
+        let parameter_name = parameter.name.lexeme
+        let function_parameter = new IR_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
+        ir_macro.parameters.append(function_parameter)
+        ast_parameters_item = ast_parameters_item.next_item
+    }
+
+    self.named_macros.append(ir_macro)
+
+    \ TODO: validate macro block (to use only declared variables for example)
+
+    return ir_macro
 }
 
 define create_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> IR_Function {
@@ -1227,6 +1259,25 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         named_functions_item = named_functions_item.next_item
     }
     if (call_function == null) {
+        let called_macro: IR_Macro = null
+        let named_macros_item = self.named_macros.first_item
+        while (named_macros_item != null) {
+            let named_macro = named_macros_item.data as IR_Macro
+            if (named_macro.name.equals(callee_name.lexeme)) {
+                if (named_macro.accepts(call_arguments)) {
+                    if (called_macro != null) {
+                        abort(call_expression.location, "Found at least two matching macros")
+                    }
+                    called_macro = named_macro
+                }
+            }
+            named_macros_item = named_macros_item.next_item
+        }
+        if (called_macro != null) {
+            self.convert_macro_call_expression(call_expression, call_arguments, called_macro)
+            return null
+        }
+
         let named_functions_item = self.named_functions.first_item
         while (named_functions_item != null) {
             let named_function = named_functions_item.data as IR_Function
@@ -1278,6 +1329,25 @@ define convert_dynamic_call_expression = func (self: IR_Builder, call_expression
     return self.append(create_ir_dynamic_call_instruction(result_value, call_arguments, call_function as IR_Variable_Value), call_expression.location)
 }
 
+define convert_macro_call_expression = func (self: IR_Builder, call_expression: AST_Call_Expression, call_arguments: List, called_macro: IR_Macro) -> Nothing {
+    let call_arguments_item = call_arguments.first_item
+    let parameters_item = called_macro.parameters.first_item
+    while (call_arguments_item != null && parameters_item != null) {
+        let call_argument = call_arguments_item.data as IR_Call_Argument
+        let parameter = parameters_item.data as IR_Function_Parameter
+        self.add_variable(parameter)
+        self.current_block.append(create_ir_set_instruction(self.create_variable_value(parameter), call_argument.value))
+        call_arguments_item = call_arguments_item.next_item
+        parameters_item = parameters_item.next_item
+    }
+
+    if (call_arguments_item != null || parameters_item != null) {
+        abort(call_expression.location, "Invalid state")
+    }
+
+    self.convert_block_statement(called_macro.statement.body)
+}
+
 define accepts = func (self: IR_Function_Type, call_arguments: List) -> bool {
     let call_arguments_item = call_arguments.first_item
     let function_parameters_item = self.parameters.first_item
@@ -1286,6 +1356,16 @@ define accepts = func (self: IR_Function_Type, call_arguments: List) -> bool {
         function_parameters_item = function_parameters_item.next_item
     }
     return call_arguments_item == null && function_parameters_item == null
+}
+
+define accepts = func (self: IR_Macro, call_arguments: List) -> bool {
+    let call_arguments_item = call_arguments.first_item
+    let macro_parameters_item = self.parameters.first_item
+    while (call_arguments_item != null && macro_parameters_item != null && (macro_parameters_item.data as IR_Parameter).type.accepts((call_arguments_item.data as IR_Call_Argument).value.type)) {
+        call_arguments_item = call_arguments_item.next_item
+        macro_parameters_item = macro_parameters_item.next_item
+    }
+    return call_arguments_item == null && macro_parameters_item == null
 }
 
 define convert_call_arguments = func (self: IR_Builder, ast_call_arguments: List) -> List {

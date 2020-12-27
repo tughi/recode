@@ -319,7 +319,7 @@ define parse_macro = func (self: Parser, macro_name: Identifier_Token) -> AST_Ma
     self.consume_space(1 as i64)
     let macro_body = self.parse_block()
     let macro_statement = new AST_Macro_Statement(location = macro_name.location, name = macro_name, type = macro_type, body = macro_body)
-    \ TODO: self.compilation_unit.macro_statements.append(macro_statement)
+    self.compilation_unit.macro_statements.append(macro_statement)
     return macro_statement
 }
 

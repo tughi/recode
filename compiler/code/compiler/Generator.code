@@ -1156,7 +1156,9 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
     } else if (ir_value.is(IR_Global_Variable_Value)) {
         let register = self.find_unused_register()
         self.generate_load_value(register, ir_value)
-        if (ir_value_type.is(IR_Pointer_Type)) {
+        if (ir_value_type.is(IR_Int32_Type)) {
+            self.output_file.write("  mov ").write(address).write(", ").write(register.name_d).end_line()
+        } else if (ir_value_type.is(IR_Pointer_Type)) {
             self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
