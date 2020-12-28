@@ -14,12 +14,16 @@ define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
 
     generator.generate_global_variables(build.global_symbols)
 
-    let functions = build.named_functions.create_iterator()
-    while (functions.has_next()) {
-        let function = functions.next() as IR_Function
-        if (function.is_external == false) {
-            generator.generate_function(function)
+    let symbols_item = build.global_symbols.first_item
+    while (symbols_item != null) {
+        let symbol = symbols_item.data as IR_Symbol
+        if (symbol.is(IR_Function)) {
+            let function = symbol as IR_Function
+            if (function.is_external == false) {
+                generator.generate_function(function)
+            }
         }
+        symbols_item = symbols_item.next_item
     }
 
     generator.generate_strings()

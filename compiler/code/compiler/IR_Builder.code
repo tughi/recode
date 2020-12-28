@@ -5,7 +5,6 @@ define build = func (compilation_unit: Compilation_Unit) -> IR_Build {
     builder.build()
     return new IR_Build(
         sources = compilation_unit.sources
-        named_functions = builder.named_functions
         named_types = builder.types
         global_symbols = builder.context.symbols
     )
@@ -13,18 +12,20 @@ define build = func (compilation_unit: Compilation_Unit) -> IR_Build {
 
 define IR_Build = struct {
     sources: List
-    named_functions: List
     named_types: List
     global_symbols: List
 }
 
 define dump = func (build: IR_Build, file: FILE) -> Nothing {
-    let functions = build.named_functions.create_iterator()
-    while (functions.has_next()) {
-        let function = functions.next() as IR_Function
-        if (function.is_external == false) {
-            function.dump(file)
-            file.end_line()
+    let symbols_iterator = build.global_symbols.create_iterator()
+    while (symbols_iterator.has_next()) {
+        let symbol = symbols_iterator.next() as IR_Symbol
+        if (symbol.is(IR_Function)) {
+            let function = symbol as IR_Function
+            if (function.is_external == false) {
+                function.dump(file)
+                file.end_line()
+            }
         }
     }
 }
@@ -33,11 +34,10 @@ define IR_Builder = struct {
     compilation_unit: Compilation_Unit
     context: IR_Builder_Context
     types: List
-    named_functions: List = new List()
-    named_macros: List = new List()
     current_block: IR_Block = null
     current_loop: IR_Loop = null
-    counter: Counter = new Counter()
+    counter: !Counter = Counter()
+    functions_counter: !Counter = Counter()
 }
 
 define IR_Builder_Context = struct {
@@ -123,6 +123,36 @@ define get_symbol = func (self: IR_Builder, name: String) -> IR_Symbol {
     }
 }
 
+define IR_Builder_Context_Symbols_Iterator = struct {
+    parent_context: IR_Builder_Context
+    next_symbol_item: List_Item = null
+}
+
+define create_symbols_iterator = func (self: IR_Builder) -> IR_Builder_Context_Symbols_Iterator {
+    return new IR_Builder_Context_Symbols_Iterator(parent_context = self.context)
+}
+
+define has_next = func (self: IR_Builder_Context_Symbols_Iterator) -> bool {
+    while (self.next_symbol_item == null && self.parent_context != null) {
+        self.next_symbol_item = self.parent_context.symbols.first_item
+        self.parent_context = self.parent_context.parent
+    }
+    return self.next_symbol_item != null
+}
+
+define next = func (self: IR_Builder_Context_Symbols_Iterator) -> IR_Symbol {
+    while (self.next_symbol_item == null && self.parent_context != null) {
+        self.next_symbol_item = self.parent_context.symbols.first_item
+        self.parent_context = self.parent_context.parent
+    }
+    if (self.next_symbol_item != null) {
+        let next_symbol = self.next_symbol_item.data as IR_Symbol
+        self.next_symbol_item = self.next_symbol_item.next_item
+        return next_symbol
+    }
+    return null
+}
+
 define add_variable = func (self: IR_Builder, variable: IR_Variable) -> Nothing {
     self.add_symbol(variable)
 }
@@ -184,26 +214,29 @@ define get_named_function = func (self: IR_Builder, name: Identifier_Token, argu
 
 define get_named_function = func (self: IR_Builder, name: String, argument_types: List) -> IR_Function {
     let function: IR_Function = null
-    let named_functions = self.named_functions.create_iterator()
-    while (named_functions.has_next()) {
-        let named_function = named_functions.next() as IR_Function
-        if (name.equals(named_function.name)) {
-            let is_match = true
-            let argument_types = argument_types.create_iterator()
-            let named_function_parameters = named_function.parameters.create_iterator()
-            while (argument_types.has_next() && named_function_parameters.has_next()) {
-                let argument_type = argument_types.next() as IR_Type
-                let named_function_parameter = named_function_parameters.next() as IR_Function_Parameter
-                if (named_function_parameter.type.accepts(argument_type) == false) {
-                    is_match = false
-                    break
+    let symbols_iterator = self.create_symbols_iterator()
+    while (symbols_iterator.has_next()) {
+        let symbol = symbols_iterator.next()
+        if (symbol.is(IR_Function)) {
+            let named_function = symbol as IR_Function
+            if (name.equals(named_function.name)) {
+                let is_match = true
+                let argument_types = argument_types.create_iterator()
+                let named_function_parameters = named_function.parameters.create_iterator()
+                while (argument_types.has_next() && named_function_parameters.has_next()) {
+                    let argument_type = argument_types.next() as IR_Type
+                    let named_function_parameter = named_function_parameters.next() as IR_Function_Parameter
+                    if (named_function_parameter.type.accepts(argument_type) == false) {
+                        is_match = false
+                        break
+                    }
                 }
-            }
-            if (is_match && argument_types.has_next() == false && named_function_parameters.has_next() == false) {
-                if (function != null) {
-                    abort(name)
+                if (is_match && argument_types.has_next() == false && named_function_parameters.has_next() == false) {
+                    if (function != null) {
+                        abort(name)
+                    }
+                    function = named_function
                 }
-                function = named_function
             }
         }
     }
@@ -212,26 +245,29 @@ define get_named_function = func (self: IR_Builder, name: String, argument_types
 
 define get_named_function = func (self: IR_Builder, name: String, function_type: IR_Function_Type) -> IR_Function {
     let function: IR_Function = null
-    let named_functions = self.named_functions.create_iterator()
-    while (named_functions.has_next()) {
-        let named_function = named_functions.next() as IR_Function
-        if (name.equals(named_function.name) && named_function.return_type == function_type.return_type && named_function.parameters.size == function_type.parameters.size) {
-            let is_match = true
-            let function_type_parameters = function_type.parameters.create_iterator()
-            let named_function_parameters = named_function.parameters.create_iterator()
-            while (function_type_parameters.has_next() && named_function_parameters.has_next()) {
-                let function_type_parameter = function_type_parameters.next() as IR_Function_Type_Parameter
-                let named_function_parameter = named_function_parameters.next() as IR_Function_Parameter
-                if (named_function_parameter.type != function_type_parameter.type) {
-                    is_match = false
-                    break
+    let symbols_iterator = self.create_symbols_iterator()
+    while (symbols_iterator.has_next()) {
+        let symbol = symbols_iterator.next()
+        if (symbol.is(IR_Function)) {
+            let named_function = symbol as IR_Function
+            if (name.equals(named_function.name) && named_function.return_type == function_type.return_type && named_function.parameters.size == function_type.parameters.size) {
+                let is_match = true
+                let function_type_parameters = function_type.parameters.create_iterator()
+                let named_function_parameters = named_function.parameters.create_iterator()
+                while (function_type_parameters.has_next() && named_function_parameters.has_next()) {
+                    let function_type_parameter = function_type_parameters.next() as IR_Function_Type_Parameter
+                    let named_function_parameter = named_function_parameters.next() as IR_Function_Parameter
+                    if (named_function_parameter.type != function_type_parameter.type) {
+                        is_match = false
+                        break
+                    }
                 }
-            }
-            if (is_match && function_type_parameters.has_next() == false && named_function_parameters.has_next() == false) {
-                if (function != null) {
-                    abort(name)
+                if (is_match && function_type_parameters.has_next() == false && named_function_parameters.has_next() == false) {
+                    if (function != null) {
+                        abort(name)
+                    }
+                    function = named_function
                 }
-                function = named_function
             }
         }
     }
@@ -598,16 +634,14 @@ define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Stateme
         ast_parameters_item = ast_parameters_item.next_item
     }
 
-    self.named_macros.append(ir_macro)
-
-    \ TODO: validate macro block (to use only declared variables for example)
+    self.add_symbol(ir_macro)
 
     return ir_macro
 }
 
 define create_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> IR_Function {
     let function = new IR_Function(
-        id = self.named_functions.size + 1
+        id = self.functions_counter.next()
         location = function_statement.location
         blocks = new List()
         name = function_statement.name.lexeme
@@ -629,7 +663,7 @@ define create_function = func (self: IR_Builder, function_statement: AST_Functio
     }
 
     function_statement.ir_function = function
-    self.named_functions.append(function)
+    self.add_symbol(function)
 
     function.type = create_ir_function_type(function_type_parameters, function.return_type)
 
@@ -1245,46 +1279,53 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
     }
 
     let call_function: IR_Function = null
-    let named_functions_item = self.named_functions.first_item
-    while (named_functions_item != null) {
-        let named_function = named_functions_item.data as IR_Function
-        if (named_function.name.equals(callee_name.lexeme)) {
-            if (named_function.type.accepts(call_arguments)) {
-                if (call_function != null) {
-                    abort(call_expression.location, "Found at least two matching functions")
+    let symbols_iterator = self.create_symbols_iterator()
+    while (symbols_iterator.has_next()) {
+        let symbol = symbols_iterator.next()
+        if (symbol.is(IR_Function)) {
+            let named_function = symbol as IR_Function
+            if (named_function.name.equals(callee_name.lexeme)) {
+                if (named_function.type.accepts(call_arguments)) {
+                    if (call_function != null) {
+                        abort(call_expression.location, "Found at least two matching functions")
+                    }
+                    call_function = named_function
                 }
-                call_function = named_function
             }
         }
-        named_functions_item = named_functions_item.next_item
     }
+
     if (call_function == null) {
         let called_macro: IR_Macro = null
-        let named_macros_item = self.named_macros.first_item
-        while (named_macros_item != null) {
-            let named_macro = named_macros_item.data as IR_Macro
-            if (named_macro.name.equals(callee_name.lexeme)) {
-                if (named_macro.accepts(call_arguments)) {
-                    if (called_macro != null) {
-                        abort(call_expression.location, "Found at least two matching macros")
+        let symbols_iterator = self.create_symbols_iterator()
+        while (symbols_iterator.has_next()) {
+            let symbol = symbols_iterator.next()
+            if (symbol.is(IR_Macro)) {
+                let named_macro = symbol as IR_Macro
+                if (named_macro.name.equals(callee_name.lexeme)) {
+                    if (named_macro.accepts(call_arguments)) {
+                        if (called_macro != null) {
+                            abort(call_expression.location, "Found at least two matching macros")
+                        }
+                        called_macro = named_macro
                     }
-                    called_macro = named_macro
                 }
             }
-            named_macros_item = named_macros_item.next_item
         }
         if (called_macro != null) {
             self.convert_macro_call_expression(call_expression, call_arguments, called_macro)
             return null
         }
 
-        let named_functions_item = self.named_functions.first_item
-        while (named_functions_item != null) {
-            let named_function = named_functions_item.data as IR_Function
-            if (named_function.name.equals(callee_name.lexeme)) {
-                stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" = ").write(named_function.type.name).end_line()
+        let symbols_iterator = self.create_symbols_iterator()
+        while (symbols_iterator.has_next()) {
+            let symbol = symbols_iterator.next()
+            if (symbol.is(IR_Function)) {
+                let named_function = symbol as IR_Function
+                if (named_function.name.equals(callee_name.lexeme)) {
+                    stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" = ").write(named_function.type.name).end_line()
+                }
             }
-            named_functions_item = named_functions_item.next_item
         }
         let message = clone("Found no matching function: ").append(callee_name.lexeme).append(" = func (")
         let call_arguments_item = call_arguments.first_item
@@ -1427,14 +1468,16 @@ define convert_equals_expression = func (self: IR_Builder, expression: AST_Equal
 
 define convert_function_expression = func (self: IR_Builder, expression: AST_Function_Expression) -> IR_Value {
     let function: IR_Function = null
-    let named_functions_item = self.named_functions.first_item
-    while (named_functions_item != null) {
-        let named_function = named_functions_item.data as IR_Function
-        if (named_function.name == expression.function_statement.name.lexeme) {
-            function = named_function
-            break
+    let symbols_iterator = self.create_symbols_iterator()
+    while (symbols_iterator.has_next()) {
+        let symbol = symbols_iterator.next()
+        if (symbol.is(IR_Function)) {
+            let named_function = symbol as IR_Function
+            if (named_function.name == expression.function_statement.name.lexeme) {
+                function = named_function
+                break
+            }
         }
-        named_functions_item = named_functions_item.next_item
     }
     if (function == null) {
         abort(expression.location, "Invalid state")
@@ -1843,12 +1886,6 @@ define convert_substract_expression = func (self: IR_Builder, expression: AST_Su
 define convert_variable_expression = func (self: IR_Builder, expression: AST_Variable_Expression, expected_type: IR_Type) -> IR_Value {
     let symbol = self.get_symbol(expression.name.lexeme)
     if (symbol == null) {
-        if (expected_type != null && expected_type.is(IR_Function_Type)) {
-            let function = self.get_named_function(expression.name.lexeme, expected_type as IR_Function_Type)
-            if (function != null) {
-                return new IR_Function_Address_Value(type = expected_type, function = function)
-            }
-        }
         abort(expression.location, clone("Undeclared symbol: ").append(expression.name.lexeme))
     }
     if (symbol.is(IR_Variable)) {
@@ -1861,7 +1898,16 @@ define convert_variable_expression = func (self: IR_Builder, expression: AST_Var
     if (symbol.is(IR_Constant)) {
         return (symbol as IR_Constant).value
     }
-    abort(expression.location, clone("Unsupport symbol type: ").append(symbol.object_type.name))
+    if (symbol.is(IR_Function)) {
+        let function = symbol as IR_Function
+        if (expected_type != null && expected_type.is(IR_Function_Type)) {
+            if (expected_type.accepts(function.type)) {
+                return new IR_Function_Address_Value(type = expected_type, function = function)
+            }
+        }
+        abort(expression.location, clone("Unsupported function usage: ").append(function.name))
+    }
+    abort(expression.location, clone("Unsupported symbol type: ").append(symbol.object_type.name))
 }
 
 define convert_variable_expression_address = func (self: IR_Builder, expression: AST_Variable_Expression) -> IR_Value {

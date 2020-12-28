@@ -457,10 +457,8 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
 }
 
 define IR_Function = struct {
-    extends Object
+    extends IR_Symbol
     id: i64
-    location: Source_Location
-    name: String
     parameters: List
     return_type: IR_Type
     type: IR_Function_Type
@@ -498,9 +496,7 @@ define IR_Parameter = struct {
 }
 
 define IR_Macro = struct {
-    extends Object
-    location: Source_Location
-    name: String
+    extends IR_Symbol
     parameters: List
     statement: AST_Macro_Statement
 }
