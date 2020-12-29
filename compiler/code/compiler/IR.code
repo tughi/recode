@@ -120,6 +120,31 @@ define create_ir_function_type = func (parameters: List, return_type: IR_Type) -
     return new IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
 }
 
+define IR_Macro_Body_Type = struct {
+    extends IR_Type
+}
+
+define IR_Macro_Type = struct {
+    extends IR_Type
+    parameters: List
+}
+
+define create_ir_macro_type = func (parameters: List) -> IR_Macro_Type {
+    let type_name = new String().append("macro (")
+    let parameters_item = parameters.first_item
+    while (parameters_item != null) {
+        let parameter = parameters_item.data as IR_Function_Type_Parameter
+        type_name.append(parameter.name).append(": ").append(parameter.type.name)
+        parameters_item = parameters_item.next_item
+        if (parameters_item != null) {
+            type_name.append(", ")
+        }
+    }
+    type_name.append(')')
+
+    return new IR_Macro_Type(name = type_name, parameters = parameters)
+}
+
 define IR_Struct_Type = struct {
     extends IR_Type
     base_type: IR_Struct_Type = null
@@ -295,6 +320,16 @@ define set_member_value = func (self: IR_Struct_Literal_Value, struct_type_membe
     value.links.append(member_value_link.back_link)
 }
 
+define IR_Macro_Body_Value = struct {
+    extends IR_Value(
+        dump = func (value: IR_Value, file: FILE) -> FILE {
+            let value = value as IR_Macro_Body_Value
+            return file.write("{ ... }")
+        }
+    )
+    macro_body: AST_Block_Statement
+}
+
 define IR_Global_Variable_Value = struct {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
@@ -456,10 +491,14 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
     return file
 }
 
-define IR_Function = struct {
+define IR_Callable = struct {
     extends IR_Symbol
-    id: i64
     parameters: List
+}
+
+define IR_Function = struct {
+    extends IR_Callable
+    id: i64
     return_type: IR_Type
     type: IR_Function_Type
     is_external: bool
@@ -496,9 +535,8 @@ define IR_Parameter = struct {
 }
 
 define IR_Macro = struct {
-    extends IR_Symbol
-    parameters: List
-    statement: AST_Macro_Statement
+    extends IR_Callable
+    block_statement: AST_Block_Statement
 }
 
 define IR_Symbol = struct {

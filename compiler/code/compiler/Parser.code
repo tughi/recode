@@ -641,7 +641,7 @@ define parse_cast_expression = func (self: Parser) -> AST_Expression {
 }
 
 \ access_expression
-\   : primary_expression ( "." IDENTIFIER | "(" call_arguments? ")"| "[" expression "]" )*
+\   : primary_expression ( "." IDENTIFIER | "(" call_arguments? ")" block? | "[" expression "]" )*
 define parse_access_expression = func (self: Parser) -> AST_Expression {
     let expression = self.parse_primary_expression()
     if (expression != null) {
@@ -663,6 +663,16 @@ define parse_access_expression = func (self: Parser) -> AST_Expression {
                 }
                 self.consume_space(0)
                 self.consume(required_close_paren)
+                if (self.matches(optional_space, required_open_brace)) {
+                    self.consume_space(1)
+                    let block_statement = self.parse_block()
+                    call_arguments.append(
+                        new AST_Call_Argument(
+                            name = null
+                            value_expression = new AST_Macro_Body(location = block_statement.location, statement = block_statement)
+                        )
+                    )
+                }
                 expression = new AST_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
             }
             if (self.matches(optional_space, required_open_bracket)) {

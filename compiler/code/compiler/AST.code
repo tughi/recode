@@ -421,3 +421,12 @@ define AST_Wrapped_Expression = struct {
     )
     expression: AST_Expression
 }
+
+define AST_Macro_Body = struct {
+    extends AST_Expression(
+        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
+            return builder.convert_macro_body(expression as AST_Macro_Body)
+        }
+    )
+    statement: AST_Block_Statement
+}
