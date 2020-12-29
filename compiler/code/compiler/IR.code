@@ -93,22 +93,27 @@ define IR_Fixed_Array_Type = struct {
     size: i64
 }
 
-define IR_Function_Type = struct {
+define IR_Callable_Type = struct {
     extends IR_Type
     parameters: List
-    return_type: IR_Type
 }
 
-define IR_Function_Type_Parameter = struct {
+define IR_Callable_Parameter = struct {
+    location: Source_Location
     name: String
     type: IR_Type
+}
+
+define IR_Function_Type = struct {
+    extends IR_Callable_Type
+    return_type: IR_Type
 }
 
 define create_ir_function_type = func (parameters: List, return_type: IR_Type) -> IR_Function_Type {
     let type_name = new String().append("func (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
-        let parameter = parameters_item.data as IR_Function_Type_Parameter
+        let parameter = parameters_item.data as IR_Callable_Parameter
         type_name.append(parameter.name).append(": ").append(parameter.type.name)
         parameters_item = parameters_item.next_item
         if (parameters_item != null) {
@@ -125,15 +130,14 @@ define IR_Macro_Body_Type = struct {
 }
 
 define IR_Macro_Type = struct {
-    extends IR_Type
-    parameters: List
+    extends IR_Callable_Type
 }
 
 define create_ir_macro_type = func (parameters: List) -> IR_Macro_Type {
     let type_name = new String().append("macro (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
-        let parameter = parameters_item.data as IR_Function_Type_Parameter
+        let parameter = parameters_item.data as IR_Callable_Parameter
         type_name.append(parameter.name).append(": ").append(parameter.type.name)
         parameters_item = parameters_item.next_item
         if (parameters_item != null) {
@@ -493,14 +497,14 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
 
 define IR_Callable = struct {
     extends IR_Symbol
-    parameters: List
+    type: IR_Callable_Type
 }
 
 define IR_Function = struct {
     extends IR_Callable
     id: i64
     return_type: IR_Type
-    type: IR_Function_Type
+    parameters: List
     is_external: bool
     blocks: List
 }

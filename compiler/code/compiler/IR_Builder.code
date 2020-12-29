@@ -256,7 +256,7 @@ define get_named_function = func (self: IR_Builder, name: String, function_type:
                 let function_type_parameters = function_type.parameters.create_iterator()
                 let named_function_parameters = named_function.parameters.create_iterator()
                 while (function_type_parameters.has_next() && named_function_parameters.has_next()) {
-                    let function_type_parameter = function_type_parameters.next() as IR_Function_Type_Parameter
+                    let function_type_parameter = function_type_parameters.next() as IR_Callable_Parameter
                     let named_function_parameter = named_function_parameters.next() as IR_Function_Parameter
                     if (named_function_parameter.type != function_type_parameter.type) {
                         is_match = false
@@ -312,8 +312,8 @@ define accepts = func (self: IR_Type, other: IR_Type) -> bool {
             let self_parameters_item = self.parameters.first_item
             let other_parameters_item = other.parameters.first_item
             while (self_parameters_item != null && other_parameters_item != null) {
-                let self_parameter = self_parameters_item.data as IR_Function_Type_Parameter
-                let other_parameter = other_parameters_item.data as IR_Function_Type_Parameter
+                let self_parameter = self_parameters_item.data as IR_Callable_Parameter
+                let other_parameter = other_parameters_item.data as IR_Callable_Parameter
                 if (self_parameter.type.accepts(other_parameter.type) == false) {
                     return false
                 }
@@ -574,7 +574,7 @@ define convert_function_type = func (self: IR_Builder, type: AST_Function_Type) 
     let function_parameters_item = type.parameters.first_item
     while (function_parameters_item != null) {
         let function_parameter = function_parameters_item.data as AST_Parameter
-        parameters.append(new IR_Function_Type_Parameter(name = function_parameter.name.lexeme, type = self.convert_type(function_parameter.type)))
+        parameters.append(new IR_Callable_Parameter(location = function_parameter.location, name = function_parameter.name.lexeme, type = self.convert_type(function_parameter.type)))
         function_parameters_item = function_parameters_item.next_item
     }
     return create_ir_function_type(parameters, self.convert_type(type.return_type))
@@ -633,31 +633,29 @@ define convert_macro_type = func (self: IR_Builder, type: AST_Macro_Type) -> IR_
     let parameters_item = type.parameters.first_item
     while (parameters_item != null) {
         let parameter = parameters_item.data as AST_Parameter
-        parameters.append(new IR_Function_Type_Parameter(name = parameter.name.lexeme, type = self.convert_type(parameter.type)))
+        parameters.append(new IR_Callable_Parameter(location = parameter.location, name = parameter.name.lexeme, type = self.convert_type(parameter.type)))
         parameters_item = parameters_item.next_item
     }
     return create_ir_macro_type(parameters)
 }
 
 define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Statement) -> IR_Macro {
-    let ir_macro = new IR_Macro(
-        location = macro_statement.location
-        name = macro_statement.name.lexeme
-        parameters = new List()
-        block_statement = macro_statement.body
-    )
-
     let ast_parameters_item = macro_statement.type.parameters.first_item
-    let function_type_parameters = new List()
+    let callable_parameters = new List()
     while (ast_parameters_item != null) {
         let parameter = ast_parameters_item.data as AST_Parameter
         let parameter_type = self.convert_type(parameter.type)
         let parameter_name = parameter.name.lexeme
-        ir_macro.parameters.append(
-            new IR_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
-        )
+        callable_parameters.append(new IR_Callable_Parameter(location = parameter.location, name = parameter_name, type = parameter_type))
         ast_parameters_item = ast_parameters_item.next_item
     }
+
+    let ir_macro = new IR_Macro(
+        location = macro_statement.location
+        name = macro_statement.name.lexeme
+        type = create_ir_macro_type(callable_parameters)
+        block_statement = macro_statement.body
+    )
 
     self.add_symbol(ir_macro)
 
@@ -677,20 +675,20 @@ define create_function = func (self: IR_Builder, function_statement: AST_Functio
     )
 
     let parameters = function_statement.type.parameters.create_iterator()
-    let function_type_parameters = new List()
+    let callable_type_parameters = new List()
     while (parameters.has_next()) {
         let parameter = parameters.next() as AST_Parameter
         let parameter_type = self.convert_type(parameter.type)
         let parameter_name = parameter.name.lexeme
         let function_parameter = new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
         function.parameters.append(function_parameter)
-        function_type_parameters.append(new IR_Function_Type_Parameter(name = parameter_name, type = parameter_type))
+        callable_type_parameters.append(new IR_Callable_Parameter(location = parameter.location, name = parameter_name, type = parameter_type))
     }
 
     function_statement.ir_function = function
     self.add_symbol(function)
 
-    function.type = create_ir_function_type(function_type_parameters, function.return_type)
+    function.type = create_ir_function_type(callable_type_parameters, function.return_type)
 
     return function
 }
@@ -1310,20 +1308,11 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         if (symbol.is(IR_Callable)) {
             let symbol = symbol as IR_Callable
             if (symbol.name.equals(callee_name.lexeme)) {
-                if (symbol.is(IR_Function)) {
-                    if ((symbol as IR_Function).type.accepts(call_arguments)) {
-                        if (callable != null) {
-                            abort(call_expression.location, "Found at least two matching callables")
-                        }
-                        callable = symbol
+                if (symbol.type.accepts(call_arguments)) {
+                    if (callable != null) {
+                        abort(call_expression.location, "Found at least two matching callables")
                     }
-                } else if (symbol.is(IR_Macro)) {
-                    if ((symbol as IR_Macro).accepts(call_arguments)) {
-                        if (callable != null) {
-                            abort(call_expression.location, "Found at least two matching callables")
-                        }
-                        callable = symbol
-                    }
+                    callable = symbol
                 }
             }
         }
@@ -1333,10 +1322,10 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         let symbols_iterator = self.create_symbols_iterator()
         while (symbols_iterator.has_next()) {
             let symbol = symbols_iterator.next()
-            if (symbol.is(IR_Function)) {
-                let named_function = symbol as IR_Function
-                if (named_function.name.equals(callee_name.lexeme)) {
-                    stderr.end_line().write(named_function.location).write(": ").write(named_function.name).write(" = ").write(named_function.type.name).end_line()
+            if (symbol.is(IR_Callable)) {
+                let callable = symbol as IR_Callable
+                if (callable.name.equals(callee_name.lexeme)) {
+                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.name).end_line()
                 }
             }
         }
@@ -1393,33 +1382,26 @@ define convert_macro_call_expression = func (self: IR_Builder, call_expression: 
     self.context = new IR_Builder_Context(parent = self.context)
 
     let call_arguments_item = call_arguments.first_item
-    let parameters_item = called_macro.parameters.first_item
+    let parameters_item = called_macro.type.parameters.first_item
     while (call_arguments_item != null && parameters_item != null) {
         let call_argument = call_arguments_item.data as IR_Call_Argument
-        let parameter = parameters_item.data as IR_Function_Parameter
+        let parameter = parameters_item.data as IR_Callable_Parameter
         if (call_argument.value.type.is(IR_Macro_Body_Type)) {
             if (parameter.type.is(IR_Macro_Type) == false) {
                 abort(call_expression.location, "Invalid state")
             }
-            let ir_macro = new IR_Macro(
-                name = parameter.name
-                location = parameter.location
-                parameters = new List()
-                block_statement = (call_argument.value as IR_Macro_Body_Value).macro_body
+            self.add_symbol(
+                new IR_Macro(
+                    name = parameter.name
+                    location = parameter.location
+                    type = parameter.type as IR_Macro_Type
+                    block_statement = (call_argument.value as IR_Macro_Body_Value).macro_body
+                )
             )
-            let ir_macro_type_parameters_item = (parameter.type as IR_Macro_Type).parameters.first_item
-            while (ir_macro_type_parameters_item != null) {
-                let ir_macro_type_parameter = ir_macro_type_parameters_item.data as IR_Function_Type_Parameter
-                ir_macro.parameters.append(new IR_Parameter(
-                    name = ir_macro_type_parameter.name
-                    type = ir_macro_type_parameter.type
-                ))
-                ir_macro_type_parameters_item = ir_macro_type_parameters_item.next_item
-            }
-            self.add_symbol(ir_macro)
         } else {
-            self.add_variable(parameter)
-            self.current_block.append(create_ir_set_instruction(self.create_variable_value(parameter), call_argument.value))
+            let variable = new IR_Variable(location = parameter.location, name = parameter.name, type = parameter.type)
+            self.add_variable(variable)
+            self.append(create_ir_set_instruction(self.create_variable_value(variable), call_argument.value), call_expression.location)
         }
         call_arguments_item = call_arguments_item.next_item
         parameters_item = parameters_item.next_item
@@ -1434,34 +1416,19 @@ define convert_macro_call_expression = func (self: IR_Builder, call_expression: 
     self.context = self.context.parent
 }
 
-define accepts = func (self: IR_Function_Type, call_arguments: List) -> bool {
+define accepts = func (self: IR_Callable_Type, call_arguments: List) -> bool {
     let call_arguments_item = call_arguments.first_item
-    let function_parameters_item = self.parameters.first_item
-    while (call_arguments_item != null && function_parameters_item != null) {
+    let callable_parameters_item = self.parameters.first_item
+    while (call_arguments_item != null && callable_parameters_item != null) {
         let call_argument = call_arguments_item.data as IR_Call_Argument
-        let function_parameter = function_parameters_item.data as IR_Function_Type_Parameter
-        if (function_parameter.type.accepts(call_argument.value.type) == false) {
+        let callable_parameter = callable_parameters_item.data as IR_Callable_Parameter
+        if (callable_parameter.type.accepts(call_argument.value.type) == false) {
             break
         }
         call_arguments_item = call_arguments_item.next_item
-        function_parameters_item = function_parameters_item.next_item
+        callable_parameters_item = callable_parameters_item.next_item
     }
-    return call_arguments_item == null && function_parameters_item == null
-}
-
-define accepts = func (self: IR_Macro, call_arguments: List) -> bool {
-    let call_arguments_item = call_arguments.first_item
-    let macro_parameters_item = self.parameters.first_item
-    while (call_arguments_item != null && macro_parameters_item != null) {
-        let call_argument = call_arguments_item.data as IR_Call_Argument
-        let macro_parameter = macro_parameters_item.data as IR_Parameter
-        if (macro_parameter.type.accepts(call_argument.value.type) == false) {
-            break
-        }
-        call_arguments_item = call_arguments_item.next_item
-        macro_parameters_item = macro_parameters_item.next_item
-    }
-    return call_arguments_item == null && macro_parameters_item == null
+    return call_arguments_item == null && callable_parameters_item == null
 }
 
 define convert_call_arguments = func (self: IR_Builder, ast_call_arguments: List) -> List {
