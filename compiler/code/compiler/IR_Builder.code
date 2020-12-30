@@ -655,6 +655,7 @@ define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Stateme
         name = macro_statement.name.lexeme
         type = create_ir_macro_type(callable_parameters)
         block_statement = macro_statement.body
+        context = self.context
     )
 
     self.add_symbol(ir_macro)
@@ -1310,6 +1311,9 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
             if (symbol.name.equals(callee_name.lexeme)) {
                 if (symbol.type.accepts(call_arguments)) {
                     if (callable != null) {
+                        stderr.end_line().write(symbol.location).write(": ").write(symbol.name).write(" = ").write(symbol.type.name).end_line()
+                        stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.name).end_line()
+
                         abort(call_expression.location, "Found at least two matching callables")
                     }
                     callable = symbol
@@ -1379,7 +1383,9 @@ define convert_dynamic_call_expression = func (self: IR_Builder, call_expression
 }
 
 define convert_macro_call_expression = func (self: IR_Builder, call_expression: AST_Call_Expression, call_arguments: List, called_macro: IR_Macro) -> Nothing {
-    self.context = new IR_Builder_Context(parent = self.context)
+    let caller_context = self.context
+
+    self.context = new IR_Builder_Context(parent = called_macro.context)
 
     let call_arguments_item = call_arguments.first_item
     let parameters_item = called_macro.type.parameters.first_item
@@ -1396,6 +1402,7 @@ define convert_macro_call_expression = func (self: IR_Builder, call_expression: 
                     location = parameter.location
                     type = parameter.type as IR_Macro_Type
                     block_statement = (call_argument.value as IR_Macro_Body_Value).macro_body
+                    context = caller_context
                 )
             )
         } else {
@@ -1413,7 +1420,7 @@ define convert_macro_call_expression = func (self: IR_Builder, call_expression: 
 
     self.convert_block_statement(called_macro.block_statement)
 
-    self.context = self.context.parent
+    self.context = caller_context
 }
 
 define accepts = func (self: IR_Callable_Type, call_arguments: List) -> bool {
