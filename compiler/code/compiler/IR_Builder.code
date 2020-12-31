@@ -1468,6 +1468,21 @@ define convert_cast_expression = func (self: IR_Builder, cast_expression: AST_Ca
     if (value.type.is(IR_Integer_Type) && result_value.type.is(IR_Integer_Type)) {
         return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
     }
+    if (value.type.is(IR_Fixed_Array_Type) && result_value.type.is(IR_Unchecked_Array_Type)) {
+        let value_type = value.type as IR_Fixed_Array_Type
+        let result_value_type = result_value.type as IR_Unchecked_Array_Type
+        if (value_type.item_type == result_value_type.item_type) {
+            if (value.is(IR_Global_Variable_Value)) {
+                value = new IR_Global_Variable_Address_Value(
+                    type = self.create_ir_pointer_type(value_type)
+                    variable = (value as IR_Global_Variable_Value).variable
+                )
+            } else {
+                abort(cast_expression.location, clone("Unsupported value type: ").append(value.object_type.name))
+            }
+            return self.append(create_ir_set_instruction(result_value, value), cast_expression.location)
+        }
+    }
     abort(cast_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
 }
 
@@ -1944,11 +1959,20 @@ define convert_variable_expression_address = func (self: IR_Builder, expression:
     if (variable == null) {
         abort(expression.location, clone("Undeclared variable: ").append(expression.name.lexeme))
     }
+    if (variable.is(IR_Global_Variable)) {
+        return new IR_Global_Variable_Address_Value(type = self.create_ir_pointer_type(variable.type), variable = variable)
+    }
     if (variable.type.is(IR_Pointer_Type)) {
         return self.get_variable_value(variable)
     }
-    if (variable.is(IR_Global_Variable)) {
-        return new IR_Global_Variable_Address_Value(type = self.create_ir_pointer_type(variable.type), variable = variable)
+    if (variable.type.is(IR_Struct_Type)) {
+        return self.append(
+            create_ir_load_variable_address_instruction(
+                self.create_temp_value(self.create_ir_pointer_type(variable.type))
+                self.get_variable_value(variable) as IR_Variable_Value
+            )
+            expression.location
+        )
     }
     if (variable.type.is(IR_Unchecked_Array_Type)) {
         return self.get_variable_value(variable)
@@ -2022,6 +2046,9 @@ define deduce_literal_expression_type = func (self: IR_Builder, expression: AST_
 
 define deduce_member_access_expression_type = func (self: IR_Builder, expression: AST_Member_Access_Expression) -> IR_Type {
     let object_type = self.deduce_expression_type(expression.object_expression)
+    if (object_type.is(IR_Struct_Type)) {
+        object_type = self.create_ir_pointer_type(object_type)
+    }
     if (object_type.is(IR_Pointer_Type) == false) {
         abort(expression.location, object_type.object_type)
     }

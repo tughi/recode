@@ -222,6 +222,15 @@ define AST_Variable_Expression = struct {
     name: Identifier_Token
 }
 
+define AST_Variable_Reference_Expression = struct {
+    extends AST_Expression(
+        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
+            return builder.convert_variable_expression_address((expression as AST_Variable_Reference_Expression).variable_expression)
+        }
+    )
+    variable_expression: AST_Variable_Expression
+}
+
 define AST_Binary_Expression = struct {
     extends AST_Expression
     left_expression: AST_Expression

@@ -733,7 +733,7 @@ define parse_call_argument = func (self: Parser) -> AST_Call_Argument {
 }
 
 \ primary_expression
-\   : IDENTIFIER
+\   : "@"? IDENTIFIER
 \   | INTEGER
 \   | STRING
 \   | CHARACTER
@@ -770,9 +770,18 @@ define parse_primary_expression = func (self: Parser) -> AST_Expression {
         let function_statement = self.parse_function(new Generated_Identifier_Token(location = self.scanner.current_token.location, lexeme = function_name))
         return new AST_Function_Expression(location = function_statement.location, function_statement = function_statement)
     }
+    if (self.matches(required_at)) {
+        let location = self.consume(required_at).location
+        self.consume_space(0)
+        let identifier = self.consume(required_identifier) as Identifier_Token
+        return new AST_Variable_Reference_Expression(
+            location = location
+            variable_expression = new AST_Variable_Expression(location = identifier.location, name = identifier)
+        )
+    }
     if (self.matches(required_identifier)) {
-        let token = self.consume(required_identifier) as Identifier_Token
-        return new AST_Variable_Expression(location = token.location, name = token)
+        let identifier = self.consume(required_identifier) as Identifier_Token
+        return new AST_Variable_Expression(location = identifier.location, name = identifier)
     }
     if (self.matches(required_open_paren)) {
         let location = self.consume(required_open_paren).location

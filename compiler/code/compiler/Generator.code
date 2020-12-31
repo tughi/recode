@@ -375,6 +375,14 @@ define generate_cast_instruction = func (self: MC_Generator, instruction: IR_Cas
         } else {
             is_supported = false
         }
+    } else if (instruction.result_value.type.is(IR_UIntMax_Type)) {
+        if (ir_value.type.is(IR_IntMax_Type)) {
+            \ nothing to do
+        } else if (ir_value.type.is(IR_UIntMax_Type)) {
+            stderr.write(instruction.location).write(": Redundant cast").end_line()
+        } else {
+            is_supported = false
+        }
     } else {
         is_supported = false
     }
