@@ -13,7 +13,7 @@ define append = func (self: String, char: u8) -> String {
     }
     self.data[self.length] = char
     self.length = self.length + 1
-    self.data[self.length] = '\0' as u8
+    self.data[self.length] = 0u8
     return self
 }
 
