@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define build = func (compilation_unit: Compilation_Unit) -> IR_Build {
     let builder = create_ir_builder(compilation_unit)
@@ -1950,6 +1950,13 @@ define convert_variable_expression = func (self: IR_Builder, expression: AST_Var
             }
         }
         abort(expression.location, clone("Unsupported function usage: ").append(function.name))
+    }
+    if (symbol.is(IR_Macro)) {
+        let symbol = symbol as IR_Macro
+        return new IR_Macro_Body_Value(
+            type = self.get_named_type("Macro_Body")
+            macro_body = symbol.block_statement
+        )
     }
     abort(expression.location, clone("Unsupported symbol type: ").append(symbol.object_type.name))
 }
