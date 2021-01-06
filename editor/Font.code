@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 let font_glyphs: [!Glyph; 256]
 
@@ -1582,8 +1582,7 @@ define init_font = func () -> Nothing {
     font_glyphs[0x66].mask[12][4] = 255
     font_glyphs[0x66].mask[13][4] = 255
     font_glyphs[0x66].mask[14][4] = 255
-    font_glyphs[0x66].mask[15][2] = 255
-    font_glyphs[0x66].mask[15][3] = 255
+    font_glyphs[0x66].mask[15][4] = 255
 
     \ g
     font_glyphs[0x67].base_line = 13

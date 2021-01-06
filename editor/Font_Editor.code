@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 include "./Button.code"
 include "./File.code"
@@ -170,7 +170,7 @@ define reference = func (self: Glyph_Editor) -> Glyph_Editor {
 define dump_font = func () -> Nothing {
     let file = open_file("editor/Font.code", "w")
 
-    file.write("\\ Copyright (c) 2020, Stefan Selariu").end_line()
+    file.write("\\ Copyright (c) 2020-2021, Stefan Selariu").end_line()
     file.end_line()
     file.write("let font_glyphs: [!Glyph; 256]").end_line()
     file.end_line()
