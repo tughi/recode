@@ -1,0 +1,20 @@
+\ Copyright (c) 2021, Stefan Selariu
+
+include "./Box_Layout.code"
+
+define GUI = struct {
+    extends GUI_Layout(
+        name = "GUI"
+        layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+            let self = self as GUI
+            self.layout_widget(left, top, right, bottom)
+            self.for_each_child() {
+                child.layout(left, top, right, bottom)
+            }
+        }
+    )
+}
+
+define init_gui = func () -> GUI {
+    return new GUI(parent_widget = null)
+}

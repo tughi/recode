@@ -1,0 +1,53 @@
+\ Copyright (c) 2021, Stefan Selariu
+
+include "./Layout.code"
+
+define GUI_Box_Layout = struct {
+    extends GUI_Layout(
+        name = "GUI_Box_Layout"
+        layout = layout_box_layout
+    )
+    is_horizontal_layout: bool = true
+    margin: i32 = 16
+    spacing: i32 = 16
+}
+
+define layout_box_layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as GUI_Box_Layout
+    self.bounds.set(left, top, right, bottom)
+    if (self.children_count > 0) {
+        if (self.is_horizontal_layout) {
+            let child_width = (self.bounds.width - self.margin * 2 - self.spacing * (self.children_count - 1)) / self.children_count
+            let child_height = self.bounds.height - self.margin * 2
+            let child_index = 0
+            self.for_each_child() {
+                let child_left = left + self.margin + (child_width + self.spacing) * child_index
+                let child_top = top + self.margin
+                child.layout(child_left, child_top, child_left + child_width - 1, child_top + child_height - 1)
+                child_index = child_index + 1
+            }
+        } else {
+            let child_width = self.bounds.width - self.margin * 2
+            let child_height = (self.bounds.height - self.margin * 2 - self.spacing * (self.children_count - 1)) / self.children_count
+            let child_index = 0
+            self.for_each_child() {
+                let child_left = left + self.margin
+                let child_top = top + self.margin + (child_height + self.spacing) * child_index
+                child.layout(child_left, child_top, child_left + child_width - 1, child_top + child_height - 1)
+                child_index = child_index + 1
+            }
+        }
+    }
+}
+
+define horizontal_box_layout = macro (parent_widget: GUI_Layout, content: macro (gui: GUI_Box_Layout)) {
+    let box_layout = new GUI_Box_Layout(parent_widget = parent_widget)
+    parent_widget.add(box_layout)
+    box_layout.content()
+}
+
+define vertical_box_layout = macro (parent_widget: GUI_Layout, content: macro (gui: GUI_Box_Layout)) {
+    let box_layout = new GUI_Box_Layout(parent_widget = parent_widget, is_horizontal_layout = false)
+    parent_widget.add(box_layout)
+    box_layout.content()
+}

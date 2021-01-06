@@ -1,0 +1,44 @@
+\ Copyright (c) 2021, Stefan Selariu
+
+include "./Widget.code"
+
+define GUI_Layout = struct {
+    extends GUI_Widget(
+        name = "GUI_Layout"
+        draw = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+            let self = self as GUI_Layout
+            self.draw_widget(canvas)
+            self.for_each_child() {
+                child.draw(canvas)
+            }
+        }
+    )
+
+    children_count: i32 = 0
+    children_first: GUI_Layout_Child = null
+    children_last: GUI_Layout_Child = null
+}
+
+define GUI_Layout_Child = struct {
+    widget: GUI_Widget
+    next_child: GUI_Layout_Child = null
+}
+
+define add = func (self: GUI_Layout, widget: GUI_Widget) -> Nothing {
+    let child = new GUI_Layout_Child(widget = widget)
+    if (self.children_first == null) {
+        self.children_first = child
+    } else {
+        self.children_last.next_child = child
+    }
+    self.children_last = child
+    self.children_count = self.children_count + 1
+}
+
+define for_each_child = macro (self: GUI_Layout, handle: macro (child: GUI_Widget)) {
+    let child = self.children_first
+    while (child != null) {
+        child.widget.handle()
+        child = child.next_child
+    }
+}

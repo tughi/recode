@@ -1,5 +1,6 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
+include "./gui/GUI.code"
 include "./Font_Editor.code"
 
 let text: String
@@ -77,12 +78,31 @@ define main = func () -> i32 {
         event = gui_event_init
     )
 
+    let gui = init_gui()
+    gui.horizontal_box_layout() {
+        gui.vertical_box_layout() {
+            gui.horizontal_box_layout() {
+                gui.vertical_box_layout() {
+                }
+                gui.vertical_box_layout() {
+                }
+            }
+            gui.horizontal_box_layout() {
+            }
+        }
+        gui.vertical_box_layout() {
+        }
+    }
+    gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
+
     loop {
         if (gui_context.event != null) {
             canvas.set_color(COLOR_BACKGROUND)
             canvas.clear()
 
             gui_context.glyph_editor(glyph_editor)
+
+            gui.draw(canvas)
 
             SDL_UpdateWindowSurface(window)
         }
