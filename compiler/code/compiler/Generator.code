@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
     let generator = create_mc_generator(output_file_path)
@@ -550,7 +550,7 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
     if (index_value.is(IR_Constant_Value)) {
         let index_value = index_value as IR_Constant_Value
         if (index_value.literal.is(Integer_Token) == false) {
-            self.abort("Invalid state")
+            self.abort(index_value.literal.location, "Not an integer literal")
         }
         let index_value = (index_value.literal as Integer_Token).value
         if (index_value != 0 as i64) {
