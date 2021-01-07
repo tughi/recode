@@ -2,11 +2,12 @@
 
 include "./Button.code"
 include "./File.code"
+include "./gui/Widget.code"
 
 define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
 
-define glyph_editor = func (context: GUI_Context, glyph_editor: Glyph_Editor) -> Nothing {
+define glyph_editor = func (context: GUI_Context, glyph_editor: Old_Glyph_Editor) -> Nothing {
     let cell_size = glyph_editor.cell_size
     let glyph = font_glyphs[glyph_editor.selected_glyph]
     let rows = glyph.mask.length as i32
@@ -150,7 +151,7 @@ define glyph_editor = func (context: GUI_Context, glyph_editor: Glyph_Editor) ->
     }
 }
 
-define Glyph_Editor = struct {
+define Old_Glyph_Editor = struct {
     extends GUI_View
     cell_size: i32
     selected_glyph: u8
@@ -163,8 +164,43 @@ define Glyph_Editor = struct {
     is_resetting: bool = false
 }
 
-define reference = func (self: Glyph_Editor) -> Glyph_Editor {
-    return self
+define glyph_editor = func (parent_widget: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
+    let glyph_editor = new Glyph_Editor(parent_widget = parent_widget, glyph = glyph)
+    parent_widget.add(glyph_editor)
+
+    let glyph_rows = glyph.mask.length as i32
+    let glyph_columns = glyph.mask[0].length as i32
+    glyph_editor.preferred_width = (glyph_editor.pixel_size + 1) * glyph_columns + 1
+    glyph_editor.preferred_height = (glyph_editor.pixel_size + 1) * glyph_rows + 1
+
+    return glyph_editor
+}
+
+define Glyph_Editor = struct {
+    extends GUI_Widget(
+        name = "Glyph_Editor"
+        draw = draw_glyph_editor
+    )
+    glyph: Glyph
+    pixel_size: i32 = 23
+}
+
+define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+    let self = self as Glyph_Editor
+
+    canvas.set_color(0xffff00u32)
+
+    let glyph_mask = self.glyph.mask
+    let glyph_row = 0
+    while (glyph_row <= glyph_mask.length as i32) {
+        canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top + glyph_row * (self.pixel_size + 1))
+        glyph_row = glyph_row + 1
+    }
+    let glyph_column = 0
+    while (glyph_column <= glyph_mask[0].length as i32) {
+        canvas.draw_vertical_line(self.bounds.left + glyph_column * (self.pixel_size + 1), self.bounds.top, self.bounds.bottom)
+        glyph_column = glyph_column + 1
+    }
 }
 
 define dump_font = func () -> Nothing {

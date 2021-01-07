@@ -1,0 +1,121 @@
+\ Copyright (c) 2021, Stefan Selariu
+
+include "./Layout.code"
+
+define GUI_Linear_Layout = struct {
+    extends GUI_Layout(
+        name = "GUI_Linear_Layout"
+        layout = layout_linear_layout
+    )
+    is_horizontal_layout: bool = true
+    margin: i32 = 0
+    spacing: i32 = 0
+}
+
+define layout_linear_layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as GUI_Linear_Layout
+    self.bounds.set(left, top, right, bottom)
+    if (self.children_count > 0) {
+        if (self.is_horizontal_layout) {
+            let variable_width = self.bounds.width - self.margin * 2 - self.spacing * (self.children_count - 1)
+            let variable_children_count = 0
+            self.for_each_child() {
+                if (child.preferred_width > 0) {
+                    variable_width = variable_width - child.preferred_width
+                } else {
+                    variable_children_count = variable_children_count + 1
+                }
+            }
+            let variable_child_width = 0
+            if (variable_children_count > 0) {
+                variable_child_width = variable_width / variable_children_count
+            }
+            let child_height = self.bounds.height - self.margin * 2
+            let child_left = left + self.margin
+            let child_top = top + self.margin
+            let child_bottom = bottom - self.margin
+            self.for_each_child() {
+                let child_right: i32
+                if (child.preferred_width > 0) {
+                    child_right = child_left + child.preferred_width - 1
+                } else {
+                    child_right = child_left + variable_child_width - 1
+                }
+                child.layout(child_left, child_top, child_right, child_bottom)
+                child_left = child_right + 1 + self.spacing
+            }
+        } else {
+            let variable_height = self.bounds.height - self.margin * 2 - self.spacing * (self.children_count - 1)
+            let variable_children_count = 0
+            self.for_each_child() {
+                if (child.preferred_height > 0) {
+                    variable_height = variable_height - child.preferred_height
+                } else {
+                    variable_children_count = variable_children_count + 1
+                }
+            }
+            let variable_child_height = 0
+            if (variable_children_count > 0) {
+                variable_child_height = variable_height / variable_children_count
+            }
+            let child_width = self.bounds.width - self.margin * 2
+            let child_left = left + self.margin
+            let child_top = top + self.margin
+            let child_right = right - self.margin
+            self.for_each_child() {
+                let child_bottom: i32
+                if (child.preferred_height > 0) {
+                    child_bottom = child_top + child.preferred_height - 1
+                } else {
+                    child_bottom = child_top + variable_child_height - 1
+                }
+                child.layout(child_left, child_top, child_right, child_bottom)
+                child_top = child_bottom + 1 + self.spacing
+            }
+        }
+    }
+}
+
+define horizontal_linear_layout = macro (parent_widget: GUI_Layout, content: macro (gui: GUI_Linear_Layout)) {
+    let linear_layout = new GUI_Linear_Layout(parent_widget = parent_widget)
+    parent_widget.add(linear_layout)
+    linear_layout.content()
+    if (linear_layout.children_count > 0) {
+        let children_width = 0
+        let children_height = 0
+        linear_layout.for_each_child() {
+            children_width = children_width + child.preferred_width
+            if (children_height < child.preferred_height) {
+                children_height = child.preferred_height
+            }
+        }
+        linear_layout.preferred_width = linear_layout.margin * 2 + children_width + linear_layout.spacing * (linear_layout.children_count - 1)
+        linear_layout.preferred_height = linear_layout.margin * 2 + children_height
+    } else {
+        linear_layout.preferred_width = linear_layout.margin * 2
+        linear_layout.preferred_height = linear_layout.margin * 2
+    }
+    stdout.write(linear_layout.preferred_width).write("x").write(linear_layout.preferred_height).end_line()
+}
+
+define vertical_linear_layout = macro (parent_widget: GUI_Layout, content: macro (gui: GUI_Linear_Layout)) {
+    let linear_layout = new GUI_Linear_Layout(parent_widget = parent_widget, is_horizontal_layout = false)
+    parent_widget.add(linear_layout)
+    linear_layout.content()
+    if (linear_layout.children_count > 0) {
+        let children_width = 0
+        let children_height = 0
+        linear_layout.for_each_child() {
+            if (children_width < child.preferred_width) {
+                children_width = child.preferred_width
+            }
+            children_height = children_height + child.preferred_height
+        }
+        linear_layout.preferred_width = linear_layout.margin * 2 + children_width
+        linear_layout.preferred_height = linear_layout.margin * 2 + children_height + linear_layout.spacing * (linear_layout.children_count - 1)
+    } else {
+        linear_layout.preferred_width = linear_layout.margin * 2
+        linear_layout.preferred_height = linear_layout.margin * 2
+    }
+    stdout.write(linear_layout.preferred_width).write("x").write(linear_layout.preferred_height).end_line()
+}
