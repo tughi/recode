@@ -3,7 +3,7 @@
 include "./Layout.code"
 
 define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
-    let button = new GUI_Button(parent = parent, label = label)
+    let button = new GUI_Button(parent = parent, label = label.clone())
     parent.add(button)
     label.compute_text_size(button.label_bounds)
     button.preferred_width = button.label_bounds.width + 16

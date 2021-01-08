@@ -8,6 +8,48 @@ define String = struct {
     length: usize = 0
 }
 
+define clone = func (self: String) -> String {
+    let other = new String(
+        data = malloc(self.length + 1) as [u8; ?]
+        data_size = self.length + 1
+        length = self.length
+    )
+    let index = 0usize
+    while (index <= self.length) {
+        other.data[index] = self.data[index]
+        index = index + 1
+    }
+    return other
+}
+
+define copy = func (self: String, other: String) -> String {
+    if (self.data_size < other.length + 1) {
+        self.data_size = other.length + 1
+        self.data = realloc(self.data, self.data_size) as [u8; ?]
+    }
+    let index = 0usize
+    while (index <= other.length) {
+        self.data[index] = other.data[index]
+        index = index + 1
+    }
+    self.length = other.length
+    return self
+}
+
+define equals = func (self: String, other: String) -> bool {
+    if (other == null || self.length != other.length) {
+        return false
+    }
+    let index = 0usize
+    while (index < self.length) {
+        if (self.data[index] != other.data[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
 define append = func (self: String, char: u8) -> String {
     if (self.length + 1 >= self.data_size) {
         self.data_size = self.data_size + 16
