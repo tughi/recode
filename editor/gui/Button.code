@@ -1,0 +1,59 @@
+\ Copyright (c) 2021, Stefan Selariu
+
+include "./Layout.code"
+
+define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
+    let button = new GUI_Button(parent = parent, label = label)
+    parent.add(button)
+    label.compute_text_size(button.label_bounds)
+    button.preferred_width = button.label_bounds.width + 16
+    button.preferred_height = button.label_bounds.height + 8
+    return button
+}
+
+define GUI_Button = struct {
+    extends GUI_Widget(
+        name = "GUI_Button"
+        layout = layout_button
+        draw = draw_button
+    )
+    label: String
+    label_bounds: !Rect = Rect()
+}
+
+define layout_button = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as GUI_Button
+    self.bounds.set(left, top, right, bottom)
+    self.label_bounds.set_location(left + (self.bounds.width - self.label_bounds.width) / 2, top + (self.bounds.height - self.label_bounds.height) / 2)
+}
+
+define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+    let self = self as GUI_Button
+    canvas.set_color(0xffff00u32)
+    canvas.draw_rect(self.bounds)
+    canvas.draw_text(self.label, self.label_bounds.left, self.label_bounds.top)
+}
+
+define compute_text_size = func (text: String, text_size: Rect) -> Nothing {
+    if (text.length > 0) {
+        let line_height = font_glyphs[0].mask.length as i32
+        let width = 0
+        let height = line_height
+        let char_right = 0
+        text.for_each_char() {
+            if (char == '\n' as u8) {
+                if (char_right > width) {
+                    width = char_right
+                }
+                height = height + line_height
+                char_right = 0
+            } else {
+                char_right = char_right + font_glyphs[char].mask[0].length as i32
+            }
+        }
+        if (char_right > width) {
+            width = char_right
+        }
+        text_size.set_size(width, height)
+    }
+}

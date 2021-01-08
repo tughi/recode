@@ -79,12 +79,15 @@ define main = func () -> i32 {
     )
 
     let gui = init_gui()
+    let glyph_editor: Glyph_Editor
+    let save_button: GUI_Button
     gui.horizontal_linear_layout() {
         gui.margin = 32
         gui.spacing = 32
         gui.vertical_linear_layout() {
             gui.spacing = 32
-            let glyph_editor = gui.glyph_editor(font_glyphs['A' as i32])
+            glyph_editor = gui.glyph_editor(font_glyphs['A' as i32])
+            save_button = gui.button("Save")
         }
         gui.vertical_linear_layout() {
         }

@@ -1,4 +1,6 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
+
+include "./LibC.code"
 
 define String = struct {
     data: [u8; ?] = malloc(16usize) as [u8; ?]
@@ -17,4 +19,11 @@ define append = func (self: String, char: u8) -> String {
     return self
 }
 
-include "./LibC.code"
+define for_each_char = macro (self: String, handler: macro (char: u8)) {
+    let index = 0
+    let length = self.length as i32
+    while (index < length) {
+        handler(self.data[index])
+        index = index + 1
+    }
+}

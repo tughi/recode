@@ -1,5 +1,6 @@
 \ Copyright (c) 2021, Stefan Selariu
 
+include "./Button.code"
 include "./Linear_Layout.code"
 
 define GUI = struct {
