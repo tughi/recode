@@ -4,7 +4,7 @@ include "../Canvas.code"
 
 define GUI_Widget = struct {
     name: String
-    parent_widget: GUI_Widget
+    parent: GUI_Layout
 
     preferred_width: i32 = 0
     preferred_height: i32 = 0

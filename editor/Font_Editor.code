@@ -164,9 +164,9 @@ define Old_Glyph_Editor = struct {
     is_resetting: bool = false
 }
 
-define glyph_editor = func (parent_widget: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
-    let glyph_editor = new Glyph_Editor(parent_widget = parent_widget, glyph = glyph)
-    parent_widget.add(glyph_editor)
+define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
+    let glyph_editor = new Glyph_Editor(parent = parent, glyph = glyph)
+    parent.add(glyph_editor)
 
     let glyph_rows = glyph.mask.length as i32
     let glyph_columns = glyph.mask[0].length as i32

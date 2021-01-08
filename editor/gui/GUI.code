@@ -16,5 +16,5 @@ define GUI = struct {
 }
 
 define init_gui = func () -> GUI {
-    return new GUI(parent_widget = null)
+    return new GUI(parent = null)
 }

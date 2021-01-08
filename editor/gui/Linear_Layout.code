@@ -76,9 +76,9 @@ define layout_linear_layout = func (self: GUI_Widget, left: i32, top: i32, right
     }
 }
 
-define horizontal_linear_layout = macro (parent_widget: GUI_Layout, content: macro (gui: GUI_Linear_Layout)) {
-    let linear_layout = new GUI_Linear_Layout(parent_widget = parent_widget)
-    parent_widget.add(linear_layout)
+define horizontal_linear_layout = macro (parent: GUI_Layout, content: macro (gui: GUI_Linear_Layout)) {
+    let linear_layout = new GUI_Linear_Layout(parent = parent)
+    parent.add(linear_layout)
     linear_layout.content()
     if (linear_layout.children_count > 0) {
         let children_width = 0
@@ -98,9 +98,9 @@ define horizontal_linear_layout = macro (parent_widget: GUI_Layout, content: mac
     stdout.write(linear_layout.preferred_width).write("x").write(linear_layout.preferred_height).end_line()
 }
 
-define vertical_linear_layout = macro (parent_widget: GUI_Layout, content: macro (gui: GUI_Linear_Layout)) {
-    let linear_layout = new GUI_Linear_Layout(parent_widget = parent_widget, is_horizontal_layout = false)
-    parent_widget.add(linear_layout)
+define vertical_linear_layout = macro (parent: GUI_Layout, content: macro (gui: GUI_Linear_Layout)) {
+    let linear_layout = new GUI_Linear_Layout(parent = parent, is_horizontal_layout = false)
+    parent.add(linear_layout)
     linear_layout.content()
     if (linear_layout.children_count > 0) {
         let children_width = 0
