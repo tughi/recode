@@ -93,6 +93,8 @@ define main = func () -> i32 {
         gui.vertical_linear_layout() {
             gui.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
             gui.height_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
+            let glyph_chooser = gui.glyph_chooser('A' as u8)
+            glyph_chooser.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
         }
     }
     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)

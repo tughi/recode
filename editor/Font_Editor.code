@@ -2,7 +2,7 @@
 
 include "./Button.code"
 include "./File.code"
-include "./gui/Widget.code"
+include "./gui/Layout.code"
 
 define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
@@ -200,6 +200,44 @@ define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     while (glyph_column <= glyph_mask[0].length as i32) {
         canvas.draw_vertical_line(self.bounds.left + glyph_column * (self.pixel_size + 1), self.bounds.top, self.bounds.bottom)
         glyph_column = glyph_column + 1
+    }
+}
+
+define glyph_chooser = func (parent: GUI_Layout, selected_glyph: u8) -> Glyph_Chooser {
+    let glyph_chooser = new Glyph_Chooser(parent = parent, selected_glyph = selected_glyph)
+    parent.add(glyph_chooser)
+
+    let glyph = ' '
+    while (glyph <= '~') {
+        glyph_chooser.button(new String().append(glyph as u8))
+        glyph = glyph + 1
+    }
+
+    return glyph_chooser
+}
+
+define Glyph_Chooser = struct {
+    extends GUI_Layout(
+        name = "Glyph_Chooser"
+        layout = layout_glyph_chooser
+    )
+    selected_glyph: u8
+}
+
+define layout_glyph_chooser = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as Glyph_Chooser
+    let child_left = left
+    let child_top = top
+    self.for_each_child() {
+        let child_right = child_left + child.width_hint - 1
+        if (child_right > right) {
+            child_left = left
+            child_right = left + child.width_hint - 1
+            child_top = child_top + child.height_hint + 3
+        }
+        let child_bottom = child_top + child.height_hint - 1
+        child.layout(child_left, child_top, child_right, child_bottom)
+        child_left = child_right + 5
     }
 }
 
