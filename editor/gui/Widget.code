@@ -6,8 +6,10 @@ define GUI_Widget = struct {
     name: String
     parent: GUI_Layout
 
-    preferred_width: i32 = 0
-    preferred_height: i32 = 0
+    width_hint: i32 = 0
+    width_policy: !Size_Policy = Size_Policy()
+    height_hint: i32 = 0
+    height_policy: !Size_Policy = Size_Policy()
 
     bounds: !Rect = Rect()
 
@@ -23,3 +25,12 @@ define draw_widget = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     canvas.set_color(0xff0000u32)
     canvas.draw_rect(self.bounds)
 }
+
+define Size_Policy = struct {
+    mode: u8 = SIZE_POLICY_MODE_WRAP_CONTENT
+    size: i32 = 0
+}
+
+define SIZE_POLICY_MODE_FIXED = 0u8
+define SIZE_POLICY_MODE_STRETCHED = 1u8
+define SIZE_POLICY_MODE_WRAP_CONTENT = 2u8

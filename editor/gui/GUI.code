@@ -1,8 +1,8 @@
 \ Copyright (c) 2021, Stefan Selariu
 
 include "./Button.code"
-include "./Horizontal_Box_Layout.code"
-include "./Vertical_Box_Layout.code"
+include "./Horizontal_Linear_Layout.code"
+include "./Vertical_Linear_Layout.code"
 
 define GUI = struct {
     extends GUI_Layout(

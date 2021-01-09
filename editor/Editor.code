@@ -88,8 +88,11 @@ define main = func () -> i32 {
             gui.spacing = 32
             glyph_editor = gui.glyph_editor(font_glyphs['A' as i32])
             save_button = gui.button("Save")
+            save_button.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
         }
         gui.vertical_linear_layout() {
+            gui.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
+            gui.height_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
         }
     }
     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)

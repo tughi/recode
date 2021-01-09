@@ -6,8 +6,8 @@ define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
     let button = new GUI_Button(parent = parent, label = label.clone())
     parent.add(button)
     label.compute_text_size(button.label_bounds)
-    button.preferred_width = button.label_bounds.width + 16
-    button.preferred_height = button.label_bounds.height + 8
+    button.width_hint = button.label_bounds.width + 16
+    button.height_hint = button.label_bounds.height + 8
     return button
 }
 
