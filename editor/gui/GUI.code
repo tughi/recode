@@ -9,6 +9,15 @@ define GUI = struct {
         name = "GUI"
         layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
             let self = self as GUI
+
+            self.if_size_changes(left, top, right, bottom) {
+                let width_spec = Measure_Spec(mode = MEASURE_SPEC_MODE_EXACTLY, size = right - left + 1)
+                let height_spec = Measure_Spec(mode = MEASURE_SPEC_MODE_EXACTLY, size = bottom - top + 1)
+                self.for_each_child() {
+                    child.measure(@width_spec, @height_spec)
+                }
+            }
+
             self.layout_widget(left, top, right, bottom)
             self.for_each_child() {
                 child.layout(left, top, right, bottom)

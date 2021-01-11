@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define Rect = struct {
     left: i32 = 0
@@ -48,4 +48,8 @@ define set_size = func (self: Rect, width: i32, height: i32) -> Nothing {
         self.height = height
         self.bottom = self.top + height - 1
     }
+}
+
+define write = func (file: FILE, rect: Rect) -> FILE {
+    return file.write("[(").write(rect.left).write(", ").write(rect.top).write(") x (").write(rect.right).write(", ").write(rect.bottom).write(")]")
 }

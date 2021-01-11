@@ -6,19 +6,45 @@ define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
     let button = new GUI_Button(parent = parent, label = label.clone())
     parent.add(button)
     label.compute_text_size(button.label_bounds)
-    button.width_hint = button.label_bounds.width + 16
-    button.height_hint = button.label_bounds.height + 8
     return button
 }
 
 define GUI_Button = struct {
     extends GUI_Widget(
         name = "GUI_Button"
+        measure = measure_button
         layout = layout_button
         draw = draw_button
     )
     label: String
     label_bounds: !Rect = Rect()
+}
+
+define measure_button = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
+    let self = self as GUI_Button
+
+    if (width_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
+        self.width_hint = width_spec.size
+    } else if (width_spec.mode == MEASURE_SPEC_MODE_LIMITED) {
+        self.width_hint = self.label_bounds.width + 16
+        if (self.width_hint > width_spec.size) {
+            self.width_hint = width_spec.size
+        }
+    } else if (width_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
+        self.width_hint = self.label_bounds.width + 16
+    } else {
+        self.abort("width", width_spec)
+    }
+
+    if (height_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
+        self.height_hint = height_spec.size
+    } else if (height_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
+        self.height_hint = self.label_bounds.height + 8
+    } else {
+        self.abort("height", height_spec)
+    }
+
+    stdout.write(self.name).write(" size hint: ").write(self.width_hint).write(" x ").write(self.height_hint).end_line()
 }
 
 define layout_button = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {

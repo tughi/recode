@@ -13,8 +13,13 @@ define GUI_Widget = struct {
 
     bounds: !Rect = Rect()
 
+    measure: func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing = measure_widget
     layout: func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing = layout_widget
     draw: func (self: GUI_Widget, canvas: Canvas) -> Nothing = draw_widget
+}
+
+define measure_widget = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
+    stderr.write(self.name).write(" has no 'measure' function").end_line()
 }
 
 define layout_widget = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
@@ -34,3 +39,49 @@ define Size_Policy = struct {
 define SIZE_POLICY_MODE_FIXED = 0u8
 define SIZE_POLICY_MODE_STRETCHED = 1u8
 define SIZE_POLICY_MODE_WRAP_CONTENT = 2u8
+
+define Measure_Spec = struct {
+    mode: u8 = MEASURE_SPEC_MODE_EXACTLY
+    size: i32 = 0
+}
+
+define MEASURE_SPEC_MODE_EXACTLY = 0u8
+define MEASURE_SPEC_MODE_LIMITED = 1u8
+define MEASURE_SPEC_MODE_UNLIMITED = 2u8
+
+define if_size_changes = macro (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32, action: macro ()) {
+    let bounds = self.bounds
+    if (bounds.width != right - left + 1 || bounds.height != bottom - top + 1) {
+        action()
+    }
+}
+
+define abort = func (self: GUI_Widget, measure: String, measure_spec: Measure_Spec) -> Nothing {
+    stderr.write(self.name).write(" cannot handle ").write(measure).write(" spec: ").write("mode=")
+    if (measure_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
+        stderr.write("EXACTLY").write(", size=").write(measure_spec.size)
+    } else if (measure_spec.mode == MEASURE_SPEC_MODE_LIMITED) {
+        stderr.write("LIMITED").write(", size=").write(measure_spec.size)
+    } else if (measure_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
+        stderr.write("UNLIMITED")
+    } else {
+        stderr.write("???")
+    }
+    stderr.end_line()
+    abort()
+}
+
+define abort = func (self: GUI_Widget, measure: String, size_policy: Size_Policy) -> Nothing {
+    stderr.write(self.name).write(" cannot handle ").write(measure).write(" policy: ").write("mode=")
+    if (size_policy.mode == SIZE_POLICY_MODE_FIXED) {
+        stderr.write("FIXED").write(", size=").write(size_policy.size)
+    } else if (size_policy.mode == SIZE_POLICY_MODE_STRETCHED) {
+        stderr.write("STRETCHED")
+    } else if (size_policy.mode == SIZE_POLICY_MODE_WRAP_CONTENT) {
+        stderr.write("WRAP_CONTENT")
+    } else {
+        stderr.write("???")
+    }
+    stderr.end_line()
+    abort()
+}
