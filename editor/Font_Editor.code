@@ -165,7 +165,7 @@ define Old_Glyph_Editor = struct {
 }
 
 define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
-    let glyph_editor = new Glyph_Editor(parent = parent, glyph = glyph)
+    let glyph_editor = new Glyph_Editor(gui = parent.gui, parent = parent, glyph = glyph)
     parent.add(glyph_editor)
 
     let glyph_rows = glyph.mask.length as i32
@@ -235,7 +235,7 @@ define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 }
 
 define glyph_chooser = func (parent: GUI_Layout, selected_glyph: u8) -> Glyph_Chooser {
-    let glyph_chooser = new Glyph_Chooser(parent = parent, selected_glyph = selected_glyph)
+    let glyph_chooser = new Glyph_Chooser(gui = parent.gui, parent = parent, selected_glyph = selected_glyph)
     parent.add(glyph_chooser)
 
     let glyph = ' '

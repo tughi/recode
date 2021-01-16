@@ -3,6 +3,7 @@
 include "../Canvas.code"
 
 define GUI_Widget = struct {
+    gui: GUI
     name: String
     parent: GUI_Layout
 
@@ -13,9 +14,17 @@ define GUI_Widget = struct {
 
     bounds: !Rect = Rect()
 
+    update_hovered_widget: func (self: GUI_Widget, x: i32, y: i32) -> Nothing = widget_updates_hovered_widget
+
     measure: func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing = measure_widget
     layout: func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing = layout_widget
     draw: func (self: GUI_Widget, canvas: Canvas) -> Nothing = draw_widget
+}
+
+define widget_updates_hovered_widget = func (self: GUI_Widget, x: i32, y: i32) -> Nothing {
+    if (self.bounds.contains(x, y)) {
+        self.gui.hovered_widget = self
+    }
 }
 
 define measure_widget = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {

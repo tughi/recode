@@ -24,8 +24,17 @@ define GUI = struct {
             }
         }
     )
+    hovered_widget: GUI_Widget
 }
 
 define init_gui = func () -> GUI {
-    return new GUI(parent = null)
+    let gui = new GUI(gui = undefined, parent = null, hovered_widget = undefined)
+    gui.gui = gui
+    gui.hovered_widget = gui
+    return gui
+}
+
+define handle_mouse_moved_event = func (self: GUI, event: GUI_Event_Mouse_Moved) -> Nothing {
+    let hovered_widget = self.hovered_widget
+    self.update_hovered_widget(event.x, event.y)
 }

@@ -130,6 +130,7 @@ define main = func () -> i32 {
                 gui_event_mouse_moved.x = event.x
                 gui_event_mouse_moved.y = event.y
                 gui_context.event = gui_event_mouse_moved
+                gui.handle_mouse_moved_event(gui_event_mouse_moved)
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {
                 let event = event as SDL_MouseButtonEvent
                 gui_event_mouse_button_pressed.which = event.button

@@ -114,7 +114,7 @@ define layout_vertical_linear_layout = func (self: GUI_Widget, left: i32, top: i
 }
 
 define vertical_linear_layout = macro (parent: GUI_Layout, content: macro (gui: GUI_Vertical_Linear_Layout)) {
-    let linear_layout = new GUI_Vertical_Linear_Layout(parent = parent)
+    let linear_layout = new GUI_Vertical_Linear_Layout(gui = parent.gui, parent = parent)
     parent.add(linear_layout)
     linear_layout.content()
 }

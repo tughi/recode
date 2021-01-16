@@ -5,6 +5,15 @@ include "./Widget.code"
 define GUI_Layout = struct {
     extends GUI_Widget(
         name = "GUI_Layout"
+        update_hovered_widget = func (self: GUI_Widget, x: i32, y: i32) -> Nothing {
+            let self = self as GUI_Layout
+            if (self.bounds.contains(x, y)) {
+                self.gui.hovered_widget = self
+            }
+            self.for_each_child() {
+                child.update_hovered_widget(x, y)
+            }
+        }
         draw = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
             let self = self as GUI_Layout
             self.draw_widget(canvas)
