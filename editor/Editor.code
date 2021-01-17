@@ -101,6 +101,11 @@ define main = func () -> i32 {
 
             let glyph_chooser = gui.glyph_chooser('A' as u8)
             glyph_chooser.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
+            glyph_chooser.data = new Glyph_Chooser_Data(glyph_editor = glyph_editor)
+            glyph_chooser.handle_glyph_selected = func (self: Glyph_Chooser, glyph: u8) -> Nothing {
+                let glyph_editor = (self.data as Glyph_Chooser_Data).glyph_editor
+                glyph_editor.glyph = font_glyphs[glyph]
+            }
 
             gui.button("Useless button")
             \ gui.text(text)
@@ -135,10 +140,12 @@ define main = func () -> i32 {
                 let event = event as SDL_MouseButtonEvent
                 gui_event_mouse_button_pressed.which = event.button
                 gui_context.event = gui_event_mouse_button_pressed
+                gui.handle_mouse_button_pressed(gui_event_mouse_button_pressed)
             } else if (event.type == SDL_MOUSEBUTTONUP) {
                 let event = event as SDL_MouseButtonEvent
                 gui_event_mouse_button_released.which = event.button
                 gui_context.event = gui_event_mouse_button_released
+                gui.handle_mouse_button_released(gui_event_mouse_button_released)
             } else if (event.type == SDL_WINDOWEVENT) {
                 let event = event as SDL_WindowEvent
                 \ stdout.write("window event: ").write(event.event as u32).end_line()
@@ -170,4 +177,9 @@ define main = func () -> i32 {
 
     SDL_Quit()
     return 0
+}
+
+define Glyph_Chooser_Data = struct {
+    extends GUI_Data
+    glyph_editor: Glyph_Editor
 }

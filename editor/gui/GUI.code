@@ -25,6 +25,7 @@ define GUI = struct {
         }
     )
     hovered_widget: GUI_Widget
+    pressed_widget: GUI_Widget = null
 }
 
 define init_gui = func () -> GUI {
@@ -37,4 +38,15 @@ define init_gui = func () -> GUI {
 define handle_mouse_moved_event = func (self: GUI, event: GUI_Event_Mouse_Moved) -> Nothing {
     let hovered_widget = self.hovered_widget
     self.update_hovered_widget(event.x, event.y)
+}
+
+define handle_mouse_button_pressed = func (self: GUI, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+    self.pressed_widget = self.hovered_widget
+}
+
+define handle_mouse_button_released = func (self: GUI, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+    if (self.hovered_widget == self.pressed_widget) {
+        self.hovered_widget.handle_click_event()
+    }
+    self.pressed_widget = null
 }

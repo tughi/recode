@@ -44,7 +44,7 @@ define measure_button = func (self: GUI_Widget, width_spec: Measure_Spec, height
         self.abort("height", height_spec)
     }
 
-    stdout.write(self.name).write(" size hint: ").write(self.width_hint).write(" x ").write(self.height_hint).end_line()
+    \ stdout.write(self.name).write(" size hint: ").write(self.width_hint).write(" x ").write(self.height_hint).end_line()
 }
 
 define layout_button = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
@@ -55,7 +55,12 @@ define layout_button = func (self: GUI_Widget, left: i32, top: i32, right: i32, 
 
 define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     let is_hovered = self.gui.hovered_widget == self
+    let is_pressed = self.gui.pressed_widget == self
     let self = self as GUI_Button
+    if (is_pressed) {
+        canvas.set_color(0x00ffffu32)
+        canvas.fill_rect(self.bounds)
+    }
     if (is_hovered) {
         canvas.set_color(0xffffffu32)
     } else {
