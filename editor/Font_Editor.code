@@ -179,11 +179,25 @@ define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
 define Glyph_Editor = struct {
     extends GUI_Widget(
         name = "Glyph_Editor"
+        update_hovered_widget = func (self: GUI_Widget, x: i32, y: i32) -> Nothing {
+            self.widget_updates_hovered_widget(x, y)
+
+            let self = self as Glyph_Editor
+            if (self.bounds.contains(x, y)) {
+                self.hovered_row = (y - self.bounds.left) / (self.pixel_size + 1)
+                self.hovered_column = (x - self.bounds.left) / (self.pixel_size + 1)
+            } else {
+                self.hovered_row = -1
+                self.hovered_column = -1
+            }
+        }
         measure = measure_glyph_editor
         draw = draw_glyph_editor
     )
     glyph: Glyph
     pixel_size: i32 = 23
+    hovered_row: i32 = -1
+    hovered_column: i32 = -1
 }
 
 define measure_glyph_editor = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
@@ -249,6 +263,20 @@ define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
             glyph_column = glyph_column + 1
         }
         glyph_row = glyph_row + 1
+    }
+
+    if (self.hovered_row >= 0 && self.hovered_column >= 0) {
+        if (glyph_mask[self.hovered_row][self.hovered_column] == 0u8) {
+            canvas.set_color(0x666600u32)
+        } else {
+            canvas.set_color(0xcccc00u32)
+        }
+        canvas.fill_rect(
+            self.bounds.left + self.hovered_column * (self.pixel_size + 1) + 1
+            self.bounds.top + self.hovered_row * (self.pixel_size + 1) + 1
+            self.bounds.left + self.hovered_column * (self.pixel_size + 1) + self.pixel_size
+            self.bounds.top + self.hovered_row * (self.pixel_size + 1) + self.pixel_size
+        )
     }
 
     canvas.set_color(0xff0000u32)
