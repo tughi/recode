@@ -1,12 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
-
-include "./Canvas.code"
-
-define GUI_Context = struct {
-    canvas: Canvas
-    event: GUI_Event
-    hovered_view: GUI_View = null
-}
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define GUI_Event = struct {
     type: u8
@@ -35,9 +27,4 @@ define GUI_Event_Mouse_Moved = struct {
     extends GUI_Event(type = GUI_EVENT_TYPE_MOUSE_MOVED)
     x: i32
     y: i32
-}
-
-define GUI_View = struct {
-    bounds: !Rect = undefined
-    is_hovered: bool = false
 }

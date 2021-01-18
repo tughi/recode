@@ -1,168 +1,10 @@
 \ Copyright (c) 2020-2021, Stefan Selariu
 
-include "./Button.code"
 include "./File.code"
 include "./gui/Layout.code"
 
 define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
-
-define glyph_editor = func (context: GUI_Context, glyph_editor: Old_Glyph_Editor) -> Nothing {
-    let cell_size = glyph_editor.cell_size
-    let glyph = font_glyphs[glyph_editor.selected_glyph]
-    let rows = glyph.mask.length as i32
-    let columns = glyph.mask[0].length as i32
-
-    define MARGIN = 32
-
-    let canvas = context.canvas
-
-    let is_reset = false
-
-    let context_event = context.event
-    let context_event_type = context_event.type
-    if (context_event_type == GUI_EVENT_TYPE_INIT) {
-        glyph_editor.bounds.set_size(cell_size * columns + 2, cell_size * rows + 2)
-        glyph_editor.bounds.set_location(MARGIN, MARGIN)
-    } else if (context_event_type == GUI_EVENT_TYPE_MOUSE_MOVED) {
-        let context_event = context_event as GUI_Event_Mouse_Moved
-        if (glyph_editor.bounds.contains(context_event.x, context_event.y)) {
-            context.hovered_view = glyph_editor
-            glyph_editor.hovered_row = (context_event.y - MARGIN - 1) / glyph_editor.cell_size
-            glyph_editor.hovered_column = (context_event.x - MARGIN - 1) / glyph_editor.cell_size
-        }
-    } else if (context_event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_PRESSED) {
-        if (context.hovered_view == glyph_editor as GUI_View) {
-            let context_event = context.event as GUI_Event_Mouse_Button_Pressed
-            if (context_event.which == 1u8) {
-                glyph_editor.is_drawing = true
-            } else if (context_event.which == 3u8) {
-                glyph_editor.is_erasing = true
-            } else if (context_event.which == 2u8) {
-                glyph_editor.is_resetting = true
-            }
-        }
-    } else if (context_event_type == GUI_EVENT_TYPE_MOUSE_BUTTON_RELEASED) {
-        let context_event = context.event as GUI_Event_Mouse_Button_Released
-        if (context_event.which == 1u8) {
-            glyph_editor.is_drawing = false
-        } else if (context_event.which == 3u8) {
-            glyph_editor.is_erasing = false
-        } else if (context_event.which == 2u8) {
-            if (context.hovered_view == glyph_editor as GUI_View) {
-                is_reset = true
-                glyph_editor.is_resetting = false
-            }
-        }
-    }
-
-    canvas.set_color(COLOR_TEXT)
-    canvas.draw_rect(glyph_editor.bounds)
-
-    canvas.set_color(COLOR_TEXT)
-    let row = 0
-    while (row < rows) {
-        let column = 0
-        while (column < columns) {
-            let cell_bounds = Rect(
-                left = MARGIN + cell_size * column + 1
-                top = MARGIN + cell_size * row + 1
-                right = MARGIN + cell_size * column + cell_size
-                bottom = MARGIN + cell_size * row + cell_size
-                width = undefined
-                height = undefined
-            )
-
-            let is_hovered = glyph_editor.hovered_row == row && glyph_editor.hovered_column == column
-
-            let is_filled = glyph.mask[row][column] != 0u8
-            if (is_filled && is_reset) {
-                glyph.mask[row][column] = 0u8
-                is_filled = false
-            }
-
-            if (is_hovered) {
-                if (is_filled == false && glyph_editor.is_drawing) {
-                    glyph.mask[row][column] = 255u8
-                    is_filled = true
-                } else if (is_filled == true && glyph_editor.is_erasing) {
-                    glyph.mask[row][column] = 0u8
-                    is_filled = false
-                }
-                let hover_color_delta = 0x070707u32
-                if (is_filled) {
-                    canvas.set_color(COLOR_TEXT - hover_color_delta)
-                } else {
-                    canvas.set_color(COLOR_BACKGROUND + hover_color_delta)
-                }
-            }
-
-            if (is_filled || is_hovered) {
-                canvas.fill_rect(cell_bounds.left, cell_bounds.top, cell_bounds.right, cell_bounds.bottom)
-            }
-
-            if (is_hovered) {
-                canvas.set_color(COLOR_TEXT)
-            }
-            column = column + 1
-        }
-        row = row + 1
-    }
-
-    canvas.set_color(0x0000ffu32)
-    canvas.draw_horizontal_line(MARGIN, MARGIN + cell_size * columns + 1, MARGIN + cell_size * glyph.base_line + 1)
-
-    let char = ' ' as i32
-    while (char < 127) {
-        if (glyph_editor.selected_glyph == char as u8) {
-            canvas.set_color(0x0000ffu32)
-            canvas.fill_rect(glyph_editor.select_glyph_buttons[char].bounds)
-        }
-        if (context.button(glyph_editor.select_glyph_buttons[char])) {
-            glyph_editor.selected_glyph = char as u8
-        }
-        char = char + 1
-    }
-
-    let margin = MARGIN
-    canvas.set_color(COLOR_TEXT)
-    canvas.draw_text(text, glyph_editor.bounds.right + MARGIN, glyph_editor.select_glyph_buttons[126].bounds.bottom + MARGIN)
-
-    if (context.button(glyph_editor.save_button)) {
-        dump_font()
-    }
-
-    if (context_event_type == GUI_EVENT_TYPE_INIT) {
-        let char_left = glyph_editor.bounds.right + MARGIN
-        let char_top = glyph_editor.bounds.top
-        let char = ' ' as i32
-        while (char < 127) {
-            glyph_editor.select_glyph_buttons[char].bounds.set_location(char_left, char_top)
-            char_left = char_left + glyph_editor.select_glyph_buttons[char].bounds.width + 2
-            if (char_left > canvas.width - 2 - MARGIN) {
-                char_left = glyph_editor.bounds.right + MARGIN
-                char_top = glyph_editor.select_glyph_buttons[char].bounds.bottom + 2
-            }
-            char = char + 1
-        }
-
-        glyph_editor.save_button.bounds.set_location(MARGIN, glyph_editor.bounds.bottom + MARGIN)
-        glyph_editor.save_button.bounds.set_size(glyph_editor.bounds.width, glyph_editor.save_button.bounds.height)
-    }
-}
-
-define Old_Glyph_Editor = struct {
-    extends GUI_View
-    cell_size: i32
-    selected_glyph: u8
-    select_glyph_buttons: [!Button; 128]
-    save_button: !Button
-    hovered_row: i32 = undefined
-    hovered_column: i32 = undefined
-    is_drawing: bool = false
-    is_erasing: bool = false
-    is_resetting: bool = false
-}
 
 define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
     let glyph_editor = new Glyph_Editor(gui = parent.gui, parent = parent, glyph = glyph)
@@ -198,6 +40,9 @@ define Glyph_Editor = struct {
     pixel_size: i32 = 23
     hovered_row: i32 = -1
     hovered_column: i32 = -1
+    is_drawing: bool = false
+    is_erasing: bool = false
+    is_resetting: bool = false
 }
 
 define measure_glyph_editor = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {

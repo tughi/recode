@@ -51,32 +51,10 @@ define main = func () -> i32 {
 
     let event: SDL_Event = new SDL_Undefined_Event()
 
-    let old_glyph_editor = Old_Glyph_Editor(
-        cell_size = 24
-        select_glyph_buttons = undefined
-        selected_glyph = 'A' as u8
-        save_button = Button(
-            bounds = undefined
-            text = "Save"
-        )
-    )
-    let old_glyph_editor = @old_glyph_editor
-    let char = ' ' as i32
-    while (char < 127) {
-        old_glyph_editor.select_glyph_buttons[char].text = new String().append(char as u8)
-        old_glyph_editor.select_glyph_buttons[char].bounds.set_size(0, 0)
-        char = char + 1
-    }
-
     let gui_event_init = new GUI_Event_Init()
     let gui_event_mouse_button_pressed = new GUI_Event_Mouse_Button_Pressed(which = undefined)
     let gui_event_mouse_button_released = new GUI_Event_Mouse_Button_Released(which = undefined)
     let gui_event_mouse_moved = new GUI_Event_Mouse_Moved(x = undefined, y = undefined)
-
-    let gui_context = new GUI_Context(
-        canvas = canvas
-        event = gui_event_init
-    )
 
     let gui = init_gui()
     let glyph_editor: Glyph_Editor
@@ -108,47 +86,46 @@ define main = func () -> i32 {
             }
 
             gui.button("Useless button")
-            \ gui.text(text)
+            \ TODO: gui.text(text)
         }
     }
     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
 
+    let draw_gui = true
+
     loop {
-        if (gui_context.event != null) {
+        if (draw_gui) {
             canvas.set_color(COLOR_BACKGROUND)
             canvas.clear()
-
-            gui_context.glyph_editor(old_glyph_editor)
 
             gui.draw(canvas)
 
             SDL_UpdateWindowSurface(window)
+
+            draw_gui = false
         }
 
         if (SDL_WaitEvent(event) != 0) {
-            gui_context.event = null
-
             if (event.type == SDL_QUIT) {
                 break
             } else if (event.type == SDL_MOUSEMOTION) {
                 let event = event as SDL_MouseMotionEvent
                 gui_event_mouse_moved.x = event.x
                 gui_event_mouse_moved.y = event.y
-                gui_context.event = gui_event_mouse_moved
                 gui.handle_mouse_moved_event(gui_event_mouse_moved)
+                draw_gui = true
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {
                 let event = event as SDL_MouseButtonEvent
                 gui_event_mouse_button_pressed.which = event.button
-                gui_context.event = gui_event_mouse_button_pressed
                 gui.handle_mouse_button_pressed(gui_event_mouse_button_pressed)
+                draw_gui = true
             } else if (event.type == SDL_MOUSEBUTTONUP) {
                 let event = event as SDL_MouseButtonEvent
                 gui_event_mouse_button_released.which = event.button
-                gui_context.event = gui_event_mouse_button_released
                 gui.handle_mouse_button_released(gui_event_mouse_button_released)
+                draw_gui = true
             } else if (event.type == SDL_WINDOWEVENT) {
                 let event = event as SDL_WindowEvent
-                \ stdout.write("window event: ").write(event.event as u32).end_line()
                 if (event.event == SDL_WINDOWEVENT_RESIZED) {
                     let window_surface = SDL_GetWindowSurface(window)
                     if (window_surface == null) {
@@ -166,8 +143,8 @@ define main = func () -> i32 {
                         width = window_surface.width
                         height = window_surface.height
                     )
-                    gui_context.event = gui_event_init
                     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
+                    draw_gui = true
                 }
             }
         }
