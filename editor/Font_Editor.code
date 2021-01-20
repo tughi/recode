@@ -247,13 +247,18 @@ define layout_glyph_chooser = func (self: GUI_Widget, left: i32, top: i32, right
 
     self.bounds.set(left, top, right, bottom)
 
+    let row_children = (self.bounds.width + 4) / (self.children_first.widget.width_hint + 4)
+
+    let row_child = 0
     let child_left = left
     let child_top = top
     self.for_each_child() {
-        let child_right = child_left + child.width_hint - 1
+        row_child = row_child + 1
+        let child_right = left + (self.bounds.width + 4) * row_child / row_children - 5
         if (child_right > right) {
+            row_child = 1
             child_left = left
-            child_right = left + child.width_hint - 1
+            child_right = left + (self.bounds.width + 4) * row_child / row_children - 5
             child_top = child_top + child.height_hint + 3
         }
         let child_bottom = child_top + child.height_hint - 1
@@ -265,8 +270,8 @@ define layout_glyph_chooser = func (self: GUI_Widget, left: i32, top: i32, right
 define draw_glyph_chooser = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     let self = self as Glyph_Chooser
 
-    canvas.set_color(0x00ff77u32)
-    canvas.draw_rect(self.bounds)
+    \ canvas.set_color(0x00ff77u32)
+    \ canvas.draw_rect(self.bounds)
 
     self.for_each_child() {
         child.draw(canvas)
