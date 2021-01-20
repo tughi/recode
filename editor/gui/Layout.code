@@ -16,7 +16,7 @@ define GUI_Layout = struct {
         }
         draw = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
             let self = self as GUI_Layout
-            self.draw_widget(canvas)
+            \ self.draw_widget(canvas)
             self.for_each_child() {
                 child.draw(canvas)
             }

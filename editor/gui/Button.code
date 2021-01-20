@@ -68,8 +68,12 @@ define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     let is_hovered = self.gui.hovered_widget == self
     let is_pressed = self.gui.pressed_widget == self
     let self = self as GUI_Button
+    if (is_hovered) {
+        canvas.set_color(0x666633u32)
+        canvas.fill_rect(self.bounds)
+    }
     if (is_pressed) {
-        canvas.set_color(0x00ffffu32)
+        canvas.set_color(0xcccc00u32)
         canvas.fill_rect(self.bounds)
     }
     if (is_hovered) {
