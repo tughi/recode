@@ -28,9 +28,47 @@ define Glyph_Editor = struct {
 
                 self.hovered_row = (event.y - self.bounds.left) / (self.pixel_size + 1)
                 self.hovered_column = (event.x - self.bounds.left) / (self.pixel_size + 1)
+
+                if (self.is_drawing) {
+                    self.glyph.mask[self.hovered_row][self.hovered_column] = 255u8
+                } else if (self.is_erasing) {
+                    self.glyph.mask[self.hovered_row][self.hovered_column] = 0u8
+                }
             } else {
                 self.hovered_row = -1
                 self.hovered_column = -1
+            }
+        }
+        on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+            let self = self as Glyph_Editor
+            self.gui.pressed_widget = self
+            if (event.button == 1u8) {
+                self.is_drawing = true
+                self.glyph.mask[self.hovered_row][self.hovered_column] = 255u8
+            } else if (event.button == 3u8) {
+                self.is_erasing = true
+                self.glyph.mask[self.hovered_row][self.hovered_column] = 0u8
+            }
+        }
+        on_mouse_button_released = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+            let self = self as Glyph_Editor
+            self.gui.pressed_widget = self
+            if (event.button == 1u8) {
+                self.is_drawing = false
+            } else if (event.button == 2u8) {
+                let glyph_mask = self.glyph.mask
+                let glyph_row = 0
+                while (glyph_row < glyph_mask.length as i32) {
+                    let glyph_row_mask = glyph_mask[glyph_row]
+                    let glyph_column = 0
+                    while (glyph_column < glyph_row_mask.length as i32) {
+                        glyph_row_mask[glyph_column] = 0u8
+                        glyph_column = glyph_column + 1
+                    }
+                    glyph_row = glyph_row + 1
+                }
+            } else if (event.button == 3u8) {
+                self.is_erasing = false
             }
         }
         measure = measure_glyph_editor
@@ -42,7 +80,6 @@ define Glyph_Editor = struct {
     hovered_column: i32 = -1
     is_drawing: bool = false
     is_erasing: bool = false
-    is_resetting: bool = false
 }
 
 define measure_glyph_editor = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
