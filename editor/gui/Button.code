@@ -12,12 +12,23 @@ define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
 define GUI_Button = struct {
     extends GUI_Widget(
         name = "GUI_Button"
+        on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+            self.gui.pressed_widget = self
+        }
+        on_mouse_button_released = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+            if (self.gui.pressed_widget == self) {
+                (self as GUI_Button).on_click()
+            }
+        }
         measure = measure_button
         layout = layout_button
         draw = draw_button
     )
     label: String
     label_bounds: !Rect = Rect()
+
+    on_click: func (self: GUI_Button) -> Nothing = func (self: GUI_Button) -> Nothing {
+    }
 }
 
 define measure_button = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {

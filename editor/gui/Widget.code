@@ -16,9 +16,17 @@ define GUI_Widget = struct {
 
     bounds: !Rect = Rect()
 
-    handle_click_event: func (self: GUI_Widget) -> Nothing = widget_handles_click_event
+    on_mouse_moved: func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
+        if (self.bounds.contains(event.x, event.y)) {
+            self.gui.hovered_widget = self
+        }
+    }
 
-    update_hovered_widget: func (self: GUI_Widget, x: i32, y: i32) -> Nothing = widget_updates_hovered_widget
+    on_mouse_button_pressed: func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+    }
+
+    on_mouse_button_released: func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+    }
 
     measure: func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing = measure_widget
     layout: func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing = layout_widget
@@ -26,15 +34,6 @@ define GUI_Widget = struct {
 }
 
 define GUI_Data = struct {
-}
-
-define widget_handles_click_event = func (self: GUI_Widget) -> Nothing {
-}
-
-define widget_updates_hovered_widget = func (self: GUI_Widget, x: i32, y: i32) -> Nothing {
-    if (self.bounds.contains(x, y)) {
-        self.gui.hovered_widget = self
-    }
 }
 
 define measure_widget = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {

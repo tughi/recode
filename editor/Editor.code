@@ -52,8 +52,8 @@ define main = func () -> i32 {
     let event: SDL_Event = new SDL_Undefined_Event()
 
     let gui_event_init = new GUI_Event_Init()
-    let gui_event_mouse_button_pressed = new GUI_Event_Mouse_Button_Pressed(which = undefined)
-    let gui_event_mouse_button_released = new GUI_Event_Mouse_Button_Released(which = undefined)
+    let gui_event_mouse_button_pressed = new GUI_Event_Mouse_Button_Pressed(button = undefined, x = undefined, y = undefined)
+    let gui_event_mouse_button_released = new GUI_Event_Mouse_Button_Released(button = undefined, x = undefined, y = undefined)
     let gui_event_mouse_moved = new GUI_Event_Mouse_Moved(x = undefined, y = undefined)
 
     let gui = init_gui()
@@ -112,17 +112,21 @@ define main = func () -> i32 {
                 let event = event as SDL_MouseMotionEvent
                 gui_event_mouse_moved.x = event.x
                 gui_event_mouse_moved.y = event.y
-                gui.handle_mouse_moved_event(gui_event_mouse_moved)
+                gui.on_mouse_moved(gui_event_mouse_moved)
                 draw_gui = true
             } else if (event.type == SDL_MOUSEBUTTONDOWN) {
                 let event = event as SDL_MouseButtonEvent
-                gui_event_mouse_button_pressed.which = event.button
-                gui.handle_mouse_button_pressed(gui_event_mouse_button_pressed)
+                gui_event_mouse_button_pressed.button = event.button
+                gui_event_mouse_button_pressed.x = gui_event_mouse_moved.x
+                gui_event_mouse_button_pressed.y = gui_event_mouse_moved.y
+                gui.on_mouse_button_pressed(gui_event_mouse_button_pressed)
                 draw_gui = true
             } else if (event.type == SDL_MOUSEBUTTONUP) {
                 let event = event as SDL_MouseButtonEvent
-                gui_event_mouse_button_released.which = event.button
-                gui.handle_mouse_button_released(gui_event_mouse_button_released)
+                gui_event_mouse_button_released.button = event.button
+                gui_event_mouse_button_released.x = gui_event_mouse_moved.x
+                gui_event_mouse_button_released.y = gui_event_mouse_moved.y
+                gui.on_mouse_button_released(gui_event_mouse_button_released)
                 draw_gui = true
             } else if (event.type == SDL_WINDOWEVENT) {
                 let event = event as SDL_WindowEvent

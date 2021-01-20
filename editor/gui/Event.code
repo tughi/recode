@@ -15,12 +15,16 @@ define GUI_Event_Init = struct {
 
 define GUI_Event_Mouse_Button_Pressed = struct {
     extends GUI_Event(type = GUI_EVENT_TYPE_MOUSE_BUTTON_PRESSED)
-    which: u8
+    button: u8
+    x: i32
+    y: i32
 }
 
 define GUI_Event_Mouse_Button_Released = struct {
     extends GUI_Event(type = GUI_EVENT_TYPE_MOUSE_BUTTON_RELEASED)
-    which: u8
+    button: u8
+    x: i32
+    y: i32
 }
 
 define GUI_Event_Mouse_Moved = struct {

@@ -8,6 +8,20 @@ include "./Vertical_Linear_Layout.code"
 define GUI = struct {
     extends GUI_Layout(
         name = "GUI"
+        on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
+            let self = self as GUI
+            self.hovered_widget = self
+            self.for_each_child() {
+                child.on_mouse_moved(event)
+            }
+        }
+        on_mouse_button_pressed = func (self: GUI, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+            self.hovered_widget.on_mouse_button_pressed(event)
+        }
+        on_mouse_button_released = func (self: GUI, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+            self.hovered_widget.on_mouse_button_released(event)
+            self.pressed_widget = null
+        }
         layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
             let self = self as GUI
 
@@ -34,20 +48,4 @@ define init_gui = func () -> GUI {
     gui.gui = gui
     gui.hovered_widget = gui
     return gui
-}
-
-define handle_mouse_moved_event = func (self: GUI, event: GUI_Event_Mouse_Moved) -> Nothing {
-    let hovered_widget = self.hovered_widget
-    self.update_hovered_widget(event.x, event.y)
-}
-
-define handle_mouse_button_pressed = func (self: GUI, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
-    self.pressed_widget = self.hovered_widget
-}
-
-define handle_mouse_button_released = func (self: GUI, event: GUI_Event_Mouse_Button_Released) -> Nothing {
-    if (self.hovered_widget == self.pressed_widget) {
-        self.hovered_widget.handle_click_event()
-    }
-    self.pressed_widget = null
 }

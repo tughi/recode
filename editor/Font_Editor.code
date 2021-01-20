@@ -21,13 +21,13 @@ define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
 define Glyph_Editor = struct {
     extends GUI_Widget(
         name = "Glyph_Editor"
-        update_hovered_widget = func (self: GUI_Widget, x: i32, y: i32) -> Nothing {
-            self.widget_updates_hovered_widget(x, y)
-
+        on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
             let self = self as Glyph_Editor
-            if (self.bounds.contains(x, y)) {
-                self.hovered_row = (y - self.bounds.left) / (self.pixel_size + 1)
-                self.hovered_column = (x - self.bounds.left) / (self.pixel_size + 1)
+            if (self.bounds.contains(event.x, event.y)) {
+                self.gui.hovered_widget = self
+
+                self.hovered_row = (event.y - self.bounds.left) / (self.pixel_size + 1)
+                self.hovered_column = (event.x - self.bounds.left) / (self.pixel_size + 1)
             } else {
                 self.hovered_row = -1
                 self.hovered_column = -1
@@ -136,7 +136,7 @@ define glyph_chooser = func (parent: GUI_Layout, selected_glyph: u8) -> Glyph_Ch
     while (glyph <= '~') {
         let button = glyph_chooser.button(new String().append(glyph as u8))
         button.data = new Glyph_Chooser_Button_Data(glyph_chooser = glyph_chooser, glyph = glyph as u8)
-        button.handle_click_event = func (self: GUI_Widget) -> Nothing {
+        button.on_click = func (self: GUI_Button) -> Nothing {
             let data = (self as GUI_Button).data as Glyph_Chooser_Button_Data
             data.glyph_chooser.handle_glyph_selected(data.glyph)
         }
