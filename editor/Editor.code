@@ -70,6 +70,9 @@ define main = func () -> i32 {
 
             save_button = gui.button("Save")
             save_button.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
+            save_button.on_click = func (self: GUI_Button) -> Nothing {
+                dump_font()
+            }
         }
 
         gui.vertical_linear_layout() {
