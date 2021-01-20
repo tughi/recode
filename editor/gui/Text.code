@@ -1,0 +1,41 @@
+\ Copyright (c) 2021, Stefan Selariu
+
+include "./Layout.code"
+
+define text = func (parent: GUI_Layout, value: String) -> GUI_Text {
+    let text = new GUI_Text(gui = parent.gui, parent = parent, value = value)
+    parent.add(text)
+    value.compute_text_size(text.value_bounds)
+    return text
+}
+
+define GUI_Text = struct {
+    extends GUI_Widget(
+        name = "GUI_Text"
+        layout = layout_text
+        draw = draw_text
+    )
+    value: String
+    value_bounds: !Rect = Rect()
+}
+
+define layout_text = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as GUI_Text
+    self.bounds.set(left, top, right, bottom)
+    self.value_bounds.set_location(left, top)
+}
+
+define draw_text = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+    self.draw_widget(canvas)
+
+    let old_clip = Rect()
+    old_clip.set(canvas.clip_rect)
+
+    canvas.clip_rect.set(self.bounds)
+
+    let self = self as GUI_Text
+    canvas.set_color(0xffff00u32)
+    canvas.draw_text(self.value, self.bounds.left, self.bounds.top)
+
+    canvas.clip_rect.set(@old_clip)
+}

@@ -3,6 +3,7 @@
 include "./Button.code"
 include "./Event.code"
 include "./Horizontal_Linear_Layout.code"
+include "./Text.code"
 include "./Vertical_Linear_Layout.code"
 
 define GUI = struct {

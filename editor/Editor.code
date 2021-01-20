@@ -88,8 +88,9 @@ define main = func () -> i32 {
                 glyph_editor.glyph = font_glyphs[glyph]
             }
 
-            gui.button("Useless button")
-            \ TODO: gui.text(text)
+            let text = gui.text(text)
+            text.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
+            text.height_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
         }
     }
     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
