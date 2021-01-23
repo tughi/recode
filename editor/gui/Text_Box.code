@@ -2,16 +2,16 @@
 
 include "./Layout.code"
 
-define text = func (parent: GUI_Layout, value: String) -> GUI_Text {
-    let text = new GUI_Text(gui = parent.gui, parent = parent, value = value)
+define text = func (parent: GUI_Layout, value: String) -> GUI_Text_Box {
+    let text = new GUI_Text_Box(gui = parent.gui, parent = parent, value = value)
     parent.add(text)
     value.compute_text_size(text.value_bounds)
     return text
 }
 
-define GUI_Text = struct {
+define GUI_Text_Box = struct {
     extends GUI_Widget(
-        name = "GUI_Text"
+        name = "GUI_Text_Box"
         layout = layout_text
         draw = draw_text
     )
@@ -20,20 +20,22 @@ define GUI_Text = struct {
 }
 
 define layout_text = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-    let self = self as GUI_Text
+    let self = self as GUI_Text_Box
     self.bounds.set(left, top, right, bottom)
     self.value_bounds.set_location(left, top)
 }
 
 define draw_text = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
-    self.draw_widget(canvas)
-
     let old_clip = Rect()
     old_clip.set(canvas.clip_rect)
 
     canvas.clip_rect.set(self.bounds)
 
-    let self = self as GUI_Text
+    let self = self as GUI_Text_Box
+
+    canvas.set_color(0x666633u32)
+    canvas.fill_rect(self.bounds)
+
     canvas.set_color(0xffff00u32)
     canvas.draw_text(self.value, self.bounds.left, self.bounds.top)
 
