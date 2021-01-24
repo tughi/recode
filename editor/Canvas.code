@@ -1,4 +1,8 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
+
+include "./Font.code"
+include "./Rect.code"
+include "./SDL.code"
 
 define Canvas = struct {
     pixels: Any
@@ -7,8 +11,6 @@ define Canvas = struct {
     color: u32 = 0
     clip_rect: !Rect
 }
-
-include "./Rect.code"
 
 define set_color = func (self: Canvas, red: u8, green: u8, blue: u8, alpha: u8) -> u32 {
     let color = (red as u32 * 256 + green as u32) * 256 + blue as u32
@@ -41,7 +43,14 @@ define draw_pixel = func (self: Canvas, x: i32, y: i32) -> Nothing {
     pixels[offset] = self.color
 }
 
+define draw_on_row = macro (self: Canvas, row: i32, draw: macro (pixels: [u32; ?], row_offset: i32)) {
+    if (row >= self.clip_rect.top && row <= self.clip_rect.bottom) {
+        draw(self.pixels as [u32; ?], self.width * row)
+    }
+}
+
 define draw_line = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
+    \ TODO: implement line clipping
     let dx: i32
     let sx: i32
     if (x1 < x2) {
@@ -81,60 +90,80 @@ define draw_line = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> No
 }
 
 define draw_horizontal_line = func (self: Canvas, x1: i32, x2: i32, y: i32) -> Nothing {
-    let x = x1
     if (x2 < x1) {
-        x = x2
-        x2 = x1
-        x1 = x
+        abort()
     }
-    while (x <= x2) {
-        self.draw_pixel(x, y)
-        x = x + 1
+    let pixel_color = self.color
+    self.draw_on_row(y) {
+        let x = max(x1, self.clip_rect.left)
+        let max_x = min(x2, self.clip_rect.right)
+        while (x <= max_x) {
+            pixels[row_offset + x] = pixel_color
+            x = x + 1
+        }
     }
 }
 
 define draw_vertical_line = func (self: Canvas, x: i32, y1: i32, y2: i32) -> Nothing {
-    let y = y1
     if (y2 < y1) {
-        y1 = y2
-        y2 = y
-        y = y1
+        abort()
     }
-    while (y <= y2) {
-        self.draw_pixel(x, y)
+    let pixel_color = self.color
+    let y = max(y1, self.clip_rect.top)
+    let max_y = min(y2, self.clip_rect.bottom)
+    while (y <= max_y) {
+        self.draw_on_row(y) {
+            pixels[row_offset + x] = pixel_color
+        }
         y = y + 1
     }
 }
 
 define draw_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
-    self.draw_horizontal_line(x1, x2, y1)
-    self.draw_horizontal_line(x1, x2, y2)
-    self.draw_vertical_line(x1, y1, y2)
-    self.draw_vertical_line(x2, y1, y2)
+    let rect = Rect(left = x1, top = y1, right = x2, bottom = y2)
+    self.draw_rect(@rect)
 }
 
 define draw_rect = func (self: Canvas, rect: Rect) -> Nothing {
-    self.draw_rect(rect.left, rect.top, rect.right, rect.bottom)
+    if (rect.intersects(self.clip_rect)) {
+        self.draw_horizontal_line(rect.left, rect.right, rect.top)
+        self.draw_horizontal_line(rect.left, rect.right, rect.bottom)
+        if (rect.height > 2) {
+            self.draw_vertical_line(rect.left, rect.top + 1, rect.bottom - 1)
+            self.draw_vertical_line(rect.right, rect.top + 1, rect.bottom - 1)
+        }
+    }
 }
 
 define fill_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
-    let y = y1
-    if (y2 < y1) {
-        y1 = y2
-        y2 = y
-        y = y1
-    }
-    while (y <= y2) {
-        self.draw_horizontal_line(x1, x2, y)
-        y = y + 1
-    }
+    let rect = Rect(left = x1, top = y1, right = x2, bottom = y2)
+    self.fill_rect(@rect)
 }
 
 define fill_rect = func (self: Canvas, rect: Rect) -> Nothing {
-    self.fill_rect(rect.left, rect.top, rect.right, rect.bottom)
+    if (rect.intersects(self.clip_rect)) {
+        let clipped_rect = Rect(left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom)
+        clipped_rect.intersect(self.clip_rect)
+
+        let pixel_color = self.color
+        let y = clipped_rect.top
+        let max_y = clipped_rect.bottom
+        while (y <= max_y) {
+            self.draw_on_row(y) {
+                let x = clipped_rect.left
+                let max_x = clipped_rect.right
+                while (x <= max_x) {
+                    pixels[row_offset + x] = pixel_color
+                    x = x + 1
+                }
+            }
+            y = y + 1
+        }
+    }
 }
 
 define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) -> Nothing {
+    \ TODO: implement text clipping to avoid using draw_pixel
     let char_left = left
     let char_index = 0usize
     while (char_index < text.length && base_line < self.height) {
@@ -166,6 +195,7 @@ define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) 
 }
 
 define draw_char = func (self: Canvas, char: u8, left: i32, base_line: i32) -> Nothing {
+    \ TODO: implement text clipping to avoid using draw_pixel
     let glyph_mask = font_glyphs[char].mask
     let glyph_line = 0isize
     while (glyph_line < glyph_mask.length) {
@@ -181,6 +211,3 @@ define draw_char = func (self: Canvas, char: u8, left: i32, base_line: i32) -> N
         glyph_line = glyph_line + 1
     }
 }
-
-include "./Font.code"
-include "./SDL.code"

@@ -1,12 +1,14 @@
 \ Copyright (c) 2020-2021, Stefan Selariu
 
+include "./Math.code"
+
 define Rect = struct {
-    left: i32 = 0
-    top: i32 = 0
-    right: i32 = 0
-    bottom: i32 = 0
-    width: i32 = 0
-    height: i32 = 0
+    left: i32 = undefined
+    top: i32 = undefined
+    right: i32 = undefined
+    bottom: i32 = undefined
+    width: i32 = undefined
+    height: i32 = undefined
 }
 
 define reference = func (self: Rect) -> Rect {
@@ -52,6 +54,27 @@ define set_size = func (self: Rect, width: i32, height: i32) -> Nothing {
         self.height = height
         self.bottom = self.top + height - 1
     }
+}
+
+define intersect = func (self: Rect, other: Rect) -> Nothing {
+    let new_left = max(self.left, other.left)
+    let new_right = min(self.right, other.right)
+    if (new_left > new_right) {
+        abort()
+    }
+    let new_top = max(self.top, other.top)
+    let new_bottom = min(self.bottom, other.bottom)
+    if (new_top > new_bottom) {
+        abort()
+    }
+    self.set(new_left, new_top, new_right, new_bottom)
+}
+
+define intersects = func (self: Rect, other: Rect) -> bool {
+    if (self.left > other.right || self.top > other.bottom || self.right < other.left || self.bottom < other.top) {
+        return false
+    }
+    return true
 }
 
 define write = func (file: FILE, rect: Rect) -> FILE {
