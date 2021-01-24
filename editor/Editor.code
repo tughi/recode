@@ -49,8 +49,6 @@ define main = func () -> i32 {
 
     init_font()
 
-    let event: SDL_Event = new SDL_Undefined_Event()
-
     let gui_event_init = new GUI_Event_Init()
     let gui_event_mouse_button_pressed = new GUI_Event_Mouse_Button_Pressed(button = undefined, x = undefined, y = undefined)
     let gui_event_mouse_button_released = new GUI_Event_Mouse_Button_Released(button = undefined, x = undefined, y = undefined)
@@ -86,6 +84,7 @@ define main = func () -> i32 {
             glyph_chooser.handle_glyph_selected = func (self: Glyph_Chooser, glyph: u8) -> Nothing {
                 let glyph_editor = (self.data as Glyph_Chooser_Data).glyph_editor
                 glyph_editor.glyph = font_glyphs[glyph]
+                glyph_editor.gui.post(new GUI_Event_Widget_Updated(widget = glyph_editor))
             }
 
             let text = gui.text(text)
@@ -95,46 +94,50 @@ define main = func () -> i32 {
     }
     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
 
-    let draw_gui = true
-
+    let sdl_event = new SDL_Undefined_Event()
     loop {
-        if (draw_gui) {
-            canvas.set_color(COLOR_BACKGROUND)
-            canvas.clear()
+        while (gui.first_event != null) {
+            let event = gui.first_event
+            if (event.type == GUI_EVENT_TYPE_WIDGET_UPDATED) {
+                let event = event as GUI_Event_Widget_Updated
+                stdout.write(event.widget.name).write(event.widget.bounds).write(" updated").end_line()
+                event.widget.draw(canvas)
 
-            gui.draw(canvas)
-
-            SDL_UpdateWindowSurface(window)
-
-            draw_gui = false
+                SDL_UpdateWindowSurface(window)
+            } else if (event.type == GUI_EVENT_TYPE_MOUSE_MOVED) {
+                gui.on_mouse_moved(event as GUI_Event_Mouse_Moved)
+            } else {
+                stderr.write("Unsupported event type: 0x").write(event.type as u32, 16u8).write("u8").end_line()
+                abort()
+            }
+            gui.first_event = event.next_event
+            \ TODO: recycle event
+            event.next_event = null
         }
 
-        if (SDL_WaitEvent(event) != 0) {
-            if (event.type == SDL_QUIT) {
+        if (SDL_WaitEvent(sdl_event) != 0) {
+            if (sdl_event.type == SDL_QUIT) {
                 break
-            } else if (event.type == SDL_MOUSEMOTION) {
-                let event = event as SDL_MouseMotionEvent
-                gui_event_mouse_moved.x = event.x
-                gui_event_mouse_moved.y = event.y
-                gui.on_mouse_moved(gui_event_mouse_moved)
-                draw_gui = true
-            } else if (event.type == SDL_MOUSEBUTTONDOWN) {
-                let event = event as SDL_MouseButtonEvent
-                gui_event_mouse_button_pressed.button = event.button
+            } else if (sdl_event.type == SDL_MOUSEMOTION) {
+                let sdl_event = sdl_event as SDL_MouseMotionEvent
+                gui_event_mouse_moved.x = sdl_event.x
+                gui_event_mouse_moved.y = sdl_event.y
+                gui.post(gui_event_mouse_moved)
+            } else if (sdl_event.type == SDL_MOUSEBUTTONDOWN) {
+                let sdl_event = sdl_event as SDL_MouseButtonEvent
+                gui_event_mouse_button_pressed.button = sdl_event.button
                 gui_event_mouse_button_pressed.x = gui_event_mouse_moved.x
                 gui_event_mouse_button_pressed.y = gui_event_mouse_moved.y
                 gui.on_mouse_button_pressed(gui_event_mouse_button_pressed)
-                draw_gui = true
-            } else if (event.type == SDL_MOUSEBUTTONUP) {
-                let event = event as SDL_MouseButtonEvent
-                gui_event_mouse_button_released.button = event.button
+            } else if (sdl_event.type == SDL_MOUSEBUTTONUP) {
+                let sdl_event = sdl_event as SDL_MouseButtonEvent
+                gui_event_mouse_button_released.button = sdl_event.button
                 gui_event_mouse_button_released.x = gui_event_mouse_moved.x
                 gui_event_mouse_button_released.y = gui_event_mouse_moved.y
                 gui.on_mouse_button_released(gui_event_mouse_button_released)
-                draw_gui = true
-            } else if (event.type == SDL_WINDOWEVENT) {
-                let event = event as SDL_WindowEvent
-                if (event.event == SDL_WINDOWEVENT_RESIZED) {
+            } else if (sdl_event.type == SDL_WINDOWEVENT) {
+                let sdl_event = sdl_event as SDL_WindowEvent
+                if (sdl_event.event == SDL_WINDOWEVENT_RESIZED) {
                     let window_surface = SDL_GetWindowSurface(window)
                     if (window_surface == null) {
                         stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
@@ -152,7 +155,6 @@ define main = func () -> i32 {
                         height = window_surface.height
                     )
                     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
-                    draw_gui = true
                 }
             }
         }

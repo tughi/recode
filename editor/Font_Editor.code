@@ -23,20 +23,25 @@ define Glyph_Editor = struct {
         name = "Glyph_Editor"
         on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
             let self = self as Glyph_Editor
-            if (self.bounds.contains(event.x, event.y)) {
+            let last_hovered_row = self.hovered_row
+            let last_hovered_column = self.hovered_column
+            if (self.bounds.contains(event.x, event.y) && event.x < self.bounds.right && event.y < self.bounds.bottom) {
                 self.gui.hovered_widget = self
 
                 self.hovered_row = (event.y - self.bounds.left) / (self.pixel_size + 1)
                 self.hovered_column = (event.x - self.bounds.left) / (self.pixel_size + 1)
 
                 if (self.is_drawing) {
-                    self.glyph.mask[self.hovered_row][self.hovered_column] = 255u8
+                    self.update_glyph_cell(self.hovered_row, self.hovered_column, 255u8)
                 } else if (self.is_erasing) {
-                    self.glyph.mask[self.hovered_row][self.hovered_column] = 0u8
+                    self.update_glyph_cell(self.hovered_row, self.hovered_column, 0u8)
                 }
             } else {
                 self.hovered_row = -1
                 self.hovered_column = -1
+            }
+            if (last_hovered_row != self.hovered_row || last_hovered_column != self.hovered_column) {
+                self.gui.post(new GUI_Event_Widget_Updated(widget = self))
             }
         }
         on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
@@ -44,31 +49,33 @@ define Glyph_Editor = struct {
             self.gui.pressed_widget = self
             if (event.button == 1u8) {
                 self.is_drawing = true
-                self.glyph.mask[self.hovered_row][self.hovered_column] = 255u8
+                self.update_glyph_cell(self.hovered_row, self.hovered_column, 255u8)
             } else if (event.button == 3u8) {
                 self.is_erasing = true
-                self.glyph.mask[self.hovered_row][self.hovered_column] = 0u8
+                self.update_glyph_cell(self.hovered_row, self.hovered_column, 0u8)
             }
         }
         on_mouse_button_released = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
-            let self = self as Glyph_Editor
-            self.gui.pressed_widget = self
-            if (event.button == 1u8) {
-                self.is_drawing = false
-            } else if (event.button == 2u8) {
-                let glyph_mask = self.glyph.mask
-                let glyph_row = 0
-                while (glyph_row < glyph_mask.length as i32) {
-                    let glyph_row_mask = glyph_mask[glyph_row]
-                    let glyph_column = 0
-                    while (glyph_column < glyph_row_mask.length as i32) {
-                        glyph_row_mask[glyph_column] = 0u8
-                        glyph_column = glyph_column + 1
+            if (self.gui.pressed_widget == self) {
+                let self = self as Glyph_Editor
+                if (event.button == 1u8) {
+                    self.is_drawing = false
+                } else if (event.button == 2u8 && self.gui.hovered_widget == self as GUI_Widget) {
+                    let glyph_mask = self.glyph.mask
+                    let glyph_row = 0
+                    while (glyph_row < glyph_mask.length as i32) {
+                        let glyph_row_mask = glyph_mask[glyph_row]
+                        let glyph_column = 0
+                        while (glyph_column < glyph_row_mask.length as i32) {
+                            glyph_row_mask[glyph_column] = 0u8
+                            glyph_column = glyph_column + 1
+                        }
+                        glyph_row = glyph_row + 1
                     }
-                    glyph_row = glyph_row + 1
+                    self.gui.post(new GUI_Event_Widget_Updated(widget = self.gui))
+                } else if (event.button == 3u8) {
+                    self.is_erasing = false
                 }
-            } else if (event.button == 3u8) {
-                self.is_erasing = false
             }
         }
         measure = measure_glyph_editor
@@ -114,6 +121,9 @@ define measure_glyph_editor = func (self: GUI_Widget, width_spec: Measure_Spec, 
 
 define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     let self = self as Glyph_Editor
+
+    canvas.set_color(COLOR_BACKGROUND)
+    canvas.fill_rect(self.bounds)
 
     canvas.set_color(0xffff00u32)
 
@@ -163,6 +173,13 @@ define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 
     canvas.set_color(0xff0000u32)
     canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top + self.glyph.base_line * (self.pixel_size + 1))
+}
+
+define update_glyph_cell = macro (self: Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
+    if (self.glyph.mask[glyph_row][glyph_column] != value) {
+        self.glyph.mask[glyph_row][glyph_column] = value
+        self.gui.post(new GUI_Event_Widget_Updated(widget = self.gui))
+    }
 }
 
 define glyph_chooser = func (parent: GUI_Layout, selected_glyph: u8) -> Glyph_Chooser {

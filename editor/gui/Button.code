@@ -13,11 +13,17 @@ define GUI_Button = struct {
     extends GUI_Widget(
         name = "GUI_Button"
         on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
-            self.gui.pressed_widget = self
+            if (event.button == 1u8) {
+                self.gui.pressed_widget = self
+                self.gui.post(new GUI_Event_Widget_Updated(widget = self))
+            }
         }
         on_mouse_button_released = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
             if (self.gui.pressed_widget == self) {
-                (self as GUI_Button).on_click()
+                if (self.gui.hovered_widget == self) {
+                    (self as GUI_Button).on_click()
+                }
+                self.gui.post(new GUI_Event_Widget_Updated(widget = self))
             }
         }
         measure = measure_button
@@ -68,14 +74,16 @@ define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     let is_hovered = self.gui.hovered_widget == self
     let is_pressed = self.gui.pressed_widget == self
     let self = self as GUI_Button
-    if (is_hovered) {
-        canvas.set_color(0x666633u32)
-        canvas.fill_rect(self.bounds)
-    }
+
     if (is_pressed) {
         canvas.set_color(0xcccc00u32)
-        canvas.fill_rect(self.bounds)
+    } else if (is_hovered) {
+        canvas.set_color(0x666633u32)
+    } else {
+        canvas.set_color(COLOR_BACKGROUND)
     }
+    canvas.fill_rect(self.bounds)
+
     if (is_hovered) {
         canvas.set_color(0xffffffu32)
     } else {

@@ -14,18 +14,20 @@ define GUI_Layout = struct {
                 child.on_mouse_moved(event)
             }
         }
-        draw = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
-            let self = self as GUI_Layout
-            \ self.draw_widget(canvas)
-            self.for_each_child() {
-                child.draw(canvas)
-            }
-        }
+        draw = draw_layout
     )
 
     children_count: i32 = 0
     children_first: GUI_Layout_Child = null
     children_last: GUI_Layout_Child = null
+}
+
+define draw_layout = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+    let self = self as GUI_Layout
+    \ self.draw_widget(canvas)
+    self.for_each_child() {
+        child.draw(canvas)
+    }
 }
 
 define GUI_Layout_Child = struct {

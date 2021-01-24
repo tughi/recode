@@ -6,14 +6,22 @@ include "./Horizontal_Linear_Layout.code"
 include "./Text_Box.code"
 include "./Vertical_Linear_Layout.code"
 
+define COLOR_BACKGROUND = 0x333333u32
+define COLOR_TEXT = 0xbfbfafu32
+
 define GUI = struct {
     extends GUI_Layout(
         name = "GUI"
         on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
             let self = self as GUI
+            let last_hovered_widget = self.hovered_widget
             self.hovered_widget = self
             self.for_each_child() {
                 child.on_mouse_moved(event)
+            }
+            if (last_hovered_widget != self.hovered_widget) {
+                self.post(new GUI_Event_Widget_Updated(widget = last_hovered_widget))
+                self.post(new GUI_Event_Widget_Updated(widget = self.hovered_widget))
             }
         }
         on_mouse_button_pressed = func (self: GUI, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
@@ -21,7 +29,10 @@ define GUI = struct {
         }
         on_mouse_button_released = func (self: GUI, event: GUI_Event_Mouse_Button_Released) -> Nothing {
             self.hovered_widget.on_mouse_button_released(event)
-            self.pressed_widget = null
+            if (self.pressed_widget != null) {
+                self.pressed_widget.on_mouse_button_released(event)
+                self.pressed_widget = null
+            }
         }
         layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
             let self = self as GUI
@@ -32,14 +43,26 @@ define GUI = struct {
                 self.for_each_child() {
                     child.measure(@width_spec, @height_spec)
                 }
-            }
 
-            self.layout_widget(left, top, right, bottom)
-            self.for_each_child() {
-                child.layout(left, top, right, bottom)
+                self.layout_widget(left, top, right, bottom)
+                self.post(new GUI_Event_Widget_Updated(widget = self))
+
+                self.for_each_child() {
+                    child.layout(left, top, right, bottom)
+                }
             }
         }
+        draw = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+            canvas.set_color(COLOR_BACKGROUND)
+            canvas.fill_rect(self.bounds)
+
+            self.draw_layout(canvas)
+        }
     )
+
+    first_event: GUI_Event = null
+    last_event: GUI_Event = null
+
     hovered_widget: GUI_Widget
     pressed_widget: GUI_Widget = null
 }
@@ -49,4 +72,13 @@ define init_gui = func () -> GUI {
     gui.gui = gui
     gui.hovered_widget = gui
     return gui
+}
+
+define post = func (self: GUI, event: GUI_Event) -> Nothing {
+    if (self.first_event == null) {
+        self.first_event = event
+    } else {
+        self.last_event.next_event = event
+    }
+    self.last_event = event
 }
