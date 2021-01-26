@@ -75,21 +75,38 @@ define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     let is_pressed = self.gui.pressed_widget == self
     let self = self as GUI_Button
 
-    if (is_pressed) {
-        canvas.set_color(0xcccc00u32)
-    } else if (is_hovered) {
-        canvas.set_color(0x666633u32)
-    } else {
-        canvas.set_color(COLOR_BACKGROUND)
-    }
-    canvas.fill_rect(self.bounds)
+    define COLOR_SHADOW = 0x1a1a1au32
+    define COLOR_LIGHT_BORDER = 0x676767u32
+    define COLOR_DARK_BORDER = 0x333333u32
+    define COLOR_BACKGROUND = 0x4d4d4du32
+    define COLOR_TEXT = 0xe6e6e6u32
 
-    if (is_hovered) {
-        canvas.set_color(0xffffffu32)
-    } else {
-        canvas.set_color(0xffff00u32)
-    }
+    canvas.set_color(COLOR_SHADOW)
     canvas.draw_rect(self.bounds)
+
+    if (is_pressed) {
+        canvas.set_color(COLOR_DARK_BORDER)
+        canvas.fill_rect(self.bounds.left + 1, self.bounds.top + 1, self.bounds.right - 1, self.bounds.bottom - 1)
+    } else {
+        canvas.set_color(COLOR_LIGHT_BORDER)
+        canvas.draw_horizontal_line(self.bounds.left + 1, self.bounds.right - 2, self.bounds.top + 1)
+        canvas.draw_vertical_line(self.bounds.left + 1, self.bounds.top + 2, self.bounds.bottom - 2)
+
+        if (is_hovered) {
+            canvas.set_color(COLOR_LIGHT_BORDER)
+        } else {
+            canvas.set_color(COLOR_BACKGROUND)
+        }
+        canvas.fill_rect(self.bounds.left + 2, self.bounds.top + 2, self.bounds.right - 2, self.bounds.bottom - 2)
+        canvas.draw_pixel(self.bounds.left + 1, self.bounds.bottom - 1)
+        canvas.draw_pixel(self.bounds.right - 1, self.bounds.top + 1)
+
+        canvas.set_color(COLOR_DARK_BORDER)
+        canvas.draw_horizontal_line(self.bounds.left + 2, self.bounds.right - 1, self.bounds.bottom - 1)
+        canvas.draw_vertical_line(self.bounds.right - 1, self.bounds.top + 2, self.bounds.bottom - 2)
+    }
+
+    canvas.set_color(COLOR_TEXT)
     canvas.draw_text(self.label, self.label_bounds.left, self.label_bounds.top)
 }
 
