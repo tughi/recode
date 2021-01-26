@@ -262,18 +262,21 @@ define init_font = func () -> Nothing {
 
     \ /
     font_glyphs[0x2F].base_line = 13
-    font_glyphs[0x2F].mask[3][7] = 255
-    font_glyphs[0x2F].mask[4][6] = 255
-    font_glyphs[0x2F].mask[5][6] = 255
+    font_glyphs[0x2F].mask[1][6] = 255
+    font_glyphs[0x2F].mask[2][6] = 255
+    font_glyphs[0x2F].mask[3][6] = 255
+    font_glyphs[0x2F].mask[4][5] = 255
+    font_glyphs[0x2F].mask[5][5] = 255
     font_glyphs[0x2F].mask[6][5] = 255
-    font_glyphs[0x2F].mask[7][5] = 255
+    font_glyphs[0x2F].mask[7][4] = 255
     font_glyphs[0x2F].mask[8][4] = 255
     font_glyphs[0x2F].mask[9][4] = 255
     font_glyphs[0x2F].mask[10][3] = 255
     font_glyphs[0x2F].mask[11][3] = 255
-    font_glyphs[0x2F].mask[12][2] = 255
+    font_glyphs[0x2F].mask[12][3] = 255
     font_glyphs[0x2F].mask[13][2] = 255
-    font_glyphs[0x2F].mask[14][1] = 255
+    font_glyphs[0x2F].mask[14][2] = 255
+    font_glyphs[0x2F].mask[15][2] = 255
 
     \ 0
     font_glyphs[0x30].base_line = 13
@@ -1373,18 +1376,21 @@ define init_font = func () -> Nothing {
 
     \ \
     font_glyphs[0x5C].base_line = 13
-    font_glyphs[0x5C].mask[3][1] = 255
-    font_glyphs[0x5C].mask[4][2] = 255
-    font_glyphs[0x5C].mask[5][2] = 255
+    font_glyphs[0x5C].mask[1][2] = 255
+    font_glyphs[0x5C].mask[2][2] = 255
+    font_glyphs[0x5C].mask[3][2] = 255
+    font_glyphs[0x5C].mask[4][3] = 255
+    font_glyphs[0x5C].mask[5][3] = 255
     font_glyphs[0x5C].mask[6][3] = 255
-    font_glyphs[0x5C].mask[7][3] = 255
+    font_glyphs[0x5C].mask[7][4] = 255
     font_glyphs[0x5C].mask[8][4] = 255
     font_glyphs[0x5C].mask[9][4] = 255
     font_glyphs[0x5C].mask[10][5] = 255
     font_glyphs[0x5C].mask[11][5] = 255
-    font_glyphs[0x5C].mask[12][6] = 255
+    font_glyphs[0x5C].mask[12][5] = 255
     font_glyphs[0x5C].mask[13][6] = 255
-    font_glyphs[0x5C].mask[14][7] = 255
+    font_glyphs[0x5C].mask[14][6] = 255
+    font_glyphs[0x5C].mask[15][6] = 255
 
     \ ]
     font_glyphs[0x5D].base_line = 13
