@@ -1,31 +1,28 @@
 \ Copyright (c) 2021, Stefan Selariu
 
 include "./Layout.code"
+include "./Text_Model.code"
 
 define text = func (parent: GUI_Layout, value: String) -> GUI_Text_Box {
-    let text = new GUI_Text_Box(gui = parent.gui, parent = parent, value = value)
+    let model = create_text_model(value)
+    let text = new GUI_Text_Box(gui = parent.gui, parent = parent, model = model)
     parent.add(text)
-    value.compute_text_size(text.value_bounds)
     return text
 }
 
 define GUI_Text_Box = struct {
     extends GUI_Widget(
         name = "GUI_Text_Box"
-        layout = layout_text
         draw = draw_text
     )
-    value: String
-    value_bounds: !Rect = Rect()
-}
-
-define layout_text = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-    let self = self as GUI_Text_Box
-    self.bounds.set(left, top, right, bottom)
-    self.value_bounds.set_location(left, top)
+    model: GUI_Text_Model
 }
 
 define draw_text = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+    define COLOR_BACKGROUND = 0x1a1a1au32
+    define COLOR_DARK_BORDER = 0x000000u32
+    define COLOR_TEXT = 0xe6e6e6u32
+
     let old_clip = Rect()
     old_clip.set(canvas.clip_rect)
 
@@ -33,11 +30,27 @@ define draw_text = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 
     let self = self as GUI_Text_Box
 
-    canvas.set_color(0x666633u32)
+    canvas.set_color(COLOR_BACKGROUND)
     canvas.fill_rect(self.bounds)
 
-    canvas.set_color(0xffff00u32)
-    canvas.draw_text(self.value, self.bounds.left, self.bounds.top)
+    canvas.set_color(COLOR_DARK_BORDER)
+    canvas.draw_rect(self.bounds)
+
+    canvas.set_color(COLOR_TEXT)
+    let line = self.model.first_line
+    let line_bounds = Rect()
+    line_bounds.set_location(self.bounds.left + 2, self.bounds.top + 2)
+    while (line != null) {
+        canvas.draw_text(line.text, line_bounds.left, line_bounds.top)
+
+        line.text.compute_text_size(@line_bounds)
+        if (line_bounds.top + line_bounds.height > self.bounds.bottom) {
+            break
+        }
+
+        line_bounds.set_location(line_bounds.left, line_bounds.top + line_bounds.height)
+        line = line.next_line
+    }
 
     canvas.clip_rect.set(@old_clip)
 }

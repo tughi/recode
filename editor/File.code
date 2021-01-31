@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define write = func (self: FILE, string: String) -> FILE {
     return self.write(string.data)
@@ -88,12 +88,13 @@ define read_all = func (file: FILE) -> String {
     if (feof(file) != 0) {
         return null
     }
-    let content = new String()
+    let content = "".clone()
     loop {
-        content.append(fgetc(file) as u8)
-        if (feof(file) != 0) {
+        let char = fgetc(file)
+        if (char < 0) {
             break
         }
+        content.append(char as u8)
     }
     return content
 }
