@@ -53,6 +53,7 @@ define main = func () -> i32 {
     let gui_event_mouse_button_pressed = new GUI_Event_Mouse_Button_Pressed(button = undefined, x = undefined, y = undefined)
     let gui_event_mouse_button_released = new GUI_Event_Mouse_Button_Released(button = undefined, x = undefined, y = undefined)
     let gui_event_mouse_moved = new GUI_Event_Mouse_Moved(x = undefined, y = undefined)
+    let gui_event_mouse_scrolled = new GUI_Event_Mouse_Scrolled(x = undefined, y = undefined)
 
     let gui = init_gui()
     let glyph_editor: Glyph_Editor
@@ -135,6 +136,11 @@ define main = func () -> i32 {
                 gui_event_mouse_button_released.x = gui_event_mouse_moved.x
                 gui_event_mouse_button_released.y = gui_event_mouse_moved.y
                 gui.on_mouse_button_released(gui_event_mouse_button_released)
+            } else if (sdl_event.type == SDL_MOUSEWHEEL) {
+                let sdl_event = sdl_event as SDL_MouseWheelEvent
+                gui_event_mouse_scrolled.x = sdl_event.x
+                gui_event_mouse_scrolled.y = sdl_event.y
+                gui.on_mouse_scrolled(gui_event_mouse_scrolled)
             } else if (sdl_event.type == SDL_WINDOWEVENT) {
                 let sdl_event = sdl_event as SDL_WindowEvent
                 if (sdl_event.event == SDL_WINDOWEVENT_RESIZED) {

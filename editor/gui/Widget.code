@@ -28,6 +28,9 @@ define GUI_Widget = struct {
     on_mouse_button_released: func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
     }
 
+    on_mouse_scrolled: func (self: GUI_Widget, event: GUI_Event_Mouse_Scrolled) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Scrolled) -> Nothing {
+    }
+
     measure: func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing = measure_widget
     layout: func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing = layout_widget
     draw: func (self: GUI_Widget, canvas: Canvas) -> Nothing = draw_widget
