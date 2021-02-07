@@ -1,10 +1,11 @@
 \ Copyright (c) 2020-2021, Stefan Selariu
 
+include "./LibC.code"
+include "./String.code"
+
 define write = func (self: FILE, string: String) -> FILE {
     return self.write(string.data)
 }
-
-include "./String.code"
 
 define write = func (file: FILE, chars: [u8; ?]) -> FILE {
     let index = 0isize
@@ -99,19 +100,17 @@ define read_all = func (file: FILE) -> String {
     return content
 }
 
-define read_line = func (file: FILE) -> String {
+define read_line = func (file: FILE, line: String) -> bool {
     if (feof(file) != 0) {
-        return null
+        return false
     }
-    let line = new String()
+    line.clear()
     loop {
-        let char = fgetc(file) as u8
-        line.append(char)
-        if (char == '\n' as u8 || feof(file) != 0) {
+        let char = fgetc(file)
+        if (char < 0 || char == '\n' as i32) {
             break
         }
+        line.append(char as u8)
     }
-    return line
+    return true
 }
-
-include "./LibC.code"

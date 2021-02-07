@@ -172,7 +172,7 @@ define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     }
 
     canvas.set_color(0xff0000u32)
-    canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top + self.glyph.base_line * (self.pixel_size + 1))
+    canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top + font.base_line * (self.pixel_size + 1))
 }
 
 define update_glyph_cell = macro (self: Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
@@ -296,65 +296,40 @@ define draw_glyph_chooser = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 }
 
 define dump_font = func () -> Nothing {
-    let file = open_file("editor/Font.code", "w")
+    let file = open_file("editor/Font.data", "w")
 
-    file.write("\\ Copyright (c) 2020-2021, Stefan Selariu").end_line()
+    file.write("\\ Copyright (c) 2021, Stefan Selariu").end_line()
     file.end_line()
-    file.write("let font_glyphs: [!Glyph; 256]").end_line()
-    file.end_line()
-    file.write("define Glyph = struct {").end_line()
-    file.write("    mask: [[u8; 9]; 18]").end_line()
-    file.write("    base_line: i32").end_line()
-    file.write("}").end_line()
-    file.end_line()
-    file.write("define init_font = func () -> Nothing {").end_line()
-    file.write("    let index = 0isize").end_line()
-    file.write("    while (index < font_glyphs.length) {").end_line()
-    file.write("        if (index < ' ' as isize || index >= 127) {").end_line()
-    file.write("            let font_glyph = font_glyphs[index]").end_line()
-    file.write("            font_glyphs[index].base_line = 13").end_line()
-    file.write("            let left = 1").end_line()
-    file.write("            let top = 2").end_line()
-    file.write("            let right = font_glyph.mask[0].length as i32 - 2").end_line()
-    file.write("            let bottom = font_glyph.base_line - 1").end_line()
-    file.write("            let x = left").end_line()
-    file.write("            while (x <= right) {").end_line()
-    file.write("                font_glyph.mask[top][x] = 255u8").end_line()
-    file.write("                font_glyph.mask[bottom][x] = 255u8").end_line()
-    file.write("                x = x + 1").end_line()
-    file.write("            }").end_line()
-    file.write("            let y = top + 1").end_line()
-    file.write("            while (y < bottom) {").end_line()
-    file.write("                font_glyph.mask[y][left] = 255u8").end_line()
-    file.write("                font_glyph.mask[y][right] = 255u8").end_line()
-    file.write("                y = y + 1").end_line()
-    file.write("            }").end_line()
-    file.write("        }").end_line()
-    file.write("        index = index + 1").end_line()
-    file.write("    }").end_line()
+    file.write("font.height: ").write(font.height).end_line()
+    file.write("font.base_line: ").write(font.base_line).end_line()
 
     let char = '!' as i32
     while (char < 127) {
         file.end_line()
-        file.write("    \\ ").write(char as u8).end_line()
+        file.write("glyph: ").write(char as u8).end_line()
         let glyph = font.glyphs[char]
-        file.write("    font_glyphs[0x").write(char as u32, 16u8).write("].base_line = ").write(glyph.base_line).end_line()
+        file.write("glyph.width: ").write(glyph.width).end_line()
         let row = 0isize
         while (row < glyph.mask.length) {
             let column = 0isize
             while (column < glyph.mask[0].length) {
-                if (glyph.mask[row][column] != 0u8) {
-                    file.write("    font_glyphs[0x").write(char as u32, 16u8).write("].mask[").write(row).write("][").write(column).write("] = ").write(glyph.mask[row][column] as i32).end_line()
+                let alpha = glyph.mask[row][column] as u32
+                if (alpha > 0) {
+                    if (alpha < 0x10) {
+                        file.write("-")
+                    }
+                    file.write(alpha, 16u8)
+                } else {
+                    file.write("--")
                 }
                 column = column + 1
             }
+            file.end_line()
             row = row + 1
         }
 
         char = char + 1
     }
-
-    file.write("}").end_line()
 
     file.close()
 }

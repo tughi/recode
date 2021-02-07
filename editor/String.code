@@ -8,6 +8,12 @@ define String = struct {
     length: usize = 0
 }
 
+define clear = func (self: String) -> String {
+    self.length = 0
+    self.data[0] = 0u8
+    return self
+}
+
 define clone = func (self: String) -> String {
     let other = new String(
         data = malloc(self.length + 1) as [u8; ?]
@@ -42,6 +48,20 @@ define equals = func (self: String, other: String) -> bool {
     }
     let index = 0usize
     while (index < self.length) {
+        if (self.data[index] != other.data[index]) {
+            return false
+        }
+        index = index + 1
+    }
+    return true
+}
+
+define starts_with = func (self: String, other: String) -> bool {
+    if (self.length < other.length) {
+        return false
+    }
+    let index = 0usize
+    while (index < other.length) {
         if (self.data[index] != other.data[index]) {
             return false
         }
