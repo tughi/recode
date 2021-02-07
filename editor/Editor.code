@@ -65,7 +65,7 @@ define main = func () -> i32 {
         gui.vertical_linear_layout() {
             gui.spacing = 32
 
-            glyph_editor = gui.glyph_editor(font_glyphs['A' as u8])
+            glyph_editor = gui.glyph_editor(font.glyphs['A' as u8])
 
             save_button = gui.button("Save")
             save_button.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
@@ -84,7 +84,7 @@ define main = func () -> i32 {
             glyph_chooser.data = new Glyph_Chooser_Data(glyph_editor = glyph_editor)
             glyph_chooser.handle_glyph_selected = func (self: Glyph_Chooser, glyph: u8) -> Nothing {
                 let glyph_editor = (self.data as Glyph_Chooser_Data).glyph_editor
-                glyph_editor.glyph = font_glyphs[glyph]
+                glyph_editor.glyph = font.glyphs[glyph]
                 glyph_editor.gui.post(new GUI_Event_Widget_Updated(widget = glyph_editor))
             }
 

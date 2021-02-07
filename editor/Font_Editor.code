@@ -333,11 +333,11 @@ define dump_font = func () -> Nothing {
     file.write("        index = index + 1").end_line()
     file.write("    }").end_line()
 
-    let char = ' ' as i32
+    let char = '!' as i32
     while (char < 127) {
         file.end_line()
         file.write("    \\ ").write(char as u8).end_line()
-        let glyph = font_glyphs[char]
+        let glyph = font.glyphs[char]
         file.write("    font_glyphs[0x").write(char as u32, 16u8).write("].base_line = ").write(glyph.base_line).end_line()
         let row = 0isize
         while (row < glyph.mask.length) {

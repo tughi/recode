@@ -111,7 +111,7 @@ define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 }
 
 define compute_text_size = func (text: String, text_size: Rect) -> Nothing {
-    let line_height = font_glyphs[0].mask.length as i32
+    let line_height = font.height
     if (text.length > 0) {
         let width = 0
         let height = line_height
@@ -124,7 +124,7 @@ define compute_text_size = func (text: String, text_size: Rect) -> Nothing {
                 height = height + line_height
                 char_right = 0
             } else {
-                char_right = char_right + font_glyphs[char].mask[0].length as i32
+                char_right = char_right + font.glyphs[char].width
             }
         }
         if (char_right > width) {

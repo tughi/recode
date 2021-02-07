@@ -168,10 +168,10 @@ define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) 
     let char_index = 0usize
     while (char_index < text.length && base_line < self.height) {
         let char = text.data[char_index]
-        let glyph_mask = font_glyphs[char].mask
+        let glyph_mask = font.glyphs[char].mask
         if (char == '\n' as u8) {
             char_left = left
-            base_line = base_line + glyph_mask.length as i32
+            base_line = base_line + font.height
         } else {
             if (char_left < self.width) {
                 let glyph_line = 0isize
@@ -196,7 +196,7 @@ define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) 
 
 define draw_char = func (self: Canvas, char: u8, left: i32, base_line: i32) -> Nothing {
     \ TODO: implement text clipping to avoid using draw_pixel
-    let glyph_mask = font_glyphs[char].mask
+    let glyph_mask = font.glyphs[char].mask
     let glyph_line = 0isize
     while (glyph_line < glyph_mask.length) {
         let glyph_line_mask = glyph_mask[glyph_line]
