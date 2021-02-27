@@ -1,0 +1,8 @@
+define main = func () -> Nothing {
+
+}
+
+define Array = struct [T] {
+    array: [T; ?]
+    length: usize
+}
