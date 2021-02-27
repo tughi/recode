@@ -62,15 +62,16 @@ Structs are reference types... Struct values are passed by default by reference.
 
 To pass a struct by value one need to specify this with the `!` prefix, like this: `!Node`.
 
-## Template structs
+## Generic structs
 
-Template types have one or more other types as parameters.
+Generic structs have one or more other types as parameters.
 
-    define Box[T] = struct {
+    define Box = struct [T] {
         it: alias T
     }
 
-Concrete template types that have different parameters are different types themselves.
+Declared variables of generic structs have different types if the generic type parameters are
+different.
 
 > NOTE: The `Box[!Value]` and `Value` types have similar usage.
 
@@ -89,7 +90,7 @@ The `Object_Type` structure looks like this:
 
 ## Pointers
 
-There are no pointers, but one can fake pointers by using the `Box[T]` template type.
+There are no pointers, but one can fake pointers by using the `Box[T]` generic type.
 
 Boxes can be also used to pass value types (like integers) by reference.
 
@@ -99,7 +100,7 @@ Types prefixed with a `?` become nullable types, and require a `null` check to g
 
 Nullable types have a similar in-memory structure with the following struct:
 
-    define Nullable[T] = struct {
+    define Nullable = struct [T] {
         is_null: bool
         value: T
     }
@@ -186,11 +187,23 @@ UFCS is useful to chain function calls.
 
     file.write("An example of ").write(4).write(" chained calls").end_line()
 
-## Templates
+## Generic functions
 
-Templates look like functions but they are always inlined where _invoked_.
+    define max = func [T] (v1: T, v2: T) -> T {
+        if (v1 > v2) {
+            return v1
+        }
+        return v2
+    }
 
-    define for_each = func (list: List, block: func (item: Any, index: i32)) {
+Depending on the generic type parameters and function's body, the compiler might generate multiple
+instances of a generic function.
+
+## Macros
+
+Macros look like functions but they are always inlined where _invoked_, and have no return type.
+
+    define for_each = macro (list: List, block: macro (item: Any, index: i32)) {
         let index = 0
         let item = list.first_item
         while (item != null) {
@@ -200,9 +213,10 @@ Templates look like functions but they are always inlined where _invoked_.
         }
     }
 
-If a template has accepts block-parameters, these blocks get inlined within the template's body.
+If a macro accepts block-parameters, these blocks are treated as macros and get inlined within the
+macros's body.
 
-The last block-parameter can be inlined after the template _invocation_.
+The last block-parameter can be declared after the macro _invocation_.
 
     list.for_each() {
         stdout.write(item)
