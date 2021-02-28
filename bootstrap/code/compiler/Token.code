@@ -57,7 +57,7 @@ define Other_Token = struct {
 
 define Space_Token = struct {
     extends Token
-    count: i64
+    count: i32
 }
 
 define String_Token = struct {

@@ -94,18 +94,23 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
         return file.write("break")
     }
 
+    if (statement.is(AST_Constant_Statement)) {
+        let statement = statement as AST_Constant_Statement
+        return file.write("define ").write(statement.name).write(" = ").write(statement.expression)
+    }
+
     if (statement.is(AST_Expression_Statement)) {
         return file.write((statement as AST_Expression_Statement).expression)
     }
 
     if (statement.is(AST_Function_Statement)) {
         let statement = statement as AST_Function_Statement
-        file.write(statement.name).write(" :: (")
-        let function_parameters = statement.type.parameters.create_iterator()
-        if (function_parameters.has_next()) {
+        file.write("define ").write(statement.name).write(" = func (")
+        let parameters = statement.type.parameters.create_iterator()
+        if (parameters.has_next()) {
             loop {
-                file.write(function_parameters.next() as AST_Function_Parameter)
-                if (function_parameters.has_next()) {
+                file.write(parameters.next() as AST_Parameter)
+                if (parameters.has_next()) {
                     file.write(", ")
                 } else {
                     break
@@ -133,6 +138,23 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
         return file.write("loop ").write(statement.block, alignment)
     }
 
+    if (statement.is(AST_Macro_Statement)) {
+        let statement = statement as AST_Macro_Statement
+        file.write("define ").write(statement.name).write(" = func (")
+        let parameters = statement.type.parameters.create_iterator()
+        if (parameters.has_next()) {
+            loop {
+                file.write(parameters.next() as AST_Parameter)
+                if (parameters.has_next()) {
+                    file.write(", ")
+                } else {
+                    break
+                }
+            }
+        }
+        return file.write(") ").write(statement.body, alignment)
+    }
+
     if (statement.is(AST_Return_Statement)) {
         let statement = statement as AST_Return_Statement
         file.write("return")
@@ -144,9 +166,9 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
 
     if (statement.is(AST_Struct_Statement)) {
         let statement = statement as AST_Struct_Statement
-        file.write(statement.name).write(" :: struct")
+        file.write("define ").write(statement.name).write(" = struct {")
         if (statement.base_type != null) {
-            file.write(" : ").write(statement.base_type)
+            file.write_source_line(statement.base_type.location, alignment + 1).write("extends ").write(statement.base_type).end_line()
         }
         if (statement.members == null) {
             return file
@@ -209,7 +231,7 @@ define write_source_line = func (file: FILE, location: Source_Location, alignmen
     return file
 }
 
-define write = func (file: FILE, parameter: AST_Function_Parameter) -> FILE {
+define write = func (file: FILE, parameter: AST_Parameter) -> FILE {
     return file.write(parameter.name).write(": ").write(parameter.type)
 }
 
@@ -220,6 +242,21 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
             return file.write('[').write(type.item_type).write("; ").write(type.size_expression).write(']')
         }
         return file.write('[').write(type.item_type).write(']')
+    }
+
+    if (type.is(AST_Function_Type)) {
+        let type = type as AST_Function_Type
+        file.write("func (")
+        let parameters_item = type.parameters.first_item
+        while (parameters_item != null) {
+            let parameter = parameters_item.data as AST_Parameter
+            file.write(parameter.name).write(": ").write(parameter.type)
+            parameters_item = parameters_item.next_item
+            if (parameters_item != null) {
+                file.write(", ")
+            }
+        }
+        return file.write(") -> ").write(type.return_type)
     }
 
     if (type.is(AST_Named_Type)) {
@@ -284,15 +321,16 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
 
     if (expression.is(AST_Call_Expression)) {
         file.write((expression as AST_Call_Expression).callee_expression).write('(')
-        let call_arguments = (expression as AST_Call_Expression).arguments.create_iterator()
-        if (call_arguments.has_next()) {
-            loop {
-                file.write(call_arguments.next() as AST_Expression)
-                if (call_arguments.has_next()) {
-                    file.write(", ")
-                } else {
-                    break
-                }
+        let call_arguments_item = (expression as AST_Call_Expression).arguments.first_item
+        while (call_arguments_item != null) {
+            let call_argument = call_arguments_item.data as AST_Call_Argument
+            if (call_argument.name != null) {
+                file.write(call_argument.name).write(" = ")
+            }
+            file.write(call_argument.value_expression)
+            call_arguments_item = call_arguments_item.next_item
+            if (call_arguments_item != null) {
+                file.write(", ")
             }
         }
         return file.write(')')
@@ -308,6 +346,10 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
 
     if (expression.is(AST_New_Expression)) {
         return file.write("new ").write((expression as AST_New_Expression).type)
+    }
+
+    if (expression.is(AST_Negate_Expression)) {
+        return file.write("- ").write((expression as AST_Negate_Expression).expression)
     }
 
     if (expression.is(AST_Member_Access_Expression)) {

@@ -87,22 +87,33 @@ define IR_Unchecked_Array_Type = struct {
     item_type: IR_Type
 }
 
-define IR_Function_Type = struct {
+define IR_Fixed_Array_Type = struct {
     extends IR_Type
-    parameters: List
-    return_type: IR_Type
+    item_type: IR_Type
+    size: i64
 }
 
-define IR_Function_Type_Parameter = struct {
+define IR_Callable_Type = struct {
+    extends IR_Type
+    parameters: List
+}
+
+define IR_Callable_Parameter = struct {
+    location: Source_Location
     name: String
     type: IR_Type
+}
+
+define IR_Function_Type = struct {
+    extends IR_Callable_Type
+    return_type: IR_Type
 }
 
 define create_ir_function_type = func (parameters: List, return_type: IR_Type) -> IR_Function_Type {
     let type_name = new String().append("func (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
-        let parameter = parameters_item.data as IR_Function_Type_Parameter
+        let parameter = parameters_item.data as IR_Callable_Parameter
         type_name.append(parameter.name).append(": ").append(parameter.type.name)
         parameters_item = parameters_item.next_item
         if (parameters_item != null) {
@@ -112,6 +123,30 @@ define create_ir_function_type = func (parameters: List, return_type: IR_Type) -
     type_name.append(") -> ").append(return_type.name)
 
     return new IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
+}
+
+define IR_Macro_Body_Type = struct {
+    extends IR_Type
+}
+
+define IR_Macro_Type = struct {
+    extends IR_Callable_Type
+}
+
+define create_ir_macro_type = func (parameters: List) -> IR_Macro_Type {
+    let type_name = new String().append("macro (")
+    let parameters_item = parameters.first_item
+    while (parameters_item != null) {
+        let parameter = parameters_item.data as IR_Callable_Parameter
+        type_name.append(parameter.name).append(": ").append(parameter.type.name)
+        parameters_item = parameters_item.next_item
+        if (parameters_item != null) {
+            type_name.append(", ")
+        }
+    }
+    type_name.append(')')
+
+    return new IR_Macro_Type(name = type_name, parameters = parameters)
 }
 
 define IR_Struct_Type = struct {
@@ -289,6 +324,16 @@ define set_member_value = func (self: IR_Struct_Literal_Value, struct_type_membe
     value.links.append(member_value_link.back_link)
 }
 
+define IR_Macro_Body_Value = struct {
+    extends IR_Value(
+        dump = func (value: IR_Value, file: FILE) -> FILE {
+            let value = value as IR_Macro_Body_Value
+            return file.write("{ ... }")
+        }
+    )
+    macro_body: AST_Block_Statement
+}
+
 define IR_Global_Variable_Value = struct {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
@@ -450,14 +495,16 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
     return file
 }
 
+define IR_Callable = struct {
+    extends IR_Symbol
+    type: IR_Callable_Type
+}
+
 define IR_Function = struct {
-    extends Object
+    extends IR_Callable
     id: i64
-    location: Source_Location
-    name: String
-    parameters: List
     return_type: IR_Type
-    type: IR_Function_Type
+    parameters: List
     is_external: bool
     blocks: List
 }
@@ -487,10 +534,24 @@ define dump = func (function: IR_Function, file: FILE) -> Nothing {
     file.write('}').end_line()
 }
 
-define IR_Variable = struct {
+define IR_Parameter = struct {
+    extends IR_Function_Parameter
+}
+
+define IR_Macro = struct {
+    extends IR_Callable
+    context: IR_Builder_Context
+    block_statement: AST_Block_Statement
+}
+
+define IR_Symbol = struct {
     extends Object
-    location: Source_Location
     name: String
+    location: Source_Location
+}
+
+define IR_Variable = struct {
+    extends IR_Symbol
     type: IR_Type
     values: List = new List()
 }
@@ -503,6 +564,11 @@ define IR_Global_Variable = struct {
 
 define IR_Function_Parameter = struct {
     extends IR_Variable
+}
+
+define IR_Constant = struct {
+    extends IR_Symbol
+    value: IR_Constant_Value
 }
 
 define IR_Instruction = struct {
@@ -727,10 +793,12 @@ define IR_Load_Array_Item_Instruction = struct {
             return file.write("load_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(')').end_line()
         }
     )
+    array_item_type: IR_Type
+    load_address: bool
 }
 
-define create_ir_load_array_item_instruction = func (result_value: IR_Variable_Value, array_value: IR_Value, index_value: IR_Value) -> IR_Load_Array_Item_Instruction {
-    let instruction = new IR_Load_Array_Item_Instruction(result_value = result_value)
+define create_ir_load_array_item_instruction = func (result_value: IR_Variable_Value, array_value: IR_Value, index_value: IR_Value, array_item_type: IR_Type, load_address: bool) -> IR_Load_Array_Item_Instruction {
+    let instruction = new IR_Load_Array_Item_Instruction(result_value = result_value, array_item_type = array_item_type, load_address = load_address)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
     result_value.creator_instruction = instruction

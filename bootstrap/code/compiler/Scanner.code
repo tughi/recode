@@ -256,7 +256,7 @@ define scan_integer_token = func (self: Scanner, token_lexeme: String, token_loc
 }
 
 define scan_space_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
-    let count = 0 as i64
+    let count = 0
     while (self.peek_char() == ' ') {
         let char = self.next_char()
         count = count + 1

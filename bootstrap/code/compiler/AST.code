@@ -2,9 +2,8 @@
 
 define Compilation_Unit = struct {
     sources: List = new List()
-    types: List = new List()
-    global_variables: List = new List()
-    functions: List = new List()
+    function_statements: List = new List()
+    macro_statements: List = new List()
     statements: List = new List()
 }
 
@@ -30,10 +29,11 @@ define AST_Function_Statement = struct {
     ir_function: IR_Function = null
 }
 
-define AST_Function_Parameter = struct {
-    location: Source_Location
+define AST_Macro_Statement = struct {
+    extends AST_Statement
     name: Identifier_Token
-    type: AST_Type
+    type: AST_Macro_Type
+    body: AST_Block_Statement
 }
 
 define AST_Block_Statement = struct {
@@ -43,6 +43,16 @@ define AST_Block_Statement = struct {
         }
     )
     statements: List
+}
+
+define AST_Constant_Statement = struct {
+    extends AST_Statement(
+        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
+            builder.convert_constant_statement(statement as AST_Constant_Statement)
+        }
+    )
+    name: Identifier_Token
+    expression: AST_Expression
 }
 
 define AST_Expression_Statement = struct {
@@ -166,6 +176,17 @@ define AST_Function_Type = struct {
     return_type: AST_Type
 }
 
+define AST_Macro_Type = struct {
+    extends AST_Type
+    parameters: List
+}
+
+define AST_Parameter = struct {
+    location: Source_Location
+    name: Identifier_Token
+    type: AST_Type
+}
+
 define AST_Expression = struct {
     extends Object
     location: Source_Location
@@ -199,6 +220,15 @@ define AST_Variable_Expression = struct {
         }
     )
     name: Identifier_Token
+}
+
+define AST_Variable_Reference_Expression = struct {
+    extends AST_Expression(
+        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
+            return builder.convert_variable_expression_address((expression as AST_Variable_Reference_Expression).variable_expression)
+        }
+    )
+    variable_expression: AST_Variable_Expression
 }
 
 define AST_Binary_Expression = struct {
@@ -399,4 +429,13 @@ define AST_Wrapped_Expression = struct {
         }
     )
     expression: AST_Expression
+}
+
+define AST_Macro_Body = struct {
+    extends AST_Expression(
+        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
+            return builder.convert_macro_body(expression as AST_Macro_Body)
+        }
+    )
+    statement: AST_Block_Statement
 }
