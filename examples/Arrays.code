@@ -1,5 +1,6 @@
 define main = func () -> Nothing {
-
+    let array = new Array[i32]
+    array.array[0] = 42
 }
 
 define Array = struct [T] {

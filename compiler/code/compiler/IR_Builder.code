@@ -34,6 +34,7 @@ define IR_Builder = struct {
     compilation_unit: Compilation_Unit
     context: IR_Builder_Context
     types: List
+    generic_struct_statements: List = new List()
     current_block: IR_Block = null
     current_loop: IR_Loop = null
     counter: !Counter = Counter()
@@ -349,13 +350,16 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
-    let statements_item = self.compilation_unit.statements.first_item
-    while (statements_item != null) {
-        let statement = statements_item.data as AST_Statement
+    self.compilation_unit.statements.for_each() {
+        let statement = data as AST_Statement
         if (statement.is(AST_Struct_Statement)) {
-            self.convert_type_statement(statement as AST_Struct_Statement)
+            let statement = statement as AST_Struct_Statement
+            if (statement.type_parameters != null) {
+                self.add_generic_struct_statement(statement)
+            } else {
+                self.convert_struct_statement(statement)
+            }
         }
-        statements_item = statements_item.next_item
     }
 
     let function_statements_item = self.compilation_unit.function_statements.first_item
@@ -399,11 +403,17 @@ define build = func (self: IR_Builder) -> Nothing {
     }
 }
 
-define convert_type_statement = func (self: IR_Builder, statement: AST_Statement) -> IR_Type {
-    if (statement.is(AST_Struct_Statement)) {
-        return self.convert_struct_statement(statement as AST_Struct_Statement)
+define add_generic_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement) -> Nothing {
+    let struct_name = struct_statement.name.lexeme
+
+    self.generic_struct_statements.for_each() {
+        let other_struct_statement = data as AST_Struct_Statement
+        if (other_struct_statement.name.lexeme.equals(struct_name)) {
+            abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
+        }
     }
-    abort(statement.location, statement.object_type)
+
+    self.generic_struct_statements.append(struct_statement)
 }
 
 define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement) -> IR_Struct_Type {
