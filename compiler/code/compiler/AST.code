@@ -164,6 +164,12 @@ define AST_Embedded_Type = struct {
     embedded_type: AST_Type
 }
 
+define AST_Generic_Type = struct {
+    extends AST_Type
+    name: Identifier_Token
+    arguments: List
+}
+
 define AST_Array_Type = struct {
     extends AST_Type
     item_type: AST_Type

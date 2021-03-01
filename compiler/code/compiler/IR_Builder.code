@@ -1846,7 +1846,7 @@ define convert_negate_expression = func (self: IR_Builder, expression: AST_Negat
 
 define convert_new_expression = func (self: IR_Builder, expression: AST_New_Expression) -> IR_Value {
     if (expression.type.is(AST_Named_Type) == false) {
-        abort(expression.type.location, "Unsupported type")
+        abort(expression.type.location, clone("Unsupported AST type: ").append(expression.type.object_type.name))
     }
     let type_name = (expression.type as AST_Named_Type).name.lexeme
     let struct_statement = self.get_struct_statement(type_name)

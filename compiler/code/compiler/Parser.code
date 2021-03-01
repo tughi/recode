@@ -458,7 +458,7 @@ define parse_while = func (self: Parser) -> AST_Statement {
 }
 
 \ type
-\   : "!"? ( IDENTIFIER | "[" type ( ";" expression )? "]" | function_type | macro_type )
+\   : "!"? ( IDENTIFIER ( "[" type ( "," type )* "]" )? | "[" type ( ";" expression )? "]" | function_type | macro_type )
 define parse_type = func (self: Parser) -> AST_Type {
     let is_embedded_type = false
     let location: Source_Location = null
@@ -494,7 +494,26 @@ define parse_type = func (self: Parser) -> AST_Type {
         type = self.parse_macro_type()
     } else {
         let type_name = self.consume(required_identifier) as Identifier_Token
-        type = new AST_Named_Type(location = type_name.location, name = type_name)
+        if (self.matches(optional_space, required_open_bracket)) {
+            self.consume_space(0)
+            self.consume(required_open_bracket)
+            self.consume_space(0)
+            let type_arguments = new List()
+            loop {
+                let type_argument = self.parse_type()
+                type_arguments.append(type_argument)
+                self.consume_space(0)
+                if (self.matches(required_comma) == false) {
+                    break
+                }
+                self.consume(required_comma)
+                self.consume_space(1)
+            }
+            self.consume(required_close_bracket)
+            type = new AST_Generic_Type(location = type_name.location, name = type_name, arguments = type_arguments)
+        } else {
+            type = new AST_Named_Type(location = type_name.location, name = type_name)
+        }
     }
     if (is_embedded_type) {
         return new AST_Embedded_Type(location = location, embedded_type = type)
