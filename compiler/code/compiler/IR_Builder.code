@@ -416,6 +416,7 @@ define add_generic_struct_statement = func (self: IR_Builder, struct_statement: 
     self.generic_struct_statements.append(struct_statement)
 }
 
+\ TODO: merge convert_struct_statement with convert_generic_struct_statement to eliminate duplicated code
 define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement) -> IR_Struct_Type {
     let struct_name = struct_statement.name.lexeme
 
@@ -476,12 +477,113 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
     return type
 }
 
+define AST_Type_Argument = struct {
+    name: String
+    type: AST_Type
+}
+
 define convert_generic_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement, type_arguments: List) -> IR_Struct_Type {
+    let struct_name = struct_statement.name.lexeme.clone().append('[')
     let struct_type_arguments = new List()
-    type_arguments.for_each() {
-        struct_type_arguments.append(self.convert_type(data as AST_Type))
+
+    let type_arguments_item = type_arguments.first_item
+    let struct_type_parameters_item = struct_statement.type_parameters.first_item
+    while (type_arguments_item != null && struct_type_parameters_item != null) {
+        let type = type_arguments_item.data as AST_Type
+        let type_argument = self.convert_type(type)
+        struct_name.append(type_argument.name)
+        struct_type_arguments.append(new AST_Type_Argument(name = (struct_type_parameters_item.data as Token).lexeme, type = type))
+        type_arguments_item = type_arguments_item.next_item
+        struct_type_parameters_item = struct_type_parameters_item.next_item
+        if (type_arguments_item != null) {
+            struct_name.append(", ")
+        }
     }
-    abort("TODO")
+    struct_name.append(']')
+
+    let type = self.get_named_type(struct_name)
+    if (type != null) {
+        if (type.is(IR_Struct_Type)) {
+            let type = type as IR_Struct_Type
+            if (type.statement == struct_statement) {
+                return type
+            }
+        }
+        abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
+    }
+
+    let type = new IR_Struct_Type(
+        name = struct_name
+        statement = struct_statement
+    )
+    self.types.append(type)
+
+    if (struct_statement.base_type != null) {
+        let base_type = self.convert_type(struct_statement.base_type)
+        if (base_type.is(IR_Pointer_Type) == false) {
+            let base_type = base_type as IR_Pointer_Type
+            if (base_type.pointed_type.is(IR_Struct_Type) == false) {
+                abort(struct_statement.base_type.location, "Not a struct type.")
+            }
+            type.base_type = base_type.pointed_type as IR_Struct_Type
+        }
+    }
+
+    if (struct_statement.members != null) {
+        let struct_members = struct_statement.members.create_iterator()
+        while (struct_members.has_next()) {
+            let struct_member = struct_members.next() as AST_Struct_Member
+            let struct_member_name = struct_member.name.lexeme
+            let struct_member_type = self.convert_type(struct_member.type.apply_type_arguments(struct_type_arguments))
+            type.add_member(struct_member_name, struct_member_type)
+        }
+    }
+
+    if (type.is_object_type()) {
+        self.convert_variable_statement(
+            new AST_Variable_Statement(
+                location = struct_statement.name.location
+                name = struct_statement.name
+                type = new AST_Named_Type(
+                    name = new Identifier_Token(lexeme = "Object_Type", location = null)
+                )
+                is_external = true
+            )
+            true
+        )
+    }
+
+    return type
+}
+
+define apply_type_arguments = func (type: AST_Type, type_arguments: List) -> AST_Type {
+    if (type.is(AST_Named_Type)) {
+        let type = type as AST_Named_Type
+        let type_name = type.name.lexeme
+        type_arguments.for_each() {
+            let type_argument = data as AST_Type_Argument
+            if (type_name.equals(type_argument.name)) {
+                return type_argument.type
+            }
+        }
+        return type
+    }
+    
+    if (type.is(AST_Array_Type)) {
+        let type = type as AST_Array_Type
+        let old_item_type = type.item_type
+        let new_item_type = old_item_type.apply_type_arguments(type_arguments)
+        if (new_item_type != old_item_type) {
+            return new AST_Array_Type(
+                item_type = new_item_type
+                size_expression = type.size_expression
+                is_checked = type.is_checked
+            )
+        }
+        return type
+    }
+
+    abort(type.location, type.object_type)
 }
 
 define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
@@ -493,6 +595,9 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     }
     if (type.is(AST_Named_Type)) {
         return self.convert_named_type(type as AST_Named_Type)
+    }
+    if (type.is(AST_Generic_Type)) {
+        return self.convert_generic_type(type as AST_Generic_Type)
     }
     if (type.is(AST_Macro_Type)) {
         return self.convert_macro_type(type as AST_Macro_Type)
@@ -596,6 +701,15 @@ define convert_function_type = func (self: IR_Builder, type: AST_Function_Type) 
         function_parameters_item = function_parameters_item.next_item
     }
     return create_ir_function_type(parameters, self.convert_type(type.return_type))
+}
+
+define convert_generic_type = func (self: IR_Builder, type: AST_Generic_Type) -> IR_Type {
+    let type_name = type.name.lexeme
+    let struct_statement = self.get_struct_statement(type_name)
+    if (struct_statement == null) {
+        abort(type.location, clone(type_name).append(" is not a generic struct"))
+    }
+    return self.convert_generic_struct_statement(struct_statement, type.arguments)
 }
 
 define convert_named_type = func (self: IR_Builder, type: AST_Named_Type) -> IR_Type {
@@ -1854,6 +1968,8 @@ define convert_negate_expression = func (self: IR_Builder, expression: AST_Negat
 
 define convert_new_expression = func (self: IR_Builder, expression: AST_New_Expression) -> IR_Value {
     let expression_type = expression.type
+    \ TODO: let type = self.convert_type(expression_type)
+
     let result_value: IR_Value
     if (expression_type.is(AST_Named_Type)) {
         let expression_type = expression_type as AST_Named_Type
@@ -1878,7 +1994,7 @@ define convert_new_expression = func (self: IR_Builder, expression: AST_New_Expr
         }
         let type = self.convert_generic_struct_statement(struct_statement, expression_type.arguments)
 
-        abort(expression_type.location, "TODO: A support for generic structs")
+        abort(expression_type.location, "TODO: Add support for generic structs")
     } else {
         abort(expression_type.location, clone("Unsupported AST type: ").append(expression_type.object_type.name))
     }
