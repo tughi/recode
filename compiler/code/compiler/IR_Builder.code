@@ -583,6 +583,17 @@ define apply_type_arguments = func (type: AST_Type, type_arguments: List) -> AST
         return type
     }
 
+    if (type.is(AST_Generic_Type)) {
+        let old_generic_type = type as AST_Generic_Type
+        let new_generic_type_arguments = new List()
+        old_generic_type.arguments.for_each() {
+            let old_generic_type_argument = data as AST_Type
+            let new_generic_type_argument = old_generic_type_argument.apply_type_arguments(type_arguments)
+            new_generic_type_arguments.append(new_generic_type_argument)
+        }
+        return new AST_Generic_Type(location = old_generic_type.location, name = old_generic_type.name, arguments = new_generic_type_arguments)
+    }
+
     abort(type.location, type.object_type)
 }
 

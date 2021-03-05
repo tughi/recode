@@ -5,8 +5,8 @@ define main = func () -> Nothing {
 }
 
 define Map = struct [K, V] {
-\    first_item: Map_Item[K, V] = null
-\    last_item: Map_Item[K, V] = null
+    first_item: Map_Item[K, V] = null
+    last_item: Map_Item[K, V] = null
 }
 
 define Map_Item = struct [K, V] {
