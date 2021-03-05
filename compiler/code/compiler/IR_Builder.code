@@ -568,7 +568,7 @@ define apply_type_arguments = func (type: AST_Type, type_arguments: List) -> AST
         }
         return type
     }
-    
+
     if (type.is(AST_Array_Type)) {
         let type = type as AST_Array_Type
         let old_item_type = type.item_type
@@ -709,7 +709,8 @@ define convert_generic_type = func (self: IR_Builder, type: AST_Generic_Type) ->
     if (struct_statement == null) {
         abort(type.location, clone(type_name).append(" is not a generic struct"))
     }
-    return self.convert_generic_struct_statement(struct_statement, type.arguments)
+    let type = self.convert_generic_struct_statement(struct_statement, type.arguments)
+    return self.create_ir_pointer_type(type)
 }
 
 define convert_named_type = func (self: IR_Builder, type: AST_Named_Type) -> IR_Type {
@@ -1968,37 +1969,18 @@ define convert_negate_expression = func (self: IR_Builder, expression: AST_Negat
 
 define convert_new_expression = func (self: IR_Builder, expression: AST_New_Expression) -> IR_Value {
     let expression_type = expression.type
-    \ TODO: let type = self.convert_type(expression_type)
-
-    let result_value: IR_Value
-    if (expression_type.is(AST_Named_Type)) {
-        let expression_type = expression_type as AST_Named_Type
-        let type_name = expression_type.name.lexeme
-        let type = self.get_named_type(type_name)
-        if (type == null) {
-            abort(expression_type.location, clone("Undeclared type: ").append(type_name))
-        }
-        if (type.is(IR_Struct_Type) == false) {
-            abort(expression_type.location, clone(type_name).append(" is not a struct type"))
-        }
-        let type = type as IR_Struct_Type
-        let init_arguments = new List()
-        let init_value = self.convert_struct_literal_expression(expression, type)
-        result_value = self.append(create_ir_new_instruction(self.create_temp_value(self.create_ir_pointer_type(type)), type, init_value), expression.location)
-    } else if (expression_type.is(AST_Generic_Type)) {
-        let expression_type = expression_type as AST_Generic_Type
-        let type_name = expression_type.name.lexeme
-        let struct_statement = self.get_struct_statement(type_name)
-        if (struct_statement == null) {
-            abort(expression_type.location, clone(type_name).append(" is not a generic struct"))
-        }
-        let type = self.convert_generic_struct_statement(struct_statement, expression_type.arguments)
-
-        abort(expression_type.location, "TODO: Add support for generic structs")
-    } else {
-        abort(expression_type.location, clone("Unsupported AST type: ").append(expression_type.object_type.name))
+    let type = self.convert_type(expression_type)
+    if (type.is(IR_Pointer_Type) == false) {
+        abort(expression_type.location, clone(type.name).append(" is not a pointer type"))
     }
-    return result_value
+    type = (type as IR_Pointer_Type).pointed_type
+    if (type.is(IR_Struct_Type) == false) {
+        abort(expression_type.location, clone(type.name).append(" is not a struct type"))
+    }
+    let type = type as IR_Struct_Type
+    let init_arguments = new List()
+    let init_value = self.convert_struct_literal_expression(expression, type)
+    return self.append(create_ir_new_instruction(self.create_temp_value(self.create_ir_pointer_type(type)), type, init_value), expression.location)
 }
 
 define convert_struct_literal_expression = func (self: IR_Builder, expression: AST_Expression, struct_type: IR_Struct_Type) -> IR_Struct_Literal_Value {

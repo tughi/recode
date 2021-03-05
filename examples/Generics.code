@@ -1,23 +1,17 @@
 include "./code/lang/String.code"
 
 define main = func () -> Nothing {
-    let map_item = new Map_Item[String, Array[i32]]
-    let array = new Array[i32]
-    array.array[0] = 42
+    let map = new Map[String, i32]
 }
 
-define Array = struct [T] {
-    array: [T; ?]
-    length: usize
-}
-
-\ TODO: report duplicate struct type
-define Array = struct {
-    array: [i32; ?]
-    length: usize
+define Map = struct [K, V] {
+\    first_item: Map_Item[K, V] = null
+\    last_item: Map_Item[K, V] = null
 }
 
 define Map_Item = struct [K, V] {
     key: K
     value: V
+    prev_item: Map_Item[K, V] = null
+    next_item: Map_Item[K, V] = null
 }
