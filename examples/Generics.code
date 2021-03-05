@@ -2,6 +2,8 @@ include "./code/lang/String.code"
 
 define main = func () -> Nothing {
     let map = new Map[String, i32]
+    map.put("First", 1)
+    map.put("Second", 2)
 }
 
 define Map = struct [K, V] {
@@ -14,4 +16,20 @@ define Map_Item = struct [K, V] {
     value: V
     prev_item: Map_Item[K, V] = null
     next_item: Map_Item[K, V] = null
+}
+
+define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
+    \ TODO: check if key exists already
+
+    let item = new Map_Item[K, V](
+        key = key
+        value = value
+        prev_item = self.last_item
+    )
+    if (self.first_item == null) {
+        self.first_item = item
+    } else {
+        self.last_item.next_item = item
+    }
+    self.last_item = item
 }
