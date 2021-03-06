@@ -126,7 +126,7 @@ define AST_Variable_Statement = struct {
 define AST_Struct_Statement = struct {
     extends AST_Statement
     name: Identifier_Token
-    type_parameters: List
+    placeholder_types: List
     base_type: AST_Type
     members: List
     init_arguments: List
@@ -159,12 +159,17 @@ define AST_Named_Type = struct {
     name: Identifier_Token
 }
 
+define AST_Placeholder_Type = struct {
+    extends AST_Type
+    name: Identifier_Token
+}
+
 define AST_Embedded_Type = struct {
     extends AST_Type
     embedded_type: AST_Type
 }
 
-define AST_Generic_Type = struct {
+define AST_Specialized_Type = struct {
     extends AST_Type
     name: Identifier_Token
     arguments: List

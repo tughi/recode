@@ -184,7 +184,7 @@ define parse_define = func (self: Parser) -> AST_Statement {
         self.consume(required_unknown)
         self.consume_space(1)
         self.consume(required_struct)
-        return new AST_Struct_Statement(location = name.location, name = name, type_parameters = null, base_type = null, members = null, init_arguments = null)
+        return new AST_Struct_Statement(location = name.location, name = name, placeholder_types = null, base_type = null, members = null, init_arguments = null)
     }
     if (self.matches(required_struct)) {
         return self.parse_struct(name)
@@ -200,14 +200,15 @@ define parse_define = func (self: Parser) -> AST_Statement {
 }
 
 \ struct
-\   : "struct" type_parameters? "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
+\   : "struct" placeholder_types? "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
 define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_Struct_Statement {
     let struct_init_arguments = new List()
     self.consume(required_struct)
     self.consume_space(1)
-    let struct_type_parameters: List = null
+    let struct_placeholder_types: List = null
     if (self.matches(required_open_bracket)) {
-        struct_type_parameters = self.parse_type_parameters()
+        struct_placeholder_types = self.parse_placeholder_types()
+        self.consume_space(1)
     }
     self.consume(required_open_brace)
     self.consume_end_of_line()
@@ -250,18 +251,18 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(required_close_brace)
-    return new AST_Struct_Statement(location = struct_name.location, name = struct_name, type_parameters = struct_type_parameters, base_type = base_type, members = struct_members, init_arguments = struct_init_arguments)
+    return new AST_Struct_Statement(location = struct_name.location, name = struct_name, placeholder_types = struct_placeholder_types, base_type = base_type, members = struct_members, init_arguments = struct_init_arguments)
 }
 
-\ type_parameters
+\ placeholder_types
 \   : "[" IDENTIFIER ( "," IDENTIFIER )* "]"
-define parse_type_parameters = func (self: Parser) -> List {
-    let type_parameters = new List()
+define parse_placeholder_types = func (self: Parser) -> List {
+    let placeholder_types = new List()
     self.consume(required_open_bracket)
     self.consume_space(0)
     loop {
-        let type_parameter_name = self.consume(required_identifier)
-        type_parameters.append(type_parameter_name)
+        let placeholder_type_name = self.consume(required_identifier) as Identifier_Token
+        placeholder_types.append(new AST_Placeholder_Type(location = placeholder_type_name.location, name = placeholder_type_name))
         self.consume_space(0)
         if (self.matches(required_comma) == false) {
             break
@@ -270,8 +271,7 @@ define parse_type_parameters = func (self: Parser) -> List {
         self.consume_space(1)
     }
     self.consume(required_close_bracket)
-    self.consume_space(1)
-    return type_parameters
+    return placeholder_types
 }
 
 \ function
@@ -510,7 +510,7 @@ define parse_type = func (self: Parser) -> AST_Type {
                 self.consume_space(1)
             }
             self.consume(required_close_bracket)
-            type = new AST_Generic_Type(location = type_name.location, name = type_name, arguments = type_arguments)
+            type = new AST_Specialized_Type(location = type_name.location, name = type_name, arguments = type_arguments)
         } else {
             type = new AST_Named_Type(location = type_name.location, name = type_name)
         }

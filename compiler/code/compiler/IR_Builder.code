@@ -354,7 +354,7 @@ define build = func (self: IR_Builder) -> Nothing {
         let statement = data as AST_Statement
         if (statement.is(AST_Struct_Statement)) {
             let statement = statement as AST_Struct_Statement
-            if (statement.type_parameters != null) {
+            if (statement.placeholder_types != null) {
                 self.add_generic_struct_statement(statement)
             } else {
                 self.convert_struct_statement(statement)
@@ -487,17 +487,20 @@ define convert_generic_struct_statement = func (self: IR_Builder, struct_stateme
     let struct_type_arguments = new List()
 
     let type_arguments_item = type_arguments.first_item
-    let struct_type_parameters_item = struct_statement.type_parameters.first_item
-    while (type_arguments_item != null && struct_type_parameters_item != null) {
+    let struct_placeholder_types_item = struct_statement.placeholder_types.first_item
+    while (type_arguments_item != null && struct_placeholder_types_item != null) {
         let type = type_arguments_item.data as AST_Type
         let type_argument = self.convert_type(type)
         struct_name.append(type_argument.name)
-        struct_type_arguments.append(new AST_Type_Argument(name = (struct_type_parameters_item.data as Token).lexeme, type = type))
+        struct_type_arguments.append(new AST_Type_Argument(name = (struct_placeholder_types_item.data as AST_Placeholder_Type).name.lexeme, type = type))
         type_arguments_item = type_arguments_item.next_item
-        struct_type_parameters_item = struct_type_parameters_item.next_item
+        struct_placeholder_types_item = struct_placeholder_types_item.next_item
         if (type_arguments_item != null) {
             struct_name.append(", ")
         }
+    }
+    if (type_arguments_item != null || struct_placeholder_types_item != null) {
+        abort("TODO: report mismatching number of type arguments")
     }
     struct_name.append(']')
 
@@ -584,15 +587,15 @@ define specialize = func (type: AST_Type, type_arguments: List) -> AST_Type {
         return type
     }
 
-    if (type.is(AST_Generic_Type)) {
-        let old_generic_type = type as AST_Generic_Type
-        let new_generic_type_arguments = new List()
-        old_generic_type.arguments.for_each() {
-            let old_generic_type_argument = data as AST_Type
-            let new_generic_type_argument = old_generic_type_argument.specialize(type_arguments)
-            new_generic_type_arguments.append(new_generic_type_argument)
+    if (type.is(AST_Specialized_Type)) {
+        let old_specialized_type = type as AST_Specialized_Type
+        let new_specialized_type_arguments = new List()
+        old_specialized_type.arguments.for_each() {
+            let old_specialized_type_argument = data as AST_Type
+            let new_specialized_type_argument = old_specialized_type_argument.specialize(type_arguments)
+            new_specialized_type_arguments.append(new_specialized_type_argument)
         }
-        return new AST_Generic_Type(location = old_generic_type.location, name = old_generic_type.name, arguments = new_generic_type_arguments)
+        return new AST_Specialized_Type(location = old_specialized_type.location, name = old_specialized_type.name, arguments = new_specialized_type_arguments)
     }
 
     abort(type.location, type.object_type)
@@ -608,8 +611,8 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     if (type.is(AST_Named_Type)) {
         return self.convert_named_type(type as AST_Named_Type)
     }
-    if (type.is(AST_Generic_Type)) {
-        return self.convert_generic_type(type as AST_Generic_Type)
+    if (type.is(AST_Specialized_Type)) {
+        return self.convert_specialized_type(type as AST_Specialized_Type)
     }
     if (type.is(AST_Macro_Type)) {
         return self.convert_macro_type(type as AST_Macro_Type)
@@ -715,7 +718,7 @@ define convert_function_type = func (self: IR_Builder, type: AST_Function_Type) 
     return create_ir_function_type(parameters, self.convert_type(type.return_type))
 }
 
-define convert_generic_type = func (self: IR_Builder, type: AST_Generic_Type) -> IR_Type {
+define convert_specialized_type = func (self: IR_Builder, type: AST_Specialized_Type) -> IR_Type {
     let type_name = type.name.lexeme
     let struct_statement = self.get_struct_statement(type_name)
     if (struct_statement == null) {
