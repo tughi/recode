@@ -270,14 +270,12 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
     if (type.is(AST_Specialized_Type)) {
         let type = type as AST_Specialized_Type
         file.write(type.name).write('[')
-        let first_type_argument = true
-        type.arguments.for_each() {
-            if (first_type_argument == false) {
+        type.arguments.for_each_list_item() {
+            let type_argument = list_item.data as AST_Type
+            file.write(type_argument)
+            if (list_item.next_item != null) {
                 file.write(", ")
             }
-            let type_argument = data as AST_Type
-            file.write(type_argument)
-            first_type_argument = false
         }
         return file.write(']')
     }

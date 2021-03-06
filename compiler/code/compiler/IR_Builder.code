@@ -350,8 +350,8 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
-    self.compilation_unit.statements.for_each() {
-        let statement = data as AST_Statement
+    self.compilation_unit.statements.for_each_list_item() {
+        let statement = list_item.data as AST_Statement
         if (statement.is(AST_Struct_Statement)) {
             let statement = statement as AST_Struct_Statement
             if (statement.placeholder_types != null) {
@@ -406,8 +406,8 @@ define build = func (self: IR_Builder) -> Nothing {
 define add_generic_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement) -> Nothing {
     let struct_name = struct_statement.name.lexeme
 
-    self.generic_struct_statements.for_each() {
-        let other_struct_statement = data as AST_Struct_Statement
+    self.generic_struct_statements.for_each_list_item() {
+        let other_struct_statement = list_item.data as AST_Struct_Statement
         if (other_struct_statement.name.lexeme.equals(struct_name)) {
             abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
         }
@@ -564,8 +564,8 @@ define specialize = func (type: AST_Type, type_arguments: List) -> AST_Type {
     if (type.is(AST_Named_Type)) {
         let type = type as AST_Named_Type
         let type_name = type.name.lexeme
-        type_arguments.for_each() {
-            let type_argument = data as AST_Type_Argument
+        type_arguments.for_each_list_item() {
+            let type_argument = list_item.data as AST_Type_Argument
             if (type_name.equals(type_argument.name)) {
                 return type_argument.type
             }
@@ -590,8 +590,8 @@ define specialize = func (type: AST_Type, type_arguments: List) -> AST_Type {
     if (type.is(AST_Specialized_Type)) {
         let old_specialized_type = type as AST_Specialized_Type
         let new_specialized_type_arguments = new List()
-        old_specialized_type.arguments.for_each() {
-            let old_specialized_type_argument = data as AST_Type
+        old_specialized_type.arguments.for_each_list_item() {
+            let old_specialized_type_argument = list_item.data as AST_Type
             let new_specialized_type_argument = old_specialized_type_argument.specialize(type_arguments)
             new_specialized_type_arguments.append(new_specialized_type_argument)
         }
