@@ -184,6 +184,7 @@ define AST_Array_Type = struct {
 
 define AST_Function_Type = struct {
     extends AST_Type
+    placeholder_types: List
     parameters: List
     return_type: AST_Type
 }
