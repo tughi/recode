@@ -519,14 +519,15 @@ define convert_generic_struct_statement = func (self: IR_Builder, struct_stateme
     self.types.append(type)
 
     if (struct_statement.base_type != null) {
-        let base_type = self.convert_type(struct_statement.base_type)
+        let base_type = self.convert_type(struct_statement.base_type.specialize(struct_type_arguments))
         if (base_type.is(IR_Pointer_Type) == false) {
-            let base_type = base_type as IR_Pointer_Type
-            if (base_type.pointed_type.is(IR_Struct_Type) == false) {
-                abort(struct_statement.base_type.location, "Not a struct type.")
-            }
-            type.base_type = base_type.pointed_type as IR_Struct_Type
+            abort(struct_statement.base_type.location, "Not a pointer type.")
         }
+        let base_type = (base_type as IR_Pointer_Type).pointed_type
+        if (base_type.is(IR_Struct_Type) == false) {
+            abort(struct_statement.base_type.location, "Not a struct type.")
+        }
+        type.base_type = base_type as IR_Struct_Type
     }
 
     if (struct_statement.members != null) {
@@ -534,7 +535,7 @@ define convert_generic_struct_statement = func (self: IR_Builder, struct_stateme
         while (struct_members.has_next()) {
             let struct_member = struct_members.next() as AST_Struct_Member
             let struct_member_name = struct_member.name.lexeme
-            let struct_member_type = self.convert_type(struct_member.type.apply_type_arguments(struct_type_arguments))
+            let struct_member_type = self.convert_type(struct_member.type.specialize(struct_type_arguments))
             type.add_member(struct_member_name, struct_member_type)
         }
     }
@@ -556,7 +557,7 @@ define convert_generic_struct_statement = func (self: IR_Builder, struct_stateme
     return type
 }
 
-define apply_type_arguments = func (type: AST_Type, type_arguments: List) -> AST_Type {
+define specialize = func (type: AST_Type, type_arguments: List) -> AST_Type {
     if (type.is(AST_Named_Type)) {
         let type = type as AST_Named_Type
         let type_name = type.name.lexeme
@@ -572,7 +573,7 @@ define apply_type_arguments = func (type: AST_Type, type_arguments: List) -> AST
     if (type.is(AST_Array_Type)) {
         let type = type as AST_Array_Type
         let old_item_type = type.item_type
-        let new_item_type = old_item_type.apply_type_arguments(type_arguments)
+        let new_item_type = old_item_type.specialize(type_arguments)
         if (new_item_type != old_item_type) {
             return new AST_Array_Type(
                 item_type = new_item_type
@@ -588,7 +589,7 @@ define apply_type_arguments = func (type: AST_Type, type_arguments: List) -> AST
         let new_generic_type_arguments = new List()
         old_generic_type.arguments.for_each() {
             let old_generic_type_argument = data as AST_Type
-            let new_generic_type_argument = old_generic_type_argument.apply_type_arguments(type_arguments)
+            let new_generic_type_argument = old_generic_type_argument.specialize(type_arguments)
             new_generic_type_arguments.append(new_generic_type_argument)
         }
         return new AST_Generic_Type(location = old_generic_type.location, name = old_generic_type.name, arguments = new_generic_type_arguments)
