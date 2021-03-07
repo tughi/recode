@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define IR_Type = struct {
     extends Object
@@ -210,6 +210,16 @@ define is_object_type = func (self: IR_Struct_Type) -> bool {
             return false
         }
     }
+}
+
+define IR_Generic_Struct_Type = struct {
+    extends IR_Struct_Type
+    placeholder_types: List = new List()
+}
+
+define IR_Placeholder_Type = struct {
+    extends IR_Type
+    ast_type: AST_Placeholder_Type
 }
 
 define IR_Value = struct {

@@ -34,6 +34,7 @@ define IR_Builder = struct {
     compilation_unit: Compilation_Unit
     context: IR_Builder_Context
     types: List
+    generic_function_statements: List = new List()
     generic_struct_statements: List = new List()
     current_block: IR_Block = null
     current_loop: IR_Loop = null
@@ -362,10 +363,13 @@ define build = func (self: IR_Builder) -> Nothing {
         }
     }
 
-    let function_statements_item = self.compilation_unit.function_statements.first_item
-    while (function_statements_item != null) {
-        self.create_function(function_statements_item.data as AST_Function_Statement)
-        function_statements_item = function_statements_item.next_item
+    self.compilation_unit.function_statements.for_each_list_item() {
+        let function_statement = list_item.data as AST_Function_Statement
+        if (function_statement.type.placeholder_types != null) {
+            self.add_generic_function_statement(function_statement)
+        } else {
+            self.create_function(function_statement)
+        }
     }
 
     let macro_statements_item = self.compilation_unit.macro_statements.first_item
@@ -393,14 +397,18 @@ define build = func (self: IR_Builder) -> Nothing {
         statements_item = statements_item.next_item
     }
 
-    let function_statements_item = self.compilation_unit.function_statements.first_item
-    while (function_statements_item != null) {
-        let function_statement = function_statements_item.data as AST_Statement
-        if (function_statement.is(AST_Function_Statement)) {
-            self.build_function(function_statement as AST_Function_Statement)
+    self.compilation_unit.function_statements.for_each_list_item() {
+        let function_statement = list_item.data as AST_Function_Statement
+        if (function_statement.type.placeholder_types == null) {
+            self.build_function(function_statement)
         }
-        function_statements_item = function_statements_item.next_item
     }
+}
+
+define add_generic_function_statement = func (self: IR_Builder, function_statement: AST_Function_Statement) -> Nothing {
+    \ TODO: check for duplicates
+
+    self.generic_function_statements.append(function_statement)
 }
 
 define add_generic_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement) -> Nothing {
@@ -619,6 +627,10 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     }
     if (type.is(AST_Embedded_Type)) {
         return self.convert_embedded_type(type as AST_Embedded_Type)
+    }
+    if (type.is(AST_Placeholder_Type)) {
+        let type = type as AST_Placeholder_Type
+        return new IR_Placeholder_Type(name = type.name.lexeme, ast_type = type)
     }
     abort(type.location, type.object_type)
 }
@@ -1471,14 +1483,30 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
     }
 
     if (callable == null) {
+        self.generic_function_statements.for_each_list_item() {
+            let function_statement = list_item.data as AST_Function_Statement
+            if (function_statement.name.lexeme.equals(callee_name.lexeme) && self.specialize(function_statement, call_arguments)) {
+                break
+            }
+        }
+    }
+
+    if (callable == null) {
         let symbols_iterator = self.create_symbols_iterator()
         while (symbols_iterator.has_next()) {
             let symbol = symbols_iterator.next()
             if (symbol.is(IR_Callable)) {
                 let callable = symbol as IR_Callable
                 if (callable.name.equals(callee_name.lexeme)) {
-                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.name).end_line()
+                    \ TODO: Write original (parsed) declarations
+                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.name)
                 }
+            }
+        }
+        self.generic_function_statements.for_each_list_item() {
+            let function_statement = list_item.data as AST_Function_Statement
+            if (function_statement.name.lexeme.equals(callee_name.lexeme)) {
+                stderr.end_line().write(function_statement.location).write(": ").write(function_statement.name).write(" = ").write(function_statement.type)
             }
         }
         let message = clone("Found no matching callable '").append(callee_name.lexeme).append("': (")
@@ -1512,6 +1540,32 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         result_value = self.create_temp_value(call_function.return_type)
     }
     return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
+}
+
+define specialize = func (self: IR_Builder, function_statement: AST_Function_Statement, call_arguments: List) -> bool {
+    let type_arguments = new List()
+    function_statement.type.placeholder_types.for_each_list_item() {
+        let placeholder_type = list_item.data as AST_Placeholder_Type
+        type_arguments.append(new AST_Type_Argument(name = placeholder_type.name.lexeme, type = placeholder_type))
+    }
+
+    let function_statement_parameters_item = function_statement.type.parameters.first_item
+    let call_arguments_item = call_arguments.first_item
+    while (function_statement_parameters_item != null && call_arguments_item != null) {
+        let function_statement_parameter = function_statement_parameters_item.data as AST_Parameter
+        let call_argument = call_arguments_item.data as IR_Call_Argument
+
+        let parameter_type = self.convert_type(function_statement_parameter.type.specialize(type_arguments))
+        if (parameter_type.accepts(call_argument.value.type) == false) {
+            stderr.write("Parameter of type ").write(parameter_type.name).write(" doesn't accept ").write(call_argument.value.type.name).write(" value!").end_line()
+            return false
+        }
+        abort(function_statement.location, "TODO: Replace placeholder types with specialized types from call argument")
+
+        function_statement_parameters_item = function_statement_parameters_item.next_item
+        call_arguments_item = call_arguments_item.next_item
+    }
+    abort(function_statement.location, "TODO: Finish generic function specialization")
 }
 
 define convert_dynamic_call_expression = func (self: IR_Builder, call_expression: AST_Call_Expression, call_function: IR_Value, first_argument: IR_Value) -> IR_Value {
