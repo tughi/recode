@@ -217,9 +217,13 @@ define IR_Specialized_Struct_Type = struct {
     type_arguments: List
 }
 
+define IR_Type_Argument = struct {
+    name: String
+    type: IR_Type
+}
+
 define IR_Placeholder_Type = struct {
     extends IR_Type
-    accepted_type: IR_Type = null
 }
 
 define IR_Value = struct {

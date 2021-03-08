@@ -317,16 +317,11 @@ define accepts = func (self: IR_Type, other: IR_Type) -> bool {
                 let self_struct_type_arguments_item = self_struct_type.type_arguments.first_item
                 let other_struct_type = other_struct_type as IR_Specialized_Struct_Type
                 let other_struct_type_arguments_item = other_struct_type.type_arguments.first_item
-                stderr.write("Evaluate ").write(self_struct_type.name).write(" and ").write(other_struct_type.name).end_line()
                 while (self_struct_type_arguments_item != null && other_struct_type_arguments_item != null) {
                     let self_struct_type_argument = self_struct_type_arguments_item.data as IR_Type_Argument
                     let other_struct_type_argument = other_struct_type_arguments_item.data as IR_Type_Argument
-                    if (self_struct_type_argument.ir_type.accepts(other_struct_type_argument.ir_type) == false) {
+                    if (self_struct_type_argument.type.accepts(other_struct_type_argument.type) == false) {
                         return false
-                    }
-                    if (self_struct_type_argument.ir_type.is(IR_Placeholder_Type)) {
-                        let placeholder_type = self_struct_type_argument.ir_type as IR_Placeholder_Type
-                        placeholder_type.accepted_type = other_struct_type_argument.ir_type
                     }
                     self_struct_type_arguments_item = self_struct_type_arguments_item.next_item
                     other_struct_type_arguments_item = other_struct_type_arguments_item.next_item
@@ -525,23 +520,28 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
     return type
 }
 
-define IR_Type_Argument = struct {
+define AST_Type_Argument = struct {
     name: String
-    ast_type: AST_Type
-    ir_type: IR_Type
+    type: AST_Type
 }
 
 define convert_generic_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement, type_arguments: List) -> IR_Struct_Type {
     let struct_name = struct_statement.name.lexeme.clone().append('[')
-    let struct_type_arguments = new List()
+    let ast_type_arguments = new List()
+    let ir_type_arguments = new List()
+    let has_placeholder_type_arguments = false
 
     let type_arguments_item = type_arguments.first_item
     let struct_placeholder_types_item = struct_statement.placeholder_types.first_item
     while (type_arguments_item != null && struct_placeholder_types_item != null) {
-        let type = type_arguments_item.data as AST_Type
-        let type_argument = self.convert_type(type)
-        struct_name.append(type_argument.name)
-        struct_type_arguments.append(new IR_Type_Argument(name = (struct_placeholder_types_item.data as AST_Placeholder_Type).name.lexeme, ast_type = type, ir_type = type_argument))
+        let ast_type = type_arguments_item.data as AST_Type
+        let ir_type = self.convert_type(ast_type)
+        if (ir_type.is(IR_Placeholder_Type)) {
+            has_placeholder_type_arguments = true
+        }
+        struct_name.append(ir_type.name)
+        ast_type_arguments.append(new AST_Type_Argument(name = (struct_placeholder_types_item.data as AST_Placeholder_Type).name.lexeme, type = ast_type))
+        ir_type_arguments.append(new IR_Type_Argument(name = (struct_placeholder_types_item.data as AST_Placeholder_Type).name.lexeme, type = ir_type))
         type_arguments_item = type_arguments_item.next_item
         struct_placeholder_types_item = struct_placeholder_types_item.next_item
         if (type_arguments_item != null) {
@@ -567,12 +567,17 @@ define convert_generic_struct_statement = func (self: IR_Builder, struct_stateme
     let type = new IR_Specialized_Struct_Type(
         name = struct_name
         statement = struct_statement
-        type_arguments = struct_type_arguments
+        type_arguments = ir_type_arguments
     )
+
+    if (has_placeholder_type_arguments) {
+        return type
+    }
+
     self.types.append(type)
 
     if (struct_statement.base_type != null) {
-        let base_type = self.convert_type(struct_statement.base_type.specialize(struct_type_arguments))
+        let base_type = self.convert_type(struct_statement.base_type.specialize(ast_type_arguments))
         if (base_type.is(IR_Pointer_Type) == false) {
             abort(struct_statement.base_type.location, "Not a pointer type.")
         }
@@ -588,7 +593,7 @@ define convert_generic_struct_statement = func (self: IR_Builder, struct_stateme
         while (struct_members.has_next()) {
             let struct_member = struct_members.next() as AST_Struct_Member
             let struct_member_name = struct_member.name.lexeme
-            let struct_member_type = self.convert_type(struct_member.type.specialize(struct_type_arguments))
+            let struct_member_type = self.convert_type(struct_member.type.specialize(ast_type_arguments))
             type.add_member(struct_member_name, struct_member_type)
         }
     }
@@ -615,9 +620,9 @@ define specialize = func (type: AST_Type, type_arguments: List) -> AST_Type {
         let type = type as AST_Named_Type
         let type_name = type.name.lexeme
         type_arguments.for_each_list_item() {
-            let type_argument = list_item.data as IR_Type_Argument
+            let type_argument = list_item.data as AST_Type_Argument
             if (type_name.equals(type_argument.name)) {
-                return type_argument.ast_type
+                return type_argument.type
             }
         }
         return type
@@ -1588,7 +1593,7 @@ define specialize = func (self: IR_Builder, function_statement: AST_Function_Sta
     let type_arguments = new List()
     function_statement.type.placeholder_types.for_each_list_item() {
         let placeholder_type = list_item.data as AST_Placeholder_Type
-        type_arguments.append(new IR_Type_Argument(name = placeholder_type.name.lexeme, ast_type = placeholder_type, ir_type = null))
+        type_arguments.append(new AST_Type_Argument(name = placeholder_type.name.lexeme, type = placeholder_type))
     }
 
     let function_statement_parameters_item = function_statement.type.parameters.first_item
@@ -1599,9 +1604,9 @@ define specialize = func (self: IR_Builder, function_statement: AST_Function_Sta
 
         let parameter_type = self.convert_type(function_statement_parameter.type.specialize(type_arguments))
         if (parameter_type.accepts(call_argument.value.type) == false) {
-            stderr.write("Parameter of type ").write(parameter_type.name).write(" doesn't accept ").write(call_argument.value.type.name).write(" value!").end_line()
             return false
         }
+
         abort(function_statement.location, "TODO: Replace placeholder types with specialized types from call argument")
 
         function_statement_parameters_item = function_statement_parameters_item.next_item
