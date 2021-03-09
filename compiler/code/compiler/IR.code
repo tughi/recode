@@ -224,6 +224,7 @@ define IR_Type_Argument = struct {
 
 define IR_Placeholder_Type = struct {
     extends IR_Type
+    ast_type: AST_Placeholder_Type
 }
 
 define IR_Value = struct {

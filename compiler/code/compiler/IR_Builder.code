@@ -481,16 +481,15 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
     self.types.append(type)
 
     if (struct_statement.base_type != null) {
-        let base_type = struct_statement.base_type
-        if (base_type.is(AST_Named_Type) == false) {
-            abort(struct_statement.base_type.location, "Cannot be used as base type.")
+        let base_type = self.convert_type(struct_statement.base_type)
+        if (base_type.is(IR_Pointer_Type) == false) {
+            abort(struct_statement.base_type.location, "Not a pointer type.")
         }
-        let base_type_name = (base_type as AST_Named_Type).name.lexeme
-        let base_struct_statement = self.get_struct_statement(base_type_name)
-        if (base_struct_statement == null) {
+        let base_type = (base_type as IR_Pointer_Type).pointed_type
+        if (base_type.is(IR_Struct_Type) == false) {
             abort(struct_statement.base_type.location, "Not a struct type.")
         }
-        type.base_type = self.convert_struct_statement(base_struct_statement)
+        type.base_type = base_type as IR_Struct_Type
     }
 
     if (struct_statement.members != null) {
@@ -677,7 +676,7 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     }
     if (type.is(AST_Placeholder_Type)) {
         let type = type as AST_Placeholder_Type
-        return new IR_Placeholder_Type(name = type.name.lexeme)
+        return new IR_Placeholder_Type(name = type.name.lexeme, ast_type = type)
     }
     abort(type.location, type.object_type)
 }
@@ -1601,18 +1600,90 @@ define specialize = func (self: IR_Builder, function_statement: AST_Function_Sta
     while (function_statement_parameters_item != null && call_arguments_item != null) {
         let function_statement_parameter = function_statement_parameters_item.data as AST_Parameter
         let call_argument = call_arguments_item.data as IR_Call_Argument
+        let call_argument_type = call_argument.value.type
 
         let parameter_type = self.convert_type(function_statement_parameter.type.specialize(type_arguments))
-        if (parameter_type.accepts(call_argument.value.type) == false) {
+        if (parameter_type.accepts(call_argument_type) == false) {
             return false
         }
 
-        abort(function_statement.location, "TODO: Replace placeholder types with specialized types from call argument")
+        \ Search parameter type for placeholders
+        if (parameter_type.is(IR_Pointer_Type)) {
+            let parameter_pointed_type = (parameter_type as IR_Pointer_Type).pointed_type
+            if (parameter_pointed_type.is(IR_Specialized_Struct_Type)) {
+                let parameter_pointed_type = parameter_pointed_type as IR_Specialized_Struct_Type
+                if (call_argument_type.is(IR_Pointer_Type) == false) {
+                    abort("Invalid state")
+                }
+                let call_argument_pointed_type = (call_argument_type as IR_Pointer_Type).pointed_type
+                if (call_argument_pointed_type.is(IR_Struct_Type) == false) {
+                    abort("Invalid state")
+                }
+                let call_argument_pointed_type = call_argument_pointed_type as IR_Struct_Type
+                while (call_argument_pointed_type != null) {
+                    if (call_argument_pointed_type.statement == parameter_pointed_type.statement) {
+                        break
+                    }
+                    call_argument_pointed_type = call_argument_pointed_type.base_type
+                }
+                if (call_argument_pointed_type == null) {
+                    abort("Invalid state")
+                }
+                if (call_argument_pointed_type.is(IR_Specialized_Struct_Type) == false) {
+                    abort("Invalid state")
+                }
+                let call_argument_pointed_type_arguments_item = (call_argument_pointed_type as IR_Specialized_Struct_Type).type_arguments.first_item
+                let parameter_pointed_type_arguments_item = parameter_pointed_type.type_arguments.first_item
+                while (call_argument_pointed_type_arguments_item != null && parameter_pointed_type_arguments_item != null) {
+                    let parameter_pointed_type_argument = parameter_pointed_type_arguments_item.data as IR_Type_Argument
+                    if (parameter_pointed_type_argument.type.is(IR_Placeholder_Type)) {
+                        \ Replace placeholer type with type from the call argument type
+                        let placeholder_type: AST_Type = (parameter_pointed_type_argument.type as IR_Placeholder_Type).ast_type
+                        type_arguments.for_each_list_item() {
+                            let type_argument = list_item.data as AST_Type_Argument
+                            if (type_argument.type == placeholder_type) {
+                                let replacement_type = (call_argument_pointed_type_arguments_item.data as IR_Type_Argument).type
+                                type_argument.type = replacement_type.convert_type()
+                                stderr.write("Replaced ").write(type_argument.name).write(" with ").write(type_argument.type).end_line()
+                            }
+                        }
+
+                    }
+                    call_argument_pointed_type_arguments_item = call_argument_pointed_type_arguments_item.next_item
+                    parameter_pointed_type_arguments_item = parameter_pointed_type_arguments_item.next_item
+                }
+            } else if (parameter_pointed_type.is(IR_Struct_Type)) {
+                \ ignore parameter
+            } else {
+                abort(function_statement.location, parameter_pointed_type.object_type)
+            }
+        } else if (parameter_type.is(IR_Integer_Type)) {
+            \ ignore parameter
+        } else {
+            abort(function_statement.location, parameter_type.object_type)
+        }
 
         function_statement_parameters_item = function_statement_parameters_item.next_item
         call_arguments_item = call_arguments_item.next_item
     }
+
     abort(function_statement.location, "TODO: Finish generic function specialization")
+}
+
+define convert_type = func (self: IR_Type) -> AST_Type {
+    if (self.is(IR_Pointer_Type)) {
+        let pointed_type = (self as IR_Pointer_Type).pointed_type
+        if (pointed_type.is(IR_Specialized_Struct_Type)) {
+            abort(null, pointed_type.object_type)
+        } else if (pointed_type.is(IR_Struct_Type)) {
+            return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = pointed_type.name))
+        }
+        abort(null, pointed_type.object_type)
+    }
+    if (self.is(IR_Integer_Type)) {
+        return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = self.name))
+    }
+    abort(null, self.object_type)
 }
 
 define convert_dynamic_call_expression = func (self: IR_Builder, call_expression: AST_Call_Expression, call_function: IR_Value, first_argument: IR_Value) -> IR_Value {
