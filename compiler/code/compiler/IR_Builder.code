@@ -870,13 +870,18 @@ define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Stateme
 }
 
 define create_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> IR_Function {
+    let type_arguments = List()
+    return self.create_specialized_function(function_statement, @type_arguments)
+}
+
+define create_specialized_function = func (self: IR_Builder, function_statement: AST_Function_Statement, type_arguments: List) -> IR_Function {
     let function = new IR_Function(
         id = self.functions_counter.next()
         location = function_statement.location
         blocks = new List()
         name = function_statement.name.lexeme
         parameters = new List()
-        return_type = self.convert_type(function_statement.type.return_type)
+        return_type = self.convert_type(function_statement.type.return_type.specialize(type_arguments))
         is_external = function_statement.body == null
         type = undefined
     )
@@ -885,7 +890,7 @@ define create_function = func (self: IR_Builder, function_statement: AST_Functio
     let callable_type_parameters = new List()
     while (parameters.has_next()) {
         let parameter = parameters.next() as AST_Parameter
-        let parameter_type = self.convert_type(parameter.type)
+        let parameter_type = self.convert_type(parameter.type.specialize(type_arguments))
         let parameter_name = parameter.name.lexeme
         let function_parameter = new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
         function.parameters.append(function_parameter)
@@ -1531,8 +1536,12 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
     if (callable == null) {
         self.generic_function_statements.for_each_list_item() {
             let function_statement = list_item.data as AST_Function_Statement
-            if (function_statement.name.lexeme.equals(callee_name.lexeme) && self.specialize(function_statement, call_arguments)) {
-                break
+            if (function_statement.name.lexeme.equals(callee_name.lexeme)) {
+                let type_arguments = self.specialize(function_statement, call_arguments)
+                if (type_arguments != null) {
+                    callable = self.create_specialized_function(function_statement, type_arguments)
+                    break
+                }
             }
         }
     }
@@ -1544,8 +1553,7 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
             if (symbol.is(IR_Callable)) {
                 let callable = symbol as IR_Callable
                 if (callable.name.equals(callee_name.lexeme)) {
-                    \ TODO: Write original (parsed) declarations
-                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.name)
+                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.convert_type())
                 }
             }
         }
@@ -1563,6 +1571,7 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
                 if (call_argument.name != null) {
                     message.append(call_argument.name).append(": ")
                 }
+                \ TODO: Append original (parsed) type
                 message.append(call_argument.value.type.name)
                 call_arguments_item = call_arguments_item.next_item
                 if (call_arguments_item == null) {
@@ -1588,7 +1597,7 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
     return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
 }
 
-define specialize = func (self: IR_Builder, function_statement: AST_Function_Statement, call_arguments: List) -> bool {
+define specialize = func (self: IR_Builder, function_statement: AST_Function_Statement, call_arguments: List) -> List {
     let type_arguments = new List()
     function_statement.type.placeholder_types.for_each_list_item() {
         let placeholder_type = list_item.data as AST_Placeholder_Type
@@ -1604,7 +1613,7 @@ define specialize = func (self: IR_Builder, function_statement: AST_Function_Sta
 
         let parameter_type = self.convert_type(function_statement_parameter.type.specialize(type_arguments))
         if (parameter_type.accepts(call_argument_type) == false) {
-            return false
+            return null
         }
 
         \ Search parameter type for placeholders
@@ -1644,10 +1653,8 @@ define specialize = func (self: IR_Builder, function_statement: AST_Function_Sta
                             if (type_argument.type == placeholder_type) {
                                 let replacement_type = (call_argument_pointed_type_arguments_item.data as IR_Type_Argument).type
                                 type_argument.type = replacement_type.convert_type()
-                                stderr.write("Replaced ").write(type_argument.name).write(" with ").write(type_argument.type).end_line()
                             }
                         }
-
                     }
                     call_argument_pointed_type_arguments_item = call_argument_pointed_type_arguments_item.next_item
                     parameter_pointed_type_arguments_item = parameter_pointed_type_arguments_item.next_item
@@ -1667,14 +1674,30 @@ define specialize = func (self: IR_Builder, function_statement: AST_Function_Sta
         call_arguments_item = call_arguments_item.next_item
     }
 
-    abort(function_statement.location, "TODO: Finish generic function specialization")
+    type_arguments.for_each_list_item() {
+        let type_argument = list_item.data as AST_Type_Argument
+        if (type_argument.type.is(AST_Placeholder_Type)) {
+            abort("Invalid state")
+        }
+    }
+
+    return type_arguments
 }
 
 define convert_type = func (self: IR_Type) -> AST_Type {
     if (self.is(IR_Pointer_Type)) {
         let pointed_type = (self as IR_Pointer_Type).pointed_type
         if (pointed_type.is(IR_Specialized_Struct_Type)) {
-            abort(null, pointed_type.object_type)
+            let pointed_type = pointed_type as IR_Specialized_Struct_Type
+            let type_arguments = new List()
+            pointed_type.type_arguments.for_each_list_item() {
+                let type_argument = list_item.data as IR_Type_Argument
+                type_arguments.append(type_argument.type.convert_type())
+            }
+            return new AST_Specialized_Type(
+                name = pointed_type.statement.name
+                arguments = type_arguments
+            )
         } else if (pointed_type.is(IR_Struct_Type)) {
             return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = pointed_type.name))
         }
@@ -1682,6 +1705,27 @@ define convert_type = func (self: IR_Type) -> AST_Type {
     }
     if (self.is(IR_Integer_Type)) {
         return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = self.name))
+    }
+    if (self.is(IR_Function_Type)) {
+        let self = self as IR_Function_Type
+        let function_parameters = new List()
+        self.parameters.for_each_list_item() {
+            let parameter = list_item.data as IR_Callable_Parameter
+            function_parameters.append(new AST_Parameter(
+                location = parameter.location
+                name = new Identifier_Token(location = parameter.location, lexeme = parameter.name)
+                type = parameter.type.convert_type()
+            ))
+        }
+        let function_return_type = self.return_type.convert_type()
+        return new AST_Function_Type(
+            placeholder_types = null
+            parameters = function_parameters
+            return_type = function_return_type
+        )
+    }
+    if (self.is(IR_Nothing_Type)) {
+        return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = "Nothing"))
     }
     abort(null, self.object_type)
 }

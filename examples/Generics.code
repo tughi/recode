@@ -1,9 +1,16 @@
 include "./code/lang/String.code"
 
 define main = func () -> Nothing {
-    let map = new Map[String, i32]
+    let map = new Special_Map
     map.put("First", 1)
     map.put("Second", 2)
+
+    let map = new Map[String, u8]
+    map.put("Third", 3u8)
+}
+
+define Special_Map = struct {
+    extends Map[String, i32]
 }
 
 define Map = struct [K, V] {
@@ -17,6 +24,9 @@ define Map_Item = struct [K, V] {
     prev_item: Map_Item[K, V] = null
     next_item: Map_Item[K, V] = null
 }
+
+\ define put = func (self: Map[String, i32], key: String, value: i32) -> Nothing {
+\ }
 
 define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
     \ TODO: check if key exists already
@@ -33,3 +43,9 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
     }
     self.last_item = item
 }
+
+define put = func (self: Map[String, i32], key: i32, value: String) -> Nothing {
+    abort()
+}
+
+define abort = func () -> Nothing
