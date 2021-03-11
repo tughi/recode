@@ -27,6 +27,9 @@ define Map_Item = struct [K, V] {
 
 \ define put = func (self: Map[String, i32], key: String, value: i32) -> Nothing {
 \ }
+\ 
+\ define put = func (self: Map[String, u8], key: String, value: u8) -> Nothing {
+\ }
 
 define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
     \ TODO: check if key exists already
@@ -44,7 +47,7 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
     self.last_item = item
 }
 
-define put = func (self: Map[String, i32], key: i32, value: String) -> Nothing {
+define put = func (self: Map[String, i32], key: String) -> Nothing {
     abort()
 }
 

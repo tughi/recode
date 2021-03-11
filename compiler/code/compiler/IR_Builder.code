@@ -34,6 +34,8 @@ define IR_Builder = struct {
     compilation_unit: Compilation_Unit
     context: IR_Builder_Context
     types: List
+    function_statement_type_arguments: List = null
+    functions: List = new List()
     generic_function_statements: List = new List()
     generic_struct_statements: List = new List()
     current_block: IR_Block = null
@@ -432,11 +434,9 @@ define build = func (self: IR_Builder) -> Nothing {
         statements_item = statements_item.next_item
     }
 
-    self.compilation_unit.function_statements.for_each_list_item() {
-        let function_statement = list_item.data as AST_Function_Statement
-        if (function_statement.type.placeholder_types == null) {
-            self.build_function(function_statement)
-        }
+    self.functions.for_each_list_item() {
+        let function = list_item.data as IR_Function
+        self.build_function(function)
     }
 }
 
@@ -788,6 +788,16 @@ define convert_specialized_type = func (self: IR_Builder, type: AST_Specialized_
 
 define convert_named_type = func (self: IR_Builder, type: AST_Named_Type) -> IR_Type {
     let type_name = type.name.lexeme
+
+    if (self.function_statement_type_arguments != null) {
+        self.function_statement_type_arguments.for_each_list_item() {
+            let type_argument = list_item.data as AST_Type_Argument
+            if (type_argument.name.equals(type_name)) {
+                return self.convert_type(type_argument.type)
+            }
+        }
+    }
+
     let named_type = self.get_named_type(type_name)
     if (named_type == null) {
         let struct_statement = self.get_struct_statement(type_name)
@@ -870,12 +880,13 @@ define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Stateme
 }
 
 define create_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> IR_Function {
-    let type_arguments = List()
-    return self.create_specialized_function(function_statement, @type_arguments)
+    return self.create_specialized_function(function_statement, new List())
 }
 
 define create_specialized_function = func (self: IR_Builder, function_statement: AST_Function_Statement, type_arguments: List) -> IR_Function {
     let function = new IR_Function(
+        statement = function_statement
+        statement_type_arguments = type_arguments
         id = self.functions_counter.next()
         location = function_statement.location
         blocks = new List()
@@ -897,20 +908,22 @@ define create_specialized_function = func (self: IR_Builder, function_statement:
         callable_type_parameters.append(new IR_Callable_Parameter(location = parameter.location, name = parameter_name, type = parameter_type))
     }
 
-    function_statement.ir_function = function
     self.add_symbol(function)
+    self.functions.append(function)
 
     function.type = create_ir_function_type(callable_type_parameters, function.return_type)
 
     return function
 }
 
-define build_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> Nothing {
+define build_function = func (self: IR_Builder, function: IR_Function) -> Nothing {
+    let function_statement = function.statement
+
     if (function_statement.body == null) {
         return
     }
 
-    let function = function_statement.ir_function
+    self.function_statement_type_arguments = function.statement_type_arguments
 
     self.context = new IR_Builder_Context(parent = self.context)
     self.counter.reset()
@@ -943,6 +956,8 @@ define build_function = func (self: IR_Builder, function_statement: AST_Function
     self.remove_redundant_set_instructions(function)
 
     self.context = self.context.parent
+
+    self.function_statement_type_arguments = null
 }
 
 define remove_redundant_blocks = func (self: IR_Builder, function: IR_Function) -> Nothing {

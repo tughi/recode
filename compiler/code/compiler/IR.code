@@ -518,6 +518,8 @@ define IR_Callable = struct {
 define IR_Function = struct {
     extends IR_Callable
     id: i64
+    statement: AST_Function_Statement
+    statement_type_arguments: List
     return_type: IR_Type
     parameters: List
     is_external: bool
