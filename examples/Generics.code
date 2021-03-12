@@ -1,12 +1,14 @@
 include "./code/lang/String.code"
 
-define main = func () -> Nothing {
+define main = func () -> i32 {
+    let map = new Map[String, u8]
+    map.put("Third", 3u8)
+
     let map = new Special_Map
     map.put("First", 1)
     map.put("Second", 2)
 
-    let map = new Map[String, u8]
-    map.put("Third", 3u8)
+    return map.get("Second") - 2
 }
 
 define Special_Map = struct {
@@ -25,11 +27,7 @@ define Map_Item = struct [K, V] {
     next_item: Map_Item[K, V] = null
 }
 
-\ define put = func (self: Map[String, i32], key: String, value: i32) -> Nothing {
-\ }
-\ 
-\ define put = func (self: Map[String, u8], key: String, value: u8) -> Nothing {
-\ }
+define abort = func () -> Nothing
 
 define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
     \ TODO: check if key exists already
@@ -47,8 +45,13 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
     self.last_item = item
 }
 
-define put = func (self: Map[String, i32], key: String) -> Nothing {
+define get = func [K, V] (self: Map[K, V], key: K) -> V {
+    let item = self.first_item
+    while (item != null) {
+        if (item.key == key) {
+            return item.value
+        }
+        item = item.next_item
+    }
     abort()
 }
-
-define abort = func () -> Nothing
