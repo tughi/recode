@@ -1685,6 +1685,8 @@ define specialize = func (self: IR_Builder, function_statement: AST_Function_Sta
                 }
             } else if (parameter_pointed_type.is(IR_Struct_Type)) {
                 \ ignore parameter
+            } else if (parameter_pointed_type.is(IR_Any_Type)) {
+                \ ignore parameter
             } else {
                 abort(function_statement.location, parameter_pointed_type.object_type)
             }
@@ -1722,7 +1724,11 @@ define convert_type = func (self: IR_Type) -> AST_Type {
                 name = pointed_type.statement.name
                 arguments = type_arguments
             )
-        } else if (pointed_type.is(IR_Struct_Type)) {
+        }
+        if (pointed_type.is(IR_Struct_Type)) {
+            return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = pointed_type.name))
+        }
+        if (pointed_type.is(IR_Any_Type)) {
             return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = pointed_type.name))
         }
         abort(null, pointed_type.object_type)
