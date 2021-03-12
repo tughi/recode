@@ -190,6 +190,7 @@ define AST_Function_Type = struct {
 
 define AST_Macro_Type = struct {
     extends AST_Type
+    placeholder_types: List
     parameters: List
 }
 

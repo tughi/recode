@@ -354,12 +354,17 @@ define parse_macro = func (self: Parser, macro_name: Identifier_Token) -> AST_Ma
 }
 
 \ macro_type
-\   : "macro" parameters
+\   : "macro" placeholder_types? parameters
 define parse_macro_type = func (self: Parser) -> AST_Macro_Type {
     let location = self.consume(required_macro).location
     self.consume_space(1)
+    let macro_placeholder_types: List = null
+    if (self.matches(required_open_bracket)) {
+        macro_placeholder_types = self.parse_placeholder_types()
+        self.consume_space(1)
+    }
     let macro_parameters = self.parse_parameters()
-    return new AST_Macro_Type(location = location, parameters = macro_parameters)
+    return new AST_Macro_Type(location = location, placeholder_types = macro_placeholder_types, parameters = macro_parameters)
 }
 
 \ block
