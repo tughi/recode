@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define List = struct {
     first_item: List_Item = null
@@ -180,3 +180,10 @@ define change = func (self: List_Iterator, data: Any) -> Nothing {
     }
 }
 
+define for_each_list_item = macro (self: List, block: macro (list_item: List_Item)) {
+    let item = self.first_item
+    while (item != null) {
+        block(item)
+        item = item.next_item
+    }
+}

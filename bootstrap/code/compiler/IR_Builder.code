@@ -33,7 +33,12 @@ define dump = func (build: IR_Build, file: FILE) -> Nothing {
 define IR_Builder = struct {
     compilation_unit: Compilation_Unit
     context: IR_Builder_Context
+    root_context: IR_Builder_Context
     types: List
+    function_statement_type_arguments: List = null
+    functions: List = new List()
+    generic_function_statements: List = new List()
+    generic_struct_statements: List = new List()
     current_block: IR_Block = null
     current_loop: IR_Loop = null
     counter: !Counter = Counter()
@@ -68,8 +73,12 @@ define create_ir_builder = func (compilation_unit: Compilation_Unit) -> IR_Build
     types.append(new IR_UInt64_Type(name = "u64"))
     types.append(new IR_UIntMax_Type(name = "usize"))
     types.append(new IR_Undefined_Type(name = "Undefined"))
+
+    let context = new IR_Builder_Context(parent = null)
+
     return new IR_Builder(
-        context = new IR_Builder_Context(parent = null)
+        context = context
+        root_context = context
         compilation_unit = compilation_unit
         types = types
     )
@@ -103,7 +112,11 @@ define get_struct_statement = func (self: IR_Builder, name: String) -> AST_Struc
 }
 
 define add_symbol = func (self: IR_Builder, symbol: IR_Symbol) -> Nothing {
-    self.context.symbols.prepend(symbol)
+    if (symbol.is(IR_Function)) {
+        self.root_context.symbols.append(symbol)
+    } else {
+        self.context.symbols.prepend(symbol)
+    }
 }
 
 define get_symbol = func (self: IR_Builder, name: String) -> IR_Symbol {
@@ -276,7 +289,7 @@ define get_named_function = func (self: IR_Builder, name: String, function_type:
 }
 
 define accepts = func (self: IR_Type, other: IR_Type) -> bool {
-    if (self == other || other.is(IR_Undefined_Type)) {
+    if (self == other || self.is(IR_Placeholder_Type) || other.is(IR_Undefined_Type)) {
         return true
     }
     if (self.is(IR_Pointer_Type)) {
@@ -293,7 +306,42 @@ define accepts = func (self: IR_Type, other: IR_Type) -> bool {
                 return true
             }
             if (self.pointed_type.is(IR_Struct_Type) && other.pointed_type.is(IR_Struct_Type)) {
-                return (self.pointed_type as IR_Struct_Type).is_base_type(other.pointed_type as IR_Struct_Type)
+                let self_struct_type = self.pointed_type as IR_Struct_Type
+
+                \ Find matching base struct
+                let other_struct_type = other.pointed_type as IR_Struct_Type
+                while (other_struct_type != null) {
+                    if (other_struct_type.statement == self_struct_type.statement) {
+                        break
+                    }
+                    other_struct_type = other_struct_type.base_type
+                }
+                if (other_struct_type == null) {
+                    return false
+                }
+
+                if (self_struct_type.is(IR_Specialized_Struct_Type) == false) {
+                    return true
+                }
+
+                let self_struct_type = self_struct_type as IR_Specialized_Struct_Type
+                let self_struct_type_arguments_item = self_struct_type.type_arguments.first_item
+                let other_struct_type = other_struct_type as IR_Specialized_Struct_Type
+                let other_struct_type_arguments_item = other_struct_type.type_arguments.first_item
+                while (self_struct_type_arguments_item != null && other_struct_type_arguments_item != null) {
+                    let self_struct_type_argument = self_struct_type_arguments_item.data as IR_Type_Argument
+                    let other_struct_type_argument = other_struct_type_arguments_item.data as IR_Type_Argument
+                    if (self_struct_type_argument.type.accepts(other_struct_type_argument.type) == false) {
+                        return false
+                    }
+                    self_struct_type_arguments_item = self_struct_type_arguments_item.next_item
+                    other_struct_type_arguments_item = other_struct_type_arguments_item.next_item
+                }
+                if (self_struct_type_arguments_item != null || other_struct_type_arguments_item != null) {
+                    abort("Invalid state")
+                }
+
+                return true
             }
             return self.pointed_type.accepts(other.pointed_type)
         }
@@ -349,19 +397,25 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
-    let statements_item = self.compilation_unit.statements.first_item
-    while (statements_item != null) {
-        let statement = statements_item.data as AST_Statement
+    self.compilation_unit.statements.for_each_list_item() {
+        let statement = list_item.data as AST_Statement
         if (statement.is(AST_Struct_Statement)) {
-            self.convert_type_statement(statement as AST_Struct_Statement)
+            let statement = statement as AST_Struct_Statement
+            if (statement.placeholder_types != null) {
+                self.add_generic_struct_statement(statement)
+            } else {
+                self.convert_struct_statement(statement)
+            }
         }
-        statements_item = statements_item.next_item
     }
 
-    let function_statements_item = self.compilation_unit.function_statements.first_item
-    while (function_statements_item != null) {
-        self.create_function(function_statements_item.data as AST_Function_Statement)
-        function_statements_item = function_statements_item.next_item
+    self.compilation_unit.function_statements.for_each_list_item() {
+        let function_statement = list_item.data as AST_Function_Statement
+        if (function_statement.type.placeholder_types != null) {
+            self.add_generic_function_statement(function_statement)
+        } else {
+            self.create_function(function_statement)
+        }
     }
 
     let macro_statements_item = self.compilation_unit.macro_statements.first_item
@@ -389,23 +443,32 @@ define build = func (self: IR_Builder) -> Nothing {
         statements_item = statements_item.next_item
     }
 
-    let function_statements_item = self.compilation_unit.function_statements.first_item
-    while (function_statements_item != null) {
-        let function_statement = function_statements_item.data as AST_Statement
-        if (function_statement.is(AST_Function_Statement)) {
-            self.build_function(function_statement as AST_Function_Statement)
+    self.functions.for_each_list_item() {
+        let function = list_item.data as IR_Function
+        self.build_function(function)
+    }
+}
+
+define add_generic_function_statement = func (self: IR_Builder, function_statement: AST_Function_Statement) -> Nothing {
+    \ TODO: check for duplicates
+
+    self.generic_function_statements.append(function_statement)
+}
+
+define add_generic_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement) -> Nothing {
+    let struct_name = struct_statement.name.lexeme
+
+    self.generic_struct_statements.for_each_list_item() {
+        let other_struct_statement = list_item.data as AST_Struct_Statement
+        if (other_struct_statement.name.lexeme.equals(struct_name)) {
+            abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
         }
-        function_statements_item = function_statements_item.next_item
     }
+
+    self.generic_struct_statements.append(struct_statement)
 }
 
-define convert_type_statement = func (self: IR_Builder, statement: AST_Statement) -> IR_Type {
-    if (statement.is(AST_Struct_Statement)) {
-        return self.convert_struct_statement(statement as AST_Struct_Statement)
-    }
-    abort(statement.location, statement.object_type)
-}
-
+\ TODO: merge convert_struct_statement with convert_generic_struct_statement to eliminate duplicated code
 define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement) -> IR_Struct_Type {
     let struct_name = struct_statement.name.lexeme
 
@@ -427,16 +490,15 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
     self.types.append(type)
 
     if (struct_statement.base_type != null) {
-        let base_type = struct_statement.base_type
-        if (base_type.is(AST_Named_Type) == false) {
-            abort(struct_statement.base_type.location, "Cannot be used as base type.")
+        let base_type = self.convert_type(struct_statement.base_type)
+        if (base_type.is(IR_Pointer_Type) == false) {
+            abort(struct_statement.base_type.location, "Not a pointer type.")
         }
-        let base_type_name = (base_type as AST_Named_Type).name.lexeme
-        let base_struct_statement = self.get_struct_statement(base_type_name)
-        if (base_struct_statement == null) {
+        let base_type = (base_type as IR_Pointer_Type).pointed_type
+        if (base_type.is(IR_Struct_Type) == false) {
             abort(struct_statement.base_type.location, "Not a struct type.")
         }
-        type.base_type = self.convert_struct_statement(base_struct_statement)
+        type.base_type = base_type as IR_Struct_Type
     }
 
     if (struct_statement.members != null) {
@@ -466,6 +528,142 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
     return type
 }
 
+define AST_Type_Argument = struct {
+    name: String
+    type: AST_Type
+}
+
+define convert_generic_struct_statement = func (self: IR_Builder, struct_statement: AST_Struct_Statement, type_arguments: List) -> IR_Struct_Type {
+    let struct_name = struct_statement.name.lexeme.clone().append('[')
+    let ast_type_arguments = new List()
+    let ir_type_arguments = new List()
+    let has_placeholder_type_arguments = false
+
+    let type_arguments_item = type_arguments.first_item
+    let struct_placeholder_types_item = struct_statement.placeholder_types.first_item
+    while (type_arguments_item != null && struct_placeholder_types_item != null) {
+        let ast_type = type_arguments_item.data as AST_Type
+        let ir_type = self.convert_type(ast_type)
+        if (ir_type.is(IR_Placeholder_Type)) {
+            has_placeholder_type_arguments = true
+        }
+        struct_name.append(ir_type.name)
+        ast_type_arguments.append(new AST_Type_Argument(name = (struct_placeholder_types_item.data as AST_Placeholder_Type).name.lexeme, type = ast_type))
+        ir_type_arguments.append(new IR_Type_Argument(name = (struct_placeholder_types_item.data as AST_Placeholder_Type).name.lexeme, type = ir_type))
+        type_arguments_item = type_arguments_item.next_item
+        struct_placeholder_types_item = struct_placeholder_types_item.next_item
+        if (type_arguments_item != null) {
+            struct_name.append(", ")
+        }
+    }
+    if (type_arguments_item != null || struct_placeholder_types_item != null) {
+        abort("TODO: report mismatching number of type arguments")
+    }
+    struct_name.append(']')
+
+    let type = self.get_named_type(struct_name)
+    if (type != null) {
+        if (type.is(IR_Struct_Type)) {
+            let type = type as IR_Struct_Type
+            if (type.statement == struct_statement) {
+                return type
+            }
+        }
+        abort(struct_statement.location, clone("Duplicate type declaration: ").append(struct_name))
+    }
+
+    let type = new IR_Specialized_Struct_Type(
+        name = struct_name
+        statement = struct_statement
+        type_arguments = ir_type_arguments
+    )
+
+    if (has_placeholder_type_arguments) {
+        return type
+    }
+
+    self.types.append(type)
+
+    if (struct_statement.base_type != null) {
+        let base_type = self.convert_type(struct_statement.base_type.specialize(ast_type_arguments))
+        if (base_type.is(IR_Pointer_Type) == false) {
+            abort(struct_statement.base_type.location, "Not a pointer type.")
+        }
+        let base_type = (base_type as IR_Pointer_Type).pointed_type
+        if (base_type.is(IR_Struct_Type) == false) {
+            abort(struct_statement.base_type.location, "Not a struct type.")
+        }
+        type.base_type = base_type as IR_Struct_Type
+    }
+
+    if (struct_statement.members != null) {
+        let struct_members = struct_statement.members.create_iterator()
+        while (struct_members.has_next()) {
+            let struct_member = struct_members.next() as AST_Struct_Member
+            let struct_member_name = struct_member.name.lexeme
+            let struct_member_type = self.convert_type(struct_member.type.specialize(ast_type_arguments))
+            type.add_member(struct_member_name, struct_member_type)
+        }
+    }
+
+    if (type.is_object_type()) {
+        self.convert_variable_statement(
+            new AST_Variable_Statement(
+                location = struct_statement.name.location
+                name = struct_statement.name
+                type = new AST_Named_Type(
+                    name = new Identifier_Token(lexeme = "Object_Type", location = null)
+                )
+                is_external = true
+            )
+            true
+        )
+    }
+
+    return type
+}
+
+define specialize = func (type: AST_Type, type_arguments: List) -> AST_Type {
+    if (type.is(AST_Named_Type)) {
+        let type = type as AST_Named_Type
+        let type_name = type.name.lexeme
+        type_arguments.for_each_list_item() {
+            let type_argument = list_item.data as AST_Type_Argument
+            if (type_name.equals(type_argument.name)) {
+                return type_argument.type
+            }
+        }
+        return type
+    }
+
+    if (type.is(AST_Array_Type)) {
+        let type = type as AST_Array_Type
+        let old_item_type = type.item_type
+        let new_item_type = old_item_type.specialize(type_arguments)
+        if (new_item_type != old_item_type) {
+            return new AST_Array_Type(
+                item_type = new_item_type
+                size_expression = type.size_expression
+                is_checked = type.is_checked
+            )
+        }
+        return type
+    }
+
+    if (type.is(AST_Specialized_Type)) {
+        let old_specialized_type = type as AST_Specialized_Type
+        let new_specialized_type_arguments = new List()
+        old_specialized_type.arguments.for_each_list_item() {
+            let old_specialized_type_argument = list_item.data as AST_Type
+            let new_specialized_type_argument = old_specialized_type_argument.specialize(type_arguments)
+            new_specialized_type_arguments.append(new_specialized_type_argument)
+        }
+        return new AST_Specialized_Type(location = old_specialized_type.location, name = old_specialized_type.name, arguments = new_specialized_type_arguments)
+    }
+
+    abort(type.location, type.object_type)
+}
+
 define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     if (type.is(AST_Array_Type)) {
         return self.convert_array_type(type as AST_Array_Type)
@@ -476,11 +674,18 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     if (type.is(AST_Named_Type)) {
         return self.convert_named_type(type as AST_Named_Type)
     }
+    if (type.is(AST_Specialized_Type)) {
+        return self.convert_specialized_type(type as AST_Specialized_Type)
+    }
     if (type.is(AST_Macro_Type)) {
         return self.convert_macro_type(type as AST_Macro_Type)
     }
     if (type.is(AST_Embedded_Type)) {
         return self.convert_embedded_type(type as AST_Embedded_Type)
+    }
+    if (type.is(AST_Placeholder_Type)) {
+        let type = type as AST_Placeholder_Type
+        return new IR_Placeholder_Type(name = type.name.lexeme, ast_type = type)
     }
     abort(type.location, type.object_type)
 }
@@ -580,8 +785,28 @@ define convert_function_type = func (self: IR_Builder, type: AST_Function_Type) 
     return create_ir_function_type(parameters, self.convert_type(type.return_type))
 }
 
+define convert_specialized_type = func (self: IR_Builder, type: AST_Specialized_Type) -> IR_Type {
+    let type_name = type.name.lexeme
+    let struct_statement = self.get_struct_statement(type_name)
+    if (struct_statement == null) {
+        abort(type.location, clone(type_name).append(" is not a generic struct"))
+    }
+    let type = self.convert_generic_struct_statement(struct_statement, type.arguments)
+    return self.create_ir_pointer_type(type)
+}
+
 define convert_named_type = func (self: IR_Builder, type: AST_Named_Type) -> IR_Type {
     let type_name = type.name.lexeme
+
+    if (self.function_statement_type_arguments != null) {
+        self.function_statement_type_arguments.for_each_list_item() {
+            let type_argument = list_item.data as AST_Type_Argument
+            if (type_argument.name.equals(type_name)) {
+                return self.convert_type(type_argument.type)
+            }
+        }
+    }
+
     let named_type = self.get_named_type(type_name)
     if (named_type == null) {
         let struct_statement = self.get_struct_statement(type_name)
@@ -664,13 +889,19 @@ define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Stateme
 }
 
 define create_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> IR_Function {
+    return self.create_specialized_function(function_statement, new List())
+}
+
+define create_specialized_function = func (self: IR_Builder, function_statement: AST_Function_Statement, type_arguments: List) -> IR_Function {
     let function = new IR_Function(
+        statement = function_statement
+        statement_type_arguments = type_arguments
         id = self.functions_counter.next()
         location = function_statement.location
         blocks = new List()
         name = function_statement.name.lexeme
         parameters = new List()
-        return_type = self.convert_type(function_statement.type.return_type)
+        return_type = self.convert_type(function_statement.type.return_type.specialize(type_arguments))
         is_external = function_statement.body == null
         type = undefined
     )
@@ -679,27 +910,29 @@ define create_function = func (self: IR_Builder, function_statement: AST_Functio
     let callable_type_parameters = new List()
     while (parameters.has_next()) {
         let parameter = parameters.next() as AST_Parameter
-        let parameter_type = self.convert_type(parameter.type)
+        let parameter_type = self.convert_type(parameter.type.specialize(type_arguments))
         let parameter_name = parameter.name.lexeme
         let function_parameter = new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
         function.parameters.append(function_parameter)
         callable_type_parameters.append(new IR_Callable_Parameter(location = parameter.location, name = parameter_name, type = parameter_type))
     }
 
-    function_statement.ir_function = function
     self.add_symbol(function)
+    self.functions.append(function)
 
     function.type = create_ir_function_type(callable_type_parameters, function.return_type)
 
     return function
 }
 
-define build_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> Nothing {
+define build_function = func (self: IR_Builder, function: IR_Function) -> Nothing {
+    let function_statement = function.statement
+
     if (function_statement.body == null) {
         return
     }
 
-    let function = function_statement.ir_function
+    self.function_statement_type_arguments = function.statement_type_arguments
 
     self.context = new IR_Builder_Context(parent = self.context)
     self.counter.reset()
@@ -732,6 +965,8 @@ define build_function = func (self: IR_Builder, function_statement: AST_Function
     self.remove_redundant_set_instructions(function)
 
     self.context = self.context.parent
+
+    self.function_statement_type_arguments = null
 }
 
 define remove_redundant_blocks = func (self: IR_Builder, function: IR_Function) -> Nothing {
@@ -1323,14 +1558,33 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
     }
 
     if (callable == null) {
+        self.generic_function_statements.for_each_list_item() {
+            let function_statement = list_item.data as AST_Function_Statement
+            if (function_statement.name.lexeme.equals(callee_name.lexeme)) {
+                let type_arguments = self.specialize(function_statement, call_arguments)
+                if (type_arguments != null) {
+                    callable = self.create_specialized_function(function_statement, type_arguments)
+                    break
+                }
+            }
+        }
+    }
+
+    if (callable == null) {
         let symbols_iterator = self.create_symbols_iterator()
         while (symbols_iterator.has_next()) {
             let symbol = symbols_iterator.next()
             if (symbol.is(IR_Callable)) {
                 let callable = symbol as IR_Callable
                 if (callable.name.equals(callee_name.lexeme)) {
-                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.name).end_line()
+                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.convert_type())
                 }
+            }
+        }
+        self.generic_function_statements.for_each_list_item() {
+            let function_statement = list_item.data as AST_Function_Statement
+            if (function_statement.name.lexeme.equals(callee_name.lexeme)) {
+                stderr.end_line().write(function_statement.location).write(": ").write(function_statement.name).write(" = ").write(function_statement.type)
             }
         }
         let message = clone("Found no matching callable '").append(callee_name.lexeme).append("': (")
@@ -1341,6 +1595,7 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
                 if (call_argument.name != null) {
                     message.append(call_argument.name).append(": ")
                 }
+                \ TODO: Append original (parsed) type
                 message.append(call_argument.value.type.name)
                 call_arguments_item = call_arguments_item.next_item
                 if (call_arguments_item == null) {
@@ -1364,6 +1619,145 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         result_value = self.create_temp_value(call_function.return_type)
     }
     return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
+}
+
+define specialize = func (self: IR_Builder, function_statement: AST_Function_Statement, call_arguments: List) -> List {
+    let type_arguments = new List()
+    function_statement.type.placeholder_types.for_each_list_item() {
+        let placeholder_type = list_item.data as AST_Placeholder_Type
+        type_arguments.append(new AST_Type_Argument(name = placeholder_type.name.lexeme, type = placeholder_type))
+    }
+
+    let function_statement_parameters_item = function_statement.type.parameters.first_item
+    let call_arguments_item = call_arguments.first_item
+    while (function_statement_parameters_item != null && call_arguments_item != null) {
+        let function_statement_parameter = function_statement_parameters_item.data as AST_Parameter
+        let call_argument = call_arguments_item.data as IR_Call_Argument
+        let call_argument_type = call_argument.value.type
+
+        let parameter_type = self.convert_type(function_statement_parameter.type.specialize(type_arguments))
+        if (parameter_type.accepts(call_argument_type) == false) {
+            return null
+        }
+
+        \ Search parameter type for placeholders
+        if (parameter_type.is(IR_Pointer_Type)) {
+            let parameter_pointed_type = (parameter_type as IR_Pointer_Type).pointed_type
+            if (parameter_pointed_type.is(IR_Specialized_Struct_Type)) {
+                let parameter_pointed_type = parameter_pointed_type as IR_Specialized_Struct_Type
+                if (call_argument_type.is(IR_Pointer_Type) == false) {
+                    abort("Invalid state")
+                }
+                let call_argument_pointed_type = (call_argument_type as IR_Pointer_Type).pointed_type
+                if (call_argument_pointed_type.is(IR_Struct_Type) == false) {
+                    abort("Invalid state")
+                }
+                let call_argument_pointed_type = call_argument_pointed_type as IR_Struct_Type
+                while (call_argument_pointed_type != null) {
+                    if (call_argument_pointed_type.statement == parameter_pointed_type.statement) {
+                        break
+                    }
+                    call_argument_pointed_type = call_argument_pointed_type.base_type
+                }
+                if (call_argument_pointed_type == null) {
+                    abort("Invalid state")
+                }
+                if (call_argument_pointed_type.is(IR_Specialized_Struct_Type) == false) {
+                    abort("Invalid state")
+                }
+                let call_argument_pointed_type_arguments_item = (call_argument_pointed_type as IR_Specialized_Struct_Type).type_arguments.first_item
+                let parameter_pointed_type_arguments_item = parameter_pointed_type.type_arguments.first_item
+                while (call_argument_pointed_type_arguments_item != null && parameter_pointed_type_arguments_item != null) {
+                    let parameter_pointed_type_argument = parameter_pointed_type_arguments_item.data as IR_Type_Argument
+                    if (parameter_pointed_type_argument.type.is(IR_Placeholder_Type)) {
+                        \ Replace placeholer type with type from the call argument type
+                        let placeholder_type: AST_Type = (parameter_pointed_type_argument.type as IR_Placeholder_Type).ast_type
+                        type_arguments.for_each_list_item() {
+                            let type_argument = list_item.data as AST_Type_Argument
+                            if (type_argument.type == placeholder_type) {
+                                let replacement_type = (call_argument_pointed_type_arguments_item.data as IR_Type_Argument).type
+                                type_argument.type = replacement_type.convert_type()
+                            }
+                        }
+                    }
+                    call_argument_pointed_type_arguments_item = call_argument_pointed_type_arguments_item.next_item
+                    parameter_pointed_type_arguments_item = parameter_pointed_type_arguments_item.next_item
+                }
+            } else if (parameter_pointed_type.is(IR_Struct_Type)) {
+                \ ignore parameter
+            } else if (parameter_pointed_type.is(IR_Any_Type)) {
+                \ ignore parameter
+            } else {
+                abort(function_statement.location, parameter_pointed_type.object_type)
+            }
+        } else if (parameter_type.is(IR_Integer_Type)) {
+            \ ignore parameter
+        } else {
+            abort(function_statement.location, parameter_type.object_type)
+        }
+
+        function_statement_parameters_item = function_statement_parameters_item.next_item
+        call_arguments_item = call_arguments_item.next_item
+    }
+
+    type_arguments.for_each_list_item() {
+        let type_argument = list_item.data as AST_Type_Argument
+        if (type_argument.type.is(AST_Placeholder_Type)) {
+            abort("Invalid state")
+        }
+    }
+
+    return type_arguments
+}
+
+define convert_type = func (self: IR_Type) -> AST_Type {
+    if (self.is(IR_Pointer_Type)) {
+        let pointed_type = (self as IR_Pointer_Type).pointed_type
+        if (pointed_type.is(IR_Specialized_Struct_Type)) {
+            let pointed_type = pointed_type as IR_Specialized_Struct_Type
+            let type_arguments = new List()
+            pointed_type.type_arguments.for_each_list_item() {
+                let type_argument = list_item.data as IR_Type_Argument
+                type_arguments.append(type_argument.type.convert_type())
+            }
+            return new AST_Specialized_Type(
+                name = pointed_type.statement.name
+                arguments = type_arguments
+            )
+        }
+        if (pointed_type.is(IR_Struct_Type)) {
+            return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = pointed_type.name))
+        }
+        if (pointed_type.is(IR_Any_Type)) {
+            return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = pointed_type.name))
+        }
+        abort(null, pointed_type.object_type)
+    }
+    if (self.is(IR_Integer_Type)) {
+        return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = self.name))
+    }
+    if (self.is(IR_Function_Type)) {
+        let self = self as IR_Function_Type
+        let function_parameters = new List()
+        self.parameters.for_each_list_item() {
+            let parameter = list_item.data as IR_Callable_Parameter
+            function_parameters.append(new AST_Parameter(
+                location = parameter.location
+                name = new Identifier_Token(location = parameter.location, lexeme = parameter.name)
+                type = parameter.type.convert_type()
+            ))
+        }
+        let function_return_type = self.return_type.convert_type()
+        return new AST_Function_Type(
+            placeholder_types = null
+            parameters = function_parameters
+            return_type = function_return_type
+        )
+    }
+    if (self.is(IR_Nothing_Type)) {
+        return new AST_Named_Type(name = new Identifier_Token(location = null, lexeme = "Nothing"))
+    }
+    abort(null, self.object_type)
 }
 
 define convert_dynamic_call_expression = func (self: IR_Builder, call_expression: AST_Call_Expression, call_function: IR_Value, first_argument: IR_Value) -> IR_Value {
@@ -1835,19 +2229,19 @@ define convert_negate_expression = func (self: IR_Builder, expression: AST_Negat
 }
 
 define convert_new_expression = func (self: IR_Builder, expression: AST_New_Expression) -> IR_Value {
-    if (expression.type.is(AST_Named_Type) == false) {
-        abort(expression.type.location, "Unsupported type")
+    let expression_type = expression.type
+    let type = self.convert_type(expression_type)
+    if (type.is(IR_Pointer_Type) == false) {
+        abort(expression_type.location, clone(type.name).append(" is not a pointer type"))
     }
-    let type_name = (expression.type as AST_Named_Type).name.lexeme
-    let struct_statement = self.get_struct_statement(type_name)
-    if (struct_statement == null) {
-        abort(expression.type.location, clone("Unsupported type: ").append(type_name))
+    type = (type as IR_Pointer_Type).pointed_type
+    if (type.is(IR_Struct_Type) == false) {
+        abort(expression_type.location, clone(type.name).append(" is not a struct type"))
     }
-    let type = self.convert_struct_statement(struct_statement)
+    let type = type as IR_Struct_Type
     let init_arguments = new List()
     let init_value = self.convert_struct_literal_expression(expression, type)
-    let result_value = self.append(create_ir_new_instruction(self.create_temp_value(self.create_ir_pointer_type(type)), type, init_value), expression.location)
-    return result_value
+    return self.append(create_ir_new_instruction(self.create_temp_value(self.create_ir_pointer_type(type)), type, init_value), expression.location)
 }
 
 define convert_struct_literal_expression = func (self: IR_Builder, expression: AST_Expression, struct_type: IR_Struct_Type) -> IR_Struct_Literal_Value {
