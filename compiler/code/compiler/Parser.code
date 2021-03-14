@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define Parser = struct {
     scanner: Scanner = null
@@ -184,7 +184,14 @@ define parse_define = func (self: Parser) -> AST_Statement {
         self.consume(required_unknown)
         self.consume_space(1)
         self.consume(required_struct)
-        return new AST_Struct_Statement(location = name.location, name = name, base_type = null, members = null, init_arguments = null)
+        return new AST_Struct_Statement(
+            location = name.location
+            name = name
+            type_parameters = null
+            base_type = null
+            members = null
+            init_arguments = null
+        )
     }
     if (self.matches(required_struct)) {
         return self.parse_struct(name)
@@ -200,11 +207,16 @@ define parse_define = func (self: Parser) -> AST_Statement {
 }
 
 \ struct
-\   : "struct" "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
+\   : "struct" type_parameters? "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
 define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_Struct_Statement {
     let struct_init_arguments = new List()
     self.consume(required_struct)
     self.consume_space(1)
+    let struct_type_parameters: List = null
+    if (self.matches(required_open_bracket)) {
+        struct_type_parameters = self.parse_type_parameters()
+        self.consume_space(1)
+    }
     self.consume(required_open_brace)
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
@@ -246,7 +258,34 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(required_close_brace)
-    return new AST_Struct_Statement(location = struct_name.location, name = struct_name, base_type = base_type, members = struct_members, init_arguments = struct_init_arguments)
+    return new AST_Struct_Statement(
+        location = struct_name.location
+        name = struct_name
+        type_parameters = struct_type_parameters
+        base_type = base_type
+        members = struct_members
+        init_arguments = struct_init_arguments
+    )
+}
+
+\ type_parameters
+\   : "[" IDENTIFIER ( "," IDENTIFIER )* "]"
+define parse_type_parameters = func (self: Parser) -> List {
+    let type_parameters = new List()
+    self.consume(required_open_bracket)
+    self.consume_space(0)
+    loop {
+        let type_parameter_name = self.consume(required_identifier) as Identifier_Token
+        type_parameters.append(new AST_Type_Parameter(name = type_parameter_name))
+        self.consume_space(0)
+        if (self.matches(required_comma) == false) {
+            break
+        }
+        self.consume(required_comma)
+        self.consume_space(1)
+    }
+    self.consume(required_close_bracket)
+    return type_parameters
 }
 
 \ function
@@ -433,7 +472,7 @@ define parse_while = func (self: Parser) -> AST_Statement {
 }
 
 \ type
-\   : "!"? ( IDENTIFIER | "[" type ( ";" expression )? "]" | function_type | macro_type )
+\   : "!"? ( IDENTIFIER ( "[" type ( "," type )* "]" )? | "[" type ( ";" expression )? "]" | function_type | macro_type )
 define parse_type = func (self: Parser) -> AST_Type {
     let is_embedded_type = false
     let location: Source_Location = null
@@ -469,7 +508,25 @@ define parse_type = func (self: Parser) -> AST_Type {
         type = self.parse_macro_type()
     } else {
         let type_name = self.consume(required_identifier) as Identifier_Token
-        type = new AST_Named_Type(location = type_name.location, name = type_name)
+        if (self.matches(optional_space, required_open_bracket)) {
+            self.consume_space(0)
+            self.consume(required_open_bracket)
+            self.consume_space(0)
+            let type_arguments = new List()
+            loop {
+                type_arguments.append(new AST_Type_Argument(type = self.parse_type()))
+                self.consume_space(0)
+                if (self.matches(required_comma) == false) {
+                    break
+                }
+                self.consume(required_comma)
+                self.consume_space(1)
+            }
+            self.consume(required_close_bracket)
+            type = new AST_Specialized_Type(location = type_name.location, name = type_name, type_arguments = type_arguments)
+        } else {
+            type = new AST_Named_Type(location = type_name.location, name = type_name)
+        }
     }
     if (is_embedded_type) {
         return new AST_Embedded_Type(location = location, embedded_type = type)

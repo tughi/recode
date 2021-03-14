@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define Compilation_Unit = struct {
     sources: List = new List()
@@ -126,9 +126,14 @@ define AST_Variable_Statement = struct {
 define AST_Struct_Statement = struct {
     extends AST_Statement
     name: Identifier_Token
+    type_parameters: List
     base_type: AST_Type
     members: List
     init_arguments: List
+}
+
+define AST_Type_Parameter = struct {
+    name: Identifier_Token
 }
 
 define AST_Struct_Member = struct {
@@ -156,6 +161,16 @@ define AST_Type = struct {
 define AST_Named_Type = struct {
     extends AST_Type
     name: Identifier_Token
+}
+
+define AST_Specialized_Type = struct {
+    extends AST_Type
+    name: Identifier_Token
+    type_arguments: List
+}
+
+define AST_Type_Argument = struct {
+    type: AST_Type
 }
 
 define AST_Embedded_Type = struct {

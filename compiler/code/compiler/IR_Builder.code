@@ -349,13 +349,16 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
-    let statements_item = self.compilation_unit.statements.first_item
-    while (statements_item != null) {
-        let statement = statements_item.data as AST_Statement
+    self.compilation_unit.statements.for_each_list_item() {
+        let statement = list_item.data as AST_Statement
         if (statement.is(AST_Struct_Statement)) {
-            self.convert_type_statement(statement as AST_Struct_Statement)
+            let statement = statement as AST_Struct_Statement
+            if (statement.type_parameters != null) {
+                stderr.write(statement.location).write(": TODO: check if generic struct has duplicates").end_line()
+            } else {
+                self.convert_type_statement(statement as AST_Struct_Statement)
+            }
         }
-        statements_item = statements_item.next_item
     }
 
     let function_statements_item = self.compilation_unit.function_statements.first_item
@@ -427,16 +430,15 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
     self.types.append(type)
 
     if (struct_statement.base_type != null) {
-        let base_type = struct_statement.base_type
-        if (base_type.is(AST_Named_Type) == false) {
-            abort(struct_statement.base_type.location, "Cannot be used as base type.")
+        let base_type = self.convert_type(struct_statement.base_type)
+        if (base_type.is(IR_Pointer_Type) == false) {
+            abort(struct_statement.base_type.location, "Not a pointer type.")
         }
-        let base_type_name = (base_type as AST_Named_Type).name.lexeme
-        let base_struct_statement = self.get_struct_statement(base_type_name)
-        if (base_struct_statement == null) {
+        let base_type = (base_type as IR_Pointer_Type).pointed_type
+        if (base_type.is(IR_Struct_Type) == false) {
             abort(struct_statement.base_type.location, "Not a struct type.")
         }
-        type.base_type = self.convert_struct_statement(base_struct_statement)
+        type.base_type = base_type as IR_Struct_Type
     }
 
     if (struct_statement.members != null) {

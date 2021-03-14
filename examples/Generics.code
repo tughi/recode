@@ -1,0 +1,83 @@
+include "./code/lang/String.code"
+
+define main = func () -> Nothing {
+    let map = new Map[Any, u8]
+    map.put("First", 1u8)
+
+    if (map.get("First") != 1u8) {
+        abort()
+    }
+
+    let map = new Special_Map
+    map.put("Second", 2)
+    map.put("Third", 3)
+
+    let sum = 0
+    map.for_each() {
+        sum = sum + value
+    }
+    if (sum != 5) {
+        abort()
+    }
+
+    if (map.get("Third") != 3) {
+       abort()
+    }
+}
+
+define Special_Map = struct {
+    extends Map[String, i32]
+}
+
+\ Map and Map[K, T] are different types
+define Map = struct {
+}
+
+define Map = struct [K, V] {
+    first_item: Map_Item[K, V] = null
+    last_item: Map_Item[K, V] = null
+}
+
+define Map_Item = struct [K, V] {
+    key: K
+    value: V
+    prev_item: Map_Item[K, V] = null
+    next_item: Map_Item[K, V] = null
+}
+
+define abort = func () -> Nothing
+
+define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
+    \ TODO: check if key exists already
+
+    let item = new Map_Item[K, V](
+        key = key
+        value = value
+        prev_item = self.last_item
+    )
+    if (self.first_item == null) {
+        self.first_item = item
+    } else {
+        self.last_item.next_item = item
+    }
+    self.last_item = item
+}
+
+define get = func [K, V] (self: Map[K, V], key: K) -> V {
+    let item = self.first_item
+    while (item != null) {
+        if (item.key == key) {
+            return item.value
+        }
+        item = item.next_item
+    }
+    abort()
+}
+
+define for_each = macro [K, V] (self: Map[K, V], block: macro (key: K, value: V)) {
+    let item = self.first_item
+    while (item != null) {
+        block(item.key, item.value)
+        item = item.next_item
+    }
+}
