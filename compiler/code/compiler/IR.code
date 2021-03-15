@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define IR_Type = struct {
     extends Object
@@ -210,6 +210,15 @@ define is_object_type = func (self: IR_Struct_Type) -> bool {
             return false
         }
     }
+}
+
+define IR_Specialized_Struct_Type = struct {
+    extends IR_Struct_Type
+    type_arguments: List
+}
+
+define IR_Type_Argument = struct {
+    type: IR_Type
 }
 
 define IR_Value = struct {

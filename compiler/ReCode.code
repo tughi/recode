@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define main = func (argc: i32, argv: [[i8; ?]; ?]) -> Nothing {
     if (argc < 3) {
@@ -166,14 +166,14 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
 
     if (statement.is(AST_Struct_Statement)) {
         let statement = statement as AST_Struct_Statement
-        file.write("define ").write(statement.name).write(" = struct {")
-        if (statement.base_type != null) {
-            file.write_source_line(statement.base_type.location, alignment + 1).write("extends ").write(statement.base_type).end_line()
-        }
+        file.write("define ").write(statement.name).write(" = struct")
         if (statement.members == null) {
             return file
         }
         file.write(" {").end_line()
+        if (statement.base_type != null) {
+            file.write_source_line(statement.base_type.location, alignment + 1).write("extends ").write(statement.base_type).end_line()
+        }
         let members = statement.members.create_iterator()
         while (members.has_next()) {
             let member = members.next() as AST_Struct_Member
@@ -261,6 +261,19 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
 
     if (type.is(AST_Named_Type)) {
         return file.write((type as AST_Named_Type).name)
+    }
+
+    if (type.is(AST_Specialized_Type)) {
+        let type = type as AST_Specialized_Type
+        file.write(type.name).write('[')
+        type.type_arguments.for_each_list_item() {
+            let type_argument = list_item.data as AST_Type_Argument
+            file.write(type_argument.type)
+            if (list_item.next_item != null) {
+                file.write(", ")
+            }
+        }
+        return file.write(']')
     }
 
     if (type.is(AST_Embedded_Type)) {

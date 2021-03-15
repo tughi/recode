@@ -88,18 +88,39 @@ define get_named_type = func (self: IR_Builder, name: String) -> IR_Type {
 }
 
 define get_struct_statement = func (self: IR_Builder, name: String) -> AST_Struct_Statement {
-    let statements_item = self.compilation_unit.statements.first_item
-    while (statements_item != null) {
-        let statement = statements_item.data as AST_Statement
+    let struct_statement: AST_Struct_Statement = null
+    self.compilation_unit.statements.for_each_list_item() {
+        let statement = list_item.data as AST_Statement
         if (statement.is(AST_Struct_Statement)) {
             let statement = statement as AST_Struct_Statement
-            if (statement.name.lexeme.equals(name)) {
-                return statement as AST_Struct_Statement
+            if (statement.name.lexeme.equals(name) && statement.type_parameters == null) {
+                if (struct_statement != null) {
+                    stderr.end_line().write(struct_statement.location).write(": First ").write(name).write(" declaration").end_line()
+                    abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
+                }
+                struct_statement = statement
             }
         }
-        statements_item = statements_item.next_item
     }
-    return null
+    return struct_statement
+}
+
+define get_generic_struct_statement = func (self: IR_Builder, name: String) -> AST_Struct_Statement {
+    let struct_statement: AST_Struct_Statement = null
+    self.compilation_unit.statements.for_each_list_item() {
+        let statement = list_item.data as AST_Statement
+        if (statement.is(AST_Struct_Statement)) {
+            let statement = statement as AST_Struct_Statement
+            if (statement.name.lexeme.equals(name) && statement.type_parameters != null) {
+                if (struct_statement != null) {
+                    stderr.end_line().write(struct_statement.location).write(": First ").write(name).write(" declaration").end_line()
+                    abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
+                }
+                struct_statement = statement
+            }
+        }
+    }
+    return struct_statement
 }
 
 define add_symbol = func (self: IR_Builder, symbol: IR_Symbol) -> Nothing {
@@ -349,6 +370,7 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
+    \ TODO: convert struct on demand and remove this step
     self.compilation_unit.statements.for_each_list_item() {
         let statement = list_item.data as AST_Statement
         if (statement.is(AST_Struct_Statement)) {
@@ -472,17 +494,20 @@ define convert_type = func (self: IR_Builder, type: AST_Type) -> IR_Type {
     if (type.is(AST_Array_Type)) {
         return self.convert_array_type(type as AST_Array_Type)
     }
+    if (type.is(AST_Embedded_Type)) {
+        return self.convert_embedded_type(type as AST_Embedded_Type)
+    }
     if (type.is(AST_Function_Type)) {
         return self.convert_function_type(type as AST_Function_Type)
-    }
-    if (type.is(AST_Named_Type)) {
-        return self.convert_named_type(type as AST_Named_Type)
     }
     if (type.is(AST_Macro_Type)) {
         return self.convert_macro_type(type as AST_Macro_Type)
     }
-    if (type.is(AST_Embedded_Type)) {
-        return self.convert_embedded_type(type as AST_Embedded_Type)
+    if (type.is(AST_Named_Type)) {
+        return self.convert_named_type(type as AST_Named_Type)
+    }
+    if (type.is(AST_Specialized_Type)) {
+        return self.convert_specialized_type(type as AST_Specialized_Type)
     }
     abort(type.location, type.object_type)
 }
@@ -594,6 +619,46 @@ define convert_named_type = func (self: IR_Builder, type: AST_Named_Type) -> IR_
         }
     }
     if (named_type.is(IR_Struct_Type) || named_type.is(IR_Any_Type)) {
+        named_type = self.create_ir_pointer_type(named_type)
+    }
+    return named_type
+}
+
+define convert_specialized_type = func (self: IR_Builder, type: AST_Specialized_Type) -> IR_Type {
+    let type_arguments = new List()
+    let type_name = type.name.lexeme.clone().append('[')
+    type.type_arguments.for_each_list_item() {
+        let type_argument = new IR_Type_Argument(
+            type = self.convert_type((list_item.data as AST_Type_Argument).type)
+        )
+        type_arguments.append(type_argument)
+        type_name.append(type_argument.type.name)
+        if (list_item.next_item != null) {
+            type_name.append(", ")
+        }
+    }
+    type_name.append(']')
+
+    let named_type = self.get_named_type(type_name)
+    if (named_type == null) {
+        let struct_statement = self.get_generic_struct_statement(type.name.lexeme)
+        if (struct_statement != null) {
+            let type_arguments_item = type_arguments.first_item
+            let type_parameters_item = struct_statement.type_parameters.first_item
+            while (type_arguments_item != null && type_parameters_item != null) {
+                type_arguments_item = type_arguments_item.next_item
+                type_parameters_item = type_parameters_item.next_item
+            }
+            if (type_arguments_item != null || type_parameters_item != null) {
+                abort(type.location, "Unexpected number of type arguments")
+            }
+            abort("TODO: Create builder context with resolved type arguments")
+            named_type = self.convert_struct_statement(struct_statement)
+        } else {
+            abort(type.name.location, clone("Unknown generic type: ").append(type.name.lexeme))
+        }
+    }
+    if (named_type.is(IR_Struct_Type)) {
         named_type = self.create_ir_pointer_type(named_type)
     }
     return named_type
@@ -1837,6 +1902,7 @@ define convert_negate_expression = func (self: IR_Builder, expression: AST_Negat
 }
 
 define convert_new_expression = func (self: IR_Builder, expression: AST_New_Expression) -> IR_Value {
+    \ TODO: Convert type first!
     if (expression.type.is(AST_Named_Type) == false) {
         abort(expression.type.location, "Unsupported type")
     }
