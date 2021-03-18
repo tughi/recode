@@ -246,7 +246,19 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
 
     if (type.is(AST_Function_Type)) {
         let type = type as AST_Function_Type
-        file.write("func (")
+        file.write("func ")
+        if (type.type_parameters != null) {
+            file.write('[')
+            type.type_parameters.for_each_list_item() {
+                let type_parameter = list_item.data as AST_Type_Parameter
+                file.write(type_parameter.name)
+                if (list_item.next_item != null) {
+                    file.write(", ")
+                }
+            }
+            file.write("] ")
+        }
+        file.write('(')
         let parameters_item = type.parameters.first_item
         while (parameters_item != null) {
             let parameter = parameters_item.data as AST_Parameter
