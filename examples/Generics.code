@@ -14,14 +14,14 @@ define main = func () -> Nothing {
 
     let sum = 0
     map.for_each() {
-        sum = sum + value
+        sum = sum + item_value
     }
     if (sum != 5) {
         abort()
     }
 
     if (map.get("Third") != 3) {
-       abort()
+        abort()
     }
 }
 
@@ -64,17 +64,15 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
 }
 
 define get = func [K, V] (self: Map[K, V], key: K) -> V {
-    let item = self.first_item
-    while (item != null) {
-        if (item.key == key) {
-            return item.value
+    self.for_each() {
+        if (item_key == key) {
+            return item_value
         }
-        item = item.next_item
     }
     abort()
 }
 
-define for_each = macro [K, V] (self: Map[K, V], block: macro (key: K, value: V)) {
+define for_each = macro [K, V] (self: Map[K, V], block: macro (item_key: K, item_value: V)) {
     let item = self.first_item
     while (item != null) {
         block(item.key, item.value)

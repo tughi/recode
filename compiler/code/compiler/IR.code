@@ -557,7 +557,8 @@ define IR_Parameter = struct {
 define IR_Macro = struct {
     extends IR_Callable
     context: IR_Builder_Context
-    block_statement: AST_Block_Statement
+    statement: AST_Block_Statement
+    type_replacements: List
 }
 
 define IR_Symbol = struct {
