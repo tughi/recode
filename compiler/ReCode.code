@@ -68,7 +68,7 @@ include "./code/compiler/AST.code"
 define write = func (file: FILE, compilation_unit: Compilation_Unit) -> FILE {
     let statements = compilation_unit.statements.create_iterator()
     while (statements.has_next()) {
-        let statement = statements.next() as AST_Statement
+        let statement = statements.next()
         file.write_source_line(statement.location, 0 as i64).write(statement, 0 as i64).end_line()
     }
     return file
@@ -84,7 +84,7 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
         file.write('{').end_line()
         let block_statements = (statement as AST_Block_Statement).statements.create_iterator()
         while (block_statements.has_next()) {
-            let block_statement = block_statements.next() as AST_Statement
+            let block_statement = block_statements.next()
             file.write_source_line(block_statement.location, alignment + 1).write(block_statement, alignment + 1).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
@@ -109,7 +109,7 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
         let parameters = statement.type.parameters.create_iterator()
         if (parameters.has_next()) {
             loop {
-                file.write(parameters.next() as AST_Parameter)
+                file.write(parameters.next())
                 if (parameters.has_next()) {
                     file.write(", ")
                 } else {
@@ -144,7 +144,7 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
         let parameters = statement.type.parameters.create_iterator()
         if (parameters.has_next()) {
             loop {
-                file.write(parameters.next() as AST_Parameter)
+                file.write(parameters.next())
                 if (parameters.has_next()) {
                     file.write(", ")
                 } else {
@@ -176,7 +176,7 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
         }
         let members = statement.members.create_iterator()
         while (members.has_next()) {
-            let member = members.next() as AST_Struct_Member
+            let member = members.next()
             file.write_source_line(member.location, alignment + 1).write(member.name).write(": ").write(member.type).end_line()
         }
         return file.write_source_line(statement.location, alignment).write('}')
@@ -184,7 +184,7 @@ define write = func (file: FILE, statement: AST_Statement, alignment: i64) -> FI
 
     if (statement.is(AST_Variable_Statement)) {
         let statement = statement as AST_Variable_Statement
-        file.write((statement as AST_Variable_Statement).name)
+        file.write(statement.name)
         if (statement.type != null) {
             file.write(": ").write(statement.type)
             if (statement.value_expression != null) {
@@ -250,7 +250,7 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
         if (type.type_parameters != null) {
             file.write('[')
             type.type_parameters.for_each_list_item() {
-                let type_parameter = list_item.data as AST_Type_Parameter
+                let type_parameter = list_item.data
                 file.write(type_parameter.name)
                 if (list_item.next_item != null) {
                     file.write(", ")
@@ -261,7 +261,7 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
         file.write('(')
         let parameters_item = type.parameters.first_item
         while (parameters_item != null) {
-            let parameter = parameters_item.data as AST_Parameter
+            let parameter = parameters_item.data
             file.write(parameter.name).write(": ").write(parameter.type)
             parameters_item = parameters_item.next_item
             if (parameters_item != null) {
@@ -279,7 +279,7 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
         let type = type as AST_Specialized_Type
         file.write(type.name).write('[')
         type.type_arguments.for_each_list_item() {
-            let type_argument = list_item.data as AST_Type_Argument
+            let type_argument = list_item.data
             file.write(type_argument.type)
             if (list_item.next_item != null) {
                 file.write(", ")
@@ -348,7 +348,7 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
         file.write((expression as AST_Call_Expression).callee_expression).write('(')
         let call_arguments_item = (expression as AST_Call_Expression).arguments.first_item
         while (call_arguments_item != null) {
-            let call_argument = call_arguments_item.data as AST_Call_Argument
+            let call_argument = call_arguments_item.data
             if (call_argument.name != null) {
                 file.write(call_argument.name).write(" = ")
             }

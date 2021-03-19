@@ -95,7 +95,7 @@ define IR_Fixed_Array_Type = struct {
 
 define IR_Callable_Type = struct {
     extends IR_Type
-    parameters: List
+    parameters: List[IR_Callable_Parameter]
 }
 
 define IR_Callable_Parameter = struct {
@@ -109,11 +109,11 @@ define IR_Function_Type = struct {
     return_type: IR_Type
 }
 
-define create_ir_function_type = func (parameters: List, return_type: IR_Type) -> IR_Function_Type {
+define create_ir_function_type = func (parameters: List[IR_Callable_Parameter], return_type: IR_Type) -> IR_Function_Type {
     let type_name = new String().append("func (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
-        let parameter = parameters_item.data as IR_Callable_Parameter
+        let parameter = parameters_item.data
         type_name.append(parameter.name).append(": ").append(parameter.type.name)
         parameters_item = parameters_item.next_item
         if (parameters_item != null) {
@@ -133,11 +133,11 @@ define IR_Macro_Type = struct {
     extends IR_Callable_Type
 }
 
-define create_ir_macro_type = func (parameters: List) -> IR_Macro_Type {
+define create_ir_macro_type = func (parameters: List[IR_Callable_Parameter]) -> IR_Macro_Type {
     let type_name = new String().append("macro (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
-        let parameter = parameters_item.data as IR_Callable_Parameter
+        let parameter = parameters_item.data
         type_name.append(parameter.name).append(": ").append(parameter.type.name)
         parameters_item = parameters_item.next_item
         if (parameters_item != null) {
@@ -152,7 +152,7 @@ define create_ir_macro_type = func (parameters: List) -> IR_Macro_Type {
 define IR_Struct_Type = struct {
     extends IR_Type
     base_type: IR_Struct_Type = null
-    members: List = new List()
+    members: List[IR_Struct_Type_Member] = new List[IR_Struct_Type_Member]()
     statement: AST_Struct_Statement
 }
 
@@ -173,7 +173,7 @@ define get_member = func (self: IR_Struct_Type, name: String) -> IR_Struct_Type_
     loop {
         let members_item = struct_type.members.first_item
         while (members_item != null) {
-            let member = members_item.data as IR_Struct_Type_Member
+            let member = members_item.data
             if (member.name.equals(name)) {
                 return member
             }
@@ -214,7 +214,7 @@ define is_object_type = func (self: IR_Struct_Type) -> bool {
 
 define IR_Specialized_Struct_Type = struct {
     extends IR_Struct_Type
-    type_arguments: List
+    type_arguments: List[IR_Type_Argument]
 }
 
 define IR_Type_Argument = struct {
@@ -230,8 +230,8 @@ define IR_Value = struct {
     extends Object
     type: IR_Type
     creator_instruction: IR_Instruction = null
-    user_instructions: List = new List()
-    links: List = new List()
+    user_instructions: List[IR_Instruction] = new List[IR_Instruction]()
+    links: List[IR_Link] = new List[IR_Link]()
     dump: func (value: IR_Value, file: FILE) -> FILE = func (value: IR_Value, file: FILE) -> FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(value.object_type.name))
@@ -293,7 +293,7 @@ define IR_Struct_Literal_Value = struct {
             let value_links_item = value.links.first_item
             let is_first_value_link = true
             while (value_links_item != null) {
-                let value_link = value_links_item.data as IR_Link
+                let value_link = value_links_item.data
                 if (value_link.is(IR_Struct_Literal_Member_Value_Link)) {
                     let value_link = value_link as IR_Struct_Literal_Member_Value_Link
                     if (is_first_value_link) {
@@ -319,7 +319,7 @@ define IR_Struct_Literal_Member_Value_Link = struct {
 define get_member_value = func (self: IR_Struct_Literal_Value, struct_type_member: IR_Struct_Type_Member) -> IR_Value {
     let links_item = self.links.first_item
     while (links_item != null) {
-        let link = links_item.data as IR_Link
+        let link = links_item.data
         if (link.is(IR_Struct_Literal_Member_Value_Link)) {
             let link = link as IR_Struct_Literal_Member_Value_Link
             if (link.struct_type_member == struct_type_member) {
@@ -410,7 +410,7 @@ define IR_Block = struct {
     extends Object
     id: i64
     function: IR_Function
-    predecessors: List = new List()
+    predecessors: List[IR_Block] = new List[IR_Block]()
     first_instruction: IR_Instruction = null
     last_instruction: IR_Instruction = null
     is_being_generated: bool = false
@@ -490,7 +490,7 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
     if (block_predecessors.has_next()) {
         file.write('(')
         loop {
-            let block_predecessor = block_predecessors.next() as IR_Block
+            let block_predecessor = block_predecessors.next()
             file.write("block.").write(block_predecessor.id)
             if (block_predecessors.has_next()) {
                 file.write(", ")
@@ -518,11 +518,11 @@ define IR_Function = struct {
     extends IR_Callable
     id: i64
     statement: AST_Function_Statement
-    type_replacements: List
+    type_replacements: List[IR_Builder_Context_Type_Replacement]
     return_type: IR_Type
-    parameters: List
+    parameters: List[IR_Function_Parameter]
     is_external: bool
-    blocks: List
+    blocks: List[IR_Block]
 }
 
 define create_block = func (self: IR_Function) -> IR_Block {
@@ -544,7 +544,7 @@ define dump = func (function: IR_Function, file: FILE) -> Nothing {
     file.write(") -> ").write(function.return_type.name).write(" {").end_line()
     let block_item = function.blocks.first_item
     while (block_item != null) {
-        (block_item.data as IR_Block).dump(file)
+        block_item.data.dump(file)
         block_item = block_item.next_item
     }
     file.write('}').end_line()
@@ -558,7 +558,7 @@ define IR_Macro = struct {
     extends IR_Callable
     context: IR_Builder_Context
     statement: AST_Block_Statement
-    type_replacements: List
+    type_replacements: List[IR_Builder_Context_Type_Replacement]
 }
 
 define IR_Symbol = struct {
@@ -570,7 +570,7 @@ define IR_Symbol = struct {
 define IR_Variable = struct {
     extends IR_Symbol
     type: IR_Type
-    values: List = new List()
+    values: List[IR_Value] = new List[IR_Value]()
 }
 
 define IR_Global_Variable = struct {
@@ -624,7 +624,7 @@ define is_exit_instruction = func (self: IR_Instruction) -> bool {
             return true
         }
         if (function.name.equals("exit") && function.parameters.size == 1 as i64) {
-            let function_parameter = function.parameters.get(0 as i64) as IR_Function_Parameter
+            let function_parameter = function.parameters.get(0 as i64)
             if (function_parameter.type.is(IR_IntMax_Type)) {
                 return true
             }
@@ -669,10 +669,10 @@ define IR_Call_Argument = struct {
     value: IR_Value
 }
 
-define add_arguments = func (self: IR_Call_Instruction, call_arguments: List) -> IR_Call_Instruction {
+define add_arguments = func (self: IR_Call_Instruction, call_arguments: List[IR_Call_Argument]) -> IR_Call_Instruction {
     let call_arguments_item = call_arguments.first_item
     while (call_arguments_item != null) {
-        let call_argument = call_arguments_item.data as IR_Call_Argument
+        let call_argument = call_arguments_item.data
         self.set_operand_value(get_argument_key(self.arguments_size), call_argument.value)
         self.arguments_size = self.arguments_size + 1
         call_arguments_item = call_arguments_item.next_item
@@ -714,7 +714,7 @@ define IR_Direct_Call_Instruction = struct {
     function: IR_Function
 }
 
-define create_ir_direct_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List, function: IR_Function) -> IR_Call_Instruction {
+define create_ir_direct_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List[IR_Call_Argument], function: IR_Function) -> IR_Call_Instruction {
     let instruction = new IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
     if (result_value != null) {
@@ -736,7 +736,7 @@ define IR_Dynamic_Call_Instruction = struct {
     )
 }
 
-define create_ir_dynamic_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List, function_address: IR_Variable_Value) -> IR_Call_Instruction {
+define create_ir_dynamic_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List[IR_Call_Argument], function_address: IR_Variable_Value) -> IR_Call_Instruction {
     let instruction = new IR_Dynamic_Call_Instruction(result_value = result_value)
     instruction.add_arguments(call_arguments)
     instruction.set_operand_value("function_address", function_address)

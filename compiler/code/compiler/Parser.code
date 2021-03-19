@@ -44,7 +44,7 @@ define parse = func (self: Parser, file_path: String, location: Source_Location)
 
 \ statements
 \   : ( statement <EOL> )*
-define parse_statements = func (self: Parser, statements: List) -> Nothing {
+define parse_statements = func (self: Parser, statements: List[AST_Statement]) -> Nothing {
     loop {
         let statement = self.parse_statement()
         if (statement == null) {
@@ -61,7 +61,7 @@ define parse_statements = func (self: Parser, statements: List) -> Nothing {
 
             let compilation_unit_sources_item = self.compilation_unit.sources.first_item
             while (compilation_unit_sources_item != null) {
-                if ((compilation_unit_sources_item.data as Source).file_path.equals(statement_file_path)) {
+                if (compilation_unit_sources_item.data.file_path.equals(statement_file_path)) {
                     break
                 }
                 compilation_unit_sources_item = compilation_unit_sources_item.next_item
@@ -209,10 +209,10 @@ define parse_define = func (self: Parser) -> AST_Statement {
 \ struct
 \   : "struct" type_parameters? "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
 define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_Struct_Statement {
-    let struct_init_arguments = new List()
+    let struct_init_arguments = new List[AST_Call_Argument]()
     self.consume(required_struct)
     self.consume_space(1)
-    let struct_type_parameters: List = null
+    let struct_type_parameters: List[AST_Type_Parameter] = null
     if (self.matches(required_open_bracket)) {
         struct_type_parameters = self.parse_type_parameters()
         self.consume_space(1)
@@ -235,7 +235,7 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
         }
         self.consume_end_of_line()
     }
-    let struct_members = new List()
+    let struct_members = new List[AST_Struct_Member]()
     while (self.matches(optional_space, required_close_brace) == false) {
         if (self.consume_empty_line() == false) {
             self.consume_space(self.current_alignment * 4)
@@ -270,8 +270,8 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
 
 \ type_parameters
 \   : "[" IDENTIFIER ( "," IDENTIFIER )* "]"
-define parse_type_parameters = func (self: Parser) -> List {
-    let type_parameters = new List()
+define parse_type_parameters = func (self: Parser) -> List[AST_Type_Parameter] {
+    let type_parameters = new List[AST_Type_Parameter]()
     self.consume(required_open_bracket)
     self.consume_space(0)
     loop {
@@ -313,7 +313,7 @@ define parse_function = func (self: Parser, function_name: Identifier_Token) -> 
 define parse_function_type = func (self: Parser) -> AST_Function_Type {
     let location = self.consume(required_func).location
     self.consume_space(1)
-    let function_type_parameters: List = null
+    let function_type_parameters: List[AST_Type_Parameter] = null
     if (self.matches(required_open_bracket)) {
         function_type_parameters = self.parse_type_parameters()
         self.consume_space(1)
@@ -328,8 +328,8 @@ define parse_function_type = func (self: Parser) -> AST_Function_Type {
 
 \ parameters
 \   : "(" ( parameter ( "," parameter )* )? ")"
-define parse_parameters = func (self: Parser) -> List {
-    let parameters = new List()
+define parse_parameters = func (self: Parser) -> List[AST_Parameter] {
+    let parameters = new List[AST_Parameter]()
     self.consume(required_open_paren)
     self.consume_space(0)
     if (self.matches(required_close_paren) == false) {
@@ -372,7 +372,7 @@ define parse_macro = func (self: Parser, macro_name: Identifier_Token) -> AST_Ma
 define parse_macro_type = func (self: Parser) -> AST_Macro_Type {
     let location = self.consume(required_macro).location
     self.consume_space(1)
-    let macro_type_parameters: List = null
+    let macro_type_parameters: List[AST_Type_Parameter] = null
     if (self.matches(required_open_bracket)) {
         macro_type_parameters = self.parse_type_parameters()
         self.consume_space(1)
@@ -387,7 +387,7 @@ define parse_block = func (self: Parser) -> AST_Block_Statement {
     let location = self.consume(required_open_brace).location
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
-    let statements = new List()
+    let statements = new List[AST_Statement]()
     self.parse_statements(statements)
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
@@ -522,7 +522,7 @@ define parse_type = func (self: Parser) -> AST_Type {
             self.consume_space(0)
             self.consume(required_open_bracket)
             self.consume_space(0)
-            let type_arguments = new List()
+            let type_arguments = new List[AST_Type_Argument]()
             loop {
                 type_arguments.append(new AST_Type_Argument(type = self.parse_type()))
                 self.consume_space(0)
@@ -724,7 +724,7 @@ define parse_access_expression = func (self: Parser) -> AST_Expression {
                 self.consume_space(0)
                 self.consume(required_open_paren)
                 self.consume_space(0)
-                let call_arguments = new List()
+                let call_arguments = new List[AST_Call_Argument]()
                 if (self.matches(optional_space, required_close_paren) == false) {
                     self.parse_call_arguments(call_arguments)
                 }
@@ -762,7 +762,7 @@ define parse_access_expression = func (self: Parser) -> AST_Expression {
 \ call_arguments
 \   : call_argument ( "," call_argument )*
 \   | END_OF_LINE call_argument ( END_OF_LINE call_argument )*
-define parse_call_arguments = func (self: Parser, call_arguments: List) -> Nothing {
+define parse_call_arguments = func (self: Parser, call_arguments: List[AST_Call_Argument]) -> Nothing {
     if (self.matches_end_of_line()) {
         self.consume_end_of_line()
         self.current_alignment = self.current_alignment + 1
@@ -816,7 +816,7 @@ define parse_primary_expression = func (self: Parser) -> AST_Expression {
         let token = self.consume(required_new)
         self.consume_space(1)
         let type = self.parse_type()
-        let call_arguments = new List()
+        let call_arguments = new List[AST_Call_Argument]()
         if (self.matches(optional_space, required_open_paren)) {
             self.consume_space(0)
             self.consume(required_open_paren)

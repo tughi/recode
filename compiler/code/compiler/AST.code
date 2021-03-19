@@ -1,10 +1,10 @@
 \ Copyright (c) 2020-2021, Stefan Selariu
 
 define Compilation_Unit = struct {
-    sources: List = new List()
-    function_statements: List = new List()
-    macro_statements: List = new List()
-    statements: List = new List()
+    sources: List[Source] = new List[Source]()
+    function_statements: List[AST_Function_Statement] = new List[AST_Function_Statement]()
+    macro_statements: List[AST_Macro_Statement] = new List[AST_Macro_Statement]()
+    statements: List[AST_Statement] = new List[AST_Statement]()
 }
 
 define AST_Statement = struct {
@@ -42,7 +42,7 @@ define AST_Block_Statement = struct {
             builder.convert_block_statement(statement as AST_Block_Statement)
         }
     )
-    statements: List
+    statements: List[AST_Statement]
 }
 
 define AST_Constant_Statement = struct {
@@ -126,10 +126,10 @@ define AST_Variable_Statement = struct {
 define AST_Struct_Statement = struct {
     extends AST_Statement
     name: Identifier_Token
-    type_parameters: List
+    type_parameters: List[AST_Type_Parameter]
     base_type: AST_Type
-    members: List
-    init_arguments: List
+    members: List[AST_Struct_Member]
+    init_arguments: List[AST_Call_Argument]
 }
 
 define AST_Type_Parameter = struct {
@@ -171,7 +171,7 @@ define AST_Placeholder_Type = struct {
 define AST_Specialized_Type = struct {
     extends AST_Type
     name: Identifier_Token
-    type_arguments: List
+    type_arguments: List[AST_Type_Argument]
 }
 
 define AST_Type_Argument = struct {
@@ -192,15 +192,15 @@ define AST_Array_Type = struct {
 
 define AST_Function_Type = struct {
     extends AST_Type
-    type_parameters: List
-    parameters: List
+    type_parameters: List[AST_Type_Parameter]
+    parameters: List[AST_Parameter]
     return_type: AST_Type
 }
 
 define AST_Macro_Type = struct {
     extends AST_Type
-    type_parameters: List
-    parameters: List
+    type_parameters: List[AST_Type_Parameter]
+    parameters: List[AST_Parameter]
 }
 
 define AST_Parameter = struct {
@@ -393,7 +393,7 @@ define AST_New_Expression = struct {
         }
     )
     type: AST_Type
-    init_arguments: List
+    init_arguments: List[AST_Call_Argument]
 }
 
 define AST_Function_Expression = struct {
@@ -412,7 +412,7 @@ define AST_Call_Expression = struct {
         }
     )
     callee_expression: AST_Expression
-    arguments: List
+    arguments: List[AST_Call_Argument]
 }
 
 define AST_Call_Argument = struct {

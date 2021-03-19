@@ -5,7 +5,7 @@ define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
 
     let build_sources_item = build.sources.first_item
     while (build_sources_item != null) {
-        let build_source = build_sources_item.data as Source
+        let build_source = build_sources_item.data
         generator.output_file.write("  .file ").write(build_source.id).write(" \"").write(build_source.file_path).write("\"").end_line()
         build_sources_item = build_sources_item.next_item
     }
@@ -16,7 +16,7 @@ define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
 
     let symbols_item = build.global_symbols.first_item
     while (symbols_item != null) {
-        let symbol = symbols_item.data as IR_Symbol
+        let symbol = symbols_item.data
         if (symbol.is(IR_Function)) {
             let function = symbol as IR_Function
             if (function.is_external == false) {
@@ -49,7 +49,7 @@ define generate_function = func (self: MC_Generator, function: IR_Function) -> N
 
     let blocks = function.blocks.create_iterator()
     while (blocks.has_next()) {
-        let block = blocks.next() as IR_Block
+        let block = blocks.next()
         let block_instruction = block.first_instruction
         while (block_instruction != null) {
             if (block_instruction.result_value != null) {
@@ -59,7 +59,7 @@ define generate_function = func (self: MC_Generator, function: IR_Function) -> N
         }
     }
 
-    self.generate_block(function.blocks.first() as IR_Block)
+    self.generate_block(function.blocks.first())
 
     self.output_unreached_ir_instructions()
 
@@ -100,7 +100,7 @@ define output_unreached_ir_instructions = func (self: MC_Generator) -> Nothing {
     while (mc_value != null) {
         let ir_instruction_item = mc_value.ir_variable_value.user_instructions.first_item
         while (ir_instruction_item != null) {
-            let ir_instruction = ir_instruction_item.data as IR_Instruction
+            let ir_instruction = ir_instruction_item.data
             if (ir_instruction.is_generated == false) {
                 ir_instruction.dump(self.output_file, "  # [unreachable instruction]: ")
             }
@@ -1298,7 +1298,7 @@ define generate_store_struct_literal_value = func (self: MC_Generator, ir_value:
     }
     let struct_type_members_item = struct_type.members.first_item
     while (struct_type_members_item != null) {
-        let struct_type_member = struct_type_members_item.data as IR_Struct_Type_Member
+        let struct_type_member = struct_type_members_item.data
         let struct_type_member_value = ir_value.get_member_value(struct_type_member)
         if (struct_type_member_value != null) {
             self.output_file.write("  #     .").write(struct_type_member.name).write(" = ").write(struct_type_member_value, false).end_line()
@@ -1323,7 +1323,7 @@ define get_offset = func (self: MC_Generator, struct_type_member: IR_Struct_Type
     }
     let current_struct_type_member_item = struct_type.members.first_item
     while (current_struct_type_member_item != null) {
-        let current_struct_type_member = current_struct_type_member_item.data as IR_Struct_Type_Member
+        let current_struct_type_member = current_struct_type_member_item.data
         let current_struct_type_member_type_size = self.get_type_size(current_struct_type_member.type)
         let current_struct_type_member_alignment = self.get_type_alignment(current_struct_type_member_type_size)
         if (current_struct_type_member_alignment > 1 && offset // current_struct_type_member_alignment != 0i64) {
@@ -1434,7 +1434,7 @@ define MC_Generator = struct {
     first_value: MC_Value = null
     last_value: MC_Value = null
     stack_frame_size: i64 = 0
-    strings: List = new List()
+    strings: List[MC_String] = new List[MC_String]()
 }
 
 define create_mc_generator = func (output_file_path: String) -> MC_Generator {
@@ -1637,7 +1637,7 @@ define release_register = func (self: MC_Generator, register: MC_Register) -> No
             if (persist_value == false) {
                 let ir_value_user_instructions_item = mc_value.ir_variable_value.user_instructions.first_item
                 while (ir_value_user_instructions_item != null) {
-                    let ir_value_user_instruction = ir_value_user_instructions_item.data as IR_Instruction
+                    let ir_value_user_instruction = ir_value_user_instructions_item.data
                     if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction.is(IR_Phi_Instruction)) {
                         persist_value = true
                         break
@@ -1668,7 +1668,7 @@ define discard_used_values = func (self: MC_Generator) -> i64 {
 
             let user_instructions_item = mc_value.ir_variable_value.user_instructions.first_item
             while (discard_value && user_instructions_item != null) {
-                let user_instruction = user_instructions_item.data as IR_Instruction
+                let user_instruction = user_instructions_item.data
                 if (user_instruction.is(IR_Phi_Instruction)) {
                     value_is_phi_argument = true
                 }
@@ -1720,7 +1720,7 @@ define discard_used_values = func (self: MC_Generator) -> i64 {
 define is_used = func (self: IR_Value) -> bool {
     let user_instructions_item = self.user_instructions.first_item
     while (user_instructions_item != null) {
-        let user_instruction = user_instructions_item.data as IR_Instruction
+        let user_instruction = user_instructions_item.data
         if (user_instruction.is_generated == false) {
             return false
         }
@@ -1728,7 +1728,7 @@ define is_used = func (self: IR_Value) -> bool {
     }
     let links_item = self.links.first_item
     while (links_item != null) {
-        let link = links_item.data as IR_Link
+        let link = links_item.data
         if (link.is(IR_Required_By_Value_Link)) {
             let link = link as IR_Required_By_Value_Link
             if (link.value.is_used() == false) {
@@ -1953,7 +1953,7 @@ define get_type_size = func (self: MC_Generator, ir_type: IR_Type) -> i64 {
         }
         let struct_type_members = ir_type.members.create_iterator()
         while (struct_type_members.has_next()) {
-            let struct_type_member = struct_type_members.next() as IR_Struct_Type_Member
+            let struct_type_member = struct_type_members.next()
             let struct_type_member_type_size = self.get_type_size(struct_type_member.type)
             let struct_type_member_alignment = self.get_type_alignment(struct_type_member_type_size)
             if (struct_type_member_alignment > 1 && size // struct_type_member_alignment != 0i64) {
@@ -1996,7 +1996,7 @@ define MC_String = struct {
 define convert_string = func (self: MC_Generator, literal: String_Token) -> MC_String {
     let string_item = self.strings.first_item
     while (string_item != null) {
-        let string = string_item.data as MC_String
+        let string = string_item.data
         if (string.literal.lexeme.equals(literal.lexeme)) {
             return string
         }
@@ -2011,7 +2011,7 @@ define generate_strings = func (self: MC_Generator) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
     let string_item = self.strings.first_item
     while (string_item != null) {
-        let string = string_item.data as MC_String
+        let string = string_item.data
 
         self.output_file.end_line()
         self.output_file.write("  .align 8").end_line()
@@ -2029,11 +2029,11 @@ define write_string_label = func (file: FILE, string: MC_String) -> FILE {
     return file.write(".LABEL__string_").write(string.id)
 }
 
-define generate_object_types = func (self: MC_Generator, types: List) -> Nothing {
+define generate_object_types = func (self: MC_Generator, types: List[IR_Type]) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
     let type_item = types.first_item
     while (type_item != null) {
-        let type = type_item.data as IR_Type
+        let type = type_item.data
         if (type.is(IR_Struct_Type)) {
             let type = type as IR_Struct_Type
             if (type.is_object_type()) {
@@ -2062,12 +2062,12 @@ define write_type_label = func (file: FILE, type: IR_Type) -> FILE {
     return file.write(type.name)
 }
 
-define generate_global_variables = func (self: MC_Generator, symbols: List) -> Nothing {
+define generate_global_variables = func (self: MC_Generator, symbols: List[IR_Symbol]) -> Nothing {
     self.output_file.end_line().write("  .bss").end_line()
 
     let symbols_item = symbols.last_item
     while (symbols_item != null) {
-        let symbol = symbols_item.data as IR_Symbol
+        let symbol = symbols_item.data
         if (symbol.is(IR_Variable)) {
             let variable = symbol as IR_Variable
             if (variable.is(IR_Global_Variable) == false) {
