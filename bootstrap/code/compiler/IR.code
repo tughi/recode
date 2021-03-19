@@ -1,5 +1,7 @@
 \ Copyright (c) 2020-2021, Stefan Selariu
 
+include "./Map.code"
+
 define IR_Type = struct {
     extends Object
     name: String
@@ -592,7 +594,7 @@ define IR_Instruction = struct {
     extends Object
     location: Source_Location = null
     result_value: IR_Variable_Value
-    operand_values: IR_Values_Map = new IR_Values_Map()
+    operand_values: Map[Any, IR_Value] = new Map[Any, IR_Value]()
     parent_block: IR_Block = undefined
     prev_instruction: IR_Instruction = null
     next_instruction: IR_Instruction = null
@@ -648,8 +650,6 @@ define replace_operand_value = func (self: IR_Instruction, old_value: IR_Value, 
         self.operand_values.replace_values(old_value, new_value)
     }
 }
-
-include "./IR_Values_Map.code"
 
 define IR_Call_Instruction = struct {
     extends IR_Instruction

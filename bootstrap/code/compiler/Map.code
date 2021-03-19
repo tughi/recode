@@ -1,16 +1,18 @@
-define IR_Values_Map = struct {
-    first_entry: IR_Values_Map_Entry = null
-    last_entry: IR_Values_Map_Entry = null
+\ Copyright (c) 2021, Stefan Selariu
+
+define Map = struct [K, V] {
+    first_entry: Map_Entry[K, V] = null
+    last_entry: Map_Entry[K, V] = null
 }
 
-define IR_Values_Map_Entry = struct {
-    key: Any
-    value: IR_Value
-    prev_entry: IR_Values_Map_Entry = null
-    next_entry: IR_Values_Map_Entry = null
+define Map_Entry = struct [K, V] {
+    key: K
+    value: V
+    prev_entry: Map_Entry[K, V] = null
+    next_entry: Map_Entry[K, V] = null
 }
 
-define get = func (self: IR_Values_Map, key: Any) -> IR_Value {
+define get = func [K, V] (self: Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -21,7 +23,7 @@ define get = func (self: IR_Values_Map, key: Any) -> IR_Value {
     return null
 }
 
-define put = func (self: IR_Values_Map, key: Any, value: IR_Value) -> IR_Value {
+define put = func [K, V] (self: Map[K, V], key: K, value: V) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -31,7 +33,7 @@ define put = func (self: IR_Values_Map, key: Any, value: IR_Value) -> IR_Value {
         }
         entry = entry.next_entry
     }
-    entry = new IR_Values_Map_Entry(key = key, value = value, prev_entry = self.last_entry)
+    entry = new Map_Entry[K, V](key = key, value = value, prev_entry = self.last_entry)
     if (self.last_entry == null) {
         self.first_entry = entry
     } else {
@@ -41,7 +43,7 @@ define put = func (self: IR_Values_Map, key: Any, value: IR_Value) -> IR_Value {
     return null
 }
 
-define remove = func (self: IR_Values_Map, key: Any) -> IR_Value {
+define remove = func [K, V] (self: Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -52,7 +54,7 @@ define remove = func (self: IR_Values_Map, key: Any) -> IR_Value {
     return null
 }
 
-define remove_values = func (self: IR_Values_Map, value: IR_Value) -> Nothing {
+define remove_values = func [K, V] (self: Map[K, V], value: V) -> Nothing {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.value == value) {
@@ -62,7 +64,7 @@ define remove_values = func (self: IR_Values_Map, value: IR_Value) -> Nothing {
     }
 }
 
-define unlink = func (self: IR_Values_Map, entry: IR_Values_Map_Entry) -> IR_Values_Map_Entry {
+define unlink = func [K, V] (self: Map[K, V], entry: Map_Entry[K, V]) -> Map_Entry[K, V] {
     if (entry.prev_entry != null) {
         entry.prev_entry.next_entry = entry.next_entry
     } else {
@@ -76,7 +78,7 @@ define unlink = func (self: IR_Values_Map, entry: IR_Values_Map_Entry) -> IR_Val
     return entry
 }
 
-define replace_values = func (self: IR_Values_Map, old_value: IR_Value, new_value: IR_Value) -> Nothing {
+define replace_values = func [K, V] (self: Map[K, V], old_value: V, new_value: V) -> Nothing {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.value == old_value) {
