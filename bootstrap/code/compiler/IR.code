@@ -225,7 +225,7 @@ define IR_Type_Argument = struct {
 
 define IR_Placeholder_Type = struct {
     extends IR_Type
-    ast_type: AST_Type
+    ast_type: AST_Placeholder_Type
 }
 
 define IR_Value = struct {
@@ -520,10 +520,10 @@ define IR_Function = struct {
     extends IR_Callable
     id: i64
     statement: AST_Function_Statement
-    type_replacements: List[IR_Builder_Context_Type_Replacement]
     return_type: IR_Type
     parameters: List[IR_Function_Parameter]
     is_external: bool
+    context_type_arguments: List[AST_Type_Argument]
     blocks: List[IR_Block]
 }
 
@@ -560,7 +560,6 @@ define IR_Macro = struct {
     extends IR_Callable
     context: IR_Builder_Context
     statement: AST_Block_Statement
-    type_replacements: List[IR_Builder_Context_Type_Replacement]
 }
 
 define IR_Symbol = struct {

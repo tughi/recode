@@ -44,13 +44,8 @@ define IR_Builder = struct {
 
 define IR_Builder_Context = struct {
     parent: IR_Builder_Context
-    type_replacements: List[IR_Builder_Context_Type_Replacement] = null
     symbols: List[IR_Symbol] = new List[IR_Symbol]()
-}
-
-define IR_Builder_Context_Type_Replacement = struct {
-    name: String
-    type: AST_Type
+    type_arguments: List[AST_Type_Argument] = null
 }
 
 define IR_Loop = struct {
@@ -496,7 +491,7 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
         type_arguments.for_each_list_item() {
             let type_argument = list_item.data
             if (type_argument.type.is(IR_Placeholder_Type)) {
-                \ This is a placeholder type
+                \ This is an incomplete type
                 return type
             }
         }
@@ -673,11 +668,14 @@ define convert_named_type = func (self: IR_Builder, type: AST_Named_Type) -> IR_
 
     let context = self.context
     while (context != null) {
-        if (context.type_replacements != null) {
-            context.type_replacements.for_each_list_item() {
-                let context_type_replacement = list_item.data
-                if (type_name.equals(context_type_replacement.name)) {
-                    return self.convert_type(context_type_replacement.type)
+        if (context.type_arguments != null) {
+            for_each_list_item(context.type_arguments) {
+                let type_argument = list_item.data
+                if (type_argument.name == null) {
+                    abort("Invalid state")
+                }
+                if (type_argument.name.equals(type_name)) {
+                    return self.convert_type(type_argument.type)
                 }
             }
         }
@@ -719,15 +717,16 @@ define convert_specialized_type = func (self: IR_Builder, type: AST_Specialized_
     if (named_type == null) {
         let struct_statement = self.get_generic_struct_statement(type.name.lexeme)
         if (struct_statement != null) {
-            let context_type_replacements = new List[IR_Builder_Context_Type_Replacement]()
+            let context_type_arguments = new List[AST_Type_Argument]()
             let type_arguments_item = type_arguments.first_item
             let type_parameters_item = struct_statement.type_parameters.first_item
             while (type_arguments_item != null && type_parameters_item != null) {
-                let context_type_replacement = new IR_Builder_Context_Type_Replacement(
-                    name = type_parameters_item.data.name.lexeme
-                    type = type_arguments_item.data.type.convert_type()
+                context_type_arguments.append(
+                    new AST_Type_Argument(
+                        name = type_parameters_item.data.name.lexeme
+                        type = type_arguments_item.data.type.convert_type()
+                    )
                 )
-                context_type_replacements.append(context_type_replacement)
                 type_arguments_item = type_arguments_item.next_item
                 type_parameters_item = type_parameters_item.next_item
             }
@@ -738,7 +737,7 @@ define convert_specialized_type = func (self: IR_Builder, type: AST_Specialized_
             let local_context = IR_Builder_Context(
                 parent = self.context
                 symbols = self.context.symbols
-                type_replacements = context_type_replacements
+                type_arguments = context_type_arguments
             )
             self.context = @local_context
 
@@ -872,14 +871,14 @@ define convert_macro_type = func (self: IR_Builder, type: AST_Macro_Type) -> IR_
 }
 
 define create_macro = func (self: IR_Builder, macro_statement: AST_Macro_Statement) -> IR_Macro {
-    return self.create_specialized_macro(macro_statement, new List[IR_Builder_Context_Type_Replacement]())
+    return self.create_specialized_macro(macro_statement, new List[AST_Type_Argument]())
 }
 
-define create_specialized_macro = func (self: IR_Builder, macro_statement: AST_Macro_Statement, context_type_replacements: List[IR_Builder_Context_Type_Replacement]) -> IR_Macro {
+define create_specialized_macro = func (self: IR_Builder, macro_statement: AST_Macro_Statement, context_type_arguments: List[AST_Type_Argument]) -> IR_Macro {
     self.context = new IR_Builder_Context(
         parent = self.context
-        type_replacements = context_type_replacements
         symbols = self.context.symbols
+        type_arguments = context_type_arguments
     )
 
     let callable_parameters = new List[IR_Callable_Parameter]()
@@ -895,7 +894,6 @@ define create_specialized_macro = func (self: IR_Builder, macro_statement: AST_M
         name = macro_statement.name.lexeme
         type = create_ir_macro_type(callable_parameters)
         statement = macro_statement.body
-        type_replacements = context_type_replacements
         context = self.context
     )
 
@@ -907,21 +905,21 @@ define create_specialized_macro = func (self: IR_Builder, macro_statement: AST_M
 }
 
 define create_function = func (self: IR_Builder, function_statement: AST_Function_Statement) -> IR_Function {
-    return self.create_specialized_function(function_statement, new List[IR_Builder_Context_Type_Replacement]())
+    return self.create_specialized_function(function_statement, new List[AST_Type_Argument]())
 }
 
-define create_specialized_function = func (self: IR_Builder, function_statement: AST_Function_Statement, context_type_replacements: List[IR_Builder_Context_Type_Replacement]) -> IR_Function {
+define create_specialized_function = func (self: IR_Builder, function_statement: AST_Function_Statement, context_type_arguments: List[AST_Type_Argument]) -> IR_Function {
     let local_context = IR_Builder_Context(
         parent = self.context
-        type_replacements = context_type_replacements
         symbols = self.context.symbols
+        type_arguments = context_type_arguments
     )
     self.context = @local_context
 
     let function = new IR_Function(
         id = self.functions_counter.next()
         statement = function_statement
-        type_replacements = context_type_replacements
+        context_type_arguments = context_type_arguments
         location = function_statement.location
         blocks = new List[IR_Block]()
         name = function_statement.name.lexeme
@@ -932,7 +930,7 @@ define create_specialized_function = func (self: IR_Builder, function_statement:
     )
 
     let callable_type_parameters = new List[IR_Callable_Parameter]()
-    function_statement.type.parameters.for_each_list_item() {
+    for_each_list_item(function_statement.type.parameters) {
         let parameter = list_item.data
         let parameter_type = self.convert_type(parameter.type)
         let parameter_name = parameter.name.lexeme
@@ -960,7 +958,7 @@ define build_function = func (self: IR_Builder, function: IR_Function) -> Nothin
 
     let local_context = IR_Builder_Context(
         parent = self.context
-        type_replacements = function.type_replacements
+        type_arguments = function.context_type_arguments
     )
     self.context = @local_context
 
@@ -1588,9 +1586,9 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         self.compilation_unit.function_statements.for_each_list_item() {
             let function_statement = list_item.data
             if (function_statement.type.type_parameters != null && function_statement.name.lexeme.equals(callee_name.lexeme)) {
-                let context_type_replacements = self.specialize(function_statement.type.type_parameters, function_statement.type.parameters, call_arguments)
-                if (context_type_replacements != null) {
-                    callable = self.create_specialized_function(function_statement, context_type_replacements)
+                let context_type_arguments = self.specialize(function_statement.type.type_parameters, function_statement.type.parameters, call_arguments)
+                if (context_type_arguments != null) {
+                    callable = self.create_specialized_function(function_statement, context_type_arguments)
                     break
                 }
             }
@@ -1601,9 +1599,9 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         self.compilation_unit.macro_statements.for_each_list_item() {
             let macro_statement = list_item.data
             if (macro_statement.type.type_parameters != null && macro_statement.name.lexeme.equals(callee_name.lexeme)) {
-                let context_type_replacements = self.specialize(macro_statement.type.type_parameters, macro_statement.type.parameters, call_arguments)
-                if (context_type_replacements != null) {
-                    callable = self.create_specialized_macro(macro_statement, context_type_replacements)
+                let context_type_arguments = self.specialize(macro_statement.type.type_parameters, macro_statement.type.parameters, call_arguments)
+                if (context_type_arguments != null) {
+                    callable = self.create_specialized_macro(macro_statement, context_type_arguments)
                     break
                 }
             }
@@ -1661,12 +1659,12 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
     return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
 }
 
-define specialize = func (self: IR_Builder, callable_type_parameters: List[AST_Type_Parameter], callable_parameters: List[AST_Parameter], call_arguments: List[IR_Call_Argument]) -> List[IR_Builder_Context_Type_Replacement] {
-    let context_type_replacements = new List[IR_Builder_Context_Type_Replacement]()
+define specialize = func (self: IR_Builder, callable_type_parameters: List[AST_Type_Parameter], callable_parameters: List[AST_Parameter], call_arguments: List[IR_Call_Argument]) -> List[AST_Type_Argument] {
+    let context_type_arguments = new List[AST_Type_Argument]()
     callable_type_parameters.for_each_list_item() {
         let callable_type_parameter = list_item.data
-        context_type_replacements.append(
-            new IR_Builder_Context_Type_Replacement(
+        context_type_arguments.append(
+            new AST_Type_Argument(
                 name = callable_type_parameter.name.lexeme
                 type = new AST_Placeholder_Type(
                     location = callable_type_parameter.name.location
@@ -1686,7 +1684,7 @@ define specialize = func (self: IR_Builder, callable_type_parameters: List[AST_T
         let local_context = IR_Builder_Context(
             parent = self.context
             symbols = self.context.symbols
-            type_replacements = context_type_replacements
+            type_arguments = context_type_arguments
         )
         self.context = @local_context
         let parameter_type = self.convert_type(callable_parameter.type)
@@ -1726,12 +1724,11 @@ define specialize = func (self: IR_Builder, callable_type_parameters: List[AST_T
                     let parameter_pointed_type_argument = parameter_pointed_type_arguments_item.data
                     if (parameter_pointed_type_argument.type.is(IR_Placeholder_Type)) {
                         \ Replace placeholer type with type from the call argument type
-                        let placeholder_type = (parameter_pointed_type_argument.type as IR_Placeholder_Type).ast_type
-                        context_type_replacements.for_each_list_item() {
-                            let context_type_replacement = list_item.data
-                            if (context_type_replacement.type == placeholder_type) {
-                                let replacement_type = call_argument_pointed_type_arguments_item.data.type
-                                context_type_replacement.type = replacement_type.convert_type()
+                        let placeholder_type: AST_Type = (parameter_pointed_type_argument.type as IR_Placeholder_Type).ast_type
+                        context_type_arguments.for_each_list_item() {
+                            let type_argument = list_item.data
+                            if (type_argument.type == placeholder_type) {
+                                type_argument.type = call_argument_pointed_type_arguments_item.data.type.convert_type()
                             }
                         }
                     }
@@ -1757,14 +1754,14 @@ define specialize = func (self: IR_Builder, callable_type_parameters: List[AST_T
         call_arguments_item = call_arguments_item.next_item
     }
 
-    context_type_replacements.for_each_list_item() {
-        let context_type_replacement = list_item.data
-        if (context_type_replacement.type.is(AST_Placeholder_Type)) {
+    context_type_arguments.for_each_list_item() {
+        let type_argument = list_item.data
+        if (type_argument.type.is(AST_Placeholder_Type)) {
             abort("Invalid state")
         }
     }
 
-    return context_type_replacements
+    return context_type_arguments
 }
 
 
@@ -1804,7 +1801,6 @@ define convert_macro_call_expression = func (self: IR_Builder, call_expression: 
                     location = parameter.location
                     type = parameter.type as IR_Macro_Type
                     statement = (call_argument.value as IR_Macro_Body_Value).macro_body
-                    type_replacements = null
                     context = caller_context
                 )
             )

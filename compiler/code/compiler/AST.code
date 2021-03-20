@@ -26,7 +26,6 @@ define AST_Function_Statement = struct {
     type: AST_Function_Type
     body: AST_Block_Statement
     is_anonymous: bool
-    ir_function: IR_Function = null
 }
 
 define AST_Macro_Statement = struct {
@@ -175,6 +174,7 @@ define AST_Specialized_Type = struct {
 }
 
 define AST_Type_Argument = struct {
+    name: String = null
     type: AST_Type
 }
 

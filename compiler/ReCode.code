@@ -275,6 +275,10 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
         return file.write((type as AST_Named_Type).name)
     }
 
+    if (type.is(AST_Embedded_Type)) {
+        return file.write('!').write((type as AST_Embedded_Type).embedded_type)
+    }
+
     if (type.is(AST_Specialized_Type)) {
         let type = type as AST_Specialized_Type
         file.write(type.name).write('[')
@@ -288,8 +292,35 @@ define write = func (file: FILE, type: AST_Type) -> FILE {
         return file.write(']')
     }
 
-    if (type.is(AST_Embedded_Type)) {
-        return file.write('!').write((type as AST_Embedded_Type).embedded_type)
+    if (type.is(AST_Placeholder_Type)) {
+        return file.write((type as AST_Placeholder_Type).name)
+    }
+
+    if (type.is(AST_Macro_Type)) {
+        let type = type as AST_Macro_Type
+        file.write("macro ")
+        if (type.type_parameters != null) {
+            file.write('[')
+            type.type_parameters.for_each_list_item() {
+                let type_parameter = list_item.data
+                file.write(type_parameter.name)
+                if (list_item.next_item != null) {
+                    file.write(", ")
+                }
+            }
+            file.write("] ")
+        }
+        file.write('(')
+        let parameters_item = type.parameters.first_item
+        while (parameters_item != null) {
+            let parameter = parameters_item.data
+            file.write(parameter.name).write(": ").write(parameter.type)
+            parameters_item = parameters_item.next_item
+            if (parameters_item != null) {
+                file.write(", ")
+            }
+        }
+        return file.write(")")
     }
 
     file.flush()

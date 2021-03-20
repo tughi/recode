@@ -1994,13 +1994,11 @@ define MC_String = struct {
 }
 
 define convert_string = func (self: MC_Generator, literal: String_Token) -> MC_String {
-    let string_item = self.strings.first_item
-    while (string_item != null) {
-        let string = string_item.data
+    self.strings.for_each_list_item() {
+        let string = list_item.data
         if (string.literal.lexeme.equals(literal.lexeme)) {
             return string
         }
-        string_item = string_item.next_item
     }
     let string = new MC_String(id = self.strings.size, literal = literal)
     self.strings.append(string)
@@ -2009,9 +2007,8 @@ define convert_string = func (self: MC_Generator, literal: String_Token) -> MC_S
 
 define generate_strings = func (self: MC_Generator) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
-    let string_item = self.strings.first_item
-    while (string_item != null) {
-        let string = string_item.data
+    self.strings.for_each_list_item() {
+        let string = list_item.data
 
         self.output_file.end_line()
         self.output_file.write("  .align 8").end_line()
@@ -2020,8 +2017,6 @@ define generate_strings = func (self: MC_Generator) -> Nothing {
         self.output_file.write("  .quad ").write(string.literal.value.length + 1).end_line()
         self.output_file.write("  .quad ").write(string.literal.value.length).end_line()
         self.output_file.write_string_label(string).write("__data: .string ").write(string.literal.lexeme).end_line()
-
-        string_item = string_item.next_item
     }
 }
 
