@@ -156,34 +156,20 @@ define get_symbol = func (self: IR_Builder, name: String) -> IR_Symbol {
     }
 }
 
-define IR_Builder_Context_Symbols_Iterator = struct {
-    parent_context: IR_Builder_Context
-    next_symbol_item: List_Item[IR_Symbol] = null
-}
-
-define create_symbols_iterator = func (self: IR_Builder) -> IR_Builder_Context_Symbols_Iterator {
-    return new IR_Builder_Context_Symbols_Iterator(parent_context = self.context)
-}
-
-define has_next = func (self: IR_Builder_Context_Symbols_Iterator) -> bool {
-    while (self.next_symbol_item == null && self.parent_context != null) {
-        self.next_symbol_item = self.parent_context.symbols.first_item
-        self.parent_context = self.parent_context.parent
+define for_each_symbol = macro (self: IR_Builder, block: macro (symbol: IR_Symbol)) {
+    let context = self.context
+    let context_symbols_item = context.symbols.first_item
+    loop {
+        if (context_symbols_item != null) {
+            block(context_symbols_item.data)
+            context_symbols_item = context_symbols_item.next_item
+        } else if (context.parent != null) {
+            context = context.parent
+            context_symbols_item = context.symbols.first_item
+        } else {
+            break
+        }
     }
-    return self.next_symbol_item != null
-}
-
-define next = func (self: IR_Builder_Context_Symbols_Iterator) -> IR_Symbol {
-    while (self.next_symbol_item == null && self.parent_context != null) {
-        self.next_symbol_item = self.parent_context.symbols.first_item
-        self.parent_context = self.parent_context.parent
-    }
-    if (self.next_symbol_item != null) {
-        let next_symbol = self.next_symbol_item.data
-        self.next_symbol_item = self.next_symbol_item.next_item
-        return next_symbol
-    }
-    return null
 }
 
 define add_variable = func (self: IR_Builder, variable: IR_Variable) -> Nothing {
@@ -247,9 +233,7 @@ define get_named_function = func (self: IR_Builder, name: Identifier_Token, argu
 
 define get_named_function = func (self: IR_Builder, name: String, argument_types: List[IR_Type]) -> IR_Function {
     let function: IR_Function = null
-    let symbols_iterator = self.create_symbols_iterator()
-    while (symbols_iterator.has_next()) {
-        let symbol = symbols_iterator.next()
+    self.for_each_symbol() {
         if (symbol.is(IR_Function)) {
             let named_function = symbol as IR_Function
             if (name.equals(named_function.name)) {
@@ -278,9 +262,7 @@ define get_named_function = func (self: IR_Builder, name: String, argument_types
 
 define get_named_function = func (self: IR_Builder, name: String, function_type: IR_Function_Type) -> IR_Function {
     let function: IR_Function = null
-    let symbols_iterator = self.create_symbols_iterator()
-    while (symbols_iterator.has_next()) {
-        let symbol = symbols_iterator.next()
+    self.for_each_symbol() {
         if (symbol.is(IR_Function)) {
             let named_function = symbol as IR_Function
             if (name.equals(named_function.name) && named_function.return_type == function_type.return_type && named_function.parameters.size == function_type.parameters.size) {
@@ -433,14 +415,12 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
-    \ TODO: convert struct on demand and remove this step
+    \ TODO: Convert struct on demand and remove this step
     for_each_list_item(self.compilation_unit.statements) {
         let statement = list_item.data
         if (statement.is(AST_Struct_Statement)) {
             let statement = statement as AST_Struct_Statement
-            if (statement.type_parameters != null) {
-                stderr.write(statement.location).write(": TODO: check if generic struct has duplicates").end_line()
-            } else {
+            if (statement.type_parameters == null) {
                 self.convert_struct_statement(statement, statement.name.lexeme, null)
             }
         }
@@ -460,9 +440,8 @@ define build = func (self: IR_Builder) -> Nothing {
         }
     }
 
-    let statements_item = self.compilation_unit.statements.first_item
-    while (statements_item != null) {
-        let statement = statements_item.data
+    for_each_list_item(self.compilation_unit.statements) {
+        let statement = list_item.data
         if (statement.is(AST_Constant_Statement)) {
             self.convert_constant_statement(statement as AST_Constant_Statement)
         } else if (statement.is(AST_Function_Statement)) {
@@ -476,7 +455,6 @@ define build = func (self: IR_Builder) -> Nothing {
         } else {
             abort(statement.location, clone("Unsupported statement type: ").append(statement.object_type.name))
         }
-        statements_item = statements_item.next_item
     }
 
     for_each_list_item(self.functions) {
@@ -546,7 +524,7 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
         self.convert_variable_statement(
             new AST_Variable_Statement(
                 location = struct_statement.name.location
-                name = struct_statement.name
+                name = new Identifier_Token(location = struct_statement.name.location, lexeme = type_name)
                 type = new AST_Named_Type(
                     name = new Identifier_Token(lexeme = "Object_Type", location = null)
                 )
@@ -1580,9 +1558,7 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
     let callable_candidates = new List[IR_Callable]()
 
     \ Collect all existing callable candidates
-    let symbols_iterator = self.create_symbols_iterator()
-    while (symbols_iterator.has_next()) {
-        let symbol = symbols_iterator.next()
+    self.for_each_symbol() {
         if (symbol.is(IR_Callable)) {
             let symbol = symbol as IR_Callable
             if (symbol.name.equals(callee_name.lexeme)) {
@@ -1692,9 +1668,7 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
 
     if (callable_candidates.size != 1i64) {
         if (callable_candidates.size == 0i64) {
-            let symbols_iterator = self.create_symbols_iterator()
-            while (symbols_iterator.has_next()) {
-                let symbol = symbols_iterator.next()
+            self.for_each_symbol() {
                 if (symbol.is(IR_Callable)) {
                     let callable = symbol as IR_Callable
                     if (callable.name.equals(callee_name.lexeme)) {
@@ -2016,9 +1990,7 @@ define convert_equals_expression = func (self: IR_Builder, expression: AST_Equal
 
 define convert_function_expression = func (self: IR_Builder, expression: AST_Function_Expression) -> IR_Value {
     let function: IR_Function = null
-    let symbols_iterator = self.create_symbols_iterator()
-    while (symbols_iterator.has_next()) {
-        let symbol = symbols_iterator.next()
+    self.for_each_symbol() {
         if (symbol.is(IR_Function)) {
             let named_function = symbol as IR_Function
             if (named_function.name == expression.function_statement.name.lexeme) {
