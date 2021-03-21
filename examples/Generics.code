@@ -1,16 +1,25 @@
-include "./code/lang/String.code"
+include "./code/lang/Object.code"
 
 define main = func () -> Nothing {
-    let map = new Map[Any, u8]
-    map.put("First", 1u8)
+    let map = new Map[Any, i32]
+    map.put("One", 0)
+    map.put("One", 1)
 
-    if (map.get("First") != 1u8) {
+    if (map.get("One") != 1) {
+        abort()
+    }
+
+    let count = 0
+    map.for_each() {
+        count = count + 1
+    }
+    if (count != 1) {
         abort()
     }
 
     let map = new Special_Map
-    map.put("Second", 2)
-    map.put("Third", 3)
+    map.put("Two", 2)
+    map.put("Three", 3)
 
     let sum = 0
     map.for_each() {
@@ -20,7 +29,7 @@ define main = func () -> Nothing {
         abort()
     }
 
-    if (map.get("Third") != 3) {
+    if (map.get("Three") != 3) {
         abort()
     }
 }
@@ -34,6 +43,7 @@ define Map = struct {
 }
 
 define Map = struct [K, V] {
+    \ TODO: extends Object
     first_item: Map_Item[K, V] = null
     last_item: Map_Item[K, V] = null
 }
@@ -48,7 +58,14 @@ define Map_Item = struct [K, V] {
 define abort = func () -> Nothing
 
 define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
-    \ TODO: check if key exists already
+    let item = self.first_item
+    while (item != null) {
+        if (item.key == key) {
+            item.value = value
+            return
+        }
+        item = item.next_item
+    }
 
     let item = new Map_Item[K, V](
         key = key

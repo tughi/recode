@@ -258,7 +258,7 @@ define get_named_function = func (self: IR_Builder, name: String, argument_types
                 let named_function_parameters = named_function.parameters.create_iterator()
                 while (argument_types.has_next() && named_function_parameters.has_next()) {
                     let argument_type = argument_types.next()
-                    let named_function_parameter = named_function_parameters.next() as IR_Function_Parameter
+                    let named_function_parameter = named_function_parameters.next()
                     if (named_function_parameter.type.accepts(argument_type) == false) {
                         is_match = false
                         break
@@ -289,7 +289,7 @@ define get_named_function = func (self: IR_Builder, name: String, function_type:
                 let named_function_parameters = named_function.parameters.create_iterator()
                 while (function_type_parameters.has_next() && named_function_parameters.has_next()) {
                     let function_type_parameter = function_type_parameters.next()
-                    let named_function_parameter = named_function_parameters.next() as IR_Function_Parameter
+                    let named_function_parameter = named_function_parameters.next()
                     if (named_function_parameter.type != function_type_parameter.type) {
                         is_match = false
                         break
@@ -397,6 +397,23 @@ define accepts = func (self: IR_Type, other: IR_Type) -> bool {
         if (other.is(IR_Macro_Body_Type)) {
             return true
         }
+        if (other.is(IR_Macro_Type)) {
+            let self_parameters_item = (self as IR_Macro_Type).parameters.first_item
+            let other_parameters_item = (other as IR_Macro_Type).parameters.first_item
+            while (self_parameters_item != null && other_parameters_item != null) {
+                let self_parameter = self_parameters_item.data
+                let other_parameter = other_parameters_item.data
+                if (self_parameter.type.accepts(other_parameter.type) == false) {
+                    return false
+                }
+                self_parameters_item = self_parameters_item.next_item
+                other_parameters_item = other_parameters_item.next_item
+            }
+            if (self_parameters_item != null || other_parameters_item != null) {
+                return false
+            }
+            return true
+        }
     }
     return false
 }
@@ -417,7 +434,7 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 
 define build = func (self: IR_Builder) -> Nothing {
     \ TODO: convert struct on demand and remove this step
-    self.compilation_unit.statements.for_each_list_item() {
+    for_each_list_item(self.compilation_unit.statements) {
         let statement = list_item.data
         if (statement.is(AST_Struct_Statement)) {
             let statement = statement as AST_Struct_Statement
@@ -429,15 +446,15 @@ define build = func (self: IR_Builder) -> Nothing {
         }
     }
 
-    self.compilation_unit.function_statements.for_each_list_item() {
-        let function_statement = list_item.data as AST_Function_Statement
+    for_each_list_item(self.compilation_unit.function_statements) {
+        let function_statement = list_item.data
         if (function_statement.type.type_parameters == null) {
             self.create_function(function_statement)
         }
     }
 
-    self.compilation_unit.macro_statements.for_each_list_item() {
-        let macro_statement = list_item.data as AST_Macro_Statement
+    for_each_list_item(self.compilation_unit.macro_statements) {
+        let macro_statement = list_item.data
         if (macro_statement.type.type_parameters == null) {
             self.create_macro(macro_statement)
         }
@@ -462,7 +479,7 @@ define build = func (self: IR_Builder) -> Nothing {
         statements_item = statements_item.next_item
     }
 
-    self.functions.for_each_list_item() {
+    for_each_list_item(self.functions) {
         let function = list_item.data
         self.build_function(function)
     }
@@ -934,15 +951,13 @@ define create_specialized_function = func (self: IR_Builder, function_statement:
         let parameter = list_item.data
         let parameter_type = self.convert_type(parameter.type)
         let parameter_name = parameter.name.lexeme
-        let function_parameter = new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type)
-        function.parameters.append(function_parameter)
+        function.parameters.append(new IR_Function_Parameter(location = parameter.location, name = parameter_name, type = parameter_type))
         callable_type_parameters.append(new IR_Callable_Parameter(location = parameter.location, name = parameter_name, type = parameter_type))
     }
+    function.type = create_ir_function_type(callable_type_parameters, function.return_type)
 
     self.add_symbol(function)
     self.functions.append(function)
-
-    function.type = create_ir_function_type(callable_type_parameters, function.return_type)
 
     self.context = local_context.parent
 
@@ -966,9 +981,8 @@ define build_function = func (self: IR_Builder, function: IR_Function) -> Nothin
 
     self.current_block = function.create_block()
 
-    let function_parameters = function.parameters.create_iterator()
-    while (function_parameters.has_next()) {
-        let function_parameter = function_parameters.next() as IR_Function_Parameter
+    for_each_list_item(function.parameters) {
+        let function_parameter = list_item.data
         self.add_variable(function_parameter)
         self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(function_parameter)))
     }
@@ -1562,7 +1576,10 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         call_arguments.prepend(new IR_Call_Argument(value = first_argument))
     }
 
-    let callable: IR_Callable = null
+    \ Find all callable candidates
+    let callable_candidates = new List[IR_Callable]()
+
+    \ Collect all existing callable candidates
     let symbols_iterator = self.create_symbols_iterator()
     while (symbols_iterator.has_next()) {
         let symbol = symbols_iterator.next()
@@ -1570,62 +1587,134 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
             let symbol = symbol as IR_Callable
             if (symbol.name.equals(callee_name.lexeme)) {
                 if (symbol.type.accepts(call_arguments)) {
-                    if (callable != null) {
-                        stderr.end_line().write(symbol.location).write(": ").write(symbol.name).write(" = ").write(symbol.type.name).end_line()
-                        stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.name).end_line()
+                    callable_candidates.append(symbol)
+                }
+            }
+        }
+    }
 
-                        abort(call_expression.location, "Found at least two matching callables")
+    \ Create callable candidates from generic functions
+    for_each_list_item(self.compilation_unit.function_statements) {
+        let function_statement = list_item.data
+        if (function_statement.type.type_parameters != null && function_statement.name.lexeme.equals(callee_name.lexeme)) {
+            let context_type_arguments = self.specialize(function_statement.type.type_parameters, function_statement.type.parameters, call_arguments)
+            if (context_type_arguments != null) {
+                let has_specialize_candidate = false
+
+                self.with_context_type_arguments(context_type_arguments) {
+                    let function_type = self.convert_function_type(function_statement.type)
+                    for_each_list_item(callable_candidates) {
+                        let callable = list_item.data
+                        if (callable.name.equals(callee_name.lexeme) && callable.type.name.equals(function_type.name)) {
+                            has_specialize_candidate = true
+                            break
+                        }
                     }
-                    callable = symbol
+                }
+
+                if (has_specialize_candidate == false) {
+                    callable_candidates.append(self.create_specialized_function(function_statement, context_type_arguments))
                 }
             }
         }
     }
 
-    if (callable == null) {
-        self.compilation_unit.function_statements.for_each_list_item() {
-            let function_statement = list_item.data
-            if (function_statement.type.type_parameters != null && function_statement.name.lexeme.equals(callee_name.lexeme)) {
-                let context_type_arguments = self.specialize(function_statement.type.type_parameters, function_statement.type.parameters, call_arguments)
-                if (context_type_arguments != null) {
-                    callable = self.create_specialized_function(function_statement, context_type_arguments)
-                    break
+    \ Create callable candidates from generic macros
+    self.compilation_unit.macro_statements.for_each_list_item() {
+        let macro_statement = list_item.data
+        if (macro_statement.type.type_parameters != null && macro_statement.name.lexeme.equals(callee_name.lexeme)) {
+            let context_type_arguments = self.specialize(macro_statement.type.type_parameters, macro_statement.type.parameters, call_arguments)
+            if (context_type_arguments != null) {
+                let has_specialize_candidate = false
+
+                self.with_context_type_arguments(context_type_arguments) {
+                    let macro_type = self.convert_macro_type(macro_statement.type)
+                    for_each_list_item(callable_candidates) {
+                        let callable = list_item.data
+                        if (callable.name.equals(callee_name.lexeme) && callable.type.name.equals(macro_type.name)) {
+                            has_specialize_candidate = true
+                            break
+                        }
+                    }
+                }
+
+                if (has_specialize_candidate == false) {
+                    callable_candidates.append(self.create_specialized_macro(macro_statement, context_type_arguments))
                 }
             }
         }
     }
 
-    if (callable == null) {
-        self.compilation_unit.macro_statements.for_each_list_item() {
-            let macro_statement = list_item.data
-            if (macro_statement.type.type_parameters != null && macro_statement.name.lexeme.equals(callee_name.lexeme)) {
-                let context_type_arguments = self.specialize(macro_statement.type.type_parameters, macro_statement.type.parameters, call_arguments)
-                if (context_type_arguments != null) {
-                    callable = self.create_specialized_macro(macro_statement, context_type_arguments)
-                    break
+    if (callable_candidates.size > 1) {
+        \ Eliminate candidates that accepts parameters from another candidate
+        let repeat = true
+        while (repeat) {
+            repeat = false
+            for_each_list_item(callable_candidates) {
+                let callable = list_item.data
+                for_each_list_item(callable_candidates) {
+                    let other_callable = list_item.data
+
+                    if (other_callable != callable && list_item.is_removed == false) {
+                        if (callable.type.name.equals(other_callable.type.name)) {
+                            abort("Invalid state")
+                        }
+
+                        let other_callable_is_broader = true
+
+                        let callable_parameters_item = callable.type.parameters.first_item
+                        let other_callable_parameters_item = other_callable.type.parameters.first_item
+                        while (callable_parameters_item != null && other_callable_parameters_item != null) {
+                            let callable_parameter = callable_parameters_item.data
+                            let other_callable_parameter = other_callable_parameters_item.data
+                            if (other_callable_parameter.type.accepts(callable_parameter.type) == false) {
+                                other_callable_is_broader = false
+                            }
+                            callable_parameters_item = callable_parameters_item.next_item
+                            other_callable_parameters_item = other_callable_parameters_item.next_item
+                        }
+                        if (callable_parameters_item != null || other_callable_parameters_item != null) {
+                            abort("Invalid state")
+                        }
+
+                        if (other_callable_is_broader) {
+                            list_item.is_removed = true
+                            repeat = true
+                        }
+                    }
                 }
+            }
+            if (repeat) {
+                callable_candidates.prune()
             }
         }
     }
 
-    if (callable == null) {
-        let symbols_iterator = self.create_symbols_iterator()
-        while (symbols_iterator.has_next()) {
-            let symbol = symbols_iterator.next()
-            if (symbol.is(IR_Callable)) {
-                let callable = symbol as IR_Callable
-                if (callable.name.equals(callee_name.lexeme)) {
-                    stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.convert_type())
+    if (callable_candidates.size != 1i64) {
+        if (callable_candidates.size == 0i64) {
+            let symbols_iterator = self.create_symbols_iterator()
+            while (symbols_iterator.has_next()) {
+                let symbol = symbols_iterator.next()
+                if (symbol.is(IR_Callable)) {
+                    let callable = symbol as IR_Callable
+                    if (callable.name.equals(callee_name.lexeme)) {
+                        stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.convert_type())
+                    }
                 }
             }
-        }
-        self.compilation_unit.function_statements.for_each_list_item() {
-            let function_statement = list_item.data
-            if (function_statement.type.type_parameters != null && function_statement.name.lexeme.equals(callee_name.lexeme)) {
-                stderr.end_line().write(function_statement.location).write(": ").write(function_statement.name).write(" = ").write(function_statement.type)
+            self.compilation_unit.function_statements.for_each_list_item() {
+                let function_statement = list_item.data
+                if (function_statement.type.type_parameters != null && function_statement.name.lexeme.equals(callee_name.lexeme)) {
+                    stderr.end_line().write(function_statement.location).write(": ").write(function_statement.name).write(" = ").write(function_statement.type)
+                }
+            }
+        } else {
+            for_each_list_item(callable_candidates) {
+                let callable = list_item.data
+                stderr.end_line().write(callable.location).write(": ").write(callable.name).write(" = ").write(callable.type.convert_type())
             }
         }
-        let message = clone("Found no matching callable '").append(callee_name.lexeme).append("': (")
+        let message = clone("Found ").append(callable_candidates.size).append(" matching '").append(callee_name.lexeme).append("' callables: (")
         let call_arguments_item = call_arguments.first_item
         if (call_arguments_item != null) {
             loop {
@@ -1642,9 +1731,11 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
                 message.append(", ")
             }
         }
-        message.append(") -> ?")
+        message.append(')')
         abort(call_expression.location, message)
     }
+
+    let callable = callable_candidates.first()
 
     if (callable.is(IR_Macro)) {
         self.convert_macro_call_expression(call_expression, call_arguments, callable as IR_Macro)
@@ -1657,6 +1748,17 @@ define convert_direct_call_expression = func (self: IR_Builder, call_expression:
         result_value = self.create_temp_value(call_function.return_type)
     }
     return self.append(create_ir_direct_call_instruction(result_value, call_arguments, call_function), call_expression.location)
+}
+
+define with_context_type_arguments = macro (self: IR_Builder, type_arguments: List[AST_Type_Argument], block: macro ()) {
+    let local_context = IR_Builder_Context(
+        parent = self.context
+        symbols = self.context.symbols
+        type_arguments = type_arguments
+    )
+    self.context = @local_context
+    block()
+    self.context = local_context.parent
 }
 
 define specialize = func (self: IR_Builder, callable_type_parameters: List[AST_Type_Parameter], callable_parameters: List[AST_Parameter], call_arguments: List[IR_Call_Argument]) -> List[AST_Type_Argument] {

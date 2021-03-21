@@ -537,7 +537,7 @@ define dump = func (function: IR_Function, file: FILE) -> Nothing {
     file.write_function_label(function).write(" :: (")
     let function_parameters = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
-        let function_parameter = function_parameters.next() as IR_Function_Parameter
+        let function_parameter = function_parameters.next()
         file.write(function_parameter.name).write(": ").write(function_parameter.type.name)
         if (function_parameters.has_next()) {
             file.write(", ")
