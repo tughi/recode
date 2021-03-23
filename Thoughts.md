@@ -33,6 +33,11 @@ There will be a fixed set of float types:
 
 > NOTE: Floats are not supported yet.
 
+## Custom types
+
+Identifiers that start with a capital letter are treated as type names. Primitive types are the only
+exception.
+
 ## Structs
 
     define Node = struct {
@@ -49,11 +54,12 @@ There will be a fixed set of float types:
 
 Newly created structs can be initializated using named arguments, which can replace default values.
 
-    let node = new Extended_Node(parent = null, type = 6)
+    let node = !Node()          \ Value is stored in reserved stack space
+    let node = Node(type = 13)  \ Value is stored in newly allocated heap space
 
 Initilization arguments can be declared also on separate lines.
 
-    let node = new Extended_Node(
+    let node = Extended_Node(
         parent = null
         type = 6
     )
@@ -165,7 +171,7 @@ String literals are global values of type `String`.
 
     let text: String = "123"            \ text holds the address to the specified string
     let number: i32 = text.length + 1   \ number holds the result of the provided expression
-    let root_node = new Node            \ root_node holds the address of a Node
+    let root_node = Node()              \ root_node holds the address of a Node
 
 The variable names are symbols used by the compiler to know where the value are stored.
 
