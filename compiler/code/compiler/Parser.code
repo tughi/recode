@@ -2,13 +2,13 @@
 
 define Parser = struct {
     scanner: Scanner = null
-    compilation_unit: Compilation_Unit = new Compilation_Unit()
+    compilation_unit: Compilation_Unit = Compilation_Unit()
     current_alignment: i32 = 0
-    anonymous_functions_counter: !Counter = Counter()
+    anonymous_functions_counter: !Counter = !Counter()
 }
 
 define parse = func (file_path: String) -> Compilation_Unit {
-    let parser = new Parser()
+    let parser = Parser()
     parser.parse(file_path, null)
     return parser.compilation_unit
 }
@@ -130,7 +130,7 @@ define parse_statement = func (self: Parser) -> AST_Statement {
             self.consume_space(1)
             value_expression = self.parse_expression()
         }
-        return new AST_Return_Statement(location = token.location, value_expression = value_expression)
+        return AST_Return_Statement(location = token.location, value_expression = value_expression)
     }
     if (self.matches(required_loop)) {
         return self.parse_loop()
@@ -140,7 +140,7 @@ define parse_statement = func (self: Parser) -> AST_Statement {
     }
     if (self.matches(required_break)) {
         let token = self.consume(required_break)
-        return new AST_Break_Statement(location = token.location)
+        return AST_Break_Statement(location = token.location)
     }
     if (self.matches(required_include)) {
         return self.parse_include()
@@ -149,14 +149,14 @@ define parse_statement = func (self: Parser) -> AST_Statement {
     let expression = self.parse_expression()
 
     if (self.matches(optional_space, optional_comment, required_end_of_line)) {
-        return new AST_Expression_Statement(location = expression.location, expression = expression)
+        return AST_Expression_Statement(location = expression.location, expression = expression)
     }
 
     if (self.matches(optional_space, required_equals)) {
         self.consume_space(1)
         let operator = self.consume(required_equals) as Other_Token
         self.consume_space(1)
-        return new AST_Assignment_Statement(location = expression.location, storage_expression = expression, operator = operator, value_expression = self.parse_expression())
+        return AST_Assignment_Statement(location = expression.location, storage_expression = expression, operator = operator, value_expression = self.parse_expression())
     }
 
     return null
@@ -168,7 +168,7 @@ define parse_include = func (self: Parser) -> AST_Include_Statement {
     let location = self.consume(required_include).location
     self.consume_space(1)
     let file_path = (self.consume(required_string_literal) as String_Token).value
-    return new AST_Include_Statement(location = location, file_path = file_path)
+    return AST_Include_Statement(location = location, file_path = file_path)
 }
 
 \ define
@@ -176,7 +176,12 @@ define parse_include = func (self: Parser) -> AST_Include_Statement {
 define parse_define = func (self: Parser) -> AST_Statement {
     self.consume(required_define)
     self.consume_space(1)
-    let name = self.consume(required_identifier) as Identifier_Token
+    let name: Identifier_Token
+    if (self.matches(required_type_name)) {
+        name = self.consume(required_type_name) as Identifier_Token
+    } else {
+        name = self.consume(required_identifier) as Identifier_Token
+    }
     self.consume_space(1)
     self.consume(required_equals)
     self.consume_space(1)
@@ -184,7 +189,7 @@ define parse_define = func (self: Parser) -> AST_Statement {
         self.consume(required_unknown)
         self.consume_space(1)
         self.consume(required_struct)
-        return new AST_Struct_Statement(
+        return AST_Struct_Statement(
             location = name.location
             name = name
             type_parameters = null
@@ -203,13 +208,13 @@ define parse_define = func (self: Parser) -> AST_Statement {
         return self.parse_macro(name)
     }
     let expression = self.parse_expression()
-    return new AST_Constant_Statement(location = name.location, name = name, expression = expression)
+    return AST_Constant_Statement(location = name.location, name = name, expression = expression)
 }
 
 \ struct
 \   : "struct" type_parameters? "{" <EOL> ( "extends" IDENTIFIER ( "(" call_arguments ")" )? <EOL> )? ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
 define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_Struct_Statement {
-    let struct_init_arguments = new List[AST_Call_Argument]()
+    let struct_init_arguments = List[AST_Call_Argument]()
     self.consume(required_struct)
     self.consume_space(1)
     let struct_type_parameters: List[AST_Type_Parameter] = null
@@ -235,7 +240,7 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
         }
         self.consume_end_of_line()
     }
-    let struct_members = new List[AST_Struct_Member]()
+    let struct_members = List[AST_Struct_Member]()
     while (self.matches(optional_space, required_close_brace) == false) {
         if (self.consume_empty_line() == false) {
             self.consume_space(self.current_alignment * 4)
@@ -249,16 +254,16 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
                 self.consume(required_equals)
                 self.consume_space(1)
                 let value_expression = self.parse_expression()
-                struct_init_arguments.append(new AST_Call_Argument(name = struct_member_name, value_expression = value_expression))
+                struct_init_arguments.append(AST_Call_Argument(name = struct_member_name, value_expression = value_expression))
             }
             self.consume_end_of_line()
-            struct_members.append(new AST_Struct_Member(location = struct_member_name.location, name = struct_member_name, type = struct_member_value_type))
+            struct_members.append(AST_Struct_Member(location = struct_member_name.location, name = struct_member_name, type = struct_member_value_type))
         }
     }
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(required_close_brace)
-    return new AST_Struct_Statement(
+    return AST_Struct_Statement(
         location = struct_name.location
         name = struct_name
         type_parameters = struct_type_parameters
@@ -271,12 +276,12 @@ define parse_struct = func (self: Parser, struct_name: Identifier_Token) -> AST_
 \ type_parameters
 \   : "[" IDENTIFIER ( "," IDENTIFIER )* "]"
 define parse_type_parameters = func (self: Parser) -> List[AST_Type_Parameter] {
-    let type_parameters = new List[AST_Type_Parameter]()
+    let type_parameters = List[AST_Type_Parameter]()
     self.consume(required_open_bracket)
     self.consume_space(0)
     loop {
-        let type_parameter_name = self.consume(required_identifier) as Identifier_Token
-        type_parameters.append(new AST_Type_Parameter(name = type_parameter_name))
+        let type_parameter_name = self.consume(required_type_name) as Identifier_Token
+        type_parameters.append(AST_Type_Parameter(name = type_parameter_name))
         self.consume_space(0)
         if (self.matches(required_comma) == false) {
             break
@@ -303,7 +308,7 @@ define parse_function = func (self: Parser, function_name: Identifier_Token) -> 
         }
         function_body = null
     }
-    let function_statement = new AST_Function_Statement(location = function_name.location, name = function_name, type = function_type, body = function_body, is_anonymous = function_is_anonymous)
+    let function_statement = AST_Function_Statement(location = function_name.location, name = function_name, type = function_type, body = function_body, is_anonymous = function_is_anonymous)
     self.compilation_unit.function_statements.append(function_statement)
     return function_statement
 }
@@ -323,13 +328,13 @@ define parse_function_type = func (self: Parser) -> AST_Function_Type {
     self.consume(required_hyphen, required_greater_than)
     self.consume_space(1)
     let function_return_type = self.parse_type()
-    return new AST_Function_Type(location = location, type_parameters = function_type_parameters, parameters = function_parameters, return_type = function_return_type)
+    return AST_Function_Type(location = location, type_parameters = function_type_parameters, parameters = function_parameters, return_type = function_return_type)
 }
 
 \ parameters
 \   : "(" ( parameter ( "," parameter )* )? ")"
 define parse_parameters = func (self: Parser) -> List[AST_Parameter] {
-    let parameters = new List[AST_Parameter]()
+    let parameters = List[AST_Parameter]()
     self.consume(required_open_paren)
     self.consume_space(0)
     if (self.matches(required_close_paren) == false) {
@@ -353,7 +358,7 @@ define parse_parameter = func (self: Parser) -> AST_Parameter {
     self.consume(required_colon)
     self.consume_space(1)
     let parameter_type = self.parse_type()
-    return new AST_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
+    return AST_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
 }
 
 \ macro
@@ -362,7 +367,7 @@ define parse_macro = func (self: Parser, macro_name: Identifier_Token) -> AST_Ma
     let macro_type = self.parse_macro_type()
     self.consume_space(1)
     let macro_body = self.parse_block()
-    let macro_statement = new AST_Macro_Statement(location = macro_name.location, name = macro_name, type = macro_type, body = macro_body)
+    let macro_statement = AST_Macro_Statement(location = macro_name.location, name = macro_name, type = macro_type, body = macro_body)
     self.compilation_unit.macro_statements.append(macro_statement)
     return macro_statement
 }
@@ -378,7 +383,7 @@ define parse_macro_type = func (self: Parser) -> AST_Macro_Type {
         self.consume_space(1)
     }
     let macro_parameters = self.parse_parameters()
-    return new AST_Macro_Type(location = location, type_parameters = macro_type_parameters, parameters = macro_parameters)
+    return AST_Macro_Type(location = location, type_parameters = macro_type_parameters, parameters = macro_parameters)
 }
 
 \ block
@@ -387,12 +392,12 @@ define parse_block = func (self: Parser) -> AST_Block_Statement {
     let location = self.consume(required_open_brace).location
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
-    let statements = new List[AST_Statement]()
+    let statements = List[AST_Statement]()
     self.parse_statements(statements)
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(required_close_brace)
-    return new AST_Block_Statement(location = location, statements = statements)
+    return AST_Block_Statement(location = location, statements = statements)
 }
 
 \ let
@@ -428,7 +433,7 @@ define parse_let = func (self: Parser) -> AST_Variable_Statement {
             variable_value_expression = self.parse_expression()
         }
     }
-    return new AST_Variable_Statement(location = variable_name.location, name = variable_name, type = variable_value_type, value_expression = variable_value_expression, is_external = variable_is_external)
+    return AST_Variable_Statement(location = variable_name.location, name = variable_name, type = variable_value_type, value_expression = variable_value_expression, is_external = variable_is_external)
 }
 
 \ if
@@ -454,7 +459,7 @@ define parse_if = func (self: Parser) -> AST_Statement {
             false_statement = self.parse_block()
         }
     }
-    return new AST_If_Statement(location = location, condition_expression = condition_expression, true_statement = true_statement, false_statement = false_statement)
+    return AST_If_Statement(location = location, condition_expression = condition_expression, true_statement = true_statement, false_statement = false_statement)
 }
 
 \ loop
@@ -463,7 +468,7 @@ define parse_loop = func (self: Parser) -> AST_Statement {
     let location = self.consume(required_loop).location
     self.consume_space(1)
     let loop_block = self.parse_block()
-    return new AST_Loop_Statement(location = location, block = loop_block)
+    return AST_Loop_Statement(location = location, block = loop_block)
 }
 
 \ while
@@ -478,7 +483,7 @@ define parse_while = func (self: Parser) -> AST_Statement {
     self.consume(required_close_paren)
     self.consume_space(1)
     let loop_block = self.parse_block()
-    return new AST_While_Statement(location = location, condition_expression = condition_expression, block = loop_block)
+    return AST_While_Statement(location = location, condition_expression = condition_expression, block = loop_block)
 }
 
 \ type
@@ -511,20 +516,20 @@ define parse_type = func (self: Parser) -> AST_Type {
         }
         self.consume_space(0)
         self.consume(required_close_bracket)
-        type = new AST_Array_Type(location = token.location, item_type = array_item_type, is_checked = array_is_checked, size_expression = array_size_expression)
+        type = AST_Array_Type(location = token.location, item_type = array_item_type, is_checked = array_is_checked, size_expression = array_size_expression)
     } else if (self.matches(required_func)) {
         type = self.parse_function_type()
     } else if (self.matches(required_macro)) {
         type = self.parse_macro_type()
     } else {
-        let type_name = self.consume(required_identifier) as Identifier_Token
+        let type_name = self.consume(required_type_name) as Identifier_Token
         if (self.matches(optional_space, required_open_bracket)) {
             self.consume_space(0)
             self.consume(required_open_bracket)
             self.consume_space(0)
-            let type_arguments = new List[AST_Type_Argument]()
+            let type_arguments = List[AST_Type_Argument]()
             loop {
-                type_arguments.append(new AST_Type_Argument(type = self.parse_type()))
+                type_arguments.append(AST_Type_Argument(type = self.parse_type()))
                 self.consume_space(0)
                 if (self.matches(required_comma) == false) {
                     break
@@ -533,13 +538,13 @@ define parse_type = func (self: Parser) -> AST_Type {
                 self.consume_space(1)
             }
             self.consume(required_close_bracket)
-            type = new AST_Specialized_Type(location = type_name.location, name = type_name, type_arguments = type_arguments)
+            type = AST_Specialized_Type(location = type_name.location, name = type_name, type_arguments = type_arguments)
         } else {
-            type = new AST_Named_Type(location = type_name.location, name = type_name)
+            type = AST_Named_Type(location = type_name.location, name = type_name)
         }
     }
     if (is_embedded_type) {
-        return new AST_Embedded_Type(location = location, embedded_type = type)
+        return AST_Embedded_Type(location = location, embedded_type = type)
     }
     return type
 }
@@ -556,7 +561,7 @@ define parse_logic_or_expression = func (self: Parser) -> AST_Expression {
         self.consume_space(1)
         self.consume(required_vertical_bar, required_vertical_bar)
         self.consume_space(1)
-        expression = new AST_Logic_Or_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_logic_and_expression())
+        expression = AST_Logic_Or_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_logic_and_expression())
     }
     return expression
 }
@@ -569,7 +574,7 @@ define parse_logic_and_expression = func (self: Parser) -> AST_Expression {
         self.consume_space(1)
         self.consume(required_ampersand, required_ampersand)
         self.consume_space(1)
-        expression = new AST_Logic_And_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_equality_expression())
+        expression = AST_Logic_And_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_equality_expression())
     }
     return expression
 }
@@ -583,11 +588,11 @@ define parse_equality_expression = func (self: Parser) -> AST_Expression {
         if (self.matches(required_equals)) {
             self.consume(required_equals, required_equals)
             self.consume_space(1)
-            expression = new AST_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
+            expression = AST_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
         } else {
             self.consume(required_exclamation_mark, required_equals)
             self.consume_space(1)
-            expression = new AST_Not_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
+            expression = AST_Not_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
         }
     }
     return expression
@@ -604,20 +609,20 @@ define parse_comparison_expression = func (self: Parser) -> AST_Expression {
             if (self.matches(required_equals)) {
                 self.consume(required_equals)
                 self.consume_space(1)
-                expression = new AST_Less_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+                expression = AST_Less_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
             } else {
                 self.consume_space(1)
-                expression = new AST_Less_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+                expression = AST_Less_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
             }
         } else {
             self.consume(required_greater_than)
             if (self.matches(required_equals)) {
                 self.consume(required_equals)
                 self.consume_space(1)
-                expression = new AST_Greater_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+                expression = AST_Greater_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
             } else {
                 self.consume_space(1)
-                expression = new AST_Greater_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+                expression = AST_Greater_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
             }
         }
     }
@@ -634,11 +639,11 @@ define parse_addition_expression = func (self: Parser) -> AST_Expression {
         if (self.matches(required_plus)) {
             self.consume(required_plus)
             self.consume_space(1)
-            expression = new AST_Add_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_multiplication_expression())
+            expression = AST_Add_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_multiplication_expression())
         } else {
             self.consume(required_hyphen)
             self.consume_space(1)
-            expression = new AST_Substract_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_multiplication_expression())
+            expression = AST_Substract_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_multiplication_expression())
         }
     }
     return expression
@@ -655,15 +660,15 @@ define parse_multiplication_expression = func (self: Parser) -> AST_Expression {
             if (self.matches(required_slash)) {
                 self.consume(required_slash)
                 self.consume_space(1)
-                expression = new AST_Modulo_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
+                expression = AST_Modulo_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
             } else {
                 self.consume_space(1)
-                expression = new AST_Divide_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
+                expression = AST_Divide_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
             }
         } else {
             self.consume(required_asterisk)
             self.consume_space(1)
-            expression = new AST_Multiply_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
+            expression = AST_Multiply_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_unary_expression())
         }
     }
     return expression
@@ -679,16 +684,16 @@ define parse_unary_expression = func (self: Parser) -> AST_Expression {
         let expression = self.parse_unary_expression()
         if (expression.is(AST_Literal_Expression) && (expression as AST_Literal_Expression).literal.is(Integer_Token)) {
             let old_literal = (expression as AST_Literal_Expression).literal as Integer_Token
-            let new_literal = new Integer_Token(location = location, lexeme = clone("-").append(old_literal.lexeme), value = -old_literal.value, type = old_literal.type)
-            return new AST_Wrapped_Expression(
+            let new_literal = Integer_Token(location = location, lexeme = clone("-").append(old_literal.lexeme), value = -old_literal.value, type = old_literal.type)
+            return AST_Wrapped_Expression(
                 location = location
-                expression = new AST_Literal_Expression(
+                expression = AST_Literal_Expression(
                     location = location
                     literal = new_literal
                 )
             )
         }
-        return new AST_Negate_Expression(location = location, expression = expression)
+        return AST_Negate_Expression(location = location, expression = expression)
     }
     return self.parse_cast_expression()
 }
@@ -702,7 +707,7 @@ define parse_cast_expression = func (self: Parser) -> AST_Expression {
         self.consume(required_as)
         self.consume_space(1)
         let type = self.parse_type()
-        return new AST_Cast_Expression(location = expression.location, value_expression = expression, type = type)
+        return AST_Cast_Expression(location = expression.location, value_expression = expression, type = type)
     }
     return expression
 }
@@ -718,13 +723,13 @@ define parse_access_expression = func (self: Parser) -> AST_Expression {
                 self.consume_space(0)
                 self.consume(required_dot)
                 self.consume_space(0)
-                expression = new AST_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(required_identifier) as Identifier_Token)
+                expression = AST_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(required_identifier) as Identifier_Token)
             }
             if (self.matches(optional_space, required_open_paren)) {
                 self.consume_space(0)
                 self.consume(required_open_paren)
                 self.consume_space(0)
-                let call_arguments = new List[AST_Call_Argument]()
+                let call_arguments = List[AST_Call_Argument]()
                 if (self.matches(optional_space, required_close_paren) == false) {
                     self.parse_call_arguments(call_arguments)
                 }
@@ -734,13 +739,13 @@ define parse_access_expression = func (self: Parser) -> AST_Expression {
                     self.consume_space(1)
                     let block_statement = self.parse_block()
                     call_arguments.append(
-                        new AST_Call_Argument(
+                        AST_Call_Argument(
                             name = null
-                            value_expression = new AST_Macro_Body(location = block_statement.location, statement = block_statement)
+                            value_expression = AST_Macro_Body(location = block_statement.location, statement = block_statement)
                         )
                     )
                 }
-                expression = new AST_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
+                expression = AST_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
             }
             if (self.matches(optional_space, required_open_bracket)) {
                 self.consume_space(0)
@@ -749,7 +754,7 @@ define parse_access_expression = func (self: Parser) -> AST_Expression {
                 let index_expression = self.parse_expression()
                 self.consume_space(0)
                 self.consume(required_close_bracket)
-                expression = new AST_Array_Access_Expression(location = expression.location, array_expression = expression, index_expression = index_expression)
+                expression = AST_Array_Access_Expression(location = expression.location, array_expression = expression, index_expression = index_expression)
             }
             if (expression == old_expression) {
                 break
@@ -793,10 +798,10 @@ define parse_call_argument = func (self: Parser) -> AST_Call_Argument {
         self.consume(required_equals)
         self.consume_space(1)
         let value = self.parse_expression()
-        return new AST_Call_Argument(name = name, value_expression = value)
+        return AST_Call_Argument(name = name, value_expression = value)
     }
     let value = self.parse_expression()
-    return new AST_Call_Argument(name = null, value_expression = value)
+    return AST_Call_Argument(name = null, value_expression = value)
 }
 
 \ primary_expression
@@ -809,46 +814,48 @@ define parse_call_argument = func (self: Parser) -> AST_Call_Argument {
 \   | "true"
 \   | "undefined"
 \   | "(" expression ")"
-\   | "new" type ( "(" call_arguments? ")" )?
+\   | "!"? type "(" call_arguments? ")"
 \   | function
 define parse_primary_expression = func (self: Parser) -> AST_Expression {
-    if (self.matches(required_new)) {
-        let token = self.consume(required_new)
-        self.consume_space(1)
+    if (self.matches(required_exclamation_mark) || self.matches(required_type_name)) {
         let type = self.parse_type()
-        let call_arguments = new List[AST_Call_Argument]()
-        if (self.matches(optional_space, required_open_paren)) {
-            self.consume_space(0)
-            self.consume(required_open_paren)
-            if (self.matches(optional_space, required_close_paren) == false) {
-                self.parse_call_arguments(call_arguments)
+        if (self.matches(optional_space, required_open_paren) == false) {
+            if (type.is(AST_Named_Type) == false) {
+                abort(type.location, clone(type.object_type.name).append(" cannot be used as variable name"))
             }
-            self.consume_space(0)
-            self.consume(required_close_paren)
+            return AST_Variable_Expression(location = type.location, name = (type as AST_Named_Type).name)
         }
-        return new AST_New_Expression(location = token.location, type = type, init_arguments = call_arguments)
+        self.consume_space(0)
+        self.consume(required_open_paren)
+        let call_arguments = List[AST_Call_Argument]()
+        if (self.matches(optional_space, required_close_paren) == false) {
+            self.parse_call_arguments(call_arguments)
+        }
+        self.consume_space(0)
+        self.consume(required_close_paren)
+        return AST_Init_Expression(location = type.location, type = type, init_arguments = call_arguments)
     }
     if (self.matches(required_literal)) {
         let token = self.consume(required_literal) as Literal_Token
-        return new AST_Literal_Expression(location = token.location, literal = token)
+        return AST_Literal_Expression(location = token.location, literal = token)
     }
     if (self.matches(required_func)) {
         let function_name = clone("anonymous_function_").append(self.anonymous_functions_counter.next())
-        let function_statement = self.parse_function(new Generated_Identifier_Token(location = self.scanner.current_token.location, lexeme = function_name))
-        return new AST_Function_Expression(location = function_statement.location, function_statement = function_statement)
+        let function_statement = self.parse_function(Generated_Identifier_Token(location = self.scanner.current_token.location, lexeme = function_name))
+        return AST_Function_Expression(location = function_statement.location, function_statement = function_statement)
     }
     if (self.matches(required_at)) {
         let location = self.consume(required_at).location
         self.consume_space(0)
         let identifier = self.consume(required_identifier) as Identifier_Token
-        return new AST_Variable_Reference_Expression(
+        return AST_Variable_Reference_Expression(
             location = location
-            variable_expression = new AST_Variable_Expression(location = identifier.location, name = identifier)
+            variable_expression = AST_Variable_Expression(location = identifier.location, name = identifier)
         )
     }
     if (self.matches(required_identifier)) {
         let identifier = self.consume(required_identifier) as Identifier_Token
-        return new AST_Variable_Expression(location = identifier.location, name = identifier)
+        return AST_Variable_Expression(location = identifier.location, name = identifier)
     }
     if (self.matches(required_open_paren)) {
         let location = self.consume(required_open_paren).location
@@ -856,7 +863,7 @@ define parse_primary_expression = func (self: Parser) -> AST_Expression {
         let expression = self.parse_expression()
         self.consume_space(0)
         self.consume(required_close_paren)
-        return new AST_Paren_Expression(location = location, expression = expression)
+        return AST_Paren_Expression(location = location, expression = expression)
     }
     return null
 }
@@ -1020,7 +1027,11 @@ define End_Of_Line_Matcher = struct {
 define Identifier_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            return token.is(Identifier_Token)
+            if (token.is(Identifier_Token)) {
+                let char = token.lexeme.data[0]
+                return char < 'A' || char > 'Z'
+            }
+            return false
         }
     )
 }
@@ -1073,6 +1084,28 @@ define String_Literal_Matcher = struct {
     )
 }
 
+define Type_Name_Matcher = struct {
+    extends Matcher(
+        accepts = func (self: Matcher, token: Token) -> bool {
+            if (token.is(Identifier_Token)) {
+                let char = token.lexeme.data[0]
+                if (char >= 'A' && char <= 'Z') {
+                    return true
+                }
+                let lexeme = token.lexeme
+                if (char == 'i') {
+                    return lexeme.equals("i16") || lexeme.equals("i32") || lexeme.equals("i64") || lexeme.equals("i8") || lexeme.equals("isize")
+                }
+                if (char == 'u') {
+                    return lexeme.equals("u16") || lexeme.equals("u32") || lexeme.equals("u64") || lexeme.equals("u8") || lexeme.equals("usize")
+                }
+                return lexeme.equals("bool")
+            }
+            return false
+        }
+    )
+}
+
 let optional_comment: Matcher = undefined
 let optional_space: Matcher = undefined
 let required_ampersand: Matcher = undefined
@@ -1107,7 +1140,6 @@ let required_let: Matcher = undefined
 let required_literal: Matcher = undefined
 let required_loop: Matcher = undefined
 let required_macro: Matcher = undefined
-let required_new: Matcher = undefined
 let required_open_brace: Matcher = undefined
 let required_open_bracket: Matcher = undefined
 let required_open_paren: Matcher = undefined
@@ -1117,56 +1149,57 @@ let required_return: Matcher = undefined
 let required_slash: Matcher = undefined
 let required_string_literal: Matcher = undefined
 let required_struct: Matcher = undefined
+let required_type_name: Matcher = undefined
 let required_unknown: Matcher = undefined
 let required_vertical_bar: Matcher = undefined
 let required_while: Matcher = undefined
 
 define init_matchers = func () -> Nothing {
-    optional_comment = new Comment_Matcher(is_required = false)
-    optional_space = new Space_Matcher(is_required = false)
-    required_ampersand = new Other_Matcher(is_required = true, lexeme = "&")
-    required_as = new Keyword_Matcher(is_required = true, lexeme = "as")
-    required_asterisk = new Other_Matcher(is_required = true, lexeme = "*")
-    required_at = new Other_Matcher(is_required = true, lexeme = "@")
-    required_break = new Keyword_Matcher(is_required = true, lexeme = "break")
-    required_close_brace = new Other_Matcher(is_required = true, lexeme = "}")
-    required_close_bracket = new Other_Matcher(is_required = true, lexeme = "]")
-    required_close_paren = new Other_Matcher(is_required = true, lexeme = ")")
-    required_colon = new Other_Matcher(is_required = true, lexeme = ":")
-    required_column = new Other_Matcher(is_required = true, lexeme = ";")
-    required_comma = new Other_Matcher(is_required = true, lexeme = ",")
-    required_comment = new Comment_Matcher(is_required = true)
-    required_define = new Keyword_Matcher(is_required = true, lexeme = "define")
-    required_dot = new Other_Matcher(is_required = true, lexeme = ".")
-    required_else = new Keyword_Matcher(is_required = true, lexeme = "else")
-    required_end_of_file = new End_Of_File_Matcher(is_required = true)
-    required_end_of_line = new End_Of_Line_Matcher(is_required = true)
-    required_equals = new Other_Matcher(is_required = true, lexeme = "=")
-    required_exclamation_mark = new Other_Matcher(is_required = true, lexeme = "!")
-    required_extends = new Keyword_Matcher(is_required = true, lexeme = "extends")
-    required_external = new Keyword_Matcher(is_required = true, lexeme = "external")
-    required_func = new Keyword_Matcher(is_required = true, lexeme = "func")
-    required_greater_than = new Other_Matcher(is_required = true, lexeme = ">")
-    required_hyphen = new Other_Matcher(is_required = true, lexeme = "-")
-    required_identifier = new Identifier_Matcher(is_required = true)
-    required_if = new Keyword_Matcher(is_required = true, lexeme = "if")
-    required_include = new Keyword_Matcher(is_required = true, lexeme = "include")
-    required_less_than = new Other_Matcher(is_required = true, lexeme = "<")
-    required_let = new Keyword_Matcher(is_required = true, lexeme = "let")
-    required_literal = new Literal_Matcher(is_required = true)
-    required_loop = new Keyword_Matcher(is_required = true, lexeme = "loop")
-    required_new = new Keyword_Matcher(is_required = true, lexeme = "new")
-    required_macro = new Keyword_Matcher(is_required = true, lexeme = "macro")
-    required_open_brace = new Other_Matcher(is_required = true, lexeme = "{")
-    required_open_bracket = new Other_Matcher(is_required = true, lexeme = "[")
-    required_open_paren = new Other_Matcher(is_required = true, lexeme = "(")
-    required_plus = new Other_Matcher(is_required = true, lexeme = "+")
-    required_question_mark = new Other_Matcher(is_required = true, lexeme = "?")
-    required_return = new Keyword_Matcher(is_required = true, lexeme = "return")
-    required_slash = new Other_Matcher(is_required = true, lexeme = "/")
-    required_string_literal = new String_Literal_Matcher(is_required = true)
-    required_struct = new Keyword_Matcher(is_required = true, lexeme = "struct")
-    required_unknown = new Keyword_Matcher(is_required = true, lexeme = "unknown")
-    required_vertical_bar = new Other_Matcher(is_required = true, lexeme = "|")
-    required_while = new Keyword_Matcher(is_required = true, lexeme = "while")
+    optional_comment = Comment_Matcher(is_required = false)
+    optional_space = Space_Matcher(is_required = false)
+    required_ampersand = Other_Matcher(is_required = true, lexeme = "&")
+    required_as = Keyword_Matcher(is_required = true, lexeme = "as")
+    required_asterisk = Other_Matcher(is_required = true, lexeme = "*")
+    required_at = Other_Matcher(is_required = true, lexeme = "@")
+    required_break = Keyword_Matcher(is_required = true, lexeme = "break")
+    required_close_brace = Other_Matcher(is_required = true, lexeme = "}")
+    required_close_bracket = Other_Matcher(is_required = true, lexeme = "]")
+    required_close_paren = Other_Matcher(is_required = true, lexeme = ")")
+    required_colon = Other_Matcher(is_required = true, lexeme = ":")
+    required_column = Other_Matcher(is_required = true, lexeme = ";")
+    required_comma = Other_Matcher(is_required = true, lexeme = ",")
+    required_comment = Comment_Matcher(is_required = true)
+    required_define = Keyword_Matcher(is_required = true, lexeme = "define")
+    required_dot = Other_Matcher(is_required = true, lexeme = ".")
+    required_else = Keyword_Matcher(is_required = true, lexeme = "else")
+    required_end_of_file = End_Of_File_Matcher(is_required = true)
+    required_end_of_line = End_Of_Line_Matcher(is_required = true)
+    required_equals = Other_Matcher(is_required = true, lexeme = "=")
+    required_exclamation_mark = Other_Matcher(is_required = true, lexeme = "!")
+    required_extends = Keyword_Matcher(is_required = true, lexeme = "extends")
+    required_external = Keyword_Matcher(is_required = true, lexeme = "external")
+    required_func = Keyword_Matcher(is_required = true, lexeme = "func")
+    required_greater_than = Other_Matcher(is_required = true, lexeme = ">")
+    required_hyphen = Other_Matcher(is_required = true, lexeme = "-")
+    required_identifier = Identifier_Matcher(is_required = true)
+    required_if = Keyword_Matcher(is_required = true, lexeme = "if")
+    required_include = Keyword_Matcher(is_required = true, lexeme = "include")
+    required_less_than = Other_Matcher(is_required = true, lexeme = "<")
+    required_let = Keyword_Matcher(is_required = true, lexeme = "let")
+    required_literal = Literal_Matcher(is_required = true)
+    required_loop = Keyword_Matcher(is_required = true, lexeme = "loop")
+    required_macro = Keyword_Matcher(is_required = true, lexeme = "macro")
+    required_open_brace = Other_Matcher(is_required = true, lexeme = "{")
+    required_open_bracket = Other_Matcher(is_required = true, lexeme = "[")
+    required_open_paren = Other_Matcher(is_required = true, lexeme = "(")
+    required_plus = Other_Matcher(is_required = true, lexeme = "+")
+    required_question_mark = Other_Matcher(is_required = true, lexeme = "?")
+    required_return = Keyword_Matcher(is_required = true, lexeme = "return")
+    required_slash = Other_Matcher(is_required = true, lexeme = "/")
+    required_string_literal = String_Literal_Matcher(is_required = true)
+    required_struct = Keyword_Matcher(is_required = true, lexeme = "struct")
+    required_type_name = Type_Name_Matcher(is_required = true)
+    required_unknown = Keyword_Matcher(is_required = true, lexeme = "unknown")
+    required_vertical_bar = Other_Matcher(is_required = true, lexeme = "|")
+    required_while = Keyword_Matcher(is_required = true, lexeme = "while")
 }

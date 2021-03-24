@@ -3,7 +3,7 @@ let shape: Shape = undefined
 let polygon: !Polygon
 
 define main = func () -> i32 {
-    shape = new Rectangle()
+    shape = Rectangle()
     if (shape.is(Polygon) == false) {
         return 1
     }

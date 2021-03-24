@@ -1,10 +1,10 @@
 \ Copyright (c) 2020-2021, Stefan Selariu
 
 define Compilation_Unit = struct {
-    sources: List[Source] = new List[Source]()
-    function_statements: List[AST_Function_Statement] = new List[AST_Function_Statement]()
-    macro_statements: List[AST_Macro_Statement] = new List[AST_Macro_Statement]()
-    statements: List[AST_Statement] = new List[AST_Statement]()
+    sources: List[Source] = List[Source]()
+    function_statements: List[AST_Function_Statement] = List[AST_Function_Statement]()
+    macro_statements: List[AST_Macro_Statement] = List[AST_Macro_Statement]()
+    statements: List[AST_Statement] = List[AST_Statement]()
 }
 
 define AST_Statement = struct {
@@ -386,10 +386,10 @@ define AST_Cast_Expression = struct {
     type: AST_Type
 }
 
-define AST_New_Expression = struct {
+define AST_Init_Expression = struct {
     extends AST_Expression(
         convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_new_expression(expression as AST_New_Expression)
+            return builder.convert_init_expression(expression as AST_Init_Expression)
         }
     )
     type: AST_Type

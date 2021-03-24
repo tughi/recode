@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define String = struct {
     data: [i8; ?] = malloc(16 as i64) as [i8; ?]
@@ -16,11 +16,11 @@ define create_string = func (data: [i8; ?]) -> String {
         data_length = data_length + 1
     }
 
-    return new String(data = data, data_size = data_length + 1, length = data_length)
+    return String(data = data, data_size = data_length + 1, length = data_length)
 }
 
 define clone = func (self: String) -> String {
-    let clone = new String(data = malloc(self.data_size) as [i8; ?], data_size = self.data_size)
+    let clone = String(data = malloc(self.data_size) as [i8; ?], data_size = self.data_size)
     clone.append(self)
     return clone
 }

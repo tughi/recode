@@ -1,13 +1,13 @@
 include "./code/lang/Object.code"
 
 define main = func (argc: i32, argv: [[i8; ?]; ?]) -> i32 {
-    let window = Widget()
+    let window = !Widget()
     return window.bounds.location.x - 42
 }
 
 define Widget = struct {
     extends Object
-    bounds: !Rectangle = Rectangle()
+    bounds: !Rectangle = !Rectangle()
 }
 
 define set_location = func (self: Widget, x: i32, y: i32) -> Nothing {
@@ -15,7 +15,7 @@ define set_location = func (self: Widget, x: i32, y: i32) -> Nothing {
 }
 
 define Rectangle = struct {
-    location: !Point = Point(x = 42, y = 42)
+    location: !Point = !Point(x = 42, y = 42)
     width: i32
     height: i32
 }

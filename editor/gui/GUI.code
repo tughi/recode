@@ -20,8 +20,8 @@ define GUI = struct {
                 child.on_mouse_moved(event)
             }
             if (last_hovered_widget != self.hovered_widget) {
-                self.post(new GUI_Event_Widget_Updated(widget = last_hovered_widget))
-                self.post(new GUI_Event_Widget_Updated(widget = self.hovered_widget))
+                self.post(GUI_Event_Widget_Updated(widget = last_hovered_widget))
+                self.post(GUI_Event_Widget_Updated(widget = self.hovered_widget))
             }
         }
         on_mouse_button_pressed = func (self: GUI, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
@@ -48,7 +48,7 @@ define GUI = struct {
                 }
 
                 self.layout_widget(left, top, right, bottom)
-                self.post(new GUI_Event_Widget_Updated(widget = self))
+                self.post(GUI_Event_Widget_Updated(widget = self))
 
                 self.for_each_child() {
                     child.layout(left, top, right, bottom)
@@ -71,7 +71,7 @@ define GUI = struct {
 }
 
 define init_gui = func () -> GUI {
-    let gui = new GUI(gui = undefined, parent = null, hovered_widget = undefined)
+    let gui = GUI(gui = undefined, parent = null, hovered_widget = undefined)
     gui.gui = gui
     gui.hovered_widget = gui
     return gui

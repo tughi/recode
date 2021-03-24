@@ -33,7 +33,7 @@ define main = func () -> i32 {
         return 1
     }
 
-    let canvas = new Canvas(
+    let canvas = Canvas(
         pixels = window_surface.pixels
         width = window_surface.width
         height = window_surface.height
@@ -49,11 +49,11 @@ define main = func () -> i32 {
 
     init_font()
 
-    let gui_event_init = new GUI_Event_Init()
-    let gui_event_mouse_button_pressed = new GUI_Event_Mouse_Button_Pressed(button = undefined, x = undefined, y = undefined)
-    let gui_event_mouse_button_released = new GUI_Event_Mouse_Button_Released(button = undefined, x = undefined, y = undefined)
-    let gui_event_mouse_moved = new GUI_Event_Mouse_Moved(x = undefined, y = undefined)
-    let gui_event_mouse_scrolled = new GUI_Event_Mouse_Scrolled(x = undefined, y = undefined)
+    let gui_event_init = GUI_Event_Init()
+    let gui_event_mouse_button_pressed = GUI_Event_Mouse_Button_Pressed(button = undefined, x = undefined, y = undefined)
+    let gui_event_mouse_button_released = GUI_Event_Mouse_Button_Released(button = undefined, x = undefined, y = undefined)
+    let gui_event_mouse_moved = GUI_Event_Mouse_Moved(x = undefined, y = undefined)
+    let gui_event_mouse_scrolled = GUI_Event_Mouse_Scrolled(x = undefined, y = undefined)
 
     let gui = init_gui()
     let glyph_editor: Glyph_Editor
@@ -81,11 +81,11 @@ define main = func () -> i32 {
 
             let glyph_chooser = gui.glyph_chooser('A' as u8)
             glyph_chooser.width_policy = Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
-            glyph_chooser.data = new Glyph_Chooser_Data(glyph_editor = glyph_editor)
+            glyph_chooser.data = Glyph_Chooser_Data(glyph_editor = glyph_editor)
             glyph_chooser.handle_glyph_selected = func (self: Glyph_Chooser, glyph: u8) -> Nothing {
                 let glyph_editor = (self.data as Glyph_Chooser_Data).glyph_editor
                 glyph_editor.glyph = font.glyphs[glyph]
-                glyph_editor.gui.post(new GUI_Event_Widget_Updated(widget = glyph_editor))
+                glyph_editor.gui.post(GUI_Event_Widget_Updated(widget = glyph_editor))
             }
 
             let text = gui.text(text)
@@ -95,7 +95,7 @@ define main = func () -> i32 {
     }
     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
 
-    let sdl_event = new SDL_Undefined_Event()
+    let sdl_event = SDL_Undefined_Event()
     loop {
         while (gui.first_event != null) {
             let event = gui.first_event

@@ -585,7 +585,7 @@ define generate_load_array_item_instruction = func (self: MC_Generator, instruct
         self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_register.name_q).end_line()
     }
     if (instruction.load_address == false) {
-        let address = new MC_Register_Based_Address(register = result_register)
+        let address = MC_Register_Based_Address(register = result_register)
         if (array_item_type_size == 8i64) {
             self.output_file.write("  mov ").write(result_register.name_q).write(", ").write(address).end_line()
         } else if (array_item_type_size == 4i64) {
@@ -685,7 +685,7 @@ define generate_load_struct_member_instruction = func (self: MC_Generator, instr
         } else {
             self.abort("Invalid state")
         }
-        self.output_file.write(", ").write(new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)).end_line()
+        self.output_file.write(", ").write(MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)).end_line()
     }
     struct_pointer_register.is_reserved = false
 }
@@ -797,7 +797,7 @@ define generate_new_instruction = func (self: MC_Generator, instruction: IR_New_
     self.output_file.write("  mov ").write(self.register_rdi.name_q).write(", ").write(self.get_type_size(instruction.type)).end_line()
     self.output_file.write("  call ").write("malloc").end_line()
     self.map_variable_value(instruction.result_value, self.register_rax)
-    self.generate_store_value(instruction.get_init_value(), new MC_Register_Based_Address(register = self.register_rax))
+    self.generate_store_value(instruction.get_init_value(), MC_Register_Based_Address(register = self.register_rax))
 }
 
 define generate_phi_instruction = func (self: MC_Generator, instruction: IR_Phi_Instruction) -> Nothing {
@@ -911,7 +911,7 @@ define generate_store_array_item_instruction = func (self: MC_Generator, instruc
         index_register.is_reserved = false
     }
 
-    self.generate_store_value(ir_value, new MC_Register_Based_Address(register = address_register))
+    self.generate_store_value(ir_value, MC_Register_Based_Address(register = address_register))
 
     address_register.is_reserved = false
 }
@@ -942,14 +942,14 @@ define generate_store_struct_member_instruction = func (self: MC_Generator, inst
                 self.map_variable_value(ir_value, register)
             }
         }
-        let struct_type_member_address = new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
+        let struct_type_member_address = MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
         self.generate_store_value(ir_value, struct_type_member_address)
     } else if (ir_struct_pointer_value.is(IR_Global_Variable_Address_Value)) {
         let struct_pointer_register = self.find_unused_register()
         struct_pointer_register.is_reserved = true
         self.generate_load_value(struct_pointer_register, ir_struct_pointer_value)
         let struct_type_member_offset = self.get_offset(instruction.struct_type_member)
-        let struct_type_member_address = new MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
+        let struct_type_member_address = MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
         self.generate_store_value(instruction.get_value(), struct_type_member_address)
         struct_pointer_register.is_reserved = false
     } else {
@@ -1119,7 +1119,7 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
     } else if (ir_value.is(IR_Global_Variable_Value)) {
         let ir_value = ir_value as IR_Global_Variable_Value
         let ir_value_type = ir_value.type
-        let variable_address = new MC_Global_Variable_Address(ir_variable = ir_value.variable)
+        let variable_address = MC_Global_Variable_Address(ir_variable = ir_value.variable)
         if (ir_value_type.is(IR_Boolean_Type)) {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(variable_address).end_line()
         } else if (ir_value_type.is(IR_Function_Type)) {
@@ -1141,7 +1141,7 @@ define generate_load_value = func (self: MC_Generator, register: MC_Register, ir
         }
     } else if (ir_value.is(IR_Global_Variable_Address_Value)) {
         let ir_value = ir_value as IR_Global_Variable_Address_Value
-        let variable_address = new MC_Global_Variable_Address(ir_variable = ir_value.variable)
+        let variable_address = MC_Global_Variable_Address(ir_variable = ir_value.variable)
         self.output_file.write("  lea ").write(register.name_q).write(", ").write(variable_address).end_line()
     } else if (ir_value.is(IR_Function_Address_Value)) {
         let ir_value = ir_value as IR_Function_Address_Value
@@ -1207,13 +1207,13 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
         if (address.is(MC_Register_Based_Address)) {
             let address = address as MC_Register_Based_Address
             destination_register = null
-            destination_address = new MC_Register_Based_Address(register = address.register)
+            destination_address = MC_Register_Based_Address(register = address.register)
             destination_address_extra_offset = address.offset
         } else {
             destination_register = self.find_unused_register()
             destination_register.is_reserved = true
             self.output_file.write("  lea ").write(destination_register.name_q).write(", ").write(address).end_line()
-            destination_address = new MC_Register_Based_Address(register = destination_register)
+            destination_address = MC_Register_Based_Address(register = destination_register)
             destination_address_extra_offset = 0
         }
         if (ir_value.is(IR_Variable_Value)) {
@@ -1229,13 +1229,13 @@ define generate_store_value = func (self: MC_Generator, ir_value: IR_Value, addr
             if (mc_value_address.is(MC_Register_Based_Address)) {
                 let mc_value_address = mc_value_address as MC_Register_Based_Address
                 source_register = null
-                source_address = new MC_Register_Based_Address(register = mc_value_address.register)
+                source_address = MC_Register_Based_Address(register = mc_value_address.register)
                 source_address_extra_offset = mc_value_address.offset
             } else {
                 source_register = self.find_unused_register()
                 source_register.is_reserved = true
                 self.output_file.write("  lea ").write(source_register.name_q).write(", ").write(mc_value_address).end_line()
-                source_address = new MC_Register_Based_Address(register = source_register)
+                source_address = MC_Register_Based_Address(register = source_register)
                 source_address_extra_offset = 0
             }
             let ir_value_type_size = self.get_type_size(ir_value_type)
@@ -1415,30 +1415,30 @@ define MC_Generator = struct {
     output_file_path: String
     output_file: FILE
     output_debug_comments: bool
-    register_rax: MC_Register = new MC_Register_RAX(name_q = "rax", name_d = "eax", name_w = "ax", name_b = "al")
-    register_rcx: MC_Register = new MC_Register_RCX(name_q = "rcx", name_d = "ecx", name_w = "cx", name_b = "cl")
-    register_rdx: MC_Register = new MC_Register_RDX(name_q = "rdx", name_d = "edx", name_w = "dx", name_b = "dl")
-    register_rbx: MC_Register = new MC_Register_RBX(name_q = "rbx", name_d = "ebx", name_w = "bx", name_b = "bl")
-    register_rsi: MC_Register = new MC_Register_RSI(name_q = "rsi", name_d = "esi", name_w = "si", name_b = "sil")
-    register_rdi: MC_Register = new MC_Register_RDI(name_q = "rdi", name_d = "edi", name_w = "di", name_b = "dil")
-    register_rsp: MC_Register = new MC_Register_RSP(name_q = "rsp", name_d = "esp", name_w = "sp", name_b = "spl")
-    register_rbp: MC_Register = new MC_Register_RBP(name_q = "rbp", name_d = "ebp", name_w = "bp", name_b = "bpl")
-    register_r8: MC_Register = new MC_Register_R8(name_q = "r8", name_d = "r8d", name_w = "r8w", name_b = "r8b")
-    register_r9: MC_Register = new MC_Register_R9(name_q = "r9", name_d = "r9d", name_w = "r9w", name_b = "r9b")
-    register_r10: MC_Register = new MC_Register_R10(name_q = "r10", name_d = "r10d", name_w = "r10w", name_b = "r10b")
-    register_r11: MC_Register = new MC_Register_R11(name_q = "r11", name_d = "r11d", name_w = "r11w", name_b = "r11b")
-    register_r12: MC_Register = new MC_Register_R12(name_q = "r12", name_d = "r12d", name_w = "r12w", name_b = "r12b")
-    register_r13: MC_Register = new MC_Register_R13(name_q = "r13", name_d = "r13d", name_w = "r13w", name_b = "r13b")
-    register_r14: MC_Register = new MC_Register_R14(name_q = "r14", name_d = "r14d", name_w = "r14w", name_b = "r14b")
-    register_r15: MC_Register = new MC_Register_R15(name_q = "r15", name_d = "r15d", name_w = "r15w", name_b = "r15b")
+    register_rax: MC_Register = MC_Register_RAX(name_q = "rax", name_d = "eax", name_w = "ax", name_b = "al")
+    register_rcx: MC_Register = MC_Register_RCX(name_q = "rcx", name_d = "ecx", name_w = "cx", name_b = "cl")
+    register_rdx: MC_Register = MC_Register_RDX(name_q = "rdx", name_d = "edx", name_w = "dx", name_b = "dl")
+    register_rbx: MC_Register = MC_Register_RBX(name_q = "rbx", name_d = "ebx", name_w = "bx", name_b = "bl")
+    register_rsi: MC_Register = MC_Register_RSI(name_q = "rsi", name_d = "esi", name_w = "si", name_b = "sil")
+    register_rdi: MC_Register = MC_Register_RDI(name_q = "rdi", name_d = "edi", name_w = "di", name_b = "dil")
+    register_rsp: MC_Register = MC_Register_RSP(name_q = "rsp", name_d = "esp", name_w = "sp", name_b = "spl")
+    register_rbp: MC_Register = MC_Register_RBP(name_q = "rbp", name_d = "ebp", name_w = "bp", name_b = "bpl")
+    register_r8: MC_Register = MC_Register_R8(name_q = "r8", name_d = "r8d", name_w = "r8w", name_b = "r8b")
+    register_r9: MC_Register = MC_Register_R9(name_q = "r9", name_d = "r9d", name_w = "r9w", name_b = "r9b")
+    register_r10: MC_Register = MC_Register_R10(name_q = "r10", name_d = "r10d", name_w = "r10w", name_b = "r10b")
+    register_r11: MC_Register = MC_Register_R11(name_q = "r11", name_d = "r11d", name_w = "r11w", name_b = "r11b")
+    register_r12: MC_Register = MC_Register_R12(name_q = "r12", name_d = "r12d", name_w = "r12w", name_b = "r12b")
+    register_r13: MC_Register = MC_Register_R13(name_q = "r13", name_d = "r13d", name_w = "r13w", name_b = "r13b")
+    register_r14: MC_Register = MC_Register_R14(name_q = "r14", name_d = "r14d", name_w = "r14w", name_b = "r14b")
+    register_r15: MC_Register = MC_Register_R15(name_q = "r15", name_d = "r15d", name_w = "r15w", name_b = "r15b")
     first_value: MC_Value = null
     last_value: MC_Value = null
     stack_frame_size: i64 = 0
-    strings: List[MC_String] = new List[MC_String]()
+    strings: List[MC_String] = List[MC_String]()
 }
 
 define create_mc_generator = func (output_file_path: String) -> MC_Generator {
-    return new MC_Generator(
+    return MC_Generator(
         output_file_path = output_file_path
         output_file = fopen(output_file_path.data, "w".data)
         output_debug_comments = true
@@ -1510,7 +1510,7 @@ define find_unused_register = func (self: MC_Generator) -> MC_Register {
 }
 
 define create_mc_value = func (self: MC_Generator, ir_instruction: IR_Instruction) -> Nothing {
-    let mc_value = new MC_Value(
+    let mc_value = MC_Value(
         prev_value = self.last_value
         ir_variable_value = ir_instruction.result_value
         ir_instruction = ir_instruction
@@ -1603,12 +1603,12 @@ define create_local_variable_address = func (self: MC_Generator, variable_type_s
     if (-offset > self.stack_frame_size) {
         self.stack_frame_size = -offset
     }
-    return new MC_Local_Variable_Address(register = self.register_rbp, offset = offset)
+    return MC_Local_Variable_Address(register = self.register_rbp, offset = offset)
 }
 
 define spill_global_variable = func (self: MC_Generator, mc_value: MC_Value) -> Nothing {
     self.output_file.write("  # store global variable: ").write(mc_value.ir_variable_value.variable.name).end_line()
-    self.generate_store_value(mc_value.ir_variable_value, new MC_Global_Variable_Address(ir_variable = mc_value.ir_variable_value.variable))
+    self.generate_store_value(mc_value.ir_variable_value, MC_Global_Variable_Address(ir_variable = mc_value.ir_variable_value.variable))
 }
 
 define release_all_registers = func (self: MC_Generator) -> Nothing {
@@ -2000,7 +2000,7 @@ define convert_string = func (self: MC_Generator, literal: String_Token) -> MC_S
             return string
         }
     }
-    let string = new MC_String(id = self.strings.size, literal = literal)
+    let string = MC_String(id = self.strings.size, literal = literal)
     self.strings.append(string)
     return string
 }

@@ -1,7 +1,7 @@
 include "./code/lang/Object.code"
 
 define main = func () -> Nothing {
-    let map = new Map[Any, i32]
+    let map = Map[Any, i32]()
     map.put("One", 0)
     map.put("One", 1)
 
@@ -17,7 +17,7 @@ define main = func () -> Nothing {
         abort()
     }
 
-    let map = new Special_Map
+    let map = Special_Map()
     map.put("Two", 2)
     map.put("Three", 3)
 
@@ -67,7 +67,7 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
         item = item.next_item
     }
 
-    let item = new Map_Item[K, V](
+    let item = Map_Item[K, V](
         key = key
         value = value
         prev_item = self.last_item

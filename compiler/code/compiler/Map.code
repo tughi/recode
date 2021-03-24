@@ -33,7 +33,7 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> V {
         }
         entry = entry.next_entry
     }
-    entry = new Map_Entry[K, V](key = key, value = value, prev_entry = self.last_entry)
+    entry = Map_Entry[K, V](key = key, value = value, prev_entry = self.last_entry)
     if (self.last_entry == null) {
         self.first_entry = entry
     } else {

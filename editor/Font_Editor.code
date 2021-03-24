@@ -7,7 +7,7 @@ define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
 
 define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
-    let glyph_editor = new Glyph_Editor(gui = parent.gui, parent = parent, glyph = glyph)
+    let glyph_editor = Glyph_Editor(gui = parent.gui, parent = parent, glyph = glyph)
     parent.add(glyph_editor)
 
     let glyph_rows = glyph.mask.length as i32
@@ -41,7 +41,7 @@ define Glyph_Editor = struct {
                 self.hovered_column = -1
             }
             if (last_hovered_row != self.hovered_row || last_hovered_column != self.hovered_column) {
-                self.gui.post(new GUI_Event_Widget_Updated(widget = self))
+                self.gui.post(GUI_Event_Widget_Updated(widget = self))
             }
         }
         on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
@@ -72,7 +72,7 @@ define Glyph_Editor = struct {
                         }
                         glyph_row = glyph_row + 1
                     }
-                    self.gui.post(new GUI_Event_Widget_Updated(widget = self.gui))
+                    self.gui.post(GUI_Event_Widget_Updated(widget = self.gui))
                 } else if (event.button == 3u8) {
                     self.is_erasing = false
                 }
@@ -178,18 +178,18 @@ define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 define update_glyph_cell = macro (self: Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
     if (self.glyph.mask[glyph_row][glyph_column] != value) {
         self.glyph.mask[glyph_row][glyph_column] = value
-        self.gui.post(new GUI_Event_Widget_Updated(widget = self.gui))
+        self.gui.post(GUI_Event_Widget_Updated(widget = self.gui))
     }
 }
 
 define glyph_chooser = func (parent: GUI_Layout, selected_glyph: u8) -> Glyph_Chooser {
-    let glyph_chooser = new Glyph_Chooser(gui = parent.gui, parent = parent, selected_glyph = selected_glyph)
+    let glyph_chooser = Glyph_Chooser(gui = parent.gui, parent = parent, selected_glyph = selected_glyph)
     parent.add(glyph_chooser)
 
     let glyph = ' '
     while (glyph <= '~') {
-        let button = glyph_chooser.button(new String().append(glyph as u8))
-        button.data = new Glyph_Chooser_Button_Data(glyph_chooser = glyph_chooser, glyph = glyph as u8)
+        let button = glyph_chooser.button(String().append(glyph as u8))
+        button.data = Glyph_Chooser_Button_Data(glyph_chooser = glyph_chooser, glyph = glyph as u8)
         button.on_click = func (self: GUI_Button) -> Nothing {
             let data = (self as GUI_Button).data as Glyph_Chooser_Button_Data
             data.glyph_chooser.handle_glyph_selected(data.glyph)

@@ -112,7 +112,7 @@ define IR_Function_Type = struct {
 }
 
 define create_ir_function_type = func (parameters: List[IR_Callable_Parameter], return_type: IR_Type) -> IR_Function_Type {
-    let type_name = new String().append("func (")
+    let type_name = String().append("func (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
         let parameter = parameters_item.data
@@ -124,7 +124,7 @@ define create_ir_function_type = func (parameters: List[IR_Callable_Parameter], 
     }
     type_name.append(") -> ").append(return_type.name)
 
-    return new IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
+    return IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
 }
 
 define IR_Macro_Body_Type = struct {
@@ -136,7 +136,7 @@ define IR_Macro_Type = struct {
 }
 
 define create_ir_macro_type = func (parameters: List[IR_Callable_Parameter]) -> IR_Macro_Type {
-    let type_name = new String().append("macro (")
+    let type_name = String().append("macro (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
         let parameter = parameters_item.data
@@ -148,13 +148,13 @@ define create_ir_macro_type = func (parameters: List[IR_Callable_Parameter]) -> 
     }
     type_name.append(')')
 
-    return new IR_Macro_Type(name = type_name, parameters = parameters)
+    return IR_Macro_Type(name = type_name, parameters = parameters)
 }
 
 define IR_Struct_Type = struct {
     extends IR_Type
     base_type: IR_Struct_Type = null
-    members: List[IR_Struct_Type_Member] = new List[IR_Struct_Type_Member]()
+    members: List[IR_Struct_Type_Member] = List[IR_Struct_Type_Member]()
     statement: AST_Struct_Statement
 }
 
@@ -165,7 +165,7 @@ define IR_Struct_Type_Member = struct {
 }
 
 define add_member = func (self: IR_Struct_Type, name: String, type: IR_Type) -> IR_Struct_Type_Member {
-    let member = new IR_Struct_Type_Member(struct_type = self, name = name, type = type)
+    let member = IR_Struct_Type_Member(struct_type = self, name = name, type = type)
     self.members.append(member)
     return member
 }
@@ -232,8 +232,8 @@ define IR_Value = struct {
     extends Object
     type: IR_Type
     creator_instruction: IR_Instruction = null
-    user_instructions: List[IR_Instruction] = new List[IR_Instruction]()
-    links: List[IR_Link] = new List[IR_Link]()
+    user_instructions: List[IR_Instruction] = List[IR_Instruction]()
+    links: List[IR_Link] = List[IR_Link]()
     dump: func (value: IR_Value, file: FILE) -> FILE = func (value: IR_Value, file: FILE) -> FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(value.object_type.name))
@@ -334,8 +334,8 @@ define get_member_value = func (self: IR_Struct_Literal_Value, struct_type_membe
 }
 
 define set_member_value = func (self: IR_Struct_Literal_Value, struct_type_member: IR_Struct_Type_Member, value: IR_Value) -> Nothing {
-    let member_value_link = new IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
-    member_value_link.back_link = new IR_Required_By_Value_Link(value = self, back_link = member_value_link)
+    let member_value_link = IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
+    member_value_link.back_link = IR_Required_By_Value_Link(value = self, back_link = member_value_link)
     self.links.append(member_value_link)
     value.links.append(member_value_link.back_link)
 }
@@ -412,7 +412,7 @@ define IR_Block = struct {
     extends Object
     id: i64
     function: IR_Function
-    predecessors: List[IR_Block] = new List[IR_Block]()
+    predecessors: List[IR_Block] = List[IR_Block]()
     first_instruction: IR_Instruction = null
     last_instruction: IR_Instruction = null
     is_being_generated: bool = false
@@ -450,14 +450,14 @@ define append = func (self: IR_Block, instruction: IR_Instruction) -> IR_Instruc
 }
 
 define append_jump = func (self: IR_Block, block: IR_Block) -> IR_Direct_Jump_Instruction {
-    let instruction = new IR_Direct_Jump_Instruction(result_value = null, block = block)
+    let instruction = IR_Direct_Jump_Instruction(result_value = null, block = block)
     block.predecessors.append(self)
     self.append(instruction)
     return instruction
 }
 
 define append_jump = func (self: IR_Block, condition_value: IR_Value, true_block: IR_Block, false_block: IR_Block) -> IR_Conditional_Jump_Instruction {
-    let instruction = new IR_Conditional_Jump_Instruction(result_value = null, true_block = true_block, false_block = false_block)
+    let instruction = IR_Conditional_Jump_Instruction(result_value = null, true_block = true_block, false_block = false_block)
     instruction.set_operand_value("condition", condition_value)
     true_block.predecessors.append(self)
     false_block.predecessors.append(self)
@@ -528,7 +528,7 @@ define IR_Function = struct {
 }
 
 define create_block = func (self: IR_Function) -> IR_Block {
-    let block = new IR_Block(id = self.blocks.size + 1, function = self)
+    let block = IR_Block(id = self.blocks.size + 1, function = self)
     self.blocks.append(block)
     return block
 }
@@ -571,7 +571,7 @@ define IR_Symbol = struct {
 define IR_Variable = struct {
     extends IR_Symbol
     type: IR_Type
-    values: List[IR_Value] = new List[IR_Value]()
+    values: List[IR_Value] = List[IR_Value]()
 }
 
 define IR_Global_Variable = struct {
@@ -593,7 +593,7 @@ define IR_Instruction = struct {
     extends Object
     location: Source_Location = null
     result_value: IR_Variable_Value
-    operand_values: Map[Any, IR_Value] = new Map[Any, IR_Value]()
+    operand_values: Map[Any, IR_Value] = Map[Any, IR_Value]()
     parent_block: IR_Block = undefined
     prev_instruction: IR_Instruction = null
     next_instruction: IR_Instruction = null
@@ -714,7 +714,7 @@ define IR_Direct_Call_Instruction = struct {
 }
 
 define create_ir_direct_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List[IR_Call_Argument], function: IR_Function) -> IR_Call_Instruction {
-    let instruction = new IR_Direct_Call_Instruction(result_value = result_value, function = function)
+    let instruction = IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
     if (result_value != null) {
         result_value.creator_instruction = instruction
@@ -736,7 +736,7 @@ define IR_Dynamic_Call_Instruction = struct {
 }
 
 define create_ir_dynamic_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List[IR_Call_Argument], function_address: IR_Variable_Value) -> IR_Call_Instruction {
-    let instruction = new IR_Dynamic_Call_Instruction(result_value = result_value)
+    let instruction = IR_Dynamic_Call_Instruction(result_value = result_value)
     instruction.add_arguments(call_arguments)
     instruction.set_operand_value("function_address", function_address)
     if (result_value != null) {
@@ -760,7 +760,7 @@ define IR_Cast_Instruction = struct {
 }
 
 define create_ir_cast_instruction = func (result_value: IR_Variable_Value, value: IR_Value) -> IR_Cast_Instruction {
-    let instruction = new IR_Cast_Instruction(result_value = result_value)
+    let instruction = IR_Cast_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
@@ -814,7 +814,7 @@ define IR_Load_Array_Item_Instruction = struct {
 }
 
 define create_ir_load_array_item_instruction = func (result_value: IR_Variable_Value, array_value: IR_Value, index_value: IR_Value, array_item_type: IR_Type, load_address: bool) -> IR_Load_Array_Item_Instruction {
-    let instruction = new IR_Load_Array_Item_Instruction(result_value = result_value, array_item_type = array_item_type, load_address = load_address)
+    let instruction = IR_Load_Array_Item_Instruction(result_value = result_value, array_item_type = array_item_type, load_address = load_address)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
     result_value.creator_instruction = instruction
@@ -847,13 +847,13 @@ define IR_Load_Struct_Member_Instruction = struct {
 }
 
 define create_ir_load_struct_member_instruction = func (result_value: IR_Variable_Value, struct_pointer_value: IR_Value, struct_type_member: IR_Struct_Type_Member, load_address: bool) -> IR_Load_Struct_Member_Instruction {
-    let instruction = new IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
+    let instruction = IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     result_value.creator_instruction = instruction
 
     if (struct_type_member.type.is(IR_Struct_Type)) {
-        let result_value_link = new IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
-        result_value_link.back_link = new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
+        let result_value_link = IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
+        result_value_link.back_link = IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
         result_value.links.append(result_value_link)
         struct_pointer_value.links.append(result_value_link.back_link)
     }
@@ -876,12 +876,12 @@ define IR_Load_Variable_Address_Instruction = struct {
 }
 
 define create_ir_load_variable_address_instruction = func (result_value: IR_Variable_Value, variable_value: IR_Variable_Value) -> IR_Load_Variable_Address_Instruction {
-    let instruction = new IR_Load_Variable_Address_Instruction(result_value = result_value)
+    let instruction = IR_Load_Variable_Address_Instruction(result_value = result_value)
     instruction.set_operand_value("variable_value", variable_value)
     result_value.creator_instruction = instruction
 
-    let result_value_link = new IR_Requires_Value_Link(value = variable_value, back_link = undefined)
-    result_value_link.back_link = new IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
+    let result_value_link = IR_Requires_Value_Link(value = variable_value, back_link = undefined)
+    result_value_link.back_link = IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
     result_value.links.append(result_value_link)
     variable_value.links.append(result_value_link.back_link)
 
@@ -903,7 +903,7 @@ define IR_Load_Variable_Instruction = struct {
 }
 
 define create_ir_load_variable_instruction = func (result_value: IR_Variable_Value) -> IR_Load_Variable_Instruction {
-    let instruction = new IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
+    let instruction = IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
     result_value.creator_instruction = instruction
     return instruction
 }
@@ -920,7 +920,7 @@ define IR_New_Instruction = struct {
 }
 
 define create_ir_new_instruction = func (result_value: IR_Variable_Value, type: IR_Type, init_value: IR_Value) -> IR_New_Instruction {
-    let instruction = new IR_New_Instruction(result_value = result_value, type = type)
+    let instruction = IR_New_Instruction(result_value = result_value, type = type)
     instruction.set_operand_value("init_value", init_value)
     result_value.creator_instruction = instruction
     return instruction
@@ -944,7 +944,7 @@ define IR_Return_Instruction = struct {
 }
 
 define create_ir_return_instruction = func (return_value: IR_Value) -> IR_Return_Instruction {
-    let instruction = new IR_Return_Instruction(result_value = null)
+    let instruction = IR_Return_Instruction(result_value = null)
     if (return_value != null) {
         instruction.set_operand_value("return_value", return_value)
     }
@@ -966,7 +966,7 @@ define IR_Set_Instruction = struct {
 }
 
 define create_ir_set_instruction = func (result_value: IR_Variable_Value, value: IR_Value) -> IR_Set_Instruction {
-    let instruction = new IR_Set_Instruction(result_value = result_value)
+    let instruction = IR_Set_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
@@ -987,7 +987,7 @@ define IR_Store_Array_Item_Instruction = struct {
 }
 
 define create_ir_store_array_item_instruction = func (array_value: IR_Value, index_value: IR_Value, value: IR_Value) -> IR_Store_Array_Item_Instruction {
-    let instruction = new IR_Store_Array_Item_Instruction(result_value = null)
+    let instruction = IR_Store_Array_Item_Instruction(result_value = null)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
     instruction.set_operand_value("value", value)
@@ -1018,7 +1018,7 @@ define IR_Store_Struct_Member_Instruction = struct {
 }
 
 define create_ir_store_struct_member_instruction = func (struct_pointer_value: IR_Value, struct_type_member: IR_Struct_Type_Member, value: IR_Value) -> IR_Store_Struct_Member_Instruction {
-    let instruction = new IR_Store_Struct_Member_Instruction(result_value = null, struct_type_member = struct_type_member)
+    let instruction = IR_Store_Struct_Member_Instruction(result_value = null, struct_type_member = struct_type_member)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     instruction.set_operand_value("value", value)
     return instruction
@@ -1187,7 +1187,7 @@ define IR_Phi_Instruction = struct {
 }
 
 define create_ir_phi_instruction = func (result_value: IR_Variable_Value) -> IR_Phi_Instruction {
-    let instruction = new IR_Phi_Instruction(result_value = result_value)
+    let instruction = IR_Phi_Instruction(result_value = result_value)
     result_value.creator_instruction = instruction
     return instruction
 }

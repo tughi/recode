@@ -400,8 +400,20 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
         return file.write((expression as AST_Literal_Expression).literal)
     }
 
-    if (expression.is(AST_New_Expression)) {
-        return file.write("new ").write((expression as AST_New_Expression).type)
+    if (expression.is(AST_Init_Expression)) {
+        let expression = expression as AST_Init_Expression
+        file.write(expression.type)
+        for_each_list_item(expression.init_arguments) {
+            let call_argument = list_item.data
+            if (call_argument.name != null) {
+                file.write(call_argument.name).write(" = ")
+            }
+            file.write(call_argument.value_expression)
+            if (list_item.next_item != null) {
+                file.write(", ")
+            }
+        }
+        return file.write(')')
     }
 
     if (expression.is(AST_Negate_Expression)) {

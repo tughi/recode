@@ -7,7 +7,7 @@ include "../Math.code"
 
 define text = func (parent: GUI_Layout, value: String) -> GUI_Text_Box {
     let model = create_text_model(value)
-    let text = new GUI_Text_Box(gui = parent.gui, parent = parent, model = model)
+    let text = GUI_Text_Box(gui = parent.gui, parent = parent, model = model)
     parent.add(text)
     return text
 }
@@ -21,10 +21,10 @@ define GUI_Text_Box = struct {
             if (self.model.lines > 1) {
                 if (event.y > 0) {
                     self.first_visible_line = max(0, self.first_visible_line - event.y)
-                    self.gui.post(new GUI_Event_Widget_Updated(widget = self))
+                    self.gui.post(GUI_Event_Widget_Updated(widget = self))
                 } else if (event.y < 0) {
                     self.first_visible_line = min(self.model.lines - 1, self.first_visible_line - event.y)
-                    self.gui.post(new GUI_Event_Widget_Updated(widget = self))
+                    self.gui.post(GUI_Event_Widget_Updated(widget = self))
                 }
             }
         }

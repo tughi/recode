@@ -1,3 +1,5 @@
+\ Copyright (c) 2021, Stefan Selariu
+
 include "../String.code"
 
 define GUI_Text_Model = struct {
@@ -7,23 +9,23 @@ define GUI_Text_Model = struct {
 }
 
 define GUI_Text_Model_Line = struct {
-    text: String = new String()
+    text: String = String()
     next_line: GUI_Text_Model_Line = null
 }
 
 define create_text_model = func (text: String) -> GUI_Text_Model {
-    let model = new GUI_Text_Model()
+    let model = GUI_Text_Model()
 
     let line_text = "".clone()
     text.for_each_char() {
         if (char == '\n' as u8) {
-            model.append(new GUI_Text_Model_Line(text = line_text))
+            model.append(GUI_Text_Model_Line(text = line_text))
             line_text = "".clone()
         } else {
             line_text.append(char)
         }
     }
-    model.append(new GUI_Text_Model_Line(text = line_text))
+    model.append(GUI_Text_Model_Line(text = line_text))
 
     return model
 }

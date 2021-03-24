@@ -1,4 +1,4 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define Source = struct {
     id: i64 = undefined
@@ -35,5 +35,5 @@ define create_source = func (file_path: String) -> Source {
     }
     content[content_length] = '\0'
 
-    return new Source(file_path = file_path, content = content)
+    return Source(file_path = file_path, content = content)
 }
