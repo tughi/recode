@@ -120,7 +120,7 @@ define draw_vertical_line = func (self: Canvas, x: i32, y1: i32, y2: i32) -> Not
 }
 
 define draw_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
-    let rect = Rect(left = x1, top = y1, right = x2, bottom = y2)
+    let rect = make !Rect(left = x1, top = y1, right = x2, bottom = y2)
     self.draw_rect(@rect)
 }
 
@@ -136,13 +136,13 @@ define draw_rect = func (self: Canvas, rect: Rect) -> Nothing {
 }
 
 define fill_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
-    let rect = Rect(left = x1, top = y1, right = x2, bottom = y2)
+    let rect = make !Rect(left = x1, top = y1, right = x2, bottom = y2)
     self.fill_rect(@rect)
 }
 
 define fill_rect = func (self: Canvas, rect: Rect) -> Nothing {
     if (rect.intersects(self.clip_rect)) {
-        let clipped_rect = Rect(left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom)
+        let clipped_rect = make !Rect(left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom)
         clipped_rect.intersect(self.clip_rect)
 
         let pixel_color = self.color

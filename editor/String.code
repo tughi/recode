@@ -15,7 +15,7 @@ define clear = func (self: String) -> String {
 }
 
 define clone = func (self: String) -> String {
-    let other = String(
+    let other = make String(
         data = malloc(self.length + 1) as [u8; ?]
         data_size = self.length + 1
         length = self.length

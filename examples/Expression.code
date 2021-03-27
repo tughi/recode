@@ -55,18 +55,18 @@ define evaluate_substraction = func (self: Expression) -> i32 {
 }
 
 define main = func () -> Nothing {
-    let one = Int_Expression(value = 1)
+    let one = make Int_Expression(value = 1)
 
-    let expression: Expression = Addition_Expression(
-        left_expression = Int_Expression(
+    let expression: Expression = make Addition_Expression(
+        left_expression = make Int_Expression(
             value = 2
         )
-        right_expression = Int_Expression(
+        right_expression = make Int_Expression(
             value = 3
         )
     )
     while (expression.evaluate() > 0) {
-        expression = Substraction_Expression(
+        expression = make Substraction_Expression(
             left_expression = expression
             right_expression = one
         )

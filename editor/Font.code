@@ -17,7 +17,7 @@ define Glyph = struct {
 
 define init_font = func () -> Nothing {
     let file = open_file("editor/Font.data", "r")
-    let line = String()
+    let line = make !String()
 
     if ((file.read_line(@line) && line.starts_with("\\ Copyright ") && file.read_line(@line) && line.equals("")) == false) {
         abort()

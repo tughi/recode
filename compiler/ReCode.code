@@ -400,9 +400,9 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
         return file.write((expression as AST_Literal_Expression).literal)
     }
 
-    if (expression is AST_Init_Expression) {
-        let expression = expression as AST_Init_Expression
-        file.write(expression.type)
+    if (expression is AST_Make_Expression) {
+        let expression = expression as AST_Make_Expression
+        file.write("make ").write(expression.type)
         for_each_list_item(expression.init_arguments) {
             let call_argument = list_item.data
             if (call_argument.name != null) {

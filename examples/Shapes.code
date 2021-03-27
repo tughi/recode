@@ -3,14 +3,14 @@ let shape: Shape = undefined
 let polygon: !Polygon
 
 define main = func () -> i32 {
-    shape = Rectangle()
+    shape = make Rectangle()
     if (shape is Polygon == false) {
         return 1
     }
     stdout.write(shape.object_type.name).write(" has sides: ").write((shape as Polygon).sides).end_line()
     let shape = shape as Polygon
 
-    polygon.sides = 4
+    polygon = make !Polygon(sides = 4)
 
     return shape.sides - polygon.sides
 }

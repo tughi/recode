@@ -7,7 +7,7 @@ define List = struct [T] {
 }
 
 define append = func [T] (self: List[T], data: T) -> Nothing {
-    let item = List_Item[T](data = data, prev_item = self.last_item)
+    let item = make List_Item[T](data = data, prev_item = self.last_item)
     if (self.last_item == null) {
         self.first_item = item
     } else {
@@ -18,7 +18,7 @@ define append = func [T] (self: List[T], data: T) -> Nothing {
 }
 
 define prepend = func [T] (self: List[T], data: T) -> Nothing {
-    let item = List_Item[T](data = data, next_item = self.first_item)
+    let item = make List_Item[T](data = data, next_item = self.first_item)
     if (self.first_item == null) {
         self.last_item = item
     } else {
@@ -147,7 +147,7 @@ define List_Iterator = struct [T] {
 }
 
 define create_iterator = func [T] (list: List[T]) -> List_Iterator[T] {
-    return List_Iterator[T](current_item = null, next_item = list.first_item)
+    return make List_Iterator[T](current_item = null, next_item = list.first_item)
 }
 
 define current = func [T] (self: List_Iterator[T]) -> T {

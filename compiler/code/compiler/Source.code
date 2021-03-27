@@ -35,5 +35,5 @@ define create_source = func (file_path: String) -> Source {
     }
     content[content_length] = '\0'
 
-    return Source(file_path = file_path, content = content)
+    return make Source(file_path = file_path, content = content)
 }

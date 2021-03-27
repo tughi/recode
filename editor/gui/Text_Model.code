@@ -14,18 +14,18 @@ define GUI_Text_Model_Line = struct {
 }
 
 define create_text_model = func (text: String) -> GUI_Text_Model {
-    let model = GUI_Text_Model()
+    let model = make GUI_Text_Model()
 
     let line_text = "".clone()
     text.for_each_char() {
         if (char == '\n' as u8) {
-            model.append(GUI_Text_Model_Line(text = line_text))
+            model.append(make GUI_Text_Model_Line(text = line_text))
             line_text = "".clone()
         } else {
             line_text.append(char)
         }
     }
-    model.append(GUI_Text_Model_Line(text = line_text))
+    model.append(make GUI_Text_Model_Line(text = line_text))
 
     return model
 }

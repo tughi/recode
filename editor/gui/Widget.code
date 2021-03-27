@@ -10,11 +10,11 @@ define GUI_Widget = struct {
     data: GUI_Data = null
 
     width_hint: i32 = 0
-    width_policy: !Size_Policy = Size_Policy()
+    width_policy: !Size_Policy = make !Size_Policy()
     height_hint: i32 = 0
-    height_policy: !Size_Policy = Size_Policy()
+    height_policy: !Size_Policy = make !Size_Policy()
 
-    bounds: !Rect = Rect()
+    bounds: !Rect = make !Rect()
 
     on_mouse_moved: func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
         if (self.bounds.contains(event.x, event.y)) {

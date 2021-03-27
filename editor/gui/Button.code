@@ -3,7 +3,7 @@
 include "./Layout.code"
 
 define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
-    let button = GUI_Button(gui = parent.gui, parent = parent, label = label.clone())
+    let button = make GUI_Button(gui = parent.gui, parent = parent, label = label.clone())
     parent.add(button)
     label.compute_text_size(button.label_bounds)
     return button
@@ -15,7 +15,7 @@ define GUI_Button = struct {
         on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
             if (event.button == 1u8) {
                 self.gui.pressed_widget = self
-                self.gui.post(GUI_Event_Widget_Updated(widget = self))
+                self.gui.post(make GUI_Event_Widget_Updated(widget = self))
             }
         }
         on_mouse_button_released = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
@@ -23,7 +23,7 @@ define GUI_Button = struct {
                 if (self.gui.hovered_widget == self) {
                     (self as GUI_Button).on_click()
                 }
-                self.gui.post(GUI_Event_Widget_Updated(widget = self))
+                self.gui.post(make GUI_Event_Widget_Updated(widget = self))
             }
         }
         measure = measure_button
@@ -31,7 +31,7 @@ define GUI_Button = struct {
         draw = draw_button
     )
     label: String
-    label_bounds: !Rect = Rect()
+    label_bounds: !Rect = make !Rect()
 
     on_click: func (self: GUI_Button) -> Nothing = func (self: GUI_Button) -> Nothing {
     }

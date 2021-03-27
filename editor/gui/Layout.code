@@ -36,7 +36,7 @@ define GUI_Layout_Child = struct {
 }
 
 define add = func (self: GUI_Layout, widget: GUI_Widget) -> Nothing {
-    let child = GUI_Layout_Child(widget = widget)
+    let child = make GUI_Layout_Child(widget = widget)
     if (self.children_first == null) {
         self.children_first = child
     } else {
