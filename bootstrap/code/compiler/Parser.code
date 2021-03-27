@@ -31,7 +31,7 @@ define parse = func (self: Parser, file_path: String, location: Source_Location)
     self.parse_statements(self.compilation_unit.statements)
 
     let token = self.scanner.current_token
-    if (token.is(End_Of_File_Token) == false) {
+    if (token is End_Of_File_Token == false) {
         abort(self, self.scanner.current_token)
     }
     let token = token as End_Of_File_Token
@@ -51,7 +51,7 @@ define parse_statements = func (self: Parser, statements: List[AST_Statement]) -
             break
         }
         self.consume_end_of_line()
-        if (statement.is(AST_Include_Statement)) {
+        if (statement is AST_Include_Statement) {
             let statement = statement as AST_Include_Statement
 
             let statement_file_path = statement.file_path.make_relative_path(statement.location.source.file_path)
@@ -296,7 +296,7 @@ define parse_type_parameters = func (self: Parser) -> List[AST_Type_Parameter] {
 \ function
 \   : function_type block?
 define parse_function = func (self: Parser, function_name: Identifier_Token) -> AST_Function_Statement {
-    let function_is_anonymous = function_name.is(Generated_Identifier_Token)
+    let function_is_anonymous = function_name is Generated_Identifier_Token
     let function_type = self.parse_function_type()
     let function_body: AST_Block_Statement
     if (self.matches(optional_space, required_open_brace)) {
@@ -682,7 +682,7 @@ define parse_unary_expression = func (self: Parser) -> AST_Expression {
         let location = self.consume(required_hyphen).location
         self.consume_space(0)
         let expression = self.parse_unary_expression()
-        if (expression.is(AST_Literal_Expression) && (expression as AST_Literal_Expression).literal.is(Integer_Token)) {
+        if (expression is AST_Literal_Expression && (expression as AST_Literal_Expression).literal is Integer_Token) {
             let old_literal = (expression as AST_Literal_Expression).literal as Integer_Token
             let new_literal = Integer_Token(location = location, lexeme = clone("-").append(old_literal.lexeme), value = -old_literal.value, type = old_literal.type)
             return AST_Wrapped_Expression(
@@ -699,15 +699,29 @@ define parse_unary_expression = func (self: Parser) -> AST_Expression {
 }
 
 \ cast_expression
-\   : access_expression ( "as" type )?
+\   : is_expression ( "as" type )?
 define parse_cast_expression = func (self: Parser) -> AST_Expression {
-    let expression = self.parse_access_expression()
+    let expression = self.parse_is_expression()
     if (self.matches(optional_space, required_as)) {
         self.consume_space(1)
         self.consume(required_as)
         self.consume_space(1)
         let type = self.parse_type()
         return AST_Cast_Expression(location = expression.location, value_expression = expression, type = type)
+    }
+    return expression
+}
+
+\ is_expression
+\   : access_expression ( "is" type )?
+define parse_is_expression = func (self: Parser) -> AST_Expression {
+    let expression = self.parse_access_expression()
+    if (self.matches(optional_space, required_is)) {
+        self.consume_space(1)
+        self.consume(required_is)
+        self.consume_space(1)
+        let type = self.parse_type()
+        return AST_Is_Expression(location = expression.location, value_expression = expression, type = type)
     }
     return expression
 }
@@ -820,7 +834,7 @@ define parse_primary_expression = func (self: Parser) -> AST_Expression {
     if (self.matches(required_exclamation_mark) || self.matches(required_type_name)) {
         let type = self.parse_type()
         if (self.matches(optional_space, required_open_paren) == false) {
-            if (type.is(AST_Named_Type) == false) {
+            if (type is AST_Named_Type == false) {
                 abort(type.location, clone(type.object_type.name).append(" cannot be used as variable name"))
             }
             return AST_Variable_Expression(location = type.location, name = (type as AST_Named_Type).name)
@@ -901,7 +915,7 @@ define consume_empty_line = func (self: Parser) -> bool {
 define consume_space = func (self: Parser, expected_space_count: i32) -> Nothing {
     let space_count: i32
     let token = self.scanner.current_token
-    if (token.is(Space_Token)) {
+    if (token is Space_Token) {
         self.scanner.next_token()
         let space = token as Space_Token
         space_count = space.count
@@ -1003,7 +1017,7 @@ define Matcher = struct {
 define Comment_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            return token.is(Comment_Token)
+            return token is Comment_Token
         }
     )
 }
@@ -1011,7 +1025,7 @@ define Comment_Matcher = struct {
 define End_Of_File_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            return token.is(End_Of_File_Token)
+            return token is End_Of_File_Token
         }
     )
 }
@@ -1019,7 +1033,7 @@ define End_Of_File_Matcher = struct {
 define End_Of_Line_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            return token.is(End_Of_Line_Token)
+            return token is End_Of_Line_Token
         }
     )
 }
@@ -1027,7 +1041,7 @@ define End_Of_Line_Matcher = struct {
 define Identifier_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            if (token.is(Identifier_Token)) {
+            if (token is Identifier_Token) {
                 let char = token.lexeme.data[0]
                 return char < 'A' || char > 'Z'
             }
@@ -1039,7 +1053,7 @@ define Identifier_Matcher = struct {
 define Keyword_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            if (token.is(Identifier_Token)) {
+            if (token is Identifier_Token) {
                 return token.lexeme.equals((self as Keyword_Matcher).lexeme)
             }
             return false
@@ -1051,7 +1065,7 @@ define Keyword_Matcher = struct {
 define Literal_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            return token.is(Integer_Token) || token.is(String_Token) || token.is(Character_Token) || token.is(Boolean_Token) || token.is(Null_Token) || token.is(Undefined_Token)
+            return token is Integer_Token || token is String_Token || token is Character_Token || token is Boolean_Token || token is Null_Token || token is Undefined_Token
         }
     )
 }
@@ -1059,7 +1073,7 @@ define Literal_Matcher = struct {
 define Other_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            if (token.is(Other_Token)) {
+            if (token is Other_Token) {
                 return token.lexeme.equals((self as Other_Matcher).lexeme)
             }
             return false
@@ -1071,7 +1085,7 @@ define Other_Matcher = struct {
 define Space_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            return token.is(Space_Token)
+            return token is Space_Token
         }
     )
 }
@@ -1079,7 +1093,7 @@ define Space_Matcher = struct {
 define String_Literal_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            return token.is(String_Token)
+            return token is String_Token
         }
     )
 }
@@ -1087,7 +1101,7 @@ define String_Literal_Matcher = struct {
 define Type_Name_Matcher = struct {
     extends Matcher(
         accepts = func (self: Matcher, token: Token) -> bool {
-            if (token.is(Identifier_Token)) {
+            if (token is Identifier_Token) {
                 let char = token.lexeme.data[0]
                 if (char >= 'A' && char <= 'Z') {
                     return true
@@ -1135,6 +1149,7 @@ let required_hyphen: Matcher = undefined
 let required_identifier: Matcher = undefined
 let required_if: Matcher = undefined
 let required_include: Matcher = undefined
+let required_is: Matcher = undefined
 let required_less_than: Matcher = undefined
 let required_let: Matcher = undefined
 let required_literal: Matcher = undefined
@@ -1184,6 +1199,7 @@ define init_matchers = func () -> Nothing {
     required_identifier = Identifier_Matcher(is_required = true)
     required_if = Keyword_Matcher(is_required = true, lexeme = "if")
     required_include = Keyword_Matcher(is_required = true, lexeme = "include")
+    required_is = Keyword_Matcher(is_required = true, lexeme = "is")
     required_less_than = Other_Matcher(is_required = true, lexeme = "<")
     required_let = Keyword_Matcher(is_required = true, lexeme = "let")
     required_literal = Literal_Matcher(is_required = true)

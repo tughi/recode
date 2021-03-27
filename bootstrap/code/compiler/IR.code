@@ -156,6 +156,7 @@ define IR_Struct_Type = struct {
     base_type: IR_Struct_Type = null
     members: List[IR_Struct_Type_Member] = List[IR_Struct_Type_Member]()
     statement: AST_Struct_Statement
+    object_type_variable: IR_Global_Variable = null
 }
 
 define IR_Struct_Type_Member = struct {
@@ -243,7 +244,7 @@ define IR_Value = struct {
 define write = func (file: FILE, value: IR_Value, check_users: bool) -> FILE {
     if (check_users && value.user_instructions.size == 0 as i64) {
         file.flush()
-        if (value.is(IR_Variable_Value)) {
+        if (value is IR_Variable_Value) {
             let value = value as IR_Variable_Value
             let value_version = value.version
         }
@@ -296,7 +297,7 @@ define IR_Struct_Literal_Value = struct {
             let is_first_value_link = true
             while (value_links_item != null) {
                 let value_link = value_links_item.data
-                if (value_link.is(IR_Struct_Literal_Member_Value_Link)) {
+                if (value_link is IR_Struct_Literal_Member_Value_Link) {
                     let value_link = value_link as IR_Struct_Literal_Member_Value_Link
                     if (is_first_value_link) {
                         is_first_value_link = false
@@ -322,7 +323,7 @@ define get_member_value = func (self: IR_Struct_Literal_Value, struct_type_membe
     let links_item = self.links.first_item
     while (links_item != null) {
         let link = links_item.data
-        if (link.is(IR_Struct_Literal_Member_Value_Link)) {
+        if (link is IR_Struct_Literal_Member_Value_Link) {
             let link = link as IR_Struct_Literal_Member_Value_Link
             if (link.struct_type_member == struct_type_member) {
                 return link.value
@@ -615,10 +616,10 @@ define is_exit_instruction = func (self: IR_Instruction) -> bool {
     if (self == null) {
         return false
     }
-    if (self.is(IR_Jump_Instruction) || self.is(IR_Return_Instruction)) {
+    if (self is IR_Jump_Instruction || self is IR_Return_Instruction) {
         return true
     }
-    if (self.is(IR_Direct_Call_Instruction)) {
+    if (self is IR_Direct_Call_Instruction) {
         let self = self as IR_Direct_Call_Instruction
         let function = self.function
         if (function.name.equals("abort")) {
@@ -626,7 +627,7 @@ define is_exit_instruction = func (self: IR_Instruction) -> bool {
         }
         if (function.name.equals("exit") && function.parameters.size == 1 as i64) {
             let function_parameter = function.parameters.get(0 as i64)
-            if (function_parameter.type.is(IR_IntMax_Type)) {
+            if (function_parameter.type is IR_IntMax_Type) {
                 return true
             }
         }
@@ -642,7 +643,7 @@ define set_operand_value = func (self: IR_Instruction, key: Any, value: IR_Value
 define replace_operand_value = func (self: IR_Instruction, old_value: IR_Value, new_value: IR_Value) -> Nothing {
     old_value.user_instructions.remove(self).prune()
     new_value.user_instructions.append(self)
-    if (self.is(IR_Phi_Instruction)) {
+    if (self is IR_Phi_Instruction) {
         self.operand_values.remove(old_value)
         self.operand_values.put(new_value, new_value)
     } else {
@@ -851,7 +852,7 @@ define create_ir_load_struct_member_instruction = func (result_value: IR_Variabl
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     result_value.creator_instruction = instruction
 
-    if (struct_type_member.type.is(IR_Struct_Type)) {
+    if (struct_type_member.type is IR_Struct_Type) {
         let result_value_link = IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
         result_value_link.back_link = IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
         result_value.links.append(result_value_link)

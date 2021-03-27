@@ -4,7 +4,7 @@ let polygon: !Polygon
 
 define main = func () -> i32 {
     shape = Rectangle()
-    if (shape.is(Polygon) == false) {
+    if (shape is Polygon == false) {
         return 1
     }
     stdout.write(shape.object_type.name).write(" has sides: ").write((shape as Polygon).sides).end_line()

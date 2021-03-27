@@ -43,7 +43,7 @@ define Map = struct {
 }
 
 define Map = struct [K, V] {
-    \ TODO: extends Object
+    extends Object
     first_item: Map_Item[K, V] = null
     last_item: Map_Item[K, V] = null
 }

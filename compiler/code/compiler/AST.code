@@ -386,6 +386,16 @@ define AST_Cast_Expression = struct {
     type: AST_Type
 }
 
+define AST_Is_Expression = struct {
+    extends AST_Expression(
+        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
+            return builder.convert_is_expression(expression as AST_Is_Expression)
+        }
+    )
+    value_expression: AST_Expression
+    type: AST_Type
+}
+
 define AST_Init_Expression = struct {
     extends AST_Expression(
         convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
