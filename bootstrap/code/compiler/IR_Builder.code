@@ -416,17 +416,6 @@ define append = func (self: IR_Builder, instruction: IR_Instruction, location: S
 }
 
 define build = func (self: IR_Builder) -> Nothing {
-    \ TODO: Convert struct on demand and remove this step
-    for_each_list_item(self.compilation_unit.statements) {
-        let statement = list_item.data
-        if (statement is AST_Struct_Statement) {
-            let statement = statement as AST_Struct_Statement
-            if (statement.type_parameters == null) {
-                self.convert_struct_statement(statement, statement.name.lexeme, null)
-            }
-        }
-    }
-
     for_each_list_item(self.compilation_unit.function_statements) {
         let function_statement = list_item.data
         if (function_statement.type.type_parameters == null) {
@@ -2177,7 +2166,10 @@ define convert_literal_expression = func (self: IR_Builder, expression: AST_Lite
         return make IR_Constant_Value(type = self.get_named_type("Null"), literal = expression.literal)
     }
     if (expression.literal is String_Token) {
-        return make IR_Constant_Value(type = self.create_ir_pointer_type(self.get_named_type("String")), literal = expression.literal)
+        return make IR_Constant_Value(
+            type = self.convert_type(make AST_Named_Type(name = make Identifier_Token(location = null, lexeme = "String")))
+            literal = expression.literal
+        )
     }
     if (expression.literal is Undefined_Token) {
         return make IR_Undefined_Value(type = self.get_named_type("Undefined"))
