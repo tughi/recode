@@ -1827,6 +1827,15 @@ define specialize = func (self: IR_Builder, callable_type_parameters: List[AST_T
             } else {
                 abort(callable_parameter.location, parameter_pointed_type.object_type)
             }
+        } else if (parameter_type is IR_Placeholder_Type) {
+            \ Replace placeholer type with type from the call argument type
+            let placeholder_type: AST_Type = (parameter_type as IR_Placeholder_Type).ast_type
+            context_type_arguments.for_each_list_item() {
+                let type_argument = list_item.data
+                if (type_argument.type == placeholder_type) {
+                    type_argument.type = call_argument_type.convert_type()
+                }
+            }
         } else if (parameter_type is IR_Integer_Type) {
             \ ignore parameter
         } else if (parameter_type is IR_Macro_Type) {

@@ -32,6 +32,14 @@ define main = func () -> Nothing {
     if (map.get("Three") != 3) {
         abort()
     }
+
+    if (max(100, 2i32) != 100) {
+        abort()
+    }
+
+    if (max(100u8, 2u8) != 100u8) {
+        abort()
+    }
 }
 
 define Special_Map = struct {
@@ -95,4 +103,11 @@ define for_each = macro [K, V] (self: Map[K, V], block: macro (item_key: K, item
         block(item.key, item.value)
         item = item.next_item
     }
+}
+
+define max = func [T] (self: T, other: T) -> T {
+    if (self < other) {
+        return other
+    }
+    return self
 }
