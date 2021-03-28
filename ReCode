@@ -118,12 +118,23 @@ def stage():
     execute('build/stage2/ReCode bootstrap/ReCode.code bootstrap/ReCode.s')
     bootstrap()
 
+def time():
+    build()
+
+    count = 5
+    start_time = datetime.now()
+    for _ in range(count):
+        execute('build/stage2/ReCode compiler/ReCode.code build/stage3/ReCode.s', echo=True)
+    finish_time = datetime.now()
+
+    print(f"[{finish_time.time().isoformat(timespec='milliseconds')}] Average time: {((finish_time - start_time) / count).total_seconds()}")
 
 TASKS = OrderedDict(
     clean=clean,
     build=build,
     editor=editor,
     stage=stage,
+    time=time,
 )
 
 if len(sys.argv) > 1:
