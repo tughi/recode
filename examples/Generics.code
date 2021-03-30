@@ -1,7 +1,7 @@
 include "./code/lang/Object.code"
 
 define main = func () -> Nothing {
-    let map = make Map[Any, i32]()
+    let map = make !Map[Any, i32]()
     map.put("One", 0)
     map.put("One", 1)
 

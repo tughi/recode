@@ -631,19 +631,13 @@ define create_ir_unchecked_array_type = func (self: IR_Builder, item_type: IR_Ty
 }
 
 define convert_embedded_type = func (self: IR_Builder, type: AST_Embedded_Type) -> IR_Type {
-    if (type.embedded_type is AST_Named_Type == false) {
+    let embedded_type = self.convert_type(type.embedded_type)
+    if (embedded_type is IR_Pointer_Type == false) {
         abort(type.location, "Unsupported type")
     }
-    let embedded_type_name = (type.embedded_type as AST_Named_Type).name.lexeme
-    let embedded_type = self.get_named_type(embedded_type_name)
-    if (embedded_type == null) {
-        let struct_statement = self.get_struct_statement(embedded_type_name)
-        if (struct_statement != null) {
-            embedded_type = self.convert_struct_statement(struct_statement, embedded_type_name, null)
-        }
-    }
-    if (embedded_type == null) {
-        abort(type.location, "Unsupported type")
+    let embedded_type = (embedded_type as IR_Pointer_Type).pointed_type
+    if (embedded_type is IR_Struct_Type == false) {
+        abort(type.location, "Not a struct type")
     }
     return embedded_type
 }
@@ -2372,7 +2366,7 @@ define convert_negate_expression = func (self: IR_Builder, expression: AST_Negat
     )
 }
 
-define conert_make_expression = func (self: IR_Builder, expression: AST_Make_Expression) -> IR_Value {
+define convert_make_expression = func (self: IR_Builder, expression: AST_Make_Expression) -> IR_Value {
     let expression_type = expression.type
     let type = self.convert_type(expression_type)
     if (type is IR_Struct_Type) {
