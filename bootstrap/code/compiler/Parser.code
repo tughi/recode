@@ -4,7 +4,7 @@ define Parser = struct {
     scanner: Scanner = null
     compilation_unit: Compilation_Unit = make Compilation_Unit()
     current_alignment: i32 = 0
-    anonymous_functions_counter: !Counter = make !Counter()
+    anonymous_functions_counter: !Counter[i64] = make !Counter[i64]()
 }
 
 define parse = func (file_path: String) -> Compilation_Unit {

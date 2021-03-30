@@ -84,10 +84,13 @@ variable, named after the type.
 The `Object_Type` structure looks like this:
 
     define Object_Type = struct {
-        id: i32
+        _id: u32
+        _max_derivate_id: u32
         name: !String
         base_type: Object_Type
     }
+
+The *_id* and *_max_derivate_id* fields are used internally for 'is' operations.
 
 ## Pointers
 

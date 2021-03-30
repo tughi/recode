@@ -38,9 +38,9 @@ define IR_Builder = struct {
     functions: List[IR_Function] = make List[IR_Function]()
     current_block: IR_Block = null
     current_loop: IR_Loop = null
-    counter: !Counter = make !Counter()
-    functions_counter: !Counter = make !Counter()
-    types_counter: !Counter = make !Counter()
+    counter: !Counter[i64] = make !Counter[i64]()
+    functions_counter: !Counter[i64] = make !Counter[i64]()
+    types_counter: !Counter[i64] = make !Counter[i64]()
 }
 
 define IR_Builder_Context = struct {
@@ -498,6 +498,7 @@ define convert_struct_statement = func (self: IR_Builder, struct_statement: AST_
             abort(struct_statement.base_type.location, "Not a struct type.")
         }
         type.base_type = base_type as IR_Struct_Type
+        type.base_type.derived_types.append(type)
     }
 
     if (struct_statement.members != null) {
@@ -1972,6 +1973,10 @@ define convert_is_expression = func (self: IR_Builder, is_expression: AST_Is_Exp
     if (struct_type.object_type_variable == null) {
         abort(is_expression.type.location, "Not an Object type")
     }
+
+    \ TODO: Check if struct_type is derived type of value_struct_type
+
+    \ TODO: Inline the 'is' function
 
     let call_arguments = make List[IR_Call_Argument]()
     call_arguments.append(make IR_Call_Argument(name = null, value = value))

@@ -1,24 +1,28 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
 define Object = struct {
     object_type: Object_Type = undefined
 }
 
 define Object_Type = struct {
-    id: i64
+    _id: u32
+    _max_derivate_id: u32
     name: !String
     base_type: Object_Type
 }
 
 define is = func (self: Object, object_type: Object_Type) -> bool {
-    let self_type = self.object_type
-    loop {
-        if (self_type == object_type) {
-            return true
-        }
-        self_type = self_type.base_type
-        if (self_type == null) {
-            return false
-        }
-    }
+    \ let self_type = self.object_type
+    \ loop {
+    \     if (self_type == object_type) {
+    \         return true
+    \     }
+    \     self_type = self_type.base_type
+    \     if (self_type == null) {
+    \         return false
+    \     }
+    \ }
+
+    let id = self.object_type._id
+    return id >= object_type._id && id <= object_type._max_derivate_id
 }

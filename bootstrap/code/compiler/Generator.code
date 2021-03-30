@@ -2025,6 +2025,28 @@ define write_string_label = func (file: FILE, string: MC_String) -> FILE {
 }
 
 define generate_object_types = func (self: MC_Generator, types: List[IR_Type]) -> Nothing {
+    let object_type: IR_Struct_Type = null
+    for_each_list_item(types) {
+        let type = list_item.data
+        if (type is IR_Struct_Type) {
+            let type = type as IR_Struct_Type
+            if (type.object_type_variable != null) {
+                object_type = type
+                while (object_type.base_type != null) {
+                    object_type = object_type.base_type
+                }
+                break
+            }
+        }
+    }
+
+    if (object_type == null) {
+        return
+    }
+
+    let counter = make !Counter[u32]()
+    object_type.assign_object_type_ids(@counter)
+
     self.output_file.end_line().write("  .section .rodata").end_line()
     let type_item = types.first_item
     while (type_item != null) {
@@ -2037,7 +2059,8 @@ define generate_object_types = func (self: MC_Generator, types: List[IR_Type]) -
                 self.output_file.write(type.object_type_variable.name).write(':').end_line()
                 self.output_file.write("  .quad .LABEL__").write(type.object_type_variable.name).write("__object_type").end_line()
                 self.output_file.write(".LABEL__").write(type.object_type_variable.name).write("__object_type").write(':').end_line()
-                self.output_file.write("  .quad ").write(0).end_line() \ CHECK: Why isn't there a type.id? Isn't it needed anymore?
+                self.output_file.write("  .long ").write(type.object_type_id).end_line()
+                self.output_file.write("  .long ").write(type.object_type_max_derivate_id).end_line()
                 self.output_file.write("  .quad .LABEL__").write(type.object_type_variable.name).write("__object_type__name__data").end_line()
                 self.output_file.write("  .quad ").write(type.name.length + 1).end_line()
                 self.output_file.write("  .quad ").write(type.name.length).end_line()
@@ -2051,6 +2074,15 @@ define generate_object_types = func (self: MC_Generator, types: List[IR_Type]) -
         }
         type_item = type_item.next_item
     }
+}
+
+define assign_object_type_ids = func (type: IR_Struct_Type, counter: Counter[u32]) -> Nothing {
+    type.object_type_id = counter.next()
+    for_each_list_item(type.derived_types) {
+        let derived_type = list_item.data
+        derived_type.assign_object_type_ids(counter)
+    }
+    type.object_type_max_derivate_id = counter.value
 }
 
 define generate_global_variables = func (self: MC_Generator, symbols: List[IR_Symbol], types: List[IR_Type]) -> Nothing {

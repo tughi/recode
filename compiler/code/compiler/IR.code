@@ -154,9 +154,12 @@ define create_ir_macro_type = func (parameters: List[IR_Callable_Parameter]) -> 
 define IR_Struct_Type = struct {
     extends IR_Type
     base_type: IR_Struct_Type = null
+    derived_types: List[IR_Struct_Type] = make List[IR_Struct_Type]()
     members: List[IR_Struct_Type_Member] = make List[IR_Struct_Type_Member]()
     statement: AST_Struct_Statement
     object_type_variable: IR_Global_Variable = null
+    object_type_id: u32 = 0
+    object_type_max_derivate_id: u32 = 0
 }
 
 define IR_Struct_Type_Member = struct {
@@ -410,7 +413,6 @@ define IR_Function_Address_Value = struct {
 }
 
 define IR_Block = struct {
-    extends Object
     id: i64
     function: IR_Function
     predecessors: List[IR_Block] = make List[IR_Block]()

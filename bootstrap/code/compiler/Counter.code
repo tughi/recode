@@ -1,15 +1,15 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020-2021, Stefan Selariu
 
-define Counter = struct {
-    value: i64 = 0
+define Counter = struct [T] {
+    value: T = 0
 }
 
-define next = func (self: Counter) -> i64 {
+define next = func [T] (self: Counter[T]) -> T {
     self.value = self.value + 1
     return self.value
 }
 
-define reset = func (self: Counter) -> Counter {
+define reset = func [T] (self: Counter[T]) -> Counter[T] {
     self.value = 0
     return self
 }
