@@ -1974,7 +1974,13 @@ define convert_is_expression = func (self: IR_Builder, is_expression: AST_Is_Exp
         abort(is_expression.type.location, "Not an Object type")
     }
 
-    \ TODO: Check if struct_type is derived type of value_struct_type
+    if (value_struct_type.is_base_type(struct_type) == false) {
+        if (value_struct_type == struct_type || struct_type.is_base_type(value_struct_type)) {
+            stderr.write(is_expression.location).write(": Redundant is operation").end_line()
+        } else {
+            abort(is_expression.type.location, clone(struct_type.name).append(" is not a derivate of ").append(value_struct_type.name))
+        }
+    }
 
     \ TODO: Inline the 'is' function
 
