@@ -1982,20 +1982,27 @@ define convert_is_expression = func (self: IR_Builder, is_expression: AST_Is_Exp
         }
     }
 
-    \ TODO: Inline the 'is' function
+    \ Instruction-based implementation
+    return self.append(
+        create_ir_is_instruction(
+            self.create_temp_value(self.get_named_type("bool"))
+            value
+            struct_type
+        )
+        is_expression.location
+    )
 
-    let call_arguments = make List[IR_Call_Argument]()
-    call_arguments.append(make IR_Call_Argument(name = null, value = value))
-    call_arguments.append(make IR_Call_Argument(name = null, value = self.get_variable_value(struct_type.object_type_variable)))
-
-    let callable = self.get_callable(is_expression.location, "is", call_arguments)
-    if (callable is IR_Function == false) {
-        abort(callable.location, "Not a function")
-    }
-
-    let function = callable as IR_Function
-    let result_value = self.create_temp_value(function.return_type)
-    return self.append(create_ir_direct_call_instruction(result_value, call_arguments, function), is_expression.location)
+    \ Function-based implementation
+    \ let call_arguments = make List[IR_Call_Argument]()
+    \ call_arguments.append(make IR_Call_Argument(name = null, value = value))
+    \ call_arguments.append(make IR_Call_Argument(name = null, value = self.get_variable_value(struct_type.object_type_variable)))
+    \ let callable = self.get_callable(is_expression.location, "is", call_arguments)
+    \ if (callable is IR_Function == false) {
+    \     abort(callable.location, "Not a function")
+    \ }
+    \ let function = callable as IR_Function
+    \ let result_value = self.create_temp_value(function.return_type)
+    \ return self.append(create_ir_direct_call_instruction(result_value, call_arguments, function), is_expression.location)
 }
 
 define convert_cast_expression = func (self: IR_Builder, cast_expression: AST_Cast_Expression) -> IR_Value {

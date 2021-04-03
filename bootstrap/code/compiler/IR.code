@@ -773,6 +773,28 @@ define get_value = func (self: IR_Cast_Instruction) -> IR_Value {
     return self.operand_values.get("value")
 }
 
+define IR_Is_Instruction = struct {
+    extends IR_Instruction(
+        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+            instruction.dump_ir_instruction_result(file, prefix)
+            let instruction = instruction as IR_Is_Instruction
+            return file.write("is").write('(').write(instruction.get_value(), true).write(", ").write(instruction.type.name).write(')').end_line()
+        }
+    )
+    type: IR_Struct_Type
+}
+
+define create_ir_is_instruction = func (result_value: IR_Variable_Value, value: IR_Value, type: IR_Struct_Type) -> IR_Is_Instruction {
+    let instruction = make IR_Is_Instruction(result_value = result_value, type = type)
+    instruction.set_operand_value("value", value)
+    result_value.creator_instruction = instruction
+    return instruction
+}
+
+define get_value = func (self: IR_Is_Instruction) -> IR_Value {
+    return self.operand_values.get("value")
+}
+
 define IR_Jump_Instruction = struct {
     extends IR_Instruction
 }

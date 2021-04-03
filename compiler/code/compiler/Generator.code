@@ -12,6 +12,12 @@ define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
 
     generator.output_file.write_line("  .intel_syntax noprefix").end_line()
 
+    let object_type = find_object_type(build.named_types)
+    if (object_type != null) {
+        let counter = make !Counter[u32]()
+        object_type.assign_object_type_ids(@counter)
+    }
+
     generator.generate_global_variables(build.global_symbols, build.named_types)
 
     let symbols_item = build.global_symbols.first_item
@@ -28,7 +34,9 @@ define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
 
     generator.generate_strings()
 
-    generator.generate_object_types(build.named_types)
+    if (object_type != null) {
+        generator.generate_object_types(build.named_types)
+    }
 
     generator.output_file.fclose()
 }
@@ -156,6 +164,8 @@ define generate_instruction = func (self: MC_Generator, instruction: IR_Instruct
         self.generate_direct_jump_instruction(instruction as IR_Direct_Jump_Instruction)
     } else if (instruction is IR_Divide_Instruction) {
         self.generate_divide_instruction(instruction as IR_Divide_Instruction)
+    } else if (instruction is IR_Is_Instruction) {
+        self.generate_is_instruction(instruction as IR_Is_Instruction)
     } else if (instruction is IR_Load_Array_Item_Instruction) {
         self.generate_load_array_item_instruction(instruction as IR_Load_Array_Item_Instruction)
     } else if (instruction is IR_Load_Struct_Member_Instruction) {
@@ -448,25 +458,36 @@ define generate_comparison_instruction = func (self: MC_Generator, instruction: 
     let register = self.find_unused_register()
     if (instruction is IR_Equals_Comparison_Instruction) {
         self.output_file.write("  sete ").write(register.name_b).end_line()
-        self.map_variable_value(instruction.result_value, register)
     } else if (instruction is IR_Greater_Comparison_Instruction) {
-        self.output_file.write("  setg ").write(register.name_b).end_line()
-        self.map_variable_value(instruction.result_value, register)
+        if (left_value.type is IR_UInt_Type) {
+            self.output_file.write("  seta ").write(register.name_b).end_line()
+        } else {
+            self.output_file.write("  setg ").write(register.name_b).end_line()
+        }
     } else if (instruction is IR_Greater_Or_Equal_Comparison_Instruction) {
-        self.output_file.write("  setge ").write(register.name_b).end_line()
-        self.map_variable_value(instruction.result_value, register)
+        if (left_value.type is IR_UInt_Type) {
+            self.output_file.write("  setae ").write(register.name_b).end_line()
+        } else {
+            self.output_file.write("  setge ").write(register.name_b).end_line()
+        }
     } else if (instruction is IR_Less_Comparison_Instruction) {
-        self.output_file.write("  setl ").write(register.name_b).end_line()
-        self.map_variable_value(instruction.result_value, register)
+        if (left_value.type is IR_UInt_Type) {
+            self.output_file.write("  setb ").write(register.name_b).end_line()
+        } else {
+            self.output_file.write("  setl ").write(register.name_b).end_line()
+        }
     } else if (instruction is IR_Less_Or_Equal_Comparison_Instruction) {
-        self.output_file.write("  setle ").write(register.name_b).end_line()
-        self.map_variable_value(instruction.result_value, register)
+        if (left_value.type is IR_UInt_Type) {
+            self.output_file.write("  setbe ").write(register.name_b).end_line()
+        } else {
+            self.output_file.write("  setle ").write(register.name_b).end_line()
+        }
     } else if (instruction is IR_Not_Equal_Comparison_Instruction) {
         self.output_file.write("  setne ").write(register.name_b).end_line()
-        self.map_variable_value(instruction.result_value, register)
     } else {
         self.abort(clone("Unsupported comparison instruction type: ").append(instruction.object_type.name))
     }
+    self.map_variable_value(instruction.result_value, register)
 }
 
 define generate_direct_jump_instruction = func (self: MC_Generator, instruction: IR_Direct_Jump_Instruction) -> Nothing {
@@ -476,6 +497,21 @@ define generate_direct_jump_instruction = func (self: MC_Generator, instruction:
     } else {
         self.generate_block(instruction.block)
     }
+}
+
+define generate_is_instruction = func (self: MC_Generator, instruction: IR_Is_Instruction) -> Nothing {
+    let result_register = self.find_unused_register()
+    \ load self
+    self.generate_load_value(result_register, instruction.get_value())
+    \ load self.object_type address
+    self.output_file.write("  mov ").write(result_register.name_q).write(", QWORD PTR [").write(result_register.name_q).write(']').end_line()
+    \ load self.object_type.id
+    self.output_file.write("  mov ").write(result_register.name_d).write(", DWORD PTR [").write(result_register.name_q).write(']').end_line()
+    \ (self.object_type.id - other_type.object_type_id) <= (other_type.object_type_max_derivate_id - other_type.object_type_id)
+    self.output_file.write("  sub ").write(result_register.name_d).write(", ").write(instruction.type.object_type_id).end_line()
+    self.output_file.write("  cmp ").write(result_register.name_d).write(", ").write(instruction.type.object_type_max_derivate_id - instruction.type.object_type_id).end_line()
+    self.output_file.write("  setbe ").write(result_register.name_b).end_line()
+    self.map_variable_value(instruction.result_value, result_register)
 }
 
 define generate_divide_instruction = func (self: MC_Generator, instruction: IR_Divide_Instruction) -> Nothing {
@@ -2024,7 +2060,7 @@ define write_string_label = func (file: FILE, string: MC_String) -> FILE {
     return file.write(".LABEL__string_").write(string.id)
 }
 
-define generate_object_types = func (self: MC_Generator, types: List[IR_Type]) -> Nothing {
+define find_object_type = func (types: List[IR_Type]) -> IR_Struct_Type {
     let object_type: IR_Struct_Type = null
     for_each_list_item(types) {
         let type = list_item.data
@@ -2039,14 +2075,10 @@ define generate_object_types = func (self: MC_Generator, types: List[IR_Type]) -
             }
         }
     }
+    return object_type
+}
 
-    if (object_type == null) {
-        return
-    }
-
-    let counter = make !Counter[u32]()
-    object_type.assign_object_type_ids(@counter)
-
+define generate_object_types = func (self: MC_Generator, types: List[IR_Type]) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
     let type_item = types.first_item
     while (type_item != null) {

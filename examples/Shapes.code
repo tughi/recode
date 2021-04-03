@@ -4,7 +4,16 @@ let polygon: !Polygon
 
 define main = func () -> i32 {
     shape = make Rectangle()
+    if (shape is Rectangle == false) {
+        return 1
+    }
     if (shape is Polygon == false) {
+        return 1
+    }
+    if (shape is Circle) {
+        return 1
+    }
+    if (shape is Triangle) {
         return 1
     }
     stdout.write(shape.object_type.name).write(" has sides: ").write((shape as Polygon).sides).end_line()

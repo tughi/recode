@@ -511,6 +511,14 @@ define write = func (self: FILE, number: i64) -> FILE {
     return self
 }
 
+define write = func (self: FILE, number: u64) -> FILE {
+    if (number >= 10) {
+        self.write(number / 10)
+    }
+    fputc((number // 10) as i32 + '0' as i32, self)
+    return self
+}
+
 define write = func (self: FILE, number: isize) -> FILE {
     if (number < 0) {
         return self.write('-').write(-number)
