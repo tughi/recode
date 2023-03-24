@@ -142,6 +142,7 @@ Token_Location *Token_Location__create(Source *source, u16 line, u16 column) {
 
 typedef enum {
     TOKEN_TYPE_END_OF_FILE,
+    TOKEN_TYPE_COMMENT,
     TOKEN_TYPE_OTHER,
 } Token_Type;
 
@@ -170,6 +171,18 @@ typedef struct {
 
 End_Of_File_Token *End_Of_File_Token__create(Token_Location *location, String *lexeme) {
     End_Of_File_Token *token = Token__create(sizeof(End_Of_File_Token), TOKEN_TYPE_END_OF_FILE, location, lexeme);
+    return token;
+}
+
+typedef struct {
+    Token_Type type;
+    Source *source;
+    String *lexeme;
+    Token *next_token;
+} Comment_Token;
+
+Comment_Token *Comment_Token__create(Token_Location *location, String *lexeme) {
+    Comment_Token *token = Token__create(sizeof(Comment_Token), TOKEN_TYPE_COMMENT, location, lexeme);
     return token;
 }
 
@@ -213,11 +226,31 @@ u8 Scanner__next_char(Scanner *self) {
     return next_char;
 }
 
+Token *Scanner__scan_comment_token(Scanner *self, Token_Location *token_location, String *token_lexeme) {
+    while (true) {
+        u8 next_char = Scanner__peek_char(self);
+        if (next_char == '\n' || next_char == '\0') {
+            break;
+        }
+        String__append_char(token_lexeme, Scanner__next_char(self));
+    }
+    return (Token *) Comment_Token__create(token_location, token_lexeme);
+}
+
 Token *Scanner__scan_token(Scanner *self) {
     Token_Location *token_location = Token_Location__create(self->source, self->current_line, self->current_column);
     String *token_lexeme = String__create();
 
     u8 next_char = Scanner__peek_char(self);
+
+    if (next_char == '/') {
+        String__append_char(token_lexeme, Scanner__next_char(self));
+        if (Scanner__peek_char(self) == '/') {
+            return Scanner__scan_comment_token(self, token_location, token_lexeme);
+        }
+        // not a comment
+        return (Token *) Other_Token__create(token_location, token_lexeme);
+    }
 
     if (next_char == '\0') {
         Scanner__next_char(self);

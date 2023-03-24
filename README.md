@@ -21,6 +21,7 @@ A compiler for the _Code_ language.
     - **if-else**
     - **return**
     - **while**
+  - line comments
   - no preprocessor
 - [ ] Switch parser from _C_ syntax to _Code_ syntax
 - [ ] Implement compiler in _Code_
