@@ -28,6 +28,7 @@ extern File *stderr;
 
 extern i32 fgetc(File *stream);
 extern i32 fputc(i32 c, File *stream);
+extern i32 fputs(const i8 *s, File *stream);
 
 extern void *malloc(usize size);
 extern void *realloc(void *ptr, usize size);
@@ -141,11 +142,16 @@ Token_Location *Token_Location__create(Source *source, u16 line, u16 column) {
 }
 
 typedef enum {
-    TOKEN_TYPE_END_OF_FILE,
+    TOKEN_TYPE_CHARACTER,
     TOKEN_TYPE_COMMENT,
+    TOKEN_TYPE_END_OF_FILE,
+    TOKEN_TYPE_END_OF_LINE,
     TOKEN_TYPE_IDENTIFIER,
     TOKEN_TYPE_INTEGER,
+    TOKEN_TYPE_KEYWORD,
     TOKEN_TYPE_OTHER,
+    TOKEN_TYPE_SPACE,
+    TOKEN_TYPE_STRING,
 } Token_Type;
 
 typedef struct Token {
@@ -191,6 +197,17 @@ typedef struct {
     Source *source;
     String *lexeme;
     Token *next_token;
+} End_Of_Line_Token;
+
+End_Of_Line_Token *End_Of_Line_Token__create(Token_Location *location, String *lexeme) {
+    return Token__create(sizeof(End_Of_Line_Token), TOKEN_TYPE_END_OF_LINE, location, lexeme);
+}
+
+typedef struct {
+    Token_Type type;
+    Source *source;
+    String *lexeme;
+    Token *next_token;
 } Identifier_Token;
 
 Identifier_Token *Identifier_Token__create(Token_Location *location, String *lexeme) {
@@ -220,6 +237,33 @@ typedef struct {
 
 Other_Token *Other_Token__create(Token_Location *location, String *lexeme) {
     return Token__create(sizeof(Other_Token), TOKEN_TYPE_OTHER, location, lexeme);
+}
+
+typedef struct {
+    Token_Type type;
+    Source *source;
+    String *lexeme;
+    Token *next_token;
+    u16 count;
+} Space_Token;
+
+Space_Token *Space_Token__create(Token_Location *location, String *lexeme, u16 count) {
+    Space_Token *token = Token__create(sizeof(Space_Token), TOKEN_TYPE_SPACE, location, lexeme);
+    token->count = count;
+    return token;
+}
+
+void File__write_token(File *stream, Token *token) {
+    bool colored = token->type == TOKEN_TYPE_OTHER;
+    if (colored) {
+        fputc(27, stream);
+        fputs("[2;33m", stream);
+    }
+    File__write_string(stream, token->lexeme);
+    if (colored) {
+        fputc(27, stream);
+        fputs("[0m", stream);
+    }
 }
 
 // Scanner
@@ -290,6 +334,20 @@ Token *Scanner__scan_integer_token(Scanner *self, Token_Location *token_location
     return (Token *) Integer_Token__create(token_location, token_lexeme, value);
 }
 
+bool char_is_space(u8 c) {
+    return c == ' ';
+}
+
+Token *Scanner__scan_space_token(Scanner *self, Token_Location *token_location, String *token_lexeme) {
+    u16 count = 0;
+    while (char_is_space(Scanner__peek_char(self))) {
+        count = count + 1;
+        String__append_char(token_lexeme, Scanner__next_char(self));
+    }
+    return (Token *) Space_Token__create(token_location, token_lexeme, count);
+}
+
+
 Token *Scanner__scan_token(Scanner *self) {
     Token_Location *token_location = Token_Location__create(self->source, self->current_line, self->current_column);
     String *token_lexeme = String__create();
@@ -304,6 +362,10 @@ Token *Scanner__scan_token(Scanner *self) {
         return Scanner__scan_integer_token(self, token_location, token_lexeme);
     }
 
+    if (char_is_space(next_char)) {
+        return Scanner__scan_space_token(self, token_location, token_lexeme);
+    }
+
     if (next_char == '/') {
         String__append_char(token_lexeme, Scanner__next_char(self));
         if (Scanner__peek_char(self) == '/') {
@@ -313,8 +375,12 @@ Token *Scanner__scan_token(Scanner *self) {
         return (Token *) Other_Token__create(token_location, token_lexeme);
     }
 
+    if (next_char == '\n') {
+        String__append_char(token_lexeme, Scanner__next_char(self));
+        return (Token *) End_Of_Line_Token__create(token_location, token_lexeme);
+    }
+
     if (next_char == '\0') {
-        Scanner__next_char(self);
         return (Token *) End_Of_File_Token__create(token_location, token_lexeme);
     }
 
@@ -350,7 +416,7 @@ i32 main() {
 
     Token *token = scanner->current_token;
     while (token->type != TOKEN_TYPE_END_OF_FILE) {
-        File__write_string(stdout, token->lexeme);
+        File__write_token(stdout, token);
 
         token = Scanner__next_token(scanner);
     }
