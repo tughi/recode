@@ -58,7 +58,7 @@ String *String__create() {
 
 String *String__create_from(u8 *data) {
     usize string_length = 0;
-    while (1) {
+    while (true) {
         u8 c = data[string_length];
         if (c == 0) {
             break;
@@ -96,7 +96,9 @@ void pass() {
 }
 
 void panic(String *message) {
+    fputs("\e[1;31m", stderr);
     File__write_string(stderr, message);
+    fputs("\e[0m\n", stderr);
     abort();
 }
 
@@ -146,6 +148,7 @@ typedef enum {
     TOKEN_TYPE_COMMENT,
     TOKEN_TYPE_END_OF_FILE,
     TOKEN_TYPE_END_OF_LINE,
+    TOKEN_TYPE_ERROR,
     TOKEN_TYPE_IDENTIFIER,
     TOKEN_TYPE_INTEGER,
     TOKEN_TYPE_KEYWORD,
@@ -167,6 +170,20 @@ void *Token__create(usize size, u16 type, Token_Location *location, String *lexe
     token->location = location;
     token->lexeme = lexeme;
     token->next_token = 0;
+    return token;
+}
+
+typedef struct {
+    Token_Type type;
+    Source *source;
+    String *lexeme;
+    Token *next_token;
+    u8 value;
+} Character_Token;
+
+Character_Token *Character_Token__create(Token_Location *location, String *lexeme, u8 value) {
+    Character_Token *token = Token__create(sizeof(Character_Token), TOKEN_TYPE_CHARACTER, location, lexeme);
+    token->value = value;
     return token;
 }
 
@@ -201,6 +218,17 @@ typedef struct {
 
 End_Of_Line_Token *End_Of_Line_Token__create(Token_Location *location, String *lexeme) {
     return Token__create(sizeof(End_Of_Line_Token), TOKEN_TYPE_END_OF_LINE, location, lexeme);
+}
+
+typedef struct {
+    Token_Type type;
+    Source *source;
+    String *lexeme;
+    Token *next_token;
+} Error_Token;
+
+Error_Token *Error_Token__create(Token_Location *location, String *lexeme) {
+    return Token__create(sizeof(Error_Token), TOKEN_TYPE_ERROR, location, lexeme);
 }
 
 typedef struct {
@@ -254,15 +282,17 @@ Space_Token *Space_Token__create(Token_Location *location, String *lexeme, u16 c
 }
 
 void File__write_token(File *stream, Token *token) {
-    bool colored = token->type == TOKEN_TYPE_OTHER;
+    bool colored = token->type == TOKEN_TYPE_ERROR || token->type == TOKEN_TYPE_OTHER;
     if (colored) {
-        fputc(27, stream);
-        fputs("[2;33m", stream);
+        if (token->type == TOKEN_TYPE_ERROR) {
+            fputs("\e[2;31m", stream);
+        } else if (token->type == TOKEN_TYPE_OTHER) {
+            fputs("\e[2;33m", stream);
+        }
     }
     File__write_string(stream, token->lexeme);
     if (colored) {
-        fputc(27, stream);
-        fputs("[0m", stream);
+        fputs("\e[0m", stream);
     }
 }
 
@@ -294,8 +324,52 @@ u8 Scanner__next_char(Scanner *self) {
     return next_char;
 }
 
+u8 escape_char_value(u8 c) {
+    if (c == 'n') return '\n';
+    if (c == '"') return '\"';
+    if (c == '\'') return '\'';
+    if (c == '\\') return '\\';
+    if (c == 't') return '\t';
+    if (c == '0') return '\0';
+    if (c == 'e') return '\e';
+    return -1;
+}
+
 bool char_is_end_of_line(u8 c) {
     return c == '\n' || c == '\0';
+}
+
+Token *Scanner__scan_character_token(Scanner *self, Token_Location *token_location, String *token_lexeme) {
+    if (Scanner__next_char(self) != '\'') {
+        panic(String__create_from("Invalid state"));
+    }
+    String__append_char(token_lexeme, '\'');
+
+    u8 value = Scanner__next_char(self);
+    String__append_char(token_lexeme, value);
+
+    if (value == '\'') {
+        return (Token *) Error_Token__create(token_location, token_lexeme);
+    }
+
+    if (value == '\\') {
+        value = Scanner__next_char(self);
+        String__append_char(token_lexeme, value);
+
+        value = escape_char_value(value);
+        if (value == -1) {
+            return (Token *) Error_Token__create(token_location, token_lexeme);
+        }
+    } else if (char_is_end_of_line(value)) {
+        return (Token *) Error_Token__create(token_location, token_lexeme);
+    }
+
+    if (Scanner__next_char(self) != '\'') {
+        return (Token *) Error_Token__create(token_location, token_lexeme);
+    }
+
+    String__append_char(token_lexeme, '\'');
+    return (Token *) Character_Token__create(token_location, token_lexeme, value);
 }
 
 Token *Scanner__scan_comment_token(Scanner *self, Token_Location *token_location, String *token_lexeme) {
@@ -347,7 +421,6 @@ Token *Scanner__scan_space_token(Scanner *self, Token_Location *token_location, 
     return (Token *) Space_Token__create(token_location, token_lexeme, count);
 }
 
-
 Token *Scanner__scan_token(Scanner *self) {
     Token_Location *token_location = Token_Location__create(self->source, self->current_line, self->current_column);
     String *token_lexeme = String__create();
@@ -364,6 +437,10 @@ Token *Scanner__scan_token(Scanner *self) {
 
     if (char_is_space(next_char)) {
         return Scanner__scan_space_token(self, token_location, token_lexeme);
+    }
+
+    if (next_char == '\'') {
+        return Scanner__scan_character_token(self, token_location, token_lexeme);
     }
 
     if (next_char == '/') {
