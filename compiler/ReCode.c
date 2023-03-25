@@ -82,24 +82,50 @@ String *String__append_char(String *self, u8 ch) {
     return self;
 }
 
-void File__write_string(File *self, String *string) {
-    usize index = 0;
-    while (index < string->length) {
-        fputc(string->data[index], self);
-        index = index + 1;
-    }
-}
-
 // Utils
 
 void pass() {
 }
 
+void File__write_char(File *stream, u8 c) {
+    fputc(c, stream);
+}
+
+void File__write_cstring(File *stream, const i8 *s) {
+    fputs(s, stream);
+}
+
+void File__write_i32(File *stream, i32 value) {
+    if (value < 0) {
+        File__write_char(stream, '-');
+        File__write_i32(stream, -value);
+    } else {
+        if (value >= 10) {
+            File__write_i32(stream, value / 10);
+        }
+        File__write_char(stream, value % 10 + '0');
+    }
+}
+
+void File__write_string(File *self, String *string) {
+    usize index = 0;
+    while (index < string->length) {
+        File__write_char(self, string->data[index]);
+        index = index + 1;
+    }
+}
+
 void panic(String *message) {
-    fputs("\e[1;31m", stderr);
+    File__write_cstring(stderr, "\e[0;91m");
     File__write_string(stderr, message);
-    fputs("\e[0m\n", stderr);
+    File__write_cstring(stderr, "\e[0m\n");
     abort();
+}
+
+void warning(String *message) {
+    File__write_cstring(stderr, "\e[0;96m");
+    File__write_string(stderr, message);
+    File__write_cstring(stderr, "\e[0m\n");
 }
 
 // Source
@@ -119,7 +145,7 @@ Source *Source__create(File *stream) {
         String__append_char(source_content, ch);
     }
 
-    String__append_char(source_content, '\0'); // simplifies "end of source" detection
+    String__append_char(source_content, '\0'); // simplifies EOF detection
 
     Source *source = malloc(sizeof(Source));
     source->content = source_content;
@@ -141,6 +167,24 @@ Token_Location *Token_Location__create(Source *source, u16 line, u16 column) {
     token_location->line = line;
     token_location->column = column;
     return token_location;
+}
+
+void File__write_token_location(File *stream, Token_Location *self) {
+    File__write_cstring(stream, "compiler/ReCode.c:");
+    File__write_i32(stream, self->line);
+    File__write_char(stream, ':');
+    File__write_i32(stream, self->column);
+    File__write_cstring(stream, ": ");
+}
+
+void Token_Location__panic(Token_Location *self, String *message) {
+    File__write_token_location(stderr, self);
+    panic(message);
+}
+
+void Token_Location__warning(Token_Location *self, String *message) {
+    File__write_token_location(stderr, self);
+    warning(message);
 }
 
 typedef enum {
@@ -171,6 +215,14 @@ void *Token__create(usize size, u16 type, Token_Location *location, String *lexe
     token->lexeme = lexeme;
     token->next_token = 0;
     return token;
+}
+
+void Token__panic(Token *self, String *message) {
+    Token_Location__panic(self->location, message);
+}
+
+void Token__warning(Token *self, String *message) {
+    Token_Location__warning(self->location, message);
 }
 
 typedef struct {
@@ -296,17 +348,19 @@ String_Token *String_Token__create(Token_Location *location, String *lexeme, Str
 }
 
 void File__write_token(File *stream, Token *token) {
-    bool colored = token->type == TOKEN_TYPE_ERROR || token->type == TOKEN_TYPE_OTHER;
+    bool colored = token->type == TOKEN_TYPE_COMMENT || token->type == TOKEN_TYPE_ERROR || token->type == TOKEN_TYPE_OTHER;
     if (colored) {
-        if (token->type == TOKEN_TYPE_ERROR) {
-            fputs("\e[2;31m", stream);
-        } else if (token->type == TOKEN_TYPE_OTHER) {
-            fputs("\e[2;33m", stream);
+        if (token->type == TOKEN_TYPE_OTHER) {
+            File__write_cstring(stream, "\e[2;33m");
+        } else if (token->type == TOKEN_TYPE_COMMENT) {
+            File__write_cstring(stream, "\e[2;37m");
+        } else if (token->type == TOKEN_TYPE_ERROR) {
+            File__write_cstring(stream, "\e[2;31m");
         }
     }
     File__write_string(stream, token->lexeme);
     if (colored) {
-        fputs("\e[0m", stream);
+        File__write_cstring(stream, "\e[0m");
     }
 }
 
@@ -536,6 +590,18 @@ Token *Scanner__next_token(Scanner *self) {
     return self->current_token;
 }
 
+Token *Scanner__peek_token(Scanner *self, u8 offset) {
+    Token *token = self->current_token;
+    while (offset > 0) {
+        if (token->next_token == 0) {
+            token->next_token = Scanner__scan_token(self);
+        }
+        token = token->next_token;
+        offset = offset - 1;
+    }
+    return token;
+}
+
 Scanner *Scanner__create(Source *source) {
     Scanner *scanner = malloc(sizeof(Scanner));
     scanner->source = source;
@@ -548,18 +614,156 @@ Scanner *Scanner__create(Source *source) {
     return scanner;
 }
 
+// AST
+
+typedef struct AST_Statements AST_Statements;
+
+typedef struct {
+    AST_Statements *statements;
+} AST_Compilation_Unit;
+
+typedef struct AST_Statement {
+    struct AST_Statement *next_statement;
+} AST_Statement;
+
+typedef struct AST_Statements {
+    AST_Statement *first_statement;
+    AST_Statement *last_statement;
+} AST_Statements;
+
+AST_Statements *AST_Statements__create() {
+    AST_Statements *statements = malloc(sizeof(AST_Statements));
+    statements->first_statement = 0;
+    statements->last_statement = 0;
+    return statements;
+}
+
+AST_Compilation_Unit *AST_Compilation_Unit__create() {
+    AST_Compilation_Unit *compilation_unit = malloc(sizeof(AST_Compilation_Unit));
+    compilation_unit->statements = AST_Statements__create();
+    return compilation_unit;
+}
+
+// Parser
+
+typedef struct Parser {
+    Scanner *scanner;
+    AST_Compilation_Unit *compilation_unit;
+    u16 current_identation;
+} Parser;
+
+Token *Parser__peek_token(Parser *self, u8 offset) {
+    return Scanner__peek_token(self->scanner, offset);
+}
+
+Token *Parser__consume_token(Parser *self) {
+    Token *token = self->scanner->current_token;
+    Scanner__next_token(self->scanner);
+    return token;
+}
+
+void Parser__consume_comment(Parser *self) {
+    Token *token = Parser__consume_token(self);
+    if (token->type != TOKEN_TYPE_COMMENT) {
+        Token__panic(token, String__create_from("Unexpected token"));
+    }
+}
+
+void Parser__consume_end_of_line(Parser *self) {
+    Token *token = Parser__consume_token(self);
+    if (token->type != TOKEN_TYPE_END_OF_LINE) {
+        if (token->type == TOKEN_TYPE_END_OF_FILE) {
+            Token__warning(token, String__create_from("Unexpected end of line"));
+        } else {
+            Token__panic(token, String__create_from("Unexpected token"));
+        }
+    }
+}
+
+void Parser__consume_space(Parser *self, u16 identation) {
+    Token *token = Parser__consume_token(self);
+    if (token->type != TOKEN_TYPE_SPACE) {
+        Token__panic(token, String__create_from("Unexpected token"));
+    }
+    Space_Token *space_token = (Space_Token *) token;
+    if (space_token->count != identation * 4) {
+        Token__warning(token, String__create_from("Unexpected identation"));
+    }
+}
+
+bool Parser__consume_empty_line(Parser *self) {
+    if (Parser__peek_token(self, 0)->type == TOKEN_TYPE_SPACE && Parser__peek_token(self, 1)->type == TOKEN_TYPE_COMMENT && (Parser__peek_token(self, 2)->type == TOKEN_TYPE_END_OF_LINE || Parser__peek_token(self, 2)->type == TOKEN_TYPE_END_OF_FILE)) {
+        Parser__consume_space(self, self->current_identation);
+        Parser__consume_comment(self);
+        Parser__consume_end_of_line(self);
+        return true;
+    } else if (Parser__peek_token(self, 0)->type == TOKEN_TYPE_COMMENT && (Parser__peek_token(self, 1)->type == TOKEN_TYPE_END_OF_LINE || Parser__peek_token(self, 1)->type == TOKEN_TYPE_END_OF_FILE)) {
+        Parser__consume_comment(self);
+        Parser__consume_end_of_line(self);
+        return true;
+    } else if (Parser__peek_token(self, 0)->type == TOKEN_TYPE_SPACE && (Parser__peek_token(self, 1)->type == TOKEN_TYPE_END_OF_LINE || Parser__peek_token(self, 1)->type == TOKEN_TYPE_END_OF_FILE)) {
+        Parser__consume_space(self, 0);
+        Parser__consume_end_of_line(self);
+        return true;
+    } else if (Parser__peek_token(self, 0)->type == TOKEN_TYPE_END_OF_LINE || Parser__peek_token(self, 0)->type == TOKEN_TYPE_END_OF_FILE) {
+        Parser__consume_end_of_line(self);
+        return true;
+    }
+    return false;
+}
+
+// statement
+//      | typedef
+AST_Statement *Parser__parse_statement(Parser *self) {
+    while (Parser__consume_empty_line(self));
+
+    return 0;
+}
+
+// statements
+//      | ( statement <EOL> )*
+void Parser__parse_statements(Parser *self, AST_Statements *statements) {
+    while (true) {
+        AST_Statement *statement = Parser__parse_statement(self);
+        if (statement == 0) {
+            break;
+        }
+    }
+}
+
+void Parser__parse_source(Parser *self, Source *source) {
+    Scanner *other_scanner = self->scanner;
+
+    self->scanner = Scanner__create(source);
+
+    Parser__parse_statements(self, self->compilation_unit->statements);
+
+    if (self->scanner->current_token->type != TOKEN_TYPE_END_OF_FILE) {
+        Token__panic(self->scanner->current_token, String__create_from("Scanner didn't reach end of file"));
+    }
+
+    // TODO: warn if the source doesn't end with a new line
+
+    self->scanner = other_scanner;
+}
+
+AST_Compilation_Unit *parse(Source *source) {
+    Parser parser;
+    parser.scanner = 0;
+    parser.compilation_unit = AST_Compilation_Unit__create();
+    parser.current_identation = 0;
+
+    Parser__parse_source(&parser, source);
+
+    return parser.compilation_unit;
+}
+
 // Main
 
 i32 main() {
     Source *source = Source__create(stdin);
-    Scanner *scanner = Scanner__create(source);
 
-    Token *token = scanner->current_token;
-    while (token->type != TOKEN_TYPE_END_OF_FILE) {
-        File__write_token(stdout, token);
-
-        token = Scanner__next_token(scanner);
-    }
+    AST_Compilation_Unit *compilation_unit = parse(source);
 
     return 0;
 }
