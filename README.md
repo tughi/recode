@@ -7,15 +7,18 @@ A compiler for the _Code_ language.
 - [ ] Implement self-hosted _C_ compiler
   - types: 
     - **const**
-    - **enum**
-    - **i8**, **u8**
-    - **i16**, **u16**
-    - **i32**, **u32**
-    - **i64**, **u64**
-    - **isize**, **usize**
+    - **bool**
+    - **char**
+    - **int8_t**, **uint8_t**
+    - **int16_t**, **uint16_t**
+    - **int32_t**, **uint32_t**
+    - **int64_t**, **uint64_t**
+    - **size_t**
     - **struct**
-    - **typedef**
     - **void**
+  - values:
+    - **null**
+    - **true**, **false**
   - control:
     - **break**
     - **if-else**
