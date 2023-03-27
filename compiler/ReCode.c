@@ -478,12 +478,24 @@ bool Token__is_comma(Token *self) {
     return Token__is_other(self, ",");
 }
 
+bool Token__is_dot(Token *self) {
+    return Token__is_other(self, ".");
+}
+
 bool Token__is_equals(Token *self) {
     return Token__is_other(self, "=");
 }
 
+bool Token__is_greater_than(Token *self) {
+    return Token__is_other(self, ">");
+}
+
 bool Token__is_hash(Token *self) {
     return Token__is_other(self, "#");
+}
+
+bool Token__is_minus(Token *self) {
+    return Token__is_other(self, "-");
 }
 
 bool Token__is_opening_brace(Token *self) {
@@ -852,6 +864,71 @@ AST_Types *AST_Types__create() {
 }
 
 typedef enum {
+    AST_EXPRESSION_KIND__CALL,
+    AST_EXPRESSION_KIND__SIZEOF,
+    AST_EXPRESSION_KIND__SYMBOL,
+} AST_Expression_Kind;
+
+typedef struct AST_Expression {
+    AST_Expression_Kind kind;
+    Source_Location *location;
+} AST_Expression;
+
+AST_Expression* AST_Expression__create(size_t size, AST_Expression_Kind kind, Source_Location *location) {
+    AST_Expression* expression = malloc(size);
+    expression->kind = kind;
+    expression->location = location;
+    return expression;
+}
+
+typedef struct AST_Call_Argument {
+    AST_Expression *expression;
+    struct AST_Call_Argument *next_argument;
+} AST_Call_Argument;
+
+AST_Call_Argument* AST_Call_Argument__create(AST_Expression *expression) {
+    AST_Call_Argument* argument = malloc(sizeof(AST_Call_Argument));
+    argument->expression = expression;
+    argument->next_argument = null;
+    return argument;
+}
+
+typedef struct AST_Call_Expression {
+    AST_Expression expression;
+    AST_Expression *callee_expression;
+    AST_Call_Argument *first_argument;
+} AST_Call_Expression;
+
+AST_Call_Expression* AST_Call_Expression__create(AST_Expression *callee_expression) {
+    AST_Call_Expression* call_expression = (AST_Call_Expression*) AST_Expression__create(sizeof(AST_Call_Expression), AST_EXPRESSION_KIND__CALL, callee_expression->location);
+    call_expression->callee_expression = callee_expression;
+    call_expression->first_argument = null;
+    return call_expression;
+}
+
+typedef struct AST_Sizeof_Expression {
+    AST_Expression expression;
+    AST_Type *type;
+} AST_Sizeof_Expression;
+
+AST_Sizeof_Expression* AST_Sizeof_Expression__create(Source_Location* location, AST_Type *type) {
+    AST_Sizeof_Expression* call_expression = (AST_Sizeof_Expression*) AST_Expression__create(sizeof(AST_Sizeof_Expression), AST_EXPRESSION_KIND__SIZEOF, location);
+    call_expression->type = type;
+    return call_expression;
+}
+
+typedef struct AST_Symbol_Expression {
+    AST_Expression expression;
+    Token *name;
+} AST_Symbol_Expression;
+
+AST_Symbol_Expression* AST_Symbol_Expression__create(Token *name) {
+    AST_Symbol_Expression* symbol_expression = (AST_Symbol_Expression*) AST_Expression__create(sizeof(AST_Symbol_Expression), AST_EXPRESSION_KIND__SYMBOL, name->location);
+    symbol_expression->name = name;
+    return symbol_expression;
+}
+
+typedef enum {
     AST_STATEMENT_KIND__FUNCTION,
     AST_STATEMENT_KIND__STRUCT,
     AST_STATEMENT_KIND__VARIABLE,
@@ -941,14 +1018,15 @@ AST_Struct_Statement *AST_Struct_Statement__create(Source_Location *location, To
 typedef struct AST_Variable_Statement {
     AST_Named_Statement named_statement;
     AST_Type *type;
+    AST_Expression *expression;
     bool is_external;
 } AST_Variable_Statement;
 
-AST_Statement *AST_Variable_Statement__create(Source_Location *location, Token *name, AST_Type *type, bool is_external) {
+AST_Variable_Statement *AST_Variable_Statement__create(Source_Location *location, Token *name, AST_Type *type, bool is_external) {
     AST_Variable_Statement *statement = AST_Named_Statement__create(sizeof(AST_Variable_Statement), AST_STATEMENT_KIND__VARIABLE, location, name);
     statement->type = type;
     statement->is_external = is_external;
-    return (AST_Statement *) statement;
+    return statement;
 }
 
 typedef struct AST_Statements {
@@ -1148,6 +1226,67 @@ bool Parser__consume_empty_line(Parser *self) {
 
 AST_Type *Parser__parse_type(Parser *self);
 
+// primary_expression
+//      | IDENTIFIER
+AST_Expression* Parser__parse_primary_expression(Parser *self) {
+    if (Parser__matches_one(self, Token__is_identifier)) {
+        return (AST_Expression*) AST_Symbol_Expression__create(Parser__consume_token(self, Token__is_identifier));
+    }
+    Parser__panic(self, String__create_from("Unsupported primary expression"));
+}
+
+AST_Expression* Parser__parse_expression(Parser *self);
+
+// access_expression
+//      | primary_expression ( "." IDENTIFIER | "->" IDENTIFIER | "(" ( expression ( "," expression )* )? ")" | "[" expression "]" )*
+AST_Expression* Parser__parse_access_expression(Parser *self) {
+    AST_Expression* expression = Parser__parse_primary_expression(self);
+    while (true) {
+        AST_Expression* old_expression = expression;
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_dot) || Parser__matches_three(self, Token__is_space, false, Token__is_minus, true, Token__is_greater_than)) {
+            Parser__panic(self, String__create_from("TODO: Parse member access"));
+        }
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_paren)) {
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_opening_paren);
+            Parser__consume_space(self, 0);
+            if (expression->kind == AST_EXPRESSION_KIND__SYMBOL && String__equals_cstring(((AST_Symbol_Expression*) expression)->name->lexeme, "sizeof")) {
+                AST_Type* type = Parser__parse_type(self);
+                expression = (AST_Expression*) AST_Sizeof_Expression__create(expression->location, type);
+            } else {
+                AST_Call_Expression* call_expression = AST_Call_Expression__create(expression);
+                if (!Parser__matches_one(self, Token__is_closing_paren)) {
+                    AST_Call_Argument* last_argument = AST_Call_Argument__create(Parser__parse_expression(self));
+                    call_expression->first_argument = last_argument;
+                    Parser__consume_space(self, 0);
+                    while (Parser__matches_one(self, Token__is_comma)) {
+                        Parser__consume_token(self, Token__is_comma);
+                        Parser__consume_space(self, 1);
+                        AST_Call_Argument* argument = AST_Call_Argument__create(Parser__parse_expression(self));
+                        last_argument->next_argument = argument;
+                        last_argument = argument;
+                        Parser__consume_space(self, 0);
+                    }
+                }
+                expression = (AST_Expression*) call_expression;
+            }
+            Parser__consume_token(self, Token__is_closing_paren);
+        }
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
+            Parser__panic(self, String__create_from("TODO: Parse array access"));
+        }
+        if (old_expression == expression) {
+            break;
+        }
+    }
+    return expression;
+}
+
+// expression
+AST_Expression* Parser__parse_expression(Parser *self) {
+    return Parser__parse_access_expression(self);
+}
+
 // struct
 //      | "typedef" "struct" IDENTIFIER IDENTIFIER
 //      | "typedef" "struct" IDENTIFIER "{" ( type "*"? IDENTIFIER ";" )* "}" IDENTIFIER
@@ -1237,13 +1376,14 @@ AST_Statement *Parser__parse_variable(Parser *self) {
     AST_Type *type = Parser__parse_type(self);
     Parser__consume_space(self, 1);
     Token *name = Parser__consume_token(self, Token__is_identifier);
+    AST_Variable_Statement* variable_statement = AST_Variable_Statement__create(location, name, type, is_external);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
-        Parser__panic(self, String__create_from("TODO: parse expression"));
+        variable_statement->expression = Parser__parse_expression(self);
     }
-    return AST_Variable_Statement__create(location, name, type, is_external);
+    return (AST_Statement*) variable_statement;
 }
 
 AST_Function_Parameter *Parser__parse_function_parameter(Parser *self) {
