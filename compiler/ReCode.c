@@ -16,15 +16,15 @@ extern File* stdin;
 extern File* stdout;
 extern File* stderr;
 
-int32_t fgetc(File *stream);
-int32_t fputc(int32_t c, File *stream);
-int32_t fputs(char const *s, File *stream);
+extern int32_t fgetc(File* stream);
+extern int32_t fputc(int32_t c, File* stream);
+extern int32_t fputs(const char* s, File* stream);
 
-void *malloc(size_t size);
-void *realloc(void *ptr, size_t size);
-void free(void *ptr);
+extern void* malloc(size_t size);
+extern void* realloc(void* ptr, size_t size);
+extern void free(void* ptr);
 
-void abort();
+extern void abort();
 
 // String
 
@@ -474,6 +474,10 @@ bool Token__is_closing_paren(Token *self) {
     return Token__is_other(self, ")");
 }
 
+bool Token__is_comma(Token *self) {
+    return Token__is_other(self, ",");
+}
+
 bool Token__is_equals(Token *self) {
     return Token__is_other(self, "=");
 }
@@ -778,6 +782,8 @@ typedef struct {
 } AST_Compilation_Unit;
 
 typedef enum {
+    AST_TYPE_KIND__BOOL,
+    AST_TYPE_KIND__CHAR,
     AST_TYPE_KIND__CONST,
     AST_TYPE_KIND__INT16_T,
     AST_TYPE_KIND__INT32_T,
@@ -790,6 +796,7 @@ typedef enum {
     AST_TYPE_KIND__UINT32_T,
     AST_TYPE_KIND__UINT64_T,
     AST_TYPE_KIND__UINT8_T,
+    AST_TYPE_KIND__VOID,
 } AST_Type_Kind;
 
 typedef struct AST_Statement AST_Statement;
@@ -845,6 +852,7 @@ AST_Types *AST_Types__create() {
 }
 
 typedef enum {
+    AST_STATEMENT_KIND__FUNCTION,
     AST_STATEMENT_KIND__STRUCT,
     AST_STATEMENT_KIND__VARIABLE,
 } AST_Statement_Kind;
@@ -863,49 +871,133 @@ void *AST_Statement__create(size_t size, AST_Statement_Kind kind, Source_Locatio
     return statement;
 }
 
-typedef struct AST_Struct_Statement {
+typedef struct AST_Named_Statement {
     AST_Statement statement;
     Token *name;
+} AST_Named_Statement;
+
+void *AST_Named_Statement__create(size_t size, AST_Statement_Kind kind, Source_Location *location, Token *name) {
+    AST_Named_Statement *statement = AST_Statement__create(size, kind, location);
+    statement->name = name;
+    return statement;
+}
+
+typedef struct AST_Function_Parameter {
+    Token *name;
+    AST_Type *type;
+    struct AST_Function_Parameter *next_parameter;
+} AST_Function_Parameter;
+
+AST_Function_Parameter *AST_Function_Parameter__create(Token *name, AST_Type *type) {
+    AST_Function_Parameter *parameter = malloc(sizeof(AST_Function_Parameter));
+    parameter->name = name;
+    parameter->type = type;
+    parameter->next_parameter = null;
+    return parameter;
+}
+
+typedef struct AST_Function_Statement {
+    AST_Named_Statement named_statement;
+    AST_Function_Parameter *first_parameter;
+    AST_Type *return_type;
+    bool is_external;
+} AST_Function_Statement;
+
+AST_Statement *AST_Function_Statement__create(Source_Location *location, Token *name, AST_Function_Parameter *first_parameter, AST_Type *resturn_type, bool is_external) {
+    AST_Function_Statement *statement = AST_Named_Statement__create(sizeof(AST_Function_Statement), AST_STATEMENT_KIND__FUNCTION, location, name);
+    statement->first_parameter = first_parameter;
+    statement->return_type = resturn_type;
+    statement->is_external = is_external;
+    return (AST_Statement *) statement;
+}
+
+typedef struct AST_Struct_Statement {
+    AST_Named_Statement named_statement;
     bool is_opaque;
 } AST_Struct_Statement;
 
 AST_Statement *AST_Struct_Statement__create(Source_Location *location, Token *name, bool is_opaque) {
-    AST_Struct_Statement *statement = AST_Statement__create(sizeof(AST_Struct_Statement), AST_STATEMENT_KIND__STRUCT, location);
-    statement->name = name;
+    AST_Struct_Statement *statement = AST_Named_Statement__create(sizeof(AST_Struct_Statement), AST_STATEMENT_KIND__STRUCT, location, name);
     statement->is_opaque = is_opaque;
-    return &statement->statement;
+    return (AST_Statement *) statement;
 }
 
 typedef struct AST_Variable_Statement {
-    AST_Statement statement;
-    Token *name;
+    AST_Named_Statement named_statement;
     AST_Type *type;
     bool is_external;
 } AST_Variable_Statement;
 
 AST_Statement *AST_Variable_Statement__create(Source_Location *location, Token *name, AST_Type *type, bool is_external) {
-    AST_Variable_Statement *statement = AST_Statement__create(sizeof(AST_Variable_Statement), AST_STATEMENT_KIND__VARIABLE, location);
-    statement->name = name;
+    AST_Variable_Statement *statement = AST_Named_Statement__create(sizeof(AST_Variable_Statement), AST_STATEMENT_KIND__VARIABLE, location, name);
     statement->type = type;
     statement->is_external = is_external;
-    return &statement->statement;
+    return (AST_Statement *) statement;
 }
 
 typedef struct AST_Statements {
     AST_Statement *first_statement;
     AST_Statement *last_statement;
+    bool has_globals;
 } AST_Statements;
 
-AST_Statements *AST_Statements__create() {
+AST_Statements *AST_Statements__create(bool has_globals) {
     AST_Statements *statements = malloc(sizeof(AST_Statements));
     statements->first_statement = null;
     statements->last_statement = null;
+    statements->has_globals = has_globals;
     return statements;
+}
+
+AST_Statement *AST_Statements__find_named_statement(AST_Statements *self, String *name) {
+    AST_Statement *statement = self->first_statement;
+    while (statement != null) {
+        if (statement->kind == AST_STATEMENT_KIND__FUNCTION || statement->kind == AST_STATEMENT_KIND__STRUCT || statement->kind == AST_STATEMENT_KIND__VARIABLE) {
+            AST_Named_Statement *named_statement = (AST_Named_Statement *) statement;
+            if (String__equals_string(name, named_statement->name->lexeme)) {
+                return statement;
+            }
+        }
+        statement = statement->next_statement;
+    }
+    return null;
+}
+
+void AST_Statements__append(AST_Statements *self, AST_Statement *statement) {
+    if (statement->kind == AST_STATEMENT_KIND__FUNCTION || statement->kind == AST_STATEMENT_KIND__STRUCT || statement->kind == AST_STATEMENT_KIND__VARIABLE) {
+        AST_Named_Statement *named_statement = (AST_Named_Statement *) statement;
+        if (self->has_globals) {
+            AST_Statement *other_statement = AST_Statements__find_named_statement(self, named_statement->name->lexeme);
+            if (other_statement != null) {
+                Source_Location__panic(statement->location, String__create_from("TODO: Handle redeclaration"));
+            }
+        } else {
+            if (statement->kind == AST_STATEMENT_KIND__FUNCTION) {
+                Source_Location__panic(statement->location, String__create_from("Local functions are not supported"));
+            }
+            if (statement->kind == AST_STATEMENT_KIND__STRUCT) {
+                Source_Location__panic(statement->location, String__create_from("Local structs are not supported"));
+            }
+            if (statement->kind == AST_STATEMENT_KIND__VARIABLE) {
+                AST_Statement *other_statement = AST_Statements__find_named_statement(self, named_statement->name->lexeme);
+                if (other_statement != null) {
+                    Source_Location__panic(statement->location, String__create_from("TODO: Handle redeclaration"));
+                }
+            }
+        }
+    }
+
+    if (self->first_statement == null) {
+        self->first_statement = statement;
+    } else {
+        self->last_statement->next_statement = statement;
+    }
+    self->last_statement = statement;
 }
 
 AST_Compilation_Unit *AST_Compilation_Unit__create() {
     AST_Compilation_Unit *compilation_unit = malloc(sizeof(AST_Compilation_Unit));
-    compilation_unit->statements = AST_Statements__create();
+    compilation_unit->statements = AST_Statements__create(true);
     return compilation_unit;
 }
 
@@ -1116,6 +1208,68 @@ AST_Statement *Parser__parse_variable(Parser *self) {
     return AST_Variable_Statement__create(location, name, type, is_external);
 }
 
+AST_Function_Parameter *Parser__parse_function_parameter(Parser *self) {
+    AST_Type *type = Parser__parse_type(self);
+    Parser__consume_space(self, 1);
+    Token *name = Parser__consume_token(self, Token__is_identifier);
+    return AST_Function_Parameter__create(name, type);
+}
+
+AST_Function_Parameter *Parser__parse_function_parameters(Parser *self) {
+    AST_Function_Parameter *first_parameter = null;
+    if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
+        Parser__consume_space(self, 0);
+        first_parameter = Parser__parse_function_parameter(self);
+        AST_Function_Parameter *last_parameter = first_parameter;
+        while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_comma);
+            Parser__consume_space(self, 1);
+            last_parameter->next_parameter = Parser__parse_function_parameter(self);
+            last_parameter = last_parameter->next_parameter;
+        }
+    }
+    return first_parameter;
+}
+
+void Parser__parse_statements(Parser *self, AST_Statements *statements);
+
+// function
+//      | "extern"? type IDENTIFIER "(" function_parameter* ")" ( "{" statements "}" )?
+AST_Statement *Parser__parse_function(Parser *self) {
+    bool is_external;
+    Source_Location *location;
+    if (Parser__matches_one(self, Token__is_extern)) {
+        is_external = true;
+        location = Parser__consume_token(self, Token__is_extern)->location;
+        Parser__consume_space(self, 1);
+    } else {
+        is_external = false;
+        location = Parser__peek_token(self, 0)->location;
+    }
+    AST_Type *return_type = Parser__parse_type(self);
+    Parser__consume_space(self, 1);
+    Token *name = Parser__consume_token(self, Token__is_identifier);
+    Parser__consume_space(self, 0);
+    Parser__consume_token(self, Token__is_opening_paren);
+    AST_Function_Parameter *first_parameter = Parser__parse_function_parameters(self);
+    Parser__consume_space(self, 0);
+    Parser__consume_token(self, Token__is_closing_paren);
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_brace)) {
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_opening_brace);
+        Parser__consume_end_of_line(self);
+        AST_Statements *statements = AST_Statements__create(false);
+        self->current_identation = self->current_identation + 1;
+        Parser__parse_statements(self, statements);
+        self->current_identation = self->current_identation - 1;
+        Parser__consume_space(self, self->current_identation * 4);
+        Parser__consume_token(self, Token__is_closing_brace);
+        Parser__consume_end_of_line(self);
+    }
+    return AST_Function_Statement__create(location, name, first_parameter, return_type, is_external);
+}
+
 // statement
 //      | struct
 //      | variable
@@ -1160,8 +1314,7 @@ AST_Statement* Parser__parse_statement(Parser *self) {
                     peek_offset = peek_offset + 1;
                 }
                 if (Token__is_opening_paren(Parser__peek_token(self, peek_offset))) {
-                    Token__warning(Parser__peek_token(self, peek_offset), String__create_from("It's a function!"));
-                    return null;
+                    return Parser__parse_function(self);
                 }
                 return Parser__parse_variable(self);
             }
@@ -1182,7 +1335,8 @@ void Parser__parse_statements(Parser *self, AST_Statements *statements) {
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_semicolon);
         Parser__consume_end_of_line(self);
-        // TODO: append to statements
+
+        AST_Statements__append(statements, statement);
     }
 }
 
@@ -1209,6 +1363,8 @@ AST_Compilation_Unit *parse(Source *source) {
     parser.compilation_unit = AST_Compilation_Unit__create();
     parser.current_identation = 0;
 
+    Parser__create_type(&parser, AST_TYPE_KIND__BOOL, String__create_from("bool"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__CHAR, String__create_from("char"), null);
     Parser__create_type(&parser, AST_TYPE_KIND__INT16_T, String__create_from("int16_t"), null);
     Parser__create_type(&parser, AST_TYPE_KIND__INT32_T, String__create_from("int32_t"), null);
     Parser__create_type(&parser, AST_TYPE_KIND__INT64_T, String__create_from("int64_t"), null);
@@ -1218,6 +1374,7 @@ AST_Compilation_Unit *parse(Source *source) {
     Parser__create_type(&parser, AST_TYPE_KIND__UINT32_T, String__create_from("uint32_t"), null);
     Parser__create_type(&parser, AST_TYPE_KIND__UINT64_T, String__create_from("uint64_t"), null);
     Parser__create_type(&parser, AST_TYPE_KIND__UINT8_T, String__create_from("uint8_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__VOID, String__create_from("void"), null);
 
     Parser__parse_source(&parser, source);
 
