@@ -12,13 +12,13 @@
 
 typedef struct File File;
 
-extern File *stdin;
-extern File *stdout;
-extern File *stderr;
+extern File* stdin;
+extern File* stdout;
+extern File* stderr;
 
 int32_t fgetc(File *stream);
 int32_t fputc(int32_t c, File *stream);
-int32_t fputs(const char *s, File *stream);
+int32_t fputs(char const *s, File *stream);
 
 void *malloc(size_t size);
 void *realloc(void *ptr, size_t size);
@@ -46,6 +46,33 @@ String *String__create() {
     return String__create_empty(16);
 }
 
+void String__delete(String *self) {
+    free(self->data);
+    free(self);
+}
+
+String *String__append_char(String *self, uint8_t ch) {
+    if (self->length >= self->data_size) {
+        self->data_size = self->data_size + 16;
+        self->data = realloc(self->data, self->data_size);
+    }
+    self->data[self->length] = ch;
+    self->length = self->length + 1;
+    return self;
+}
+
+String *String__append_cstring(String *self, const char *s) {
+    size_t index = 0;
+    while (true) {
+        uint8_t c = s[index];
+        if (c == 0) {
+            return self;
+        }
+        String__append_char(self, c);
+        index = index + 1;
+    }
+}
+
 size_t cstring_length(const char *s) {
     size_t length = 0;
     while (true) {
@@ -60,36 +87,9 @@ size_t cstring_length(const char *s) {
 
 String *String__create_from(uint8_t *data) {
     size_t string_length = cstring_length(data);
-    String *string = malloc(sizeof(String));
-    string->data = data;
-    string->data_size = string_length + 1;
-    string->length = string_length;
+    String *string = String__create_empty(string_length);
+    String__append_cstring(string, data);
     return string;
-}
-
-void String__delete(String *self) {
-    free(self->data);
-    free(self);
-}
-
-void String__append_char(String *self, uint8_t ch) {
-    if (self->length >= self->data_size) {
-        self->data_size = self->data_size + 16;
-        self->data = realloc(self->data, self->data_size);
-    }
-    self->data[self->length] = ch;
-    self->length = self->length + 1;
-}
-
-String *String__append_cstring(String *self, const char *s) {
-    size_t index = 0;
-    while (true) {
-        uint8_t c = s[index];
-        if (c == 0) {
-            return self;
-        }
-        String__append_char(self, c);
-    }
 }
 
 String *String__append_int16_t(String *self, int16_t value) {
@@ -255,29 +255,29 @@ void Source_Location__warning(Source_Location *self, String *message) {
 // Token
 
 typedef enum {
-    TOKEN_TYPE_CHARACTER,
-    TOKEN_TYPE_COMMENT,
-    TOKEN_TYPE_END_OF_FILE,
-    TOKEN_TYPE_END_OF_LINE,
-    TOKEN_TYPE_ERROR,
-    TOKEN_TYPE_IDENTIFIER,
-    TOKEN_TYPE_INTEGER,
-    TOKEN_TYPE_KEYWORD,
-    TOKEN_TYPE_OTHER,
-    TOKEN_TYPE_SPACE,
-    TOKEN_TYPE_STRING,
-} Token_Type;
+    TOKEN_KIND__CHARACTER,
+    TOKEN_KIND__COMMENT,
+    TOKEN_KIND__END_OF_FILE,
+    TOKEN_KIND__END_OF_LINE,
+    TOKEN_KIND__ERROR,
+    TOKEN_KIND__IDENTIFIER,
+    TOKEN_KIND__INTEGER,
+    TOKEN_KIND__KEYWORD,
+    TOKEN_KIND__OTHER,
+    TOKEN_KIND__SPACE,
+    TOKEN_KIND__STRING,
+} Token_Kind;
 
 typedef struct Token {
-    Token_Type type;
+    Token_Kind kind;
     Source_Location *location;
     String *lexeme;
     struct Token *next_token;
 } Token;
 
-void *Token__create(size_t size, uint16_t type, Source_Location *location, String *lexeme) {
+void *Token__create(size_t size, uint16_t kind, Source_Location *location, String *lexeme) {
     Token *token = malloc(size);
-    token->type = type;
+    token->kind = kind;
     token->location = location;
     token->lexeme = lexeme;
     token->next_token = null;
@@ -293,7 +293,7 @@ void Token__warning(Token *self, String *message) {
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
@@ -301,68 +301,68 @@ typedef struct {
 } Character_Token;
 
 Character_Token *Character_Token__create(Source_Location *location, String *lexeme, uint8_t value) {
-    Character_Token *token = Token__create(sizeof(Character_Token), TOKEN_TYPE_CHARACTER, location, lexeme);
+    Character_Token *token = Token__create(sizeof(Character_Token), TOKEN_KIND__CHARACTER, location, lexeme);
     token->value = value;
     return token;
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
 } Comment_Token;
 
 Comment_Token *Comment_Token__create(Source_Location *location, String *lexeme) {
-    return Token__create(sizeof(Comment_Token), TOKEN_TYPE_COMMENT, location, lexeme);
+    return Token__create(sizeof(Comment_Token), TOKEN_KIND__COMMENT, location, lexeme);
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
 } End_Of_File_Token;
 
 End_Of_File_Token *End_Of_File_Token__create(Source_Location *location, String *lexeme) {
-    return Token__create(sizeof(End_Of_File_Token), TOKEN_TYPE_END_OF_FILE, location, lexeme);
+    return Token__create(sizeof(End_Of_File_Token), TOKEN_KIND__END_OF_FILE, location, lexeme);
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
 } End_Of_Line_Token;
 
 End_Of_Line_Token *End_Of_Line_Token__create(Source_Location *location, String *lexeme) {
-    return Token__create(sizeof(End_Of_Line_Token), TOKEN_TYPE_END_OF_LINE, location, lexeme);
+    return Token__create(sizeof(End_Of_Line_Token), TOKEN_KIND__END_OF_LINE, location, lexeme);
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
 } Error_Token;
 
 Error_Token *Error_Token__create(Source_Location *location, String *lexeme) {
-    return Token__create(sizeof(Error_Token), TOKEN_TYPE_ERROR, location, lexeme);
+    return Token__create(sizeof(Error_Token), TOKEN_KIND__ERROR, location, lexeme);
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
 } Identifier_Token;
 
 Identifier_Token *Identifier_Token__create(Source_Location *location, String *lexeme) {
-    return Token__create(sizeof(Identifier_Token), TOKEN_TYPE_IDENTIFIER, location, lexeme);
+    return Token__create(sizeof(Identifier_Token), TOKEN_KIND__IDENTIFIER, location, lexeme);
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
@@ -370,24 +370,24 @@ typedef struct {
 } Integer_Token;
 
 Integer_Token *Integer_Token__create(Source_Location *location, String *lexeme, uint64_t value) {
-    Integer_Token *token = Token__create(sizeof(Integer_Token), TOKEN_TYPE_INTEGER, location, lexeme);
+    Integer_Token *token = Token__create(sizeof(Integer_Token), TOKEN_KIND__INTEGER, location, lexeme);
     token->value = value;
     return token;
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
 } Other_Token;
 
 Other_Token *Other_Token__create(Source_Location *location, String *lexeme) {
-    return Token__create(sizeof(Other_Token), TOKEN_TYPE_OTHER, location, lexeme);
+    return Token__create(sizeof(Other_Token), TOKEN_KIND__OTHER, location, lexeme);
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
@@ -395,13 +395,13 @@ typedef struct {
 } Space_Token;
 
 Space_Token *Space_Token__create(Source_Location *location, String *lexeme, uint16_t count) {
-    Space_Token *token = Token__create(sizeof(Space_Token), TOKEN_TYPE_SPACE, location, lexeme);
+    Space_Token *token = Token__create(sizeof(Space_Token), TOKEN_KIND__SPACE, location, lexeme);
     token->count = count;
     return token;
 }
 
 typedef struct {
-    Token_Type type;
+    Token_Kind kind;
     Source *source;
     String *lexeme;
     Token *next_token;
@@ -409,7 +409,7 @@ typedef struct {
 } String_Token;
 
 String_Token *String_Token__create(Source_Location *location, String *lexeme, String *value) {
-    String_Token *token = Token__create(sizeof(String_Token), TOKEN_TYPE_STRING, location, lexeme);
+    String_Token *token = Token__create(sizeof(String_Token), TOKEN_KIND__STRING, location, lexeme);
     token->value = value;
     return token;
 }
@@ -419,23 +419,31 @@ bool Token__is_anything(Token *self) {
 }
 
 bool Token__is_comment(Token *self) {
-    return self->type == TOKEN_TYPE_COMMENT;
+    return self->kind == TOKEN_KIND__COMMENT;
 }
 
 bool Token__is_end_of_file(Token *self) {
-    return self->type == TOKEN_TYPE_END_OF_FILE;
+    return self->kind == TOKEN_KIND__END_OF_FILE;
 }
 
 bool Token__is_end_of_line(Token *self) {
-    return self->type == TOKEN_TYPE_END_OF_LINE || self->type == TOKEN_TYPE_END_OF_FILE;
+    return self->kind == TOKEN_KIND__END_OF_LINE || self->kind == TOKEN_KIND__END_OF_FILE;
 }
 
-bool Token__is_identifier(Token *self) {
-    return self->type == TOKEN_TYPE_IDENTIFIER;
+bool Token__is_identifier(Token* self) {
+    return self->kind == TOKEN_KIND__IDENTIFIER;
 }
 
 bool Token__is_keyword(Token *self, const char *lexeme) {
-    return self->type == TOKEN_TYPE_IDENTIFIER && String__equals_cstring(self->lexeme, lexeme);
+    return self->kind == TOKEN_KIND__IDENTIFIER && String__equals_cstring(self->lexeme, lexeme);
+}
+
+bool Token__is_const(Token *self) {
+    return Token__is_keyword(self, "const");
+}
+
+bool Token__is_extern(Token *self) {
+    return Token__is_keyword(self, "extern");
 }
 
 bool Token__is_struct(Token *self) {
@@ -447,11 +455,27 @@ bool Token__is_typedef(Token *self) {
 }
 
 bool Token__is_other(Token *self, const char *lexeme) {
-    return self->type == TOKEN_TYPE_OTHER && String__equals_cstring(self->lexeme, lexeme);
+    return self->kind == TOKEN_KIND__OTHER && String__equals_cstring(self->lexeme, lexeme);
+}
+
+bool Token__is_asterisk(Token *self) {
+    return Token__is_other(self, "*");
 }
 
 bool Token__is_closing_brace(Token *self) {
     return Token__is_other(self, "}");
+}
+
+bool Token__is_closing_bracket(Token *self) {
+    return Token__is_other(self, "]");
+}
+
+bool Token__is_closing_paren(Token *self) {
+    return Token__is_other(self, ")");
+}
+
+bool Token__is_equals(Token *self) {
+    return Token__is_other(self, "=");
 }
 
 bool Token__is_hash(Token *self) {
@@ -462,22 +486,30 @@ bool Token__is_opening_brace(Token *self) {
     return Token__is_other(self, "{");
 }
 
+bool Token__is_opening_bracket(Token *self) {
+    return Token__is_other(self, "[");
+}
+
+bool Token__is_opening_paren(Token *self) {
+    return Token__is_other(self, "(");
+}
+
 bool Token__is_semicolon(Token *self) {
     return Token__is_other(self, ";");
 }
 
 bool Token__is_space(Token *self) {
-    return self->type == TOKEN_TYPE_SPACE;
+    return self->kind == TOKEN_KIND__SPACE;
 }
 
 void File__write_token(File *stream, Token *token) {
-    bool colored = token->type == TOKEN_TYPE_COMMENT || token->type == TOKEN_TYPE_ERROR || token->type == TOKEN_TYPE_OTHER;
+    bool colored = token->kind == TOKEN_KIND__COMMENT || token->kind == TOKEN_KIND__ERROR || token->kind == TOKEN_KIND__OTHER;
     if (colored) {
-        if (token->type == TOKEN_TYPE_OTHER) {
+        if (token->kind == TOKEN_KIND__OTHER) {
             File__write_cstring(stream, "\e[2;33m");
-        } else if (token->type == TOKEN_TYPE_COMMENT) {
+        } else if (token->kind == TOKEN_KIND__COMMENT) {
             File__write_cstring(stream, "\e[2;37m");
-        } else if (token->type == TOKEN_TYPE_ERROR) {
+        } else if (token->kind == TOKEN_KIND__ERROR) {
             File__write_cstring(stream, "\e[2;31m");
         }
     }
@@ -746,18 +778,86 @@ typedef struct {
 } AST_Compilation_Unit;
 
 typedef enum {
-    AST_STATEMENT_STRUCT,
-} AST_Statement_Type;
+    AST_TYPE_KIND__CONST,
+    AST_TYPE_KIND__INT16_T,
+    AST_TYPE_KIND__INT32_T,
+    AST_TYPE_KIND__INT64_T,
+    AST_TYPE_KIND__INT8_T,
+    AST_TYPE_KIND__POINTER,
+    AST_TYPE_KIND__SIZE_T,
+    AST_TYPE_KIND__STRUCT,
+    AST_TYPE_KIND__UINT16_T,
+    AST_TYPE_KIND__UINT32_T,
+    AST_TYPE_KIND__UINT64_T,
+    AST_TYPE_KIND__UINT8_T,
+} AST_Type_Kind;
+
+typedef struct AST_Statement AST_Statement;
+
+typedef struct AST_Type {
+    AST_Type_Kind kind;
+    String *name;
+    AST_Statement *statement;
+    struct AST_Type *next_type;
+} AST_Type;
+
+AST_Type *AST_Type__create(size_t size, AST_Type_Kind kind, String *name, AST_Statement *statement) {
+    AST_Type *type = malloc(size);
+    type->kind = kind;
+    type->name = name;
+    type->statement = statement;
+    type->next_type = null;
+    return type;
+}
+
+typedef struct {
+    AST_Type type;
+    AST_Type *other_type;
+} AST_Const_Type;
+
+AST_Type *AST_Const_Type__create(AST_Type *other_type) {
+    AST_Const_Type *type = (AST_Const_Type *) AST_Type__create(sizeof(AST_Const_Type), AST_TYPE_KIND__CONST, String__append_string(String__create_from("const "), other_type->name), null);
+    type->other_type = other_type;
+    return &type->type;
+}
+
+typedef struct {
+    AST_Type type;
+    AST_Type *other_type;
+} AST_Pointer_Type;
+
+AST_Type *AST_Pointer_Type__create(AST_Type *other_type) {
+    AST_Pointer_Type *type = (AST_Pointer_Type *) AST_Type__create(sizeof(AST_Pointer_Type), AST_TYPE_KIND__POINTER, String__append_char(String__append_string(String__create_empty(other_type->name->length + 1), other_type->name), '*'), null);
+    type->other_type = other_type;
+    return &type->type;
+}
+
+typedef struct AST_Types {
+    AST_Type *first_type;
+    AST_Type *last_type;
+} AST_Types;
+
+AST_Types *AST_Types__create() {
+    AST_Types *types = malloc(sizeof(AST_Types));
+    types->first_type = null;
+    types->last_type = null;
+    return types;
+}
+
+typedef enum {
+    AST_STATEMENT_KIND__STRUCT,
+    AST_STATEMENT_KIND__VARIABLE,
+} AST_Statement_Kind;
 
 typedef struct AST_Statement {
-    AST_Statement_Type type;
+    AST_Statement_Kind kind;
     Source_Location *location;
     struct AST_Statement *next_statement;
 } AST_Statement;
 
-void *AST_Statement__create(size_t size, AST_Statement_Type type, Source_Location *location) {
+void *AST_Statement__create(size_t size, AST_Statement_Kind kind, Source_Location *location) {
     AST_Statement *statement = malloc(size);
-    statement->type = type;
+    statement->kind = kind;
     statement->location = location;
     statement->next_statement = null;
     return statement;
@@ -770,9 +870,24 @@ typedef struct AST_Struct_Statement {
 } AST_Struct_Statement;
 
 AST_Statement *AST_Struct_Statement__create(Source_Location *location, Token *name, bool is_opaque) {
-    AST_Struct_Statement *statement = AST_Statement__create(sizeof(AST_Struct_Statement), AST_STATEMENT_STRUCT, location);
+    AST_Struct_Statement *statement = AST_Statement__create(sizeof(AST_Struct_Statement), AST_STATEMENT_KIND__STRUCT, location);
     statement->name = name;
     statement->is_opaque = is_opaque;
+    return &statement->statement;
+}
+
+typedef struct AST_Variable_Statement {
+    AST_Statement statement;
+    Token *name;
+    AST_Type *type;
+    bool is_external;
+} AST_Variable_Statement;
+
+AST_Statement *AST_Variable_Statement__create(Source_Location *location, Token *name, AST_Type *type, bool is_external) {
+    AST_Variable_Statement *statement = AST_Statement__create(sizeof(AST_Variable_Statement), AST_STATEMENT_KIND__VARIABLE, location);
+    statement->name = name;
+    statement->type = type;
+    statement->is_external = is_external;
     return &statement->statement;
 }
 
@@ -798,9 +913,32 @@ AST_Compilation_Unit *AST_Compilation_Unit__create() {
 
 typedef struct Parser {
     Scanner *scanner;
+    AST_Types *types;
     AST_Compilation_Unit *compilation_unit;
     uint16_t current_identation;
 } Parser;
+
+AST_Type *Parser__create_type(Parser *self, AST_Type_Kind type_kind, String *type_name, AST_Statement *type_statement) {
+    AST_Type *type = AST_Type__create(sizeof(AST_Type), type_kind, type_name, type_statement);
+    if (self->types->first_type == null) {
+        self->types->first_type = type;
+    } else {
+        self->types->last_type->next_type = type;
+    }
+    self->types->last_type = type;
+    return type;
+}
+
+AST_Type *Parser__find_type(Parser *self, String *name) {
+    AST_Type *type = self->types->first_type;
+    while (type != null) {
+        if (String__equals_string(name, type->name)) {
+            break;
+        }
+        type = type->next_type;
+    }
+    return type;
+}
 
 void Parser__panic(Parser *self, String *message) {
     Token__panic(self->scanner->current_token, message);
@@ -888,6 +1026,7 @@ bool Parser__consume_empty_line(Parser *self) {
         Parser__consume_end_of_line(self);
         return true;
     } else if (Parser__matches_two(self, Token__is_space, false, Token__is_hash)) {
+        // Preprocessor directives are ignored and treated as empty lines
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_hash);
         while (!Parser__matches_one(self, Token__is_end_of_line)) {
@@ -921,18 +1060,112 @@ AST_Statement *Parser__parse_struct(Parser *self) {
     if (!String__equals_string(final_name->lexeme, local_name->lexeme)) {
         Token__panic(final_name, String__append_string(String__create_from("Final struct name doesn't match the local name: "), local_name->lexeme));
     }
-    return (AST_Statement *) AST_Struct_Statement__create(location, local_name, is_opaque);
+    AST_Statement *statement = (AST_Statement *) AST_Struct_Statement__create(location, local_name, is_opaque);
+    Parser__create_type(self, AST_TYPE_KIND__STRUCT, final_name->lexeme, statement);
+    return statement;
+}
+
+// type
+//      | "const"? IDENTIFIER "*"*
+AST_Type *Parser__parse_type(Parser *self) {
+    bool is_const = false;
+    Source_Location *location;
+    if (Parser__matches_one(self, Token__is_const)) {
+        is_const = true;
+        location = Parser__consume_token(self, Token__is_const)->location;
+        Parser__consume_space(self, 1);
+    }
+    Token *name = Parser__consume_token(self, Token__is_identifier);
+    AST_Type *type = Parser__find_type(self, name->lexeme);
+    if (type == null) {
+        Token__panic(name, String__create_from("Undefined type"));
+    }
+    while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_asterisk);
+        type = AST_Pointer_Type__create(type);
+    }
+    if (is_const) {
+        return AST_Const_Type__create(type);
+    }
+    return type;
+}
+
+// variable
+//      | "extern"? type IDENTIFIER ( "=" expression )?
+AST_Statement *Parser__parse_variable(Parser *self) {
+    bool is_external;
+    Source_Location *location;
+    if (Parser__matches_one(self, Token__is_extern)) {
+        is_external = true;
+        location = Parser__consume_token(self, Token__is_extern)->location;
+        Parser__consume_space(self, 1);
+    } else {
+        is_external = false;
+        location = Parser__peek_token(self, 0)->location;
+    }
+    AST_Type *type = Parser__parse_type(self);
+    Parser__consume_space(self, 1);
+    Token *name = Parser__consume_token(self, Token__is_identifier);
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
+        Parser__consume_space(self, 1);
+        Parser__consume_token(self, Token__is_equals);
+        Parser__consume_space(self, 1);
+        Parser__panic(self, String__create_from("TODO: parse expression"));
+    }
+    return AST_Variable_Statement__create(location, name, type, is_external);
 }
 
 // statement
 //      | struct
-AST_Statement *Parser__parse_statement(Parser *self) {
+//      | variable
+AST_Statement* Parser__parse_statement(Parser *self) {
     while (Parser__consume_empty_line(self));
 
     Parser__consume_space(self, self->current_identation * 4);
 
-    if (Parser__matches_one(self, Token__is_typedef)) {
+    if (Parser__matches_three(self, Token__is_typedef, true, Token__is_space, true, Token__is_struct)) {
         return Parser__parse_struct(self);
+    }
+
+    if (Parser__matches_one(self, Token__is_const) || Parser__matches_one(self, Token__is_extern) || Parser__matches_one(self, Token__is_identifier)) {
+        uint8_t peek_offset = 0;
+        if (Token__is_extern(Parser__peek_token(self, peek_offset))) {
+            peek_offset = peek_offset + 1;
+            if (Token__is_space(Parser__peek_token(self, peek_offset))) {
+                peek_offset = peek_offset + 1;
+            }
+        }
+        if (Token__is_const(Parser__peek_token(self, peek_offset))) {
+            peek_offset = peek_offset + 1;
+            if (Token__is_space(Parser__peek_token(self, peek_offset))) {
+                peek_offset = peek_offset + 1;
+            }
+        }
+        if (Token__is_identifier(Parser__peek_token(self, peek_offset))) {
+            peek_offset = peek_offset + 1;
+            if (Token__is_space(Parser__peek_token(self, peek_offset))) {
+                peek_offset = peek_offset + 1;
+            }
+            while (Token__is_asterisk(Parser__peek_token(self, peek_offset)))
+            {
+                peek_offset = peek_offset + 1;
+                if (Token__is_space(Parser__peek_token(self, peek_offset))) {
+                    peek_offset = peek_offset + 1;
+                }
+            }
+            if (Token__is_identifier(Parser__peek_token(self, peek_offset))) {
+                peek_offset = peek_offset + 1;
+                if (Token__is_space(Parser__peek_token(self, peek_offset))) {
+                    peek_offset = peek_offset + 1;
+                }
+                if (Token__is_opening_paren(Parser__peek_token(self, peek_offset))) {
+                    Token__warning(Parser__peek_token(self, peek_offset), String__create_from("It's a function!"));
+                    return null;
+                }
+                return Parser__parse_variable(self);
+            }
+        }
     }
 
     return null;
@@ -972,8 +1205,19 @@ void Parser__parse_source(Parser *self, Source *source) {
 AST_Compilation_Unit *parse(Source *source) {
     Parser parser;
     parser.scanner = null;
+    parser.types = AST_Types__create();
     parser.compilation_unit = AST_Compilation_Unit__create();
     parser.current_identation = 0;
+
+    Parser__create_type(&parser, AST_TYPE_KIND__INT16_T, String__create_from("int16_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__INT32_T, String__create_from("int32_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__INT64_T, String__create_from("int64_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__INT8_T, String__create_from("int8_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__SIZE_T, String__create_from("size_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__UINT16_T, String__create_from("uint16_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__UINT32_T, String__create_from("uint32_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__UINT64_T, String__create_from("uint64_t"), null);
+    Parser__create_type(&parser, AST_TYPE_KIND__UINT8_T, String__create_from("uint8_t"), null);
 
     Parser__parse_source(&parser, source);
 

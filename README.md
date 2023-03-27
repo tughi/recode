@@ -4,7 +4,7 @@ A compiler for the _Code_ language.
 
 ## Bootstraping
 
-- [ ] Implement self-hosted _C_ compiler
+- [ ] Implement self-hosted minimal _C_ compiler
   - types: 
     - **const**
     - **bool**
