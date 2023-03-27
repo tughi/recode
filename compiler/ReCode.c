@@ -28,14 +28,14 @@ extern void abort();
 
 // String
 
-typedef struct {
-    uint8_t *data;
+typedef struct String {
+    uint8_t* data;
     size_t data_size;
     size_t length;
 } String;
 
-String *String__create_empty(size_t data_size) {
-    String *string = malloc(sizeof(String));
+String* String__create_empty(size_t data_size) {
+    String* string = malloc(sizeof(String));
     string->data = malloc(data_size);
     string->data_size = data_size;
     string->length = 0;
@@ -911,15 +911,31 @@ AST_Statement *AST_Function_Statement__create(Source_Location *location, Token *
     return (AST_Statement *) statement;
 }
 
+typedef struct AST_Struct_Member {
+    Token *name;
+    AST_Type *type;
+    struct AST_Struct_Member *next_member;
+} AST_Struct_Member;
+
+AST_Struct_Member *AST_Struct_Member__create(Token *name, AST_Type *type) {
+    AST_Struct_Member *member = malloc(sizeof(AST_Struct_Member));
+    member->name = name;
+    member->type = type;
+    member->next_member = null;
+    return member;
+}
+
 typedef struct AST_Struct_Statement {
     AST_Named_Statement named_statement;
+    AST_Struct_Member *first_member;
     bool is_opaque;
 } AST_Struct_Statement;
 
-AST_Statement *AST_Struct_Statement__create(Source_Location *location, Token *name, bool is_opaque) {
+AST_Struct_Statement *AST_Struct_Statement__create(Source_Location *location, Token *name) {
     AST_Struct_Statement *statement = AST_Named_Statement__create(sizeof(AST_Struct_Statement), AST_STATEMENT_KIND__STRUCT, location, name);
-    statement->is_opaque = is_opaque;
-    return (AST_Statement *) statement;
+    statement->first_member = null;
+    statement->is_opaque = false;
+    return statement;
 }
 
 typedef struct AST_Variable_Statement {
@@ -1130,31 +1146,53 @@ bool Parser__consume_empty_line(Parser *self) {
     return false;
 }
 
+AST_Type *Parser__parse_type(Parser *self);
+
 // struct
 //      | "typedef" "struct" IDENTIFIER IDENTIFIER
 //      | "typedef" "struct" IDENTIFIER "{" ( type "*"? IDENTIFIER ";" )* "}" IDENTIFIER
 AST_Statement *Parser__parse_struct(Parser *self) {
-    bool is_opaque;
     Source_Location *location = Parser__consume_token(self, Token__is_typedef)->location;
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_struct);
     Parser__consume_space(self, 1);
     Token *local_name = Parser__consume_token(self, Token__is_identifier);
+    AST_Struct_Statement *struct_statement = AST_Struct_Statement__create(location, local_name);
     Parser__consume_space(self, 1);
     if (Parser__matches_one(self, Token__is_identifier)) {
-        is_opaque = true;
+        struct_statement->is_opaque = true;
     } else {
-        is_opaque = true;
+        AST_Struct_Member *last_member = null;
         Parser__consume_token(self, Token__is_opening_brace);
+        Parser__consume_end_of_line(self);
+        while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+            Parser__consume_space(self, (self->current_identation + 1) * 4);
+            AST_Type *type = Parser__parse_type(self);
+            Parser__consume_space(self, 1);
+            Token *name = Parser__consume_token(self, Token__is_identifier);
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_semicolon);
+            Parser__consume_end_of_line(self);
+            // TODO: check for duplicate members
+            AST_Struct_Member *member = AST_Struct_Member__create(name, type);
+            if (last_member == null) {
+                struct_statement->first_member = member;
+                last_member = member;
+            } else {
+                last_member->next_member = member;
+                last_member = member;
+            }
+        }
+        Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_brace);
+        Parser__consume_space(self, 1);
     }
     Token *final_name = Parser__consume_token(self, Token__is_identifier);
     if (!String__equals_string(final_name->lexeme, local_name->lexeme)) {
         Token__panic(final_name, String__append_string(String__create_from("Final struct name doesn't match the local name: "), local_name->lexeme));
     }
-    AST_Statement *statement = (AST_Statement *) AST_Struct_Statement__create(location, local_name, is_opaque);
-    Parser__create_type(self, AST_TYPE_KIND__STRUCT, final_name->lexeme, statement);
-    return statement;
+    Parser__create_type(self, AST_TYPE_KIND__STRUCT, final_name->lexeme, (AST_Statement*) struct_statement);
+    return (AST_Statement*) struct_statement;
 }
 
 // type
