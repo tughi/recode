@@ -293,10 +293,7 @@ void Token__warning(Token* self, String* message) {
 }
 
 typedef struct Character_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
     uint8_t value;
 } Character_Token;
 
@@ -307,10 +304,7 @@ Character_Token* Character_Token__create(Source_Location* location, String* lexe
 }
 
 typedef struct Comment_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
 } Comment_Token;
 
 Comment_Token* Comment_Token__create(Source_Location* location, String* lexeme) {
@@ -318,10 +312,7 @@ Comment_Token* Comment_Token__create(Source_Location* location, String* lexeme) 
 }
 
 typedef struct End_Of_File_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
 } End_Of_File_Token;
 
 End_Of_File_Token* End_Of_File_Token__create(Source_Location* location, String* lexeme) {
@@ -329,10 +320,7 @@ End_Of_File_Token* End_Of_File_Token__create(Source_Location* location, String* 
 }
 
 typedef struct End_Of_Line_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
 } End_Of_Line_Token;
 
 End_Of_Line_Token* End_Of_Line_Token__create(Source_Location* location, String* lexeme) {
@@ -340,10 +328,7 @@ End_Of_Line_Token* End_Of_Line_Token__create(Source_Location* location, String* 
 }
 
 typedef struct Error_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
 } Error_Token;
 
 Error_Token* Error_Token__create(Source_Location* location, String* lexeme) {
@@ -351,10 +336,7 @@ Error_Token* Error_Token__create(Source_Location* location, String* lexeme) {
 }
 
 typedef struct Identifier_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
 } Identifier_Token;
 
 Identifier_Token* Identifier_Token__create(Source_Location* location, String* lexeme) {
@@ -362,10 +344,7 @@ Identifier_Token* Identifier_Token__create(Source_Location* location, String* le
 }
 
 typedef struct Integer_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
     uint64_t value;
 } Integer_Token;
 
@@ -376,10 +355,7 @@ Integer_Token* Integer_Token__create(Source_Location* location, String* lexeme, 
 }
 
 typedef struct Other_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
 } Other_Token;
 
 Other_Token* Other_Token__create(Source_Location* location, String* lexeme) {
@@ -387,10 +363,7 @@ Other_Token* Other_Token__create(Source_Location* location, String* lexeme) {
 }
 
 typedef struct Space_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
     uint16_t count;
 } Space_Token;
 
@@ -401,10 +374,7 @@ Space_Token* Space_Token__create(Source_Location* location, String* lexeme, uint
 }
 
 typedef struct String_Token {
-    Token_Kind kind;
-    Source_Location* location;
-    String* lexeme;
-    Token* next_token;
+    Token super;
     String* value;
 } String_Token;
 
@@ -879,686 +849,686 @@ Scanner* Scanner__create(Source* source) {
     return scanner;
 }
 
-// AST
+// Parse Tree
 
-typedef struct AST_Statements AST_Statements;
+typedef struct Parsed_Statements Parsed_Statements;
 
-typedef struct AST_Compilation_Unit {
-    AST_Statements* statements;
-} AST_Compilation_Unit;
+typedef struct Parsed_Source {
+    Parsed_Statements* statements;
+} Parsed_Source;
 
-typedef enum AST_Type_Kind {
-    AST_TYPE_KIND__CONST,
-    AST_TYPE_KIND__NAMED,
-    AST_TYPE_KIND__POINTER,
-    AST_TYPE_KIND__STRUCT,
-} AST_Type_Kind;
+typedef enum Parsed_Type_Kind {
+    PARSED_TYPE_KIND__CONST,
+    PARSED_TYPE_KIND__NAMED,
+    PARSED_TYPE_KIND__POINTER,
+    PARSED_TYPE_KIND__STRUCT,
+} Parsed_Type_Kind;
 
-typedef struct AST_Statement AST_Statement;
+typedef struct Parsed_Statement Parsed_Statement;
 
-typedef struct AST_Type {
-    AST_Type_Kind kind;
+typedef struct Parsed_Type {
+    Parsed_Type_Kind kind;
     Source_Location* location;
     String* name;
-} AST_Type;
+} Parsed_Type;
 
-AST_Type* AST_Type__create(size_t size, AST_Type_Kind kind, Source_Location* location, String* name) {
-    AST_Type* type = malloc(size);
+Parsed_Type* Parsed_Type__create(size_t size, Parsed_Type_Kind kind, Source_Location* location, String* name) {
+    Parsed_Type* type = malloc(size);
     type->kind = kind;
     type->location = location;
     type->name = name;
     return type;
 }
 
-typedef struct AST_Const_Type {
-    AST_Type type;
-    AST_Type* other_type;
-} AST_Const_Type;
+typedef struct Parsed_Const_Type {
+    Parsed_Type super;
+    Parsed_Type* other_type;
+} Parsed_Const_Type;
 
-AST_Type* AST_Const_Type__create(Source_Location* location, AST_Type* other_type) {
-    AST_Const_Type* type = (AST_Const_Type*) AST_Type__create(sizeof(AST_Const_Type), AST_TYPE_KIND__CONST, location, String__append_string(String__create_from("const "), other_type->name));
+Parsed_Type* Parsed_Const_Type__create(Source_Location* location, Parsed_Type* other_type) {
+    Parsed_Const_Type* type = (Parsed_Const_Type*) Parsed_Type__create(sizeof(Parsed_Const_Type), PARSED_TYPE_KIND__CONST, location, String__append_string(String__create_from("const "), other_type->name));
     type->other_type = other_type;
-    return &type->type;
+    return (Parsed_Type*) type;
 }
 
-typedef struct AST_Named_Type {
-    AST_Type type;
-} AST_Named_Type;
+typedef struct Parsed_Named_Type {
+    Parsed_Type super;
+} Parsed_Named_Type;
 
-AST_Type* AST_Named_Type__create(Token* name) {
-    return AST_Type__create(sizeof(AST_Named_Type), AST_TYPE_KIND__NAMED, name->location, name->lexeme);
+Parsed_Type* Parsed_Named_Type__create(Token* name) {
+    return Parsed_Type__create(sizeof(Parsed_Named_Type), PARSED_TYPE_KIND__NAMED, name->location, name->lexeme);
 }
 
-typedef struct AST_Pointer_Type {
-    AST_Type type;
-    AST_Type* other_type;
-} AST_Pointer_Type;
+typedef struct Parsed_Pointer_Type {
+    Parsed_Type super;
+    Parsed_Type* other_type;
+} Parsed_Pointer_Type;
 
-AST_Type* AST_Pointer_Type__create(AST_Type* other_type) {
-    AST_Pointer_Type* type = (AST_Pointer_Type*) AST_Type__create(sizeof(AST_Pointer_Type), AST_TYPE_KIND__POINTER, other_type->location, String__append_char(String__append_string(String__create_empty(other_type->name->length + 1), other_type->name), '*'));
+Parsed_Type* Parsed_Pointer_Type__create(Parsed_Type* other_type) {
+    Parsed_Pointer_Type* type = (Parsed_Pointer_Type*) Parsed_Type__create(sizeof(Parsed_Pointer_Type), PARSED_TYPE_KIND__POINTER, other_type->location, String__append_char(String__append_string(String__create_empty(other_type->name->length + 1), other_type->name), '*'));
     type->other_type = other_type;
-    return (AST_Type*) type;
+    return (Parsed_Type*) type;
 }
 
-typedef struct AST_Struct_Type {
-    AST_Type type;
-    AST_Type* other_type;
-} AST_Struct_Type;
+typedef struct Parsed_Struct_Type {
+    Parsed_Type super;
+    Parsed_Type* other_type;
+} Parsed_Struct_Type;
 
-AST_Type* AST_Struct_Type__create(Source_Location* location, AST_Type* other_type) {
-    AST_Struct_Type* type = (AST_Struct_Type*) AST_Type__create(sizeof(AST_Struct_Type), AST_TYPE_KIND__STRUCT, location, String__append_string(String__create_from("struct "), other_type->name));
+Parsed_Type* Parsed_Struct_Type__create(Source_Location* location, Parsed_Type* other_type) {
+    Parsed_Struct_Type* type = (Parsed_Struct_Type*) Parsed_Type__create(sizeof(Parsed_Struct_Type), PARSED_TYPE_KIND__STRUCT, location, String__append_string(String__create_from("struct "), other_type->name));
     type->other_type = other_type;
-    return (AST_Type*) type;
+    return (Parsed_Type*) type;
 }
 
-typedef enum AST_Expression_Kind {
-    AST_EXPRESSION_KIND__ADD,
-    AST_EXPRESSION_KIND__ADDRESS_OF,
-    AST_EXPRESSION_KIND__ARRAY_ACCESS,
-    AST_EXPRESSION_KIND__BOOL,
-    AST_EXPRESSION_KIND__CALL,
-    AST_EXPRESSION_KIND__CAST,
-    AST_EXPRESSION_KIND__CHARACTER,
-    AST_EXPRESSION_KIND__DIVIDE,
-    AST_EXPRESSION_KIND__EQUALS,
-    AST_EXPRESSION_KIND__GREATER,
-    AST_EXPRESSION_KIND__GREATER_OR_EQUALS,
-    AST_EXPRESSION_KIND__GROUP,
-    AST_EXPRESSION_KIND__INTEGER,
-    AST_EXPRESSION_KIND__LESS,
-    AST_EXPRESSION_KIND__LESS_OR_EQUALS,
-    AST_EXPRESSION_KIND__LOGIC_AND,
-    AST_EXPRESSION_KIND__LOGIC_OR,
-    AST_EXPRESSION_KIND__MEMBER_ACCESS,
-    AST_EXPRESSION_KIND__MINUS,
-    AST_EXPRESSION_KIND__MODULO,
-    AST_EXPRESSION_KIND__MULTIPLY,
-    AST_EXPRESSION_KIND__NOT_EQUALS,
-    AST_EXPRESSION_KIND__NULL,
-    AST_EXPRESSION_KIND__SIZEOF,
-    AST_EXPRESSION_KIND__STRING,
-    AST_EXPRESSION_KIND__SUBSTRACT,
-    AST_EXPRESSION_KIND__SYMBOL,
-} AST_Expression_Kind;
+typedef enum Parsed_Expression_Kind {
+    PARSED_EXPRESSION_KIND__ADD,
+    PARSED_EXPRESSION_KIND__ADDRESS_OF,
+    PARSED_EXPRESSION_KIND__ARRAY_ACCESS,
+    PARSED_EXPRESSION_KIND__BOOL,
+    PARSED_EXPRESSION_KIND__CALL,
+    PARSED_EXPRESSION_KIND__CAST,
+    PARSED_EXPRESSION_KIND__CHARACTER,
+    PARSED_EXPRESSION_KIND__DIVIDE,
+    PARSED_EXPRESSION_KIND__EQUALS,
+    PARSED_EXPRESSION_KIND__GREATER,
+    PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS,
+    PARSED_EXPRESSION_KIND__GROUP,
+    PARSED_EXPRESSION_KIND__INTEGER,
+    PARSED_EXPRESSION_KIND__LESS,
+    PARSED_EXPRESSION_KIND__LESS_OR_EQUALS,
+    PARSED_EXPRESSION_KIND__LOGIC_AND,
+    PARSED_EXPRESSION_KIND__LOGIC_OR,
+    PARSED_EXPRESSION_KIND__MEMBER_ACCESS,
+    PARSED_EXPRESSION_KIND__MINUS,
+    PARSED_EXPRESSION_KIND__MODULO,
+    PARSED_EXPRESSION_KIND__MULTIPLY,
+    PARSED_EXPRESSION_KIND__NOT_EQUALS,
+    PARSED_EXPRESSION_KIND__NULL,
+    PARSED_EXPRESSION_KIND__SIZEOF,
+    PARSED_EXPRESSION_KIND__STRING,
+    PARSED_EXPRESSION_KIND__SUBSTRACT,
+    PARSED_EXPRESSION_KIND__SYMBOL,
+} Parsed_Expression_Kind;
 
-typedef struct AST_Expression {
-    AST_Expression_Kind kind;
+typedef struct Parsed_Expression {
+    Parsed_Expression_Kind kind;
     Source_Location* location;
-} AST_Expression;
+} Parsed_Expression;
 
-AST_Expression* AST_Expression__create(size_t size, AST_Expression_Kind kind, Source_Location* location) {
-    AST_Expression* expression = malloc(size);
+Parsed_Expression* Parsed_Expression__create(size_t size, Parsed_Expression_Kind kind, Source_Location* location) {
+    Parsed_Expression* expression = malloc(size);
     expression->kind = kind;
     expression->location = location;
     return expression;
 }
 
-typedef struct AST_Binary_Expression {
-    AST_Expression expression;
-    AST_Expression* left_expression;
-    AST_Expression* right_expression;
-} AST_Binary_Expression;
+typedef struct Parsed_Binary_Expression {
+    Parsed_Expression super;
+    Parsed_Expression* left_expression;
+    Parsed_Expression* right_expression;
+} Parsed_Binary_Expression;
 
-AST_Binary_Expression* AST_Binary_Expression__create(AST_Expression_Kind kind, AST_Expression* left_expression, AST_Expression* right_expression) {
-    AST_Binary_Expression* expression = (AST_Binary_Expression*) AST_Expression__create(sizeof(AST_Binary_Expression), kind, left_expression->location);
+Parsed_Binary_Expression* Parsed_Binary_Expression__create(Parsed_Expression_Kind kind, Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    Parsed_Binary_Expression* expression = (Parsed_Binary_Expression*) Parsed_Expression__create(sizeof(Parsed_Binary_Expression), kind, left_expression->location);
     expression->left_expression = left_expression;
     expression->right_expression = right_expression;
     return expression;
 }
 
-typedef struct AST_Unary_Expression {
-    AST_Expression expression;
-    AST_Expression* other_expression;
-} AST_Unary_Expression;
+typedef struct Parsed_Unary_Expression {
+    Parsed_Expression super;
+    Parsed_Expression* other_expression;
+} Parsed_Unary_Expression;
 
-AST_Unary_Expression* AST_Unary_Expression__create(size_t size, AST_Expression_Kind kind, Source_Location* location, AST_Expression* other_expression) {
-    AST_Unary_Expression* expression = (AST_Unary_Expression*) AST_Expression__create(size, kind, location);
+Parsed_Unary_Expression* Parsed_Unary_Expression__create(size_t size, Parsed_Expression_Kind kind, Source_Location* location, Parsed_Expression* other_expression) {
+    Parsed_Unary_Expression* expression = (Parsed_Unary_Expression*) Parsed_Expression__create(size, kind, location);
     expression->other_expression = other_expression;
     return expression;
 }
 
-typedef struct AST_Literal_Expression {
-    AST_Expression expression;
+typedef struct Parsed_Literal_Expression {
+    Parsed_Expression super;
     Token* literal;
-} AST_Literal_Expression;
+} Parsed_Literal_Expression;
 
-AST_Literal_Expression* AST_Literal_Expression__create(size_t size, AST_Expression_Kind kind, Token* literal) {
-    AST_Literal_Expression* literal_expression = (AST_Literal_Expression*) AST_Expression__create(size, kind, literal->location);
-    literal_expression->literal = literal;
-    return literal_expression;
+Parsed_Literal_Expression* Parsed_Literal_Expression__create(size_t size, Parsed_Expression_Kind kind, Token* literal) {
+    Parsed_Literal_Expression* expression = (Parsed_Literal_Expression*) Parsed_Expression__create(size, kind, literal->location);
+    expression->literal = literal;
+    return expression;
 }
 
-typedef struct AST_Add_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Add_Expression;
+typedef struct Parsed_Add_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Add_Expression;
 
-AST_Add_Expression* AST_Add_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Add_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__ADD, left_expression, right_expression);
+Parsed_Add_Expression* Parsed_Add_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Add_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__ADD, left_expression, right_expression);
 }
 
-typedef struct AST_Address_Of_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Address_Of_Expression;
+typedef struct Parsed_Address_Of_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Address_Of_Expression;
 
-AST_Address_Of_Expression* AST_Address_Of_Expression__create(Source_Location* location, AST_Expression* other_expression) {
-    return (AST_Address_Of_Expression*) AST_Unary_Expression__create(sizeof(AST_Address_Of_Expression), AST_EXPRESSION_KIND__ADDRESS_OF, location, other_expression);
+Parsed_Address_Of_Expression* Parsed_Address_Of_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
+    return (Parsed_Address_Of_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Address_Of_Expression), PARSED_EXPRESSION_KIND__ADDRESS_OF, location, other_expression);
 }
 
-typedef struct AST_Array_Access_Expression {
-    AST_Expression expression;
-    AST_Expression* array_expression;
-    AST_Expression* index_expression;
-} AST_Array_Access_Expression;
+typedef struct Parsed_Array_Access_Expression {
+    Parsed_Expression super;
+    Parsed_Expression* array_expression;
+    Parsed_Expression* index_expression;
+} Parsed_Array_Access_Expression;
 
-AST_Array_Access_Expression* AST_Array_Access_Expression__create(AST_Expression* array_expression, AST_Expression* index_expression) {
-    AST_Array_Access_Expression* array_access_expression = (AST_Array_Access_Expression*) AST_Expression__create(sizeof(AST_Array_Access_Expression), AST_EXPRESSION_KIND__ARRAY_ACCESS, array_expression->location);
-    array_access_expression->array_expression = array_expression;
-    array_access_expression->index_expression = index_expression;
-    return array_access_expression;
+Parsed_Array_Access_Expression* Parsed_Array_Access_Expression__create(Parsed_Expression* array_expression, Parsed_Expression* index_expression) {
+    Parsed_Array_Access_Expression* expression = (Parsed_Array_Access_Expression*) Parsed_Expression__create(sizeof(Parsed_Array_Access_Expression), PARSED_EXPRESSION_KIND__ARRAY_ACCESS, array_expression->location);
+    expression->array_expression = array_expression;
+    expression->index_expression = index_expression;
+    return expression;
 }
 
-typedef struct AST_Bool_Expression {
-    AST_Literal_Expression literal_expression;
+typedef struct Parsed_Bool_Expression {
+    Parsed_Literal_Expression super;
     bool value;
-} AST_Bool_Expression;
+} Parsed_Bool_Expression;
 
-AST_Bool_Expression* AST_Bool_Expression__create(Token* literal, bool value) {
-    AST_Bool_Expression* bool_expression = (AST_Bool_Expression*) AST_Literal_Expression__create(sizeof(AST_Bool_Expression), AST_EXPRESSION_KIND__BOOL, literal);
-    bool_expression->value = value;
-    return bool_expression;
+Parsed_Bool_Expression* Parsed_Bool_Expression__create(Token* literal, bool value) {
+    Parsed_Bool_Expression* expression = (Parsed_Bool_Expression*) Parsed_Literal_Expression__create(sizeof(Parsed_Bool_Expression), PARSED_EXPRESSION_KIND__BOOL, literal);
+    expression->value = value;
+    return expression;
 }
 
-typedef struct AST_Call_Argument {
-    AST_Expression* expression;
-    struct AST_Call_Argument* next_argument;
-} AST_Call_Argument;
+typedef struct Parsed_Call_Argument {
+    Parsed_Expression* expression;
+    struct Parsed_Call_Argument* next_argument;
+} Parsed_Call_Argument;
 
-AST_Call_Argument* AST_Call_Argument__create(AST_Expression* expression) {
-    AST_Call_Argument* argument = malloc(sizeof(AST_Call_Argument));
+Parsed_Call_Argument* Parsed_Call_Argument__create(Parsed_Expression* expression) {
+    Parsed_Call_Argument* argument = malloc(sizeof(Parsed_Call_Argument));
     argument->expression = expression;
     argument->next_argument = null;
     return argument;
 }
 
-typedef struct AST_Call_Expression {
-    AST_Expression expression;
-    AST_Expression* callee_expression;
-    AST_Call_Argument* first_argument;
-} AST_Call_Expression;
+typedef struct Parsed_Call_Expression {
+    Parsed_Expression super;
+    Parsed_Expression* callee_expression;
+    Parsed_Call_Argument* first_argument;
+} Parsed_Call_Expression;
 
-AST_Call_Expression* AST_Call_Expression__create(AST_Expression* callee_expression) {
-    AST_Call_Expression* call_expression = (AST_Call_Expression*) AST_Expression__create(sizeof(AST_Call_Expression), AST_EXPRESSION_KIND__CALL, callee_expression->location);
-    call_expression->callee_expression = callee_expression;
-    call_expression->first_argument = null;
-    return call_expression;
+Parsed_Call_Expression* Parsed_Call_Expression__create(Parsed_Expression* callee_expression) {
+    Parsed_Call_Expression* expression = (Parsed_Call_Expression*) Parsed_Expression__create(sizeof(Parsed_Call_Expression), PARSED_EXPRESSION_KIND__CALL, callee_expression->location);
+    expression->callee_expression = callee_expression;
+    expression->first_argument = null;
+    return expression;
 }
 
-typedef struct AST_Cast_Expression {
-    AST_Unary_Expression unary_expression;
-    AST_Type* type;
-} AST_Cast_Expression;
+typedef struct Parsed_Cast_Expression {
+    Parsed_Unary_Expression super;
+    Parsed_Type* type;
+} Parsed_Cast_Expression;
 
-AST_Cast_Expression* AST_Cast_Expression__create(Source_Location* location, AST_Expression* other_expression, AST_Type* type) {
-    AST_Cast_Expression* cast_expression = (AST_Cast_Expression*) AST_Unary_Expression__create(sizeof(AST_Cast_Expression), AST_EXPRESSION_KIND__CAST, location, other_expression);
-    cast_expression->type = type;
-    return cast_expression;
+Parsed_Cast_Expression* Parsed_Cast_Expression__create(Source_Location* location, Parsed_Expression* other_expression, Parsed_Type* type) {
+    Parsed_Cast_Expression* expression = (Parsed_Cast_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Cast_Expression), PARSED_EXPRESSION_KIND__CAST, location, other_expression);
+    expression->type = type;
+    return expression;
 }
 
-typedef struct AST_Character_Expression {
-    AST_Literal_Expression literal_expression;
+typedef struct Parsed_Character_Expression {
+    Parsed_Literal_Expression super;
     uint8_t value;
-} AST_Character_Expression;
+} Parsed_Character_Expression;
 
-AST_Character_Expression* AST_Character_Expression__create(Character_Token* literal) {
-    AST_Character_Expression* character_expression = (AST_Character_Expression*) AST_Expression__create(sizeof(AST_Character_Expression), AST_EXPRESSION_KIND__CHARACTER, literal->location);
-    character_expression->value = literal->value;
-    return character_expression;
+Parsed_Character_Expression* Parsed_Character_Expression__create(Character_Token* literal) {
+    Parsed_Character_Expression* expression = (Parsed_Character_Expression*) Parsed_Expression__create(sizeof(Parsed_Character_Expression), PARSED_EXPRESSION_KIND__CHARACTER, literal->super.location);
+    expression->value = literal->value;
+    return expression;
 }
 
-typedef struct AST_Divide_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Divide_Expression;
+typedef struct Parsed_Divide_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Divide_Expression;
 
-AST_Divide_Expression* AST_Divide_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Divide_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__DIVIDE, left_expression, right_expression);
+Parsed_Divide_Expression* Parsed_Divide_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Divide_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__DIVIDE, left_expression, right_expression);
 }
 
-typedef struct AST_Equals_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Equals_Expression;
+typedef struct Parsed_Equals_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Equals_Expression;
 
-AST_Equals_Expression* AST_Equals_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Equals_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__EQUALS, left_expression, right_expression);
+Parsed_Equals_Expression* Parsed_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__EQUALS, left_expression, right_expression);
 }
 
-typedef struct AST_Greater_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Greater_Expression;
+typedef struct Parsed_Greater_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Greater_Expression;
 
-AST_Greater_Expression* AST_Greater_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Greater_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__GREATER, left_expression, right_expression);
+Parsed_Greater_Expression* Parsed_Greater_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Greater_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__GREATER, left_expression, right_expression);
 }
 
-typedef struct AST_Greater_Or_Equals_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Greater_Or_Equals_Expression;
+typedef struct Parsed_Greater_Or_Equals_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Greater_Or_Equals_Expression;
 
-AST_Greater_Or_Equals_Expression* AST_Greater_Or_Equals_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Greater_Or_Equals_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__GREATER_OR_EQUALS, left_expression, right_expression);
+Parsed_Greater_Or_Equals_Expression* Parsed_Greater_Or_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Greater_Or_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS, left_expression, right_expression);
 }
 
-typedef struct AST_Group_Expression {
-    AST_Expression expression;
-    AST_Expression* other_expression;
-} AST_Group_Expression;
+typedef struct Parsed_Group_Expression {
+    Parsed_Expression super;
+    Parsed_Expression* other_expression;
+} Parsed_Group_Expression;
 
-AST_Group_Expression* AST_Group_Expression__create(Source_Location* location, AST_Expression* other_expression) {
-    AST_Group_Expression* group_expression = (AST_Group_Expression*) AST_Expression__create(sizeof(AST_Group_Expression), AST_EXPRESSION_KIND__GROUP, location);
-    group_expression->other_expression = other_expression;
-    return group_expression;
+Parsed_Group_Expression* Parsed_Group_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
+    Parsed_Group_Expression* expression = (Parsed_Group_Expression*) Parsed_Expression__create(sizeof(Parsed_Group_Expression), PARSED_EXPRESSION_KIND__GROUP, location);
+    expression->other_expression = other_expression;
+    return expression;
 }
 
-typedef struct AST_Integer_Expression {
-    AST_Literal_Expression literal_expression;
+typedef struct Parsed_Integer_Expression {
+    Parsed_Literal_Expression super;
     uint64_t value;
-} AST_Integer_Expression;
+} Parsed_Integer_Expression;
 
-AST_Integer_Expression* AST_Integer_Expression__create(Integer_Token* literal) {
-    AST_Integer_Expression* integer_expression = (AST_Integer_Expression*) AST_Expression__create(sizeof(AST_Integer_Expression), AST_EXPRESSION_KIND__INTEGER, literal->location);
-    integer_expression->value = literal->value;
-    return integer_expression;
+Parsed_Integer_Expression* Parsed_Integer_Expression__create(Integer_Token* literal) {
+    Parsed_Integer_Expression* expression = (Parsed_Integer_Expression*) Parsed_Expression__create(sizeof(Parsed_Integer_Expression), PARSED_EXPRESSION_KIND__INTEGER, literal->super.location);
+    expression->value = literal->value;
+    return expression;
 }
 
-typedef struct AST_Less_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Less_Expression;
+typedef struct Parsed_Less_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Less_Expression;
 
-AST_Less_Expression* AST_Less_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Less_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__LESS, left_expression, right_expression);
+Parsed_Less_Expression* Parsed_Less_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Less_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LESS, left_expression, right_expression);
 }
 
-typedef struct AST_Less_Or_Equals_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Less_Or_Equals_Expression;
+typedef struct Parsed_Less_Or_Equals_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Less_Or_Equals_Expression;
 
-AST_Less_Or_Equals_Expression* AST_Less_Or_Equals_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Less_Or_Equals_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__LESS_OR_EQUALS, left_expression, right_expression);
+Parsed_Less_Or_Equals_Expression* Parsed_Less_Or_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Less_Or_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LESS_OR_EQUALS, left_expression, right_expression);
 }
 
-typedef struct AST_Logic_And_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Logic_And_Expression;
+typedef struct Parsed_Logic_And_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Logic_And_Expression;
 
-AST_Logic_And_Expression* AST_Logic_And_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Logic_And_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__LOGIC_AND, left_expression, right_expression);
+Parsed_Logic_And_Expression* Parsed_Logic_And_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Logic_And_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LOGIC_AND, left_expression, right_expression);
 }
 
-typedef struct AST_Logic_Or_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Logic_Or_Expression;
+typedef struct Parsed_Logic_Or_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Logic_Or_Expression;
 
-AST_Logic_Or_Expression* AST_Logic_Or_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Logic_Or_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__LOGIC_OR, left_expression, right_expression);
+Parsed_Logic_Or_Expression* Parsed_Logic_Or_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Logic_Or_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LOGIC_OR, left_expression, right_expression);
 }
 
-typedef struct AST_Member_Access_Expression {
-    AST_Expression expression;
-    AST_Expression* value_expression;
+typedef struct Parsed_Member_Access_Expression {
+    Parsed_Expression super;
+    Parsed_Expression* value_expression;
     Token* member_name;
-} AST_Member_Access_Expression;
+} Parsed_Member_Access_Expression;
 
-AST_Member_Access_Expression* AST_Member_Access_Expression__create(AST_Expression* value_expression, Token* member_name) {
-    AST_Member_Access_Expression* member_access_expression = (AST_Member_Access_Expression*) AST_Expression__create(sizeof(AST_Member_Access_Expression), AST_EXPRESSION_KIND__MEMBER_ACCESS, value_expression->location);
-    member_access_expression->value_expression = value_expression;
-    member_access_expression->member_name = member_name;
-    return member_access_expression;
+Parsed_Member_Access_Expression* Parsed_Member_Access_Expression__create(Parsed_Expression* value_expression, Token* member_name) {
+    Parsed_Member_Access_Expression* expression = (Parsed_Member_Access_Expression*) Parsed_Expression__create(sizeof(Parsed_Member_Access_Expression), PARSED_EXPRESSION_KIND__MEMBER_ACCESS, value_expression->location);
+    expression->value_expression = value_expression;
+    expression->member_name = member_name;
+    return expression;
 }
 
-typedef struct AST_Minus_Expression {
-    AST_Unary_Expression unary_expression;
-} AST_Minus_Expression;
+typedef struct Parsed_Minus_Expression {
+    Parsed_Unary_Expression super;
+} Parsed_Minus_Expression;
 
-AST_Minus_Expression* AST_Minus_Expression__create(Source_Location* location, AST_Expression* other_expression) {
-    return (AST_Minus_Expression*) AST_Unary_Expression__create(sizeof(AST_Minus_Expression), AST_EXPRESSION_KIND__MINUS, location, other_expression);
+Parsed_Minus_Expression* Parsed_Minus_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
+    return (Parsed_Minus_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Minus_Expression), PARSED_EXPRESSION_KIND__MINUS, location, other_expression);
 }
 
-typedef struct AST_Modulo_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Modulo_Expression;
+typedef struct Parsed_Modulo_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Modulo_Expression;
 
-AST_Modulo_Expression* AST_Modulo_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Modulo_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__MODULO, left_expression, right_expression);
+Parsed_Modulo_Expression* Parsed_Modulo_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Modulo_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__MODULO, left_expression, right_expression);
 }
 
-typedef struct AST_Multiply_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Multiply_Expression;
+typedef struct Parsed_Multiply_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Multiply_Expression;
 
-AST_Multiply_Expression* AST_Multiply_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Multiply_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__MULTIPLY, left_expression, right_expression);
+Parsed_Multiply_Expression* Parsed_Multiply_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Multiply_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__MULTIPLY, left_expression, right_expression);
 }
 
-typedef struct AST_Not_Expression {
-    AST_Unary_Expression unary_expression;
-} AST_Not_Expression;
+typedef struct Parsed_Not_Expression {
+    Parsed_Unary_Expression super;
+} Parsed_Not_Expression;
 
-AST_Not_Expression* AST_Not_Expression__create(Source_Location* location, AST_Expression* other_expression) {
-    return (AST_Not_Expression*) AST_Unary_Expression__create(sizeof(AST_Not_Expression), AST_EXPRESSION_KIND__MINUS, location, other_expression);
+Parsed_Not_Expression* Parsed_Not_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
+    return (Parsed_Not_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Not_Expression), PARSED_EXPRESSION_KIND__MINUS, location, other_expression);
 }
 
-typedef struct AST_Not_Equals_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Not_Equals_Expression;
+typedef struct Parsed_Not_Equals_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Not_Equals_Expression;
 
-AST_Not_Equals_Expression* AST_Not_Equals_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Not_Equals_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__NOT_EQUALS, left_expression, right_expression);
+Parsed_Not_Equals_Expression* Parsed_Not_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Not_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__NOT_EQUALS, left_expression, right_expression);
 }
 
-typedef struct AST_Null_Expression {
-    AST_Literal_Expression literal_expression;
-} AST_Null_Expression;
+typedef struct Parsed_Null_Expression {
+    Parsed_Literal_Expression super;
+} Parsed_Null_Expression;
 
-AST_Null_Expression* AST_Null_Expression__create(Token* literal) {
-    return (AST_Null_Expression*) AST_Literal_Expression__create(sizeof(AST_Null_Expression), AST_EXPRESSION_KIND__NULL, literal);
+Parsed_Null_Expression* Parsed_Null_Expression__create(Token* literal) {
+    return (Parsed_Null_Expression*) Parsed_Literal_Expression__create(sizeof(Parsed_Null_Expression), PARSED_EXPRESSION_KIND__NULL, literal);
 }
 
-typedef struct AST_Sizeof_Expression {
-    AST_Expression expression;
-    AST_Type* type;
-} AST_Sizeof_Expression;
+typedef struct Parsed_Sizeof_Expression {
+    Parsed_Expression super;
+    Parsed_Type* type;
+} Parsed_Sizeof_Expression;
 
-AST_Sizeof_Expression* AST_Sizeof_Expression__create(Source_Location* location, AST_Type* type) {
-    AST_Sizeof_Expression* call_expression = (AST_Sizeof_Expression*) AST_Expression__create(sizeof(AST_Sizeof_Expression), AST_EXPRESSION_KIND__SIZEOF, location);
-    call_expression->type = type;
-    return call_expression;
+Parsed_Sizeof_Expression* Parsed_Sizeof_Expression__create(Source_Location* location, Parsed_Type* type) {
+    Parsed_Sizeof_Expression* expression = (Parsed_Sizeof_Expression*) Parsed_Expression__create(sizeof(Parsed_Sizeof_Expression), PARSED_EXPRESSION_KIND__SIZEOF, location);
+    expression->type = type;
+    return expression;
 }
 
-typedef struct AST_String_Expression {
-    AST_Literal_Expression literal_expression;
+typedef struct Parsed_String_Expression {
+    Parsed_Literal_Expression super;
     String* value;
-} AST_String_Expression;
+} Parsed_String_Expression;
 
-AST_String_Expression* AST_String_Expression__create(String_Token* literal) {
-    AST_String_Expression* integer_expression = (AST_String_Expression*) AST_Expression__create(sizeof(AST_String_Expression), AST_EXPRESSION_KIND__STRING, literal->location);
-    integer_expression->value = literal->value;
-    return integer_expression;
+Parsed_String_Expression* Parsed_String_Expression__create(String_Token* literal) {
+    Parsed_String_Expression* expression = (Parsed_String_Expression*) Parsed_Expression__create(sizeof(Parsed_String_Expression), PARSED_EXPRESSION_KIND__STRING, literal->super.location);
+    expression->value = literal->value;
+    return expression;
 }
 
-typedef struct AST_Substract_Expression {
-    AST_Binary_Expression binary_expression;
-} AST_Substract_Expression;
+typedef struct Parsed_Substract_Expression {
+    Parsed_Binary_Expression super;
+} Parsed_Substract_Expression;
 
-AST_Substract_Expression* AST_Substract_Expression__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    return (AST_Substract_Expression*) AST_Binary_Expression__create(AST_EXPRESSION_KIND__SUBSTRACT, left_expression, right_expression);
+Parsed_Substract_Expression* Parsed_Substract_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    return (Parsed_Substract_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__SUBSTRACT, left_expression, right_expression);
 }
 
-typedef struct AST_Symbol_Expression {
-    AST_Expression expression;
+typedef struct Parsed_Symbol_Expression {
+    Parsed_Expression super;
     Token* name;
-} AST_Symbol_Expression;
+} Parsed_Symbol_Expression;
 
-AST_Symbol_Expression* AST_Symbol_Expression__create(Token* name) {
-    AST_Symbol_Expression* symbol_expression = (AST_Symbol_Expression*) AST_Expression__create(sizeof(AST_Symbol_Expression), AST_EXPRESSION_KIND__SYMBOL, name->location);
-    symbol_expression->name = name;
-    return symbol_expression;
+Parsed_Symbol_Expression* Parsed_Symbol_Expression__create(Token* name) {
+    Parsed_Symbol_Expression* expression = (Parsed_Symbol_Expression*) Parsed_Expression__create(sizeof(Parsed_Symbol_Expression), PARSED_EXPRESSION_KIND__SYMBOL, name->location);
+    expression->name = name;
+    return expression;
 }
 
-typedef enum AST_Statement_Kind {
-    AST_STATEMENT_KIND__ASSIGNMENT,
-    AST_STATEMENT_KIND__BLOCK,
-    AST_STATEMENT_KIND__BREAK,
-    AST_STATEMENT_KIND__ENUM,
-    AST_STATEMENT_KIND__EXPRESSION,
-    AST_STATEMENT_KIND__FUNCTION,
-    AST_STATEMENT_KIND__IF,
-    AST_STATEMENT_KIND__RETURN,
-    AST_STATEMENT_KIND__STRUCT,
-    AST_STATEMENT_KIND__VARIABLE,
-    AST_STATEMENT_KIND__WHILE,
-} AST_Statement_Kind;
+typedef enum Parsed_Statement_Kind {
+    PARSED_STATEMENT_KIND__ASSIGNMENT,
+    PARSED_STATEMENT_KIND__BLOCK,
+    PARSED_STATEMENT_KIND__BREAK,
+    PARSED_STATEMENT_KIND__ENUM,
+    PARSED_STATEMENT_KIND__EXPRESSION,
+    PARSED_STATEMENT_KIND__FUNCTION,
+    PARSED_STATEMENT_KIND__IF,
+    PARSED_STATEMENT_KIND__RETURN,
+    PARSED_STATEMENT_KIND__STRUCT,
+    PARSED_STATEMENT_KIND__VARIABLE,
+    PARSED_STATEMENT_KIND__WHILE,
+} Parsed_Statement_Kind;
 
-typedef struct AST_Statement {
-    AST_Statement_Kind kind;
+typedef struct Parsed_Statement {
+    Parsed_Statement_Kind kind;
     Source_Location* location;
-    struct AST_Statement* next_statement;
-} AST_Statement;
+    struct Parsed_Statement* next_statement;
+} Parsed_Statement;
 
-void* AST_Statement__create(size_t size, AST_Statement_Kind kind, Source_Location* location) {
-    AST_Statement* statement = malloc(size);
+void* Parsed_Statement__create(size_t size, Parsed_Statement_Kind kind, Source_Location* location) {
+    Parsed_Statement* statement = malloc(size);
     statement->kind = kind;
     statement->location = location;
     statement->next_statement = null;
     return statement;
 }
 
-typedef struct AST_Named_Statement {
-    AST_Statement statement;
+typedef struct Parsed_Named_Statement {
+    Parsed_Statement super;
     Token* name;
-} AST_Named_Statement;
+} Parsed_Named_Statement;
 
-void* AST_Named_Statement__create(size_t size, AST_Statement_Kind kind, Source_Location* location, Token* name) {
-    AST_Named_Statement* statement = AST_Statement__create(size, kind, location);
+void* Parsed_Named_Statement__create(size_t size, Parsed_Statement_Kind kind, Source_Location* location, Token* name) {
+    Parsed_Named_Statement* statement = Parsed_Statement__create(size, kind, location);
     statement->name = name;
     return statement;
 }
 
-typedef struct AST_Assignment_Statement {
-    AST_Statement statement;
-    AST_Expression* left_expression;
-    AST_Expression* right_expression;
-} AST_Assignment_Statement;
+typedef struct Parsed_Assignment_Statement {
+    Parsed_Statement super;
+    Parsed_Expression* left_expression;
+    Parsed_Expression* right_expression;
+} Parsed_Assignment_Statement;
 
-AST_Assignment_Statement* AST_Assignment_Statement__create(AST_Expression* left_expression, AST_Expression* right_expression) {
-    AST_Assignment_Statement* assignment_statement = AST_Statement__create(sizeof(AST_Assignment_Statement), AST_STATEMENT_KIND__ASSIGNMENT, left_expression->location);
-    assignment_statement->left_expression = left_expression;
-    assignment_statement->right_expression = right_expression;
-    return assignment_statement;
+Parsed_Assignment_Statement* Parsed_Assignment_Statement__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    Parsed_Assignment_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Assignment_Statement), PARSED_STATEMENT_KIND__ASSIGNMENT, left_expression->location);
+    statement->left_expression = left_expression;
+    statement->right_expression = right_expression;
+    return statement;
 }
 
-typedef struct AST_Block_Statement {
-    AST_Statement statement;
-    AST_Statements* statements;
-} AST_Block_Statement;
+typedef struct Parsed_Block_Statement {
+    Parsed_Statement super;
+    Parsed_Statements* statements;
+} Parsed_Block_Statement;
 
-AST_Block_Statement* AST_Block_Statement__create(Source_Location* location, AST_Statements* statements) {
-    AST_Block_Statement* assignment_statement = AST_Statement__create(sizeof(AST_Block_Statement), AST_STATEMENT_KIND__BLOCK, location);
-    assignment_statement->statements = statements;
-    return assignment_statement;
+Parsed_Block_Statement* Parsed_Block_Statement__create(Source_Location* location, Parsed_Statements* statements) {
+    Parsed_Block_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Block_Statement), PARSED_STATEMENT_KIND__BLOCK, location);
+    statement->statements = statements;
+    return statement;
 }
 
-typedef struct AST_Break_Statement {
-    AST_Statement statement;
-} AST_Break_Statement;
+typedef struct Parsed_Break_Statement {
+    Parsed_Statement super;
+} Parsed_Break_Statement;
 
-AST_Statement* AST_Break_Statement__create(Source_Location* location) {
-    return (AST_Statement*) AST_Statement__create(sizeof(AST_Break_Statement), AST_STATEMENT_KIND__BREAK, location);
+Parsed_Statement* Parsed_Break_Statement__create(Source_Location* location) {
+    return (Parsed_Statement*) Parsed_Statement__create(sizeof(Parsed_Break_Statement), PARSED_STATEMENT_KIND__BREAK, location);
 }
 
-typedef struct AST_Enum_Member {
+typedef struct Parsed_Enum_Member {
     Token* name;
-    struct AST_Enum_Member* next_member;
-} AST_Enum_Member;
+    struct Parsed_Enum_Member* next_member;
+} Parsed_Enum_Member;
 
-AST_Enum_Member* AST_Enum_Member__create(Token* name) {
-    AST_Enum_Member* member = malloc(sizeof(AST_Enum_Member));
+Parsed_Enum_Member* Parsed_Enum_Member__create(Token* name) {
+    Parsed_Enum_Member* member = malloc(sizeof(Parsed_Enum_Member));
     member->name = name;
     member->next_member = null;
     return member;
 }
 
-typedef struct AST_Enum_Statement {
-    AST_Named_Statement named_statement;
-    AST_Enum_Member* first_member;
-} AST_Enum_Statement;
+typedef struct Parsed_Enum_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Enum_Member* first_member;
+} Parsed_Enum_Statement;
 
-AST_Enum_Statement* AST_Enum_Statement__create(Source_Location* location, Token* name) {
-    AST_Enum_Statement* statement = AST_Named_Statement__create(sizeof(AST_Enum_Statement), AST_STATEMENT_KIND__ENUM, location, name);
+Parsed_Enum_Statement* Parsed_Enum_Statement__create(Source_Location* location, Token* name) {
+    Parsed_Enum_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Enum_Statement), PARSED_STATEMENT_KIND__ENUM, location, name);
     statement->first_member = null;
     return statement;
 }
 
-typedef struct AST_Expression_Statement {
-    AST_Statement statement;
-    AST_Expression* expression;
-} AST_Expression_Statement;
+typedef struct Parsed_Expression_Statement {
+    Parsed_Statement super;
+    Parsed_Expression* expression;
+} Parsed_Expression_Statement;
 
-AST_Expression_Statement* AST_Expression_Statement__create(AST_Expression* expression) {
-    AST_Expression_Statement* expression_statement = AST_Statement__create(sizeof(AST_Expression_Statement), AST_STATEMENT_KIND__EXPRESSION, expression->location);
-    expression_statement->expression = expression;
-    return expression_statement;
+Parsed_Expression_Statement* Parsed_Expression_Statement__create(Parsed_Expression* expression) {
+    Parsed_Expression_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Expression_Statement), PARSED_STATEMENT_KIND__EXPRESSION, expression->location);
+    statement->expression = expression;
+    return statement;
 }
 
-typedef struct AST_Function_Parameter {
+typedef struct Parsed_Function_Parameter {
     Token* name;
-    AST_Type* type;
-    struct AST_Function_Parameter* next_parameter;
-} AST_Function_Parameter;
+    Parsed_Type* type;
+    struct Parsed_Function_Parameter* next_parameter;
+} Parsed_Function_Parameter;
 
-AST_Function_Parameter* AST_Function_Parameter__create(Token* name, AST_Type* type) {
-    AST_Function_Parameter* parameter = malloc(sizeof(AST_Function_Parameter));
+Parsed_Function_Parameter* Parsed_Function_Parameter__create(Token* name, Parsed_Type* type) {
+    Parsed_Function_Parameter* parameter = malloc(sizeof(Parsed_Function_Parameter));
     parameter->name = name;
     parameter->type = type;
     parameter->next_parameter = null;
     return parameter;
 }
 
-typedef struct AST_Function_Statement {
-    AST_Named_Statement named_statement;
-    AST_Function_Parameter* first_parameter;
-    AST_Type* return_type;
-    AST_Statements* statements;
+typedef struct Parsed_Function_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Function_Parameter* first_parameter;
+    Parsed_Type* return_type;
+    Parsed_Statements* statements;
     bool is_external;
-} AST_Function_Statement;
+} Parsed_Function_Statement;
 
-AST_Statement* AST_Function_Statement__create(Source_Location* location, Token* name, AST_Function_Parameter* first_parameter, AST_Type* resturn_type, AST_Statements* statements, bool is_external) {
-    AST_Function_Statement* function_statement = AST_Named_Statement__create(sizeof(AST_Function_Statement), AST_STATEMENT_KIND__FUNCTION, location, name);
-    function_statement->first_parameter = first_parameter;
-    function_statement->return_type = resturn_type;
-    function_statement->statements = statements;
-    function_statement->is_external = is_external;
-    return (AST_Statement*) function_statement;
+Parsed_Statement* Parsed_Function_Statement__create(Source_Location* location, Token* name, Parsed_Function_Parameter* first_parameter, Parsed_Type* resturn_type, Parsed_Statements* statements, bool is_external) {
+    Parsed_Function_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Function_Statement), PARSED_STATEMENT_KIND__FUNCTION, location, name);
+    statement->first_parameter = first_parameter;
+    statement->return_type = resturn_type;
+    statement->statements = statements;
+    statement->is_external = is_external;
+    return (Parsed_Statement*) statement;
 }
 
-typedef struct AST_Function_Type_Parameter {
-    AST_Type* type;
-    struct AST_Function_Type_Parameter* next_parameter;
-} AST_Function_Type_Parameter;
+typedef struct Parsed_Function_Type_Parameter {
+    Parsed_Type* type;
+    struct Parsed_Function_Type_Parameter* next_parameter;
+} Parsed_Function_Type_Parameter;
 
-AST_Function_Type_Parameter* AST_Function_Type_Parameter__create(AST_Type* type) {
-    AST_Function_Type_Parameter* parameter = (AST_Function_Type_Parameter*) malloc(sizeof(AST_Function_Type_Parameter));
+Parsed_Function_Type_Parameter* Parsed_Function_Type_Parameter__create(Parsed_Type* type) {
+    Parsed_Function_Type_Parameter* parameter = (Parsed_Function_Type_Parameter*) malloc(sizeof(Parsed_Function_Type_Parameter));
     parameter->type = type;
     parameter->next_parameter = null;
     return parameter;
 }
 
-typedef struct AST_Function_Type_Statement {
-    AST_Named_Statement named_statement;
-    AST_Function_Type_Parameter* first_parameter;
-    AST_Type* return_type;
-} AST_Function_Type_Statement;
+typedef struct Parsed_Function_Type_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Function_Type_Parameter* first_parameter;
+    Parsed_Type* return_type;
+} Parsed_Function_Type_Statement;
 
-AST_Statement* AST_Function_Type_Statement__create(Source_Location* location, Token* name, AST_Function_Type_Parameter* first_parameter, AST_Type* resturn_type) {
-    AST_Function_Type_Statement* function_statement = AST_Named_Statement__create(sizeof(AST_Function_Type_Statement), AST_STATEMENT_KIND__FUNCTION, location, name);
-    function_statement->first_parameter = first_parameter;
-    function_statement->return_type = resturn_type;
-    return (AST_Statement*) function_statement;
+Parsed_Statement* Parsed_Function_Type_Statement__create(Source_Location* location, Token* name, Parsed_Function_Type_Parameter* first_parameter, Parsed_Type* resturn_type) {
+    Parsed_Function_Type_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Function_Type_Statement), PARSED_STATEMENT_KIND__FUNCTION, location, name);
+    statement->first_parameter = first_parameter;
+    statement->return_type = resturn_type;
+    return (Parsed_Statement*) statement;
 }
 
-typedef struct AST_If_Statement {
-    AST_Statement statement;
-    AST_Expression* condition_expression;
-    AST_Statement* true_statement;
-    AST_Statement* false_statement;
-} AST_If_Statement;
+typedef struct Parsed_If_Statement {
+    Parsed_Statement super;
+    Parsed_Expression* condition_expression;
+    Parsed_Statement* true_statement;
+    Parsed_Statement* false_statement;
+} Parsed_If_Statement;
 
-AST_Statement* AST_If_Statement__create(Source_Location* location, AST_Expression* condition_expression, AST_Statement* true_statement, AST_Statement* false_statement) {
-    AST_If_Statement* statement = AST_Statement__create(sizeof(AST_If_Statement), AST_STATEMENT_KIND__IF, location);
+Parsed_Statement* Parsed_If_Statement__create(Source_Location* location, Parsed_Expression* condition_expression, Parsed_Statement* true_statement, Parsed_Statement* false_statement) {
+    Parsed_If_Statement* statement = Parsed_Statement__create(sizeof(Parsed_If_Statement), PARSED_STATEMENT_KIND__IF, location);
     statement->condition_expression = condition_expression;
     statement->true_statement = true_statement;
     statement->false_statement = false_statement;
-    return (AST_Statement*) statement;
+    return (Parsed_Statement*) statement;
 }
 
-typedef struct AST_Return_Statement {
-    AST_Statement statement;
-    AST_Expression* expression;
-} AST_Return_Statement;
+typedef struct Parsed_Return_Statement {
+    Parsed_Statement super;
+    Parsed_Expression* expression;
+} Parsed_Return_Statement;
 
-AST_Statement* AST_Return_Statement__create(Source_Location* location, AST_Expression* expression) {
-    AST_Return_Statement* statement = AST_Statement__create(sizeof(AST_Return_Statement), AST_STATEMENT_KIND__RETURN, location);
+Parsed_Statement* Parsed_Return_Statement__create(Source_Location* location, Parsed_Expression* expression) {
+    Parsed_Return_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Return_Statement), PARSED_STATEMENT_KIND__RETURN, location);
     statement->expression = expression;
-    return (AST_Statement*) statement;
+    return (Parsed_Statement*) statement;
 }
 
-typedef struct AST_Struct_Member {
+typedef struct Parsed_Struct_Member {
     Token* name;
-    AST_Type* type;
-    struct AST_Struct_Member* next_member;
-} AST_Struct_Member;
+    Parsed_Type* type;
+    struct Parsed_Struct_Member* next_member;
+} Parsed_Struct_Member;
 
-AST_Struct_Member* AST_Struct_Member__create(Token* name, AST_Type* type) {
-    AST_Struct_Member* member = malloc(sizeof(AST_Struct_Member));
+Parsed_Struct_Member* Parsed_Struct_Member__create(Token* name, Parsed_Type* type) {
+    Parsed_Struct_Member* member = malloc(sizeof(Parsed_Struct_Member));
     member->name = name;
     member->type = type;
     member->next_member = null;
     return member;
 }
 
-typedef struct AST_Struct_Statement {
-    AST_Named_Statement named_statement;
-    AST_Struct_Member* first_member;
+typedef struct Parsed_Struct_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Struct_Member* first_member;
     bool is_opaque;
-} AST_Struct_Statement;
+} Parsed_Struct_Statement;
 
-AST_Struct_Statement* AST_Struct_Statement__create(Source_Location* location, Token* name) {
-    AST_Struct_Statement* statement = AST_Named_Statement__create(sizeof(AST_Struct_Statement), AST_STATEMENT_KIND__STRUCT, location, name);
+Parsed_Struct_Statement* Parsed_Struct_Statement__create(Source_Location* location, Token* name) {
+    Parsed_Struct_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Struct_Statement), PARSED_STATEMENT_KIND__STRUCT, location, name);
     statement->first_member = null;
     statement->is_opaque = false;
     return statement;
 }
 
-typedef struct AST_Variable_Statement {
-    AST_Named_Statement named_statement;
-    AST_Type* type;
-    AST_Expression* expression;
+typedef struct Parsed_Variable_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Type* type;
+    Parsed_Expression* expression;
     bool is_external;
-} AST_Variable_Statement;
+} Parsed_Variable_Statement;
 
-AST_Variable_Statement* AST_Variable_Statement__create(Source_Location* location, Token* name, AST_Type* type, bool is_external) {
-    AST_Variable_Statement* statement = AST_Named_Statement__create(sizeof(AST_Variable_Statement), AST_STATEMENT_KIND__VARIABLE, location, name);
+Parsed_Variable_Statement* Parsed_Variable_Statement__create(Source_Location* location, Token* name, Parsed_Type* type, bool is_external) {
+    Parsed_Variable_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Variable_Statement), PARSED_STATEMENT_KIND__VARIABLE, location, name);
     statement->type = type;
     statement->is_external = is_external;
     return statement;
 }
 
-typedef struct AST_While_Statement {
-    AST_Statement statement;
-    AST_Expression* condition_expression;
-    AST_Statement* body_statement;
-} AST_While_Statement;
+typedef struct Parsed_While_Statement {
+    Parsed_Statement super;
+    Parsed_Expression* condition_expression;
+    Parsed_Statement* body_statement;
+} Parsed_While_Statement;
 
-AST_Statement* AST_While_Statement__create(Source_Location* location, AST_Expression* condition_expression, AST_Statement* body_statement) {
-    AST_While_Statement* statement = AST_Statement__create(sizeof(AST_While_Statement), AST_STATEMENT_KIND__WHILE, location);
+Parsed_Statement* Parsed_While_Statement__create(Source_Location* location, Parsed_Expression* condition_expression, Parsed_Statement* body_statement) {
+    Parsed_While_Statement* statement = Parsed_Statement__create(sizeof(Parsed_While_Statement), PARSED_STATEMENT_KIND__WHILE, location);
     statement->condition_expression = condition_expression;
     statement->body_statement = body_statement;
-    return (AST_Statement*) statement;
+    return (Parsed_Statement*) statement;
 }
 
-typedef struct AST_Statements {
-    AST_Statement* first_statement;
-    AST_Statement* last_statement;
+typedef struct Parsed_Statements {
+    Parsed_Statement* first_statement;
+    Parsed_Statement* last_statement;
     bool has_globals;
-} AST_Statements;
+} Parsed_Statements;
 
-AST_Statements* AST_Statements__create(bool has_globals) {
-    AST_Statements* statements = malloc(sizeof(AST_Statements));
+Parsed_Statements* Parsed_Statements__create(bool has_globals) {
+    Parsed_Statements* statements = malloc(sizeof(Parsed_Statements));
     statements->first_statement = null;
     statements->last_statement = null;
     statements->has_globals = has_globals;
     return statements;
 }
 
-void AST_Statements__append(AST_Statements* self, AST_Statement* statement) {
+void Parsed_Statements__append(Parsed_Statements* self, Parsed_Statement* statement) {
     if (self->first_statement == null) {
         self->first_statement = statement;
     } else {
@@ -1567,9 +1537,9 @@ void AST_Statements__append(AST_Statements* self, AST_Statement* statement) {
     self->last_statement = statement;
 }
 
-AST_Compilation_Unit* AST_Compilation_Unit__create() {
-    AST_Compilation_Unit* compilation_unit = malloc(sizeof(AST_Compilation_Unit));
-    compilation_unit->statements = AST_Statements__create(true);
+Parsed_Source* Parsed_Compilation_Unit__create() {
+    Parsed_Source* compilation_unit = malloc(sizeof(Parsed_Source));
+    compilation_unit->statements = Parsed_Statements__create(true);
     return compilation_unit;
 }
 
@@ -1577,7 +1547,7 @@ AST_Compilation_Unit* AST_Compilation_Unit__create() {
 
 typedef struct Parser {
     Scanner* scanner;
-    AST_Compilation_Unit* compilation_unit;
+    Parsed_Source* compilation_unit;
     uint16_t current_identation;
 } Parser;
 
@@ -1692,8 +1662,8 @@ bool Parser__consume_empty_line(Parser* self) {
     return false;
 }
 
-AST_Expression* Parser__parse_expression(Parser* self);
-AST_Type* Parser__parse_type(Parser* self);
+Parsed_Expression* Parser__parse_expression(Parser* self);
+Parsed_Type* Parser__parse_type(Parser* self);
 
 // primary_expression
 //      | "false"
@@ -1703,35 +1673,35 @@ AST_Type* Parser__parse_type(Parser* self);
 //      | IDENTIFIER
 //      | INTEGER
 //      | STRING
-AST_Expression* Parser__parse_primary_expression(Parser* self) {
+Parsed_Expression* Parser__parse_primary_expression(Parser* self) {
     if (Parser__matches_one(self, Token__is_true)) {
-        return (AST_Expression*) AST_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true);
+        return (Parsed_Expression*) Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true);
     }
     if (Parser__matches_one(self, Token__is_null)) {
-        return (AST_Expression*) AST_Null_Expression__create(Parser__consume_token(self, Token__is_null));
+        return (Parsed_Expression*) Parsed_Null_Expression__create(Parser__consume_token(self, Token__is_null));
     }
     if (Parser__matches_one(self, Token__is_false)) {
-        return (AST_Expression*) AST_Bool_Expression__create(Parser__consume_token(self, Token__is_false), false);
+        return (Parsed_Expression*) Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_false), false);
     }
     if (Parser__matches_one(self, Token__is_identifier)) {
-        return (AST_Expression*) AST_Symbol_Expression__create(Parser__consume_token(self, Token__is_identifier));
+        return (Parsed_Expression*) Parsed_Symbol_Expression__create(Parser__consume_token(self, Token__is_identifier));
     }
     if (Parser__matches_one(self, Token__is_integer)) {
-        return (AST_Expression*) AST_Integer_Expression__create((Integer_Token*) Parser__consume_token(self, Token__is_integer));
+        return (Parsed_Expression*) Parsed_Integer_Expression__create((Integer_Token*) Parser__consume_token(self, Token__is_integer));
     }
     if (Parser__matches_one(self, Token__is_character)) {
-        return (AST_Expression*) AST_Character_Expression__create((Character_Token*) Parser__consume_token(self, Token__is_character));
+        return (Parsed_Expression*) Parsed_Character_Expression__create((Character_Token*) Parser__consume_token(self, Token__is_character));
     }
     if (Parser__matches_one(self, Token__is_string)) {
-        return (AST_Expression*) AST_String_Expression__create((String_Token*) Parser__consume_token(self, Token__is_string));
+        return (Parsed_Expression*) Parsed_String_Expression__create((String_Token*) Parser__consume_token(self, Token__is_string));
     }
     if (Parser__matches_one(self, Token__is_opening_paren)) {
         Source_Location* location = Parser__consume_token(self, Token__is_opening_paren)->location;
         Parser__consume_space(self, 0);
-        AST_Expression* expression = Parser__parse_expression(self);
+        Parsed_Expression* expression = Parser__parse_expression(self);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_paren);
-        return (AST_Expression*) AST_Group_Expression__create(location, expression);
+        return (Parsed_Expression*) Parsed_Group_Expression__create(location, expression);
     }
     Parser__panic(self, String__create_from("Unsupported primary expression"));
     return null;
@@ -1739,10 +1709,10 @@ AST_Expression* Parser__parse_primary_expression(Parser* self) {
 
 // access_expression
 //      | primary_expression ( "." IDENTIFIER | "->" IDENTIFIER | "(" ( expression ( "," expression )*)? ")" | "[" expression "]" )*
-AST_Expression* Parser__parse_access_expression(Parser* self) {
-    AST_Expression* expression = Parser__parse_primary_expression(self);
+Parsed_Expression* Parser__parse_access_expression(Parser* self) {
+    Parsed_Expression* expression = Parser__parse_primary_expression(self);
     while (true) {
-        AST_Expression* old_expression = expression;
+        Parsed_Expression* old_expression = expression;
         if (Parser__matches_two(self, Token__is_space, false, Token__is_dot) || Parser__matches_three(self, Token__is_space, false, Token__is_minus, true, Token__is_greater_than)) {
             Parser__consume_space(self, 0);
             if (Parser__matches_one(self, Token__is_dot)) {
@@ -1753,31 +1723,31 @@ AST_Expression* Parser__parse_access_expression(Parser* self) {
             }
             Parser__consume_space(self, 0);
             Token* name = Parser__consume_token(self, Token__is_identifier);
-            expression = (AST_Expression*) AST_Member_Access_Expression__create(expression, name);
+            expression = (Parsed_Expression*) Parsed_Member_Access_Expression__create(expression, name);
         }
         if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_paren)) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_opening_paren);
             Parser__consume_space(self, 0);
-            if (expression->kind == AST_EXPRESSION_KIND__SYMBOL && String__equals_cstring(((AST_Symbol_Expression*) expression)->name->lexeme, "sizeof")) {
-                AST_Type* type = Parser__parse_type(self);
-                expression = (AST_Expression*) AST_Sizeof_Expression__create(expression->location, type);
+            if (expression->kind == PARSED_EXPRESSION_KIND__SYMBOL && String__equals_cstring(((Parsed_Symbol_Expression*) expression)->name->lexeme, "sizeof")) {
+                Parsed_Type* type = Parser__parse_type(self);
+                expression = (Parsed_Expression*) Parsed_Sizeof_Expression__create(expression->location, type);
             } else {
-                AST_Call_Expression* call_expression = AST_Call_Expression__create(expression);
+                Parsed_Call_Expression* call_expression = Parsed_Call_Expression__create(expression);
                 if (!Parser__matches_one(self, Token__is_closing_paren)) {
-                    AST_Call_Argument* last_argument = AST_Call_Argument__create(Parser__parse_expression(self));
+                    Parsed_Call_Argument* last_argument = Parsed_Call_Argument__create(Parser__parse_expression(self));
                     call_expression->first_argument = last_argument;
                     Parser__consume_space(self, 0);
                     while (Parser__matches_one(self, Token__is_comma)) {
                         Parser__consume_token(self, Token__is_comma);
                         Parser__consume_space(self, 1);
-                        AST_Call_Argument* argument = AST_Call_Argument__create(Parser__parse_expression(self));
+                        Parsed_Call_Argument* argument = Parsed_Call_Argument__create(Parser__parse_expression(self));
                         last_argument->next_argument = argument;
                         last_argument = argument;
                         Parser__consume_space(self, 0);
                     }
                 }
-                expression = (AST_Expression*) call_expression;
+                expression = (Parsed_Expression*) call_expression;
             }
             Parser__consume_token(self, Token__is_closing_paren);
         }
@@ -1785,10 +1755,10 @@ AST_Expression* Parser__parse_access_expression(Parser* self) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_opening_bracket);
             Parser__consume_space(self, 0);
-            AST_Expression* index_expression = Parser__parse_expression(self);
+            Parsed_Expression* index_expression = Parser__parse_expression(self);
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_closing_bracket);
-            expression = (AST_Expression*) AST_Array_Access_Expression__create(expression, index_expression);
+            expression = (Parsed_Expression*) Parsed_Array_Access_Expression__create(expression, index_expression);
         }
         if (old_expression == expression) {
             break;
@@ -1804,24 +1774,24 @@ AST_Expression* Parser__parse_access_expression(Parser* self) {
 //      | "(" type ")" unary_expression
 //      | "sizeof" "(" type ")"
 //      | access_expression
-AST_Expression* Parser__parse_unary_expression(Parser* self) {
+Parsed_Expression* Parser__parse_unary_expression(Parser* self) {
     if (Parser__matches_one(self, Token__is_minus)) {
         Source_Location* location = Parser__consume_token(self, Token__is_minus)->location;
         Parser__consume_space(self, 0);
-        AST_Expression* expression = Parser__parse_unary_expression(self);
-        return (AST_Expression*) AST_Minus_Expression__create(location, expression);
+        Parsed_Expression* expression = Parser__parse_unary_expression(self);
+        return (Parsed_Expression*) Parsed_Minus_Expression__create(location, expression);
     }
     if (Parser__matches_one(self, Token__is_exclamation_mark)) {
         Source_Location* location = Parser__consume_token(self, Token__is_exclamation_mark)->location;
         Parser__consume_space(self, 0);
-        AST_Expression* expression = Parser__parse_unary_expression(self);
-        return (AST_Expression*) AST_Not_Expression__create(location, expression);
+        Parsed_Expression* expression = Parser__parse_unary_expression(self);
+        return (Parsed_Expression*) Parsed_Not_Expression__create(location, expression);
     }
     if (Parser__matches_one(self, Token__is_ampersand)) {
         Source_Location* location = Parser__consume_token(self, Token__is_ampersand)->location;
         Parser__consume_space(self, 0);
-        AST_Expression* expression = Parser__parse_unary_expression(self);
-        return (AST_Expression*) AST_Address_Of_Expression__create(location, expression);
+        Parsed_Expression* expression = Parser__parse_unary_expression(self);
+        return (Parsed_Expression*) Parsed_Address_Of_Expression__create(location, expression);
     }
     if (Parser__matches_three(self, Token__is_opening_paren, true, Token__is_space, false, Token__is_identifier)) {
         uint16_t peek_offset = 1;
@@ -1846,12 +1816,12 @@ AST_Expression* Parser__parse_unary_expression(Parser* self) {
                 }
                 Source_Location* location = Parser__consume_token(self, Token__is_opening_paren)->location;
                 Parser__consume_space(self, 0);
-                AST_Type* type = Parser__parse_type(self);
+                Parsed_Type* type = Parser__parse_type(self);
                 Parser__consume_space(self, 0);
                 Parser__consume_token(self, Token__is_closing_paren);
                 Parser__consume_space(self, 1);
-                AST_Expression* expression = Parser__parse_unary_expression(self);
-                return (AST_Expression*) AST_Cast_Expression__create(location, expression, type);
+                Parsed_Expression* expression = Parser__parse_unary_expression(self);
+                return (Parsed_Expression*) Parsed_Cast_Expression__create(location, expression, type);
             }
         }
     }
@@ -1864,25 +1834,25 @@ bool Token__is_mutliplication(Token* self) {
 
 // multiplication
 //      | unary_expression ( ( "*" | "/" | "%" ) unary_expression )*
-AST_Expression* Parser__parse_multiplication_expression(Parser* self) {
-    AST_Expression* expression = Parser__parse_unary_expression(self);
+Parsed_Expression* Parser__parse_multiplication_expression(Parser* self) {
+    Parsed_Expression* expression = Parser__parse_unary_expression(self);
     while (Parser__matches_two(self, Token__is_space, false, Token__is_mutliplication)) {
         Parser__consume_space(self, 1);
         if (Parser__matches_one(self, Token__is_asterisk)) {
             Parser__consume_token(self, Token__is_asterisk);
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_unary_expression(self);
-            expression = (AST_Expression*) AST_Multiply_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_unary_expression(self);
+            expression = (Parsed_Expression*) Parsed_Multiply_Expression__create(expression, right_expression);
         } else if (Parser__matches_one(self, Token__is_slash)) {
             Parser__consume_token(self, Token__is_slash);
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_unary_expression(self);
-            expression = (AST_Expression*) AST_Divide_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_unary_expression(self);
+            expression = (Parsed_Expression*) Parsed_Divide_Expression__create(expression, right_expression);
         } else {
             Parser__consume_token(self, Token__is_percent);
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_unary_expression(self);
-            expression = (AST_Expression*) AST_Modulo_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_unary_expression(self);
+            expression = (Parsed_Expression*) Parsed_Modulo_Expression__create(expression, right_expression);
         }
     }
     return expression;
@@ -1894,20 +1864,20 @@ bool Token__is_addition(Token* self) {
 
 // addition
 //      | multiplication ( ( "+" | "-" ) multiplication )*
-AST_Expression* Parser__parse_addition_expression(Parser* self) {
-    AST_Expression* expression = Parser__parse_multiplication_expression(self);
+Parsed_Expression* Parser__parse_addition_expression(Parser* self) {
+    Parsed_Expression* expression = Parser__parse_multiplication_expression(self);
     while (Parser__matches_two(self, Token__is_space, false, Token__is_addition)) {
         Parser__consume_space(self, 1);
         if (Parser__matches_one(self, Token__is_plus)) {
             Parser__consume_token(self, Token__is_plus);
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_multiplication_expression(self);
-            expression = (AST_Expression*) AST_Add_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_multiplication_expression(self);
+            expression = (Parsed_Expression*) Parsed_Add_Expression__create(expression, right_expression);
         } else {
             Parser__consume_token(self, Token__is_minus);
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_multiplication_expression(self);
-            expression = (AST_Expression*) AST_Substract_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_multiplication_expression(self);
+            expression = (Parsed_Expression*) Parsed_Substract_Expression__create(expression, right_expression);
         }
     }
     return expression;
@@ -1915,20 +1885,20 @@ AST_Expression* Parser__parse_addition_expression(Parser* self) {
 
 // comparison
 //      | addition ( ( "<=" | "<" | ">" | ">=") addition )*
-AST_Expression* Parser__parse_comparison_expression(Parser* self) {
-    AST_Expression* expression = Parser__parse_addition_expression(self);
+Parsed_Expression* Parser__parse_comparison_expression(Parser* self) {
+    Parsed_Expression* expression = Parser__parse_addition_expression(self);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_less_than);
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals);
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_addition_expression(self);
-            expression = (AST_Expression*) AST_Less_Or_Equals_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            expression = (Parsed_Expression*) Parsed_Less_Or_Equals_Expression__create(expression, right_expression);
         } else {
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_addition_expression(self);
-            expression = (AST_Expression*) AST_Less_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            expression = (Parsed_Expression*) Parsed_Less_Expression__create(expression, right_expression);
         }
     } else if (Parser__matches_two(self, Token__is_space, false, Token__is_greater_than)) {
         Parser__consume_space(self, 1);
@@ -1936,12 +1906,12 @@ AST_Expression* Parser__parse_comparison_expression(Parser* self) {
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals);
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_addition_expression(self);
-            expression = (AST_Expression*) AST_Greater_Or_Equals_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            expression = (Parsed_Expression*) Parsed_Greater_Or_Equals_Expression__create(expression, right_expression);
         } else {
             Parser__consume_space(self, 1);
-            AST_Expression* right_expression = Parser__parse_addition_expression(self);
-            expression = (AST_Expression*) AST_Greater_Expression__create(expression, right_expression);
+            Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            expression = (Parsed_Expression*) Parsed_Greater_Expression__create(expression, right_expression);
         }
     }
     return expression;
@@ -1949,87 +1919,87 @@ AST_Expression* Parser__parse_comparison_expression(Parser* self) {
 
 // equality
 //      | comparison ( ( "==" | "!=" ) comparison )*
-AST_Expression* Parser__parse_equality_expression(Parser* self) {
-    AST_Expression* expression = Parser__parse_comparison_expression(self);
+Parsed_Expression* Parser__parse_equality_expression(Parser* self) {
+    Parsed_Expression* expression = Parser__parse_comparison_expression(self);
     if (Parser__matches_three(self, Token__is_space, false, Token__is_equals, true, Token__is_equals)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
-        AST_Expression* right_expression = Parser__parse_comparison_expression(self);
-        expression = (AST_Expression*) AST_Equals_Expression__create(expression, right_expression);
+        Parsed_Expression* right_expression = Parser__parse_comparison_expression(self);
+        expression = (Parsed_Expression*) Parsed_Equals_Expression__create(expression, right_expression);
     } else if (Parser__matches_three(self, Token__is_space, false, Token__is_exclamation_mark, true, Token__is_equals)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_exclamation_mark);
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
-        AST_Expression* right_expression = Parser__parse_comparison_expression(self);
-        expression = (AST_Expression*) AST_Not_Equals_Expression__create(expression, right_expression);
+        Parsed_Expression* right_expression = Parser__parse_comparison_expression(self);
+        expression = (Parsed_Expression*) Parsed_Not_Equals_Expression__create(expression, right_expression);
     }
     return expression;
 }
 
 // logic_and
 //      | equality ( "&&" equality )*
-AST_Expression* Parser__parse_logic_and_expression(Parser* self) {
-    AST_Expression* expression = Parser__parse_equality_expression(self);
+Parsed_Expression* Parser__parse_logic_and_expression(Parser* self) {
+    Parsed_Expression* expression = Parser__parse_equality_expression(self);
     while (Parser__matches_three(self, Token__is_space, false, Token__is_ampersand, true, Token__is_ampersand)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_ampersand);
         Parser__consume_token(self, Token__is_ampersand);
         Parser__consume_space(self, 1);
-        AST_Expression* right_expression = Parser__parse_equality_expression(self);
-        expression = (AST_Expression*) AST_Logic_And_Expression__create(expression, right_expression);
+        Parsed_Expression* right_expression = Parser__parse_equality_expression(self);
+        expression = (Parsed_Expression*) Parsed_Logic_And_Expression__create(expression, right_expression);
     }
     return expression;
 }
 
 // logic_or
 //      | logic_and ( "||" logic_and )*
-AST_Expression* Parser__parse_logic_or_expression(Parser* self) {
-    AST_Expression* expression = Parser__parse_logic_and_expression(self);
+Parsed_Expression* Parser__parse_logic_or_expression(Parser* self) {
+    Parsed_Expression* expression = Parser__parse_logic_and_expression(self);
     while (Parser__matches_three(self, Token__is_space, false, Token__is_vertical_bar, true, Token__is_vertical_bar)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_vertical_bar);
         Parser__consume_token(self, Token__is_vertical_bar);
         Parser__consume_space(self, 1);
-        AST_Expression* right_expression = Parser__parse_logic_and_expression(self);
-        expression = (AST_Expression*) AST_Logic_Or_Expression__create(expression, right_expression);
+        Parsed_Expression* right_expression = Parser__parse_logic_and_expression(self);
+        expression = (Parsed_Expression*) Parsed_Logic_Or_Expression__create(expression, right_expression);
     }
     return expression;
 }
 
 // expression
 //      | logic_or
-AST_Expression* Parser__parse_expression(Parser* self) {
+Parsed_Expression* Parser__parse_expression(Parser* self) {
     return Parser__parse_logic_or_expression(self);
 }
 
 // struct
 //      | "typedef" "struct" IDENTIFIER ( "{" ( type "*"? IDENTIFIER ";" )* "}" )? IDENTIFIER ";"
-AST_Statement* Parser__parse_struct(Parser* self) {
+Parsed_Statement* Parser__parse_struct(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location;
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_struct);
     Parser__consume_space(self, 1);
     Token* local_name = Parser__consume_token(self, Token__is_identifier);
-    AST_Struct_Statement* struct_statement = AST_Struct_Statement__create(location, local_name);
+    Parsed_Struct_Statement* struct_statement = Parsed_Struct_Statement__create(location, local_name);
     Parser__consume_space(self, 1);
     if (Parser__matches_one(self, Token__is_identifier)) {
         struct_statement->is_opaque = true;
     } else {
-        AST_Struct_Member* last_member = null;
+        Parsed_Struct_Member* last_member = null;
         Parser__consume_token(self, Token__is_opening_brace);
         Parser__consume_end_of_line(self);
         while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
             Parser__consume_space(self, (self->current_identation + 1) * 4);
-            AST_Type* type = Parser__parse_type(self);
+            Parsed_Type* type = Parser__parse_type(self);
             Parser__consume_space(self, 1);
             Token* name = Parser__consume_token(self, Token__is_identifier);
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_semicolon);
             Parser__consume_end_of_line(self);
-            AST_Struct_Member* member = AST_Struct_Member__create(name, type);
+            Parsed_Struct_Member* member = Parsed_Struct_Member__create(name, type);
             if (last_member == null) {
                 struct_statement->first_member = member;
                 last_member = member;
@@ -2048,29 +2018,29 @@ AST_Statement* Parser__parse_struct(Parser* self) {
     }
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_semicolon);
-    return (AST_Statement*) struct_statement;
+    return (Parsed_Statement*) struct_statement;
 }
 
 // enum
 //      | "typedef" "enum" IDENTIFIER "{" ( IDENTIFIER "," )* "}" IDENTIFIER ";"
-AST_Statement* Parser__parse_enum(Parser* self) {
+Parsed_Statement* Parser__parse_enum(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location;
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_enum);
     Parser__consume_space(self, 1);
     Token* local_name = Parser__consume_token(self, Token__is_identifier);
-    AST_Enum_Statement* enum_statement = AST_Enum_Statement__create(location, local_name);
+    Parsed_Enum_Statement* enum_statement = Parsed_Enum_Statement__create(location, local_name);
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
-    AST_Enum_Member* last_member = null;
+    Parsed_Enum_Member* last_member = null;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         Parser__consume_space(self, (self->current_identation + 1) * 4);
         Token* name = Parser__consume_token(self, Token__is_identifier);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_comma);
         Parser__consume_end_of_line(self);
-        AST_Enum_Member* member = AST_Enum_Member__create(name);
+        Parsed_Enum_Member* member = Parsed_Enum_Member__create(name);
         if (last_member == null) {
             enum_statement->first_member = member;
             last_member = member;
@@ -2088,12 +2058,12 @@ AST_Statement* Parser__parse_enum(Parser* self) {
     }
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_semicolon);
-    return (AST_Statement*) enum_statement;
+    return (Parsed_Statement*) enum_statement;
 }
 
 // type
 //      | "const"? "struct"? IDENTIFIER "*"*
-AST_Type* Parser__parse_type(Parser* self) {
+Parsed_Type* Parser__parse_type(Parser* self) {
     Token* const_token = null;
     if (Parser__matches_one(self, Token__is_const)) {
         const_token = Parser__consume_token(self, Token__is_const);
@@ -2105,41 +2075,41 @@ AST_Type* Parser__parse_type(Parser* self) {
         Parser__consume_space(self, 1);
     }
     Token* name = Parser__consume_token(self, Token__is_identifier);
-    AST_Type* type = AST_Named_Type__create(name);
+    Parsed_Type* type = Parsed_Named_Type__create(name);
     if (struct_token != null) {
-        type = AST_Struct_Type__create(struct_token->location, type);
+        type = Parsed_Struct_Type__create(struct_token->location, type);
     }
     while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_asterisk);
-        type = AST_Pointer_Type__create(type);
+        type = Parsed_Pointer_Type__create(type);
     }
     if (const_token) {
-        type = AST_Const_Type__create(const_token->location, type);
+        type = Parsed_Const_Type__create(const_token->location, type);
     }
     return type;
 }
 
 // type_alias
 //      | "typedef" type IDENTIFIER "(" ( type ( "," type )* )? ")" ";"
-AST_Statement* Parser__parse_type_alias(Parser* self) {
+Parsed_Statement* Parser__parse_type_alias(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location;
     Parser__consume_space(self, 1);
-    AST_Type* return_type = Parser__parse_type(self);
+    Parsed_Type* return_type = Parser__parse_type(self);
     Parser__consume_space(self, 1);
     Token* name = Parser__consume_token(self, Token__is_identifier);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_opening_paren);
-    AST_Function_Type_Parameter* first_parameter = null;
+    Parsed_Function_Type_Parameter* first_parameter = null;
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, 0);
-        first_parameter = AST_Function_Type_Parameter__create(Parser__parse_type(self));
-        AST_Function_Type_Parameter* last_parameter = first_parameter;
+        first_parameter = Parsed_Function_Type_Parameter__create(Parser__parse_type(self));
+        Parsed_Function_Type_Parameter* last_parameter = first_parameter;
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_comma);
             Parser__consume_space(self, 1);
-            AST_Function_Type_Parameter* parameter = AST_Function_Type_Parameter__create(Parser__parse_type(self));
+            Parsed_Function_Type_Parameter* parameter = Parsed_Function_Type_Parameter__create(Parser__parse_type(self));
             last_parameter->next_parameter = parameter;
             last_parameter = parameter;
         }
@@ -2148,12 +2118,12 @@ AST_Statement* Parser__parse_type_alias(Parser* self) {
     Parser__consume_token(self, Token__is_closing_paren);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_semicolon);
-    return (AST_Statement*) AST_Function_Type_Statement__create(location, name, first_parameter, return_type);
+    return (Parsed_Statement*) Parsed_Function_Type_Statement__create(location, name, first_parameter, return_type);
 }
 
 // variable
 //      | "extern"? type IDENTIFIER ( "=" expression )? ";"
-AST_Statement* Parser__parse_variable(Parser* self) {
+Parsed_Statement* Parser__parse_variable(Parser* self) {
     bool is_external;
     Source_Location* location;
     if (Parser__matches_one(self, Token__is_extern)) {
@@ -2164,10 +2134,10 @@ AST_Statement* Parser__parse_variable(Parser* self) {
         is_external = false;
         location = Parser__peek_token(self, 0)->location;
     }
-    AST_Type* type = Parser__parse_type(self);
+    Parsed_Type* type = Parser__parse_type(self);
     Parser__consume_space(self, 1);
     Token* name = Parser__consume_token(self, Token__is_identifier);
-    AST_Variable_Statement* variable_statement = AST_Variable_Statement__create(location, name, type, is_external);
+    Parsed_Variable_Statement* variable_statement = Parsed_Variable_Statement__create(location, name, type, is_external);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_equals);
@@ -2176,22 +2146,22 @@ AST_Statement* Parser__parse_variable(Parser* self) {
     }
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_semicolon);
-    return (AST_Statement*) variable_statement;
+    return (Parsed_Statement*) variable_statement;
 }
 
-AST_Function_Parameter* Parser__parse_function_parameter(Parser* self) {
-    AST_Type* type = Parser__parse_type(self);
+Parsed_Function_Parameter* Parser__parse_function_parameter(Parser* self) {
+    Parsed_Type* type = Parser__parse_type(self);
     Parser__consume_space(self, 1);
     Token* name = Parser__consume_token(self, Token__is_identifier);
-    return AST_Function_Parameter__create(name, type);
+    return Parsed_Function_Parameter__create(name, type);
 }
 
-AST_Function_Parameter* Parser__parse_function_parameters(Parser* self) {
-    AST_Function_Parameter* first_parameter = null;
+Parsed_Function_Parameter* Parser__parse_function_parameters(Parser* self) {
+    Parsed_Function_Parameter* first_parameter = null;
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, 0);
         first_parameter = Parser__parse_function_parameter(self);
-        AST_Function_Parameter* last_parameter = first_parameter;
+        Parsed_Function_Parameter* last_parameter = first_parameter;
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_comma);
@@ -2203,25 +2173,25 @@ AST_Function_Parameter* Parser__parse_function_parameters(Parser* self) {
     return first_parameter;
 }
 
-void Parser__parse_statements(Parser* self, AST_Statements* statements);
+void Parser__parse_statements(Parser* self, Parsed_Statements* statements);
 
 // block
 //      | "{" statements "}"
-AST_Block_Statement* Parser__parse_block_statement(Parser* self) {
+Parsed_Block_Statement* Parser__parse_block_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_opening_brace)->location;
     Parser__consume_end_of_line(self);
-    AST_Statements* statements = AST_Statements__create(false);
+    Parsed_Statements* statements = Parsed_Statements__create(false);
     self->current_identation = self->current_identation + 1;
     Parser__parse_statements(self, statements);
     self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Parser__consume_token(self, Token__is_closing_brace);
-    return AST_Block_Statement__create(location, statements);
+    return Parsed_Block_Statement__create(location, statements);
 }
 
 // function
 //      | "extern"? type IDENTIFIER "(" function_parameter* ")" ( "{" statements "}" | ";" )
-AST_Statement* Parser__parse_function(Parser* self) {
+Parsed_Statement* Parser__parse_function(Parser* self) {
     bool is_external;
     Source_Location* location;
     if (Parser__matches_one(self, Token__is_extern)) {
@@ -2232,20 +2202,20 @@ AST_Statement* Parser__parse_function(Parser* self) {
         is_external = false;
         location = Parser__peek_token(self, 0)->location;
     }
-    AST_Type* return_type = Parser__parse_type(self);
+    Parsed_Type* return_type = Parser__parse_type(self);
     Parser__consume_space(self, 1);
     Token* name = Parser__consume_token(self, Token__is_identifier);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_opening_paren);
-    AST_Function_Parameter* first_parameter = Parser__parse_function_parameters(self);
+    Parsed_Function_Parameter* first_parameter = Parser__parse_function_parameters(self);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_closing_paren);
-    AST_Statements* statements = null;
+    Parsed_Statements* statements = null;
     if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_brace)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_opening_brace);
         Parser__consume_end_of_line(self);
-        statements = AST_Statements__create(false);
+        statements = Parsed_Statements__create(false);
         self->current_identation = self->current_identation + 1;
         Parser__parse_statements(self, statements);
         self->current_identation = self->current_identation - 1;
@@ -2255,71 +2225,71 @@ AST_Statement* Parser__parse_function(Parser* self) {
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_semicolon);
     }
-    return AST_Function_Statement__create(location, name, first_parameter, return_type, statements, is_external);
+    return Parsed_Function_Statement__create(location, name, first_parameter, return_type, statements, is_external);
 }
 
 // return
 //      | "return" expression? ";"
-AST_Statement* Parser__parse_return_statement(Parser* self) {
+Parsed_Statement* Parser__parse_return_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_return)->location;
-    AST_Expression* expression = null;
+    Parsed_Expression* expression = null;
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_semicolon)) {
         Parser__consume_space(self, 1);
         expression = Parser__parse_expression(self);
     }
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_semicolon);
-    return AST_Return_Statement__create(location, expression);
+    return Parsed_Return_Statement__create(location, expression);
 }
 
 // break
 //      | "break" ";"
-AST_Statement* Parser__parse_break_statement(Parser* self) {
+Parsed_Statement* Parser__parse_break_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_break)->location;
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_semicolon);
-    return AST_Break_Statement__create(location);
+    return Parsed_Break_Statement__create(location);
 }
 
 // if
 //      | "if" "(" expression ")" statement ( "else" statement )?
-AST_Statement* Parser__parse_if_statement(Parser* self) {
+Parsed_Statement* Parser__parse_if_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_if)->location;
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_paren);
     Parser__consume_space(self, 0);
-    AST_Expression* condition_expression = Parser__parse_expression(self);
+    Parsed_Expression* condition_expression = Parser__parse_expression(self);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_closing_paren);
     Parser__consume_space(self, 1);
-    AST_Statement* true_statement = (AST_Statement*) Parser__parse_block_statement(self);
-    AST_Statement* false_statement = null;
+    Parsed_Statement* true_statement = (Parsed_Statement*) Parser__parse_block_statement(self);
+    Parsed_Statement* false_statement = null;
     if (Parser__matches_two(self, Token__is_space, false, Token__is_else)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_else);
         Parser__consume_space(self, 1);
         if (Parser__matches_one(self, Token__is_if)) {
-            false_statement = (AST_Statement*) Parser__parse_if_statement(self);
+            false_statement = (Parsed_Statement*) Parser__parse_if_statement(self);
         } else {
-            false_statement = (AST_Statement*) Parser__parse_block_statement(self);
+            false_statement = (Parsed_Statement*) Parser__parse_block_statement(self);
         }
     }
-    return AST_If_Statement__create(location, condition_expression, true_statement, false_statement);
+    return Parsed_If_Statement__create(location, condition_expression, true_statement, false_statement);
 }
 
 // while
 //      | "while" "(" expression ")" statement
-AST_Statement* Parser__parse_while_statement(Parser* self) {
+Parsed_Statement* Parser__parse_while_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_while)->location;
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_paren);
     Parser__consume_space(self, 0);
-    AST_Expression* condition_expression = Parser__parse_expression(self);
+    Parsed_Expression* condition_expression = Parser__parse_expression(self);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_closing_paren);
     Parser__consume_space(self, 1);
-    AST_Statement* body_statement = (AST_Statement*) Parser__parse_block_statement(self);
-    return AST_While_Statement__create(location, condition_expression, body_statement);
+    Parsed_Statement* body_statement = (Parsed_Statement*) Parser__parse_block_statement(self);
+    return Parsed_While_Statement__create(location, condition_expression, body_statement);
 }
 
 // statement
@@ -2330,7 +2300,7 @@ AST_Statement* Parser__parse_while_statement(Parser* self) {
 //      | struct
 //      | type_alias
 //      | variable
-AST_Statement* Parser__parse_statement(Parser* self) {
+Parsed_Statement* Parser__parse_statement(Parser* self) {
     Parser__consume_space(self, self->current_identation * 4);
 
     if (Parser__matches_one(self, Token__is_if)) {
@@ -2396,24 +2366,24 @@ AST_Statement* Parser__parse_statement(Parser* self) {
         }
     }
 
-    AST_Expression* expresion = Parser__parse_access_expression(self);
+    Parsed_Expression* expresion = Parser__parse_access_expression(self);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_equals);
         Parser__consume_space(self, 1);
-        AST_Expression* value_expression = Parser__parse_expression(self);
+        Parsed_Expression* value_expression = Parser__parse_expression(self);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_semicolon);
-        return (AST_Statement*) AST_Assignment_Statement__create(expresion, value_expression);
+        return (Parsed_Statement*) Parsed_Assignment_Statement__create(expresion, value_expression);
     }
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_semicolon);
-    return (AST_Statement*) AST_Expression_Statement__create(expresion);
+    return (Parsed_Statement*) Parsed_Expression_Statement__create(expresion);
 }
 
 // statements
 //      | ( statement )*
-void Parser__parse_statements(Parser* self, AST_Statements* statements) {
+void Parser__parse_statements(Parser* self, Parsed_Statements* statements) {
     while (true) {
         while (Parser__consume_empty_line(self)) {
             // ignored
@@ -2429,11 +2399,11 @@ void Parser__parse_statements(Parser* self, AST_Statements* statements) {
             }
         }
 
-        AST_Statement* statement = Parser__parse_statement(self);
+        Parsed_Statement* statement = Parser__parse_statement(self);
 
         Parser__consume_end_of_line(self);
 
-        AST_Statements__append(statements, statement);
+        Parsed_Statements__append(statements, statement);
     }
 }
 
@@ -2454,25 +2424,25 @@ void Parser__parse_source(Parser* self, Source* source) {
     self->scanner = other_scanner;
 }
 
-AST_Compilation_Unit* parse(Source* source) {
+Parsed_Source* parse(Source* source) {
     Parser parser;
     parser.scanner = null;
-    parser.compilation_unit = AST_Compilation_Unit__create();
+    parser.compilation_unit = Parsed_Compilation_Unit__create();
     parser.current_identation = 0;
 
     // TODO: use following types during type checking phase
-    // Parser__create_type(&parser, AST_TYPE_KIND__BOOL, String__create_from("bool"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__CHAR, String__create_from("char"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__INT16_T, String__create_from("int16_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__INT32_T, String__create_from("int32_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__INT64_T, String__create_from("int64_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__INT8_T, String__create_from("int8_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__SIZE_T, String__create_from("size_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__UINT16_T, String__create_from("uint16_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__UINT32_T, String__create_from("uint32_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__UINT64_T, String__create_from("uint64_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__UINT8_T, String__create_from("uint8_t"), null);
-    // Parser__create_type(&parser, AST_TYPE_KIND__VOID, String__create_from("void"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__BOOL, String__create_from("bool"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__CHAR, String__create_from("char"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__INT16_T, String__create_from("int16_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__INT32_T, String__create_from("int32_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__INT64_T, String__create_from("int64_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__INT8_T, String__create_from("int8_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__SIZE_T, String__create_from("size_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__UINT16_T, String__create_from("uint16_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__UINT32_T, String__create_from("uint32_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__UINT64_T, String__create_from("uint64_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__UINT8_T, String__create_from("uint8_t"), null);
+    // Parser__create_type(&parser, PARSED_TYPE_KIND__VOID, String__create_from("void"), null);
 
     Parser__parse_source(&parser, source);
 
