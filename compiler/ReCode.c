@@ -2440,88 +2440,88 @@ Parsed_Source* parse(Source* source) {
     return parser.compilation_unit;
 }
 
-// Types
+// Checked_Types
 
-typedef enum Type_Kind {
+typedef enum Checked_Type_Kind {
     // Builtins
-    TYPE_KIND__BOOL,
-    TYPE_KIND__CHAR,
-    TYPE_KIND__INT16_T,
-    TYPE_KIND__INT32_T,
-    TYPE_KIND__INT64_T,
-    TYPE_KIND__INT8_T,
-    TYPE_KIND__SIZE_T,
-    TYPE_KIND__UINT16_T,
-    TYPE_KIND__UINT32_T,
-    TYPE_KIND__UINT64_T,
-    TYPE_KIND__UINT8_T,
-    TYPE_KIND__VOID,
+    CHECKED_TYPE_KIND__BOOL,
+    CHECKED_TYPE_KIND__CHAR,
+    CHECKED_TYPE_KIND__INT16_T,
+    CHECKED_TYPE_KIND__INT32_T,
+    CHECKED_TYPE_KIND__INT64_T,
+    CHECKED_TYPE_KIND__INT8_T,
+    CHECKED_TYPE_KIND__SIZE_T,
+    CHECKED_TYPE_KIND__UINT16_T,
+    CHECKED_TYPE_KIND__UINT32_T,
+    CHECKED_TYPE_KIND__UINT64_T,
+    CHECKED_TYPE_KIND__UINT8_T,
+    CHECKED_TYPE_KIND__VOID,
     // Defined
-    TYPE_KIND__ENUM,
-    TYPE_KIND__FUNCTION,
-    TYPE_KIND__STRUCT,
+    CHECKED_TYPE_KIND__ENUM,
+    CHECKED_TYPE_KIND__FUNCTION,
+    CHECKED_TYPE_KIND__STRUCT,
     // Dynamic
-    TYPE_KIND__CONST,
-    TYPE_KIND__POINTER,
-} Type_Kind;
+    CHECKED_TYPE_KIND__CONST,
+    CHECKED_TYPE_KIND__POINTER,
+} Checked_Type_Kind;
 
-typedef struct Type {
-    Type_Kind kind;
+typedef struct Checked_Type {
+    Checked_Type_Kind kind;
     Source_Location* location;
-    struct Type* next_type;
-} Type;
+    struct Checked_Type* next_type;
+} Checked_Type;
 
-Type* Type__create(size_t size, Type_Kind kind, Source_Location* location) {
-    Type* type = malloc(size);
+Checked_Type* Checked_Type__create(size_t size, Checked_Type_Kind kind, Source_Location* location) {
+    Checked_Type* type = malloc(size);
     type->kind = kind;
     type->location = location;
     type->next_type = null;
     return type;
 }
 
-typedef struct Named_Type {
-    Type super;
+typedef struct Checked_Named_Type {
+    Checked_Type super;
     String* name;
-} Named_Type;
+} Checked_Named_Type;
 
-Named_Type* Named_Type__create(size_t size, Type_Kind kind, Source_Location* location, String* name) {
-    Named_Type* type = (Named_Type*) Type__create(size, kind, location);
+Checked_Named_Type* Checked_Named_Type__create(size_t size, Checked_Type_Kind kind, Source_Location* location, String* name) {
+    Checked_Named_Type* type = (Checked_Named_Type*) Checked_Type__create(size, kind, location);
     type->name = name;
     return type;
 }
 
-typedef struct Pointer_Type {
-    Type super;
-    Type* other_type;
-} Pointer_Type;
+typedef struct Checked_Pointer_Type {
+    Checked_Type super;
+    Checked_Type* other_type;
+} Checked_Pointer_Type;
 
-typedef struct Enum_Member {
+typedef struct Checked_Enum_Member {
     Source_Location* location;
     String* name;
-    struct Enum_Member* next_member;
-} Enum_Member;
+    struct Checked_Enum_Member* next_member;
+} Checked_Enum_Member;
 
-Enum_Member* Enum_Member__create(Source_Location* location, String* name) {
-    Enum_Member* member = malloc(sizeof(Enum_Member));
+Checked_Enum_Member* Checked_Enum_Member__create(Source_Location* location, String* name) {
+    Checked_Enum_Member* member = malloc(sizeof(Checked_Enum_Member));
     member->location = location;
     member->name = name;
     member->next_member = null;
     return member;
 }
 
-typedef struct Enum_Type {
-    Named_Type super;
-    Enum_Member* first_member;
-} Enum_Type;
+typedef struct Checked_Enum_Type {
+    Checked_Named_Type super;
+    Checked_Enum_Member* first_member;
+} Checked_Enum_Type;
 
-Enum_Type* Enum_Type__create(Source_Location* location, String* name) {
-    Enum_Type* type = (Enum_Type*) Named_Type__create(sizeof(Enum_Type), TYPE_KIND__ENUM, location, name);
+Checked_Enum_Type* Checked_Enum_Type__create(Source_Location* location, String* name) {
+    Checked_Enum_Type* type = (Checked_Enum_Type*) Checked_Named_Type__create(sizeof(Checked_Enum_Type), CHECKED_TYPE_KIND__ENUM, location, name);
     type->first_member = null;
     return type;
 }
 
-Enum_Member* Enum_Type__find_member(Enum_Type* self, String* name) {
-    Enum_Member* member = self->first_member;
+Checked_Enum_Member* Checked_Enum_Type__find_member(Checked_Enum_Type* self, String* name) {
+    Checked_Enum_Member* member = self->first_member;
     while (member != null) {
         if (String__equals_string(name, member->name)) {
             break;
@@ -2531,15 +2531,15 @@ Enum_Member* Enum_Type__find_member(Enum_Type* self, String* name) {
     return member;
 }
 
-typedef struct Function_Parameter {
+typedef struct Checked_Function_Parameter {
     Source_Location* location;
     String* name;
-    Type* type;
-    struct Function_Parameter* next_parameter;
-} Function_Parameter;
+    Checked_Type* type;
+    struct Checked_Function_Parameter* next_parameter;
+} Checked_Function_Parameter;
 
-Function_Parameter* Function_Member__create(Source_Location* location, String* name, Type* type) {
-    Function_Parameter* parameter = malloc(sizeof(Function_Parameter));
+Checked_Function_Parameter* Checked_Function_Member__create(Source_Location* location, String* name, Checked_Type* type) {
+    Checked_Function_Parameter* parameter = malloc(sizeof(Checked_Function_Parameter));
     parameter->location = location;
     parameter->name = name;
     parameter->type = type;
@@ -2547,32 +2547,32 @@ Function_Parameter* Function_Member__create(Source_Location* location, String* n
     return parameter;
 }
 
-typedef struct Function_Type {
-    Named_Type super;
-    Function_Parameter* first_parameter;
-} Function_Type;
+typedef struct Checked_Function_Type {
+    Checked_Named_Type super;
+    Checked_Function_Parameter* first_parameter;
+} Checked_Function_Type;
 
-Function_Type* Function_Type__create(Source_Location* location, String* name) {
-    Function_Type* type = (Function_Type*) Named_Type__create(sizeof(Function_Type), TYPE_KIND__FUNCTION, location, name);
+Checked_Function_Type* Checked_Function_Type__create(Source_Location* location, String* name) {
+    Checked_Function_Type* type = (Checked_Function_Type*) Checked_Named_Type__create(sizeof(Checked_Function_Type), CHECKED_TYPE_KIND__FUNCTION, location, name);
     type->first_parameter = null;
     return type;
 }
 
-Pointer_Type* Pointer_Type__create(Source_Location* location, Type* other_type) {
-    Pointer_Type* type = (Pointer_Type*) Type__create(sizeof(Pointer_Type), TYPE_KIND__POINTER, location);
+Checked_Pointer_Type* Checked_Pointer_Type__create(Source_Location* location, Checked_Type* other_type) {
+    Checked_Pointer_Type* type = (Checked_Pointer_Type*) Checked_Type__create(sizeof(Checked_Pointer_Type), CHECKED_TYPE_KIND__POINTER, location);
     type->other_type = other_type;
     return type;
 }
 
-typedef struct Struct_Member {
+typedef struct Checked_Struct_Member {
     Source_Location* location;
     String* name;
-    Type* type;
-    struct Struct_Member* next_member;
-} Struct_Member;
+    Checked_Type* type;
+    struct Checked_Struct_Member* next_member;
+} Checked_Struct_Member;
 
-Struct_Member* Struct_Member__create(Source_Location* location, String* name, Type* type) {
-    Struct_Member* member = malloc(sizeof(Struct_Member));
+Checked_Struct_Member* Checked_Struct_Member__create(Source_Location* location, String* name, Checked_Type* type) {
+    Checked_Struct_Member* member = malloc(sizeof(Checked_Struct_Member));
     member->location = location;
     member->name = name;
     member->type = type;
@@ -2580,19 +2580,19 @@ Struct_Member* Struct_Member__create(Source_Location* location, String* name, Ty
     return member;
 }
 
-typedef struct Struct_Type {
-    Named_Type super;
-    Struct_Member* first_member;
-} Struct_Type;
+typedef struct Checked_Struct_Type {
+    Checked_Named_Type super;
+    Checked_Struct_Member* first_member;
+} Checked_Struct_Type;
 
-Struct_Type* Struct_Type__create(Source_Location* location, String* name) {
-    Struct_Type* type = (Struct_Type*) Named_Type__create(sizeof(Struct_Type), TYPE_KIND__STRUCT, location, name);
+Checked_Struct_Type* Checked_Struct_Type__create(Source_Location* location, String* name) {
+    Checked_Struct_Type* type = (Checked_Struct_Type*) Checked_Named_Type__create(sizeof(Checked_Struct_Type), CHECKED_TYPE_KIND__STRUCT, location, name);
     type->first_member = null;
     return type;
 }
 
-Struct_Member* Struct_Type__find_member(Struct_Type* self, String* name) {
-    Struct_Member* member = self->first_member;
+Checked_Struct_Member* Checked_Struct_Type__find_member(Checked_Struct_Type* self, String* name) {
+    Checked_Struct_Member* member = self->first_member;
     while (member != null) {
         if (String__equals_string(name, member->name)) {
             break;
@@ -2602,76 +2602,172 @@ Struct_Member* Struct_Type__find_member(Struct_Type* self, String* name) {
     return member;
 }
 
+// Checked_Symbols
+
+typedef enum Checked_Symbol_Kind {
+    CHECKED_SYMBOL_KIND__BASIC,
+    CHECKED_SYMBOL_KIND__VARIABLE,
+} Checked_Symbol_Kind;
+
+typedef struct Checked_Symbol {
+    Checked_Symbol_Kind kind;
+    Source_Location* location;
+    String* name;
+    Checked_Type* type;
+    struct Checked_Symbol* prev_symbol;
+    struct Checked_Symbol* next_symbol;
+} Checked_Symbol;
+
+Checked_Symbol* Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Source_Location* location, String* name, Checked_Type* type) {
+    Checked_Symbol* symbol = malloc(kind_size);
+    symbol->kind = kind;
+    symbol->location = location;
+    symbol->name = name;
+    symbol->type = type;
+    symbol->prev_symbol = null;
+    symbol->next_symbol = null;
+    return symbol;
+}
+
+Checked_Symbol* Checked_Symbol__create(Source_Location* location, String* name, Checked_Type* type) {
+    return Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__BASIC, sizeof(Checked_Symbol), location, name, type);
+}
+
+typedef struct Checked_Expression Checked_Expression;
+
+typedef struct Checked_Variable {
+    Checked_Symbol super;
+    Checked_Expression* expression;
+} Checked_Variable;
+
+Checked_Variable* Checked_Variable__create(Source_Location* location, String* name, Checked_Type* type, Checked_Expression* expression) {
+    Checked_Variable* variable = (Checked_Variable*) Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable), location, name, type);
+    variable->expression = expression;
+    return variable;
+}
+
+typedef struct Checked_Symbols {
+    struct Checked_Symbols* parent;
+    Checked_Symbol* first_symbol;
+    Checked_Symbol* last_symbol;
+} Checked_Symbols;
+
+Checked_Symbols* Checked_Symbols__create(Checked_Symbols* parent) {
+    Checked_Symbols* symbols = malloc(sizeof(Checked_Symbols));
+    symbols->parent = parent;
+    symbols->first_symbol = null;
+    symbols->last_symbol = null;
+    return symbols;
+}
+
+void Checked_Symbols__append_symbol(Checked_Symbols* self, Checked_Symbol* symbol) {
+    Checked_Symbol* other_symbol = self->first_symbol;
+    while (other_symbol != null) {
+        if (String__equals_string(other_symbol->name, symbol->name)) {
+            TODO("Report symbol redeclaration");
+        }
+        other_symbol = other_symbol->next_symbol;
+    }
+
+    if (self->last_symbol == null) {
+        self->first_symbol = symbol;
+    } else {
+        self->last_symbol->next_symbol = symbol;
+        symbol->prev_symbol = self->last_symbol;
+    }
+    self->last_symbol = symbol;
+}
+
+Checked_Symbol* Checked_Symbols__find_symbol(Checked_Symbols* self, String* name) {
+    Checked_Symbol* symbol = self->last_symbol;
+    while (true) {
+        while (symbol != null) {
+            if (String__equals_string(name, symbol->name)) {
+                return symbol;
+            }
+            symbol = symbol->prev_symbol;
+        }
+        if (self->parent != null) {
+            symbol = self->parent->last_symbol;
+        }
+    }
+    return null;
+}
+
 // Checked_Source
 
 typedef struct Checked_Source {
-    Named_Type* first_type;
+    Checked_Named_Type* first_type;
 } Checked_Source;
 
-// Type_Checker
+// Checker
 
-typedef struct Type_Checker {
-    Named_Type* first_type;
-    Named_Type* last_type;
-} Type_Checker;
+typedef struct Checker {
+    Checked_Named_Type* first_type;
+    Checked_Named_Type* last_type;
+    Checked_Symbols* symbols;
+} Checker;
 
-void Type_Checker__append_type(Type_Checker* self, Named_Type* type);
+void Checker__append_type(Checker* self, Checked_Named_Type* type);
 
-Type_Checker* Type_Checker__create() {
-    Type_Checker* type_checker = malloc(sizeof(Type_Checker));
-    type_checker->first_type = null;
-    type_checker->last_type = null;
+Checker* Checker__create() {
+    Checker* checker = malloc(sizeof(Checker));
+    checker->first_type = null;
+    checker->last_type = null;
+    checker->symbols = Checked_Symbols__create(null);
 
     Source_Location* location = Source_Location__create(null, 0, 1);
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__BOOL, location, String__create_from("bool")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__CHAR, location, String__create_from("char")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__INT16_T, location, String__create_from("int16_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__INT32_T, location, String__create_from("int32_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__INT64_T, location, String__create_from("int64_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__INT8_T, location, String__create_from("int8_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__SIZE_T, location, String__create_from("size_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__UINT16_T, location, String__create_from("uint16_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__UINT32_T, location, String__create_from("uint32_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__UINT64_T, location, String__create_from("uint64_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__UINT8_T, location, String__create_from("uint8_t")));
-    Type_Checker__append_type(type_checker, Named_Type__create(sizeof(Named_Type), TYPE_KIND__VOID, location, String__create_from("void")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__BOOL, location, String__create_from("bool")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__CHAR, location, String__create_from("char")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT16_T, location, String__create_from("int16_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT32_T, location, String__create_from("int32_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT64_T, location, String__create_from("int64_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT8_T, location, String__create_from("int8_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__SIZE_T, location, String__create_from("size_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT16_T, location, String__create_from("uint16_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT32_T, location, String__create_from("uint32_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT64_T, location, String__create_from("uint64_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT8_T, location, String__create_from("uint8_t")));
+    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__VOID, location, String__create_from("void")));
 
-    return type_checker;
+    return checker;
 }
 
-void Type_Checker__append_type(Type_Checker* self, Named_Type* type) {
+void Checker__append_type(Checker* self, Checked_Named_Type* type) {
     if (self->first_type == null) {
         self->first_type = type;
     } else {
-        self->last_type->super.next_type = (Type*) type;
+        self->last_type->super.next_type = (Checked_Type*) type;
     }
     self->last_type = type;
+
+    Checked_Symbols__append_symbol(self->symbols, Checked_Symbol__create(type->super.location, type->name, null));
 }
 
-Named_Type* Type_Checker__find_type(Type_Checker* self, String* name) {
-    Named_Type* type = self->first_type;
+Checked_Named_Type* Checker__find_type(Checker* self, String* name) {
+    Checked_Named_Type* type = self->first_type;
     while (type != null) {
         if (String__equals_string(name, type->name)) {
             break;
         }
-        type = (Named_Type*) type->super.next_type;
+        type = (Checked_Named_Type*) type->super.next_type;
     }
     return type;
 }
 
-Type* Type_Checker__resolve_type(Type_Checker* self, Parsed_Type* parsed_type) {
+Checked_Type* Checker__resolve_type(Checker* self, Parsed_Type* parsed_type) {
     if (parsed_type->kind == PARSED_TYPE_KIND__NAMED) {
-        Named_Type* type = Type_Checker__find_type(self, ((Parsed_Named_Type*) parsed_type)->name);
+        Checked_Named_Type* type = Checker__find_type(self, ((Parsed_Named_Type*) parsed_type)->name);
         if (type != null) {
-            return (Type*) type;
+            return (Checked_Type*) type;
         }
     }
     if (parsed_type->kind == PARSED_TYPE_KIND__POINTER) {
-        return (Type*) Pointer_Type__create(parsed_type->location, Type_Checker__resolve_type(self, ((Parsed_Pointer_Type*) parsed_type)->other_type));
+        return (Checked_Type*) Checked_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, ((Parsed_Pointer_Type*) parsed_type)->other_type));
     }
     if (parsed_type->kind == PARSED_TYPE_KIND__STRUCT) {
-        Type* type = Type_Checker__resolve_type(self, ((Parsed_Struct_Type*) parsed_type)->other_type);
-        if (type->kind != TYPE_KIND__STRUCT) {
+        Checked_Type* type = Checker__resolve_type(self, ((Parsed_Struct_Type*) parsed_type)->other_type);
+        if (type->kind != CHECKED_TYPE_KIND__STRUCT) {
             TODO("Report unexpected type");
         }
         return type;
@@ -2679,52 +2775,45 @@ Type* Type_Checker__resolve_type(Type_Checker* self, Parsed_Type* parsed_type) {
     TODO("Report undefined type");
 }
 
-void Type_Checker__check_enum_statement(Type_Checker* self, Parsed_Enum_Statement* statement) {
-    Named_Type* type = Type_Checker__find_type(self, statement->super.name->lexeme);
-    Enum_Type* enum_type;
-    if (type != null) {
-        TODO("Handle type redeclaration");
-    } else {
-        enum_type = Enum_Type__create(statement->super.super.location, statement->super.name->lexeme);
-        Type_Checker__append_type(self, (Named_Type*) enum_type);
-    }
+void Checker__check_enum_statement(Checker* self, Parsed_Enum_Statement* statement) {
+    Checked_Enum_Type* enum_type = Checked_Enum_Type__create(statement->super.name->location, statement->super.name->lexeme);
+    Checker__append_type(self, (Checked_Named_Type*) enum_type);
 
-    if (statement->first_member != null) {
-        Enum_Member* last_enum_member = null;
-        Parsed_Enum_Member* parsed_member = statement->first_member;
-        while (parsed_member != null) {
-            Enum_Member* enum_member = Enum_Type__find_member(enum_type, parsed_member->name->lexeme);
-            if (enum_member != null) {
-                TODO("Handle enum member duplicate");
-            }
-            enum_member = Enum_Member__create(parsed_member->name->location, parsed_member->name->lexeme);
-            if (last_enum_member == null) {
-                enum_type->first_member = enum_member;
-            } else {
-                last_enum_member->next_member = enum_member;
-            }
-            last_enum_member = enum_member;
-            parsed_member = parsed_member->next_member;
+    Checked_Enum_Member* last_enum_member = null;
+    Parsed_Enum_Member* parsed_enum_member = statement->first_member;
+    while (parsed_enum_member != null) {
+        Checked_Enum_Member* enum_member = Checked_Enum_Type__find_member(enum_type, parsed_enum_member->name->lexeme);
+        if (enum_member != null) {
+            TODO("Handle enum member duplicate");
         }
+        enum_member = Checked_Enum_Member__create(parsed_enum_member->name->location, parsed_enum_member->name->lexeme);
+        if (last_enum_member == null) {
+            enum_type->first_member = enum_member;
+        } else {
+            last_enum_member->next_member = enum_member;
+        }
+        last_enum_member = enum_member;
+        Checked_Symbols__append_symbol(self->symbols, Checked_Symbol__create(enum_member->location, enum_member->name, (Checked_Type*) enum_type));
+        parsed_enum_member = parsed_enum_member->next_member;
     }
 }
 
-void Type_Checker__check_function_type_statement(Type_Checker* self, Parsed_Function_Type_Statement* statement) {
-    Named_Type* type = Type_Checker__find_type(self, statement->super.name->lexeme);
-    Function_Type* function_type;
-    if (type != null) {
+void Checker__check_function_type_statement(Checker* self, Parsed_Function_Type_Statement* statement) {
+    Checked_Named_Type* other_type = Checker__find_type(self, statement->super.name->lexeme);
+    Checked_Function_Type* function_type;
+    if (other_type != null) {
         TODO("Handle type redeclaration");
     } else {
-        function_type = Function_Type__create(statement->super.super.location, statement->super.name->lexeme);
-        Type_Checker__append_type(self, (Named_Type*) function_type);
+        function_type = Checked_Function_Type__create(statement->super.name->location, statement->super.name->lexeme);
+        Checker__append_type(self, (Checked_Named_Type*) function_type);
     }
 
     if (statement->first_parameter != null) {
-        Function_Parameter* last_function_parameter = null;
+        Checked_Function_Parameter* last_function_parameter = null;
         Parsed_Function_Type_Parameter* parsed_parameter = statement->first_parameter;
         while (parsed_parameter != null) {
-            Type* function_parameter_type = Type_Checker__resolve_type(self, parsed_parameter->type);
-            Function_Parameter* function_parameter = Function_Member__create(parsed_parameter->type->location, null, function_parameter_type);
+            Checked_Type* function_parameter_type = Checker__resolve_type(self, parsed_parameter->type);
+            Checked_Function_Parameter* function_parameter = Checked_Function_Member__create(parsed_parameter->type->location, null, function_parameter_type);
             if (last_function_parameter == null) {
                 function_type->first_parameter = function_parameter;
             } else {
@@ -2736,29 +2825,29 @@ void Type_Checker__check_function_type_statement(Type_Checker* self, Parsed_Func
     }
 }
 
-void Type_Checker__check_struct_statement(Type_Checker* self, Parsed_Struct_Statement* statement) {
-    Named_Type* type = Type_Checker__find_type(self, statement->super.name->lexeme);
-    Struct_Type* struct_type;
-    if (type != null) {
-        if (type->super.kind != TYPE_KIND__STRUCT || (((Struct_Type*) type)->first_member != null)) {
+void Checker__check_struct_statement(Checker* self, Parsed_Struct_Statement* statement) {
+    Checked_Named_Type* other_type = Checker__find_type(self, statement->super.name->lexeme);
+    Checked_Struct_Type* struct_type;
+    if (other_type != null) {
+        if (other_type->super.kind != CHECKED_TYPE_KIND__STRUCT || (((Checked_Struct_Type*) other_type)->first_member != null)) {
             TODO("Report type redeclaration");
         }
-        struct_type = (Struct_Type*) type;
+        struct_type = (Checked_Struct_Type*) other_type;
     } else {
-        struct_type = Struct_Type__create(statement->super.super.location, statement->super.name->lexeme);
-        Type_Checker__append_type(self, (Named_Type*) struct_type);
+        struct_type = Checked_Struct_Type__create(statement->super.name->location, statement->super.name->lexeme);
+        Checker__append_type(self, (Checked_Named_Type*) struct_type);
     }
 
     if (statement->first_member != null) {
-        Struct_Member* last_struct_member = null;
+        Checked_Struct_Member* last_struct_member = null;
         Parsed_Struct_Member* parsed_member = statement->first_member;
         while (parsed_member != null) {
-            Struct_Member* struct_member = Struct_Type__find_member(struct_type, parsed_member->name->lexeme);
+            Checked_Struct_Member* struct_member = Checked_Struct_Type__find_member(struct_type, parsed_member->name->lexeme);
             if (struct_member != null) {
                 TODO("Handle struct member duplicate");
             }
-            Type* struct_member_type = Type_Checker__resolve_type(self, parsed_member->type);
-            struct_member = Struct_Member__create(parsed_member->name->location, parsed_member->name->lexeme, struct_member_type);
+            Checked_Type* struct_member_type = Checker__resolve_type(self, parsed_member->type);
+            struct_member = Checked_Struct_Member__create(parsed_member->name->location, parsed_member->name->lexeme, struct_member_type);
             if (last_struct_member == null) {
                 struct_type->first_member = struct_member;
             } else {
@@ -2770,18 +2859,48 @@ void Type_Checker__check_struct_statement(Type_Checker* self, Parsed_Struct_Stat
     }
 }
 
-Checked_Source* Type_Checker__check_source(Type_Checker* self, Parsed_Source* parsed_source) {
+void Checker__check_variable_statement(Checker* self, Parsed_Variable_Statement* statement) {
+    Checked_Type* type = Checker__resolve_type(self, statement->type);
+    Checked_Expression* expression = null;
+    if (statement->expression != null) {
+        TODO("Check variable expression");
+    }
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol*) Checked_Variable__create(statement->super.name->location, statement->super.name->lexeme, type, expression));
+}
+
+Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_source) {
     Checked_Source* checked_source = malloc(sizeof(Checked_Source));
+    Parsed_Statement* statement;
 
     // Check all declared types
-    Parsed_Statement* statement = parsed_source->statements->first_statement;
+    statement = parsed_source->statements->first_statement;
     while (statement != null) {
         if (statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
-            Type_Checker__check_struct_statement(self, (Parsed_Struct_Statement*) statement);
+            Checker__check_struct_statement(self, (Parsed_Struct_Statement*) statement);
         } else if (statement->kind == PARSED_STATEMENT_KIND__ENUM) {
-            Type_Checker__check_enum_statement(self, (Parsed_Enum_Statement*) statement);
+            Checker__check_enum_statement(self, (Parsed_Enum_Statement*) statement);
         } else if (statement->kind == PARSED_STATEMENT_KIND__FUNCTION_TYPE) {
-            Type_Checker__check_function_type_statement(self, (Parsed_Function_Type_Statement*) statement);
+            Checker__check_function_type_statement(self, (Parsed_Function_Type_Statement*) statement);
+        }
+        statement = statement->next_statement;
+    }
+    checked_source->first_type = self->first_type;
+
+    // Collect other declarations
+    statement = parsed_source->statements->first_statement;
+    while (statement != null) {
+        if (statement->kind == PARSED_STATEMENT_KIND__FUNCTION) {
+            Source_Location__warning(statement->location, String__create_from("TODO: Check function statement"));
+        } else if (statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
+            Checker__check_variable_statement(self, (Parsed_Variable_Statement*) statement);
+        } else if (statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
+            // ignored
+        } else if (statement->kind == PARSED_STATEMENT_KIND__ENUM) {
+            // ignored
+        } else if (statement->kind == PARSED_STATEMENT_KIND__FUNCTION_TYPE) {
+            // ignored
+        } else {
+            Source_Location__panic(statement->location, String__create_from("Unsupported statement"));
         }
         statement = statement->next_statement;
     }
@@ -2791,9 +2910,9 @@ Checked_Source* Type_Checker__check_source(Type_Checker* self, Parsed_Source* pa
 }
 
 Checked_Source* check(Parsed_Source* parsed_source) {
-    Type_Checker* type_checker = Type_Checker__create();
+    Checker* type_checker = Checker__create();
 
-    return Type_Checker__check_source(type_checker, parsed_source);
+    return Checker__check_source(type_checker, parsed_source);
 }
 
 // Main
@@ -2803,7 +2922,7 @@ int32_t main() {
     Parsed_Source* parsed_source = parse(source);
     Checked_Source* checked_source = check(parsed_source);
 
-    Named_Type* type = checked_source->first_type;
+    Checked_Named_Type* type = checked_source->first_type;
     while (type != null) {
         File__write_cstring(stdout, __FILE__);
         File__write_char(stdout, ':');
@@ -2813,7 +2932,7 @@ int32_t main() {
         File__write_cstring(stdout, ": ");
         File__write_string(stdout, type->name);
         File__write_char(stdout, '\n');
-        type = (Named_Type*) type->super.next_type;
+        type = (Checked_Named_Type*) type->super.next_type;
     }
 
     return 0;
