@@ -277,8 +277,8 @@ typedef struct Token {
     struct Token* next_token;
 } Token;
 
-void* Token__create(size_t size, uint16_t kind, Source_Location* location, String* lexeme) {
-    Token* token = malloc(size);
+Token* Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location* location, String* lexeme) {
+    Token* token = malloc(kind_size);
     token->kind = kind;
     token->location = location;
     token->lexeme = lexeme;
@@ -300,7 +300,7 @@ typedef struct Character_Token {
 } Character_Token;
 
 Character_Token* Character_Token__create(Source_Location* location, String* lexeme, uint8_t value) {
-    Character_Token* token = Token__create(sizeof(Character_Token), TOKEN_KIND__CHARACTER, location, lexeme);
+    Character_Token* token = (Character_Token*) Token__create_kind(TOKEN_KIND__CHARACTER, sizeof(Character_Token), location, lexeme);
     token->value = value;
     return token;
 }
@@ -310,7 +310,7 @@ typedef struct Comment_Token {
 } Comment_Token;
 
 Comment_Token* Comment_Token__create(Source_Location* location, String* lexeme) {
-    return Token__create(sizeof(Comment_Token), TOKEN_KIND__COMMENT, location, lexeme);
+    return (Comment_Token*) Token__create_kind(TOKEN_KIND__COMMENT, sizeof(Comment_Token), location, lexeme);
 }
 
 typedef struct End_Of_File_Token {
@@ -318,7 +318,7 @@ typedef struct End_Of_File_Token {
 } End_Of_File_Token;
 
 End_Of_File_Token* End_Of_File_Token__create(Source_Location* location, String* lexeme) {
-    return Token__create(sizeof(End_Of_File_Token), TOKEN_KIND__END_OF_FILE, location, lexeme);
+    return (End_Of_File_Token*) Token__create_kind(TOKEN_KIND__END_OF_FILE, sizeof(End_Of_File_Token), location, lexeme);
 }
 
 typedef struct End_Of_Line_Token {
@@ -326,7 +326,7 @@ typedef struct End_Of_Line_Token {
 } End_Of_Line_Token;
 
 End_Of_Line_Token* End_Of_Line_Token__create(Source_Location* location, String* lexeme) {
-    return Token__create(sizeof(End_Of_Line_Token), TOKEN_KIND__END_OF_LINE, location, lexeme);
+    return (End_Of_Line_Token*) Token__create_kind(TOKEN_KIND__END_OF_LINE, sizeof(End_Of_Line_Token), location, lexeme);
 }
 
 typedef struct Error_Token {
@@ -334,7 +334,7 @@ typedef struct Error_Token {
 } Error_Token;
 
 Error_Token* Error_Token__create(Source_Location* location, String* lexeme) {
-    return Token__create(sizeof(Error_Token), TOKEN_KIND__ERROR, location, lexeme);
+    return (Error_Token*) Token__create_kind(TOKEN_KIND__ERROR, sizeof(Error_Token), location, lexeme);
 }
 
 typedef struct Identifier_Token {
@@ -342,7 +342,7 @@ typedef struct Identifier_Token {
 } Identifier_Token;
 
 Identifier_Token* Identifier_Token__create(Source_Location* location, String* lexeme) {
-    return Token__create(sizeof(Identifier_Token), TOKEN_KIND__IDENTIFIER, location, lexeme);
+    return (Identifier_Token*) Token__create_kind(TOKEN_KIND__IDENTIFIER, sizeof(Identifier_Token), location, lexeme);
 }
 
 typedef struct Integer_Token {
@@ -351,7 +351,7 @@ typedef struct Integer_Token {
 } Integer_Token;
 
 Integer_Token* Integer_Token__create(Source_Location* location, String* lexeme, uint64_t value) {
-    Integer_Token* token = Token__create(sizeof(Integer_Token), TOKEN_KIND__INTEGER, location, lexeme);
+    Integer_Token* token = (Integer_Token*) Token__create_kind(TOKEN_KIND__INTEGER, sizeof(Integer_Token), location, lexeme);
     token->value = value;
     return token;
 }
@@ -361,7 +361,7 @@ typedef struct Other_Token {
 } Other_Token;
 
 Other_Token* Other_Token__create(Source_Location* location, String* lexeme) {
-    return Token__create(sizeof(Other_Token), TOKEN_KIND__OTHER, location, lexeme);
+    return (Other_Token*) Token__create_kind(TOKEN_KIND__OTHER, sizeof(Other_Token), location, lexeme);
 }
 
 typedef struct Space_Token {
@@ -370,7 +370,7 @@ typedef struct Space_Token {
 } Space_Token;
 
 Space_Token* Space_Token__create(Source_Location* location, String* lexeme, uint16_t count) {
-    Space_Token* token = Token__create(sizeof(Space_Token), TOKEN_KIND__SPACE, location, lexeme);
+    Space_Token* token = (Space_Token*) Token__create_kind(TOKEN_KIND__SPACE, sizeof(Space_Token), location, lexeme);
     token->count = count;
     return token;
 }
@@ -381,7 +381,7 @@ typedef struct String_Token {
 } String_Token;
 
 String_Token* String_Token__create(Source_Location* location, String* lexeme, String* value) {
-    String_Token* token = Token__create(sizeof(String_Token), TOKEN_KIND__STRING, location, lexeme);
+    String_Token* token = (String_Token*) Token__create_kind(TOKEN_KIND__STRING, sizeof(String_Token), location, lexeme);
     token->value = value;
     return token;
 }
@@ -873,8 +873,8 @@ typedef struct Parsed_Type {
     Source_Location* location;
 } Parsed_Type;
 
-Parsed_Type* Parsed_Type__create(size_t size, Parsed_Type_Kind kind, Source_Location* location) {
-    Parsed_Type* type = malloc(size);
+Parsed_Type* Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, Source_Location* location) {
+    Parsed_Type* type = malloc(kind_size);
     type->kind = kind;
     type->location = location;
     return type;
@@ -886,7 +886,7 @@ typedef struct Parsed_Const_Type {
 } Parsed_Const_Type;
 
 Parsed_Type* Parsed_Const_Type__create(Source_Location* location, Parsed_Type* other_type) {
-    Parsed_Const_Type* type = (Parsed_Const_Type*) Parsed_Type__create(sizeof(Parsed_Const_Type), PARSED_TYPE_KIND__CONST, location);
+    Parsed_Const_Type* type = (Parsed_Const_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__CONST, sizeof(Parsed_Const_Type), location);
     type->other_type = other_type;
     return (Parsed_Type*) type;
 }
@@ -897,7 +897,7 @@ typedef struct Parsed_Named_Type {
 } Parsed_Named_Type;
 
 Parsed_Type* Parsed_Named_Type__create(Token* name) {
-    Parsed_Named_Type* type = (Parsed_Named_Type*) Parsed_Type__create(sizeof(Parsed_Named_Type), PARSED_TYPE_KIND__NAMED, name->location);
+    Parsed_Named_Type* type = (Parsed_Named_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location);
     type->name = name->lexeme;
     return (Parsed_Type*) type;
 }
@@ -908,7 +908,7 @@ typedef struct Parsed_Pointer_Type {
 } Parsed_Pointer_Type;
 
 Parsed_Type* Parsed_Pointer_Type__create(Parsed_Type* other_type) {
-    Parsed_Pointer_Type* type = (Parsed_Pointer_Type*) Parsed_Type__create(sizeof(Parsed_Pointer_Type), PARSED_TYPE_KIND__POINTER, other_type->location);
+    Parsed_Pointer_Type* type = (Parsed_Pointer_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__POINTER, sizeof(Parsed_Pointer_Type), other_type->location);
     type->other_type = other_type;
     return (Parsed_Type*) type;
 }
@@ -919,7 +919,7 @@ typedef struct Parsed_Struct_Type {
 } Parsed_Struct_Type;
 
 Parsed_Type* Parsed_Struct_Type__create(Source_Location* location, Parsed_Type* other_type) {
-    Parsed_Struct_Type* type = (Parsed_Struct_Type*) Parsed_Type__create(sizeof(Parsed_Struct_Type), PARSED_TYPE_KIND__STRUCT, location);
+    Parsed_Struct_Type* type = (Parsed_Struct_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__STRUCT, sizeof(Parsed_Struct_Type), location);
     type->other_type = other_type;
     return (Parsed_Type*) type;
 }
@@ -946,6 +946,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__MINUS,
     PARSED_EXPRESSION_KIND__MODULO,
     PARSED_EXPRESSION_KIND__MULTIPLY,
+    PARSED_EXPRESSION_KIND__NOT,
     PARSED_EXPRESSION_KIND__NOT_EQUALS,
     PARSED_EXPRESSION_KIND__NULL,
     PARSED_EXPRESSION_KIND__SIZEOF,
@@ -959,8 +960,8 @@ typedef struct Parsed_Expression {
     Source_Location* location;
 } Parsed_Expression;
 
-Parsed_Expression* Parsed_Expression__create(size_t size, Parsed_Expression_Kind kind, Source_Location* location) {
-    Parsed_Expression* expression = malloc(size);
+Parsed_Expression* Parsed_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location* location) {
+    Parsed_Expression* expression = malloc(kind_size);
     expression->kind = kind;
     expression->location = location;
     return expression;
@@ -972,8 +973,8 @@ typedef struct Parsed_Binary_Expression {
     Parsed_Expression* right_expression;
 } Parsed_Binary_Expression;
 
-Parsed_Binary_Expression* Parsed_Binary_Expression__create(Parsed_Expression_Kind kind, Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    Parsed_Binary_Expression* expression = (Parsed_Binary_Expression*) Parsed_Expression__create(sizeof(Parsed_Binary_Expression), kind, left_expression->location);
+Parsed_Binary_Expression* Parsed_Binary_Expression__create_kind(Parsed_Expression_Kind kind, Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
+    Parsed_Binary_Expression* expression = (Parsed_Binary_Expression*) Parsed_Expression__create_kind(kind, sizeof(Parsed_Binary_Expression), left_expression->location);
     expression->left_expression = left_expression;
     expression->right_expression = right_expression;
     return expression;
@@ -984,8 +985,8 @@ typedef struct Parsed_Unary_Expression {
     Parsed_Expression* other_expression;
 } Parsed_Unary_Expression;
 
-Parsed_Unary_Expression* Parsed_Unary_Expression__create(size_t size, Parsed_Expression_Kind kind, Source_Location* location, Parsed_Expression* other_expression) {
-    Parsed_Unary_Expression* expression = (Parsed_Unary_Expression*) Parsed_Expression__create(size, kind, location);
+Parsed_Unary_Expression* Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location* location, Parsed_Expression* other_expression) {
+    Parsed_Unary_Expression* expression = (Parsed_Unary_Expression*) Parsed_Expression__create_kind(kind, kind_size, location);
     expression->other_expression = other_expression;
     return expression;
 }
@@ -995,8 +996,8 @@ typedef struct Parsed_Literal_Expression {
     Token* literal;
 } Parsed_Literal_Expression;
 
-Parsed_Literal_Expression* Parsed_Literal_Expression__create(size_t size, Parsed_Expression_Kind kind, Token* literal) {
-    Parsed_Literal_Expression* expression = (Parsed_Literal_Expression*) Parsed_Expression__create(size, kind, literal->location);
+Parsed_Literal_Expression* Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Token* literal) {
+    Parsed_Literal_Expression* expression = (Parsed_Literal_Expression*) Parsed_Expression__create_kind(kind, kind_size, literal->location);
     expression->literal = literal;
     return expression;
 }
@@ -1006,7 +1007,7 @@ typedef struct Parsed_Add_Expression {
 } Parsed_Add_Expression;
 
 Parsed_Add_Expression* Parsed_Add_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Add_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__ADD, left_expression, right_expression);
+    return (Parsed_Add_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__ADD, left_expression, right_expression);
 }
 
 typedef struct Parsed_Address_Of_Expression {
@@ -1014,7 +1015,7 @@ typedef struct Parsed_Address_Of_Expression {
 } Parsed_Address_Of_Expression;
 
 Parsed_Address_Of_Expression* Parsed_Address_Of_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
-    return (Parsed_Address_Of_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Address_Of_Expression), PARSED_EXPRESSION_KIND__ADDRESS_OF, location, other_expression);
+    return (Parsed_Address_Of_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__ADDRESS_OF, sizeof(Parsed_Address_Of_Expression), location, other_expression);
 }
 
 typedef struct Parsed_Array_Access_Expression {
@@ -1024,7 +1025,7 @@ typedef struct Parsed_Array_Access_Expression {
 } Parsed_Array_Access_Expression;
 
 Parsed_Array_Access_Expression* Parsed_Array_Access_Expression__create(Parsed_Expression* array_expression, Parsed_Expression* index_expression) {
-    Parsed_Array_Access_Expression* expression = (Parsed_Array_Access_Expression*) Parsed_Expression__create(sizeof(Parsed_Array_Access_Expression), PARSED_EXPRESSION_KIND__ARRAY_ACCESS, array_expression->location);
+    Parsed_Array_Access_Expression* expression = (Parsed_Array_Access_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__ARRAY_ACCESS, sizeof(Parsed_Array_Access_Expression), array_expression->location);
     expression->array_expression = array_expression;
     expression->index_expression = index_expression;
     return expression;
@@ -1036,7 +1037,7 @@ typedef struct Parsed_Bool_Expression {
 } Parsed_Bool_Expression;
 
 Parsed_Bool_Expression* Parsed_Bool_Expression__create(Token* literal, bool value) {
-    Parsed_Bool_Expression* expression = (Parsed_Bool_Expression*) Parsed_Literal_Expression__create(sizeof(Parsed_Bool_Expression), PARSED_EXPRESSION_KIND__BOOL, literal);
+    Parsed_Bool_Expression* expression = (Parsed_Bool_Expression*) Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__BOOL, sizeof(Parsed_Bool_Expression), literal);
     expression->value = value;
     return expression;
 }
@@ -1060,7 +1061,7 @@ typedef struct Parsed_Call_Expression {
 } Parsed_Call_Expression;
 
 Parsed_Call_Expression* Parsed_Call_Expression__create(Parsed_Expression* callee_expression) {
-    Parsed_Call_Expression* expression = (Parsed_Call_Expression*) Parsed_Expression__create(sizeof(Parsed_Call_Expression), PARSED_EXPRESSION_KIND__CALL, callee_expression->location);
+    Parsed_Call_Expression* expression = (Parsed_Call_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__CALL, sizeof(Parsed_Call_Expression), callee_expression->location);
     expression->callee_expression = callee_expression;
     expression->first_argument = null;
     return expression;
@@ -1072,7 +1073,7 @@ typedef struct Parsed_Cast_Expression {
 } Parsed_Cast_Expression;
 
 Parsed_Cast_Expression* Parsed_Cast_Expression__create(Source_Location* location, Parsed_Expression* other_expression, Parsed_Type* type) {
-    Parsed_Cast_Expression* expression = (Parsed_Cast_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Cast_Expression), PARSED_EXPRESSION_KIND__CAST, location, other_expression);
+    Parsed_Cast_Expression* expression = (Parsed_Cast_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__CAST, sizeof(Parsed_Cast_Expression), location, other_expression);
     expression->type = type;
     return expression;
 }
@@ -1083,7 +1084,7 @@ typedef struct Parsed_Character_Expression {
 } Parsed_Character_Expression;
 
 Parsed_Character_Expression* Parsed_Character_Expression__create(Character_Token* literal) {
-    Parsed_Character_Expression* expression = (Parsed_Character_Expression*) Parsed_Expression__create(sizeof(Parsed_Character_Expression), PARSED_EXPRESSION_KIND__CHARACTER, literal->super.location);
+    Parsed_Character_Expression* expression = (Parsed_Character_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__CHARACTER, sizeof(Parsed_Character_Expression), literal->super.location);
     expression->value = literal->value;
     return expression;
 }
@@ -1093,7 +1094,7 @@ typedef struct Parsed_Divide_Expression {
 } Parsed_Divide_Expression;
 
 Parsed_Divide_Expression* Parsed_Divide_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Divide_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__DIVIDE, left_expression, right_expression);
+    return (Parsed_Divide_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__DIVIDE, left_expression, right_expression);
 }
 
 typedef struct Parsed_Equals_Expression {
@@ -1101,7 +1102,7 @@ typedef struct Parsed_Equals_Expression {
 } Parsed_Equals_Expression;
 
 Parsed_Equals_Expression* Parsed_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__EQUALS, left_expression, right_expression);
+    return (Parsed_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__EQUALS, left_expression, right_expression);
 }
 
 typedef struct Parsed_Greater_Expression {
@@ -1109,7 +1110,7 @@ typedef struct Parsed_Greater_Expression {
 } Parsed_Greater_Expression;
 
 Parsed_Greater_Expression* Parsed_Greater_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Greater_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__GREATER, left_expression, right_expression);
+    return (Parsed_Greater_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__GREATER, left_expression, right_expression);
 }
 
 typedef struct Parsed_Greater_Or_Equals_Expression {
@@ -1117,7 +1118,7 @@ typedef struct Parsed_Greater_Or_Equals_Expression {
 } Parsed_Greater_Or_Equals_Expression;
 
 Parsed_Greater_Or_Equals_Expression* Parsed_Greater_Or_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Greater_Or_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS, left_expression, right_expression);
+    return (Parsed_Greater_Or_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS, left_expression, right_expression);
 }
 
 typedef struct Parsed_Group_Expression {
@@ -1126,7 +1127,7 @@ typedef struct Parsed_Group_Expression {
 } Parsed_Group_Expression;
 
 Parsed_Group_Expression* Parsed_Group_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
-    Parsed_Group_Expression* expression = (Parsed_Group_Expression*) Parsed_Expression__create(sizeof(Parsed_Group_Expression), PARSED_EXPRESSION_KIND__GROUP, location);
+    Parsed_Group_Expression* expression = (Parsed_Group_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__GROUP, sizeof(Parsed_Group_Expression), location);
     expression->other_expression = other_expression;
     return expression;
 }
@@ -1137,7 +1138,7 @@ typedef struct Parsed_Integer_Expression {
 } Parsed_Integer_Expression;
 
 Parsed_Integer_Expression* Parsed_Integer_Expression__create(Integer_Token* literal) {
-    Parsed_Integer_Expression* expression = (Parsed_Integer_Expression*) Parsed_Expression__create(sizeof(Parsed_Integer_Expression), PARSED_EXPRESSION_KIND__INTEGER, literal->super.location);
+    Parsed_Integer_Expression* expression = (Parsed_Integer_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__INTEGER, sizeof(Parsed_Integer_Expression), literal->super.location);
     expression->value = literal->value;
     return expression;
 }
@@ -1147,7 +1148,7 @@ typedef struct Parsed_Less_Expression {
 } Parsed_Less_Expression;
 
 Parsed_Less_Expression* Parsed_Less_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Less_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LESS, left_expression, right_expression);
+    return (Parsed_Less_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LESS, left_expression, right_expression);
 }
 
 typedef struct Parsed_Less_Or_Equals_Expression {
@@ -1155,7 +1156,7 @@ typedef struct Parsed_Less_Or_Equals_Expression {
 } Parsed_Less_Or_Equals_Expression;
 
 Parsed_Less_Or_Equals_Expression* Parsed_Less_Or_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Less_Or_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LESS_OR_EQUALS, left_expression, right_expression);
+    return (Parsed_Less_Or_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LESS_OR_EQUALS, left_expression, right_expression);
 }
 
 typedef struct Parsed_Logic_And_Expression {
@@ -1163,7 +1164,7 @@ typedef struct Parsed_Logic_And_Expression {
 } Parsed_Logic_And_Expression;
 
 Parsed_Logic_And_Expression* Parsed_Logic_And_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Logic_And_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LOGIC_AND, left_expression, right_expression);
+    return (Parsed_Logic_And_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LOGIC_AND, left_expression, right_expression);
 }
 
 typedef struct Parsed_Logic_Or_Expression {
@@ -1171,7 +1172,7 @@ typedef struct Parsed_Logic_Or_Expression {
 } Parsed_Logic_Or_Expression;
 
 Parsed_Logic_Or_Expression* Parsed_Logic_Or_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Logic_Or_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__LOGIC_OR, left_expression, right_expression);
+    return (Parsed_Logic_Or_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LOGIC_OR, left_expression, right_expression);
 }
 
 typedef struct Parsed_Member_Access_Expression {
@@ -1181,7 +1182,7 @@ typedef struct Parsed_Member_Access_Expression {
 } Parsed_Member_Access_Expression;
 
 Parsed_Member_Access_Expression* Parsed_Member_Access_Expression__create(Parsed_Expression* value_expression, Token* member_name) {
-    Parsed_Member_Access_Expression* expression = (Parsed_Member_Access_Expression*) Parsed_Expression__create(sizeof(Parsed_Member_Access_Expression), PARSED_EXPRESSION_KIND__MEMBER_ACCESS, value_expression->location);
+    Parsed_Member_Access_Expression* expression = (Parsed_Member_Access_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Parsed_Member_Access_Expression), value_expression->location);
     expression->value_expression = value_expression;
     expression->member_name = member_name;
     return expression;
@@ -1192,7 +1193,7 @@ typedef struct Parsed_Minus_Expression {
 } Parsed_Minus_Expression;
 
 Parsed_Minus_Expression* Parsed_Minus_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
-    return (Parsed_Minus_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Minus_Expression), PARSED_EXPRESSION_KIND__MINUS, location, other_expression);
+    return (Parsed_Minus_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__MINUS, sizeof(Parsed_Minus_Expression), location, other_expression);
 }
 
 typedef struct Parsed_Modulo_Expression {
@@ -1200,7 +1201,7 @@ typedef struct Parsed_Modulo_Expression {
 } Parsed_Modulo_Expression;
 
 Parsed_Modulo_Expression* Parsed_Modulo_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Modulo_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__MODULO, left_expression, right_expression);
+    return (Parsed_Modulo_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__MODULO, left_expression, right_expression);
 }
 
 typedef struct Parsed_Multiply_Expression {
@@ -1208,7 +1209,7 @@ typedef struct Parsed_Multiply_Expression {
 } Parsed_Multiply_Expression;
 
 Parsed_Multiply_Expression* Parsed_Multiply_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Multiply_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__MULTIPLY, left_expression, right_expression);
+    return (Parsed_Multiply_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__MULTIPLY, left_expression, right_expression);
 }
 
 typedef struct Parsed_Not_Expression {
@@ -1216,7 +1217,7 @@ typedef struct Parsed_Not_Expression {
 } Parsed_Not_Expression;
 
 Parsed_Not_Expression* Parsed_Not_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
-    return (Parsed_Not_Expression*) Parsed_Unary_Expression__create(sizeof(Parsed_Not_Expression), PARSED_EXPRESSION_KIND__MINUS, location, other_expression);
+    return (Parsed_Not_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__NOT, sizeof(Parsed_Not_Expression), location, other_expression);
 }
 
 typedef struct Parsed_Not_Equals_Expression {
@@ -1224,7 +1225,7 @@ typedef struct Parsed_Not_Equals_Expression {
 } Parsed_Not_Equals_Expression;
 
 Parsed_Not_Equals_Expression* Parsed_Not_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Not_Equals_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__NOT_EQUALS, left_expression, right_expression);
+    return (Parsed_Not_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__NOT_EQUALS, left_expression, right_expression);
 }
 
 typedef struct Parsed_Null_Expression {
@@ -1232,7 +1233,7 @@ typedef struct Parsed_Null_Expression {
 } Parsed_Null_Expression;
 
 Parsed_Null_Expression* Parsed_Null_Expression__create(Token* literal) {
-    return (Parsed_Null_Expression*) Parsed_Literal_Expression__create(sizeof(Parsed_Null_Expression), PARSED_EXPRESSION_KIND__NULL, literal);
+    return (Parsed_Null_Expression*) Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__NULL, sizeof(Parsed_Null_Expression), literal);
 }
 
 typedef struct Parsed_Sizeof_Expression {
@@ -1241,7 +1242,7 @@ typedef struct Parsed_Sizeof_Expression {
 } Parsed_Sizeof_Expression;
 
 Parsed_Sizeof_Expression* Parsed_Sizeof_Expression__create(Source_Location* location, Parsed_Type* type) {
-    Parsed_Sizeof_Expression* expression = (Parsed_Sizeof_Expression*) Parsed_Expression__create(sizeof(Parsed_Sizeof_Expression), PARSED_EXPRESSION_KIND__SIZEOF, location);
+    Parsed_Sizeof_Expression* expression = (Parsed_Sizeof_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__SIZEOF, sizeof(Parsed_Sizeof_Expression), location);
     expression->type = type;
     return expression;
 }
@@ -1252,7 +1253,7 @@ typedef struct Parsed_String_Expression {
 } Parsed_String_Expression;
 
 Parsed_String_Expression* Parsed_String_Expression__create(String_Token* literal) {
-    Parsed_String_Expression* expression = (Parsed_String_Expression*) Parsed_Expression__create(sizeof(Parsed_String_Expression), PARSED_EXPRESSION_KIND__STRING, literal->super.location);
+    Parsed_String_Expression* expression = (Parsed_String_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__STRING, sizeof(Parsed_String_Expression), literal->super.location);
     expression->value = literal->value;
     return expression;
 }
@@ -1262,7 +1263,7 @@ typedef struct Parsed_Substract_Expression {
 } Parsed_Substract_Expression;
 
 Parsed_Substract_Expression* Parsed_Substract_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    return (Parsed_Substract_Expression*) Parsed_Binary_Expression__create(PARSED_EXPRESSION_KIND__SUBSTRACT, left_expression, right_expression);
+    return (Parsed_Substract_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__SUBSTRACT, left_expression, right_expression);
 }
 
 typedef struct Parsed_Symbol_Expression {
@@ -1271,7 +1272,7 @@ typedef struct Parsed_Symbol_Expression {
 } Parsed_Symbol_Expression;
 
 Parsed_Symbol_Expression* Parsed_Symbol_Expression__create(Token* name) {
-    Parsed_Symbol_Expression* expression = (Parsed_Symbol_Expression*) Parsed_Expression__create(sizeof(Parsed_Symbol_Expression), PARSED_EXPRESSION_KIND__SYMBOL, name->location);
+    Parsed_Symbol_Expression* expression = (Parsed_Symbol_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__SYMBOL, sizeof(Parsed_Symbol_Expression), name->location);
     expression->name = name;
     return expression;
 }
@@ -1297,8 +1298,8 @@ typedef struct Parsed_Statement {
     struct Parsed_Statement* next_statement;
 } Parsed_Statement;
 
-void* Parsed_Statement__create(size_t size, Parsed_Statement_Kind kind, Source_Location* location) {
-    Parsed_Statement* statement = malloc(size);
+Parsed_Statement* Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location* location) {
+    Parsed_Statement* statement = malloc(kind_size);
     statement->kind = kind;
     statement->location = location;
     statement->next_statement = null;
@@ -1310,8 +1311,8 @@ typedef struct Parsed_Named_Statement {
     Token* name;
 } Parsed_Named_Statement;
 
-void* Parsed_Named_Statement__create(size_t size, Parsed_Statement_Kind kind, Source_Location* location, Token* name) {
-    Parsed_Named_Statement* statement = Parsed_Statement__create(size, kind, location);
+Parsed_Named_Statement* Parsed_Named_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location* location, Token* name) {
+    Parsed_Named_Statement* statement = (Parsed_Named_Statement*) Parsed_Statement__create_kind(kind, kind_size, location);
     statement->name = name;
     return statement;
 }
@@ -1323,7 +1324,7 @@ typedef struct Parsed_Assignment_Statement {
 } Parsed_Assignment_Statement;
 
 Parsed_Assignment_Statement* Parsed_Assignment_Statement__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
-    Parsed_Assignment_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Assignment_Statement), PARSED_STATEMENT_KIND__ASSIGNMENT, left_expression->location);
+    Parsed_Assignment_Statement* statement = (Parsed_Assignment_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__ASSIGNMENT, sizeof(Parsed_Assignment_Statement), left_expression->location);
     statement->left_expression = left_expression;
     statement->right_expression = right_expression;
     return statement;
@@ -1335,7 +1336,7 @@ typedef struct Parsed_Block_Statement {
 } Parsed_Block_Statement;
 
 Parsed_Block_Statement* Parsed_Block_Statement__create(Source_Location* location, Parsed_Statements* statements) {
-    Parsed_Block_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Block_Statement), PARSED_STATEMENT_KIND__BLOCK, location);
+    Parsed_Block_Statement* statement = (Parsed_Block_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BLOCK, sizeof(Parsed_Block_Statement), location);
     statement->statements = statements;
     return statement;
 }
@@ -1345,7 +1346,7 @@ typedef struct Parsed_Break_Statement {
 } Parsed_Break_Statement;
 
 Parsed_Statement* Parsed_Break_Statement__create(Source_Location* location) {
-    return (Parsed_Statement*) Parsed_Statement__create(sizeof(Parsed_Break_Statement), PARSED_STATEMENT_KIND__BREAK, location);
+    return (Parsed_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
 }
 
 typedef struct Parsed_Enum_Member {
@@ -1366,7 +1367,7 @@ typedef struct Parsed_Enum_Statement {
 } Parsed_Enum_Statement;
 
 Parsed_Enum_Statement* Parsed_Enum_Statement__create(Source_Location* location, Token* name) {
-    Parsed_Enum_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Enum_Statement), PARSED_STATEMENT_KIND__ENUM, location, name);
+    Parsed_Enum_Statement* statement = (Parsed_Enum_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__ENUM, sizeof(Parsed_Enum_Statement), location, name);
     statement->first_member = null;
     return statement;
 }
@@ -1377,7 +1378,7 @@ typedef struct Parsed_Expression_Statement {
 } Parsed_Expression_Statement;
 
 Parsed_Expression_Statement* Parsed_Expression_Statement__create(Parsed_Expression* expression) {
-    Parsed_Expression_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Expression_Statement), PARSED_STATEMENT_KIND__EXPRESSION, expression->location);
+    Parsed_Expression_Statement* statement = (Parsed_Expression_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__EXPRESSION, sizeof(Parsed_Expression_Statement), expression->location);
     statement->expression = expression;
     return statement;
 }
@@ -1405,7 +1406,7 @@ typedef struct Parsed_Function_Statement {
 } Parsed_Function_Statement;
 
 Parsed_Statement* Parsed_Function_Statement__create(Source_Location* location, Token* name, Parsed_Function_Parameter* first_parameter, Parsed_Type* resturn_type, Parsed_Statements* statements, bool is_external) {
-    Parsed_Function_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Function_Statement), PARSED_STATEMENT_KIND__FUNCTION, location, name);
+    Parsed_Function_Statement* statement = (Parsed_Function_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__FUNCTION, sizeof(Parsed_Function_Statement), location, name);
     statement->first_parameter = first_parameter;
     statement->return_type = resturn_type;
     statement->statements = statements;
@@ -1432,7 +1433,7 @@ typedef struct Parsed_Function_Type_Statement {
 } Parsed_Function_Type_Statement;
 
 Parsed_Statement* Parsed_Function_Type_Statement__create(Source_Location* location, Token* name, Parsed_Function_Type_Parameter* first_parameter, Parsed_Type* resturn_type) {
-    Parsed_Function_Type_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Function_Type_Statement), PARSED_STATEMENT_KIND__FUNCTION_TYPE, location, name);
+    Parsed_Function_Type_Statement* statement = (Parsed_Function_Type_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__FUNCTION_TYPE, sizeof(Parsed_Function_Type_Statement), location, name);
     statement->first_parameter = first_parameter;
     statement->return_type = resturn_type;
     return (Parsed_Statement*) statement;
@@ -1446,7 +1447,7 @@ typedef struct Parsed_If_Statement {
 } Parsed_If_Statement;
 
 Parsed_Statement* Parsed_If_Statement__create(Source_Location* location, Parsed_Expression* condition_expression, Parsed_Statement* true_statement, Parsed_Statement* false_statement) {
-    Parsed_If_Statement* statement = Parsed_Statement__create(sizeof(Parsed_If_Statement), PARSED_STATEMENT_KIND__IF, location);
+    Parsed_If_Statement* statement = (Parsed_If_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IF, sizeof(Parsed_If_Statement), location);
     statement->condition_expression = condition_expression;
     statement->true_statement = true_statement;
     statement->false_statement = false_statement;
@@ -1459,7 +1460,7 @@ typedef struct Parsed_Return_Statement {
 } Parsed_Return_Statement;
 
 Parsed_Statement* Parsed_Return_Statement__create(Source_Location* location, Parsed_Expression* expression) {
-    Parsed_Return_Statement* statement = Parsed_Statement__create(sizeof(Parsed_Return_Statement), PARSED_STATEMENT_KIND__RETURN, location);
+    Parsed_Return_Statement* statement = (Parsed_Return_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__RETURN, sizeof(Parsed_Return_Statement), location);
     statement->expression = expression;
     return (Parsed_Statement*) statement;
 }
@@ -1484,7 +1485,7 @@ typedef struct Parsed_Struct_Statement {
 } Parsed_Struct_Statement;
 
 Parsed_Struct_Statement* Parsed_Struct_Statement__create(Source_Location* location, Token* name) {
-    Parsed_Struct_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Struct_Statement), PARSED_STATEMENT_KIND__STRUCT, location, name);
+    Parsed_Struct_Statement* statement = (Parsed_Struct_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__STRUCT, sizeof(Parsed_Struct_Statement), location, name);
     statement->first_member = null;
     return statement;
 }
@@ -1497,7 +1498,7 @@ typedef struct Parsed_Variable_Statement {
 } Parsed_Variable_Statement;
 
 Parsed_Variable_Statement* Parsed_Variable_Statement__create(Source_Location* location, Token* name, Parsed_Type* type, bool is_external) {
-    Parsed_Variable_Statement* statement = Parsed_Named_Statement__create(sizeof(Parsed_Variable_Statement), PARSED_STATEMENT_KIND__VARIABLE, location, name);
+    Parsed_Variable_Statement* statement = (Parsed_Variable_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__VARIABLE, sizeof(Parsed_Variable_Statement), location, name);
     statement->type = type;
     statement->is_external = is_external;
     return statement;
@@ -1510,7 +1511,7 @@ typedef struct Parsed_While_Statement {
 } Parsed_While_Statement;
 
 Parsed_Statement* Parsed_While_Statement__create(Source_Location* location, Parsed_Expression* condition_expression, Parsed_Statement* body_statement) {
-    Parsed_While_Statement* statement = Parsed_Statement__create(sizeof(Parsed_While_Statement), PARSED_STATEMENT_KIND__WHILE, location);
+    Parsed_While_Statement* statement = (Parsed_While_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__WHILE, sizeof(Parsed_While_Statement), location);
     statement->condition_expression = condition_expression;
     statement->body_statement = body_statement;
     return (Parsed_Statement*) statement;
@@ -2471,8 +2472,8 @@ typedef struct Checked_Type {
     struct Checked_Type* next_type;
 } Checked_Type;
 
-Checked_Type* Checked_Type__create(size_t size, Checked_Type_Kind kind, Source_Location* location) {
-    Checked_Type* type = malloc(size);
+Checked_Type* Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location* location) {
+    Checked_Type* type = malloc(kind_size);
     type->kind = kind;
     type->location = location;
     type->next_type = null;
@@ -2484,8 +2485,8 @@ typedef struct Checked_Named_Type {
     String* name;
 } Checked_Named_Type;
 
-Checked_Named_Type* Checked_Named_Type__create(size_t size, Checked_Type_Kind kind, Source_Location* location, String* name) {
-    Checked_Named_Type* type = (Checked_Named_Type*) Checked_Type__create(size, kind, location);
+Checked_Named_Type* Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location* location, String* name) {
+    Checked_Named_Type* type = (Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
     return type;
 }
@@ -2515,7 +2516,7 @@ typedef struct Checked_Enum_Type {
 } Checked_Enum_Type;
 
 Checked_Enum_Type* Checked_Enum_Type__create(Source_Location* location, String* name) {
-    Checked_Enum_Type* type = (Checked_Enum_Type*) Checked_Named_Type__create(sizeof(Checked_Enum_Type), CHECKED_TYPE_KIND__ENUM, location, name);
+    Checked_Enum_Type* type = (Checked_Enum_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ENUM, sizeof(Checked_Enum_Type), location, name);
     type->first_member = null;
     return type;
 }
@@ -2553,13 +2554,13 @@ typedef struct Checked_Function_Type {
 } Checked_Function_Type;
 
 Checked_Function_Type* Checked_Function_Type__create(Source_Location* location, String* name) {
-    Checked_Function_Type* type = (Checked_Function_Type*) Checked_Named_Type__create(sizeof(Checked_Function_Type), CHECKED_TYPE_KIND__FUNCTION, location, name);
+    Checked_Function_Type* type = (Checked_Function_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__FUNCTION, sizeof(Checked_Function_Type), location, name);
     type->first_parameter = null;
     return type;
 }
 
 Checked_Pointer_Type* Checked_Pointer_Type__create(Source_Location* location, Checked_Type* other_type) {
-    Checked_Pointer_Type* type = (Checked_Pointer_Type*) Checked_Type__create(sizeof(Checked_Pointer_Type), CHECKED_TYPE_KIND__POINTER, location);
+    Checked_Pointer_Type* type = (Checked_Pointer_Type*) Checked_Type__create_kind(CHECKED_TYPE_KIND__POINTER, sizeof(Checked_Pointer_Type), location);
     type->other_type = other_type;
     return type;
 }
@@ -2586,7 +2587,7 @@ typedef struct Checked_Struct_Type {
 } Checked_Struct_Type;
 
 Checked_Struct_Type* Checked_Struct_Type__create(Source_Location* location, String* name) {
-    Checked_Struct_Type* type = (Checked_Struct_Type*) Checked_Named_Type__create(sizeof(Checked_Struct_Type), CHECKED_TYPE_KIND__STRUCT, location, name);
+    Checked_Struct_Type* type = (Checked_Struct_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name);
     type->first_member = null;
     return type;
 }
@@ -2717,18 +2718,18 @@ Checker* Checker__create() {
     checker->symbols = Checked_Symbols__create(null);
 
     Source_Location* location = Source_Location__create(null, 0, 1);
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__BOOL, location, String__create_from("bool")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__CHAR, location, String__create_from("char")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT16_T, location, String__create_from("int16_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT32_T, location, String__create_from("int32_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT64_T, location, String__create_from("int64_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__INT8_T, location, String__create_from("int8_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__SIZE_T, location, String__create_from("size_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT16_T, location, String__create_from("uint16_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT32_T, location, String__create_from("uint32_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT64_T, location, String__create_from("uint64_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__UINT8_T, location, String__create_from("uint8_t")));
-    Checker__append_type(checker, Checked_Named_Type__create(sizeof(Checked_Named_Type), CHECKED_TYPE_KIND__VOID, location, String__create_from("void")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__BOOL, sizeof(Checked_Named_Type), location, String__create_from("bool")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__CHAR, sizeof(Checked_Named_Type), location, String__create_from("char")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT16_T, sizeof(Checked_Named_Type), location, String__create_from("int16_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT32_T, sizeof(Checked_Named_Type), location, String__create_from("int32_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT64_T, sizeof(Checked_Named_Type), location, String__create_from("int64_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT8_T, sizeof(Checked_Named_Type), location, String__create_from("int8_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__SIZE_T, sizeof(Checked_Named_Type), location, String__create_from("size_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT16_T, sizeof(Checked_Named_Type), location, String__create_from("uint16_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT32_T, sizeof(Checked_Named_Type), location, String__create_from("uint32_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT64_T, sizeof(Checked_Named_Type), location, String__create_from("uint64_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT8_T, sizeof(Checked_Named_Type), location, String__create_from("uint8_t")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__VOID, sizeof(Checked_Named_Type), location, String__create_from("void")));
 
     return checker;
 }
