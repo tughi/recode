@@ -1415,12 +1415,14 @@ Parsed_Statement* Parsed_Function_Statement__create(Source_Location* location, T
 }
 
 typedef struct Parsed_Function_Type_Parameter {
+    Token* name;
     Parsed_Type* type;
     struct Parsed_Function_Type_Parameter* next_parameter;
 } Parsed_Function_Type_Parameter;
 
-Parsed_Function_Type_Parameter* Parsed_Function_Type_Parameter__create(Parsed_Type* type) {
+Parsed_Function_Type_Parameter* Parsed_Function_Type_Parameter__create(Token* name, Parsed_Type* type) {
     Parsed_Function_Type_Parameter* parameter = (Parsed_Function_Type_Parameter*) malloc(sizeof(Parsed_Function_Type_Parameter));
+    parameter->name = name;
     parameter->type = type;
     parameter->next_parameter = null;
     return parameter;
@@ -1566,7 +1568,7 @@ Token* Parser__peek_token(Parser* self, uint8_t offset) {
     return Scanner__peek_token(self->scanner, offset);
 }
 
-typedef bool Token_Is_Function(Token*);
+typedef bool Token_Is_Function(Token* self);
 
 bool Parser__matches_three(Parser* self, Token_Is_Function* first_is, bool first_required, Token_Is_Function* second_is, bool second_required, Token_Is_Function* third_is) {
     size_t peek_offset = 0;
@@ -2097,7 +2099,7 @@ Parsed_Type* Parser__parse_type(Parser* self) {
 }
 
 // type_alias
-//      | "typedef" type IDENTIFIER "(" ( type ( "," type )* )? ")" ";"
+//      | "typedef" type IDENTIFIER "(" ( type IDENTIFIER ( "," type IDENTIFIER )* )? ")" ";"
 Parsed_Statement* Parser__parse_type_alias(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location;
     Parser__consume_space(self, 1);
@@ -2109,13 +2111,19 @@ Parsed_Statement* Parser__parse_type_alias(Parser* self) {
     Parsed_Function_Type_Parameter* first_parameter = null;
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, 0);
-        first_parameter = Parsed_Function_Type_Parameter__create(Parser__parse_type(self));
+        Parsed_Type* parameter_type = Parser__parse_type(self);
+        Parser__consume_space(self, 1);
+        Token* parameter_name = Parser__consume_token(self, Token__is_identifier);
+        first_parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type);
         Parsed_Function_Type_Parameter* last_parameter = first_parameter;
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_comma);
             Parser__consume_space(self, 1);
-            Parsed_Function_Type_Parameter* parameter = Parsed_Function_Type_Parameter__create(Parser__parse_type(self));
+            Parsed_Type* parameter_type = Parser__parse_type(self);
+            Parser__consume_space(self, 1);
+            Token* parameter_name = Parser__consume_token(self, Token__is_identifier);
+            Parsed_Function_Type_Parameter* parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type);
             last_parameter->next_parameter = parameter;
             last_parameter = parameter;
         }
@@ -2480,6 +2488,8 @@ Checked_Type* Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size
     return type;
 }
 
+bool Checked_Type__equals(Checked_Type* self, Checked_Type* other_type);
+
 typedef struct Checked_Named_Type {
     Checked_Type super;
     String* name;
@@ -2491,10 +2501,16 @@ Checked_Named_Type* Checked_Named_Type__create_kind(Checked_Type_Kind kind, size
     return type;
 }
 
-typedef struct Checked_Pointer_Type {
+typedef struct Checked_Const_Type {
     Checked_Type super;
     Checked_Type* other_type;
-} Checked_Pointer_Type;
+} Checked_Const_Type;
+
+Checked_Const_Type* Checked_Const_Type__create(Source_Location* location, Checked_Type* other_type) {
+    Checked_Const_Type* type = (Checked_Const_Type*) Checked_Type__create_kind(CHECKED_TYPE_KIND__CONST, sizeof(Checked_Const_Type), location);
+    type->other_type = other_type;
+    return type;
+}
 
 typedef struct Checked_Enum_Member {
     Source_Location* location;
@@ -2539,7 +2555,7 @@ typedef struct Checked_Function_Parameter {
     struct Checked_Function_Parameter* next_parameter;
 } Checked_Function_Parameter;
 
-Checked_Function_Parameter* Checked_Function_Member__create(Source_Location* location, String* name, Checked_Type* type) {
+Checked_Function_Parameter* Checked_Function_Parameter__create(Source_Location* location, String* name, Checked_Type* type) {
     Checked_Function_Parameter* parameter = malloc(sizeof(Checked_Function_Parameter));
     parameter->location = location;
     parameter->name = name;
@@ -2550,19 +2566,56 @@ Checked_Function_Parameter* Checked_Function_Member__create(Source_Location* loc
 
 typedef struct Checked_Function_Type {
     Checked_Named_Type super;
+    Checked_Type* return_type;
     Checked_Function_Parameter* first_parameter;
 } Checked_Function_Type;
 
-Checked_Function_Type* Checked_Function_Type__create(Source_Location* location, String* name) {
+Checked_Function_Type* Checked_Function_Type__create(Source_Location* location, String* name, Checked_Type* return_type) {
     Checked_Function_Type* type = (Checked_Function_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__FUNCTION, sizeof(Checked_Function_Type), location, name);
+    type->return_type = return_type;
     type->first_parameter = null;
     return type;
 }
+
+bool Checked_Function_Type__equals(Checked_Function_Type* self, Checked_Type* other_type) {
+    if (other_type->kind != self->super.super.kind) {
+        return false;
+    }
+    Checked_Function_Type* function_type = (Checked_Function_Type*) other_type;
+    if (!Checked_Type__equals(self->return_type, function_type->return_type)) {
+        return false;
+    }
+    Checked_Function_Parameter* self_parameter = self->first_parameter;
+    Checked_Function_Parameter* function_parameter = function_type->first_parameter;
+    while (self_parameter != null && function_parameter != null) {
+        if (!Checked_Type__equals(self_parameter->type, function_parameter->type)) {
+            return false;
+        }
+        self_parameter = self_parameter->next_parameter;
+        function_parameter = function_parameter->next_parameter;
+    }
+    if (self_parameter != null || function_parameter != null) {
+        return false;
+    }
+    return true;
+}
+
+typedef struct Checked_Pointer_Type {
+    Checked_Type super;
+    Checked_Type* other_type;
+} Checked_Pointer_Type;
 
 Checked_Pointer_Type* Checked_Pointer_Type__create(Source_Location* location, Checked_Type* other_type) {
     Checked_Pointer_Type* type = (Checked_Pointer_Type*) Checked_Type__create_kind(CHECKED_TYPE_KIND__POINTER, sizeof(Checked_Pointer_Type), location);
     type->other_type = other_type;
     return type;
+}
+
+bool Checked_Pointer_Type__equals(Checked_Pointer_Type* self, Checked_Type* other_type) {
+    if (other_type->kind != self->super.kind) {
+        return false;
+    }
+    return Checked_Type__equals(self->other_type, ((Checked_Pointer_Type*) other_type)->other_type);
 }
 
 typedef struct Checked_Struct_Member {
@@ -2601,6 +2654,22 @@ Checked_Struct_Member* Checked_Struct_Type__find_member(Checked_Struct_Type* sel
         member = member->next_member;
     }
     return member;
+}
+
+bool Checked_Type__equals(Checked_Type* self, Checked_Type* other_type) {
+    if (self == other_type) {
+        return true;
+    }
+    if (self->kind != other_type->kind) {
+        return false;
+    }
+    if (self->kind == CHECKED_TYPE_KIND__FUNCTION) {
+        return Checked_Function_Type__equals((Checked_Function_Type*) self, other_type);
+    }
+    if (self->kind == CHECKED_TYPE_KIND__POINTER) {
+        return Checked_Pointer_Type__equals((Checked_Pointer_Type*) self, other_type);
+    }
+    TODO("Compare unsupported type");
 }
 
 // Checked_Symbols
@@ -2661,13 +2730,20 @@ Checked_Symbols* Checked_Symbols__create(Checked_Symbols* parent) {
     return symbols;
 }
 
-void Checked_Symbols__append_symbol(Checked_Symbols* self, Checked_Symbol* symbol) {
-    Checked_Symbol* other_symbol = self->first_symbol;
-    while (other_symbol != null) {
-        if (String__equals_string(other_symbol->name, symbol->name)) {
-            TODO("Report symbol redeclaration");
+Checked_Symbol* Checked_Symbols__find_sibling_symbol(Checked_Symbols* self, String* name) {
+    Checked_Symbol* symbol = self->first_symbol;
+    while (symbol != null) {
+        if (String__equals_string(name, symbol->name)) {
+            return symbol;
         }
-        other_symbol = other_symbol->next_symbol;
+        symbol = symbol->next_symbol;
+    }
+    return null;
+}
+
+void Checked_Symbols__append_symbol(Checked_Symbols* self, Checked_Symbol* symbol) {
+    if (Checked_Symbols__find_sibling_symbol(self, symbol->name) != null) {
+        TODO("Report symbol redeclaration");
     }
 
     if (self->last_symbol == null) {
@@ -2681,7 +2757,7 @@ void Checked_Symbols__append_symbol(Checked_Symbols* self, Checked_Symbol* symbo
 
 Checked_Symbol* Checked_Symbols__find_symbol(Checked_Symbols* self, String* name) {
     Checked_Symbol* symbol = self->last_symbol;
-    while (true) {
+    while (symbol != null) {
         while (symbol != null) {
             if (String__equals_string(name, symbol->name)) {
                 return symbol;
@@ -2698,7 +2774,7 @@ Checked_Symbol* Checked_Symbols__find_symbol(Checked_Symbols* self, String* name
 // Checked_Source
 
 typedef struct Checked_Source {
-    Checked_Named_Type* first_type;
+    Checked_Symbol* first_symbol;
 } Checked_Source;
 
 // Checker
@@ -2757,6 +2833,9 @@ Checked_Named_Type* Checker__find_type(Checker* self, String* name) {
 }
 
 Checked_Type* Checker__resolve_type(Checker* self, Parsed_Type* parsed_type) {
+    if (parsed_type->kind == PARSED_TYPE_KIND__CONST) {
+        return (Checked_Type*) Checked_Const_Type__create(parsed_type->location, Checker__resolve_type(self, ((Parsed_Const_Type*) parsed_type)->other_type));
+    }
     if (parsed_type->kind == PARSED_TYPE_KIND__NAMED) {
         Checked_Named_Type* type = Checker__find_type(self, ((Parsed_Named_Type*) parsed_type)->name);
         if (type != null) {
@@ -2805,7 +2884,8 @@ void Checker__check_function_type_statement(Checker* self, Parsed_Function_Type_
     if (other_type != null) {
         TODO("Handle type redeclaration");
     } else {
-        function_type = Checked_Function_Type__create(statement->super.name->location, statement->super.name->lexeme);
+        Checked_Type* return_type = Checker__resolve_type(self, statement->return_type);
+        function_type = Checked_Function_Type__create(statement->super.name->location, statement->super.name->lexeme, return_type);
         Checker__append_type(self, (Checked_Named_Type*) function_type);
     }
 
@@ -2814,7 +2894,7 @@ void Checker__check_function_type_statement(Checker* self, Parsed_Function_Type_
         Parsed_Function_Type_Parameter* parsed_parameter = statement->first_parameter;
         while (parsed_parameter != null) {
             Checked_Type* function_parameter_type = Checker__resolve_type(self, parsed_parameter->type);
-            Checked_Function_Parameter* function_parameter = Checked_Function_Member__create(parsed_parameter->type->location, null, function_parameter_type);
+            Checked_Function_Parameter* function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->name->lexeme, function_parameter_type);
             if (last_function_parameter == null) {
                 function_type->first_parameter = function_parameter;
             } else {
@@ -2869,8 +2949,36 @@ void Checker__check_variable_statement(Checker* self, Parsed_Variable_Statement*
     Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol*) Checked_Variable__create(statement->super.name->location, statement->super.name->lexeme, type, expression));
 }
 
+void Checker__check_function_declaration(Checker* self, Parsed_Function_Statement* statement) {
+    String* function_name = statement->super.name->lexeme;
+    Checked_Type* function_return_type = Checker__resolve_type(self, statement->return_type);
+    Checked_Function_Parameter* function_first_parameter = null;
+    Parsed_Function_Parameter* parsed_parameter = statement->first_parameter;
+    if (parsed_parameter != null) {
+        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+        Checked_Function_Parameter* function_last_parameter = function_first_parameter;
+        parsed_parameter = parsed_parameter->next_parameter;
+        while (parsed_parameter != null) {
+            Checked_Function_Parameter* function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+            function_last_parameter->next_parameter = function_parameter;
+            function_last_parameter = function_parameter;
+            parsed_parameter = parsed_parameter->next_parameter;
+        }
+    }
+    Checked_Function_Type* function_type = Checked_Function_Type__create(statement->super.super.location, function_name, function_return_type);
+    function_type->first_parameter = function_first_parameter;
+
+    Checked_Symbol* other_symbol = Checked_Symbols__find_sibling_symbol(self->symbols, function_name);
+    if (other_symbol != null) {
+        if (!Checked_Function_Type__equals(function_type, other_symbol->type)) {
+            TODO("Report function redeclaration");
+        }
+    } else {
+        Checked_Symbols__append_symbol(self->symbols, Checked_Symbol__create(statement->super.name->location, function_name, (Checked_Type*) function_type));
+    }
+}
+
 Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_source) {
-    Checked_Source* checked_source = malloc(sizeof(Checked_Source));
     Parsed_Statement* statement;
 
     // Check all declared types
@@ -2885,13 +2993,12 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
         }
         statement = statement->next_statement;
     }
-    checked_source->first_type = self->first_type;
 
     // Collect other declarations
     statement = parsed_source->statements->first_statement;
     while (statement != null) {
         if (statement->kind == PARSED_STATEMENT_KIND__FUNCTION) {
-            Source_Location__warning(statement->location, String__create_from("TODO: Check function statement"));
+            Checker__check_function_declaration(self, (Parsed_Function_Statement*) statement);
         } else if (statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
             Checker__check_variable_statement(self, (Parsed_Variable_Statement*) statement);
         } else if (statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
@@ -2905,8 +3012,9 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
         }
         statement = statement->next_statement;
     }
-    checked_source->first_type = self->first_type;
 
+    Checked_Source* checked_source = malloc(sizeof(Checked_Source));
+    checked_source->first_symbol = self->symbols->first_symbol;
     return checked_source;
 }
 
@@ -2918,22 +3026,68 @@ Checked_Source* check(Parsed_Source* parsed_source) {
 
 // Main
 
+void File__write_checked_type(File* self, Checked_Type* type) {
+    if (type == null) {
+        File__write_cstring(self, "null");
+    } else if (type->kind <= CHECKED_TYPE_KIND__VOID) {
+        Checked_Named_Type* named_type = (Checked_Named_Type*) type;
+        File__write_string(self, named_type->name);
+    } else if (type->kind == CHECKED_TYPE_KIND__STRUCT) {
+        Checked_Struct_Type* struct_type = (Checked_Struct_Type*) type;
+        File__write_cstring(self, "struct ");
+        File__write_string(self, struct_type->super.name);
+    } else if (type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+        Checked_Function_Type* function_type = (Checked_Function_Type*) type;
+        File__write_checked_type(self, function_type->return_type);
+        File__write_char(self, ' ');
+        File__write_string(self, function_type->super.name);
+        File__write_char(self, '(');
+        Checked_Function_Parameter* function_parameter = function_type->first_parameter;
+        while (function_parameter != null) {
+            File__write_checked_type(self, function_parameter->type);
+            File__write_char(self, ' ');
+            File__write_string(self, function_parameter->name);
+            function_parameter = function_parameter->next_parameter;
+            if (function_parameter != null) {
+                File__write_cstring(self, ", ");
+            }
+        }
+        File__write_char(self, ')');
+    } else if (type->kind == CHECKED_TYPE_KIND__ENUM) {
+        Checked_Enum_Type* enum_type = (Checked_Enum_Type*) type;
+        File__write_cstring(self, "enum ");
+        File__write_string(self, enum_type->super.name);
+    } else if (type->kind == CHECKED_TYPE_KIND__POINTER) {
+        Checked_Pointer_Type* pointer_type = (Checked_Pointer_Type*) type;
+        File__write_checked_type(self, pointer_type->other_type);
+        File__write_char(self, '*');
+    } else if (type->kind == CHECKED_TYPE_KIND__CONST) {
+        Checked_Const_Type* const_type = (Checked_Const_Type*) type;
+        File__write_cstring(self, "const ");
+        File__write_checked_type(self, const_type->other_type);
+    } else {
+        Source_Location__panic(type->location, String__create_from("Unsupported type"));
+    }
+}
+
 int32_t main() {
     Source* source = Source__create(stdin);
     Parsed_Source* parsed_source = parse(source);
     Checked_Source* checked_source = check(parsed_source);
 
-    Checked_Named_Type* type = checked_source->first_type;
-    while (type != null) {
+    Checked_Symbol* symbol = checked_source->first_symbol;
+    while (symbol != null) {
         File__write_cstring(stdout, __FILE__);
         File__write_char(stdout, ':');
-        File__write_int32_t(stdout, type->super.location->line);
+        File__write_int32_t(stdout, symbol->location->line);
         File__write_char(stdout, ':');
-        File__write_int32_t(stdout, type->super.location->column);
+        File__write_int32_t(stdout, symbol->location->column);
         File__write_cstring(stdout, ": ");
-        File__write_string(stdout, type->name);
+        File__write_string(stdout, symbol->name);
+        File__write_cstring(stdout, ": ");
+        File__write_checked_type(stdout, symbol->type);
         File__write_char(stdout, '\n');
-        type = (Checked_Named_Type*) type->super.next_type;
+        symbol = symbol->next_symbol;
     }
 
     return 0;
