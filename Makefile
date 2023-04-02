@@ -1,5 +1,6 @@
 run: ReCode
-	./ReCode < compiler/ReCode.c
+	./ReCode < compiler/ReCode.c > build/ReCode.c
+	cc -ansi -Wpedantic -g -c -o build/ReCode.o build/ReCode.c
 
 trace: ReCode
 	gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run ./ReCode < compiler/ReCode.c' -ex=bt -ex=quit --args ReCode
