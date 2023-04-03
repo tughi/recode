@@ -4317,6 +4317,12 @@ typedef struct Generator {
     uint16_t identation;
 } Generator;
 
+void Generator__write_source_location(Generator* self, Source_Location* location) {
+    File__write_cstring(self->file, "#line ");
+    File__write_int32_t(self->file, (int32_t) location->line);
+    File__write_cstring(self->file, " \"./compiler/ReCode.c\"\n");
+}
+
 void Generator__generate_expression(Generator* self, Checked_Expression* expression);
 
 void Generator__generate_add_expression(Generator* self, Checked_Add_Expression* expression) {
@@ -4699,6 +4705,8 @@ void Generator__generate_statements(Generator* self, Checked_Statements* stateme
 
     Checked_Statement* statement = statements->first_statement;
     while (statement != null) {
+        Generator__write_source_location(self, statement->location);
+
         Generator__write_identation(self);
 
         Generator__generate_statement(self, statement);
@@ -4737,6 +4745,7 @@ void Generator__generate_function(Generator* self, Checked_Function_Symbol* func
     if (function_symbol->checked_statements == null) {
         return;
     }
+    Generator__write_source_location(self, function_symbol->super.location);
     File__write_checked_type(self->file, (Checked_Type*) function_symbol->function_type);
     File__write_cstring(self->file, " {\n");
     Generator__generate_statements(self, function_symbol->checked_statements);
