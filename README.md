@@ -6,7 +6,6 @@ A compiler for the _Code_ language.
 
 - [ ] Implement self-hosted minimal _C_ compiler
   - types: 
-    - **const**
     - **bool**
     - **char**
     - **int8_t**, **uint8_t**

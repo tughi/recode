@@ -19,7 +19,7 @@ extern File* stderr;
 
 extern int32_t fgetc(File* stream);
 extern int32_t fputc(int32_t c, File* stream);
-extern int32_t fputs(const char* s, File* stream);
+extern int32_t fputs(char* s, File* stream);
 
 extern void* malloc(size_t size);
 extern void* realloc(void* ptr, size_t size);
@@ -63,7 +63,7 @@ String* String__append_char(String* self, char ch) {
     return self;
 }
 
-String* String__append_cstring(String* self, const char* s) {
+String* String__append_cstring(String* self, char* s) {
     size_t index = (size_t) 0;
     while (true) {
         char c = s[index];
@@ -75,7 +75,7 @@ String* String__append_cstring(String* self, const char* s) {
     }
 }
 
-size_t cstring_length(const char* s) {
+size_t cstring_length(char* s) {
     size_t length = (size_t) 0;
     while (true) {
         uint8_t c = (uint8_t) s[length];
@@ -87,7 +87,7 @@ size_t cstring_length(const char* s) {
     return length;
 }
 
-String* String__create_from(const char* data) {
+String* String__create_from(char* data) {
     size_t string_length = cstring_length(data);
     String* string = String__create_empty(string_length);
     String__append_cstring(string, data);
@@ -116,7 +116,7 @@ String* String__append_string(String* self, String* other) {
     return self;
 }
 
-bool String__equals_cstring(String* self, const char* s) {
+bool String__equals_cstring(String* self, char* s) {
     size_t length = cstring_length(s);
     if (self->length != length) {
         return false;
@@ -159,7 +159,7 @@ void File__write_char(File* self, char c) {
     fputc((int32_t) c, self);
 }
 
-void File__write_cstring(File* self, const char* s) {
+void File__write_cstring(File* self, char* s) {
     fputs(s, self);
 }
 
@@ -202,7 +202,7 @@ void warning(String* message) {
     File__write_cstring(stderr, "\e[0m\n");
 }
 
-void TODO(const char* message) {
+void TODO(char* message) {
     File__write_cstring(stderr, "\e[0;95mTODO: ");
     File__write_cstring(stderr, message);
     File__write_cstring(stderr, "\e[0m\n");
@@ -430,16 +430,12 @@ bool Token__is_integer(Token* self) {
     return self->kind == TOKEN_KIND__INTEGER;
 }
 
-bool Token__is_keyword(Token* self, const char* lexeme) {
+bool Token__is_keyword(Token* self, char* lexeme) {
     return self->kind == TOKEN_KIND__IDENTIFIER && String__equals_cstring(self->lexeme, lexeme);
 }
 
 bool Token__is_break(Token* self) {
     return Token__is_keyword(self, "break");
-}
-
-bool Token__is_const(Token* self) {
-    return Token__is_keyword(self, "const");
 }
 
 bool Token__is_else(Token* self) {
@@ -490,7 +486,7 @@ bool Token__is_while(Token* self) {
     return Token__is_keyword(self, "while");
 }
 
-bool Token__is_other(Token* self, const char* lexeme) {
+bool Token__is_other(Token* self, char* lexeme) {
     return self->kind == TOKEN_KIND__OTHER && String__equals_cstring(self->lexeme, lexeme);
 }
 
@@ -880,7 +876,6 @@ typedef struct Parsed_Source {
 } Parsed_Source;
 
 typedef enum Parsed_Type_Kind {
-    PARSED_TYPE_KIND__CONST,
     PARSED_TYPE_KIND__NAMED,
     PARSED_TYPE_KIND__POINTER,
     PARSED_TYPE_KIND__STRUCT,
@@ -898,17 +893,6 @@ Parsed_Type* Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, S
     type->kind = kind;
     type->location = location;
     return type;
-}
-
-typedef struct Parsed_Const_Type {
-    Parsed_Type super;
-    Parsed_Type* other_type;
-} Parsed_Const_Type;
-
-Parsed_Type* Parsed_Const_Type__create(Source_Location* location, Parsed_Type* other_type) {
-    Parsed_Const_Type* type = (Parsed_Const_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__CONST, sizeof(Parsed_Const_Type), location);
-    type->other_type = other_type;
-    return (Parsed_Type*) type;
 }
 
 typedef struct Parsed_Named_Type {
@@ -2098,13 +2082,8 @@ Parsed_Statement* Parser__parse_enum(Parser* self) {
 }
 
 // type
-//      | "const"? "struct"? IDENTIFIER "*"*
+//      | "struct"? IDENTIFIER "*"*
 Parsed_Type* Parser__parse_type(Parser* self) {
-    Token* const_token = null;
-    if (Parser__matches_one(self, Token__is_const)) {
-        const_token = Parser__consume_token(self, Token__is_const);
-        Parser__consume_space(self, (uint16_t) 1);
-    }
     Token* struct_token = null;
     if (Parser__matches_one(self, Token__is_struct)) {
         struct_token = Parser__consume_token(self, Token__is_struct);
@@ -2119,9 +2098,6 @@ Parsed_Type* Parser__parse_type(Parser* self) {
         Parser__consume_space(self, (uint16_t) 0);
         Parser__consume_token(self, Token__is_asterisk);
         type = Parsed_Pointer_Type__create(type);
-    }
-    if (const_token != null) {
-        type = Parsed_Const_Type__create(const_token->location, type);
     }
     return type;
 }
@@ -2370,15 +2346,9 @@ Parsed_Statement* Parser__parse_statement(Parser* self) {
         return Parser__parse_type_alias(self);
     }
 
-    if (Parser__matches_one(self, Token__is_const) || Parser__matches_one(self, Token__is_extern) || Parser__matches_one(self, Token__is_identifier)) {
+    if (Parser__matches_one(self, Token__is_extern) || Parser__matches_one(self, Token__is_identifier)) {
         uint8_t peek_offset = (uint8_t) 0;
         if (Token__is_extern(Parser__peek_token(self, peek_offset))) {
-            peek_offset = peek_offset + (uint8_t) 1;
-            if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1;
-            }
-        }
-        if (Token__is_const(Parser__peek_token(self, peek_offset))) {
             peek_offset = peek_offset + (uint8_t) 1;
             if (Token__is_space(Parser__peek_token(self, peek_offset))) {
                 peek_offset = peek_offset + (uint8_t) 1;
@@ -2501,7 +2471,6 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__FUNCTION,
     CHECKED_TYPE_KIND__STRUCT,
     // Dynamic
-    CHECKED_TYPE_KIND__CONST,
     CHECKED_TYPE_KIND__POINTER,
 } Checked_Type_Kind;
 
@@ -2584,24 +2553,6 @@ Checked_Named_Type* Checked_Named_Type__create_kind(Checked_Type_Kind kind, size
     Checked_Named_Type* type = (Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
     return type;
-}
-
-typedef struct Checked_Const_Type {
-    Checked_Type super;
-    Checked_Type* other_type;
-} Checked_Const_Type;
-
-Checked_Const_Type* Checked_Const_Type__create(Source_Location* location, Checked_Type* other_type) {
-    Checked_Const_Type* type = (Checked_Const_Type*) Checked_Type__create_kind(CHECKED_TYPE_KIND__CONST, sizeof(Checked_Const_Type), location);
-    type->other_type = other_type;
-    return type;
-}
-
-bool Checked_Const_Type__equals(Checked_Const_Type* self, Checked_Type* other_type) {
-    if (other_type->kind != self->super.kind) {
-        return false;
-    }
-    return Checked_Type__equals(self->other_type, ((Checked_Const_Type*) other_type)->other_type);
 }
 
 typedef struct Checked_Enum_Member {
@@ -2762,9 +2713,6 @@ bool Checked_Type__equals(Checked_Type* self, Checked_Type* other_type) {
     if (self->kind != other_type->kind) {
         return false;
     }
-    if (self->kind == CHECKED_TYPE_KIND__CONST) {
-        return Checked_Const_Type__equals((Checked_Const_Type*) self, other_type);
-    }
     if (self->kind == CHECKED_TYPE_KIND__FUNCTION) {
         return Checked_Function_Type__equals((Checked_Function_Type*) self, other_type);
     }
@@ -2811,10 +2759,6 @@ String* String__append_checked_type(String* self, Checked_Type* type) {
         Checked_Pointer_Type* pointer_type = (Checked_Pointer_Type*) type;
         String__append_checked_type(self, pointer_type->other_type);
         String__append_char(self, '*');
-    } else if (type->kind == CHECKED_TYPE_KIND__CONST) {
-        Checked_Const_Type* const_type = (Checked_Const_Type*) type;
-        String__append_cstring(self, "const ");
-        String__append_checked_type(self, const_type->other_type);
     } else {
         Source_Location__error(type->location, String__create_from("Unsupported type"));
         abort();
@@ -2880,10 +2824,6 @@ void File__write_checked_type(File* self, Checked_Type* type) {
         Checked_Pointer_Type* pointer_type = (Checked_Pointer_Type*) type;
         File__write_checked_type(self, pointer_type->other_type);
         File__write_char(self, '*');
-    } else if (type->kind == CHECKED_TYPE_KIND__CONST) {
-        Checked_Const_Type* const_type = (Checked_Const_Type*) type;
-        File__write_cstring(self, "const ");
-        File__write_checked_type(self, const_type->other_type);
     } else {
         Source_Location__error(type->location, String__create_from("Unsupported type"));
         abort();
@@ -3600,9 +3540,6 @@ Checked_Named_Type* Checker__get_builtin_type(Checker* self, Checked_Type_Kind k
 }
 
 Checked_Type* Checker__resolve_type(Checker* self, Parsed_Type* parsed_type) {
-    if (parsed_type->kind == PARSED_TYPE_KIND__CONST) {
-        return (Checked_Type*) Checked_Const_Type__create(parsed_type->location, Checker__resolve_type(self, ((Parsed_Const_Type*) parsed_type)->other_type));
-    }
     if (parsed_type->kind == PARSED_TYPE_KIND__NAMED) {
         Checked_Named_Type* type = Checker__find_type(self, ((Parsed_Named_Type*) parsed_type)->name);
         if (type != null) {
@@ -3646,9 +3583,6 @@ Checked_Expression* Checker__check_address_of_expression(Checker* self, Parsed_A
 Checked_Expression* Checker__check_array_access_expression(Checker* self, Parsed_Array_Access_Expression* parsed_expression) {
     Checked_Expression* array_expression = Checker__check_expression(self, parsed_expression->array_expression);
     Checked_Type* array_type = array_expression->type;
-    if (array_type->kind == CHECKED_TYPE_KIND__CONST) {
-        array_type = ((Checked_Const_Type*) array_type)->other_type;
-    }
     if (array_type->kind != CHECKED_TYPE_KIND__POINTER) {
         String* message = String__create();
         String__append_char(message, '"');
@@ -3885,8 +3819,7 @@ Checked_Expression* Checker__check_sizeof_expression(Checker* self, Parsed_Sizeo
 
 Checked_Expression* Checker__check_string_expression(Checker* self, Parsed_String_Expression* parsed_expression) {
     Checked_Type* char_type = (Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__CHAR);
-    Checked_Type* char_pointer_type = (Checked_Type*) Checked_Pointer_Type__create(parsed_expression->super.literal->location, char_type);
-    Checked_Type* expression_type = (Checked_Type*) Checked_Const_Type__create(parsed_expression->super.literal->location, char_pointer_type);
+    Checked_Type* expression_type = (Checked_Type*) Checked_Pointer_Type__create(parsed_expression->super.literal->location, char_type);
     String* value = parsed_expression->value;
     return (Checked_Expression*) Checked_String_Expression__create(parsed_expression->super.super.location, expression_type, value);
 }
