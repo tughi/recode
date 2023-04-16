@@ -17,6 +17,8 @@ extern File* stdin;
 extern File* stdout;
 extern File* stderr;
 
+extern File* fopen(char* file_name, char* mode);
+extern int32_t fclose(File* stream);
 extern int32_t fgetc(File* stream);
 extern int32_t fputc(int32_t c, File* stream);
 extern int32_t fputs(char* s, File* stream);
@@ -213,23 +215,25 @@ void TODO(char* message) {
 
 typedef struct Source {
     String* content;
+    char* path;
 } Source;
 
-Source* Source__create(File* stream) {
-    String* source_content = String__create();
+Source* Source__create(File* file, char* file_path) {
+    String* file_content = String__create();
 
     while (true) {
-        int32_t ch = fgetc(stream);
+        int32_t ch = fgetc(file);
         if (ch == -1) {
             break;
         }
-        String__append_char(source_content, (char) ch);
+        String__append_char(file_content, (char) ch);
     }
 
-    String__append_char(source_content, '\0'); // simplifies EOF detection
+    String__append_char(file_content, '\0'); // simplifies EOF detection
 
     Source* source = (Source*) malloc(sizeof(Source));
-    source->content = source_content;
+    source->content = file_content;
+    source->path = file_path;
 
     return source;
 }
@@ -252,7 +256,8 @@ Source_Location* Source_Location__create(Source* source, uint16_t line, uint16_t
 }
 
 void File__write_source_location(File* self, Source_Location* location) {
-    File__write_cstring(self, "compiler/ReCode.c:");
+    File__write_cstring(self, location->source->path);
+    File__write_char(self, ':');
     File__write_int32_t(self, (int32_t) location->line);
     File__write_char(self, ':');
     File__write_int32_t(self, (int32_t) location->column);
@@ -4253,7 +4258,9 @@ typedef struct Generator {
 void Generator__write_source_location(Generator* self, Source_Location* location) {
     File__write_cstring(self->file, "#line ");
     File__write_int32_t(self->file, (int32_t) location->line);
-    File__write_cstring(self->file, " \"./compiler/ReCode.c\"\n");
+    File__write_cstring(self->file, " \"");
+    File__write_cstring(self->file, location->source->path);
+    File__write_cstring(self->file, "\"\n");
 }
 
 void Generator__generate_expression(Generator* self, Checked_Expression* expression);
@@ -4785,10 +4792,36 @@ void generate(File* file, Checked_Source* checked_source) {
 
 #pragma endregion
 
-int32_t main() {
-    Source* source = Source__create(stdin);
+int32_t main(int32_t argc, char** argv) {
+    if (argc < 3) {
+        error(String__append_cstring(String__append_cstring(String__create_from("Usage: "), argv[(size_t) 0]), " SOURCE OUTPUT"));
+        return 1;
+    }
+
+    char* source_file_path = argv[(size_t) 1];
+    File* source_file = fopen(source_file_path, "r");
+    if (source_file == null) {
+        error(String__append_cstring(String__create_from("Cannot open file: "), source_file_path));
+        return 1;
+    }
+
+    char* output_file_path = argv[(size_t) 2];
+    File* output_file;
+    if (String__equals_cstring(String__create_from(output_file_path), "-")) {
+        output_file = stdout;
+    } else {
+        output_file = fopen(output_file_path, "w");
+        if (output_file == null) {
+            error(String__append_cstring(String__create_from("Cannot open file: "), output_file_path));
+            return 1;
+        }
+    }
+
+    Source* source = Source__create(source_file, source_file_path);
     Parsed_Source* parsed_source = parse(source);
     Checked_Source* checked_source = check(parsed_source);
-    generate(stdout, checked_source);
-    return 0;
+    generate(output_file, checked_source);
+
+    fclose(source_file);
+    return fclose(output_file);
 }
