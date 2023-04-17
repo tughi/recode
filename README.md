@@ -8,21 +8,19 @@ A compiler for the _Code_ language.
   - types: 
     - **bool**
     - **char**
-    - **int8_t**, **uint8_t**
-    - **int16_t**, **uint16_t**
-    - **int32_t**, **uint32_t**
-    - **int64_t**, **uint64_t**
+    - **int8_t**, **int16_t**, **int32_t**, **int64_t**
+    - **uint8_t**, **uint16_t**, **uint32_t**, **uint64_t**
     - **size_t**
-    - **struct**
     - **void**
+    - **struct**
   - values:
     - **null**
     - **true**, **false**
   - control:
-    - **break**
     - **if-else**
-    - **return**
     - **while**
+    - **break**
+    - **return**
   - line comments
   - literals:
     - base 10 integers
@@ -30,18 +28,26 @@ A compiler for the _Code_ language.
     - string
   - no preprocessor
 - [ ] Translate and refactor compiler to _Code_
-  - [ ] integer types
-  - [ ] struct types
-  - [ ] remove forward delarations
-  - [ ] remove ;
-  - [ ] explicit variable declarations
-  - [ ] funtion definitions
-- [ ] Implement compiler in _Code_
+  - TODO: Rename integer types
+  - TODO: Change struct syntax
+  - TODO: Disallow forward delaration of structs
+  - TODO: Remove ;
+  - TODO: Change variable declarations syntax
+  - TODO: Change funtion syntax
+  - TODO: Treat string literals as local String instances
 
 
 ## How to add new features
 
-1. Add or update tests
+Non-breaking changes follow a simple process:
+1. Add tests
 1. Implement feature to pass all tests
 1. Stage compiler via: `./ReCode stage`
-1. _Optional:_ Refactor compiler to use new feature and stage again
+
+Bracking changes require a carefully planned approach:
+1. Add or update tests
+1. Deprecated old feature via warnings
+1. Implement new feature to pass all tests
+1. Stage compiler via: `./ReCode stage`
+1. Remove depredated feature
+1. Stage compiler via: `./ReCode stage`

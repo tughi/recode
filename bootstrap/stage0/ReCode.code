@@ -1677,9 +1677,6 @@ bool Parser__consume_empty_line(Parser* self) {
     return false;
 }
 
-Parsed_Expression* Parser__parse_expression(Parser* self);
-Parsed_Type* Parser__parse_type(Parser* self);
-
 // primary_expression
 //      | "false"
 //      | "null"
@@ -2196,8 +2193,6 @@ Parsed_Function_Parameter* Parser__parse_function_parameters(Parser* self) {
     return first_parameter;
 }
 
-void Parser__parse_statements(Parser* self, Parsed_Statements* statements);
-
 // block
 //      | "{" statements "}"
 Parsed_Block_Statement* Parser__parse_block_statement(Parser* self) {
@@ -2213,7 +2208,8 @@ Parsed_Block_Statement* Parser__parse_block_statement(Parser* self) {
 }
 
 // function
-//      | "extern"? type IDENTIFIER "(" function_parameter* ")" ( "{" statements "}" | ";" )
+//      | "extern" type IDENTIFIER "(" function_parameter* ")" ";"
+//      | type IDENTIFIER "(" function_parameter* ")" "{" statements "}"
 Parsed_Statement* Parser__parse_function(Parser* self) {
     bool is_external;
     Source_Location* location;
@@ -2235,6 +2231,10 @@ Parsed_Statement* Parser__parse_function(Parser* self) {
     Parser__consume_token(self, Token__is_closing_paren);
     Parsed_Statements* statements = null;
     if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_brace)) {
+        if (is_external) {
+            Source_Location__error(location, String__create_from("External function cannot have a body"));
+            abort();
+        }
         Parser__consume_space(self, (uint16_t) 1);
         Parser__consume_token(self, Token__is_opening_brace);
         Parser__consume_end_of_line(self);
@@ -2245,6 +2245,10 @@ Parsed_Statement* Parser__parse_function(Parser* self) {
         Parser__consume_space(self, self->current_identation * (uint16_t) 4);
         Parser__consume_token(self, Token__is_closing_brace);
     } else {
+        if (is_external == false) {
+            Source_Location__error(location, String__create_from("Function declaration without a body"));
+            abort();
+        }
         Parser__consume_space(self, (uint16_t) 0);
         Parser__consume_token(self, Token__is_semicolon);
     }
@@ -2492,10 +2496,6 @@ Checked_Type* Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size
     type->next_type = null;
     return type;
 }
-
-bool Checked_Type__equals(Checked_Type* self, Checked_Type* other_type);
-
-String* String__append_checked_type(String* self, Checked_Type* type);
 
 void Checked_Type__expect_same_type(Checked_Type* self, Checked_Type* other_type, Source_Location* location) {
     if (self->kind == CHECKED_TYPE_KIND__POINTER && other_type->kind == CHECKED_TYPE_KIND__NULL) {
@@ -2770,8 +2770,6 @@ String* String__append_checked_type(String* self, Checked_Type* type) {
     }
     return self;
 }
-
-void File__write_checked_type(File* self, Checked_Type* type);
 
 void File__write_checked_function_parameter(File* self, Checked_Function_Parameter* parameter) {
     if (parameter->type->kind == CHECKED_TYPE_KIND__POINTER && ((Checked_Pointer_Type*) parameter->type)->other_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
@@ -3482,8 +3480,6 @@ typedef struct Checker {
     Checked_Type* return_type;
 } Checker;
 
-void Checker__append_type(Checker* self, Checked_Named_Type* type);
-
 Checker* Checker__create() {
     Checker* checker = (Checker*) malloc(sizeof(Checker));
     checker->first_type = null;
@@ -3565,8 +3561,6 @@ Checked_Type* Checker__resolve_type(Checker* self, Parsed_Type* parsed_type) {
     TODO("Report undefined type");
     abort();
 }
-
-Checked_Expression* Checker__check_expression(Checker* self, Parsed_Expression* parsed_expression);
 
 Checked_Expression* Checker__check_add_expression(Checker* self, Parsed_Add_Expression* parsed_expression) {
     Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
@@ -4001,16 +3995,12 @@ void Checker__check_struct_statement(Checker* self, Parsed_Struct_Statement* par
     }
 }
 
-Checked_Statement* Checker__check_statement(Checker* self, Parsed_Statement* parsed_statement);
-
 Checked_Assignment_Statement* Checker__check_assignment_statement(Checker* self, Parsed_Assignment_Statement* parsed_statement) {
     Checked_Expression* object_expression = Checker__check_expression(self, parsed_statement->object_expression);
     Checked_Expression* value_expression = Checker__check_expression(self, parsed_statement->value_expression);
     Checked_Type__expect_same_type(object_expression->type, value_expression->type, value_expression->location);
     return Checked_Assignment_Statement__create(parsed_statement->super.location, object_expression, value_expression);
 }
-
-Checked_Statements* Checker__check_statements(Checker* self, Parsed_Statements* parsed_statements);
 
 Checked_Block_Statement* Checker__check_block_statement(Checker* self, Parsed_Block_Statement* parsed_statement) {
     Checked_Statements* statements = Checker__check_statements(self, parsed_statement->statements);
@@ -4262,8 +4252,6 @@ void Generator__write_source_location(Generator* self, Source_Location* location
     File__write_cstring(self->file, location->source->path);
     File__write_cstring(self->file, "\"\n");
 }
-
-void Generator__generate_expression(Generator* self, Checked_Expression* expression);
 
 void Generator__generate_add_expression(Generator* self, Checked_Add_Expression* expression) {
     Generator__generate_expression(self, expression->super.left_expression);
@@ -4549,9 +4537,6 @@ void Generator__write_identation(Generator* self) {
         identation = identation - (uint16_t) 1;
     }
 }
-
-void Generator__generate_statement(Generator* self, Checked_Statement* statement);
-void Generator__generate_statements(Generator* self, Checked_Statements* statements);
 
 void Generator__generate_assignment_statement(Generator* self, Checked_Assignment_Statement* statement) {
     Generator__generate_expression(self, statement->object_expression);

@@ -1,0 +1,15 @@
+// Not implemented yet
+// Expect:
+// - error: 'tests/redefined_function.code:13:1: Redefined function\n'
+
+int32_t get_answer() {
+    return 1;
+}
+
+int32_t main() {
+    int32_t answer = get_answer();
+}
+
+int32_t get_answer() {
+    return 2;
+}

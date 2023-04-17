@@ -5,7 +5,7 @@ typedef struct File File;
 
 extern File* stdout;
 
-int32_t fputs(char* s, File* stream);
+extern int32_t fputs(char* s, File* stream);
 
 int32_t main() {
     if (get_answer() == 42) {

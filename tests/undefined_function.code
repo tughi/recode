@@ -1,0 +1,6 @@
+// Expect:
+// - error: 'tests/undefined_function.code:5:22: Undefined symbol\n'
+
+int32_t main() {
+    int32_t answer = get_answer();
+}

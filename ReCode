@@ -15,6 +15,7 @@ logger.setLevel(logging.DEBUG)
 
 COLOR_DEBUG = '\x1b[2;37m'
 COLOR_ERROR = '\x1b[0;91m'
+COLOR_WARNING = '\x1b[0;93m'
 COLOR_RESET = '\x1b[0m'
 
 def execute(command, exit_on_error=True, expected_code=0):
@@ -41,7 +42,7 @@ def clean():
 
 
 def bootstrap():
-    logger.info("Bootstrapping")
+    logger.info(f"Building stage0")
 
     if not os.path.exists('build/stage0'):
         execute(f'mkdir -p build/stage0')
@@ -75,7 +76,7 @@ def build_stage(n):
 
     if compiler_changed:
         if execute(f'{compiler} {compiler_args}', exit_on_error=False) != 0:
-            trace(compiler, compiler_args)
+            trace(compiler, compiler_args + ' 2> /dev/null')
         cc(output_file, f'build/stage{n}/ReCode')
 
 
@@ -99,7 +100,10 @@ def test():
                         expected_error = line_match.group(2)
                     else:
                         expected_output = line_match.group(2)
+            elif line == '// Skip\n':
+                continue
             if expected_error is None and expected_output is None:
+                logger.warning(f"{COLOR_WARNING}Skipping unsupported test: tests/{test_file_name}{COLOR_RESET}")
                 continue
 
         args = ['build/stage1/ReCode', f'tests/{test_file_name}', f'build/tests/{test_file_name[:-5]}.c']
@@ -130,12 +134,12 @@ def build():
     bootstrap()
     build_stage(1)
     test()
-    build_stage(2)
-    build_stage(3)
 
 
 def stage():
     build()
+    build_stage(2)
+    build_stage(3)
 
     logger.info("Staging")
     execute('diff -q build/stage2/ReCode.c build/stage3/ReCode.c')
