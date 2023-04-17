@@ -255,6 +255,15 @@ Source_Location* Source_Location__create(Source* source, uint16_t line, uint16_t
     return source_location;
 }
 
+String* String__append_source_location(String* self, Source_Location* location) {
+    String__append_cstring(self, location->source->path);
+    String__append_char(self, ':');
+    String__append_int16_t(self, (int16_t) location->line);
+    String__append_char(self, ':');
+    String__append_int16_t(self, (int16_t) location->column);
+    return self;
+}
+
 void File__write_source_location(File* self, Source_Location* location) {
     File__write_cstring(self, location->source->path);
     File__write_char(self, ':');
@@ -4083,7 +4092,10 @@ void Checker__check_function_declaration(Checker* self, Parsed_Function_Statemen
     Checked_Symbol* other_symbol = Checked_Symbols__find_sibling_symbol(self->symbols, function_name);
     if (other_symbol != null) {
         if (other_symbol->kind != CHECKED_SYMBOL_KIND__FUNCTION || !Checked_Type__equals((Checked_Type*) function_type, (Checked_Type*) ((Checked_Function_Symbol*) other_symbol)->function_type)) {
-            TODO("Report function redeclaration");
+            TODO("Report overloaded function");
+            abort();
+        } else {
+            Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Function declared first here: "), other_symbol->location));
             abort();
         }
     } else {
