@@ -1,0 +1,19 @@
+// Expect:
+// - output: 'PASS\n'
+
+typedef struct File File;
+
+extern File* stdout;
+
+int32_t fputs(char* s, File* stream);
+
+int32_t main() {
+    if (get_answer() == 42) {
+        fputs("PASS\n", stdout);
+    }
+    return 0;
+}
+
+int32_t get_answer() {
+    return 42;
+}
