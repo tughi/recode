@@ -1,15 +1,8 @@
 \ Copyright (C) 2023 Stefan Selariu
 
-#pragma region Builtins
-
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-#define null 0
-
-#pragma endregion
-#pragma region LibC
+\ ---------------------------------------------------------------------------------------------------------------------
+\   LibC
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct File File
 
@@ -29,8 +22,9 @@ extern void free(void* ptr)
 
 extern void abort()
 
-#pragma endregion
-#pragma region String
+\ ---------------------------------------------------------------------------------------------------------------------
+\   String
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct String {
     char* data
@@ -151,8 +145,9 @@ bool String__equals_string(String* self, String* other) {
     return true
 }
 
-#pragma endregion
-#pragma region Utils
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Utils
+\ ---------------------------------------------------------------------------------------------------------------------
 
 void pass() {
 }
@@ -210,8 +205,9 @@ void TODO(char* message) {
     File__write_cstring(stderr, "\e[0m\n")
 }
 
-#pragma endregion
-#pragma region Source
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Source
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Source {
     String* content
@@ -238,8 +234,9 @@ Source* Source__create(File* file, char* file_path) {
     return source
 }
 
-#pragma endregion
-#pragma region Source Location
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Source Location
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Source_Location {
     Source* source
@@ -283,8 +280,9 @@ void Source_Location__warning(Source_Location* self, String* message) {
     warning(message)
 }
 
-#pragma endregion
-#pragma region Tokens
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Tokens
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef enum Token_Kind {
     TOKEN_KIND__CHARACTER,
@@ -544,10 +542,6 @@ bool Token__is_greater_than(Token* self) {
     return Token__is_other(self, ">")
 }
 
-bool Token__is_hash(Token* self) {
-    return Token__is_other(self, "#")
-}
-
 bool Token__is_less_than(Token* self) {
     return Token__is_other(self, "<")
 }
@@ -609,8 +603,9 @@ void File__write_token(File* stream, Token* token) {
     }
 }
 
-#pragma endregion
-#pragma region Scanner
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Scanner
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Scanner {
     Source* source
@@ -871,8 +866,9 @@ Scanner* Scanner__create(Source* source) {
     return scanner
 }
 
-#pragma endregion
-#pragma region Parsed Source
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Parsed Source
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Parsed_Statements Parsed_Statements
 
@@ -1557,8 +1553,9 @@ Parsed_Source* Parsed_Compilation_Unit__create() {
     return compilation_unit
 }
 
-#pragma endregion
-#pragma region Parser
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Parser
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Parser {
     Scanner* scanner
@@ -1660,16 +1657,6 @@ bool Parser__consume_empty_line(Parser* self) {
             Parser__consume_comment(self)
         } else {
             Parser__consume_space(self, (u16) 0)
-        }
-        Parser__consume_token(self, Token__is_end_of_line)
-        return true
-    }
-    if (Parser__matches_two(self, Token__is_space, false, Token__is_hash)) {
-        \ Preprocessor directives are ignored and treated as empty lines
-        Parser__consume_space(self, (u16) 0)
-        Parser__consume_token(self, Token__is_hash)
-        while (!Parser__matches_one(self, Token__is_end_of_line)) {
-            Parser__consume_token(self, Token__is_anything)
         }
         Parser__consume_token(self, Token__is_end_of_line)
         return true
@@ -2437,8 +2424,9 @@ Parsed_Source* parse(Source* source) {
     return parser.compilation_unit
 }
 
-#pragma endregion
-#pragma region Checked Types
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Checked Types
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef enum Checked_Type_Kind {
     \ Builtins
@@ -2831,8 +2819,9 @@ void File__write_checked_type(File* self, Checked_Type* type) {
     }
 }
 
-#pragma endregion
-#pragma region Checked Symbols
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Checked Symbols
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__ENUM_MEMBER,
@@ -2966,8 +2955,9 @@ Checked_Symbol* Checked_Symbols__find_symbol(Checked_Symbols* self, String* name
     return null
 }
 
-#pragma endregion
-#pragma region Checked Expressions
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Checked Expressions
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__ADD,
@@ -3313,8 +3303,9 @@ Checked_Symbol_Expression* Checked_Symbol_Expression__create(Source_Location* lo
     return expression
 }
 
-#pragma endregion
-#pragma region Checked Statements
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Checked Statements
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__ASSIGNMENT,
@@ -3459,16 +3450,18 @@ void Checked_Statements__append(Checked_Statements* self, Checked_Statement* sta
     self->last_statement = statement
 }
 
-#pragma endregion
-#pragma region Checked Source
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Checked Source
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Checked_Source {
     Checked_Symbol* first_symbol
     Checked_Statements* statements
 } Checked_Source
 
-#pragma endregion
-#pragma region Checker
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Checker
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Checker {
     Checked_Named_Type* first_type
@@ -4238,8 +4231,9 @@ Checked_Source* check(Parsed_Source* parsed_source) {
     return Checker__check_source(type_checker, parsed_source)
 }
 
-#pragma endregion
-#pragma region Generator
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Generator
+\ ---------------------------------------------------------------------------------------------------------------------
 
 typedef struct Generator {
     File* file
@@ -4776,7 +4770,9 @@ void generate(File* file, Checked_Source* checked_source) {
     }
 }
 
-#pragma endregion
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Main
+\ ---------------------------------------------------------------------------------------------------------------------
 
 i32 main(i32 argc, char** argv) {
     if (argc < 3) {

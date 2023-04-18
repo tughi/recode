@@ -1,16 +1,6 @@
 \ Copyright (C) 2023 Stefan Selariu
 
 \ ---------------------------------------------------------------------------------------------------------------------
-\   Builtins
-\ ---------------------------------------------------------------------------------------------------------------------
-
-#include <inttypes.h>
-#include <stdbool.h>
-#include <stddef.h>
-
-#define null 0
-
-\ ---------------------------------------------------------------------------------------------------------------------
 \   LibC
 \ ---------------------------------------------------------------------------------------------------------------------
 
@@ -550,10 +540,6 @@ bool Token__is_exclamation_mark(Token* self) {
 
 bool Token__is_greater_than(Token* self) {
     return Token__is_other(self, ">")
-}
-
-bool Token__is_hash(Token* self) {
-    return Token__is_other(self, "#")
 }
 
 bool Token__is_less_than(Token* self) {
@@ -1671,16 +1657,6 @@ bool Parser__consume_empty_line(Parser* self) {
             Parser__consume_comment(self)
         } else {
             Parser__consume_space(self, (u16) 0)
-        }
-        Parser__consume_token(self, Token__is_end_of_line)
-        return true
-    }
-    if (Parser__matches_two(self, Token__is_space, false, Token__is_hash)) {
-        \ Preprocessor directives are ignored and treated as empty lines
-        Parser__consume_space(self, (u16) 0)
-        Parser__consume_token(self, Token__is_hash)
-        while (!Parser__matches_one(self, Token__is_end_of_line)) {
-            Parser__consume_token(self, Token__is_anything)
         }
         Parser__consume_token(self, Token__is_end_of_line)
         return true
