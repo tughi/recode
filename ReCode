@@ -92,15 +92,15 @@ def test():
         expected_output = None
         with open(f'tests/{test_file_name}') as test_file:
             line = next(test_file)
-            if line == '// Expect:\n':
+            if line == '\\ Expect:\n':
                 line = next(test_file)
-                line_match = re.match(r'// - (error|output): (\'.*\')\n', line)
+                line_match = re.match(r'\\ - (error|output): (\'.*\')\n', line)
                 if line_match:
                     if line_match.group(1) == 'error':
                         expected_error = line_match.group(2)
                     else:
                         expected_output = line_match.group(2)
-            elif line == '// Skip\n':
+            elif line == '\\ Skip\n':
                 continue
             if expected_error is None and expected_output is None:
                 logger.warning(f"{COLOR_WARNING}Skipping unsupported test: tests/{test_file_name}{COLOR_RESET}")

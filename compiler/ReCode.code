@@ -1,4 +1,4 @@
-// Copyright (C) 2023 Stefan Selariu
+\ Copyright (C) 2023 Stefan Selariu
 
 #pragma region Builtins
 
@@ -229,7 +229,7 @@ Source* Source__create(File* file, char* file_path) {
         String__append_char(file_content, (char) ch)
     }
 
-    String__append_char(file_content, '\0') // simplifies EOF detection
+    String__append_char(file_content, '\0') \ simplifies EOF detection
 
     Source* source = (Source*) malloc(sizeof(Source))
     source->content = file_content
@@ -822,13 +822,8 @@ Token* Scanner__scan_token(Scanner* self) {
         return Scanner__scan_string_token(self, source_location, token_lexeme)
     }
 
-    if (next_char == '/') {
-        String__append_char(token_lexeme, Scanner__next_char(self))
-        if (Scanner__peek_char(self) == '/') {
-            return Scanner__scan_comment_token(self, source_location, token_lexeme)
-        }
-        // not a comment
-        return (Token*) Other_Token__create(source_location, token_lexeme)
+    if (next_char == '\\') {
+        return Scanner__scan_comment_token(self, source_location, token_lexeme)
     }
 
     if (next_char == '\n') {
@@ -1670,7 +1665,7 @@ bool Parser__consume_empty_line(Parser* self) {
         return true
     }
     if (Parser__matches_two(self, Token__is_space, false, Token__is_hash)) {
-        // Preprocessor directives are ignored and treated as empty lines
+        \ Preprocessor directives are ignored and treated as empty lines
         Parser__consume_space(self, (uint16_t) 0)
         Parser__consume_token(self, Token__is_hash)
         while (!Parser__matches_one(self, Token__is_end_of_line)) {
@@ -1682,14 +1677,14 @@ bool Parser__consume_empty_line(Parser* self) {
     return false
 }
 
-// primary_expression
-//      | "false"
-//      | "null"
-//      | "true"
-//      | CHARACTER
-//      | IDENTIFIER
-//      | INTEGER
-//      | STRING
+\ primary_expression
+\      | "false"
+\      | "null"
+\      | "true"
+\      | CHARACTER
+\      | IDENTIFIER
+\      | INTEGER
+\      | STRING
 Parsed_Expression* Parser__parse_primary_expression(Parser* self) {
     if (Parser__matches_one(self, Token__is_true)) {
         return (Parsed_Expression*) Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true)
@@ -1724,8 +1719,8 @@ Parsed_Expression* Parser__parse_primary_expression(Parser* self) {
     abort()
 }
 
-// access_expression
-//      | primary_expression ( "." IDENTIFIER | "->" IDENTIFIER | "(" ( expression ( "," expression )*)? ")" | "[" expression "]" )*
+\ access_expression
+\      | primary_expression ( "." IDENTIFIER | "->" IDENTIFIER | "(" ( expression ( "," expression )*)? ")" | "[" expression "]" )*
 Parsed_Expression* Parser__parse_access_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_primary_expression(self)
     while (true) {
@@ -1779,13 +1774,13 @@ Parsed_Expression* Parser__parse_access_expression(Parser* self) {
     return expression
 }
 
-// unary_expression
-//      | "-" unary_expression
-//      | "!" unary_expression
-//      | "&" unary_expression
-//      | "(" type ")" unary_expression
-//      | "sizeof" "(" type ")"
-//      | access_expression
+\ unary_expression
+\      | "-" unary_expression
+\      | "!" unary_expression
+\      | "&" unary_expression
+\      | "(" type ")" unary_expression
+\      | "sizeof" "(" type ")"
+\      | access_expression
 Parsed_Expression* Parser__parse_unary_expression(Parser* self) {
     if (Parser__matches_one(self, Token__is_minus)) {
         Source_Location* location = Parser__consume_token(self, Token__is_minus)->location
@@ -1854,8 +1849,8 @@ bool Token__is_mutliplication(Token* self) {
     return Token__is_asterisk(self) || Token__is_slash(self) || Token__is_percent(self)
 }
 
-// multiplication
-//      | unary_expression ( ( "*" | "/" | "%" ) unary_expression )*
+\ multiplication
+\      | unary_expression ( ( "*" | "/" | "%" ) unary_expression )*
 Parsed_Expression* Parser__parse_multiplication_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_unary_expression(self)
     while (Parser__matches_two(self, Token__is_space, false, Token__is_mutliplication)) {
@@ -1884,8 +1879,8 @@ bool Token__is_addition(Token* self) {
     return Token__is_plus(self) || Token__is_minus(self)
 }
 
-// addition
-//      | multiplication ( ( "+" | "-" ) multiplication )*
+\ addition
+\      | multiplication ( ( "+" | "-" ) multiplication )*
 Parsed_Expression* Parser__parse_addition_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_multiplication_expression(self)
     while (Parser__matches_two(self, Token__is_space, false, Token__is_addition)) {
@@ -1905,8 +1900,8 @@ Parsed_Expression* Parser__parse_addition_expression(Parser* self) {
     return expression
 }
 
-// comparison
-//      | addition ( ( "<=" | "<" | ">" | ">=") addition )*
+\ comparison
+\      | addition ( ( "<=" | "<" | ">" | ">=") addition )*
 Parsed_Expression* Parser__parse_comparison_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_addition_expression(self)
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
@@ -1939,8 +1934,8 @@ Parsed_Expression* Parser__parse_comparison_expression(Parser* self) {
     return expression
 }
 
-// equality
-//      | comparison ( ( "==" | "!=" ) comparison )*
+\ equality
+\      | comparison ( ( "==" | "!=" ) comparison )*
 Parsed_Expression* Parser__parse_equality_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_comparison_expression(self)
     if (Parser__matches_three(self, Token__is_space, false, Token__is_equals, true, Token__is_equals)) {
@@ -1961,8 +1956,8 @@ Parsed_Expression* Parser__parse_equality_expression(Parser* self) {
     return expression
 }
 
-// logic_and
-//      | equality ( "&&" equality )*
+\ logic_and
+\      | equality ( "&&" equality )*
 Parsed_Expression* Parser__parse_logic_and_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_equality_expression(self)
     while (Parser__matches_three(self, Token__is_space, false, Token__is_ampersand, true, Token__is_ampersand)) {
@@ -1976,8 +1971,8 @@ Parsed_Expression* Parser__parse_logic_and_expression(Parser* self) {
     return expression
 }
 
-// logic_or
-//      | logic_and ( "||" logic_and )*
+\ logic_or
+\      | logic_and ( "||" logic_and )*
 Parsed_Expression* Parser__parse_logic_or_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_logic_and_expression(self)
     while (Parser__matches_three(self, Token__is_space, false, Token__is_vertical_bar, true, Token__is_vertical_bar)) {
@@ -1991,14 +1986,14 @@ Parsed_Expression* Parser__parse_logic_or_expression(Parser* self) {
     return expression
 }
 
-// expression
-//      | logic_or
+\ expression
+\      | logic_or
 Parsed_Expression* Parser__parse_expression(Parser* self) {
     return Parser__parse_logic_or_expression(self)
 }
 
-// struct
-//      | "typedef" "struct" IDENTIFIER ( "{" ( type "*"? IDENTIFIER )* "}" )? IDENTIFIER
+\ struct
+\      | "typedef" "struct" IDENTIFIER ( "{" ( type "*"? IDENTIFIER )* "}" )? IDENTIFIER
 Parsed_Statement* Parser__parse_struct(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location
     Parser__consume_space(self, (uint16_t) 1)
@@ -2038,8 +2033,8 @@ Parsed_Statement* Parser__parse_struct(Parser* self) {
     return (Parsed_Statement*) struct_statement
 }
 
-// enum
-//      | "typedef" "enum" IDENTIFIER "{" ( IDENTIFIER "," )* "}" IDENTIFIER
+\ enum
+\      | "typedef" "enum" IDENTIFIER "{" ( IDENTIFIER "," )* "}" IDENTIFIER
 Parsed_Statement* Parser__parse_enum(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location
     Parser__consume_space(self, (uint16_t) 1)
@@ -2054,7 +2049,7 @@ Parsed_Statement* Parser__parse_enum(Parser* self) {
     Parsed_Enum_Member* last_member = null
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         while (Parser__consume_empty_line(self)) {
-            // ignored
+            \ ignored
         }
         Parser__consume_space(self, self->current_identation * (uint16_t) 4)
         Token* name = Parser__consume_token(self, Token__is_identifier)
@@ -2082,8 +2077,8 @@ Parsed_Statement* Parser__parse_enum(Parser* self) {
     return (Parsed_Statement*) enum_statement
 }
 
-// type
-//      | "struct"? IDENTIFIER "*"*
+\ type
+\      | "struct"? IDENTIFIER "*"*
 Parsed_Type* Parser__parse_type(Parser* self) {
     Token* struct_token = null
     if (Parser__matches_one(self, Token__is_struct)) {
@@ -2103,8 +2098,8 @@ Parsed_Type* Parser__parse_type(Parser* self) {
     return type
 }
 
-// type_alias
-//      | "typedef" type IDENTIFIER "(" ( type IDENTIFIER ( "," type IDENTIFIER )* )? ")"
+\ type_alias
+\      | "typedef" type IDENTIFIER "(" ( type IDENTIFIER ( "," type IDENTIFIER )* )? ")"
 Parsed_Statement* Parser__parse_type_alias(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location
     Parser__consume_space(self, (uint16_t) 1)
@@ -2138,8 +2133,8 @@ Parsed_Statement* Parser__parse_type_alias(Parser* self) {
     return Parsed_Function_Type_Statement__create(location, name, first_parameter, return_type)
 }
 
-// variable
-//      | "extern"? type IDENTIFIER ( "=" expression )?
+\ variable
+\      | "extern"? type IDENTIFIER ( "=" expression )?
 Parsed_Statement* Parser__parse_variable(Parser* self) {
     bool is_external
     Source_Location* location
@@ -2188,8 +2183,8 @@ Parsed_Function_Parameter* Parser__parse_function_parameters(Parser* self) {
     return first_parameter
 }
 
-// block
-//      | "{" statements "}"
+\ block
+\      | "{" statements "}"
 Parsed_Block_Statement* Parser__parse_block_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_opening_brace)->location
     Parser__consume_end_of_line(self)
@@ -2202,9 +2197,9 @@ Parsed_Block_Statement* Parser__parse_block_statement(Parser* self) {
     return Parsed_Block_Statement__create(location, statements)
 }
 
-// function
-//      | "extern" type IDENTIFIER "(" function_parameter* ")"
-//      | type IDENTIFIER "(" function_parameter* ")" "{" statements "}"
+\ function
+\      | "extern" type IDENTIFIER "(" function_parameter* ")"
+\      | type IDENTIFIER "(" function_parameter* ")" "{" statements "}"
 Parsed_Statement* Parser__parse_function(Parser* self) {
     bool is_external
     Source_Location* location
@@ -2248,8 +2243,8 @@ Parsed_Statement* Parser__parse_function(Parser* self) {
     return Parsed_Function_Statement__create(location, name, first_parameter, return_type, statements, is_external)
 }
 
-// return
-//      | "return" expression?
+\ return
+\      | "return" expression?
 Parsed_Statement* Parser__parse_return_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_return)->location
     Parsed_Expression* expression = null
@@ -2260,15 +2255,15 @@ Parsed_Statement* Parser__parse_return_statement(Parser* self) {
     return Parsed_Return_Statement__create(location, expression)
 }
 
-// break
-//      | "break"
+\ break
+\      | "break"
 Parsed_Statement* Parser__parse_break_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_break)->location
     return Parsed_Break_Statement__create(location)
 }
 
-// if
-//      | "if" "(" expression ")" statement ( "else" statement )?
+\ if
+\      | "if" "(" expression ")" statement ( "else" statement )?
 Parsed_Statement* Parser__parse_if_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_if)->location
     Parser__consume_space(self, (uint16_t) 1)
@@ -2293,8 +2288,8 @@ Parsed_Statement* Parser__parse_if_statement(Parser* self) {
     return Parsed_If_Statement__create(location, condition_expression, true_statement, false_statement)
 }
 
-// while
-//      | "while" "(" expression ")" statement
+\ while
+\      | "while" "(" expression ")" statement
 Parsed_Statement* Parser__parse_while_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_while)->location
     Parser__consume_space(self, (uint16_t) 1)
@@ -2308,14 +2303,14 @@ Parsed_Statement* Parser__parse_while_statement(Parser* self) {
     return Parsed_While_Statement__create(location, condition_expression, body_statement)
 }
 
-// statement
-//      | enum
-//      | function
-//      | if
-//      | return
-//      | struct
-//      | type_alias
-//      | variable
+\ statement
+\      | enum
+\      | function
+\      | if
+\      | return
+\      | struct
+\      | type_alias
+\      | variable
 Parsed_Statement* Parser__parse_statement(Parser* self) {
     Parser__consume_space(self, self->current_identation * (uint16_t) 4)
 
@@ -2387,12 +2382,12 @@ Parsed_Statement* Parser__parse_statement(Parser* self) {
     return (Parsed_Statement*) Parsed_Expression_Statement__create(expresion)
 }
 
-// statements
-//      | ( statement )*
+\ statements
+\      | ( statement )*
 void Parser__parse_statements(Parser* self, Parsed_Statements* statements) {
     while (true) {
         while (Parser__consume_empty_line(self)) {
-            // ignored
+            \ ignored
         }
 
         if (statements->has_globals) {
@@ -2446,7 +2441,7 @@ Parsed_Source* parse(Source* source) {
 #pragma region Checked Types
 
 typedef enum Checked_Type_Kind {
-    // Builtins
+    \ Builtins
     CHECKED_TYPE_KIND__BOOL,
     CHECKED_TYPE_KIND__CHAR,
     CHECKED_TYPE_KIND__INT16_T,
@@ -2459,12 +2454,12 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__UINT64_T,
     CHECKED_TYPE_KIND__UINT8_T,
     CHECKED_TYPE_KIND__VOID,
-    CHECKED_TYPE_KIND__NULL, // Pseudo type
-    // Defined
+    CHECKED_TYPE_KIND__NULL, \ Pseudo type
+    \ Defined
     CHECKED_TYPE_KIND__ENUM,
     CHECKED_TYPE_KIND__FUNCTION,
     CHECKED_TYPE_KIND__STRUCT,
-    // Dynamic
+    \ Dynamic
     CHECKED_TYPE_KIND__POINTER,
 } Checked_Type_Kind
 
@@ -3999,7 +3994,7 @@ Checked_Break_Statement* Checker__check_break_statement(Checker* self, Parsed_Br
 Checked_Expression_Statement* Checker__check_expression_statement(Checker* self, Parsed_Expression_Statement* parsed_statement) {
     Checked_Expression* expression = Checker__check_expression(self, parsed_statement->expression)
     if (!Checked_Type__equals((Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__VOID), expression->type)) {
-        // TODO: Source_Location__warning(expression->location, String__create_from("Unused result value"))
+        \ TODO: Source_Location__warning(expression->location, String__create_from("Unused result value"))
     }
     return Checked_Expression_Statement__create(parsed_statement->super.location, expression)
 }
@@ -4102,7 +4097,7 @@ Checked_Statement* Checker__check_statement(Checker* self, Parsed_Statement* par
 }
 
 Checked_Statements* Checker__check_statements(Checker* self, Parsed_Statements* parsed_statements) {
-    // Create and push block symbols
+    \ Create and push block symbols
     self->symbols = Checked_Symbols__create(self->symbols)
 
     Checked_Statements* checked_statements = Checked_Statements__create()
@@ -4113,7 +4108,7 @@ Checked_Statements* Checker__check_statements(Checker* self, Parsed_Statements* 
         parsed_statement = parsed_statement->next_statement
     }
 
-    // Pop block symbols
+    \ Pop block symbols
     self->symbols = self->symbols->parent
 
     return checked_statements
@@ -4129,11 +4124,11 @@ void Checker__check_function_definition(Checker* self, Parsed_Function_Statement
     Checked_Function_Type* function_type = function_symbol->function_type
     self->return_type = function_type->return_type
 
-    // Create and push function symbols
+    \ Create and push function symbols
     self->symbols = Checked_Symbols__create(self->symbols)
 
     if (function_type->first_parameter != null) {
-        // Create a symbol for each function parameter
+        \ Create a symbol for each function parameter
         Checked_Function_Parameter* parameter = function_type->first_parameter
         while (parameter != null) {
             Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol*) Checked_Function_Parameter_Symbol__create(parameter->location, parameter->name, parameter->type))
@@ -4141,10 +4136,10 @@ void Checker__check_function_definition(Checker* self, Parsed_Function_Statement
         }
     }
 
-    // Check statements
+    \ Check statements
     function_symbol->checked_statements = Checker__check_statements(self, parsed_statement->statements)
 
-    // Pop function symbols
+    \ Pop function symbols
     self->symbols = self->symbols->parent
 }
 
@@ -4153,7 +4148,7 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
 
     Parsed_Statement* parsed_statement
 
-    // Check all declared types
+    \ Check all declared types
     parsed_statement = parsed_source->statements->first_statement
     while (parsed_statement != null) {
         if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
@@ -4166,7 +4161,7 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
         parsed_statement = parsed_statement->next_statement
     }
 
-    // Collect other declarations
+    \ Collect other declarations
     parsed_statement = parsed_source->statements->first_statement
     while (parsed_statement != null) {
         Checked_Statement* checked_statement = null
@@ -4175,11 +4170,11 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
             checked_statement = (Checked_Statement*) Checker__check_variable_statement(self, (Parsed_Variable_Statement*) parsed_statement)
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
-            // ignored
+            \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__ENUM) {
-            // ignored
+            \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__FUNCTION_TYPE) {
-            // ignored
+            \ ignored
         } else {
             Source_Location__error(parsed_statement->location, String__create_from("Unsupported statement"))
             abort()
@@ -4190,7 +4185,7 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
         parsed_statement = parsed_statement->next_statement
     }
 
-    // Check function definitions
+    \ Check function definitions
     parsed_statement = parsed_source->statements->first_statement
     while (parsed_statement != null) {
         if (parsed_statement->kind == PARSED_STATEMENT_KIND__FUNCTION) {
@@ -4199,13 +4194,13 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
                 Checker__check_function_definition(self, function_statement)
             }
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
-            // ignored
+            \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
-            // ignored
+            \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__ENUM) {
-            // ignored
+            \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__FUNCTION_TYPE) {
-            // ignored
+            \ ignored
         } else {
             Source_Location__error(parsed_statement->location, String__create_from("Unsupported statement"))
             abort()
@@ -4702,7 +4697,7 @@ void generate(File* file, Checked_Source* checked_source) {
     File__write_cstring(generator.file, "#include <stddef.h>\n")
     File__write_cstring(generator.file, "\n")
 
-    // Declare all defined types
+    \ Declare all defined types
     checked_symbol = checked_source->first_symbol
     while (checked_symbol != null) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
@@ -4717,7 +4712,7 @@ void generate(File* file, Checked_Source* checked_source) {
     }
     File__write_cstring(generator.file, "\n")
 
-    // Generate all defined types
+    \ Generate all defined types
     checked_symbol = checked_source->first_symbol
     while (checked_symbol != null) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE) {
@@ -4729,7 +4724,7 @@ void generate(File* file, Checked_Source* checked_source) {
         checked_symbol = checked_symbol->next_symbol
     }
 
-    // Declare all global variables
+    \ Declare all global variables
     Checked_Statement* checked_statement = checked_source->statements->first_statement
     while (checked_statement != null) {
         if (checked_statement->kind == CHECKED_STATEMENT_KIND__VARIABLE) {
@@ -4743,7 +4738,7 @@ void generate(File* file, Checked_Source* checked_source) {
     }
     File__write_cstring(generator.file, "\n")
 
-    // Declare all defined functions
+    \ Declare all defined functions
     checked_symbol = checked_source->first_symbol
     while (checked_symbol != null) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
@@ -4753,7 +4748,7 @@ void generate(File* file, Checked_Source* checked_source) {
     }
     File__write_cstring(generator.file, "\n")
 
-    // Generate all defined functions
+    \ Generate all defined functions
     checked_symbol = checked_source->first_symbol
     while (checked_symbol != null) {
         if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {

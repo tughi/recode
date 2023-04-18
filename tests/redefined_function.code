@@ -1,5 +1,5 @@
-// Expect:
-// - error: 'tests/redefined_function.code:12:9: Function declared first here: tests/redefined_function.code:4:9\n'
+\ Expect:
+\ - error: 'tests/redefined_function.code:12:9: Function declared first here: tests/redefined_function.code:4:9\n'
 
 int32_t get_answer() {
     return 1

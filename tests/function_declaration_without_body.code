@@ -1,5 +1,5 @@
-// Expect:
-// - error: 'tests/function_declaration_without_body.code:4:1: Function declaration without a body\n'
+\ Expect:
+\ - error: 'tests/function_declaration_without_body.code:4:1: Function declaration without a body\n'
 
 void get_answer();
 

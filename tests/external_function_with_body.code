@@ -1,5 +1,5 @@
-// Expect:
-// - error: 'tests/external_function_with_body.code:4:1: External function cannot have a body\n'
+\ Expect:
+\ - error: 'tests/external_function_with_body.code:4:1: External function cannot have a body\n'
 
 extern void test() {
 }

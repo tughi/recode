@@ -35,6 +35,7 @@ A compiler for the _Code_ language.
   - TODO: Change funtion syntax
   - TODO: Treat string literals as local String instances
   - TODO: Change cast syntax
+  - TODO: Collect copyright headers and put the in the generated file
 
 
 ## How to add new features
