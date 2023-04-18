@@ -28,7 +28,6 @@ A compiler for the _Code_ language.
     - string
   - no preprocessor
 - [ ] Translate and refactor compiler to _Code_
-  - TODO: Rename integer types
   - TODO: Change struct syntax
   - TODO: Disallow forward declaration of structs
   - TODO: Change variable declarations syntax

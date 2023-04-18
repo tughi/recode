@@ -18,13 +18,13 @@ extern File* stdout
 extern File* stderr
 
 extern File* fopen(char* file_name, char* mode)
-extern int32_t fclose(File* stream)
-extern int32_t fgetc(File* stream)
-extern int32_t fputc(int32_t c, File* stream)
-extern int32_t fputs(char* s, File* stream)
+extern i32 fclose(File* stream)
+extern i32 fgetc(File* stream)
+extern i32 fputc(i32 c, File* stream)
+extern i32 fputs(char* s, File* stream)
 
-extern void* malloc(size_t size)
-extern void* realloc(void* ptr, size_t size)
+extern void* malloc(usize size)
+extern void* realloc(void* ptr, usize size)
 extern void free(void* ptr)
 
 extern void abort()
@@ -34,20 +34,20 @@ extern void abort()
 
 typedef struct String {
     char* data
-    size_t data_size
-    size_t length
+    usize data_size
+    usize length
 } String
 
-String* String__create_empty(size_t data_size) {
+String* String__create_empty(usize data_size) {
     String* string = (String*) malloc(sizeof(String))
     string->data = (char*) malloc(data_size)
     string->data_size = data_size
-    string->length = (size_t) 0
+    string->length = (usize) 0
     return string
 }
 
 String* String__create() {
-    return String__create_empty((size_t) 16)
+    return String__create_empty((usize) 16)
 }
 
 void String__delete(String* self) {
@@ -57,79 +57,79 @@ void String__delete(String* self) {
 
 String* String__append_char(String* self, char ch) {
     if (self->length >= self->data_size) {
-        self->data_size = self->data_size + (size_t) 16
+        self->data_size = self->data_size + (usize) 16
         self->data = (char*) realloc((void*) self->data, self->data_size)
     }
     self->data[self->length] = ch
-    self->length = self->length + (size_t) 1
+    self->length = self->length + (usize) 1
     return self
 }
 
 String* String__append_cstring(String* self, char* s) {
-    size_t index = (size_t) 0
+    usize index = (usize) 0
     while (true) {
         char c = s[index]
         if (c == '\0') {
             return self
         }
         String__append_char(self, c)
-        index = index + (size_t) 1
+        index = index + (usize) 1
     }
 }
 
-size_t cstring_length(char* s) {
-    size_t length = (size_t) 0
+usize cstring_length(char* s) {
+    usize length = (usize) 0
     while (true) {
-        uint8_t c = (uint8_t) s[length]
-        if (c == (uint8_t) 0) {
+        u8 c = (u8) s[length]
+        if (c == (u8) 0) {
             break
         }
-        length = length + (size_t) 1
+        length = length + (usize) 1
     }
     return length
 }
 
 String* String__create_from(char* data) {
-    size_t string_length = cstring_length(data)
+    usize string_length = cstring_length(data)
     String* string = String__create_empty(string_length)
     String__append_cstring(string, data)
     return string
 }
 
-String* String__append_int16_t(String* self, int16_t value) {
-    if (value < (int16_t) 0) {
+String* String__append_i16(String* self, i16 value) {
+    if (value < (i16) 0) {
         String__append_char(self, '-')
-        String__append_int16_t(self, -value)
+        String__append_i16(self, -value)
     } else {
-        if (value >= (int16_t) 10) {
-            String__append_int16_t(self, value / (int16_t) 10)
+        if (value >= (i16) 10) {
+            String__append_i16(self, value / (i16) 10)
         }
-        String__append_char(self, (char) (value % (int16_t) 10) + '0')
+        String__append_char(self, (char) (value % (i16) 10) + '0')
     }
     return self
 }
 
 String* String__append_string(String* self, String* other) {
-    size_t index = (size_t) 0
+    usize index = (usize) 0
     while (index < other->length) {
         String__append_char(self, other->data[index])
-        index = index + (size_t) 1
+        index = index + (usize) 1
     }
     return self
 }
 
 bool String__equals_cstring(String* self, char* s) {
-    size_t length = cstring_length(s)
+    usize length = cstring_length(s)
     if (self->length != length) {
         return false
     }
 
-    size_t index = (size_t) 0
+    usize index = (usize) 0
     while (index < length) {
         if (self->data[index] != s[index]) {
             return false
         }
-        index = index + (size_t) 1
+        index = index + (usize) 1
     }
 
     return true
@@ -140,12 +140,12 @@ bool String__equals_string(String* self, String* other) {
         return false
     }
 
-    size_t index = (size_t) 0
+    usize index = (usize) 0
     while (index < self->length) {
         if (self->data[index] != other->data[index]) {
             return false
         }
-        index = index + (size_t) 1
+        index = index + (usize) 1
     }
 
     return true
@@ -158,37 +158,37 @@ void pass() {
 }
 
 void File__write_char(File* self, char c) {
-    fputc((int32_t) c, self)
+    fputc((i32) c, self)
 }
 
 void File__write_cstring(File* self, char* s) {
     fputs(s, self)
 }
 
-void File__write_int32_t(File* self, int32_t value) {
+void File__write_i32(File* self, i32 value) {
     if (value < 0) {
         File__write_char(self, '-')
-        File__write_int32_t(self, -value)
+        File__write_i32(self, -value)
     } else {
         if (value >= 10) {
-            File__write_int32_t(self, value / 10)
+            File__write_i32(self, value / 10)
         }
         File__write_char(self, (char) (value % 10) + '0')
     }
 }
 
-void File__write_uint64_t(File* self, uint64_t value) {
-    if (value >= (uint64_t) 10) {
-        File__write_uint64_t(self, value / (uint64_t) 10)
+void File__write_u64(File* self, u64 value) {
+    if (value >= (u64) 10) {
+        File__write_u64(self, value / (u64) 10)
     }
-    File__write_char(self, (char) (value % (uint64_t) 10) + '0')
+    File__write_char(self, (char) (value % (u64) 10) + '0')
 }
 
 void File__write_string(File* self, String* string) {
-    size_t index = (size_t) 0
+    usize index = (usize) 0
     while (index < string->length) {
         File__write_char(self, string->data[index])
-        index = index + (size_t) 1
+        index = index + (usize) 1
     }
 }
 
@@ -222,7 +222,7 @@ Source* Source__create(File* file, char* file_path) {
     String* file_content = String__create()
 
     while (true) {
-        int32_t ch = fgetc(file)
+        i32 ch = fgetc(file)
         if (ch == -1) {
             break
         }
@@ -243,11 +243,11 @@ Source* Source__create(File* file, char* file_path) {
 
 typedef struct Source_Location {
     Source* source
-    uint16_t line
-    uint16_t column
+    u16 line
+    u16 column
 } Source_Location
 
-Source_Location* Source_Location__create(Source* source, uint16_t line, uint16_t column) {
+Source_Location* Source_Location__create(Source* source, u16 line, u16 column) {
     Source_Location* source_location = (Source_Location*) malloc(sizeof(Source_Location))
     source_location->source = source
     source_location->line = line
@@ -258,18 +258,18 @@ Source_Location* Source_Location__create(Source* source, uint16_t line, uint16_t
 String* String__append_source_location(String* self, Source_Location* location) {
     String__append_cstring(self, location->source->path)
     String__append_char(self, ':')
-    String__append_int16_t(self, (int16_t) location->line)
+    String__append_i16(self, (i16) location->line)
     String__append_char(self, ':')
-    String__append_int16_t(self, (int16_t) location->column)
+    String__append_i16(self, (i16) location->column)
     return self
 }
 
 void File__write_source_location(File* self, Source_Location* location) {
     File__write_cstring(self, location->source->path)
     File__write_char(self, ':')
-    File__write_int32_t(self, (int32_t) location->line)
+    File__write_i32(self, (i32) location->line)
     File__write_char(self, ':')
-    File__write_int32_t(self, (int32_t) location->column)
+    File__write_i32(self, (i32) location->column)
     File__write_cstring(self, ": ")
 }
 
@@ -307,7 +307,7 @@ typedef struct Token {
     struct Token* next_token
 } Token
 
-Token* Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location* location, String* lexeme) {
+Token* Token__create_kind(Token_Kind kind, usize kind_size, Source_Location* location, String* lexeme) {
     Token* token = (Token*) malloc(kind_size)
     token->kind = kind
     token->location = location
@@ -377,10 +377,10 @@ Identifier_Token* Identifier_Token__create(Source_Location* location, String* le
 
 typedef struct Integer_Token {
     Token super
-    uint64_t value
+    u64 value
 } Integer_Token
 
-Integer_Token* Integer_Token__create(Source_Location* location, String* lexeme, uint64_t value) {
+Integer_Token* Integer_Token__create(Source_Location* location, String* lexeme, u64 value) {
     Integer_Token* token = (Integer_Token*) Token__create_kind(TOKEN_KIND__INTEGER, sizeof(Integer_Token), location, lexeme)
     token->value = value
     return token
@@ -396,10 +396,10 @@ Other_Token* Other_Token__create(Source_Location* location, String* lexeme) {
 
 typedef struct Space_Token {
     Token super
-    uint16_t count
+    u16 count
 } Space_Token
 
-Space_Token* Space_Token__create(Source_Location* location, String* lexeme, uint16_t count) {
+Space_Token* Space_Token__create(Source_Location* location, String* lexeme, u16 count) {
     Space_Token* token = (Space_Token*) Token__create_kind(TOKEN_KIND__SPACE, sizeof(Space_Token), location, lexeme)
     token->count = count
     return token
@@ -614,9 +614,9 @@ void File__write_token(File* stream, Token* token) {
 
 typedef struct Scanner {
     Source* source
-    size_t current_char_index
-    uint16_t current_line
-    uint16_t current_column
+    usize current_char_index
+    u16 current_line
+    u16 current_column
     Token* current_token
 } Scanner
 
@@ -627,12 +627,12 @@ char Scanner__peek_char(Scanner* self) {
 char Scanner__next_char(Scanner* self) {
     char next_char = Scanner__peek_char(self)
     if (next_char != '\0') {
-        self->current_char_index = self->current_char_index + (size_t) 1
+        self->current_char_index = self->current_char_index + (usize) 1
         if (next_char == '\n') {
-            self->current_line = self->current_line + (uint16_t) 1
-            self->current_column = (uint16_t) 1
+            self->current_line = self->current_line + (u16) 1
+            self->current_column = (u16) 1
         } else {
-            self->current_column = self->current_column + (uint16_t) 1
+            self->current_column = self->current_column + (u16) 1
         }
     }
     return next_char
@@ -735,10 +735,10 @@ bool char_is_digit(char c) {
 }
 
 Token* Scanner__scan_integer_token(Scanner* self, Source_Location* source_location, String* token_lexeme) {
-    uint64_t value = (uint64_t) 0
+    u64 value = (u64) 0
     while (char_is_digit(Scanner__peek_char(self))) {
         char c = Scanner__next_char(self)
-        value = value * (uint64_t) 10 + (uint64_t) (c - '0')
+        value = value * (u64) 10 + (u64) (c - '0')
         String__append_char(token_lexeme, c)
     }
     return (Token*) Integer_Token__create(source_location, token_lexeme, value)
@@ -749,9 +749,9 @@ bool char_is_space(char c) {
 }
 
 Token* Scanner__scan_space_token(Scanner* self, Source_Location* source_location, String* token_lexeme) {
-    uint16_t count = (uint16_t) 0
+    u16 count = (u16) 0
     while (char_is_space(Scanner__peek_char(self))) {
-        count = count + (uint16_t) 1
+        count = count + (u16) 1
         String__append_char(token_lexeme, Scanner__next_char(self))
     }
     return (Token*) Space_Token__create(source_location, token_lexeme, count)
@@ -847,14 +847,14 @@ Token* Scanner__next_token(Scanner* self) {
     return self->current_token
 }
 
-Token* Scanner__peek_token(Scanner* self, uint8_t offset) {
+Token* Scanner__peek_token(Scanner* self, u8 offset) {
     Token* token = self->current_token
-    while (offset > (uint8_t) 0) {
+    while (offset > (u8) 0) {
         if (token->next_token == null) {
             token->next_token = Scanner__scan_token(self)
         }
         token = token->next_token
-        offset = offset - (uint8_t) 1
+        offset = offset - (u8) 1
     }
     return token
 }
@@ -862,9 +862,9 @@ Token* Scanner__peek_token(Scanner* self, uint8_t offset) {
 Scanner* Scanner__create(Source* source) {
     Scanner* scanner = (Scanner*) malloc(sizeof(Scanner))
     scanner->source = source
-    scanner->current_char_index = (size_t) 0
-    scanner->current_line = (uint16_t) 1
-    scanner->current_column = (uint16_t) 1
+    scanner->current_char_index = (usize) 0
+    scanner->current_line = (u16) 1
+    scanner->current_column = (u16) 1
 
     scanner->current_token = Scanner__scan_token(scanner)
 
@@ -893,7 +893,7 @@ typedef struct Parsed_Type {
     Source_Location* location
 } Parsed_Type
 
-Parsed_Type* Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, Source_Location* location) {
+Parsed_Type* Parsed_Type__create_kind(Parsed_Type_Kind kind, usize kind_size, Source_Location* location) {
     Parsed_Type* type = (Parsed_Type*) malloc(kind_size)
     type->kind = kind
     type->location = location
@@ -969,7 +969,7 @@ typedef struct Parsed_Expression {
     Source_Location* location
 } Parsed_Expression
 
-Parsed_Expression* Parsed_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location* location) {
+Parsed_Expression* Parsed_Expression__create_kind(Parsed_Expression_Kind kind, usize kind_size, Source_Location* location) {
     Parsed_Expression* expression = (Parsed_Expression*) malloc(kind_size)
     expression->kind = kind
     expression->location = location
@@ -994,7 +994,7 @@ typedef struct Parsed_Unary_Expression {
     Parsed_Expression* other_expression
 } Parsed_Unary_Expression
 
-Parsed_Unary_Expression* Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location* location, Parsed_Expression* other_expression) {
+Parsed_Unary_Expression* Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind kind, usize kind_size, Source_Location* location, Parsed_Expression* other_expression) {
     Parsed_Unary_Expression* expression = (Parsed_Unary_Expression*) Parsed_Expression__create_kind(kind, kind_size, location)
     expression->other_expression = other_expression
     return expression
@@ -1005,7 +1005,7 @@ typedef struct Parsed_Literal_Expression {
     Token* literal
 } Parsed_Literal_Expression
 
-Parsed_Literal_Expression* Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Token* literal) {
+Parsed_Literal_Expression* Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind kind, usize kind_size, Token* literal) {
     Parsed_Literal_Expression* expression = (Parsed_Literal_Expression*) Parsed_Expression__create_kind(kind, kind_size, literal->location)
     expression->literal = literal
     return expression
@@ -1143,7 +1143,7 @@ Parsed_Group_Expression* Parsed_Group_Expression__create(Source_Location* locati
 
 typedef struct Parsed_Integer_Expression {
     Parsed_Literal_Expression super
-    uint64_t value
+    u64 value
 } Parsed_Integer_Expression
 
 Parsed_Integer_Expression* Parsed_Integer_Expression__create(Integer_Token* literal) {
@@ -1307,7 +1307,7 @@ typedef struct Parsed_Statement {
     struct Parsed_Statement* next_statement
 } Parsed_Statement
 
-Parsed_Statement* Parsed_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location* location) {
+Parsed_Statement* Parsed_Statement__create_kind(Parsed_Statement_Kind kind, usize kind_size, Source_Location* location) {
     Parsed_Statement* statement = (Parsed_Statement*) malloc(kind_size)
     statement->kind = kind
     statement->location = location
@@ -1320,7 +1320,7 @@ typedef struct Parsed_Named_Statement {
     Token* name
 } Parsed_Named_Statement
 
-Parsed_Named_Statement* Parsed_Named_Statement__create_kind(Parsed_Statement_Kind kind, size_t kind_size, Source_Location* location, Token* name) {
+Parsed_Named_Statement* Parsed_Named_Statement__create_kind(Parsed_Statement_Kind kind, usize kind_size, Source_Location* location, Token* name) {
     Parsed_Named_Statement* statement = (Parsed_Named_Statement*) Parsed_Statement__create_kind(kind, kind_size, location)
     statement->name = name
     return statement
@@ -1563,7 +1563,7 @@ Parsed_Source* Parsed_Compilation_Unit__create() {
 typedef struct Parser {
     Scanner* scanner
     Parsed_Source* compilation_unit
-    uint16_t current_identation
+    u16 current_identation
 } Parser
 
 void Parser__error(Parser* self, String* message) {
@@ -1574,22 +1574,22 @@ void Parser__warning(Parser* self, String* message) {
     Token__warning(self->scanner->current_token, message)
 }
 
-Token* Parser__peek_token(Parser* self, uint8_t offset) {
+Token* Parser__peek_token(Parser* self, u8 offset) {
     return Scanner__peek_token(self->scanner, offset)
 }
 
 typedef bool Token_Is_Function(Token* self)
 
 bool Parser__matches_three(Parser* self, Token_Is_Function* first_is, bool first_required, Token_Is_Function* second_is, bool second_required, Token_Is_Function* third_is) {
-    uint8_t peek_offset = (uint8_t) 0
+    u8 peek_offset = (u8) 0
     if (first_is(Parser__peek_token(self, peek_offset))) {
-        peek_offset = peek_offset + (uint8_t) 1
+        peek_offset = peek_offset + (u8) 1
     } else if (first_required) {
         return false
     }
     if (second_is != null) {
         if (second_is(Parser__peek_token(self, peek_offset))) {
-            peek_offset = peek_offset + (uint8_t) 1
+            peek_offset = peek_offset + (u8) 1
         } else if (second_required) {
             return false
         }
@@ -1622,16 +1622,16 @@ void Parser__consume_comment(Parser* self) {
     Parser__consume_token(self, Token__is_comment)
 }
 
-void Parser__consume_space(Parser* self, uint16_t count) {
+void Parser__consume_space(Parser* self, u16 count) {
     if (Parser__matches_one(self, Token__is_space)) {
         Space_Token* token = (Space_Token*) Parser__consume_token(self, Token__is_space)
         if (token->count != count) {
-            String* message = String__append_cstring(String__append_int16_t(String__append_cstring(String__append_int16_t(String__create_from("Consumed "), (int16_t) token->count), " spaces where "), (int16_t) count), " were expected")
+            String* message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), (i16) token->count), " spaces where "), (i16) count), " were expected")
             Token__warning((Token*) token, message)
             String__delete(message)
         }
-    } else if (count > (uint16_t) 0) {
-        String* message = String__append_cstring(String__append_int16_t(String__append_cstring(String__append_int16_t(String__create_from("Consumed "), (int16_t) 0), " spaces where "), (int16_t) count), " were expected")
+    } else if (count > (u16) 0) {
+        String* message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), (i16) 0), " spaces where "), (i16) count), " were expected")
         Parser__warning(self, message)
         String__delete(message)
     }
@@ -1639,10 +1639,10 @@ void Parser__consume_space(Parser* self, uint16_t count) {
 
 void Parser__consume_end_of_line(Parser* self) {
     if (Parser__matches_two(self, Token__is_space, false, Token__is_comment)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_comment(self)
     } else {
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
     }
     Token* token = Parser__consume_token(self, Token__is_end_of_line)
     if (Token__is_end_of_file(token)) {
@@ -1656,17 +1656,17 @@ bool Parser__consume_empty_line(Parser* self) {
     }
     if (Parser__matches_three(self, Token__is_space, false, Token__is_comment, false, Token__is_end_of_line)) {
         if (Parser__matches_two(self, Token__is_space, false, Token__is_comment)) {
-            Parser__consume_space(self, self->current_identation * (uint16_t) 4)
+            Parser__consume_space(self, self->current_identation * (u16) 4)
             Parser__consume_comment(self)
         } else {
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
         }
         Parser__consume_token(self, Token__is_end_of_line)
         return true
     }
     if (Parser__matches_two(self, Token__is_space, false, Token__is_hash)) {
         \ Preprocessor directives are ignored and treated as empty lines
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_hash)
         while (!Parser__matches_one(self, Token__is_end_of_line)) {
             Parser__consume_token(self, Token__is_anything)
@@ -1709,9 +1709,9 @@ Parsed_Expression* Parser__parse_primary_expression(Parser* self) {
     }
     if (Parser__matches_one(self, Token__is_opening_paren)) {
         Source_Location* location = Parser__consume_token(self, Token__is_opening_paren)->location
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parsed_Expression* expression = Parser__parse_expression(self)
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_closing_paren)
         return (Parsed_Expression*) Parsed_Group_Expression__create(location, expression)
     }
@@ -1726,44 +1726,44 @@ Parsed_Expression* Parser__parse_access_expression(Parser* self) {
     while (true) {
         Parsed_Expression* old_expression = expression
         if (Parser__matches_two(self, Token__is_space, false, Token__is_dot) || Parser__matches_three(self, Token__is_space, false, Token__is_minus, true, Token__is_greater_than)) {
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             if (Parser__matches_one(self, Token__is_dot)) {
                 Parser__consume_token(self, Token__is_dot)
             } else {
                 Parser__consume_token(self, Token__is_minus)
                 Parser__consume_token(self, Token__is_greater_than)
             }
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Token* name = Parser__consume_token(self, Token__is_identifier)
             expression = (Parsed_Expression*) Parsed_Member_Access_Expression__create(expression, name)
         }
         if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_paren)) {
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_opening_paren)
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Parsed_Call_Expression* call_expression = Parsed_Call_Expression__create(expression)
             if (!Parser__matches_one(self, Token__is_closing_paren)) {
                 Parsed_Call_Argument* last_argument = Parsed_Call_Argument__create(Parser__parse_expression(self))
                 call_expression->first_argument = last_argument
-                Parser__consume_space(self, (uint16_t) 0)
+                Parser__consume_space(self, (u16) 0)
                 while (Parser__matches_one(self, Token__is_comma)) {
                     Parser__consume_token(self, Token__is_comma)
-                    Parser__consume_space(self, (uint16_t) 1)
+                    Parser__consume_space(self, (u16) 1)
                     Parsed_Call_Argument* argument = Parsed_Call_Argument__create(Parser__parse_expression(self))
                     last_argument->next_argument = argument
                     last_argument = argument
-                    Parser__consume_space(self, (uint16_t) 0)
+                    Parser__consume_space(self, (u16) 0)
                 }
             }
             expression = (Parsed_Expression*) call_expression
             Parser__consume_token(self, Token__is_closing_paren)
         }
         if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_opening_bracket)
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Parsed_Expression* index_expression = Parser__parse_expression(self)
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_closing_bracket)
             expression = (Parsed_Expression*) Parsed_Array_Access_Expression__create(expression, index_expression)
         }
@@ -1784,49 +1784,49 @@ Parsed_Expression* Parser__parse_access_expression(Parser* self) {
 Parsed_Expression* Parser__parse_unary_expression(Parser* self) {
     if (Parser__matches_one(self, Token__is_minus)) {
         Source_Location* location = Parser__consume_token(self, Token__is_minus)->location
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parsed_Expression* expression = Parser__parse_unary_expression(self)
         return (Parsed_Expression*) Parsed_Minus_Expression__create(location, expression)
     }
     if (Parser__matches_one(self, Token__is_exclamation_mark)) {
         Source_Location* location = Parser__consume_token(self, Token__is_exclamation_mark)->location
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parsed_Expression* expression = Parser__parse_unary_expression(self)
         return (Parsed_Expression*) Parsed_Not_Expression__create(location, expression)
     }
     if (Parser__matches_one(self, Token__is_ampersand)) {
         Source_Location* location = Parser__consume_token(self, Token__is_ampersand)->location
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parsed_Expression* expression = Parser__parse_unary_expression(self)
         return (Parsed_Expression*) Parsed_Address_Of_Expression__create(location, expression)
     }
     if (Parser__matches_three(self, Token__is_opening_paren, true, Token__is_space, false, Token__is_identifier)) {
-        uint8_t peek_offset = (uint8_t) 1
+        u8 peek_offset = (u8) 1
         if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-            peek_offset = peek_offset + (uint8_t) 1
+            peek_offset = peek_offset + (u8) 1
         }
         if (Token__is_identifier(Parser__peek_token(self, peek_offset))) {
-            peek_offset = peek_offset + (uint8_t) 1
+            peek_offset = peek_offset + (u8) 1
             if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1
+                peek_offset = peek_offset + (u8) 1
             }
             while (Token__is_asterisk(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1
+                peek_offset = peek_offset + (u8) 1
                 if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                    peek_offset = peek_offset + (uint8_t) 1
+                    peek_offset = peek_offset + (u8) 1
                 }
             }
             if (Token__is_closing_paren(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1
+                peek_offset = peek_offset + (u8) 1
                 if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                    peek_offset = peek_offset + (uint8_t) 1
+                    peek_offset = peek_offset + (u8) 1
                 }
                 Source_Location* location = Parser__consume_token(self, Token__is_opening_paren)->location
-                Parser__consume_space(self, (uint16_t) 0)
+                Parser__consume_space(self, (u16) 0)
                 Parsed_Type* type = Parser__parse_type(self)
-                Parser__consume_space(self, (uint16_t) 0)
+                Parser__consume_space(self, (u16) 0)
                 Parser__consume_token(self, Token__is_closing_paren)
-                Parser__consume_space(self, (uint16_t) 1)
+                Parser__consume_space(self, (u16) 1)
                 Parsed_Expression* expression = Parser__parse_unary_expression(self)
                 return (Parsed_Expression*) Parsed_Cast_Expression__create(location, expression, type)
             }
@@ -1834,11 +1834,11 @@ Parsed_Expression* Parser__parse_unary_expression(Parser* self) {
     }
     if (Parser__matches_one(self, Token__is_sizeof)) {
         Source_Location* location = Parser__consume_token(self, Token__is_sizeof)->location
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_opening_paren)
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parsed_Type* type = Parser__parse_type(self)
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_closing_paren)
         return (Parsed_Expression*) Parsed_Sizeof_Expression__create(location, type)
     }
@@ -1854,20 +1854,20 @@ bool Token__is_mutliplication(Token* self) {
 Parsed_Expression* Parser__parse_multiplication_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_unary_expression(self)
     while (Parser__matches_two(self, Token__is_space, false, Token__is_mutliplication)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         if (Parser__matches_one(self, Token__is_asterisk)) {
             Parser__consume_token(self, Token__is_asterisk)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_unary_expression(self)
             expression = (Parsed_Expression*) Parsed_Multiply_Expression__create(expression, right_expression)
         } else if (Parser__matches_one(self, Token__is_slash)) {
             Parser__consume_token(self, Token__is_slash)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_unary_expression(self)
             expression = (Parsed_Expression*) Parsed_Divide_Expression__create(expression, right_expression)
         } else {
             Parser__consume_token(self, Token__is_percent)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_unary_expression(self)
             expression = (Parsed_Expression*) Parsed_Modulo_Expression__create(expression, right_expression)
         }
@@ -1884,15 +1884,15 @@ bool Token__is_addition(Token* self) {
 Parsed_Expression* Parser__parse_addition_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_multiplication_expression(self)
     while (Parser__matches_two(self, Token__is_space, false, Token__is_addition)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         if (Parser__matches_one(self, Token__is_plus)) {
             Parser__consume_token(self, Token__is_plus)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_multiplication_expression(self)
             expression = (Parsed_Expression*) Parsed_Add_Expression__create(expression, right_expression)
         } else {
             Parser__consume_token(self, Token__is_minus)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_multiplication_expression(self)
             expression = (Parsed_Expression*) Parsed_Substract_Expression__create(expression, right_expression)
         }
@@ -1905,28 +1905,28 @@ Parsed_Expression* Parser__parse_addition_expression(Parser* self) {
 Parsed_Expression* Parser__parse_comparison_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_addition_expression(self)
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_less_than)
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Less_Or_Equals_Expression__create(expression, right_expression)
         } else {
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Less_Expression__create(expression, right_expression)
         }
     } else if (Parser__matches_two(self, Token__is_space, false, Token__is_greater_than)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_greater_than)
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Greater_Or_Equals_Expression__create(expression, right_expression)
         } else {
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Expression* right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Greater_Expression__create(expression, right_expression)
         }
@@ -1939,17 +1939,17 @@ Parsed_Expression* Parser__parse_comparison_expression(Parser* self) {
 Parsed_Expression* Parser__parse_equality_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_comparison_expression(self)
     if (Parser__matches_three(self, Token__is_space, false, Token__is_equals, true, Token__is_equals)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_equals)
         Parser__consume_token(self, Token__is_equals)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parsed_Expression* right_expression = Parser__parse_comparison_expression(self)
         expression = (Parsed_Expression*) Parsed_Equals_Expression__create(expression, right_expression)
     } else if (Parser__matches_three(self, Token__is_space, false, Token__is_exclamation_mark, true, Token__is_equals)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_exclamation_mark)
         Parser__consume_token(self, Token__is_equals)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parsed_Expression* right_expression = Parser__parse_comparison_expression(self)
         expression = (Parsed_Expression*) Parsed_Not_Equals_Expression__create(expression, right_expression)
     }
@@ -1961,10 +1961,10 @@ Parsed_Expression* Parser__parse_equality_expression(Parser* self) {
 Parsed_Expression* Parser__parse_logic_and_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_equality_expression(self)
     while (Parser__matches_three(self, Token__is_space, false, Token__is_ampersand, true, Token__is_ampersand)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_ampersand)
         Parser__consume_token(self, Token__is_ampersand)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parsed_Expression* right_expression = Parser__parse_equality_expression(self)
         expression = (Parsed_Expression*) Parsed_Logic_And_Expression__create(expression, right_expression)
     }
@@ -1976,10 +1976,10 @@ Parsed_Expression* Parser__parse_logic_and_expression(Parser* self) {
 Parsed_Expression* Parser__parse_logic_or_expression(Parser* self) {
     Parsed_Expression* expression = Parser__parse_logic_and_expression(self)
     while (Parser__matches_three(self, Token__is_space, false, Token__is_vertical_bar, true, Token__is_vertical_bar)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_vertical_bar)
         Parser__consume_token(self, Token__is_vertical_bar)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parsed_Expression* right_expression = Parser__parse_logic_and_expression(self)
         expression = (Parsed_Expression*) Parsed_Logic_Or_Expression__create(expression, right_expression)
     }
@@ -1996,20 +1996,20 @@ Parsed_Expression* Parser__parse_expression(Parser* self) {
 \      | "typedef" "struct" IDENTIFIER ( "{" ( type "*"? IDENTIFIER )* "}" )? IDENTIFIER
 Parsed_Statement* Parser__parse_struct(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_struct)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Token* local_name = Parser__consume_token(self, Token__is_identifier)
     Parsed_Struct_Statement* struct_statement = Parsed_Struct_Statement__create(location, local_name)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     if (!Parser__matches_one(self, Token__is_identifier)) {
         Parsed_Struct_Member* last_member = null
         Parser__consume_token(self, Token__is_opening_brace)
         Parser__consume_end_of_line(self)
         while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
-            Parser__consume_space(self, (self->current_identation + (uint16_t) 1) * (uint16_t) 4)
+            Parser__consume_space(self, (self->current_identation + (u16) 1) * (u16) 4)
             Parsed_Type* type = Parser__parse_type(self)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Token* name = Parser__consume_token(self, Token__is_identifier)
             Parser__consume_end_of_line(self)
             Parsed_Struct_Member* member = Parsed_Struct_Member__create(name, type)
@@ -2021,9 +2021,9 @@ Parsed_Statement* Parser__parse_struct(Parser* self) {
                 last_member = member
             }
         }
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_closing_brace)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
     }
     Token* final_name = Parser__consume_token(self, Token__is_identifier)
     if (!String__equals_string(final_name->lexeme, local_name->lexeme)) {
@@ -2037,23 +2037,23 @@ Parsed_Statement* Parser__parse_struct(Parser* self) {
 \      | "typedef" "enum" IDENTIFIER "{" ( IDENTIFIER "," )* "}" IDENTIFIER
 Parsed_Statement* Parser__parse_enum(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_enum)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Token* local_name = Parser__consume_token(self, Token__is_identifier)
     Parsed_Enum_Statement* enum_statement = Parsed_Enum_Statement__create(location, local_name)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_brace)
     Parser__consume_end_of_line(self)
-    self->current_identation = self->current_identation + (uint16_t) 1
+    self->current_identation = self->current_identation + (u16) 1
     Parsed_Enum_Member* last_member = null
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         while (Parser__consume_empty_line(self)) {
             \ ignored
         }
-        Parser__consume_space(self, self->current_identation * (uint16_t) 4)
+        Parser__consume_space(self, self->current_identation * (u16) 4)
         Token* name = Parser__consume_token(self, Token__is_identifier)
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_comma)
         Parser__consume_end_of_line(self)
         Parsed_Enum_Member* member = Parsed_Enum_Member__create(name)
@@ -2065,10 +2065,10 @@ Parsed_Statement* Parser__parse_enum(Parser* self) {
             last_member = member
         }
     }
-    self->current_identation = self->current_identation - (uint16_t) 1
-    Parser__consume_space(self, self->current_identation * (uint16_t) 4)
+    self->current_identation = self->current_identation - (u16) 1
+    Parser__consume_space(self, self->current_identation * (u16) 4)
     Parser__consume_token(self, Token__is_closing_brace)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Token* final_name = Parser__consume_token(self, Token__is_identifier)
     if (!String__equals_string(final_name->lexeme, local_name->lexeme)) {
         Token__error(final_name, String__append_string(String__create_from("Final enum name doesn't match the local name: "), local_name->lexeme))
@@ -2083,7 +2083,7 @@ Parsed_Type* Parser__parse_type(Parser* self) {
     Token* struct_token = null
     if (Parser__matches_one(self, Token__is_struct)) {
         struct_token = Parser__consume_token(self, Token__is_struct)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
     }
     Token* name = Parser__consume_token(self, Token__is_identifier)
     Parsed_Type* type = Parsed_Named_Type__create(name)
@@ -2091,7 +2091,7 @@ Parsed_Type* Parser__parse_type(Parser* self) {
         type = Parsed_Struct_Type__create(struct_token->location, type)
     }
     while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_asterisk)
         type = Parsed_Pointer_Type__create(type)
     }
@@ -2102,33 +2102,33 @@ Parsed_Type* Parser__parse_type(Parser* self) {
 \      | "typedef" type IDENTIFIER "(" ( type IDENTIFIER ( "," type IDENTIFIER )* )? ")"
 Parsed_Statement* Parser__parse_type_alias(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parsed_Type* return_type = Parser__parse_type(self)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Token* name = Parser__consume_token(self, Token__is_identifier)
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_opening_paren)
     Parsed_Function_Type_Parameter* first_parameter = null
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         Parsed_Type* parameter_type = Parser__parse_type(self)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Token* parameter_name = Parser__consume_token(self, Token__is_identifier)
         first_parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type)
         Parsed_Function_Type_Parameter* last_parameter = first_parameter
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_comma)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Parsed_Type* parameter_type = Parser__parse_type(self)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             Token* parameter_name = Parser__consume_token(self, Token__is_identifier)
             Parsed_Function_Type_Parameter* parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type)
             last_parameter->next_parameter = parameter
             last_parameter = parameter
         }
     }
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_closing_paren)
     return Parsed_Function_Type_Statement__create(location, name, first_parameter, return_type)
 }
@@ -2141,19 +2141,19 @@ Parsed_Statement* Parser__parse_variable(Parser* self) {
     if (Parser__matches_one(self, Token__is_extern)) {
         is_external = true
         location = Parser__consume_token(self, Token__is_extern)->location
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
     } else {
         is_external = false
-        location = Parser__peek_token(self, (uint8_t) 0)->location
+        location = Parser__peek_token(self, (u8) 0)->location
     }
     Parsed_Type* type = Parser__parse_type(self)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Token* name = Parser__consume_token(self, Token__is_identifier)
     Parsed_Variable_Statement* variable_statement = Parsed_Variable_Statement__create(location, name, type, is_external)
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_equals)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         variable_statement->expression = Parser__parse_expression(self)
     }
     return (Parsed_Statement*) variable_statement
@@ -2161,7 +2161,7 @@ Parsed_Statement* Parser__parse_variable(Parser* self) {
 
 Parsed_Function_Parameter* Parser__parse_function_parameter(Parser* self) {
     Parsed_Type* type = Parser__parse_type(self)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Token* name = Parser__consume_token(self, Token__is_identifier)
     return Parsed_Function_Parameter__create(name, type)
 }
@@ -2169,13 +2169,13 @@ Parsed_Function_Parameter* Parser__parse_function_parameter(Parser* self) {
 Parsed_Function_Parameter* Parser__parse_function_parameters(Parser* self) {
     Parsed_Function_Parameter* first_parameter = null
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
-        Parser__consume_space(self, (uint16_t) 0)
+        Parser__consume_space(self, (u16) 0)
         first_parameter = Parser__parse_function_parameter(self)
         Parsed_Function_Parameter* last_parameter = first_parameter
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
-            Parser__consume_space(self, (uint16_t) 0)
+            Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_comma)
-            Parser__consume_space(self, (uint16_t) 1)
+            Parser__consume_space(self, (u16) 1)
             last_parameter->next_parameter = Parser__parse_function_parameter(self)
             last_parameter = last_parameter->next_parameter
         }
@@ -2189,10 +2189,10 @@ Parsed_Block_Statement* Parser__parse_block_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_opening_brace)->location
     Parser__consume_end_of_line(self)
     Parsed_Statements* statements = Parsed_Statements__create(false)
-    self->current_identation = self->current_identation + (uint16_t) 1
+    self->current_identation = self->current_identation + (u16) 1
     Parser__parse_statements(self, statements)
-    self->current_identation = self->current_identation - (uint16_t) 1
-    Parser__consume_space(self, self->current_identation * (uint16_t) 4)
+    self->current_identation = self->current_identation - (u16) 1
+    Parser__consume_space(self, self->current_identation * (u16) 4)
     Parser__consume_token(self, Token__is_closing_brace)
     return Parsed_Block_Statement__create(location, statements)
 }
@@ -2206,18 +2206,18 @@ Parsed_Statement* Parser__parse_function(Parser* self) {
     if (Parser__matches_one(self, Token__is_extern)) {
         is_external = true
         location = Parser__consume_token(self, Token__is_extern)->location
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
     } else {
         is_external = false
-        location = Parser__peek_token(self, (uint8_t) 0)->location
+        location = Parser__peek_token(self, (u8) 0)->location
     }
     Parsed_Type* return_type = Parser__parse_type(self)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Token* name = Parser__consume_token(self, Token__is_identifier)
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_opening_paren)
     Parsed_Function_Parameter* first_parameter = Parser__parse_function_parameters(self)
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_closing_paren)
     Parsed_Statements* statements = null
     if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_brace)) {
@@ -2225,14 +2225,14 @@ Parsed_Statement* Parser__parse_function(Parser* self) {
             Source_Location__error(location, String__create_from("External function cannot have a body"))
             abort()
         }
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_opening_brace)
         Parser__consume_end_of_line(self)
         statements = Parsed_Statements__create(false)
-        self->current_identation = self->current_identation + (uint16_t) 1
+        self->current_identation = self->current_identation + (u16) 1
         Parser__parse_statements(self, statements)
-        self->current_identation = self->current_identation - (uint16_t) 1
-        Parser__consume_space(self, self->current_identation * (uint16_t) 4)
+        self->current_identation = self->current_identation - (u16) 1
+        Parser__consume_space(self, self->current_identation * (u16) 4)
         Parser__consume_token(self, Token__is_closing_brace)
     } else {
         if (is_external == false) {
@@ -2249,7 +2249,7 @@ Parsed_Statement* Parser__parse_return_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_return)->location
     Parsed_Expression* expression = null
     if (!Parser__matches_three(self, Token__is_space, false, Token__is_comment, false, Token__is_end_of_line)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         expression = Parser__parse_expression(self)
     }
     return Parsed_Return_Statement__create(location, expression)
@@ -2266,19 +2266,19 @@ Parsed_Statement* Parser__parse_break_statement(Parser* self) {
 \      | "if" "(" expression ")" statement ( "else" statement )?
 Parsed_Statement* Parser__parse_if_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_if)->location
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_paren)
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parsed_Expression* condition_expression = Parser__parse_expression(self)
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_closing_paren)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parsed_Statement* true_statement = (Parsed_Statement*) Parser__parse_block_statement(self)
     Parsed_Statement* false_statement = null
     if (Parser__matches_two(self, Token__is_space, false, Token__is_else)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_else)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         if (Parser__matches_one(self, Token__is_if)) {
             false_statement = Parser__parse_if_statement(self)
         } else {
@@ -2292,13 +2292,13 @@ Parsed_Statement* Parser__parse_if_statement(Parser* self) {
 \      | "while" "(" expression ")" statement
 Parsed_Statement* Parser__parse_while_statement(Parser* self) {
     Source_Location* location = Parser__consume_token(self, Token__is_while)->location
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_paren)
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parsed_Expression* condition_expression = Parser__parse_expression(self)
-    Parser__consume_space(self, (uint16_t) 0)
+    Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_closing_paren)
-    Parser__consume_space(self, (uint16_t) 1)
+    Parser__consume_space(self, (u16) 1)
     Parsed_Statement* body_statement = (Parsed_Statement*) Parser__parse_block_statement(self)
     return Parsed_While_Statement__create(location, condition_expression, body_statement)
 }
@@ -2312,7 +2312,7 @@ Parsed_Statement* Parser__parse_while_statement(Parser* self) {
 \      | type_alias
 \      | variable
 Parsed_Statement* Parser__parse_statement(Parser* self) {
-    Parser__consume_space(self, self->current_identation * (uint16_t) 4)
+    Parser__consume_space(self, self->current_identation * (u16) 4)
 
     if (Parser__matches_one(self, Token__is_if)) {
         return Parser__parse_if_statement(self)
@@ -2340,28 +2340,28 @@ Parsed_Statement* Parser__parse_statement(Parser* self) {
     }
 
     if (Parser__matches_one(self, Token__is_extern) || Parser__matches_one(self, Token__is_identifier)) {
-        uint8_t peek_offset = (uint8_t) 0
+        u8 peek_offset = (u8) 0
         if (Token__is_extern(Parser__peek_token(self, peek_offset))) {
-            peek_offset = peek_offset + (uint8_t) 1
+            peek_offset = peek_offset + (u8) 1
             if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1
+                peek_offset = peek_offset + (u8) 1
             }
         }
         if (Token__is_identifier(Parser__peek_token(self, peek_offset))) {
-            peek_offset = peek_offset + (uint8_t) 1
+            peek_offset = peek_offset + (u8) 1
             if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1
+                peek_offset = peek_offset + (u8) 1
             }
             while (Token__is_asterisk(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1
+                peek_offset = peek_offset + (u8) 1
                 if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                    peek_offset = peek_offset + (uint8_t) 1
+                    peek_offset = peek_offset + (u8) 1
                 }
             }
             if (Token__is_identifier(Parser__peek_token(self, peek_offset))) {
-                peek_offset = peek_offset + (uint8_t) 1
+                peek_offset = peek_offset + (u8) 1
                 if (Token__is_space(Parser__peek_token(self, peek_offset))) {
-                    peek_offset = peek_offset + (uint8_t) 1
+                    peek_offset = peek_offset + (u8) 1
                 }
                 if (Token__is_opening_paren(Parser__peek_token(self, peek_offset))) {
                     return Parser__parse_function(self)
@@ -2373,9 +2373,9 @@ Parsed_Statement* Parser__parse_statement(Parser* self) {
 
     Parsed_Expression* expresion = Parser__parse_access_expression(self)
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_equals)
-        Parser__consume_space(self, (uint16_t) 1)
+        Parser__consume_space(self, (u16) 1)
         Parsed_Expression* value_expression = Parser__parse_expression(self)
         return (Parsed_Statement*) Parsed_Assignment_Statement__create(expresion, value_expression)
     }
@@ -2415,11 +2415,11 @@ void Parser__parse_source(Parser* self, Source* source) {
 
     Parser__parse_statements(self, self->compilation_unit->statements)
 
-    Token* last_token = Parser__peek_token(self, (uint8_t) 0)
+    Token* last_token = Parser__peek_token(self, (u8) 0)
     if (!Token__is_end_of_file(last_token)) {
         Parser__error(self, String__create_from("Scanner didn't reach end of file"))
         abort()
-    } else if (last_token->location->column != (uint16_t) 1) {
+    } else if (last_token->location->column != (u16) 1) {
         Parser__warning(self, String__create_from("No new line at the end of file"))
     }
 
@@ -2430,7 +2430,7 @@ Parsed_Source* parse(Source* source) {
     Parser parser
     parser.scanner = null
     parser.compilation_unit = Parsed_Compilation_Unit__create()
-    parser.current_identation = (uint16_t) 0
+    parser.current_identation = (u16) 0
 
     Parser__parse_source(&parser, source)
 
@@ -2444,15 +2444,15 @@ typedef enum Checked_Type_Kind {
     \ Builtins
     CHECKED_TYPE_KIND__BOOL,
     CHECKED_TYPE_KIND__CHAR,
-    CHECKED_TYPE_KIND__INT16_T,
-    CHECKED_TYPE_KIND__INT32_T,
-    CHECKED_TYPE_KIND__INT64_T,
-    CHECKED_TYPE_KIND__INT8_T,
-    CHECKED_TYPE_KIND__SIZE_T,
-    CHECKED_TYPE_KIND__UINT16_T,
-    CHECKED_TYPE_KIND__UINT32_T,
-    CHECKED_TYPE_KIND__UINT64_T,
-    CHECKED_TYPE_KIND__UINT8_T,
+    CHECKED_TYPE_KIND__I16,
+    CHECKED_TYPE_KIND__I32,
+    CHECKED_TYPE_KIND__I64,
+    CHECKED_TYPE_KIND__I8,
+    CHECKED_TYPE_KIND__USIZE,
+    CHECKED_TYPE_KIND__U16,
+    CHECKED_TYPE_KIND__U32,
+    CHECKED_TYPE_KIND__U64,
+    CHECKED_TYPE_KIND__U8,
     CHECKED_TYPE_KIND__VOID,
     CHECKED_TYPE_KIND__NULL, \ Pseudo type
     \ Defined
@@ -2469,7 +2469,7 @@ typedef struct Checked_Type {
     struct Checked_Type* next_type
 } Checked_Type
 
-Checked_Type* Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location* location) {
+Checked_Type* Checked_Type__create_kind(Checked_Type_Kind kind, usize kind_size, Source_Location* location) {
     Checked_Type* type = (Checked_Type*) malloc(kind_size)
     type->kind = kind
     type->location = location
@@ -2495,23 +2495,23 @@ void Checked_Type__expect_same_type(Checked_Type* self, Checked_Type* other_type
 bool Checked_Type__is_scalar_type(Checked_Type* self) {
     if (self->kind == CHECKED_TYPE_KIND__CHAR) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__INT16_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__I16) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__INT32_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__I32) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__INT64_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__I64) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__INT8_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__I8) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__SIZE_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__U16) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__UINT16_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__U32) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__UINT32_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__U64) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__UINT64_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__U8) {
         return true
-    } else if (self->kind == CHECKED_TYPE_KIND__UINT8_T) {
+    } else if (self->kind == CHECKED_TYPE_KIND__USIZE) {
         return true
     } else if (self->kind == CHECKED_TYPE_KIND__ENUM) {
         return true
@@ -2534,7 +2534,7 @@ typedef struct Checked_Named_Type {
     String* name
 } Checked_Named_Type
 
-Checked_Named_Type* Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location* location, String* name) {
+Checked_Named_Type* Checked_Named_Type__create_kind(Checked_Type_Kind kind, usize kind_size, Source_Location* location, String* name) {
     Checked_Named_Type* type = (Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location)
     type->name = name
     return type
@@ -2777,6 +2777,24 @@ void File__write_checked_function_parameter(File* self, Checked_Function_Paramet
 void File__write_checked_type(File* self, Checked_Type* type) {
     if (type == null) {
         File__write_cstring(self, "null")
+    } else if (type->kind == CHECKED_TYPE_KIND__I16) {
+        File__write_cstring(self, "int16_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__I32) {
+        File__write_cstring(self, "int32_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__I64) {
+        File__write_cstring(self, "int64_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__I8) {
+        File__write_cstring(self, "int8_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__U16) {
+        File__write_cstring(self, "uint16_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__U32) {
+        File__write_cstring(self, "uint32_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__U64) {
+        File__write_cstring(self, "uint64_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__U8) {
+        File__write_cstring(self, "uint8_t")
+    } else if (type->kind == CHECKED_TYPE_KIND__USIZE) {
+        File__write_cstring(self, "size_t")
     } else if (type->kind <= CHECKED_TYPE_KIND__NULL) {
         Checked_Named_Type* named_type = (Checked_Named_Type*) type
         File__write_string(self, named_type->name)
@@ -2833,7 +2851,7 @@ typedef struct Checked_Symbol {
     struct Checked_Symbol* next_symbol
 } Checked_Symbol
 
-Checked_Symbol* Checked_Symbol__create_kind(Checked_Symbol_Kind kind, size_t kind_size, Source_Location* location, String* name, Checked_Type* type) {
+Checked_Symbol* Checked_Symbol__create_kind(Checked_Symbol_Kind kind, usize kind_size, Source_Location* location, String* name, Checked_Type* type) {
     Checked_Symbol* symbol = (Checked_Symbol*) malloc(kind_size)
     symbol->kind = kind
     symbol->location = location
@@ -2988,7 +3006,7 @@ typedef struct Checked_Expression {
     Checked_Type* type
 } Checked_Expression
 
-Checked_Expression* Checked_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location* location, Checked_Type* type) {
+Checked_Expression* Checked_Expression__create_kind(Checked_Expression_Kind kind, usize kind_size, Source_Location* location, Checked_Type* type) {
     Checked_Expression* expression = (Checked_Expression*) malloc(kind_size)
     expression->kind = kind
     expression->location = location
@@ -3014,7 +3032,7 @@ typedef struct Checked_Unary_Expression {
     Checked_Expression* other_expression
 } Checked_Unary_Expression
 
-Checked_Unary_Expression* Checked_Unary_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
+Checked_Unary_Expression* Checked_Unary_Expression__create_kind(Checked_Expression_Kind kind, usize kind_size, Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
     Checked_Unary_Expression* expression = (Checked_Unary_Expression*) Checked_Expression__create_kind(kind, kind_size, location, type)
     expression->other_expression = other_expression
     return expression
@@ -3152,10 +3170,10 @@ Checked_Group_Expression* Checked_Group_Expression__create(Source_Location* loca
 
 typedef struct Checked_Integer_Expression {
     Checked_Expression super
-    uint64_t value
+    u64 value
 } Checked_Integer_Expression
 
-Checked_Integer_Expression* Checked_Integer_Expression__create(Source_Location* location, Checked_Type* type, uint64_t value) {
+Checked_Integer_Expression* Checked_Integer_Expression__create(Source_Location* location, Checked_Type* type, u64 value) {
     Checked_Integer_Expression* expression = (Checked_Integer_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__INTEGER, sizeof(Checked_Integer_Expression), location, type)
     expression->value = value
     return expression
@@ -3315,7 +3333,7 @@ typedef struct Checked_Statement {
     struct Checked_Statement* next_statement
 } Checked_Statement
 
-Checked_Statement* Checked_Statement__create_kind(Checked_Statement_Kind kind, size_t kind_size, Source_Location* location) {
+Checked_Statement* Checked_Statement__create_kind(Checked_Statement_Kind kind, usize kind_size, Source_Location* location) {
     Checked_Statement* statement = (Checked_Statement*) malloc(kind_size)
     statement->kind = kind
     statement->location = location
@@ -3466,18 +3484,18 @@ Checker* Checker__create() {
     checker->last_type = null
     checker->symbols = Checked_Symbols__create(null)
 
-    Source_Location* location = Source_Location__create(null, (uint16_t) 0, (uint16_t) 1)
+    Source_Location* location = Source_Location__create(null, (u16) 0, (u16) 1)
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__BOOL, sizeof(Checked_Named_Type), location, String__create_from("bool")))
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__CHAR, sizeof(Checked_Named_Type), location, String__create_from("char")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT16_T, sizeof(Checked_Named_Type), location, String__create_from("int16_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT32_T, sizeof(Checked_Named_Type), location, String__create_from("int32_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT64_T, sizeof(Checked_Named_Type), location, String__create_from("int64_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__INT8_T, sizeof(Checked_Named_Type), location, String__create_from("int8_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__SIZE_T, sizeof(Checked_Named_Type), location, String__create_from("size_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT16_T, sizeof(Checked_Named_Type), location, String__create_from("uint16_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT32_T, sizeof(Checked_Named_Type), location, String__create_from("uint32_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT64_T, sizeof(Checked_Named_Type), location, String__create_from("uint64_t")))
-    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__UINT8_T, sizeof(Checked_Named_Type), location, String__create_from("uint8_t")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I16, sizeof(Checked_Named_Type), location, String__create_from("i16")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I32, sizeof(Checked_Named_Type), location, String__create_from("i32")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I64, sizeof(Checked_Named_Type), location, String__create_from("i64")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__I8, sizeof(Checked_Named_Type), location, String__create_from("i8")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U16, sizeof(Checked_Named_Type), location, String__create_from("u16")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U32, sizeof(Checked_Named_Type), location, String__create_from("u32")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U64, sizeof(Checked_Named_Type), location, String__create_from("u64")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__U8, sizeof(Checked_Named_Type), location, String__create_from("u8")))
+    Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__USIZE, sizeof(Checked_Named_Type), location, String__create_from("usize")))
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__VOID, sizeof(Checked_Named_Type), location, String__create_from("void")))
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__NULL, sizeof(Checked_Named_Type), location, String__create_from("null")))
     checker->last_builting_type = checker->last_type
@@ -3538,7 +3556,7 @@ Checked_Type* Checker__resolve_type(Checker* self, Parsed_Type* parsed_type) {
         }
         return type
     }
-    TODO("Report undefined type")
+    Source_Location__error(parsed_type->location, String__create_from("Undefined type"))
     abort()
 }
 
@@ -3572,7 +3590,7 @@ Checked_Expression* Checker__check_array_access_expression(Checker* self, Parsed
     }
     Checked_Type* type = ((Checked_Pointer_Type*) array_type)->other_type
     Checked_Expression* index_expression = Checker__check_expression(self, parsed_expression->index_expression)
-    Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__SIZE_T), index_expression->type, index_expression->location)
+    Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__USIZE), index_expression->type, index_expression->location)
     return (Checked_Expression*) Checked_Array_Access_Expression__create(parsed_expression->super.location, type, array_expression, index_expression)
 }
 
@@ -3692,8 +3710,8 @@ Checked_Expression* Checker__check_group_expression(Checker* self, Parsed_Group_
 }
 
 Checked_Expression* Checker__check_integer_expression(Checker* self, Parsed_Integer_Expression* parsed_expression) {
-    Checked_Type* expression_type = (Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__INT32_T)
-    uint64_t value = parsed_expression->value
+    Checked_Type* expression_type = (Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__I32)
+    u64 value = parsed_expression->value
     return (Checked_Expression*) Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, value)
 }
 
@@ -3791,7 +3809,7 @@ Checked_Expression* Checker__check_null_expression(Checker* self, Parsed_Null_Ex
 }
 
 Checked_Expression* Checker__check_sizeof_expression(Checker* self, Parsed_Sizeof_Expression* parsed_expression) {
-    Checked_Type* expression_type = (Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__SIZE_T)
+    Checked_Type* expression_type = (Checked_Type*) Checker__get_builtin_type(self, CHECKED_TYPE_KIND__USIZE)
     Checked_Type* sized_type = Checker__resolve_type(self, parsed_expression->type)
     return (Checked_Expression*) Checked_Sizeof_Expression__create(parsed_expression->super.location, expression_type, sized_type)
 }
@@ -4225,12 +4243,12 @@ Checked_Source* check(Parsed_Source* parsed_source) {
 
 typedef struct Generator {
     File* file
-    uint16_t identation
+    u16 identation
 } Generator
 
 void Generator__write_source_location(Generator* self, Source_Location* location) {
     File__write_cstring(self->file, "#line ")
-    File__write_int32_t(self->file, (int32_t) location->line)
+    File__write_i32(self->file, (i32) location->line)
     File__write_cstring(self->file, " \"")
     File__write_cstring(self->file, location->source->path)
     File__write_cstring(self->file, "\"\n")
@@ -4355,7 +4373,7 @@ void Generator__generate_group_expression(Generator* self, Checked_Group_Express
 }
 
 void Generator__generate_integer_expression(Generator* self, Checked_Integer_Expression* expression) {
-    File__write_uint64_t(self->file, expression->value)
+    File__write_u64(self->file, expression->value)
 }
 
 void Generator__generate_less_expression(Generator* self, Checked_Less_Expression* expression) {
@@ -4432,10 +4450,10 @@ void Generator__generate_sizeof_expression(Generator* self, Checked_Sizeof_Expre
 
 void Generator__generate_string_expression(Generator* self, Checked_String_Expression* expression) {
     File__write_char(self->file, '"')
-    size_t index = (size_t) 0
+    usize index = (usize) 0
     while (index < expression->value->length) {
         File__write_escaped_char(self->file, expression->value->data[index])
-        index = index + (size_t) 1
+        index = index + (usize) 1
     }
     File__write_char(self->file, '"')
 }
@@ -4514,10 +4532,10 @@ void Generator__generate_expression(Generator* self, Checked_Expression* express
 }
 
 void Generator__write_identation(Generator* self) {
-    uint16_t identation = self->identation
-    while (identation > (uint16_t) 0) {
+    u16 identation = self->identation
+    while (identation > (u16) 0) {
         File__write_cstring(self->file, "    ")
-        identation = identation - (uint16_t) 1
+        identation = identation - (u16) 1
     }
 }
 
@@ -4609,7 +4627,7 @@ void Generator__generate_statement(Generator* self, Checked_Statement* statement
 }
 
 void Generator__generate_statements(Generator* self, Checked_Statements* statements) {
-    self->identation = self->identation + (uint16_t) 1
+    self->identation = self->identation + (u16) 1
 
     Checked_Statement* statement = statements->first_statement
     while (statement != null) {
@@ -4624,7 +4642,7 @@ void Generator__generate_statements(Generator* self, Checked_Statements* stateme
         statement = statement->next_statement
     }
 
-    self->identation = self->identation - (uint16_t) 1
+    self->identation = self->identation - (u16) 1
 }
 
 void Generator__generate_enum(Generator* self, Checked_Enum_Type* enum_type) {
@@ -4686,7 +4704,7 @@ void Generator__generate_struct(Generator* self, Checked_Struct_Type* struct_typ
 void generate(File* file, Checked_Source* checked_source) {
     Generator generator
     generator.file = file
-    generator.identation = (uint16_t) 0
+    generator.identation = (u16) 0
 
     Checked_Symbol* checked_symbol
 
@@ -4760,20 +4778,20 @@ void generate(File* file, Checked_Source* checked_source) {
 
 #pragma endregion
 
-int32_t main(int32_t argc, char** argv) {
+i32 main(i32 argc, char** argv) {
     if (argc < 3) {
-        error(String__append_cstring(String__append_cstring(String__create_from("Usage: "), argv[(size_t) 0]), " SOURCE OUTPUT"))
+        error(String__append_cstring(String__append_cstring(String__create_from("Usage: "), argv[(usize) 0]), " SOURCE OUTPUT"))
         return 1
     }
 
-    char* source_file_path = argv[(size_t) 1]
+    char* source_file_path = argv[(usize) 1]
     File* source_file = fopen(source_file_path, "r")
     if (source_file == null) {
         error(String__append_cstring(String__create_from("Cannot open file: "), source_file_path))
         return 1
     }
 
-    char* output_file_path = argv[(size_t) 2]
+    char* output_file_path = argv[(usize) 2]
     File* output_file
     if (String__equals_cstring(String__create_from(output_file_path), "-")) {
         output_file = stdout

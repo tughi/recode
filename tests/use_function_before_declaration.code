@@ -5,15 +5,15 @@ typedef struct File File
 
 extern File* stdout
 
-extern int32_t fputs(char* s, File* stream)
+extern i32 fputs(char* s, File* stream)
 
-int32_t main() {
+i32 main() {
     if (get_answer() == 42) {
         fputs("PASS\n", stdout)
     }
     return 0
 }
 
-int32_t get_answer() {
+i32 get_answer() {
     return 42
 }
