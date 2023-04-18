@@ -31,10 +31,10 @@ A compiler for the _Code_ language.
   - TODO: Rename integer types
   - TODO: Change struct syntax
   - TODO: Disallow forward declaration of structs
-  - TODO: Remove ;
   - TODO: Change variable declarations syntax
   - TODO: Change funtion syntax
   - TODO: Treat string literals as local String instances
+  - TODO: Change cast syntax
 
 
 ## How to add new features
