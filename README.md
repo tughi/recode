@@ -28,13 +28,13 @@ A compiler for the _Code_ language.
     - string
   - no preprocessor
 - [ ] Translate and refactor compiler to _Code_
-  - TODO: Change struct syntax
-  - TODO: Disallow forward declaration of structs
+  - TODO: Change enum syntax
   - TODO: Change variable declarations syntax
   - TODO: Change funtion syntax
   - TODO: Treat string literals as local String instances
   - TODO: Change cast syntax
   - TODO: Collect copyright headers and put the in the generated file
+  - TODO: Declare external functions with Code and C signatures
 
 
 ## How to add new features

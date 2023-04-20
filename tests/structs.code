@@ -1,0 +1,16 @@
+\ Expect:
+\ - output: ''
+
+define Source = struct {
+    file: File*
+    value: i32
+}
+
+define File = opaque type
+
+i32 main() {
+    Source result
+    result.file = null
+    result.value = 0
+    return result.value
+}

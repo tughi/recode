@@ -1,7 +1,7 @@
 \ Expect:
 \ - output: 'PASS\n'
 
-typedef struct File File
+define File = opaque type
 
 extern File* stdout
 

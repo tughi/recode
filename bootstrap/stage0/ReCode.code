@@ -4,7 +4,7 @@
 \   LibC
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct File File
+define File = opaque type
 
 extern File* stdin
 extern File* stdout
@@ -26,11 +26,11 @@ extern void abort()
 \   String
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct String {
-    char* data
-    usize data_size
-    usize length
-} String
+define String = struct {
+    data: char*
+    data_size: usize
+    length: usize
+}
 
 String* String__create_empty(usize data_size) {
     String* string = (String*) malloc(sizeof(String))
@@ -209,10 +209,10 @@ void TODO(char* message) {
 \   Source
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Source {
-    String* content
-    char* path
-} Source
+define Source = struct {
+    content: String*
+    path: char*
+}
 
 Source* Source__create(File* file, char* file_path) {
     String* file_content = String__create()
@@ -238,11 +238,11 @@ Source* Source__create(File* file, char* file_path) {
 \   Source Location
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Source_Location {
-    Source* source
-    u16 line
-    u16 column
-} Source_Location
+define Source_Location = struct {
+    source: Source*
+    line: u16
+    column: u16
+}
 
 Source_Location* Source_Location__create(Source* source, u16 line, u16 column) {
     Source_Location* source_location = (Source_Location*) malloc(sizeof(Source_Location))
@@ -298,12 +298,12 @@ typedef enum Token_Kind {
     TOKEN_KIND__STRING,
 } Token_Kind
 
-typedef struct Token {
-    Token_Kind kind
-    Source_Location* location
-    String* lexeme
-    struct Token* next_token
-} Token
+define Token = struct {
+    kind: Token_Kind
+    location: Source_Location*
+    lexeme: String*
+    next_token: struct Token*
+}
 
 Token* Token__create_kind(Token_Kind kind, usize kind_size, Source_Location* location, String* lexeme) {
     Token* token = (Token*) malloc(kind_size)
@@ -322,10 +322,10 @@ void Token__warning(Token* self, String* message) {
     Source_Location__warning(self->location, message)
 }
 
-typedef struct Character_Token {
-    Token super
-    char value
-} Character_Token
+define Character_Token = struct {
+    super: Token
+    value: char
+}
 
 Character_Token* Character_Token__create(Source_Location* location, String* lexeme, char value) {
     Character_Token* token = (Character_Token*) Token__create_kind(TOKEN_KIND__CHARACTER, sizeof(Character_Token), location, lexeme)
@@ -333,50 +333,50 @@ Character_Token* Character_Token__create(Source_Location* location, String* lexe
     return token
 }
 
-typedef struct Comment_Token {
-    Token super
-} Comment_Token
+define Comment_Token = struct {
+    super: Token
+}
 
 Comment_Token* Comment_Token__create(Source_Location* location, String* lexeme) {
     return (Comment_Token*) Token__create_kind(TOKEN_KIND__COMMENT, sizeof(Comment_Token), location, lexeme)
 }
 
-typedef struct End_Of_File_Token {
-    Token super
-} End_Of_File_Token
+define End_Of_File_Token = struct {
+    super: Token
+}
 
 End_Of_File_Token* End_Of_File_Token__create(Source_Location* location, String* lexeme) {
     return (End_Of_File_Token*) Token__create_kind(TOKEN_KIND__END_OF_FILE, sizeof(End_Of_File_Token), location, lexeme)
 }
 
-typedef struct End_Of_Line_Token {
-    Token super
-} End_Of_Line_Token
+define End_Of_Line_Token = struct {
+    super: Token
+}
 
 End_Of_Line_Token* End_Of_Line_Token__create(Source_Location* location, String* lexeme) {
     return (End_Of_Line_Token*) Token__create_kind(TOKEN_KIND__END_OF_LINE, sizeof(End_Of_Line_Token), location, lexeme)
 }
 
-typedef struct Error_Token {
-    Token super
-} Error_Token
+define Error_Token = struct {
+    super: Token
+}
 
 Error_Token* Error_Token__create(Source_Location* location, String* lexeme) {
     return (Error_Token*) Token__create_kind(TOKEN_KIND__ERROR, sizeof(Error_Token), location, lexeme)
 }
 
-typedef struct Identifier_Token {
-    Token super
-} Identifier_Token
+define Identifier_Token = struct {
+    super: Token
+}
 
 Identifier_Token* Identifier_Token__create(Source_Location* location, String* lexeme) {
     return (Identifier_Token*) Token__create_kind(TOKEN_KIND__IDENTIFIER, sizeof(Identifier_Token), location, lexeme)
 }
 
-typedef struct Integer_Token {
-    Token super
-    u64 value
-} Integer_Token
+define Integer_Token = struct {
+    super: Token
+    value: u64
+}
 
 Integer_Token* Integer_Token__create(Source_Location* location, String* lexeme, u64 value) {
     Integer_Token* token = (Integer_Token*) Token__create_kind(TOKEN_KIND__INTEGER, sizeof(Integer_Token), location, lexeme)
@@ -384,18 +384,18 @@ Integer_Token* Integer_Token__create(Source_Location* location, String* lexeme, 
     return token
 }
 
-typedef struct Other_Token {
-    Token super
-} Other_Token
+define Other_Token = struct {
+    super: Token
+}
 
 Other_Token* Other_Token__create(Source_Location* location, String* lexeme) {
     return (Other_Token*) Token__create_kind(TOKEN_KIND__OTHER, sizeof(Other_Token), location, lexeme)
 }
 
-typedef struct Space_Token {
-    Token super
-    u16 count
-} Space_Token
+define Space_Token = struct {
+    super: Token
+    count: u16
+}
 
 Space_Token* Space_Token__create(Source_Location* location, String* lexeme, u16 count) {
     Space_Token* token = (Space_Token*) Token__create_kind(TOKEN_KIND__SPACE, sizeof(Space_Token), location, lexeme)
@@ -403,10 +403,10 @@ Space_Token* Space_Token__create(Source_Location* location, String* lexeme, u16 
     return token
 }
 
-typedef struct String_Token {
-    Token super
-    String* value
-} String_Token
+define String_Token = struct {
+    super: Token
+    value: String*
+}
 
 String_Token* String_Token__create(Source_Location* location, String* lexeme, String* value) {
     String_Token* token = (String_Token*) Token__create_kind(TOKEN_KIND__STRING, sizeof(String_Token), location, lexeme)
@@ -450,6 +450,10 @@ bool Token__is_break(Token* self) {
     return Token__is_keyword(self, "break")
 }
 
+bool Token__is_define(Token* self) {
+    return Token__is_keyword(self, "define")
+}
+
 bool Token__is_else(Token* self) {
     return Token__is_keyword(self, "else")
 }
@@ -474,6 +478,10 @@ bool Token__is_null(Token* self) {
     return Token__is_keyword(self, "null")
 }
 
+bool Token__is_opaque(Token* self) {
+    return Token__is_keyword(self, "opaque")
+}
+
 bool Token__is_return(Token* self) {
     return Token__is_keyword(self, "return")
 }
@@ -488,6 +496,10 @@ bool Token__is_struct(Token* self) {
 
 bool Token__is_true(Token* self) {
     return Token__is_keyword(self, "true")
+}
+
+bool Token__is_type(Token* self) {
+    return Token__is_keyword(self, "type")
 }
 
 bool Token__is_typedef(Token* self) {
@@ -520,6 +532,10 @@ bool Token__is_closing_bracket(Token* self) {
 
 bool Token__is_closing_paren(Token* self) {
     return Token__is_other(self, ")")
+}
+
+bool Token__is_colon(Token* self) {
+    return Token__is_other(self, ":")
 }
 
 bool Token__is_comma(Token* self) {
@@ -607,13 +623,13 @@ void File__write_token(File* stream, Token* token) {
 \   Scanner
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Scanner {
-    Source* source
-    usize current_char_index
-    u16 current_line
-    u16 current_column
-    Token* current_token
-} Scanner
+define Scanner = struct {
+    source: Source*
+    current_char_index: usize
+    current_line: u16
+    current_column: u16
+    current_token: Token*
+}
 
 char Scanner__peek_char(Scanner* self) {
     return self->source->content->data[self->current_char_index]
@@ -870,11 +886,9 @@ Scanner* Scanner__create(Source* source) {
 \   Parsed Source
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Parsed_Statements Parsed_Statements
-
-typedef struct Parsed_Source {
-    Parsed_Statements* statements
-} Parsed_Source
+define Parsed_Source = struct {
+    statements: Parsed_Statements*
+}
 
 typedef enum Parsed_Type_Kind {
     PARSED_TYPE_KIND__NAMED,
@@ -882,12 +896,10 @@ typedef enum Parsed_Type_Kind {
     PARSED_TYPE_KIND__STRUCT,
 } Parsed_Type_Kind
 
-typedef struct Parsed_Statement Parsed_Statement
-
-typedef struct Parsed_Type {
-    Parsed_Type_Kind kind
-    Source_Location* location
-} Parsed_Type
+define Parsed_Type = struct {
+    kind: Parsed_Type_Kind
+    location: Source_Location*
+}
 
 Parsed_Type* Parsed_Type__create_kind(Parsed_Type_Kind kind, usize kind_size, Source_Location* location) {
     Parsed_Type* type = (Parsed_Type*) malloc(kind_size)
@@ -896,10 +908,10 @@ Parsed_Type* Parsed_Type__create_kind(Parsed_Type_Kind kind, usize kind_size, So
     return type
 }
 
-typedef struct Parsed_Named_Type {
-    Parsed_Type super
-    String* name
-} Parsed_Named_Type
+define Parsed_Named_Type = struct {
+    super: Parsed_Type
+    name: String*
+}
 
 Parsed_Type* Parsed_Named_Type__create(Token* name) {
     Parsed_Named_Type* type = (Parsed_Named_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__NAMED, sizeof(Parsed_Named_Type), name->location)
@@ -907,10 +919,10 @@ Parsed_Type* Parsed_Named_Type__create(Token* name) {
     return (Parsed_Type*) type
 }
 
-typedef struct Parsed_Pointer_Type {
-    Parsed_Type super
-    Parsed_Type* other_type
-} Parsed_Pointer_Type
+define Parsed_Pointer_Type = struct {
+    super: Parsed_Type
+    other_type: Parsed_Type*
+}
 
 Parsed_Type* Parsed_Pointer_Type__create(Parsed_Type* other_type) {
     Parsed_Pointer_Type* type = (Parsed_Pointer_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__POINTER, sizeof(Parsed_Pointer_Type), other_type->location)
@@ -918,10 +930,10 @@ Parsed_Type* Parsed_Pointer_Type__create(Parsed_Type* other_type) {
     return (Parsed_Type*) type
 }
 
-typedef struct Parsed_Struct_Type {
-    Parsed_Type super
-    Parsed_Type* other_type
-} Parsed_Struct_Type
+define Parsed_Struct_Type = struct {
+    super: Parsed_Type
+    other_type: Parsed_Type*
+}
 
 Parsed_Type* Parsed_Struct_Type__create(Source_Location* location, Parsed_Type* other_type) {
     Parsed_Struct_Type* type = (Parsed_Struct_Type*) Parsed_Type__create_kind(PARSED_TYPE_KIND__STRUCT, sizeof(Parsed_Struct_Type), location)
@@ -960,10 +972,10 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__SYMBOL,
 } Parsed_Expression_Kind
 
-typedef struct Parsed_Expression {
-    Parsed_Expression_Kind kind
-    Source_Location* location
-} Parsed_Expression
+define Parsed_Expression = struct {
+    kind: Parsed_Expression_Kind
+    location: Source_Location*
+}
 
 Parsed_Expression* Parsed_Expression__create_kind(Parsed_Expression_Kind kind, usize kind_size, Source_Location* location) {
     Parsed_Expression* expression = (Parsed_Expression*) malloc(kind_size)
@@ -972,11 +984,11 @@ Parsed_Expression* Parsed_Expression__create_kind(Parsed_Expression_Kind kind, u
     return expression
 }
 
-typedef struct Parsed_Binary_Expression {
-    Parsed_Expression super
-    Parsed_Expression* left_expression
-    Parsed_Expression* right_expression
-} Parsed_Binary_Expression
+define Parsed_Binary_Expression = struct {
+    super: Parsed_Expression
+    left_expression: Parsed_Expression*
+    right_expression: Parsed_Expression*
+}
 
 Parsed_Binary_Expression* Parsed_Binary_Expression__create_kind(Parsed_Expression_Kind kind, Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     Parsed_Binary_Expression* expression = (Parsed_Binary_Expression*) Parsed_Expression__create_kind(kind, sizeof(Parsed_Binary_Expression), left_expression->location)
@@ -985,10 +997,10 @@ Parsed_Binary_Expression* Parsed_Binary_Expression__create_kind(Parsed_Expressio
     return expression
 }
 
-typedef struct Parsed_Unary_Expression {
-    Parsed_Expression super
-    Parsed_Expression* other_expression
-} Parsed_Unary_Expression
+define Parsed_Unary_Expression = struct {
+    super: Parsed_Expression
+    other_expression: Parsed_Expression*
+}
 
 Parsed_Unary_Expression* Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind kind, usize kind_size, Source_Location* location, Parsed_Expression* other_expression) {
     Parsed_Unary_Expression* expression = (Parsed_Unary_Expression*) Parsed_Expression__create_kind(kind, kind_size, location)
@@ -996,10 +1008,10 @@ Parsed_Unary_Expression* Parsed_Unary_Expression__create_kind(Parsed_Expression_
     return expression
 }
 
-typedef struct Parsed_Literal_Expression {
-    Parsed_Expression super
-    Token* literal
-} Parsed_Literal_Expression
+define Parsed_Literal_Expression = struct {
+    super: Parsed_Expression
+    literal: Token*
+}
 
 Parsed_Literal_Expression* Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind kind, usize kind_size, Token* literal) {
     Parsed_Literal_Expression* expression = (Parsed_Literal_Expression*) Parsed_Expression__create_kind(kind, kind_size, literal->location)
@@ -1007,27 +1019,27 @@ Parsed_Literal_Expression* Parsed_Literal_Expression__create_kind(Parsed_Express
     return expression
 }
 
-typedef struct Parsed_Add_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Add_Expression
+define Parsed_Add_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Add_Expression* Parsed_Add_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Add_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__ADD, left_expression, right_expression)
 }
 
-typedef struct Parsed_Address_Of_Expression {
-    Parsed_Unary_Expression super
-} Parsed_Address_Of_Expression
+define Parsed_Address_Of_Expression = struct {
+    super: Parsed_Unary_Expression
+}
 
 Parsed_Address_Of_Expression* Parsed_Address_Of_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
     return (Parsed_Address_Of_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__ADDRESS_OF, sizeof(Parsed_Address_Of_Expression), location, other_expression)
 }
 
-typedef struct Parsed_Array_Access_Expression {
-    Parsed_Expression super
-    Parsed_Expression* array_expression
-    Parsed_Expression* index_expression
-} Parsed_Array_Access_Expression
+define Parsed_Array_Access_Expression = struct {
+    super: Parsed_Expression
+    array_expression: Parsed_Expression*
+    index_expression: Parsed_Expression*
+}
 
 Parsed_Array_Access_Expression* Parsed_Array_Access_Expression__create(Parsed_Expression* array_expression, Parsed_Expression* index_expression) {
     Parsed_Array_Access_Expression* expression = (Parsed_Array_Access_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__ARRAY_ACCESS, sizeof(Parsed_Array_Access_Expression), array_expression->location)
@@ -1036,10 +1048,10 @@ Parsed_Array_Access_Expression* Parsed_Array_Access_Expression__create(Parsed_Ex
     return expression
 }
 
-typedef struct Parsed_Bool_Expression {
-    Parsed_Literal_Expression super
-    bool value
-} Parsed_Bool_Expression
+define Parsed_Bool_Expression = struct {
+    super: Parsed_Literal_Expression
+    value: bool
+}
 
 Parsed_Bool_Expression* Parsed_Bool_Expression__create(Token* literal, bool value) {
     Parsed_Bool_Expression* expression = (Parsed_Bool_Expression*) Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__BOOL, sizeof(Parsed_Bool_Expression), literal)
@@ -1047,10 +1059,10 @@ Parsed_Bool_Expression* Parsed_Bool_Expression__create(Token* literal, bool valu
     return expression
 }
 
-typedef struct Parsed_Call_Argument {
-    Parsed_Expression* expression
-    struct Parsed_Call_Argument* next_argument
-} Parsed_Call_Argument
+define Parsed_Call_Argument = struct {
+    expression: Parsed_Expression*
+    next_argument: Parsed_Call_Argument*
+}
 
 Parsed_Call_Argument* Parsed_Call_Argument__create(Parsed_Expression* expression) {
     Parsed_Call_Argument* argument = (Parsed_Call_Argument*) malloc(sizeof(Parsed_Call_Argument))
@@ -1059,11 +1071,11 @@ Parsed_Call_Argument* Parsed_Call_Argument__create(Parsed_Expression* expression
     return argument
 }
 
-typedef struct Parsed_Call_Expression {
-    Parsed_Expression super
-    Parsed_Expression* callee_expression
-    Parsed_Call_Argument* first_argument
-} Parsed_Call_Expression
+define Parsed_Call_Expression = struct {
+    super: Parsed_Expression
+    callee_expression: Parsed_Expression*
+    first_argument: Parsed_Call_Argument*
+}
 
 Parsed_Call_Expression* Parsed_Call_Expression__create(Parsed_Expression* callee_expression) {
     Parsed_Call_Expression* expression = (Parsed_Call_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__CALL, sizeof(Parsed_Call_Expression), callee_expression->location)
@@ -1072,10 +1084,10 @@ Parsed_Call_Expression* Parsed_Call_Expression__create(Parsed_Expression* callee
     return expression
 }
 
-typedef struct Parsed_Cast_Expression {
-    Parsed_Unary_Expression super
-    Parsed_Type* type
-} Parsed_Cast_Expression
+define Parsed_Cast_Expression = struct {
+    super: Parsed_Unary_Expression
+    type: Parsed_Type*
+}
 
 Parsed_Cast_Expression* Parsed_Cast_Expression__create(Source_Location* location, Parsed_Expression* other_expression, Parsed_Type* type) {
     Parsed_Cast_Expression* expression = (Parsed_Cast_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__CAST, sizeof(Parsed_Cast_Expression), location, other_expression)
@@ -1083,10 +1095,10 @@ Parsed_Cast_Expression* Parsed_Cast_Expression__create(Source_Location* location
     return expression
 }
 
-typedef struct Parsed_Character_Expression {
-    Parsed_Literal_Expression super
-    char value
-} Parsed_Character_Expression
+define Parsed_Character_Expression = struct {
+    super: Parsed_Literal_Expression
+    value: char
+}
 
 Parsed_Character_Expression* Parsed_Character_Expression__create(Character_Token* literal) {
     Parsed_Character_Expression* expression = (Parsed_Character_Expression*) Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__CHARACTER, sizeof(Parsed_Character_Expression), (Token*) literal)
@@ -1094,42 +1106,42 @@ Parsed_Character_Expression* Parsed_Character_Expression__create(Character_Token
     return expression
 }
 
-typedef struct Parsed_Divide_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Divide_Expression
+define Parsed_Divide_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Divide_Expression* Parsed_Divide_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Divide_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__DIVIDE, left_expression, right_expression)
 }
 
-typedef struct Parsed_Equals_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Equals_Expression
+define Parsed_Equals_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Equals_Expression* Parsed_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__EQUALS, left_expression, right_expression)
 }
 
-typedef struct Parsed_Greater_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Greater_Expression
+define Parsed_Greater_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Greater_Expression* Parsed_Greater_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Greater_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__GREATER, left_expression, right_expression)
 }
 
-typedef struct Parsed_Greater_Or_Equals_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Greater_Or_Equals_Expression
+define Parsed_Greater_Or_Equals_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Greater_Or_Equals_Expression* Parsed_Greater_Or_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Greater_Or_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS, left_expression, right_expression)
 }
 
-typedef struct Parsed_Group_Expression {
-    Parsed_Expression super
-    Parsed_Expression* other_expression
-} Parsed_Group_Expression
+define Parsed_Group_Expression = struct {
+    super: Parsed_Expression
+    other_expression: Parsed_Expression*
+}
 
 Parsed_Group_Expression* Parsed_Group_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
     Parsed_Group_Expression* expression = (Parsed_Group_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__GROUP, sizeof(Parsed_Group_Expression), location)
@@ -1137,10 +1149,10 @@ Parsed_Group_Expression* Parsed_Group_Expression__create(Source_Location* locati
     return expression
 }
 
-typedef struct Parsed_Integer_Expression {
-    Parsed_Literal_Expression super
-    u64 value
-} Parsed_Integer_Expression
+define Parsed_Integer_Expression = struct {
+    super: Parsed_Literal_Expression
+    value: u64
+}
 
 Parsed_Integer_Expression* Parsed_Integer_Expression__create(Integer_Token* literal) {
     Parsed_Integer_Expression* expression = (Parsed_Integer_Expression*) Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__INTEGER, sizeof(Parsed_Integer_Expression), (Token*) literal)
@@ -1148,43 +1160,43 @@ Parsed_Integer_Expression* Parsed_Integer_Expression__create(Integer_Token* lite
     return expression
 }
 
-typedef struct Parsed_Less_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Less_Expression
+define Parsed_Less_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Less_Expression* Parsed_Less_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Less_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LESS, left_expression, right_expression)
 }
 
-typedef struct Parsed_Less_Or_Equals_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Less_Or_Equals_Expression
+define Parsed_Less_Or_Equals_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Less_Or_Equals_Expression* Parsed_Less_Or_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Less_Or_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LESS_OR_EQUALS, left_expression, right_expression)
 }
 
-typedef struct Parsed_Logic_And_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Logic_And_Expression
+define Parsed_Logic_And_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Logic_And_Expression* Parsed_Logic_And_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Logic_And_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LOGIC_AND, left_expression, right_expression)
 }
 
-typedef struct Parsed_Logic_Or_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Logic_Or_Expression
+define Parsed_Logic_Or_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Logic_Or_Expression* Parsed_Logic_Or_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Logic_Or_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LOGIC_OR, left_expression, right_expression)
 }
 
-typedef struct Parsed_Member_Access_Expression {
-    Parsed_Expression super
-    Parsed_Expression* object_expression
-    Token* member_name
-} Parsed_Member_Access_Expression
+define Parsed_Member_Access_Expression = struct {
+    super: Parsed_Expression
+    object_expression: Parsed_Expression*
+    member_name: Token*
+}
 
 Parsed_Member_Access_Expression* Parsed_Member_Access_Expression__create(Parsed_Expression* object_expression, Token* member_name) {
     Parsed_Member_Access_Expression* expression = (Parsed_Member_Access_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Parsed_Member_Access_Expression), object_expression->location)
@@ -1193,58 +1205,58 @@ Parsed_Member_Access_Expression* Parsed_Member_Access_Expression__create(Parsed_
     return expression
 }
 
-typedef struct Parsed_Minus_Expression {
-    Parsed_Unary_Expression super
-} Parsed_Minus_Expression
+define Parsed_Minus_Expression = struct {
+    super: Parsed_Unary_Expression
+}
 
 Parsed_Minus_Expression* Parsed_Minus_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
     return (Parsed_Minus_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__MINUS, sizeof(Parsed_Minus_Expression), location, other_expression)
 }
 
-typedef struct Parsed_Modulo_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Modulo_Expression
+define Parsed_Modulo_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Modulo_Expression* Parsed_Modulo_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Modulo_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__MODULO, left_expression, right_expression)
 }
 
-typedef struct Parsed_Multiply_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Multiply_Expression
+define Parsed_Multiply_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Multiply_Expression* Parsed_Multiply_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Multiply_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__MULTIPLY, left_expression, right_expression)
 }
 
-typedef struct Parsed_Not_Expression {
-    Parsed_Unary_Expression super
-} Parsed_Not_Expression
+define Parsed_Not_Expression = struct {
+    super: Parsed_Unary_Expression
+}
 
 Parsed_Not_Expression* Parsed_Not_Expression__create(Source_Location* location, Parsed_Expression* other_expression) {
     return (Parsed_Not_Expression*) Parsed_Unary_Expression__create_kind(PARSED_EXPRESSION_KIND__NOT, sizeof(Parsed_Not_Expression), location, other_expression)
 }
 
-typedef struct Parsed_Not_Equals_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Not_Equals_Expression
+define Parsed_Not_Equals_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Not_Equals_Expression* Parsed_Not_Equals_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Not_Equals_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__NOT_EQUALS, left_expression, right_expression)
 }
 
-typedef struct Parsed_Null_Expression {
-    Parsed_Literal_Expression super
-} Parsed_Null_Expression
+define Parsed_Null_Expression = struct {
+    super: Parsed_Literal_Expression
+}
 
 Parsed_Null_Expression* Parsed_Null_Expression__create(Token* literal) {
     return (Parsed_Null_Expression*) Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__NULL, sizeof(Parsed_Null_Expression), literal)
 }
 
-typedef struct Parsed_Sizeof_Expression {
-    Parsed_Expression super
-    Parsed_Type* type
-} Parsed_Sizeof_Expression
+define Parsed_Sizeof_Expression = struct {
+    super: Parsed_Expression
+    type: Parsed_Type*
+}
 
 Parsed_Sizeof_Expression* Parsed_Sizeof_Expression__create(Source_Location* location, Parsed_Type* type) {
     Parsed_Sizeof_Expression* expression = (Parsed_Sizeof_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__SIZEOF, sizeof(Parsed_Sizeof_Expression), location)
@@ -1252,10 +1264,10 @@ Parsed_Sizeof_Expression* Parsed_Sizeof_Expression__create(Source_Location* loca
     return expression
 }
 
-typedef struct Parsed_String_Expression {
-    Parsed_Literal_Expression super
-    String* value
-} Parsed_String_Expression
+define Parsed_String_Expression = struct {
+    super: Parsed_Literal_Expression
+    value: String*
+}
 
 Parsed_String_Expression* Parsed_String_Expression__create(String_Token* literal) {
     Parsed_String_Expression* expression = (Parsed_String_Expression*) Parsed_Literal_Expression__create_kind(PARSED_EXPRESSION_KIND__STRING, sizeof(Parsed_String_Expression), (Token*) literal)
@@ -1263,18 +1275,18 @@ Parsed_String_Expression* Parsed_String_Expression__create(String_Token* literal
     return expression
 }
 
-typedef struct Parsed_Substract_Expression {
-    Parsed_Binary_Expression super
-} Parsed_Substract_Expression
+define Parsed_Substract_Expression = struct {
+    super: Parsed_Binary_Expression
+}
 
 Parsed_Substract_Expression* Parsed_Substract_Expression__create(Parsed_Expression* left_expression, Parsed_Expression* right_expression) {
     return (Parsed_Substract_Expression*) Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__SUBSTRACT, left_expression, right_expression)
 }
 
-typedef struct Parsed_Symbol_Expression {
-    Parsed_Expression super
-    Token* name
-} Parsed_Symbol_Expression
+define Parsed_Symbol_Expression = struct {
+    super: Parsed_Expression
+    name: Token*
+}
 
 Parsed_Symbol_Expression* Parsed_Symbol_Expression__create(Token* name) {
     Parsed_Symbol_Expression* expression = (Parsed_Symbol_Expression*) Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__SYMBOL, sizeof(Parsed_Symbol_Expression), name->location)
@@ -1291,17 +1303,18 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__FUNCTION,
     PARSED_STATEMENT_KIND__FUNCTION_TYPE,
     PARSED_STATEMENT_KIND__IF,
+    PARSED_STATEMENT_KIND__OPAQUE_TYPE,
     PARSED_STATEMENT_KIND__RETURN,
     PARSED_STATEMENT_KIND__STRUCT,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE,
 } Parsed_Statement_Kind
 
-typedef struct Parsed_Statement {
-    Parsed_Statement_Kind kind
-    Source_Location* location
-    struct Parsed_Statement* next_statement
-} Parsed_Statement
+define Parsed_Statement = struct {
+    kind: Parsed_Statement_Kind
+    location: Source_Location*
+    next_statement: Parsed_Statement*
+}
 
 Parsed_Statement* Parsed_Statement__create_kind(Parsed_Statement_Kind kind, usize kind_size, Source_Location* location) {
     Parsed_Statement* statement = (Parsed_Statement*) malloc(kind_size)
@@ -1311,10 +1324,10 @@ Parsed_Statement* Parsed_Statement__create_kind(Parsed_Statement_Kind kind, usiz
     return statement
 }
 
-typedef struct Parsed_Named_Statement {
-    Parsed_Statement super
-    Token* name
-} Parsed_Named_Statement
+define Parsed_Named_Statement = struct {
+    super: Parsed_Statement
+    name: Token*
+}
 
 Parsed_Named_Statement* Parsed_Named_Statement__create_kind(Parsed_Statement_Kind kind, usize kind_size, Source_Location* location, Token* name) {
     Parsed_Named_Statement* statement = (Parsed_Named_Statement*) Parsed_Statement__create_kind(kind, kind_size, location)
@@ -1322,11 +1335,11 @@ Parsed_Named_Statement* Parsed_Named_Statement__create_kind(Parsed_Statement_Kin
     return statement
 }
 
-typedef struct Parsed_Assignment_Statement {
-    Parsed_Statement super
-    Parsed_Expression* object_expression
-    Parsed_Expression* value_expression
-} Parsed_Assignment_Statement
+define Parsed_Assignment_Statement = struct {
+    super: Parsed_Statement
+    object_expression: Parsed_Expression*
+    value_expression: Parsed_Expression*
+}
 
 Parsed_Assignment_Statement* Parsed_Assignment_Statement__create(Parsed_Expression* object_expression, Parsed_Expression* value_expression) {
     Parsed_Assignment_Statement* statement = (Parsed_Assignment_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__ASSIGNMENT, sizeof(Parsed_Assignment_Statement), object_expression->location)
@@ -1335,10 +1348,10 @@ Parsed_Assignment_Statement* Parsed_Assignment_Statement__create(Parsed_Expressi
     return statement
 }
 
-typedef struct Parsed_Block_Statement {
-    Parsed_Statement super
-    Parsed_Statements* statements
-} Parsed_Block_Statement
+define Parsed_Block_Statement = struct {
+    super: Parsed_Statement
+    statements: Parsed_Statements*
+}
 
 Parsed_Block_Statement* Parsed_Block_Statement__create(Source_Location* location, Parsed_Statements* statements) {
     Parsed_Block_Statement* statement = (Parsed_Block_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BLOCK, sizeof(Parsed_Block_Statement), location)
@@ -1346,18 +1359,18 @@ Parsed_Block_Statement* Parsed_Block_Statement__create(Source_Location* location
     return statement
 }
 
-typedef struct Parsed_Break_Statement {
-    Parsed_Statement super
-} Parsed_Break_Statement
+define Parsed_Break_Statement = struct {
+    super: Parsed_Statement
+}
 
 Parsed_Statement* Parsed_Break_Statement__create(Source_Location* location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location)
 }
 
-typedef struct Parsed_Enum_Member {
-    Token* name
-    struct Parsed_Enum_Member* next_member
-} Parsed_Enum_Member
+define Parsed_Enum_Member = struct {
+    name: Token*
+    next_member: Parsed_Enum_Member*
+}
 
 Parsed_Enum_Member* Parsed_Enum_Member__create(Token* name) {
     Parsed_Enum_Member* member = (Parsed_Enum_Member*) malloc(sizeof(Parsed_Enum_Member))
@@ -1366,10 +1379,10 @@ Parsed_Enum_Member* Parsed_Enum_Member__create(Token* name) {
     return member
 }
 
-typedef struct Parsed_Enum_Statement {
-    Parsed_Named_Statement super
-    Parsed_Enum_Member* first_member
-} Parsed_Enum_Statement
+define Parsed_Enum_Statement = struct {
+    super: Parsed_Named_Statement
+    first_member: Parsed_Enum_Member*
+}
 
 Parsed_Enum_Statement* Parsed_Enum_Statement__create(Source_Location* location, Token* name) {
     Parsed_Enum_Statement* statement = (Parsed_Enum_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__ENUM, sizeof(Parsed_Enum_Statement), location, name)
@@ -1377,10 +1390,10 @@ Parsed_Enum_Statement* Parsed_Enum_Statement__create(Source_Location* location, 
     return statement
 }
 
-typedef struct Parsed_Expression_Statement {
-    Parsed_Statement super
-    Parsed_Expression* expression
-} Parsed_Expression_Statement
+define Parsed_Expression_Statement = struct {
+    super: Parsed_Statement
+    expression: Parsed_Expression*
+}
 
 Parsed_Expression_Statement* Parsed_Expression_Statement__create(Parsed_Expression* expression) {
     Parsed_Expression_Statement* statement = (Parsed_Expression_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__EXPRESSION, sizeof(Parsed_Expression_Statement), expression->location)
@@ -1388,11 +1401,11 @@ Parsed_Expression_Statement* Parsed_Expression_Statement__create(Parsed_Expressi
     return statement
 }
 
-typedef struct Parsed_Function_Parameter {
-    Token* name
-    Parsed_Type* type
-    struct Parsed_Function_Parameter* next_parameter
-} Parsed_Function_Parameter
+define Parsed_Function_Parameter = struct {
+    name: Token*
+    type: Parsed_Type*
+    next_parameter: Parsed_Function_Parameter*
+}
 
 Parsed_Function_Parameter* Parsed_Function_Parameter__create(Token* name, Parsed_Type* type) {
     Parsed_Function_Parameter* parameter = (Parsed_Function_Parameter*) malloc(sizeof(Parsed_Function_Parameter))
@@ -1402,13 +1415,13 @@ Parsed_Function_Parameter* Parsed_Function_Parameter__create(Token* name, Parsed
     return parameter
 }
 
-typedef struct Parsed_Function_Statement {
-    Parsed_Named_Statement super
-    Parsed_Function_Parameter* first_parameter
-    Parsed_Type* return_type
-    Parsed_Statements* statements
-    bool is_external
-} Parsed_Function_Statement
+define Parsed_Function_Statement = struct {
+    super: Parsed_Named_Statement
+    first_parameter: Parsed_Function_Parameter*
+    return_type: Parsed_Type*
+    statements: Parsed_Statements*
+    is_external: bool
+}
 
 Parsed_Statement* Parsed_Function_Statement__create(Source_Location* location, Token* name, Parsed_Function_Parameter* first_parameter, Parsed_Type* resturn_type, Parsed_Statements* statements, bool is_external) {
     Parsed_Function_Statement* statement = (Parsed_Function_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__FUNCTION, sizeof(Parsed_Function_Statement), location, name)
@@ -1419,11 +1432,11 @@ Parsed_Statement* Parsed_Function_Statement__create(Source_Location* location, T
     return (Parsed_Statement*) statement
 }
 
-typedef struct Parsed_Function_Type_Parameter {
-    Token* name
-    Parsed_Type* type
-    struct Parsed_Function_Type_Parameter* next_parameter
-} Parsed_Function_Type_Parameter
+define Parsed_Function_Type_Parameter = struct {
+    name: Token*
+    type: Parsed_Type*
+    next_parameter: Parsed_Function_Type_Parameter*
+}
 
 Parsed_Function_Type_Parameter* Parsed_Function_Type_Parameter__create(Token* name, Parsed_Type* type) {
     Parsed_Function_Type_Parameter* parameter = (Parsed_Function_Type_Parameter*) malloc(sizeof(Parsed_Function_Type_Parameter))
@@ -1433,11 +1446,11 @@ Parsed_Function_Type_Parameter* Parsed_Function_Type_Parameter__create(Token* na
     return parameter
 }
 
-typedef struct Parsed_Function_Type_Statement {
-    Parsed_Named_Statement super
-    Parsed_Function_Type_Parameter* first_parameter
-    Parsed_Type* return_type
-} Parsed_Function_Type_Statement
+define Parsed_Function_Type_Statement = struct {
+    super: Parsed_Named_Statement
+    first_parameter: Parsed_Function_Type_Parameter*
+    return_type: Parsed_Type*
+}
 
 Parsed_Statement* Parsed_Function_Type_Statement__create(Source_Location* location, Token* name, Parsed_Function_Type_Parameter* first_parameter, Parsed_Type* resturn_type) {
     Parsed_Function_Type_Statement* statement = (Parsed_Function_Type_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__FUNCTION_TYPE, sizeof(Parsed_Function_Type_Statement), location, name)
@@ -1446,12 +1459,12 @@ Parsed_Statement* Parsed_Function_Type_Statement__create(Source_Location* locati
     return (Parsed_Statement*) statement
 }
 
-typedef struct Parsed_If_Statement {
-    Parsed_Statement super
-    Parsed_Expression* condition_expression
-    Parsed_Statement* true_statement
-    Parsed_Statement* false_statement
-} Parsed_If_Statement
+define Parsed_If_Statement = struct {
+    super: Parsed_Statement
+    condition_expression: Parsed_Expression*
+    true_statement: Parsed_Statement*
+    false_statement: Parsed_Statement*
+}
 
 Parsed_Statement* Parsed_If_Statement__create(Source_Location* location, Parsed_Expression* condition_expression, Parsed_Statement* true_statement, Parsed_Statement* false_statement) {
     Parsed_If_Statement* statement = (Parsed_If_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__IF, sizeof(Parsed_If_Statement), location)
@@ -1461,10 +1474,18 @@ Parsed_Statement* Parsed_If_Statement__create(Source_Location* location, Parsed_
     return (Parsed_Statement*) statement
 }
 
-typedef struct Parsed_Return_Statement {
-    Parsed_Statement super
-    Parsed_Expression* expression
-} Parsed_Return_Statement
+define Parsed_Opaque_Type_Statement = struct {
+    super: Parsed_Named_Statement
+}
+
+Parsed_Opaque_Type_Statement* Parsed_Opaque_Type_Statement__create(Source_Location* location, Token* name) {
+    return (Parsed_Opaque_Type_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__OPAQUE_TYPE, sizeof(Parsed_Opaque_Type_Statement), location, name)
+}
+
+define Parsed_Return_Statement = struct {
+    super: Parsed_Statement
+    expression: Parsed_Expression*
+}
 
 Parsed_Statement* Parsed_Return_Statement__create(Source_Location* location, Parsed_Expression* expression) {
     Parsed_Return_Statement* statement = (Parsed_Return_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__RETURN, sizeof(Parsed_Return_Statement), location)
@@ -1472,11 +1493,11 @@ Parsed_Statement* Parsed_Return_Statement__create(Source_Location* location, Par
     return (Parsed_Statement*) statement
 }
 
-typedef struct Parsed_Struct_Member {
-    Token* name
-    Parsed_Type* type
-    struct Parsed_Struct_Member* next_member
-} Parsed_Struct_Member
+define Parsed_Struct_Member = struct {
+    name: Token*
+    type: Parsed_Type*
+    next_member: Parsed_Struct_Member*
+}
 
 Parsed_Struct_Member* Parsed_Struct_Member__create(Token* name, Parsed_Type* type) {
     Parsed_Struct_Member* member = (Parsed_Struct_Member*) malloc(sizeof(Parsed_Struct_Member))
@@ -1486,10 +1507,10 @@ Parsed_Struct_Member* Parsed_Struct_Member__create(Token* name, Parsed_Type* typ
     return member
 }
 
-typedef struct Parsed_Struct_Statement {
-    Parsed_Named_Statement super
-    Parsed_Struct_Member* first_member
-} Parsed_Struct_Statement
+define Parsed_Struct_Statement = struct {
+    super: Parsed_Named_Statement
+    first_member: Parsed_Struct_Member*
+}
 
 Parsed_Struct_Statement* Parsed_Struct_Statement__create(Source_Location* location, Token* name) {
     Parsed_Struct_Statement* statement = (Parsed_Struct_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__STRUCT, sizeof(Parsed_Struct_Statement), location, name)
@@ -1497,12 +1518,12 @@ Parsed_Struct_Statement* Parsed_Struct_Statement__create(Source_Location* locati
     return statement
 }
 
-typedef struct Parsed_Variable_Statement {
-    Parsed_Named_Statement super
-    Parsed_Type* type
-    Parsed_Expression* expression
-    bool is_external
-} Parsed_Variable_Statement
+define Parsed_Variable_Statement = struct {
+    super: Parsed_Named_Statement
+    type: Parsed_Type*
+    expression: Parsed_Expression*
+    is_external: bool
+}
 
 Parsed_Variable_Statement* Parsed_Variable_Statement__create(Source_Location* location, Token* name, Parsed_Type* type, bool is_external) {
     Parsed_Variable_Statement* statement = (Parsed_Variable_Statement*) Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__VARIABLE, sizeof(Parsed_Variable_Statement), location, name)
@@ -1511,11 +1532,11 @@ Parsed_Variable_Statement* Parsed_Variable_Statement__create(Source_Location* lo
     return statement
 }
 
-typedef struct Parsed_While_Statement {
-    Parsed_Statement super
-    Parsed_Expression* condition_expression
-    Parsed_Statement* body_statement
-} Parsed_While_Statement
+define Parsed_While_Statement = struct {
+    super: Parsed_Statement
+    condition_expression: Parsed_Expression*
+    body_statement: Parsed_Statement*
+}
 
 Parsed_Statement* Parsed_While_Statement__create(Source_Location* location, Parsed_Expression* condition_expression, Parsed_Statement* body_statement) {
     Parsed_While_Statement* statement = (Parsed_While_Statement*) Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__WHILE, sizeof(Parsed_While_Statement), location)
@@ -1524,11 +1545,11 @@ Parsed_Statement* Parsed_While_Statement__create(Source_Location* location, Pars
     return (Parsed_Statement*) statement
 }
 
-typedef struct Parsed_Statements {
-    Parsed_Statement* first_statement
-    Parsed_Statement* last_statement
-    bool has_globals
-} Parsed_Statements
+define Parsed_Statements = struct {
+    first_statement: Parsed_Statement*
+    last_statement: Parsed_Statement*
+    has_globals: bool
+}
 
 Parsed_Statements* Parsed_Statements__create(bool has_globals) {
     Parsed_Statements* statements = (Parsed_Statements*) malloc(sizeof(Parsed_Statements))
@@ -1557,11 +1578,11 @@ Parsed_Source* Parsed_Compilation_Unit__create() {
 \   Parser
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Parser {
-    Scanner* scanner
-    Parsed_Source* compilation_unit
-    u16 current_identation
-} Parser
+define Parser = struct {
+    scanner: Scanner*
+    compilation_unit: Parsed_Source*
+    current_identation: u16
+}
 
 void Parser__error(Parser* self, String* message) {
     Token__error(self->scanner->current_token, message)
@@ -1980,43 +2001,42 @@ Parsed_Expression* Parser__parse_expression(Parser* self) {
 }
 
 \ struct
-\      | "typedef" "struct" IDENTIFIER ( "{" ( type "*"? IDENTIFIER )* "}" )? IDENTIFIER
-Parsed_Statement* Parser__parse_struct(Parser* self) {
-    Source_Location* location = Parser__consume_token(self, Token__is_typedef)->location
+\   | "opaque" "type"
+Parsed_Statement* Parser__parse_opaque_type(Parser* self, Token* name) {
+    Parser__consume_token(self, Token__is_opaque)
     Parser__consume_space(self, (u16) 1)
+    Parser__consume_token(self, Token__is_type)
+    return (Parsed_Statement*) Parsed_Opaque_Type_Statement__create(name->location, name)
+}
+
+\ struct
+\   | "struct" "{" ( IDENTIFIER ":" type )* "}"
+Parsed_Statement* Parser__parse_struct(Parser* self, Token* name) {
     Parser__consume_token(self, Token__is_struct)
     Parser__consume_space(self, (u16) 1)
-    Token* local_name = Parser__consume_token(self, Token__is_identifier)
-    Parsed_Struct_Statement* struct_statement = Parsed_Struct_Statement__create(location, local_name)
-    Parser__consume_space(self, (u16) 1)
-    if (!Parser__matches_one(self, Token__is_identifier)) {
-        Parsed_Struct_Member* last_member = null
-        Parser__consume_token(self, Token__is_opening_brace)
-        Parser__consume_end_of_line(self)
-        while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
-            Parser__consume_space(self, (self->current_identation + (u16) 1) * (u16) 4)
-            Parsed_Type* type = Parser__parse_type(self)
-            Parser__consume_space(self, (u16) 1)
-            Token* name = Parser__consume_token(self, Token__is_identifier)
-            Parser__consume_end_of_line(self)
-            Parsed_Struct_Member* member = Parsed_Struct_Member__create(name, type)
-            if (last_member == null) {
-                struct_statement->first_member = member
-                last_member = member
-            } else {
-                last_member->next_member = member
-                last_member = member
-            }
-        }
+    Parser__consume_token(self, Token__is_opening_brace)
+    Parser__consume_end_of_line(self)
+    Parsed_Struct_Statement* struct_statement = Parsed_Struct_Statement__create(name->location, name)
+    Parsed_Struct_Member* last_member = null
+    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        Parser__consume_space(self, (self->current_identation + (u16) 1) * (u16) 4)
+        Token* name = Parser__consume_token(self, Token__is_identifier)
         Parser__consume_space(self, (u16) 0)
-        Parser__consume_token(self, Token__is_closing_brace)
+        Parser__consume_token(self, Token__is_colon)
         Parser__consume_space(self, (u16) 1)
+        Parsed_Type* type = Parser__parse_type(self)
+        Parser__consume_end_of_line(self)
+        Parsed_Struct_Member* member = Parsed_Struct_Member__create(name, type)
+        if (last_member == null) {
+            struct_statement->first_member = member
+            last_member = member
+        } else {
+            last_member->next_member = member
+            last_member = member
+        }
     }
-    Token* final_name = Parser__consume_token(self, Token__is_identifier)
-    if (!String__equals_string(final_name->lexeme, local_name->lexeme)) {
-        Token__error(final_name, String__append_string(String__create_from("Final struct name doesn't match the local name: "), local_name->lexeme))
-        abort()
-    }
+    Parser__consume_space(self, (u16) 0)
+    Parser__consume_token(self, Token__is_closing_brace)
     return (Parsed_Statement*) struct_statement
 }
 
@@ -2291,13 +2311,14 @@ Parsed_Statement* Parser__parse_while_statement(Parser* self) {
 }
 
 \ statement
-\      | enum
-\      | function
-\      | if
-\      | return
-\      | struct
-\      | type_alias
-\      | variable
+\   | define ( struct | opaque_type )
+\   | enum
+\   | function
+\   | if
+\   | return
+\   | struct
+\   | type_alias
+\   | variable
 Parsed_Statement* Parser__parse_statement(Parser* self) {
     Parser__consume_space(self, self->current_identation * (u16) 4)
 
@@ -2314,12 +2335,24 @@ Parsed_Statement* Parser__parse_statement(Parser* self) {
         return Parser__parse_break_statement(self)
     }
 
-    if (Parser__matches_three(self, Token__is_typedef, true, Token__is_space, true, Token__is_struct)) {
-        return Parser__parse_struct(self)
-    }
-
     if (Parser__matches_three(self, Token__is_typedef, true, Token__is_space, true, Token__is_enum)) {
         return Parser__parse_enum(self)
+    }
+
+    if (Parser__matches_one(self, Token__is_define)) {
+        Parser__consume_token(self, Token__is_define)
+        Parser__consume_space(self, (u16) 1)
+        Token* name = Parser__consume_token(self, Token__is_identifier)
+        Parser__consume_space(self, (u16) 1)
+        Parser__consume_token(self, Token__is_equals)
+        Parser__consume_space(self, (u16) 1)
+        if (Parser__matches_one(self, Token__is_struct)) {
+            return Parser__parse_struct(self, name)
+        } else if (Parser__matches_three(self, Token__is_opaque, true, Token__is_space, true, Token__is_type)) {
+            return Parser__parse_opaque_type(self, name)
+        }
+        Parser__error(self, String__create_from("Unsupported define"))
+        abort()
     }
 
     if (Parser__matches_one(self, Token__is_typedef)) {
@@ -2446,16 +2479,17 @@ typedef enum Checked_Type_Kind {
     \ Defined
     CHECKED_TYPE_KIND__ENUM,
     CHECKED_TYPE_KIND__FUNCTION,
+    CHECKED_TYPE_KIND__OPAQUE,
     CHECKED_TYPE_KIND__STRUCT,
     \ Dynamic
     CHECKED_TYPE_KIND__POINTER,
 } Checked_Type_Kind
 
-typedef struct Checked_Type {
-    Checked_Type_Kind kind
-    Source_Location* location
-    struct Checked_Type* next_type
-} Checked_Type
+define Checked_Type = struct {
+    kind: Checked_Type_Kind
+    location: Source_Location*
+    next_type: Checked_Type*
+}
 
 Checked_Type* Checked_Type__create_kind(Checked_Type_Kind kind, usize kind_size, Source_Location* location) {
     Checked_Type* type = (Checked_Type*) malloc(kind_size)
@@ -2517,10 +2551,10 @@ void Checked_Type__expect_scalar_type(Checked_Type* self, Source_Location* locat
     }
 }
 
-typedef struct Checked_Named_Type {
-    Checked_Type super
-    String* name
-} Checked_Named_Type
+define Checked_Named_Type = struct {
+    super: Checked_Type
+    name: String*
+}
 
 Checked_Named_Type* Checked_Named_Type__create_kind(Checked_Type_Kind kind, usize kind_size, Source_Location* location, String* name) {
     Checked_Named_Type* type = (Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location)
@@ -2528,11 +2562,11 @@ Checked_Named_Type* Checked_Named_Type__create_kind(Checked_Type_Kind kind, usiz
     return type
 }
 
-typedef struct Checked_Enum_Member {
-    Source_Location* location
-    String* name
-    struct Checked_Enum_Member* next_member
-} Checked_Enum_Member
+define Checked_Enum_Member = struct {
+    location: Source_Location*
+    name: String*
+    next_member: Checked_Enum_Member*
+}
 
 Checked_Enum_Member* Checked_Enum_Member__create(Source_Location* location, String* name) {
     Checked_Enum_Member* member = (Checked_Enum_Member*) malloc(sizeof(Checked_Enum_Member))
@@ -2542,10 +2576,10 @@ Checked_Enum_Member* Checked_Enum_Member__create(Source_Location* location, Stri
     return member
 }
 
-typedef struct Checked_Enum_Type {
-    Checked_Named_Type super
-    Checked_Enum_Member* first_member
-} Checked_Enum_Type
+define Checked_Enum_Type = struct {
+    super: Checked_Named_Type
+    first_member: Checked_Enum_Member*
+}
 
 Checked_Enum_Type* Checked_Enum_Type__create(Source_Location* location, String* name) {
     Checked_Enum_Type* type = (Checked_Enum_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ENUM, sizeof(Checked_Enum_Type), location, name)
@@ -2564,12 +2598,12 @@ Checked_Enum_Member* Checked_Enum_Type__find_member(Checked_Enum_Type* self, Str
     return member
 }
 
-typedef struct Checked_Function_Parameter {
-    Source_Location* location
-    String* name
-    Checked_Type* type
-    struct Checked_Function_Parameter* next_parameter
-} Checked_Function_Parameter
+define Checked_Function_Parameter = struct {
+    location: Source_Location*
+    name: String*
+    type: Checked_Type*
+    next_parameter: Checked_Function_Parameter*
+}
 
 Checked_Function_Parameter* Checked_Function_Parameter__create(Source_Location* location, String* name, Checked_Type* type) {
     Checked_Function_Parameter* parameter = (Checked_Function_Parameter*) malloc(sizeof(Checked_Function_Parameter))
@@ -2580,11 +2614,11 @@ Checked_Function_Parameter* Checked_Function_Parameter__create(Source_Location* 
     return parameter
 }
 
-typedef struct Checked_Function_Type {
-    Checked_Named_Type super
-    Checked_Type* return_type
-    Checked_Function_Parameter* first_parameter
-} Checked_Function_Type
+define Checked_Function_Type = struct {
+    super: Checked_Named_Type
+    return_type: Checked_Type*
+    first_parameter: Checked_Function_Parameter*
+}
 
 Checked_Function_Type* Checked_Function_Type__create(Source_Location* location, String* name, Checked_Type* return_type) {
     Checked_Function_Type* type = (Checked_Function_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__FUNCTION, sizeof(Checked_Function_Type), location, name)
@@ -2616,10 +2650,18 @@ bool Checked_Function_Type__equals(Checked_Function_Type* self, Checked_Type* ot
     return true
 }
 
-typedef struct Checked_Pointer_Type {
-    Checked_Type super
-    Checked_Type* other_type
-} Checked_Pointer_Type
+define Checked_Opaque_Type = struct {
+    super: Checked_Named_Type
+}
+
+Checked_Opaque_Type* Checked_Opaque_Type__create(Source_Location* location, String* name) {
+    return (Checked_Opaque_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__OPAQUE, sizeof(Checked_Opaque_Type), location, name)
+}
+
+define Checked_Pointer_Type = struct {
+    super: Checked_Type
+    other_type: Checked_Type*
+}
 
 Checked_Pointer_Type* Checked_Pointer_Type__create(Source_Location* location, Checked_Type* other_type) {
     Checked_Pointer_Type* type = (Checked_Pointer_Type*) Checked_Type__create_kind(CHECKED_TYPE_KIND__POINTER, sizeof(Checked_Pointer_Type), location)
@@ -2634,12 +2676,12 @@ bool Checked_Pointer_Type__equals(Checked_Pointer_Type* self, Checked_Type* othe
     return Checked_Type__equals(self->other_type, ((Checked_Pointer_Type*) other_type)->other_type)
 }
 
-typedef struct Checked_Struct_Member {
-    Source_Location* location
-    String* name
-    Checked_Type* type
-    struct Checked_Struct_Member* next_member
-} Checked_Struct_Member
+define Checked_Struct_Member = struct {
+    location: Source_Location*
+    name: String*
+    type: Checked_Type*
+    next_member: Checked_Struct_Member*
+}
 
 Checked_Struct_Member* Checked_Struct_Member__create(Source_Location* location, String* name, Checked_Type* type) {
     Checked_Struct_Member* member = (Checked_Struct_Member*) malloc(sizeof(Checked_Struct_Member))
@@ -2650,10 +2692,10 @@ Checked_Struct_Member* Checked_Struct_Member__create(Source_Location* location, 
     return member
 }
 
-typedef struct Checked_Struct_Type {
-    Checked_Named_Type super
-    Checked_Struct_Member* first_member
-} Checked_Struct_Type
+define Checked_Struct_Type = struct {
+    super: Checked_Named_Type
+    first_member: Checked_Struct_Member*
+}
 
 Checked_Struct_Type* Checked_Struct_Type__create(Source_Location* location, String* name) {
     Checked_Struct_Type* type = (Checked_Struct_Type*) Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__STRUCT, sizeof(Checked_Struct_Type), location, name)
@@ -2790,6 +2832,10 @@ void File__write_checked_type(File* self, Checked_Type* type) {
         Checked_Struct_Type* struct_type = (Checked_Struct_Type*) type
         File__write_cstring(self, "struct ")
         File__write_string(self, struct_type->super.name)
+    } else if (type->kind == CHECKED_TYPE_KIND__OPAQUE) {
+        Checked_Opaque_Type* opaque_type = (Checked_Opaque_Type*) type
+        File__write_cstring(self, "struct ")
+        File__write_string(self, opaque_type->super.name)
     } else if (type->kind == CHECKED_TYPE_KIND__FUNCTION) {
         Checked_Function_Type* function_type = (Checked_Function_Type*) type
         File__write_checked_type(self, function_type->return_type)
@@ -2831,14 +2877,14 @@ typedef enum Checked_Symbol_Kind {
     CHECKED_SYMBOL_KIND__VARIABLE,
 } Checked_Symbol_Kind
 
-typedef struct Checked_Symbol {
-    Checked_Symbol_Kind kind
-    Source_Location* location
-    String* name
-    Checked_Type* type
-    struct Checked_Symbol* prev_symbol
-    struct Checked_Symbol* next_symbol
-} Checked_Symbol
+define Checked_Symbol = struct {
+    kind: Checked_Symbol_Kind
+    location: Source_Location*
+    name: String*
+    type: Checked_Type*
+    prev_symbol: Checked_Symbol*
+    next_symbol: Checked_Symbol*
+}
 
 Checked_Symbol* Checked_Symbol__create_kind(Checked_Symbol_Kind kind, usize kind_size, Source_Location* location, String* name, Checked_Type* type) {
     Checked_Symbol* symbol = (Checked_Symbol*) malloc(kind_size)
@@ -2851,21 +2897,19 @@ Checked_Symbol* Checked_Symbol__create_kind(Checked_Symbol_Kind kind, usize kind
     return symbol
 }
 
-typedef struct Checked_Enum_Member_Symbol {
-    Checked_Symbol super
-} Checked_Enum_Member_Symbol
+define Checked_Enum_Member_Symbol = struct {
+    super: Checked_Symbol
+}
 
 Checked_Enum_Member_Symbol* Checked_Enum_Member_Symbol__create(Source_Location* location, String* name, Checked_Type* type) {
     return (Checked_Enum_Member_Symbol*) Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), location, name, type)
 }
 
-typedef struct Checked_Statements Checked_Statements
-
-typedef struct Checked_Function_Symbol {
-    Checked_Symbol super
-    Checked_Function_Type* function_type
-    Checked_Statements* checked_statements
-} Checked_Function_Symbol
+define Checked_Function_Symbol = struct {
+    super: Checked_Symbol
+    function_type: Checked_Function_Type*
+    checked_statements: Checked_Statements*
+}
 
 Checked_Function_Symbol* Checked_Function_Symbol__create(Source_Location* location, String* name, Checked_Function_Type* function_type) {
     Checked_Function_Symbol* symbol = (Checked_Function_Symbol*) Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__FUNCTION, sizeof(Checked_Function_Symbol), location, name, (Checked_Type*) Checked_Pointer_Type__create(function_type->super.super.location, (Checked_Type*) function_type))
@@ -2874,18 +2918,18 @@ Checked_Function_Symbol* Checked_Function_Symbol__create(Source_Location* locati
     return symbol
 }
 
-typedef struct Checked_Function_Parameter_Symbol {
-    Checked_Symbol super
-} Checked_Function_Parameter_Symbol
+define Checked_Function_Parameter_Symbol = struct {
+    super: Checked_Symbol
+}
 
 Checked_Function_Parameter_Symbol* Checked_Function_Parameter_Symbol__create(Source_Location* location, String* name, Checked_Type* type) {
     return (Checked_Function_Parameter_Symbol*) Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__FUNCTION_PARAMETER, sizeof(Checked_Function_Parameter_Symbol), location, name, type)
 }
 
-typedef struct Checked_Type_Symbol {
-    Checked_Symbol super
-    Checked_Named_Type* named_type
-} Checked_Type_Symbol
+define Checked_Type_Symbol = struct {
+    super: Checked_Symbol
+    named_type: Checked_Named_Type*
+}
 
 Checked_Type_Symbol* Checked_Type_Symbol__create(Source_Location* location, String* name, Checked_Named_Type* named_type) {
     Checked_Type_Symbol* symbol = (Checked_Type_Symbol*) Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__TYPE, sizeof(Checked_Type_Symbol), location, name, null)
@@ -2893,19 +2937,19 @@ Checked_Type_Symbol* Checked_Type_Symbol__create(Source_Location* location, Stri
     return symbol
 }
 
-typedef struct Checked_Variable_Symbol {
-    Checked_Symbol super
-} Checked_Variable_Symbol
+define Checked_Variable_Symbol = struct {
+    super: Checked_Symbol
+}
 
 Checked_Variable_Symbol* Checked_Variable__create(Source_Location* location, String* name, Checked_Type* type) {
     return (Checked_Variable_Symbol*) Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), location, name, type)
 }
 
-typedef struct Checked_Symbols {
-    struct Checked_Symbols* parent
-    Checked_Symbol* first_symbol
-    Checked_Symbol* last_symbol
-} Checked_Symbols
+define Checked_Symbols = struct {
+    parent: Checked_Symbols*
+    first_symbol: Checked_Symbol*
+    last_symbol: Checked_Symbol*
+}
 
 Checked_Symbols* Checked_Symbols__create(Checked_Symbols* parent) {
     Checked_Symbols* symbols = (Checked_Symbols*) malloc(sizeof(Checked_Symbols))
@@ -2990,11 +3034,11 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__SYMBOL,
 } Checked_Expression_Kind
 
-typedef struct Checked_Expression {
-    Checked_Expression_Kind kind
-    Source_Location* location
-    Checked_Type* type
-} Checked_Expression
+define Checked_Expression = struct {
+    kind: Checked_Expression_Kind
+    location: Source_Location*
+    type: Checked_Type*
+}
 
 Checked_Expression* Checked_Expression__create_kind(Checked_Expression_Kind kind, usize kind_size, Source_Location* location, Checked_Type* type) {
     Checked_Expression* expression = (Checked_Expression*) malloc(kind_size)
@@ -3004,11 +3048,11 @@ Checked_Expression* Checked_Expression__create_kind(Checked_Expression_Kind kind
     return expression
 }
 
-typedef struct Checked_Binary_Expression {
-    Checked_Expression super
-    Checked_Expression* left_expression
-    Checked_Expression* right_expression
-} Checked_Binary_Expression
+define Checked_Binary_Expression = struct {
+    super: Checked_Expression
+    left_expression: Checked_Expression*
+    right_expression: Checked_Expression*
+}
 
 Checked_Binary_Expression* Checked_Binary_Expression__create_kind(Checked_Expression_Kind kind, Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     Checked_Binary_Expression* expression = (Checked_Binary_Expression*) Checked_Expression__create_kind(kind, sizeof(Checked_Binary_Expression), location, type)
@@ -3017,10 +3061,10 @@ Checked_Binary_Expression* Checked_Binary_Expression__create_kind(Checked_Expres
     return expression
 }
 
-typedef struct Checked_Unary_Expression {
-    Checked_Expression super
-    Checked_Expression* other_expression
-} Checked_Unary_Expression
+define Checked_Unary_Expression = struct {
+    super: Checked_Expression
+    other_expression: Checked_Expression*
+}
 
 Checked_Unary_Expression* Checked_Unary_Expression__create_kind(Checked_Expression_Kind kind, usize kind_size, Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
     Checked_Unary_Expression* expression = (Checked_Unary_Expression*) Checked_Expression__create_kind(kind, kind_size, location, type)
@@ -3028,27 +3072,27 @@ Checked_Unary_Expression* Checked_Unary_Expression__create_kind(Checked_Expressi
     return expression
 }
 
-typedef struct Checked_Add_Expression {
-    Checked_Binary_Expression super
-} Checked_Add_Expression
+define Checked_Add_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Add_Expression* Checked_Add_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Add_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__ADD, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Address_Of_Expression {
-    Checked_Unary_Expression super
-} Checked_Address_Of_Expression
+define Checked_Address_Of_Expression = struct {
+    super: Checked_Unary_Expression
+}
 
 Checked_Address_Of_Expression* Checked_Address_Of_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
     return (Checked_Address_Of_Expression*) Checked_Unary_Expression__create_kind(CHECKED_EXPRESSION_KIND__ADDRESS_OF, sizeof(Checked_Address_Of_Expression), location, type, other_expression)
 }
 
-typedef struct Checked_Array_Access_Expression {
-    Checked_Expression super
-    Checked_Expression* array_expression
-    Checked_Expression* index_expression
-} Checked_Array_Access_Expression
+define Checked_Array_Access_Expression = struct {
+    super: Checked_Expression
+    array_expression: Checked_Expression*
+    index_expression: Checked_Expression*
+}
 
 Checked_Array_Access_Expression* Checked_Array_Access_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* array_expression, Checked_Expression* index_expression) {
     Checked_Array_Access_Expression* expression = (Checked_Array_Access_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__ARRAY_ACCESS, sizeof(Checked_Array_Access_Expression), location, type)
@@ -3057,10 +3101,10 @@ Checked_Array_Access_Expression* Checked_Array_Access_Expression__create(Source_
     return expression
 }
 
-typedef struct Checked_Bool_Expression {
-    Checked_Expression super
-    bool value
-} Checked_Bool_Expression
+define Checked_Bool_Expression = struct {
+    super: Checked_Expression
+    value: bool
+}
 
 Checked_Bool_Expression* Checked_Bool_Expression__create(Source_Location* location, Checked_Type* type, bool value) {
     Checked_Bool_Expression* expression = (Checked_Bool_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__BOOL, sizeof(Checked_Bool_Expression), location, type)
@@ -3068,10 +3112,10 @@ Checked_Bool_Expression* Checked_Bool_Expression__create(Source_Location* locati
     return expression
 }
 
-typedef struct Checked_Call_Argument {
-    Checked_Expression* expression
-    struct Checked_Call_Argument* next_argument
-} Checked_Call_Argument
+define Checked_Call_Argument = struct {
+    expression: Checked_Expression*
+    next_argument: Checked_Call_Argument*
+}
 
 Checked_Call_Argument* Checked_Call_Argument__create(Checked_Expression* expression) {
     Checked_Call_Argument* argument = (Checked_Call_Argument*) malloc(sizeof(Checked_Call_Argument))
@@ -3080,11 +3124,11 @@ Checked_Call_Argument* Checked_Call_Argument__create(Checked_Expression* express
     return argument
 }
 
-typedef struct Checked_Call_Expression {
-    Checked_Expression super
-    Checked_Expression* callee_expression
-    Checked_Call_Argument* first_argument
-} Checked_Call_Expression
+define Checked_Call_Expression = struct {
+    super: Checked_Expression
+    callee_expression: Checked_Expression*
+    first_argument: Checked_Call_Argument*
+}
 
 Checked_Call_Expression* Checked_Call_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* callee_expression, Checked_Call_Argument* first_argument) {
     Checked_Call_Expression* expression = (Checked_Call_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__CALL, sizeof(Checked_Call_Expression), location, type)
@@ -3093,10 +3137,10 @@ Checked_Call_Expression* Checked_Call_Expression__create(Source_Location* locati
     return expression
 }
 
-typedef struct Checked_Cast_Expression {
-    Checked_Expression super
-    Checked_Expression* other_expression
-} Checked_Cast_Expression
+define Checked_Cast_Expression = struct {
+    super: Checked_Expression
+    other_expression: Checked_Expression*
+}
 
 Checked_Cast_Expression* Checked_Cast_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
     Checked_Cast_Expression* expression = (Checked_Cast_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__CAST, sizeof(Checked_Cast_Expression), location, type)
@@ -3104,10 +3148,10 @@ Checked_Cast_Expression* Checked_Cast_Expression__create(Source_Location* locati
     return expression
 }
 
-typedef struct Checked_Character_Expression {
-    Checked_Expression super
-    char value
-} Checked_Character_Expression
+define Checked_Character_Expression = struct {
+    super: Checked_Expression
+    value: char
+}
 
 Checked_Character_Expression* Checked_Character_Expression__create(Source_Location* location, Checked_Type* type, char value) {
     Checked_Character_Expression* expression = (Checked_Character_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__CHARACTER, sizeof(Checked_Character_Expression), location, type)
@@ -3115,42 +3159,42 @@ Checked_Character_Expression* Checked_Character_Expression__create(Source_Locati
     return expression
 }
 
-typedef struct Checked_Divide_Expression {
-    Checked_Binary_Expression super
-} Checked_Divide_Expression
+define Checked_Divide_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Divide_Expression* Checked_Divide_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Divide_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__DIVIDE, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Equals_Expression {
-    Checked_Binary_Expression super
-} Checked_Equals_Expression
+define Checked_Equals_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Equals_Expression* Checked_Equals_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Equals_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__EQUALS, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Greater_Expression {
-    Checked_Binary_Expression super
-} Checked_Greater_Expression
+define Checked_Greater_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Greater_Expression* Checked_Greater_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Greater_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__GREATER, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Greater_Or_Equals_Expression {
-    Checked_Binary_Expression super
-} Checked_Greater_Or_Equals_Expression
+define Checked_Greater_Or_Equals_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Greater_Or_Equals_Expression* Checked_Greater_Or_Equals_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Greater_Or_Equals_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Group_Expression {
-    Checked_Expression super
-    Checked_Expression* other_expression
-} Checked_Group_Expression
+define Checked_Group_Expression = struct {
+    super: Checked_Expression
+    other_expression: Checked_Expression*
+}
 
 Checked_Group_Expression* Checked_Group_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
     Checked_Group_Expression* expression = (Checked_Group_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__GROUP, sizeof(Checked_Group_Expression), location, type)
@@ -3158,10 +3202,10 @@ Checked_Group_Expression* Checked_Group_Expression__create(Source_Location* loca
     return expression
 }
 
-typedef struct Checked_Integer_Expression {
-    Checked_Expression super
-    u64 value
-} Checked_Integer_Expression
+define Checked_Integer_Expression = struct {
+    super: Checked_Expression
+    value: u64
+}
 
 Checked_Integer_Expression* Checked_Integer_Expression__create(Source_Location* location, Checked_Type* type, u64 value) {
     Checked_Integer_Expression* expression = (Checked_Integer_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__INTEGER, sizeof(Checked_Integer_Expression), location, type)
@@ -3169,43 +3213,43 @@ Checked_Integer_Expression* Checked_Integer_Expression__create(Source_Location* 
     return expression
 }
 
-typedef struct Checked_Less_Expression {
-    Checked_Binary_Expression super
-} Checked_Less_Expression
+define Checked_Less_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Less_Expression* Checked_Less_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Less_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LESS, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Less_Or_Equals_Expression {
-    Checked_Binary_Expression super
-} Checked_Less_Or_Equals_Expression
+define Checked_Less_Or_Equals_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Less_Or_Equals_Expression* Checked_Less_Or_Equals_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Less_Or_Equals_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Logic_And_Expression {
-    Checked_Binary_Expression super
-} Checked_Logic_And_Expression
+define Checked_Logic_And_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Logic_And_Expression* Checked_Logic_And_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Logic_And_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LOGIC_AND, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Logic_Or_Expression {
-    Checked_Binary_Expression super
-} Checked_Logic_Or_Expression
+define Checked_Logic_Or_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Logic_Or_Expression* Checked_Logic_Or_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Logic_Or_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LOGIC_OR, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Member_Access_Expression {
-    Checked_Expression super
-    Checked_Expression* object_expression
-    Checked_Struct_Member* member
-} Checked_Member_Access_Expression
+define Checked_Member_Access_Expression = struct {
+    super: Checked_Expression
+    object_expression: Checked_Expression*
+    member: Checked_Struct_Member*
+}
 
 Checked_Member_Access_Expression* Checked_Member_Access_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* object_expression, Checked_Struct_Member* member) {
     Checked_Member_Access_Expression* expression = (Checked_Member_Access_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__MEMBER_ACCESS, sizeof(Checked_Member_Access_Expression), location, type)
@@ -3214,58 +3258,58 @@ Checked_Member_Access_Expression* Checked_Member_Access_Expression__create(Sourc
     return expression
 }
 
-typedef struct Checked_Minus_Expression {
-    Checked_Unary_Expression super
-} Checked_Minus_Expression
+define Checked_Minus_Expression = struct {
+    super: Checked_Unary_Expression
+}
 
 Checked_Minus_Expression* Checked_Minus_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
     return (Checked_Minus_Expression*) Checked_Unary_Expression__create_kind(CHECKED_EXPRESSION_KIND__MINUS, sizeof(Checked_Minus_Expression), location, type, other_expression)
 }
 
-typedef struct Checked_Modulo_Expression {
-    Checked_Binary_Expression super
-} Checked_Modulo_Expression
+define Checked_Modulo_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Modulo_Expression* Checked_Modulo_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Modulo_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__MODULO, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Multiply_Expression {
-    Checked_Binary_Expression super
-} Checked_Multiply_Expression
+define Checked_Multiply_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Multiply_Expression* Checked_Multiply_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Multiply_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__MULTIPLY, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Not_Expression {
-    Checked_Unary_Expression super
-} Checked_Not_Expression
+define Checked_Not_Expression = struct {
+    super: Checked_Unary_Expression
+}
 
 Checked_Not_Expression* Checked_Not_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* other_expression) {
     return (Checked_Not_Expression*) Checked_Unary_Expression__create_kind(CHECKED_EXPRESSION_KIND__NOT, sizeof(Checked_Not_Expression), location, type, other_expression)
 }
 
-typedef struct Checked_Not_Equals_Expression {
-    Checked_Binary_Expression super
-} Checked_Not_Equals_Expression
+define Checked_Not_Equals_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Not_Equals_Expression* Checked_Not_Equals_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Not_Equals_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__NOT_EQUALS, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Null_Expression {
-    Checked_Expression super
-} Checked_Null_Expression
+define Checked_Null_Expression = struct {
+    super: Checked_Expression
+}
 
 Checked_Null_Expression* Checked_Null_Expression__create(Source_Location* location, Checked_Type* type) {
     return (Checked_Null_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__NULL, sizeof(Checked_Null_Expression), location, type)
 }
 
-typedef struct Checked_Sizeof_Expression {
-    Checked_Expression super
-    Checked_Type* sized_type
-} Checked_Sizeof_Expression
+define Checked_Sizeof_Expression = struct {
+    super: Checked_Expression
+    sized_type: Checked_Type*
+}
 
 Checked_Sizeof_Expression* Checked_Sizeof_Expression__create(Source_Location* location, Checked_Type* type, Checked_Type* sized_type) {
     Checked_Sizeof_Expression* expression = (Checked_Sizeof_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__SIZEOF, sizeof(Checked_Sizeof_Expression), location, type)
@@ -3273,10 +3317,10 @@ Checked_Sizeof_Expression* Checked_Sizeof_Expression__create(Source_Location* lo
     return expression
 }
 
-typedef struct Checked_String_Expression {
-    Checked_Expression super
-    String* value
-} Checked_String_Expression
+define Checked_String_Expression = struct {
+    super: Checked_Expression
+    value: String*
+}
 
 Checked_String_Expression* Checked_String_Expression__create(Source_Location* location, Checked_Type* type, String* value) {
     Checked_String_Expression* expression = (Checked_String_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__STRING, sizeof(Checked_String_Expression), location, type)
@@ -3284,18 +3328,18 @@ Checked_String_Expression* Checked_String_Expression__create(Source_Location* lo
     return expression
 }
 
-typedef struct Checked_Substract_Expression {
-    Checked_Binary_Expression super
-} Checked_Substract_Expression
+define Checked_Substract_Expression = struct {
+    super: Checked_Binary_Expression
+}
 
 Checked_Substract_Expression* Checked_Substract_Expression__create(Source_Location* location, Checked_Type* type, Checked_Expression* left_expression, Checked_Expression* right_expression) {
     return (Checked_Substract_Expression*) Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__SUBSTRACT, location, type, left_expression, right_expression)
 }
 
-typedef struct Checked_Symbol_Expression {
-    Checked_Expression super
-    Checked_Symbol* symbol
-} Checked_Symbol_Expression
+define Checked_Symbol_Expression = struct {
+    super: Checked_Expression
+    symbol: Checked_Symbol*
+}
 
 Checked_Symbol_Expression* Checked_Symbol_Expression__create(Source_Location* location, Checked_Type* type, Checked_Symbol* symbol) {
     Checked_Symbol_Expression* expression = (Checked_Symbol_Expression*) Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__SYMBOL, sizeof(Checked_Symbol_Expression), location, type)
@@ -3318,11 +3362,11 @@ typedef enum Checked_Statement_Kind {
     CHECKED_STATEMENT_KIND__WHILE,
 } Checked_Statement_Kind
 
-typedef struct Checked_Statement {
-    Checked_Statement_Kind kind
-    Source_Location* location
-    struct Checked_Statement* next_statement
-} Checked_Statement
+define Checked_Statement = struct {
+    kind: Checked_Statement_Kind
+    location: Source_Location*
+    next_statement: Checked_Statement*
+}
 
 Checked_Statement* Checked_Statement__create_kind(Checked_Statement_Kind kind, usize kind_size, Source_Location* location) {
     Checked_Statement* statement = (Checked_Statement*) malloc(kind_size)
@@ -3332,11 +3376,11 @@ Checked_Statement* Checked_Statement__create_kind(Checked_Statement_Kind kind, u
     return statement
 }
 
-typedef struct Checked_Assignment_Statement {
-    Checked_Statement super
-    Checked_Expression* object_expression
-    Checked_Expression* value_expression
-} Checked_Assignment_Statement
+define Checked_Assignment_Statement = struct {
+    super: Checked_Statement
+    object_expression: Checked_Expression*
+    value_expression: Checked_Expression*
+}
 
 Checked_Assignment_Statement* Checked_Assignment_Statement__create(Source_Location* location, Checked_Expression* object_expression, Checked_Expression* value_expression) {
     Checked_Assignment_Statement* statement = (Checked_Assignment_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__ASSIGNMENT, sizeof(Checked_Assignment_Statement), location)
@@ -3345,10 +3389,10 @@ Checked_Assignment_Statement* Checked_Assignment_Statement__create(Source_Locati
     return statement
 }
 
-typedef struct Checked_Block_Statement {
-    Checked_Statement super
-    Checked_Statements* statements
-} Checked_Block_Statement
+define Checked_Block_Statement = struct {
+    super: Checked_Statement
+    statements: Checked_Statements*
+}
 
 Checked_Block_Statement* Checked_Block_Statement__create(Source_Location* location, Checked_Statements* statements) {
     Checked_Block_Statement* statement = (Checked_Block_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__BLOCK, sizeof(Checked_Block_Statement), location)
@@ -3356,18 +3400,18 @@ Checked_Block_Statement* Checked_Block_Statement__create(Source_Location* locati
     return statement
 }
 
-typedef struct Checked_Break_Statement {
-    Checked_Statement super
-} Checked_Break_Statement
+define Checked_Break_Statement = struct {
+    super: Checked_Statement
+}
 
 Checked_Break_Statement* Checked_Break_Statement__create(Source_Location* location) {
     return (Checked_Break_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__BREAK, sizeof(Checked_Break_Statement), location)
 }
 
-typedef struct Checked_Expression_Statement {
-    Checked_Statement super
-    Checked_Expression* expression
-} Checked_Expression_Statement
+define Checked_Expression_Statement = struct {
+    super: Checked_Statement
+    expression: Checked_Expression*
+}
 
 Checked_Expression_Statement* Checked_Expression_Statement__create(Source_Location* location, Checked_Expression* expression) {
     Checked_Expression_Statement* statement = (Checked_Expression_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__EXPRESSION, sizeof(Checked_Expression_Statement), location)
@@ -3375,12 +3419,12 @@ Checked_Expression_Statement* Checked_Expression_Statement__create(Source_Locati
     return statement
 }
 
-typedef struct Checked_If_Statement {
-    Checked_Statement super
-    Checked_Expression* condition_expression
-    Checked_Statement* true_statement
-    Checked_Statement* false_statement
-} Checked_If_Statement
+define Checked_If_Statement = struct {
+    super: Checked_Statement
+    condition_expression: Checked_Expression*
+    true_statement: Checked_Statement*
+    false_statement: Checked_Statement*
+}
 
 Checked_If_Statement* Checked_If_Statement__create(Source_Location* location, Checked_Expression* condition_expression, Checked_Statement* true_statement, Checked_Statement* false_statement) {
     Checked_If_Statement* statement = (Checked_If_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__IF, sizeof(Checked_If_Statement), location)
@@ -3390,10 +3434,10 @@ Checked_If_Statement* Checked_If_Statement__create(Source_Location* location, Ch
     return statement
 }
 
-typedef struct Checked_Return_Statement {
-    Checked_Statement super
-    Checked_Expression* expression
-} Checked_Return_Statement
+define Checked_Return_Statement = struct {
+    super: Checked_Statement
+    expression: Checked_Expression*
+}
 
 Checked_Return_Statement* Checked_Return_Statement__create(Source_Location* location, Checked_Expression* expression) {
     Checked_Return_Statement* statement = (Checked_Return_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__RETURN, sizeof(Checked_Return_Statement), location)
@@ -3401,12 +3445,12 @@ Checked_Return_Statement* Checked_Return_Statement__create(Source_Location* loca
     return statement
 }
 
-typedef struct Checked_Variable_Statement {
-    Checked_Statement super
-    Checked_Variable_Symbol* variable
-    Checked_Expression* expression
-    bool is_external
-} Checked_Variable_Statement
+define Checked_Variable_Statement = struct {
+    super: Checked_Statement
+    variable: Checked_Variable_Symbol*
+    expression: Checked_Expression*
+    is_external: bool
+}
 
 Checked_Variable_Statement* Checked_Variable_Statement__create(Source_Location* location, Checked_Variable_Symbol* variable, Checked_Expression* expression, bool is_external) {
     Checked_Variable_Statement* statement = (Checked_Variable_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__VARIABLE, sizeof(Checked_Variable_Statement), location)
@@ -3416,11 +3460,11 @@ Checked_Variable_Statement* Checked_Variable_Statement__create(Source_Location* 
     return statement
 }
 
-typedef struct Checked_While_Statement {
-    Checked_Statement super
-    Checked_Expression* condition_expression
-    Checked_Statement* body_statement
-} Checked_While_Statement
+define Checked_While_Statement = struct {
+    super: Checked_Statement
+    condition_expression: Checked_Expression*
+    body_statement: Checked_Statement*
+}
 
 Checked_While_Statement* Checked_While_Statement__create(Source_Location* location, Checked_Expression* condition_expression, Checked_Statement* body_statement) {
     Checked_While_Statement* statement = (Checked_While_Statement*) Checked_Statement__create_kind(CHECKED_STATEMENT_KIND__WHILE, sizeof(Checked_While_Statement), location)
@@ -3429,10 +3473,10 @@ Checked_While_Statement* Checked_While_Statement__create(Source_Location* locati
     return statement
 }
 
-typedef struct Checked_Statements {
-    Checked_Statement* first_statement
-    Checked_Statement* last_statement
-} Checked_Statements
+define Checked_Statements = struct {
+    first_statement: Checked_Statement*
+    last_statement: Checked_Statement*
+}
 
 Checked_Statements* Checked_Statements__create() {
     Checked_Statements* statements = (Checked_Statements*) malloc(sizeof(Checked_Statements))
@@ -3454,22 +3498,22 @@ void Checked_Statements__append(Checked_Statements* self, Checked_Statement* sta
 \   Checked Source
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Checked_Source {
-    Checked_Symbol* first_symbol
-    Checked_Statements* statements
-} Checked_Source
+define Checked_Source = struct {
+    first_symbol: Checked_Symbol*
+    statements: Checked_Statements*
+}
 
 \ ---------------------------------------------------------------------------------------------------------------------
 \   Checker
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Checker {
-    Checked_Named_Type* first_type
-    Checked_Named_Type* last_type
-    Checked_Named_Type* last_builting_type
-    Checked_Symbols* symbols
-    Checked_Type* return_type
-} Checker
+define Checker = struct {
+    first_type: Checked_Named_Type*
+    last_type: Checked_Named_Type*
+    last_builting_type: Checked_Named_Type*
+    symbols: Checked_Symbols*
+    return_type: Checked_Type*
+}
 
 Checker* Checker__create() {
     Checker* checker = (Checker*) malloc(sizeof(Checker))
@@ -3950,20 +3994,30 @@ void Checker__check_function_type_statement(Checker* self, Parsed_Function_Type_
     }
 }
 
-void Checker__check_struct_statement(Checker* self, Parsed_Struct_Statement* parsed_statement) {
+void Checker__create_opaque_type(Checker* self, Parsed_Opaque_Type_Statement* parsed_statement) {
     Checked_Named_Type* other_type = Checker__find_type(self, parsed_statement->super.name->lexeme)
-    Checked_Struct_Type* struct_type
     if (other_type != null) {
-        if (other_type->super.kind != CHECKED_TYPE_KIND__STRUCT || (((Checked_Struct_Type*) other_type)->first_member != null)) {
-            TODO("Report type redeclaration")
-            abort()
-        }
-        struct_type = (Checked_Struct_Type*) other_type
+        Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Type declared first here: "), other_type->super.location))
+        abort()
     } else {
-        struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme)
+        Checked_Opaque_Type* opaque_type = Checked_Opaque_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme)
+        Checker__append_type(self, (Checked_Named_Type*) opaque_type)
+    }
+}
+
+void Checker__create_struct_type(Checker* self, Parsed_Struct_Statement* parsed_statement) {
+    Checked_Named_Type* other_type = Checker__find_type(self, parsed_statement->super.name->lexeme)
+    if (other_type != null) {
+        Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Type declared first here: "), other_type->super.location))
+        abort()
+    } else {
+        Checked_Struct_Type* struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme)
         Checker__append_type(self, (Checked_Named_Type*) struct_type)
     }
+}
 
+void Checker__check_struct_statement(Checker* self, Parsed_Struct_Statement* parsed_statement) {
+    Checked_Struct_Type* struct_type = (Checked_Struct_Type*) Checker__find_type(self, parsed_statement->super.name->lexeme)
     if (parsed_statement->first_member != null) {
         Checked_Struct_Member* last_struct_member = null
         Parsed_Struct_Member* parsed_member = parsed_statement->first_member
@@ -4159,13 +4213,37 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
 
     Parsed_Statement* parsed_statement
 
-    \ Check all declared types
+    \ Collect all type definitions
+    parsed_statement = parsed_source->statements->first_statement
+    while (parsed_statement != null) {
+        Checked_Statement* checked_statement = null
+        if (parsed_statement->kind == PARSED_STATEMENT_KIND__FUNCTION) {
+            \ ignored
+        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
+            \ ignored
+        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
+            Checker__create_struct_type(self, (Parsed_Struct_Statement*) parsed_statement)
+        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__OPAQUE_TYPE) {
+            Checker__create_opaque_type(self, (Parsed_Opaque_Type_Statement*) parsed_statement)
+        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__ENUM) {
+            Checker__check_enum_statement(self, (Parsed_Enum_Statement*) parsed_statement)
+        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__FUNCTION_TYPE) {
+            \ ignored
+        } else {
+            Source_Location__error(parsed_statement->location, String__create_from("Unsupported statement"))
+            abort()
+        }
+        if (checked_statement != null) {
+            Checked_Statements__append(checked_statements, checked_statement)
+        }
+        parsed_statement = parsed_statement->next_statement
+    }
+
+    \ Check all defined types
     parsed_statement = parsed_source->statements->first_statement
     while (parsed_statement != null) {
         if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
             Checker__check_struct_statement(self, (Parsed_Struct_Statement*) parsed_statement)
-        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__ENUM) {
-            Checker__check_enum_statement(self, (Parsed_Enum_Statement*) parsed_statement)
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__FUNCTION_TYPE) {
             Checker__check_function_type_statement(self, (Parsed_Function_Type_Statement*) parsed_statement)
         }
@@ -4181,6 +4259,8 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
             checked_statement = (Checked_Statement*) Checker__check_variable_statement(self, (Parsed_Variable_Statement*) parsed_statement)
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
+            \ ignored
+        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__OPAQUE_TYPE) {
             \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__ENUM) {
             \ ignored
@@ -4207,6 +4287,8 @@ Checked_Source* Checker__check_source(Checker* self, Parsed_Source* parsed_sourc
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
             \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
+            \ ignored
+        } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__OPAQUE_TYPE) {
             \ ignored
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__ENUM) {
             \ ignored
@@ -4235,10 +4317,10 @@ Checked_Source* check(Parsed_Source* parsed_source) {
 \   Generator
 \ ---------------------------------------------------------------------------------------------------------------------
 
-typedef struct Generator {
-    File* file
-    u16 identation
-} Generator
+define Generator = struct {
+    file: File*
+    identation: u16
+}
 
 void Generator__write_source_location(Generator* self, Source_Location* location) {
     File__write_cstring(self->file, "#line ")
@@ -4672,6 +4754,11 @@ void Generator__generate_function(Generator* self, Checked_Function_Symbol* func
     File__write_cstring(self->file, "}\n\n")
 }
 
+void Generator__declare_opaque_type(Generator* self, Checked_Opaque_Type* opaque_type) {
+    File__write_checked_type(self->file, (Checked_Type*) opaque_type)
+    File__write_cstring(self->file, ";\n")
+}
+
 void Generator__declare_struct(Generator* self, Checked_Struct_Type* struct_type) {
     File__write_checked_type(self->file, (Checked_Type*) struct_type)
     File__write_cstring(self->file, ";\n")
@@ -4716,6 +4803,8 @@ void generate(File* file, Checked_Source* checked_source) {
             Checked_Named_Type* named_type = ((Checked_Type_Symbol*) checked_symbol)->named_type
             if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
                 Generator__declare_struct(&generator, (Checked_Struct_Type*) named_type)
+            } else if (named_type->super.kind == CHECKED_TYPE_KIND__OPAQUE) {
+                Generator__declare_opaque_type(&generator, (Checked_Opaque_Type*) named_type)
             } else if (named_type->super.kind == CHECKED_TYPE_KIND__ENUM) {
                 Generator__generate_enum(&generator, (Checked_Enum_Type*) named_type)
             }
