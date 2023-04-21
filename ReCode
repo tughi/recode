@@ -31,7 +31,7 @@ def cc(source_file, output_file):
 
 def trace(program, args):
     logger.info(f"Tracing: {program} {args}")
-    subprocess.run(f'''gdb {program} -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args}' -ex=backtrace -ex=quit''', shell=True)
+    subprocess.run(f'''gdb {program} -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args} 2> /dev/null' -ex=backtrace -ex=quit''', shell=True)
     exit(1)
 
 
@@ -76,7 +76,7 @@ def build_stage(n):
 
     if compiler_changed:
         if execute(f'{compiler} {compiler_args}', exit_on_error=False) != 0:
-            trace(compiler, compiler_args + ' 2> /dev/null')
+            trace(compiler, compiler_args)
         cc(output_file, f'build/stage{n}/ReCode')
 
 
@@ -108,19 +108,25 @@ def test():
 
         args = ['build/stage1/ReCode', f'tests/{test_file_name}', f'build/tests/{test_file_name[:-5]}.c']
         logger.info(f"Testing: {args[1]}")
-        test_result = subprocess.run(args, capture_output=expected_error is not None, text=True)
-        if expected_error:
-            if test_result.returncode == 0:
-                logger.error(f"{COLOR_ERROR}Unexpected exit code: {test_result.returncode}{COLOR_RESET}")
-                exit(1)
-            test_error = repr(re.sub(r'\x1b\[[0-9;]+m', '', test_result.stderr)) if test_result.stderr else None
-            if test_error != expected_error:
-                logger.error(f"{COLOR_ERROR}Unexpected error: {test_error}{COLOR_RESET}")
+
+        logger.debug(f"{COLOR_DEBUG}build/stage1/ReCode tests/{test_file_name} build/tests/{test_file_name[:-5]}.c{COLOR_RESET}")
+        compiler_result = subprocess.run(args, capture_output=True, text=True)
+
+        if compiler_result.returncode != 0:
+            compiler_error = repr(re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr)) if compiler_result.stderr else None
+            if expected_error is None or expected_error != compiler_error:
+                print(compiler_result.stderr)
+                logger.error(f"{COLOR_ERROR}Unexpected compiler error{COLOR_RESET}")
                 trace(args[0], ' '.join(args[1:]))
-                exit(test_result.returncode)
-        if test_result.returncode == 0:
+                exit(compiler_result.returncode)
+        else:
+            if expected_error:
+                logger.error(f"{COLOR_ERROR}Unexpected exit code: {compiler_result.returncode}{COLOR_RESET}")
+                exit(1)
+
             cc(f'build/tests/{test_file_name[:-5]}.c', f'build/tests/{test_file_name[:-5]}')
 
+            logger.debug(f"{COLOR_DEBUG}build/tests/{test_file_name[:-5]}{COLOR_RESET}")
             test_result = subprocess.run([f'build/tests/{test_file_name[:-5]}'], capture_output=expected_output is not None, text=True)
             if test_result.returncode != 0:
                 logger.error(f"{COLOR_ERROR}Unexpected exit code: {test_result.returncode}{COLOR_RESET}")

@@ -28,7 +28,6 @@ A compiler for the _Code_ language.
     - string
   - no preprocessor
 - [ ] Translate and refactor compiler to _Code_
-  - TODO: Change enum syntax
   - TODO: Change variable declarations syntax
   - TODO: Change funtion syntax
   - TODO: Treat string literals as local String instances
