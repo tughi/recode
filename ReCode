@@ -61,7 +61,6 @@ def build_stage(n):
     compiler = f'build/stage{n - 1}/ReCode'
     source_file = f'compiler/ReCode.code'
     output_file = f'build/stage{n}/ReCode.c'
-    compiler_args = f'{source_file} {output_file}'
 
     compiler_changed = not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler)
     if not compiler_changed:
@@ -75,8 +74,10 @@ def build_stage(n):
             break
 
     if compiler_changed:
-        if execute(f'{compiler} {compiler_args}', exit_on_error=False) != 0:
-            trace(compiler, compiler_args)
+        if execute(f'{compiler} {source_file} {output_file}', exit_on_error=False) != 0:
+            if os.path.exists(output_file):
+                execute(f'rm {output_file}')
+            trace(compiler, f'{source_file} -')
         cc(output_file, f'build/stage{n}/ReCode')
 
 
