@@ -2,38 +2,19 @@
 
 A compiler for the _Code_ language.
 
-## Bootstrapping
+## Progress
 
 - [X] Implement self-hosted minimal _C_ compiler
-  - types: 
-    - **bool**
-    - **char**
-    - **int8_t**, **int16_t**, **int32_t**, **int64_t**
-    - **uint8_t**, **uint16_t**, **uint32_t**, **uint64_t**
-    - **size_t**
-    - **void**
-    - **struct**
-  - values:
-    - **null**
-    - **true**, **false**
-  - control:
-    - **if-else**
-    - **while**
-    - **break**
-    - **return**
-  - line comments
-  - literals:
-    - base 10 integers
-    - char
-    - string
-  - no preprocessor
-- [ ] Translate and refactor compiler to _Code_
+  - See [bootstrap/c-compiler](https://github.com/tughi/recode/tree/bootstrap/c-compiler) tag
+- [ ] Translate compiler to _Code_
   - TODO: Implement closures (functions with context)
   - TODO: Change variable declarations syntax
   - TODO: Treat string literals as local String instances
   - TODO: Change cast syntax
   - TODO: Collect copyright headers and put the in the generated file
   - TODO: Declare external functions with Code and C signatures
+  - TODO: Automatic dereferencing (replace -> with .)
+  - TODO: Use super to find struct members
 
 
 ## How to add new features
