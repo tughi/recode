@@ -3,7 +3,7 @@
 
 define File = opaque type
 
-extern File* stdout
+let stdout: File* = external
 
 define fputs = external func (s: char*, stream: File*) -> i32
 

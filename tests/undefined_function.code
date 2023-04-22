@@ -1,6 +1,6 @@
 \ Expect:
-\ - error: 'tests/undefined_function.code:5:18: Undefined symbol\n'
+\ - error: 'tests/undefined_function.code:5:23: Undefined symbol\n'
 
 define main = func () -> i32 {
-    i32 answer = get_answer()
+    let answer: i32 = get_answer()
 }

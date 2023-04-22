@@ -10,7 +10,7 @@ define Source = struct {
 define File = opaque type
 
 define main = func () -> i32 {
-    Source result
+    let result: Source = undefined
     result.file = null
     result.value = 0
     return result.value

@@ -1,0 +1,17 @@
+\ Expect:
+\ - output: 'PASS\n'
+
+define File = opaque type
+
+let stdout: File* = external
+
+define fputs = external func (s: char*, stream: File*) -> i32
+
+define main = func () -> i32 {
+    let value: i32 = undefined
+    let value_ref: i32* = &value
+
+    fputs("PASS\n", stdout)
+
+    return 0
+}
