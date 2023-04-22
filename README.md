@@ -13,7 +13,6 @@ A compiler for the _Code_ language.
   - TODO: Change cast syntax
   - TODO: Collect copyright headers and put the in the generated file
   - TODO: Declare external functions with Code and C signatures
-  - TODO: Automatic dereferencing (replace -> with .)
   - TODO: Use super to find struct members
 
 

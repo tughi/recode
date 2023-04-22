@@ -1,0 +1,50 @@
+\ Expect:
+\ - output: ''
+
+define Data = struct {
+    value_ref: i32*
+}
+
+define Node = struct {
+    data: Data*
+}
+
+define main = func () -> i32 {
+    let value: i32 = undefined
+    let value_ref: i32* = &value
+    value_ref.* = 42
+
+    if (value != 42) {
+        return 1
+    }
+
+    let data: Data = undefined
+    data.value_ref = null
+
+    let node: Node = undefined
+    node.data = null
+
+    let node_ref: Node* = &node
+    node_ref.data = &data
+
+    node_ref.data.value_ref = &value
+    if (node_ref.data.value_ref.* != 42) {
+        return 2
+    }
+
+    node_ref.data.value_ref.* = 0
+    if (value != 0) {
+        return 3
+    }
+
+    let other_value: i32 = 42
+    let other_data: Data = undefined
+    other_data.value_ref = &other_value
+
+    node_ref.data.* = other_data
+    if (data.value_ref.* != other_value) {
+        return 4
+    }
+
+    return 0 \ PASS
+}
