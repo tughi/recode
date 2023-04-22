@@ -9,7 +9,7 @@ define Source = struct {
 
 define File = opaque type
 
-i32 main() {
+define main = func () -> i32 {
     Source result
     result.file = null
     result.value = 0

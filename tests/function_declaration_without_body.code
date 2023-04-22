@@ -1,8 +1,4 @@
 \ Expect:
-\ - error: 'tests/function_declaration_without_body.code:4:1: Function declaration without a body\n'
+\ - error: 'tests/function_declaration_without_body.code:4:36: Consumed 0 spaces where 1 were expected\ntests/function_declaration_without_body.code:4:36: Unexpected token\n'
 
-void get_answer();
-
-int32_t main() {
-    return 0;
-}
+define get_answer = func () -> void

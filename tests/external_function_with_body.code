@@ -1,9 +1,5 @@
 \ Expect:
-\ - error: 'tests/external_function_with_body.code:4:1: External function cannot have a body\n'
+\ - error: 'tests/external_function_with_body.code:4:37: Consumed 1 spaces where 0 were expected\ntests/external_function_with_body.code:4:38: Unexpected token\n'
 
-extern void test() {
-}
-
-int32_t main() {
-    int32_t answer = get_answer();
+define test = extern func () -> void {
 }

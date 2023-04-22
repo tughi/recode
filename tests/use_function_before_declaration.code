@@ -5,15 +5,19 @@ define File = opaque type
 
 extern File* stdout
 
-extern i32 fputs(char* s, File* stream)
+define fputs = extern func (s: char*, stream: File*) -> i32
 
-i32 main() {
+define main = func () -> i32 {
     if (get_answer() == 42) {
         fputs("PASS\n", stdout)
     }
     return 0
 }
 
-i32 get_answer() {
-    return 42
+define get_answer = func () -> i32 {
+    return echo_value(42)
+}
+
+define echo_value = func (value: i32) -> i32 {
+    return value
 }

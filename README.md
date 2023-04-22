@@ -28,8 +28,8 @@ A compiler for the _Code_ language.
     - string
   - no preprocessor
 - [ ] Translate and refactor compiler to _Code_
+  - TODO: Implement closures (functions with context)
   - TODO: Change variable declarations syntax
-  - TODO: Change funtion syntax
   - TODO: Treat string literals as local String instances
   - TODO: Change cast syntax
   - TODO: Collect copyright headers and put the in the generated file

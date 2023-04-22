@@ -1,6 +1,6 @@
 \ Expect:
 \ - error: 'tests/undefined_function.code:5:18: Undefined symbol\n'
 
-i32 main() {
+define main = func () -> i32 {
     i32 answer = get_answer()
 }

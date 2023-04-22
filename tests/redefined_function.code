@@ -1,14 +1,14 @@
 \ Expect:
-\ - error: 'tests/redefined_function.code:12:5: Function declared first here: tests/redefined_function.code:4:5\n'
+\ - error: 'tests/redefined_function.code:12:8: Function declared first here: tests/redefined_function.code:4:8\n'
 
-i32 get_answer() {
+define get_answer = func () -> i32 {
     return 1
 }
 
-i32 main() {
+define main = func () -> i32 {
     i32 answer = get_answer()
 }
 
-i32 get_answer() {
+define get_answer = func () -> i32 {
     return 2
 }

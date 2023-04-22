@@ -116,11 +116,13 @@ def test():
         if compiler_result.returncode != 0:
             compiler_error = repr(re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr)) if compiler_result.stderr else None
             if expected_error is None or expected_error != compiler_error:
-                print(compiler_result.stderr)
+                print(compiler_result.stderr, end='')
                 logger.error(f"{COLOR_ERROR}Unexpected compiler error{COLOR_RESET}")
                 trace(args[0], ' '.join(args[1:]))
                 exit(compiler_result.returncode)
         else:
+            print(compiler_result.stderr, end='')
+
             if expected_error:
                 logger.error(f"{COLOR_ERROR}Unexpected exit code: {compiler_result.returncode}{COLOR_RESET}")
                 exit(1)
