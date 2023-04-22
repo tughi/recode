@@ -10,17 +10,17 @@ extern File* stdin
 extern File* stdout
 extern File* stderr
 
-define fopen = extern func (file_name: char*, mode: char*) -> File*
-define fclose = extern func (stream: File*) -> i32
-define fgetc = extern func (stream: File*) -> i32
-define fputc = extern func (c: i32, stream: File*) -> i32
-define fputs = extern func (s: char*, stream: File*) -> i32
+define fopen = external func (file_name: char*, mode: char*) -> File*
+define fclose = external func (stream: File*) -> i32
+define fgetc = external func (stream: File*) -> i32
+define fputc = external func (c: i32, stream: File*) -> i32
+define fputs = external func (s: char*, stream: File*) -> i32
 
-define malloc = extern func (size: usize) -> void*
-define realloc = extern func (ptr: void*, size: usize) -> void*
-define free = extern func (ptr: void*) -> void
+define malloc = external func (size: usize) -> void*
+define realloc = external func (ptr: void*, size: usize) -> void*
+define free = external func (ptr: void*) -> void
 
-define abort = extern func () -> void
+define abort = external func () -> void
 
 \ ---------------------------------------------------------------------------------------------------------------------
 \   String
@@ -302,7 +302,7 @@ define Token = struct {
     kind: Token_Kind
     location: Source_Location*
     lexeme: String*
-    next_token: struct Token*
+    next_token: Token*
 }
 
 define Token__create_kind = func (kind: Token_Kind, kind_size: usize, location: Source_Location*, lexeme: String*) -> Token* {
@@ -464,6 +464,10 @@ define Token__is_enum = func (self: Token*) -> bool {
 
 define Token__is_extern = func (self: Token*) -> bool {
     return Token__is_keyword(self, "extern")
+}
+
+define Token__is_external = func (self: Token*) -> bool {
+    return Token__is_keyword(self, "external")
 }
 
 define Token__is_false = func (self: Token*) -> bool {
@@ -2088,18 +2092,10 @@ define Parser__parse_enum = func (self: Parser*, name: Token*) -> Parsed_Stateme
 }
 
 \ type
-\      | "struct"? IDENTIFIER "*"*
+\   | IDENTIFIER "*"*
 define Parser__parse_type = func (self: Parser*) -> Parsed_Type* {
-    Token* struct_token = null
-    if (Parser__matches_one(self, Token__is_struct)) {
-        struct_token = Parser__consume_token(self, Token__is_struct)
-        Parser__consume_space(self, (u16) 1)
-    }
     Token* name = Parser__consume_token(self, Token__is_identifier)
     Parsed_Type* type = Parsed_Named_Type__create(name)
-    if (struct_token != null) {
-        type = Parsed_Struct_Type__create(struct_token->location, type)
-    }
     while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
         Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_asterisk)
@@ -2148,7 +2144,11 @@ define Parser__parse_type_alias = func (self: Parser*) -> Parsed_Statement* {
 define Parser__parse_variable = func (self: Parser*) -> Parsed_Statement* {
     bool is_external
     Source_Location* location
-    if (Parser__matches_one(self, Token__is_extern)) {
+    if (Parser__matches_one(self, Token__is_external)) {
+        is_external = true
+        location = Parser__consume_token(self, Token__is_external)->location
+        Parser__consume_space(self, (u16) 1)
+    } else if (Parser__matches_one(self, Token__is_extern)) {
         is_external = true
         location = Parser__consume_token(self, Token__is_extern)->location
         Parser__consume_space(self, (u16) 1)
@@ -2234,9 +2234,9 @@ define Parser__parse_function = func (self: Parser*, name: Token*) -> Parsed_Sta
 }
 
 \ function
-\   | "extern" "func" "(" function_parameter* ")" "->" type "{" statements "}"
+\   | "external" "func" "(" function_parameter* ")" "->" type "{" statements "}"
 define Parser__parse_external_function = func (self: Parser*, name: Token*) -> Parsed_Statement* {
-    Parser__consume_token(self, Token__is_extern)
+    Parser__consume_token(self, Token__is_external)
     Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_func)
     Parser__consume_space(self, (u16) 1)
@@ -2363,6 +2363,8 @@ define Parser__parse_statement = func (self: Parser*) -> Parsed_Statement* {
             return Parser__parse_opaque_type(self, name)
         } else if (Parser__matches_one(self, Token__is_enum)) {
             return Parser__parse_enum(self, name)
+        } else if (Parser__matches_three(self, Token__is_external, true, Token__is_space, true, Token__is_func)) {
+            return Parser__parse_external_function(self, name)
         } else if (Parser__matches_three(self, Token__is_extern, true, Token__is_space, true, Token__is_func)) {
             return Parser__parse_external_function(self, name)
         }

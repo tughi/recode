@@ -5,7 +5,7 @@ define File = opaque type
 
 extern File* stdout
 
-define fputs = extern func (s: char*, stream: File*) -> i32
+define fputs = external func (s: char*, stream: File*) -> i32
 
 define main = func () -> i32 {
     if (get_answer() == 42) {

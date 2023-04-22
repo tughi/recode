@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/external_function_with_body.code:4:37: Consumed 1 spaces where 0 were expected\ntests/external_function_with_body.code:4:38: Unexpected token\n'
+\ - error: 'tests/external_function_with_body.code:4:39: Consumed 1 spaces where 0 were expected\ntests/external_function_with_body.code:4:40: Unexpected token\n'
 
-define test = extern func () -> void {
+define test = external func () -> void {
 }
