@@ -11,7 +11,7 @@ define Node = struct {
 
 define main = func () -> i32 {
     let value: i32 = undefined
-    let value_ref: i32* = &value
+    let value_ref = &value
     value_ref.* = 42
 
     if (value != 42) {
@@ -24,7 +24,7 @@ define main = func () -> i32 {
     let node: Node = undefined
     node.data = null
 
-    let node_ref: Node* = &node
+    let node_ref = &node
     node_ref.data = &data
 
     node_ref.data.value_ref = &value
@@ -37,7 +37,7 @@ define main = func () -> i32 {
         return 3
     }
 
-    let other_value: i32 = 42
+    let other_value = 42
     let other_data: Data = undefined
     other_data.value_ref = &other_value
 

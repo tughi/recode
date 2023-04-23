@@ -8,7 +8,6 @@ A compiler for the _Code_ language.
   - See [bootstrap/c-compiler](https://github.com/tughi/recode/tree/bootstrap/c-compiler) tag
 - [ ] Translate compiler to _Code_
   - TODO: Implement closures (functions with context)
-  - TODO: Implement variable type inference
   - TODO: Treat string literals as local String instances
   - TODO: Change cast syntax
   - TODO: Collect copyright headers and put the in the generated file

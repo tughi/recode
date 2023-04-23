@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/undefined_variable_without_type.code:5:9: Unknown variable type\n'
+
+define test = func () -> void {
+    let value = undefined
+}

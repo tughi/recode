@@ -33,7 +33,7 @@ define String = struct {
 }
 
 define String__create_empty = func (data_size: usize) -> String* {
-    let string: String* = (String*) malloc(sizeof(String))
+    let string = (String*) malloc(sizeof(String))
     string.data = (char*) malloc(data_size)
     string.data_size = data_size
     string.length = (usize) 0
@@ -60,9 +60,9 @@ define String__append_char = func (self: String*, ch: char) -> String* {
 }
 
 define String__append_cstring = func (self: String*, s: char*) -> String* {
-    let index: usize = (usize) 0
+    let index = (usize) 0
     while (true) {
-        let c: char = s[index]
+        let c = s[index]
         if (c == '\0') {
             return self
         }
@@ -72,9 +72,9 @@ define String__append_cstring = func (self: String*, s: char*) -> String* {
 }
 
 define cstring_length = func (s: char*) -> usize {
-    let length: usize = (usize) 0
+    let length = (usize) 0
     while (true) {
-        let c: u8 = (u8) s[length]
+        let c = (u8) s[length]
         if (c == (u8) 0) {
             break
         }
@@ -84,8 +84,8 @@ define cstring_length = func (s: char*) -> usize {
 }
 
 define String__create_from = func (data: char*) -> String* {
-    let string_length: usize = cstring_length(data)
-    let string: String* = String__create_empty(string_length)
+    let string_length = cstring_length(data)
+    let string = String__create_empty(string_length)
     String__append_cstring(string, data)
     return string
 }
@@ -104,7 +104,7 @@ define String__append_i16 = func (self: String*, value: i16) -> String* {
 }
 
 define String__append_string = func (self: String*, other: String*) -> String* {
-    let index: usize = (usize) 0
+    let index = (usize) 0
     while (index < other.length) {
         String__append_char(self, other.data[index])
         index = index + (usize) 1
@@ -113,12 +113,12 @@ define String__append_string = func (self: String*, other: String*) -> String* {
 }
 
 define String__equals_cstring = func (self: String*, s: char*) -> bool {
-    let length: usize = cstring_length(s)
+    let length = cstring_length(s)
     if (self.length != length) {
         return false
     }
 
-    let index: usize = (usize) 0
+    let index = (usize) 0
     while (index < length) {
         if (self.data[index] != s[index]) {
             return false
@@ -134,7 +134,7 @@ define String__equals_string = func (self: String*, other: String*) -> bool {
         return false
     }
 
-    let index: usize = (usize) 0
+    let index = (usize) 0
     while (index < self.length) {
         if (self.data[index] != other.data[index]) {
             return false
@@ -148,9 +148,6 @@ define String__equals_string = func (self: String*, other: String*) -> bool {
 \ ---------------------------------------------------------------------------------------------------------------------
 \   Utils
 \ ---------------------------------------------------------------------------------------------------------------------
-
-define pass = func () -> void {
-}
 
 define File__write_char = func (self: File*, c: char) -> void {
     fputc((i32) c, self)
@@ -180,7 +177,7 @@ define File__write_u64 = func (self: File*, value: u64) -> void {
 }
 
 define File__write_string = func (self: File*, string: String*) -> void {
-    let index: usize = (usize) 0
+    let index = (usize) 0
     while (index < string.length) {
         File__write_char(self, string.data[index])
         index = index + (usize) 1
@@ -215,10 +212,10 @@ define Source = struct {
 }
 
 define Source__create = func (file: File*, file_path: char*) -> Source* {
-    let file_content: String* = String__create()
+    let file_content = String__create()
 
     while (true) {
-        let ch: i32 = fgetc(file)
+        let ch = fgetc(file)
         if (ch == -1) {
             break
         }
@@ -227,7 +224,7 @@ define Source__create = func (file: File*, file_path: char*) -> Source* {
 
     String__append_char(file_content, '\0') \ simplifies EOF detection
 
-    let source: Source* = (Source*) malloc(sizeof(Source))
+    let source = (Source*) malloc(sizeof(Source))
     source.content = file_content
     source.path = file_path
 
@@ -245,7 +242,7 @@ define Source_Location = struct {
 }
 
 define Source_Location__create = func (source: Source*, line: u16, column: u16) -> Source_Location* {
-    let source_location: Source_Location* = (Source_Location*) malloc(sizeof(Source_Location))
+    let source_location = (Source_Location*) malloc(sizeof(Source_Location))
     source_location.source = source
     source_location.line = line
     source_location.column = column
@@ -306,7 +303,7 @@ define Token = struct {
 }
 
 define Token__create_kind = func (kind: Token_Kind, kind_size: usize, location: Source_Location*, lexeme: String*) -> Token* {
-    let token: Token* = (Token*) malloc(kind_size)
+    let token = (Token*) malloc(kind_size)
     token.kind = kind
     token.location = location
     token.lexeme = lexeme
@@ -328,7 +325,7 @@ define Character_Token = struct {
 }
 
 define Character_Token__create = func (location: Source_Location*, lexeme: String*, value: char) -> Character_Token* {
-    let token: Character_Token* = (Character_Token*) Token__create_kind(Token_Kind.CHARACTER, sizeof(Character_Token), location, lexeme)
+    let token = (Character_Token*) Token__create_kind(Token_Kind.CHARACTER, sizeof(Character_Token), location, lexeme)
     token.value = value
     return token
 }
@@ -379,7 +376,7 @@ define Integer_Token = struct {
 }
 
 define Integer_Token__create = func (location: Source_Location*, lexeme: String*, value: u64) -> Integer_Token* {
-    let token: Integer_Token* = (Integer_Token*) Token__create_kind(Token_Kind.INTEGER, sizeof(Integer_Token), location, lexeme)
+    let token = (Integer_Token*) Token__create_kind(Token_Kind.INTEGER, sizeof(Integer_Token), location, lexeme)
     token.value = value
     return token
 }
@@ -398,7 +395,7 @@ define Space_Token = struct {
 }
 
 define Space_Token__create = func (location: Source_Location*, lexeme: String*, count: u16) -> Space_Token* {
-    let token: Space_Token* = (Space_Token*) Token__create_kind(Token_Kind.SPACE, sizeof(Space_Token), location, lexeme)
+    let token = (Space_Token*) Token__create_kind(Token_Kind.SPACE, sizeof(Space_Token), location, lexeme)
     token.count = count
     return token
 }
@@ -409,7 +406,7 @@ define String_Token = struct {
 }
 
 define String_Token__create = func (location: Source_Location*, lexeme: String*, value: String*) -> String_Token* {
-    let token: String_Token* = (String_Token*) Token__create_kind(Token_Kind.STRING, sizeof(String_Token), location, lexeme)
+    let token = (String_Token*) Token__create_kind(Token_Kind.STRING, sizeof(String_Token), location, lexeme)
     token.value = value
     return token
 }
@@ -615,7 +612,7 @@ define Token__is_string = func (self: Token*) -> bool {
 }
 
 define File__write_token = func (stream: File*, token: Token*) -> void {
-    let colored: bool = token.kind == Token_Kind.COMMENT || token.kind == Token_Kind.ERROR || token.kind == Token_Kind.OTHER
+    let colored = token.kind == Token_Kind.COMMENT || token.kind == Token_Kind.ERROR || token.kind == Token_Kind.OTHER
     if (colored) {
         if (token.kind == Token_Kind.OTHER) {
             File__write_cstring(stream, "\e[2;33m")
@@ -648,7 +645,7 @@ define Scanner__peek_char = func (self: Scanner*) -> char {
 }
 
 define Scanner__next_char = func (self: Scanner*) -> char {
-    let next_char: char = Scanner__peek_char(self)
+    let next_char = Scanner__peek_char(self)
     if (next_char != '\0') {
         self.current_char_index = self.current_char_index + (usize) 1
         if (next_char == '\n') {
@@ -697,13 +694,13 @@ define Scanner__scan_character_token = func (self: Scanner*, source_location: So
     }
     String__append_char(token_lexeme, '\'')
 
-    let next_char: char = Scanner__peek_char(self)
+    let next_char = Scanner__peek_char(self)
     if (char_is_end_of_line(next_char) || next_char == '\t') {
         return (Token*) Error_Token__create(source_location, token_lexeme)
     }
 
     String__append_char(token_lexeme, Scanner__next_char(self))
-    let value: char = next_char
+    let value = next_char
 
     if (value == '\'') {
         return (Token*) Error_Token__create(source_location, token_lexeme)
@@ -758,9 +755,9 @@ define char_is_digit = func (c: char) -> bool {
 }
 
 define Scanner__scan_integer_token = func (self: Scanner*, source_location: Source_Location*, token_lexeme: String*) -> Token* {
-    let value: u64 = (u64) 0
+    let value = (u64) 0
     while (char_is_digit(Scanner__peek_char(self))) {
-        let c: char = Scanner__next_char(self)
+        let c = Scanner__next_char(self)
         value = value * (u64) 10 + (u64) (c - '0')
         String__append_char(token_lexeme, c)
     }
@@ -772,7 +769,7 @@ define char_is_space = func (c: char) -> bool {
 }
 
 define Scanner__scan_space_token = func (self: Scanner*, source_location: Source_Location*, token_lexeme: String*) -> Token* {
-    let count: u16 = (u16) 0
+    let count = (u16) 0
     while (char_is_space(Scanner__peek_char(self))) {
         count = count + (u16) 1
         String__append_char(token_lexeme, Scanner__next_char(self))
@@ -787,10 +784,10 @@ define Scanner__scan_string_token = func (self: Scanner*, source_location: Sourc
     }
     String__append_char(token_lexeme, '"')
 
-    let value: String* = String__create()
+    let value = String__create()
 
     while (true) {
-        let next_char: char = Scanner__peek_char(self)
+        let next_char = Scanner__peek_char(self)
         if (char_is_end_of_line(next_char) || next_char == '\t') {
             return (Token*) Error_Token__create(source_location, token_lexeme)
         }
@@ -820,10 +817,10 @@ define Scanner__scan_string_token = func (self: Scanner*, source_location: Sourc
 }
 
 define Scanner__scan_token = func (self: Scanner*) -> Token* {
-    let source_location: Source_Location* = Source_Location__create(self.source, self.current_line, self.current_column)
-    let token_lexeme: String* = String__create()
+    let source_location = Source_Location__create(self.source, self.current_line, self.current_column)
+    let token_lexeme = String__create()
 
-    let next_char: char = Scanner__peek_char(self)
+    let next_char = Scanner__peek_char(self)
 
     if (char_is_identifier_start(next_char)) {
         return Scanner__scan_identifier_token(self, source_location, token_lexeme)
@@ -871,7 +868,7 @@ define Scanner__next_token = func (self: Scanner*) -> Token* {
 }
 
 define Scanner__peek_token = func (self: Scanner*, offset: u8) -> Token* {
-    let token: Token* = self.current_token
+    let token = self.current_token
     while (offset > (u8) 0) {
         if (token.next_token == null) {
             token.next_token = Scanner__scan_token(self)
@@ -883,7 +880,7 @@ define Scanner__peek_token = func (self: Scanner*, offset: u8) -> Token* {
 }
 
 define Scanner__create = func (source: Source*) -> Scanner* {
-    let scanner: Scanner* = (Scanner*) malloc(sizeof(Scanner))
+    let scanner = (Scanner*) malloc(sizeof(Scanner))
     scanner.source = source
     scanner.current_char_index = (usize) 0
     scanner.current_line = (u16) 1
@@ -914,7 +911,7 @@ define Parsed_Type = struct {
 }
 
 define Parsed_Type__create_kind = func (kind: Parsed_Type_Kind, kind_size: usize, location: Source_Location*) -> Parsed_Type* {
-    let type: Parsed_Type* = (Parsed_Type*) malloc(kind_size)
+    let type = (Parsed_Type*) malloc(kind_size)
     type.kind = kind
     type.location = location
     return type
@@ -926,7 +923,7 @@ define Parsed_Named_Type = struct {
 }
 
 define Parsed_Named_Type__create = func (name: Token*) -> Parsed_Type* {
-    let type: Parsed_Named_Type* = (Parsed_Named_Type*) Parsed_Type__create_kind(Parsed_Type_Kind.NAMED, sizeof(Parsed_Named_Type), name.location)
+    let type = (Parsed_Named_Type*) Parsed_Type__create_kind(Parsed_Type_Kind.NAMED, sizeof(Parsed_Named_Type), name.location)
     type.name = name.lexeme
     return (Parsed_Type*) type
 }
@@ -937,7 +934,7 @@ define Parsed_Pointer_Type = struct {
 }
 
 define Parsed_Pointer_Type__create = func (other_type: Parsed_Type*) -> Parsed_Type* {
-    let type: Parsed_Pointer_Type* = (Parsed_Pointer_Type*) Parsed_Type__create_kind(Parsed_Type_Kind.POINTER, sizeof(Parsed_Pointer_Type), other_type.location)
+    let type = (Parsed_Pointer_Type*) Parsed_Type__create_kind(Parsed_Type_Kind.POINTER, sizeof(Parsed_Pointer_Type), other_type.location)
     type.other_type = other_type
     return (Parsed_Type*) type
 }
@@ -948,7 +945,7 @@ define Parsed_Struct_Type = struct {
 }
 
 define Parsed_Struct_Type__create = func (location: Source_Location*, other_type: Parsed_Type*) -> Parsed_Type* {
-    let type: Parsed_Struct_Type* = (Parsed_Struct_Type*) Parsed_Type__create_kind(Parsed_Type_Kind.STRUCT, sizeof(Parsed_Struct_Type), location)
+    let type = (Parsed_Struct_Type*) Parsed_Type__create_kind(Parsed_Type_Kind.STRUCT, sizeof(Parsed_Struct_Type), location)
     type.other_type = other_type
     return (Parsed_Type*) type
 }
@@ -991,7 +988,7 @@ define Parsed_Expression = struct {
 }
 
 define Parsed_Expression__create_kind = func (kind: Parsed_Expression_Kind, kind_size: usize, location: Source_Location*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = (Parsed_Expression*) malloc(kind_size)
+    let expression = (Parsed_Expression*) malloc(kind_size)
     expression.kind = kind
     expression.location = location
     return expression
@@ -1004,7 +1001,7 @@ define Parsed_Binary_Expression = struct {
 }
 
 define Parsed_Binary_Expression__create_kind = func (kind: Parsed_Expression_Kind, left_expression: Parsed_Expression*, right_expression: Parsed_Expression*) -> Parsed_Binary_Expression* {
-    let expression: Parsed_Binary_Expression* = (Parsed_Binary_Expression*) Parsed_Expression__create_kind(kind, sizeof(Parsed_Binary_Expression), left_expression.location)
+    let expression = (Parsed_Binary_Expression*) Parsed_Expression__create_kind(kind, sizeof(Parsed_Binary_Expression), left_expression.location)
     expression.left_expression = left_expression
     expression.right_expression = right_expression
     return expression
@@ -1016,7 +1013,7 @@ define Parsed_Unary_Expression = struct {
 }
 
 define Parsed_Unary_Expression__create_kind = func (kind: Parsed_Expression_Kind, kind_size: usize, location: Source_Location*, other_expression: Parsed_Expression*) -> Parsed_Unary_Expression* {
-    let expression: Parsed_Unary_Expression* = (Parsed_Unary_Expression*) Parsed_Expression__create_kind(kind, kind_size, location)
+    let expression = (Parsed_Unary_Expression*) Parsed_Expression__create_kind(kind, kind_size, location)
     expression.other_expression = other_expression
     return expression
 }
@@ -1027,7 +1024,7 @@ define Parsed_Literal_Expression = struct {
 }
 
 define Parsed_Literal_Expression__create_kind = func (kind: Parsed_Expression_Kind, kind_size: usize, literal: Token*) -> Parsed_Literal_Expression* {
-    let expression: Parsed_Literal_Expression* = (Parsed_Literal_Expression*) Parsed_Expression__create_kind(kind, kind_size, literal.location)
+    let expression = (Parsed_Literal_Expression*) Parsed_Expression__create_kind(kind, kind_size, literal.location)
     expression.literal = literal
     return expression
 }
@@ -1055,7 +1052,7 @@ define Parsed_Array_Access_Expression = struct {
 }
 
 define Parsed_Array_Access_Expression__create = func (array_expression: Parsed_Expression*, index_expression: Parsed_Expression*) -> Parsed_Array_Access_Expression* {
-    let expression: Parsed_Array_Access_Expression* = (Parsed_Array_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.ARRAY_ACCESS, sizeof(Parsed_Array_Access_Expression), array_expression.location)
+    let expression = (Parsed_Array_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.ARRAY_ACCESS, sizeof(Parsed_Array_Access_Expression), array_expression.location)
     expression.array_expression = array_expression
     expression.index_expression = index_expression
     return expression
@@ -1067,7 +1064,7 @@ define Parsed_Bool_Expression = struct {
 }
 
 define Parsed_Bool_Expression__create = func (literal: Token*, value: bool) -> Parsed_Bool_Expression* {
-    let expression: Parsed_Bool_Expression* = (Parsed_Bool_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.BOOL, sizeof(Parsed_Bool_Expression), literal)
+    let expression = (Parsed_Bool_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.BOOL, sizeof(Parsed_Bool_Expression), literal)
     expression.value = value
     return expression
 }
@@ -1078,7 +1075,7 @@ define Parsed_Call_Argument = struct {
 }
 
 define Parsed_Call_Argument__create = func (expression: Parsed_Expression*) -> Parsed_Call_Argument* {
-    let argument: Parsed_Call_Argument* = (Parsed_Call_Argument*) malloc(sizeof(Parsed_Call_Argument))
+    let argument = (Parsed_Call_Argument*) malloc(sizeof(Parsed_Call_Argument))
     argument.expression = expression
     argument.next_argument = null
     return argument
@@ -1091,7 +1088,7 @@ define Parsed_Call_Expression = struct {
 }
 
 define Parsed_Call_Expression__create = func (callee_expression: Parsed_Expression*) -> Parsed_Call_Expression* {
-    let expression: Parsed_Call_Expression* = (Parsed_Call_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.CALL, sizeof(Parsed_Call_Expression), callee_expression.location)
+    let expression = (Parsed_Call_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.CALL, sizeof(Parsed_Call_Expression), callee_expression.location)
     expression.callee_expression = callee_expression
     expression.first_argument = null
     return expression
@@ -1103,7 +1100,7 @@ define Parsed_Cast_Expression = struct {
 }
 
 define Parsed_Cast_Expression__create = func (location: Source_Location*, other_expression: Parsed_Expression*, type: Parsed_Type*) -> Parsed_Cast_Expression* {
-    let expression: Parsed_Cast_Expression* = (Parsed_Cast_Expression*) Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind.CAST, sizeof(Parsed_Cast_Expression), location, other_expression)
+    let expression = (Parsed_Cast_Expression*) Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind.CAST, sizeof(Parsed_Cast_Expression), location, other_expression)
     expression.type = type
     return expression
 }
@@ -1114,7 +1111,7 @@ define Parsed_Character_Expression = struct {
 }
 
 define Parsed_Character_Expression__create = func (literal: Character_Token*) -> Parsed_Character_Expression* {
-    let expression: Parsed_Character_Expression* = (Parsed_Character_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.CHARACTER, sizeof(Parsed_Character_Expression), (Token*) literal)
+    let expression = (Parsed_Character_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.CHARACTER, sizeof(Parsed_Character_Expression), (Token*) literal)
     expression.value = literal.value
     return expression
 }
@@ -1125,7 +1122,7 @@ define Parsed_Dereference_Expression = struct {
 }
 
 define Parsed_Dereference_Expression__create = func (value_expression: Parsed_Expression*) -> Parsed_Dereference_Expression* {
-    let expression: Parsed_Dereference_Expression* = (Parsed_Dereference_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.DEREFERENCE, sizeof(Parsed_Dereference_Expression), value_expression.location)
+    let expression = (Parsed_Dereference_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.DEREFERENCE, sizeof(Parsed_Dereference_Expression), value_expression.location)
     expression.value_expression = value_expression
     return expression
 }
@@ -1168,7 +1165,7 @@ define Parsed_Group_Expression = struct {
 }
 
 define Parsed_Group_Expression__create = func (location: Source_Location*, other_expression: Parsed_Expression*) -> Parsed_Group_Expression* {
-    let expression: Parsed_Group_Expression* = (Parsed_Group_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.GROUP, sizeof(Parsed_Group_Expression), location)
+    let expression = (Parsed_Group_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.GROUP, sizeof(Parsed_Group_Expression), location)
     expression.other_expression = other_expression
     return expression
 }
@@ -1179,7 +1176,7 @@ define Parsed_Integer_Expression = struct {
 }
 
 define Parsed_Integer_Expression__create = func (literal: Integer_Token*) -> Parsed_Integer_Expression* {
-    let expression: Parsed_Integer_Expression* = (Parsed_Integer_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.INTEGER, sizeof(Parsed_Integer_Expression), (Token*) literal)
+    let expression = (Parsed_Integer_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.INTEGER, sizeof(Parsed_Integer_Expression), (Token*) literal)
     expression.value = literal.value
     return expression
 }
@@ -1223,7 +1220,7 @@ define Parsed_Member_Access_Expression = struct {
 }
 
 define Parsed_Member_Access_Expression__create = func (object_expression: Parsed_Expression*, member_name: Token*) -> Parsed_Member_Access_Expression* {
-    let expression: Parsed_Member_Access_Expression* = (Parsed_Member_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.MEMBER_ACCESS, sizeof(Parsed_Member_Access_Expression), object_expression.location)
+    let expression = (Parsed_Member_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.MEMBER_ACCESS, sizeof(Parsed_Member_Access_Expression), object_expression.location)
     expression.object_expression = object_expression
     expression.member_name = member_name
     return expression
@@ -1283,7 +1280,7 @@ define Parsed_Sizeof_Expression = struct {
 }
 
 define Parsed_Sizeof_Expression__create = func (location: Source_Location*, type: Parsed_Type*) -> Parsed_Sizeof_Expression* {
-    let expression: Parsed_Sizeof_Expression* = (Parsed_Sizeof_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.SIZEOF, sizeof(Parsed_Sizeof_Expression), location)
+    let expression = (Parsed_Sizeof_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.SIZEOF, sizeof(Parsed_Sizeof_Expression), location)
     expression.type = type
     return expression
 }
@@ -1294,7 +1291,7 @@ define Parsed_String_Expression = struct {
 }
 
 define Parsed_String_Expression__create = func (literal: String_Token*) -> Parsed_String_Expression* {
-    let expression: Parsed_String_Expression* = (Parsed_String_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.STRING, sizeof(Parsed_String_Expression), (Token*) literal)
+    let expression = (Parsed_String_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind.STRING, sizeof(Parsed_String_Expression), (Token*) literal)
     expression.value = literal.value
     return expression
 }
@@ -1313,7 +1310,7 @@ define Parsed_Symbol_Expression = struct {
 }
 
 define Parsed_Symbol_Expression__create = func (name: Token*) -> Parsed_Symbol_Expression* {
-    let expression: Parsed_Symbol_Expression* = (Parsed_Symbol_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.SYMBOL, sizeof(Parsed_Symbol_Expression), name.location)
+    let expression = (Parsed_Symbol_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind.SYMBOL, sizeof(Parsed_Symbol_Expression), name.location)
     expression.name = name
     return expression
 }
@@ -1341,7 +1338,7 @@ define Parsed_Statement = struct {
 }
 
 define Parsed_Statement__create_kind = func (kind: Parsed_Statement_Kind, kind_size: usize, location: Source_Location*) -> Parsed_Statement* {
-    let statement: Parsed_Statement* = (Parsed_Statement*) malloc(kind_size)
+    let statement = (Parsed_Statement*) malloc(kind_size)
     statement.kind = kind
     statement.location = location
     statement.next_statement = null
@@ -1354,7 +1351,7 @@ define Parsed_Named_Statement = struct {
 }
 
 define Parsed_Named_Statement__create_kind = func (kind: Parsed_Statement_Kind, kind_size: usize, location: Source_Location*, name: Token*) -> Parsed_Named_Statement* {
-    let statement: Parsed_Named_Statement* = (Parsed_Named_Statement*) Parsed_Statement__create_kind(kind, kind_size, location)
+    let statement = (Parsed_Named_Statement*) Parsed_Statement__create_kind(kind, kind_size, location)
     statement.name = name
     return statement
 }
@@ -1366,7 +1363,7 @@ define Parsed_Assignment_Statement = struct {
 }
 
 define Parsed_Assignment_Statement__create = func (object_expression: Parsed_Expression*, value_expression: Parsed_Expression*) -> Parsed_Assignment_Statement* {
-    let statement: Parsed_Assignment_Statement* = (Parsed_Assignment_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.ASSIGNMENT, sizeof(Parsed_Assignment_Statement), object_expression.location)
+    let statement = (Parsed_Assignment_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.ASSIGNMENT, sizeof(Parsed_Assignment_Statement), object_expression.location)
     statement.object_expression = object_expression
     statement.value_expression = value_expression
     return statement
@@ -1378,7 +1375,7 @@ define Parsed_Block_Statement = struct {
 }
 
 define Parsed_Block_Statement__create = func (location: Source_Location*, statements: Parsed_Statements*) -> Parsed_Block_Statement* {
-    let statement: Parsed_Block_Statement* = (Parsed_Block_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.BLOCK, sizeof(Parsed_Block_Statement), location)
+    let statement = (Parsed_Block_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.BLOCK, sizeof(Parsed_Block_Statement), location)
     statement.statements = statements
     return statement
 }
@@ -1397,7 +1394,7 @@ define Parsed_Enum_Member = struct {
 }
 
 define Parsed_Enum_Member__create = func (name: Token*) -> Parsed_Enum_Member* {
-    let member: Parsed_Enum_Member* = (Parsed_Enum_Member*) malloc(sizeof(Parsed_Enum_Member))
+    let member = (Parsed_Enum_Member*) malloc(sizeof(Parsed_Enum_Member))
     member.name = name
     member.next_member = null
     return member
@@ -1409,7 +1406,7 @@ define Parsed_Enum_Statement = struct {
 }
 
 define Parsed_Enum_Statement__create = func (location: Source_Location*, name: Token*) -> Parsed_Enum_Statement* {
-    let statement: Parsed_Enum_Statement* = (Parsed_Enum_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.ENUM, sizeof(Parsed_Enum_Statement), location, name)
+    let statement = (Parsed_Enum_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.ENUM, sizeof(Parsed_Enum_Statement), location, name)
     statement.first_member = null
     return statement
 }
@@ -1420,7 +1417,7 @@ define Parsed_Expression_Statement = struct {
 }
 
 define Parsed_Expression_Statement__create = func (expression: Parsed_Expression*) -> Parsed_Expression_Statement* {
-    let statement: Parsed_Expression_Statement* = (Parsed_Expression_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.EXPRESSION, sizeof(Parsed_Expression_Statement), expression.location)
+    let statement = (Parsed_Expression_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.EXPRESSION, sizeof(Parsed_Expression_Statement), expression.location)
     statement.expression = expression
     return statement
 }
@@ -1432,7 +1429,7 @@ define Parsed_Function_Parameter = struct {
 }
 
 define Parsed_Function_Parameter__create = func (name: Token*, type: Parsed_Type*) -> Parsed_Function_Parameter* {
-    let parameter: Parsed_Function_Parameter* = (Parsed_Function_Parameter*) malloc(sizeof(Parsed_Function_Parameter))
+    let parameter = (Parsed_Function_Parameter*) malloc(sizeof(Parsed_Function_Parameter))
     parameter.name = name
     parameter.type = type
     parameter.next_parameter = null
@@ -1448,7 +1445,7 @@ define Parsed_Function_Statement = struct {
 }
 
 define Parsed_Function_Statement__create = func (location: Source_Location*, name: Token*, first_parameter: Parsed_Function_Parameter*, resturn_type: Parsed_Type*, statements: Parsed_Statements*, is_external: bool) -> Parsed_Statement* {
-    let statement: Parsed_Function_Statement* = (Parsed_Function_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.FUNCTION, sizeof(Parsed_Function_Statement), location, name)
+    let statement = (Parsed_Function_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.FUNCTION, sizeof(Parsed_Function_Statement), location, name)
     statement.first_parameter = first_parameter
     statement.return_type = resturn_type
     statement.statements = statements
@@ -1463,7 +1460,7 @@ define Parsed_Function_Type_Parameter = struct {
 }
 
 define Parsed_Function_Type_Parameter__create = func (name: Token*, type: Parsed_Type*) -> Parsed_Function_Type_Parameter* {
-    let parameter: Parsed_Function_Type_Parameter* = (Parsed_Function_Type_Parameter*) malloc(sizeof(Parsed_Function_Type_Parameter))
+    let parameter = (Parsed_Function_Type_Parameter*) malloc(sizeof(Parsed_Function_Type_Parameter))
     parameter.name = name
     parameter.type = type
     parameter.next_parameter = null
@@ -1477,7 +1474,7 @@ define Parsed_Function_Type_Statement = struct {
 }
 
 define Parsed_Function_Type_Statement__create = func (location: Source_Location*, name: Token*, first_parameter: Parsed_Function_Type_Parameter*, resturn_type: Parsed_Type*) -> Parsed_Statement* {
-    let statement: Parsed_Function_Type_Statement* = (Parsed_Function_Type_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.FUNCTION_TYPE, sizeof(Parsed_Function_Type_Statement), location, name)
+    let statement = (Parsed_Function_Type_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.FUNCTION_TYPE, sizeof(Parsed_Function_Type_Statement), location, name)
     statement.first_parameter = first_parameter
     statement.return_type = resturn_type
     return (Parsed_Statement*) statement
@@ -1491,7 +1488,7 @@ define Parsed_If_Statement = struct {
 }
 
 define Parsed_If_Statement__create = func (location: Source_Location*, condition_expression: Parsed_Expression*, true_statement: Parsed_Statement*, false_statement: Parsed_Statement*) -> Parsed_Statement* {
-    let statement: Parsed_If_Statement* = (Parsed_If_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.IF, sizeof(Parsed_If_Statement), location)
+    let statement = (Parsed_If_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.IF, sizeof(Parsed_If_Statement), location)
     statement.condition_expression = condition_expression
     statement.true_statement = true_statement
     statement.false_statement = false_statement
@@ -1512,7 +1509,7 @@ define Parsed_Return_Statement = struct {
 }
 
 define Parsed_Return_Statement__create = func (location: Source_Location*, expression: Parsed_Expression*) -> Parsed_Statement* {
-    let statement: Parsed_Return_Statement* = (Parsed_Return_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.RETURN, sizeof(Parsed_Return_Statement), location)
+    let statement = (Parsed_Return_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.RETURN, sizeof(Parsed_Return_Statement), location)
     statement.expression = expression
     return (Parsed_Statement*) statement
 }
@@ -1524,7 +1521,7 @@ define Parsed_Struct_Member = struct {
 }
 
 define Parsed_Struct_Member__create = func (name: Token*, type: Parsed_Type*) -> Parsed_Struct_Member* {
-    let member: Parsed_Struct_Member* = (Parsed_Struct_Member*) malloc(sizeof(Parsed_Struct_Member))
+    let member = (Parsed_Struct_Member*) malloc(sizeof(Parsed_Struct_Member))
     member.name = name
     member.type = type
     member.next_member = null
@@ -1537,7 +1534,7 @@ define Parsed_Struct_Statement = struct {
 }
 
 define Parsed_Struct_Statement__create = func (location: Source_Location*, name: Token*) -> Parsed_Struct_Statement* {
-    let statement: Parsed_Struct_Statement* = (Parsed_Struct_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.STRUCT, sizeof(Parsed_Struct_Statement), location, name)
+    let statement = (Parsed_Struct_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.STRUCT, sizeof(Parsed_Struct_Statement), location, name)
     statement.first_member = null
     return statement
 }
@@ -1550,7 +1547,7 @@ define Parsed_Variable_Statement = struct {
 }
 
 define Parsed_Variable_Statement__create = func (location: Source_Location*, name: Token*, type: Parsed_Type*, is_external: bool) -> Parsed_Variable_Statement* {
-    let statement: Parsed_Variable_Statement* = (Parsed_Variable_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.VARIABLE, sizeof(Parsed_Variable_Statement), location, name)
+    let statement = (Parsed_Variable_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.VARIABLE, sizeof(Parsed_Variable_Statement), location, name)
     statement.type = type
     statement.is_external = is_external
     return statement
@@ -1563,7 +1560,7 @@ define Parsed_While_Statement = struct {
 }
 
 define Parsed_While_Statement__create = func (location: Source_Location*, condition_expression: Parsed_Expression*, body_statement: Parsed_Statement*) -> Parsed_Statement* {
-    let statement: Parsed_While_Statement* = (Parsed_While_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.WHILE, sizeof(Parsed_While_Statement), location)
+    let statement = (Parsed_While_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind.WHILE, sizeof(Parsed_While_Statement), location)
     statement.condition_expression = condition_expression
     statement.body_statement = body_statement
     return (Parsed_Statement*) statement
@@ -1576,7 +1573,7 @@ define Parsed_Statements = struct {
 }
 
 define Parsed_Statements__create = func (has_globals: bool) -> Parsed_Statements* {
-    let statements: Parsed_Statements* = (Parsed_Statements*) malloc(sizeof(Parsed_Statements))
+    let statements = (Parsed_Statements*) malloc(sizeof(Parsed_Statements))
     statements.first_statement = null
     statements.last_statement = null
     statements.has_globals = has_globals
@@ -1593,7 +1590,7 @@ define Parsed_Statements__append = func (self: Parsed_Statements*, statement: Pa
 }
 
 define Parsed_Compilation_Unit__create = func () -> Parsed_Source* {
-    let compilation_unit: Parsed_Source* = (Parsed_Source*) malloc(sizeof(Parsed_Source))
+    let compilation_unit = (Parsed_Source*) malloc(sizeof(Parsed_Source))
     compilation_unit.statements = Parsed_Statements__create(true)
     return compilation_unit
 }
@@ -1623,7 +1620,7 @@ define Parser__peek_token = func (self: Parser*, offset: u8) -> Token* {
 typedef bool Token_Is_Function(Token* self)
 
 define Parser__matches_three = func (self: Parser*, first_is: Token_Is_Function*, first_required: bool, second_is: Token_Is_Function*, second_required: bool, third_is: Token_Is_Function*) -> bool {
-    let peek_offset: u8 = (u8) 0
+    let peek_offset = (u8) 0
     if (first_is(Parser__peek_token(self, peek_offset))) {
         peek_offset = peek_offset + (u8) 1
     } else if (first_required) {
@@ -1652,7 +1649,7 @@ define Parser__matches_one = func (self: Parser*, first_is: Token_Is_Function*) 
 
 define Parser__consume_token = func (self: Parser*, check: Token_Is_Function*) -> Token* {
     if (Parser__matches_one(self, check)) {
-        let token: Token* = self.scanner.current_token
+        let token = self.scanner.current_token
         Scanner__next_token(self.scanner)
         return token
     }
@@ -1666,14 +1663,14 @@ define Parser__consume_comment = func (self: Parser*) -> void {
 
 define Parser__consume_space = func (self: Parser*, count: u16) -> void {
     if (Parser__matches_one(self, Token__is_space)) {
-        let token: Space_Token* = (Space_Token*) Parser__consume_token(self, Token__is_space)
+        let token = (Space_Token*) Parser__consume_token(self, Token__is_space)
         if (token.count != count) {
-            let message: String* = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), (i16) token.count), " spaces where "), (i16) count), " were expected")
+            let message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), (i16) token.count), " spaces where "), (i16) count), " were expected")
             Token__warning((Token*) token, message)
             String__delete(message)
         }
     } else if (count > (u16) 0) {
-        let message: String* = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), (i16) 0), " spaces where "), (i16) count), " were expected")
+        let message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), (i16) 0), " spaces where "), (i16) count), " were expected")
         Parser__warning(self, message)
         String__delete(message)
     }
@@ -1686,7 +1683,7 @@ define Parser__consume_end_of_line = func (self: Parser*) -> void {
     } else {
         Parser__consume_space(self, (u16) 0)
     }
-    let token: Token* = Parser__consume_token(self, Token__is_end_of_line)
+    let token = Parser__consume_token(self, Token__is_end_of_line)
     if (Token__is_end_of_file(token)) {
         Token__warning(token, String__create_from("Unexpected end of file"))
     }
@@ -1740,9 +1737,9 @@ define Parser__parse_primary_expression = func (self: Parser*) -> Parsed_Express
         return (Parsed_Expression*) Parsed_String_Expression__create((String_Token*) Parser__consume_token(self, Token__is_string))
     }
     if (Parser__matches_one(self, Token__is_opening_paren)) {
-        let location: Source_Location* = Parser__consume_token(self, Token__is_opening_paren).location
+        let location = Parser__consume_token(self, Token__is_opening_paren).location
         Parser__consume_space(self, (u16) 0)
-        let expression: Parsed_Expression* = Parser__parse_expression(self)
+        let expression = Parser__parse_expression(self)
         Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_closing_paren)
         return (Parsed_Expression*) Parsed_Group_Expression__create(location, expression)
@@ -1754,9 +1751,9 @@ define Parser__parse_primary_expression = func (self: Parser*) -> Parsed_Express
 \ access_expression
 \      | primary_expression ( "." "*" | "." IDENTIFIER | "(" ( expression ( "," expression )*)? ")" | "[" expression "]" )*
 define Parser__parse_access_expression = func (self: Parser*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = Parser__parse_primary_expression(self)
+    let expression = Parser__parse_primary_expression(self)
     while (true) {
-        let old_expression: Parsed_Expression* = expression
+        let old_expression = expression
         if (Parser__matches_two(self, Token__is_space, false, Token__is_dot)) {
             Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_dot)
@@ -1765,7 +1762,7 @@ define Parser__parse_access_expression = func (self: Parser*) -> Parsed_Expressi
                 Parser__consume_token(self, Token__is_asterisk)
                 expression = (Parsed_Expression*) Parsed_Dereference_Expression__create(expression)
             } else {
-                let name: Token* = Parser__consume_token(self, Token__is_identifier)
+                let name = Parser__consume_token(self, Token__is_identifier)
                 expression = (Parsed_Expression*) Parsed_Member_Access_Expression__create(expression, name)
             }
         }
@@ -1773,15 +1770,15 @@ define Parser__parse_access_expression = func (self: Parser*) -> Parsed_Expressi
             Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_opening_paren)
             Parser__consume_space(self, (u16) 0)
-            let call_expression: Parsed_Call_Expression* = Parsed_Call_Expression__create(expression)
+            let call_expression = Parsed_Call_Expression__create(expression)
             if (!Parser__matches_one(self, Token__is_closing_paren)) {
-                let last_argument: Parsed_Call_Argument* = Parsed_Call_Argument__create(Parser__parse_expression(self))
+                let last_argument = Parsed_Call_Argument__create(Parser__parse_expression(self))
                 call_expression.first_argument = last_argument
                 Parser__consume_space(self, (u16) 0)
                 while (Parser__matches_one(self, Token__is_comma)) {
                     Parser__consume_token(self, Token__is_comma)
                     Parser__consume_space(self, (u16) 1)
-                    let argument: Parsed_Call_Argument* = Parsed_Call_Argument__create(Parser__parse_expression(self))
+                    let argument = Parsed_Call_Argument__create(Parser__parse_expression(self))
                     last_argument.next_argument = argument
                     last_argument = argument
                     Parser__consume_space(self, (u16) 0)
@@ -1794,7 +1791,7 @@ define Parser__parse_access_expression = func (self: Parser*) -> Parsed_Expressi
             Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_opening_bracket)
             Parser__consume_space(self, (u16) 0)
-            let index_expression: Parsed_Expression* = Parser__parse_expression(self)
+            let index_expression = Parser__parse_expression(self)
             Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_closing_bracket)
             expression = (Parsed_Expression*) Parsed_Array_Access_Expression__create(expression, index_expression)
@@ -1815,25 +1812,25 @@ define Parser__parse_access_expression = func (self: Parser*) -> Parsed_Expressi
 \      | access_expression
 define Parser__parse_unary_expression = func (self: Parser*) -> Parsed_Expression* {
     if (Parser__matches_one(self, Token__is_minus)) {
-        let location: Source_Location* = Parser__consume_token(self, Token__is_minus).location
+        let location = Parser__consume_token(self, Token__is_minus).location
         Parser__consume_space(self, (u16) 0)
-        let expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+        let expression = Parser__parse_unary_expression(self)
         return (Parsed_Expression*) Parsed_Minus_Expression__create(location, expression)
     }
     if (Parser__matches_one(self, Token__is_exclamation_mark)) {
-        let location: Source_Location* = Parser__consume_token(self, Token__is_exclamation_mark).location
+        let location = Parser__consume_token(self, Token__is_exclamation_mark).location
         Parser__consume_space(self, (u16) 0)
-        let expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+        let expression = Parser__parse_unary_expression(self)
         return (Parsed_Expression*) Parsed_Not_Expression__create(location, expression)
     }
     if (Parser__matches_one(self, Token__is_ampersand)) {
-        let location: Source_Location* = Parser__consume_token(self, Token__is_ampersand).location
+        let location = Parser__consume_token(self, Token__is_ampersand).location
         Parser__consume_space(self, (u16) 0)
-        let expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+        let expression = Parser__parse_unary_expression(self)
         return (Parsed_Expression*) Parsed_Address_Of_Expression__create(location, expression)
     }
     if (Parser__matches_three(self, Token__is_opening_paren, true, Token__is_space, false, Token__is_identifier)) {
-        let peek_offset: u8 = (u8) 1
+        let peek_offset = (u8) 1
         if (Token__is_space(Parser__peek_token(self, peek_offset))) {
             peek_offset = peek_offset + (u8) 1
         }
@@ -1853,23 +1850,23 @@ define Parser__parse_unary_expression = func (self: Parser*) -> Parsed_Expressio
                 if (Token__is_space(Parser__peek_token(self, peek_offset))) {
                     peek_offset = peek_offset + (u8) 1
                 }
-                let location: Source_Location* = Parser__consume_token(self, Token__is_opening_paren).location
+                let location = Parser__consume_token(self, Token__is_opening_paren).location
                 Parser__consume_space(self, (u16) 0)
-                let type: Parsed_Type* = Parser__parse_type(self)
+                let type = Parser__parse_type(self)
                 Parser__consume_space(self, (u16) 0)
                 Parser__consume_token(self, Token__is_closing_paren)
                 Parser__consume_space(self, (u16) 1)
-                let expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+                let expression = Parser__parse_unary_expression(self)
                 return (Parsed_Expression*) Parsed_Cast_Expression__create(location, expression, type)
             }
         }
     }
     if (Parser__matches_one(self, Token__is_sizeof)) {
-        let location: Source_Location* = Parser__consume_token(self, Token__is_sizeof).location
+        let location = Parser__consume_token(self, Token__is_sizeof).location
         Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_opening_paren)
         Parser__consume_space(self, (u16) 0)
-        let type: Parsed_Type* = Parser__parse_type(self)
+        let type = Parser__parse_type(self)
         Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_closing_paren)
         return (Parsed_Expression*) Parsed_Sizeof_Expression__create(location, type)
@@ -1884,23 +1881,23 @@ define Token__is_mutliplication = func (self: Token*) -> bool {
 \ multiplication
 \      | unary_expression ( ( "*" | "/" | "%" ) unary_expression )*
 define Parser__parse_multiplication_expression = func (self: Parser*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+    let expression = Parser__parse_unary_expression(self)
     while (Parser__matches_two(self, Token__is_space, false, Token__is_mutliplication)) {
         Parser__consume_space(self, (u16) 1)
         if (Parser__matches_one(self, Token__is_asterisk)) {
             Parser__consume_token(self, Token__is_asterisk)
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+            let right_expression = Parser__parse_unary_expression(self)
             expression = (Parsed_Expression*) Parsed_Multiply_Expression__create(expression, right_expression)
         } else if (Parser__matches_one(self, Token__is_slash)) {
             Parser__consume_token(self, Token__is_slash)
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+            let right_expression = Parser__parse_unary_expression(self)
             expression = (Parsed_Expression*) Parsed_Divide_Expression__create(expression, right_expression)
         } else {
             Parser__consume_token(self, Token__is_percent)
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_unary_expression(self)
+            let right_expression = Parser__parse_unary_expression(self)
             expression = (Parsed_Expression*) Parsed_Modulo_Expression__create(expression, right_expression)
         }
     }
@@ -1914,18 +1911,18 @@ define Token__is_addition = func (self: Token*) -> bool {
 \ addition
 \      | multiplication ( ( "+" | "-" ) multiplication )*
 define Parser__parse_addition_expression = func (self: Parser*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = Parser__parse_multiplication_expression(self)
+    let expression = Parser__parse_multiplication_expression(self)
     while (Parser__matches_two(self, Token__is_space, false, Token__is_addition)) {
         Parser__consume_space(self, (u16) 1)
         if (Parser__matches_one(self, Token__is_plus)) {
             Parser__consume_token(self, Token__is_plus)
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_multiplication_expression(self)
+            let right_expression = Parser__parse_multiplication_expression(self)
             expression = (Parsed_Expression*) Parsed_Add_Expression__create(expression, right_expression)
         } else {
             Parser__consume_token(self, Token__is_minus)
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_multiplication_expression(self)
+            let right_expression = Parser__parse_multiplication_expression(self)
             expression = (Parsed_Expression*) Parsed_Substract_Expression__create(expression, right_expression)
         }
     }
@@ -1935,18 +1932,18 @@ define Parser__parse_addition_expression = func (self: Parser*) -> Parsed_Expres
 \ comparison
 \      | addition ( ( "<=" | "<" | ">" | ">=") addition )*
 define Parser__parse_comparison_expression = func (self: Parser*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = Parser__parse_addition_expression(self)
+    let expression = Parser__parse_addition_expression(self)
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_less_than)
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals)
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_addition_expression(self)
+            let right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Less_Or_Equals_Expression__create(expression, right_expression)
         } else {
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_addition_expression(self)
+            let right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Less_Expression__create(expression, right_expression)
         }
     } else if (Parser__matches_two(self, Token__is_space, false, Token__is_greater_than)) {
@@ -1955,11 +1952,11 @@ define Parser__parse_comparison_expression = func (self: Parser*) -> Parsed_Expr
         if (Parser__matches_one(self, Token__is_equals)) {
             Parser__consume_token(self, Token__is_equals)
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_addition_expression(self)
+            let right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Greater_Or_Equals_Expression__create(expression, right_expression)
         } else {
             Parser__consume_space(self, (u16) 1)
-            let right_expression: Parsed_Expression* = Parser__parse_addition_expression(self)
+            let right_expression = Parser__parse_addition_expression(self)
             expression = (Parsed_Expression*) Parsed_Greater_Expression__create(expression, right_expression)
         }
     }
@@ -1969,20 +1966,20 @@ define Parser__parse_comparison_expression = func (self: Parser*) -> Parsed_Expr
 \ equality
 \      | comparison ( ( "==" | "!=" ) comparison )*
 define Parser__parse_equality_expression = func (self: Parser*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = Parser__parse_comparison_expression(self)
+    let expression = Parser__parse_comparison_expression(self)
     if (Parser__matches_three(self, Token__is_space, false, Token__is_equals, true, Token__is_equals)) {
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_equals)
         Parser__consume_token(self, Token__is_equals)
         Parser__consume_space(self, (u16) 1)
-        let right_expression: Parsed_Expression* = Parser__parse_comparison_expression(self)
+        let right_expression = Parser__parse_comparison_expression(self)
         expression = (Parsed_Expression*) Parsed_Equals_Expression__create(expression, right_expression)
     } else if (Parser__matches_three(self, Token__is_space, false, Token__is_exclamation_mark, true, Token__is_equals)) {
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_exclamation_mark)
         Parser__consume_token(self, Token__is_equals)
         Parser__consume_space(self, (u16) 1)
-        let right_expression: Parsed_Expression* = Parser__parse_comparison_expression(self)
+        let right_expression = Parser__parse_comparison_expression(self)
         expression = (Parsed_Expression*) Parsed_Not_Equals_Expression__create(expression, right_expression)
     }
     return expression
@@ -1991,13 +1988,13 @@ define Parser__parse_equality_expression = func (self: Parser*) -> Parsed_Expres
 \ logic_and
 \      | equality ( "&&" equality )*
 define Parser__parse_logic_and_expression = func (self: Parser*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = Parser__parse_equality_expression(self)
+    let expression = Parser__parse_equality_expression(self)
     while (Parser__matches_three(self, Token__is_space, false, Token__is_ampersand, true, Token__is_ampersand)) {
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_ampersand)
         Parser__consume_token(self, Token__is_ampersand)
         Parser__consume_space(self, (u16) 1)
-        let right_expression: Parsed_Expression* = Parser__parse_equality_expression(self)
+        let right_expression = Parser__parse_equality_expression(self)
         expression = (Parsed_Expression*) Parsed_Logic_And_Expression__create(expression, right_expression)
     }
     return expression
@@ -2006,13 +2003,13 @@ define Parser__parse_logic_and_expression = func (self: Parser*) -> Parsed_Expre
 \ logic_or
 \      | logic_and ( "||" logic_and )*
 define Parser__parse_logic_or_expression = func (self: Parser*) -> Parsed_Expression* {
-    let expression: Parsed_Expression* = Parser__parse_logic_and_expression(self)
+    let expression = Parser__parse_logic_and_expression(self)
     while (Parser__matches_three(self, Token__is_space, false, Token__is_vertical_bar, true, Token__is_vertical_bar)) {
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_vertical_bar)
         Parser__consume_token(self, Token__is_vertical_bar)
         Parser__consume_space(self, (u16) 1)
-        let right_expression: Parsed_Expression* = Parser__parse_logic_and_expression(self)
+        let right_expression = Parser__parse_logic_and_expression(self)
         expression = (Parsed_Expression*) Parsed_Logic_Or_Expression__create(expression, right_expression)
     }
     return expression
@@ -2040,7 +2037,7 @@ define Parser__parse_struct = func (self: Parser*, name: Token*) -> Parsed_State
     Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_brace)
     Parser__consume_end_of_line(self)
-    let struct_statement: Parsed_Struct_Statement* = Parsed_Struct_Statement__create(name.location, name)
+    let struct_statement = Parsed_Struct_Statement__create(name.location, name)
     let last_member: Parsed_Struct_Member* = null
     self.current_identation = self.current_identation + (u16) 1
     while (Parser__consume_empty_line(self)) {
@@ -2048,13 +2045,13 @@ define Parser__parse_struct = func (self: Parser*, name: Token*) -> Parsed_State
     }
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         Parser__consume_space(self, self.current_identation * (u16) 4)
-        let name: Token* = Parser__consume_token(self, Token__is_identifier)
+        let name = Parser__consume_token(self, Token__is_identifier)
         Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_colon)
         Parser__consume_space(self, (u16) 1)
-        let type: Parsed_Type* = Parser__parse_type(self)
+        let type = Parser__parse_type(self)
         Parser__consume_end_of_line(self)
-        let member: Parsed_Struct_Member* = Parsed_Struct_Member__create(name, type)
+        let member = Parsed_Struct_Member__create(name, type)
         if (last_member == null) {
             struct_statement.first_member = member
             last_member = member
@@ -2079,7 +2076,7 @@ define Parser__parse_enum = func (self: Parser*, name: Token*) -> Parsed_Stateme
     Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_brace)
     Parser__consume_end_of_line(self)
-    let enum_statement: Parsed_Enum_Statement* = Parsed_Enum_Statement__create(name.location, name)
+    let enum_statement = Parsed_Enum_Statement__create(name.location, name)
     let last_member: Parsed_Enum_Member* = null
     self.current_identation = self.current_identation + (u16) 1
     while (Parser__consume_empty_line(self)) {
@@ -2087,9 +2084,9 @@ define Parser__parse_enum = func (self: Parser*, name: Token*) -> Parsed_Stateme
     }
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         Parser__consume_space(self, self.current_identation * (u16) 4)
-        let name: Token* = Parser__consume_token(self, Token__is_identifier)
+        let name = Parser__consume_token(self, Token__is_identifier)
         Parser__consume_end_of_line(self)
-        let member: Parsed_Enum_Member* = Parsed_Enum_Member__create(name)
+        let member = Parsed_Enum_Member__create(name)
         if (last_member == null) {
             enum_statement.first_member = member
             last_member = member
@@ -2110,8 +2107,8 @@ define Parser__parse_enum = func (self: Parser*, name: Token*) -> Parsed_Stateme
 \ type
 \   | IDENTIFIER "*"*
 define Parser__parse_type = func (self: Parser*) -> Parsed_Type* {
-    let name: Token* = Parser__consume_token(self, Token__is_identifier)
-    let type: Parsed_Type* = Parsed_Named_Type__create(name)
+    let name = Parser__consume_token(self, Token__is_identifier)
+    let type = Parsed_Named_Type__create(name)
     while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
         Parser__consume_space(self, (u16) 0)
         Parser__consume_token(self, Token__is_asterisk)
@@ -2123,29 +2120,29 @@ define Parser__parse_type = func (self: Parser*) -> Parsed_Type* {
 \ type_alias
 \      | "typedef" type IDENTIFIER "(" ( type IDENTIFIER ( "," type IDENTIFIER )* )? ")"
 define Parser__parse_type_alias = func (self: Parser*) -> Parsed_Statement* {
-    let location: Source_Location* = Parser__consume_token(self, Token__is_typedef).location
+    let location = Parser__consume_token(self, Token__is_typedef).location
     Parser__consume_space(self, (u16) 1)
-    let return_type: Parsed_Type* = Parser__parse_type(self)
+    let return_type = Parser__parse_type(self)
     Parser__consume_space(self, (u16) 1)
-    let name: Token* = Parser__consume_token(self, Token__is_identifier)
+    let name = Parser__consume_token(self, Token__is_identifier)
     Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_opening_paren)
     let first_parameter: Parsed_Function_Type_Parameter* = null
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, (u16) 0)
-        let parameter_type: Parsed_Type* = Parser__parse_type(self)
+        let parameter_type = Parser__parse_type(self)
         Parser__consume_space(self, (u16) 1)
-        let parameter_name: Token* = Parser__consume_token(self, Token__is_identifier)
+        let parameter_name = Parser__consume_token(self, Token__is_identifier)
         first_parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type)
-        let last_parameter: Parsed_Function_Type_Parameter* = first_parameter
+        let last_parameter = first_parameter
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_comma)
             Parser__consume_space(self, (u16) 1)
-            let parameter_type: Parsed_Type* = Parser__parse_type(self)
+            let parameter_type = Parser__parse_type(self)
             Parser__consume_space(self, (u16) 1)
-            let parameter_name: Token* = Parser__consume_token(self, Token__is_identifier)
-            let parameter: Parsed_Function_Type_Parameter* = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type)
+            let parameter_name = Parser__consume_token(self, Token__is_identifier)
+            let parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type)
             last_parameter.next_parameter = parameter
             last_parameter = parameter
         }
@@ -2156,15 +2153,18 @@ define Parser__parse_type_alias = func (self: Parser*) -> Parsed_Statement* {
 }
 
 \ variable
-\      | "let" IDENTIFIER ":" type "=" ( "external" | "undefined" | expression )
+\      | "let" IDENTIFIER ( ":" type )? "=" ( "external" | "undefined" | expression )
 define Parser__parse_variable = func (self: Parser*) -> Parsed_Statement* {
     Parser__consume_token(self, Token__is_let)
     Parser__consume_space(self, (u16) 1)
-    let name: Token* = Parser__consume_token(self, Token__is_identifier)
-    Parser__consume_space(self, (u16) 0)
-    Parser__consume_token(self, Token__is_colon)
-    Parser__consume_space(self, (u16) 1)
-    let type: Parsed_Type* = Parser__parse_type(self)
+    let name = Parser__consume_token(self, Token__is_identifier)
+    let type: Parsed_Type* = null
+    if (Parser__matches_two(self, Token__is_space, false, Token__is_colon)) {
+        Parser__consume_space(self, (u16) 0)
+        Parser__consume_token(self, Token__is_colon)
+        Parser__consume_space(self, (u16) 1)
+        type = Parser__parse_type(self)
+    }
     Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_equals)
     Parser__consume_space(self, (u16) 1)
@@ -2183,7 +2183,7 @@ define Parser__parse_variable = func (self: Parser*) -> Parsed_Statement* {
         value_expression = Parser__parse_expression(self)
         is_external = false
     }
-    let variable_statement: Parsed_Variable_Statement* = Parsed_Variable_Statement__create(name.location, name, type, is_external)
+    let variable_statement = Parsed_Variable_Statement__create(name.location, name, type, is_external)
     variable_statement.expression = value_expression
     return (Parsed_Statement*) variable_statement
 }
@@ -2201,10 +2201,10 @@ define Parser__parse_old_variable = func (self: Parser*) -> Parsed_Statement* {
         is_external = false
         location = Parser__peek_token(self, (u8) 0).location
     }
-    let type: Parsed_Type* = Parser__parse_type(self)
+    let type = Parser__parse_type(self)
     Parser__consume_space(self, (u16) 1)
-    let name: Token* = Parser__consume_token(self, Token__is_identifier)
-    let variable_statement: Parsed_Variable_Statement* = Parsed_Variable_Statement__create(location, name, type, is_external)
+    let name = Parser__consume_token(self, Token__is_identifier)
+    let variable_statement = Parsed_Variable_Statement__create(location, name, type, is_external)
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_equals)
@@ -2217,9 +2217,9 @@ define Parser__parse_old_variable = func (self: Parser*) -> Parsed_Statement* {
 \ block
 \      | "{" statements "}"
 define Parser__parse_block_statement = func (self: Parser*) -> Parsed_Block_Statement* {
-    let location: Source_Location* = Parser__consume_token(self, Token__is_opening_brace).location
+    let location = Parser__consume_token(self, Token__is_opening_brace).location
     Parser__consume_end_of_line(self)
-    let statements: Parsed_Statements* = Parsed_Statements__create(false)
+    let statements = Parsed_Statements__create(false)
     self.current_identation = self.current_identation + (u16) 1
     Parser__parse_statements(self, statements)
     self.current_identation = self.current_identation - (u16) 1
@@ -2231,11 +2231,11 @@ define Parser__parse_block_statement = func (self: Parser*) -> Parsed_Block_Stat
 \ function_parameter
 \   IDENTIFIER ":" type
 define Parser__parse_function_parameter = func (self: Parser*) -> Parsed_Function_Parameter* {
-    let name: Token* = Parser__consume_token(self, Token__is_identifier)
+    let name = Parser__consume_token(self, Token__is_identifier)
     Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_colon)
     Parser__consume_space(self, (u16) 1)
-    let type: Parsed_Type* = Parser__parse_type(self)
+    let type = Parser__parse_type(self)
     return Parsed_Function_Parameter__create(name, type)
 }
 
@@ -2249,7 +2249,7 @@ define Parser__parse_function = func (self: Parser*, name: Token*) -> Parsed_Sta
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, (u16) 0)
         first_parameter = Parser__parse_function_parameter(self)
-        let last_parameter: Parsed_Function_Parameter* = first_parameter
+        let last_parameter = first_parameter
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_comma)
@@ -2265,11 +2265,11 @@ define Parser__parse_function = func (self: Parser*, name: Token*) -> Parsed_Sta
     Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_greater_than)
     Parser__consume_space(self, (u16) 1)
-    let return_type: Parsed_Type* = Parser__parse_type(self)
+    let return_type = Parser__parse_type(self)
     Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_brace)
     Parser__consume_end_of_line(self)
-    let statements: Parsed_Statements* = Parsed_Statements__create(false)
+    let statements = Parsed_Statements__create(false)
     self.current_identation = self.current_identation + (u16) 1
     Parser__parse_statements(self, statements)
     self.current_identation = self.current_identation - (u16) 1
@@ -2290,7 +2290,7 @@ define Parser__parse_external_function = func (self: Parser*, name: Token*) -> P
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, (u16) 0)
         first_parameter = Parser__parse_function_parameter(self)
-        let last_parameter: Parsed_Function_Parameter* = first_parameter
+        let last_parameter = first_parameter
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, (u16) 0)
             Parser__consume_token(self, Token__is_comma)
@@ -2306,14 +2306,14 @@ define Parser__parse_external_function = func (self: Parser*, name: Token*) -> P
     Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_greater_than)
     Parser__consume_space(self, (u16) 1)
-    let return_type: Parsed_Type* = Parser__parse_type(self)
+    let return_type = Parser__parse_type(self)
     return Parsed_Function_Statement__create(name.location, name, first_parameter, return_type, null, true)
 }
 
 \ return
 \      | "return" expression?
 define Parser__parse_return_statement = func (self: Parser*) -> Parsed_Statement* {
-    let location: Source_Location* = Parser__consume_token(self, Token__is_return).location
+    let location = Parser__consume_token(self, Token__is_return).location
     let expression: Parsed_Expression* = null
     if (!Parser__matches_three(self, Token__is_space, false, Token__is_comment, false, Token__is_end_of_line)) {
         Parser__consume_space(self, (u16) 1)
@@ -2325,22 +2325,22 @@ define Parser__parse_return_statement = func (self: Parser*) -> Parsed_Statement
 \ break
 \      | "break"
 define Parser__parse_break_statement = func (self: Parser*) -> Parsed_Statement* {
-    let location: Source_Location* = Parser__consume_token(self, Token__is_break).location
+    let location = Parser__consume_token(self, Token__is_break).location
     return Parsed_Break_Statement__create(location)
 }
 
 \ if
 \      | "if" "(" expression ")" statement ( "else" statement )?
 define Parser__parse_if_statement = func (self: Parser*) -> Parsed_Statement* {
-    let location: Source_Location* = Parser__consume_token(self, Token__is_if).location
+    let location = Parser__consume_token(self, Token__is_if).location
     Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_paren)
     Parser__consume_space(self, (u16) 0)
-    let condition_expression: Parsed_Expression* = Parser__parse_expression(self)
+    let condition_expression = Parser__parse_expression(self)
     Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_closing_paren)
     Parser__consume_space(self, (u16) 1)
-    let true_statement: Parsed_Statement* = (Parsed_Statement*) Parser__parse_block_statement(self)
+    let true_statement = (Parsed_Statement*) Parser__parse_block_statement(self)
     let false_statement: Parsed_Statement* = null
     if (Parser__matches_two(self, Token__is_space, false, Token__is_else)) {
         Parser__consume_space(self, (u16) 1)
@@ -2358,15 +2358,15 @@ define Parser__parse_if_statement = func (self: Parser*) -> Parsed_Statement* {
 \ while
 \      | "while" "(" expression ")" statement
 define Parser__parse_while_statement = func (self: Parser*) -> Parsed_Statement* {
-    let location: Source_Location* = Parser__consume_token(self, Token__is_while).location
+    let location = Parser__consume_token(self, Token__is_while).location
     Parser__consume_space(self, (u16) 1)
     Parser__consume_token(self, Token__is_opening_paren)
     Parser__consume_space(self, (u16) 0)
-    let condition_expression: Parsed_Expression* = Parser__parse_expression(self)
+    let condition_expression = Parser__parse_expression(self)
     Parser__consume_space(self, (u16) 0)
     Parser__consume_token(self, Token__is_closing_paren)
     Parser__consume_space(self, (u16) 1)
-    let body_statement: Parsed_Statement* = (Parsed_Statement*) Parser__parse_block_statement(self)
+    let body_statement = (Parsed_Statement*) Parser__parse_block_statement(self)
     return Parsed_While_Statement__create(location, condition_expression, body_statement)
 }
 
@@ -2396,7 +2396,7 @@ define Parser__parse_statement = func (self: Parser*) -> Parsed_Statement* {
     if (Parser__matches_one(self, Token__is_define)) {
         Parser__consume_token(self, Token__is_define)
         Parser__consume_space(self, (u16) 1)
-        let name: Token* = Parser__consume_token(self, Token__is_identifier)
+        let name = Parser__consume_token(self, Token__is_identifier)
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_equals)
         Parser__consume_space(self, (u16) 1)
@@ -2423,15 +2423,15 @@ define Parser__parse_statement = func (self: Parser*) -> Parsed_Statement* {
         return Parser__parse_variable(self)
     }
 
-    let expresion: Parsed_Expression* = Parser__parse_access_expression(self)
+    let expression = Parser__parse_access_expression(self)
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
         Parser__consume_space(self, (u16) 1)
         Parser__consume_token(self, Token__is_equals)
         Parser__consume_space(self, (u16) 1)
-        let value_expression: Parsed_Expression* = Parser__parse_expression(self)
-        return (Parsed_Statement*) Parsed_Assignment_Statement__create(expresion, value_expression)
+        let value_expression = Parser__parse_expression(self)
+        return (Parsed_Statement*) Parsed_Assignment_Statement__create(expression, value_expression)
     }
-    return (Parsed_Statement*) Parsed_Expression_Statement__create(expresion)
+    return (Parsed_Statement*) Parsed_Expression_Statement__create(expression)
 }
 
 \ statements
@@ -2452,7 +2452,7 @@ define Parser__parse_statements = func (self: Parser*, statements: Parsed_Statem
             }
         }
 
-        let statement: Parsed_Statement* = Parser__parse_statement(self)
+        let statement = Parser__parse_statement(self)
 
         Parser__consume_end_of_line(self)
 
@@ -2461,13 +2461,13 @@ define Parser__parse_statements = func (self: Parser*, statements: Parsed_Statem
 }
 
 define Parser__parse_source = func (self: Parser*, source: Source*) -> void {
-    let other_scanner: Scanner* = self.scanner
+    let other_scanner = self.scanner
 
     self.scanner = Scanner__create(source)
 
     Parser__parse_statements(self, self.compilation_unit.statements)
 
-    let last_token: Token* = Parser__peek_token(self, (u8) 0)
+    let last_token = Parser__peek_token(self, (u8) 0)
     if (!Token__is_end_of_file(last_token)) {
         Parser__error(self, String__create_from("Scanner didn't reach end of file"))
         abort()
@@ -2525,7 +2525,7 @@ define Checked_Type = struct {
 }
 
 define Checked_Type__create_kind = func (kind: Checked_Type_Kind, kind_size: usize, location: Source_Location*) -> Checked_Type* {
-    let type: Checked_Type* = (Checked_Type*) malloc(kind_size)
+    let type = (Checked_Type*) malloc(kind_size)
     type.kind = kind
     type.location = location
     type.next_type = null
@@ -2537,7 +2537,7 @@ define Checked_Type__expect_same_type = func (self: Checked_Type*, other_type: C
         return
     }
     if (!Checked_Type__equals(self, other_type)) {
-        let message: String* = String__create_from("Unexpected type. Got \"")
+        let message = String__create_from("Unexpected type. Got \"")
         String__append_checked_type(message, other_type)
         String__append_cstring(message, "\" instead of \"")
         String__append_checked_type(message, self)
@@ -2576,7 +2576,7 @@ define Checked_Type__is_scalar_type = func (self: Checked_Type*) -> bool {
 
 define Checked_Type__expect_scalar_type = func (self: Checked_Type*, location: Source_Location*) -> void {
     if (!Checked_Type__is_scalar_type(self)) {
-        let message: String* = String__create_from("Type \"")
+        let message = String__create_from("Type \"")
         String__append_checked_type(message, self)
         String__append_cstring(message, "\" is not a scalar type")
         Source_Location__error(location, message)
@@ -2590,7 +2590,7 @@ define Checked_Named_Type = struct {
 }
 
 define Checked_Named_Type__create_kind = func (kind: Checked_Type_Kind, kind_size: usize, location: Source_Location*, name: String*) -> Checked_Named_Type* {
-    let type: Checked_Named_Type* = (Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location)
+    let type = (Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location)
     type.name = name
     return type
 }
@@ -2603,7 +2603,7 @@ define Checked_Enum_Member = struct {
 }
 
 define Checked_Enum_Member__create = func (location: Source_Location*, name: String*) -> Checked_Enum_Member* {
-    let member: Checked_Enum_Member* = (Checked_Enum_Member*) malloc(sizeof(Checked_Enum_Member))
+    let member = (Checked_Enum_Member*) malloc(sizeof(Checked_Enum_Member))
     member.location = location
     member.name = name
     member.symbol = null
@@ -2617,13 +2617,13 @@ define Checked_Enum_Type = struct {
 }
 
 define Checked_Enum_Type__create = func (location: Source_Location*, name: String*) -> Checked_Enum_Type* {
-    let type: Checked_Enum_Type* = (Checked_Enum_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind.ENUM, sizeof(Checked_Enum_Type), location, name)
+    let type = (Checked_Enum_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind.ENUM, sizeof(Checked_Enum_Type), location, name)
     type.first_member = null
     return type
 }
 
 define Checked_Enum_Type__find_member = func (self: Checked_Enum_Type*, name: String*) -> Checked_Enum_Member* {
-    let member: Checked_Enum_Member* = self.first_member
+    let member = self.first_member
     while (member != null) {
         if (String__equals_string(name, member.name)) {
             break
@@ -2641,7 +2641,7 @@ define Checked_Function_Parameter = struct {
 }
 
 define Checked_Function_Parameter__create = func (location: Source_Location*, name: String*, type: Checked_Type*) -> Checked_Function_Parameter* {
-    let parameter: Checked_Function_Parameter* = (Checked_Function_Parameter*) malloc(sizeof(Checked_Function_Parameter))
+    let parameter = (Checked_Function_Parameter*) malloc(sizeof(Checked_Function_Parameter))
     parameter.location = location
     parameter.name = name
     parameter.type = type
@@ -2656,7 +2656,7 @@ define Checked_Function_Type = struct {
 }
 
 define Checked_Function_Type__create = func (location: Source_Location*, name: String*, return_type: Checked_Type*) -> Checked_Function_Type* {
-    let type: Checked_Function_Type* = (Checked_Function_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind.FUNCTION, sizeof(Checked_Function_Type), location, name)
+    let type = (Checked_Function_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind.FUNCTION, sizeof(Checked_Function_Type), location, name)
     type.return_type = return_type
     type.first_parameter = null
     return type
@@ -2666,12 +2666,12 @@ define Checked_Function_Type__equals = func (self: Checked_Function_Type*, other
     if (other_type.kind != self.super.super.kind) {
         return false
     }
-    let function_type: Checked_Function_Type* = (Checked_Function_Type*) other_type
+    let function_type = (Checked_Function_Type*) other_type
     if (!Checked_Type__equals(self.return_type, function_type.return_type)) {
         return false
     }
-    let self_parameter: Checked_Function_Parameter* = self.first_parameter
-    let function_parameter: Checked_Function_Parameter* = function_type.first_parameter
+    let self_parameter = self.first_parameter
+    let function_parameter = function_type.first_parameter
     while (self_parameter != null && function_parameter != null) {
         if (!Checked_Type__equals(self_parameter.type, function_parameter.type)) {
             return false
@@ -2699,7 +2699,7 @@ define Checked_Pointer_Type = struct {
 }
 
 define Checked_Pointer_Type__create = func (location: Source_Location*, other_type: Checked_Type*) -> Checked_Pointer_Type* {
-    let type: Checked_Pointer_Type* = (Checked_Pointer_Type*) Checked_Type__create_kind(Checked_Type_Kind.POINTER, sizeof(Checked_Pointer_Type), location)
+    let type = (Checked_Pointer_Type*) Checked_Type__create_kind(Checked_Type_Kind.POINTER, sizeof(Checked_Pointer_Type), location)
     type.other_type = other_type
     return type
 }
@@ -2717,7 +2717,7 @@ define Checked_Defined_Type = struct {
 }
 
 define Checked_Defined_Type__create = func (defined_type: Checked_Named_Type*) -> Checked_Defined_Type* {
-    let type: Checked_Defined_Type* = (Checked_Defined_Type*) Checked_Type__create_kind(Checked_Type_Kind.DEFINED, sizeof(Checked_Defined_Type), defined_type.super.location)
+    let type = (Checked_Defined_Type*) Checked_Type__create_kind(Checked_Type_Kind.DEFINED, sizeof(Checked_Defined_Type), defined_type.super.location)
     type.defined_type = defined_type
     return type
 }
@@ -2730,7 +2730,7 @@ define Checked_Struct_Member = struct {
 }
 
 define Checked_Struct_Member__create = func (location: Source_Location*, name: String*, type: Checked_Type*) -> Checked_Struct_Member* {
-    let member: Checked_Struct_Member* = (Checked_Struct_Member*) malloc(sizeof(Checked_Struct_Member))
+    let member = (Checked_Struct_Member*) malloc(sizeof(Checked_Struct_Member))
     member.location = location
     member.name = name
     member.type = type
@@ -2744,13 +2744,13 @@ define Checked_Struct_Type = struct {
 }
 
 define Checked_Struct_Type__create = func (location: Source_Location*, name: String*) -> Checked_Struct_Type* {
-    let type: Checked_Struct_Type* = (Checked_Struct_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind.STRUCT, sizeof(Checked_Struct_Type), location, name)
+    let type = (Checked_Struct_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind.STRUCT, sizeof(Checked_Struct_Type), location, name)
     type.first_member = null
     return type
 }
 
 define Checked_Struct_Type__find_member = func (self: Checked_Struct_Type*, name: String*) -> Checked_Struct_Member* {
-    let member: Checked_Struct_Member* = self.first_member
+    let member = self.first_member
     while (member != null) {
         if (String__equals_string(name, member.name)) {
             break
@@ -2789,19 +2789,19 @@ define Checked_Type__equals = func (self: Checked_Type*, other_type: Checked_Typ
 
 define String__append_checked_type = func (self: String*, type: Checked_Type*) -> String* {
     if (type.kind <= Checked_Type_Kind.NULL) {
-        let named_type: Checked_Named_Type* = (Checked_Named_Type*) type
+        let named_type = (Checked_Named_Type*) type
         String__append_string(self, named_type.name)
     } else if (type.kind == Checked_Type_Kind.STRUCT) {
-        let struct_type: Checked_Struct_Type* = (Checked_Struct_Type*) type
+        let struct_type = (Checked_Struct_Type*) type
         String__append_cstring(self, "struct ")
         String__append_string(self, struct_type.super.name)
     } else if (type.kind == Checked_Type_Kind.FUNCTION) {
-        let function_type: Checked_Function_Type* = (Checked_Function_Type*) type
+        let function_type = (Checked_Function_Type*) type
         String__append_checked_type(self, function_type.return_type)
         String__append_char(self, ' ')
         String__append_string(self, function_type.super.name)
         String__append_char(self, '(')
-        let function_parameter: Checked_Function_Parameter* = function_type.first_parameter
+        let function_parameter = function_type.first_parameter
         while (function_parameter != null) {
             String__append_checked_type(self, function_parameter.type)
             String__append_char(self, ' ')
@@ -2813,11 +2813,11 @@ define String__append_checked_type = func (self: String*, type: Checked_Type*) -
         }
         String__append_char(self, ')')
     } else if (type.kind == Checked_Type_Kind.ENUM) {
-        let enum_type: Checked_Enum_Type* = (Checked_Enum_Type*) type
+        let enum_type = (Checked_Enum_Type*) type
         String__append_cstring(self, "enum ")
         String__append_string(self, enum_type.super.name)
     } else if (type.kind == Checked_Type_Kind.POINTER) {
-        let pointer_type: Checked_Pointer_Type* = (Checked_Pointer_Type*) type
+        let pointer_type = (Checked_Pointer_Type*) type
         String__append_checked_type(self, pointer_type.other_type)
         String__append_char(self, '*')
     } else {
@@ -2829,12 +2829,12 @@ define String__append_checked_type = func (self: String*, type: Checked_Type*) -
 
 define File__write_checked_function_parameter = func (self: File*, parameter: Checked_Function_Parameter*) -> void {
     if (parameter.type.kind == Checked_Type_Kind.POINTER && ((Checked_Pointer_Type*) parameter.type).other_type.kind == Checked_Type_Kind.FUNCTION) {
-        let function_type: Checked_Function_Type* = (Checked_Function_Type*) ((Checked_Pointer_Type*) parameter.type).other_type
+        let function_type = (Checked_Function_Type*) ((Checked_Pointer_Type*) parameter.type).other_type
         File__write_checked_type(self, function_type.return_type)
         File__write_cstring(self, " (*")
         File__write_string(self, parameter.name)
         File__write_cstring(self, ")(")
-        let function_parameter: Checked_Function_Parameter* = function_type.first_parameter
+        let function_parameter = function_type.first_parameter
         while (function_parameter != null) {
             File__write_checked_function_parameter(self, function_parameter)
             function_parameter = function_parameter.next_parameter
@@ -2872,23 +2872,23 @@ define File__write_checked_type = func (self: File*, type: Checked_Type*) -> voi
     } else if (type.kind == Checked_Type_Kind.USIZE) {
         File__write_cstring(self, "size_t")
     } else if (type.kind <= Checked_Type_Kind.NULL) {
-        let named_type: Checked_Named_Type* = (Checked_Named_Type*) type
+        let named_type = (Checked_Named_Type*) type
         File__write_string(self, named_type.name)
     } else if (type.kind == Checked_Type_Kind.STRUCT) {
-        let struct_type: Checked_Struct_Type* = (Checked_Struct_Type*) type
+        let struct_type = (Checked_Struct_Type*) type
         File__write_cstring(self, "struct ")
         File__write_string(self, struct_type.super.name)
     } else if (type.kind == Checked_Type_Kind.OPAQUE) {
-        let opaque_type: Checked_Opaque_Type* = (Checked_Opaque_Type*) type
+        let opaque_type = (Checked_Opaque_Type*) type
         File__write_cstring(self, "struct ")
         File__write_string(self, opaque_type.super.name)
     } else if (type.kind == Checked_Type_Kind.FUNCTION) {
-        let function_type: Checked_Function_Type* = (Checked_Function_Type*) type
+        let function_type = (Checked_Function_Type*) type
         File__write_checked_type(self, function_type.return_type)
         File__write_char(self, ' ')
         File__write_string(self, function_type.super.name)
         File__write_char(self, '(')
-        let function_parameter: Checked_Function_Parameter* = function_type.first_parameter
+        let function_parameter = function_type.first_parameter
         while (function_parameter != null) {
             File__write_checked_function_parameter(self, function_parameter)
             function_parameter = function_parameter.next_parameter
@@ -2898,11 +2898,11 @@ define File__write_checked_type = func (self: File*, type: Checked_Type*) -> voi
         }
         File__write_char(self, ')')
     } else if (type.kind == Checked_Type_Kind.ENUM) {
-        let enum_type: Checked_Enum_Type* = (Checked_Enum_Type*) type
+        let enum_type = (Checked_Enum_Type*) type
         File__write_cstring(self, "enum ")
         File__write_string(self, enum_type.super.name)
     } else if (type.kind == Checked_Type_Kind.POINTER) {
-        let pointer_type: Checked_Pointer_Type* = (Checked_Pointer_Type*) type
+        let pointer_type = (Checked_Pointer_Type*) type
         File__write_checked_type(self, pointer_type.other_type)
         File__write_char(self, '*')
     } else {
@@ -2933,7 +2933,7 @@ define Checked_Symbol = struct {
 }
 
 define Checked_Symbol__create_kind = func (kind: Checked_Symbol_Kind, kind_size: usize, location: Source_Location*, name: String*, type: Checked_Type*) -> Checked_Symbol* {
-    let symbol: Checked_Symbol* = (Checked_Symbol*) malloc(kind_size)
+    let symbol = (Checked_Symbol*) malloc(kind_size)
     symbol.kind = kind
     symbol.location = location
     symbol.name = name
@@ -2958,7 +2958,7 @@ define Checked_Function_Symbol = struct {
 }
 
 define Checked_Function_Symbol__create = func (location: Source_Location*, name: String*, function_type: Checked_Function_Type*) -> Checked_Function_Symbol* {
-    let symbol: Checked_Function_Symbol* = (Checked_Function_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind.FUNCTION, sizeof(Checked_Function_Symbol), location, name, (Checked_Type*) Checked_Pointer_Type__create(function_type.super.super.location, (Checked_Type*) function_type))
+    let symbol = (Checked_Function_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind.FUNCTION, sizeof(Checked_Function_Symbol), location, name, (Checked_Type*) Checked_Pointer_Type__create(function_type.super.super.location, (Checked_Type*) function_type))
     symbol.function_type = function_type
     symbol.checked_statements = null
     return symbol
@@ -2978,7 +2978,7 @@ define Checked_Type_Symbol = struct {
 }
 
 define Checked_Type_Symbol__create = func (location: Source_Location*, name: String*, named_type: Checked_Named_Type*) -> Checked_Type_Symbol* {
-    let symbol: Checked_Type_Symbol* = (Checked_Type_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind.TYPE, sizeof(Checked_Type_Symbol), location, name, (Checked_Type*) Checked_Defined_Type__create(named_type))
+    let symbol = (Checked_Type_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind.TYPE, sizeof(Checked_Type_Symbol), location, name, (Checked_Type*) Checked_Defined_Type__create(named_type))
     symbol.named_type = named_type
     return symbol
 }
@@ -2998,7 +2998,7 @@ define Checked_Symbols = struct {
 }
 
 define Checked_Symbols__create = func (parent: Checked_Symbols*) -> Checked_Symbols* {
-    let symbols: Checked_Symbols* = (Checked_Symbols*) malloc(sizeof(Checked_Symbols))
+    let symbols = (Checked_Symbols*) malloc(sizeof(Checked_Symbols))
     symbols.parent = parent
     symbols.first_symbol = null
     symbols.last_symbol = null
@@ -3006,7 +3006,7 @@ define Checked_Symbols__create = func (parent: Checked_Symbols*) -> Checked_Symb
 }
 
 define Checked_Symbols__find_sibling_symbol = func (self: Checked_Symbols*, name: String*) -> Checked_Symbol* {
-    let symbol: Checked_Symbol* = self.first_symbol
+    let symbol = self.first_symbol
     while (symbol != null) {
         if (String__equals_string(name, symbol.name)) {
             return symbol
@@ -3017,7 +3017,7 @@ define Checked_Symbols__find_sibling_symbol = func (self: Checked_Symbols*, name
 }
 
 define Checked_Symbols__append_symbol = func (self: Checked_Symbols*, symbol: Checked_Symbol*) -> void {
-    let other_symbol: Checked_Symbol* = Checked_Symbols__find_sibling_symbol(self, symbol.name)
+    let other_symbol = Checked_Symbols__find_sibling_symbol(self, symbol.name)
     if (other_symbol != null) {
         Source_Location__error(symbol.location, String__append_source_location(String__create_from("Symbol declared first here: "), other_symbol.location))
         abort()
@@ -3033,7 +3033,7 @@ define Checked_Symbols__append_symbol = func (self: Checked_Symbols*, symbol: Ch
 }
 
 define Checked_Symbols__find_symbol = func (self: Checked_Symbols*, name: String*) -> Checked_Symbol* {
-    let symbol: Checked_Symbol* = self.last_symbol
+    let symbol = self.last_symbol
     while (symbol != null) {
         if (String__equals_string(name, symbol.name)) {
             return symbol
@@ -3089,7 +3089,7 @@ define Checked_Expression = struct {
 }
 
 define Checked_Expression__create_kind = func (kind: Checked_Expression_Kind, kind_size: usize, location: Source_Location*, type: Checked_Type*) -> Checked_Expression* {
-    let expression: Checked_Expression* = (Checked_Expression*) malloc(kind_size)
+    let expression = (Checked_Expression*) malloc(kind_size)
     expression.kind = kind
     expression.location = location
     expression.type = type
@@ -3103,7 +3103,7 @@ define Checked_Binary_Expression = struct {
 }
 
 define Checked_Binary_Expression__create_kind = func (kind: Checked_Expression_Kind, location: Source_Location*, type: Checked_Type*, left_expression: Checked_Expression*, right_expression: Checked_Expression*) -> Checked_Binary_Expression* {
-    let expression: Checked_Binary_Expression* = (Checked_Binary_Expression*) Checked_Expression__create_kind(kind, sizeof(Checked_Binary_Expression), location, type)
+    let expression = (Checked_Binary_Expression*) Checked_Expression__create_kind(kind, sizeof(Checked_Binary_Expression), location, type)
     expression.left_expression = left_expression
     expression.right_expression = right_expression
     return expression
@@ -3115,7 +3115,7 @@ define Checked_Unary_Expression = struct {
 }
 
 define Checked_Unary_Expression__create_kind = func (kind: Checked_Expression_Kind, kind_size: usize, location: Source_Location*, type: Checked_Type*, other_expression: Checked_Expression*) -> Checked_Unary_Expression* {
-    let expression: Checked_Unary_Expression* = (Checked_Unary_Expression*) Checked_Expression__create_kind(kind, kind_size, location, type)
+    let expression = (Checked_Unary_Expression*) Checked_Expression__create_kind(kind, kind_size, location, type)
     expression.other_expression = other_expression
     return expression
 }
@@ -3143,7 +3143,7 @@ define Checked_Array_Access_Expression = struct {
 }
 
 define Checked_Array_Access_Expression__create = func (location: Source_Location*, type: Checked_Type*, array_expression: Checked_Expression*, index_expression: Checked_Expression*) -> Checked_Array_Access_Expression* {
-    let expression: Checked_Array_Access_Expression* = (Checked_Array_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.ARRAY_ACCESS, sizeof(Checked_Array_Access_Expression), location, type)
+    let expression = (Checked_Array_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.ARRAY_ACCESS, sizeof(Checked_Array_Access_Expression), location, type)
     expression.array_expression = array_expression
     expression.index_expression = index_expression
     return expression
@@ -3155,7 +3155,7 @@ define Checked_Bool_Expression = struct {
 }
 
 define Checked_Bool_Expression__create = func (location: Source_Location*, type: Checked_Type*, value: bool) -> Checked_Bool_Expression* {
-    let expression: Checked_Bool_Expression* = (Checked_Bool_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.BOOL, sizeof(Checked_Bool_Expression), location, type)
+    let expression = (Checked_Bool_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.BOOL, sizeof(Checked_Bool_Expression), location, type)
     expression.value = value
     return expression
 }
@@ -3166,7 +3166,7 @@ define Checked_Call_Argument = struct {
 }
 
 define Checked_Call_Argument__create = func (expression: Checked_Expression*) -> Checked_Call_Argument* {
-    let argument: Checked_Call_Argument* = (Checked_Call_Argument*) malloc(sizeof(Checked_Call_Argument))
+    let argument = (Checked_Call_Argument*) malloc(sizeof(Checked_Call_Argument))
     argument.expression = expression
     argument.next_argument = null
     return argument
@@ -3179,7 +3179,7 @@ define Checked_Call_Expression = struct {
 }
 
 define Checked_Call_Expression__create = func (location: Source_Location*, type: Checked_Type*, callee_expression: Checked_Expression*, first_argument: Checked_Call_Argument*) -> Checked_Call_Expression* {
-    let expression: Checked_Call_Expression* = (Checked_Call_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.CALL, sizeof(Checked_Call_Expression), location, type)
+    let expression = (Checked_Call_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.CALL, sizeof(Checked_Call_Expression), location, type)
     expression.callee_expression = callee_expression
     expression.first_argument = first_argument
     return expression
@@ -3191,7 +3191,7 @@ define Checked_Cast_Expression = struct {
 }
 
 define Checked_Cast_Expression__create = func (location: Source_Location*, type: Checked_Type*, other_expression: Checked_Expression*) -> Checked_Cast_Expression* {
-    let expression: Checked_Cast_Expression* = (Checked_Cast_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.CAST, sizeof(Checked_Cast_Expression), location, type)
+    let expression = (Checked_Cast_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.CAST, sizeof(Checked_Cast_Expression), location, type)
     expression.other_expression = other_expression
     return expression
 }
@@ -3202,7 +3202,7 @@ define Checked_Character_Expression = struct {
 }
 
 define Checked_Character_Expression__create = func (location: Source_Location*, type: Checked_Type*, value: char) -> Checked_Character_Expression* {
-    let expression: Checked_Character_Expression* = (Checked_Character_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.CHARACTER, sizeof(Checked_Character_Expression), location, type)
+    let expression = (Checked_Character_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.CHARACTER, sizeof(Checked_Character_Expression), location, type)
     expression.value = value
     return expression
 }
@@ -3213,9 +3213,9 @@ define Checked_Dereference_Expression = struct {
 }
 
 define Checked_Dereference_Expression__create = func (location: Source_Location*, type: Checked_Type*, value_expression: Checked_Expression*) -> Checked_Dereference_Expression* {
-    let expresion: Checked_Dereference_Expression* = (Checked_Dereference_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.DEREFERENCE, sizeof(Checked_Dereference_Expression), location, type)
-    expresion.value_expression = value_expression
-    return expresion
+    let expression = (Checked_Dereference_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.DEREFERENCE, sizeof(Checked_Dereference_Expression), location, type)
+    expression.value_expression = value_expression
+    return expression
 }
 
 define Checked_Divide_Expression = struct {
@@ -3256,7 +3256,7 @@ define Checked_Group_Expression = struct {
 }
 
 define Checked_Group_Expression__create = func (location: Source_Location*, type: Checked_Type*, other_expression: Checked_Expression*) -> Checked_Group_Expression* {
-    let expression: Checked_Group_Expression* = (Checked_Group_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.GROUP, sizeof(Checked_Group_Expression), location, type)
+    let expression = (Checked_Group_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.GROUP, sizeof(Checked_Group_Expression), location, type)
     expression.other_expression = other_expression
     return expression
 }
@@ -3267,7 +3267,7 @@ define Checked_Integer_Expression = struct {
 }
 
 define Checked_Integer_Expression__create = func (location: Source_Location*, type: Checked_Type*, value: u64) -> Checked_Integer_Expression* {
-    let expression: Checked_Integer_Expression* = (Checked_Integer_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.INTEGER, sizeof(Checked_Integer_Expression), location, type)
+    let expression = (Checked_Integer_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.INTEGER, sizeof(Checked_Integer_Expression), location, type)
     expression.value = value
     return expression
 }
@@ -3311,7 +3311,7 @@ define Checked_Member_Access_Expression = struct {
 }
 
 define Checked_Member_Access_Expression__create = func (location: Source_Location*, type: Checked_Type*, object_expression: Checked_Expression*, member: Checked_Struct_Member*) -> Checked_Member_Access_Expression* {
-    let expression: Checked_Member_Access_Expression* = (Checked_Member_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.MEMBER_ACCESS, sizeof(Checked_Member_Access_Expression), location, type)
+    let expression = (Checked_Member_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.MEMBER_ACCESS, sizeof(Checked_Member_Access_Expression), location, type)
     expression.object_expression = object_expression
     expression.member = member
     return expression
@@ -3371,7 +3371,7 @@ define Checked_Sizeof_Expression = struct {
 }
 
 define Checked_Sizeof_Expression__create = func (location: Source_Location*, type: Checked_Type*, sized_type: Checked_Type*) -> Checked_Sizeof_Expression* {
-    let expression: Checked_Sizeof_Expression* = (Checked_Sizeof_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.SIZEOF, sizeof(Checked_Sizeof_Expression), location, type)
+    let expression = (Checked_Sizeof_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.SIZEOF, sizeof(Checked_Sizeof_Expression), location, type)
     expression.sized_type = sized_type
     return expression
 }
@@ -3382,7 +3382,7 @@ define Checked_String_Expression = struct {
 }
 
 define Checked_String_Expression__create = func (location: Source_Location*, type: Checked_Type*, value: String*) -> Checked_String_Expression* {
-    let expression: Checked_String_Expression* = (Checked_String_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.STRING, sizeof(Checked_String_Expression), location, type)
+    let expression = (Checked_String_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.STRING, sizeof(Checked_String_Expression), location, type)
     expression.value = value
     return expression
 }
@@ -3401,7 +3401,7 @@ define Checked_Symbol_Expression = struct {
 }
 
 define Checked_Symbol_Expression__create = func (location: Source_Location*, type: Checked_Type*, symbol: Checked_Symbol*) -> Checked_Symbol_Expression* {
-    let expression: Checked_Symbol_Expression* = (Checked_Symbol_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.SYMBOL, sizeof(Checked_Symbol_Expression), location, type)
+    let expression = (Checked_Symbol_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind.SYMBOL, sizeof(Checked_Symbol_Expression), location, type)
     expression.symbol = symbol
     return expression
 }
@@ -3428,7 +3428,7 @@ define Checked_Statement = struct {
 }
 
 define Checked_Statement__create_kind = func (kind: Checked_Statement_Kind, kind_size: usize, location: Source_Location*) -> Checked_Statement* {
-    let statement: Checked_Statement* = (Checked_Statement*) malloc(kind_size)
+    let statement = (Checked_Statement*) malloc(kind_size)
     statement.kind = kind
     statement.location = location
     statement.next_statement = null
@@ -3442,7 +3442,7 @@ define Checked_Assignment_Statement = struct {
 }
 
 define Checked_Assignment_Statement__create = func (location: Source_Location*, object_expression: Checked_Expression*, value_expression: Checked_Expression*) -> Checked_Assignment_Statement* {
-    let statement: Checked_Assignment_Statement* = (Checked_Assignment_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.ASSIGNMENT, sizeof(Checked_Assignment_Statement), location)
+    let statement = (Checked_Assignment_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.ASSIGNMENT, sizeof(Checked_Assignment_Statement), location)
     statement.object_expression = object_expression
     statement.value_expression = value_expression
     return statement
@@ -3454,7 +3454,7 @@ define Checked_Block_Statement = struct {
 }
 
 define Checked_Block_Statement__create = func (location: Source_Location*, statements: Checked_Statements*) -> Checked_Block_Statement* {
-    let statement: Checked_Block_Statement* = (Checked_Block_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.BLOCK, sizeof(Checked_Block_Statement), location)
+    let statement = (Checked_Block_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.BLOCK, sizeof(Checked_Block_Statement), location)
     statement.statements = statements
     return statement
 }
@@ -3473,7 +3473,7 @@ define Checked_Expression_Statement = struct {
 }
 
 define Checked_Expression_Statement__create = func (location: Source_Location*, expression: Checked_Expression*) -> Checked_Expression_Statement* {
-    let statement: Checked_Expression_Statement* = (Checked_Expression_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.EXPRESSION, sizeof(Checked_Expression_Statement), location)
+    let statement = (Checked_Expression_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.EXPRESSION, sizeof(Checked_Expression_Statement), location)
     statement.expression = expression
     return statement
 }
@@ -3486,7 +3486,7 @@ define Checked_If_Statement = struct {
 }
 
 define Checked_If_Statement__create = func (location: Source_Location*, condition_expression: Checked_Expression*, true_statement: Checked_Statement*, false_statement: Checked_Statement*) -> Checked_If_Statement* {
-    let statement: Checked_If_Statement* = (Checked_If_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.IF, sizeof(Checked_If_Statement), location)
+    let statement = (Checked_If_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.IF, sizeof(Checked_If_Statement), location)
     statement.condition_expression = condition_expression
     statement.true_statement = true_statement
     statement.false_statement = false_statement
@@ -3499,7 +3499,7 @@ define Checked_Return_Statement = struct {
 }
 
 define Checked_Return_Statement__create = func (location: Source_Location*, expression: Checked_Expression*) -> Checked_Return_Statement* {
-    let statement: Checked_Return_Statement* = (Checked_Return_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.RETURN, sizeof(Checked_Return_Statement), location)
+    let statement = (Checked_Return_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.RETURN, sizeof(Checked_Return_Statement), location)
     statement.expression = expression
     return statement
 }
@@ -3512,7 +3512,7 @@ define Checked_Variable_Statement = struct {
 }
 
 define Checked_Variable_Statement__create = func (location: Source_Location*, variable: Checked_Variable_Symbol*, expression: Checked_Expression*, is_external: bool) -> Checked_Variable_Statement* {
-    let statement: Checked_Variable_Statement* = (Checked_Variable_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.VARIABLE, sizeof(Checked_Variable_Statement), location)
+    let statement = (Checked_Variable_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.VARIABLE, sizeof(Checked_Variable_Statement), location)
     statement.variable = variable
     statement.expression = expression
     statement.is_external = is_external
@@ -3526,7 +3526,7 @@ define Checked_While_Statement = struct {
 }
 
 define Checked_While_Statement__create = func (location: Source_Location*, condition_expression: Checked_Expression*, body_statement: Checked_Statement*) -> Checked_While_Statement* {
-    let statement: Checked_While_Statement* = (Checked_While_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.WHILE, sizeof(Checked_While_Statement), location)
+    let statement = (Checked_While_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind.WHILE, sizeof(Checked_While_Statement), location)
     statement.condition_expression = condition_expression
     statement.body_statement = body_statement
     return statement
@@ -3538,7 +3538,7 @@ define Checked_Statements = struct {
 }
 
 define Checked_Statements__create = func () -> Checked_Statements* {
-    let statements: Checked_Statements* = (Checked_Statements*) malloc(sizeof(Checked_Statements))
+    let statements = (Checked_Statements*) malloc(sizeof(Checked_Statements))
     statements.first_statement = null
     statements.last_statement = null
     return statements
@@ -3575,12 +3575,12 @@ define Checker = struct {
 }
 
 define Checker__create = func () -> Checker* {
-    let checker: Checker* = (Checker*) malloc(sizeof(Checker))
+    let checker = (Checker*) malloc(sizeof(Checker))
     checker.first_type = null
     checker.last_type = null
     checker.symbols = Checked_Symbols__create(null)
 
-    let location: Source_Location* = Source_Location__create(null, (u16) 0, (u16) 1)
+    let location = Source_Location__create(null, (u16) 0, (u16) 1)
     Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind.BOOL, sizeof(Checked_Named_Type), location, String__create_from("bool")))
     Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind.CHAR, sizeof(Checked_Named_Type), location, String__create_from("char")))
     Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind.I16, sizeof(Checked_Named_Type), location, String__create_from("i16")))
@@ -3611,7 +3611,7 @@ define Checker__append_type = func (self: Checker*, type: Checked_Named_Type*) -
 }
 
 define Checker__find_type = func (self: Checker*, name: String*) -> Checked_Named_Type* {
-    let type: Checked_Named_Type* = self.first_type
+    let type = self.first_type
     while (type != null) {
         if (String__equals_string(name, type.name)) {
             break
@@ -3622,8 +3622,8 @@ define Checker__find_type = func (self: Checker*, name: String*) -> Checked_Name
 }
 
 define Checker__get_builtin_type = func (self: Checker*, kind: Checked_Type_Kind) -> Checked_Named_Type* {
-    let type: Checked_Named_Type* = self.first_type
-    let custom_type: Checked_Named_Type* = (Checked_Named_Type*) self.last_builting_type.super.next_type
+    let type = self.first_type
+    let custom_type = (Checked_Named_Type*) self.last_builting_type.super.next_type
     while (type != custom_type) {
         if (type.super.kind == kind) {
             return type
@@ -3636,7 +3636,7 @@ define Checker__get_builtin_type = func (self: Checker*, kind: Checked_Type_Kind
 
 define Checker__resolve_type = func (self: Checker*, parsed_type: Parsed_Type*) -> Checked_Type* {
     if (parsed_type.kind == Parsed_Type_Kind.NAMED) {
-        let type: Checked_Named_Type* = Checker__find_type(self, ((Parsed_Named_Type*) parsed_type).name)
+        let type = Checker__find_type(self, ((Parsed_Named_Type*) parsed_type).name)
         if (type != null) {
             return (Checked_Type*) type
         }
@@ -3645,7 +3645,7 @@ define Checker__resolve_type = func (self: Checker*, parsed_type: Parsed_Type*) 
         return (Checked_Type*) Checked_Pointer_Type__create(parsed_type.location, Checker__resolve_type(self, ((Parsed_Pointer_Type*) parsed_type).other_type))
     }
     if (parsed_type.kind == Parsed_Type_Kind.STRUCT) {
-        let type: Checked_Type* = Checker__resolve_type(self, ((Parsed_Struct_Type*) parsed_type).other_type)
+        let type = Checker__resolve_type(self, ((Parsed_Struct_Type*) parsed_type).other_type)
         if (type.kind != Checked_Type_Kind.STRUCT) {
             TODO("Report unexpected type")
             abort()
@@ -3657,15 +3657,15 @@ define Checker__resolve_type = func (self: Checker*, parsed_type: Parsed_Type*) 
 }
 
 define Checker__check_add_expression = func (self: Checker*, parsed_expression: Parsed_Add_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Add_Expression__create(parsed_expression.super.super.location, left_expression.type, left_expression, right_expression)
 }
 
 define Checker__check_address_of_expression = func (self: Checker*, parsed_expression: Parsed_Address_Of_Expression*) -> Checked_Expression* {
-    let other_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.other_expression)
+    let other_expression = Checker__check_expression(self, parsed_expression.super.other_expression)
     if (other_expression.kind != Checked_Expression_Kind.SYMBOL) {
         Source_Location__error(parsed_expression.super.super.location, String__create_from("Not a symbol"))
         abort()
@@ -3674,45 +3674,45 @@ define Checker__check_address_of_expression = func (self: Checker*, parsed_expre
 }
 
 define Checker__check_array_access_expression = func (self: Checker*, parsed_expression: Parsed_Array_Access_Expression*) -> Checked_Expression* {
-    let array_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.array_expression)
-    let array_type: Checked_Type* = array_expression.type
+    let array_expression = Checker__check_expression(self, parsed_expression.array_expression)
+    let array_type = array_expression.type
     if (array_type.kind != Checked_Type_Kind.POINTER) {
-        let message: String* = String__create()
+        let message = String__create()
         String__append_char(message, '"')
         String__append_checked_type(message, array_type)
         String__append_cstring(message, "\" is not a pointer type.")
         Source_Location__error(parsed_expression.array_expression.location, message)
         abort()
     }
-    let type: Checked_Type* = ((Checked_Pointer_Type*) array_type).other_type
-    let index_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.index_expression)
+    let type = ((Checked_Pointer_Type*) array_type).other_type
+    let index_expression = Checker__check_expression(self, parsed_expression.index_expression)
     Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.USIZE), index_expression.type, index_expression.location)
     return (Checked_Expression*) Checked_Array_Access_Expression__create(parsed_expression.super.location, type, array_expression, index_expression)
 }
 
 define Checker__check_bool_expression = func (self: Checker*, parsed_expression: Parsed_Bool_Expression*) -> Checked_Expression* {
-    let expression_type: Checked_Type* = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL)
-    let value: bool = parsed_expression.value
+    let expression_type = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL)
+    let value = parsed_expression.value
     return (Checked_Expression*) Checked_Bool_Expression__create(parsed_expression.super.super.location, expression_type, value)
 }
 
 define Checker__check_call_expression = func (self: Checker*, parsed_expression: Parsed_Call_Expression*) -> Checked_Expression* {
-    let callee_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.callee_expression)
-    let callee_type: Checked_Type* = callee_expression.type
+    let callee_expression = Checker__check_expression(self, parsed_expression.callee_expression)
+    let callee_type = callee_expression.type
     if (callee_type.kind != Checked_Type_Kind.POINTER || ((Checked_Pointer_Type*) callee_type).other_type.kind != Checked_Type_Kind.FUNCTION) {
         Source_Location__error(parsed_expression.super.location, String__create_from("Not a function"))
         abort()
     }
-    let function_type: Checked_Function_Type* = (Checked_Function_Type*) ((Checked_Pointer_Type*) callee_type).other_type
+    let function_type = (Checked_Function_Type*) ((Checked_Pointer_Type*) callee_type).other_type
     let first_argument: Checked_Call_Argument* = null
     if (parsed_expression.first_argument != null) {
         let last_argument: Checked_Call_Argument* = null
-        let function_parameter: Checked_Function_Parameter* = function_type.first_parameter
-        let parsed_argument: Parsed_Call_Argument* = parsed_expression.first_argument
+        let function_parameter = function_type.first_parameter
+        let parsed_argument = parsed_expression.first_argument
         while (function_parameter != null && parsed_argument != null) {
-            let argument_expression: Checked_Expression* = Checker__check_expression(self, parsed_argument.expression)
+            let argument_expression = Checker__check_expression(self, parsed_argument.expression)
             Checked_Type__expect_same_type(function_parameter.type, argument_expression.type, argument_expression.location)
-            let argument: Checked_Call_Argument* = Checked_Call_Argument__create(argument_expression)
+            let argument = Checked_Call_Argument__create(argument_expression)
             if (last_argument == null) {
                 first_argument = argument
             } else {
@@ -3735,10 +3735,10 @@ define Checker__check_call_expression = func (self: Checker*, parsed_expression:
 }
 
 define Checker__check_cast_expression = func (self: Checker*, parsed_expression: Parsed_Cast_Expression*) -> Checked_Expression* {
-    let type: Checked_Type* = Checker__resolve_type(self, parsed_expression.type)
-    let other_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.other_expression)
-    let other_type: Checked_Type* = other_expression.type
-    let can_cast: bool = false
+    let type = Checker__resolve_type(self, parsed_expression.type)
+    let other_expression = Checker__check_expression(self, parsed_expression.super.other_expression)
+    let other_type = other_expression.type
+    let can_cast = false
     if (type.kind == Checked_Type_Kind.POINTER) {
         if (other_type.kind == Checked_Type_Kind.POINTER) {
             can_cast = true
@@ -3752,7 +3752,7 @@ define Checker__check_cast_expression = func (self: Checker*, parsed_expression:
         Source_Location__warning(parsed_expression.super.super.location, String__create_from("Redundant cast"))
     }
     if (!can_cast) {
-        let message: String* = String__create_from("Cannot cast \"")
+        let message = String__create_from("Cannot cast \"")
         String__append_checked_type(message, other_expression.type)
         String__append_cstring(message, "\" to \"")
         String__append_checked_type(message, type)
@@ -3764,14 +3764,14 @@ define Checker__check_cast_expression = func (self: Checker*, parsed_expression:
 }
 
 define Checker__check_character_expression = func (self: Checker*, parsed_expression: Parsed_Character_Expression*) -> Checked_Expression* {
-    let expression_type: Checked_Type* = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.CHAR)
-    let value: char = parsed_expression.value
+    let expression_type = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.CHAR)
+    let value = parsed_expression.value
     return (Checked_Expression*) Checked_Character_Expression__create(parsed_expression.super.super.location, expression_type, value)
 }
 
 define Checker__check_dereference_expression = func (self: Checker*, parsed_expression: Parsed_Dereference_Expression*) -> Checked_Expression* {
-    let value_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.value_expression)
-    let value_type: Checked_Type* = value_expression.type
+    let value_expression = Checker__check_expression(self, parsed_expression.value_expression)
+    let value_type = value_expression.type
     if (value_type.kind != Checked_Type_Kind.POINTER) {
         Source_Location__error(parsed_expression.super.location, String__create_from("Not a pointer value"))
         abort()
@@ -3780,82 +3780,82 @@ define Checker__check_dereference_expression = func (self: Checker*, parsed_expr
 }
 
 define Checker__check_divide_expression = func (self: Checker*, parsed_expression: Parsed_Divide_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Divide_Expression__create(parsed_expression.super.super.location, left_expression.type, left_expression, right_expression)
 }
 
 define Checker__check_equals_expression = func (self: Checker*, parsed_expression: Parsed_Equals_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Equals_Expression__create(parsed_expression.super.super.location, (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression, right_expression)
 }
 
 define Checker__check_greater_expression = func (self: Checker*, parsed_expression: Parsed_Greater_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Greater_Expression__create(parsed_expression.super.super.location, (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression, right_expression)
 }
 
 define Checker__check_greater_or_equals_expression = func (self: Checker*, parsed_expression: Parsed_Greater_Or_Equals_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Greater_Or_Equals_Expression__create(parsed_expression.super.super.location, (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression, right_expression)
 }
 
 define Checker__check_group_expression = func (self: Checker*, parsed_expression: Parsed_Group_Expression*) -> Checked_Expression* {
-    let other_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.other_expression)
+    let other_expression = Checker__check_expression(self, parsed_expression.other_expression)
     return (Checked_Expression*) Checked_Group_Expression__create(parsed_expression.super.location, other_expression.type, other_expression)
 }
 
 define Checker__check_integer_expression = func (self: Checker*, parsed_expression: Parsed_Integer_Expression*) -> Checked_Expression* {
-    let expression_type: Checked_Type* = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.I32)
-    let value: u64 = parsed_expression.value
+    let expression_type = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.I32)
+    let value = parsed_expression.value
     return (Checked_Expression*) Checked_Integer_Expression__create(parsed_expression.super.super.location, expression_type, value)
 }
 
 define Checker__check_less_expression = func (self: Checker*, parsed_expression: Parsed_Less_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Less_Expression__create(parsed_expression.super.super.location, (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression, right_expression)
 }
 
 define Checker__check_less_or_equals_expression = func (self: Checker*, parsed_expression: Parsed_Less_Or_Equals_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Less_Or_Equals_Expression__create(parsed_expression.super.super.location, (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression, right_expression)
 }
 
 define Checker__check_logic_and_expression = func (self: Checker*, parsed_expression: Parsed_Logic_And_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Logic_And_Expression__create(parsed_expression.super.super.location, left_expression.type, left_expression, right_expression)
 }
 
 define Checker__check_logic_or_expression = func (self: Checker*, parsed_expression: Parsed_Logic_Or_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Logic_Or_Expression__create(parsed_expression.super.super.location, left_expression.type, left_expression, right_expression)
 }
 
 define Checker__check_member_access_expression = func (self: Checker*, parsed_expression: Parsed_Member_Access_Expression*) -> Checked_Expression* {
-    let object_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.object_expression)
-    let object_type: Checked_Type* = object_expression.type
+    let object_expression = Checker__check_expression(self, parsed_expression.object_expression)
+    let object_type = object_expression.type
     if (object_type.kind == Checked_Type_Kind.POINTER) {
         object_type = ((Checked_Pointer_Type*) object_type).other_type
         if (object_type.kind == Checked_Type_Kind.STRUCT) {
@@ -3864,10 +3864,10 @@ define Checker__check_member_access_expression = func (self: Checker*, parsed_ex
     } else if (object_type.kind == Checked_Type_Kind.STRUCT) {
         return Checker__check_struct_member_access_expression(self, object_expression, (Checked_Struct_Type*) object_type, parsed_expression.member_name)
     } else if (object_type.kind == Checked_Type_Kind.DEFINED) {
-        let defined_type: Checked_Named_Type* = ((Checked_Defined_Type*) object_type).defined_type
+        let defined_type = ((Checked_Defined_Type*) object_type).defined_type
         if (defined_type.super.kind == Checked_Type_Kind.ENUM) {
-            let enum_type: Checked_Enum_Type* = (Checked_Enum_Type*) defined_type
-            let enum_member: Checked_Enum_Member* = Checked_Enum_Type__find_member(enum_type, parsed_expression.member_name.lexeme)
+            let enum_type = (Checked_Enum_Type*) defined_type
+            let enum_member = Checked_Enum_Type__find_member(enum_type, parsed_expression.member_name.lexeme)
             if (enum_member == null) {
                 Source_Location__error(object_expression.location, String__create_from("No such enum members"))
                 abort()
@@ -3882,7 +3882,7 @@ define Checker__check_member_access_expression = func (self: Checker*, parsed_ex
 }
 
 define Checker__check_struct_member_access_expression = func (self: Checker*, object_expression: Checked_Expression*, struct_type: Checked_Struct_Type*, member_name: Token*) -> Checked_Expression* {
-    let member: Checked_Struct_Member* = Checked_Struct_Type__find_member(struct_type, member_name.lexeme)
+    let member = Checked_Struct_Type__find_member(struct_type, member_name.lexeme)
     if (member == null) {
         Source_Location__error(object_expression.location, String__create_from("No such struct member"))
         abort()
@@ -3891,70 +3891,70 @@ define Checker__check_struct_member_access_expression = func (self: Checker*, ob
 }
 
 define Checker__check_minus_expression = func (self: Checker*, parsed_expression: Parsed_Minus_Expression*) -> Checked_Expression* {
-    let other_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.other_expression)
-    let other_expression_type: Checked_Type* = other_expression.type
+    let other_expression = Checker__check_expression(self, parsed_expression.super.other_expression)
+    let other_expression_type = other_expression.type
     Checked_Type__expect_scalar_type(other_expression_type, other_expression.location)
     return (Checked_Expression*) Checked_Minus_Expression__create(parsed_expression.super.super.location, other_expression_type, other_expression)
 }
 
 define Checker__check_modulo_expression = func (self: Checker*, parsed_expression: Parsed_Modulo_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Modulo_Expression__create(parsed_expression.super.super.location, left_expression.type, left_expression, right_expression)
 }
 
 define Checker__check_multiply_expression = func (self: Checker*, parsed_expression: Parsed_Multiply_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Multiply_Expression__create(parsed_expression.super.super.location, left_expression.type, left_expression, right_expression)
 }
 
 define Checker__check_not_expression = func (self: Checker*, parsed_expression: Parsed_Not_Expression*) -> Checked_Expression* {
-    let other_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.other_expression)
-    let other_expression_type: Checked_Type* = other_expression.type
+    let other_expression = Checker__check_expression(self, parsed_expression.super.other_expression)
+    let other_expression_type = other_expression.type
     Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), other_expression_type, other_expression.location)
     return (Checked_Expression*) Checked_Not_Expression__create(parsed_expression.super.super.location, other_expression_type, other_expression)
 }
 
 define Checker__check_not_equals_expression = func (self: Checker*, parsed_expression: Parsed_Not_Equals_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Not_Equals_Expression__create(parsed_expression.super.super.location, (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), left_expression, right_expression)
 }
 
 define Checker__check_null_expression = func (self: Checker*, parsed_expression: Parsed_Null_Expression*) -> Checked_Expression* {
-    let expression_type: Checked_Type* = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.NULL)
+    let expression_type = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.NULL)
     return (Checked_Expression*) Checked_Null_Expression__create(parsed_expression.super.literal.location, expression_type)
 }
 
 define Checker__check_sizeof_expression = func (self: Checker*, parsed_expression: Parsed_Sizeof_Expression*) -> Checked_Expression* {
-    let expression_type: Checked_Type* = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.USIZE)
-    let sized_type: Checked_Type* = Checker__resolve_type(self, parsed_expression.type)
+    let expression_type = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.USIZE)
+    let sized_type = Checker__resolve_type(self, parsed_expression.type)
     return (Checked_Expression*) Checked_Sizeof_Expression__create(parsed_expression.super.location, expression_type, sized_type)
 }
 
 define Checker__check_string_expression = func (self: Checker*, parsed_expression: Parsed_String_Expression*) -> Checked_Expression* {
-    let char_type: Checked_Type* = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.CHAR)
-    let expression_type: Checked_Type* = (Checked_Type*) Checked_Pointer_Type__create(parsed_expression.super.literal.location, char_type)
-    let value: String* = parsed_expression.value
+    let char_type = (Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.CHAR)
+    let expression_type = (Checked_Type*) Checked_Pointer_Type__create(parsed_expression.super.literal.location, char_type)
+    let value = parsed_expression.value
     return (Checked_Expression*) Checked_String_Expression__create(parsed_expression.super.super.location, expression_type, value)
 }
 
 define Checker__check_substract_expression = func (self: Checker*, parsed_expression: Parsed_Substract_Expression*) -> Checked_Expression* {
-    let left_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.left_expression)
+    let left_expression = Checker__check_expression(self, parsed_expression.super.left_expression)
     Checked_Type__expect_scalar_type(left_expression.type, left_expression.location)
-    let right_expression: Checked_Expression* = Checker__check_expression(self, parsed_expression.super.right_expression)
+    let right_expression = Checker__check_expression(self, parsed_expression.super.right_expression)
     Checked_Type__expect_same_type(left_expression.type, right_expression.type, right_expression.location)
     return (Checked_Expression*) Checked_Substract_Expression__create(parsed_expression.super.super.location, left_expression.type, left_expression, right_expression)
 }
 
 define Checker__check_symbol_expression = func (self: Checker*, parsed_expression: Parsed_Symbol_Expression*) -> Checked_Expression* {
-    let symbol: Checked_Symbol* = Checked_Symbols__find_symbol(self.symbols, parsed_expression.name.lexeme)
+    let symbol = Checked_Symbols__find_symbol(self.symbols, parsed_expression.name.lexeme)
     if (symbol == null) {
         Token__error(parsed_expression.name, String__create_from("Undefined symbol"))
         abort()
@@ -4031,14 +4031,14 @@ define Checker__check_expression = func (self: Checker*, parsed_expression: Pars
 }
 
 define Checker__check_enum_statement = func (self: Checker*, parsed_statement: Parsed_Enum_Statement*) -> void {
-    let enum_type: Checked_Enum_Type* = Checked_Enum_Type__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme)
+    let enum_type = Checked_Enum_Type__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme)
     Checker__append_type(self, (Checked_Named_Type*) enum_type)
 
     let last_enum_member: Checked_Enum_Member* = null
-    let parsed_enum_member: Parsed_Enum_Member* = parsed_statement.first_member
+    let parsed_enum_member = parsed_statement.first_member
     while (parsed_enum_member != null) {
-        let enum_member: Checked_Enum_Member* = Checked_Enum_Member__create(parsed_enum_member.name.location, parsed_enum_member.name.lexeme)
-        let enum_member_symbol_name: String* = String__append_string(String__append_cstring(String__append_string(String__create(), enum_type.super.name), "__"), enum_member.name)
+        let enum_member = Checked_Enum_Member__create(parsed_enum_member.name.location, parsed_enum_member.name.lexeme)
+        let enum_member_symbol_name = String__append_string(String__append_cstring(String__append_string(String__create(), enum_type.super.name), "__"), enum_member.name)
         enum_member.symbol = (Checked_Symbol*) Checked_Enum_Member_Symbol__create(enum_member.location, enum_member_symbol_name, (Checked_Type*) enum_type)
         Checked_Symbols__append_symbol(self.symbols, enum_member.symbol)
         if (last_enum_member == null) {
@@ -4052,23 +4052,23 @@ define Checker__check_enum_statement = func (self: Checker*, parsed_statement: P
 }
 
 define Checker__check_function_type_statement = func (self: Checker*, parsed_statement: Parsed_Function_Type_Statement*) -> void {
-    let other_type: Checked_Named_Type* = Checker__find_type(self, parsed_statement.super.name.lexeme)
+    let other_type = Checker__find_type(self, parsed_statement.super.name.lexeme)
     let function_type: Checked_Function_Type* = undefined
     if (other_type != null) {
         TODO("Handle type redeclaration")
         abort()
     } else {
-        let return_type: Checked_Type* = Checker__resolve_type(self, parsed_statement.return_type)
+        let return_type = Checker__resolve_type(self, parsed_statement.return_type)
         function_type = Checked_Function_Type__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme, return_type)
         Checker__append_type(self, (Checked_Named_Type*) function_type)
     }
 
     if (parsed_statement.first_parameter != null) {
         let last_function_parameter: Checked_Function_Parameter* = null
-        let parsed_parameter: Parsed_Function_Type_Parameter* = parsed_statement.first_parameter
+        let parsed_parameter = parsed_statement.first_parameter
         while (parsed_parameter != null) {
-            let function_parameter_type: Checked_Type* = Checker__resolve_type(self, parsed_parameter.type)
-            let function_parameter: Checked_Function_Parameter* = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, function_parameter_type)
+            let function_parameter_type = Checker__resolve_type(self, parsed_parameter.type)
+            let function_parameter = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, function_parameter_type)
             if (last_function_parameter == null) {
                 function_type.first_parameter = function_parameter
             } else {
@@ -4081,39 +4081,39 @@ define Checker__check_function_type_statement = func (self: Checker*, parsed_sta
 }
 
 define Checker__create_opaque_type = func (self: Checker*, parsed_statement: Parsed_Opaque_Type_Statement*) -> void {
-    let other_type: Checked_Named_Type* = Checker__find_type(self, parsed_statement.super.name.lexeme)
+    let other_type = Checker__find_type(self, parsed_statement.super.name.lexeme)
     if (other_type != null) {
         Source_Location__error(parsed_statement.super.name.location, String__append_source_location(String__create_from("Type declared first here: "), other_type.super.location))
         abort()
     } else {
-        let opaque_type: Checked_Opaque_Type* = Checked_Opaque_Type__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme)
+        let opaque_type = Checked_Opaque_Type__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme)
         Checker__append_type(self, (Checked_Named_Type*) opaque_type)
     }
 }
 
 define Checker__create_struct_type = func (self: Checker*, parsed_statement: Parsed_Struct_Statement*) -> void {
-    let other_type: Checked_Named_Type* = Checker__find_type(self, parsed_statement.super.name.lexeme)
+    let other_type = Checker__find_type(self, parsed_statement.super.name.lexeme)
     if (other_type != null) {
         Source_Location__error(parsed_statement.super.name.location, String__append_source_location(String__create_from("Type declared first here: "), other_type.super.location))
         abort()
     } else {
-        let struct_type: Checked_Struct_Type* = Checked_Struct_Type__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme)
+        let struct_type = Checked_Struct_Type__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme)
         Checker__append_type(self, (Checked_Named_Type*) struct_type)
     }
 }
 
 define Checker__check_struct_statement = func (self: Checker*, parsed_statement: Parsed_Struct_Statement*) -> void {
-    let struct_type: Checked_Struct_Type* = (Checked_Struct_Type*) Checker__find_type(self, parsed_statement.super.name.lexeme)
+    let struct_type = (Checked_Struct_Type*) Checker__find_type(self, parsed_statement.super.name.lexeme)
     if (parsed_statement.first_member != null) {
         let last_struct_member: Checked_Struct_Member* = null
-        let parsed_member: Parsed_Struct_Member* = parsed_statement.first_member
+        let parsed_member = parsed_statement.first_member
         while (parsed_member != null) {
-            let struct_member: Checked_Struct_Member* = Checked_Struct_Type__find_member(struct_type, parsed_member.name.lexeme)
+            let struct_member = Checked_Struct_Type__find_member(struct_type, parsed_member.name.lexeme)
             if (struct_member != null) {
                 TODO("Handle struct member duplicate")
                 abort()
             }
-            let struct_member_type: Checked_Type* = Checker__resolve_type(self, parsed_member.type)
+            let struct_member_type = Checker__resolve_type(self, parsed_member.type)
             struct_member = Checked_Struct_Member__create(parsed_member.name.location, parsed_member.name.lexeme, struct_member_type)
             if (last_struct_member == null) {
                 struct_type.first_member = struct_member
@@ -4127,14 +4127,14 @@ define Checker__check_struct_statement = func (self: Checker*, parsed_statement:
 }
 
 define Checker__check_assignment_statement = func (self: Checker*, parsed_statement: Parsed_Assignment_Statement*) -> Checked_Assignment_Statement* {
-    let object_expression: Checked_Expression* = Checker__check_expression(self, parsed_statement.object_expression)
-    let value_expression: Checked_Expression* = Checker__check_expression(self, parsed_statement.value_expression)
+    let object_expression = Checker__check_expression(self, parsed_statement.object_expression)
+    let value_expression = Checker__check_expression(self, parsed_statement.value_expression)
     Checked_Type__expect_same_type(object_expression.type, value_expression.type, value_expression.location)
     return Checked_Assignment_Statement__create(parsed_statement.super.location, object_expression, value_expression)
 }
 
 define Checker__check_block_statement = func (self: Checker*, parsed_statement: Parsed_Block_Statement*) -> Checked_Block_Statement* {
-    let statements: Checked_Statements* = Checker__check_statements(self, parsed_statement.statements)
+    let statements = Checker__check_statements(self, parsed_statement.statements)
     return Checked_Block_Statement__create(parsed_statement.super.location, statements)
 }
 
@@ -4143,7 +4143,7 @@ define Checker__check_break_statement = func (self: Checker*, parsed_statement: 
 }
 
 define Checker__check_expression_statement = func (self: Checker*, parsed_statement: Parsed_Expression_Statement*) -> Checked_Expression_Statement* {
-    let expression: Checked_Expression* = Checker__check_expression(self, parsed_statement.expression)
+    let expression = Checker__check_expression(self, parsed_statement.expression)
     if (!Checked_Type__equals((Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.VOID), expression.type)) {
         \ TODO: Source_Location__warning(expression.location, String__create_from("Unused result value"))
     }
@@ -4151,9 +4151,9 @@ define Checker__check_expression_statement = func (self: Checker*, parsed_statem
 }
 
 define Checker__check_if_statement = func (self: Checker*, parsed_statement: Parsed_If_Statement*) -> Checked_If_Statement* {
-    let considition_expression: Checked_Expression* = Checker__check_expression(self, parsed_statement.condition_expression)
+    let considition_expression = Checker__check_expression(self, parsed_statement.condition_expression)
     Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), considition_expression.type, considition_expression.location)
-    let true_statement: Checked_Statement* = Checker__check_statement(self, parsed_statement.true_statement)
+    let true_statement = Checker__check_statement(self, parsed_statement.true_statement)
     let false_statement: Checked_Statement* = null
     if (parsed_statement.false_statement != null) {
         false_statement = Checker__check_statement(self, parsed_statement.false_statement)
@@ -4174,44 +4174,62 @@ define Checker__check_return_statement = func (self: Checker*, parsed_statement:
 }
 
 define Checker__check_variable_statement = func (self: Checker*, parsed_statement: Parsed_Variable_Statement*) -> Checked_Variable_Statement* {
-    let type: Checked_Type* = Checker__resolve_type(self, parsed_statement.type)
+    let type: Checked_Type* = null
+    if (parsed_statement.type != null) {
+        type = Checker__resolve_type(self, parsed_statement.type)
+        if (type.kind == Checked_Type_Kind.OPAQUE) {
+            Source_Location__error(parsed_statement.super.super.location, String__create_from("Variable cannot have an opaque type"))
+            abort()
+        }
+    }
     let expression: Checked_Expression* = null
     if (parsed_statement.expression != null) {
         expression = Checker__check_expression(self, parsed_statement.expression)
-        Checked_Type__expect_same_type(type, expression.type, expression.location)
+        if (type != null) {
+            Checked_Type__expect_same_type(type, expression.type, expression.location)
+            if (expression.type.kind != Checked_Type_Kind.NULL) {
+                Source_Location__warning(parsed_statement.type.location, String__create_from("Redundant type declaration"))
+            }
+        } else {
+            type = expression.type
+        }
     }
-    let variable: Checked_Variable_Symbol* = Checked_Variable__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme, type)
+    if (type == null || type.kind == Checked_Type_Kind.NULL) {
+        Source_Location__error(parsed_statement.super.super.location, String__create_from("Unknown variable type"))
+        abort()
+    }
+    let variable = Checked_Variable__create(parsed_statement.super.name.location, parsed_statement.super.name.lexeme, type)
     Checked_Symbols__append_symbol(self.symbols, (Checked_Symbol*) variable)
     return Checked_Variable_Statement__create(parsed_statement.super.super.location, variable, expression, parsed_statement.is_external)
 }
 
 define Checker__check_while_statement = func (self: Checker*, parsed_statement: Parsed_While_Statement*) -> Checked_While_Statement* {
-    let considition_expression: Checked_Expression* = Checker__check_expression(self, parsed_statement.condition_expression)
+    let considition_expression = Checker__check_expression(self, parsed_statement.condition_expression)
     Checked_Type__expect_same_type((Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind.BOOL), considition_expression.type, considition_expression.location)
-    let body_statement: Checked_Statement* = Checker__check_statement(self, parsed_statement.body_statement)
+    let body_statement = Checker__check_statement(self, parsed_statement.body_statement)
     return Checked_While_Statement__create(parsed_statement.super.location, considition_expression, body_statement)
 }
 
 define Checker__check_function_declaration = func (self: Checker*, parsed_statement: Parsed_Function_Statement*) -> void {
-    let function_name: String* = parsed_statement.super.name.lexeme
-    let function_return_type: Checked_Type* = Checker__resolve_type(self, parsed_statement.return_type)
+    let function_name = parsed_statement.super.name.lexeme
+    let function_return_type = Checker__resolve_type(self, parsed_statement.return_type)
     let function_first_parameter: Checked_Function_Parameter* = null
-    let parsed_parameter: Parsed_Function_Parameter* = parsed_statement.first_parameter
+    let parsed_parameter = parsed_statement.first_parameter
     if (parsed_parameter != null) {
         function_first_parameter = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, Checker__resolve_type(self, parsed_parameter.type))
-        let function_last_parameter: Checked_Function_Parameter* = function_first_parameter
+        let function_last_parameter = function_first_parameter
         parsed_parameter = parsed_parameter.next_parameter
         while (parsed_parameter != null) {
-            let function_parameter: Checked_Function_Parameter* = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, Checker__resolve_type(self, parsed_parameter.type))
+            let function_parameter = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, Checker__resolve_type(self, parsed_parameter.type))
             function_last_parameter.next_parameter = function_parameter
             function_last_parameter = function_parameter
             parsed_parameter = parsed_parameter.next_parameter
         }
     }
-    let function_type: Checked_Function_Type* = Checked_Function_Type__create(parsed_statement.super.super.location, function_name, function_return_type)
+    let function_type = Checked_Function_Type__create(parsed_statement.super.super.location, function_name, function_return_type)
     function_type.first_parameter = function_first_parameter
 
-    let other_symbol: Checked_Symbol* = Checked_Symbols__find_sibling_symbol(self.symbols, function_name)
+    let other_symbol = Checked_Symbols__find_sibling_symbol(self.symbols, function_name)
     if (other_symbol != null) {
         if (other_symbol.kind != Checked_Symbol_Kind.FUNCTION || !Checked_Type__equals((Checked_Type*) function_type, (Checked_Type*) ((Checked_Function_Symbol*) other_symbol).function_type)) {
             TODO("Report overloaded function")
@@ -4251,10 +4269,10 @@ define Checker__check_statements = func (self: Checker*, parsed_statements: Pars
     \ Create and push block symbols
     self.symbols = Checked_Symbols__create(self.symbols)
 
-    let checked_statements: Checked_Statements* = Checked_Statements__create()
-    let parsed_statement: Parsed_Statement* = parsed_statements.first_statement
+    let checked_statements = Checked_Statements__create()
+    let parsed_statement = parsed_statements.first_statement
     while (parsed_statement != null) {
-        let checked_statement: Checked_Statement* = Checker__check_statement(self, parsed_statement)
+        let checked_statement = Checker__check_statement(self, parsed_statement)
         Checked_Statements__append(checked_statements, checked_statement)
         parsed_statement = parsed_statement.next_statement
     }
@@ -4266,13 +4284,13 @@ define Checker__check_statements = func (self: Checker*, parsed_statements: Pars
 }
 
 define Checker__check_function_definition = func (self: Checker*, parsed_statement: Parsed_Function_Statement*) -> void {
-    let symbol: Checked_Symbol* = Checked_Symbols__find_sibling_symbol(self.symbols, parsed_statement.super.name.lexeme)
+    let symbol = Checked_Symbols__find_sibling_symbol(self.symbols, parsed_statement.super.name.lexeme)
     if (symbol == null || symbol.kind != Checked_Symbol_Kind.FUNCTION) {
         TODO("Report missing function symbol")
         abort()
     }
-    let function_symbol: Checked_Function_Symbol* = (Checked_Function_Symbol*) symbol
-    let function_type: Checked_Function_Type* = function_symbol.function_type
+    let function_symbol = (Checked_Function_Symbol*) symbol
+    let function_type = function_symbol.function_type
     self.return_type = function_type.return_type
 
     \ Create and push function symbols
@@ -4280,7 +4298,7 @@ define Checker__check_function_definition = func (self: Checker*, parsed_stateme
 
     if (function_type.first_parameter != null) {
         \ Create a symbol for each function parameter
-        let parameter: Checked_Function_Parameter* = function_type.first_parameter
+        let parameter = function_type.first_parameter
         while (parameter != null) {
             Checked_Symbols__append_symbol(self.symbols, (Checked_Symbol*) Checked_Function_Parameter_Symbol__create(parameter.location, parameter.name, parameter.type))
             parameter = parameter.next_parameter
@@ -4295,7 +4313,7 @@ define Checker__check_function_definition = func (self: Checker*, parsed_stateme
 }
 
 define Checker__check_source = func (self: Checker*, parsed_source: Parsed_Source*) -> Checked_Source* {
-    let checked_statements: Checked_Statements* = Checked_Statements__create()
+    let checked_statements = Checked_Statements__create()
 
     let parsed_statement: Parsed_Statement* = undefined
 
@@ -4366,7 +4384,7 @@ define Checker__check_source = func (self: Checker*, parsed_source: Parsed_Sourc
     parsed_statement = parsed_source.statements.first_statement
     while (parsed_statement != null) {
         if (parsed_statement.kind == Parsed_Statement_Kind.FUNCTION) {
-            let function_statement: Parsed_Function_Statement* = (Parsed_Function_Statement*) parsed_statement
+            let function_statement = (Parsed_Function_Statement*) parsed_statement
             if (function_statement.statements != null) {
                 Checker__check_function_definition(self, function_statement)
             }
@@ -4387,14 +4405,14 @@ define Checker__check_source = func (self: Checker*, parsed_source: Parsed_Sourc
         parsed_statement = parsed_statement.next_statement
     }
 
-    let checked_source: Checked_Source* = (Checked_Source*) malloc(sizeof(Checked_Source))
+    let checked_source = (Checked_Source*) malloc(sizeof(Checked_Source))
     checked_source.first_symbol = self.symbols.first_symbol
     checked_source.statements = checked_statements
     return checked_source
 }
 
 define check = func (parsed_source: Parsed_Source*) -> Checked_Source* {
-    let type_checker: Checker* = Checker__create()
+    let type_checker = Checker__create()
 
     return Checker__check_source(type_checker, parsed_source)
 }
@@ -4445,7 +4463,7 @@ define Generator__generate_bool_expression = func (self: Generator*, expression:
 define Generator__generate_call_expression = func (self: Generator*, expression: Checked_Call_Expression*) -> void {
     Generator__generate_expression(self, expression.callee_expression)
     File__write_cstring(self.file, "(")
-    let argument: Checked_Call_Argument* = expression.first_argument
+    let argument = expression.first_argument
     while (argument != null) {
         Generator__generate_expression(self, argument.expression)
         argument = argument.next_argument
@@ -4618,7 +4636,7 @@ define Generator__generate_sizeof_expression = func (self: Generator*, expressio
 
 define Generator__generate_string_expression = func (self: Generator*, expression: Checked_String_Expression*) -> void {
     File__write_char(self.file, '"')
-    let index: usize = (usize) 0
+    let index = (usize) 0
     while (index < expression.value.length) {
         File__write_escaped_char(self.file, expression.value.data[index])
         index = index + (usize) 1
@@ -4702,7 +4720,7 @@ define Generator__generate_expression = func (self: Generator*, expression: Chec
 }
 
 define Generator__write_identation = func (self: Generator*) -> void {
-    let identation: u16 = self.identation
+    let identation = self.identation
     while (identation > (u16) 0) {
         File__write_cstring(self.file, "    ")
         identation = identation - (u16) 1
@@ -4799,7 +4817,7 @@ define Generator__generate_statement = func (self: Generator*, statement: Checke
 define Generator__generate_statements = func (self: Generator*, statements: Checked_Statements*) -> void {
     self.identation = self.identation + (u16) 1
 
-    let statement: Checked_Statement* = statements.first_statement
+    let statement = statements.first_statement
     while (statement != null) {
         Generator__write_source_location(self, statement.location)
 
@@ -4818,7 +4836,7 @@ define Generator__generate_statements = func (self: Generator*, statements: Chec
 define Generator__generate_enum = func (self: Generator*, enum_type: Checked_Enum_Type*) -> void {
     File__write_checked_type(self.file, (Checked_Type*) enum_type)
     File__write_cstring(self.file, " {\n")
-    let enum_member: Checked_Enum_Member* = enum_type.first_member
+    let enum_member = enum_type.first_member
     while (enum_member != null) {
         File__write_char(self.file, '\t')
         File__write_string(self.file, enum_member.symbol.name)
@@ -4859,7 +4877,7 @@ define Generator__declare_struct = func (self: Generator*, struct_type: Checked_
 }
 
 define Generator__generate_struct = func (self: Generator*, struct_type: Checked_Struct_Type*) -> void {
-    let struct_member: Checked_Struct_Member* = struct_type.first_member
+    let struct_member = struct_type.first_member
     if (struct_member == null) {
         return
     }
@@ -4894,7 +4912,7 @@ define generate = func (file: File*, checked_source: Checked_Source*) -> void {
     checked_symbol = checked_source.first_symbol
     while (checked_symbol != null) {
         if (checked_symbol.kind == Checked_Symbol_Kind.TYPE) {
-            let named_type: Checked_Named_Type* = ((Checked_Type_Symbol*) checked_symbol).named_type
+            let named_type = ((Checked_Type_Symbol*) checked_symbol).named_type
             if (named_type.super.kind == Checked_Type_Kind.STRUCT) {
                 Generator__declare_struct(&generator, (Checked_Struct_Type*) named_type)
             } else if (named_type.super.kind == Checked_Type_Kind.OPAQUE) {
@@ -4911,7 +4929,7 @@ define generate = func (file: File*, checked_source: Checked_Source*) -> void {
     checked_symbol = checked_source.first_symbol
     while (checked_symbol != null) {
         if (checked_symbol.kind == Checked_Symbol_Kind.TYPE) {
-            let named_type: Checked_Named_Type* = ((Checked_Type_Symbol*) checked_symbol).named_type
+            let named_type = ((Checked_Type_Symbol*) checked_symbol).named_type
             if (named_type.super.kind == Checked_Type_Kind.STRUCT) {
                 Generator__generate_struct(&generator, (Checked_Struct_Type*) named_type)
             }
@@ -4920,7 +4938,7 @@ define generate = func (file: File*, checked_source: Checked_Source*) -> void {
     }
 
     \ Declare all global variables
-    let checked_statement: Checked_Statement* = checked_source.statements.first_statement
+    let checked_statement = checked_source.statements.first_statement
     while (checked_statement != null) {
         if (checked_statement.kind == Checked_Statement_Kind.VARIABLE) {
             Generator__generate_variable_statement(&generator, (Checked_Variable_Statement*) checked_statement)
@@ -4963,14 +4981,14 @@ define main = func (argc: i32, argv: char**) -> i32 {
         return 1
     }
 
-    let source_file_path: char* = argv[(usize) 1]
-    let source_file: File* = fopen(source_file_path, "r")
+    let source_file_path = argv[(usize) 1]
+    let source_file = fopen(source_file_path, "r")
     if (source_file == null) {
         error(String__append_cstring(String__create_from("Cannot open file: "), source_file_path))
         return 1
     }
 
-    let output_file_path: char* = argv[(usize) 2]
+    let output_file_path = argv[(usize) 2]
     let output_file: File* = undefined
     if (String__equals_cstring(String__create_from(output_file_path), "-")) {
         output_file = stdout
@@ -4982,9 +5000,9 @@ define main = func (argc: i32, argv: char**) -> i32 {
         }
     }
 
-    let source: Source* = Source__create(source_file, source_file_path)
-    let parsed_source: Parsed_Source* = parse(source)
-    let checked_source: Checked_Source* = check(parsed_source)
+    let source = Source__create(source_file, source_file_path)
+    let parsed_source = parse(source)
+    let checked_source = check(parsed_source)
     generate(output_file, checked_source)
 
     fclose(source_file)

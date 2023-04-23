@@ -9,7 +9,8 @@ define fputs = external func (s: char*, stream: File*) -> i32
 
 define main = func () -> i32 {
     let value: i32 = undefined
-    let value_ref: i32* = &value
+    let value_ref = &value \ type inference
+    let file: File* = null
 
     fputs("PASS\n", stdout)
 
