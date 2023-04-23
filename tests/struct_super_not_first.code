@@ -1,0 +1,7 @@
+\ Expect:
+\ - error: 'tests/struct_super_not_first.code:6:5: Must be the first struct member\n'
+
+define ExtendedTest = struct {
+    value: i32
+    super: ExtendedTest
+}

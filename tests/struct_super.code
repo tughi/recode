@@ -1,0 +1,32 @@
+\ Expect:
+\ - output: ''
+
+define Test = struct {
+    result: i32
+    value: i32
+}
+
+define ExtendedTest = struct {
+    super: Test
+    value: i32
+}
+
+define main = func () -> i32 {
+    let test: Test = undefined
+    test.result = 42
+    test.value = 42
+
+    let extended_test: ExtendedTest = undefined
+
+    extended_test.super = test
+    if (extended_test.result != 42) {
+        return 1
+    }
+
+    extended_test.value = 13
+    if (extended_test.super.value != 42) {
+        return 2
+    }
+
+    return 0
+}
