@@ -9,7 +9,7 @@ struct Node {
     data: Data*
 }
 
-define main = func () -> i32 {
+func main() -> i32 {
     let value: i32 = undefined
     let value_ref = &value
     value_ref.* = 42

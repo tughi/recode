@@ -7,9 +7,9 @@ struct Source {
     value: i32
 }
 
-struct File \ opaque type
+external struct File \ opaque type
 
-define main = func () -> i32 {
+func main() -> i32 {
     let result: Source = undefined
     result.file = null
     result.value = 0

@@ -11,7 +11,7 @@ struct ExtendedTest {
     value: i32
 }
 
-define main = func () -> i32 {
+func main() -> i32 {
     let test: Test = undefined
     test.result = 42
     test.value = 42

@@ -1,6 +1,6 @@
 \ Expect:
 \ - error: 'tests/null_variable_with_scalar_type.code:5:18: Unexpected type. Got "null" instead of "i32"\n'
 
-define test = func () -> void {
+func test() -> void {
     let x: i32 = null
 }

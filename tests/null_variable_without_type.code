@@ -1,7 +1,7 @@
 \ Expect:
 \ - error: 'tests/null_variable_without_type.code:5:9: Unknown variable type\n'
 
-define main = func () -> i32 {
+func main() -> i32 {
     let x = null
     return 0
 }

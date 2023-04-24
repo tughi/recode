@@ -10,7 +10,7 @@ struct Integer_Token {
     value: i32
 }
 
-define main = func () -> i32 {
+func main() -> i32 {
     let token: Integer_Token = undefined
     token.value = 13
 

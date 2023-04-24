@@ -1,13 +1,12 @@
 \ Expect:
 \ - output: 'PASS\n'
 
-struct File
+external struct File
+external func fputs(s: char*, stream: File*) -> i32
 
 let stdout: File* = external
 
-define fputs = external func (s: char*, stream: File*) -> i32
-
-define main = func () -> i32 {
+func main() -> i32 {
     let value: i32 = undefined
     let value_ref = &value \ type inference
     let file: File* = null

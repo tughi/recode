@@ -6,6 +6,6 @@ struct Test {
     value: i32
 }
 
-define test = func () -> void {
+func test() -> void {
     let test: Test = undefined
 }

@@ -1,23 +1,23 @@
 \ Expect:
 \ - output: 'PASS\n'
 
-struct File
+external struct File
 
 let stdout: File* = external
 
-define fputs = external func (s: char*, stream: File*) -> i32
+external func fputs(s: char*, stream: File*) -> i32
 
-define main = func () -> i32 {
+func main() -> i32 {
     if (get_answer() == 42) {
         fputs("PASS\n", stdout)
     }
     return 0
 }
 
-define get_answer = func () -> i32 {
+func get_answer() -> i32 {
     return echo_value(42)
 }
 
-define echo_value = func (value: i32) -> i32 {
+func echo_value(value: i32) -> i32 {
     return value
 }
