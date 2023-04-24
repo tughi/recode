@@ -1,12 +1,12 @@
 \ Expect:
 \ - output: ''
 
-define Token_Kind = enum {
+enum Token_Kind {
     IDENTIFIER
     NUMBER
 }
 
-define Expression_Kind = enum {
+enum Expression_Kind {
     \ Comment
     IDENTIFIER
 

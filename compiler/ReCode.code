@@ -281,7 +281,7 @@ func Source_Location__warning(self: Source_Location*, message: String*) -> void 
 \   Tokens
 \ ---------------------------------------------------------------------------------------------------------------------
 
-define Token_Kind = enum {
+enum Token_Kind {
     CHARACTER
     COMMENT
     END_OF_FILE
@@ -445,10 +445,6 @@ func Token__is_keyword(self: Token*, lexeme: char*) -> bool {
 
 func Token__is_break(self: Token*) -> bool {
     return Token__is_keyword(self, "break")
-}
-
-func Token__is_define(self: Token*) -> bool {
-    return Token__is_keyword(self, "define")
 }
 
 func Token__is_else(self: Token*) -> bool {
@@ -891,7 +887,7 @@ struct Parsed_Source {
     statements: Parsed_Statements*
 }
 
-define Parsed_Type_Kind = enum {
+enum Parsed_Type_Kind {
     NAMED
     POINTER
     STRUCT
@@ -942,7 +938,7 @@ func Parsed_Struct_Type__create(location: Source_Location*, other_type: Parsed_T
     return type.as(Parsed_Type*)
 }
 
-define Parsed_Expression_Kind = enum {
+enum Parsed_Expression_Kind {
     ADD
     ADDRESS_OF
     ARRAY_ACCESS
@@ -1307,7 +1303,7 @@ func Parsed_Symbol_Expression__create(name: Token*) -> Parsed_Symbol_Expression*
     return expression
 }
 
-define Parsed_Statement_Kind = enum {
+enum Parsed_Statement_Kind {
     ASSIGNMENT
     BLOCK
     BREAK
@@ -2043,9 +2039,11 @@ func Parser__parse_opaque_type(self: Parser*) -> Parsed_Statement* {
 }
 
 \ enum
-\      | "enum" "{" ( IDENTIFIER )* "}"
-func Parser__parse_enum(self: Parser*, name: Token*) -> Parsed_Statement* {
+\      | "enum" IDENTIFIER "{" ( IDENTIFIER )* "}"
+func Parser__parse_enum(self: Parser*) -> Parsed_Statement* {
     Parser__consume_token(self, Token__is_enum)
+    Parser__consume_space(self, 1.as(u16))
+    let name = Parser__consume_token(self, Token__is_identifier)
     Parser__consume_space(self, 1.as(u16))
     Parser__consume_token(self, Token__is_opening_brace)
     Parser__consume_end_of_line(self)
@@ -2322,10 +2320,12 @@ func Parser__parse_while_statement(self: Parser*) -> Parsed_Statement* {
 }
 
 \ statement
-\   | define ( enum | function | opaque_type | struct )
-\   | old_function
+\   | enum
+\   | function
 \   | if
+\   | opaque_type
 \   | return
+\   | struct
 \   | type_alias
 \   | variable
 func Parser__parse_statement(self: Parser*) -> Parsed_Statement* {
@@ -2345,20 +2345,6 @@ func Parser__parse_statement(self: Parser*) -> Parsed_Statement* {
 
     if (Parser__matches_one(self, Token__is_break)) {
         return Parser__parse_break_statement(self)
-    }
-
-    if (Parser__matches_one(self, Token__is_define)) {
-        Parser__consume_token(self, Token__is_define)
-        Parser__consume_space(self, 1.as(u16))
-        let name = Parser__consume_token(self, Token__is_identifier)
-        Parser__consume_space(self, 1.as(u16))
-        Parser__consume_token(self, Token__is_equals)
-        Parser__consume_space(self, 1.as(u16))
-        if (Parser__matches_one(self, Token__is_enum)) {
-            return Parser__parse_enum(self, name)
-        }
-        Parser__error(self, String__create_from("Unsupported define"))
-        abort()
     }
 
     if (Parser__matches_one(self, Token__is_typedef)) {
@@ -2383,6 +2369,10 @@ func Parser__parse_statement(self: Parser*) -> Parsed_Statement* {
 
     if (Parser__matches_one(self, Token__is_struct)) {
         return Parser__parse_struct(self)
+    }
+
+    if (Parser__matches_one(self, Token__is_enum)) {
+        return Parser__parse_enum(self)
     }
 
     let expression = Parser__parse_access_expression(self)
@@ -2455,7 +2445,7 @@ func parse(source: Source*) -> Parsed_Source* {
 \   Checked Types
 \ ---------------------------------------------------------------------------------------------------------------------
 
-define Checked_Type_Kind = enum {
+enum Checked_Type_Kind {
     \ Builtins
     BOOL
     CHAR
@@ -2879,7 +2869,7 @@ func File__write_checked_type(self: File*, type: Checked_Type*) -> void {
 \   Checked Symbols
 \ ---------------------------------------------------------------------------------------------------------------------
 
-define Checked_Symbol_Kind = enum {
+enum Checked_Symbol_Kind {
     ENUM_MEMBER
     FUNCTION
     FUNCTION_PARAMETER
@@ -3014,7 +3004,7 @@ func Checked_Symbols__find_symbol(self: Checked_Symbols*, name: String*) -> Chec
 \   Checked Expressions
 \ ---------------------------------------------------------------------------------------------------------------------
 
-define Checked_Expression_Kind = enum {
+enum Checked_Expression_Kind {
     ADD
     ADDRESS_OF
     ARRAY_ACCESS
@@ -3374,7 +3364,7 @@ func Checked_Symbol_Expression__create(location: Source_Location*, type: Checked
 \   Checked Statements
 \ ---------------------------------------------------------------------------------------------------------------------
 
-define Checked_Statement_Kind = enum {
+enum Checked_Statement_Kind {
     ASSIGNMENT
     BLOCK
     BREAK
