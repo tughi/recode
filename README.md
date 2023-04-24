@@ -9,9 +9,11 @@ A compiler for the _Code_ language.
 - [ ] Translate compiler to _Code_
   - TODO: Implement closures (functions with context)
   - TODO: Treat string literals as local String instances
-  - TODO: Change cast syntax
-  - TODO: Collect copyright headers and put the in the generated file
+  - TODO: Collect copyright headers and put them in the generated file
   - TODO: Declare external functions with Code and C signatures
+  - TODO: Change struct syntax
+  - TODO: Change function syntax
+  - TODO: Check function call parameters
 
 
 ## How to add new features
