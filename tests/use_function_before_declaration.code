@@ -1,7 +1,7 @@
 \ Expect:
 \ - output: 'PASS\n'
 
-define File = opaque type
+struct File
 
 let stdout: File* = external
 

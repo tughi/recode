@@ -1,7 +1,7 @@
 \ Expect:
 \ - error: 'tests/struct_super_same_type.code:5:12: Type recursivity\n'
 
-define Test = struct {
+struct Test {
     super: Test
     value: i32
 }

@@ -1,12 +1,12 @@
 \ Expect:
 \ - output: ''
 
-define Test = struct {
+struct Test {
     result: i32
     value: i32
 }
 
-define ExtendedTest = struct {
+struct ExtendedTest {
     super: Test
     value: i32
 }

@@ -1,6 +1,6 @@
 \ Expect:
 \ - error: 'tests/variable_of_opaque_type.code:6:5: Variable cannot have an opaque type\n'
 
-define XXX = opaque type
+struct XXX
 
 let x: XXX = undefined

@@ -1,13 +1,13 @@
 \ Expect:
 \ - output: ''
 
-define Source = struct {
+struct Source {
     file: File*
 
     value: i32
 }
 
-define File = opaque type
+struct File \ opaque type
 
 define main = func () -> i32 {
     let result: Source = undefined

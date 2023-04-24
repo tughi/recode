@@ -1,11 +1,11 @@
 \ Expect:
 \ - output: ''
 
-define Data = struct {
+struct Data {
     value_ref: i32*
 }
 
-define Node = struct {
+struct Node {
     data: Data*
 }
 
