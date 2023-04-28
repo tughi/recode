@@ -26,7 +26,7 @@ def execute(command, exit_on_error=True, expected_code=0):
     return return_code
 
 def cc(source_file, output_file):
-    execute(f'cc -ansi -pedantic -Wno-declaration-after-statement -g -o {output_file} {source_file}')
+    execute(f'cc -ansi -pedantic -g -o {output_file} {source_file}')
 
 
 def trace(program, args):

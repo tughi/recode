@@ -3469,12 +3469,14 @@ func Checked_While_Statement__create(location: Source_Location*, condition_expre
 }
 
 struct Checked_Statements {
+    symbols: Checked_Symbols*
     first_statement: Checked_Statement*
     last_statement: Checked_Statement*
 }
 
-func Checked_Statements__create() -> Checked_Statements* {
+func Checked_Statements__create(symbols: Checked_Symbols*) -> Checked_Statements* {
     let statements = malloc(sizeof(Checked_Statements)).as(Checked_Statements*)
+    statements.symbols = symbols
     statements.first_statement = null
     statements.last_statement = null
     return statements
@@ -4217,7 +4219,7 @@ func Checker__check_statements(self: Checker*, parsed_statements: Parsed_Stateme
     \ Create and push block symbols
     self.symbols = Checked_Symbols__create(self.symbols)
 
-    let checked_statements = Checked_Statements__create()
+    let checked_statements = Checked_Statements__create(self.symbols)
     let parsed_statement = parsed_statements.first_statement
     while (parsed_statement != null) {
         let checked_statement = Checker__check_statement(self, parsed_statement)
@@ -4261,7 +4263,7 @@ func Checker__check_function_definition(self: Checker*, parsed_statement: Parsed
 }
 
 func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Checked_Source* {
-    let checked_statements = Checked_Statements__create()
+    let checked_statements = Checked_Statements__create(self.symbols)
 
     let parsed_statement: Parsed_Statement* = undefined
 
@@ -4714,11 +4716,11 @@ func Generator__generate_return_statement(self: Generator*, statement: Checked_R
 func Generator__generate_variable_statement(self: Generator*, statement: Checked_Variable_Statement*) -> void {
     if (statement.is_external) {
         File__write_cstring(self.file, "extern ")
-    }
-    File__write_checked_type(self.file, statement.variable.type)
-    File__write_char(self.file, ' ')
-    File__write_string(self.file, statement.variable.name)
-    if (statement.expression != null) {
+        File__write_checked_type(self.file, statement.variable.type)
+        File__write_char(self.file, ' ')
+        File__write_string(self.file, statement.variable.name)
+    } else if (statement.expression != null) {
+        File__write_string(self.file, statement.variable.name)
         File__write_cstring(self.file, " = ")
         Generator__generate_expression(self, statement.expression)
     }
@@ -4757,6 +4759,16 @@ func Generator__generate_statement(self: Generator*, statement: Checked_Statemen
 
 func Generator__generate_statements(self: Generator*, statements: Checked_Statements*) -> void {
     self.identation = self.identation + 1.as(u16)
+
+    let symbol = statements.symbols.first_symbol
+    while (symbol != null) {
+        Generator__write_identation(self)
+        File__write_checked_type(self.file, symbol.type)
+        File__write_char(self.file, ' ')
+        File__write_string(self.file, symbol.name)
+        File__write_cstring(self.file, ";\n")
+        symbol = symbol.next_symbol
+    }
 
     let statement = statements.first_statement
     while (statement != null) {

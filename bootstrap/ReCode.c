@@ -954,6 +954,7 @@ struct Checked_While_Statement {
 };
 
 struct Checked_Statements {
+	struct Checked_Symbols* symbols;
 	struct Checked_Statement* first_statement;
 	struct Checked_Statement* last_statement;
 };
@@ -1267,7 +1268,7 @@ struct Checked_If_Statement* Checked_If_Statement__create(struct Source_Location
 struct Checked_Return_Statement* Checked_Return_Statement__create(struct Source_Location* location, struct Checked_Expression* expression);
 struct Checked_Variable_Statement* Checked_Variable_Statement__create(struct Source_Location* location, struct Checked_Variable_Symbol* variable, struct Checked_Expression* expression, bool is_external);
 struct Checked_While_Statement* Checked_While_Statement__create(struct Source_Location* location, struct Checked_Expression* condition_expression, struct Checked_Statement* body_statement);
-struct Checked_Statements* Checked_Statements__create();
+struct Checked_Statements* Checked_Statements__create(struct Checked_Symbols* symbols);
 void Checked_Statements__append(struct Checked_Statements* self, struct Checked_Statement* statement);
 struct Checker* Checker__create();
 void Checker__append_type(struct Checker* self, struct Checked_Named_Type* type);
@@ -1378,8 +1379,9 @@ int32_t main(int32_t argc, char** argv);
 
 #line 35 "bootstrap/stage0/ReCode.code"
 struct String* String__create_empty(size_t data_size) {
+    struct String* string;
 #line 36 "bootstrap/stage0/ReCode.code"
-    struct String* string = ((struct String*) malloc(sizeof(struct String)));
+    string = ((struct String*) malloc(sizeof(struct String)));
 #line 37 "bootstrap/stage0/ReCode.code"
     string->data = ((char*) malloc(data_size));
 #line 38 "bootstrap/stage0/ReCode.code"
@@ -1423,12 +1425,14 @@ struct String* String__append_char(struct String* self, char ch) {
 
 #line 62 "bootstrap/stage0/ReCode.code"
 struct String* String__append_cstring(struct String* self, char* s) {
+    size_t index;
 #line 63 "bootstrap/stage0/ReCode.code"
-    size_t index = ((size_t) 0);
+    index = ((size_t) 0);
 #line 64 "bootstrap/stage0/ReCode.code"
     while (true) {
+        char c;
 #line 65 "bootstrap/stage0/ReCode.code"
-        char c = s[index];
+        c = s[index];
 #line 66 "bootstrap/stage0/ReCode.code"
         if (c == '\0') {
 #line 67 "bootstrap/stage0/ReCode.code"
@@ -1443,12 +1447,14 @@ struct String* String__append_cstring(struct String* self, char* s) {
 
 #line 74 "bootstrap/stage0/ReCode.code"
 size_t cstring_length(char* s) {
+    size_t length;
 #line 75 "bootstrap/stage0/ReCode.code"
-    size_t length = ((size_t) 0);
+    length = ((size_t) 0);
 #line 76 "bootstrap/stage0/ReCode.code"
     while (true) {
+        uint8_t c;
 #line 77 "bootstrap/stage0/ReCode.code"
-        uint8_t c = ((uint8_t) s[length]);
+        c = ((uint8_t) s[length]);
 #line 78 "bootstrap/stage0/ReCode.code"
         if (c == ((uint8_t) 0)) {
 #line 79 "bootstrap/stage0/ReCode.code"
@@ -1463,10 +1469,12 @@ size_t cstring_length(char* s) {
 
 #line 86 "bootstrap/stage0/ReCode.code"
 struct String* String__create_from(char* data) {
+    size_t string_length;
+    struct String* string;
 #line 87 "bootstrap/stage0/ReCode.code"
-    size_t string_length = cstring_length(data);
+    string_length = cstring_length(data);
 #line 88 "bootstrap/stage0/ReCode.code"
-    struct String* string = String__create_empty(string_length);
+    string = String__create_empty(string_length);
 #line 89 "bootstrap/stage0/ReCode.code"
     String__append_cstring(string, data);
 #line 90 "bootstrap/stage0/ReCode.code"
@@ -1496,8 +1504,9 @@ struct String* String__append_i16(struct String* self, int16_t value) {
 
 #line 106 "bootstrap/stage0/ReCode.code"
 struct String* String__append_string(struct String* self, struct String* other) {
+    size_t index;
 #line 107 "bootstrap/stage0/ReCode.code"
-    size_t index = ((size_t) 0);
+    index = ((size_t) 0);
 #line 108 "bootstrap/stage0/ReCode.code"
     while (index < other->length) {
 #line 109 "bootstrap/stage0/ReCode.code"
@@ -1511,15 +1520,17 @@ struct String* String__append_string(struct String* self, struct String* other) 
 
 #line 115 "bootstrap/stage0/ReCode.code"
 bool String__equals_cstring(struct String* self, char* s) {
+    size_t length;
+    size_t index;
 #line 116 "bootstrap/stage0/ReCode.code"
-    size_t length = cstring_length(s);
+    length = cstring_length(s);
 #line 117 "bootstrap/stage0/ReCode.code"
     if (self->length != length) {
 #line 118 "bootstrap/stage0/ReCode.code"
         return false;
     }
 #line 121 "bootstrap/stage0/ReCode.code"
-    size_t index = ((size_t) 0);
+    index = ((size_t) 0);
 #line 122 "bootstrap/stage0/ReCode.code"
     while (index < length) {
 #line 123 "bootstrap/stage0/ReCode.code"
@@ -1536,13 +1547,14 @@ bool String__equals_cstring(struct String* self, char* s) {
 
 #line 132 "bootstrap/stage0/ReCode.code"
 bool String__equals_string(struct String* self, struct String* other) {
+    size_t index;
 #line 133 "bootstrap/stage0/ReCode.code"
     if (self->length != other->length) {
 #line 134 "bootstrap/stage0/ReCode.code"
         return false;
     }
 #line 137 "bootstrap/stage0/ReCode.code"
-    size_t index = ((size_t) 0);
+    index = ((size_t) 0);
 #line 138 "bootstrap/stage0/ReCode.code"
     while (index < self->length) {
 #line 139 "bootstrap/stage0/ReCode.code"
@@ -1601,8 +1613,9 @@ void File__write_u64(struct File* self, uint64_t value) {
 
 #line 179 "bootstrap/stage0/ReCode.code"
 void File__write_string(struct File* self, struct String* string) {
+    size_t index;
 #line 180 "bootstrap/stage0/ReCode.code"
-    size_t index = ((size_t) 0);
+    index = ((size_t) 0);
 #line 181 "bootstrap/stage0/ReCode.code"
     while (index < string->length) {
 #line 182 "bootstrap/stage0/ReCode.code"
@@ -1644,12 +1657,15 @@ void TODO(char* message) {
 
 #line 214 "bootstrap/stage0/ReCode.code"
 struct Source* Source__create(struct File* file, char* file_path) {
+    struct String* file_content;
+    struct Source* source;
 #line 215 "bootstrap/stage0/ReCode.code"
-    struct String* file_content = String__create();
+    file_content = String__create();
 #line 217 "bootstrap/stage0/ReCode.code"
     while (true) {
+        int32_t ch;
 #line 218 "bootstrap/stage0/ReCode.code"
-        int32_t ch = fgetc(file);
+        ch = fgetc(file);
 #line 219 "bootstrap/stage0/ReCode.code"
         if (ch == -1) {
 #line 220 "bootstrap/stage0/ReCode.code"
@@ -1661,7 +1677,7 @@ struct Source* Source__create(struct File* file, char* file_path) {
 #line 225 "bootstrap/stage0/ReCode.code"
     String__append_char(file_content, '\0');
 #line 227 "bootstrap/stage0/ReCode.code"
-    struct Source* source = ((struct Source*) malloc(sizeof(struct Source)));
+    source = ((struct Source*) malloc(sizeof(struct Source)));
 #line 228 "bootstrap/stage0/ReCode.code"
     source->content = file_content;
 #line 229 "bootstrap/stage0/ReCode.code"
@@ -1672,8 +1688,9 @@ struct Source* Source__create(struct File* file, char* file_path) {
 
 #line 244 "bootstrap/stage0/ReCode.code"
 struct Source_Location* Source_Location__create(struct Source* source, uint16_t line, uint16_t column) {
+    struct Source_Location* source_location;
 #line 245 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* source_location = ((struct Source_Location*) malloc(sizeof(struct Source_Location)));
+    source_location = ((struct Source_Location*) malloc(sizeof(struct Source_Location)));
 #line 246 "bootstrap/stage0/ReCode.code"
     source_location->source = source;
 #line 247 "bootstrap/stage0/ReCode.code"
@@ -1734,8 +1751,9 @@ void Source_Location__warning(struct Source_Location* self, struct String* messa
 
 #line 305 "bootstrap/stage0/ReCode.code"
 struct Token* Token__create_kind(enum Token_Kind kind, size_t kind_size, struct Source_Location* location, struct String* lexeme) {
+    struct Token* token;
 #line 306 "bootstrap/stage0/ReCode.code"
-    struct Token* token = ((struct Token*) malloc(kind_size));
+    token = ((struct Token*) malloc(kind_size));
 #line 307 "bootstrap/stage0/ReCode.code"
     token->kind = kind;
 #line 308 "bootstrap/stage0/ReCode.code"
@@ -1762,8 +1780,9 @@ void Token__warning(struct Token* self, struct String* message) {
 
 #line 327 "bootstrap/stage0/ReCode.code"
 struct Character_Token* Character_Token__create(struct Source_Location* location, struct String* lexeme, char value) {
+    struct Character_Token* token;
 #line 328 "bootstrap/stage0/ReCode.code"
-    struct Character_Token* token = ((struct Character_Token*) Token__create_kind(Token_Kind__CHARACTER, sizeof(struct Character_Token), location, lexeme));
+    token = ((struct Character_Token*) Token__create_kind(Token_Kind__CHARACTER, sizeof(struct Character_Token), location, lexeme));
 #line 329 "bootstrap/stage0/ReCode.code"
     token->value = value;
 #line 330 "bootstrap/stage0/ReCode.code"
@@ -1802,8 +1821,9 @@ struct Identifier_Token* Identifier_Token__create(struct Source_Location* locati
 
 #line 378 "bootstrap/stage0/ReCode.code"
 struct Integer_Token* Integer_Token__create(struct Source_Location* location, struct String* lexeme, uint64_t value) {
+    struct Integer_Token* token;
 #line 379 "bootstrap/stage0/ReCode.code"
-    struct Integer_Token* token = ((struct Integer_Token*) Token__create_kind(Token_Kind__INTEGER, sizeof(struct Integer_Token), location, lexeme));
+    token = ((struct Integer_Token*) Token__create_kind(Token_Kind__INTEGER, sizeof(struct Integer_Token), location, lexeme));
 #line 380 "bootstrap/stage0/ReCode.code"
     token->value = value;
 #line 381 "bootstrap/stage0/ReCode.code"
@@ -1818,8 +1838,9 @@ struct Other_Token* Other_Token__create(struct Source_Location* location, struct
 
 #line 397 "bootstrap/stage0/ReCode.code"
 struct Space_Token* Space_Token__create(struct Source_Location* location, struct String* lexeme, uint16_t count) {
+    struct Space_Token* token;
 #line 398 "bootstrap/stage0/ReCode.code"
-    struct Space_Token* token = ((struct Space_Token*) Token__create_kind(Token_Kind__SPACE, sizeof(struct Space_Token), location, lexeme));
+    token = ((struct Space_Token*) Token__create_kind(Token_Kind__SPACE, sizeof(struct Space_Token), location, lexeme));
 #line 399 "bootstrap/stage0/ReCode.code"
     token->count = count;
 #line 400 "bootstrap/stage0/ReCode.code"
@@ -1828,8 +1849,9 @@ struct Space_Token* Space_Token__create(struct Source_Location* location, struct
 
 #line 408 "bootstrap/stage0/ReCode.code"
 struct String_Token* String_Token__create(struct Source_Location* location, struct String* lexeme, struct String* value) {
+    struct String_Token* token;
 #line 409 "bootstrap/stage0/ReCode.code"
-    struct String_Token* token = ((struct String_Token*) Token__create_kind(Token_Kind__STRING, sizeof(struct String_Token), location, lexeme));
+    token = ((struct String_Token*) Token__create_kind(Token_Kind__STRING, sizeof(struct String_Token), location, lexeme));
 #line 410 "bootstrap/stage0/ReCode.code"
     token->value = value;
 #line 411 "bootstrap/stage0/ReCode.code"
@@ -2114,8 +2136,9 @@ bool Token__is_string(struct Token* self) {
 
 #line 598 "bootstrap/stage0/ReCode.code"
 void File__write_token(struct File* stream, struct Token* token) {
+    bool colored;
 #line 599 "bootstrap/stage0/ReCode.code"
-    bool colored = token->kind == Token_Kind__COMMENT || token->kind == Token_Kind__ERROR || token->kind == Token_Kind__OTHER;
+    colored = token->kind == Token_Kind__COMMENT || token->kind == Token_Kind__ERROR || token->kind == Token_Kind__OTHER;
 #line 600 "bootstrap/stage0/ReCode.code"
     if (colored) {
 #line 601 "bootstrap/stage0/ReCode.code"
@@ -2147,8 +2170,9 @@ char Scanner__peek_char(struct Scanner* self) {
 
 #line 631 "bootstrap/stage0/ReCode.code"
 char Scanner__next_char(struct Scanner* self) {
+    char next_char;
 #line 632 "bootstrap/stage0/ReCode.code"
-    char next_char = Scanner__peek_char(self);
+    next_char = Scanner__peek_char(self);
 #line 633 "bootstrap/stage0/ReCode.code"
     if (next_char != '\0') {
 #line 634 "bootstrap/stage0/ReCode.code"
@@ -2217,6 +2241,8 @@ bool char_is_end_of_line(char c) {
 
 #line 674 "bootstrap/stage0/ReCode.code"
 struct Token* Scanner__scan_character_token(struct Scanner* self, struct Source_Location* source_location, struct String* token_lexeme) {
+    char next_char;
+    char value;
 #line 675 "bootstrap/stage0/ReCode.code"
     if (Scanner__next_char(self) != '\'') {
 #line 676 "bootstrap/stage0/ReCode.code"
@@ -2227,7 +2253,7 @@ struct Token* Scanner__scan_character_token(struct Scanner* self, struct Source_
 #line 679 "bootstrap/stage0/ReCode.code"
     String__append_char(token_lexeme, '\'');
 #line 681 "bootstrap/stage0/ReCode.code"
-    char next_char = Scanner__peek_char(self);
+    next_char = Scanner__peek_char(self);
 #line 682 "bootstrap/stage0/ReCode.code"
     if (char_is_end_of_line(next_char) || next_char == '\t') {
 #line 683 "bootstrap/stage0/ReCode.code"
@@ -2236,7 +2262,7 @@ struct Token* Scanner__scan_character_token(struct Scanner* self, struct Source_
 #line 686 "bootstrap/stage0/ReCode.code"
     String__append_char(token_lexeme, Scanner__next_char(self));
 #line 687 "bootstrap/stage0/ReCode.code"
-    char value = next_char;
+    value = next_char;
 #line 689 "bootstrap/stage0/ReCode.code"
     if (value == '\'') {
 #line 690 "bootstrap/stage0/ReCode.code"
@@ -2314,12 +2340,14 @@ bool char_is_digit(char c) {
 
 #line 741 "bootstrap/stage0/ReCode.code"
 struct Token* Scanner__scan_integer_token(struct Scanner* self, struct Source_Location* source_location, struct String* token_lexeme) {
+    uint64_t value;
 #line 742 "bootstrap/stage0/ReCode.code"
-    uint64_t value = ((uint64_t) 0);
+    value = ((uint64_t) 0);
 #line 743 "bootstrap/stage0/ReCode.code"
     while (char_is_digit(Scanner__peek_char(self))) {
+        char c;
 #line 744 "bootstrap/stage0/ReCode.code"
-        char c = Scanner__next_char(self);
+        c = Scanner__next_char(self);
 #line 745 "bootstrap/stage0/ReCode.code"
         value = value * ((uint64_t) 10) + ((uint64_t) (c - '0'));
 #line 746 "bootstrap/stage0/ReCode.code"
@@ -2337,8 +2365,9 @@ bool char_is_space(char c) {
 
 #line 755 "bootstrap/stage0/ReCode.code"
 struct Token* Scanner__scan_space_token(struct Scanner* self, struct Source_Location* source_location, struct String* token_lexeme) {
+    uint16_t count;
 #line 756 "bootstrap/stage0/ReCode.code"
-    uint16_t count = ((uint16_t) 0);
+    count = ((uint16_t) 0);
 #line 757 "bootstrap/stage0/ReCode.code"
     while (char_is_space(Scanner__peek_char(self))) {
 #line 758 "bootstrap/stage0/ReCode.code"
@@ -2352,6 +2381,7 @@ struct Token* Scanner__scan_space_token(struct Scanner* self, struct Source_Loca
 
 #line 764 "bootstrap/stage0/ReCode.code"
 struct Token* Scanner__scan_string_token(struct Scanner* self, struct Source_Location* source_location, struct String* token_lexeme) {
+    struct String* value;
 #line 765 "bootstrap/stage0/ReCode.code"
     if (Scanner__next_char(self) != '\"') {
 #line 766 "bootstrap/stage0/ReCode.code"
@@ -2362,11 +2392,12 @@ struct Token* Scanner__scan_string_token(struct Scanner* self, struct Source_Loc
 #line 769 "bootstrap/stage0/ReCode.code"
     String__append_char(token_lexeme, '\"');
 #line 771 "bootstrap/stage0/ReCode.code"
-    struct String* value = String__create();
+    value = String__create();
 #line 773 "bootstrap/stage0/ReCode.code"
     while (true) {
+        char next_char;
 #line 774 "bootstrap/stage0/ReCode.code"
-        char next_char = Scanner__peek_char(self);
+        next_char = Scanner__peek_char(self);
 #line 775 "bootstrap/stage0/ReCode.code"
         if (char_is_end_of_line(next_char) || next_char == '\t') {
 #line 776 "bootstrap/stage0/ReCode.code"
@@ -2405,12 +2436,15 @@ struct Token* Scanner__scan_string_token(struct Scanner* self, struct Source_Loc
 
 #line 803 "bootstrap/stage0/ReCode.code"
 struct Token* Scanner__scan_token(struct Scanner* self) {
+    struct Source_Location* source_location;
+    struct String* token_lexeme;
+    char next_char;
 #line 804 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* source_location = Source_Location__create(self->source, self->current_line, self->current_column);
+    source_location = Source_Location__create(self->source, self->current_line, self->current_column);
 #line 805 "bootstrap/stage0/ReCode.code"
-    struct String* token_lexeme = String__create();
+    token_lexeme = String__create();
 #line 807 "bootstrap/stage0/ReCode.code"
-    char next_char = Scanner__peek_char(self);
+    next_char = Scanner__peek_char(self);
 #line 809 "bootstrap/stage0/ReCode.code"
     if (char_is_identifier_start(next_char)) {
 #line 810 "bootstrap/stage0/ReCode.code"
@@ -2474,8 +2508,9 @@ struct Token* Scanner__next_token(struct Scanner* self) {
 
 #line 854 "bootstrap/stage0/ReCode.code"
 struct Token* Scanner__peek_token(struct Scanner* self, uint8_t offset) {
+    struct Token* token;
 #line 855 "bootstrap/stage0/ReCode.code"
-    struct Token* token = self->current_token;
+    token = self->current_token;
 #line 856 "bootstrap/stage0/ReCode.code"
     while (offset > ((uint8_t) 0)) {
 #line 857 "bootstrap/stage0/ReCode.code"
@@ -2494,8 +2529,9 @@ struct Token* Scanner__peek_token(struct Scanner* self, uint8_t offset) {
 
 #line 866 "bootstrap/stage0/ReCode.code"
 struct Scanner* Scanner__create(struct Source* source) {
+    struct Scanner* scanner;
 #line 867 "bootstrap/stage0/ReCode.code"
-    struct Scanner* scanner = ((struct Scanner*) malloc(sizeof(struct Scanner)));
+    scanner = ((struct Scanner*) malloc(sizeof(struct Scanner)));
 #line 868 "bootstrap/stage0/ReCode.code"
     scanner->source = source;
 #line 869 "bootstrap/stage0/ReCode.code"
@@ -2512,8 +2548,9 @@ struct Scanner* Scanner__create(struct Source* source) {
 
 #line 898 "bootstrap/stage0/ReCode.code"
 struct Parsed_Type* Parsed_Type__create_kind(enum Parsed_Type_Kind kind, size_t kind_size, struct Source_Location* location) {
+    struct Parsed_Type* type;
 #line 899 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Type* type = ((struct Parsed_Type*) malloc(kind_size));
+    type = ((struct Parsed_Type*) malloc(kind_size));
 #line 900 "bootstrap/stage0/ReCode.code"
     type->kind = kind;
 #line 901 "bootstrap/stage0/ReCode.code"
@@ -2524,8 +2561,9 @@ struct Parsed_Type* Parsed_Type__create_kind(enum Parsed_Type_Kind kind, size_t 
 
 #line 912 "bootstrap/stage0/ReCode.code"
 struct Parsed_Function_Parameter* Parsed_Function_Parameter__create(struct Source_Location* location, struct String* name, struct Parsed_Type* type) {
+    struct Parsed_Function_Parameter* parameter;
 #line 913 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Function_Parameter* parameter = ((struct Parsed_Function_Parameter*) malloc(sizeof(struct Parsed_Function_Parameter)));
+    parameter = ((struct Parsed_Function_Parameter*) malloc(sizeof(struct Parsed_Function_Parameter)));
 #line 914 "bootstrap/stage0/ReCode.code"
     parameter->location = location;
 #line 915 "bootstrap/stage0/ReCode.code"
@@ -2540,8 +2578,9 @@ struct Parsed_Function_Parameter* Parsed_Function_Parameter__create(struct Sourc
 
 #line 927 "bootstrap/stage0/ReCode.code"
 struct Parsed_Function_Type* Parsed_Function_Type__create(struct Source_Location* location, struct Parsed_Function_Parameter* first_parameter, struct Parsed_Type* return_type) {
+    struct Parsed_Function_Type* type;
 #line 928 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Function_Type* type = ((struct Parsed_Function_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__FUNCTION, sizeof(struct Parsed_Function_Type), location));
+    type = ((struct Parsed_Function_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__FUNCTION, sizeof(struct Parsed_Function_Type), location));
 #line 929 "bootstrap/stage0/ReCode.code"
     type->first_parameter = first_parameter;
 #line 930 "bootstrap/stage0/ReCode.code"
@@ -2552,8 +2591,9 @@ struct Parsed_Function_Type* Parsed_Function_Type__create(struct Source_Location
 
 #line 939 "bootstrap/stage0/ReCode.code"
 struct Parsed_Named_Type* Parsed_Named_Type__create(struct Token* name) {
+    struct Parsed_Named_Type* type;
 #line 940 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Named_Type* type = ((struct Parsed_Named_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__NAMED, sizeof(struct Parsed_Named_Type), name->location));
+    type = ((struct Parsed_Named_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__NAMED, sizeof(struct Parsed_Named_Type), name->location));
 #line 941 "bootstrap/stage0/ReCode.code"
     type->name = name->lexeme;
 #line 942 "bootstrap/stage0/ReCode.code"
@@ -2562,8 +2602,9 @@ struct Parsed_Named_Type* Parsed_Named_Type__create(struct Token* name) {
 
 #line 950 "bootstrap/stage0/ReCode.code"
 struct Parsed_Pointer_Type* Parsed_Pointer_Type__create(struct Parsed_Type* other_type) {
+    struct Parsed_Pointer_Type* type;
 #line 951 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Pointer_Type* type = ((struct Parsed_Pointer_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__POINTER, sizeof(struct Parsed_Pointer_Type), other_type->location));
+    type = ((struct Parsed_Pointer_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__POINTER, sizeof(struct Parsed_Pointer_Type), other_type->location));
 #line 952 "bootstrap/stage0/ReCode.code"
     type->other_type = other_type;
 #line 953 "bootstrap/stage0/ReCode.code"
@@ -2572,8 +2613,9 @@ struct Parsed_Pointer_Type* Parsed_Pointer_Type__create(struct Parsed_Type* othe
 
 #line 961 "bootstrap/stage0/ReCode.code"
 struct Parsed_Struct_Type* Parsed_Struct_Type__create(struct Source_Location* location, struct Parsed_Type* other_type) {
+    struct Parsed_Struct_Type* type;
 #line 962 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Struct_Type* type = ((struct Parsed_Struct_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__STRUCT, sizeof(struct Parsed_Struct_Type), location));
+    type = ((struct Parsed_Struct_Type*) Parsed_Type__create_kind(Parsed_Type_Kind__STRUCT, sizeof(struct Parsed_Struct_Type), location));
 #line 963 "bootstrap/stage0/ReCode.code"
     type->other_type = other_type;
 #line 964 "bootstrap/stage0/ReCode.code"
@@ -2582,8 +2624,9 @@ struct Parsed_Struct_Type* Parsed_Struct_Type__create(struct Source_Location* lo
 
 #line 1004 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parsed_Expression__create_kind(enum Parsed_Expression_Kind kind, size_t kind_size, struct Source_Location* location) {
+    struct Parsed_Expression* expression;
 #line 1005 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = ((struct Parsed_Expression*) malloc(kind_size));
+    expression = ((struct Parsed_Expression*) malloc(kind_size));
 #line 1006 "bootstrap/stage0/ReCode.code"
     expression->kind = kind;
 #line 1007 "bootstrap/stage0/ReCode.code"
@@ -2594,8 +2637,9 @@ struct Parsed_Expression* Parsed_Expression__create_kind(enum Parsed_Expression_
 
 #line 1017 "bootstrap/stage0/ReCode.code"
 struct Parsed_Binary_Expression* Parsed_Binary_Expression__create_kind(enum Parsed_Expression_Kind kind, struct Parsed_Expression* left_expression, struct Parsed_Expression* right_expression) {
+    struct Parsed_Binary_Expression* expression;
 #line 1018 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Binary_Expression* expression = ((struct Parsed_Binary_Expression*) Parsed_Expression__create_kind(kind, sizeof(struct Parsed_Binary_Expression), left_expression->location));
+    expression = ((struct Parsed_Binary_Expression*) Parsed_Expression__create_kind(kind, sizeof(struct Parsed_Binary_Expression), left_expression->location));
 #line 1019 "bootstrap/stage0/ReCode.code"
     expression->left_expression = left_expression;
 #line 1020 "bootstrap/stage0/ReCode.code"
@@ -2606,8 +2650,9 @@ struct Parsed_Binary_Expression* Parsed_Binary_Expression__create_kind(enum Pars
 
 #line 1029 "bootstrap/stage0/ReCode.code"
 struct Parsed_Unary_Expression* Parsed_Unary_Expression__create_kind(enum Parsed_Expression_Kind kind, size_t kind_size, struct Source_Location* location, struct Parsed_Expression* other_expression) {
+    struct Parsed_Unary_Expression* expression;
 #line 1030 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Unary_Expression* expression = ((struct Parsed_Unary_Expression*) Parsed_Expression__create_kind(kind, kind_size, location));
+    expression = ((struct Parsed_Unary_Expression*) Parsed_Expression__create_kind(kind, kind_size, location));
 #line 1031 "bootstrap/stage0/ReCode.code"
     expression->other_expression = other_expression;
 #line 1032 "bootstrap/stage0/ReCode.code"
@@ -2616,8 +2661,9 @@ struct Parsed_Unary_Expression* Parsed_Unary_Expression__create_kind(enum Parsed
 
 #line 1040 "bootstrap/stage0/ReCode.code"
 struct Parsed_Literal_Expression* Parsed_Literal_Expression__create_kind(enum Parsed_Expression_Kind kind, size_t kind_size, struct Token* literal) {
+    struct Parsed_Literal_Expression* expression;
 #line 1041 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Literal_Expression* expression = ((struct Parsed_Literal_Expression*) Parsed_Expression__create_kind(kind, kind_size, literal->location));
+    expression = ((struct Parsed_Literal_Expression*) Parsed_Expression__create_kind(kind, kind_size, literal->location));
 #line 1042 "bootstrap/stage0/ReCode.code"
     expression->literal = literal;
 #line 1043 "bootstrap/stage0/ReCode.code"
@@ -2638,8 +2684,9 @@ struct Parsed_Address_Of_Expression* Parsed_Address_Of_Expression__create(struct
 
 #line 1068 "bootstrap/stage0/ReCode.code"
 struct Parsed_Array_Access_Expression* Parsed_Array_Access_Expression__create(struct Parsed_Expression* array_expression, struct Parsed_Expression* index_expression) {
+    struct Parsed_Array_Access_Expression* expression;
 #line 1069 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Array_Access_Expression* expression = ((struct Parsed_Array_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__ARRAY_ACCESS, sizeof(struct Parsed_Array_Access_Expression), array_expression->location));
+    expression = ((struct Parsed_Array_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__ARRAY_ACCESS, sizeof(struct Parsed_Array_Access_Expression), array_expression->location));
 #line 1070 "bootstrap/stage0/ReCode.code"
     expression->array_expression = array_expression;
 #line 1071 "bootstrap/stage0/ReCode.code"
@@ -2650,8 +2697,9 @@ struct Parsed_Array_Access_Expression* Parsed_Array_Access_Expression__create(st
 
 #line 1080 "bootstrap/stage0/ReCode.code"
 struct Parsed_Bool_Expression* Parsed_Bool_Expression__create(struct Token* literal, bool value) {
+    struct Parsed_Bool_Expression* expression;
 #line 1081 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Bool_Expression* expression = ((struct Parsed_Bool_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__BOOL, sizeof(struct Parsed_Bool_Expression), literal));
+    expression = ((struct Parsed_Bool_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__BOOL, sizeof(struct Parsed_Bool_Expression), literal));
 #line 1082 "bootstrap/stage0/ReCode.code"
     expression->value = value;
 #line 1083 "bootstrap/stage0/ReCode.code"
@@ -2660,8 +2708,9 @@ struct Parsed_Bool_Expression* Parsed_Bool_Expression__create(struct Token* lite
 
 #line 1091 "bootstrap/stage0/ReCode.code"
 struct Parsed_Call_Argument* Parsed_Call_Argument__create(struct Parsed_Expression* expression) {
+    struct Parsed_Call_Argument* argument;
 #line 1092 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Call_Argument* argument = ((struct Parsed_Call_Argument*) malloc(sizeof(struct Parsed_Call_Argument)));
+    argument = ((struct Parsed_Call_Argument*) malloc(sizeof(struct Parsed_Call_Argument)));
 #line 1093 "bootstrap/stage0/ReCode.code"
     argument->expression = expression;
 #line 1094 "bootstrap/stage0/ReCode.code"
@@ -2672,8 +2721,9 @@ struct Parsed_Call_Argument* Parsed_Call_Argument__create(struct Parsed_Expressi
 
 #line 1104 "bootstrap/stage0/ReCode.code"
 struct Parsed_Call_Expression* Parsed_Call_Expression__create(struct Parsed_Expression* callee_expression) {
+    struct Parsed_Call_Expression* expression;
 #line 1105 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Call_Expression* expression = ((struct Parsed_Call_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__CALL, sizeof(struct Parsed_Call_Expression), callee_expression->location));
+    expression = ((struct Parsed_Call_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__CALL, sizeof(struct Parsed_Call_Expression), callee_expression->location));
 #line 1106 "bootstrap/stage0/ReCode.code"
     expression->callee_expression = callee_expression;
 #line 1107 "bootstrap/stage0/ReCode.code"
@@ -2684,8 +2734,9 @@ struct Parsed_Call_Expression* Parsed_Call_Expression__create(struct Parsed_Expr
 
 #line 1116 "bootstrap/stage0/ReCode.code"
 struct Parsed_Cast_Expression* Parsed_Cast_Expression__create(struct Source_Location* location, struct Parsed_Expression* other_expression, struct Parsed_Type* type) {
+    struct Parsed_Cast_Expression* expression;
 #line 1117 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Cast_Expression* expression = ((struct Parsed_Cast_Expression*) Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind__CAST, sizeof(struct Parsed_Cast_Expression), location, other_expression));
+    expression = ((struct Parsed_Cast_Expression*) Parsed_Unary_Expression__create_kind(Parsed_Expression_Kind__CAST, sizeof(struct Parsed_Cast_Expression), location, other_expression));
 #line 1118 "bootstrap/stage0/ReCode.code"
     expression->type = type;
 #line 1119 "bootstrap/stage0/ReCode.code"
@@ -2694,8 +2745,9 @@ struct Parsed_Cast_Expression* Parsed_Cast_Expression__create(struct Source_Loca
 
 #line 1127 "bootstrap/stage0/ReCode.code"
 struct Parsed_Character_Expression* Parsed_Character_Expression__create(struct Character_Token* literal) {
+    struct Parsed_Character_Expression* expression;
 #line 1128 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Character_Expression* expression = ((struct Parsed_Character_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__CHARACTER, sizeof(struct Parsed_Character_Expression), ((struct Token*) literal)));
+    expression = ((struct Parsed_Character_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__CHARACTER, sizeof(struct Parsed_Character_Expression), ((struct Token*) literal)));
 #line 1129 "bootstrap/stage0/ReCode.code"
     expression->value = literal->value;
 #line 1130 "bootstrap/stage0/ReCode.code"
@@ -2704,8 +2756,9 @@ struct Parsed_Character_Expression* Parsed_Character_Expression__create(struct C
 
 #line 1138 "bootstrap/stage0/ReCode.code"
 struct Parsed_Dereference_Expression* Parsed_Dereference_Expression__create(struct Parsed_Expression* value_expression) {
+    struct Parsed_Dereference_Expression* expression;
 #line 1139 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Dereference_Expression* expression = ((struct Parsed_Dereference_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__DEREFERENCE, sizeof(struct Parsed_Dereference_Expression), value_expression->location));
+    expression = ((struct Parsed_Dereference_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__DEREFERENCE, sizeof(struct Parsed_Dereference_Expression), value_expression->location));
 #line 1140 "bootstrap/stage0/ReCode.code"
     expression->value_expression = value_expression;
 #line 1141 "bootstrap/stage0/ReCode.code"
@@ -2738,8 +2791,9 @@ struct Parsed_Greater_Or_Equals_Expression* Parsed_Greater_Or_Equals_Expression_
 
 #line 1181 "bootstrap/stage0/ReCode.code"
 struct Parsed_Group_Expression* Parsed_Group_Expression__create(struct Source_Location* location, struct Parsed_Expression* other_expression) {
+    struct Parsed_Group_Expression* expression;
 #line 1182 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Group_Expression* expression = ((struct Parsed_Group_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__GROUP, sizeof(struct Parsed_Group_Expression), location));
+    expression = ((struct Parsed_Group_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__GROUP, sizeof(struct Parsed_Group_Expression), location));
 #line 1183 "bootstrap/stage0/ReCode.code"
     expression->other_expression = other_expression;
 #line 1184 "bootstrap/stage0/ReCode.code"
@@ -2748,8 +2802,9 @@ struct Parsed_Group_Expression* Parsed_Group_Expression__create(struct Source_Lo
 
 #line 1192 "bootstrap/stage0/ReCode.code"
 struct Parsed_Integer_Expression* Parsed_Integer_Expression__create(struct Integer_Token* literal) {
+    struct Parsed_Integer_Expression* expression;
 #line 1193 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Integer_Expression* expression = ((struct Parsed_Integer_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__INTEGER, sizeof(struct Parsed_Integer_Expression), ((struct Token*) literal)));
+    expression = ((struct Parsed_Integer_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__INTEGER, sizeof(struct Parsed_Integer_Expression), ((struct Token*) literal)));
 #line 1194 "bootstrap/stage0/ReCode.code"
     expression->value = literal->value;
 #line 1195 "bootstrap/stage0/ReCode.code"
@@ -2782,8 +2837,9 @@ struct Parsed_Logic_Or_Expression* Parsed_Logic_Or_Expression__create(struct Par
 
 #line 1236 "bootstrap/stage0/ReCode.code"
 struct Parsed_Member_Access_Expression* Parsed_Member_Access_Expression__create(struct Parsed_Expression* object_expression, struct Token* member_name) {
+    struct Parsed_Member_Access_Expression* expression;
 #line 1237 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Member_Access_Expression* expression = ((struct Parsed_Member_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__MEMBER_ACCESS, sizeof(struct Parsed_Member_Access_Expression), object_expression->location));
+    expression = ((struct Parsed_Member_Access_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__MEMBER_ACCESS, sizeof(struct Parsed_Member_Access_Expression), object_expression->location));
 #line 1238 "bootstrap/stage0/ReCode.code"
     expression->object_expression = object_expression;
 #line 1239 "bootstrap/stage0/ReCode.code"
@@ -2830,8 +2886,9 @@ struct Parsed_Null_Expression* Parsed_Null_Expression__create(struct Token* lite
 
 #line 1296 "bootstrap/stage0/ReCode.code"
 struct Parsed_Sizeof_Expression* Parsed_Sizeof_Expression__create(struct Source_Location* location, struct Parsed_Type* type) {
+    struct Parsed_Sizeof_Expression* expression;
 #line 1297 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Sizeof_Expression* expression = ((struct Parsed_Sizeof_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__SIZEOF, sizeof(struct Parsed_Sizeof_Expression), location));
+    expression = ((struct Parsed_Sizeof_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__SIZEOF, sizeof(struct Parsed_Sizeof_Expression), location));
 #line 1298 "bootstrap/stage0/ReCode.code"
     expression->type = type;
 #line 1299 "bootstrap/stage0/ReCode.code"
@@ -2840,8 +2897,9 @@ struct Parsed_Sizeof_Expression* Parsed_Sizeof_Expression__create(struct Source_
 
 #line 1307 "bootstrap/stage0/ReCode.code"
 struct Parsed_String_Expression* Parsed_String_Expression__create(struct String_Token* literal) {
+    struct Parsed_String_Expression* expression;
 #line 1308 "bootstrap/stage0/ReCode.code"
-    struct Parsed_String_Expression* expression = ((struct Parsed_String_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__STRING, sizeof(struct Parsed_String_Expression), ((struct Token*) literal)));
+    expression = ((struct Parsed_String_Expression*) Parsed_Literal_Expression__create_kind(Parsed_Expression_Kind__STRING, sizeof(struct Parsed_String_Expression), ((struct Token*) literal)));
 #line 1309 "bootstrap/stage0/ReCode.code"
     expression->value = literal->value;
 #line 1310 "bootstrap/stage0/ReCode.code"
@@ -2856,8 +2914,9 @@ struct Parsed_Substract_Expression* Parsed_Substract_Expression__create(struct P
 
 #line 1326 "bootstrap/stage0/ReCode.code"
 struct Parsed_Symbol_Expression* Parsed_Symbol_Expression__create(struct Token* name) {
+    struct Parsed_Symbol_Expression* expression;
 #line 1327 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Symbol_Expression* expression = ((struct Parsed_Symbol_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__SYMBOL, sizeof(struct Parsed_Symbol_Expression), name->location));
+    expression = ((struct Parsed_Symbol_Expression*) Parsed_Expression__create_kind(Parsed_Expression_Kind__SYMBOL, sizeof(struct Parsed_Symbol_Expression), name->location));
 #line 1328 "bootstrap/stage0/ReCode.code"
     expression->name = name;
 #line 1329 "bootstrap/stage0/ReCode.code"
@@ -2866,8 +2925,9 @@ struct Parsed_Symbol_Expression* Parsed_Symbol_Expression__create(struct Token* 
 
 #line 1353 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parsed_Statement__create_kind(enum Parsed_Statement_Kind kind, size_t kind_size, struct Source_Location* location) {
+    struct Parsed_Statement* statement;
 #line 1354 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statement* statement = ((struct Parsed_Statement*) malloc(kind_size));
+    statement = ((struct Parsed_Statement*) malloc(kind_size));
 #line 1355 "bootstrap/stage0/ReCode.code"
     statement->kind = kind;
 #line 1356 "bootstrap/stage0/ReCode.code"
@@ -2880,8 +2940,9 @@ struct Parsed_Statement* Parsed_Statement__create_kind(enum Parsed_Statement_Kin
 
 #line 1366 "bootstrap/stage0/ReCode.code"
 struct Parsed_Named_Statement* Parsed_Named_Statement__create_kind(enum Parsed_Statement_Kind kind, size_t kind_size, struct Source_Location* location, struct Token* name) {
+    struct Parsed_Named_Statement* statement;
 #line 1367 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Named_Statement* statement = ((struct Parsed_Named_Statement*) Parsed_Statement__create_kind(kind, kind_size, location));
+    statement = ((struct Parsed_Named_Statement*) Parsed_Statement__create_kind(kind, kind_size, location));
 #line 1368 "bootstrap/stage0/ReCode.code"
     statement->name = name;
 #line 1369 "bootstrap/stage0/ReCode.code"
@@ -2890,8 +2951,9 @@ struct Parsed_Named_Statement* Parsed_Named_Statement__create_kind(enum Parsed_S
 
 #line 1378 "bootstrap/stage0/ReCode.code"
 struct Parsed_Assignment_Statement* Parsed_Assignment_Statement__create(struct Parsed_Expression* object_expression, struct Parsed_Expression* value_expression) {
+    struct Parsed_Assignment_Statement* statement;
 #line 1379 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Assignment_Statement* statement = ((struct Parsed_Assignment_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__ASSIGNMENT, sizeof(struct Parsed_Assignment_Statement), object_expression->location));
+    statement = ((struct Parsed_Assignment_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__ASSIGNMENT, sizeof(struct Parsed_Assignment_Statement), object_expression->location));
 #line 1380 "bootstrap/stage0/ReCode.code"
     statement->object_expression = object_expression;
 #line 1381 "bootstrap/stage0/ReCode.code"
@@ -2902,8 +2964,9 @@ struct Parsed_Assignment_Statement* Parsed_Assignment_Statement__create(struct P
 
 #line 1390 "bootstrap/stage0/ReCode.code"
 struct Parsed_Block_Statement* Parsed_Block_Statement__create(struct Source_Location* location, struct Parsed_Statements* statements) {
+    struct Parsed_Block_Statement* statement;
 #line 1391 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Block_Statement* statement = ((struct Parsed_Block_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__BLOCK, sizeof(struct Parsed_Block_Statement), location));
+    statement = ((struct Parsed_Block_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__BLOCK, sizeof(struct Parsed_Block_Statement), location));
 #line 1392 "bootstrap/stage0/ReCode.code"
     statement->statements = statements;
 #line 1393 "bootstrap/stage0/ReCode.code"
@@ -2918,8 +2981,9 @@ struct Parsed_Statement* Parsed_Break_Statement__create(struct Source_Location* 
 
 #line 1409 "bootstrap/stage0/ReCode.code"
 struct Parsed_Enum_Member* Parsed_Enum_Member__create(struct Token* name) {
+    struct Parsed_Enum_Member* member;
 #line 1410 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Enum_Member* member = ((struct Parsed_Enum_Member*) malloc(sizeof(struct Parsed_Enum_Member)));
+    member = ((struct Parsed_Enum_Member*) malloc(sizeof(struct Parsed_Enum_Member)));
 #line 1411 "bootstrap/stage0/ReCode.code"
     member->name = name;
 #line 1412 "bootstrap/stage0/ReCode.code"
@@ -2930,8 +2994,9 @@ struct Parsed_Enum_Member* Parsed_Enum_Member__create(struct Token* name) {
 
 #line 1421 "bootstrap/stage0/ReCode.code"
 struct Parsed_Enum_Statement* Parsed_Enum_Statement__create(struct Source_Location* location, struct Token* name) {
+    struct Parsed_Enum_Statement* statement;
 #line 1422 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Enum_Statement* statement = ((struct Parsed_Enum_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__ENUM, sizeof(struct Parsed_Enum_Statement), location, name));
+    statement = ((struct Parsed_Enum_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__ENUM, sizeof(struct Parsed_Enum_Statement), location, name));
 #line 1423 "bootstrap/stage0/ReCode.code"
     statement->first_member = NULL;
 #line 1424 "bootstrap/stage0/ReCode.code"
@@ -2940,8 +3005,9 @@ struct Parsed_Enum_Statement* Parsed_Enum_Statement__create(struct Source_Locati
 
 #line 1432 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression_Statement* Parsed_Expression_Statement__create(struct Parsed_Expression* expression) {
+    struct Parsed_Expression_Statement* statement;
 #line 1433 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression_Statement* statement = ((struct Parsed_Expression_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__EXPRESSION, sizeof(struct Parsed_Expression_Statement), expression->location));
+    statement = ((struct Parsed_Expression_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__EXPRESSION, sizeof(struct Parsed_Expression_Statement), expression->location));
 #line 1434 "bootstrap/stage0/ReCode.code"
     statement->expression = expression;
 #line 1435 "bootstrap/stage0/ReCode.code"
@@ -2950,8 +3016,9 @@ struct Parsed_Expression_Statement* Parsed_Expression_Statement__create(struct P
 
 #line 1446 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parsed_Function_Statement__create(struct Source_Location* location, struct Token* name, struct Parsed_Function_Parameter* first_parameter, struct Parsed_Type* resturn_type, struct Parsed_Statements* statements, bool is_external) {
+    struct Parsed_Function_Statement* statement;
 #line 1447 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Function_Statement* statement = ((struct Parsed_Function_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__FUNCTION, sizeof(struct Parsed_Function_Statement), location, name));
+    statement = ((struct Parsed_Function_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__FUNCTION, sizeof(struct Parsed_Function_Statement), location, name));
 #line 1448 "bootstrap/stage0/ReCode.code"
     statement->first_parameter = first_parameter;
 #line 1449 "bootstrap/stage0/ReCode.code"
@@ -2966,8 +3033,9 @@ struct Parsed_Statement* Parsed_Function_Statement__create(struct Source_Locatio
 
 #line 1462 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parsed_If_Statement__create(struct Source_Location* location, struct Parsed_Expression* condition_expression, struct Parsed_Statement* true_statement, struct Parsed_Statement* false_statement) {
+    struct Parsed_If_Statement* statement;
 #line 1463 "bootstrap/stage0/ReCode.code"
-    struct Parsed_If_Statement* statement = ((struct Parsed_If_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__IF, sizeof(struct Parsed_If_Statement), location));
+    statement = ((struct Parsed_If_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__IF, sizeof(struct Parsed_If_Statement), location));
 #line 1464 "bootstrap/stage0/ReCode.code"
     statement->condition_expression = condition_expression;
 #line 1465 "bootstrap/stage0/ReCode.code"
@@ -2986,8 +3054,9 @@ struct Parsed_Opaque_Type_Statement* Parsed_Opaque_Type_Statement__create(struct
 
 #line 1483 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parsed_Return_Statement__create(struct Source_Location* location, struct Parsed_Expression* expression) {
+    struct Parsed_Return_Statement* statement;
 #line 1484 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Return_Statement* statement = ((struct Parsed_Return_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__RETURN, sizeof(struct Parsed_Return_Statement), location));
+    statement = ((struct Parsed_Return_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__RETURN, sizeof(struct Parsed_Return_Statement), location));
 #line 1485 "bootstrap/stage0/ReCode.code"
     statement->expression = expression;
 #line 1486 "bootstrap/stage0/ReCode.code"
@@ -2996,8 +3065,9 @@ struct Parsed_Statement* Parsed_Return_Statement__create(struct Source_Location*
 
 #line 1495 "bootstrap/stage0/ReCode.code"
 struct Parsed_Struct_Member* Parsed_Struct_Member__create(struct Token* name, struct Parsed_Type* type) {
+    struct Parsed_Struct_Member* member;
 #line 1496 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Struct_Member* member = ((struct Parsed_Struct_Member*) malloc(sizeof(struct Parsed_Struct_Member)));
+    member = ((struct Parsed_Struct_Member*) malloc(sizeof(struct Parsed_Struct_Member)));
 #line 1497 "bootstrap/stage0/ReCode.code"
     member->name = name;
 #line 1498 "bootstrap/stage0/ReCode.code"
@@ -3010,8 +3080,9 @@ struct Parsed_Struct_Member* Parsed_Struct_Member__create(struct Token* name, st
 
 #line 1508 "bootstrap/stage0/ReCode.code"
 struct Parsed_Struct_Statement* Parsed_Struct_Statement__create(struct Source_Location* location, struct Token* name) {
+    struct Parsed_Struct_Statement* statement;
 #line 1509 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Struct_Statement* statement = ((struct Parsed_Struct_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__STRUCT, sizeof(struct Parsed_Struct_Statement), location, name));
+    statement = ((struct Parsed_Struct_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__STRUCT, sizeof(struct Parsed_Struct_Statement), location, name));
 #line 1510 "bootstrap/stage0/ReCode.code"
     statement->first_member = NULL;
 #line 1511 "bootstrap/stage0/ReCode.code"
@@ -3020,8 +3091,9 @@ struct Parsed_Struct_Statement* Parsed_Struct_Statement__create(struct Source_Lo
 
 #line 1521 "bootstrap/stage0/ReCode.code"
 struct Parsed_Variable_Statement* Parsed_Variable_Statement__create(struct Source_Location* location, struct Token* name, struct Parsed_Type* type, bool is_external) {
+    struct Parsed_Variable_Statement* statement;
 #line 1522 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Variable_Statement* statement = ((struct Parsed_Variable_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__VARIABLE, sizeof(struct Parsed_Variable_Statement), location, name));
+    statement = ((struct Parsed_Variable_Statement*) Parsed_Named_Statement__create_kind(Parsed_Statement_Kind__VARIABLE, sizeof(struct Parsed_Variable_Statement), location, name));
 #line 1523 "bootstrap/stage0/ReCode.code"
     statement->type = type;
 #line 1524 "bootstrap/stage0/ReCode.code"
@@ -3032,8 +3104,9 @@ struct Parsed_Variable_Statement* Parsed_Variable_Statement__create(struct Sourc
 
 #line 1534 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parsed_While_Statement__create(struct Source_Location* location, struct Parsed_Expression* condition_expression, struct Parsed_Statement* body_statement) {
+    struct Parsed_While_Statement* statement;
 #line 1535 "bootstrap/stage0/ReCode.code"
-    struct Parsed_While_Statement* statement = ((struct Parsed_While_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__WHILE, sizeof(struct Parsed_While_Statement), location));
+    statement = ((struct Parsed_While_Statement*) Parsed_Statement__create_kind(Parsed_Statement_Kind__WHILE, sizeof(struct Parsed_While_Statement), location));
 #line 1536 "bootstrap/stage0/ReCode.code"
     statement->condition_expression = condition_expression;
 #line 1537 "bootstrap/stage0/ReCode.code"
@@ -3044,8 +3117,9 @@ struct Parsed_Statement* Parsed_While_Statement__create(struct Source_Location* 
 
 #line 1547 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statements* Parsed_Statements__create(bool has_globals) {
+    struct Parsed_Statements* statements;
 #line 1548 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statements* statements = ((struct Parsed_Statements*) malloc(sizeof(struct Parsed_Statements)));
+    statements = ((struct Parsed_Statements*) malloc(sizeof(struct Parsed_Statements)));
 #line 1549 "bootstrap/stage0/ReCode.code"
     statements->first_statement = NULL;
 #line 1550 "bootstrap/stage0/ReCode.code"
@@ -3072,8 +3146,9 @@ void Parsed_Statements__append(struct Parsed_Statements* self, struct Parsed_Sta
 
 #line 1564 "bootstrap/stage0/ReCode.code"
 struct Parsed_Source* Parsed_Compilation_Unit__create() {
+    struct Parsed_Source* compilation_unit;
 #line 1565 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Source* compilation_unit = ((struct Parsed_Source*) malloc(sizeof(struct Parsed_Source)));
+    compilation_unit = ((struct Parsed_Source*) malloc(sizeof(struct Parsed_Source)));
 #line 1566 "bootstrap/stage0/ReCode.code"
     compilation_unit->statements = Parsed_Statements__create(true);
 #line 1567 "bootstrap/stage0/ReCode.code"
@@ -3100,8 +3175,9 @@ struct Token* Parser__peek_token(struct Parser* self, uint8_t offset) {
 
 #line 1592 "bootstrap/stage0/ReCode.code"
 bool Parser__matches_three(struct Parser* self, bool (*first_is)(struct Token*), bool first_required, bool (*second_is)(struct Token*), bool second_required, bool (*third_is)(struct Token*)) {
+    uint8_t peek_offset;
 #line 1593 "bootstrap/stage0/ReCode.code"
-    uint8_t peek_offset = ((uint8_t) 0);
+    peek_offset = ((uint8_t) 0);
 #line 1594 "bootstrap/stage0/ReCode.code"
     if (first_is(Parser__peek_token(self, peek_offset))) {
 #line 1595 "bootstrap/stage0/ReCode.code"
@@ -3146,8 +3222,9 @@ bool Parser__matches_one(struct Parser* self, bool (*first_is)(struct Token*)) {
 struct Token* Parser__consume_token(struct Parser* self, bool (*check)(struct Token*)) {
 #line 1621 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, check)) {
+        struct Token* token;
 #line 1622 "bootstrap/stage0/ReCode.code"
-        struct Token* token = self->scanner->current_token;
+        token = self->scanner->current_token;
 #line 1623 "bootstrap/stage0/ReCode.code"
         Scanner__next_token(self->scanner);
 #line 1624 "bootstrap/stage0/ReCode.code"
@@ -3169,20 +3246,23 @@ void Parser__consume_comment(struct Parser* self) {
 void Parser__consume_space(struct Parser* self, uint16_t count) {
 #line 1635 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, Token__is_space)) {
+        struct Space_Token* token;
 #line 1636 "bootstrap/stage0/ReCode.code"
-        struct Space_Token* token = ((struct Space_Token*) Parser__consume_token(self, Token__is_space));
+        token = ((struct Space_Token*) Parser__consume_token(self, Token__is_space));
 #line 1637 "bootstrap/stage0/ReCode.code"
         if (token->count != count) {
+            struct String* message;
 #line 1638 "bootstrap/stage0/ReCode.code"
-            struct String* message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), ((int16_t) token->count)), " spaces where "), ((int16_t) count)), " were expected");
+            message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), ((int16_t) token->count)), " spaces where "), ((int16_t) count)), " were expected");
 #line 1639 "bootstrap/stage0/ReCode.code"
             Token__warning(((struct Token*) token), message);
 #line 1640 "bootstrap/stage0/ReCode.code"
             String__delete(message);
         }
     } else if (count > ((uint16_t) 0)) {
+        struct String* message;
 #line 1643 "bootstrap/stage0/ReCode.code"
-        struct String* message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), ((int16_t) 0)), " spaces where "), ((int16_t) count)), " were expected");
+        message = String__append_cstring(String__append_i16(String__append_cstring(String__append_i16(String__create_from("Consumed "), ((int16_t) 0)), " spaces where "), ((int16_t) count)), " were expected");
 #line 1644 "bootstrap/stage0/ReCode.code"
         Parser__warning(self, message);
 #line 1645 "bootstrap/stage0/ReCode.code"
@@ -3192,6 +3272,7 @@ void Parser__consume_space(struct Parser* self, uint16_t count) {
 
 #line 1649 "bootstrap/stage0/ReCode.code"
 void Parser__consume_end_of_line(struct Parser* self) {
+    struct Token* token;
 #line 1650 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_two(self, Token__is_space, false, Token__is_comment)) {
 #line 1651 "bootstrap/stage0/ReCode.code"
@@ -3203,7 +3284,7 @@ void Parser__consume_end_of_line(struct Parser* self) {
         Parser__consume_space(self, ((uint16_t) 0));
     }
 #line 1656 "bootstrap/stage0/ReCode.code"
-    struct Token* token = Parser__consume_token(self, Token__is_end_of_line);
+    token = Parser__consume_token(self, Token__is_end_of_line);
 #line 1657 "bootstrap/stage0/ReCode.code"
     if (Token__is_end_of_file(token)) {
 #line 1658 "bootstrap/stage0/ReCode.code"
@@ -3278,12 +3359,14 @@ struct Parsed_Expression* Parser__parse_primary_expression(struct Parser* self) 
     }
 #line 1709 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, Token__is_opening_paren)) {
+        struct Source_Location* location;
+        struct Parsed_Expression* expression;
 #line 1710 "bootstrap/stage0/ReCode.code"
-        struct Source_Location* location = Parser__consume_token(self, Token__is_opening_paren)->location;
+        location = Parser__consume_token(self, Token__is_opening_paren)->location;
 #line 1711 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1712 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* expression = Parser__parse_expression(self);
+        expression = Parser__parse_expression(self);
 #line 1713 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1714 "bootstrap/stage0/ReCode.code"
@@ -3299,12 +3382,14 @@ struct Parsed_Expression* Parser__parse_primary_expression(struct Parser* self) 
 
 #line 1723 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 1724 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_primary_expression(self);
+    expression = Parser__parse_primary_expression(self);
 #line 1725 "bootstrap/stage0/ReCode.code"
     while (true) {
+        struct Parsed_Expression* old_expression;
 #line 1726 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* old_expression = expression;
+        old_expression = expression;
 #line 1727 "bootstrap/stage0/ReCode.code"
         if (Parser__matches_two(self, Token__is_space, false, Token__is_dot)) {
 #line 1728 "bootstrap/stage0/ReCode.code"
@@ -3320,10 +3405,12 @@ struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
 #line 1733 "bootstrap/stage0/ReCode.code"
                 expression = ((struct Parsed_Expression*) Parsed_Dereference_Expression__create(expression));
             } else {
+                struct Token* name;
 #line 1735 "bootstrap/stage0/ReCode.code"
-                struct Token* name = Parser__consume_token(self, Token__is_identifier);
+                name = Parser__consume_token(self, Token__is_identifier);
 #line 1736 "bootstrap/stage0/ReCode.code"
                 if (String__equals_cstring(name->lexeme, "as")) {
+                    struct Parsed_Type* type;
 #line 1737 "bootstrap/stage0/ReCode.code"
                     Parser__consume_space(self, ((uint16_t) 0));
 #line 1738 "bootstrap/stage0/ReCode.code"
@@ -3331,7 +3418,7 @@ struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
 #line 1739 "bootstrap/stage0/ReCode.code"
                     Parser__consume_space(self, ((uint16_t) 0));
 #line 1740 "bootstrap/stage0/ReCode.code"
-                    struct Parsed_Type* type = Parser__parse_type(self);
+                    type = Parser__parse_type(self);
 #line 1741 "bootstrap/stage0/ReCode.code"
                     Parser__consume_space(self, ((uint16_t) 0));
 #line 1742 "bootstrap/stage0/ReCode.code"
@@ -3346,6 +3433,7 @@ struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
         }
 #line 1749 "bootstrap/stage0/ReCode.code"
         if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_paren)) {
+            struct Parsed_Call_Expression* call_expression;
 #line 1750 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 0));
 #line 1751 "bootstrap/stage0/ReCode.code"
@@ -3353,23 +3441,25 @@ struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
 #line 1752 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 0));
 #line 1753 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Call_Expression* call_expression = Parsed_Call_Expression__create(expression);
+            call_expression = Parsed_Call_Expression__create(expression);
 #line 1754 "bootstrap/stage0/ReCode.code"
             if (!Parser__matches_one(self, Token__is_closing_paren)) {
+                struct Parsed_Call_Argument* last_argument;
 #line 1755 "bootstrap/stage0/ReCode.code"
-                struct Parsed_Call_Argument* last_argument = Parsed_Call_Argument__create(Parser__parse_expression(self));
+                last_argument = Parsed_Call_Argument__create(Parser__parse_expression(self));
 #line 1756 "bootstrap/stage0/ReCode.code"
                 call_expression->first_argument = last_argument;
 #line 1757 "bootstrap/stage0/ReCode.code"
                 Parser__consume_space(self, ((uint16_t) 0));
 #line 1758 "bootstrap/stage0/ReCode.code"
                 while (Parser__matches_one(self, Token__is_comma)) {
+                    struct Parsed_Call_Argument* argument;
 #line 1759 "bootstrap/stage0/ReCode.code"
                     Parser__consume_token(self, Token__is_comma);
 #line 1760 "bootstrap/stage0/ReCode.code"
                     Parser__consume_space(self, ((uint16_t) 1));
 #line 1761 "bootstrap/stage0/ReCode.code"
-                    struct Parsed_Call_Argument* argument = Parsed_Call_Argument__create(Parser__parse_expression(self));
+                    argument = Parsed_Call_Argument__create(Parser__parse_expression(self));
 #line 1762 "bootstrap/stage0/ReCode.code"
                     last_argument->next_argument = argument;
 #line 1763 "bootstrap/stage0/ReCode.code"
@@ -3385,6 +3475,7 @@ struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
         }
 #line 1770 "bootstrap/stage0/ReCode.code"
         if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_bracket)) {
+            struct Parsed_Expression* index_expression;
 #line 1771 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 0));
 #line 1772 "bootstrap/stage0/ReCode.code"
@@ -3392,7 +3483,7 @@ struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
 #line 1773 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 0));
 #line 1774 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* index_expression = Parser__parse_expression(self);
+            index_expression = Parser__parse_expression(self);
 #line 1775 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 0));
 #line 1776 "bootstrap/stage0/ReCode.code"
@@ -3414,41 +3505,49 @@ struct Parsed_Expression* Parser__parse_access_expression(struct Parser* self) {
 struct Parsed_Expression* Parser__parse_unary_expression(struct Parser* self) {
 #line 1793 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, Token__is_minus)) {
+        struct Source_Location* location;
+        struct Parsed_Expression* expression;
 #line 1794 "bootstrap/stage0/ReCode.code"
-        struct Source_Location* location = Parser__consume_token(self, Token__is_minus)->location;
+        location = Parser__consume_token(self, Token__is_minus)->location;
 #line 1795 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1796 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* expression = Parser__parse_unary_expression(self);
+        expression = Parser__parse_unary_expression(self);
 #line 1797 "bootstrap/stage0/ReCode.code"
         return ((struct Parsed_Expression*) Parsed_Minus_Expression__create(location, expression));
     }
 #line 1799 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, Token__is_exclamation_mark)) {
+        struct Source_Location* location;
+        struct Parsed_Expression* expression;
 #line 1800 "bootstrap/stage0/ReCode.code"
-        struct Source_Location* location = Parser__consume_token(self, Token__is_exclamation_mark)->location;
+        location = Parser__consume_token(self, Token__is_exclamation_mark)->location;
 #line 1801 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1802 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* expression = Parser__parse_unary_expression(self);
+        expression = Parser__parse_unary_expression(self);
 #line 1803 "bootstrap/stage0/ReCode.code"
         return ((struct Parsed_Expression*) Parsed_Not_Expression__create(location, expression));
     }
 #line 1805 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, Token__is_ampersand)) {
+        struct Source_Location* location;
+        struct Parsed_Expression* expression;
 #line 1806 "bootstrap/stage0/ReCode.code"
-        struct Source_Location* location = Parser__consume_token(self, Token__is_ampersand)->location;
+        location = Parser__consume_token(self, Token__is_ampersand)->location;
 #line 1807 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1808 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* expression = Parser__parse_unary_expression(self);
+        expression = Parser__parse_unary_expression(self);
 #line 1809 "bootstrap/stage0/ReCode.code"
         return ((struct Parsed_Expression*) Parsed_Address_Of_Expression__create(location, expression));
     }
 #line 1811 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, Token__is_sizeof)) {
+        struct Source_Location* location;
+        struct Parsed_Type* type;
 #line 1812 "bootstrap/stage0/ReCode.code"
-        struct Source_Location* location = Parser__consume_token(self, Token__is_sizeof)->location;
+        location = Parser__consume_token(self, Token__is_sizeof)->location;
 #line 1813 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1814 "bootstrap/stage0/ReCode.code"
@@ -3456,7 +3555,7 @@ struct Parsed_Expression* Parser__parse_unary_expression(struct Parser* self) {
 #line 1815 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1816 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Type* type = Parser__parse_type(self);
+        type = Parser__parse_type(self);
 #line 1817 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1818 "bootstrap/stage0/ReCode.code"
@@ -3476,38 +3575,42 @@ bool Token__is_mutliplication(struct Token* self) {
 
 #line 1830 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parser__parse_multiplication_expression(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 1831 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_unary_expression(self);
+    expression = Parser__parse_unary_expression(self);
 #line 1832 "bootstrap/stage0/ReCode.code"
     while (Parser__matches_two(self, Token__is_space, false, Token__is_mutliplication)) {
 #line 1833 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1834 "bootstrap/stage0/ReCode.code"
         if (Parser__matches_one(self, Token__is_asterisk)) {
+            struct Parsed_Expression* right_expression;
 #line 1835 "bootstrap/stage0/ReCode.code"
             Parser__consume_token(self, Token__is_asterisk);
 #line 1836 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1837 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_unary_expression(self);
+            right_expression = Parser__parse_unary_expression(self);
 #line 1838 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Multiply_Expression__create(expression, right_expression));
         } else if (Parser__matches_one(self, Token__is_slash)) {
+            struct Parsed_Expression* right_expression;
 #line 1840 "bootstrap/stage0/ReCode.code"
             Parser__consume_token(self, Token__is_slash);
 #line 1841 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1842 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_unary_expression(self);
+            right_expression = Parser__parse_unary_expression(self);
 #line 1843 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Divide_Expression__create(expression, right_expression));
         } else {
+            struct Parsed_Expression* right_expression;
 #line 1845 "bootstrap/stage0/ReCode.code"
             Parser__consume_token(self, Token__is_percent);
 #line 1846 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1847 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_unary_expression(self);
+            right_expression = Parser__parse_unary_expression(self);
 #line 1848 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Modulo_Expression__create(expression, right_expression));
         }
@@ -3524,29 +3627,32 @@ bool Token__is_addition(struct Token* self) {
 
 #line 1860 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parser__parse_addition_expression(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 1861 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_multiplication_expression(self);
+    expression = Parser__parse_multiplication_expression(self);
 #line 1862 "bootstrap/stage0/ReCode.code"
     while (Parser__matches_two(self, Token__is_space, false, Token__is_addition)) {
 #line 1863 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1864 "bootstrap/stage0/ReCode.code"
         if (Parser__matches_one(self, Token__is_plus)) {
+            struct Parsed_Expression* right_expression;
 #line 1865 "bootstrap/stage0/ReCode.code"
             Parser__consume_token(self, Token__is_plus);
 #line 1866 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1867 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_multiplication_expression(self);
+            right_expression = Parser__parse_multiplication_expression(self);
 #line 1868 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Add_Expression__create(expression, right_expression));
         } else {
+            struct Parsed_Expression* right_expression;
 #line 1870 "bootstrap/stage0/ReCode.code"
             Parser__consume_token(self, Token__is_minus);
 #line 1871 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1872 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_multiplication_expression(self);
+            right_expression = Parser__parse_multiplication_expression(self);
 #line 1873 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Substract_Expression__create(expression, right_expression));
         }
@@ -3557,8 +3663,9 @@ struct Parsed_Expression* Parser__parse_addition_expression(struct Parser* self)
 
 #line 1881 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parser__parse_comparison_expression(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 1882 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_addition_expression(self);
+    expression = Parser__parse_addition_expression(self);
 #line 1883 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
 #line 1884 "bootstrap/stage0/ReCode.code"
@@ -3567,19 +3674,21 @@ struct Parsed_Expression* Parser__parse_comparison_expression(struct Parser* sel
         Parser__consume_token(self, Token__is_less_than);
 #line 1886 "bootstrap/stage0/ReCode.code"
         if (Parser__matches_one(self, Token__is_equals)) {
+            struct Parsed_Expression* right_expression;
 #line 1887 "bootstrap/stage0/ReCode.code"
             Parser__consume_token(self, Token__is_equals);
 #line 1888 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1889 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            right_expression = Parser__parse_addition_expression(self);
 #line 1890 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Less_Or_Equals_Expression__create(expression, right_expression));
         } else {
+            struct Parsed_Expression* right_expression;
 #line 1892 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1893 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            right_expression = Parser__parse_addition_expression(self);
 #line 1894 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Less_Expression__create(expression, right_expression));
         }
@@ -3590,19 +3699,21 @@ struct Parsed_Expression* Parser__parse_comparison_expression(struct Parser* sel
         Parser__consume_token(self, Token__is_greater_than);
 #line 1899 "bootstrap/stage0/ReCode.code"
         if (Parser__matches_one(self, Token__is_equals)) {
+            struct Parsed_Expression* right_expression;
 #line 1900 "bootstrap/stage0/ReCode.code"
             Parser__consume_token(self, Token__is_equals);
 #line 1901 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1902 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            right_expression = Parser__parse_addition_expression(self);
 #line 1903 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Greater_Or_Equals_Expression__create(expression, right_expression));
         } else {
+            struct Parsed_Expression* right_expression;
 #line 1905 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 1));
 #line 1906 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Expression* right_expression = Parser__parse_addition_expression(self);
+            right_expression = Parser__parse_addition_expression(self);
 #line 1907 "bootstrap/stage0/ReCode.code"
             expression = ((struct Parsed_Expression*) Parsed_Greater_Expression__create(expression, right_expression));
         }
@@ -3613,10 +3724,12 @@ struct Parsed_Expression* Parser__parse_comparison_expression(struct Parser* sel
 
 #line 1915 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parser__parse_equality_expression(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 1916 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_comparison_expression(self);
+    expression = Parser__parse_comparison_expression(self);
 #line 1917 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_three(self, Token__is_space, false, Token__is_equals, true, Token__is_equals)) {
+        struct Parsed_Expression* right_expression;
 #line 1918 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1919 "bootstrap/stage0/ReCode.code"
@@ -3626,10 +3739,11 @@ struct Parsed_Expression* Parser__parse_equality_expression(struct Parser* self)
 #line 1921 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1922 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* right_expression = Parser__parse_comparison_expression(self);
+        right_expression = Parser__parse_comparison_expression(self);
 #line 1923 "bootstrap/stage0/ReCode.code"
         expression = ((struct Parsed_Expression*) Parsed_Equals_Expression__create(expression, right_expression));
     } else if (Parser__matches_three(self, Token__is_space, false, Token__is_exclamation_mark, true, Token__is_equals)) {
+        struct Parsed_Expression* right_expression;
 #line 1925 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1926 "bootstrap/stage0/ReCode.code"
@@ -3639,7 +3753,7 @@ struct Parsed_Expression* Parser__parse_equality_expression(struct Parser* self)
 #line 1928 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1929 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* right_expression = Parser__parse_comparison_expression(self);
+        right_expression = Parser__parse_comparison_expression(self);
 #line 1930 "bootstrap/stage0/ReCode.code"
         expression = ((struct Parsed_Expression*) Parsed_Not_Equals_Expression__create(expression, right_expression));
     }
@@ -3649,10 +3763,12 @@ struct Parsed_Expression* Parser__parse_equality_expression(struct Parser* self)
 
 #line 1937 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parser__parse_logic_and_expression(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 1938 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_equality_expression(self);
+    expression = Parser__parse_equality_expression(self);
 #line 1939 "bootstrap/stage0/ReCode.code"
     while (Parser__matches_three(self, Token__is_space, false, Token__is_ampersand, true, Token__is_ampersand)) {
+        struct Parsed_Expression* right_expression;
 #line 1940 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1941 "bootstrap/stage0/ReCode.code"
@@ -3662,7 +3778,7 @@ struct Parsed_Expression* Parser__parse_logic_and_expression(struct Parser* self
 #line 1943 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1944 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* right_expression = Parser__parse_equality_expression(self);
+        right_expression = Parser__parse_equality_expression(self);
 #line 1945 "bootstrap/stage0/ReCode.code"
         expression = ((struct Parsed_Expression*) Parsed_Logic_And_Expression__create(expression, right_expression));
     }
@@ -3672,10 +3788,12 @@ struct Parsed_Expression* Parser__parse_logic_and_expression(struct Parser* self
 
 #line 1952 "bootstrap/stage0/ReCode.code"
 struct Parsed_Expression* Parser__parse_logic_or_expression(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 1953 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_logic_and_expression(self);
+    expression = Parser__parse_logic_and_expression(self);
 #line 1954 "bootstrap/stage0/ReCode.code"
     while (Parser__matches_three(self, Token__is_space, false, Token__is_vertical_bar, true, Token__is_vertical_bar)) {
+        struct Parsed_Expression* right_expression;
 #line 1955 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1956 "bootstrap/stage0/ReCode.code"
@@ -3685,7 +3803,7 @@ struct Parsed_Expression* Parser__parse_logic_or_expression(struct Parser* self)
 #line 1958 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1959 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* right_expression = Parser__parse_logic_and_expression(self);
+        right_expression = Parser__parse_logic_and_expression(self);
 #line 1960 "bootstrap/stage0/ReCode.code"
         expression = ((struct Parsed_Expression*) Parsed_Logic_Or_Expression__create(expression, right_expression));
     }
@@ -3701,12 +3819,15 @@ struct Parsed_Expression* Parser__parse_expression(struct Parser* self) {
 
 #line 1973 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_struct(struct Parser* self) {
+    struct Token* name;
+    struct Parsed_Struct_Statement* struct_statement;
+    struct Parsed_Struct_Member* last_member;
 #line 1974 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_struct);
 #line 1975 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 1976 "bootstrap/stage0/ReCode.code"
-    struct Token* name = Parser__consume_token(self, Token__is_identifier);
+    name = Parser__consume_token(self, Token__is_identifier);
 #line 1977 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 1978 "bootstrap/stage0/ReCode.code"
@@ -3714,9 +3835,9 @@ struct Parsed_Statement* Parser__parse_struct(struct Parser* self) {
 #line 1979 "bootstrap/stage0/ReCode.code"
     Parser__consume_end_of_line(self);
 #line 1980 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Struct_Statement* struct_statement = Parsed_Struct_Statement__create(name->location, name);
+    struct_statement = Parsed_Struct_Statement__create(name->location, name);
 #line 1981 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Struct_Member* last_member = NULL;
+    last_member = NULL;
 #line 1982 "bootstrap/stage0/ReCode.code"
     self->current_identation = self->current_identation + ((uint16_t) 1);
 #line 1983 "bootstrap/stage0/ReCode.code"
@@ -3724,10 +3845,13 @@ struct Parsed_Statement* Parser__parse_struct(struct Parser* self) {
     }
 #line 1986 "bootstrap/stage0/ReCode.code"
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        struct Token* name;
+        struct Parsed_Type* type;
+        struct Parsed_Struct_Member* member;
 #line 1987 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, self->current_identation * ((uint16_t) 4));
 #line 1988 "bootstrap/stage0/ReCode.code"
-        struct Token* name = Parser__consume_token(self, Token__is_identifier);
+        name = Parser__consume_token(self, Token__is_identifier);
 #line 1989 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 1990 "bootstrap/stage0/ReCode.code"
@@ -3735,11 +3859,11 @@ struct Parsed_Statement* Parser__parse_struct(struct Parser* self) {
 #line 1991 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 1992 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Type* type = Parser__parse_type(self);
+        type = Parser__parse_type(self);
 #line 1993 "bootstrap/stage0/ReCode.code"
         Parser__consume_end_of_line(self);
 #line 1994 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Struct_Member* member = Parsed_Struct_Member__create(name, type);
+        member = Parsed_Struct_Member__create(name, type);
 #line 1995 "bootstrap/stage0/ReCode.code"
         if (last_member == NULL) {
 #line 1996 "bootstrap/stage0/ReCode.code"
@@ -3768,6 +3892,7 @@ struct Parsed_Statement* Parser__parse_struct(struct Parser* self) {
 
 #line 2014 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_opaque_type(struct Parser* self) {
+    struct Token* name;
 #line 2015 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_external);
 #line 2016 "bootstrap/stage0/ReCode.code"
@@ -3777,19 +3902,22 @@ struct Parsed_Statement* Parser__parse_opaque_type(struct Parser* self) {
 #line 2018 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2019 "bootstrap/stage0/ReCode.code"
-    struct Token* name = Parser__consume_token(self, Token__is_identifier);
+    name = Parser__consume_token(self, Token__is_identifier);
 #line 2020 "bootstrap/stage0/ReCode.code"
     return ((struct Parsed_Statement*) Parsed_Opaque_Type_Statement__create(name->location, name));
 }
 
 #line 2025 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_enum(struct Parser* self) {
+    struct Token* name;
+    struct Parsed_Enum_Statement* enum_statement;
+    struct Parsed_Enum_Member* last_member;
 #line 2026 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_enum);
 #line 2027 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2028 "bootstrap/stage0/ReCode.code"
-    struct Token* name = Parser__consume_token(self, Token__is_identifier);
+    name = Parser__consume_token(self, Token__is_identifier);
 #line 2029 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2030 "bootstrap/stage0/ReCode.code"
@@ -3797,9 +3925,9 @@ struct Parsed_Statement* Parser__parse_enum(struct Parser* self) {
 #line 2031 "bootstrap/stage0/ReCode.code"
     Parser__consume_end_of_line(self);
 #line 2032 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Enum_Statement* enum_statement = Parsed_Enum_Statement__create(name->location, name);
+    enum_statement = Parsed_Enum_Statement__create(name->location, name);
 #line 2033 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Enum_Member* last_member = NULL;
+    last_member = NULL;
 #line 2034 "bootstrap/stage0/ReCode.code"
     self->current_identation = self->current_identation + ((uint16_t) 1);
 #line 2035 "bootstrap/stage0/ReCode.code"
@@ -3807,14 +3935,16 @@ struct Parsed_Statement* Parser__parse_enum(struct Parser* self) {
     }
 #line 2038 "bootstrap/stage0/ReCode.code"
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        struct Token* name;
+        struct Parsed_Enum_Member* member;
 #line 2039 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, self->current_identation * ((uint16_t) 4));
 #line 2040 "bootstrap/stage0/ReCode.code"
-        struct Token* name = Parser__consume_token(self, Token__is_identifier);
+        name = Parser__consume_token(self, Token__is_identifier);
 #line 2041 "bootstrap/stage0/ReCode.code"
         Parser__consume_end_of_line(self);
 #line 2042 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Enum_Member* member = Parsed_Enum_Member__create(name);
+        member = Parsed_Enum_Member__create(name);
 #line 2043 "bootstrap/stage0/ReCode.code"
         if (last_member == NULL) {
 #line 2044 "bootstrap/stage0/ReCode.code"
@@ -3845,8 +3975,11 @@ struct Parsed_Statement* Parser__parse_enum(struct Parser* self) {
 struct Parsed_Type* Parser__parse_type(struct Parser* self) {
 #line 2064 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_three(self, Token__is_opening_paren, true, Token__is_space, false, Token__is_func)) {
+        struct Source_Location* location;
+        struct Parsed_Function_Parameter* first_parameter;
+        struct Parsed_Type* return_type;
 #line 2065 "bootstrap/stage0/ReCode.code"
-        struct Source_Location* location = Parser__consume_token(self, Token__is_opening_paren)->location;
+        location = Parser__consume_token(self, Token__is_opening_paren)->location;
 #line 2066 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 2067 "bootstrap/stage0/ReCode.code"
@@ -3858,25 +3991,28 @@ struct Parsed_Type* Parser__parse_type(struct Parser* self) {
 #line 2070 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 2071 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Function_Parameter* first_parameter = NULL;
+        first_parameter = NULL;
 #line 2072 "bootstrap/stage0/ReCode.code"
         if (!Parser__matches_one(self, Token__is_closing_paren)) {
+            struct Parsed_Type* type;
+            struct Parsed_Function_Parameter* last_parameter;
 #line 2073 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Type* type = Parser__parse_type(self);
+            type = Parser__parse_type(self);
 #line 2074 "bootstrap/stage0/ReCode.code"
             Parser__consume_space(self, ((uint16_t) 0));
 #line 2075 "bootstrap/stage0/ReCode.code"
             first_parameter = Parsed_Function_Parameter__create(type->location, NULL, type);
 #line 2076 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Function_Parameter* last_parameter = first_parameter;
+            last_parameter = first_parameter;
 #line 2077 "bootstrap/stage0/ReCode.code"
             while (!Parser__matches_one(self, Token__is_closing_paren)) {
+                struct Parsed_Type* type;
 #line 2078 "bootstrap/stage0/ReCode.code"
                 Parser__consume_token(self, Token__is_comma);
 #line 2079 "bootstrap/stage0/ReCode.code"
                 Parser__consume_space(self, ((uint16_t) 1));
 #line 2080 "bootstrap/stage0/ReCode.code"
-                struct Parsed_Type* type = Parser__parse_type(self);
+                type = Parser__parse_type(self);
 #line 2081 "bootstrap/stage0/ReCode.code"
                 Parser__consume_space(self, ((uint16_t) 0));
 #line 2082 "bootstrap/stage0/ReCode.code"
@@ -3898,7 +4034,7 @@ struct Parsed_Type* Parser__parse_type(struct Parser* self) {
 #line 2091 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 2092 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Type* return_type = Parser__parse_type(self);
+        return_type = Parser__parse_type(self);
 #line 2093 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 2094 "bootstrap/stage0/ReCode.code"
@@ -3906,10 +4042,12 @@ struct Parsed_Type* Parser__parse_type(struct Parser* self) {
 #line 2095 "bootstrap/stage0/ReCode.code"
         return ((struct Parsed_Type*) Parsed_Function_Type__create(location, first_parameter, return_type));
     } else {
+        struct Token* name;
+        struct Parsed_Type* type;
 #line 2097 "bootstrap/stage0/ReCode.code"
-        struct Token* name = Parser__consume_token(self, Token__is_identifier);
+        name = Parser__consume_token(self, Token__is_identifier);
 #line 2098 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Type* type = ((struct Parsed_Type*) Parsed_Named_Type__create(name));
+        type = ((struct Parsed_Type*) Parsed_Named_Type__create(name));
 #line 2099 "bootstrap/stage0/ReCode.code"
         while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
 #line 2100 "bootstrap/stage0/ReCode.code"
@@ -3926,14 +4064,19 @@ struct Parsed_Type* Parser__parse_type(struct Parser* self) {
 
 #line 2110 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_variable(struct Parser* self) {
+    struct Token* name;
+    struct Parsed_Type* type;
+    bool is_external;
+    struct Parsed_Expression* value_expression;
+    struct Parsed_Variable_Statement* variable_statement;
 #line 2111 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_let);
 #line 2112 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2113 "bootstrap/stage0/ReCode.code"
-    struct Token* name = Parser__consume_token(self, Token__is_identifier);
+    name = Parser__consume_token(self, Token__is_identifier);
 #line 2114 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Type* type = NULL;
+    type = NULL;
 #line 2115 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_two(self, Token__is_space, false, Token__is_colon)) {
 #line 2116 "bootstrap/stage0/ReCode.code"
@@ -3952,9 +4095,9 @@ struct Parsed_Statement* Parser__parse_variable(struct Parser* self) {
 #line 2123 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2125 "bootstrap/stage0/ReCode.code"
-    bool is_external;
+    ;
 #line 2126 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* value_expression;
+    ;
 #line 2127 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_one(self, Token__is_external)) {
 #line 2128 "bootstrap/stage0/ReCode.code"
@@ -3977,7 +4120,7 @@ struct Parsed_Statement* Parser__parse_variable(struct Parser* self) {
         is_external = false;
     }
 #line 2139 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Variable_Statement* variable_statement = Parsed_Variable_Statement__create(name->location, name, type, is_external);
+    variable_statement = Parsed_Variable_Statement__create(name->location, name, type, is_external);
 #line 2140 "bootstrap/stage0/ReCode.code"
     variable_statement->expression = value_expression;
 #line 2141 "bootstrap/stage0/ReCode.code"
@@ -3986,12 +4129,14 @@ struct Parsed_Statement* Parser__parse_variable(struct Parser* self) {
 
 #line 2146 "bootstrap/stage0/ReCode.code"
 struct Parsed_Block_Statement* Parser__parse_block_statement(struct Parser* self) {
+    struct Source_Location* location;
+    struct Parsed_Statements* statements;
 #line 2147 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* location = Parser__consume_token(self, Token__is_opening_brace)->location;
+    location = Parser__consume_token(self, Token__is_opening_brace)->location;
 #line 2148 "bootstrap/stage0/ReCode.code"
     Parser__consume_end_of_line(self);
 #line 2149 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statements* statements = Parsed_Statements__create(false);
+    statements = Parsed_Statements__create(false);
 #line 2150 "bootstrap/stage0/ReCode.code"
     self->current_identation = self->current_identation + ((uint16_t) 1);
 #line 2151 "bootstrap/stage0/ReCode.code"
@@ -4008,8 +4153,10 @@ struct Parsed_Block_Statement* Parser__parse_block_statement(struct Parser* self
 
 #line 2160 "bootstrap/stage0/ReCode.code"
 struct Parsed_Function_Parameter* Parser__parse_function_parameter(struct Parser* self) {
+    struct Token* name;
+    struct Parsed_Type* type;
 #line 2161 "bootstrap/stage0/ReCode.code"
-    struct Token* name = Parser__consume_token(self, Token__is_identifier);
+    name = Parser__consume_token(self, Token__is_identifier);
 #line 2162 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 0));
 #line 2163 "bootstrap/stage0/ReCode.code"
@@ -4017,33 +4164,38 @@ struct Parsed_Function_Parameter* Parser__parse_function_parameter(struct Parser
 #line 2164 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2165 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Type* type = Parser__parse_type(self);
+    type = Parser__parse_type(self);
 #line 2166 "bootstrap/stage0/ReCode.code"
     return Parsed_Function_Parameter__create(name->location, name->lexeme, type);
 }
 
 #line 2171 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_function(struct Parser* self) {
+    struct Token* name;
+    struct Parsed_Function_Parameter* first_parameter;
+    struct Parsed_Type* return_type;
+    struct Parsed_Statements* statements;
 #line 2172 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_func);
 #line 2173 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2174 "bootstrap/stage0/ReCode.code"
-    struct Token* name = Parser__consume_token(self, Token__is_identifier);
+    name = Parser__consume_token(self, Token__is_identifier);
 #line 2175 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 0));
 #line 2176 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_opening_paren);
 #line 2177 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Function_Parameter* first_parameter = NULL;
+    first_parameter = NULL;
 #line 2178 "bootstrap/stage0/ReCode.code"
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
+        struct Parsed_Function_Parameter* last_parameter;
 #line 2179 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 2180 "bootstrap/stage0/ReCode.code"
         first_parameter = Parser__parse_function_parameter(self);
 #line 2181 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Function_Parameter* last_parameter = first_parameter;
+        last_parameter = first_parameter;
 #line 2182 "bootstrap/stage0/ReCode.code"
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
 #line 2183 "bootstrap/stage0/ReCode.code"
@@ -4073,7 +4225,7 @@ struct Parsed_Statement* Parser__parse_function(struct Parser* self) {
 #line 2196 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2197 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Type* return_type = Parser__parse_type(self);
+    return_type = Parser__parse_type(self);
 #line 2198 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2199 "bootstrap/stage0/ReCode.code"
@@ -4081,7 +4233,7 @@ struct Parsed_Statement* Parser__parse_function(struct Parser* self) {
 #line 2200 "bootstrap/stage0/ReCode.code"
     Parser__consume_end_of_line(self);
 #line 2201 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statements* statements = Parsed_Statements__create(false);
+    statements = Parsed_Statements__create(false);
 #line 2202 "bootstrap/stage0/ReCode.code"
     self->current_identation = self->current_identation + ((uint16_t) 1);
 #line 2203 "bootstrap/stage0/ReCode.code"
@@ -4098,6 +4250,9 @@ struct Parsed_Statement* Parser__parse_function(struct Parser* self) {
 
 #line 2212 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_external_function(struct Parser* self) {
+    struct Token* name;
+    struct Parsed_Function_Parameter* first_parameter;
+    struct Parsed_Type* return_type;
 #line 2213 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_external);
 #line 2214 "bootstrap/stage0/ReCode.code"
@@ -4107,21 +4262,22 @@ struct Parsed_Statement* Parser__parse_external_function(struct Parser* self) {
 #line 2216 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2217 "bootstrap/stage0/ReCode.code"
-    struct Token* name = Parser__consume_token(self, Token__is_identifier);
+    name = Parser__consume_token(self, Token__is_identifier);
 #line 2218 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 0));
 #line 2219 "bootstrap/stage0/ReCode.code"
     Parser__consume_token(self, Token__is_opening_paren);
 #line 2220 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Function_Parameter* first_parameter = NULL;
+    first_parameter = NULL;
 #line 2221 "bootstrap/stage0/ReCode.code"
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
+        struct Parsed_Function_Parameter* last_parameter;
 #line 2222 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 0));
 #line 2223 "bootstrap/stage0/ReCode.code"
         first_parameter = Parser__parse_function_parameter(self);
 #line 2224 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Function_Parameter* last_parameter = first_parameter;
+        last_parameter = first_parameter;
 #line 2225 "bootstrap/stage0/ReCode.code"
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
 #line 2226 "bootstrap/stage0/ReCode.code"
@@ -4151,17 +4307,19 @@ struct Parsed_Statement* Parser__parse_external_function(struct Parser* self) {
 #line 2239 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2240 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Type* return_type = Parser__parse_type(self);
+    return_type = Parser__parse_type(self);
 #line 2241 "bootstrap/stage0/ReCode.code"
     return Parsed_Function_Statement__create(name->location, name, first_parameter, return_type, NULL, true);
 }
 
 #line 2246 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_return_statement(struct Parser* self) {
+    struct Source_Location* location;
+    struct Parsed_Expression* expression;
 #line 2247 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* location = Parser__consume_token(self, Token__is_return)->location;
+    location = Parser__consume_token(self, Token__is_return)->location;
 #line 2248 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = NULL;
+    expression = NULL;
 #line 2249 "bootstrap/stage0/ReCode.code"
     if (!Parser__matches_three(self, Token__is_space, false, Token__is_comment, false, Token__is_end_of_line)) {
 #line 2250 "bootstrap/stage0/ReCode.code"
@@ -4175,16 +4333,21 @@ struct Parsed_Statement* Parser__parse_return_statement(struct Parser* self) {
 
 #line 2258 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_break_statement(struct Parser* self) {
+    struct Source_Location* location;
 #line 2259 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* location = Parser__consume_token(self, Token__is_break)->location;
+    location = Parser__consume_token(self, Token__is_break)->location;
 #line 2260 "bootstrap/stage0/ReCode.code"
     return Parsed_Break_Statement__create(location);
 }
 
 #line 2265 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_if_statement(struct Parser* self) {
+    struct Source_Location* location;
+    struct Parsed_Expression* condition_expression;
+    struct Parsed_Statement* true_statement;
+    struct Parsed_Statement* false_statement;
 #line 2266 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* location = Parser__consume_token(self, Token__is_if)->location;
+    location = Parser__consume_token(self, Token__is_if)->location;
 #line 2267 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2268 "bootstrap/stage0/ReCode.code"
@@ -4192,7 +4355,7 @@ struct Parsed_Statement* Parser__parse_if_statement(struct Parser* self) {
 #line 2269 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 0));
 #line 2270 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* condition_expression = Parser__parse_expression(self);
+    condition_expression = Parser__parse_expression(self);
 #line 2271 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 0));
 #line 2272 "bootstrap/stage0/ReCode.code"
@@ -4200,9 +4363,9 @@ struct Parsed_Statement* Parser__parse_if_statement(struct Parser* self) {
 #line 2273 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2274 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statement* true_statement = ((struct Parsed_Statement*) Parser__parse_block_statement(self));
+    true_statement = ((struct Parsed_Statement*) Parser__parse_block_statement(self));
 #line 2275 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statement* false_statement = NULL;
+    false_statement = NULL;
 #line 2276 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_two(self, Token__is_space, false, Token__is_else)) {
 #line 2277 "bootstrap/stage0/ReCode.code"
@@ -4226,8 +4389,11 @@ struct Parsed_Statement* Parser__parse_if_statement(struct Parser* self) {
 
 #line 2291 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_while_statement(struct Parser* self) {
+    struct Source_Location* location;
+    struct Parsed_Expression* condition_expression;
+    struct Parsed_Statement* body_statement;
 #line 2292 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* location = Parser__consume_token(self, Token__is_while)->location;
+    location = Parser__consume_token(self, Token__is_while)->location;
 #line 2293 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2294 "bootstrap/stage0/ReCode.code"
@@ -4235,7 +4401,7 @@ struct Parsed_Statement* Parser__parse_while_statement(struct Parser* self) {
 #line 2295 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 0));
 #line 2296 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* condition_expression = Parser__parse_expression(self);
+    condition_expression = Parser__parse_expression(self);
 #line 2297 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 0));
 #line 2298 "bootstrap/stage0/ReCode.code"
@@ -4243,13 +4409,14 @@ struct Parsed_Statement* Parser__parse_while_statement(struct Parser* self) {
 #line 2299 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, ((uint16_t) 1));
 #line 2300 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statement* body_statement = ((struct Parsed_Statement*) Parser__parse_block_statement(self));
+    body_statement = ((struct Parsed_Statement*) Parser__parse_block_statement(self));
 #line 2301 "bootstrap/stage0/ReCode.code"
     return Parsed_While_Statement__create(location, condition_expression, body_statement);
 }
 
 #line 2313 "bootstrap/stage0/ReCode.code"
 struct Parsed_Statement* Parser__parse_statement(struct Parser* self) {
+    struct Parsed_Expression* expression;
 #line 2314 "bootstrap/stage0/ReCode.code"
     Parser__consume_space(self, self->current_identation * ((uint16_t) 4));
 #line 2316 "bootstrap/stage0/ReCode.code"
@@ -4303,9 +4470,10 @@ struct Parsed_Statement* Parser__parse_statement(struct Parser* self) {
         return Parser__parse_enum(self);
     }
 #line 2356 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Expression* expression = Parser__parse_access_expression(self);
+    expression = Parser__parse_access_expression(self);
 #line 2357 "bootstrap/stage0/ReCode.code"
     if (Parser__matches_two(self, Token__is_space, false, Token__is_equals)) {
+        struct Parsed_Expression* value_expression;
 #line 2358 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 2359 "bootstrap/stage0/ReCode.code"
@@ -4313,7 +4481,7 @@ struct Parsed_Statement* Parser__parse_statement(struct Parser* self) {
 #line 2360 "bootstrap/stage0/ReCode.code"
         Parser__consume_space(self, ((uint16_t) 1));
 #line 2361 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Expression* value_expression = Parser__parse_expression(self);
+        value_expression = Parser__parse_expression(self);
 #line 2362 "bootstrap/stage0/ReCode.code"
         return ((struct Parsed_Statement*) Parsed_Assignment_Statement__create(expression, value_expression));
     }
@@ -4325,6 +4493,7 @@ struct Parsed_Statement* Parser__parse_statement(struct Parser* self) {
 void Parser__parse_statements(struct Parser* self, struct Parsed_Statements* statements) {
 #line 2370 "bootstrap/stage0/ReCode.code"
     while (true) {
+        struct Parsed_Statement* statement;
 #line 2371 "bootstrap/stage0/ReCode.code"
         while (Parser__consume_empty_line(self)) {
         }
@@ -4343,7 +4512,7 @@ void Parser__parse_statements(struct Parser* self, struct Parsed_Statements* sta
             }
         }
 #line 2385 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Statement* statement = Parser__parse_statement(self);
+        statement = Parser__parse_statement(self);
 #line 2387 "bootstrap/stage0/ReCode.code"
         Parser__consume_end_of_line(self);
 #line 2389 "bootstrap/stage0/ReCode.code"
@@ -4353,14 +4522,16 @@ void Parser__parse_statements(struct Parser* self, struct Parsed_Statements* sta
 
 #line 2393 "bootstrap/stage0/ReCode.code"
 void Parser__parse_source(struct Parser* self, struct Source* source) {
+    struct Scanner* other_scanner;
+    struct Token* last_token;
 #line 2394 "bootstrap/stage0/ReCode.code"
-    struct Scanner* other_scanner = self->scanner;
+    other_scanner = self->scanner;
 #line 2396 "bootstrap/stage0/ReCode.code"
     self->scanner = Scanner__create(source);
 #line 2398 "bootstrap/stage0/ReCode.code"
     Parser__parse_statements(self, self->compilation_unit->statements);
 #line 2400 "bootstrap/stage0/ReCode.code"
-    struct Token* last_token = Parser__peek_token(self, ((uint8_t) 0));
+    last_token = Parser__peek_token(self, ((uint8_t) 0));
 #line 2401 "bootstrap/stage0/ReCode.code"
     if (!Token__is_end_of_file(last_token)) {
 #line 2402 "bootstrap/stage0/ReCode.code"
@@ -4377,8 +4548,9 @@ void Parser__parse_source(struct Parser* self, struct Source* source) {
 
 #line 2411 "bootstrap/stage0/ReCode.code"
 struct Parsed_Source* parse(struct Source* source) {
-#line 2412 "bootstrap/stage0/ReCode.code"
     struct Parser parser;
+#line 2412 "bootstrap/stage0/ReCode.code"
+    ;
 #line 2413 "bootstrap/stage0/ReCode.code"
     parser.scanner = NULL;
 #line 2414 "bootstrap/stage0/ReCode.code"
@@ -4393,8 +4565,9 @@ struct Parsed_Source* parse(struct Source* source) {
 
 #line 2457 "bootstrap/stage0/ReCode.code"
 struct Checked_Type* Checked_Type__create_kind(enum Checked_Type_Kind kind, size_t kind_size, struct Source_Location* location) {
+    struct Checked_Type* type;
 #line 2458 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* type = ((struct Checked_Type*) malloc(kind_size));
+    type = ((struct Checked_Type*) malloc(kind_size));
 #line 2459 "bootstrap/stage0/ReCode.code"
     type->kind = kind;
 #line 2460 "bootstrap/stage0/ReCode.code"
@@ -4419,8 +4592,9 @@ void Checked_Type__expect_same_type(struct Checked_Type* self, struct Checked_Ty
     }
 #line 2472 "bootstrap/stage0/ReCode.code"
     if (!Checked_Type__equals(self, other_type)) {
+        struct String* message;
 #line 2473 "bootstrap/stage0/ReCode.code"
-        struct String* message = String__create_from("Unexpected type. Got \"");
+        message = String__create_from("Unexpected type. Got \"");
 #line 2474 "bootstrap/stage0/ReCode.code"
         String__append_checked_type(message, other_type);
 #line 2475 "bootstrap/stage0/ReCode.code"
@@ -4481,8 +4655,9 @@ bool Checked_Type__is_scalar_type(struct Checked_Type* self) {
 void Checked_Type__expect_scalar_type(struct Checked_Type* self, struct Source_Location* location) {
 #line 2511 "bootstrap/stage0/ReCode.code"
     if (!Checked_Type__is_scalar_type(self)) {
+        struct String* message;
 #line 2512 "bootstrap/stage0/ReCode.code"
-        struct String* message = String__create_from("Type \"");
+        message = String__create_from("Type \"");
 #line 2513 "bootstrap/stage0/ReCode.code"
         String__append_checked_type(message, self);
 #line 2514 "bootstrap/stage0/ReCode.code"
@@ -4496,8 +4671,9 @@ void Checked_Type__expect_scalar_type(struct Checked_Type* self, struct Source_L
 
 #line 2525 "bootstrap/stage0/ReCode.code"
 struct Checked_Named_Type* Checked_Named_Type__create_kind(enum Checked_Type_Kind kind, size_t kind_size, struct Source_Location* location, struct String* name) {
+    struct Checked_Named_Type* type;
 #line 2526 "bootstrap/stage0/ReCode.code"
-    struct Checked_Named_Type* type = ((struct Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location));
+    type = ((struct Checked_Named_Type*) Checked_Type__create_kind(kind, kind_size, location));
 #line 2527 "bootstrap/stage0/ReCode.code"
     type->name = name;
 #line 2528 "bootstrap/stage0/ReCode.code"
@@ -4506,8 +4682,9 @@ struct Checked_Named_Type* Checked_Named_Type__create_kind(enum Checked_Type_Kin
 
 #line 2538 "bootstrap/stage0/ReCode.code"
 struct Checked_Enum_Member* Checked_Enum_Member__create(struct Source_Location* location, struct String* name) {
+    struct Checked_Enum_Member* member;
 #line 2539 "bootstrap/stage0/ReCode.code"
-    struct Checked_Enum_Member* member = ((struct Checked_Enum_Member*) malloc(sizeof(struct Checked_Enum_Member)));
+    member = ((struct Checked_Enum_Member*) malloc(sizeof(struct Checked_Enum_Member)));
 #line 2540 "bootstrap/stage0/ReCode.code"
     member->location = location;
 #line 2541 "bootstrap/stage0/ReCode.code"
@@ -4522,8 +4699,9 @@ struct Checked_Enum_Member* Checked_Enum_Member__create(struct Source_Location* 
 
 #line 2552 "bootstrap/stage0/ReCode.code"
 struct Checked_Enum_Type* Checked_Enum_Type__create(struct Source_Location* location, struct String* name) {
+    struct Checked_Enum_Type* type;
 #line 2553 "bootstrap/stage0/ReCode.code"
-    struct Checked_Enum_Type* type = ((struct Checked_Enum_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind__ENUM, sizeof(struct Checked_Enum_Type), location, name));
+    type = ((struct Checked_Enum_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind__ENUM, sizeof(struct Checked_Enum_Type), location, name));
 #line 2554 "bootstrap/stage0/ReCode.code"
     type->first_member = NULL;
 #line 2555 "bootstrap/stage0/ReCode.code"
@@ -4532,8 +4710,9 @@ struct Checked_Enum_Type* Checked_Enum_Type__create(struct Source_Location* loca
 
 #line 2558 "bootstrap/stage0/ReCode.code"
 struct Checked_Enum_Member* Checked_Enum_Type__find_member(struct Checked_Enum_Type* self, struct String* name) {
+    struct Checked_Enum_Member* member;
 #line 2559 "bootstrap/stage0/ReCode.code"
-    struct Checked_Enum_Member* member = self->first_member;
+    member = self->first_member;
 #line 2560 "bootstrap/stage0/ReCode.code"
     while (member != NULL) {
 #line 2561 "bootstrap/stage0/ReCode.code"
@@ -4550,8 +4729,9 @@ struct Checked_Enum_Member* Checked_Enum_Type__find_member(struct Checked_Enum_T
 
 #line 2576 "bootstrap/stage0/ReCode.code"
 struct Checked_Function_Parameter* Checked_Function_Parameter__create(struct Source_Location* location, struct String* name, struct Checked_Type* type) {
+    struct Checked_Function_Parameter* parameter;
 #line 2577 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Parameter* parameter = ((struct Checked_Function_Parameter*) malloc(sizeof(struct Checked_Function_Parameter)));
+    parameter = ((struct Checked_Function_Parameter*) malloc(sizeof(struct Checked_Function_Parameter)));
 #line 2578 "bootstrap/stage0/ReCode.code"
     parameter->location = location;
 #line 2579 "bootstrap/stage0/ReCode.code"
@@ -4566,8 +4746,9 @@ struct Checked_Function_Parameter* Checked_Function_Parameter__create(struct Sou
 
 #line 2591 "bootstrap/stage0/ReCode.code"
 struct Checked_Function_Type* Checked_Function_Type__create(struct Source_Location* location, struct Checked_Function_Parameter* first_parameter, struct Checked_Type* return_type) {
+    struct Checked_Function_Type* type;
 #line 2592 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Type* type = ((struct Checked_Function_Type*) Checked_Type__create_kind(Checked_Type_Kind__FUNCTION, sizeof(struct Checked_Function_Type), location));
+    type = ((struct Checked_Function_Type*) Checked_Type__create_kind(Checked_Type_Kind__FUNCTION, sizeof(struct Checked_Function_Type), location));
 #line 2593 "bootstrap/stage0/ReCode.code"
     type->first_parameter = first_parameter;
 #line 2594 "bootstrap/stage0/ReCode.code"
@@ -4578,22 +4759,25 @@ struct Checked_Function_Type* Checked_Function_Type__create(struct Source_Locati
 
 #line 2598 "bootstrap/stage0/ReCode.code"
 bool Checked_Function_Type__equals(struct Checked_Function_Type* self, struct Checked_Type* other_type) {
+    struct Checked_Function_Type* function_type;
+    struct Checked_Function_Parameter* self_parameter;
+    struct Checked_Function_Parameter* function_parameter;
 #line 2599 "bootstrap/stage0/ReCode.code"
     if (other_type->kind != self->super.kind) {
 #line 2600 "bootstrap/stage0/ReCode.code"
         return false;
     }
 #line 2602 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Type* function_type = ((struct Checked_Function_Type*) other_type);
+    function_type = ((struct Checked_Function_Type*) other_type);
 #line 2603 "bootstrap/stage0/ReCode.code"
     if (!Checked_Type__equals(self->return_type, function_type->return_type)) {
 #line 2604 "bootstrap/stage0/ReCode.code"
         return false;
     }
 #line 2606 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Parameter* self_parameter = self->first_parameter;
+    self_parameter = self->first_parameter;
 #line 2607 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Parameter* function_parameter = function_type->first_parameter;
+    function_parameter = function_type->first_parameter;
 #line 2608 "bootstrap/stage0/ReCode.code"
     while (self_parameter != NULL && function_parameter != NULL) {
 #line 2609 "bootstrap/stage0/ReCode.code"
@@ -4623,8 +4807,9 @@ struct Checked_Opaque_Type* Checked_Opaque_Type__create(struct Source_Location* 
 
 #line 2634 "bootstrap/stage0/ReCode.code"
 struct Checked_Pointer_Type* Checked_Pointer_Type__create(struct Source_Location* location, struct Checked_Type* other_type) {
+    struct Checked_Pointer_Type* type;
 #line 2635 "bootstrap/stage0/ReCode.code"
-    struct Checked_Pointer_Type* type = ((struct Checked_Pointer_Type*) Checked_Type__create_kind(Checked_Type_Kind__POINTER, sizeof(struct Checked_Pointer_Type), location));
+    type = ((struct Checked_Pointer_Type*) Checked_Type__create_kind(Checked_Type_Kind__POINTER, sizeof(struct Checked_Pointer_Type), location));
 #line 2636 "bootstrap/stage0/ReCode.code"
     type->other_type = other_type;
 #line 2637 "bootstrap/stage0/ReCode.code"
@@ -4644,8 +4829,9 @@ bool Checked_Pointer_Type__equals(struct Checked_Pointer_Type* self, struct Chec
 
 #line 2652 "bootstrap/stage0/ReCode.code"
 struct Checked_Defined_Type* Checked_Defined_Type__create(struct Checked_Named_Type* defined_type) {
+    struct Checked_Defined_Type* type;
 #line 2653 "bootstrap/stage0/ReCode.code"
-    struct Checked_Defined_Type* type = ((struct Checked_Defined_Type*) Checked_Type__create_kind(Checked_Type_Kind__DEFINED, sizeof(struct Checked_Defined_Type), defined_type->super.location));
+    type = ((struct Checked_Defined_Type*) Checked_Type__create_kind(Checked_Type_Kind__DEFINED, sizeof(struct Checked_Defined_Type), defined_type->super.location));
 #line 2654 "bootstrap/stage0/ReCode.code"
     type->defined_type = defined_type;
 #line 2655 "bootstrap/stage0/ReCode.code"
@@ -4654,8 +4840,9 @@ struct Checked_Defined_Type* Checked_Defined_Type__create(struct Checked_Named_T
 
 #line 2665 "bootstrap/stage0/ReCode.code"
 struct Checked_Struct_Member* Checked_Struct_Member__create(struct Source_Location* location, struct String* name, struct Checked_Type* type) {
+    struct Checked_Struct_Member* member;
 #line 2666 "bootstrap/stage0/ReCode.code"
-    struct Checked_Struct_Member* member = ((struct Checked_Struct_Member*) malloc(sizeof(struct Checked_Struct_Member)));
+    member = ((struct Checked_Struct_Member*) malloc(sizeof(struct Checked_Struct_Member)));
 #line 2667 "bootstrap/stage0/ReCode.code"
     member->location = location;
 #line 2668 "bootstrap/stage0/ReCode.code"
@@ -4670,8 +4857,9 @@ struct Checked_Struct_Member* Checked_Struct_Member__create(struct Source_Locati
 
 #line 2680 "bootstrap/stage0/ReCode.code"
 struct Checked_Struct_Type* Checked_Struct_Type__create(struct Source_Location* location, struct String* name) {
+    struct Checked_Struct_Type* type;
 #line 2681 "bootstrap/stage0/ReCode.code"
-    struct Checked_Struct_Type* type = ((struct Checked_Struct_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind__STRUCT, sizeof(struct Checked_Struct_Type), location, name));
+    type = ((struct Checked_Struct_Type*) Checked_Named_Type__create_kind(Checked_Type_Kind__STRUCT, sizeof(struct Checked_Struct_Type), location, name));
 #line 2682 "bootstrap/stage0/ReCode.code"
     type->super_type = NULL;
 #line 2683 "bootstrap/stage0/ReCode.code"
@@ -4682,8 +4870,9 @@ struct Checked_Struct_Type* Checked_Struct_Type__create(struct Source_Location* 
 
 #line 2687 "bootstrap/stage0/ReCode.code"
 struct Checked_Struct_Member* Checked_Struct_Type__find_member(struct Checked_Struct_Type* self, struct String* name) {
+    struct Checked_Struct_Member* member;
 #line 2688 "bootstrap/stage0/ReCode.code"
-    struct Checked_Struct_Member* member = self->first_member;
+    member = self->first_member;
 #line 2689 "bootstrap/stage0/ReCode.code"
     while (member != NULL) {
 #line 2690 "bootstrap/stage0/ReCode.code"
@@ -4746,24 +4935,28 @@ bool Checked_Type__equals(struct Checked_Type* self, struct Checked_Type* other_
 struct String* String__append_checked_type(struct String* self, struct Checked_Type* type) {
 #line 2726 "bootstrap/stage0/ReCode.code"
     if (type->kind <= Checked_Type_Kind__NULL) {
+        struct Checked_Named_Type* named_type;
 #line 2727 "bootstrap/stage0/ReCode.code"
-        struct Checked_Named_Type* named_type = ((struct Checked_Named_Type*) type);
+        named_type = ((struct Checked_Named_Type*) type);
 #line 2728 "bootstrap/stage0/ReCode.code"
         String__append_string(self, named_type->name);
     } else if (type->kind == Checked_Type_Kind__STRUCT) {
+        struct Checked_Struct_Type* struct_type;
 #line 2730 "bootstrap/stage0/ReCode.code"
-        struct Checked_Struct_Type* struct_type = ((struct Checked_Struct_Type*) type);
+        struct_type = ((struct Checked_Struct_Type*) type);
 #line 2731 "bootstrap/stage0/ReCode.code"
         String__append_cstring(self, "struct ");
 #line 2732 "bootstrap/stage0/ReCode.code"
         String__append_string(self, struct_type->super.name);
     } else if (type->kind == Checked_Type_Kind__FUNCTION) {
+        struct Checked_Function_Type* function_type;
+        struct Checked_Function_Parameter* function_parameter;
 #line 2734 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Type* function_type = ((struct Checked_Function_Type*) type);
+        function_type = ((struct Checked_Function_Type*) type);
 #line 2735 "bootstrap/stage0/ReCode.code"
         String__append_cstring(self, "(func (");
 #line 2736 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Parameter* function_parameter = function_type->first_parameter;
+        function_parameter = function_type->first_parameter;
 #line 2737 "bootstrap/stage0/ReCode.code"
         while (function_parameter != NULL) {
 #line 2738 "bootstrap/stage0/ReCode.code"
@@ -4783,15 +4976,17 @@ struct String* String__append_checked_type(struct String* self, struct Checked_T
 #line 2746 "bootstrap/stage0/ReCode.code"
         String__append_char(self, ')');
     } else if (type->kind == Checked_Type_Kind__ENUM) {
+        struct Checked_Enum_Type* enum_type;
 #line 2748 "bootstrap/stage0/ReCode.code"
-        struct Checked_Enum_Type* enum_type = ((struct Checked_Enum_Type*) type);
+        enum_type = ((struct Checked_Enum_Type*) type);
 #line 2749 "bootstrap/stage0/ReCode.code"
         String__append_cstring(self, "enum ");
 #line 2750 "bootstrap/stage0/ReCode.code"
         String__append_string(self, enum_type->super.name);
     } else if (type->kind == Checked_Type_Kind__POINTER) {
+        struct Checked_Pointer_Type* pointer_type;
 #line 2752 "bootstrap/stage0/ReCode.code"
-        struct Checked_Pointer_Type* pointer_type = ((struct Checked_Pointer_Type*) type);
+        pointer_type = ((struct Checked_Pointer_Type*) type);
 #line 2753 "bootstrap/stage0/ReCode.code"
         String__append_checked_type(self, pointer_type->other_type);
 #line 2754 "bootstrap/stage0/ReCode.code"
@@ -4808,8 +5003,10 @@ struct String* String__append_checked_type(struct String* self, struct Checked_T
 
 #line 2762 "bootstrap/stage0/ReCode.code"
 void File__write_checked_function_symbol(struct File* self, struct Checked_Function_Symbol* function_symbol) {
+    struct Checked_Function_Type* function_type;
+    struct Checked_Function_Parameter* function_parameter;
 #line 2763 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Type* function_type = function_symbol->function_type;
+    function_type = function_symbol->function_type;
 #line 2764 "bootstrap/stage0/ReCode.code"
     File__write_checked_type(self, function_type->return_type);
 #line 2765 "bootstrap/stage0/ReCode.code"
@@ -4819,7 +5016,7 @@ void File__write_checked_function_symbol(struct File* self, struct Checked_Funct
 #line 2767 "bootstrap/stage0/ReCode.code"
     File__write_char(self, '(');
 #line 2768 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Parameter* function_parameter = function_type->first_parameter;
+    function_parameter = function_type->first_parameter;
 #line 2769 "bootstrap/stage0/ReCode.code"
     while (function_parameter != NULL) {
 #line 2770 "bootstrap/stage0/ReCode.code"
@@ -4840,8 +5037,10 @@ void File__write_checked_function_symbol(struct File* self, struct Checked_Funct
 void File__write_checked_function_parameter(struct File* self, struct Checked_Function_Parameter* parameter) {
 #line 2780 "bootstrap/stage0/ReCode.code"
     if (parameter->type->kind == Checked_Type_Kind__FUNCTION) {
+        struct Checked_Function_Type* function_type;
+        struct Checked_Function_Parameter* function_parameter;
 #line 2781 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Type* function_type = ((struct Checked_Function_Type*) parameter->type);
+        function_type = ((struct Checked_Function_Type*) parameter->type);
 #line 2782 "bootstrap/stage0/ReCode.code"
         File__write_checked_type(self, function_type->return_type);
 #line 2783 "bootstrap/stage0/ReCode.code"
@@ -4851,7 +5050,7 @@ void File__write_checked_function_parameter(struct File* self, struct Checked_Fu
 #line 2785 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self, ")(");
 #line 2786 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Parameter* function_parameter = function_type->first_parameter;
+        function_parameter = function_type->first_parameter;
 #line 2787 "bootstrap/stage0/ReCode.code"
         while (function_parameter != NULL) {
 #line 2788 "bootstrap/stage0/ReCode.code"
@@ -4913,34 +5112,39 @@ void File__write_checked_type(struct File* self, struct Checked_Type* type) {
 #line 2824 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self, "size_t");
     } else if (type->kind <= Checked_Type_Kind__NULL) {
+        struct Checked_Named_Type* named_type;
 #line 2826 "bootstrap/stage0/ReCode.code"
-        struct Checked_Named_Type* named_type = ((struct Checked_Named_Type*) type);
+        named_type = ((struct Checked_Named_Type*) type);
 #line 2827 "bootstrap/stage0/ReCode.code"
         File__write_string(self, named_type->name);
     } else if (type->kind == Checked_Type_Kind__STRUCT) {
+        struct Checked_Struct_Type* struct_type;
 #line 2829 "bootstrap/stage0/ReCode.code"
-        struct Checked_Struct_Type* struct_type = ((struct Checked_Struct_Type*) type);
+        struct_type = ((struct Checked_Struct_Type*) type);
 #line 2830 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self, "struct ");
 #line 2831 "bootstrap/stage0/ReCode.code"
         File__write_string(self, struct_type->super.name);
     } else if (type->kind == Checked_Type_Kind__OPAQUE) {
+        struct Checked_Opaque_Type* opaque_type;
 #line 2833 "bootstrap/stage0/ReCode.code"
-        struct Checked_Opaque_Type* opaque_type = ((struct Checked_Opaque_Type*) type);
+        opaque_type = ((struct Checked_Opaque_Type*) type);
 #line 2834 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self, "struct ");
 #line 2835 "bootstrap/stage0/ReCode.code"
         File__write_string(self, opaque_type->super.name);
     } else if (type->kind == Checked_Type_Kind__ENUM) {
+        struct Checked_Enum_Type* enum_type;
 #line 2837 "bootstrap/stage0/ReCode.code"
-        struct Checked_Enum_Type* enum_type = ((struct Checked_Enum_Type*) type);
+        enum_type = ((struct Checked_Enum_Type*) type);
 #line 2838 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self, "enum ");
 #line 2839 "bootstrap/stage0/ReCode.code"
         File__write_string(self, enum_type->super.name);
     } else if (type->kind == Checked_Type_Kind__POINTER) {
+        struct Checked_Pointer_Type* pointer_type;
 #line 2841 "bootstrap/stage0/ReCode.code"
-        struct Checked_Pointer_Type* pointer_type = ((struct Checked_Pointer_Type*) type);
+        pointer_type = ((struct Checked_Pointer_Type*) type);
 #line 2842 "bootstrap/stage0/ReCode.code"
         File__write_checked_type(self, pointer_type->other_type);
 #line 2843 "bootstrap/stage0/ReCode.code"
@@ -4955,8 +5159,9 @@ void File__write_checked_type(struct File* self, struct Checked_Type* type) {
 
 #line 2871 "bootstrap/stage0/ReCode.code"
 struct Checked_Symbol* Checked_Symbol__create_kind(enum Checked_Symbol_Kind kind, size_t kind_size, struct Source_Location* location, struct String* name, struct Checked_Type* type) {
+    struct Checked_Symbol* symbol;
 #line 2872 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* symbol = ((struct Checked_Symbol*) malloc(kind_size));
+    symbol = ((struct Checked_Symbol*) malloc(kind_size));
 #line 2873 "bootstrap/stage0/ReCode.code"
     symbol->kind = kind;
 #line 2874 "bootstrap/stage0/ReCode.code"
@@ -4981,8 +5186,9 @@ struct Checked_Enum_Member_Symbol* Checked_Enum_Member_Symbol__create(struct Sou
 
 #line 2896 "bootstrap/stage0/ReCode.code"
 struct Checked_Function_Symbol* Checked_Function_Symbol__create(struct Source_Location* location, struct String* name, struct Checked_Function_Type* function_type) {
+    struct Checked_Function_Symbol* symbol;
 #line 2897 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Symbol* symbol = ((struct Checked_Function_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind__FUNCTION, sizeof(struct Checked_Function_Symbol), location, name, ((struct Checked_Type*) function_type)));
+    symbol = ((struct Checked_Function_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind__FUNCTION, sizeof(struct Checked_Function_Symbol), location, name, ((struct Checked_Type*) function_type)));
 #line 2898 "bootstrap/stage0/ReCode.code"
     symbol->function_type = function_type;
 #line 2899 "bootstrap/stage0/ReCode.code"
@@ -4999,8 +5205,9 @@ struct Checked_Function_Parameter_Symbol* Checked_Function_Parameter_Symbol__cre
 
 #line 2916 "bootstrap/stage0/ReCode.code"
 struct Checked_Type_Symbol* Checked_Type_Symbol__create(struct Source_Location* location, struct String* name, struct Checked_Named_Type* named_type) {
+    struct Checked_Type_Symbol* symbol;
 #line 2917 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type_Symbol* symbol = ((struct Checked_Type_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind__TYPE, sizeof(struct Checked_Type_Symbol), location, name, ((struct Checked_Type*) Checked_Defined_Type__create(named_type))));
+    symbol = ((struct Checked_Type_Symbol*) Checked_Symbol__create_kind(Checked_Symbol_Kind__TYPE, sizeof(struct Checked_Type_Symbol), location, name, ((struct Checked_Type*) Checked_Defined_Type__create(named_type))));
 #line 2918 "bootstrap/stage0/ReCode.code"
     symbol->named_type = named_type;
 #line 2919 "bootstrap/stage0/ReCode.code"
@@ -5015,8 +5222,9 @@ struct Checked_Variable_Symbol* Checked_Variable__create(struct Source_Location*
 
 #line 2936 "bootstrap/stage0/ReCode.code"
 struct Checked_Symbols* Checked_Symbols__create(struct Checked_Symbols* parent) {
+    struct Checked_Symbols* symbols;
 #line 2937 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbols* symbols = ((struct Checked_Symbols*) malloc(sizeof(struct Checked_Symbols)));
+    symbols = ((struct Checked_Symbols*) malloc(sizeof(struct Checked_Symbols)));
 #line 2938 "bootstrap/stage0/ReCode.code"
     symbols->parent = parent;
 #line 2939 "bootstrap/stage0/ReCode.code"
@@ -5029,8 +5237,9 @@ struct Checked_Symbols* Checked_Symbols__create(struct Checked_Symbols* parent) 
 
 #line 2944 "bootstrap/stage0/ReCode.code"
 struct Checked_Symbol* Checked_Symbols__find_sibling_symbol(struct Checked_Symbols* self, struct String* name) {
+    struct Checked_Symbol* symbol;
 #line 2945 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* symbol = self->first_symbol;
+    symbol = self->first_symbol;
 #line 2946 "bootstrap/stage0/ReCode.code"
     while (symbol != NULL) {
 #line 2947 "bootstrap/stage0/ReCode.code"
@@ -5047,8 +5256,9 @@ struct Checked_Symbol* Checked_Symbols__find_sibling_symbol(struct Checked_Symbo
 
 #line 2955 "bootstrap/stage0/ReCode.code"
 void Checked_Symbols__append_symbol(struct Checked_Symbols* self, struct Checked_Symbol* symbol) {
+    struct Checked_Symbol* other_symbol;
 #line 2956 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* other_symbol = Checked_Symbols__find_sibling_symbol(self, symbol->name);
+    other_symbol = Checked_Symbols__find_sibling_symbol(self, symbol->name);
 #line 2957 "bootstrap/stage0/ReCode.code"
     if (other_symbol != NULL) {
 #line 2958 "bootstrap/stage0/ReCode.code"
@@ -5072,8 +5282,9 @@ void Checked_Symbols__append_symbol(struct Checked_Symbols* self, struct Checked
 
 #line 2971 "bootstrap/stage0/ReCode.code"
 struct Checked_Symbol* Checked_Symbols__find_symbol(struct Checked_Symbols* self, struct String* name) {
+    struct Checked_Symbol* symbol;
 #line 2972 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* symbol = self->last_symbol;
+    symbol = self->last_symbol;
 #line 2973 "bootstrap/stage0/ReCode.code"
     while (symbol != NULL) {
 #line 2974 "bootstrap/stage0/ReCode.code"
@@ -5095,8 +5306,9 @@ struct Checked_Symbol* Checked_Symbols__find_symbol(struct Checked_Symbols* self
 
 #line 3027 "bootstrap/stage0/ReCode.code"
 struct Checked_Expression* Checked_Expression__create_kind(enum Checked_Expression_Kind kind, size_t kind_size, struct Source_Location* location, struct Checked_Type* type) {
+    struct Checked_Expression* expression;
 #line 3028 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* expression = ((struct Checked_Expression*) malloc(kind_size));
+    expression = ((struct Checked_Expression*) malloc(kind_size));
 #line 3029 "bootstrap/stage0/ReCode.code"
     expression->kind = kind;
 #line 3030 "bootstrap/stage0/ReCode.code"
@@ -5109,8 +5321,9 @@ struct Checked_Expression* Checked_Expression__create_kind(enum Checked_Expressi
 
 #line 3041 "bootstrap/stage0/ReCode.code"
 struct Checked_Binary_Expression* Checked_Binary_Expression__create_kind(enum Checked_Expression_Kind kind, struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* left_expression, struct Checked_Expression* right_expression) {
+    struct Checked_Binary_Expression* expression;
 #line 3042 "bootstrap/stage0/ReCode.code"
-    struct Checked_Binary_Expression* expression = ((struct Checked_Binary_Expression*) Checked_Expression__create_kind(kind, sizeof(struct Checked_Binary_Expression), location, type));
+    expression = ((struct Checked_Binary_Expression*) Checked_Expression__create_kind(kind, sizeof(struct Checked_Binary_Expression), location, type));
 #line 3043 "bootstrap/stage0/ReCode.code"
     expression->left_expression = left_expression;
 #line 3044 "bootstrap/stage0/ReCode.code"
@@ -5121,8 +5334,9 @@ struct Checked_Binary_Expression* Checked_Binary_Expression__create_kind(enum Ch
 
 #line 3053 "bootstrap/stage0/ReCode.code"
 struct Checked_Unary_Expression* Checked_Unary_Expression__create_kind(enum Checked_Expression_Kind kind, size_t kind_size, struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* other_expression) {
+    struct Checked_Unary_Expression* expression;
 #line 3054 "bootstrap/stage0/ReCode.code"
-    struct Checked_Unary_Expression* expression = ((struct Checked_Unary_Expression*) Checked_Expression__create_kind(kind, kind_size, location, type));
+    expression = ((struct Checked_Unary_Expression*) Checked_Expression__create_kind(kind, kind_size, location, type));
 #line 3055 "bootstrap/stage0/ReCode.code"
     expression->other_expression = other_expression;
 #line 3056 "bootstrap/stage0/ReCode.code"
@@ -5143,8 +5357,9 @@ struct Checked_Address_Of_Expression* Checked_Address_Of_Expression__create(stru
 
 #line 3081 "bootstrap/stage0/ReCode.code"
 struct Checked_Array_Access_Expression* Checked_Array_Access_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* array_expression, struct Checked_Expression* index_expression) {
+    struct Checked_Array_Access_Expression* expression;
 #line 3082 "bootstrap/stage0/ReCode.code"
-    struct Checked_Array_Access_Expression* expression = ((struct Checked_Array_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__ARRAY_ACCESS, sizeof(struct Checked_Array_Access_Expression), location, type));
+    expression = ((struct Checked_Array_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__ARRAY_ACCESS, sizeof(struct Checked_Array_Access_Expression), location, type));
 #line 3083 "bootstrap/stage0/ReCode.code"
     expression->array_expression = array_expression;
 #line 3084 "bootstrap/stage0/ReCode.code"
@@ -5155,8 +5370,9 @@ struct Checked_Array_Access_Expression* Checked_Array_Access_Expression__create(
 
 #line 3093 "bootstrap/stage0/ReCode.code"
 struct Checked_Bool_Expression* Checked_Bool_Expression__create(struct Source_Location* location, struct Checked_Type* type, bool value) {
+    struct Checked_Bool_Expression* expression;
 #line 3094 "bootstrap/stage0/ReCode.code"
-    struct Checked_Bool_Expression* expression = ((struct Checked_Bool_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__BOOL, sizeof(struct Checked_Bool_Expression), location, type));
+    expression = ((struct Checked_Bool_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__BOOL, sizeof(struct Checked_Bool_Expression), location, type));
 #line 3095 "bootstrap/stage0/ReCode.code"
     expression->value = value;
 #line 3096 "bootstrap/stage0/ReCode.code"
@@ -5165,8 +5381,9 @@ struct Checked_Bool_Expression* Checked_Bool_Expression__create(struct Source_Lo
 
 #line 3104 "bootstrap/stage0/ReCode.code"
 struct Checked_Call_Argument* Checked_Call_Argument__create(struct Checked_Expression* expression) {
+    struct Checked_Call_Argument* argument;
 #line 3105 "bootstrap/stage0/ReCode.code"
-    struct Checked_Call_Argument* argument = ((struct Checked_Call_Argument*) malloc(sizeof(struct Checked_Call_Argument)));
+    argument = ((struct Checked_Call_Argument*) malloc(sizeof(struct Checked_Call_Argument)));
 #line 3106 "bootstrap/stage0/ReCode.code"
     argument->expression = expression;
 #line 3107 "bootstrap/stage0/ReCode.code"
@@ -5177,8 +5394,9 @@ struct Checked_Call_Argument* Checked_Call_Argument__create(struct Checked_Expre
 
 #line 3117 "bootstrap/stage0/ReCode.code"
 struct Checked_Call_Expression* Checked_Call_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* callee_expression, struct Checked_Call_Argument* first_argument) {
+    struct Checked_Call_Expression* expression;
 #line 3118 "bootstrap/stage0/ReCode.code"
-    struct Checked_Call_Expression* expression = ((struct Checked_Call_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__CALL, sizeof(struct Checked_Call_Expression), location, type));
+    expression = ((struct Checked_Call_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__CALL, sizeof(struct Checked_Call_Expression), location, type));
 #line 3119 "bootstrap/stage0/ReCode.code"
     expression->callee_expression = callee_expression;
 #line 3120 "bootstrap/stage0/ReCode.code"
@@ -5189,8 +5407,9 @@ struct Checked_Call_Expression* Checked_Call_Expression__create(struct Source_Lo
 
 #line 3129 "bootstrap/stage0/ReCode.code"
 struct Checked_Cast_Expression* Checked_Cast_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* other_expression) {
+    struct Checked_Cast_Expression* expression;
 #line 3130 "bootstrap/stage0/ReCode.code"
-    struct Checked_Cast_Expression* expression = ((struct Checked_Cast_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__CAST, sizeof(struct Checked_Cast_Expression), location, type));
+    expression = ((struct Checked_Cast_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__CAST, sizeof(struct Checked_Cast_Expression), location, type));
 #line 3131 "bootstrap/stage0/ReCode.code"
     expression->other_expression = other_expression;
 #line 3132 "bootstrap/stage0/ReCode.code"
@@ -5199,8 +5418,9 @@ struct Checked_Cast_Expression* Checked_Cast_Expression__create(struct Source_Lo
 
 #line 3140 "bootstrap/stage0/ReCode.code"
 struct Checked_Character_Expression* Checked_Character_Expression__create(struct Source_Location* location, struct Checked_Type* type, char value) {
+    struct Checked_Character_Expression* expression;
 #line 3141 "bootstrap/stage0/ReCode.code"
-    struct Checked_Character_Expression* expression = ((struct Checked_Character_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__CHARACTER, sizeof(struct Checked_Character_Expression), location, type));
+    expression = ((struct Checked_Character_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__CHARACTER, sizeof(struct Checked_Character_Expression), location, type));
 #line 3142 "bootstrap/stage0/ReCode.code"
     expression->value = value;
 #line 3143 "bootstrap/stage0/ReCode.code"
@@ -5209,8 +5429,9 @@ struct Checked_Character_Expression* Checked_Character_Expression__create(struct
 
 #line 3151 "bootstrap/stage0/ReCode.code"
 struct Checked_Dereference_Expression* Checked_Dereference_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* value_expression) {
+    struct Checked_Dereference_Expression* expression;
 #line 3152 "bootstrap/stage0/ReCode.code"
-    struct Checked_Dereference_Expression* expression = ((struct Checked_Dereference_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__DEREFERENCE, sizeof(struct Checked_Dereference_Expression), location, type));
+    expression = ((struct Checked_Dereference_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__DEREFERENCE, sizeof(struct Checked_Dereference_Expression), location, type));
 #line 3153 "bootstrap/stage0/ReCode.code"
     expression->value_expression = value_expression;
 #line 3154 "bootstrap/stage0/ReCode.code"
@@ -5243,8 +5464,9 @@ struct Checked_Greater_Or_Equals_Expression* Checked_Greater_Or_Equals_Expressio
 
 #line 3194 "bootstrap/stage0/ReCode.code"
 struct Checked_Group_Expression* Checked_Group_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* other_expression) {
+    struct Checked_Group_Expression* expression;
 #line 3195 "bootstrap/stage0/ReCode.code"
-    struct Checked_Group_Expression* expression = ((struct Checked_Group_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__GROUP, sizeof(struct Checked_Group_Expression), location, type));
+    expression = ((struct Checked_Group_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__GROUP, sizeof(struct Checked_Group_Expression), location, type));
 #line 3196 "bootstrap/stage0/ReCode.code"
     expression->other_expression = other_expression;
 #line 3197 "bootstrap/stage0/ReCode.code"
@@ -5253,8 +5475,9 @@ struct Checked_Group_Expression* Checked_Group_Expression__create(struct Source_
 
 #line 3205 "bootstrap/stage0/ReCode.code"
 struct Checked_Integer_Expression* Checked_Integer_Expression__create(struct Source_Location* location, struct Checked_Type* type, uint64_t value) {
+    struct Checked_Integer_Expression* expression;
 #line 3206 "bootstrap/stage0/ReCode.code"
-    struct Checked_Integer_Expression* expression = ((struct Checked_Integer_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__INTEGER, sizeof(struct Checked_Integer_Expression), location, type));
+    expression = ((struct Checked_Integer_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__INTEGER, sizeof(struct Checked_Integer_Expression), location, type));
 #line 3207 "bootstrap/stage0/ReCode.code"
     expression->value = value;
 #line 3208 "bootstrap/stage0/ReCode.code"
@@ -5287,8 +5510,9 @@ struct Checked_Logic_Or_Expression* Checked_Logic_Or_Expression__create(struct S
 
 #line 3249 "bootstrap/stage0/ReCode.code"
 struct Checked_Member_Access_Expression* Checked_Member_Access_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Expression* object_expression, struct Checked_Struct_Member* member) {
+    struct Checked_Member_Access_Expression* expression;
 #line 3250 "bootstrap/stage0/ReCode.code"
-    struct Checked_Member_Access_Expression* expression = ((struct Checked_Member_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__MEMBER_ACCESS, sizeof(struct Checked_Member_Access_Expression), location, type));
+    expression = ((struct Checked_Member_Access_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__MEMBER_ACCESS, sizeof(struct Checked_Member_Access_Expression), location, type));
 #line 3251 "bootstrap/stage0/ReCode.code"
     expression->object_expression = object_expression;
 #line 3252 "bootstrap/stage0/ReCode.code"
@@ -5335,8 +5559,9 @@ struct Checked_Null_Expression* Checked_Null_Expression__create(struct Source_Lo
 
 #line 3309 "bootstrap/stage0/ReCode.code"
 struct Checked_Sizeof_Expression* Checked_Sizeof_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Type* sized_type) {
+    struct Checked_Sizeof_Expression* expression;
 #line 3310 "bootstrap/stage0/ReCode.code"
-    struct Checked_Sizeof_Expression* expression = ((struct Checked_Sizeof_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__SIZEOF, sizeof(struct Checked_Sizeof_Expression), location, type));
+    expression = ((struct Checked_Sizeof_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__SIZEOF, sizeof(struct Checked_Sizeof_Expression), location, type));
 #line 3311 "bootstrap/stage0/ReCode.code"
     expression->sized_type = sized_type;
 #line 3312 "bootstrap/stage0/ReCode.code"
@@ -5345,8 +5570,9 @@ struct Checked_Sizeof_Expression* Checked_Sizeof_Expression__create(struct Sourc
 
 #line 3320 "bootstrap/stage0/ReCode.code"
 struct Checked_String_Expression* Checked_String_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct String* value) {
+    struct Checked_String_Expression* expression;
 #line 3321 "bootstrap/stage0/ReCode.code"
-    struct Checked_String_Expression* expression = ((struct Checked_String_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__STRING, sizeof(struct Checked_String_Expression), location, type));
+    expression = ((struct Checked_String_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__STRING, sizeof(struct Checked_String_Expression), location, type));
 #line 3322 "bootstrap/stage0/ReCode.code"
     expression->value = value;
 #line 3323 "bootstrap/stage0/ReCode.code"
@@ -5361,8 +5587,9 @@ struct Checked_Substract_Expression* Checked_Substract_Expression__create(struct
 
 #line 3339 "bootstrap/stage0/ReCode.code"
 struct Checked_Symbol_Expression* Checked_Symbol_Expression__create(struct Source_Location* location, struct Checked_Type* type, struct Checked_Symbol* symbol) {
+    struct Checked_Symbol_Expression* expression;
 #line 3340 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol_Expression* expression = ((struct Checked_Symbol_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__SYMBOL, sizeof(struct Checked_Symbol_Expression), location, type));
+    expression = ((struct Checked_Symbol_Expression*) Checked_Expression__create_kind(Checked_Expression_Kind__SYMBOL, sizeof(struct Checked_Symbol_Expression), location, type));
 #line 3341 "bootstrap/stage0/ReCode.code"
     expression->symbol = symbol;
 #line 3342 "bootstrap/stage0/ReCode.code"
@@ -5371,8 +5598,9 @@ struct Checked_Symbol_Expression* Checked_Symbol_Expression__create(struct Sourc
 
 #line 3366 "bootstrap/stage0/ReCode.code"
 struct Checked_Statement* Checked_Statement__create_kind(enum Checked_Statement_Kind kind, size_t kind_size, struct Source_Location* location) {
+    struct Checked_Statement* statement;
 #line 3367 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statement* statement = ((struct Checked_Statement*) malloc(kind_size));
+    statement = ((struct Checked_Statement*) malloc(kind_size));
 #line 3368 "bootstrap/stage0/ReCode.code"
     statement->kind = kind;
 #line 3369 "bootstrap/stage0/ReCode.code"
@@ -5385,8 +5613,9 @@ struct Checked_Statement* Checked_Statement__create_kind(enum Checked_Statement_
 
 #line 3380 "bootstrap/stage0/ReCode.code"
 struct Checked_Assignment_Statement* Checked_Assignment_Statement__create(struct Source_Location* location, struct Checked_Expression* object_expression, struct Checked_Expression* value_expression) {
+    struct Checked_Assignment_Statement* statement;
 #line 3381 "bootstrap/stage0/ReCode.code"
-    struct Checked_Assignment_Statement* statement = ((struct Checked_Assignment_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__ASSIGNMENT, sizeof(struct Checked_Assignment_Statement), location));
+    statement = ((struct Checked_Assignment_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__ASSIGNMENT, sizeof(struct Checked_Assignment_Statement), location));
 #line 3382 "bootstrap/stage0/ReCode.code"
     statement->object_expression = object_expression;
 #line 3383 "bootstrap/stage0/ReCode.code"
@@ -5397,8 +5626,9 @@ struct Checked_Assignment_Statement* Checked_Assignment_Statement__create(struct
 
 #line 3392 "bootstrap/stage0/ReCode.code"
 struct Checked_Block_Statement* Checked_Block_Statement__create(struct Source_Location* location, struct Checked_Statements* statements) {
+    struct Checked_Block_Statement* statement;
 #line 3393 "bootstrap/stage0/ReCode.code"
-    struct Checked_Block_Statement* statement = ((struct Checked_Block_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__BLOCK, sizeof(struct Checked_Block_Statement), location));
+    statement = ((struct Checked_Block_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__BLOCK, sizeof(struct Checked_Block_Statement), location));
 #line 3394 "bootstrap/stage0/ReCode.code"
     statement->statements = statements;
 #line 3395 "bootstrap/stage0/ReCode.code"
@@ -5413,8 +5643,9 @@ struct Checked_Break_Statement* Checked_Break_Statement__create(struct Source_Lo
 
 #line 3411 "bootstrap/stage0/ReCode.code"
 struct Checked_Expression_Statement* Checked_Expression_Statement__create(struct Source_Location* location, struct Checked_Expression* expression) {
+    struct Checked_Expression_Statement* statement;
 #line 3412 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression_Statement* statement = ((struct Checked_Expression_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__EXPRESSION, sizeof(struct Checked_Expression_Statement), location));
+    statement = ((struct Checked_Expression_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__EXPRESSION, sizeof(struct Checked_Expression_Statement), location));
 #line 3413 "bootstrap/stage0/ReCode.code"
     statement->expression = expression;
 #line 3414 "bootstrap/stage0/ReCode.code"
@@ -5423,8 +5654,9 @@ struct Checked_Expression_Statement* Checked_Expression_Statement__create(struct
 
 #line 3424 "bootstrap/stage0/ReCode.code"
 struct Checked_If_Statement* Checked_If_Statement__create(struct Source_Location* location, struct Checked_Expression* condition_expression, struct Checked_Statement* true_statement, struct Checked_Statement* false_statement) {
+    struct Checked_If_Statement* statement;
 #line 3425 "bootstrap/stage0/ReCode.code"
-    struct Checked_If_Statement* statement = ((struct Checked_If_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__IF, sizeof(struct Checked_If_Statement), location));
+    statement = ((struct Checked_If_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__IF, sizeof(struct Checked_If_Statement), location));
 #line 3426 "bootstrap/stage0/ReCode.code"
     statement->condition_expression = condition_expression;
 #line 3427 "bootstrap/stage0/ReCode.code"
@@ -5437,8 +5669,9 @@ struct Checked_If_Statement* Checked_If_Statement__create(struct Source_Location
 
 #line 3437 "bootstrap/stage0/ReCode.code"
 struct Checked_Return_Statement* Checked_Return_Statement__create(struct Source_Location* location, struct Checked_Expression* expression) {
+    struct Checked_Return_Statement* statement;
 #line 3438 "bootstrap/stage0/ReCode.code"
-    struct Checked_Return_Statement* statement = ((struct Checked_Return_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__RETURN, sizeof(struct Checked_Return_Statement), location));
+    statement = ((struct Checked_Return_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__RETURN, sizeof(struct Checked_Return_Statement), location));
 #line 3439 "bootstrap/stage0/ReCode.code"
     statement->expression = expression;
 #line 3440 "bootstrap/stage0/ReCode.code"
@@ -5447,8 +5680,9 @@ struct Checked_Return_Statement* Checked_Return_Statement__create(struct Source_
 
 #line 3450 "bootstrap/stage0/ReCode.code"
 struct Checked_Variable_Statement* Checked_Variable_Statement__create(struct Source_Location* location, struct Checked_Variable_Symbol* variable, struct Checked_Expression* expression, bool is_external) {
+    struct Checked_Variable_Statement* statement;
 #line 3451 "bootstrap/stage0/ReCode.code"
-    struct Checked_Variable_Statement* statement = ((struct Checked_Variable_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__VARIABLE, sizeof(struct Checked_Variable_Statement), location));
+    statement = ((struct Checked_Variable_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__VARIABLE, sizeof(struct Checked_Variable_Statement), location));
 #line 3452 "bootstrap/stage0/ReCode.code"
     statement->variable = variable;
 #line 3453 "bootstrap/stage0/ReCode.code"
@@ -5461,8 +5695,9 @@ struct Checked_Variable_Statement* Checked_Variable_Statement__create(struct Sou
 
 #line 3464 "bootstrap/stage0/ReCode.code"
 struct Checked_While_Statement* Checked_While_Statement__create(struct Source_Location* location, struct Checked_Expression* condition_expression, struct Checked_Statement* body_statement) {
+    struct Checked_While_Statement* statement;
 #line 3465 "bootstrap/stage0/ReCode.code"
-    struct Checked_While_Statement* statement = ((struct Checked_While_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__WHILE, sizeof(struct Checked_While_Statement), location));
+    statement = ((struct Checked_While_Statement*) Checked_Statement__create_kind(Checked_Statement_Kind__WHILE, sizeof(struct Checked_While_Statement), location));
 #line 3466 "bootstrap/stage0/ReCode.code"
     statement->condition_expression = condition_expression;
 #line 3467 "bootstrap/stage0/ReCode.code"
@@ -5471,1366 +5706,1504 @@ struct Checked_While_Statement* Checked_While_Statement__create(struct Source_Lo
     return statement;
 }
 
-#line 3476 "bootstrap/stage0/ReCode.code"
-struct Checked_Statements* Checked_Statements__create() {
 #line 3477 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statements* statements = ((struct Checked_Statements*) malloc(sizeof(struct Checked_Statements)));
+struct Checked_Statements* Checked_Statements__create(struct Checked_Symbols* symbols) {
+    struct Checked_Statements* statements;
 #line 3478 "bootstrap/stage0/ReCode.code"
-    statements->first_statement = NULL;
+    statements = ((struct Checked_Statements*) malloc(sizeof(struct Checked_Statements)));
 #line 3479 "bootstrap/stage0/ReCode.code"
-    statements->last_statement = NULL;
+    statements->symbols = symbols;
 #line 3480 "bootstrap/stage0/ReCode.code"
+    statements->first_statement = NULL;
+#line 3481 "bootstrap/stage0/ReCode.code"
+    statements->last_statement = NULL;
+#line 3482 "bootstrap/stage0/ReCode.code"
     return statements;
 }
 
-#line 3483 "bootstrap/stage0/ReCode.code"
-void Checked_Statements__append(struct Checked_Statements* self, struct Checked_Statement* statement) {
-#line 3484 "bootstrap/stage0/ReCode.code"
-    if (self->first_statement == NULL) {
 #line 3485 "bootstrap/stage0/ReCode.code"
+void Checked_Statements__append(struct Checked_Statements* self, struct Checked_Statement* statement) {
+#line 3486 "bootstrap/stage0/ReCode.code"
+    if (self->first_statement == NULL) {
+#line 3487 "bootstrap/stage0/ReCode.code"
         self->first_statement = statement;
     } else {
-#line 3487 "bootstrap/stage0/ReCode.code"
+#line 3489 "bootstrap/stage0/ReCode.code"
         self->last_statement->next_statement = statement;
     }
-#line 3489 "bootstrap/stage0/ReCode.code"
+#line 3491 "bootstrap/stage0/ReCode.code"
     self->last_statement = statement;
 }
 
-#line 3513 "bootstrap/stage0/ReCode.code"
-struct Checker* Checker__create() {
-#line 3514 "bootstrap/stage0/ReCode.code"
-    struct Checker* checker = ((struct Checker*) malloc(sizeof(struct Checker)));
 #line 3515 "bootstrap/stage0/ReCode.code"
-    checker->first_type = NULL;
+struct Checker* Checker__create() {
+    struct Checker* checker;
+    struct Source_Location* location;
 #line 3516 "bootstrap/stage0/ReCode.code"
-    checker->last_type = NULL;
+    checker = ((struct Checker*) malloc(sizeof(struct Checker)));
 #line 3517 "bootstrap/stage0/ReCode.code"
-    checker->symbols = Checked_Symbols__create(NULL);
+    checker->first_type = NULL;
+#line 3518 "bootstrap/stage0/ReCode.code"
+    checker->last_type = NULL;
 #line 3519 "bootstrap/stage0/ReCode.code"
-    struct Source_Location* location = Source_Location__create(NULL, ((uint16_t) 0), ((uint16_t) 1));
-#line 3520 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__BOOL, sizeof(struct Checked_Named_Type), location, String__create_from("bool")));
+    checker->symbols = Checked_Symbols__create(NULL);
 #line 3521 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__CHAR, sizeof(struct Checked_Named_Type), location, String__create_from("char")));
+    location = Source_Location__create(NULL, ((uint16_t) 0), ((uint16_t) 1));
 #line 3522 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I16, sizeof(struct Checked_Named_Type), location, String__create_from("i16")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__BOOL, sizeof(struct Checked_Named_Type), location, String__create_from("bool")));
 #line 3523 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I32, sizeof(struct Checked_Named_Type), location, String__create_from("i32")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__CHAR, sizeof(struct Checked_Named_Type), location, String__create_from("char")));
 #line 3524 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I64, sizeof(struct Checked_Named_Type), location, String__create_from("i64")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I16, sizeof(struct Checked_Named_Type), location, String__create_from("i16")));
 #line 3525 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I8, sizeof(struct Checked_Named_Type), location, String__create_from("i8")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I32, sizeof(struct Checked_Named_Type), location, String__create_from("i32")));
 #line 3526 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U16, sizeof(struct Checked_Named_Type), location, String__create_from("u16")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I64, sizeof(struct Checked_Named_Type), location, String__create_from("i64")));
 #line 3527 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U32, sizeof(struct Checked_Named_Type), location, String__create_from("u32")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__I8, sizeof(struct Checked_Named_Type), location, String__create_from("i8")));
 #line 3528 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U64, sizeof(struct Checked_Named_Type), location, String__create_from("u64")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U16, sizeof(struct Checked_Named_Type), location, String__create_from("u16")));
 #line 3529 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U8, sizeof(struct Checked_Named_Type), location, String__create_from("u8")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U32, sizeof(struct Checked_Named_Type), location, String__create_from("u32")));
 #line 3530 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__USIZE, sizeof(struct Checked_Named_Type), location, String__create_from("usize")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U64, sizeof(struct Checked_Named_Type), location, String__create_from("u64")));
 #line 3531 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__VOID, sizeof(struct Checked_Named_Type), location, String__create_from("void")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__U8, sizeof(struct Checked_Named_Type), location, String__create_from("u8")));
 #line 3532 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__NULL, sizeof(struct Checked_Named_Type), location, String__create_from("null")));
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__USIZE, sizeof(struct Checked_Named_Type), location, String__create_from("usize")));
 #line 3533 "bootstrap/stage0/ReCode.code"
-    checker->last_builting_type = checker->last_type;
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__VOID, sizeof(struct Checked_Named_Type), location, String__create_from("void")));
+#line 3534 "bootstrap/stage0/ReCode.code"
+    Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind__NULL, sizeof(struct Checked_Named_Type), location, String__create_from("null")));
 #line 3535 "bootstrap/stage0/ReCode.code"
+    checker->last_builting_type = checker->last_type;
+#line 3537 "bootstrap/stage0/ReCode.code"
     return checker;
 }
 
-#line 3538 "bootstrap/stage0/ReCode.code"
-void Checker__append_type(struct Checker* self, struct Checked_Named_Type* type) {
-#line 3539 "bootstrap/stage0/ReCode.code"
-    if (self->first_type == NULL) {
 #line 3540 "bootstrap/stage0/ReCode.code"
+void Checker__append_type(struct Checker* self, struct Checked_Named_Type* type) {
+#line 3541 "bootstrap/stage0/ReCode.code"
+    if (self->first_type == NULL) {
+#line 3542 "bootstrap/stage0/ReCode.code"
         self->first_type = type;
     } else {
-#line 3542 "bootstrap/stage0/ReCode.code"
+#line 3544 "bootstrap/stage0/ReCode.code"
         self->last_type->super.next_type = ((struct Checked_Type*) type);
     }
-#line 3544 "bootstrap/stage0/ReCode.code"
-    self->last_type = type;
 #line 3546 "bootstrap/stage0/ReCode.code"
+    self->last_type = type;
+#line 3548 "bootstrap/stage0/ReCode.code"
     Checked_Symbols__append_symbol(self->symbols, ((struct Checked_Symbol*) Checked_Type_Symbol__create(type->super.location, type->name, type)));
 }
 
-#line 3549 "bootstrap/stage0/ReCode.code"
-struct Checked_Named_Type* Checker__find_type(struct Checker* self, struct String* name) {
-#line 3550 "bootstrap/stage0/ReCode.code"
-    struct Checked_Named_Type* type = self->first_type;
 #line 3551 "bootstrap/stage0/ReCode.code"
-    while (type != NULL) {
+struct Checked_Named_Type* Checker__find_type(struct Checker* self, struct String* name) {
+    struct Checked_Named_Type* type;
 #line 3552 "bootstrap/stage0/ReCode.code"
-        if (String__equals_string(name, type->name)) {
+    type = self->first_type;
 #line 3553 "bootstrap/stage0/ReCode.code"
+    while (type != NULL) {
+#line 3554 "bootstrap/stage0/ReCode.code"
+        if (String__equals_string(name, type->name)) {
+#line 3555 "bootstrap/stage0/ReCode.code"
             break;
         }
-#line 3555 "bootstrap/stage0/ReCode.code"
+#line 3557 "bootstrap/stage0/ReCode.code"
         type = ((struct Checked_Named_Type*) type->super.next_type);
     }
-#line 3557 "bootstrap/stage0/ReCode.code"
+#line 3559 "bootstrap/stage0/ReCode.code"
     return type;
 }
 
-#line 3560 "bootstrap/stage0/ReCode.code"
-struct Checked_Named_Type* Checker__get_builtin_type(struct Checker* self, enum Checked_Type_Kind kind) {
-#line 3561 "bootstrap/stage0/ReCode.code"
-    struct Checked_Named_Type* type = self->first_type;
 #line 3562 "bootstrap/stage0/ReCode.code"
-    struct Checked_Named_Type* custom_type = ((struct Checked_Named_Type*) self->last_builting_type->super.next_type);
+struct Checked_Named_Type* Checker__get_builtin_type(struct Checker* self, enum Checked_Type_Kind kind) {
+    struct Checked_Named_Type* type;
+    struct Checked_Named_Type* custom_type;
 #line 3563 "bootstrap/stage0/ReCode.code"
-    while (type != custom_type) {
+    type = self->first_type;
 #line 3564 "bootstrap/stage0/ReCode.code"
-        if (type->super.kind == kind) {
+    custom_type = ((struct Checked_Named_Type*) self->last_builting_type->super.next_type);
 #line 3565 "bootstrap/stage0/ReCode.code"
+    while (type != custom_type) {
+#line 3566 "bootstrap/stage0/ReCode.code"
+        if (type->super.kind == kind) {
+#line 3567 "bootstrap/stage0/ReCode.code"
             return type;
         }
-#line 3567 "bootstrap/stage0/ReCode.code"
+#line 3569 "bootstrap/stage0/ReCode.code"
         type = ((struct Checked_Named_Type*) type->super.next_type);
     }
-#line 3569 "bootstrap/stage0/ReCode.code"
+#line 3571 "bootstrap/stage0/ReCode.code"
     error(String__create_from("No such builtin type"));
-#line 3570 "bootstrap/stage0/ReCode.code"
+#line 3572 "bootstrap/stage0/ReCode.code"
     abort();
 }
 
-#line 3573 "bootstrap/stage0/ReCode.code"
-struct Checked_Type* Checker__resolve_type(struct Checker* self, struct Parsed_Type* parsed_type) {
-#line 3574 "bootstrap/stage0/ReCode.code"
-    if (parsed_type->kind == Parsed_Type_Kind__NAMED) {
 #line 3575 "bootstrap/stage0/ReCode.code"
-        struct Checked_Named_Type* type = Checker__find_type(self, ((struct Parsed_Named_Type*) parsed_type)->name);
+struct Checked_Type* Checker__resolve_type(struct Checker* self, struct Parsed_Type* parsed_type) {
 #line 3576 "bootstrap/stage0/ReCode.code"
-        if (type != NULL) {
+    if (parsed_type->kind == Parsed_Type_Kind__NAMED) {
+        struct Checked_Named_Type* type;
 #line 3577 "bootstrap/stage0/ReCode.code"
+        type = Checker__find_type(self, ((struct Parsed_Named_Type*) parsed_type)->name);
+#line 3578 "bootstrap/stage0/ReCode.code"
+        if (type != NULL) {
+#line 3579 "bootstrap/stage0/ReCode.code"
             return ((struct Checked_Type*) type);
         }
     }
-#line 3580 "bootstrap/stage0/ReCode.code"
+#line 3582 "bootstrap/stage0/ReCode.code"
     if (parsed_type->kind == Parsed_Type_Kind__POINTER) {
-#line 3581 "bootstrap/stage0/ReCode.code"
+#line 3583 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Type*) Checked_Pointer_Type__create(parsed_type->location, Checker__resolve_type(self, ((struct Parsed_Pointer_Type*) parsed_type)->other_type)));
     }
-#line 3583 "bootstrap/stage0/ReCode.code"
-    if (parsed_type->kind == Parsed_Type_Kind__STRUCT) {
-#line 3584 "bootstrap/stage0/ReCode.code"
-        struct Checked_Type* type = Checker__resolve_type(self, ((struct Parsed_Struct_Type*) parsed_type)->other_type);
 #line 3585 "bootstrap/stage0/ReCode.code"
-        if (type->kind != Checked_Type_Kind__STRUCT) {
+    if (parsed_type->kind == Parsed_Type_Kind__STRUCT) {
+        struct Checked_Type* type;
 #line 3586 "bootstrap/stage0/ReCode.code"
-            TODO("Report unexpected type");
+        type = Checker__resolve_type(self, ((struct Parsed_Struct_Type*) parsed_type)->other_type);
 #line 3587 "bootstrap/stage0/ReCode.code"
+        if (type->kind != Checked_Type_Kind__STRUCT) {
+#line 3588 "bootstrap/stage0/ReCode.code"
+            TODO("Report unexpected type");
+#line 3589 "bootstrap/stage0/ReCode.code"
             abort();
         }
-#line 3589 "bootstrap/stage0/ReCode.code"
+#line 3591 "bootstrap/stage0/ReCode.code"
         return type;
     }
-#line 3591 "bootstrap/stage0/ReCode.code"
-    if (parsed_type->kind == Parsed_Type_Kind__FUNCTION) {
-#line 3592 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Function_Type* parsed_function_type = ((struct Parsed_Function_Type*) parsed_type);
 #line 3593 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Parameter* first_parameter = NULL;
+    if (parsed_type->kind == Parsed_Type_Kind__FUNCTION) {
+        struct Parsed_Function_Type* parsed_function_type;
+        struct Checked_Function_Parameter* first_parameter;
+        struct Parsed_Function_Parameter* parsed_parameter;
+        struct Checked_Type* return_type;
 #line 3594 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Function_Parameter* parsed_parameter = parsed_function_type->first_parameter;
+        parsed_function_type = ((struct Parsed_Function_Type*) parsed_type);
 #line 3595 "bootstrap/stage0/ReCode.code"
-        if (parsed_parameter != NULL) {
+        first_parameter = NULL;
 #line 3596 "bootstrap/stage0/ReCode.code"
-            first_parameter = Checked_Function_Parameter__create(parsed_parameter->location, NULL, Checker__resolve_type(self, parsed_parameter->type));
+        parsed_parameter = parsed_function_type->first_parameter;
 #line 3597 "bootstrap/stage0/ReCode.code"
-            struct Checked_Function_Parameter* last_parameter = first_parameter;
+        if (parsed_parameter != NULL) {
+            struct Checked_Function_Parameter* last_parameter;
 #line 3598 "bootstrap/stage0/ReCode.code"
-            parsed_parameter = parsed_parameter->next_parameter;
+            first_parameter = Checked_Function_Parameter__create(parsed_parameter->location, NULL, Checker__resolve_type(self, parsed_parameter->type));
 #line 3599 "bootstrap/stage0/ReCode.code"
-            while (parsed_parameter != NULL) {
+            last_parameter = first_parameter;
 #line 3600 "bootstrap/stage0/ReCode.code"
-                struct Checked_Function_Parameter* parameter = Checked_Function_Parameter__create(parsed_parameter->location, NULL, Checker__resolve_type(self, parsed_parameter->type));
+            parsed_parameter = parsed_parameter->next_parameter;
 #line 3601 "bootstrap/stage0/ReCode.code"
-                last_parameter->next_parameter = parameter;
+            while (parsed_parameter != NULL) {
+                struct Checked_Function_Parameter* parameter;
 #line 3602 "bootstrap/stage0/ReCode.code"
-                last_parameter = parameter;
+                parameter = Checked_Function_Parameter__create(parsed_parameter->location, NULL, Checker__resolve_type(self, parsed_parameter->type));
 #line 3603 "bootstrap/stage0/ReCode.code"
+                last_parameter->next_parameter = parameter;
+#line 3604 "bootstrap/stage0/ReCode.code"
+                last_parameter = parameter;
+#line 3605 "bootstrap/stage0/ReCode.code"
                 parsed_parameter = parsed_parameter->next_parameter;
             }
         }
-#line 3606 "bootstrap/stage0/ReCode.code"
-        struct Checked_Type* return_type = Checker__resolve_type(self, parsed_function_type->return_type);
-#line 3607 "bootstrap/stage0/ReCode.code"
+#line 3608 "bootstrap/stage0/ReCode.code"
+        return_type = Checker__resolve_type(self, parsed_function_type->return_type);
+#line 3609 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Type*) Checked_Function_Type__create(parsed_type->location, first_parameter, return_type));
     }
-#line 3609 "bootstrap/stage0/ReCode.code"
+#line 3611 "bootstrap/stage0/ReCode.code"
     Source_Location__error(parsed_type->location, String__create_from("Undefined type"));
-#line 3610 "bootstrap/stage0/ReCode.code"
+#line 3612 "bootstrap/stage0/ReCode.code"
     abort();
 }
 
-#line 3613 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_add_expression(struct Checker* self, struct Parsed_Add_Expression* parsed_expression) {
-#line 3614 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3615 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_add_expression(struct Checker* self, struct Parsed_Add_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3616 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3617 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3618 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3619 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3620 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Add_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression));
 }
 
-#line 3621 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_address_of_expression(struct Checker* self, struct Parsed_Address_Of_Expression* parsed_expression) {
-#line 3622 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
 #line 3623 "bootstrap/stage0/ReCode.code"
-    if (other_expression->kind != Checked_Expression_Kind__SYMBOL) {
+struct Checked_Expression* Checker__check_address_of_expression(struct Checker* self, struct Parsed_Address_Of_Expression* parsed_expression) {
+    struct Checked_Expression* other_expression;
 #line 3624 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_expression->super.super.location, String__create_from("Not a symbol"));
+    other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
 #line 3625 "bootstrap/stage0/ReCode.code"
+    if (other_expression->kind != Checked_Expression_Kind__SYMBOL) {
+#line 3626 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_expression->super.super.location, String__create_from("Not a symbol"));
+#line 3627 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 3627 "bootstrap/stage0/ReCode.code"
+#line 3629 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Address_Of_Expression__create(parsed_expression->super.super.location, ((struct Checked_Type*) Checked_Pointer_Type__create(other_expression->location, other_expression->type)), other_expression));
 }
 
-#line 3630 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_array_access_expression(struct Checker* self, struct Parsed_Array_Access_Expression* parsed_expression) {
-#line 3631 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* array_expression = Checker__check_expression(self, parsed_expression->array_expression);
 #line 3632 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* array_type = array_expression->type;
+struct Checked_Expression* Checker__check_array_access_expression(struct Checker* self, struct Parsed_Array_Access_Expression* parsed_expression) {
+    struct Checked_Expression* array_expression;
+    struct Checked_Type* array_type;
+    struct Checked_Type* type;
+    struct Checked_Expression* index_expression;
 #line 3633 "bootstrap/stage0/ReCode.code"
-    if (array_type->kind != Checked_Type_Kind__POINTER) {
+    array_expression = Checker__check_expression(self, parsed_expression->array_expression);
 #line 3634 "bootstrap/stage0/ReCode.code"
-        struct String* message = String__create();
+    array_type = array_expression->type;
 #line 3635 "bootstrap/stage0/ReCode.code"
-        String__append_char(message, '\"');
+    if (array_type->kind != Checked_Type_Kind__POINTER) {
+        struct String* message;
 #line 3636 "bootstrap/stage0/ReCode.code"
-        String__append_checked_type(message, array_type);
+        message = String__create();
 #line 3637 "bootstrap/stage0/ReCode.code"
-        String__append_cstring(message, "\" is not a pointer type.");
+        String__append_char(message, '\"');
 #line 3638 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_expression->array_expression->location, message);
+        String__append_checked_type(message, array_type);
 #line 3639 "bootstrap/stage0/ReCode.code"
+        String__append_cstring(message, "\" is not a pointer type.");
+#line 3640 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_expression->array_expression->location, message);
+#line 3641 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 3641 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* type = ((struct Checked_Pointer_Type*) array_type)->other_type;
-#line 3642 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* index_expression = Checker__check_expression(self, parsed_expression->index_expression);
 #line 3643 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__USIZE)), index_expression->type, index_expression->location);
+    type = ((struct Checked_Pointer_Type*) array_type)->other_type;
 #line 3644 "bootstrap/stage0/ReCode.code"
+    index_expression = Checker__check_expression(self, parsed_expression->index_expression);
+#line 3645 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__USIZE)), index_expression->type, index_expression->location);
+#line 3646 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Array_Access_Expression__create(parsed_expression->super.location, type, array_expression, index_expression));
 }
 
-#line 3647 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_bool_expression(struct Checker* self, struct Parsed_Bool_Expression* parsed_expression) {
-#line 3648 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL));
 #line 3649 "bootstrap/stage0/ReCode.code"
-    bool value = parsed_expression->value;
+struct Checked_Expression* Checker__check_bool_expression(struct Checker* self, struct Parsed_Bool_Expression* parsed_expression) {
+    struct Checked_Type* expression_type;
+    bool value;
 #line 3650 "bootstrap/stage0/ReCode.code"
+    expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL));
+#line 3651 "bootstrap/stage0/ReCode.code"
+    value = parsed_expression->value;
+#line 3652 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Bool_Expression__create(parsed_expression->super.super.location, expression_type, value));
 }
 
-#line 3653 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_call_expression(struct Checker* self, struct Parsed_Call_Expression* parsed_expression) {
-#line 3654 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* callee_expression = Checker__check_expression(self, parsed_expression->callee_expression);
 #line 3655 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* callee_type = callee_expression->type;
+struct Checked_Expression* Checker__check_call_expression(struct Checker* self, struct Parsed_Call_Expression* parsed_expression) {
+    struct Checked_Expression* callee_expression;
+    struct Checked_Type* callee_type;
+    struct Checked_Function_Type* function_type;
+    struct Checked_Call_Argument* first_argument;
 #line 3656 "bootstrap/stage0/ReCode.code"
-    if (callee_type->kind != Checked_Type_Kind__FUNCTION) {
+    callee_expression = Checker__check_expression(self, parsed_expression->callee_expression);
 #line 3657 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_expression->super.location, String__create_from("Not a function"));
+    callee_type = callee_expression->type;
 #line 3658 "bootstrap/stage0/ReCode.code"
+    if (callee_type->kind != Checked_Type_Kind__FUNCTION) {
+#line 3659 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_expression->super.location, String__create_from("Not a function"));
+#line 3660 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 3660 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Type* function_type = ((struct Checked_Function_Type*) callee_type);
-#line 3661 "bootstrap/stage0/ReCode.code"
-    struct Checked_Call_Argument* first_argument = NULL;
 #line 3662 "bootstrap/stage0/ReCode.code"
-    if (parsed_expression->first_argument != NULL || function_type->first_parameter != NULL) {
+    function_type = ((struct Checked_Function_Type*) callee_type);
 #line 3663 "bootstrap/stage0/ReCode.code"
-        struct Checked_Call_Argument* last_argument = NULL;
+    first_argument = NULL;
 #line 3664 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Parameter* function_parameter = function_type->first_parameter;
+    if (parsed_expression->first_argument != NULL || function_type->first_parameter != NULL) {
+        struct Checked_Call_Argument* last_argument;
+        struct Checked_Function_Parameter* function_parameter;
+        struct Parsed_Call_Argument* parsed_argument;
 #line 3665 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Call_Argument* parsed_argument = parsed_expression->first_argument;
+        last_argument = NULL;
 #line 3666 "bootstrap/stage0/ReCode.code"
-        while (function_parameter != NULL && parsed_argument != NULL) {
+        function_parameter = function_type->first_parameter;
 #line 3667 "bootstrap/stage0/ReCode.code"
-            struct Checked_Expression* argument_expression = Checker__check_expression(self, parsed_argument->expression);
+        parsed_argument = parsed_expression->first_argument;
 #line 3668 "bootstrap/stage0/ReCode.code"
-            Checked_Type__expect_same_type(function_parameter->type, argument_expression->type, argument_expression->location);
+        while (function_parameter != NULL && parsed_argument != NULL) {
+            struct Checked_Expression* argument_expression;
+            struct Checked_Call_Argument* argument;
 #line 3669 "bootstrap/stage0/ReCode.code"
-            struct Checked_Call_Argument* argument = Checked_Call_Argument__create(argument_expression);
+            argument_expression = Checker__check_expression(self, parsed_argument->expression);
 #line 3670 "bootstrap/stage0/ReCode.code"
-            if (last_argument == NULL) {
+            Checked_Type__expect_same_type(function_parameter->type, argument_expression->type, argument_expression->location);
 #line 3671 "bootstrap/stage0/ReCode.code"
+            argument = Checked_Call_Argument__create(argument_expression);
+#line 3672 "bootstrap/stage0/ReCode.code"
+            if (last_argument == NULL) {
+#line 3673 "bootstrap/stage0/ReCode.code"
                 first_argument = argument;
             } else {
-#line 3673 "bootstrap/stage0/ReCode.code"
+#line 3675 "bootstrap/stage0/ReCode.code"
                 last_argument->next_argument = argument;
             }
-#line 3675 "bootstrap/stage0/ReCode.code"
-            last_argument = argument;
-#line 3676 "bootstrap/stage0/ReCode.code"
-            function_parameter = function_parameter->next_parameter;
 #line 3677 "bootstrap/stage0/ReCode.code"
+            last_argument = argument;
+#line 3678 "bootstrap/stage0/ReCode.code"
+            function_parameter = function_parameter->next_parameter;
+#line 3679 "bootstrap/stage0/ReCode.code"
             parsed_argument = parsed_argument->next_argument;
         }
-#line 3679 "bootstrap/stage0/ReCode.code"
-        if (function_parameter != NULL) {
-#line 3680 "bootstrap/stage0/ReCode.code"
-            Source_Location__error(parsed_expression->super.location, String__create_from("Report too few arguments"));
 #line 3681 "bootstrap/stage0/ReCode.code"
+        if (function_parameter != NULL) {
+#line 3682 "bootstrap/stage0/ReCode.code"
+            Source_Location__error(parsed_expression->super.location, String__create_from("Report too few arguments"));
+#line 3683 "bootstrap/stage0/ReCode.code"
             abort();
         }
-#line 3683 "bootstrap/stage0/ReCode.code"
-        if (parsed_argument != NULL) {
-#line 3684 "bootstrap/stage0/ReCode.code"
-            Source_Location__error(parsed_expression->super.location, String__create_from("Report too many arguments"));
 #line 3685 "bootstrap/stage0/ReCode.code"
+        if (parsed_argument != NULL) {
+#line 3686 "bootstrap/stage0/ReCode.code"
+            Source_Location__error(parsed_expression->super.location, String__create_from("Report too many arguments"));
+#line 3687 "bootstrap/stage0/ReCode.code"
             abort();
         }
     }
-#line 3688 "bootstrap/stage0/ReCode.code"
+#line 3690 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Call_Expression__create(parsed_expression->super.location, function_type->return_type, callee_expression, first_argument));
 }
 
-#line 3691 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_cast_expression(struct Checker* self, struct Parsed_Cast_Expression* parsed_expression) {
-#line 3692 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* type = Checker__resolve_type(self, parsed_expression->type);
 #line 3693 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
+struct Checked_Expression* Checker__check_cast_expression(struct Checker* self, struct Parsed_Cast_Expression* parsed_expression) {
+    struct Checked_Type* type;
+    struct Checked_Expression* other_expression;
+    struct Checked_Type* other_type;
+    bool can_cast;
 #line 3694 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* other_type = other_expression->type;
+    type = Checker__resolve_type(self, parsed_expression->type);
 #line 3695 "bootstrap/stage0/ReCode.code"
-    bool can_cast = false;
+    other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
 #line 3696 "bootstrap/stage0/ReCode.code"
-    if (type->kind == Checked_Type_Kind__POINTER) {
+    other_type = other_expression->type;
 #line 3697 "bootstrap/stage0/ReCode.code"
-        if (other_type->kind == Checked_Type_Kind__POINTER) {
+    can_cast = false;
 #line 3698 "bootstrap/stage0/ReCode.code"
+    if (type->kind == Checked_Type_Kind__POINTER) {
+#line 3699 "bootstrap/stage0/ReCode.code"
+        if (other_type->kind == Checked_Type_Kind__POINTER) {
+#line 3700 "bootstrap/stage0/ReCode.code"
             can_cast = true;
         }
     } else if (Checked_Type__is_scalar_type(type)) {
-#line 3701 "bootstrap/stage0/ReCode.code"
+#line 3703 "bootstrap/stage0/ReCode.code"
         if (Checked_Type__is_scalar_type(type)) {
-#line 3702 "bootstrap/stage0/ReCode.code"
+#line 3704 "bootstrap/stage0/ReCode.code"
             can_cast = true;
         }
     }
-#line 3705 "bootstrap/stage0/ReCode.code"
+#line 3707 "bootstrap/stage0/ReCode.code"
     if (Checked_Type__equals(type, other_type)) {
-#line 3706 "bootstrap/stage0/ReCode.code"
+#line 3708 "bootstrap/stage0/ReCode.code"
         Source_Location__warning(parsed_expression->super.super.location, String__create_from("Redundant cast"));
     }
-#line 3708 "bootstrap/stage0/ReCode.code"
-    if (!can_cast) {
-#line 3709 "bootstrap/stage0/ReCode.code"
-        struct String* message = String__create_from("Cannot cast \"");
 #line 3710 "bootstrap/stage0/ReCode.code"
-        String__append_checked_type(message, other_expression->type);
+    if (!can_cast) {
+        struct String* message;
 #line 3711 "bootstrap/stage0/ReCode.code"
-        String__append_cstring(message, "\" to \"");
+        message = String__create_from("Cannot cast \"");
 #line 3712 "bootstrap/stage0/ReCode.code"
-        String__append_checked_type(message, type);
+        String__append_checked_type(message, other_expression->type);
 #line 3713 "bootstrap/stage0/ReCode.code"
-        String__append_cstring(message, "\".");
+        String__append_cstring(message, "\" to \"");
 #line 3714 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_expression->super.super.location, message);
+        String__append_checked_type(message, type);
 #line 3715 "bootstrap/stage0/ReCode.code"
+        String__append_cstring(message, "\".");
+#line 3716 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_expression->super.super.location, message);
+#line 3717 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 3717 "bootstrap/stage0/ReCode.code"
+#line 3719 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Cast_Expression__create(parsed_expression->super.super.location, type, other_expression));
 }
 
-#line 3720 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_character_expression(struct Checker* self, struct Parsed_Character_Expression* parsed_expression) {
-#line 3721 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__CHAR));
 #line 3722 "bootstrap/stage0/ReCode.code"
-    char value = parsed_expression->value;
+struct Checked_Expression* Checker__check_character_expression(struct Checker* self, struct Parsed_Character_Expression* parsed_expression) {
+    struct Checked_Type* expression_type;
+    char value;
 #line 3723 "bootstrap/stage0/ReCode.code"
+    expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__CHAR));
+#line 3724 "bootstrap/stage0/ReCode.code"
+    value = parsed_expression->value;
+#line 3725 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Character_Expression__create(parsed_expression->super.super.location, expression_type, value));
 }
 
-#line 3726 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_dereference_expression(struct Checker* self, struct Parsed_Dereference_Expression* parsed_expression) {
-#line 3727 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* value_expression = Checker__check_expression(self, parsed_expression->value_expression);
 #line 3728 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* value_type = value_expression->type;
+struct Checked_Expression* Checker__check_dereference_expression(struct Checker* self, struct Parsed_Dereference_Expression* parsed_expression) {
+    struct Checked_Expression* value_expression;
+    struct Checked_Type* value_type;
 #line 3729 "bootstrap/stage0/ReCode.code"
-    if (value_type->kind != Checked_Type_Kind__POINTER) {
+    value_expression = Checker__check_expression(self, parsed_expression->value_expression);
 #line 3730 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_expression->super.location, String__create_from("Not a pointer value"));
+    value_type = value_expression->type;
 #line 3731 "bootstrap/stage0/ReCode.code"
+    if (value_type->kind != Checked_Type_Kind__POINTER) {
+#line 3732 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_expression->super.location, String__create_from("Not a pointer value"));
+#line 3733 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 3733 "bootstrap/stage0/ReCode.code"
+#line 3735 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Dereference_Expression__create(parsed_expression->super.location, ((struct Checked_Pointer_Type*) value_type)->other_type, value_expression));
 }
 
-#line 3736 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_divide_expression(struct Checker* self, struct Parsed_Divide_Expression* parsed_expression) {
-#line 3737 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3738 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_divide_expression(struct Checker* self, struct Parsed_Divide_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3739 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3740 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3741 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3742 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3743 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Divide_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression));
 }
 
-#line 3744 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_equals_expression(struct Checker* self, struct Parsed_Equals_Expression* parsed_expression) {
-#line 3745 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3746 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+struct Checked_Expression* Checker__check_equals_expression(struct Checker* self, struct Parsed_Equals_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3747 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3748 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3749 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3750 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Equals_Expression__create(parsed_expression->super.super.location, ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression, right_expression));
 }
 
-#line 3751 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_greater_expression(struct Checker* self, struct Parsed_Greater_Expression* parsed_expression) {
-#line 3752 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3753 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_greater_expression(struct Checker* self, struct Parsed_Greater_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3754 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3755 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3756 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3757 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3758 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Greater_Expression__create(parsed_expression->super.super.location, ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression, right_expression));
 }
 
-#line 3759 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_greater_or_equals_expression(struct Checker* self, struct Parsed_Greater_Or_Equals_Expression* parsed_expression) {
-#line 3760 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3761 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_greater_or_equals_expression(struct Checker* self, struct Parsed_Greater_Or_Equals_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3762 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3763 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3764 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3765 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3766 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Greater_Or_Equals_Expression__create(parsed_expression->super.super.location, ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression, right_expression));
 }
 
-#line 3767 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_group_expression(struct Checker* self, struct Parsed_Group_Expression* parsed_expression) {
-#line 3768 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* other_expression = Checker__check_expression(self, parsed_expression->other_expression);
 #line 3769 "bootstrap/stage0/ReCode.code"
+struct Checked_Expression* Checker__check_group_expression(struct Checker* self, struct Parsed_Group_Expression* parsed_expression) {
+    struct Checked_Expression* other_expression;
+#line 3770 "bootstrap/stage0/ReCode.code"
+    other_expression = Checker__check_expression(self, parsed_expression->other_expression);
+#line 3771 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Group_Expression__create(parsed_expression->super.location, other_expression->type, other_expression));
 }
 
-#line 3772 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_integer_expression(struct Checker* self, struct Parsed_Integer_Expression* parsed_expression) {
-#line 3773 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__I32));
 #line 3774 "bootstrap/stage0/ReCode.code"
-    uint64_t value = parsed_expression->value;
+struct Checked_Expression* Checker__check_integer_expression(struct Checker* self, struct Parsed_Integer_Expression* parsed_expression) {
+    struct Checked_Type* expression_type;
+    uint64_t value;
 #line 3775 "bootstrap/stage0/ReCode.code"
+    expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__I32));
+#line 3776 "bootstrap/stage0/ReCode.code"
+    value = parsed_expression->value;
+#line 3777 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Integer_Expression__create(parsed_expression->super.super.location, expression_type, value));
 }
 
-#line 3778 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_less_expression(struct Checker* self, struct Parsed_Less_Expression* parsed_expression) {
-#line 3779 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3780 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_less_expression(struct Checker* self, struct Parsed_Less_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3781 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3782 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3783 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3784 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3785 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Less_Expression__create(parsed_expression->super.super.location, ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression, right_expression));
 }
 
-#line 3786 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_less_or_equals_expression(struct Checker* self, struct Parsed_Less_Or_Equals_Expression* parsed_expression) {
-#line 3787 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3788 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_less_or_equals_expression(struct Checker* self, struct Parsed_Less_Or_Equals_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3789 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3790 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3791 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3792 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3793 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Less_Or_Equals_Expression__create(parsed_expression->super.super.location, ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression, right_expression));
 }
 
-#line 3794 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_logic_and_expression(struct Checker* self, struct Parsed_Logic_And_Expression* parsed_expression) {
-#line 3795 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3796 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_logic_and_expression(struct Checker* self, struct Parsed_Logic_And_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3797 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3798 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression->type, left_expression->location);
 #line 3799 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3800 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3801 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Logic_And_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression));
 }
 
-#line 3802 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_logic_or_expression(struct Checker* self, struct Parsed_Logic_Or_Expression* parsed_expression) {
-#line 3803 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3804 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_logic_or_expression(struct Checker* self, struct Parsed_Logic_Or_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3805 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3806 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression->type, left_expression->location);
 #line 3807 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3808 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3809 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Logic_Or_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression));
 }
 
-#line 3810 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_member_access_expression(struct Checker* self, struct Parsed_Member_Access_Expression* parsed_expression) {
-#line 3811 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* object_expression = Checker__check_expression(self, parsed_expression->object_expression);
 #line 3812 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* object_type = object_expression->type;
+struct Checked_Expression* Checker__check_member_access_expression(struct Checker* self, struct Parsed_Member_Access_Expression* parsed_expression) {
+    struct Checked_Expression* object_expression;
+    struct Checked_Type* object_type;
 #line 3813 "bootstrap/stage0/ReCode.code"
-    if (object_type->kind == Checked_Type_Kind__POINTER) {
+    object_expression = Checker__check_expression(self, parsed_expression->object_expression);
 #line 3814 "bootstrap/stage0/ReCode.code"
-        object_type = ((struct Checked_Pointer_Type*) object_type)->other_type;
+    object_type = object_expression->type;
 #line 3815 "bootstrap/stage0/ReCode.code"
-        if (object_type->kind == Checked_Type_Kind__STRUCT) {
+    if (object_type->kind == Checked_Type_Kind__POINTER) {
 #line 3816 "bootstrap/stage0/ReCode.code"
+        object_type = ((struct Checked_Pointer_Type*) object_type)->other_type;
+#line 3817 "bootstrap/stage0/ReCode.code"
+        if (object_type->kind == Checked_Type_Kind__STRUCT) {
+#line 3818 "bootstrap/stage0/ReCode.code"
             return Checker__check_struct_member_access_expression(self, object_expression, ((struct Checked_Struct_Type*) object_type), parsed_expression->member_name);
         }
     } else if (object_type->kind == Checked_Type_Kind__STRUCT) {
-#line 3819 "bootstrap/stage0/ReCode.code"
+#line 3821 "bootstrap/stage0/ReCode.code"
         return Checker__check_struct_member_access_expression(self, object_expression, ((struct Checked_Struct_Type*) object_type), parsed_expression->member_name);
     } else if (object_type->kind == Checked_Type_Kind__DEFINED) {
-#line 3821 "bootstrap/stage0/ReCode.code"
-        struct Checked_Named_Type* defined_type = ((struct Checked_Defined_Type*) object_type)->defined_type;
-#line 3822 "bootstrap/stage0/ReCode.code"
-        if (defined_type->super.kind == Checked_Type_Kind__ENUM) {
+        struct Checked_Named_Type* defined_type;
 #line 3823 "bootstrap/stage0/ReCode.code"
-            struct Checked_Enum_Type* enum_type = ((struct Checked_Enum_Type*) defined_type);
+        defined_type = ((struct Checked_Defined_Type*) object_type)->defined_type;
 #line 3824 "bootstrap/stage0/ReCode.code"
-            struct Checked_Enum_Member* enum_member = Checked_Enum_Type__find_member(enum_type, parsed_expression->member_name->lexeme);
+        if (defined_type->super.kind == Checked_Type_Kind__ENUM) {
+            struct Checked_Enum_Type* enum_type;
+            struct Checked_Enum_Member* enum_member;
 #line 3825 "bootstrap/stage0/ReCode.code"
-            if (enum_member == NULL) {
+            enum_type = ((struct Checked_Enum_Type*) defined_type);
 #line 3826 "bootstrap/stage0/ReCode.code"
-                Source_Location__error(object_expression->location, String__create_from("No such enum members"));
+            enum_member = Checked_Enum_Type__find_member(enum_type, parsed_expression->member_name->lexeme);
 #line 3827 "bootstrap/stage0/ReCode.code"
+            if (enum_member == NULL) {
+#line 3828 "bootstrap/stage0/ReCode.code"
+                Source_Location__error(object_expression->location, String__create_from("No such enum members"));
+#line 3829 "bootstrap/stage0/ReCode.code"
                 abort();
             }
-#line 3829 "bootstrap/stage0/ReCode.code"
+#line 3831 "bootstrap/stage0/ReCode.code"
             return ((struct Checked_Expression*) Checked_Symbol_Expression__create(object_expression->location, ((struct Checked_Type*) enum_type), enum_member->symbol));
         }
-#line 3831 "bootstrap/stage0/ReCode.code"
+#line 3833 "bootstrap/stage0/ReCode.code"
         Source_Location__error(object_expression->location, String__create_from("Type has no members"));
-#line 3832 "bootstrap/stage0/ReCode.code"
+#line 3834 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 3834 "bootstrap/stage0/ReCode.code"
+#line 3836 "bootstrap/stage0/ReCode.code"
     Source_Location__error(object_expression->location, String__create_from("Unsupported type"));
-#line 3835 "bootstrap/stage0/ReCode.code"
+#line 3837 "bootstrap/stage0/ReCode.code"
     abort();
 }
 
-#line 3838 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_struct_member_access_expression(struct Checker* self, struct Checked_Expression* object_expression, struct Checked_Struct_Type* struct_type, struct Token* member_name) {
-#line 3839 "bootstrap/stage0/ReCode.code"
-    struct Checked_Struct_Member* member = Checked_Struct_Type__find_member(struct_type, member_name->lexeme);
 #line 3840 "bootstrap/stage0/ReCode.code"
-    if (member == NULL) {
+struct Checked_Expression* Checker__check_struct_member_access_expression(struct Checker* self, struct Checked_Expression* object_expression, struct Checked_Struct_Type* struct_type, struct Token* member_name) {
+    struct Checked_Struct_Member* member;
 #line 3841 "bootstrap/stage0/ReCode.code"
-        if (struct_type->super_type != NULL) {
+    member = Checked_Struct_Type__find_member(struct_type, member_name->lexeme);
 #line 3842 "bootstrap/stage0/ReCode.code"
-            object_expression = ((struct Checked_Expression*) Checked_Member_Access_Expression__create(object_expression->location, struct_type->first_member->type, object_expression, struct_type->first_member));
+    if (member == NULL) {
 #line 3843 "bootstrap/stage0/ReCode.code"
+        if (struct_type->super_type != NULL) {
+#line 3844 "bootstrap/stage0/ReCode.code"
+            object_expression = ((struct Checked_Expression*) Checked_Member_Access_Expression__create(object_expression->location, struct_type->first_member->type, object_expression, struct_type->first_member));
+#line 3845 "bootstrap/stage0/ReCode.code"
             return Checker__check_struct_member_access_expression(self, object_expression, struct_type->super_type, member_name);
         }
-#line 3845 "bootstrap/stage0/ReCode.code"
+#line 3847 "bootstrap/stage0/ReCode.code"
         Source_Location__error(member_name->location, String__create_from("No such struct member"));
-#line 3846 "bootstrap/stage0/ReCode.code"
+#line 3848 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 3848 "bootstrap/stage0/ReCode.code"
+#line 3850 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Member_Access_Expression__create(object_expression->location, member->type, object_expression, member));
 }
 
-#line 3851 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_minus_expression(struct Checker* self, struct Parsed_Minus_Expression* parsed_expression) {
-#line 3852 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
 #line 3853 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* other_expression_type = other_expression->type;
+struct Checked_Expression* Checker__check_minus_expression(struct Checker* self, struct Parsed_Minus_Expression* parsed_expression) {
+    struct Checked_Expression* other_expression;
+    struct Checked_Type* other_expression_type;
 #line 3854 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(other_expression_type, other_expression->location);
+    other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
 #line 3855 "bootstrap/stage0/ReCode.code"
+    other_expression_type = other_expression->type;
+#line 3856 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_scalar_type(other_expression_type, other_expression->location);
+#line 3857 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Minus_Expression__create(parsed_expression->super.super.location, other_expression_type, other_expression));
 }
 
-#line 3858 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_modulo_expression(struct Checker* self, struct Parsed_Modulo_Expression* parsed_expression) {
-#line 3859 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3860 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_modulo_expression(struct Checker* self, struct Parsed_Modulo_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3861 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3862 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3863 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3864 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3865 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Modulo_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression));
 }
 
-#line 3866 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_multiply_expression(struct Checker* self, struct Parsed_Multiply_Expression* parsed_expression) {
-#line 3867 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3868 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_multiply_expression(struct Checker* self, struct Parsed_Multiply_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3869 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3870 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3871 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3872 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3873 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Multiply_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression));
 }
 
-#line 3874 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_not_expression(struct Checker* self, struct Parsed_Not_Expression* parsed_expression) {
-#line 3875 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
 #line 3876 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* other_expression_type = other_expression->type;
+struct Checked_Expression* Checker__check_not_expression(struct Checker* self, struct Parsed_Not_Expression* parsed_expression) {
+    struct Checked_Expression* other_expression;
+    struct Checked_Type* other_expression_type;
 #line 3877 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), other_expression_type, other_expression->location);
+    other_expression = Checker__check_expression(self, parsed_expression->super.other_expression);
 #line 3878 "bootstrap/stage0/ReCode.code"
+    other_expression_type = other_expression->type;
+#line 3879 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), other_expression_type, other_expression->location);
+#line 3880 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Not_Expression__create(parsed_expression->super.super.location, other_expression_type, other_expression));
 }
 
-#line 3881 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_not_equals_expression(struct Checker* self, struct Parsed_Not_Equals_Expression* parsed_expression) {
-#line 3882 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3883 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+struct Checked_Expression* Checker__check_not_equals_expression(struct Checker* self, struct Parsed_Not_Equals_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3884 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3885 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3886 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3887 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Not_Equals_Expression__create(parsed_expression->super.super.location, ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), left_expression, right_expression));
 }
 
-#line 3888 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_null_expression(struct Checker* self, struct Parsed_Null_Expression* parsed_expression) {
-#line 3889 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__NULL));
 #line 3890 "bootstrap/stage0/ReCode.code"
+struct Checked_Expression* Checker__check_null_expression(struct Checker* self, struct Parsed_Null_Expression* parsed_expression) {
+    struct Checked_Type* expression_type;
+#line 3891 "bootstrap/stage0/ReCode.code"
+    expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__NULL));
+#line 3892 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Null_Expression__create(parsed_expression->super.literal->location, expression_type));
 }
 
-#line 3893 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_sizeof_expression(struct Checker* self, struct Parsed_Sizeof_Expression* parsed_expression) {
-#line 3894 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__USIZE));
 #line 3895 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* sized_type = Checker__resolve_type(self, parsed_expression->type);
+struct Checked_Expression* Checker__check_sizeof_expression(struct Checker* self, struct Parsed_Sizeof_Expression* parsed_expression) {
+    struct Checked_Type* expression_type;
+    struct Checked_Type* sized_type;
 #line 3896 "bootstrap/stage0/ReCode.code"
+    expression_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__USIZE));
+#line 3897 "bootstrap/stage0/ReCode.code"
+    sized_type = Checker__resolve_type(self, parsed_expression->type);
+#line 3898 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Sizeof_Expression__create(parsed_expression->super.location, expression_type, sized_type));
 }
 
-#line 3899 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_string_expression(struct Checker* self, struct Parsed_String_Expression* parsed_expression) {
-#line 3900 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* char_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__CHAR));
 #line 3901 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* expression_type = ((struct Checked_Type*) Checked_Pointer_Type__create(parsed_expression->super.literal->location, char_type));
+struct Checked_Expression* Checker__check_string_expression(struct Checker* self, struct Parsed_String_Expression* parsed_expression) {
+    struct Checked_Type* char_type;
+    struct Checked_Type* expression_type;
+    struct String* value;
 #line 3902 "bootstrap/stage0/ReCode.code"
-    struct String* value = parsed_expression->value;
+    char_type = ((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__CHAR));
 #line 3903 "bootstrap/stage0/ReCode.code"
+    expression_type = ((struct Checked_Type*) Checked_Pointer_Type__create(parsed_expression->super.literal->location, char_type));
+#line 3904 "bootstrap/stage0/ReCode.code"
+    value = parsed_expression->value;
+#line 3905 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_String_Expression__create(parsed_expression->super.super.location, expression_type, value));
 }
 
-#line 3906 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_substract_expression(struct Checker* self, struct Parsed_Substract_Expression* parsed_expression) {
-#line 3907 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3908 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
+struct Checked_Expression* Checker__check_substract_expression(struct Checker* self, struct Parsed_Substract_Expression* parsed_expression) {
+    struct Checked_Expression* left_expression;
+    struct Checked_Expression* right_expression;
 #line 3909 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+    left_expression = Checker__check_expression(self, parsed_expression->super.left_expression);
 #line 3910 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+    Checked_Type__expect_scalar_type(left_expression->type, left_expression->location);
 #line 3911 "bootstrap/stage0/ReCode.code"
+    right_expression = Checker__check_expression(self, parsed_expression->super.right_expression);
+#line 3912 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(left_expression->type, right_expression->type, right_expression->location);
+#line 3913 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Substract_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression));
 }
 
-#line 3914 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_symbol_expression(struct Checker* self, struct Parsed_Symbol_Expression* parsed_expression) {
-#line 3915 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* symbol = Checked_Symbols__find_symbol(self->symbols, parsed_expression->name->lexeme);
 #line 3916 "bootstrap/stage0/ReCode.code"
-    if (symbol == NULL) {
+struct Checked_Expression* Checker__check_symbol_expression(struct Checker* self, struct Parsed_Symbol_Expression* parsed_expression) {
+    struct Checked_Symbol* symbol;
 #line 3917 "bootstrap/stage0/ReCode.code"
-        Token__error(parsed_expression->name, String__create_from("Undefined symbol"));
+    symbol = Checked_Symbols__find_symbol(self->symbols, parsed_expression->name->lexeme);
 #line 3918 "bootstrap/stage0/ReCode.code"
-        abort();
-    }
+    if (symbol == NULL) {
+#line 3919 "bootstrap/stage0/ReCode.code"
+        Token__error(parsed_expression->name, String__create_from("Undefined symbol"));
 #line 3920 "bootstrap/stage0/ReCode.code"
-    if (symbol->type == NULL) {
-#line 3921 "bootstrap/stage0/ReCode.code"
-        Token__error(parsed_expression->name, String__create_from("Symbol without type"));
-#line 3922 "bootstrap/stage0/ReCode.code"
         abort();
     }
+#line 3922 "bootstrap/stage0/ReCode.code"
+    if (symbol->type == NULL) {
+#line 3923 "bootstrap/stage0/ReCode.code"
+        Token__error(parsed_expression->name, String__create_from("Symbol without type"));
 #line 3924 "bootstrap/stage0/ReCode.code"
+        abort();
+    }
+#line 3926 "bootstrap/stage0/ReCode.code"
     return ((struct Checked_Expression*) Checked_Symbol_Expression__create(parsed_expression->super.location, symbol->type, symbol));
 }
 
-#line 3927 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression* Checker__check_expression(struct Checker* self, struct Parsed_Expression* parsed_expression) {
-#line 3928 "bootstrap/stage0/ReCode.code"
-    if (parsed_expression->kind == Parsed_Expression_Kind__ADD) {
 #line 3929 "bootstrap/stage0/ReCode.code"
+struct Checked_Expression* Checker__check_expression(struct Checker* self, struct Parsed_Expression* parsed_expression) {
+#line 3930 "bootstrap/stage0/ReCode.code"
+    if (parsed_expression->kind == Parsed_Expression_Kind__ADD) {
+#line 3931 "bootstrap/stage0/ReCode.code"
         return Checker__check_add_expression(self, ((struct Parsed_Add_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__ADDRESS_OF) {
-#line 3931 "bootstrap/stage0/ReCode.code"
+#line 3933 "bootstrap/stage0/ReCode.code"
         return Checker__check_address_of_expression(self, ((struct Parsed_Address_Of_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__ARRAY_ACCESS) {
-#line 3933 "bootstrap/stage0/ReCode.code"
+#line 3935 "bootstrap/stage0/ReCode.code"
         return Checker__check_array_access_expression(self, ((struct Parsed_Array_Access_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__BOOL) {
-#line 3935 "bootstrap/stage0/ReCode.code"
+#line 3937 "bootstrap/stage0/ReCode.code"
         return Checker__check_bool_expression(self, ((struct Parsed_Bool_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__CALL) {
-#line 3937 "bootstrap/stage0/ReCode.code"
+#line 3939 "bootstrap/stage0/ReCode.code"
         return Checker__check_call_expression(self, ((struct Parsed_Call_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__CAST) {
-#line 3939 "bootstrap/stage0/ReCode.code"
+#line 3941 "bootstrap/stage0/ReCode.code"
         return Checker__check_cast_expression(self, ((struct Parsed_Cast_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__CHARACTER) {
-#line 3941 "bootstrap/stage0/ReCode.code"
+#line 3943 "bootstrap/stage0/ReCode.code"
         return Checker__check_character_expression(self, ((struct Parsed_Character_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__DEREFERENCE) {
-#line 3943 "bootstrap/stage0/ReCode.code"
+#line 3945 "bootstrap/stage0/ReCode.code"
         return Checker__check_dereference_expression(self, ((struct Parsed_Dereference_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__DIVIDE) {
-#line 3945 "bootstrap/stage0/ReCode.code"
+#line 3947 "bootstrap/stage0/ReCode.code"
         return Checker__check_divide_expression(self, ((struct Parsed_Divide_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__EQUALS) {
-#line 3947 "bootstrap/stage0/ReCode.code"
+#line 3949 "bootstrap/stage0/ReCode.code"
         return Checker__check_equals_expression(self, ((struct Parsed_Equals_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__GREATER) {
-#line 3949 "bootstrap/stage0/ReCode.code"
+#line 3951 "bootstrap/stage0/ReCode.code"
         return Checker__check_greater_expression(self, ((struct Parsed_Greater_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__GREATER_OR_EQUALS) {
-#line 3951 "bootstrap/stage0/ReCode.code"
+#line 3953 "bootstrap/stage0/ReCode.code"
         return Checker__check_greater_or_equals_expression(self, ((struct Parsed_Greater_Or_Equals_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__GROUP) {
-#line 3953 "bootstrap/stage0/ReCode.code"
+#line 3955 "bootstrap/stage0/ReCode.code"
         return Checker__check_group_expression(self, ((struct Parsed_Group_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__INTEGER) {
-#line 3955 "bootstrap/stage0/ReCode.code"
+#line 3957 "bootstrap/stage0/ReCode.code"
         return Checker__check_integer_expression(self, ((struct Parsed_Integer_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__LESS) {
-#line 3957 "bootstrap/stage0/ReCode.code"
+#line 3959 "bootstrap/stage0/ReCode.code"
         return Checker__check_less_expression(self, ((struct Parsed_Less_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__LESS_OR_EQUALS) {
-#line 3959 "bootstrap/stage0/ReCode.code"
+#line 3961 "bootstrap/stage0/ReCode.code"
         return Checker__check_less_or_equals_expression(self, ((struct Parsed_Less_Or_Equals_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__LOGIC_AND) {
-#line 3961 "bootstrap/stage0/ReCode.code"
+#line 3963 "bootstrap/stage0/ReCode.code"
         return Checker__check_logic_and_expression(self, ((struct Parsed_Logic_And_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__LOGIC_OR) {
-#line 3963 "bootstrap/stage0/ReCode.code"
+#line 3965 "bootstrap/stage0/ReCode.code"
         return Checker__check_logic_or_expression(self, ((struct Parsed_Logic_Or_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__MEMBER_ACCESS) {
-#line 3965 "bootstrap/stage0/ReCode.code"
+#line 3967 "bootstrap/stage0/ReCode.code"
         return Checker__check_member_access_expression(self, ((struct Parsed_Member_Access_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__MINUS) {
-#line 3967 "bootstrap/stage0/ReCode.code"
+#line 3969 "bootstrap/stage0/ReCode.code"
         return Checker__check_minus_expression(self, ((struct Parsed_Minus_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__MODULO) {
-#line 3969 "bootstrap/stage0/ReCode.code"
+#line 3971 "bootstrap/stage0/ReCode.code"
         return Checker__check_modulo_expression(self, ((struct Parsed_Modulo_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__MULTIPLY) {
-#line 3971 "bootstrap/stage0/ReCode.code"
+#line 3973 "bootstrap/stage0/ReCode.code"
         return Checker__check_multiply_expression(self, ((struct Parsed_Multiply_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__NOT) {
-#line 3973 "bootstrap/stage0/ReCode.code"
+#line 3975 "bootstrap/stage0/ReCode.code"
         return Checker__check_not_expression(self, ((struct Parsed_Not_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__NOT_EQUALS) {
-#line 3975 "bootstrap/stage0/ReCode.code"
+#line 3977 "bootstrap/stage0/ReCode.code"
         return Checker__check_not_equals_expression(self, ((struct Parsed_Not_Equals_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__NULL) {
-#line 3977 "bootstrap/stage0/ReCode.code"
+#line 3979 "bootstrap/stage0/ReCode.code"
         return Checker__check_null_expression(self, ((struct Parsed_Null_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__SIZEOF) {
-#line 3979 "bootstrap/stage0/ReCode.code"
+#line 3981 "bootstrap/stage0/ReCode.code"
         return Checker__check_sizeof_expression(self, ((struct Parsed_Sizeof_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__STRING) {
-#line 3981 "bootstrap/stage0/ReCode.code"
+#line 3983 "bootstrap/stage0/ReCode.code"
         return Checker__check_string_expression(self, ((struct Parsed_String_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__SUBSTRACT) {
-#line 3983 "bootstrap/stage0/ReCode.code"
+#line 3985 "bootstrap/stage0/ReCode.code"
         return Checker__check_substract_expression(self, ((struct Parsed_Substract_Expression*) parsed_expression));
     } else if (parsed_expression->kind == Parsed_Expression_Kind__SYMBOL) {
-#line 3985 "bootstrap/stage0/ReCode.code"
+#line 3987 "bootstrap/stage0/ReCode.code"
         return Checker__check_symbol_expression(self, ((struct Parsed_Symbol_Expression*) parsed_expression));
     }
-#line 3987 "bootstrap/stage0/ReCode.code"
+#line 3989 "bootstrap/stage0/ReCode.code"
     Source_Location__error(parsed_expression->location, String__create_from("Unsupported expression kind"));
-#line 3988 "bootstrap/stage0/ReCode.code"
+#line 3990 "bootstrap/stage0/ReCode.code"
     abort();
 }
 
-#line 3991 "bootstrap/stage0/ReCode.code"
-void Checker__check_enum_statement(struct Checker* self, struct Parsed_Enum_Statement* parsed_statement) {
-#line 3992 "bootstrap/stage0/ReCode.code"
-    struct Checked_Enum_Type* enum_type = Checked_Enum_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
 #line 3993 "bootstrap/stage0/ReCode.code"
-    Checker__append_type(self, ((struct Checked_Named_Type*) enum_type));
+void Checker__check_enum_statement(struct Checker* self, struct Parsed_Enum_Statement* parsed_statement) {
+    struct Checked_Enum_Type* enum_type;
+    struct Checked_Enum_Member* last_enum_member;
+    struct Parsed_Enum_Member* parsed_enum_member;
+#line 3994 "bootstrap/stage0/ReCode.code"
+    enum_type = Checked_Enum_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
 #line 3995 "bootstrap/stage0/ReCode.code"
-    struct Checked_Enum_Member* last_enum_member = NULL;
-#line 3996 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Enum_Member* parsed_enum_member = parsed_statement->first_member;
+    Checker__append_type(self, ((struct Checked_Named_Type*) enum_type));
 #line 3997 "bootstrap/stage0/ReCode.code"
-    while (parsed_enum_member != NULL) {
+    last_enum_member = NULL;
 #line 3998 "bootstrap/stage0/ReCode.code"
-        struct Checked_Enum_Member* enum_member = Checked_Enum_Member__create(parsed_enum_member->name->location, parsed_enum_member->name->lexeme);
+    parsed_enum_member = parsed_statement->first_member;
 #line 3999 "bootstrap/stage0/ReCode.code"
-        struct String* enum_member_symbol_name = String__append_string(String__append_cstring(String__append_string(String__create(), enum_type->super.name), "__"), enum_member->name);
+    while (parsed_enum_member != NULL) {
+        struct Checked_Enum_Member* enum_member;
+        struct String* enum_member_symbol_name;
 #line 4000 "bootstrap/stage0/ReCode.code"
-        enum_member->symbol = ((struct Checked_Symbol*) Checked_Enum_Member_Symbol__create(enum_member->location, enum_member_symbol_name, ((struct Checked_Type*) enum_type)));
+        enum_member = Checked_Enum_Member__create(parsed_enum_member->name->location, parsed_enum_member->name->lexeme);
 #line 4001 "bootstrap/stage0/ReCode.code"
-        Checked_Symbols__append_symbol(self->symbols, enum_member->symbol);
+        enum_member_symbol_name = String__append_string(String__append_cstring(String__append_string(String__create(), enum_type->super.name), "__"), enum_member->name);
 #line 4002 "bootstrap/stage0/ReCode.code"
-        if (last_enum_member == NULL) {
+        enum_member->symbol = ((struct Checked_Symbol*) Checked_Enum_Member_Symbol__create(enum_member->location, enum_member_symbol_name, ((struct Checked_Type*) enum_type)));
 #line 4003 "bootstrap/stage0/ReCode.code"
+        Checked_Symbols__append_symbol(self->symbols, enum_member->symbol);
+#line 4004 "bootstrap/stage0/ReCode.code"
+        if (last_enum_member == NULL) {
+#line 4005 "bootstrap/stage0/ReCode.code"
             enum_type->first_member = enum_member;
         } else {
-#line 4005 "bootstrap/stage0/ReCode.code"
+#line 4007 "bootstrap/stage0/ReCode.code"
             last_enum_member->next_member = enum_member;
         }
-#line 4007 "bootstrap/stage0/ReCode.code"
+#line 4009 "bootstrap/stage0/ReCode.code"
         last_enum_member = enum_member;
-#line 4008 "bootstrap/stage0/ReCode.code"
+#line 4010 "bootstrap/stage0/ReCode.code"
         parsed_enum_member = parsed_enum_member->next_member;
     }
 }
 
-#line 4012 "bootstrap/stage0/ReCode.code"
-void Checker__create_opaque_type(struct Checker* self, struct Parsed_Opaque_Type_Statement* parsed_statement) {
-#line 4013 "bootstrap/stage0/ReCode.code"
-    struct Checked_Named_Type* other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
 #line 4014 "bootstrap/stage0/ReCode.code"
-    if (other_type != NULL) {
+void Checker__create_opaque_type(struct Checker* self, struct Parsed_Opaque_Type_Statement* parsed_statement) {
+    struct Checked_Named_Type* other_type;
 #line 4015 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Type declared first here: "), other_type->super.location));
+    other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
 #line 4016 "bootstrap/stage0/ReCode.code"
+    if (other_type != NULL) {
+#line 4017 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Type declared first here: "), other_type->super.location));
+#line 4018 "bootstrap/stage0/ReCode.code"
         abort();
     } else {
-#line 4018 "bootstrap/stage0/ReCode.code"
-        struct Checked_Opaque_Type* opaque_type = Checked_Opaque_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
-#line 4019 "bootstrap/stage0/ReCode.code"
+        struct Checked_Opaque_Type* opaque_type;
+#line 4020 "bootstrap/stage0/ReCode.code"
+        opaque_type = Checked_Opaque_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
+#line 4021 "bootstrap/stage0/ReCode.code"
         Checker__append_type(self, ((struct Checked_Named_Type*) opaque_type));
     }
 }
 
-#line 4023 "bootstrap/stage0/ReCode.code"
-void Checker__create_struct_type(struct Checker* self, struct Parsed_Struct_Statement* parsed_statement) {
-#line 4024 "bootstrap/stage0/ReCode.code"
-    struct Checked_Named_Type* other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
 #line 4025 "bootstrap/stage0/ReCode.code"
-    if (other_type != NULL) {
+void Checker__create_struct_type(struct Checker* self, struct Parsed_Struct_Statement* parsed_statement) {
+    struct Checked_Named_Type* other_type;
 #line 4026 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Type declared first here: "), other_type->super.location));
+    other_type = Checker__find_type(self, parsed_statement->super.name->lexeme);
 #line 4027 "bootstrap/stage0/ReCode.code"
+    if (other_type != NULL) {
+#line 4028 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Type declared first here: "), other_type->super.location));
+#line 4029 "bootstrap/stage0/ReCode.code"
         abort();
     } else {
-#line 4029 "bootstrap/stage0/ReCode.code"
-        struct Checked_Struct_Type* struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
-#line 4030 "bootstrap/stage0/ReCode.code"
+        struct Checked_Struct_Type* struct_type;
+#line 4031 "bootstrap/stage0/ReCode.code"
+        struct_type = Checked_Struct_Type__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme);
+#line 4032 "bootstrap/stage0/ReCode.code"
         Checker__append_type(self, ((struct Checked_Named_Type*) struct_type));
     }
 }
 
-#line 4034 "bootstrap/stage0/ReCode.code"
-void Checker__check_struct_statement(struct Checker* self, struct Parsed_Struct_Statement* parsed_statement) {
-#line 4035 "bootstrap/stage0/ReCode.code"
-    struct Checked_Struct_Type* struct_type = ((struct Checked_Struct_Type*) Checker__find_type(self, parsed_statement->super.name->lexeme));
 #line 4036 "bootstrap/stage0/ReCode.code"
-    if (parsed_statement->first_member != NULL) {
+void Checker__check_struct_statement(struct Checker* self, struct Parsed_Struct_Statement* parsed_statement) {
+    struct Checked_Struct_Type* struct_type;
 #line 4037 "bootstrap/stage0/ReCode.code"
-        struct Checked_Struct_Member* last_struct_member = NULL;
+    struct_type = ((struct Checked_Struct_Type*) Checker__find_type(self, parsed_statement->super.name->lexeme));
 #line 4038 "bootstrap/stage0/ReCode.code"
-        struct Parsed_Struct_Member* parsed_member = parsed_statement->first_member;
+    if (parsed_statement->first_member != NULL) {
+        struct Checked_Struct_Member* last_struct_member;
+        struct Parsed_Struct_Member* parsed_member;
 #line 4039 "bootstrap/stage0/ReCode.code"
-        while (parsed_member != NULL) {
+        last_struct_member = NULL;
 #line 4040 "bootstrap/stage0/ReCode.code"
-            struct Checked_Struct_Member* struct_member = Checked_Struct_Type__find_member(struct_type, parsed_member->name->lexeme);
+        parsed_member = parsed_statement->first_member;
 #line 4041 "bootstrap/stage0/ReCode.code"
-            if (struct_member != NULL) {
+        while (parsed_member != NULL) {
+            struct Checked_Struct_Member* struct_member;
+            struct Checked_Type* struct_member_type;
 #line 4042 "bootstrap/stage0/ReCode.code"
-                Source_Location__error(parsed_member->name->location, String__append_source_location(String__create_from("Struct member declared first here: "), struct_member->location));
+            struct_member = Checked_Struct_Type__find_member(struct_type, parsed_member->name->lexeme);
 #line 4043 "bootstrap/stage0/ReCode.code"
+            if (struct_member != NULL) {
+#line 4044 "bootstrap/stage0/ReCode.code"
+                Source_Location__error(parsed_member->name->location, String__append_source_location(String__create_from("Struct member declared first here: "), struct_member->location));
+#line 4045 "bootstrap/stage0/ReCode.code"
                 abort();
             }
-#line 4045 "bootstrap/stage0/ReCode.code"
-            struct Checked_Type* struct_member_type = Checker__resolve_type(self, parsed_member->type);
-#line 4046 "bootstrap/stage0/ReCode.code"
-            struct_member = Checked_Struct_Member__create(parsed_member->name->location, parsed_member->name->lexeme, struct_member_type);
 #line 4047 "bootstrap/stage0/ReCode.code"
-            if (String__equals_cstring(struct_member->name, "super")) {
+            struct_member_type = Checker__resolve_type(self, parsed_member->type);
 #line 4048 "bootstrap/stage0/ReCode.code"
-                if (struct_type->first_member != NULL) {
+            struct_member = Checked_Struct_Member__create(parsed_member->name->location, parsed_member->name->lexeme, struct_member_type);
 #line 4049 "bootstrap/stage0/ReCode.code"
-                    Source_Location__error(parsed_member->name->location, String__create_from("Must be the first struct member"));
+            if (String__equals_cstring(struct_member->name, "super")) {
+                struct Checked_Struct_Type* struct_super_type;
+                struct Checked_Struct_Type* other_struct_type;
 #line 4050 "bootstrap/stage0/ReCode.code"
-                    abort();
-                }
+                if (struct_type->first_member != NULL) {
+#line 4051 "bootstrap/stage0/ReCode.code"
+                    Source_Location__error(parsed_member->name->location, String__create_from("Must be the first struct member"));
 #line 4052 "bootstrap/stage0/ReCode.code"
-                if (struct_member->type->kind != Checked_Type_Kind__STRUCT) {
-#line 4053 "bootstrap/stage0/ReCode.code"
-                    Source_Location__error(parsed_member->type->location, String__create_from("Must be a struct"));
-#line 4054 "bootstrap/stage0/ReCode.code"
                     abort();
                 }
+#line 4054 "bootstrap/stage0/ReCode.code"
+                if (struct_member->type->kind != Checked_Type_Kind__STRUCT) {
+#line 4055 "bootstrap/stage0/ReCode.code"
+                    Source_Location__error(parsed_member->type->location, String__create_from("Must be a struct"));
 #line 4056 "bootstrap/stage0/ReCode.code"
-                struct Checked_Struct_Type* struct_super_type = ((struct Checked_Struct_Type*) struct_member->type);
-#line 4057 "bootstrap/stage0/ReCode.code"
-                struct Checked_Struct_Type* other_struct_type = struct_super_type;
+                    abort();
+                }
 #line 4058 "bootstrap/stage0/ReCode.code"
-                while (other_struct_type != NULL) {
+                struct_super_type = ((struct Checked_Struct_Type*) struct_member->type);
 #line 4059 "bootstrap/stage0/ReCode.code"
-                    if (other_struct_type == struct_type) {
+                other_struct_type = struct_super_type;
 #line 4060 "bootstrap/stage0/ReCode.code"
-                        Source_Location__error(parsed_member->type->location, String__create_from("Type recursivity"));
+                while (other_struct_type != NULL) {
 #line 4061 "bootstrap/stage0/ReCode.code"
+                    if (other_struct_type == struct_type) {
+#line 4062 "bootstrap/stage0/ReCode.code"
+                        Source_Location__error(parsed_member->type->location, String__create_from("Type recursivity"));
+#line 4063 "bootstrap/stage0/ReCode.code"
                         abort();
                     }
-#line 4063 "bootstrap/stage0/ReCode.code"
+#line 4065 "bootstrap/stage0/ReCode.code"
                     other_struct_type = other_struct_type->super_type;
                 }
-#line 4065 "bootstrap/stage0/ReCode.code"
+#line 4067 "bootstrap/stage0/ReCode.code"
                 struct_type->super_type = struct_super_type;
             }
-#line 4067 "bootstrap/stage0/ReCode.code"
+#line 4069 "bootstrap/stage0/ReCode.code"
             if (last_struct_member == NULL) {
-#line 4068 "bootstrap/stage0/ReCode.code"
+#line 4070 "bootstrap/stage0/ReCode.code"
                 struct_type->first_member = struct_member;
             } else {
-#line 4070 "bootstrap/stage0/ReCode.code"
+#line 4072 "bootstrap/stage0/ReCode.code"
                 last_struct_member->next_member = struct_member;
             }
-#line 4072 "bootstrap/stage0/ReCode.code"
+#line 4074 "bootstrap/stage0/ReCode.code"
             last_struct_member = struct_member;
-#line 4073 "bootstrap/stage0/ReCode.code"
+#line 4075 "bootstrap/stage0/ReCode.code"
             parsed_member = parsed_member->next_member;
         }
     }
 }
 
-#line 4078 "bootstrap/stage0/ReCode.code"
-struct Checked_Assignment_Statement* Checker__check_assignment_statement(struct Checker* self, struct Parsed_Assignment_Statement* parsed_statement) {
-#line 4079 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* object_expression = Checker__check_expression(self, parsed_statement->object_expression);
 #line 4080 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* value_expression = Checker__check_expression(self, parsed_statement->value_expression);
+struct Checked_Assignment_Statement* Checker__check_assignment_statement(struct Checker* self, struct Parsed_Assignment_Statement* parsed_statement) {
+    struct Checked_Expression* object_expression;
+    struct Checked_Expression* value_expression;
 #line 4081 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(object_expression->type, value_expression->type, value_expression->location);
+    object_expression = Checker__check_expression(self, parsed_statement->object_expression);
 #line 4082 "bootstrap/stage0/ReCode.code"
+    value_expression = Checker__check_expression(self, parsed_statement->value_expression);
+#line 4083 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(object_expression->type, value_expression->type, value_expression->location);
+#line 4084 "bootstrap/stage0/ReCode.code"
     return Checked_Assignment_Statement__create(parsed_statement->super.location, object_expression, value_expression);
 }
 
-#line 4085 "bootstrap/stage0/ReCode.code"
-struct Checked_Block_Statement* Checker__check_block_statement(struct Checker* self, struct Parsed_Block_Statement* parsed_statement) {
-#line 4086 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statements* statements = Checker__check_statements(self, parsed_statement->statements);
 #line 4087 "bootstrap/stage0/ReCode.code"
+struct Checked_Block_Statement* Checker__check_block_statement(struct Checker* self, struct Parsed_Block_Statement* parsed_statement) {
+    struct Checked_Statements* statements;
+#line 4088 "bootstrap/stage0/ReCode.code"
+    statements = Checker__check_statements(self, parsed_statement->statements);
+#line 4089 "bootstrap/stage0/ReCode.code"
     return Checked_Block_Statement__create(parsed_statement->super.location, statements);
 }
 
-#line 4090 "bootstrap/stage0/ReCode.code"
+#line 4092 "bootstrap/stage0/ReCode.code"
 struct Checked_Break_Statement* Checker__check_break_statement(struct Checker* self, struct Parsed_Break_Statement* parsed_statement) {
-#line 4091 "bootstrap/stage0/ReCode.code"
+#line 4093 "bootstrap/stage0/ReCode.code"
     return Checked_Break_Statement__create(parsed_statement->super.location);
 }
 
-#line 4094 "bootstrap/stage0/ReCode.code"
-struct Checked_Expression_Statement* Checker__check_expression_statement(struct Checker* self, struct Parsed_Expression_Statement* parsed_statement) {
-#line 4095 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* expression = Checker__check_expression(self, parsed_statement->expression);
 #line 4096 "bootstrap/stage0/ReCode.code"
+struct Checked_Expression_Statement* Checker__check_expression_statement(struct Checker* self, struct Parsed_Expression_Statement* parsed_statement) {
+    struct Checked_Expression* expression;
+#line 4097 "bootstrap/stage0/ReCode.code"
+    expression = Checker__check_expression(self, parsed_statement->expression);
+#line 4098 "bootstrap/stage0/ReCode.code"
     if (!Checked_Type__equals(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__VOID)), expression->type)) {
     }
-#line 4099 "bootstrap/stage0/ReCode.code"
+#line 4101 "bootstrap/stage0/ReCode.code"
     return Checked_Expression_Statement__create(parsed_statement->super.location, expression);
 }
 
-#line 4102 "bootstrap/stage0/ReCode.code"
-struct Checked_If_Statement* Checker__check_if_statement(struct Checker* self, struct Parsed_If_Statement* parsed_statement) {
-#line 4103 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* considition_expression = Checker__check_expression(self, parsed_statement->condition_expression);
 #line 4104 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), considition_expression->type, considition_expression->location);
+struct Checked_If_Statement* Checker__check_if_statement(struct Checker* self, struct Parsed_If_Statement* parsed_statement) {
+    struct Checked_Expression* considition_expression;
+    struct Checked_Statement* true_statement;
+    struct Checked_Statement* false_statement;
 #line 4105 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statement* true_statement = Checker__check_statement(self, parsed_statement->true_statement);
+    considition_expression = Checker__check_expression(self, parsed_statement->condition_expression);
 #line 4106 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statement* false_statement = NULL;
+    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), considition_expression->type, considition_expression->location);
 #line 4107 "bootstrap/stage0/ReCode.code"
-    if (parsed_statement->false_statement != NULL) {
+    true_statement = Checker__check_statement(self, parsed_statement->true_statement);
 #line 4108 "bootstrap/stage0/ReCode.code"
+    false_statement = NULL;
+#line 4109 "bootstrap/stage0/ReCode.code"
+    if (parsed_statement->false_statement != NULL) {
+#line 4110 "bootstrap/stage0/ReCode.code"
         false_statement = Checker__check_statement(self, parsed_statement->false_statement);
     }
-#line 4110 "bootstrap/stage0/ReCode.code"
+#line 4112 "bootstrap/stage0/ReCode.code"
     return Checked_If_Statement__create(parsed_statement->super.location, considition_expression, true_statement, false_statement);
 }
 
-#line 4113 "bootstrap/stage0/ReCode.code"
-struct Checked_Return_Statement* Checker__check_return_statement(struct Checker* self, struct Parsed_Return_Statement* parsed_statement) {
-#line 4114 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* expression = NULL;
 #line 4115 "bootstrap/stage0/ReCode.code"
-    if (parsed_statement->expression != NULL) {
+struct Checked_Return_Statement* Checker__check_return_statement(struct Checker* self, struct Parsed_Return_Statement* parsed_statement) {
+    struct Checked_Expression* expression;
 #line 4116 "bootstrap/stage0/ReCode.code"
-        expression = Checker__check_expression(self, parsed_statement->expression);
+    expression = NULL;
 #line 4117 "bootstrap/stage0/ReCode.code"
+    if (parsed_statement->expression != NULL) {
+#line 4118 "bootstrap/stage0/ReCode.code"
+        expression = Checker__check_expression(self, parsed_statement->expression);
+#line 4119 "bootstrap/stage0/ReCode.code"
         Checked_Type__expect_same_type(self->return_type, expression->type, expression->location);
     } else if (self->return_type->kind != Checked_Type_Kind__VOID) {
-#line 4119 "bootstrap/stage0/ReCode.code"
+#line 4121 "bootstrap/stage0/ReCode.code"
         Source_Location__error(parsed_statement->super.location, String__create_from("Missing expression"));
-#line 4120 "bootstrap/stage0/ReCode.code"
+#line 4122 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 4122 "bootstrap/stage0/ReCode.code"
+#line 4124 "bootstrap/stage0/ReCode.code"
     return Checked_Return_Statement__create(parsed_statement->super.location, expression);
 }
 
-#line 4125 "bootstrap/stage0/ReCode.code"
-struct Checked_Variable_Statement* Checker__check_variable_statement(struct Checker* self, struct Parsed_Variable_Statement* parsed_statement) {
-#line 4126 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* type = NULL;
 #line 4127 "bootstrap/stage0/ReCode.code"
-    if (parsed_statement->type != NULL) {
+struct Checked_Variable_Statement* Checker__check_variable_statement(struct Checker* self, struct Parsed_Variable_Statement* parsed_statement) {
+    struct Checked_Type* type;
+    struct Checked_Expression* expression;
+    struct Checked_Variable_Symbol* variable;
 #line 4128 "bootstrap/stage0/ReCode.code"
-        type = Checker__resolve_type(self, parsed_statement->type);
+    type = NULL;
 #line 4129 "bootstrap/stage0/ReCode.code"
-        if (type->kind == Checked_Type_Kind__OPAQUE) {
+    if (parsed_statement->type != NULL) {
 #line 4130 "bootstrap/stage0/ReCode.code"
-            Source_Location__error(parsed_statement->super.super.location, String__create_from("Variable cannot have an opaque type"));
+        type = Checker__resolve_type(self, parsed_statement->type);
 #line 4131 "bootstrap/stage0/ReCode.code"
+        if (type->kind == Checked_Type_Kind__OPAQUE) {
+#line 4132 "bootstrap/stage0/ReCode.code"
+            Source_Location__error(parsed_statement->super.super.location, String__create_from("Variable cannot have an opaque type"));
+#line 4133 "bootstrap/stage0/ReCode.code"
             abort();
         }
     }
-#line 4134 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* expression = NULL;
-#line 4135 "bootstrap/stage0/ReCode.code"
-    if (parsed_statement->expression != NULL) {
 #line 4136 "bootstrap/stage0/ReCode.code"
-        expression = Checker__check_expression(self, parsed_statement->expression);
+    expression = NULL;
 #line 4137 "bootstrap/stage0/ReCode.code"
-        if (type != NULL) {
+    if (parsed_statement->expression != NULL) {
 #line 4138 "bootstrap/stage0/ReCode.code"
-            Checked_Type__expect_same_type(type, expression->type, expression->location);
+        expression = Checker__check_expression(self, parsed_statement->expression);
 #line 4139 "bootstrap/stage0/ReCode.code"
-            if (expression->type->kind != Checked_Type_Kind__NULL) {
+        if (type != NULL) {
 #line 4140 "bootstrap/stage0/ReCode.code"
+            Checked_Type__expect_same_type(type, expression->type, expression->location);
+#line 4141 "bootstrap/stage0/ReCode.code"
+            if (expression->type->kind != Checked_Type_Kind__NULL) {
+#line 4142 "bootstrap/stage0/ReCode.code"
                 Source_Location__warning(parsed_statement->type->location, String__create_from("Redundant type declaration"));
             }
         } else {
-#line 4143 "bootstrap/stage0/ReCode.code"
+#line 4145 "bootstrap/stage0/ReCode.code"
             type = expression->type;
         }
     }
-#line 4146 "bootstrap/stage0/ReCode.code"
-    if (type == NULL || type->kind == Checked_Type_Kind__NULL) {
-#line 4147 "bootstrap/stage0/ReCode.code"
-        Source_Location__error(parsed_statement->super.super.location, String__create_from("Unknown variable type"));
 #line 4148 "bootstrap/stage0/ReCode.code"
+    if (type == NULL || type->kind == Checked_Type_Kind__NULL) {
+#line 4149 "bootstrap/stage0/ReCode.code"
+        Source_Location__error(parsed_statement->super.super.location, String__create_from("Unknown variable type"));
+#line 4150 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 4150 "bootstrap/stage0/ReCode.code"
-    struct Checked_Variable_Symbol* variable = Checked_Variable__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, type);
-#line 4151 "bootstrap/stage0/ReCode.code"
-    Checked_Symbols__append_symbol(self->symbols, ((struct Checked_Symbol*) variable));
 #line 4152 "bootstrap/stage0/ReCode.code"
+    variable = Checked_Variable__create(parsed_statement->super.name->location, parsed_statement->super.name->lexeme, type);
+#line 4153 "bootstrap/stage0/ReCode.code"
+    Checked_Symbols__append_symbol(self->symbols, ((struct Checked_Symbol*) variable));
+#line 4154 "bootstrap/stage0/ReCode.code"
     return Checked_Variable_Statement__create(parsed_statement->super.super.location, variable, expression, parsed_statement->is_external);
 }
 
-#line 4155 "bootstrap/stage0/ReCode.code"
-struct Checked_While_Statement* Checker__check_while_statement(struct Checker* self, struct Parsed_While_Statement* parsed_statement) {
-#line 4156 "bootstrap/stage0/ReCode.code"
-    struct Checked_Expression* considition_expression = Checker__check_expression(self, parsed_statement->condition_expression);
 #line 4157 "bootstrap/stage0/ReCode.code"
-    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), considition_expression->type, considition_expression->location);
+struct Checked_While_Statement* Checker__check_while_statement(struct Checker* self, struct Parsed_While_Statement* parsed_statement) {
+    struct Checked_Expression* considition_expression;
+    struct Checked_Statement* body_statement;
 #line 4158 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statement* body_statement = Checker__check_statement(self, parsed_statement->body_statement);
+    considition_expression = Checker__check_expression(self, parsed_statement->condition_expression);
 #line 4159 "bootstrap/stage0/ReCode.code"
+    Checked_Type__expect_same_type(((struct Checked_Type*) Checker__get_builtin_type(self, Checked_Type_Kind__BOOL)), considition_expression->type, considition_expression->location);
+#line 4160 "bootstrap/stage0/ReCode.code"
+    body_statement = Checker__check_statement(self, parsed_statement->body_statement);
+#line 4161 "bootstrap/stage0/ReCode.code"
     return Checked_While_Statement__create(parsed_statement->super.location, considition_expression, body_statement);
 }
 
-#line 4162 "bootstrap/stage0/ReCode.code"
-void Checker__check_function_declaration(struct Checker* self, struct Parsed_Function_Statement* parsed_statement) {
-#line 4163 "bootstrap/stage0/ReCode.code"
-    struct String* function_name = parsed_statement->super.name->lexeme;
 #line 4164 "bootstrap/stage0/ReCode.code"
-    struct Checked_Type* function_return_type = Checker__resolve_type(self, parsed_statement->return_type);
+void Checker__check_function_declaration(struct Checker* self, struct Parsed_Function_Statement* parsed_statement) {
+    struct String* function_name;
+    struct Checked_Type* function_return_type;
+    struct Checked_Function_Parameter* function_first_parameter;
+    struct Parsed_Function_Parameter* parsed_parameter;
+    struct Checked_Function_Type* function_type;
+    struct Checked_Symbol* other_symbol;
 #line 4165 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Parameter* function_first_parameter = NULL;
+    function_name = parsed_statement->super.name->lexeme;
 #line 4166 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Function_Parameter* parsed_parameter = parsed_statement->first_parameter;
+    function_return_type = Checker__resolve_type(self, parsed_statement->return_type);
 #line 4167 "bootstrap/stage0/ReCode.code"
-    if (parsed_parameter != NULL) {
+    function_first_parameter = NULL;
 #line 4168 "bootstrap/stage0/ReCode.code"
-        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->location, parsed_parameter->name, Checker__resolve_type(self, parsed_parameter->type));
+    parsed_parameter = parsed_statement->first_parameter;
 #line 4169 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Parameter* function_last_parameter = function_first_parameter;
+    if (parsed_parameter != NULL) {
+        struct Checked_Function_Parameter* function_last_parameter;
 #line 4170 "bootstrap/stage0/ReCode.code"
-        parsed_parameter = parsed_parameter->next_parameter;
+        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->location, parsed_parameter->name, Checker__resolve_type(self, parsed_parameter->type));
 #line 4171 "bootstrap/stage0/ReCode.code"
-        while (parsed_parameter != NULL) {
+        function_last_parameter = function_first_parameter;
 #line 4172 "bootstrap/stage0/ReCode.code"
-            struct Checked_Function_Parameter* function_parameter = Checked_Function_Parameter__create(parsed_parameter->location, parsed_parameter->name, Checker__resolve_type(self, parsed_parameter->type));
+        parsed_parameter = parsed_parameter->next_parameter;
 #line 4173 "bootstrap/stage0/ReCode.code"
-            function_last_parameter->next_parameter = function_parameter;
+        while (parsed_parameter != NULL) {
+            struct Checked_Function_Parameter* function_parameter;
 #line 4174 "bootstrap/stage0/ReCode.code"
-            function_last_parameter = function_parameter;
+            function_parameter = Checked_Function_Parameter__create(parsed_parameter->location, parsed_parameter->name, Checker__resolve_type(self, parsed_parameter->type));
 #line 4175 "bootstrap/stage0/ReCode.code"
+            function_last_parameter->next_parameter = function_parameter;
+#line 4176 "bootstrap/stage0/ReCode.code"
+            function_last_parameter = function_parameter;
+#line 4177 "bootstrap/stage0/ReCode.code"
             parsed_parameter = parsed_parameter->next_parameter;
         }
     }
-#line 4178 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Type* function_type = Checked_Function_Type__create(parsed_statement->super.super.location, function_first_parameter, function_return_type);
 #line 4180 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* other_symbol = Checked_Symbols__find_sibling_symbol(self->symbols, function_name);
-#line 4181 "bootstrap/stage0/ReCode.code"
-    if (other_symbol != NULL) {
+    function_type = Checked_Function_Type__create(parsed_statement->super.super.location, function_first_parameter, function_return_type);
 #line 4182 "bootstrap/stage0/ReCode.code"
-        if (other_symbol->kind != Checked_Symbol_Kind__FUNCTION || !Checked_Type__equals(((struct Checked_Type*) function_type), ((struct Checked_Type*) ((struct Checked_Function_Symbol*) other_symbol)->function_type))) {
+    other_symbol = Checked_Symbols__find_sibling_symbol(self->symbols, function_name);
 #line 4183 "bootstrap/stage0/ReCode.code"
-            TODO("Report overloaded function");
+    if (other_symbol != NULL) {
 #line 4184 "bootstrap/stage0/ReCode.code"
+        if (other_symbol->kind != Checked_Symbol_Kind__FUNCTION || !Checked_Type__equals(((struct Checked_Type*) function_type), ((struct Checked_Type*) ((struct Checked_Function_Symbol*) other_symbol)->function_type))) {
+#line 4185 "bootstrap/stage0/ReCode.code"
+            TODO("Report overloaded function");
+#line 4186 "bootstrap/stage0/ReCode.code"
             abort();
         } else {
-#line 4186 "bootstrap/stage0/ReCode.code"
+#line 4188 "bootstrap/stage0/ReCode.code"
             Source_Location__error(parsed_statement->super.name->location, String__append_source_location(String__create_from("Function declared first here: "), other_symbol->location));
-#line 4187 "bootstrap/stage0/ReCode.code"
+#line 4189 "bootstrap/stage0/ReCode.code"
             abort();
         }
     } else {
-#line 4190 "bootstrap/stage0/ReCode.code"
+#line 4192 "bootstrap/stage0/ReCode.code"
         Checked_Symbols__append_symbol(self->symbols, ((struct Checked_Symbol*) Checked_Function_Symbol__create(parsed_statement->super.name->location, function_name, function_type)));
     }
 }
 
-#line 4194 "bootstrap/stage0/ReCode.code"
-struct Checked_Statement* Checker__check_statement(struct Checker* self, struct Parsed_Statement* parsed_statement) {
-#line 4195 "bootstrap/stage0/ReCode.code"
-    if (parsed_statement->kind == Parsed_Statement_Kind__ASSIGNMENT) {
 #line 4196 "bootstrap/stage0/ReCode.code"
+struct Checked_Statement* Checker__check_statement(struct Checker* self, struct Parsed_Statement* parsed_statement) {
+#line 4197 "bootstrap/stage0/ReCode.code"
+    if (parsed_statement->kind == Parsed_Statement_Kind__ASSIGNMENT) {
+#line 4198 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_assignment_statement(self, ((struct Parsed_Assignment_Statement*) parsed_statement)));
     } else if (parsed_statement->kind == Parsed_Statement_Kind__BLOCK) {
-#line 4198 "bootstrap/stage0/ReCode.code"
+#line 4200 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_block_statement(self, ((struct Parsed_Block_Statement*) parsed_statement)));
     } else if (parsed_statement->kind == Parsed_Statement_Kind__BREAK) {
-#line 4200 "bootstrap/stage0/ReCode.code"
+#line 4202 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_break_statement(self, ((struct Parsed_Break_Statement*) parsed_statement)));
     } else if (parsed_statement->kind == Parsed_Statement_Kind__EXPRESSION) {
-#line 4202 "bootstrap/stage0/ReCode.code"
+#line 4204 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_expression_statement(self, ((struct Parsed_Expression_Statement*) parsed_statement)));
     } else if (parsed_statement->kind == Parsed_Statement_Kind__IF) {
-#line 4204 "bootstrap/stage0/ReCode.code"
+#line 4206 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_if_statement(self, ((struct Parsed_If_Statement*) parsed_statement)));
     } else if (parsed_statement->kind == Parsed_Statement_Kind__RETURN) {
-#line 4206 "bootstrap/stage0/ReCode.code"
+#line 4208 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_return_statement(self, ((struct Parsed_Return_Statement*) parsed_statement)));
     } else if (parsed_statement->kind == Parsed_Statement_Kind__VARIABLE) {
-#line 4208 "bootstrap/stage0/ReCode.code"
+#line 4210 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_variable_statement(self, ((struct Parsed_Variable_Statement*) parsed_statement)));
     } else if (parsed_statement->kind == Parsed_Statement_Kind__WHILE) {
-#line 4210 "bootstrap/stage0/ReCode.code"
+#line 4212 "bootstrap/stage0/ReCode.code"
         return ((struct Checked_Statement*) Checker__check_while_statement(self, ((struct Parsed_While_Statement*) parsed_statement)));
     }
-#line 4212 "bootstrap/stage0/ReCode.code"
+#line 4214 "bootstrap/stage0/ReCode.code"
     Source_Location__error(parsed_statement->location, String__create_from("Unsupported statement"));
-#line 4213 "bootstrap/stage0/ReCode.code"
+#line 4215 "bootstrap/stage0/ReCode.code"
     abort();
 }
 
-#line 4216 "bootstrap/stage0/ReCode.code"
-struct Checked_Statements* Checker__check_statements(struct Checker* self, struct Parsed_Statements* parsed_statements) {
 #line 4218 "bootstrap/stage0/ReCode.code"
-    self->symbols = Checked_Symbols__create(self->symbols);
+struct Checked_Statements* Checker__check_statements(struct Checker* self, struct Parsed_Statements* parsed_statements) {
+    struct Checked_Statements* checked_statements;
+    struct Parsed_Statement* parsed_statement;
 #line 4220 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statements* checked_statements = Checked_Statements__create();
-#line 4221 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Statement* parsed_statement = parsed_statements->first_statement;
+    self->symbols = Checked_Symbols__create(self->symbols);
 #line 4222 "bootstrap/stage0/ReCode.code"
-    while (parsed_statement != NULL) {
+    checked_statements = Checked_Statements__create(self->symbols);
 #line 4223 "bootstrap/stage0/ReCode.code"
-        struct Checked_Statement* checked_statement = Checker__check_statement(self, parsed_statement);
+    parsed_statement = parsed_statements->first_statement;
 #line 4224 "bootstrap/stage0/ReCode.code"
-        Checked_Statements__append(checked_statements, checked_statement);
+    while (parsed_statement != NULL) {
+        struct Checked_Statement* checked_statement;
 #line 4225 "bootstrap/stage0/ReCode.code"
+        checked_statement = Checker__check_statement(self, parsed_statement);
+#line 4226 "bootstrap/stage0/ReCode.code"
+        Checked_Statements__append(checked_statements, checked_statement);
+#line 4227 "bootstrap/stage0/ReCode.code"
         parsed_statement = parsed_statement->next_statement;
     }
-#line 4229 "bootstrap/stage0/ReCode.code"
-    self->symbols = self->symbols->parent;
 #line 4231 "bootstrap/stage0/ReCode.code"
+    self->symbols = self->symbols->parent;
+#line 4233 "bootstrap/stage0/ReCode.code"
     return checked_statements;
 }
 
-#line 4234 "bootstrap/stage0/ReCode.code"
-void Checker__check_function_definition(struct Checker* self, struct Parsed_Function_Statement* parsed_statement) {
-#line 4235 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* symbol = Checked_Symbols__find_sibling_symbol(self->symbols, parsed_statement->super.name->lexeme);
 #line 4236 "bootstrap/stage0/ReCode.code"
-    if (symbol == NULL || symbol->kind != Checked_Symbol_Kind__FUNCTION) {
+void Checker__check_function_definition(struct Checker* self, struct Parsed_Function_Statement* parsed_statement) {
+    struct Checked_Symbol* symbol;
+    struct Checked_Function_Symbol* function_symbol;
+    struct Checked_Function_Type* function_type;
 #line 4237 "bootstrap/stage0/ReCode.code"
-        TODO("Report missing function symbol");
+    symbol = Checked_Symbols__find_sibling_symbol(self->symbols, parsed_statement->super.name->lexeme);
 #line 4238 "bootstrap/stage0/ReCode.code"
+    if (symbol == NULL || symbol->kind != Checked_Symbol_Kind__FUNCTION) {
+#line 4239 "bootstrap/stage0/ReCode.code"
+        TODO("Report missing function symbol");
+#line 4240 "bootstrap/stage0/ReCode.code"
         abort();
     }
-#line 4240 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Symbol* function_symbol = ((struct Checked_Function_Symbol*) symbol);
-#line 4241 "bootstrap/stage0/ReCode.code"
-    struct Checked_Function_Type* function_type = function_symbol->function_type;
 #line 4242 "bootstrap/stage0/ReCode.code"
+    function_symbol = ((struct Checked_Function_Symbol*) symbol);
+#line 4243 "bootstrap/stage0/ReCode.code"
+    function_type = function_symbol->function_type;
+#line 4244 "bootstrap/stage0/ReCode.code"
     self->return_type = function_type->return_type;
-#line 4245 "bootstrap/stage0/ReCode.code"
-    self->symbols = Checked_Symbols__create(self->symbols);
 #line 4247 "bootstrap/stage0/ReCode.code"
-    if (function_type->first_parameter != NULL) {
+    self->symbols = Checked_Symbols__create(self->symbols);
 #line 4249 "bootstrap/stage0/ReCode.code"
-        struct Checked_Function_Parameter* parameter = function_type->first_parameter;
-#line 4250 "bootstrap/stage0/ReCode.code"
-        while (parameter != NULL) {
+    if (function_type->first_parameter != NULL) {
+        struct Checked_Function_Parameter* parameter;
 #line 4251 "bootstrap/stage0/ReCode.code"
-            Checked_Symbols__append_symbol(self->symbols, ((struct Checked_Symbol*) Checked_Function_Parameter_Symbol__create(parameter->location, parameter->name, parameter->type)));
+        parameter = function_type->first_parameter;
 #line 4252 "bootstrap/stage0/ReCode.code"
+        while (parameter != NULL) {
+#line 4253 "bootstrap/stage0/ReCode.code"
+            Checked_Symbols__append_symbol(self->symbols, ((struct Checked_Symbol*) Checked_Function_Parameter_Symbol__create(parameter->location, parameter->name, parameter->type)));
+#line 4254 "bootstrap/stage0/ReCode.code"
             parameter = parameter->next_parameter;
         }
     }
-#line 4257 "bootstrap/stage0/ReCode.code"
+#line 4259 "bootstrap/stage0/ReCode.code"
     function_symbol->checked_statements = Checker__check_statements(self, parsed_statement->statements);
-#line 4260 "bootstrap/stage0/ReCode.code"
+#line 4262 "bootstrap/stage0/ReCode.code"
     self->symbols = self->symbols->parent;
 }
 
-#line 4263 "bootstrap/stage0/ReCode.code"
+#line 4265 "bootstrap/stage0/ReCode.code"
 struct Checked_Source* Checker__check_source(struct Checker* self, struct Parsed_Source* parsed_source) {
-#line 4264 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statements* checked_statements = Checked_Statements__create();
-#line 4266 "bootstrap/stage0/ReCode.code"
+    struct Checked_Statements* checked_statements;
     struct Parsed_Statement* parsed_statement;
-#line 4269 "bootstrap/stage0/ReCode.code"
-    parsed_statement = parsed_source->statements->first_statement;
-#line 4270 "bootstrap/stage0/ReCode.code"
-    while (parsed_statement != NULL) {
+    struct Checked_Source* checked_source;
+#line 4266 "bootstrap/stage0/ReCode.code"
+    checked_statements = Checked_Statements__create(self->symbols);
+#line 4268 "bootstrap/stage0/ReCode.code"
+    ;
 #line 4271 "bootstrap/stage0/ReCode.code"
-        struct Checked_Statement* checked_statement = NULL;
+    parsed_statement = parsed_source->statements->first_statement;
 #line 4272 "bootstrap/stage0/ReCode.code"
+    while (parsed_statement != NULL) {
+        struct Checked_Statement* checked_statement;
+#line 4273 "bootstrap/stage0/ReCode.code"
+        checked_statement = NULL;
+#line 4274 "bootstrap/stage0/ReCode.code"
         if (parsed_statement->kind == Parsed_Statement_Kind__FUNCTION) {
         } else if (parsed_statement->kind == Parsed_Statement_Kind__VARIABLE) {
         } else if (parsed_statement->kind == Parsed_Statement_Kind__STRUCT) {
-#line 4277 "bootstrap/stage0/ReCode.code"
+#line 4279 "bootstrap/stage0/ReCode.code"
             Checker__create_struct_type(self, ((struct Parsed_Struct_Statement*) parsed_statement));
         } else if (parsed_statement->kind == Parsed_Statement_Kind__OPAQUE_TYPE) {
-#line 4279 "bootstrap/stage0/ReCode.code"
+#line 4281 "bootstrap/stage0/ReCode.code"
             Checker__create_opaque_type(self, ((struct Parsed_Opaque_Type_Statement*) parsed_statement));
         } else if (parsed_statement->kind == Parsed_Statement_Kind__ENUM) {
-#line 4281 "bootstrap/stage0/ReCode.code"
+#line 4283 "bootstrap/stage0/ReCode.code"
             Checker__check_enum_statement(self, ((struct Parsed_Enum_Statement*) parsed_statement));
         } else {
-#line 4283 "bootstrap/stage0/ReCode.code"
+#line 4285 "bootstrap/stage0/ReCode.code"
             Source_Location__error(parsed_statement->location, String__create_from("Unsupported statement"));
-#line 4284 "bootstrap/stage0/ReCode.code"
+#line 4286 "bootstrap/stage0/ReCode.code"
             abort();
         }
-#line 4286 "bootstrap/stage0/ReCode.code"
+#line 4288 "bootstrap/stage0/ReCode.code"
         if (checked_statement != NULL) {
-#line 4287 "bootstrap/stage0/ReCode.code"
+#line 4289 "bootstrap/stage0/ReCode.code"
             Checked_Statements__append(checked_statements, checked_statement);
         }
-#line 4289 "bootstrap/stage0/ReCode.code"
+#line 4291 "bootstrap/stage0/ReCode.code"
         parsed_statement = parsed_statement->next_statement;
     }
-#line 4293 "bootstrap/stage0/ReCode.code"
-    parsed_statement = parsed_source->statements->first_statement;
-#line 4294 "bootstrap/stage0/ReCode.code"
-    while (parsed_statement != NULL) {
 #line 4295 "bootstrap/stage0/ReCode.code"
-        if (parsed_statement->kind == Parsed_Statement_Kind__STRUCT) {
+    parsed_statement = parsed_source->statements->first_statement;
 #line 4296 "bootstrap/stage0/ReCode.code"
+    while (parsed_statement != NULL) {
+#line 4297 "bootstrap/stage0/ReCode.code"
+        if (parsed_statement->kind == Parsed_Statement_Kind__STRUCT) {
+#line 4298 "bootstrap/stage0/ReCode.code"
             Checker__check_struct_statement(self, ((struct Parsed_Struct_Statement*) parsed_statement));
         }
-#line 4298 "bootstrap/stage0/ReCode.code"
+#line 4300 "bootstrap/stage0/ReCode.code"
         parsed_statement = parsed_statement->next_statement;
     }
-#line 4302 "bootstrap/stage0/ReCode.code"
-    parsed_statement = parsed_source->statements->first_statement;
-#line 4303 "bootstrap/stage0/ReCode.code"
-    while (parsed_statement != NULL) {
 #line 4304 "bootstrap/stage0/ReCode.code"
-        struct Checked_Statement* checked_statement = NULL;
+    parsed_statement = parsed_source->statements->first_statement;
 #line 4305 "bootstrap/stage0/ReCode.code"
-        if (parsed_statement->kind == Parsed_Statement_Kind__FUNCTION) {
+    while (parsed_statement != NULL) {
+        struct Checked_Statement* checked_statement;
 #line 4306 "bootstrap/stage0/ReCode.code"
+        checked_statement = NULL;
+#line 4307 "bootstrap/stage0/ReCode.code"
+        if (parsed_statement->kind == Parsed_Statement_Kind__FUNCTION) {
+#line 4308 "bootstrap/stage0/ReCode.code"
             Checker__check_function_declaration(self, ((struct Parsed_Function_Statement*) parsed_statement));
         } else if (parsed_statement->kind == Parsed_Statement_Kind__VARIABLE) {
-#line 4308 "bootstrap/stage0/ReCode.code"
+#line 4310 "bootstrap/stage0/ReCode.code"
             checked_statement = ((struct Checked_Statement*) Checker__check_variable_statement(self, ((struct Parsed_Variable_Statement*) parsed_statement)));
         } else if (parsed_statement->kind == Parsed_Statement_Kind__STRUCT) {
         } else if (parsed_statement->kind == Parsed_Statement_Kind__OPAQUE_TYPE) {
         } else if (parsed_statement->kind == Parsed_Statement_Kind__ENUM) {
         } else {
-#line 4316 "bootstrap/stage0/ReCode.code"
+#line 4318 "bootstrap/stage0/ReCode.code"
             Source_Location__error(parsed_statement->location, String__create_from("Unsupported statement"));
-#line 4317 "bootstrap/stage0/ReCode.code"
+#line 4319 "bootstrap/stage0/ReCode.code"
             abort();
         }
-#line 4319 "bootstrap/stage0/ReCode.code"
+#line 4321 "bootstrap/stage0/ReCode.code"
         if (checked_statement != NULL) {
-#line 4320 "bootstrap/stage0/ReCode.code"
+#line 4322 "bootstrap/stage0/ReCode.code"
             Checked_Statements__append(checked_statements, checked_statement);
         }
-#line 4322 "bootstrap/stage0/ReCode.code"
+#line 4324 "bootstrap/stage0/ReCode.code"
         parsed_statement = parsed_statement->next_statement;
     }
-#line 4326 "bootstrap/stage0/ReCode.code"
-    parsed_statement = parsed_source->statements->first_statement;
-#line 4327 "bootstrap/stage0/ReCode.code"
-    while (parsed_statement != NULL) {
 #line 4328 "bootstrap/stage0/ReCode.code"
-        if (parsed_statement->kind == Parsed_Statement_Kind__FUNCTION) {
+    parsed_statement = parsed_source->statements->first_statement;
 #line 4329 "bootstrap/stage0/ReCode.code"
-            struct Parsed_Function_Statement* function_statement = ((struct Parsed_Function_Statement*) parsed_statement);
+    while (parsed_statement != NULL) {
 #line 4330 "bootstrap/stage0/ReCode.code"
-            if (function_statement->statements != NULL) {
+        if (parsed_statement->kind == Parsed_Statement_Kind__FUNCTION) {
+            struct Parsed_Function_Statement* function_statement;
 #line 4331 "bootstrap/stage0/ReCode.code"
+            function_statement = ((struct Parsed_Function_Statement*) parsed_statement);
+#line 4332 "bootstrap/stage0/ReCode.code"
+            if (function_statement->statements != NULL) {
+#line 4333 "bootstrap/stage0/ReCode.code"
                 Checker__check_function_definition(self, function_statement);
             }
         } else if (parsed_statement->kind == Parsed_Statement_Kind__VARIABLE) {
@@ -6838,951 +7211,988 @@ struct Checked_Source* Checker__check_source(struct Checker* self, struct Parsed
         } else if (parsed_statement->kind == Parsed_Statement_Kind__OPAQUE_TYPE) {
         } else if (parsed_statement->kind == Parsed_Statement_Kind__ENUM) {
         } else {
-#line 4342 "bootstrap/stage0/ReCode.code"
+#line 4344 "bootstrap/stage0/ReCode.code"
             Source_Location__error(parsed_statement->location, String__create_from("Unsupported statement"));
-#line 4343 "bootstrap/stage0/ReCode.code"
+#line 4345 "bootstrap/stage0/ReCode.code"
             abort();
         }
-#line 4345 "bootstrap/stage0/ReCode.code"
+#line 4347 "bootstrap/stage0/ReCode.code"
         parsed_statement = parsed_statement->next_statement;
     }
-#line 4348 "bootstrap/stage0/ReCode.code"
-    struct Checked_Source* checked_source = ((struct Checked_Source*) malloc(sizeof(struct Checked_Source)));
-#line 4349 "bootstrap/stage0/ReCode.code"
-    checked_source->first_symbol = self->symbols->first_symbol;
 #line 4350 "bootstrap/stage0/ReCode.code"
-    checked_source->statements = checked_statements;
+    checked_source = ((struct Checked_Source*) malloc(sizeof(struct Checked_Source)));
 #line 4351 "bootstrap/stage0/ReCode.code"
+    checked_source->first_symbol = self->symbols->first_symbol;
+#line 4352 "bootstrap/stage0/ReCode.code"
+    checked_source->statements = checked_statements;
+#line 4353 "bootstrap/stage0/ReCode.code"
     return checked_source;
 }
 
-#line 4354 "bootstrap/stage0/ReCode.code"
+#line 4356 "bootstrap/stage0/ReCode.code"
 struct Checked_Source* check(struct Parsed_Source* parsed_source) {
-#line 4355 "bootstrap/stage0/ReCode.code"
-    struct Checker* type_checker = Checker__create();
+    struct Checker* type_checker;
 #line 4357 "bootstrap/stage0/ReCode.code"
+    type_checker = Checker__create();
+#line 4359 "bootstrap/stage0/ReCode.code"
     return Checker__check_source(type_checker, parsed_source);
 }
 
-#line 4369 "bootstrap/stage0/ReCode.code"
-void Generator__write_source_location(struct Generator* self, struct Source_Location* location) {
-#line 4370 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "#line ");
 #line 4371 "bootstrap/stage0/ReCode.code"
-    File__write_i32(self->file, ((int32_t) location->line));
+void Generator__write_source_location(struct Generator* self, struct Source_Location* location) {
 #line 4372 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " \"");
+    File__write_cstring(self->file, "#line ");
 #line 4373 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, location->source->path);
+    File__write_i32(self->file, ((int32_t) location->line));
 #line 4374 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " \"");
+#line 4375 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, location->source->path);
+#line 4376 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "\"\n");
 }
 
-#line 4377 "bootstrap/stage0/ReCode.code"
-void Generator__generate_add_expression(struct Generator* self, struct Checked_Add_Expression* expression) {
-#line 4378 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4379 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " + ");
+void Generator__generate_add_expression(struct Generator* self, struct Checked_Add_Expression* expression) {
 #line 4380 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4381 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " + ");
+#line 4382 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4383 "bootstrap/stage0/ReCode.code"
-void Generator__generate_address_of_expression(struct Generator* self, struct Checked_Address_Of_Expression* expression) {
-#line 4384 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "&");
 #line 4385 "bootstrap/stage0/ReCode.code"
+void Generator__generate_address_of_expression(struct Generator* self, struct Checked_Address_Of_Expression* expression) {
+#line 4386 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, "&");
+#line 4387 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
-#line 4388 "bootstrap/stage0/ReCode.code"
-void Generator__generate_array_access_expression(struct Generator* self, struct Checked_Array_Access_Expression* expression) {
-#line 4389 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->array_expression);
 #line 4390 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "[");
+void Generator__generate_array_access_expression(struct Generator* self, struct Checked_Array_Access_Expression* expression) {
 #line 4391 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->index_expression);
+    Generator__generate_expression(self, expression->array_expression);
 #line 4392 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, "[");
+#line 4393 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->index_expression);
+#line 4394 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "]");
 }
 
-#line 4395 "bootstrap/stage0/ReCode.code"
-void Generator__generate_bool_expression(struct Generator* self, struct Checked_Bool_Expression* expression) {
-#line 4396 "bootstrap/stage0/ReCode.code"
-    if (expression->value) {
 #line 4397 "bootstrap/stage0/ReCode.code"
+void Generator__generate_bool_expression(struct Generator* self, struct Checked_Bool_Expression* expression) {
+#line 4398 "bootstrap/stage0/ReCode.code"
+    if (expression->value) {
+#line 4399 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self->file, "true");
     } else {
-#line 4399 "bootstrap/stage0/ReCode.code"
+#line 4401 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self->file, "false");
     }
 }
 
-#line 4403 "bootstrap/stage0/ReCode.code"
-void Generator__generate_call_expression(struct Generator* self, struct Checked_Call_Expression* expression) {
-#line 4404 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->callee_expression);
 #line 4405 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "(");
+void Generator__generate_call_expression(struct Generator* self, struct Checked_Call_Expression* expression) {
+    struct Checked_Call_Argument* argument;
 #line 4406 "bootstrap/stage0/ReCode.code"
-    struct Checked_Call_Argument* argument = expression->first_argument;
+    Generator__generate_expression(self, expression->callee_expression);
 #line 4407 "bootstrap/stage0/ReCode.code"
-    while (argument != NULL) {
+    File__write_cstring(self->file, "(");
 #line 4408 "bootstrap/stage0/ReCode.code"
-        Generator__generate_expression(self, argument->expression);
+    argument = expression->first_argument;
 #line 4409 "bootstrap/stage0/ReCode.code"
-        argument = argument->next_argument;
+    while (argument != NULL) {
 #line 4410 "bootstrap/stage0/ReCode.code"
-        if (argument != NULL) {
+        Generator__generate_expression(self, argument->expression);
 #line 4411 "bootstrap/stage0/ReCode.code"
+        argument = argument->next_argument;
+#line 4412 "bootstrap/stage0/ReCode.code"
+        if (argument != NULL) {
+#line 4413 "bootstrap/stage0/ReCode.code"
             File__write_cstring(self->file, ", ");
         }
     }
-#line 4414 "bootstrap/stage0/ReCode.code"
+#line 4416 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, ")");
 }
 
-#line 4417 "bootstrap/stage0/ReCode.code"
-void Generator__generate_cast_expression(struct Generator* self, struct Checked_Cast_Expression* expression) {
-#line 4418 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "((");
 #line 4419 "bootstrap/stage0/ReCode.code"
-    File__write_checked_type(self->file, expression->super.type);
+void Generator__generate_cast_expression(struct Generator* self, struct Checked_Cast_Expression* expression) {
 #line 4420 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, ") ");
+    File__write_cstring(self->file, "((");
 #line 4421 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->other_expression);
+    File__write_checked_type(self->file, expression->super.type);
 #line 4422 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, ") ");
+#line 4423 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->other_expression);
+#line 4424 "bootstrap/stage0/ReCode.code"
     File__write_char(self->file, ')');
 }
 
-#line 4425 "bootstrap/stage0/ReCode.code"
-void File__write_octal_escaped_char(struct File* stream, char value) {
-#line 4426 "bootstrap/stage0/ReCode.code"
-    File__write_char(stream, '\\');
 #line 4427 "bootstrap/stage0/ReCode.code"
-    if (value > ((char) 64)) {
+void File__write_octal_escaped_char(struct File* stream, char value) {
 #line 4428 "bootstrap/stage0/ReCode.code"
+    File__write_char(stream, '\\');
+#line 4429 "bootstrap/stage0/ReCode.code"
+    if (value > ((char) 64)) {
+#line 4430 "bootstrap/stage0/ReCode.code"
         File__write_char(stream, value / ((char) 64) % ((char) 8) + '0');
     }
-#line 4430 "bootstrap/stage0/ReCode.code"
+#line 4432 "bootstrap/stage0/ReCode.code"
     if (value > ((char) 8)) {
-#line 4431 "bootstrap/stage0/ReCode.code"
+#line 4433 "bootstrap/stage0/ReCode.code"
         File__write_char(stream, value / ((char) 8) % ((char) 8) + '0');
     }
-#line 4433 "bootstrap/stage0/ReCode.code"
+#line 4435 "bootstrap/stage0/ReCode.code"
     File__write_char(stream, value % ((char) 8) + '0');
 }
 
-#line 4436 "bootstrap/stage0/ReCode.code"
-void File__write_escaped_char(struct File* stream, char ch) {
-#line 4437 "bootstrap/stage0/ReCode.code"
-    if (ch < ((char) 32)) {
 #line 4438 "bootstrap/stage0/ReCode.code"
-        if (ch == '\n') {
+void File__write_escaped_char(struct File* stream, char ch) {
 #line 4439 "bootstrap/stage0/ReCode.code"
+    if (ch < ((char) 32)) {
+#line 4440 "bootstrap/stage0/ReCode.code"
+        if (ch == '\n') {
+#line 4441 "bootstrap/stage0/ReCode.code"
             File__write_cstring(stream, "\\n");
         } else if (ch == '\t') {
-#line 4441 "bootstrap/stage0/ReCode.code"
+#line 4443 "bootstrap/stage0/ReCode.code"
             File__write_cstring(stream, "\\t");
         } else {
-#line 4443 "bootstrap/stage0/ReCode.code"
+#line 4445 "bootstrap/stage0/ReCode.code"
             File__write_octal_escaped_char(stream, ch);
         }
     } else if (ch < ((char) 127)) {
-#line 4446 "bootstrap/stage0/ReCode.code"
+#line 4448 "bootstrap/stage0/ReCode.code"
         if (ch == '\"') {
-#line 4447 "bootstrap/stage0/ReCode.code"
+#line 4449 "bootstrap/stage0/ReCode.code"
             File__write_cstring(stream, "\\\"");
         } else if (ch == '\'') {
-#line 4449 "bootstrap/stage0/ReCode.code"
+#line 4451 "bootstrap/stage0/ReCode.code"
             File__write_cstring(stream, "\\\'");
         } else if (ch == '\\') {
-#line 4451 "bootstrap/stage0/ReCode.code"
+#line 4453 "bootstrap/stage0/ReCode.code"
             File__write_cstring(stream, "\\\\");
         } else {
-#line 4453 "bootstrap/stage0/ReCode.code"
+#line 4455 "bootstrap/stage0/ReCode.code"
             File__write_char(stream, ch);
         }
     } else {
-#line 4456 "bootstrap/stage0/ReCode.code"
+#line 4458 "bootstrap/stage0/ReCode.code"
         File__write_octal_escaped_char(stream, ch);
     }
 }
 
-#line 4460 "bootstrap/stage0/ReCode.code"
-void Generator__generate_character_expression(struct Generator* self, struct Checked_Character_Expression* expression) {
-#line 4461 "bootstrap/stage0/ReCode.code"
-    File__write_char(self->file, '\'');
 #line 4462 "bootstrap/stage0/ReCode.code"
-    File__write_escaped_char(self->file, expression->value);
+void Generator__generate_character_expression(struct Generator* self, struct Checked_Character_Expression* expression) {
 #line 4463 "bootstrap/stage0/ReCode.code"
+    File__write_char(self->file, '\'');
+#line 4464 "bootstrap/stage0/ReCode.code"
+    File__write_escaped_char(self->file, expression->value);
+#line 4465 "bootstrap/stage0/ReCode.code"
     File__write_char(self->file, '\'');
 }
 
-#line 4466 "bootstrap/stage0/ReCode.code"
-void Generator__generate_dereference_expression(struct Generator* self, struct Checked_Dereference_Expression* expression) {
-#line 4467 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "*(");
 #line 4468 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->value_expression);
+void Generator__generate_dereference_expression(struct Generator* self, struct Checked_Dereference_Expression* expression) {
 #line 4469 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, "*(");
+#line 4470 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->value_expression);
+#line 4471 "bootstrap/stage0/ReCode.code"
     File__write_char(self->file, ')');
 }
 
-#line 4472 "bootstrap/stage0/ReCode.code"
-void Generator__generate_divide_expression(struct Generator* self, struct Checked_Divide_Expression* expression) {
-#line 4473 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4474 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " / ");
+void Generator__generate_divide_expression(struct Generator* self, struct Checked_Divide_Expression* expression) {
 #line 4475 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4476 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " / ");
+#line 4477 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4478 "bootstrap/stage0/ReCode.code"
-void Generator__generate_equals_expression(struct Generator* self, struct Checked_Equals_Expression* expression) {
-#line 4479 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4480 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " == ");
+void Generator__generate_equals_expression(struct Generator* self, struct Checked_Equals_Expression* expression) {
 #line 4481 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4482 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " == ");
+#line 4483 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4484 "bootstrap/stage0/ReCode.code"
-void Generator__generate_greater_expression(struct Generator* self, struct Checked_Greater_Expression* expression) {
-#line 4485 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4486 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " > ");
+void Generator__generate_greater_expression(struct Generator* self, struct Checked_Greater_Expression* expression) {
 #line 4487 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.right_expression);
-}
-
-#line 4490 "bootstrap/stage0/ReCode.code"
-void Generator__generate_greater_or_equals_expression(struct Generator* self, struct Checked_Greater_Or_Equals_Expression* expression) {
-#line 4491 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.left_expression);
-#line 4492 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " >= ");
-#line 4493 "bootstrap/stage0/ReCode.code"
+#line 4488 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " > ");
+#line 4489 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4496 "bootstrap/stage0/ReCode.code"
-void Generator__generate_group_expression(struct Generator* self, struct Checked_Group_Expression* expression) {
-#line 4497 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "(");
+#line 4492 "bootstrap/stage0/ReCode.code"
+void Generator__generate_greater_or_equals_expression(struct Generator* self, struct Checked_Greater_Or_Equals_Expression* expression) {
+#line 4493 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4494 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " >= ");
+#line 4495 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.right_expression);
+}
+
 #line 4498 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->other_expression);
+void Generator__generate_group_expression(struct Generator* self, struct Checked_Group_Expression* expression) {
 #line 4499 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, "(");
+#line 4500 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->other_expression);
+#line 4501 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, ")");
 }
 
-#line 4502 "bootstrap/stage0/ReCode.code"
+#line 4504 "bootstrap/stage0/ReCode.code"
 void Generator__generate_integer_expression(struct Generator* self, struct Checked_Integer_Expression* expression) {
-#line 4503 "bootstrap/stage0/ReCode.code"
+#line 4505 "bootstrap/stage0/ReCode.code"
     File__write_u64(self->file, expression->value);
 }
 
-#line 4506 "bootstrap/stage0/ReCode.code"
-void Generator__generate_less_expression(struct Generator* self, struct Checked_Less_Expression* expression) {
-#line 4507 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4508 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " < ");
+void Generator__generate_less_expression(struct Generator* self, struct Checked_Less_Expression* expression) {
 #line 4509 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4510 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " < ");
+#line 4511 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4512 "bootstrap/stage0/ReCode.code"
-void Generator__generate_less_or_equals_expression(struct Generator* self, struct Checked_Less_Or_Equals_Expression* expression) {
-#line 4513 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4514 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " <= ");
+void Generator__generate_less_or_equals_expression(struct Generator* self, struct Checked_Less_Or_Equals_Expression* expression) {
 #line 4515 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4516 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " <= ");
+#line 4517 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4518 "bootstrap/stage0/ReCode.code"
-void Generator__generate_logic_and_expression(struct Generator* self, struct Checked_Logic_And_Expression* expression) {
-#line 4519 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4520 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " && ");
+void Generator__generate_logic_and_expression(struct Generator* self, struct Checked_Logic_And_Expression* expression) {
 #line 4521 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.right_expression);
-}
-
-#line 4524 "bootstrap/stage0/ReCode.code"
-void Generator__generate_logic_or_expression(struct Generator* self, struct Checked_Logic_Or_Expression* expression) {
-#line 4525 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.left_expression);
-#line 4526 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " || ");
-#line 4527 "bootstrap/stage0/ReCode.code"
+#line 4522 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " && ");
+#line 4523 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4530 "bootstrap/stage0/ReCode.code"
-void Generator__generate_member_access_expression(struct Generator* self, struct Checked_Member_Access_Expression* expression) {
-#line 4531 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->object_expression);
+#line 4526 "bootstrap/stage0/ReCode.code"
+void Generator__generate_logic_or_expression(struct Generator* self, struct Checked_Logic_Or_Expression* expression) {
+#line 4527 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4528 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " || ");
+#line 4529 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.right_expression);
+}
+
 #line 4532 "bootstrap/stage0/ReCode.code"
-    if (expression->object_expression->type->kind == Checked_Type_Kind__POINTER) {
+void Generator__generate_member_access_expression(struct Generator* self, struct Checked_Member_Access_Expression* expression) {
 #line 4533 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->object_expression);
+#line 4534 "bootstrap/stage0/ReCode.code"
+    if (expression->object_expression->type->kind == Checked_Type_Kind__POINTER) {
+#line 4535 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self->file, "->");
     } else {
-#line 4535 "bootstrap/stage0/ReCode.code"
+#line 4537 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self->file, ".");
     }
-#line 4537 "bootstrap/stage0/ReCode.code"
+#line 4539 "bootstrap/stage0/ReCode.code"
     File__write_string(self->file, expression->member->name);
 }
 
-#line 4540 "bootstrap/stage0/ReCode.code"
-void Generator__generate_minus_expression(struct Generator* self, struct Checked_Minus_Expression* expression) {
-#line 4541 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "-");
 #line 4542 "bootstrap/stage0/ReCode.code"
+void Generator__generate_minus_expression(struct Generator* self, struct Checked_Minus_Expression* expression) {
+#line 4543 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, "-");
+#line 4544 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
-#line 4545 "bootstrap/stage0/ReCode.code"
-void Generator__generate_modulo_expression(struct Generator* self, struct Checked_Modulo_Expression* expression) {
-#line 4546 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4547 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " % ");
+void Generator__generate_modulo_expression(struct Generator* self, struct Checked_Modulo_Expression* expression) {
 #line 4548 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.right_expression);
-}
-
-#line 4551 "bootstrap/stage0/ReCode.code"
-void Generator__generate_multiply_expression(struct Generator* self, struct Checked_Multiply_Expression* expression) {
-#line 4552 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.left_expression);
-#line 4553 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " * ");
-#line 4554 "bootstrap/stage0/ReCode.code"
+#line 4549 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " % ");
+#line 4550 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4557 "bootstrap/stage0/ReCode.code"
-void Generator__generate_not_expression(struct Generator* self, struct Checked_Not_Expression* expression) {
-#line 4558 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "!");
+#line 4553 "bootstrap/stage0/ReCode.code"
+void Generator__generate_multiply_expression(struct Generator* self, struct Checked_Multiply_Expression* expression) {
+#line 4554 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4555 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " * ");
+#line 4556 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.right_expression);
+}
+
 #line 4559 "bootstrap/stage0/ReCode.code"
+void Generator__generate_not_expression(struct Generator* self, struct Checked_Not_Expression* expression) {
+#line 4560 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, "!");
+#line 4561 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.other_expression);
 }
 
-#line 4562 "bootstrap/stage0/ReCode.code"
-void Generator__generate_not_equals_expression(struct Generator* self, struct Checked_Not_Equals_Expression* expression) {
-#line 4563 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4564 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " != ");
+void Generator__generate_not_equals_expression(struct Generator* self, struct Checked_Not_Equals_Expression* expression) {
 #line 4565 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4566 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " != ");
+#line 4567 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4568 "bootstrap/stage0/ReCode.code"
+#line 4570 "bootstrap/stage0/ReCode.code"
 void Generator__generate_null_expression(struct Generator* self, struct Checked_Null_Expression* expression) {
-#line 4569 "bootstrap/stage0/ReCode.code"
+#line 4571 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "NULL");
 }
 
-#line 4572 "bootstrap/stage0/ReCode.code"
-void Generator__generate_sizeof_expression(struct Generator* self, struct Checked_Sizeof_Expression* expression) {
-#line 4573 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "sizeof(");
 #line 4574 "bootstrap/stage0/ReCode.code"
-    File__write_checked_type(self->file, expression->sized_type);
+void Generator__generate_sizeof_expression(struct Generator* self, struct Checked_Sizeof_Expression* expression) {
 #line 4575 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, "sizeof(");
+#line 4576 "bootstrap/stage0/ReCode.code"
+    File__write_checked_type(self->file, expression->sized_type);
+#line 4577 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, ")");
 }
 
-#line 4578 "bootstrap/stage0/ReCode.code"
-void Generator__generate_string_expression(struct Generator* self, struct Checked_String_Expression* expression) {
-#line 4579 "bootstrap/stage0/ReCode.code"
-    File__write_char(self->file, '\"');
 #line 4580 "bootstrap/stage0/ReCode.code"
-    size_t index = ((size_t) 0);
+void Generator__generate_string_expression(struct Generator* self, struct Checked_String_Expression* expression) {
+    size_t index;
 #line 4581 "bootstrap/stage0/ReCode.code"
-    while (index < expression->value->length) {
+    File__write_char(self->file, '\"');
 #line 4582 "bootstrap/stage0/ReCode.code"
-        File__write_escaped_char(self->file, expression->value->data[index]);
+    index = ((size_t) 0);
 #line 4583 "bootstrap/stage0/ReCode.code"
+    while (index < expression->value->length) {
+#line 4584 "bootstrap/stage0/ReCode.code"
+        File__write_escaped_char(self->file, expression->value->data[index]);
+#line 4585 "bootstrap/stage0/ReCode.code"
         index = index + ((size_t) 1);
     }
-#line 4585 "bootstrap/stage0/ReCode.code"
+#line 4587 "bootstrap/stage0/ReCode.code"
     File__write_char(self->file, '\"');
 }
 
-#line 4588 "bootstrap/stage0/ReCode.code"
-void Generator__generate_substract_expression(struct Generator* self, struct Checked_Substract_Expression* expression) {
-#line 4589 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, expression->super.left_expression);
 #line 4590 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " - ");
+void Generator__generate_substract_expression(struct Generator* self, struct Checked_Substract_Expression* expression) {
 #line 4591 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, expression->super.left_expression);
+#line 4592 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " - ");
+#line 4593 "bootstrap/stage0/ReCode.code"
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
-#line 4594 "bootstrap/stage0/ReCode.code"
+#line 4596 "bootstrap/stage0/ReCode.code"
 void Generator__generate_symbol_expression(struct Generator* self, struct Checked_Symbol_Expression* expression) {
-#line 4595 "bootstrap/stage0/ReCode.code"
+#line 4597 "bootstrap/stage0/ReCode.code"
     File__write_string(self->file, expression->symbol->name);
 }
 
-#line 4598 "bootstrap/stage0/ReCode.code"
-void Generator__generate_expression(struct Generator* self, struct Checked_Expression* expression) {
-#line 4599 "bootstrap/stage0/ReCode.code"
-    if (expression->kind == Checked_Expression_Kind__ADD) {
 #line 4600 "bootstrap/stage0/ReCode.code"
+void Generator__generate_expression(struct Generator* self, struct Checked_Expression* expression) {
+#line 4601 "bootstrap/stage0/ReCode.code"
+    if (expression->kind == Checked_Expression_Kind__ADD) {
+#line 4602 "bootstrap/stage0/ReCode.code"
         Generator__generate_add_expression(self, ((struct Checked_Add_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__ADDRESS_OF) {
-#line 4602 "bootstrap/stage0/ReCode.code"
+#line 4604 "bootstrap/stage0/ReCode.code"
         Generator__generate_address_of_expression(self, ((struct Checked_Address_Of_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__ARRAY_ACCESS) {
-#line 4604 "bootstrap/stage0/ReCode.code"
+#line 4606 "bootstrap/stage0/ReCode.code"
         Generator__generate_array_access_expression(self, ((struct Checked_Array_Access_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__BOOL) {
-#line 4606 "bootstrap/stage0/ReCode.code"
+#line 4608 "bootstrap/stage0/ReCode.code"
         Generator__generate_bool_expression(self, ((struct Checked_Bool_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__CALL) {
-#line 4608 "bootstrap/stage0/ReCode.code"
+#line 4610 "bootstrap/stage0/ReCode.code"
         Generator__generate_call_expression(self, ((struct Checked_Call_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__CAST) {
-#line 4610 "bootstrap/stage0/ReCode.code"
+#line 4612 "bootstrap/stage0/ReCode.code"
         Generator__generate_cast_expression(self, ((struct Checked_Cast_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__CHARACTER) {
-#line 4612 "bootstrap/stage0/ReCode.code"
+#line 4614 "bootstrap/stage0/ReCode.code"
         Generator__generate_character_expression(self, ((struct Checked_Character_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__DEREFERENCE) {
-#line 4614 "bootstrap/stage0/ReCode.code"
+#line 4616 "bootstrap/stage0/ReCode.code"
         Generator__generate_dereference_expression(self, ((struct Checked_Dereference_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__DIVIDE) {
-#line 4616 "bootstrap/stage0/ReCode.code"
+#line 4618 "bootstrap/stage0/ReCode.code"
         Generator__generate_divide_expression(self, ((struct Checked_Divide_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__EQUALS) {
-#line 4618 "bootstrap/stage0/ReCode.code"
+#line 4620 "bootstrap/stage0/ReCode.code"
         Generator__generate_equals_expression(self, ((struct Checked_Equals_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__GREATER) {
-#line 4620 "bootstrap/stage0/ReCode.code"
+#line 4622 "bootstrap/stage0/ReCode.code"
         Generator__generate_greater_expression(self, ((struct Checked_Greater_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__GREATER_OR_EQUALS) {
-#line 4622 "bootstrap/stage0/ReCode.code"
+#line 4624 "bootstrap/stage0/ReCode.code"
         Generator__generate_greater_or_equals_expression(self, ((struct Checked_Greater_Or_Equals_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__GROUP) {
-#line 4624 "bootstrap/stage0/ReCode.code"
+#line 4626 "bootstrap/stage0/ReCode.code"
         Generator__generate_group_expression(self, ((struct Checked_Group_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__INTEGER) {
-#line 4626 "bootstrap/stage0/ReCode.code"
+#line 4628 "bootstrap/stage0/ReCode.code"
         Generator__generate_integer_expression(self, ((struct Checked_Integer_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__LESS) {
-#line 4628 "bootstrap/stage0/ReCode.code"
+#line 4630 "bootstrap/stage0/ReCode.code"
         Generator__generate_less_expression(self, ((struct Checked_Less_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__LESS_OR_EQUALS) {
-#line 4630 "bootstrap/stage0/ReCode.code"
+#line 4632 "bootstrap/stage0/ReCode.code"
         Generator__generate_less_or_equals_expression(self, ((struct Checked_Less_Or_Equals_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__LOGIC_AND) {
-#line 4632 "bootstrap/stage0/ReCode.code"
+#line 4634 "bootstrap/stage0/ReCode.code"
         Generator__generate_logic_and_expression(self, ((struct Checked_Logic_And_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__LOGIC_OR) {
-#line 4634 "bootstrap/stage0/ReCode.code"
+#line 4636 "bootstrap/stage0/ReCode.code"
         Generator__generate_logic_or_expression(self, ((struct Checked_Logic_Or_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__MEMBER_ACCESS) {
-#line 4636 "bootstrap/stage0/ReCode.code"
+#line 4638 "bootstrap/stage0/ReCode.code"
         Generator__generate_member_access_expression(self, ((struct Checked_Member_Access_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__MINUS) {
-#line 4638 "bootstrap/stage0/ReCode.code"
+#line 4640 "bootstrap/stage0/ReCode.code"
         Generator__generate_minus_expression(self, ((struct Checked_Minus_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__MODULO) {
-#line 4640 "bootstrap/stage0/ReCode.code"
+#line 4642 "bootstrap/stage0/ReCode.code"
         Generator__generate_modulo_expression(self, ((struct Checked_Modulo_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__MULTIPLY) {
-#line 4642 "bootstrap/stage0/ReCode.code"
+#line 4644 "bootstrap/stage0/ReCode.code"
         Generator__generate_multiply_expression(self, ((struct Checked_Multiply_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__NOT) {
-#line 4644 "bootstrap/stage0/ReCode.code"
+#line 4646 "bootstrap/stage0/ReCode.code"
         Generator__generate_not_expression(self, ((struct Checked_Not_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__NOT_EQUALS) {
-#line 4646 "bootstrap/stage0/ReCode.code"
+#line 4648 "bootstrap/stage0/ReCode.code"
         Generator__generate_not_equals_expression(self, ((struct Checked_Not_Equals_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__NULL) {
-#line 4648 "bootstrap/stage0/ReCode.code"
+#line 4650 "bootstrap/stage0/ReCode.code"
         Generator__generate_null_expression(self, ((struct Checked_Null_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__SIZEOF) {
-#line 4650 "bootstrap/stage0/ReCode.code"
+#line 4652 "bootstrap/stage0/ReCode.code"
         Generator__generate_sizeof_expression(self, ((struct Checked_Sizeof_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__STRING) {
-#line 4652 "bootstrap/stage0/ReCode.code"
+#line 4654 "bootstrap/stage0/ReCode.code"
         Generator__generate_string_expression(self, ((struct Checked_String_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__SUBSTRACT) {
-#line 4654 "bootstrap/stage0/ReCode.code"
+#line 4656 "bootstrap/stage0/ReCode.code"
         Generator__generate_substract_expression(self, ((struct Checked_Substract_Expression*) expression));
     } else if (expression->kind == Checked_Expression_Kind__SYMBOL) {
-#line 4656 "bootstrap/stage0/ReCode.code"
+#line 4658 "bootstrap/stage0/ReCode.code"
         Generator__generate_symbol_expression(self, ((struct Checked_Symbol_Expression*) expression));
     } else {
-#line 4658 "bootstrap/stage0/ReCode.code"
+#line 4660 "bootstrap/stage0/ReCode.code"
         Source_Location__error(expression->location, String__create_from("Unsupported expression"));
-#line 4659 "bootstrap/stage0/ReCode.code"
+#line 4661 "bootstrap/stage0/ReCode.code"
         abort();
     }
 }
 
-#line 4663 "bootstrap/stage0/ReCode.code"
-void Generator__write_identation(struct Generator* self) {
-#line 4664 "bootstrap/stage0/ReCode.code"
-    uint16_t identation = self->identation;
 #line 4665 "bootstrap/stage0/ReCode.code"
-    while (identation > ((uint16_t) 0)) {
+void Generator__write_identation(struct Generator* self) {
+    uint16_t identation;
 #line 4666 "bootstrap/stage0/ReCode.code"
-        File__write_cstring(self->file, "    ");
+    identation = self->identation;
 #line 4667 "bootstrap/stage0/ReCode.code"
+    while (identation > ((uint16_t) 0)) {
+#line 4668 "bootstrap/stage0/ReCode.code"
+        File__write_cstring(self->file, "    ");
+#line 4669 "bootstrap/stage0/ReCode.code"
         identation = identation - ((uint16_t) 1);
     }
 }
 
-#line 4671 "bootstrap/stage0/ReCode.code"
-void Generator__generate_assignment_statement(struct Generator* self, struct Checked_Assignment_Statement* statement) {
-#line 4672 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, statement->object_expression);
 #line 4673 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, " = ");
+void Generator__generate_assignment_statement(struct Generator* self, struct Checked_Assignment_Statement* statement) {
 #line 4674 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, statement->value_expression);
+    Generator__generate_expression(self, statement->object_expression);
 #line 4675 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, " = ");
+#line 4676 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, statement->value_expression);
+#line 4677 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, ";");
 }
 
-#line 4678 "bootstrap/stage0/ReCode.code"
-void Generator__generate_block_statement(struct Generator* self, struct Checked_Block_Statement* statement) {
-#line 4679 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "{\n");
 #line 4680 "bootstrap/stage0/ReCode.code"
-    Generator__generate_statements(self, statement->statements);
+void Generator__generate_block_statement(struct Generator* self, struct Checked_Block_Statement* statement) {
 #line 4681 "bootstrap/stage0/ReCode.code"
-    Generator__write_identation(self);
+    File__write_cstring(self->file, "{\n");
 #line 4682 "bootstrap/stage0/ReCode.code"
+    Generator__generate_statements(self, statement->statements);
+#line 4683 "bootstrap/stage0/ReCode.code"
+    Generator__write_identation(self);
+#line 4684 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "}");
 }
 
-#line 4685 "bootstrap/stage0/ReCode.code"
+#line 4687 "bootstrap/stage0/ReCode.code"
 void Generator__generate_break_statement(struct Generator* self, struct Checked_Break_Statement* statement) {
-#line 4686 "bootstrap/stage0/ReCode.code"
+#line 4688 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "break;");
 }
 
-#line 4689 "bootstrap/stage0/ReCode.code"
-void Generator__generate_expression_statement(struct Generator* self, struct Checked_Expression_Statement* statement) {
-#line 4690 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, statement->expression);
 #line 4691 "bootstrap/stage0/ReCode.code"
+void Generator__generate_expression_statement(struct Generator* self, struct Checked_Expression_Statement* statement) {
+#line 4692 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, statement->expression);
+#line 4693 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, ";");
 }
 
-#line 4694 "bootstrap/stage0/ReCode.code"
-void Generator__generate_if_statement(struct Generator* self, struct Checked_If_Statement* statement) {
-#line 4695 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "if (");
 #line 4696 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, statement->condition_expression);
+void Generator__generate_if_statement(struct Generator* self, struct Checked_If_Statement* statement) {
 #line 4697 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, ") ");
+    File__write_cstring(self->file, "if (");
 #line 4698 "bootstrap/stage0/ReCode.code"
-    Generator__generate_statement(self, statement->true_statement);
+    Generator__generate_expression(self, statement->condition_expression);
 #line 4699 "bootstrap/stage0/ReCode.code"
-    if (statement->false_statement != NULL) {
+    File__write_cstring(self->file, ") ");
 #line 4700 "bootstrap/stage0/ReCode.code"
-        File__write_cstring(self->file, " else ");
+    Generator__generate_statement(self, statement->true_statement);
 #line 4701 "bootstrap/stage0/ReCode.code"
+    if (statement->false_statement != NULL) {
+#line 4702 "bootstrap/stage0/ReCode.code"
+        File__write_cstring(self->file, " else ");
+#line 4703 "bootstrap/stage0/ReCode.code"
         Generator__generate_statement(self, statement->false_statement);
     }
 }
 
-#line 4705 "bootstrap/stage0/ReCode.code"
-void Generator__generate_return_statement(struct Generator* self, struct Checked_Return_Statement* statement) {
-#line 4706 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "return");
 #line 4707 "bootstrap/stage0/ReCode.code"
-    if (statement->expression != NULL) {
+void Generator__generate_return_statement(struct Generator* self, struct Checked_Return_Statement* statement) {
 #line 4708 "bootstrap/stage0/ReCode.code"
-        File__write_cstring(self->file, " ");
+    File__write_cstring(self->file, "return");
 #line 4709 "bootstrap/stage0/ReCode.code"
-        Generator__generate_expression(self, statement->expression);
-    }
-#line 4711 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, ";");
-}
-
-#line 4714 "bootstrap/stage0/ReCode.code"
-void Generator__generate_variable_statement(struct Generator* self, struct Checked_Variable_Statement* statement) {
-#line 4715 "bootstrap/stage0/ReCode.code"
-    if (statement->is_external) {
-#line 4716 "bootstrap/stage0/ReCode.code"
-        File__write_cstring(self->file, "extern ");
-    }
-#line 4718 "bootstrap/stage0/ReCode.code"
-    File__write_checked_type(self->file, statement->variable->super.type);
-#line 4719 "bootstrap/stage0/ReCode.code"
-    File__write_char(self->file, ' ');
-#line 4720 "bootstrap/stage0/ReCode.code"
-    File__write_string(self->file, statement->variable->super.name);
-#line 4721 "bootstrap/stage0/ReCode.code"
     if (statement->expression != NULL) {
-#line 4722 "bootstrap/stage0/ReCode.code"
-        File__write_cstring(self->file, " = ");
-#line 4723 "bootstrap/stage0/ReCode.code"
+#line 4710 "bootstrap/stage0/ReCode.code"
+        File__write_cstring(self->file, " ");
+#line 4711 "bootstrap/stage0/ReCode.code"
         Generator__generate_expression(self, statement->expression);
     }
-#line 4725 "bootstrap/stage0/ReCode.code"
+#line 4713 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, ";");
 }
 
-#line 4728 "bootstrap/stage0/ReCode.code"
-void Generator__generate_while_statement(struct Generator* self, struct Checked_While_Statement* statement) {
-#line 4729 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, "while (");
+#line 4716 "bootstrap/stage0/ReCode.code"
+void Generator__generate_variable_statement(struct Generator* self, struct Checked_Variable_Statement* statement) {
+#line 4717 "bootstrap/stage0/ReCode.code"
+    if (statement->is_external) {
+#line 4718 "bootstrap/stage0/ReCode.code"
+        File__write_cstring(self->file, "extern ");
+#line 4719 "bootstrap/stage0/ReCode.code"
+        File__write_checked_type(self->file, statement->variable->super.type);
+#line 4720 "bootstrap/stage0/ReCode.code"
+        File__write_char(self->file, ' ');
+#line 4721 "bootstrap/stage0/ReCode.code"
+        File__write_string(self->file, statement->variable->super.name);
+    } else if (statement->expression != NULL) {
+#line 4723 "bootstrap/stage0/ReCode.code"
+        File__write_string(self->file, statement->variable->super.name);
+#line 4724 "bootstrap/stage0/ReCode.code"
+        File__write_cstring(self->file, " = ");
+#line 4725 "bootstrap/stage0/ReCode.code"
+        Generator__generate_expression(self, statement->expression);
+    }
+#line 4727 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, ";");
+}
+
 #line 4730 "bootstrap/stage0/ReCode.code"
-    Generator__generate_expression(self, statement->condition_expression);
+void Generator__generate_while_statement(struct Generator* self, struct Checked_While_Statement* statement) {
 #line 4731 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, ") ");
+    File__write_cstring(self->file, "while (");
 #line 4732 "bootstrap/stage0/ReCode.code"
+    Generator__generate_expression(self, statement->condition_expression);
+#line 4733 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, ") ");
+#line 4734 "bootstrap/stage0/ReCode.code"
     Generator__generate_statement(self, statement->body_statement);
 }
 
-#line 4735 "bootstrap/stage0/ReCode.code"
-void Generator__generate_statement(struct Generator* self, struct Checked_Statement* statement) {
-#line 4736 "bootstrap/stage0/ReCode.code"
-    if (statement->kind == Checked_Statement_Kind__ASSIGNMENT) {
 #line 4737 "bootstrap/stage0/ReCode.code"
+void Generator__generate_statement(struct Generator* self, struct Checked_Statement* statement) {
+#line 4738 "bootstrap/stage0/ReCode.code"
+    if (statement->kind == Checked_Statement_Kind__ASSIGNMENT) {
+#line 4739 "bootstrap/stage0/ReCode.code"
         Generator__generate_assignment_statement(self, ((struct Checked_Assignment_Statement*) statement));
     } else if (statement->kind == Checked_Statement_Kind__BLOCK) {
-#line 4739 "bootstrap/stage0/ReCode.code"
+#line 4741 "bootstrap/stage0/ReCode.code"
         Generator__generate_block_statement(self, ((struct Checked_Block_Statement*) statement));
     } else if (statement->kind == Checked_Statement_Kind__BREAK) {
-#line 4741 "bootstrap/stage0/ReCode.code"
+#line 4743 "bootstrap/stage0/ReCode.code"
         Generator__generate_break_statement(self, ((struct Checked_Break_Statement*) statement));
     } else if (statement->kind == Checked_Statement_Kind__EXPRESSION) {
-#line 4743 "bootstrap/stage0/ReCode.code"
+#line 4745 "bootstrap/stage0/ReCode.code"
         Generator__generate_expression_statement(self, ((struct Checked_Expression_Statement*) statement));
     } else if (statement->kind == Checked_Statement_Kind__IF) {
-#line 4745 "bootstrap/stage0/ReCode.code"
+#line 4747 "bootstrap/stage0/ReCode.code"
         Generator__generate_if_statement(self, ((struct Checked_If_Statement*) statement));
     } else if (statement->kind == Checked_Statement_Kind__RETURN) {
-#line 4747 "bootstrap/stage0/ReCode.code"
+#line 4749 "bootstrap/stage0/ReCode.code"
         Generator__generate_return_statement(self, ((struct Checked_Return_Statement*) statement));
     } else if (statement->kind == Checked_Statement_Kind__VARIABLE) {
-#line 4749 "bootstrap/stage0/ReCode.code"
+#line 4751 "bootstrap/stage0/ReCode.code"
         Generator__generate_variable_statement(self, ((struct Checked_Variable_Statement*) statement));
     } else if (statement->kind == Checked_Statement_Kind__WHILE) {
-#line 4751 "bootstrap/stage0/ReCode.code"
+#line 4753 "bootstrap/stage0/ReCode.code"
         Generator__generate_while_statement(self, ((struct Checked_While_Statement*) statement));
     } else {
-#line 4753 "bootstrap/stage0/ReCode.code"
+#line 4755 "bootstrap/stage0/ReCode.code"
         Source_Location__error(statement->location, String__create_from("Unsupported statement"));
-#line 4754 "bootstrap/stage0/ReCode.code"
+#line 4756 "bootstrap/stage0/ReCode.code"
         abort();
     }
 }
 
-#line 4758 "bootstrap/stage0/ReCode.code"
+#line 4760 "bootstrap/stage0/ReCode.code"
 void Generator__generate_statements(struct Generator* self, struct Checked_Statements* statements) {
-#line 4759 "bootstrap/stage0/ReCode.code"
-    self->identation = self->identation + ((uint16_t) 1);
+    struct Checked_Symbol* symbol;
+    struct Checked_Statement* statement;
 #line 4761 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statement* statement = statements->first_statement;
-#line 4762 "bootstrap/stage0/ReCode.code"
-    while (statement != NULL) {
+    self->identation = self->identation + ((uint16_t) 1);
 #line 4763 "bootstrap/stage0/ReCode.code"
-        Generator__write_source_location(self, statement->location);
+    symbol = statements->symbols->first_symbol;
+#line 4764 "bootstrap/stage0/ReCode.code"
+    while (symbol != NULL) {
 #line 4765 "bootstrap/stage0/ReCode.code"
         Generator__write_identation(self);
+#line 4766 "bootstrap/stage0/ReCode.code"
+        File__write_checked_type(self->file, symbol->type);
 #line 4767 "bootstrap/stage0/ReCode.code"
-        Generator__generate_statement(self, statement);
+        File__write_char(self->file, ' ');
+#line 4768 "bootstrap/stage0/ReCode.code"
+        File__write_string(self->file, symbol->name);
 #line 4769 "bootstrap/stage0/ReCode.code"
+        File__write_cstring(self->file, ";\n");
+#line 4770 "bootstrap/stage0/ReCode.code"
+        symbol = symbol->next_symbol;
+    }
+#line 4773 "bootstrap/stage0/ReCode.code"
+    statement = statements->first_statement;
+#line 4774 "bootstrap/stage0/ReCode.code"
+    while (statement != NULL) {
+#line 4775 "bootstrap/stage0/ReCode.code"
+        Generator__write_source_location(self, statement->location);
+#line 4777 "bootstrap/stage0/ReCode.code"
+        Generator__write_identation(self);
+#line 4779 "bootstrap/stage0/ReCode.code"
+        Generator__generate_statement(self, statement);
+#line 4781 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self->file, "\n");
-#line 4771 "bootstrap/stage0/ReCode.code"
+#line 4783 "bootstrap/stage0/ReCode.code"
         statement = statement->next_statement;
     }
-#line 4774 "bootstrap/stage0/ReCode.code"
+#line 4786 "bootstrap/stage0/ReCode.code"
     self->identation = self->identation - ((uint16_t) 1);
 }
 
-#line 4777 "bootstrap/stage0/ReCode.code"
+#line 4789 "bootstrap/stage0/ReCode.code"
 void Generator__generate_enum(struct Generator* self, struct Checked_Enum_Type* enum_type) {
-#line 4778 "bootstrap/stage0/ReCode.code"
+    struct Checked_Enum_Member* enum_member;
+#line 4790 "bootstrap/stage0/ReCode.code"
     File__write_checked_type(self->file, ((struct Checked_Type*) enum_type));
-#line 4779 "bootstrap/stage0/ReCode.code"
+#line 4791 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, " {\n");
-#line 4780 "bootstrap/stage0/ReCode.code"
-    struct Checked_Enum_Member* enum_member = enum_type->first_member;
-#line 4781 "bootstrap/stage0/ReCode.code"
+#line 4792 "bootstrap/stage0/ReCode.code"
+    enum_member = enum_type->first_member;
+#line 4793 "bootstrap/stage0/ReCode.code"
     while (enum_member != NULL) {
-#line 4782 "bootstrap/stage0/ReCode.code"
+#line 4794 "bootstrap/stage0/ReCode.code"
         File__write_char(self->file, '\t');
-#line 4783 "bootstrap/stage0/ReCode.code"
+#line 4795 "bootstrap/stage0/ReCode.code"
         File__write_string(self->file, enum_member->symbol->name);
-#line 4784 "bootstrap/stage0/ReCode.code"
+#line 4796 "bootstrap/stage0/ReCode.code"
         enum_member = enum_member->next_member;
-#line 4785 "bootstrap/stage0/ReCode.code"
+#line 4797 "bootstrap/stage0/ReCode.code"
         if (enum_member != NULL) {
-#line 4786 "bootstrap/stage0/ReCode.code"
+#line 4798 "bootstrap/stage0/ReCode.code"
             File__write_cstring(self->file, ",\n");
         } else {
-#line 4788 "bootstrap/stage0/ReCode.code"
+#line 4800 "bootstrap/stage0/ReCode.code"
             File__write_char(self->file, '\n');
         }
     }
-#line 4791 "bootstrap/stage0/ReCode.code"
+#line 4803 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "};\n");
 }
 
-#line 4794 "bootstrap/stage0/ReCode.code"
+#line 4806 "bootstrap/stage0/ReCode.code"
 void Generator__declare_function(struct Generator* self, struct Checked_Function_Symbol* function_symbol) {
-#line 4795 "bootstrap/stage0/ReCode.code"
+#line 4807 "bootstrap/stage0/ReCode.code"
     File__write_checked_function_symbol(self->file, function_symbol);
-#line 4796 "bootstrap/stage0/ReCode.code"
+#line 4808 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, ";\n");
 }
 
-#line 4799 "bootstrap/stage0/ReCode.code"
+#line 4811 "bootstrap/stage0/ReCode.code"
 void Generator__generate_function(struct Generator* self, struct Checked_Function_Symbol* function_symbol) {
-#line 4800 "bootstrap/stage0/ReCode.code"
+#line 4812 "bootstrap/stage0/ReCode.code"
     if (function_symbol->checked_statements == NULL) {
-#line 4801 "bootstrap/stage0/ReCode.code"
+#line 4813 "bootstrap/stage0/ReCode.code"
         return;
     }
-#line 4803 "bootstrap/stage0/ReCode.code"
+#line 4815 "bootstrap/stage0/ReCode.code"
     Generator__write_source_location(self, function_symbol->super.location);
-#line 4804 "bootstrap/stage0/ReCode.code"
+#line 4816 "bootstrap/stage0/ReCode.code"
     File__write_checked_function_symbol(self->file, function_symbol);
-#line 4805 "bootstrap/stage0/ReCode.code"
+#line 4817 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, " {\n");
-#line 4806 "bootstrap/stage0/ReCode.code"
+#line 4818 "bootstrap/stage0/ReCode.code"
     Generator__generate_statements(self, function_symbol->checked_statements);
-#line 4807 "bootstrap/stage0/ReCode.code"
+#line 4819 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "}\n\n");
 }
 
-#line 4810 "bootstrap/stage0/ReCode.code"
-void Generator__declare_opaque_type(struct Generator* self, struct Checked_Opaque_Type* opaque_type) {
-#line 4811 "bootstrap/stage0/ReCode.code"
-    File__write_checked_type(self->file, ((struct Checked_Type*) opaque_type));
-#line 4812 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, ";\n");
-}
-
-#line 4815 "bootstrap/stage0/ReCode.code"
-void Generator__declare_struct(struct Generator* self, struct Checked_Struct_Type* struct_type) {
-#line 4816 "bootstrap/stage0/ReCode.code"
-    File__write_checked_type(self->file, ((struct Checked_Type*) struct_type));
-#line 4817 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(self->file, ";\n");
-}
-
-#line 4820 "bootstrap/stage0/ReCode.code"
-void Generator__generate_struct(struct Generator* self, struct Checked_Struct_Type* struct_type) {
-#line 4821 "bootstrap/stage0/ReCode.code"
-    struct Checked_Struct_Member* struct_member = struct_type->first_member;
 #line 4822 "bootstrap/stage0/ReCode.code"
-    if (struct_member == NULL) {
+void Generator__declare_opaque_type(struct Generator* self, struct Checked_Opaque_Type* opaque_type) {
 #line 4823 "bootstrap/stage0/ReCode.code"
+    File__write_checked_type(self->file, ((struct Checked_Type*) opaque_type));
+#line 4824 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, ";\n");
+}
+
+#line 4827 "bootstrap/stage0/ReCode.code"
+void Generator__declare_struct(struct Generator* self, struct Checked_Struct_Type* struct_type) {
+#line 4828 "bootstrap/stage0/ReCode.code"
+    File__write_checked_type(self->file, ((struct Checked_Type*) struct_type));
+#line 4829 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(self->file, ";\n");
+}
+
+#line 4832 "bootstrap/stage0/ReCode.code"
+void Generator__generate_struct(struct Generator* self, struct Checked_Struct_Type* struct_type) {
+    struct Checked_Struct_Member* struct_member;
+#line 4833 "bootstrap/stage0/ReCode.code"
+    struct_member = struct_type->first_member;
+#line 4834 "bootstrap/stage0/ReCode.code"
+    if (struct_member == NULL) {
+#line 4835 "bootstrap/stage0/ReCode.code"
         return;
     }
-#line 4825 "bootstrap/stage0/ReCode.code"
+#line 4837 "bootstrap/stage0/ReCode.code"
     File__write_checked_type(self->file, ((struct Checked_Type*) struct_type));
-#line 4826 "bootstrap/stage0/ReCode.code"
+#line 4838 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, " {\n");
-#line 4827 "bootstrap/stage0/ReCode.code"
+#line 4839 "bootstrap/stage0/ReCode.code"
     while (struct_member != NULL) {
-#line 4828 "bootstrap/stage0/ReCode.code"
+#line 4840 "bootstrap/stage0/ReCode.code"
         File__write_char(self->file, '\t');
-#line 4829 "bootstrap/stage0/ReCode.code"
+#line 4841 "bootstrap/stage0/ReCode.code"
         File__write_checked_type(self->file, struct_member->type);
-#line 4830 "bootstrap/stage0/ReCode.code"
+#line 4842 "bootstrap/stage0/ReCode.code"
         File__write_char(self->file, ' ');
-#line 4831 "bootstrap/stage0/ReCode.code"
+#line 4843 "bootstrap/stage0/ReCode.code"
         File__write_string(self->file, struct_member->name);
-#line 4832 "bootstrap/stage0/ReCode.code"
+#line 4844 "bootstrap/stage0/ReCode.code"
         File__write_cstring(self->file, ";\n");
-#line 4833 "bootstrap/stage0/ReCode.code"
+#line 4845 "bootstrap/stage0/ReCode.code"
         struct_member = struct_member->next_member;
     }
-#line 4835 "bootstrap/stage0/ReCode.code"
+#line 4847 "bootstrap/stage0/ReCode.code"
     File__write_cstring(self->file, "};\n\n");
 }
 
-#line 4838 "bootstrap/stage0/ReCode.code"
-void generate(struct File* file, struct Checked_Source* checked_source) {
-#line 4839 "bootstrap/stage0/ReCode.code"
-    struct Generator generator;
-#line 4840 "bootstrap/stage0/ReCode.code"
-    generator.file = file;
-#line 4841 "bootstrap/stage0/ReCode.code"
-    generator.identation = ((uint16_t) 0);
-#line 4843 "bootstrap/stage0/ReCode.code"
-    struct Checked_Symbol* checked_symbol;
-#line 4845 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(generator.file, "/* Copyright (C) 2023 Stefan Selariu */\n");
-#line 4846 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(generator.file, "\n");
-#line 4847 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(generator.file, "#include <inttypes.h>\n");
-#line 4848 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(generator.file, "#include <stdbool.h>\n");
-#line 4849 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(generator.file, "#include <stddef.h>\n");
 #line 4850 "bootstrap/stage0/ReCode.code"
-    File__write_cstring(generator.file, "\n");
+void generate(struct File* file, struct Checked_Source* checked_source) {
+    struct Generator generator;
+    struct Checked_Symbol* checked_symbol;
+    struct Checked_Statement* checked_statement;
+#line 4851 "bootstrap/stage0/ReCode.code"
+    ;
+#line 4852 "bootstrap/stage0/ReCode.code"
+    generator.file = file;
 #line 4853 "bootstrap/stage0/ReCode.code"
-    checked_symbol = checked_source->first_symbol;
-#line 4854 "bootstrap/stage0/ReCode.code"
-    while (checked_symbol != NULL) {
+    generator.identation = ((uint16_t) 0);
 #line 4855 "bootstrap/stage0/ReCode.code"
-        if (checked_symbol->kind == Checked_Symbol_Kind__TYPE) {
-#line 4856 "bootstrap/stage0/ReCode.code"
-            struct Checked_Named_Type* named_type = ((struct Checked_Type_Symbol*) checked_symbol)->named_type;
+    ;
 #line 4857 "bootstrap/stage0/ReCode.code"
-            if (named_type->super.kind == Checked_Type_Kind__STRUCT) {
+    File__write_cstring(generator.file, "/* Copyright (C) 2023 Stefan Selariu */\n");
 #line 4858 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(generator.file, "\n");
+#line 4859 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(generator.file, "#include <inttypes.h>\n");
+#line 4860 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(generator.file, "#include <stdbool.h>\n");
+#line 4861 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(generator.file, "#include <stddef.h>\n");
+#line 4862 "bootstrap/stage0/ReCode.code"
+    File__write_cstring(generator.file, "\n");
+#line 4865 "bootstrap/stage0/ReCode.code"
+    checked_symbol = checked_source->first_symbol;
+#line 4866 "bootstrap/stage0/ReCode.code"
+    while (checked_symbol != NULL) {
+#line 4867 "bootstrap/stage0/ReCode.code"
+        if (checked_symbol->kind == Checked_Symbol_Kind__TYPE) {
+            struct Checked_Named_Type* named_type;
+#line 4868 "bootstrap/stage0/ReCode.code"
+            named_type = ((struct Checked_Type_Symbol*) checked_symbol)->named_type;
+#line 4869 "bootstrap/stage0/ReCode.code"
+            if (named_type->super.kind == Checked_Type_Kind__STRUCT) {
+#line 4870 "bootstrap/stage0/ReCode.code"
                 Generator__declare_struct(&generator, ((struct Checked_Struct_Type*) named_type));
             } else if (named_type->super.kind == Checked_Type_Kind__OPAQUE) {
-#line 4860 "bootstrap/stage0/ReCode.code"
+#line 4872 "bootstrap/stage0/ReCode.code"
                 Generator__declare_opaque_type(&generator, ((struct Checked_Opaque_Type*) named_type));
             } else if (named_type->super.kind == Checked_Type_Kind__ENUM) {
-#line 4862 "bootstrap/stage0/ReCode.code"
+#line 4874 "bootstrap/stage0/ReCode.code"
                 Generator__generate_enum(&generator, ((struct Checked_Enum_Type*) named_type));
             }
         }
-#line 4865 "bootstrap/stage0/ReCode.code"
+#line 4877 "bootstrap/stage0/ReCode.code"
         checked_symbol = checked_symbol->next_symbol;
     }
-#line 4867 "bootstrap/stage0/ReCode.code"
+#line 4879 "bootstrap/stage0/ReCode.code"
     File__write_cstring(generator.file, "\n");
-#line 4870 "bootstrap/stage0/ReCode.code"
+#line 4882 "bootstrap/stage0/ReCode.code"
     checked_symbol = checked_source->first_symbol;
-#line 4871 "bootstrap/stage0/ReCode.code"
+#line 4883 "bootstrap/stage0/ReCode.code"
     while (checked_symbol != NULL) {
-#line 4872 "bootstrap/stage0/ReCode.code"
+#line 4884 "bootstrap/stage0/ReCode.code"
         if (checked_symbol->kind == Checked_Symbol_Kind__TYPE) {
-#line 4873 "bootstrap/stage0/ReCode.code"
-            struct Checked_Named_Type* named_type = ((struct Checked_Type_Symbol*) checked_symbol)->named_type;
-#line 4874 "bootstrap/stage0/ReCode.code"
+            struct Checked_Named_Type* named_type;
+#line 4885 "bootstrap/stage0/ReCode.code"
+            named_type = ((struct Checked_Type_Symbol*) checked_symbol)->named_type;
+#line 4886 "bootstrap/stage0/ReCode.code"
             if (named_type->super.kind == Checked_Type_Kind__STRUCT) {
-#line 4875 "bootstrap/stage0/ReCode.code"
+#line 4887 "bootstrap/stage0/ReCode.code"
                 Generator__generate_struct(&generator, ((struct Checked_Struct_Type*) named_type));
             }
         }
-#line 4878 "bootstrap/stage0/ReCode.code"
+#line 4890 "bootstrap/stage0/ReCode.code"
         checked_symbol = checked_symbol->next_symbol;
     }
-#line 4882 "bootstrap/stage0/ReCode.code"
-    struct Checked_Statement* checked_statement = checked_source->statements->first_statement;
-#line 4883 "bootstrap/stage0/ReCode.code"
+#line 4894 "bootstrap/stage0/ReCode.code"
+    checked_statement = checked_source->statements->first_statement;
+#line 4895 "bootstrap/stage0/ReCode.code"
     while (checked_statement != NULL) {
-#line 4884 "bootstrap/stage0/ReCode.code"
+#line 4896 "bootstrap/stage0/ReCode.code"
         if (checked_statement->kind == Checked_Statement_Kind__VARIABLE) {
-#line 4885 "bootstrap/stage0/ReCode.code"
+#line 4897 "bootstrap/stage0/ReCode.code"
             Generator__generate_variable_statement(&generator, ((struct Checked_Variable_Statement*) checked_statement));
-#line 4886 "bootstrap/stage0/ReCode.code"
+#line 4898 "bootstrap/stage0/ReCode.code"
             File__write_cstring(generator.file, "\n");
         } else {
-#line 4888 "bootstrap/stage0/ReCode.code"
+#line 4900 "bootstrap/stage0/ReCode.code"
             Source_Location__error(checked_statement->location, String__create_from("Unsupported statement"));
-#line 4889 "bootstrap/stage0/ReCode.code"
+#line 4901 "bootstrap/stage0/ReCode.code"
             abort();
         }
-#line 4891 "bootstrap/stage0/ReCode.code"
+#line 4903 "bootstrap/stage0/ReCode.code"
         checked_statement = checked_statement->next_statement;
     }
-#line 4893 "bootstrap/stage0/ReCode.code"
+#line 4905 "bootstrap/stage0/ReCode.code"
     File__write_cstring(generator.file, "\n");
-#line 4896 "bootstrap/stage0/ReCode.code"
+#line 4908 "bootstrap/stage0/ReCode.code"
     checked_symbol = checked_source->first_symbol;
-#line 4897 "bootstrap/stage0/ReCode.code"
+#line 4909 "bootstrap/stage0/ReCode.code"
     while (checked_symbol != NULL) {
-#line 4898 "bootstrap/stage0/ReCode.code"
+#line 4910 "bootstrap/stage0/ReCode.code"
         if (checked_symbol->kind == Checked_Symbol_Kind__FUNCTION) {
-#line 4899 "bootstrap/stage0/ReCode.code"
+#line 4911 "bootstrap/stage0/ReCode.code"
             Generator__declare_function(&generator, ((struct Checked_Function_Symbol*) checked_symbol));
         }
-#line 4901 "bootstrap/stage0/ReCode.code"
+#line 4913 "bootstrap/stage0/ReCode.code"
         checked_symbol = checked_symbol->next_symbol;
     }
-#line 4903 "bootstrap/stage0/ReCode.code"
+#line 4915 "bootstrap/stage0/ReCode.code"
     File__write_cstring(generator.file, "\n");
-#line 4906 "bootstrap/stage0/ReCode.code"
+#line 4918 "bootstrap/stage0/ReCode.code"
     checked_symbol = checked_source->first_symbol;
-#line 4907 "bootstrap/stage0/ReCode.code"
+#line 4919 "bootstrap/stage0/ReCode.code"
     while (checked_symbol != NULL) {
-#line 4908 "bootstrap/stage0/ReCode.code"
+#line 4920 "bootstrap/stage0/ReCode.code"
         if (checked_symbol->kind == Checked_Symbol_Kind__FUNCTION) {
-#line 4909 "bootstrap/stage0/ReCode.code"
+#line 4921 "bootstrap/stage0/ReCode.code"
             Generator__generate_function(&generator, ((struct Checked_Function_Symbol*) checked_symbol));
         }
-#line 4911 "bootstrap/stage0/ReCode.code"
+#line 4923 "bootstrap/stage0/ReCode.code"
         checked_symbol = checked_symbol->next_symbol;
     }
 }
 
-#line 4919 "bootstrap/stage0/ReCode.code"
+#line 4931 "bootstrap/stage0/ReCode.code"
 int32_t main(int32_t argc, char** argv) {
-#line 4920 "bootstrap/stage0/ReCode.code"
-    if (argc < 3) {
-#line 4921 "bootstrap/stage0/ReCode.code"
-        error(String__append_cstring(String__append_cstring(String__create_from("Usage: "), argv[((size_t) 0)]), " SOURCE OUTPUT"));
-#line 4922 "bootstrap/stage0/ReCode.code"
-        return 1;
-    }
-#line 4925 "bootstrap/stage0/ReCode.code"
-    char* source_file_path = argv[((size_t) 1)];
-#line 4926 "bootstrap/stage0/ReCode.code"
-    struct File* source_file = fopen(source_file_path, "r");
-#line 4927 "bootstrap/stage0/ReCode.code"
-    if (source_file == NULL) {
-#line 4928 "bootstrap/stage0/ReCode.code"
-        error(String__append_cstring(String__create_from("Cannot open file: "), source_file_path));
-#line 4929 "bootstrap/stage0/ReCode.code"
-        return 1;
-    }
-#line 4932 "bootstrap/stage0/ReCode.code"
-    char* output_file_path = argv[((size_t) 2)];
-#line 4933 "bootstrap/stage0/ReCode.code"
+    char* source_file_path;
+    struct File* source_file;
+    char* output_file_path;
     struct File* output_file;
+    struct Source* source;
+    struct Parsed_Source* parsed_source;
+    struct Checked_Source* checked_source;
+#line 4932 "bootstrap/stage0/ReCode.code"
+    if (argc < 3) {
+#line 4933 "bootstrap/stage0/ReCode.code"
+        error(String__append_cstring(String__append_cstring(String__create_from("Usage: "), argv[((size_t) 0)]), " SOURCE OUTPUT"));
 #line 4934 "bootstrap/stage0/ReCode.code"
+        return 1;
+    }
+#line 4937 "bootstrap/stage0/ReCode.code"
+    source_file_path = argv[((size_t) 1)];
+#line 4938 "bootstrap/stage0/ReCode.code"
+    source_file = fopen(source_file_path, "r");
+#line 4939 "bootstrap/stage0/ReCode.code"
+    if (source_file == NULL) {
+#line 4940 "bootstrap/stage0/ReCode.code"
+        error(String__append_cstring(String__create_from("Cannot open file: "), source_file_path));
+#line 4941 "bootstrap/stage0/ReCode.code"
+        return 1;
+    }
+#line 4944 "bootstrap/stage0/ReCode.code"
+    output_file_path = argv[((size_t) 2)];
+#line 4945 "bootstrap/stage0/ReCode.code"
+    ;
+#line 4946 "bootstrap/stage0/ReCode.code"
     if (String__equals_cstring(String__create_from(output_file_path), "-")) {
-#line 4935 "bootstrap/stage0/ReCode.code"
+#line 4947 "bootstrap/stage0/ReCode.code"
         output_file = stdout;
     } else {
-#line 4937 "bootstrap/stage0/ReCode.code"
+#line 4949 "bootstrap/stage0/ReCode.code"
         output_file = fopen(output_file_path, "w");
-#line 4938 "bootstrap/stage0/ReCode.code"
+#line 4950 "bootstrap/stage0/ReCode.code"
         if (output_file == NULL) {
-#line 4939 "bootstrap/stage0/ReCode.code"
+#line 4951 "bootstrap/stage0/ReCode.code"
             error(String__append_cstring(String__create_from("Cannot open file: "), output_file_path));
-#line 4940 "bootstrap/stage0/ReCode.code"
+#line 4952 "bootstrap/stage0/ReCode.code"
             return 1;
         }
     }
-#line 4944 "bootstrap/stage0/ReCode.code"
-    struct Source* source = Source__create(source_file, source_file_path);
-#line 4945 "bootstrap/stage0/ReCode.code"
-    struct Parsed_Source* parsed_source = parse(source);
-#line 4946 "bootstrap/stage0/ReCode.code"
-    struct Checked_Source* checked_source = check(parsed_source);
-#line 4947 "bootstrap/stage0/ReCode.code"
+#line 4956 "bootstrap/stage0/ReCode.code"
+    source = Source__create(source_file, source_file_path);
+#line 4957 "bootstrap/stage0/ReCode.code"
+    parsed_source = parse(source);
+#line 4958 "bootstrap/stage0/ReCode.code"
+    checked_source = check(parsed_source);
+#line 4959 "bootstrap/stage0/ReCode.code"
     generate(output_file, checked_source);
-#line 4949 "bootstrap/stage0/ReCode.code"
+#line 4961 "bootstrap/stage0/ReCode.code"
     fclose(source_file);
-#line 4950 "bootstrap/stage0/ReCode.code"
+#line 4962 "bootstrap/stage0/ReCode.code"
     return fclose(output_file);
 }
 
