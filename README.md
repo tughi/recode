@@ -11,7 +11,6 @@ A compiler for the _Code_ language.
   - TODO: Treat string literals as local String instances
   - TODO: Collect copyright headers and put them in the generated file
   - TODO: Declare external functions with Code and C signatures
-  - TODO: Check function call parameters
 
 
 ## How to add new features

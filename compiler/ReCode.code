@@ -495,10 +495,6 @@ func Token__is_true(self: Token*) -> bool {
     return Token__is_keyword(self, "true")
 }
 
-func Token__is_typedef(self: Token*) -> bool {
-    return Token__is_keyword(self, "typedef")
-}
-
 func Token__is_undefined(self: Token*) -> bool {
     return Token__is_keyword(self, "undefined")
 }
@@ -888,6 +884,7 @@ struct Parsed_Source {
 }
 
 enum Parsed_Type_Kind {
+    FUNCTION
     NAMED
     POINTER
     STRUCT
@@ -905,15 +902,44 @@ func Parsed_Type__create_kind(kind: Parsed_Type_Kind, kind_size: usize, location
     return type
 }
 
+struct Parsed_Function_Parameter {
+    location: Source_Location*
+    name: String*
+    type: Parsed_Type*
+    next_parameter: Parsed_Function_Parameter*
+}
+
+func Parsed_Function_Parameter__create(location: Source_Location*, name: String*, type: Parsed_Type*) -> Parsed_Function_Parameter* {
+    let parameter = malloc(sizeof(Parsed_Function_Parameter)).as(Parsed_Function_Parameter*)
+    parameter.location = location
+    parameter.name = name
+    parameter.type = type
+    parameter.next_parameter = null
+    return parameter
+}
+
+struct Parsed_Function_Type {
+    super: Parsed_Type
+    first_parameter: Parsed_Function_Parameter*
+    return_type: Parsed_Type*
+}
+
+func Parsed_Function_Type__create(location: Source_Location*, first_parameter: Parsed_Function_Parameter*, return_type: Parsed_Type*) -> Parsed_Function_Type* {
+    let type = Parsed_Type__create_kind(Parsed_Type_Kind.FUNCTION, sizeof(Parsed_Function_Type), location).as(Parsed_Function_Type*)
+    type.first_parameter = first_parameter
+    type.return_type = return_type
+    return type
+}
+
 struct Parsed_Named_Type {
     super: Parsed_Type
     name: String*
 }
 
-func Parsed_Named_Type__create(name: Token*) -> Parsed_Type* {
+func Parsed_Named_Type__create(name: Token*) -> Parsed_Named_Type* {
     let type = Parsed_Type__create_kind(Parsed_Type_Kind.NAMED, sizeof(Parsed_Named_Type), name.location).as(Parsed_Named_Type*)
     type.name = name.lexeme
-    return type.as(Parsed_Type*)
+    return type
 }
 
 struct Parsed_Pointer_Type {
@@ -921,10 +947,10 @@ struct Parsed_Pointer_Type {
     other_type: Parsed_Type*
 }
 
-func Parsed_Pointer_Type__create(other_type: Parsed_Type*) -> Parsed_Type* {
+func Parsed_Pointer_Type__create(other_type: Parsed_Type*) -> Parsed_Pointer_Type* {
     let type = Parsed_Type__create_kind(Parsed_Type_Kind.POINTER, sizeof(Parsed_Pointer_Type), other_type.location).as(Parsed_Pointer_Type*)
     type.other_type = other_type
-    return type.as(Parsed_Type*)
+    return type
 }
 
 struct Parsed_Struct_Type {
@@ -932,10 +958,10 @@ struct Parsed_Struct_Type {
     other_type: Parsed_Type*
 }
 
-func Parsed_Struct_Type__create(location: Source_Location*, other_type: Parsed_Type*) -> Parsed_Type* {
+func Parsed_Struct_Type__create(location: Source_Location*, other_type: Parsed_Type*) -> Parsed_Struct_Type* {
     let type = Parsed_Type__create_kind(Parsed_Type_Kind.STRUCT, sizeof(Parsed_Struct_Type), location).as(Parsed_Struct_Type*)
     type.other_type = other_type
-    return type.as(Parsed_Type*)
+    return type
 }
 
 enum Parsed_Expression_Kind {
@@ -1310,7 +1336,6 @@ enum Parsed_Statement_Kind {
     ENUM
     EXPRESSION
     FUNCTION
-    FUNCTION_TYPE
     IF
     OPAQUE_TYPE
     RETURN
@@ -1410,20 +1435,6 @@ func Parsed_Expression_Statement__create(expression: Parsed_Expression*) -> Pars
     return statement
 }
 
-struct Parsed_Function_Parameter {
-    name: Token*
-    type: Parsed_Type*
-    next_parameter: Parsed_Function_Parameter*
-}
-
-func Parsed_Function_Parameter__create(name: Token*, type: Parsed_Type*) -> Parsed_Function_Parameter* {
-    let parameter = malloc(sizeof(Parsed_Function_Parameter)).as(Parsed_Function_Parameter*)
-    parameter.name = name
-    parameter.type = type
-    parameter.next_parameter = null
-    return parameter
-}
-
 struct Parsed_Function_Statement {
     super: Parsed_Named_Statement
     first_parameter: Parsed_Function_Parameter*
@@ -1438,33 +1449,6 @@ func Parsed_Function_Statement__create(location: Source_Location*, name: Token*,
     statement.return_type = resturn_type
     statement.statements = statements
     statement.is_external = is_external
-    return statement.as(Parsed_Statement*)
-}
-
-struct Parsed_Function_Type_Parameter {
-    name: Token*
-    type: Parsed_Type*
-    next_parameter: Parsed_Function_Type_Parameter*
-}
-
-func Parsed_Function_Type_Parameter__create(name: Token*, type: Parsed_Type*) -> Parsed_Function_Type_Parameter* {
-    let parameter = malloc(sizeof(Parsed_Function_Type_Parameter)).as(Parsed_Function_Type_Parameter*)
-    parameter.name = name
-    parameter.type = type
-    parameter.next_parameter = null
-    return parameter
-}
-
-struct Parsed_Function_Type_Statement {
-    super: Parsed_Named_Statement
-    first_parameter: Parsed_Function_Type_Parameter*
-    return_type: Parsed_Type*
-}
-
-func Parsed_Function_Type_Statement__create(location: Source_Location*, name: Token*, first_parameter: Parsed_Function_Type_Parameter*, resturn_type: Parsed_Type*) -> Parsed_Statement* {
-    let statement = Parsed_Named_Statement__create_kind(Parsed_Statement_Kind.FUNCTION_TYPE, sizeof(Parsed_Function_Type_Statement), location, name).as(Parsed_Function_Type_Statement*)
-    statement.first_parameter = first_parameter
-    statement.return_type = resturn_type
     return statement.as(Parsed_Statement*)
 }
 
@@ -1605,9 +1589,7 @@ func Parser__peek_token(self: Parser*, offset: u8) -> Token* {
     return Scanner__peek_token(self.scanner, offset)
 }
 
-typedef bool Token_Is_Function(Token* self)
-
-func Parser__matches_three(self: Parser*, first_is: Token_Is_Function*, first_required: bool, second_is: Token_Is_Function*, second_required: bool, third_is: Token_Is_Function*) -> bool {
+func Parser__matches_three(self: Parser*, first_is: (func (Token*) -> bool), first_required: bool, second_is: (func (Token*) -> bool), second_required: bool, third_is: (func (Token*) -> bool)) -> bool {
     let peek_offset = 0.as(u8)
     if (first_is(Parser__peek_token(self, peek_offset))) {
         peek_offset = peek_offset + 1.as(u8)
@@ -1627,15 +1609,15 @@ func Parser__matches_three(self: Parser*, first_is: Token_Is_Function*, first_re
     return true
 }
 
-func Parser__matches_two(self: Parser*, first_is: Token_Is_Function*, first_required: bool, second_is: Token_Is_Function*) -> bool {
+func Parser__matches_two(self: Parser*, first_is: (func (Token*) -> bool), first_required: bool, second_is: (func (Token*) -> bool)) -> bool {
     return Parser__matches_three(self, first_is, first_required, second_is, true, null)
 }
 
-func Parser__matches_one(self: Parser*, first_is: Token_Is_Function*) -> bool {
+func Parser__matches_one(self: Parser*, first_is: (func (Token*) -> bool)) -> bool {
     return Parser__matches_two(self, first_is, true, null)
 }
 
-func Parser__consume_token(self: Parser*, check: Token_Is_Function*) -> Token* {
+func Parser__consume_token(self: Parser*, check: (func (Token*) -> bool)) -> Token* {
     if (Parser__matches_one(self, check)) {
         let token = self.scanner.current_token
         Scanner__next_token(self.scanner)
@@ -2077,50 +2059,50 @@ func Parser__parse_enum(self: Parser*) -> Parsed_Statement* {
 
 \ type
 \   | IDENTIFIER "*"*
+\   | "(" "func" "(" ( type ( "," type )* )? ")" "->" type ")"
 func Parser__parse_type(self: Parser*) -> Parsed_Type* {
-    let name = Parser__consume_token(self, Token__is_identifier)
-    let type = Parsed_Named_Type__create(name)
-    while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
+    if (Parser__matches_three(self, Token__is_opening_paren, true, Token__is_space, false, Token__is_func)) {
+        let location = Parser__consume_token(self, Token__is_opening_paren).location
         Parser__consume_space(self, 0.as(u16))
-        Parser__consume_token(self, Token__is_asterisk)
-        type = Parsed_Pointer_Type__create(type)
-    }
-    return type
-}
-
-\ type_alias
-\      | "typedef" type IDENTIFIER "(" ( type IDENTIFIER ( "," type IDENTIFIER )* )? ")"
-func Parser__parse_type_alias(self: Parser*) -> Parsed_Statement* {
-    let location = Parser__consume_token(self, Token__is_typedef).location
-    Parser__consume_space(self, 1.as(u16))
-    let return_type = Parser__parse_type(self)
-    Parser__consume_space(self, 1.as(u16))
-    let name = Parser__consume_token(self, Token__is_identifier)
-    Parser__consume_space(self, 0.as(u16))
-    Parser__consume_token(self, Token__is_opening_paren)
-    let first_parameter: Parsed_Function_Type_Parameter* = null
-    if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
-        Parser__consume_space(self, 0.as(u16))
-        let parameter_type = Parser__parse_type(self)
+        Parser__consume_token(self, Token__is_func)
         Parser__consume_space(self, 1.as(u16))
-        let parameter_name = Parser__consume_token(self, Token__is_identifier)
-        first_parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type)
-        let last_parameter = first_parameter
-        while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
+        Parser__consume_token(self, Token__is_opening_paren)
+        Parser__consume_space(self, 0.as(u16))
+        let first_parameter: Parsed_Function_Parameter* = null
+        if (!Parser__matches_one(self, Token__is_closing_paren)) {
+            let type = Parser__parse_type(self)
             Parser__consume_space(self, 0.as(u16))
-            Parser__consume_token(self, Token__is_comma)
-            Parser__consume_space(self, 1.as(u16))
-            let parameter_type = Parser__parse_type(self)
-            Parser__consume_space(self, 1.as(u16))
-            let parameter_name = Parser__consume_token(self, Token__is_identifier)
-            let parameter = Parsed_Function_Type_Parameter__create(parameter_name, parameter_type)
-            last_parameter.next_parameter = parameter
-            last_parameter = parameter
+            first_parameter = Parsed_Function_Parameter__create(type.location, null, type)
+            let last_parameter = first_parameter
+            while (!Parser__matches_one(self, Token__is_closing_paren)) {
+                Parser__consume_token(self, Token__is_comma)
+                Parser__consume_space(self, 1.as(u16))
+                let type = Parser__parse_type(self)
+                Parser__consume_space(self, 0.as(u16))
+                last_parameter.next_parameter = Parsed_Function_Parameter__create(type.location, null, type)
+                last_parameter = last_parameter.next_parameter
+            }
         }
+        Parser__consume_token(self, Token__is_closing_paren)
+        Parser__consume_space(self, 1.as(u16))
+        Parser__consume_token(self, Token__is_minus)
+        Parser__consume_space(self, 0.as(u16))
+        Parser__consume_token(self, Token__is_greater_than)
+        Parser__consume_space(self, 1.as(u16))
+        let return_type = Parser__parse_type(self)
+        Parser__consume_space(self, 0.as(u16))
+        Parser__consume_token(self, Token__is_closing_paren)
+        return Parsed_Function_Type__create(location, first_parameter, return_type).as(Parsed_Type*)
+    } else {
+        let name = Parser__consume_token(self, Token__is_identifier)
+        let type = Parsed_Named_Type__create(name).as(Parsed_Type*)
+        while (Parser__matches_two(self, Token__is_space, false, Token__is_asterisk)) {
+            Parser__consume_space(self, 0.as(u16))
+            Parser__consume_token(self, Token__is_asterisk)
+            type = Parsed_Pointer_Type__create(type).as(Parsed_Type*)
+        }
+        return type
     }
-    Parser__consume_space(self, 0.as(u16))
-    Parser__consume_token(self, Token__is_closing_paren)
-    return Parsed_Function_Type_Statement__create(location, name, first_parameter, return_type)
 }
 
 \ variable
@@ -2181,7 +2163,7 @@ func Parser__parse_function_parameter(self: Parser*) -> Parsed_Function_Paramete
     Parser__consume_token(self, Token__is_colon)
     Parser__consume_space(self, 1.as(u16))
     let type = Parser__parse_type(self)
-    return Parsed_Function_Parameter__create(name, type)
+    return Parsed_Function_Parameter__create(name.location, name.lexeme, type)
 }
 
 \ function
@@ -2347,10 +2329,6 @@ func Parser__parse_statement(self: Parser*) -> Parsed_Statement* {
         return Parser__parse_break_statement(self)
     }
 
-    if (Parser__matches_one(self, Token__is_typedef)) {
-        return Parser__parse_type_alias(self)
-    }
-
     if (Parser__matches_one(self, Token__is_let)) {
         return Parser__parse_variable(self)
     }
@@ -2463,10 +2441,10 @@ enum Checked_Type_Kind {
     \ Defined
     DEFINED
     ENUM
-    FUNCTION
     OPAQUE
     STRUCT
     \ Dynamic
+    FUNCTION
     POINTER
 }
 
@@ -2486,6 +2464,9 @@ func Checked_Type__create_kind(kind: Checked_Type_Kind, kind_size: usize, locati
 
 func Checked_Type__expect_same_type(self: Checked_Type*, other_type: Checked_Type*, location: Source_Location*) -> void {
     if (self.kind == Checked_Type_Kind.POINTER && other_type.kind == Checked_Type_Kind.NULL) {
+        return
+    }
+    if (self.kind == Checked_Type_Kind.FUNCTION && other_type.kind == Checked_Type_Kind.NULL) {
         return
     }
     if (!Checked_Type__equals(self, other_type)) {
@@ -2602,15 +2583,15 @@ func Checked_Function_Parameter__create(location: Source_Location*, name: String
 }
 
 struct Checked_Function_Type {
-    super: Checked_Named_Type
-    return_type: Checked_Type*
+    super: Checked_Type
     first_parameter: Checked_Function_Parameter*
+    return_type: Checked_Type*
 }
 
-func Checked_Function_Type__create(location: Source_Location*, name: String*, return_type: Checked_Type*) -> Checked_Function_Type* {
-    let type = Checked_Named_Type__create_kind(Checked_Type_Kind.FUNCTION, sizeof(Checked_Function_Type), location, name).as(Checked_Function_Type*)
+func Checked_Function_Type__create(location: Source_Location*, first_parameter: Checked_Function_Parameter*, return_type: Checked_Type*) -> Checked_Function_Type* {
+    let type = Checked_Type__create_kind(Checked_Type_Kind.FUNCTION, sizeof(Checked_Function_Type), location).as(Checked_Function_Type*)
+    type.first_parameter = first_parameter
     type.return_type = return_type
-    type.first_parameter = null
     return type
 }
 
@@ -2751,20 +2732,17 @@ func String__append_checked_type(self: String*, type: Checked_Type*) -> String* 
         String__append_string(self, struct_type.name)
     } else if (type.kind == Checked_Type_Kind.FUNCTION) {
         let function_type = type.as(Checked_Function_Type*)
-        String__append_checked_type(self, function_type.return_type)
-        String__append_char(self, ' ')
-        String__append_string(self, function_type.name)
-        String__append_char(self, '(')
+        String__append_cstring(self, "(func (")
         let function_parameter = function_type.first_parameter
         while (function_parameter != null) {
             String__append_checked_type(self, function_parameter.type)
-            String__append_char(self, ' ')
-            String__append_string(self, function_parameter.name)
             function_parameter = function_parameter.next_parameter
             if (function_parameter != null) {
                 String__append_cstring(self, ", ")
             }
         }
+        String__append_cstring(self, ") -> ")
+        String__append_checked_type(self, function_type.return_type)
         String__append_char(self, ')')
     } else if (type.kind == Checked_Type_Kind.ENUM) {
         let enum_type = type.as(Checked_Enum_Type*)
@@ -2781,9 +2759,26 @@ func String__append_checked_type(self: String*, type: Checked_Type*) -> String* 
     return self
 }
 
+func File__write_checked_function_symbol(self: File*, function_symbol: Checked_Function_Symbol*) -> void {
+    let function_type = function_symbol.function_type
+    File__write_checked_type(self, function_type.return_type)
+    File__write_char(self, ' ')
+    File__write_string(self, function_symbol.name)
+    File__write_char(self, '(')
+    let function_parameter = function_type.first_parameter
+    while (function_parameter != null) {
+        File__write_checked_function_parameter(self, function_parameter)
+        function_parameter = function_parameter.next_parameter
+        if (function_parameter != null) {
+            File__write_cstring(self, ", ")
+        }
+    }
+    File__write_char(self, ')')
+}
+
 func File__write_checked_function_parameter(self: File*, parameter: Checked_Function_Parameter*) -> void {
-    if (parameter.type.kind == Checked_Type_Kind.POINTER && parameter.type.as(Checked_Pointer_Type*).other_type.kind == Checked_Type_Kind.FUNCTION) {
-        let function_type = parameter.type.as(Checked_Pointer_Type*).other_type.as(Checked_Function_Type*)
+    if (parameter.type.kind == Checked_Type_Kind.FUNCTION) {
+        let function_type = parameter.type.as(Checked_Function_Type*)
         File__write_checked_type(self, function_type.return_type)
         File__write_cstring(self, " (*")
         File__write_string(self, parameter.name)
@@ -2799,8 +2794,10 @@ func File__write_checked_function_parameter(self: File*, parameter: Checked_Func
         File__write_char(self, ')')
     } else {
         File__write_checked_type(self, parameter.type)
-        File__write_char(self, ' ')
-        File__write_string(self, parameter.name)
+        if (parameter.name != null) {
+            File__write_char(self, ' ')
+            File__write_string(self, parameter.name)
+        }
     }
 }
 
@@ -2836,21 +2833,6 @@ func File__write_checked_type(self: File*, type: Checked_Type*) -> void {
         let opaque_type = type.as(Checked_Opaque_Type*)
         File__write_cstring(self, "struct ")
         File__write_string(self, opaque_type.name)
-    } else if (type.kind == Checked_Type_Kind.FUNCTION) {
-        let function_type = type.as(Checked_Function_Type*)
-        File__write_checked_type(self, function_type.return_type)
-        File__write_char(self, ' ')
-        File__write_string(self, function_type.name)
-        File__write_char(self, '(')
-        let function_parameter = function_type.first_parameter
-        while (function_parameter != null) {
-            File__write_checked_function_parameter(self, function_parameter)
-            function_parameter = function_parameter.next_parameter
-            if (function_parameter != null) {
-                File__write_cstring(self, ", ")
-            }
-        }
-        File__write_char(self, ')')
     } else if (type.kind == Checked_Type_Kind.ENUM) {
         let enum_type = type.as(Checked_Enum_Type*)
         File__write_cstring(self, "enum ")
@@ -2912,7 +2894,7 @@ struct Checked_Function_Symbol {
 }
 
 func Checked_Function_Symbol__create(location: Source_Location*, name: String*, function_type: Checked_Function_Type*) -> Checked_Function_Symbol* {
-    let symbol = Checked_Symbol__create_kind(Checked_Symbol_Kind.FUNCTION, sizeof(Checked_Function_Symbol), location, name, Checked_Pointer_Type__create(function_type.location, function_type.as(Checked_Type*)).as(Checked_Type*)).as(Checked_Function_Symbol*)
+    let symbol = Checked_Symbol__create_kind(Checked_Symbol_Kind.FUNCTION, sizeof(Checked_Function_Symbol), location, name, function_type.as(Checked_Type*)).as(Checked_Function_Symbol*)
     symbol.function_type = function_type
     symbol.checked_statements = null
     return symbol
@@ -3606,6 +3588,24 @@ func Checker__resolve_type(self: Checker*, parsed_type: Parsed_Type*) -> Checked
         }
         return type
     }
+    if (parsed_type.kind == Parsed_Type_Kind.FUNCTION) {
+        let parsed_function_type = parsed_type.as(Parsed_Function_Type*)
+        let first_parameter: Checked_Function_Parameter* = null
+        let parsed_parameter = parsed_function_type.first_parameter
+        if (parsed_parameter != null) {
+            first_parameter = Checked_Function_Parameter__create(parsed_parameter.location, null, Checker__resolve_type(self, parsed_parameter.type))
+            let last_parameter = first_parameter
+            parsed_parameter = parsed_parameter.next_parameter
+            while (parsed_parameter != null) {
+                let parameter = Checked_Function_Parameter__create(parsed_parameter.location, null, Checker__resolve_type(self, parsed_parameter.type))
+                last_parameter.next_parameter = parameter
+                last_parameter = parameter
+                parsed_parameter = parsed_parameter.next_parameter
+            }
+        }
+        let return_type = Checker__resolve_type(self, parsed_function_type.return_type)
+        return Checked_Function_Type__create(parsed_type.location, first_parameter, return_type).as(Checked_Type*)
+    }
     Source_Location__error(parsed_type.location, String__create_from("Undefined type"))
     abort()
 }
@@ -3653,13 +3653,13 @@ func Checker__check_bool_expression(self: Checker*, parsed_expression: Parsed_Bo
 func Checker__check_call_expression(self: Checker*, parsed_expression: Parsed_Call_Expression*) -> Checked_Expression* {
     let callee_expression = Checker__check_expression(self, parsed_expression.callee_expression)
     let callee_type = callee_expression.type
-    if (callee_type.kind != Checked_Type_Kind.POINTER || callee_type.as(Checked_Pointer_Type*).other_type.kind != Checked_Type_Kind.FUNCTION) {
+    if (callee_type.kind != Checked_Type_Kind.FUNCTION) {
         Source_Location__error(parsed_expression.location, String__create_from("Not a function"))
         abort()
     }
-    let function_type = callee_type.as(Checked_Pointer_Type*).other_type.as(Checked_Function_Type*)
+    let function_type = callee_type.as(Checked_Function_Type*)
     let first_argument: Checked_Call_Argument* = null
-    if (parsed_expression.first_argument != null) {
+    if (parsed_expression.first_argument != null || function_type.first_parameter != null) {
         let last_argument: Checked_Call_Argument* = null
         let function_parameter = function_type.first_parameter
         let parsed_argument = parsed_expression.first_argument
@@ -4009,35 +4009,6 @@ func Checker__check_enum_statement(self: Checker*, parsed_statement: Parsed_Enum
     }
 }
 
-func Checker__check_function_type_statement(self: Checker*, parsed_statement: Parsed_Function_Type_Statement*) -> void {
-    let other_type = Checker__find_type(self, parsed_statement.name.lexeme)
-    let function_type: Checked_Function_Type* = undefined
-    if (other_type != null) {
-        TODO("Handle type redeclaration")
-        abort()
-    } else {
-        let return_type = Checker__resolve_type(self, parsed_statement.return_type)
-        function_type = Checked_Function_Type__create(parsed_statement.name.location, parsed_statement.name.lexeme, return_type)
-        Checker__append_type(self, function_type.as(Checked_Named_Type*))
-    }
-
-    if (parsed_statement.first_parameter != null) {
-        let last_function_parameter: Checked_Function_Parameter* = null
-        let parsed_parameter = parsed_statement.first_parameter
-        while (parsed_parameter != null) {
-            let function_parameter_type = Checker__resolve_type(self, parsed_parameter.type)
-            let function_parameter = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, function_parameter_type)
-            if (last_function_parameter == null) {
-                function_type.first_parameter = function_parameter
-            } else {
-                last_function_parameter.next_parameter = function_parameter
-            }
-            last_function_parameter = function_parameter
-            parsed_parameter = parsed_parameter.next_parameter
-        }
-    }
-}
-
 func Checker__create_opaque_type(self: Checker*, parsed_statement: Parsed_Opaque_Type_Statement*) -> void {
     let other_type = Checker__find_type(self, parsed_statement.name.lexeme)
     if (other_type != null) {
@@ -4194,18 +4165,17 @@ func Checker__check_function_declaration(self: Checker*, parsed_statement: Parse
     let function_first_parameter: Checked_Function_Parameter* = null
     let parsed_parameter = parsed_statement.first_parameter
     if (parsed_parameter != null) {
-        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, Checker__resolve_type(self, parsed_parameter.type))
+        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter.location, parsed_parameter.name, Checker__resolve_type(self, parsed_parameter.type))
         let function_last_parameter = function_first_parameter
         parsed_parameter = parsed_parameter.next_parameter
         while (parsed_parameter != null) {
-            let function_parameter = Checked_Function_Parameter__create(parsed_parameter.name.location, parsed_parameter.name.lexeme, Checker__resolve_type(self, parsed_parameter.type))
+            let function_parameter = Checked_Function_Parameter__create(parsed_parameter.location, parsed_parameter.name, Checker__resolve_type(self, parsed_parameter.type))
             function_last_parameter.next_parameter = function_parameter
             function_last_parameter = function_parameter
             parsed_parameter = parsed_parameter.next_parameter
         }
     }
-    let function_type = Checked_Function_Type__create(parsed_statement.location, function_name, function_return_type)
-    function_type.first_parameter = function_first_parameter
+    let function_type = Checked_Function_Type__create(parsed_statement.location, function_first_parameter, function_return_type)
 
     let other_symbol = Checked_Symbols__find_sibling_symbol(self.symbols, function_name)
     if (other_symbol != null) {
@@ -4309,8 +4279,6 @@ func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Che
             Checker__create_opaque_type(self, parsed_statement.as(Parsed_Opaque_Type_Statement*))
         } else if (parsed_statement.kind == Parsed_Statement_Kind.ENUM) {
             Checker__check_enum_statement(self, parsed_statement.as(Parsed_Enum_Statement*))
-        } else if (parsed_statement.kind == Parsed_Statement_Kind.FUNCTION_TYPE) {
-            \ ignored
         } else {
             Source_Location__error(parsed_statement.location, String__create_from("Unsupported statement"))
             abort()
@@ -4326,8 +4294,6 @@ func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Che
     while (parsed_statement != null) {
         if (parsed_statement.kind == Parsed_Statement_Kind.STRUCT) {
             Checker__check_struct_statement(self, parsed_statement.as(Parsed_Struct_Statement*))
-        } else if (parsed_statement.kind == Parsed_Statement_Kind.FUNCTION_TYPE) {
-            Checker__check_function_type_statement(self, parsed_statement.as(Parsed_Function_Type_Statement*))
         }
         parsed_statement = parsed_statement.next_statement
     }
@@ -4345,8 +4311,6 @@ func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Che
         } else if (parsed_statement.kind == Parsed_Statement_Kind.OPAQUE_TYPE) {
             \ ignored
         } else if (parsed_statement.kind == Parsed_Statement_Kind.ENUM) {
-            \ ignored
-        } else if (parsed_statement.kind == Parsed_Statement_Kind.FUNCTION_TYPE) {
             \ ignored
         } else {
             Source_Location__error(parsed_statement.location, String__create_from("Unsupported statement"))
@@ -4373,8 +4337,6 @@ func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Che
         } else if (parsed_statement.kind == Parsed_Statement_Kind.OPAQUE_TYPE) {
             \ ignored
         } else if (parsed_statement.kind == Parsed_Statement_Kind.ENUM) {
-            \ ignored
-        } else if (parsed_statement.kind == Parsed_Statement_Kind.FUNCTION_TYPE) {
             \ ignored
         } else {
             Source_Location__error(parsed_statement.location, String__create_from("Unsupported statement"))
@@ -4830,7 +4792,7 @@ func Generator__generate_enum(self: Generator*, enum_type: Checked_Enum_Type*) -
 }
 
 func Generator__declare_function(self: Generator*, function_symbol: Checked_Function_Symbol*) -> void {
-    File__write_checked_type(self.file, function_symbol.function_type.as(Checked_Type*))
+    File__write_checked_function_symbol(self.file, function_symbol)
     File__write_cstring(self.file, ";\n")
 }
 
@@ -4839,7 +4801,7 @@ func Generator__generate_function(self: Generator*, function_symbol: Checked_Fun
         return
     }
     Generator__write_source_location(self, function_symbol.location)
-    File__write_checked_type(self.file, function_symbol.function_type.as(Checked_Type*))
+    File__write_checked_function_symbol(self.file, function_symbol)
     File__write_cstring(self.file, " {\n")
     Generator__generate_statements(self, function_symbol.checked_statements)
     File__write_cstring(self.file, "}\n\n")
