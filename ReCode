@@ -58,27 +58,28 @@ def build_stage(n):
     if not os.path.exists(f'build/stage{n}'):
         execute(f'mkdir build/stage{n}')
 
-    compiler = f'build/stage{n - 1}/ReCode'
-    source_file = f'compiler/ReCode.code'
-    output_file = f'build/stage{n}/ReCode.c'
-
-    compiler_changed = not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler)
+    compiler_changed = not os.path.exists(f'build/stage{n}/ReCode.c') or os.path.getmtime(f'build/stage{n}/ReCode.c') < os.path.getmtime(f'build/stage{n - 1}/ReCode')
     if not compiler_changed:
-        for root, dirs, files in os.walk(os.path.dirname(source_file)):
+        for root, dirs, files in os.walk(os.path.dirname(f'compiler/ReCode.code')):
             for file in files:
-                if os.path.getmtime(output_file) < os.path.getmtime(f'{root}/{file}'):
+                if os.path.getmtime(f'build/stage{n}/ReCode.c') < os.path.getmtime(f'{root}/{file}'):
                     compiler_changed = True
                     break
             else:
                 continue
             break
 
-    if compiler_changed:
-        if execute(f'{compiler} {source_file} {output_file}', exit_on_error=False) != 0:
-            if os.path.exists(output_file):
-                execute(f'rm {output_file}')
-            trace(compiler, f'{source_file} -')
-        cc(output_file, f'build/stage{n}/ReCode')
+    if compiler_changed or not os.path.exists(f'build/stage{n}/ReCode'):
+        if execute(f'build/stage{n - 1}/ReCode compiler/ReCode.code build/stage{n}/ReCode.c', exit_on_error=False) != 0:
+            if os.path.exists(f'build/stage{n}/ReCode.c'):
+                execute(f'rm build/stage{n}/ReCode.c')
+            trace(f'build/stage{n - 1}/ReCode', f'compiler/ReCode.code -')
+        try:
+            cc(f'build/stage{n}/ReCode.c', f'build/stage{n}/ReCode')
+        except SystemExit:
+            if os.path.exists(f'build/stage{n}/ReCode'):
+                execute(f'rm build/stage{n}/ReCode')
+            raise
 
 
 def test():
