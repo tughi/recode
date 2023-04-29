@@ -4,11 +4,11 @@
 \   LibC
 \ ---------------------------------------------------------------------------------------------------------------------
 
-external struct File
+external type File
 
-let stdin: File* = external
-let stdout: File* = external
-let stderr: File* = external
+external stdin: File*
+external stdout: File*
+external stderr: File*
 
 external func fopen(file_name: char*, mode: char*) -> File*
 external func fclose(stream: File*) -> i32
@@ -495,6 +495,10 @@ func Token__is_struct(self: Token*) -> bool {
 
 func Token__is_true(self: Token*) -> bool {
     return Token__is_keyword(self, "true")
+}
+
+func Token__is_type(self: Token*) -> bool {
+    return Token__is_keyword(self, "type")
 }
 
 func Token__is_undefined(self: Token*) -> bool {
@@ -2011,12 +2015,10 @@ func Parser__parse_struct(self: Parser*) -> Parsed_Statement* {
     return struct_statement.as(Parsed_Statement*)
 }
 
-\ opaque_type
-\   | "external" "struct" IDENTIFIER
-func Parser__parse_opaque_type(self: Parser*) -> Parsed_Statement* {
-    Parser__consume_token(self, Token__is_external)
-    Parser__consume_space(self, 1.as(u16))
-    Parser__consume_token(self, Token__is_struct)
+\ external_type
+\   | "type" IDENTIFIER
+func Parser__parse_external_type(self: Parser*) -> Parsed_Statement* {
+    Parser__consume_token(self, Token__is_type)
     Parser__consume_space(self, 1.as(u16))
     let name = Parser__consume_token(self, Token__is_identifier)
     return Parsed_Opaque_Type_Statement__create(name.location, name).as(Parsed_Statement*)
@@ -2108,7 +2110,7 @@ func Parser__parse_type(self: Parser*) -> Parsed_Type* {
 }
 
 \ variable
-\      | "let" IDENTIFIER ( ":" type )? "=" ( "external" | "undefined" | expression )
+\      | "let" IDENTIFIER ( ":" type )? "=" ( "undefined" | expression )
 func Parser__parse_variable(self: Parser*) -> Parsed_Statement* {
     Parser__consume_token(self, Token__is_let)
     Parser__consume_space(self, 1.as(u16))
@@ -2124,23 +2126,27 @@ func Parser__parse_variable(self: Parser*) -> Parsed_Statement* {
     Parser__consume_token(self, Token__is_equals)
     Parser__consume_space(self, 1.as(u16))
 
-    let is_external: bool = undefined
     let value_expression: Parsed_Expression* = undefined
-    if (Parser__matches_one(self, Token__is_external)) {
-        Parser__consume_token(self, Token__is_external)
-        value_expression = null
-        is_external = true
-    } else if (Parser__matches_one(self, Token__is_undefined)) {
+    if (Parser__matches_one(self, Token__is_undefined)) {
         Parser__consume_token(self, Token__is_undefined)
         value_expression = null
-        is_external = false
     } else {
         value_expression = Parser__parse_expression(self)
-        is_external = false
     }
-    let variable_statement = Parsed_Variable_Statement__create(name.location, name, type, is_external)
+    let variable_statement = Parsed_Variable_Statement__create(name.location, name, type, false)
     variable_statement.expression = value_expression
     return variable_statement.as(Parsed_Statement*)
+}
+
+\ external_variable
+\      | IDENTIFIER ":" type
+func Parser__parse_external_variable(self: Parser*) -> Parsed_Statement* {
+    let name = Parser__consume_token(self, Token__is_identifier)
+    Parser__consume_space(self, 0.as(u16))
+    Parser__consume_token(self, Token__is_colon)
+    Parser__consume_space(self, 1.as(u16))
+    let type = Parser__parse_type(self)
+    return Parsed_Variable_Statement__create(name.location, name, type, true).as(Parsed_Statement*)
 }
 
 \ block
@@ -2210,10 +2216,8 @@ func Parser__parse_function(self: Parser*) -> Parsed_Statement* {
 }
 
 \ external_function
-\   | "external" "func" IDENTIFIER "(" function_parameter* ")" ":" type
+\   | "func" IDENTIFIER "(" function_parameter* ")" ":" type
 func Parser__parse_external_function(self: Parser*) -> Parsed_Statement* {
-    Parser__consume_token(self, Token__is_external)
-    Parser__consume_space(self, 1.as(u16))
     Parser__consume_token(self, Token__is_func)
     Parser__consume_space(self, 1.as(u16))
     let name = Parser__consume_token(self, Token__is_identifier)
@@ -2305,12 +2309,11 @@ func Parser__parse_while_statement(self: Parser*) -> Parsed_Statement* {
 
 \ statement
 \   | enum
+\   | "external" ( external_function | external_type | external_variable )
 \   | function
 \   | if
-\   | opaque_type
 \   | return
 \   | struct
-\   | type_alias
 \   | variable
 func Parser__parse_statement(self: Parser*) -> Parsed_Statement* {
     Parser__consume_space(self, self.current_identation * 4.as(u16))
@@ -2335,16 +2338,8 @@ func Parser__parse_statement(self: Parser*) -> Parsed_Statement* {
         return Parser__parse_variable(self)
     }
 
-    if (Parser__matches_three(self, Token__is_external, true, Token__is_space, true, Token__is_func)) {
-        return Parser__parse_external_function(self)
-    }
-
     if (Parser__matches_one(self, Token__is_func)) {
         return Parser__parse_function(self)
-    }
-
-    if (Parser__matches_three(self, Token__is_external, true, Token__is_space, true, Token__is_struct)) {
-        return Parser__parse_opaque_type(self)
     }
 
     if (Parser__matches_one(self, Token__is_struct)) {
@@ -2353,6 +2348,18 @@ func Parser__parse_statement(self: Parser*) -> Parsed_Statement* {
 
     if (Parser__matches_one(self, Token__is_enum)) {
         return Parser__parse_enum(self)
+    }
+
+    if (Parser__matches_one(self, Token__is_external)) {
+        let location = Parser__consume_token(self, Token__is_external).location
+        Parser__consume_space(self, 1.as(u16))
+        if (Parser__matches_one(self, Token__is_func)) {
+            return Parser__parse_external_function(self)
+        }
+        if (Parser__matches_one(self, Token__is_type)) {
+            return Parser__parse_external_type(self)
+        }
+        return Parser__parse_external_variable(self)
     }
 
     let expression = Parser__parse_access_expression(self)

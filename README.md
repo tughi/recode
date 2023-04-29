@@ -7,6 +7,7 @@ A compiler for the _Code_ language.
 - [X] Implement self-hosted minimal _C_ compiler
   - See [bootstrap/c-compiler](https://github.com/tughi/recode/tree/bootstrap/c-compiler) tag
 - [ ] Translate compiler to _Code_
+  - TODO: Implement function overloading
   - TODO: Implement while loop unsing ifs and gotos
   - TODO: Implement closures (functions with context)
   - TODO: Treat string literals as local String instances

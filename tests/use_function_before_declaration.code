@@ -1,10 +1,8 @@
 \ Expect:
 \ - output: 'PASS\n'
 
-external struct File
-
-let stdout: File* = external
-
+external type File
+external stdout: File*
 external func fputs(s: char*, stream: File*) -> i32
 
 func main() -> i32 {

@@ -1,4 +1,4 @@
 \ Expect:
-\ - error: 'tests/external_variable_without_type.code:4:5: Unknown variable type\n'
+\ - error: 'tests/external_variable_without_type.code:4:15: Unexpected token\n'
 
-let value = external
+external value
