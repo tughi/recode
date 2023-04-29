@@ -1,0 +1,105 @@
+\ Expect:
+\ - output: ''
+
+func main() -> i32 {
+    let check1 = true
+    let check2 = false
+    let check3 = true
+    let check4 = false
+    let check5 = true
+    let check6 = false
+
+    if (check1) {
+        \ pass
+    } else {
+        return 1
+    }
+
+    if (!check1) {
+        return 2
+    }
+
+    if (check2) {
+        return 3
+    }
+
+    if (!check2) {
+        \ pass
+    } else {
+        return 4
+    }
+
+    if (check1 && check2) {
+        return 5
+    }
+
+    if (!(check1 && check2)) {
+        \ pass
+    } else {
+        return 6
+    }
+
+    if (!(!(check1 && check2))) {
+        return 7
+    } else {
+        \ pass
+    }
+
+    if (check1 || check2) {
+        \ pass
+    } else {
+        return 8
+    }
+
+    if (!(check1 || check2)) {
+        return 9
+    } else {
+        \ pass
+    }
+
+    if ((check1 && check2) || (check3 && check4)) {
+        return 10
+    }
+
+    if ((check2 && check4) || (check1 && check3)) {
+        \ pass
+    } else {
+        return 11
+    }
+
+    if ((check1 && (check2 || check3) && check4)) {
+        return 12
+    } else {
+        \ pass
+    }
+
+    if ((check1 || check2) && (check3 || check4)) {
+        \ pass
+    } else {
+        return 13
+    }
+
+    if ((check1 || check4) && (check2 || check3)) {
+        \ pass
+    } else {
+        return 14
+    }
+
+    if ((check2 || (check3 && check4) || check5)) {
+        \ pass
+    } else {
+        return 15
+    }
+
+    if ((((check1 && check2) || (check3 && check4)) && check5) || check6) {
+        return 16
+    } else {
+        \\ pass
+    }
+
+    if ((check1 && check2) || (((check3 && check4) || check6) && check5)) {
+        return 17
+    }
+
+    return 0
+}

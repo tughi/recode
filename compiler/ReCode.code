@@ -259,12 +259,14 @@ func String__append_source_location(self: String*, location: Source_Location*) -
 }
 
 func File__write_source_location(self: File*, location: Source_Location*) -> void {
-    File__write_cstring(self, location.source.path)
-    File__write_char(self, ':')
-    File__write_i32(self, location.line.as(i32))
-    File__write_char(self, ':')
-    File__write_i32(self, location.column.as(i32))
-    File__write_cstring(self, ": ")
+    if (location != null) {
+        File__write_cstring(self, location.source.path)
+        File__write_char(self, ':')
+        File__write_i32(self, location.line.as(i32))
+        File__write_char(self, ':')
+        File__write_i32(self, location.column.as(i32))
+        File__write_cstring(self, ": ")
+    }
 }
 
 func Source_Location__error(self: Source_Location*, message: String*) -> void {
@@ -2261,7 +2263,7 @@ func Parser__parse_break_statement(self: Parser*) -> Parsed_Statement* {
 }
 
 \ if
-\      | "if" "(" expression ")" statement ( "else" statement )?
+\      | "if" "(" expression ")" block_statement ( "else" ( if | block_statement ) )?
 func Parser__parse_if_statement(self: Parser*) -> Parsed_Statement* {
     let location = Parser__consume_token(self, Token__is_if).location
     Parser__consume_space(self, 1.as(u16))
@@ -3351,7 +3353,9 @@ enum Checked_Statement_Kind {
     BLOCK
     BREAK
     EXPRESSION
+    GOTO
     IF
+    LABEL
     RETURN
     VARIABLE
     WHILE
@@ -3386,12 +3390,14 @@ func Checked_Assignment_Statement__create(location: Source_Location*, object_exp
 
 struct Checked_Block_Statement {
     super: Checked_Statement
-    statements: Checked_Statements*
+    context: Checker_Context*
+    label: String*
 }
 
-func Checked_Block_Statement__create(location: Source_Location*, statements: Checked_Statements*) -> Checked_Block_Statement* {
+func Checked_Block_Statement__create(location: Source_Location*, context: Checker_Context*, label: String*) -> Checked_Block_Statement* {
     let statement = Checked_Statement__create_kind(Checked_Statement_Kind.BLOCK, sizeof(Checked_Block_Statement), location).as(Checked_Block_Statement*)
-    statement.statements = statements
+    statement.context = context
+    statement.label = label
     return statement
 }
 
@@ -3414,6 +3420,17 @@ func Checked_Expression_Statement__create(location: Source_Location*, expression
     return statement
 }
 
+struct Checked_Goto_Statement {
+    super: Checked_Statement
+    label: String*
+}
+
+func Checked_Goto_Statement__create(location: Source_Location*, label: String*) -> Checked_Goto_Statement* {
+    let statement = Checked_Statement__create_kind(Checked_Statement_Kind.GOTO, sizeof(Checked_Goto_Statement), location).as(Checked_Goto_Statement*)
+    statement.label = label
+    return statement
+}
+
 struct Checked_If_Statement {
     super: Checked_Statement
     condition_expression: Checked_Expression*
@@ -3426,6 +3443,17 @@ func Checked_If_Statement__create(location: Source_Location*, condition_expressi
     statement.condition_expression = condition_expression
     statement.true_statement = true_statement
     statement.false_statement = false_statement
+    return statement
+}
+
+struct Checked_Label_Statement {
+    super: Checked_Statement
+    label: String*
+}
+
+func Checked_Label_Statement__create(location: Source_Location*, label: String*) -> Checked_Label_Statement* {
+    let statement = Checked_Statement__create_kind(Checked_Statement_Kind.LABEL, sizeof(Checked_Label_Statement), location).as(Checked_Label_Statement*)
+    statement.label = label
     return statement
 }
 
@@ -3504,19 +3532,46 @@ struct Checked_Source {
 \   Checker
 \ ---------------------------------------------------------------------------------------------------------------------
 
+struct Checker_Context {
+    parent: Checker_Context*
+    symbols: Checked_Symbols*
+    statements: Checked_Statements*
+
+    function_counter: Counter*
+    function_return_type: Checked_Type*
+}
+
+func Checker_Context__create(parent: Checker_Context*) -> Checker_Context* {
+    let context = malloc(sizeof(Checker_Context)).as(Checker_Context*)
+    context.parent = parent
+    if (parent == null) {
+        context.symbols = Checked_Symbols__create(null)
+        context.function_counter = Counter__create()
+        context.function_return_type = null
+    } else {
+        context.symbols = Checked_Symbols__create(parent.symbols)
+        context.function_counter = parent.function_counter
+        context.function_return_type = parent.function_return_type
+    }
+    context.statements = Checked_Statements__create(context.symbols)
+    return context
+}
+
 struct Checker {
     first_type: Checked_Named_Type*
     last_type: Checked_Named_Type*
     last_builting_type: Checked_Named_Type*
-    symbols: Checked_Symbols*
-    return_type: Checked_Type*
+
+    root_context: Checker_Context*
+    current_context: Checker_Context*
 }
 
 func Checker__create() -> Checker* {
     let checker = malloc(sizeof(Checker)).as(Checker*)
     checker.first_type = null
     checker.last_type = null
-    checker.symbols = Checked_Symbols__create(null)
+    checker.root_context = Checker_Context__create(null)
+    checker.current_context = checker.root_context
 
     let location = Source_Location__create(null, 0.as(u16), 1.as(u16))
     Checker__append_type(checker, Checked_Named_Type__create_kind(Checked_Type_Kind.BOOL, sizeof(Checked_Named_Type), location, String__create_from("bool")))
@@ -3545,7 +3600,7 @@ func Checker__append_type(self: Checker*, type: Checked_Named_Type*) -> void {
     }
     self.last_type = type
 
-    Checked_Symbols__append_symbol(self.symbols, Checked_Type_Symbol__create(type.location, type.name, type).as(Checked_Symbol*))
+    Checked_Symbols__append_symbol(self.root_context.symbols, Checked_Type_Symbol__create(type.location, type.name, type).as(Checked_Symbol*))
 }
 
 func Checker__find_type(self: Checker*, name: String*) -> Checked_Named_Type* {
@@ -3668,6 +3723,9 @@ func Checker__check_call_expression(self: Checker*, parsed_expression: Parsed_Ca
         while (function_parameter != null && parsed_argument != null) {
             let argument_expression = Checker__check_expression(self, parsed_argument.expression)
             Checked_Type__expect_same_type(function_parameter.type, argument_expression.type, argument_expression.location)
+            if (argument_expression.kind == Checked_Expression_Kind.SYMBOL && argument_expression.as(Checked_Symbol_Expression*).symbol.kind == Checked_Symbol_Kind.FUNCTION) {
+                TODO("Create callable expression stored in a temp variable")
+            }
             let argument = Checked_Call_Argument__create(argument_expression)
             if (last_argument == null) {
                 first_argument = argument
@@ -3914,7 +3972,7 @@ func Checker__check_substract_expression(self: Checker*, parsed_expression: Pars
 }
 
 func Checker__check_symbol_expression(self: Checker*, parsed_expression: Parsed_Symbol_Expression*) -> Checked_Expression* {
-    let symbol = Checked_Symbols__find_symbol(self.symbols, parsed_expression.name.lexeme)
+    let symbol = Checked_Symbols__find_symbol(self.current_context.symbols, parsed_expression.name.lexeme)
     if (symbol == null) {
         Token__error(parsed_expression.name, String__create_from("Undefined symbol"))
         abort()
@@ -3986,7 +4044,7 @@ func Checker__check_expression(self: Checker*, parsed_expression: Parsed_Express
     } else if (parsed_expression.kind == Parsed_Expression_Kind.SYMBOL) {
         return Checker__check_symbol_expression(self, parsed_expression.as(Parsed_Symbol_Expression*))
     }
-    Source_Location__error(parsed_expression.location, String__create_from("Unsupported expression kind"))
+    Source_Location__error(parsed_expression.location, String__append_i16(String__create_from("Unsupported expression kind: "), parsed_expression.kind.as(i16)))
     abort()
 }
 
@@ -4000,7 +4058,7 @@ func Checker__check_enum_statement(self: Checker*, parsed_statement: Parsed_Enum
         let enum_member = Checked_Enum_Member__create(parsed_enum_member.name.location, parsed_enum_member.name.lexeme)
         let enum_member_symbol_name = String__append_string(String__append_cstring(String__append_string(String__create(), enum_type.name), "__"), enum_member.name)
         enum_member.symbol = Checked_Enum_Member_Symbol__create(enum_member.location, enum_member_symbol_name, enum_type.as(Checked_Type*)).as(Checked_Symbol*)
-        Checked_Symbols__append_symbol(self.symbols, enum_member.symbol)
+        Checked_Symbols__append_symbol(self.root_context.symbols, enum_member.symbol)
         if (last_enum_member == null) {
             enum_type.first_member = enum_member
         } else {
@@ -4085,8 +4143,11 @@ func Checker__check_assignment_statement(self: Checker*, parsed_statement: Parse
 }
 
 func Checker__check_block_statement(self: Checker*, parsed_statement: Parsed_Block_Statement*) -> Checked_Block_Statement* {
-    let statements = Checker__check_statements(self, parsed_statement.statements)
-    return Checked_Block_Statement__create(parsed_statement.location, statements)
+    let context = Checker_Context__create(self.current_context)
+    self.current_context = context
+    Checker__check_statements(self, parsed_statement.statements)
+    self.current_context = context.parent
+    return Checked_Block_Statement__create(parsed_statement.location, context, null)
 }
 
 func Checker__check_break_statement(self: Checker*, parsed_statement: Parsed_Break_Statement*) -> Checked_Break_Statement* {
@@ -4101,23 +4162,87 @@ func Checker__check_expression_statement(self: Checker*, parsed_statement: Parse
     return Checked_Expression_Statement__create(parsed_statement.location, expression)
 }
 
-func Checker__check_if_statement(self: Checker*, parsed_statement: Parsed_If_Statement*) -> Checked_If_Statement* {
-    let considition_expression = Checker__check_expression(self, parsed_statement.condition_expression)
-    Checked_Type__expect_same_type(Checker__get_builtin_type(self, Checked_Type_Kind.BOOL).as(Checked_Type*), considition_expression.type, considition_expression.location)
-    let true_statement = Checker__check_statement(self, parsed_statement.true_statement)
-    let false_statement: Checked_Statement* = null
+func Checker__check_if_statement(self: Checker*, parsed_statement: Parsed_If_Statement*) -> Checked_Statement* {
+    let labels_count = Counter__next(self.current_context.function_counter)
+    let wrapper_label = String__append_i16(String__create_from("if__start__"), labels_count)
+    let wrapper_end_label = String__append_i16(String__create_from("if__end__"), labels_count)
+    let then_label = String__append_i16(String__create_from("if__then__"), labels_count)
+    let else_label = wrapper_end_label
     if (parsed_statement.false_statement != null) {
-        false_statement = Checker__check_statement(self, parsed_statement.false_statement)
+        else_label = String__append_i16(String__create_from("if__else__"), labels_count)
     }
-    return Checked_If_Statement__create(parsed_statement.location, considition_expression, true_statement, false_statement)
+
+    let wrapper_context = Checker_Context__create(self.current_context)
+    self.current_context = wrapper_context
+
+    let wrapper_block = Checked_Block_Statement__create(parsed_statement.location, wrapper_context, wrapper_label)
+
+    let then_block = Checker__check_if_condition(self, parsed_statement.condition_expression, then_label, else_label)
+
+    let current_context = self.current_context
+    self.current_context = then_block.context
+    Checked_Statements__append(then_block.context.statements, Checker__check_statement(self, parsed_statement.true_statement))
+    Checked_Statements__append(then_block.context.statements, Checked_Goto_Statement__create(null, wrapper_end_label).as(Checked_Statement*))
+    self.current_context = current_context
+
+    if (parsed_statement.false_statement != null) {
+        Checked_Statements__append(wrapper_block.context.statements, Checked_Label_Statement__create(null, else_label).as(Checked_Statement*))
+        Checked_Statements__append(wrapper_block.context.statements, Checker__check_statement(self, parsed_statement.false_statement))
+    }
+
+    Checked_Statements__append(wrapper_block.context.statements, Checked_Label_Statement__create(null, wrapper_end_label).as(Checked_Statement*))
+
+    self.current_context = wrapper_context.parent
+
+    return wrapper_block.as(Checked_Statement*)
+}
+
+\ This function appends ifs and gotos in the current block and returns a block for the true statement
+func Checker__check_if_condition(self: Checker*, parsed_expression: Parsed_Expression*, then_label: String*, else_label: String*) -> Checked_Block_Statement* {
+    let initial_context = self.current_context
+    let then_block: Checked_Block_Statement* = undefined
+    if (parsed_expression.kind == Parsed_Expression_Kind.LOGIC_AND) {
+        let parsed_binary_expression = parsed_expression.as(Parsed_Logic_And_Expression*)
+        let first_expression_block = Checker__check_if_condition(self, parsed_binary_expression.left_expression, then_label, else_label)
+        self.current_context = first_expression_block.context
+        then_block = Checker__check_if_condition(self, parsed_binary_expression.right_expression, then_label, else_label)
+    } else if (parsed_expression.kind == Parsed_Expression_Kind.LOGIC_OR) {
+        let parsed_binary_expression = parsed_expression.as(Parsed_Logic_Or_Expression*)
+        let new_then_label = String__append_i16(String__append_cstring(String__append_string(String__create(), then_label), "__"), Counter__next(self.current_context.function_counter))
+        let first_expression_block = Checker__check_if_condition(self, Parsed_Not_Expression__create(null, parsed_binary_expression.left_expression).as(Parsed_Expression*), else_label, new_then_label)
+        self.current_context = first_expression_block.context
+        let second_expression_block = Checker__check_if_condition(self, Parsed_Not_Expression__create(null, parsed_binary_expression.right_expression).as(Parsed_Expression*), else_label, new_then_label)
+        Checked_Statements__append(second_expression_block.context.statements, Checked_Goto_Statement__create(null, else_label).as(Checked_Statement*))
+        then_block = Checked_Block_Statement__create(null, Checker_Context__create(initial_context), new_then_label)
+        Checked_Statements__append(initial_context.statements, then_block.as(Checked_Statement*))
+    } else if (parsed_expression.kind == Parsed_Expression_Kind.GROUP) {
+        then_block = Checker__check_if_condition(self, parsed_expression.as(Parsed_Group_Expression*).other_expression, then_label, else_label)
+    } else if (parsed_expression.kind == Parsed_Expression_Kind.NOT && parsed_expression.as(Parsed_Not_Expression*).other_expression.kind == Parsed_Expression_Kind.GROUP) {
+        then_block = Checker__check_if_condition(self, Parsed_Not_Expression__create(null, parsed_expression.as(Parsed_Not_Expression*).other_expression.as(Parsed_Group_Expression*).other_expression).as(Parsed_Expression*), then_label, else_label)
+    } else if (parsed_expression.kind == Parsed_Expression_Kind.NOT && parsed_expression.as(Parsed_Not_Expression*).other_expression.kind == Parsed_Expression_Kind.NOT) {
+        then_block = Checker__check_if_condition(self, parsed_expression.as(Parsed_Not_Expression*).other_expression.as(Parsed_Not_Expression*).other_expression, then_label, else_label)
+    } else if (parsed_expression.kind == Parsed_Expression_Kind.NOT && parsed_expression.as(Parsed_Not_Expression*).other_expression.kind == Parsed_Expression_Kind.LOGIC_OR) {
+        let parsed_binary_expression = parsed_expression.as(Parsed_Not_Expression*).other_expression.as(Parsed_Logic_Or_Expression*)
+        then_block = Checker__check_if_condition(self, Parsed_Logic_And_Expression__create(Parsed_Not_Expression__create(null, parsed_binary_expression.left_expression).as(Parsed_Expression*), Parsed_Not_Expression__create(null, parsed_binary_expression.right_expression).as(Parsed_Expression*)).as(Parsed_Expression*), then_label, else_label)
+    } else if (parsed_expression.kind == Parsed_Expression_Kind.NOT && parsed_expression.as(Parsed_Not_Expression*).other_expression.kind == Parsed_Expression_Kind.LOGIC_AND) {
+        let parsed_binary_expression = parsed_expression.as(Parsed_Not_Expression*).other_expression.as(Parsed_Logic_And_Expression*)
+        then_block = Checker__check_if_condition(self, Parsed_Logic_Or_Expression__create(Parsed_Not_Expression__create(null, parsed_binary_expression.left_expression).as(Parsed_Expression*), Parsed_Not_Expression__create(null, parsed_binary_expression.right_expression).as(Parsed_Expression*)).as(Parsed_Expression*), then_label, else_label)
+    } else {
+        let checked_expression = Checker__check_expression(self, parsed_expression)
+        Checked_Type__expect_same_type(Checker__get_builtin_type(self, Checked_Type_Kind.BOOL).as(Checked_Type*), checked_expression.type, checked_expression.location)
+        then_block = Checked_Block_Statement__create(null, Checker_Context__create(self.current_context), null)
+        Checked_Statements__append(self.current_context.statements, Checked_If_Statement__create(null, checked_expression, then_block.as(Checked_Statement*), null).as(Checked_Statement*))
+    }
+    self.current_context = initial_context
+    return then_block
 }
 
 func Checker__check_return_statement(self: Checker*, parsed_statement: Parsed_Return_Statement*) -> Checked_Return_Statement* {
     let expression: Checked_Expression* = null
     if (parsed_statement.expression != null) {
         expression = Checker__check_expression(self, parsed_statement.expression)
-        Checked_Type__expect_same_type(self.return_type, expression.type, expression.location)
-    } else if (self.return_type.kind != Checked_Type_Kind.VOID) {
+        Checked_Type__expect_same_type(self.current_context.function_return_type, expression.type, expression.location)
+    } else if (self.current_context.function_return_type.kind != Checked_Type_Kind.VOID) {
         Source_Location__error(parsed_statement.location, String__create_from("Missing expression"))
         abort()
     }
@@ -4150,15 +4275,15 @@ func Checker__check_variable_statement(self: Checker*, parsed_statement: Parsed_
         abort()
     }
     let variable = Checked_Variable__create(parsed_statement.name.location, parsed_statement.name.lexeme, type)
-    Checked_Symbols__append_symbol(self.symbols, variable.as(Checked_Symbol*))
+    Checked_Symbols__append_symbol(self.current_context.symbols, variable.as(Checked_Symbol*))
     return Checked_Variable_Statement__create(parsed_statement.location, variable, expression, parsed_statement.is_external)
 }
 
 func Checker__check_while_statement(self: Checker*, parsed_statement: Parsed_While_Statement*) -> Checked_While_Statement* {
-    let considition_expression = Checker__check_expression(self, parsed_statement.condition_expression)
-    Checked_Type__expect_same_type(Checker__get_builtin_type(self, Checked_Type_Kind.BOOL).as(Checked_Type*), considition_expression.type, considition_expression.location)
+    let condition_expression = Checker__check_expression(self, parsed_statement.condition_expression)
+    Checked_Type__expect_same_type(Checker__get_builtin_type(self, Checked_Type_Kind.BOOL).as(Checked_Type*), condition_expression.type, condition_expression.location)
     let body_statement = Checker__check_statement(self, parsed_statement.body_statement)
-    return Checked_While_Statement__create(parsed_statement.location, considition_expression, body_statement)
+    return Checked_While_Statement__create(parsed_statement.location, condition_expression, body_statement)
 }
 
 func Checker__check_function_declaration(self: Checker*, parsed_statement: Parsed_Function_Statement*) -> void {
@@ -4179,7 +4304,7 @@ func Checker__check_function_declaration(self: Checker*, parsed_statement: Parse
     }
     let function_type = Checked_Function_Type__create(parsed_statement.location, function_first_parameter, function_return_type)
 
-    let other_symbol = Checked_Symbols__find_sibling_symbol(self.symbols, function_name)
+    let other_symbol = Checked_Symbols__find_sibling_symbol(self.root_context.symbols, function_name)
     if (other_symbol != null) {
         if (other_symbol.kind != Checked_Symbol_Kind.FUNCTION || !Checked_Type__equals(function_type.as(Checked_Type*), other_symbol.as(Checked_Function_Symbol*).function_type.as(Checked_Type*))) {
             TODO("Report overloaded function")
@@ -4189,7 +4314,7 @@ func Checker__check_function_declaration(self: Checker*, parsed_statement: Parse
             abort()
         }
     } else {
-        Checked_Symbols__append_symbol(self.symbols, Checked_Function_Symbol__create(parsed_statement.name.location, function_name, function_type).as(Checked_Symbol*))
+        Checked_Symbols__append_symbol(self.root_context.symbols, Checked_Function_Symbol__create(parsed_statement.name.location, function_name, function_type).as(Checked_Symbol*))
     }
 }
 
@@ -4203,7 +4328,7 @@ func Checker__check_statement(self: Checker*, parsed_statement: Parsed_Statement
     } else if (parsed_statement.kind == Parsed_Statement_Kind.EXPRESSION) {
         return Checker__check_expression_statement(self, parsed_statement.as(Parsed_Expression_Statement*)).as(Checked_Statement*)
     } else if (parsed_statement.kind == Parsed_Statement_Kind.IF) {
-        return Checker__check_if_statement(self, parsed_statement.as(Parsed_If_Statement*)).as(Checked_Statement*)
+        return Checker__check_if_statement(self, parsed_statement.as(Parsed_If_Statement*))
     } else if (parsed_statement.kind == Parsed_Statement_Kind.RETURN) {
         return Checker__check_return_statement(self, parsed_statement.as(Parsed_Return_Statement*)).as(Checked_Statement*)
     } else if (parsed_statement.kind == Parsed_Statement_Kind.VARIABLE) {
@@ -4215,56 +4340,46 @@ func Checker__check_statement(self: Checker*, parsed_statement: Parsed_Statement
     abort()
 }
 
-func Checker__check_statements(self: Checker*, parsed_statements: Parsed_Statements*) -> Checked_Statements* {
-    \ Create and push block symbols
-    self.symbols = Checked_Symbols__create(self.symbols)
-
-    let checked_statements = Checked_Statements__create(self.symbols)
+func Checker__check_statements(self: Checker*, parsed_statements: Parsed_Statements*) -> void {
     let parsed_statement = parsed_statements.first_statement
     while (parsed_statement != null) {
         let checked_statement = Checker__check_statement(self, parsed_statement)
-        Checked_Statements__append(checked_statements, checked_statement)
+        Checked_Statements__append(self.current_context.statements, checked_statement)
         parsed_statement = parsed_statement.next_statement
     }
-
-    \ Pop block symbols
-    self.symbols = self.symbols.parent
-
-    return checked_statements
 }
 
 func Checker__check_function_definition(self: Checker*, parsed_statement: Parsed_Function_Statement*) -> void {
-    let symbol = Checked_Symbols__find_sibling_symbol(self.symbols, parsed_statement.name.lexeme)
+    let symbol = Checked_Symbols__find_sibling_symbol(self.root_context.symbols, parsed_statement.name.lexeme)
     if (symbol == null || symbol.kind != Checked_Symbol_Kind.FUNCTION) {
         TODO("Report missing function symbol")
         abort()
     }
     let function_symbol = symbol.as(Checked_Function_Symbol*)
     let function_type = function_symbol.function_type
-    self.return_type = function_type.return_type
 
-    \ Create and push function symbols
-    self.symbols = Checked_Symbols__create(self.symbols)
+    let function_context = Checker_Context__create(self.current_context)
+    function_context.function_return_type = function_type.return_type
+    Counter__reset(function_context.function_counter)
 
     if (function_type.first_parameter != null) {
         \ Create a symbol for each function parameter
         let parameter = function_type.first_parameter
         while (parameter != null) {
-            Checked_Symbols__append_symbol(self.symbols, Checked_Function_Parameter_Symbol__create(parameter.location, parameter.name, parameter.type).as(Checked_Symbol*))
+            Checked_Symbols__append_symbol(function_context.symbols, Checked_Function_Parameter_Symbol__create(parameter.location, parameter.name, parameter.type).as(Checked_Symbol*))
             parameter = parameter.next_parameter
         }
     }
 
-    \ Check statements
-    function_symbol.checked_statements = Checker__check_statements(self, parsed_statement.statements)
+    let context = Checker_Context__create(function_context)
+    self.current_context = context
+    Checker__check_statements(self, parsed_statement.statements)
+    self.current_context = function_context.parent
 
-    \ Pop function symbols
-    self.symbols = self.symbols.parent
+    function_symbol.checked_statements = context.statements \ TODO: use context instead
 }
 
 func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Checked_Source* {
-    let checked_statements = Checked_Statements__create(self.symbols)
-
     let parsed_statement: Parsed_Statement* = undefined
 
     \ Collect all type definitions
@@ -4286,7 +4401,7 @@ func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Che
             abort()
         }
         if (checked_statement != null) {
-            Checked_Statements__append(checked_statements, checked_statement)
+            Checked_Statements__append(self.current_context.statements, checked_statement)
         }
         parsed_statement = parsed_statement.next_statement
     }
@@ -4319,7 +4434,7 @@ func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Che
             abort()
         }
         if (checked_statement != null) {
-            Checked_Statements__append(checked_statements, checked_statement)
+            Checked_Statements__append(self.current_context.statements, checked_statement)
         }
         parsed_statement = parsed_statement.next_statement
     }
@@ -4348,8 +4463,8 @@ func Checker__check_source(self: Checker*, parsed_source: Parsed_Source*) -> Che
     }
 
     let checked_source = malloc(sizeof(Checked_Source)).as(Checked_Source*)
-    checked_source.first_symbol = self.symbols.first_symbol
-    checked_source.statements = checked_statements
+    checked_source.first_symbol = self.current_context.symbols.first_symbol
+    checked_source.statements = self.current_context.statements
     return checked_source
 }
 
@@ -4369,11 +4484,13 @@ struct Generator {
 }
 
 func Generator__write_source_location(self: Generator*, location: Source_Location*) -> void {
-    File__write_cstring(self.file, "#line ")
-    File__write_i32(self.file, location.line.as(i32))
-    File__write_cstring(self.file, " \"")
-    File__write_cstring(self.file, location.source.path)
-    File__write_cstring(self.file, "\"\n")
+    if (location != null) {
+        File__write_cstring(self.file, "#line ")
+        File__write_i32(self.file, location.line.as(i32))
+        File__write_cstring(self.file, " \"")
+        File__write_cstring(self.file, location.source.path)
+        File__write_cstring(self.file, "\"\n")
+    }
 }
 
 func Generator__generate_add_expression(self: Generator*, expression: Checked_Add_Expression*) -> void {
@@ -4557,8 +4674,9 @@ func Generator__generate_multiply_expression(self: Generator*, expression: Check
 }
 
 func Generator__generate_not_expression(self: Generator*, expression: Checked_Not_Expression*) -> void {
-    File__write_cstring(self.file, "!")
+    File__write_cstring(self.file, "!(")
     Generator__generate_expression(self, expression.other_expression)
+    File__write_char(self.file, ')')
 }
 
 func Generator__generate_not_equals_expression(self: Generator*, expression: Checked_Not_Equals_Expression*) -> void {
@@ -4678,10 +4796,19 @@ func Generator__generate_assignment_statement(self: Generator*, statement: Check
 }
 
 func Generator__generate_block_statement(self: Generator*, statement: Checked_Block_Statement*) -> void {
-    File__write_cstring(self.file, "{\n")
-    Generator__generate_statements(self, statement.statements)
-    Generator__write_identation(self)
-    File__write_cstring(self.file, "}")
+    if (statement.label != null) {
+        File__write_string(self.file, statement.label)
+        File__write_cstring(self.file, ": ")
+    }
+    File__write_char(self.file, '{')
+    Generator__generate_statements(self, statement.context.statements)
+    if (statement.location != null) {
+        File__write_char(self.file, '\n')
+        Generator__write_identation(self)
+        File__write_char(self.file, '}')
+    } else {
+        File__write_cstring(self.file, " }")
+    }
 }
 
 func Generator__generate_break_statement(self: Generator*, statement: Checked_Break_Statement*) -> void {
@@ -4693,6 +4820,12 @@ func Generator__generate_expression_statement(self: Generator*, statement: Check
     File__write_cstring(self.file, ";")
 }
 
+func Generator__generate_goto_statement(self: Generator*, statement: Checked_Goto_Statement*) -> void {
+    File__write_cstring(self.file, "goto ")
+    File__write_string(self.file, statement.label)
+    File__write_char(self.file, ';')
+}
+
 func Generator__generate_if_statement(self: Generator*, statement: Checked_If_Statement*) -> void {
     File__write_cstring(self.file, "if (")
     Generator__generate_expression(self, statement.condition_expression)
@@ -4702,6 +4835,11 @@ func Generator__generate_if_statement(self: Generator*, statement: Checked_If_St
         File__write_cstring(self.file, " else ")
         Generator__generate_statement(self, statement.false_statement)
     }
+}
+
+func Generator__generate_label_statement(self: Generator*, statement: Checked_Label_Statement*) -> void {
+    File__write_string(self.file, statement.label)
+    File__write_cstring(self.file, ": ;")
 }
 
 func Generator__generate_return_statement(self: Generator*, statement: Checked_Return_Statement*) -> void {
@@ -4743,8 +4881,12 @@ func Generator__generate_statement(self: Generator*, statement: Checked_Statemen
         Generator__generate_break_statement(self, statement.as(Checked_Break_Statement*))
     } else if (statement.kind == Checked_Statement_Kind.EXPRESSION) {
         Generator__generate_expression_statement(self, statement.as(Checked_Expression_Statement*))
+    } else if (statement.kind == Checked_Statement_Kind.GOTO) {
+        Generator__generate_goto_statement(self, statement.as(Checked_Goto_Statement*))
     } else if (statement.kind == Checked_Statement_Kind.IF) {
         Generator__generate_if_statement(self, statement.as(Checked_If_Statement*))
+    } else if (statement.kind == Checked_Statement_Kind.LABEL) {
+        Generator__generate_label_statement(self, statement.as(Checked_Label_Statement*))
     } else if (statement.kind == Checked_Statement_Kind.RETURN) {
         Generator__generate_return_statement(self, statement.as(Checked_Return_Statement*))
     } else if (statement.kind == Checked_Statement_Kind.VARIABLE) {
@@ -4762,23 +4904,25 @@ func Generator__generate_statements(self: Generator*, statements: Checked_Statem
 
     let symbol = statements.symbols.first_symbol
     while (symbol != null) {
-        Generator__write_identation(self)
+        File__write_char(self.file, ' ')
         File__write_checked_type(self.file, symbol.type)
         File__write_char(self.file, ' ')
         File__write_string(self.file, symbol.name)
-        File__write_cstring(self.file, ";\n")
+        File__write_cstring(self.file, ";")
         symbol = symbol.next_symbol
     }
 
     let statement = statements.first_statement
     while (statement != null) {
-        Generator__write_source_location(self, statement.location)
-
-        Generator__write_identation(self)
+        if (statement.location != null) {
+            File__write_char(self.file, '\n')
+            Generator__write_source_location(self, statement.location)
+            Generator__write_identation(self)
+        } else {
+            File__write_char(self.file, ' ')
+        }
 
         Generator__generate_statement(self, statement)
-
-        File__write_cstring(self.file, "\n")
 
         statement = statement.next_statement
     }
@@ -4814,7 +4958,7 @@ func Generator__generate_function(self: Generator*, function_symbol: Checked_Fun
     }
     Generator__write_source_location(self, function_symbol.location)
     File__write_checked_function_symbol(self.file, function_symbol)
-    File__write_cstring(self.file, " {\n")
+    File__write_cstring(self.file, " {")
     Generator__generate_statements(self, function_symbol.checked_statements)
     File__write_cstring(self.file, "}\n\n")
 }
@@ -4922,6 +5066,30 @@ func generate(file: File*, checked_source: Checked_Source*) -> void {
         }
         checked_symbol = checked_symbol.next_symbol
     }
+}
+
+\ ---------------------------------------------------------------------------------------------------------------------
+\   Counter
+\ ---------------------------------------------------------------------------------------------------------------------
+
+struct Counter {
+    value: i16
+}
+
+func Counter__create() -> Counter* {
+    let counter = malloc(sizeof(Counter)).as(Counter*)
+    counter.value = 0.as(i16)
+    return counter
+}
+
+func Counter__next(self: Counter*) -> i16 {
+    self.value = self.value + 1.as(i16)
+    return self.value
+}
+
+func Counter__reset(self: Counter*) -> Counter* {
+    self.value = 0.as(i16)
+    return self
 }
 
 \ ---------------------------------------------------------------------------------------------------------------------
