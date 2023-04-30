@@ -1,0 +1,24 @@
+\\ Expect:
+\ - output: ''
+
+define Token = struct {
+    line: u32
+}
+
+define Integer_Token = struct {
+    extends Token
+    value: i32
+}
+
+define main = func () -> i32 {
+    let token: Integer_Token = undefined
+    token.value = 13
+
+    let token_ref = (&token).as(Token*)
+
+    if (token_ref.as(Integer_Token*).value != 13) {
+        return 1
+    }
+
+    return 0.as(i16).as(i32)
+}

@@ -1,0 +1,4 @@
+\\ Expect:
+\ - error: 'tests/external_variable_without_type.code:4:15: Unexpected token\n'
+
+external value

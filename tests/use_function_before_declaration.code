@@ -1,0 +1,21 @@
+\\ Expect:
+\ - output: 'PASS\n'
+
+external type File
+external stdout: File*
+external func fputs(s: char*, stream: File*) -> i32
+
+func main() -> i32 {
+    if (get_answer() == 42) {
+        fputs("PASS\n", stdout)
+    }
+    return 0
+}
+
+func get_answer() -> i32 {
+    return echo_value(42)
+}
+
+func echo_value(value: i32) -> i32 {
+    return value
+}

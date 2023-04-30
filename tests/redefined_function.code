@@ -1,0 +1,14 @@
+\\ Expect:
+\ - error: 'tests/redefined_function.code:12:6: Function declared first here: tests/redefined_function.code:4:6\n'
+
+func get_answer() -> i32 {
+    return 1
+}
+
+func main() -> i32 {
+    let answer: i32 = get_answer()
+}
+
+func get_answer() -> i32 {
+    return 2
+}

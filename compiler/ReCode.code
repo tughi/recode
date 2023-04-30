@@ -1,4 +1,4 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 define main = func (argc: i32, argv: [[i8; ?]; ?]) -> Nothing {
     if (argc < 3) {
@@ -447,7 +447,7 @@ define write = func (file: FILE, expression: AST_Expression) -> FILE {
 include "./code/compiler/Scanner.code"
 
 define abort = func (location: Source_Location, message: String) -> Nothing {
-    stderr.end_line().write(location).write(": ").write(message).end_line()
+    stderr.write(location).write(": ").write(message).end_line()
     abort()
 }
 

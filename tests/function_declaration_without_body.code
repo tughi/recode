@@ -1,0 +1,4 @@
+\\ Expect:
+\ - error: 'tests/function_declaration_without_body.code:4:26: Consumed 0 spaces where 1 were expected\ntests/function_declaration_without_body.code:4:26: Unexpected token\n'
+
+func get_answer() -> void

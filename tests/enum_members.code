@@ -1,0 +1,25 @@
+\\ Expect:
+\ - output: ''
+
+enum Token_Kind {
+    IDENTIFIER
+    NUMBER
+}
+
+enum Expression_Kind {
+    \ Comment
+    IDENTIFIER
+
+    LITERAL
+
+    PLUS
+    MINUS
+    \ Comment
+}
+
+func main() -> i32 {
+    if (Token_Kind.IDENTIFIER == Token_Kind__IDENTIFIER) {
+        return 0
+    }
+    return 1
+}

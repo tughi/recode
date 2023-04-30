@@ -1,133 +1,208 @@
 #!/usr/bin/env python3
 
+import logging
 import os
+import re
 import subprocess
 import sys
 from collections import OrderedDict
 from datetime import datetime
 
+logging.basicConfig(format='[%(asctime)s,%(msecs)03d][%(levelname).1s] %(message)s', datefmt='%H:%M:%S')
 
-def execute(command, echo=True, exit_on_error=True, expected_return_code=0):
-    if echo:
-        print(f"[{datetime.now().time().isoformat(timespec='milliseconds')}] {command}")
-    return_code = subprocess.call(command.split(' '))
-    if return_code != expected_return_code and exit_on_error:
-        exit(return_code)
-    return return_code
+logger = logging.getLogger('ReCode')
+logger.setLevel(logging.DEBUG)
+
+COLOR_DEBUG = '\x1b[2;37m'
+COLOR_ERROR = '\x1b[0;91m'
+COLOR_WARNING = '\x1b[0;93m'
+COLOR_RESET = '\x1b[0m'
 
 
 def clean():
-    execute('rm -fr build')
+    logger.info("Cleaning")
+    run('rm -fr build')
+
+
+def run(command, **kwargs):
+    if isinstance(command, str):
+        command = command.split(' ')
+    logger.debug(f"{COLOR_DEBUG}{' '.join(command)}{COLOR_RESET}")
+    if 'check' not in kwargs:
+        kwargs['check'] = True
+    return subprocess.run(command, **kwargs)
 
 
 def bootstrap():
-    if not os.path.exists('build/stage0'):
-        execute(f'mkdir -p build/stage0')
+    logger.info("Building stage0")
 
-    bootstrap_compiler = 'build/stage0/ReCode'
-    if not os.path.exists(bootstrap_compiler) or os.path.getmtime('bootstrap/ReCode.s') > os.path.getmtime(bootstrap_compiler):
-        execute(f'gcc -no-pie -g -o {bootstrap_compiler} bootstrap/ReCode.s')
+    if not os.path.exists('build/stage0'):
+        run('mkdir -p build/stage0')
+
+    assemble('bootstrap/ReCode.s', 'build/stage0/ReCode')
+
+
+def assemble(source_file, output_file, sdl=False, **kwargs):
+    if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
+        run(['gcc', source_file, '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else [])], **kwargs)
 
 
 def build_stage(n):
+    logger.info(f"Building stage{n}")
+
     if not os.path.exists(f'build/stage{n}'):
-        execute(f'mkdir build/stage{n}')
+        run(f'mkdir build/stage{n}')
 
-    compiler = f'build/stage{n - 1}/ReCode'
-    source_file = f'compiler/ReCode.code'
-    output_file = f'build/stage{n}/ReCode.s'
-    compiler_args = f'{source_file} {output_file}'
-
-    compiler_changed = not os.path.exists(output_file) or os.path.getmtime(output_file) < os.path.getmtime(compiler)
+    compiler_changed = not os.path.exists(f'build/stage{n}/ReCode.s') or os.path.getmtime(f'build/stage{n}/ReCode.s') < os.path.getmtime(f'build/stage{n - 1}/ReCode')
     if not compiler_changed:
-        for root, dirs, files in os.walk(os.path.dirname(source_file)):
+        for root, dirs, files in os.walk('compiler'):
             for file in files:
-                if os.path.getmtime(output_file) < os.path.getmtime(f'{root}/{file}'):
+                if os.path.getmtime(f'build/stage{n}/ReCode.s') < os.path.getmtime(f'{root}/{file}'):
                     compiler_changed = True
                     break
             else:
                 continue
             break
 
-    if compiler_changed:
-        if execute(f'{compiler} {compiler_args}', exit_on_error=False) != 0:
-            subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {compiler_args} &> /dev/null' -ex=bt -ex=quit --args {compiler}''', shell=True)
+    if True or compiler_changed or not os.path.exists(f'build/stage{n}/ReCode'):
+        if run([f'build/stage{n - 1}/ReCode', 'compiler/ReCode.code', f'build/stage{n}/ReCode.s'], check=False).returncode != 0:
+            if os.path.exists(f'build/stage{n}/ReCode.s'):
+                run(f'rm build/stage{n}/ReCode.s')
+            trace(f'build/stage{n - 1}/ReCode', 'compiler/ReCode.code', '-')
             exit(1)
-        execute(f'gcc -no-pie -g -o build/stage{n}/ReCode {output_file}', echo=True)
+        try:
+            assemble(f'build/stage{n}/ReCode.s', f'build/stage{n}/ReCode', check=False)
+        except:
+            if os.path.exists(f'build/stage{n}/ReCode'):
+                execute(f'rm build/stage{n}/ReCode')
+            raise
 
 
-def editor():
-    bootstrap()
-    build_stage(1)
-    build_stage(2)
-    build_stage(3)
+def trace(*command):
+    logger.info(f"Tracing: {' '.join(command)}")
+    subprocess.run(
+        ' '.join([
+            'gdb',
+            command[0],
+            '-batch',
+            '-ex=\'set confirm off\'',
+            '-ex=\'set style enabled on\'',
+            '-ex=\'set print thread-events off\'',
+            f'-ex=\'run {" ".join(command[1:])} 2> /dev/null\'',
+            '-ex=backtrace',
+            '-ex=quit',
+        ]),
+        shell=True,
+    )
 
-    if not os.path.exists(f'build/editor'):
-        execute(f'mkdir build/editor')
 
-    args = f'editor/Editor.code build/editor/Editor.s build/editor/Editor.ir'
-    if execute(f'build/stage3/ReCode {args}', exit_on_error=False) != 0:
-        subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args} &> /dev/null' -ex=bt -ex=quit --args build/stage3/ReCode''', shell=True)
-        print()
-        exit(1)
-    execute(f'gcc build/editor/Editor.s -o build/editor/Editor -no-pie -g -lSDL2', echo=True)
-    subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='set print thread-events off' -ex='run' -ex=bt -ex=quit --args build/editor/Editor''', shell=True)
+def test():
+    if not os.path.exists(f'build/tests'):
+        run(f'mkdir build/tests')
 
-
-def examples():
-    if not os.path.exists(f'build/examples'):
-        execute(f'mkdir build/examples')
-
-    for example in os.listdir('examples'):
-        if not example.endswith('.code'):
+    for test_file_name in os.listdir('tests'):
+        if not test_file_name.endswith('.code'):
             continue
 
-        with open(f'examples/{example}') as example_file:
-            is_program = False
-            for line in example_file:
-                if line.startswith('define main = func ('):
-                    is_program = True
-                    break
-            if not is_program:
+        expected_error = None
+        expected_output = None
+        with open(f'tests/{test_file_name}') as test_file:
+            line = next(test_file)
+            if line == '\\ Expect:\n':
+                line = next(test_file)
+                line_match = re.match(r'\\ - (error|output): (\'.*\')\n', line)
+                if line_match:
+                    if line_match.group(1) == 'error':
+                        expected_error = line_match.group(2)
+                    else:
+                        expected_output = line_match.group(2)
+            elif line == '\\ Skip\n':
+                continue
+            if expected_error is None and expected_output is None:
+                logger.warning(f"{COLOR_WARNING}Skipping unsupported test: tests/{test_file_name}{COLOR_RESET}")
                 continue
 
-        args = f'examples/{example} build/examples/{example[:-5]}.s'
-        if execute(f'build/stage1/ReCode {args}', exit_on_error=False) != 0:
-            subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run {args} &> /dev/null' -ex=bt -ex=quit --args build/stage1/ReCode''', shell=True)
-            print()
-            exit(1)
-        execute(f'gcc -no-pie -g -o build/examples/{example[:-5]} build/examples/{example[:-5]}.s', echo=True)
-        if execute(f'build/examples/{example[:-5]}', exit_on_error=False, echo=True) != 0:
-            subprocess.run(f'''gdb -batch -ex='set confirm off' -ex='set style enabled on' -ex='run &> /dev/null' -ex=bt -ex=quit --args build/examples/{example[:-5]}''', shell=True)
-            exit(1)
+        # TODO: Check if compile is needed
+        compiler_command = ['build/stage1/ReCode', f'tests/{test_file_name}', f'build/tests/{test_file_name[:-5]}.s']
+        logger.info(f"Testing: {compiler_command[1]}")
+
+        compiler_result = run(compiler_command, check=False, capture_output=True, text=True)
+
+        if compiler_result.returncode != 0:
+            compiler_error = repr(re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr)) if compiler_result.stderr else None
+            if expected_error is None or expected_error != compiler_error:
+                print(compiler_result.stderr, end='')
+                logger.error(f"{COLOR_ERROR}Unexpected compiler error{COLOR_RESET}")
+                trace(*compiler_command[:2], '-')
+                exit(1)
+        else:
+            print(compiler_result.stderr, end='')
+
+            if expected_error:
+                logger.error(f"{COLOR_ERROR}Expected compile error{COLOR_RESET}")
+                exit(1)
+
+            assemble(f'build/tests/{test_file_name[:-5]}.s', f'build/tests/{test_file_name[:-5]}')
+
+            logger.debug(f"{COLOR_DEBUG}build/tests/{test_file_name[:-5]}{COLOR_RESET}")
+            test_result = run([f'build/tests/{test_file_name[:-5]}'], capture_output=expected_output is not None, text=True, check=False)
+            if test_result.returncode != 0:
+                logger.error(f"{COLOR_ERROR}Unexpected exit code: {test_result.returncode}{COLOR_RESET}")
+                exit(test_result.returncode)
+            if expected_output and repr(test_result.stdout) != expected_output:
+                logger.error(f"{COLOR_ERROR}Unexpected output: {repr(test_result.stdout)}{COLOR_RESET}")
+                exit(1)
 
 
 def build():
     bootstrap()
     build_stage(1)
-    examples()
-    build_stage(2)
-    build_stage(3)
+    test()
 
 
 def stage():
     build()
-    execute('diff -q build/stage2/ReCode.s build/stage3/ReCode.s')
-    execute('rm -fr bootstrap', echo=False)
-    execute('cp -R compiler bootstrap')
-    execute('build/stage2/ReCode bootstrap/ReCode.code bootstrap/ReCode.s')
+    build_stage(2)
+    build_stage(3)
+
+    logger.info("Staging")
+    run('diff -q build/stage2/ReCode.s build/stage3/ReCode.s')
+    run('rm -fr bootstrap')
+    run('mkdir bootstrap')
+    run('cp -R compiler bootstrap/')
+    run('mv bootstrap/compiler bootstrap/stage0')
+    run('build/stage2/ReCode bootstrap/stage0/ReCode.code bootstrap/ReCode.s')
+
     bootstrap()
 
-def time():
-    build()
 
-    count = 5
+def editor():
+    bootstrap()
+    build_stage(1)
+
+    if not os.path.exists(f'build/editor'):
+        run(f'mkdir build/editor')
+
+    compiler_command = ['build/stage1/ReCode', 'editor/Editor.code', 'build/editor/Editor.s', 'build/editor/Editor.ir']
+    if run(compiler_command, check=False).returncode != 0:
+        trace(*compiler_command[:2], '-')
+        exit(1)
+    assemble('build/editor/Editor.s', 'build/editor/Editor', sdl=True)
+    trace('build/editor/Editor')
+
+
+def time():
+    bootstrap()
+    build_stage(1)
+
+    count = 10
     start_time = datetime.now()
     for _ in range(count):
-        execute('build/stage2/ReCode compiler/ReCode.code build/stage3/ReCode.s', echo=True)
+        run('build/stage1/ReCode compiler/ReCode.code build/stage2/ReCode.s')
     finish_time = datetime.now()
 
-    print(f"[{finish_time.time().isoformat(timespec='milliseconds')}] Average time: {((finish_time - start_time) / count).total_seconds()}")
+    logger.info(f"Average time: {((finish_time - start_time) / count).total_seconds()}s")
+
 
 TASKS = OrderedDict(
     clean=clean,

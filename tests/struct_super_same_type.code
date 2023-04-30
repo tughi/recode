@@ -1,0 +1,11 @@
+\\ Expect:
+\ - error: 'tests/struct_super_same_type.code:5:12: Type recursivity\n'
+
+struct Test {
+    super: Test
+    value: i32
+}
+
+func test() -> void {
+    let test: Test = undefined
+}

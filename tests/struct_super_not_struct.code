@@ -1,0 +1,6 @@
+\\ Expect:
+\ - error: 'tests/struct_super_not_struct.code:5:12: Must be a struct\n'
+
+struct Test {
+    super: i32
+}

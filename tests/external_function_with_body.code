@@ -1,0 +1,5 @@
+\\ Expect:
+\ - error: 'tests/external_function_with_body.code:4:29: Consumed 1 spaces where 0 were expected\ntests/external_function_with_body.code:4:30: Unexpected token\n'
+
+external func test() -> void {
+}

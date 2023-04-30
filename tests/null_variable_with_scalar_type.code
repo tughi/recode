@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/null_variable_with_scalar_type.code:5:18: Incompatible types: got Null instead of i32\n'
+
+define test = func () -> Nothing {
+    let x: i32 = null
+}

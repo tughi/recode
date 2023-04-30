@@ -1,0 +1,17 @@
+\\ Expect:
+\ - output: 'PASS\n'
+
+define File = unknown struct
+define fputs = func (s: [u8; ?], stream: File) -> i32
+
+let stdout: File = external
+
+define main = func () -> i32 {
+    let value_1: i32 = undefined
+    let value_2 = 42 \ type inference
+    let file: File = null
+
+    fputs("PASS\n", stdout)
+
+    return 0
+}
