@@ -1,8 +1,8 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020, 2023, Stefan Selariu
 
 \ stdio
 
-define FILE = unknown struct
+external type FILE
 
 let stdin: FILE = external
 let stdout: FILE = external

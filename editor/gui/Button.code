@@ -1,4 +1,4 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
 include "./Layout.code"
 
@@ -9,7 +9,7 @@ define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
     return button
 }
 
-define GUI_Button = struct {
+struct GUI_Button {
     extends GUI_Widget(
         name = "GUI_Button"
         on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {

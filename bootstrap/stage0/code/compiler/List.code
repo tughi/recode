@@ -1,6 +1,6 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-define List = struct [T] {
+struct List[T] {
     first_item: List_Item[T] = null
     last_item: List_Item[T] = null
     size: i64 = 0
@@ -134,14 +134,14 @@ define last = func [T] (self: List[T]) -> T {
     return self.last_item.data
 }
 
-define List_Item = struct [T] {
+struct List_Item[T] {
     prev_item: List_Item[T] = null
     next_item: List_Item[T] = null
     data: T
     is_removed: bool = false
 }
 
-define List_Iterator = struct [T] {
+struct List_Iterator[T] {
     current_item: List_Item[T]
     next_item: List_Item[T]
 }

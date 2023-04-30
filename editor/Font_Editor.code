@@ -1,4 +1,4 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 include "./File.code"
 include "./gui/Layout.code"
@@ -18,7 +18,7 @@ define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
     return glyph_editor
 }
 
-define Glyph_Editor = struct {
+struct Glyph_Editor {
     extends GUI_Widget(
         name = "Glyph_Editor"
         on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
@@ -200,7 +200,7 @@ define glyph_chooser = func (parent: GUI_Layout, selected_glyph: u8) -> Glyph_Ch
     return glyph_chooser
 }
 
-define Glyph_Chooser = struct {
+struct Glyph_Chooser {
     extends GUI_Layout(
         name = "Glyph_Chooser"
         measure = measure_glyph_chooser
@@ -214,7 +214,7 @@ define Glyph_Chooser = struct {
     }
 }
 
-define Glyph_Chooser_Button_Data = struct {
+struct Glyph_Chooser_Button_Data {
     extends GUI_Data
     glyph_chooser: Glyph_Chooser
     glyph: u8
@@ -298,7 +298,7 @@ define draw_glyph_chooser = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 define dump_font = func () -> Nothing {
     let file = open_file("editor/Font.data", "w")
 
-    file.write("\\ Copyright (c) 2021, Stefan Selariu").end_line()
+    file.write("\\ Copyright (c) 2021, 2023, Stefan Selariu").end_line()
     file.end_line()
     file.write("font.height: ").write(font.height).end_line()
     file.write("font.base_line: ").write(font.base_line).end_line()

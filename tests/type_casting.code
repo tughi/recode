@@ -1,11 +1,11 @@
 \\ Expect:
 \ - output: ''
 
-define Token = struct {
+struct Token {
     line: u32
 }
 
-define Integer_Token = struct {
+struct Integer_Token {
     extends Token
     value: i32
 }

@@ -1,4 +1,4 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
 define max = func (v1: i32, v2: i32) -> i32 {
     if (v1 < v2) {

@@ -1,70 +1,70 @@
-\ Copyright (c) 2020, Stefan Selariu
+\ Copyright (c) 2020, 2023 Stefan Selariu
 
-define Token = struct {
+struct Token {
     extends Object
     lexeme: String
     location: Source_Location
     next_token: Token = null
 }
 
-define Literal_Token = struct {
+struct Literal_Token {
     extends Token
 }
 
-define Character_Token = struct {
+struct Character_Token {
     extends Literal_Token
     value: i8
 }
 
-define Boolean_Token = struct {
+struct Boolean_Token {
     extends Literal_Token
     value: bool
 }
 
-define Comment_Token = struct {
+struct Comment_Token {
     extends Token
 }
 
-define End_Of_File_Token = struct {
+struct End_Of_File_Token {
     extends Token
 }
 
-define End_Of_Line_Token = struct {
+struct End_Of_Line_Token {
     extends Token
 }
 
-define Error_Token = struct {
+struct Error_Token {
     extends Token
 }
 
-define Identifier_Token = struct {
+struct Identifier_Token {
     extends Token
 }
 
-define Integer_Token = struct {
+struct Integer_Token {
     extends Literal_Token
     value: i64
     type: String
 }
 
-define Null_Token = struct {
+struct Null_Token {
     extends Literal_Token
 }
 
-define Other_Token = struct {
+struct Other_Token {
     extends Token
 }
 
-define Space_Token = struct {
+struct Space_Token {
     extends Token
     count: i32
 }
 
-define String_Token = struct {
+struct String_Token {
     extends Literal_Token
     value: String
 }
 
-define Undefined_Token = struct {
+struct Undefined_Token {
     extends Literal_Token
 }

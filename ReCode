@@ -33,29 +33,24 @@ def run(command, **kwargs):
     return subprocess.run(command, **kwargs)
 
 
-def bootstrap():
-    logger.info("Building stage0")
-
-    if not os.path.exists('build/stage0'):
-        run('mkdir -p build/stage0')
-
-    assemble('bootstrap/ReCode.s', 'build/stage0/ReCode')
-
-
-def assemble(source_file, output_file, sdl=False, **kwargs):
-    if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
-        run(['gcc', source_file, '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else [])], **kwargs)
-
-
 def build_stage(n):
     logger.info(f"Building stage{n}")
 
     if not os.path.exists(f'build/stage{n}'):
-        run(f'mkdir build/stage{n}')
+        run(f'mkdir -p build/stage{n}')
+
+    if n == 0:
+        assemble('bootstrap/ReCode.s', f'build/stage{n}/ReCode')
+        return
+
+    if n == 1:
+        compiler = 'compiler'
+    else:
+        compiler = 'stage0'
 
     compiler_changed = not os.path.exists(f'build/stage{n}/ReCode.s') or os.path.getmtime(f'build/stage{n}/ReCode.s') < os.path.getmtime(f'build/stage{n - 1}/ReCode')
     if not compiler_changed:
-        for root, dirs, files in os.walk('compiler'):
+        for root, dirs, files in os.walk(compiler):
             for file in files:
                 if os.path.getmtime(f'build/stage{n}/ReCode.s') < os.path.getmtime(f'{root}/{file}'):
                     compiler_changed = True
@@ -64,18 +59,23 @@ def build_stage(n):
                 continue
             break
 
-    if True or compiler_changed or not os.path.exists(f'build/stage{n}/ReCode'):
-        if run([f'build/stage{n - 1}/ReCode', 'compiler/ReCode.code', f'build/stage{n}/ReCode.s'], check=False).returncode != 0:
+    if compiler_changed or not os.path.exists(f'build/stage{n}/ReCode'):
+        if run([f'build/stage{n - 1}/ReCode', f'{compiler}/ReCode.code', f'build/stage{n}/ReCode.s'], check=False).returncode != 0:
             if os.path.exists(f'build/stage{n}/ReCode.s'):
                 run(f'rm build/stage{n}/ReCode.s')
-            trace(f'build/stage{n - 1}/ReCode', 'compiler/ReCode.code', '-')
+            trace(f'build/stage{n - 1}/ReCode', f'{compiler}/ReCode.code', '-')
             exit(1)
         try:
-            assemble(f'build/stage{n}/ReCode.s', f'build/stage{n}/ReCode', check=False)
+            assemble(f'build/stage{n}/ReCode.s', f'build/stage{n}/ReCode', check=True)
         except:
             if os.path.exists(f'build/stage{n}/ReCode'):
                 execute(f'rm build/stage{n}/ReCode')
             raise
+
+
+def assemble(source_file, output_file, sdl=False, **kwargs):
+    if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
+        run(['gcc', source_file, '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else [])], **kwargs)
 
 
 def trace(*command):
@@ -96,7 +96,7 @@ def trace(*command):
     )
 
 
-def test():
+def test_with_stage(n):
     if not os.path.exists(f'build/tests'):
         run(f'mkdir build/tests')
 
@@ -123,7 +123,7 @@ def test():
                 continue
 
         # TODO: Check if compile is needed
-        compiler_command = ['build/stage1/ReCode', f'tests/{test_file_name}', f'build/tests/{test_file_name[:-5]}.s']
+        compiler_command = [f'build/stage{n}/ReCode', f'tests/{test_file_name}', f'build/tests/{test_file_name[:-5]}.s']
         logger.info(f"Testing: {compiler_command[1]}")
 
         compiler_result = run(compiler_command, check=False, capture_output=True, text=True)
@@ -155,29 +155,36 @@ def test():
 
 
 def build():
-    bootstrap()
+    build_stage(0)
     build_stage(1)
-    test()
+    test_with_stage(1)
 
 
 def stage():
     build()
-    build_stage(2)
-    build_stage(3)
 
     logger.info("Staging")
-    run('diff -q build/stage2/ReCode.s build/stage3/ReCode.s')
+
+    if not os.path.exists('stage0'):
+        run('cp -R compiler stage0')
+
+    build_stage(2)
+    build_stage(3)
+    run('diff -q build/stage2/ReCode.s build/stage3/ReCode.s', check=True)
+
+    test_with_stage(3)
+
     run('rm -fr bootstrap')
     run('mkdir bootstrap')
-    run('cp -R compiler bootstrap/')
-    run('mv bootstrap/compiler bootstrap/stage0')
+    run('mv stage0 bootstrap/')
     run('build/stage2/ReCode bootstrap/stage0/ReCode.code bootstrap/ReCode.s')
 
-    bootstrap()
+    run('rm -fr compiler')
+    run('cp -R bootstrap/stage0 compiler')
 
 
 def editor():
-    bootstrap()
+    build_stage(0)
     build_stage(1)
 
     if not os.path.exists(f'build/editor'):
@@ -192,7 +199,7 @@ def editor():
 
 
 def time():
-    bootstrap()
+    build_stage(0)
     build_stage(1)
 
     count = 10

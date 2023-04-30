@@ -1,10 +1,10 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 include "./Font.code"
 include "./Rect.code"
 include "./SDL.code"
 
-define Canvas = struct {
+struct Canvas {
     pixels: Any
     width: i32
     height: i32

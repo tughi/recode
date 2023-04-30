@@ -24,28 +24,28 @@ define main = func () -> i32 {
     return shape.sides - polygon.sides
 }
 
-define Shape = struct {
+struct Shape {
     extends Object
 }
 
-define Ellipse = struct {
+struct Ellipse {
     extends Shape
 }
 
-define Circle = struct {
+struct Circle {
     extends Ellipse
 }
 
-define Polygon = struct {
+struct Polygon {
     extends Shape
     sides: i32
 }
 
-define Triangle = struct {
+struct Triangle {
     extends Polygon(sides = 3)
 }
 
-define Rectangle = struct {
+struct Rectangle {
     extends Polygon(sides = 4)
 }
 

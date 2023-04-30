@@ -1,4 +1,4 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 define generate = func (build: IR_Build, output_file_path: String) -> Nothing {
     let generator = create_mc_generator(output_file_path)
@@ -1447,7 +1447,7 @@ define abort = func (self: MC_Generator, location: Source_Location, message: Str
     abort()
 }
 
-define MC_Generator = struct {
+struct MC_Generator {
     output_file_path: String
     output_file: FILE
     output_debug_comments: bool
@@ -1474,9 +1474,16 @@ define MC_Generator = struct {
 }
 
 define create_mc_generator = func (output_file_path: String) -> MC_Generator {
+    let output_file: FILE = undefined
+    if (output_file_path.equals("-")) {
+        output_file = stdout
+    } else {
+        output_file = fopen(output_file_path.data, "w".data)
+    }
+
     return make MC_Generator(
         output_file_path = output_file_path
-        output_file = fopen(output_file_path.data, "w".data)
+        output_file = output_file
         output_debug_comments = true
     )
 }
@@ -1830,7 +1837,7 @@ define output_used_register = func (self: MC_Generator, register: MC_Register) -
     }
 }
 
-define MC_Value = struct {
+struct MC_Value {
     prev_value: MC_Value = null
     next_value: MC_Value = null
     ir_instruction: IR_Instruction
@@ -1839,7 +1846,7 @@ define MC_Value = struct {
     address: MC_Address = null
 }
 
-define MC_Register = struct {
+struct MC_Register {
     extends Object
     name_q: String
     name_d: String
@@ -1861,71 +1868,71 @@ define init = func (self: MC_Register, name_q: String, name_d: String, name_w: S
     return self
 }
 
-define MC_Register_RAX = struct {
+struct MC_Register_RAX {
     extends MC_Register
 }
 
-define MC_Register_RCX = struct {
+struct MC_Register_RCX {
     extends MC_Register
 }
 
-define MC_Register_RDX = struct {
+struct MC_Register_RDX {
     extends MC_Register
 }
 
-define MC_Register_RBX = struct {
+struct MC_Register_RBX {
     extends MC_Register
 }
 
-define MC_Register_RSI = struct {
+struct MC_Register_RSI {
     extends MC_Register
 }
 
-define MC_Register_RDI = struct {
+struct MC_Register_RDI {
     extends MC_Register
 }
 
-define MC_Register_RSP = struct {
+struct MC_Register_RSP {
     extends MC_Register
 }
 
-define MC_Register_RBP = struct {
+struct MC_Register_RBP {
     extends MC_Register
 }
 
-define MC_Register_R8 = struct {
+struct MC_Register_R8 {
     extends MC_Register
 }
 
-define MC_Register_R9 = struct {
+struct MC_Register_R9 {
     extends MC_Register
 }
 
-define MC_Register_R10 = struct {
+struct MC_Register_R10 {
     extends MC_Register
 }
 
-define MC_Register_R11 = struct {
+struct MC_Register_R11 {
     extends MC_Register
 }
 
-define MC_Register_R12 = struct {
+struct MC_Register_R12 {
     extends MC_Register
 }
 
-define MC_Register_R13 = struct {
+struct MC_Register_R13 {
     extends MC_Register
 }
 
-define MC_Register_R14 = struct {
+struct MC_Register_R14 {
     extends MC_Register
 }
 
-define MC_Register_R15 = struct {
+struct MC_Register_R15 {
     extends MC_Register
 }
 
-define MC_Address = struct {
+struct MC_Address {
     extends Object
 }
 
@@ -1947,18 +1954,18 @@ define write = func (file: FILE, address: MC_Address) -> FILE {
     abort(clone("Unsupported type: ").append(address.object_type.name))
 }
 
-define MC_Global_Variable_Address = struct {
+struct MC_Global_Variable_Address {
     extends MC_Address
     ir_variable: IR_Variable
 }
 
-define MC_Register_Based_Address = struct {
+struct MC_Register_Based_Address {
     extends MC_Address
     register: MC_Register
     offset: i64 = 0
 }
 
-define MC_Local_Variable_Address = struct {
+struct MC_Local_Variable_Address {
     extends MC_Register_Based_Address
 }
 
@@ -2024,7 +2031,7 @@ define get_type_alignment = func (self: MC_Generator, type_size: i64) -> i64 {
     return 8
 }
 
-define MC_String = struct {
+struct MC_String {
     id: i64
     literal: String_Token
 }

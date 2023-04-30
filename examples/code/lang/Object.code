@@ -1,10 +1,10 @@
 include "./String.code"
 
-define Object = struct {
+struct Object {
     object_type: Object_Type = undefined
 }
 
-define Object_Type = struct {
+struct Object_Type {
     id: isize
     name: !String
     base_type: Object_Type

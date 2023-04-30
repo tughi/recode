@@ -35,14 +35,14 @@ There will be a fixed set of float types:
 
 ## Structs
 
-    define Node = struct {
+    struct Node {
         name: !String       \ embedded
         parent: Node        \ parent node reference
         children: [Node]    \ checked array of child node references
         type: i32 = 42      \ with default value
     }
 
-    define Extended_Node = struct {
+    struct Extended_Node {
         extends Node(type = 7)  \ type has another default value
         data: alias Data        \ members of Data can be accessed without .data
     }
@@ -67,7 +67,7 @@ To pass a struct by value one need to specify this with the `!` prefix, like thi
 
 Generic structs have one or more other types as parameters.
 
-    define Box = struct [T] {
+    struct Box[T] {
         it: alias T
     }
 
@@ -83,7 +83,7 @@ variable, named after the type.
 
 The `Object_Type` structure looks like this:
 
-    define Object_Type = struct {
+    struct Object_Type {
         _id: u32
         _max_derivate_id: u32
         name: !String
@@ -104,7 +104,7 @@ Types prefixed with a `?` become nullable types, and require a `null` check to g
 
 Nullable types have a similar in-memory structure with the following struct:
 
-    define Nullable = struct [T] {
+    struct Nullable[T] {
         is_null: bool
         value: T
     }
@@ -125,7 +125,7 @@ Like structs, arrays are passed by reference.
 
 An `[i8]` array has the following in-memory structure:
 
-    define Int8_Array = struct {
+    struct Int8_Array {
         data: [i8; ?]       \ reference to an unchecked array
         size: isize
     }
@@ -143,7 +143,7 @@ Fixed arrays, like `[i8; 42]` are arrays for which the compiler knows their size
 
 An `[i32; 7]` array has the following in-memory structure:
 
-    define I32_7_Array = struct {
+    struct I32_7_Array {
         _0: i32
         _1: i32
         _2: i32
@@ -157,7 +157,7 @@ An `[i32; 7]` array has the following in-memory structure:
 
 The `String` type has the following structure:
 
-    define String = struct {
+    struct String {
         data: [i8; ?]
         data_size: i32
         length: i32

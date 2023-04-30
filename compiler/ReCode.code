@@ -4,19 +4,19 @@ define main = func (argc: i32, argv: [[i8; ?]; ?]) -> Nothing {
     if (argc < 3) {
         stdout.write("Usage:").end_line()
         stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").end_line()
-        exit(1)
+        abort()
     }
 
     let source_file_path = create_string(argv[1])
     if (source_file_path.ends_with(".code") == false) {
         stdout.write("'").write(source_file_path).write("' doesn't end with '.code'.").end_line()
-        exit(1)
+        abort()
     }
 
     let output_file_path = create_string(argv[2])
-    if (output_file_path.ends_with(".s") == false) {
+    if (output_file_path.equals("-") == false && output_file_path.ends_with(".s") == false) {
         stdout.write("'").write(output_file_path).write("' doesn't end with '.s'.").end_line()
-        exit(1)
+        abort()
     }
 
     let dump_file_path: String = null
@@ -24,7 +24,7 @@ define main = func (argc: i32, argv: [[i8; ?]; ?]) -> Nothing {
         dump_file_path = create_string(argv[3])
         if (dump_file_path.ends_with(".ir") == false) {
             stdout.write("'").write(dump_file_path).write("' doesn't end with '.ir'.").end_line()
-            exit(1)
+            abort()
         }
     }
 

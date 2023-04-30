@@ -1,16 +1,16 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 include "./LibC.code"
 
 let font: !Font
 
-define Font = struct {
+struct Font {
     height: i32
     base_line: i32
     glyphs: [!Glyph; 256]
 }
 
-define Glyph = struct {
+struct Glyph {
     width: i32
     mask: [[u8; 9]; 18]
 }

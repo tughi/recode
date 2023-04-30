@@ -1,13 +1,13 @@
 \ Expect:
 \ - output: ''
 
-define Source = struct {
+struct Source {
     file: File
 
     value: i32
 }
 
-define File = unknown struct \ opaque type
+external type File \ opaque type
 
 define main = func () -> i32 {
     let result = make !Source(file = null, value = 0)

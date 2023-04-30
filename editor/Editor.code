@@ -1,4 +1,4 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 include "./gui/GUI.code"
 include "./Font_Editor.code"
@@ -172,7 +172,7 @@ define main = func () -> i32 {
     return 0
 }
 
-define Glyph_Chooser_Data = struct {
+struct Glyph_Chooser_Data {
     extends GUI_Data
     glyph_editor: Glyph_Editor
 }

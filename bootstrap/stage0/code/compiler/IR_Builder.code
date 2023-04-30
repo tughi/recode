@@ -1,4 +1,4 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023 Stefan Selariu
 
 define build = func (compilation_unit: Compilation_Unit) -> IR_Build {
     let builder = create_ir_builder(compilation_unit)
@@ -10,7 +10,7 @@ define build = func (compilation_unit: Compilation_Unit) -> IR_Build {
     )
 }
 
-define IR_Build = struct {
+struct IR_Build {
     sources: List[Source]
     named_types: List[IR_Type]
     global_symbols: List[IR_Symbol]
@@ -30,7 +30,7 @@ define dump = func (build: IR_Build, file: FILE) -> Nothing {
     }
 }
 
-define IR_Builder = struct {
+struct IR_Builder {
     compilation_unit: Compilation_Unit
     context: IR_Builder_Context
     root_context: IR_Builder_Context
@@ -43,13 +43,13 @@ define IR_Builder = struct {
     types_counter: !Counter[i64] = make !Counter[i64]()
 }
 
-define IR_Builder_Context = struct {
+struct IR_Builder_Context {
     parent: IR_Builder_Context
     symbols: List[IR_Symbol] = make List[IR_Symbol]()
     type_arguments: List[AST_Type_Argument] = null
 }
 
-define IR_Loop = struct {
+struct IR_Loop {
     parent: IR_Loop
     end_block: IR_Block
 }

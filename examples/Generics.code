@@ -42,21 +42,21 @@ define main = func () -> Nothing {
     }
 }
 
-define Special_Map = struct {
+struct Special_Map {
     extends Map[String, i32]
 }
 
 \ Map and Map[K, T] are different types
-define Map = struct {
+struct Map {
 }
 
-define Map = struct [K, V] {
+struct Map[K, V] {
     extends Object
     first_item: Map_Item[K, V] = null
     last_item: Map_Item[K, V] = null
 }
 
-define Map_Item = struct [K, V] {
+struct Map_Item[K, V] {
     key: K
     value: V
     prev_item: Map_Item[K, V] = null

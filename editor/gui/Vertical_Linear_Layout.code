@@ -1,8 +1,8 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
 include "./Layout.code"
 
-define GUI_Vertical_Linear_Layout = struct {
+struct GUI_Vertical_Linear_Layout {
     extends GUI_Layout(
         name = "GUI_Vertical_Linear_Layout"
         measure = measure_vertical_linear_layout

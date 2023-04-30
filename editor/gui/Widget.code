@@ -1,8 +1,8 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
 include "../Canvas.code"
 
-define GUI_Widget = struct {
+struct GUI_Widget {
     gui: GUI
     name: String
     parent: GUI_Layout
@@ -36,7 +36,7 @@ define GUI_Widget = struct {
     draw: func (self: GUI_Widget, canvas: Canvas) -> Nothing = draw_widget
 }
 
-define GUI_Data = struct {
+struct GUI_Data {
 }
 
 define measure_widget = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
@@ -52,7 +52,7 @@ define draw_widget = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     canvas.draw_rect(self.bounds)
 }
 
-define Size_Policy = struct {
+struct Size_Policy {
     mode: u8 = SIZE_POLICY_MODE_WRAP_CONTENT
     size: i32 = 0
 }
@@ -61,7 +61,7 @@ define SIZE_POLICY_MODE_FIXED = 0u8
 define SIZE_POLICY_MODE_STRETCHED = 1u8
 define SIZE_POLICY_MODE_WRAP_CONTENT = 2u8
 
-define Measure_Spec = struct {
+struct Measure_Spec {
     mode: u8 = MEASURE_SPEC_MODE_EXACTLY
     size: i32 = 0
 }

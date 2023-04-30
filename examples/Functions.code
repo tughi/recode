@@ -15,11 +15,11 @@ define main = func () -> Nothing {
     anonymous_func(stdout)
 }
 
-define Value = struct {
+struct Value {
     dump: func (self: Value, file: FILE) -> Nothing
 }
 
-define Int_Value = struct {
+struct Int_Value {
     extends Value(dump = dump_int)
 
     value: i32
@@ -30,7 +30,7 @@ define dump_int = func (self: Value, file: FILE) -> Nothing {
     file.write("Int: ").write(self.value).end_line()
 }
 
-define String_Value = struct {
+struct String_Value {
     extends Value(
         dump = func (self: Value, file: FILE) -> Nothing {
             let self = self as String_Value

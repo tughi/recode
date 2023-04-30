@@ -1,4 +1,4 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
 include "./Button.code"
 include "./Event.code"
@@ -9,7 +9,7 @@ include "./Vertical_Linear_Layout.code"
 define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
 
-define GUI = struct {
+struct GUI {
     extends GUI_Layout(
         name = "GUI"
         on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {

@@ -1,0 +1,40 @@
+\ Expect:
+\ - output: ''
+
+struct Special_Map {
+    extends Map[u8, i32]
+}
+
+\ Map and Map[K, T] are different types
+struct Map {
+}
+
+struct Map[K, V] {
+    keys: List[K]
+    values: List[V]
+}
+
+struct List[T] {
+    items: [T; ?]
+}
+
+define main = func () -> i32 {
+    let map = make !Map()
+    let map = make !Map[u8, i32](
+        keys = null
+        values = null
+    )
+
+    let size = 1usize
+    let map = make Special_Map(
+        keys = make List[u8](items = malloc(size) as [u8; ?])
+        values = make List[i32](items = malloc(size * 4) as [i32; ?])
+    )
+
+    map.keys.items[0] = 13
+    map.values.items[0] = 42
+
+    return 0
+}
+
+define malloc = func (size: usize) -> Any

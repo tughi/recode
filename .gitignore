@@ -1,3 +1,4 @@
 /.vscode
 /build
+/stage0
 /tests/__new__.code

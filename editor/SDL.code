@@ -1,4 +1,4 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
 define SDL_Delay = func (ms: u32) -> Nothing
@@ -17,14 +17,14 @@ define SDL_WaitEvent = func (event: SDL_Event) -> i32
 
 define SDL_INIT_VIDEO = 0x20u32
 
-define SDL_Window = unknown struct
+external type SDL_Window
 
 define SDL_WINDOW_RESIZABLE = 0x0000_0020u32
 
 define SDL_WINDOWPOS_UNDEFINED_MASK = 0x1FFF_0000
 define SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK \| 0
 
-define SDL_Surface = struct {
+struct SDL_Surface {
     _flags: u32
     format: SDL_PixelFormat
     width: i32
@@ -39,7 +39,7 @@ define SDL_Surface = struct {
     refcount: i32
 }
 
-define SDL_PixelFormat = struct {
+struct SDL_PixelFormat {
     format: u32
     palette: SDL_Palette
     bits_per_pixel: u8
@@ -60,28 +60,28 @@ define SDL_PixelFormat = struct {
     _next: SDL_PixelFormat
 }
 
-define SDL_Palette = struct {
+struct SDL_Palette {
     colors_count: i32
     colors: [!SDL_Color; ?]
     _version: u32
     _refcount: i32
 }
 
-define SDL_Color = struct {
+struct SDL_Color {
     red: u8
     green: u8
     blue: u8
     alpha: u8
 }
 
-define SDL_Rect = struct {
+struct SDL_Rect {
     x: i32
     y: i32
     width: i32
     height: i32
 }
 
-define SDL_Event = struct {
+struct SDL_Event {
     type: u32
 }
 
@@ -92,7 +92,7 @@ define SDL_MOUSEBUTTONUP = 0x402u32
 define SDL_MOUSEWHEEL = 0x403u32
 define SDL_WINDOWEVENT = 0x200u32
 
-define SDL_MouseButtonEvent = struct {
+struct SDL_MouseButtonEvent {
     extends SDL_Event
     timestamp: u32
     window_id: u32
@@ -104,7 +104,7 @@ define SDL_MouseButtonEvent = struct {
     y: i32
 }
 
-define SDL_MouseMotionEvent = struct {
+struct SDL_MouseMotionEvent {
     extends SDL_Event
     timestamp: u32
     window_id: u32
@@ -116,7 +116,7 @@ define SDL_MouseMotionEvent = struct {
     relative_y: i32
 }
 
-define SDL_MouseWheelEvent = struct {
+struct SDL_MouseWheelEvent {
     extends SDL_Event
     timestamp: u32
     window_id: u32
@@ -126,7 +126,7 @@ define SDL_MouseWheelEvent = struct {
     direction: u32
 }
 
-define SDL_Undefined_Event = struct {
+struct SDL_Undefined_Event {
     extends SDL_Event(
         type = undefined
     )
@@ -139,7 +139,7 @@ define SDL_Undefined_Event = struct {
     _6: u64 = undefined \ padding
 }
 
-define SDL_WindowEvent = struct {
+struct SDL_WindowEvent {
     extends SDL_Event
     timestamp: u32
     window_id: u32

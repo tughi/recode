@@ -1,4 +1,4 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
 include "./Layout.code"
 include "./Text_Model.code"
@@ -12,7 +12,7 @@ define text = func (parent: GUI_Layout, value: String) -> GUI_Text_Box {
     return text
 }
 
-define GUI_Text_Box = struct {
+struct GUI_Text_Box {
     extends GUI_Widget(
         name = "GUI_Text_Box"
         draw = draw_text_box

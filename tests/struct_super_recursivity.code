@@ -1,14 +1,14 @@
 \\ Expect:
 \ - error: 'tests/struct_super_recursivity.code:13:12: Type recursivity\n'
 
-define A = struct {
+struct A {
     extends C
 }
 
-define B = struct {
+struct B {
     extends A
 }
 
-define C = struct {
+struct C {
     extends B
 }

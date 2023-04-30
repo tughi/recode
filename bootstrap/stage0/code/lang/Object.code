@@ -1,10 +1,10 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-define Object = struct {
+struct Object {
     object_type: Object_Type = undefined
 }
 
-define Object_Type = struct {
+struct Object_Type {
     _id: u32
     _max_derivate_id: u32
     name: !String

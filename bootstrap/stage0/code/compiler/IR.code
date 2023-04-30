@@ -1,112 +1,112 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 include "./Map.code"
 
-define IR_Type = struct {
+struct IR_Type {
     extends Object
     name: String
 }
 
-define IR_Any_Type = struct {
+struct IR_Any_Type {
     extends IR_Type
 }
 
-define IR_Boolean_Type = struct {
+struct IR_Boolean_Type {
     extends IR_Type
 }
 
-define IR_Integer_Type = struct {
+struct IR_Integer_Type {
     extends IR_Type
 }
 
-define IR_Int_Type = struct {
+struct IR_Int_Type {
     extends IR_Integer_Type
 }
 
-define IR_Int16_Type = struct {
+struct IR_Int16_Type {
     extends IR_Int_Type
 }
 
-define IR_Int32_Type = struct {
+struct IR_Int32_Type {
     extends IR_Int_Type
 }
 
-define IR_Int64_Type = struct {
+struct IR_Int64_Type {
     extends IR_Int_Type
 }
 
-define IR_Int8_Type = struct {
+struct IR_Int8_Type {
     extends IR_Int_Type
 }
 
-define IR_IntMax_Type = struct {
+struct IR_IntMax_Type {
     extends IR_Int_Type
 }
 
-define IR_UInt_Type = struct {
+struct IR_UInt_Type {
     extends IR_Integer_Type
 }
 
-define IR_UInt16_Type = struct {
+struct IR_UInt16_Type {
     extends IR_UInt_Type
 }
 
-define IR_UInt32_Type = struct {
+struct IR_UInt32_Type {
     extends IR_UInt_Type
 }
 
-define IR_UInt64_Type = struct {
+struct IR_UInt64_Type {
     extends IR_UInt_Type
 }
 
-define IR_UInt8_Type = struct {
+struct IR_UInt8_Type {
     extends IR_UInt_Type
 }
 
-define IR_UIntMax_Type = struct {
+struct IR_UIntMax_Type {
     extends IR_UInt_Type
 }
 
-define IR_Nothing_Type = struct {
+struct IR_Nothing_Type {
     extends IR_Type
 }
 
-define IR_Null_Type = struct {
+struct IR_Null_Type {
     extends IR_Type
 }
 
-define IR_Undefined_Type = struct {
+struct IR_Undefined_Type {
     extends IR_Type
 }
 
-define IR_Pointer_Type = struct {
+struct IR_Pointer_Type {
     extends IR_Type
     pointed_type: IR_Type
 }
 
-define IR_Unchecked_Array_Type = struct {
+struct IR_Unchecked_Array_Type {
     extends IR_Type
     item_type: IR_Type
 }
 
-define IR_Fixed_Array_Type = struct {
+struct IR_Fixed_Array_Type {
     extends IR_Type
     item_type: IR_Type
     size: i64
 }
 
-define IR_Callable_Type = struct {
+struct IR_Callable_Type {
     extends IR_Type
     parameters: List[IR_Callable_Parameter]
 }
 
-define IR_Callable_Parameter = struct {
+struct IR_Callable_Parameter {
     location: Source_Location
     name: String
     type: IR_Type
 }
 
-define IR_Function_Type = struct {
+struct IR_Function_Type {
     extends IR_Callable_Type
     return_type: IR_Type
 }
@@ -127,11 +127,11 @@ define create_ir_function_type = func (parameters: List[IR_Callable_Parameter], 
     return make IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
 }
 
-define IR_Macro_Body_Type = struct {
+struct IR_Macro_Body_Type {
     extends IR_Type
 }
 
-define IR_Macro_Type = struct {
+struct IR_Macro_Type {
     extends IR_Callable_Type
 }
 
@@ -151,7 +151,7 @@ define create_ir_macro_type = func (parameters: List[IR_Callable_Parameter]) -> 
     return make IR_Macro_Type(name = type_name, parameters = parameters)
 }
 
-define IR_Struct_Type = struct {
+struct IR_Struct_Type {
     extends IR_Type
     base_type: IR_Struct_Type = null
     derived_types: List[IR_Struct_Type] = make List[IR_Struct_Type]()
@@ -162,7 +162,7 @@ define IR_Struct_Type = struct {
     object_type_max_derivate_id: u32 = 0
 }
 
-define IR_Struct_Type_Member = struct {
+struct IR_Struct_Type_Member {
     struct_type: IR_Struct_Type
     name: String
     type: IR_Type
@@ -218,21 +218,21 @@ define is_object_type = func (self: IR_Struct_Type) -> bool {
     }
 }
 
-define IR_Specialized_Struct_Type = struct {
+struct IR_Specialized_Struct_Type {
     extends IR_Struct_Type
     type_arguments: List[IR_Type_Argument]
 }
 
-define IR_Type_Argument = struct {
+struct IR_Type_Argument {
     type: IR_Type
 }
 
-define IR_Placeholder_Type = struct {
+struct IR_Placeholder_Type {
     extends IR_Type
     ast_type: AST_Placeholder_Type
 }
 
-define IR_Value = struct {
+struct IR_Value {
     extends Object
     type: IR_Type
     creator_instruction: IR_Instruction = null
@@ -258,23 +258,23 @@ define write = func (file: FILE, value: IR_Value, check_users: bool) -> FILE {
     return value.dump(file)
 }
 
-define IR_Link = struct {
+struct IR_Link {
     extends Object
 }
 
-define IR_Requires_Value_Link = struct {
+struct IR_Requires_Value_Link {
     extends IR_Link
     back_link: IR_Required_By_Value_Link
     value: IR_Value
 }
 
-define IR_Required_By_Value_Link = struct {
+struct IR_Required_By_Value_Link {
     extends IR_Link
     back_link: IR_Requires_Value_Link
     value: IR_Value
 }
 
-define IR_Undefined_Value = struct {
+struct IR_Undefined_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             return file.write("undefined")
@@ -282,7 +282,7 @@ define IR_Undefined_Value = struct {
     )
 }
 
-define IR_Constant_Value = struct {
+struct IR_Constant_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             return file.write((value as IR_Constant_Value).literal.lexeme)
@@ -291,7 +291,7 @@ define IR_Constant_Value = struct {
     literal: Literal_Token
 }
 
-define IR_Struct_Literal_Value = struct {
+struct IR_Struct_Literal_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             let value = value as IR_Struct_Literal_Value
@@ -317,7 +317,7 @@ define IR_Struct_Literal_Value = struct {
     location: Source_Location
 }
 
-define IR_Struct_Literal_Member_Value_Link = struct {
+struct IR_Struct_Literal_Member_Value_Link {
     extends IR_Requires_Value_Link
     struct_type_member: IR_Struct_Type_Member
 }
@@ -344,7 +344,7 @@ define set_member_value = func (self: IR_Struct_Literal_Value, struct_type_membe
     value.links.append(member_value_link.back_link)
 }
 
-define IR_Macro_Body_Value = struct {
+struct IR_Macro_Body_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             let value = value as IR_Macro_Body_Value
@@ -354,7 +354,7 @@ define IR_Macro_Body_Value = struct {
     macro_body: AST_Block_Statement
 }
 
-define IR_Global_Variable_Value = struct {
+struct IR_Global_Variable_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             let value = value as IR_Variable_Value
@@ -364,7 +364,7 @@ define IR_Global_Variable_Value = struct {
     variable: IR_Variable
 }
 
-define IR_Global_Variable_Address_Value = struct {
+struct IR_Global_Variable_Address_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             let value = value as IR_Variable_Value
@@ -374,7 +374,7 @@ define IR_Global_Variable_Address_Value = struct {
     variable: IR_Variable
 }
 
-define IR_Variable_Value = struct {
+struct IR_Variable_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             let value = value as IR_Variable_Value
@@ -392,7 +392,7 @@ define init = func (self: IR_Variable_Value, variable: IR_Variable) -> IR_Variab
     return self
 }
 
-define IR_Variable_Address_Value = struct {
+struct IR_Variable_Address_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             let value = value as IR_Variable_Address_Value
@@ -402,7 +402,7 @@ define IR_Variable_Address_Value = struct {
     variable_value: IR_Variable_Value
 }
 
-define IR_Function_Address_Value = struct {
+struct IR_Function_Address_Value {
     extends IR_Value(
         dump = func (value: IR_Value, file: FILE) -> FILE {
             let value = value as IR_Function_Address_Value
@@ -412,7 +412,7 @@ define IR_Function_Address_Value = struct {
     function: IR_Function
 }
 
-define IR_Block = struct {
+struct IR_Block {
     id: i64
     function: IR_Function
     predecessors: List[IR_Block] = make List[IR_Block]()
@@ -514,12 +514,12 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
     return file
 }
 
-define IR_Callable = struct {
+struct IR_Callable {
     extends IR_Symbol
     type: IR_Callable_Type
 }
 
-define IR_Function = struct {
+struct IR_Function {
     extends IR_Callable
     id: i64
     statement: AST_Function_Statement
@@ -555,44 +555,44 @@ define dump = func (function: IR_Function, file: FILE) -> Nothing {
     file.write('}').end_line()
 }
 
-define IR_Parameter = struct {
+struct IR_Parameter {
     extends IR_Function_Parameter
 }
 
-define IR_Macro = struct {
+struct IR_Macro {
     extends IR_Callable
     context: IR_Builder_Context
     statement: AST_Block_Statement
 }
 
-define IR_Symbol = struct {
+struct IR_Symbol {
     extends Object
     name: String
     location: Source_Location
 }
 
-define IR_Variable = struct {
+struct IR_Variable {
     extends IR_Symbol
     type: IR_Type
     values: List[IR_Value] = make List[IR_Value]()
 }
 
-define IR_Global_Variable = struct {
+struct IR_Global_Variable {
     extends IR_Variable
     value: IR_Value
     is_external: bool
 }
 
-define IR_Function_Parameter = struct {
+struct IR_Function_Parameter {
     extends IR_Variable
 }
 
-define IR_Constant = struct {
+struct IR_Constant {
     extends IR_Symbol
     value: IR_Constant_Value
 }
 
-define IR_Instruction = struct {
+struct IR_Instruction {
     extends Object
     location: Source_Location = null
     result_value: IR_Variable_Value
@@ -653,7 +653,7 @@ define replace_operand_value = func (self: IR_Instruction, old_value: IR_Value, 
     }
 }
 
-define IR_Call_Instruction = struct {
+struct IR_Call_Instruction {
     extends IR_Instruction
     arguments_size: i64 = 0
 }
@@ -666,7 +666,7 @@ define dump_ir_call_instruction_arguments = func (instruction: IR_Call_Instructi
     }
 }
 
-define IR_Call_Argument = struct {
+struct IR_Call_Argument {
     name: String = null
     value: IR_Value
 }
@@ -703,7 +703,7 @@ define get_argument_key = func (index: i64) -> String {
     abort(clone("Missing argument index: ").append(index))
 }
 
-define IR_Direct_Call_Instruction = struct {
+struct IR_Direct_Call_Instruction {
     extends IR_Call_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -725,7 +725,7 @@ define create_ir_direct_call_instruction = func (result_value: IR_Variable_Value
     return instruction
 }
 
-define IR_Dynamic_Call_Instruction = struct {
+struct IR_Dynamic_Call_Instruction {
     extends IR_Call_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -752,7 +752,7 @@ define get_function_address = func (self: IR_Dynamic_Call_Instruction) -> IR_Var
     return self.operand_values.get("function_address") as IR_Variable_Value
 }
 
-define IR_Cast_Instruction = struct {
+struct IR_Cast_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -773,7 +773,7 @@ define get_value = func (self: IR_Cast_Instruction) -> IR_Value {
     return self.operand_values.get("value")
 }
 
-define IR_Is_Instruction = struct {
+struct IR_Is_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -795,11 +795,11 @@ define get_value = func (self: IR_Is_Instruction) -> IR_Value {
     return self.operand_values.get("value")
 }
 
-define IR_Jump_Instruction = struct {
+struct IR_Jump_Instruction {
     extends IR_Instruction
 }
 
-define IR_Conditional_Jump_Instruction = struct {
+struct IR_Conditional_Jump_Instruction {
     extends IR_Jump_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -815,7 +815,7 @@ define get_condition_value = func (self: IR_Conditional_Jump_Instruction) -> IR_
     return self.operand_values.get("condition")
 }
 
-define IR_Direct_Jump_Instruction = struct {
+struct IR_Direct_Jump_Instruction {
     extends IR_Jump_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -826,7 +826,7 @@ define IR_Direct_Jump_Instruction = struct {
     block: IR_Block
 }
 
-define IR_Load_Array_Item_Instruction = struct {
+struct IR_Load_Array_Item_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -854,7 +854,7 @@ define get_index_value = func (self: IR_Load_Array_Item_Instruction) -> IR_Value
     return self.operand_values.get("index_value")
 }
 
-define IR_Load_Struct_Member_Instruction = struct {
+struct IR_Load_Struct_Member_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -890,7 +890,7 @@ define get_struct_pointer_value = func (self: IR_Load_Struct_Member_Instruction)
     return self.operand_values.get("struct_pointer_value")
 }
 
-define IR_Load_Variable_Address_Instruction = struct {
+struct IR_Load_Variable_Address_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -917,7 +917,7 @@ define get_variable_value = func (self: IR_Load_Variable_Address_Instruction) ->
     return self.operand_values.get("variable_value") as IR_Variable_Value
 }
 
-define IR_Load_Variable_Instruction = struct {
+struct IR_Load_Variable_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -933,7 +933,7 @@ define create_ir_load_variable_instruction = func (result_value: IR_Variable_Val
     return instruction
 }
 
-define IR_New_Instruction = struct {
+struct IR_New_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -955,7 +955,7 @@ define get_init_value = func (self: IR_New_Instruction) -> IR_Value {
     return self.operand_values.get("init_value")
 }
 
-define IR_Return_Instruction = struct {
+struct IR_Return_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -980,7 +980,7 @@ define get_return_value = func (self: IR_Return_Instruction) -> IR_Value {
     return self.operand_values.get("return_value")
 }
 
-define IR_Set_Instruction = struct {
+struct IR_Set_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1001,7 +1001,7 @@ define get_value = func (self: IR_Set_Instruction) -> IR_Value {
     return self.operand_values.get("value")
 }
 
-define IR_Store_Array_Item_Instruction = struct {
+struct IR_Store_Array_Item_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1031,7 +1031,7 @@ define get_value = func (self: IR_Store_Array_Item_Instruction) -> IR_Value {
     return self.operand_values.get("value")
 }
 
-define IR_Store_Struct_Member_Instruction = struct {
+struct IR_Store_Struct_Member_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1057,7 +1057,7 @@ define get_value = func (self: IR_Store_Struct_Member_Instruction) -> IR_Value {
     return self.operand_values.get("value")
 }
 
-define IR_Binary_Instruction = struct {
+struct IR_Binary_Instruction {
     extends IR_Instruction
 }
 
@@ -1075,7 +1075,7 @@ define get_right_value = func (self: IR_Binary_Instruction) -> IR_Value {
     return self.operand_values.get("right_value")
 }
 
-define IR_Add_Instruction = struct {
+struct IR_Add_Instruction {
     extends IR_Binary_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1085,11 +1085,11 @@ define IR_Add_Instruction = struct {
     )
 }
 
-define IR_Comparison_Instruction = struct {
+struct IR_Comparison_Instruction {
     extends IR_Binary_Instruction
 }
 
-define IR_Divide_Instruction = struct {
+struct IR_Divide_Instruction {
     extends IR_Binary_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1099,7 +1099,7 @@ define IR_Divide_Instruction = struct {
     )
 }
 
-define IR_Equals_Comparison_Instruction = struct {
+struct IR_Equals_Comparison_Instruction {
     extends IR_Comparison_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1109,7 +1109,7 @@ define IR_Equals_Comparison_Instruction = struct {
     )
 }
 
-define IR_Greater_Comparison_Instruction = struct {
+struct IR_Greater_Comparison_Instruction {
     extends IR_Comparison_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1119,7 +1119,7 @@ define IR_Greater_Comparison_Instruction = struct {
     )
 }
 
-define IR_Greater_Or_Equal_Comparison_Instruction = struct {
+struct IR_Greater_Or_Equal_Comparison_Instruction {
     extends IR_Comparison_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1129,7 +1129,7 @@ define IR_Greater_Or_Equal_Comparison_Instruction = struct {
     )
 }
 
-define IR_Less_Comparison_Instruction = struct {
+struct IR_Less_Comparison_Instruction {
     extends IR_Comparison_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1139,7 +1139,7 @@ define IR_Less_Comparison_Instruction = struct {
     )
 }
 
-define IR_Less_Or_Equal_Comparison_Instruction = struct {
+struct IR_Less_Or_Equal_Comparison_Instruction {
     extends IR_Comparison_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1149,7 +1149,7 @@ define IR_Less_Or_Equal_Comparison_Instruction = struct {
     )
 }
 
-define IR_Modulo_Instruction = struct {
+struct IR_Modulo_Instruction {
     extends IR_Binary_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1159,7 +1159,7 @@ define IR_Modulo_Instruction = struct {
     )
 }
 
-define IR_Multiply_Instruction = struct {
+struct IR_Multiply_Instruction {
     extends IR_Binary_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1169,7 +1169,7 @@ define IR_Multiply_Instruction = struct {
     )
 }
 
-define IR_Not_Equal_Comparison_Instruction = struct {
+struct IR_Not_Equal_Comparison_Instruction {
     extends IR_Comparison_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)
@@ -1179,7 +1179,7 @@ define IR_Not_Equal_Comparison_Instruction = struct {
     )
 }
 
-define IR_Substract_Instruction = struct {
+struct IR_Substract_Instruction {
     extends IR_Binary_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             let instruction = instruction as IR_Binary_Instruction
@@ -1189,7 +1189,7 @@ define IR_Substract_Instruction = struct {
     )
 }
 
-define IR_Phi_Instruction = struct {
+struct IR_Phi_Instruction {
     extends IR_Instruction(
         dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
             instruction.dump_ir_instruction_result(file, prefix)

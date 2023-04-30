@@ -1,8 +1,8 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
 include "./Widget.code"
 
-define GUI_Layout = struct {
+struct GUI_Layout {
     extends GUI_Widget(
         name = "GUI_Layout"
         on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
@@ -30,7 +30,7 @@ define draw_layout = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     }
 }
 
-define GUI_Layout_Child = struct {
+struct GUI_Layout_Child {
     widget: GUI_Widget
     next_child: GUI_Layout_Child = null
 }

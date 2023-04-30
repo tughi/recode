@@ -1,11 +1,11 @@
-\ Copyright (c) 2021, Stefan Selariu
+\ Copyright (c) 2021, 2023, Stefan Selariu
 
-define Map = struct [K, V] {
+struct Map[K, V] {
     first_entry: Map_Entry[K, V] = null
     last_entry: Map_Entry[K, V] = null
 }
 
-define Map_Entry = struct [K, V] {
+struct Map_Entry[K, V] {
     key: K
     value: V
     prev_entry: Map_Entry[K, V] = null

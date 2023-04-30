@@ -1,12 +1,12 @@
-\ Copyright (c) 2020-2021, Stefan Selariu
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-define Source = struct {
+struct Source {
     id: i64 = undefined
     file_path: String
     content: [i8; ?]
 }
 
-define Source_Location = struct {
+struct Source_Location {
     source: Source
     line: i64
     column: i64
