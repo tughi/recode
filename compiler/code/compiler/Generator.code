@@ -1,6 +1,6 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-define generate = func (build: @IR_Build, output_file_path: @String) -> Nothing {
+func generate(build: @IR_Build, output_file_path: @String) -> Nothing {
     let generator = create_mc_generator(output_file_path)
 
     let build_sources_item = build.sources.first_item
@@ -41,7 +41,7 @@ define generate = func (build: @IR_Build, output_file_path: @String) -> Nothing 
     generator.output_file.fclose()
 }
 
-define generate_function = func (self: @MC_Generator, function: @IR_Function) -> Nothing {
+func generate_function(self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.end_line()
     self.output_file.write("  .loc ").write(function.location.source.id).write(' ').write(function.location.line).write(' ').write(function.location.column).end_line()
     self.output_file.write("  .text").end_line()
@@ -88,7 +88,7 @@ define generate_function = func (self: @MC_Generator, function: @IR_Function) ->
     self.reset()
 }
 
-define write_function_label = func (file: @FILE, function: @IR_Function) -> @FILE {
+func write_function_label(file: @FILE, function: @IR_Function) -> @FILE {
     file.write(function.name)
     if (function.is_external == false) {
         file.write('_').write(function.id)
@@ -96,11 +96,11 @@ define write_function_label = func (file: @FILE, function: @IR_Function) -> @FIL
     return file
 }
 
-define write_function_end_label = func (file: @FILE, function: @IR_Function) -> @FILE {
+func write_function_end_label(file: @FILE, function: @IR_Function) -> @FILE {
     return file.write(".LABEL__").write_function_label(function).write("__").write("end")
 }
 
-define output_unreached_ir_instructions = func (self: @MC_Generator) -> Nothing {
+func output_unreached_ir_instructions(self: @MC_Generator) -> Nothing {
     if (self.output_debug_comments == false) {
         return
     }
@@ -118,7 +118,7 @@ define output_unreached_ir_instructions = func (self: @MC_Generator) -> Nothing 
     }
 }
 
-define generate_block = func (self: @MC_Generator, block: @IR_Block) -> Nothing {
+func generate_block(self: @MC_Generator, block: @IR_Block) -> Nothing {
     block.is_being_generated = true
     self.output_file.write_block_label(block).write(':').end_line()
     let block_instruction = block.first_instruction
@@ -139,11 +139,11 @@ define generate_block = func (self: @MC_Generator, block: @IR_Block) -> Nothing 
     }
 }
 
-define write_block_label = func (file: @FILE, block: @IR_Block) -> @FILE {
+func write_block_label(file: @FILE, block: @IR_Block) -> @FILE {
     return file.write(".LABEL__").write(block.function.name).write('_').write(block.function.id).write("__").write(block.id)
 }
 
-define generate_instruction = func (self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
+func generate_instruction(self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
     if (instruction.location != null) {
         self.output_file.write("  .loc ").write(instruction.location.source.id).write(' ').write(instruction.location.line).write(' ').write(instruction.location.column).end_line()
     }
@@ -198,7 +198,7 @@ define generate_instruction = func (self: @MC_Generator, instruction: @IR_Instru
     instruction.is_generated = true
 }
 
-define generate_add_instruction = func (self: @MC_Generator, instruction: @IR_Add_Instruction) -> Nothing {
+func generate_add_instruction(self: @MC_Generator, instruction: @IR_Add_Instruction) -> Nothing {
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, instruction.get_left_value())
     self.map_variable_value(instruction.result_value, result_register)
@@ -238,7 +238,7 @@ define generate_add_instruction = func (self: @MC_Generator, instruction: @IR_Ad
     self.output_file.write(", ").write_operand(self, instruction.get_right_value()).end_line()
 }
 
-define generate_call_instruction = func (self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
+func generate_call_instruction(self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
     if (instruction.arguments_size > 0) {
         self.generate_load_value(self.register_rdi, instruction.get_argument_value(0i64))
         if (instruction.arguments_size > 1) {
@@ -274,7 +274,7 @@ define generate_call_instruction = func (self: @MC_Generator, instruction: @IR_C
     }
 }
 
-define generate_cast_instruction = func (self: @MC_Generator, instruction: @IR_Cast_Instruction) -> Nothing {
+func generate_cast_instruction(self: @MC_Generator, instruction: @IR_Cast_Instruction) -> Nothing {
     let ir_value = instruction.get_value()
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, ir_value)
@@ -401,7 +401,7 @@ define generate_cast_instruction = func (self: @MC_Generator, instruction: @IR_C
     }
 }
 
-define generate_conditional_jump_instruction = func (self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
+func generate_conditional_jump_instruction(self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
     let condition_value = instruction.get_condition_value()
     if (condition_value.type is IR_Boolean_Type == false) {
         self.abort("Unsupported value type")
@@ -440,7 +440,7 @@ define generate_conditional_jump_instruction = func (self: @MC_Generator, instru
     }
 }
 
-define generate_comparison_instruction = func (self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
+func generate_comparison_instruction(self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
     let left_value = instruction.get_left_value()
     let right_value = instruction.get_right_value()
     if (left_value is IR_Variable_Value && right_value is IR_Variable_Value) {
@@ -490,7 +490,7 @@ define generate_comparison_instruction = func (self: @MC_Generator, instruction:
     self.map_variable_value(instruction.result_value, register)
 }
 
-define generate_direct_jump_instruction = func (self: @MC_Generator, instruction: @IR_Direct_Jump_Instruction) -> Nothing {
+func generate_direct_jump_instruction(self: @MC_Generator, instruction: @IR_Direct_Jump_Instruction) -> Nothing {
     self.release_all_registers()
     if (instruction.block.is_being_generated) {
         self.output_file.write("  jmp ").write_block_label(instruction.block).end_line()
@@ -499,7 +499,7 @@ define generate_direct_jump_instruction = func (self: @MC_Generator, instruction
     }
 }
 
-define generate_is_instruction = func (self: @MC_Generator, instruction: @IR_Is_Instruction) -> Nothing {
+func generate_is_instruction(self: @MC_Generator, instruction: @IR_Is_Instruction) -> Nothing {
     let result_register = self.find_unused_register()
     \ load self
     self.generate_load_value(result_register, instruction.get_value())
@@ -514,7 +514,7 @@ define generate_is_instruction = func (self: @MC_Generator, instruction: @IR_Is_
     self.map_variable_value(instruction.result_value, result_register)
 }
 
-define generate_divide_instruction = func (self: @MC_Generator, instruction: @IR_Divide_Instruction) -> Nothing {
+func generate_divide_instruction(self: @MC_Generator, instruction: @IR_Divide_Instruction) -> Nothing {
     self.release_register(self.register_rax)
     self.generate_load_value(self.register_rax, instruction.get_left_value())
     self.register_rax.is_reserved = true
@@ -574,7 +574,7 @@ define generate_divide_instruction = func (self: @MC_Generator, instruction: @IR
     self.map_variable_value(instruction.result_value, self.register_rax)
 }
 
-define generate_load_array_item_instruction = func (self: @MC_Generator, instruction: @IR_Load_Array_Item_Instruction) -> Nothing {
+func generate_load_array_item_instruction(self: @MC_Generator, instruction: @IR_Load_Array_Item_Instruction) -> Nothing {
     let result_register = self.find_unused_register()
     self.generate_load_value(result_register, instruction.get_array_value())
     self.map_variable_value(instruction.result_value, result_register)
@@ -636,7 +636,7 @@ define generate_load_array_item_instruction = func (self: @MC_Generator, instruc
     }
 }
 
-define generate_load_variable_address_instruction = func (self: @MC_Generator, instruction: @IR_Load_Variable_Address_Instruction) -> Nothing {
+func generate_load_variable_address_instruction(self: @MC_Generator, instruction: @IR_Load_Variable_Address_Instruction) -> Nothing {
     let variable_value = self.get_value(instruction.get_variable_value())
     if (variable_value == null) {
         self.abort("Invalid state")
@@ -648,7 +648,7 @@ define generate_load_variable_address_instruction = func (self: @MC_Generator, i
     self.output_file.write("  lea ").write(result_value.register.name_q).write(", ").write(variable_value.address).end_line()
 }
 
-define generate_load_variable_instruction = func (self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
+func generate_load_variable_instruction(self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
     if (instruction.variable is IR_Function_Parameter) {
         let parameter = instruction.variable as @IR_Function_Parameter
         let parameter_index = instruction.parent_block.function.parameters.index_of(parameter)
@@ -675,7 +675,7 @@ define generate_load_variable_instruction = func (self: @MC_Generator, instructi
     }
 }
 
-define generate_load_struct_member_instruction = func (self: @MC_Generator, instruction: @IR_Load_Struct_Member_Instruction) -> Nothing {
+func generate_load_struct_member_instruction(self: @MC_Generator, instruction: @IR_Load_Struct_Member_Instruction) -> Nothing {
     let ir_struct_pointer_value = instruction.get_struct_pointer_value()
     let struct_pointer_register: @MC_Register
     if (ir_struct_pointer_value is IR_Variable_Value) {
@@ -726,7 +726,7 @@ define generate_load_struct_member_instruction = func (self: @MC_Generator, inst
     struct_pointer_register.is_reserved = false
 }
 
-define generate_modulo_instruction = func (self: @MC_Generator, instruction: @IR_Modulo_Instruction) -> Nothing {
+func generate_modulo_instruction(self: @MC_Generator, instruction: @IR_Modulo_Instruction) -> Nothing {
     self.release_register(self.register_rax)
     self.generate_load_value(self.register_rax, instruction.get_left_value())
     self.register_rax.is_reserved = true
@@ -786,7 +786,7 @@ define generate_modulo_instruction = func (self: @MC_Generator, instruction: @IR
     self.map_variable_value(instruction.result_value, self.register_rdx)
 }
 
-define generate_multiply_instruction = func (self: @MC_Generator, instruction: @IR_Multiply_Instruction) -> Nothing {
+func generate_multiply_instruction(self: @MC_Generator, instruction: @IR_Multiply_Instruction) -> Nothing {
     self.release_register(self.register_rax)
     self.generate_load_value(self.register_rax, instruction.get_left_value())
     self.register_rax.is_reserved = true
@@ -828,7 +828,7 @@ define generate_multiply_instruction = func (self: @MC_Generator, instruction: @
     self.map_variable_value(instruction.result_value, self.register_rax)
 }
 
-define generate_new_instruction = func (self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
+func generate_new_instruction(self: @MC_Generator, instruction: @IR_New_Instruction) -> Nothing {
     self.release_all_registers()
     self.output_file.write("  mov ").write(self.register_rdi.name_q).write(", ").write(self.get_type_size(instruction.type)).end_line()
     self.output_file.write("  call ").write("malloc").end_line()
@@ -836,7 +836,7 @@ define generate_new_instruction = func (self: @MC_Generator, instruction: @IR_Ne
     self.generate_store_value(instruction.get_init_value(), make @MC_Register_Based_Address(register = self.register_rax))
 }
 
-define generate_phi_instruction = func (self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
+func generate_phi_instruction(self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
     let result_variable = instruction.result_value.variable
     let instruction_values_entry = instruction.operand_values.first_entry
     while (instruction_values_entry != null) {
@@ -851,7 +851,7 @@ define generate_phi_instruction = func (self: @MC_Generator, instruction: @IR_Ph
     }
 }
 
-define generate_return_instruction = func (self: @MC_Generator, instruction: @IR_Return_Instruction) -> Nothing {
+func generate_return_instruction(self: @MC_Generator, instruction: @IR_Return_Instruction) -> Nothing {
     let return_value = instruction.get_return_value()
     if (return_value != null) {
         self.generate_load_value(self.register_rax, return_value)
@@ -860,7 +860,7 @@ define generate_return_instruction = func (self: @MC_Generator, instruction: @IR
     self.output_file.write("  jmp ").write_function_end_label(instruction.parent_block.function).end_line()
 }
 
-define generate_set_instruction = func (self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
+func generate_set_instruction(self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
     let ir_value = instruction.get_value()
     if (ir_value is IR_Undefined_Value) {
         self.abort(clone("Looks like ").append(instruction.result_value.variable.name).append(" is not properly initialized"))
@@ -892,7 +892,7 @@ define generate_set_instruction = func (self: @MC_Generator, instruction: @IR_Se
     }
 }
 
-define generate_store_array_item_instruction = func (self: @MC_Generator, instruction: @IR_Store_Array_Item_Instruction) -> Nothing {
+func generate_store_array_item_instruction(self: @MC_Generator, instruction: @IR_Store_Array_Item_Instruction) -> Nothing {
     let address_register = self.find_unused_register()
     address_register.is_reserved = true
     self.generate_load_value(address_register, instruction.get_array_value())
@@ -952,7 +952,7 @@ define generate_store_array_item_instruction = func (self: @MC_Generator, instru
     address_register.is_reserved = false
 }
 
-define generate_store_struct_member_instruction = func (self: @MC_Generator, instruction: @IR_Store_Struct_Member_Instruction) -> Nothing {
+func generate_store_struct_member_instruction(self: @MC_Generator, instruction: @IR_Store_Struct_Member_Instruction) -> Nothing {
     let ir_struct_pointer_value = instruction.get_struct_pointer_value()
     if (ir_struct_pointer_value is IR_Variable_Value) {
         let ir_struct_pointer_value = ir_struct_pointer_value as @IR_Variable_Value
@@ -993,7 +993,7 @@ define generate_store_struct_member_instruction = func (self: @MC_Generator, ins
     }
 }
 
-define generate_substract_instruction = func (self: @MC_Generator, instruction: @IR_Substract_Instruction) -> Nothing {
+func generate_substract_instruction(self: @MC_Generator, instruction: @IR_Substract_Instruction) -> Nothing {
     let result_register = self.find_unused_register()
     let type_size = self.get_type_size(instruction.result_value.type)
     let left_value = instruction.get_left_value()
@@ -1055,7 +1055,7 @@ define generate_substract_instruction = func (self: @MC_Generator, instruction: 
     self.output_file.write(", ").write_operand(self, right_value).end_line()
 }
 
-define generate_load_value = func (self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
+func generate_load_value(self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
     if (register.value != null) {
         if (ir_value is IR_Variable_Value) {
             let ir_value = ir_value as @IR_Variable_Value
@@ -1187,7 +1187,7 @@ define generate_load_value = func (self: @MC_Generator, register: @MC_Register, 
     }
 }
 
-define generate_store_value = func (self: @MC_Generator, ir_value: @IR_Value, address: @MC_Address) -> Nothing {
+func generate_store_value(self: @MC_Generator, ir_value: @IR_Value, address: @MC_Address) -> Nothing {
     let ir_value_type = ir_value.type
     if (ir_value is IR_Variable_Value && ir_value_type is IR_Struct_Type == false) {
         let mc_value = self.get_value(ir_value as @IR_Variable_Value)
@@ -1328,7 +1328,7 @@ define generate_store_value = func (self: @MC_Generator, ir_value: @IR_Value, ad
     }
 }
 
-define generate_store_struct_literal_value = func (self: @MC_Generator, ir_value: @IR_Struct_Literal_Value, struct_type: @IR_Struct_Type, address: @MC_Register_Based_Address) -> Nothing {
+func generate_store_struct_literal_value(self: @MC_Generator, ir_value: @IR_Struct_Literal_Value, struct_type: @IR_Struct_Type, address: @MC_Register_Based_Address) -> Nothing {
     if (struct_type.base_type != null) {
         self.generate_store_struct_literal_value(ir_value, struct_type.base_type, address)
     }
@@ -1345,13 +1345,13 @@ define generate_store_struct_literal_value = func (self: @MC_Generator, ir_value
                 address.offset = address.offset - struct_type_member_offset
             }
         } else {
-            stderr.write(ir_value.location).write(": ").write(struct_type.name).write('.').write(struct_type_member.name).write(" is not initialized").end_line()
+            stderr.write(ir_value.location).write(": ").warning().write(struct_type.name).write('.').write(struct_type_member.name).write(" is not initialized").reset().end_line()
         }
         struct_type_members_item = struct_type_members_item.next_item
     }
 }
 
-define get_offset = func (self: @MC_Generator, struct_type_member: @IR_Struct_Type_Member) -> i64 {
+func get_offset(self: @MC_Generator, struct_type_member: @IR_Struct_Type_Member) -> i64 {
     let offset = 0 as i64
     let struct_type = struct_type_member.struct_type
     if (struct_type.base_type != null) {
@@ -1374,7 +1374,7 @@ define get_offset = func (self: @MC_Generator, struct_type_member: @IR_Struct_Ty
     self.abort("Invalid state")
 }
 
-define write_operand = func (file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
+func write_operand(file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
     if (ir_value is IR_Constant_Value) {
         let ir_value = ir_value as @IR_Constant_Value
         if (ir_value.literal is Boolean_Token) {
@@ -1436,12 +1436,12 @@ define write_operand = func (file: @FILE, generator: @MC_Generator, ir_value: @I
     generator.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
 }
 
-define abort = func (self: @MC_Generator, message: @String) -> Nothing {
+func abort(self: @MC_Generator, message: @String) -> Nothing {
     self.output_file.flush()
     abort(clone("[Generator] ").append(message))
 }
 
-define abort = func (self: @MC_Generator, location: @Source_Location, message: @String) -> Nothing {
+func abort(self: @MC_Generator, location: @Source_Location, message: @String) -> Nothing {
     self.output_file.flush()
     stderr.end_line().write(location).write(": [Generator] ").write(message).end_line()
     abort()
@@ -1473,7 +1473,7 @@ struct MC_Generator {
     strings: @List[@MC_String] = make @List[@MC_String]()
 }
 
-define create_mc_generator = func (output_file_path: @String) -> @MC_Generator {
+func create_mc_generator(output_file_path: @String) -> @MC_Generator {
     let output_file: @FILE = undefined
     if (output_file_path.equals("-")) {
         output_file = stdout
@@ -1488,7 +1488,7 @@ define create_mc_generator = func (output_file_path: @String) -> @MC_Generator {
     )
 }
 
-define reset = func (self: @MC_Generator) -> Nothing {
+func reset(self: @MC_Generator) -> Nothing {
     while (self.first_value != null) {
         let value = self.first_value
         self.first_value = value.next_value
@@ -1502,7 +1502,7 @@ define reset = func (self: @MC_Generator) -> Nothing {
     self.stack_frame_size = 0
 }
 
-define find_unused_register = func (self: @MC_Generator) -> @MC_Register {
+func find_unused_register(self: @MC_Generator) -> @MC_Register {
     if (self.register_rax.is_reserved == false && self.register_rax.value == null) {
         return self.register_rax
     }
@@ -1552,7 +1552,7 @@ define find_unused_register = func (self: @MC_Generator) -> @MC_Register {
     self.abort("All registered are used")
 }
 
-define create_mc_value = func (self: @MC_Generator, ir_instruction: @IR_Instruction) -> Nothing {
+func create_mc_value(self: @MC_Generator, ir_instruction: @IR_Instruction) -> Nothing {
     let mc_value = make @MC_Value(
         prev_value = self.last_value
         ir_variable_value = ir_instruction.result_value
@@ -1566,7 +1566,7 @@ define create_mc_value = func (self: @MC_Generator, ir_instruction: @IR_Instruct
     self.last_value = mc_value
 }
 
-define map_variable_value = func (self: @MC_Generator, ir_variable_value: @IR_Variable_Value, address: @MC_Address) -> Nothing {
+func map_variable_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Value, address: @MC_Address) -> Nothing {
     if (address == null) {
         self.abort("Invalid state")
     }
@@ -1582,7 +1582,7 @@ define map_variable_value = func (self: @MC_Generator, ir_variable_value: @IR_Va
     }
 }
 
-define map_variable_value = func (self: @MC_Generator, ir_variable_value: @IR_Variable_Value, register: @MC_Register) -> @MC_Value {
+func map_variable_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Value, register: @MC_Register) -> @MC_Value {
     let mc_value = self.first_value
     while (mc_value != null && mc_value.ir_variable_value != ir_variable_value) {
         if (mc_value.ir_variable_value.variable == ir_variable_value.variable && mc_value.register != null) {
@@ -1601,7 +1601,7 @@ define map_variable_value = func (self: @MC_Generator, ir_variable_value: @IR_Va
     return mc_value
 }
 
-define get_value = func (self: @MC_Generator, ir_variable_value: @IR_Variable_Value) -> @MC_Value {
+func get_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Value) -> @MC_Value {
     let mc_value = self.first_value
     while (mc_value != null && mc_value.ir_variable_value != ir_variable_value) {
         mc_value = mc_value.next_value
@@ -1609,7 +1609,7 @@ define get_value = func (self: @MC_Generator, ir_variable_value: @IR_Variable_Va
     return mc_value
 }
 
-define spill_local_variable = func (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
+func spill_local_variable(self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
     let variable_type_size = self.get_type_size(mc_value.ir_variable_value.type)
     if (mc_value.address == null) {
         self.map_variable_value(mc_value.ir_variable_value, self.create_local_variable_address(variable_type_size))
@@ -1625,7 +1625,7 @@ define spill_local_variable = func (self: @MC_Generator, mc_value: @MC_Value) ->
     }
 }
 
-define create_local_variable_address = func (self: @MC_Generator, variable_type_size: i64) -> @MC_Local_Variable_Address {
+func create_local_variable_address(self: @MC_Generator, variable_type_size: i64) -> @MC_Local_Variable_Address {
     let offset = 0i64
     let mc_value = self.first_value
     while (mc_value != null) {
@@ -1649,12 +1649,12 @@ define create_local_variable_address = func (self: @MC_Generator, variable_type_
     return make @MC_Local_Variable_Address(register = self.register_rbp, offset = offset)
 }
 
-define spill_global_variable = func (self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
+func spill_global_variable(self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
     self.output_file.write("  # store global variable: ").write(mc_value.ir_variable_value.variable.name).end_line()
     self.generate_store_value(mc_value.ir_variable_value, make @MC_Global_Variable_Address(ir_variable = mc_value.ir_variable_value.variable))
 }
 
-define release_all_registers = func (self: @MC_Generator) -> Nothing {
+func release_all_registers(self: @MC_Generator) -> Nothing {
     self.release_register(self.register_rax)
     self.release_register(self.register_rcx)
     self.release_register(self.register_rdx)
@@ -1671,7 +1671,7 @@ define release_all_registers = func (self: @MC_Generator) -> Nothing {
     self.release_register(self.register_r15)
 }
 
-define release_register = func (self: @MC_Generator, register: @MC_Register) -> Nothing {
+func release_register(self: @MC_Generator, register: @MC_Register) -> Nothing {
     let mc_value = register.value
     if (mc_value != null) {
         if (register.loaded_value != mc_value) {
@@ -1700,7 +1700,7 @@ define release_register = func (self: @MC_Generator, register: @MC_Register) -> 
     }
 }
 
-define discard_used_values = func (self: @MC_Generator) -> i64 {
+func discard_used_values(self: @MC_Generator) -> i64 {
     let removed_values = 0 as i64
 
     let mc_value = self.last_value
@@ -1760,7 +1760,7 @@ define discard_used_values = func (self: @MC_Generator) -> i64 {
     return removed_values
 }
 
-define is_used = func (self: @IR_Value) -> bool {
+func is_used(self: @IR_Value) -> bool {
     let user_instructions_item = self.user_instructions.first_item
     while (user_instructions_item != null) {
         let user_instruction = user_instructions_item.data
@@ -1783,11 +1783,11 @@ define is_used = func (self: @IR_Value) -> bool {
     return true
 }
 
-define output_live_values = func (self: @MC_Generator) -> Nothing {
+func output_live_values(self: @MC_Generator) -> Nothing {
     self.output_live_values(self.output_file)
 }
 
-define output_live_values = func (self: @MC_Generator, output_file: @FILE) -> Nothing {
+func output_live_values(self: @MC_Generator, output_file: @FILE) -> Nothing {
     if (self.output_debug_comments == false) {
         return
     }
@@ -1809,7 +1809,7 @@ define output_live_values = func (self: @MC_Generator, output_file: @FILE) -> No
     output_file.end_line()
 }
 
-define output_used_registers = func (self: @MC_Generator) -> Nothing {
+func output_used_registers(self: @MC_Generator) -> Nothing {
     if (true) {
         return
     }
@@ -1831,7 +1831,7 @@ define output_used_registers = func (self: @MC_Generator) -> Nothing {
     self.output_file.end_line()
 }
 
-define output_used_register = func (self: @MC_Generator, register: @MC_Register) -> Nothing {
+func output_used_register(self: @MC_Generator, register: @MC_Register) -> Nothing {
     if (register.value != null) {
         self.output_file.write(register.name_q).write(':').write(register.value.ir_variable_value.variable.name).write('.').write(register.value.ir_variable_value.version).write(' ')
     }
@@ -1857,7 +1857,7 @@ struct MC_Register {
     loaded_value: @MC_Value = null
 }
 
-define init = func (self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, name_b: @String) -> @MC_Register {
+func init(self: @MC_Register, name_q: @String, name_d: @String, name_w: @String, name_b: @String) -> @MC_Register {
     self.name_q = name_q
     self.name_d = name_d
     self.name_w = name_w
@@ -1936,7 +1936,7 @@ struct MC_Address {
     extends Object
 }
 
-define write = func (file: @FILE, address: @MC_Address) -> @FILE {
+func write(file: @FILE, address: @MC_Address) -> @FILE {
     if (address is MC_Global_Variable_Address) {
         let address = address as @MC_Global_Variable_Address
         return file.write(address.ir_variable.name).write("[rip]")
@@ -1969,7 +1969,7 @@ struct MC_Local_Variable_Address {
     extends MC_Register_Based_Address
 }
 
-define get_type_size = func (self: @MC_Generator, ir_type: @IR_Type) -> i64 {
+func get_type_size(self: @MC_Generator, ir_type: @IR_Type) -> i64 {
     if (ir_type is IR_Boolean_Type) {
         return 1
     } else if (ir_type is IR_Function_Type) {
@@ -2018,7 +2018,7 @@ define get_type_size = func (self: @MC_Generator, ir_type: @IR_Type) -> i64 {
     self.abort(clone("Unsupported type: ").append(ir_type.name))
 }
 
-define get_type_alignment = func (self: @MC_Generator, type_size: i64) -> i64 {
+func get_type_alignment(self: @MC_Generator, type_size: i64) -> i64 {
     if (type_size == 1i64) {
         return 1
     }
@@ -2036,7 +2036,7 @@ struct MC_String {
     literal: @String_Token
 }
 
-define convert_string = func (self: @MC_Generator, literal: @String_Token) -> @MC_String {
+func convert_string(self: @MC_Generator, literal: @String_Token) -> @MC_String {
     self.strings.for_each_list_item() {
         let string = list_item.data
         if (string.literal.lexeme.equals(literal.lexeme)) {
@@ -2048,7 +2048,7 @@ define convert_string = func (self: @MC_Generator, literal: @String_Token) -> @M
     return string
 }
 
-define generate_strings = func (self: @MC_Generator) -> Nothing {
+func generate_strings(self: @MC_Generator) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
     self.strings.for_each_list_item() {
         let string = list_item.data
@@ -2063,11 +2063,11 @@ define generate_strings = func (self: @MC_Generator) -> Nothing {
     }
 }
 
-define write_string_label = func (file: @FILE, string: @MC_String) -> @FILE {
+func write_string_label(file: @FILE, string: @MC_String) -> @FILE {
     return file.write(".LABEL__string_").write(string.id)
 }
 
-define find_object_type = func (types: @List[@IR_Type]) -> @IR_Struct_Type {
+func find_object_type(types: @List[@IR_Type]) -> @IR_Struct_Type {
     let object_type: @IR_Struct_Type = null
     for_each_list_item(types) {
         let type = list_item.data
@@ -2085,7 +2085,7 @@ define find_object_type = func (types: @List[@IR_Type]) -> @IR_Struct_Type {
     return object_type
 }
 
-define generate_object_types = func (self: @MC_Generator, types: @List[@IR_Type]) -> Nothing {
+func generate_object_types(self: @MC_Generator, types: @List[@IR_Type]) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
     let type_item = types.first_item
     while (type_item != null) {
@@ -2115,7 +2115,7 @@ define generate_object_types = func (self: @MC_Generator, types: @List[@IR_Type]
     }
 }
 
-define assign_object_type_ids = func (type: @IR_Struct_Type, counter: @Counter[u32]) -> Nothing {
+func assign_object_type_ids(type: @IR_Struct_Type, counter: @Counter[u32]) -> Nothing {
     type.object_type_id = counter.next()
     for_each_list_item(type.derived_types) {
         let derived_type = list_item.data
@@ -2124,7 +2124,7 @@ define assign_object_type_ids = func (type: @IR_Struct_Type, counter: @Counter[u
     type.object_type_max_derivate_id = counter.value
 }
 
-define generate_global_variables = func (self: @MC_Generator, symbols: @List[@IR_Symbol], types: @List[@IR_Type]) -> Nothing {
+func generate_global_variables(self: @MC_Generator, symbols: @List[@IR_Symbol], types: @List[@IR_Type]) -> Nothing {
     self.output_file.end_line().write("  .bss").end_line()
 
     let symbols_item = symbols.last_item

@@ -6,7 +6,7 @@ struct String {
     length: i64 = 0
 }
 
-define create_string = func (data: [i8; ?]) -> @String {
+func create_string(data: [i8; ?]) -> @String {
     let data_length = 0 as i64
     loop {
         let char = data[data_length]
@@ -19,13 +19,13 @@ define create_string = func (data: [i8; ?]) -> @String {
     return make @String(data = data, data_size = data_length + 1, length = data_length)
 }
 
-define clone = func (self: @String) -> @String {
+func clone(self: @String) -> @String {
     let clone = make @String(data = malloc(self.data_size) as [i8; ?], data_size = self.data_size)
     clone.append(self)
     return clone
 }
 
-define equals = func (self: @String, other: @String) -> bool {
+func equals(self: @String, other: @String) -> bool {
     if (self.length == other.length) {
         let index = 0 as i64
         while (index < self.length) {
@@ -39,7 +39,7 @@ define equals = func (self: @String, other: @String) -> bool {
     return false
 }
 
-define index_of = func (self: @String, other: @String) -> i64 {
+func index_of(self: @String, other: @String) -> i64 {
     let self_index = 0 as i64
     while (self_index <= self.length - other.length) {
         let other_index = 0 as i64
@@ -54,7 +54,7 @@ define index_of = func (self: @String, other: @String) -> i64 {
     return -1 as i64
 }
 
-define starts_with = func (self: @String, other: @String) -> bool {
+func starts_with(self: @String, other: @String) -> bool {
     if (self.length < other.length) {
         return false
     }
@@ -68,7 +68,7 @@ define starts_with = func (self: @String, other: @String) -> bool {
     return true
 }
 
-define ends_with = func (self: @String, other: @String) -> bool {
+func ends_with(self: @String, other: @String) -> bool {
     if (self.length < other.length) {
         return false
     }
@@ -82,11 +82,11 @@ define ends_with = func (self: @String, other: @String) -> bool {
     return true
 }
 
-define last_index_of = func (self: @String, char: i8) -> i64 {
+func last_index_of(self: @String, char: i8) -> i64 {
     return self.last_index_of(char, self.length - 1)
 }
 
-define last_index_of = func (self: @String, char: i8, from_index: i64) -> i64 {
+func last_index_of(self: @String, char: i8, from_index: i64) -> i64 {
     let index = from_index
     while (index >= 0 && self.data[index] != char) {
         index = index - 1
@@ -94,7 +94,7 @@ define last_index_of = func (self: @String, char: i8, from_index: i64) -> i64 {
     return index
 }
 
-define append = func (self: @String, char: i8) -> @String {
+func append(self: @String, char: i8) -> @String {
     if (self.length + 1 >= self.data_size) {
         self.data_size = self.data_size + 16
         self.data = realloc(self.data, self.data_size) as [i8; ?]
@@ -105,7 +105,7 @@ define append = func (self: @String, char: i8) -> @String {
     return self
 }
 
-define append = func (self: @String, number: i32) -> @String {
+func append(self: @String, number: i32) -> @String {
     if (number < 0) {
         return self.append('-').append(-number)
     }
@@ -115,7 +115,7 @@ define append = func (self: @String, number: i32) -> @String {
     return self.append((number // 10) as i8 + '0')
 }
 
-define append = func (self: @String, number: i64) -> @String {
+func append(self: @String, number: i64) -> @String {
     if (number < 0) {
         return self.append('-').append(-number)
     }
@@ -125,7 +125,7 @@ define append = func (self: @String, number: i64) -> @String {
     return self.append((number // 10) as i8 + '0')
 }
 
-define append = func (self: @String, other: @String) -> @String {
+func append(self: @String, other: @String) -> @String {
     if (self.length + other.length >= self.data_size) {
         self.data_size = self.length + other.length + 1
         self.data = realloc(self.data, self.data_size) as [i8; ?]
@@ -147,7 +147,7 @@ define append = func (self: @String, other: @String) -> @String {
     return self
 }
 
-define remove = func (self: @String, begin_index: i64, end_index: i64) -> @String {
+func remove(self: @String, begin_index: i64, end_index: i64) -> @String {
     if (begin_index < 0 || begin_index > end_index || end_index >= self.length) {
         abort("Invalid state")
     }

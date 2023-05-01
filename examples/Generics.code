@@ -1,6 +1,6 @@
 include "./code/lang/Object.code"
 
-define main = func () -> Nothing {
+func main() -> Nothing {
     let map = make Map[@Any, i32]()
     map.put("One", 0)
     map.put("One", 1)
@@ -63,9 +63,9 @@ struct Map_Item[K, V] {
     next_item: @Map_Item[K, V] = null
 }
 
-define abort = func () -> Nothing
+external func abort() -> Nothing
 
-define put = func [K, V] (self: @Map[K, V], key: K, value: V) -> Nothing {
+func put[K, V] (self: @Map[K, V], key: K, value: V) -> Nothing {
     let item = self.first_item
     while (item != null) {
         if (item.key == key) {
@@ -88,7 +88,7 @@ define put = func [K, V] (self: @Map[K, V], key: K, value: V) -> Nothing {
     self.last_item = item
 }
 
-define get = func [K, V] (self: @Map[K, V], key: K) -> V {
+func get[K, V] (self: @Map[K, V], key: K) -> V {
     self.for_each() {
         if (item_key == key) {
             return item_value
@@ -105,7 +105,7 @@ define for_each = macro [K, V] (self: @Map[K, V], block: macro (item_key: K, ite
     }
 }
 
-define max = func [T] (self: T, other: T) -> T {
+func max[T] (self: T, other: T) -> T {
     if (self < other) {
         return other
     }

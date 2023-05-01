@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/function_without_return.code:4:8: Missing return statement\n'
+\ - error: 'tests/function_without_return.code:4:6: Missing return statement\n'
 
-define test = func () -> bool {
+func test() -> bool {
 }

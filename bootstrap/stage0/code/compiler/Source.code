@@ -12,7 +12,7 @@ struct Source_Location {
     column: i64
 }
 
-define create_source = func (file_path: @String) -> @Source {
+func create_source(file_path: @String) -> @Source {
     let file = fopen(file_path.data, "r".data)
     if (file == null) {
         return null

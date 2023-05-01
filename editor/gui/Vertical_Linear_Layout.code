@@ -12,7 +12,7 @@ struct GUI_Vertical_Linear_Layout {
     spacing: i32 = 0
 }
 
-define measure_vertical_linear_layout = func (self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
+func measure_vertical_linear_layout(self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
     let self = self as @GUI_Horizontal_Linear_Layout
 
     if (width_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
@@ -69,7 +69,7 @@ define measure_vertical_linear_layout = func (self: @GUI_Widget, width_spec: @Me
     \ stdout.write(self.name).write(" size hint: ").write(self.width_hint).write(" x ").write(self.height_hint).end_line()
 }
 
-define layout_vertical_linear_layout = func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+func layout_vertical_linear_layout(self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     let self = self as @GUI_Vertical_Linear_Layout
     self.bounds.set(left, top, right, bottom)
     if (self.children_count > 0) {

@@ -5,7 +5,7 @@ include "./Font_Editor.code"
 
 let text: @String
 
-define main = func () -> i32 {
+func main() -> i32 {
     text = read_file("editor/Editor.code")
 
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {

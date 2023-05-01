@@ -112,7 +112,7 @@ Nullable types have a similar in-memory structure with the following struct:
 
 The compiler will complain of missing a null-checks.
 
-    define length = func (self: @String?) -> i32 {
+    func length(self: @String?) -> i32 {
         if (self != null) {
             return self.length  \ the compiler treats self as @String at this point
         }
@@ -176,7 +176,7 @@ The variable names are symbols used by the compiler to know where the value are 
 
 ## Functions
 
-    define max = func (v1: i32, v2: i32) -> i32 {
+    func max(v1: i32, v2: i32) -> i32 {
         if (v1 > v2) {
             return v1
         }
@@ -194,7 +194,7 @@ UFCS is useful to chain function calls.
 
 ## Generic functions
 
-    define max = func [T] (v1: T, v2: T) -> T {
+    func max[T](v1: T, v2: T) -> T {
         if (v1 > v2) {
             return v1
         }

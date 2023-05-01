@@ -22,7 +22,7 @@ struct GUI_Layout {
     children_last: @GUI_Layout_Child = null
 }
 
-define draw_layout = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
+func draw_layout(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
     let self = self as @GUI_Layout
     \ self.draw_widget(canvas)
     self.for_each_child() {
@@ -35,7 +35,7 @@ struct GUI_Layout_Child {
     next_child: @GUI_Layout_Child = null
 }
 
-define add = func (self: @GUI_Layout, widget: @GUI_Widget) -> Nothing {
+func add(self: @GUI_Layout, widget: @GUI_Widget) -> Nothing {
     let child = make @GUI_Layout_Child(widget = widget)
     if (self.children_first == null) {
         self.children_first = child

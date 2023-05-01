@@ -32,10 +32,10 @@ struct Object_Type {
 }
 
 external type File
-define fputs = func (s: [i8; ?], stream: @File) -> i32
+external func fputs(s: [i8; ?], stream: @File) -> i32
 let stdout: @File = external
 
-define main = func () -> i32 {
+func main() -> i32 {
     let shape: @Shape = make @Rectangle()
 
     if (shape.points != 4) {

@@ -15,7 +15,7 @@ struct Glyph {
     mask: [[u8; 9]; 18]
 }
 
-define init_font = func () -> Nothing {
+func init_font() -> Nothing {
     let file = open_file("editor/Font.data", "r")
     let line = make String()
 

@@ -24,7 +24,7 @@ struct String {
     length: usize
 }
 
-define main = func () -> i32 {
+func main() -> i32 {
     let map = make @Map()
     let map = make Map[String, i32](
         keys = undefined
@@ -43,4 +43,4 @@ define main = func () -> i32 {
     return 0
 }
 
-define malloc = func (size: usize) -> @Any
+external func malloc(size: usize) -> @Any

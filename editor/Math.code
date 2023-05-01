@@ -1,13 +1,13 @@
 \ Copyright (c) 2021, 2023, Stefan Selariu
 
-define max = func (v1: i32, v2: i32) -> i32 {
+func max(v1: i32, v2: i32) -> i32 {
     if (v1 < v2) {
         return v2
     }
     return v1
 }
 
-define min = func (v1: i32, v2: i32) -> i32 {
+func min(v1: i32, v2: i32) -> i32 {
     if (v1 < v2) {
         return v1
     }

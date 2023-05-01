@@ -1,9 +1,9 @@
 ## Planned activities:
 
-- Change type system to pass structs by value
+- Generate function name based on its signature
 - Change struct syntax
+- Change macro syntax
 - Create dedicatd AST_Opaque_Type
-- Change function syntax
 - Implement struct super pattern
 - Change cast syntax
 - Pass all tests

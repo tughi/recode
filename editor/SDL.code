@@ -1,19 +1,19 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> @SDL_Window
-define SDL_Delay = func (ms: u32) -> Nothing
-define SDL_DestroyWindow = func (window: @SDL_Window) -> Nothing
-define SDL_GetError = func () -> [u8; ?]
-define SDL_GetTicks = func () -> u32
-define SDL_GetWindowSurface = func (window: @SDL_Window) -> @SDL_Surface
-define SDL_Init = func (flags: u32) -> i32
-define SDL_LockSurface = func (surface: @SDL_Surface) -> i32
-define SDL_PollEvent = func (event: @SDL_Event) -> i32
-define SDL_Quit = func () -> Nothing
-define SDL_ShowCursor = func (toggle: i32) -> i32
-define SDL_UnlockSurface = func (surface: @SDL_Surface) -> Nothing
-define SDL_UpdateWindowSurface = func (window: @SDL_Window) -> i32
-define SDL_WaitEvent = func (event: @SDL_Event) -> i32
+external func SDL_CreateWindow(title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> @SDL_Window
+external func SDL_Delay(ms: u32) -> Nothing
+external func SDL_DestroyWindow(window: @SDL_Window) -> Nothing
+external func SDL_GetError() -> [u8; ?]
+external func SDL_GetTicks() -> u32
+external func SDL_GetWindowSurface(window: @SDL_Window) -> @SDL_Surface
+external func SDL_Init(flags: u32) -> i32
+external func SDL_LockSurface(surface: @SDL_Surface) -> i32
+external func SDL_PollEvent(event: @SDL_Event) -> i32
+external func SDL_Quit() -> Nothing
+external func SDL_ShowCursor(toggle: i32) -> i32
+external func SDL_UnlockSurface(surface: @SDL_Surface) -> Nothing
+external func SDL_UpdateWindowSurface(window: @SDL_Window) -> i32
+external func SDL_WaitEvent(event: @SDL_Event) -> i32
 
 define SDL_INIT_VIDEO = 0x20u32
 

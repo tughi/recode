@@ -13,7 +13,7 @@ struct GUI_Text_Model_Line {
     next_line: @GUI_Text_Model_Line = null
 }
 
-define create_text_model = func (text: @String) -> @GUI_Text_Model {
+func create_text_model(text: @String) -> @GUI_Text_Model {
     let model = make @GUI_Text_Model()
 
     let line_text = "".clone()
@@ -30,7 +30,7 @@ define create_text_model = func (text: @String) -> @GUI_Text_Model {
     return model
 }
 
-define append = func (self: @GUI_Text_Model, line: @GUI_Text_Model_Line) -> Nothing {
+func append(self: @GUI_Text_Model, line: @GUI_Text_Model_Line) -> Nothing {
     if (self.first_line == null) {
         self.first_line = line
     } else {

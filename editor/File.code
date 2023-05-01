@@ -3,11 +3,11 @@
 include "./LibC.code"
 include "./String.code"
 
-define write = func (self: @FILE, string: @String) -> @FILE {
+func write(self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
-define write = func (file: @FILE, chars: [u8; ?]) -> @FILE {
+func write(file: @FILE, chars: [u8; ?]) -> @FILE {
     let index = 0isize
     loop {
         let char = chars[index]
@@ -19,7 +19,7 @@ define write = func (file: @FILE, chars: [u8; ?]) -> @FILE {
     }
 }
 
-define write = func (file: @FILE, number: i32) -> @FILE {
+func write(file: @FILE, number: i32) -> @FILE {
     if (number < 0) {
         return file.write('-' as u8).write(-number)
     }
@@ -30,7 +30,7 @@ define write = func (file: @FILE, number: i32) -> @FILE {
     return file
 }
 
-define write = func (file: @FILE, number: u32) -> @FILE {
+func write(file: @FILE, number: u32) -> @FILE {
     if (number >= 10) {
         file.write(number / 10)
     }
@@ -38,7 +38,7 @@ define write = func (file: @FILE, number: u32) -> @FILE {
     return file
 }
 
-define write = func (file: @FILE, number: u32, base: u8) -> @FILE {
+func write(file: @FILE, number: u32, base: u8) -> @FILE {
     if (number >= base as u32) {
         file.write(number / base as u32, base)
     }
@@ -51,7 +51,7 @@ define write = func (file: @FILE, number: u32, base: u8) -> @FILE {
     return file
 }
 
-define write = func (file: @FILE, number: isize) -> @FILE {
+func write(file: @FILE, number: isize) -> @FILE {
     if (number < 0) {
         return file.write('-' as u8).write(-number)
     }
@@ -61,31 +61,31 @@ define write = func (file: @FILE, number: isize) -> @FILE {
     return file.write((number // 10) as u8 + '0' as u8)
 }
 
-define write = func (file: @FILE, char: u8) -> @FILE {
+func write(file: @FILE, char: u8) -> @FILE {
     fputc(char as i32, file)
     return file
 }
 
-define end_line = func (file: @FILE) -> @FILE {
+func end_line(file: @FILE) -> @FILE {
     return file.write('\n' as u8)
 }
 
-define read_file = func (file_path: @String) -> @String {
+func read_file(file_path: @String) -> @String {
     let file = open_file(file_path, "r")
     let content = file.read_all()
     file.close()
     return content
 }
 
-define open_file = func (file_path: @String, mode: @String) -> @FILE {
+func open_file(file_path: @String, mode: @String) -> @FILE {
     return fopen(file_path.data, mode.data)
 }
 
-define close = func (file: @FILE) -> Nothing {
+func close(file: @FILE) -> Nothing {
     fclose(file)
 }
 
-define read_all = func (file: @FILE) -> @String {
+func read_all(file: @FILE) -> @String {
     if (feof(file) != 0) {
         return null
     }
@@ -100,7 +100,7 @@ define read_all = func (file: @FILE) -> @String {
     return content
 }
 
-define read_line = func (file: @FILE, line: @String) -> bool {
+func read_line(file: @FILE, line: @String) -> bool {
     if (feof(file) != 0) {
         return false
     }

@@ -10,7 +10,7 @@ struct Integer_Token {
     value: i32
 }
 
-define main = func () -> i32 {
+func main() -> i32 {
     let token = make Integer_Token(value = 42)
     let token_ref = @token as @Token
 

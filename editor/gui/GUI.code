@@ -70,14 +70,14 @@ struct GUI {
     pressed_widget: @GUI_Widget = null
 }
 
-define init_gui = func () -> @GUI {
+func init_gui() -> @GUI {
     let gui = make @GUI(gui = undefined, parent = null, hovered_widget = undefined)
     gui.gui = gui
     gui.hovered_widget = gui
     return gui
 }
 
-define post = func (self: @GUI, event: @GUI_Event) -> Nothing {
+func post(self: @GUI, event: @GUI_Event) -> Nothing {
     if (self.first_event == null) {
         self.first_event = event
     } else {

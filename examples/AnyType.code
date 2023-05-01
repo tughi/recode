@@ -1,4 +1,4 @@
-define main = func () -> i32 {
+func main() -> i32 {
     let value: @Any = "String"
     return (value as @String).length as i32 - 6
 }

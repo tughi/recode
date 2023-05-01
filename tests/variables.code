@@ -6,11 +6,11 @@ struct String {
 }
 
 external type File
-define fputs = func (s: [u8; ?], stream: @File) -> i32
+external func fputs(s: [u8; ?], stream: @File) -> i32
 
 let stdout: @File = external
 
-define main = func () -> i32 {
+func main() -> i32 {
     let value_1: i32 = undefined
     let value_2 = 42 \ type inference
     let file: @File = null

@@ -1,4 +1,4 @@
-define main = func () -> Nothing {
+func main() -> Nothing {
     let char = -'0'
     let hello = make @String_Value(value = "Hello")
     let forty_two = make @Int_Value(value = 42)
@@ -25,7 +25,7 @@ struct Int_Value {
     value: i32
 }
 
-define dump_int = func (self: @Value, file: @FILE) -> Nothing {
+func dump_int(self: @Value, file: @FILE) -> Nothing {
     let self = self as @Int_Value
     file.write("Int: ").write(self.value).end_line()
 }

@@ -1,6 +1,6 @@
 \ Expect:
 \ - error: 'tests/undefined_variable_without_type.code:5:9: Invalid variable type: Undefined\n'
 
-define test = func () -> Nothing {
+func test() -> Nothing {
     let value = undefined
 }

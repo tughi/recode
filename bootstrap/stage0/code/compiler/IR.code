@@ -111,7 +111,7 @@ struct IR_Function_Type {
     return_type: @IR_Type
 }
 
-define create_ir_function_type = func (parameters: @List[@IR_Callable_Parameter], return_type: @IR_Type) -> @IR_Function_Type {
+func create_ir_function_type(parameters: @List[@IR_Callable_Parameter], return_type: @IR_Type) -> @IR_Function_Type {
     let type_name = make @String().append("func (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
@@ -135,7 +135,7 @@ struct IR_Macro_Type {
     extends IR_Callable_Type
 }
 
-define create_ir_macro_type = func (parameters: @List[@IR_Callable_Parameter]) -> @IR_Macro_Type {
+func create_ir_macro_type(parameters: @List[@IR_Callable_Parameter]) -> @IR_Macro_Type {
     let type_name = make @String().append("macro (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
@@ -168,13 +168,13 @@ struct IR_Struct_Type_Member {
     type: @IR_Type
 }
 
-define add_member = func (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
+func add_member(self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
     let member = make @IR_Struct_Type_Member(struct_type = self, name = name, type = type)
     self.members.append(member)
     return member
 }
 
-define get_member = func (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
+func get_member(self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
     let struct_type = self
     loop {
         let members_item = struct_type.members.first_item
@@ -192,7 +192,7 @@ define get_member = func (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Ty
     }
 }
 
-define is_base_type = func (self: @IR_Struct_Type, other: @IR_Struct_Type) -> bool {
+func is_base_type(self: @IR_Struct_Type, other: @IR_Struct_Type) -> bool {
     let struct_type = other
     loop {
         if (self == struct_type.base_type) {
@@ -205,7 +205,7 @@ define is_base_type = func (self: @IR_Struct_Type, other: @IR_Struct_Type) -> bo
     }
 }
 
-define is_object_type = func (self: @IR_Struct_Type) -> bool {
+func is_object_type(self: @IR_Struct_Type) -> bool {
     let struct_type = self
     loop {
         if (struct_type.name.equals("Object")) {
@@ -244,7 +244,7 @@ struct IR_Value {
     }
 }
 
-define write = func (file: @FILE, value: @IR_Value, check_users: bool) -> @FILE {
+func write(file: @FILE, value: @IR_Value, check_users: bool) -> @FILE {
     if (check_users && value.user_instructions.size == 0 as i64) {
         file.flush()
         if (value is IR_Variable_Value) {
@@ -322,7 +322,7 @@ struct IR_Struct_Literal_Member_Value_Link {
     struct_type_member: @IR_Struct_Type_Member
 }
 
-define get_member_value = func (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Value {
+func get_member_value(self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Value {
     let links_item = self.links.first_item
     while (links_item != null) {
         let link = links_item.data
@@ -337,7 +337,7 @@ define get_member_value = func (self: @IR_Struct_Literal_Value, struct_type_memb
     return null
 }
 
-define set_member_value = func (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> Nothing {
+func set_member_value(self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> Nothing {
     let member_value_link = make @IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
     member_value_link.back_link = make @IR_Required_By_Value_Link(value = self, back_link = member_value_link)
     self.links.append(member_value_link)
@@ -385,7 +385,7 @@ struct IR_Variable_Value {
     version: i64
 }
 
-define init = func (self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value {
+func init(self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value {
     self.variable = variable
     self.version = variable.values.size + 1
     variable.values.append(self)
@@ -422,11 +422,11 @@ struct IR_Block {
     is_generated: bool = false
 }
 
-define has_instructions = func (self: @IR_Block) -> bool {
+func has_instructions(self: @IR_Block) -> bool {
     return self.first_instruction != null
 }
 
-define prepend = func (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
+func prepend(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.parent_block = self
     instruction.prev_instruction = null
     instruction.next_instruction = self.first_instruction
@@ -439,7 +439,7 @@ define prepend = func (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Ins
     return instruction
 }
 
-define append = func (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
+func append(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.parent_block = self
     instruction.prev_instruction = self.last_instruction
     instruction.next_instruction = null
@@ -452,14 +452,14 @@ define append = func (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Inst
     return instruction
 }
 
-define append_jump = func (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instruction {
+func append_jump(self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instruction {
     let instruction = make @IR_Direct_Jump_Instruction(result_value = null, block = block)
     block.predecessors.append(self)
     self.append(instruction)
     return instruction
 }
 
-define append_jump = func (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
+func append_jump(self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
     let instruction = make @IR_Conditional_Jump_Instruction(result_value = null, true_block = true_block, false_block = false_block)
     instruction.set_operand_value("condition", condition_value)
     true_block.predecessors.append(self)
@@ -468,7 +468,7 @@ define append_jump = func (self: @IR_Block, condition_value: @IR_Value, true_blo
     return instruction
 }
 
-define remove = func (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
+func remove(self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
     if (instruction.parent_block != self) {
         abort("Tried to remove instruction belonging to another block")
     }
@@ -489,7 +489,7 @@ define remove = func (self: @IR_Block, instruction: @IR_Instruction) -> Nothing 
     instruction.next_instruction = null
 }
 
-define dump = func (block: @IR_Block, file: @FILE) -> @FILE {
+func dump(block: @IR_Block, file: @FILE) -> @FILE {
     file.write("block.").write(block.id)
     let block_predecessors = block.predecessors.create_iterator()
     if (block_predecessors.has_next()) {
@@ -530,13 +530,13 @@ struct IR_Function {
     blocks: @List[@IR_Block]
 }
 
-define create_block = func (self: @IR_Function) -> @IR_Block {
+func create_block(self: @IR_Function) -> @IR_Block {
     let block = make @IR_Block(id = self.blocks.size + 1, function = self)
     self.blocks.append(block)
     return block
 }
 
-define dump = func (function: @IR_Function, file: @FILE) -> Nothing {
+func dump(function: @IR_Function, file: @FILE) -> Nothing {
     file.write_function_label(function).write(" :: (")
     let function_parameters = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
@@ -607,14 +607,14 @@ struct IR_Instruction {
     }
 }
 
-define dump_ir_instruction_result = func (self: @IR_Instruction, file: @FILE, prefix: @String) -> Nothing {
+func dump_ir_instruction_result(self: @IR_Instruction, file: @FILE, prefix: @String) -> Nothing {
     file.write(prefix)
     if (self.result_value != null) {
         file.write(self.result_value, false).write(": ").write(self.result_value.type.name).write(" = ")
     }
 }
 
-define is_exit_instruction = func (self: @IR_Instruction) -> bool {
+func is_exit_instruction(self: @IR_Instruction) -> bool {
     if (self == null) {
         return false
     }
@@ -637,12 +637,12 @@ define is_exit_instruction = func (self: @IR_Instruction) -> bool {
     return false
 }
 
-define set_operand_value = func (self: @IR_Instruction, key: @Any, value: @IR_Value) -> Nothing {
+func set_operand_value(self: @IR_Instruction, key: @Any, value: @IR_Value) -> Nothing {
     self.operand_values.put(key, value)
     value.user_instructions.append(self)
 }
 
-define replace_operand_value = func (self: @IR_Instruction, old_value: @IR_Value, new_value: @IR_Value) -> Nothing {
+func replace_operand_value(self: @IR_Instruction, old_value: @IR_Value, new_value: @IR_Value) -> Nothing {
     old_value.user_instructions.remove(self).prune()
     new_value.user_instructions.append(self)
     if (self is IR_Phi_Instruction) {
@@ -658,7 +658,7 @@ struct IR_Call_Instruction {
     arguments_size: i64 = 0
 }
 
-define dump_ir_call_instruction_arguments = func (instruction: @IR_Call_Instruction, file: @FILE) -> Nothing {
+func dump_ir_call_instruction_arguments(instruction: @IR_Call_Instruction, file: @FILE) -> Nothing {
     let call_argument_index = 0 as i64
     while (call_argument_index < instruction.arguments_size) {
         file.write(", ").write(instruction.get_argument_value(call_argument_index), true)
@@ -671,7 +671,7 @@ struct IR_Call_Argument {
     value: @IR_Value
 }
 
-define add_arguments = func (self: @IR_Call_Instruction, call_arguments: @List[@IR_Call_Argument]) -> @IR_Call_Instruction {
+func add_arguments(self: @IR_Call_Instruction, call_arguments: @List[@IR_Call_Argument]) -> @IR_Call_Instruction {
     let call_arguments_item = call_arguments.first_item
     while (call_arguments_item != null) {
         let call_argument = call_arguments_item.data
@@ -682,11 +682,11 @@ define add_arguments = func (self: @IR_Call_Instruction, call_arguments: @List[@
     return self
 }
 
-define get_argument_value = func (self: @IR_Call_Instruction, index: i64) -> @IR_Value {
+func get_argument_value(self: @IR_Call_Instruction, index: i64) -> @IR_Value {
     return self.operand_values.get(get_argument_key(index))
 }
 
-define get_argument_key = func (index: i64) -> @String {
+func get_argument_key(index: i64) -> @String {
     if (index == 0 as i64) {
         return "argument-0-value"
     } else if (index == 1 as i64) {
@@ -716,7 +716,7 @@ struct IR_Direct_Call_Instruction {
     function: @IR_Function
 }
 
-define create_ir_direct_call_instruction = func (result_value: @IR_Variable_Value, call_arguments: @List[@IR_Call_Argument], function: @IR_Function) -> @IR_Call_Instruction {
+func create_ir_direct_call_instruction(result_value: @IR_Variable_Value, call_arguments: @List[@IR_Call_Argument], function: @IR_Function) -> @IR_Call_Instruction {
     let instruction = make @IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
     if (result_value != null) {
@@ -738,7 +738,7 @@ struct IR_Dynamic_Call_Instruction {
     )
 }
 
-define create_ir_dynamic_call_instruction = func (result_value: @IR_Variable_Value, call_arguments: @List[@IR_Call_Argument], function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
+func create_ir_dynamic_call_instruction(result_value: @IR_Variable_Value, call_arguments: @List[@IR_Call_Argument], function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
     let instruction = make @IR_Dynamic_Call_Instruction(result_value = result_value)
     instruction.add_arguments(call_arguments)
     instruction.set_operand_value("function_address", function_address)
@@ -748,7 +748,7 @@ define create_ir_dynamic_call_instruction = func (result_value: @IR_Variable_Val
     return instruction
 }
 
-define get_function_address = func (self: @IR_Dynamic_Call_Instruction) -> @IR_Variable_Value {
+func get_function_address(self: @IR_Dynamic_Call_Instruction) -> @IR_Variable_Value {
     return self.operand_values.get("function_address") as @IR_Variable_Value
 }
 
@@ -762,14 +762,14 @@ struct IR_Cast_Instruction {
     )
 }
 
-define create_ir_cast_instruction = func (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
+func create_ir_cast_instruction(result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
     let instruction = make @IR_Cast_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_value = func (self: @IR_Cast_Instruction) -> @IR_Value {
+func get_value(self: @IR_Cast_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
@@ -784,14 +784,14 @@ struct IR_Is_Instruction {
     type: @IR_Struct_Type
 }
 
-define create_ir_is_instruction = func (result_value: @IR_Variable_Value, value: @IR_Value, type: @IR_Struct_Type) -> @IR_Is_Instruction {
+func create_ir_is_instruction(result_value: @IR_Variable_Value, value: @IR_Value, type: @IR_Struct_Type) -> @IR_Is_Instruction {
     let instruction = make @IR_Is_Instruction(result_value = result_value, type = type)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_value = func (self: @IR_Is_Instruction) -> @IR_Value {
+func get_value(self: @IR_Is_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
@@ -811,7 +811,7 @@ struct IR_Conditional_Jump_Instruction {
     false_block: @IR_Block
 }
 
-define get_condition_value = func (self: @IR_Conditional_Jump_Instruction) -> @IR_Value {
+func get_condition_value(self: @IR_Conditional_Jump_Instruction) -> @IR_Value {
     return self.operand_values.get("condition")
 }
 
@@ -838,7 +838,7 @@ struct IR_Load_Array_Item_Instruction {
     load_address: bool
 }
 
-define create_ir_load_array_item_instruction = func (result_value: @IR_Variable_Value, array_value: @IR_Value, index_value: @IR_Value, array_item_type: @IR_Type, load_address: bool) -> @IR_Load_Array_Item_Instruction {
+func create_ir_load_array_item_instruction(result_value: @IR_Variable_Value, array_value: @IR_Value, index_value: @IR_Value, array_item_type: @IR_Type, load_address: bool) -> @IR_Load_Array_Item_Instruction {
     let instruction = make @IR_Load_Array_Item_Instruction(result_value = result_value, array_item_type = array_item_type, load_address = load_address)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
@@ -846,11 +846,11 @@ define create_ir_load_array_item_instruction = func (result_value: @IR_Variable_
     return instruction
 }
 
-define get_array_value = func (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
+func get_array_value(self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("array_value")
 }
 
-define get_index_value = func (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
+func get_index_value(self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("index_value")
 }
 
@@ -871,7 +871,7 @@ struct IR_Load_Struct_Member_Instruction {
     load_address: bool
 }
 
-define create_ir_load_struct_member_instruction = func (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: bool) -> @IR_Load_Struct_Member_Instruction {
+func create_ir_load_struct_member_instruction(result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: bool) -> @IR_Load_Struct_Member_Instruction {
     let instruction = make @IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     result_value.creator_instruction = instruction
@@ -886,7 +886,7 @@ define create_ir_load_struct_member_instruction = func (result_value: @IR_Variab
     return instruction
 }
 
-define get_struct_pointer_value = func (self: @IR_Load_Struct_Member_Instruction) -> @IR_Value {
+func get_struct_pointer_value(self: @IR_Load_Struct_Member_Instruction) -> @IR_Value {
     return self.operand_values.get("struct_pointer_value")
 }
 
@@ -900,7 +900,7 @@ struct IR_Load_Variable_Address_Instruction {
     )
 }
 
-define create_ir_load_variable_address_instruction = func (result_value: @IR_Variable_Value, variable_value: @IR_Variable_Value) -> @IR_Load_Variable_Address_Instruction {
+func create_ir_load_variable_address_instruction(result_value: @IR_Variable_Value, variable_value: @IR_Variable_Value) -> @IR_Load_Variable_Address_Instruction {
     let instruction = make @IR_Load_Variable_Address_Instruction(result_value = result_value)
     instruction.set_operand_value("variable_value", variable_value)
     result_value.creator_instruction = instruction
@@ -913,7 +913,7 @@ define create_ir_load_variable_address_instruction = func (result_value: @IR_Var
     return instruction
 }
 
-define get_variable_value = func (self: @IR_Load_Variable_Address_Instruction) -> @IR_Variable_Value {
+func get_variable_value(self: @IR_Load_Variable_Address_Instruction) -> @IR_Variable_Value {
     return self.operand_values.get("variable_value") as @IR_Variable_Value
 }
 
@@ -927,7 +927,7 @@ struct IR_Load_Variable_Instruction {
     variable: @IR_Variable
 }
 
-define create_ir_load_variable_instruction = func (result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
+func create_ir_load_variable_instruction(result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
     let instruction = make @IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
     result_value.creator_instruction = instruction
     return instruction
@@ -944,14 +944,14 @@ struct IR_New_Instruction {
     type: @IR_Type
 }
 
-define create_ir_new_instruction = func (result_value: @IR_Variable_Value, type: @IR_Type, init_value: @IR_Value) -> @IR_New_Instruction {
+func create_ir_new_instruction(result_value: @IR_Variable_Value, type: @IR_Type, init_value: @IR_Value) -> @IR_New_Instruction {
     let instruction = make @IR_New_Instruction(result_value = result_value, type = type)
     instruction.set_operand_value("init_value", init_value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_init_value = func (self: @IR_New_Instruction) -> @IR_Value {
+func get_init_value(self: @IR_New_Instruction) -> @IR_Value {
     return self.operand_values.get("init_value")
 }
 
@@ -968,7 +968,7 @@ struct IR_Return_Instruction {
     )
 }
 
-define create_ir_return_instruction = func (return_value: @IR_Value) -> @IR_Return_Instruction {
+func create_ir_return_instruction(return_value: @IR_Value) -> @IR_Return_Instruction {
     let instruction = make @IR_Return_Instruction(result_value = null)
     if (return_value != null) {
         instruction.set_operand_value("return_value", return_value)
@@ -976,7 +976,7 @@ define create_ir_return_instruction = func (return_value: @IR_Value) -> @IR_Retu
     return instruction
 }
 
-define get_return_value = func (self: @IR_Return_Instruction) -> @IR_Value {
+func get_return_value(self: @IR_Return_Instruction) -> @IR_Value {
     return self.operand_values.get("return_value")
 }
 
@@ -990,14 +990,14 @@ struct IR_Set_Instruction {
     )
 }
 
-define create_ir_set_instruction = func (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
+func create_ir_set_instruction(result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
     let instruction = make @IR_Set_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_value = func (self: @IR_Set_Instruction) -> @IR_Value {
+func get_value(self: @IR_Set_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
@@ -1011,7 +1011,7 @@ struct IR_Store_Array_Item_Instruction {
     )
 }
 
-define create_ir_store_array_item_instruction = func (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
+func create_ir_store_array_item_instruction(array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
     let instruction = make @IR_Store_Array_Item_Instruction(result_value = null)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
@@ -1019,15 +1019,15 @@ define create_ir_store_array_item_instruction = func (array_value: @IR_Value, in
     return instruction
 }
 
-define get_array_value = func (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+func get_array_value(self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("array_value")
 }
 
-define get_index_value = func (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+func get_index_value(self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("index_value")
 }
 
-define get_value = func (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
+func get_value(self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
@@ -1042,18 +1042,18 @@ struct IR_Store_Struct_Member_Instruction {
     struct_type_member: @IR_Struct_Type_Member
 }
 
-define create_ir_store_struct_member_instruction = func (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
+func create_ir_store_struct_member_instruction(struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
     let instruction = make @IR_Store_Struct_Member_Instruction(result_value = null, struct_type_member = struct_type_member)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     instruction.set_operand_value("value", value)
     return instruction
 }
 
-define get_struct_pointer_value = func (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
+func get_struct_pointer_value(self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
     return self.operand_values.get("struct_pointer_value")
 }
 
-define get_value = func (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
+func get_value(self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
@@ -1061,17 +1061,17 @@ struct IR_Binary_Instruction {
     extends IR_Instruction
 }
 
-define init = func (self: @IR_Binary_Instruction, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
+func init(self: @IR_Binary_Instruction, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
     self.set_operand_value("left_value", left_value)
     self.set_operand_value("right_value", right_value)
     return self
 }
 
-define get_left_value = func (self: @IR_Binary_Instruction) -> @IR_Value {
+func get_left_value(self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("left_value")
 }
 
-define get_right_value = func (self: @IR_Binary_Instruction) -> @IR_Value {
+func get_right_value(self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("right_value")
 }
 
@@ -1211,17 +1211,17 @@ struct IR_Phi_Instruction {
     )
 }
 
-define create_ir_phi_instruction = func (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
+func create_ir_phi_instruction(result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
     let instruction = make @IR_Phi_Instruction(result_value = result_value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define append = func (self: @IR_Phi_Instruction, value: @IR_Value) -> Nothing {
+func append(self: @IR_Phi_Instruction, value: @IR_Value) -> Nothing {
     self.set_operand_value(value, value)
 }
 
-define is_redundant = func (self: @IR_Phi_Instruction) -> bool {
+func is_redundant(self: @IR_Phi_Instruction) -> bool {
     \ redundant phi instruction:
     \   v.1 = phi(v.2)
 
@@ -1240,7 +1240,7 @@ define is_redundant = func (self: @IR_Phi_Instruction) -> bool {
     return true
 }
 
-define is_trivial = func (self: @IR_Phi_Instruction) -> bool {
+func is_trivial(self: @IR_Phi_Instruction) -> bool {
     \ trivial phi instructions:
     \   v.1 = phi(v.1)
     \   v.1 = phi(v.1, v.2)

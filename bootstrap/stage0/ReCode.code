@@ -1,6 +1,6 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-define main = func (argc: i32, argv: [[i8; ?]; ?]) -> Nothing {
+func main(argc: i32, argv: [[i8; ?]; ?]) -> Nothing {
     if (argc < 3) {
         stdout.write("Usage:").end_line()
         stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").end_line()
@@ -47,7 +47,7 @@ include "./code/compiler/Generator.code"
 
 include "./code/compiler/IR_Builder.code"
 
-define abort = func (location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
+func abort(location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
     stderr.write(location).error().write(": Unexpected type: ").write(unexpected_type.name).reset().end_line()
     abort()
 }
@@ -58,14 +58,14 @@ include "./code/compiler/IR.code"
 
 include "./code/compiler/Parser.code"
 
-define abort = func (self: @Parser, unexpected_token: @Token) -> Nothing {
+func abort(self: @Parser, unexpected_token: @Token) -> Nothing {
     stderr.write(unexpected_token.location).write(": ").error().write("Unexpected ").write(unexpected_token.object_type.name).write(": ").write(unexpected_token).reset().end_line()
     abort()
 }
 
 include "./code/compiler/AST.code"
 
-define write = func (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
+func write(file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
     let statements = compilation_unit.statements.create_iterator()
     while (statements.has_next()) {
         let statement = statements.next()
@@ -74,7 +74,7 @@ define write = func (file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE 
     return file
 }
 
-define write = func (file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
+func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
     if (statement is AST_Assignment_Statement) {
         let statement = statement as @AST_Assignment_Statement
         return file.write(statement.storage_expression).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
@@ -208,7 +208,7 @@ define write = func (file: @FILE, statement: @AST_Statement, alignment: i64) -> 
     abort(statement.location, "Unsupported AST_Statement type: ".clone().append(statement.object_type.name))
 }
 
-define write_source_line = func (file: @FILE, location: @Source_Location, alignment: i64) -> @FILE {
+func write_source_line(file: @FILE, location: @Source_Location, alignment: i64) -> @FILE {
     file.write(location.source.file_path).write(':')
     let line = location.line
     if (line < 1000) {
@@ -231,11 +231,11 @@ define write_source_line = func (file: @FILE, location: @Source_Location, alignm
     return file
 }
 
-define write = func (file: @FILE, parameter: @AST_Parameter) -> @FILE {
+func write(file: @FILE, parameter: @AST_Parameter) -> @FILE {
     return file.write(parameter.name).write(": ").write(parameter.type)
 }
 
-define write = func (file: @FILE, type: @AST_Type) -> @FILE {
+func write(file: @FILE, type: @AST_Type) -> @FILE {
     if (type is AST_Array_Type) {
         let type = type as @AST_Array_Type
         if (type.size_expression != null) {
@@ -327,7 +327,7 @@ define write = func (file: @FILE, type: @AST_Type) -> @FILE {
     abort(type.location, "Unsupported AST_Type type: ".clone().append(type.object_type.name))
 }
 
-define write = func (file: @FILE, expression: @AST_Expression) -> @FILE {
+func write(file: @FILE, expression: @AST_Expression) -> @FILE {
     if (expression is AST_Array_Access_Expression) {
         return file.write((expression as @AST_Array_Access_Expression).array_expression).write('[').write((expression as @AST_Array_Access_Expression).index_expression).write(']')
     }
@@ -446,29 +446,20 @@ define write = func (file: @FILE, expression: @AST_Expression) -> @FILE {
 
 include "./code/compiler/Scanner.code"
 
-define abort = func (location: @Source_Location, message: @String) -> Nothing {
+func abort(location: @Source_Location, message: @String) -> Nothing {
     stderr.write(location).write(": ").error().write(message).reset().end_line()
     abort()
 }
 
 include "./code/compiler/Token.code"
 
-define write = func (file: @FILE, token: @Token) -> @FILE {
-    if (token is Other_Token) {
-        file.write(27 as i8).write("[2;37m")
-    } else if (token is Literal_Token) {
-        file.write(27 as i8).write("[1;33m")
-    } else if (token is Comment_Token) {
-        file.write(27 as i8).write("[2;33m")
-    }
-    file.write(token.lexeme)
-    file.write(27 as i8).write("[0m")
-    return file
+func write(file: @FILE, token: @Token) -> @FILE {
+    return file.write(token.lexeme)
 }
 
 include "./code/compiler/Source.code"
 
-define write = func (self: @FILE, location: @Source_Location) -> @FILE {
+func write(self: @FILE, location: @Source_Location) -> @FILE {
     if (location == null) {
         return self.write("null")
     }
@@ -477,11 +468,11 @@ define write = func (self: @FILE, location: @Source_Location) -> @FILE {
 
 include "./code/compiler/List.code"
 
-define write_line = func (file: @FILE, string: @String) -> @FILE {
+func write_line(file: @FILE, string: @String) -> @FILE {
     return file.end_line().write(string)
 }
 
-define write = func (self: @FILE, number: i32) -> @FILE {
+func write(self: @FILE, number: i32) -> @FILE {
     if (number < 0) {
         return self.write('-').write(-number)
     }
@@ -492,7 +483,7 @@ define write = func (self: @FILE, number: i32) -> @FILE {
     return self
 }
 
-define write = func (self: @FILE, number: u32) -> @FILE {
+func write(self: @FILE, number: u32) -> @FILE {
     if (number >= 10) {
         self.write(number / 10)
     }
@@ -500,7 +491,7 @@ define write = func (self: @FILE, number: u32) -> @FILE {
     return self
 }
 
-define write = func (self: @FILE, number: i64) -> @FILE {
+func write(self: @FILE, number: i64) -> @FILE {
     if (number < 0) {
         return self.write('-').write(-number)
     }
@@ -511,7 +502,7 @@ define write = func (self: @FILE, number: i64) -> @FILE {
     return self
 }
 
-define write = func (self: @FILE, number: u64) -> @FILE {
+func write(self: @FILE, number: u64) -> @FILE {
     if (number >= 10) {
         self.write(number / 10)
     }
@@ -519,7 +510,7 @@ define write = func (self: @FILE, number: u64) -> @FILE {
     return self
 }
 
-define write = func (self: @FILE, number: isize) -> @FILE {
+func write(self: @FILE, number: isize) -> @FILE {
     if (number < 0) {
         return self.write('-').write(-number)
     }
@@ -530,11 +521,11 @@ define write = func (self: @FILE, number: isize) -> @FILE {
     return self
 }
 
-define write = func (self: @FILE, string: @String) -> @FILE {
+func write(self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
-define write = func (self: @FILE, chars: [i8; ?]) -> @FILE {
+func write(self: @FILE, chars: [i8; ?]) -> @FILE {
     if (fputs(chars, self) as isize < 0) {
         stderr.end_line().end_line().write("Failed to write text").end_line()
         abort()
@@ -542,7 +533,7 @@ define write = func (self: @FILE, chars: [i8; ?]) -> @FILE {
     return self
 }
 
-define write = func (self: @FILE, char: i8) -> @FILE {
+func write(self: @FILE, char: i8) -> @FILE {
     let c = char as i32
     if (fputc(c, self) != c) {
         stderr.end_line().end_line().write("Failed to write character: ").write(c as isize).end_line()
@@ -551,16 +542,16 @@ define write = func (self: @FILE, char: i8) -> @FILE {
     return self
 }
 
-define end_line = func (self: @FILE) -> @FILE {
+func end_line(self: @FILE) -> @FILE {
     return self.write('\n')
 }
 
-define flush = func (file: @FILE) -> @FILE {
+func flush(file: @FILE) -> @FILE {
     file.fflush()
     return file
 }
 
-define abort = func (message: @String) -> Nothing {
+func abort(message: @String) -> Nothing {
     stderr.error().write(message).reset().end_line()
     abort()
 }
@@ -570,18 +561,18 @@ include "./code/lang/String.code"
 
 include "./code/core/Platform.code"
 
-define debug = func (self: @FILE) -> @FILE {
+func debug(self: @FILE) -> @FILE {
     return self.write(27i8).write("[2;37m")
 }
 
-define warning = func (self: @FILE) -> @FILE {
+func warning(self: @FILE) -> @FILE {
     return self.write(27i8).write("[0;93m")
 }
 
-define error = func (self: @FILE) -> @FILE {
+func error(self: @FILE) -> @FILE {
     return self.write(27i8).write("[0;91m")
 }
 
-define reset = func (self: @FILE) -> @FILE {
+func reset(self: @FILE) -> @FILE {
     return self.write(27i8).write("[0m")
 }

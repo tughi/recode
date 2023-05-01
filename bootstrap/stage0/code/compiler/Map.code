@@ -12,7 +12,7 @@ struct Map_Entry[K, V] {
     next_entry: @Map_Entry[K, V] = null
 }
 
-define get = func [K, V] (self: @Map[K, V], key: K) -> V {
+func get[K, V](self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -23,7 +23,7 @@ define get = func [K, V] (self: @Map[K, V], key: K) -> V {
     return null
 }
 
-define put = func [K, V] (self: @Map[K, V], key: K, value: V) -> V {
+func put[K, V](self: @Map[K, V], key: K, value: V) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -43,7 +43,7 @@ define put = func [K, V] (self: @Map[K, V], key: K, value: V) -> V {
     return null
 }
 
-define remove = func [K, V] (self: @Map[K, V], key: K) -> V {
+func remove[K, V](self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -54,7 +54,7 @@ define remove = func [K, V] (self: @Map[K, V], key: K) -> V {
     return null
 }
 
-define remove_values = func [K, V] (self: @Map[K, V], value: V) -> Nothing {
+func remove_values[K, V](self: @Map[K, V], value: V) -> Nothing {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.value == value) {
@@ -64,7 +64,7 @@ define remove_values = func [K, V] (self: @Map[K, V], value: V) -> Nothing {
     }
 }
 
-define unlink = func [K, V] (self: @Map[K, V], entry: @Map_Entry[K, V]) -> @Map_Entry[K, V] {
+func unlink[K, V](self: @Map[K, V], entry: @Map_Entry[K, V]) -> @Map_Entry[K, V] {
     if (entry.prev_entry != null) {
         entry.prev_entry.next_entry = entry.next_entry
     } else {
@@ -78,7 +78,7 @@ define unlink = func [K, V] (self: @Map[K, V], entry: @Map_Entry[K, V]) -> @Map_
     return entry
 }
 
-define replace_values = func [K, V] (self: @Map[K, V], old_value: V, new_value: V) -> Nothing {
+func replace_values[K, V](self: @Map[K, V], old_value: V, new_value: V) -> Nothing {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.value == old_value) {

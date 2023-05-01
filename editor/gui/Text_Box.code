@@ -5,7 +5,7 @@ include "./Text_Model.code"
 
 include "../Math.code"
 
-define text = func (parent: @GUI_Layout, value: @String) -> @GUI_Text_Box {
+func text(parent: @GUI_Layout, value: @String) -> @GUI_Text_Box {
     let model = create_text_model(value)
     let text = make @GUI_Text_Box(gui = parent.gui, parent = parent, model = model)
     parent.add(text)
@@ -33,7 +33,7 @@ struct GUI_Text_Box {
     first_visible_line: i32 = 0
 }
 
-define draw_text_box = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
+func draw_text_box(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
     define COLOR_BACKGROUND = 0x1a1a1au32
     define COLOR_DARK_BORDER = 0x000000u32
     define COLOR_TEXT = 0xe6e6e6u32

@@ -9,7 +9,7 @@ struct Source {
 
 external type File \ opaque type
 
-define main = func () -> i32 {
+func main() -> i32 {
     let result = make Source(file = null, value = 0)
     return result.value
 }

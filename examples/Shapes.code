@@ -2,7 +2,7 @@ let shape: @Shape = undefined
 
 let polygon: Polygon
 
-define main = func () -> i32 {
+func main() -> i32 {
     shape = make @Rectangle()
     if (shape is Rectangle == false) {
         return 1
