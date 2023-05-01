@@ -2,12 +2,12 @@
 
 include "./LibC.code"
 
-let font: !Font
+let font: Font
 
 struct Font {
     height: i32
     base_line: i32
-    glyphs: [!Glyph; 256]
+    glyphs: [Glyph; 256]
 }
 
 struct Glyph {
@@ -17,7 +17,7 @@ struct Glyph {
 
 define init_font = func () -> Nothing {
     let file = open_file("editor/Font.data", "r")
-    let line = make !String()
+    let line = make String()
 
     if ((file.read_line(@line) && line.starts_with("\\ Copyright ") && file.read_line(@line) && line.equals("")) == false) {
         abort()

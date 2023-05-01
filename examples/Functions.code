@@ -1,22 +1,22 @@
 define main = func () -> Nothing {
     let char = -'0'
-    let hello = make String_Value(value = "Hello")
-    let forty_two = make Int_Value(value = 42)
+    let hello = make @String_Value(value = "Hello")
+    let forty_two = make @Int_Value(value = 42)
 
     hello.dump(stdout)
     (forty_two.dump)(forty_two, ((stdout)))
 
-    let dump: func (self: Value, file: FILE) -> Nothing = dump_int
+    let dump: func (self: @Value, file: @FILE) -> Nothing = dump_int
     dump(forty_two, stdout)
 
-    let anonymous_func = func (file: FILE) -> Nothing {
+    let anonymous_func = func (file: @FILE) -> Nothing {
         file.write("Hello again!").end_line()
     }
     anonymous_func(stdout)
 }
 
 struct Value {
-    dump: func (self: Value, file: FILE) -> Nothing
+    dump: func (self: @Value, file: @FILE) -> Nothing
 }
 
 struct Int_Value {
@@ -25,20 +25,20 @@ struct Int_Value {
     value: i32
 }
 
-define dump_int = func (self: Value, file: FILE) -> Nothing {
-    let self = self as Int_Value
+define dump_int = func (self: @Value, file: @FILE) -> Nothing {
+    let self = self as @Int_Value
     file.write("Int: ").write(self.value).end_line()
 }
 
 struct String_Value {
     extends Value(
-        dump = func (self: Value, file: FILE) -> Nothing {
-            let self = self as String_Value
+        dump = func (self: @Value, file: @FILE) -> Nothing {
+            let self = self as @String_Value
             file.write("String: ").write(self.value).end_line()
         }
     )
 
-    value: String
+    value: @String
 }
 
 include "./code/io/File.code"

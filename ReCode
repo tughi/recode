@@ -88,7 +88,7 @@ def trace(*command):
             '-ex=\'set confirm off\'',
             '-ex=\'set style enabled on\'',
             '-ex=\'set print thread-events off\'',
-            f'-ex=\'run {" ".join(command[1:])} 2> /dev/null\'',
+            f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'',
             '-ex=backtrace',
             '-ex=quit',
         ]),
@@ -144,7 +144,6 @@ def test_with_stage(n):
 
             assemble(f'build/tests/{test_file_name[:-5]}.s', f'build/tests/{test_file_name[:-5]}')
 
-            logger.debug(f"{COLOR_DEBUG}build/tests/{test_file_name[:-5]}{COLOR_RESET}")
             test_result = run([f'build/tests/{test_file_name[:-5]}'], capture_output=expected_output is not None, text=True, check=False)
             if test_result.returncode != 0:
                 logger.error(f"{COLOR_ERROR}Unexpected exit code: {test_result.returncode}{COLOR_RESET}")

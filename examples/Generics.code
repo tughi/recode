@@ -1,7 +1,7 @@
 include "./code/lang/Object.code"
 
 define main = func () -> Nothing {
-    let map = make !Map[Any, i32]()
+    let map = make Map[@Any, i32]()
     map.put("One", 0)
     map.put("One", 1)
 
@@ -17,7 +17,7 @@ define main = func () -> Nothing {
         abort()
     }
 
-    let map = make Special_Map()
+    let map = make @Special_Map()
     map.put("Two", 2)
     map.put("Three", 3)
 
@@ -43,7 +43,7 @@ define main = func () -> Nothing {
 }
 
 struct Special_Map {
-    extends Map[String, i32]
+    extends Map[@String, i32]
 }
 
 \ Map and Map[K, T] are different types
@@ -52,20 +52,20 @@ struct Map {
 
 struct Map[K, V] {
     extends Object
-    first_item: Map_Item[K, V] = null
-    last_item: Map_Item[K, V] = null
+    first_item: @Map_Item[K, V] = null
+    last_item: @Map_Item[K, V] = null
 }
 
 struct Map_Item[K, V] {
     key: K
     value: V
-    prev_item: Map_Item[K, V] = null
-    next_item: Map_Item[K, V] = null
+    prev_item: @Map_Item[K, V] = null
+    next_item: @Map_Item[K, V] = null
 }
 
 define abort = func () -> Nothing
 
-define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
+define put = func [K, V] (self: @Map[K, V], key: K, value: V) -> Nothing {
     let item = self.first_item
     while (item != null) {
         if (item.key == key) {
@@ -75,7 +75,7 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
         item = item.next_item
     }
 
-    let item = make Map_Item[K, V](
+    let item = make @Map_Item[K, V](
         key = key
         value = value
         prev_item = self.last_item
@@ -88,7 +88,7 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> Nothing {
     self.last_item = item
 }
 
-define get = func [K, V] (self: Map[K, V], key: K) -> V {
+define get = func [K, V] (self: @Map[K, V], key: K) -> V {
     self.for_each() {
         if (item_key == key) {
             return item_value
@@ -97,7 +97,7 @@ define get = func [K, V] (self: Map[K, V], key: K) -> V {
     abort()
 }
 
-define for_each = macro [K, V] (self: Map[K, V], block: macro (item_key: K, item_value: V)) {
+define for_each = macro [K, V] (self: @Map[K, V], block: macro (item_key: K, item_value: V)) {
     let item = self.first_item
     while (item != null) {
         block(item.key, item.value)

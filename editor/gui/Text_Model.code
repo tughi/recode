@@ -3,34 +3,34 @@
 include "../String.code"
 
 struct GUI_Text_Model {
-    first_line: GUI_Text_Model_Line = null
-    last_line: GUI_Text_Model_Line = null
+    first_line: @GUI_Text_Model_Line = null
+    last_line: @GUI_Text_Model_Line = null
     lines: i32 = 0
 }
 
 struct GUI_Text_Model_Line {
-    text: String = String()
-    next_line: GUI_Text_Model_Line = null
+    text: @String = String()
+    next_line: @GUI_Text_Model_Line = null
 }
 
-define create_text_model = func (text: String) -> GUI_Text_Model {
-    let model = make GUI_Text_Model()
+define create_text_model = func (text: @String) -> @GUI_Text_Model {
+    let model = make @GUI_Text_Model()
 
     let line_text = "".clone()
     text.for_each_char() {
         if (char == '\n' as u8) {
-            model.append(make GUI_Text_Model_Line(text = line_text))
+            model.append(make @GUI_Text_Model_Line(text = line_text))
             line_text = "".clone()
         } else {
             line_text.append(char)
         }
     }
-    model.append(make GUI_Text_Model_Line(text = line_text))
+    model.append(make @GUI_Text_Model_Line(text = line_text))
 
     return model
 }
 
-define append = func (self: GUI_Text_Model, line: GUI_Text_Model_Line) -> Nothing {
+define append = func (self: @GUI_Text_Model, line: @GUI_Text_Model_Line) -> Nothing {
     if (self.first_line == null) {
         self.first_line = line
     } else {

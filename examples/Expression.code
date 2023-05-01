@@ -1,8 +1,8 @@
 include "./code/io/File.code"
 
 struct Expression {
-    dump: func (self: Expression) -> Nothing
-    evaluate: func (self: Expression) -> i32 = null
+    dump: func (self: @Expression) -> Nothing
+    evaluate: func (self: @Expression) -> i32 = null
 }
 
 struct Int_Expression {
@@ -10,25 +10,25 @@ struct Int_Expression {
     value: i32
 }
 
-define dump_int = func (self: Expression) -> Nothing {
-    let self = self as Int_Expression
+define dump_int = func (self: @Expression) -> Nothing {
+    let self = self as @Int_Expression
     stdout.write(self.value)
 }
 
-define evaluate_int = func (self: Expression) -> i32 {
-    let self = self as Int_Expression
+define evaluate_int = func (self: @Expression) -> i32 {
+    let self = self as @Int_Expression
     return self.value
 }
 
 struct Binary_Expression {
     extends Expression(dump = dump_binary_expression)
-    operator: String
-    left_expression: Expression
-    right_expression: Expression
+    operator: @String
+    left_expression: @Expression
+    right_expression: @Expression
 }
 
-define dump_binary_expression = func (self: Expression) -> Nothing {
-    let self = self as Binary_Expression
+define dump_binary_expression = func (self: @Expression) -> Nothing {
+    let self = self as @Binary_Expression
     stdout.write('(')
     self.left_expression.dump()
     stdout.write(' ').write(self.operator).write(' ')
@@ -40,8 +40,8 @@ struct Addition_Expression {
     extends Binary_Expression(operator = "+", evaluate = evaluate_addition)
 }
 
-define evaluate_addition = func (self: Expression) -> i32 {
-    let self = self as Addition_Expression
+define evaluate_addition = func (self: @Expression) -> i32 {
+    let self = self as @Addition_Expression
     return self.left_expression.evaluate() + self.right_expression.evaluate()
 }
 
@@ -49,24 +49,24 @@ struct Substraction_Expression {
     extends Binary_Expression(operator = "-", evaluate = evaluate_substraction)
 }
 
-define evaluate_substraction = func (self: Expression) -> i32 {
-    let self = self as Substraction_Expression
+define evaluate_substraction = func (self: @Expression) -> i32 {
+    let self = self as @Substraction_Expression
     return self.left_expression.evaluate() - self.right_expression.evaluate()
 }
 
 define main = func () -> Nothing {
-    let one = make Int_Expression(value = 1)
+    let one = make @Int_Expression(value = 1)
 
-    let expression: Expression = make Addition_Expression(
-        left_expression = make Int_Expression(
+    let expression: @Expression = make @Addition_Expression(
+        left_expression = make @Int_Expression(
             value = 2
         )
-        right_expression = make Int_Expression(
+        right_expression = make @Int_Expression(
             value = 3
         )
     )
     while (expression.evaluate() > 0) {
-        expression = make Substraction_Expression(
+        expression = make @Substraction_Expression(
             left_expression = expression
             right_expression = one
         )

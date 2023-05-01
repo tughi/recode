@@ -1,0 +1,28 @@
+\ Expect:
+\ - output: 'PASS\n'
+
+struct String {
+    data: [i8; ?]
+    data_size: usize
+    length: usize
+}
+
+external type File
+define fputs = func (s: [i8; ?], stream: @File) -> i32
+let stdout: @File = external
+
+define main = func () -> i32 {
+    let text = "PASS\n"
+    if (text.data_size != 6usize) {
+        return 1
+    }
+    if (text.length != 5usize) {
+        return 2
+    }
+    if (text.data[0] != 'P') {
+        return 3
+    }
+    fputs(text.data, stdout)
+
+    return 0
+}

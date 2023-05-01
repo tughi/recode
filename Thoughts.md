@@ -36,9 +36,9 @@ There will be a fixed set of float types:
 ## Structs
 
     struct Node {
-        name: !String       \ embedded
-        parent: Node        \ parent node reference
-        children: [Node]    \ checked array of child node references
+        name: String        \ embedded
+        parent: @Node       \ pointer to parent Node
+        children: [@Node]   \ checked array of Node pointers
         type: i32 = 42      \ with default value
     }
 
@@ -49,19 +49,17 @@ There will be a fixed set of float types:
 
 Newly created structs can be initializated using named arguments, which can replace default values.
 
-    let node = make !Node()         \ Initializes the local !Node variable
-    let node = make Node(type = 13) \ Allocates !Node before initialization
+    let node = make Node()              \ Initializes the local Node variable
+    let node = make @Node(type = 13)    \ Allocates Node before initialization
 
 Initilization arguments can be declared also on separate lines.
 
-    let node = make Extended_Node(
+    let node = make @Extended_Node(
         parent = null
         type = 6
     )
 
-Structs are reference types... Struct values are passed by default by reference.
-
-To pass a struct by value one need to specify this with the `!` prefix, like this: `!Node`.
+Structs are value types... They are passed by value.
 
 ## Generic structs
 
@@ -78,29 +76,32 @@ different.
 
 ## Object types
 
-For each defined struct that extends `Object`, the compiler generates an `Object_Type` global
-variable, named after the type.
+For each defined struct that extends `Object`, the compiler generates a global variable of type
+`Object_Type`, named after the type.
 
 The `Object_Type` structure looks like this:
 
     struct Object_Type {
         _id: u32
         _max_derivate_id: u32
-        name: !String
-        base_type: Object_Type
+        name: String
+        base_type: @Object_Type
     }
 
 The *_id* and *_max_derivate_id* fields are used internally for 'is' operations.
 
 ## Pointers
 
-There are no pointers, but one can fake pointers by using the `Box[T]` generic type.
+There is no pointer arithmetic nor support to indexed access.
 
-Boxes can be also used to pass value types (like integers) by reference.
+Pointers to a value can be created usig the `@` operator:
+
+    let data = make Data()      \ local Data variable
+    let data_ref = @data        \ pointer to data's value
 
 ## Nullable values
 
-Types prefixed with a `?` become nullable types, and require a `null` check to get to the its value.
+Types suffixed with a `?` become nullable types, and require a `null` check to get to the its value.
 
 Nullable types have a similar in-memory structure with the following struct:
 
@@ -111,9 +112,9 @@ Nullable types have a similar in-memory structure with the following struct:
 
 The compiler will complain of missing a null-checks.
 
-    define length = func (self: ?String) -> i32 {
+    define length = func (self: @String?) -> i32 {
         if (self != null) {
-            return self.length  \ the compiler treats self as String at this point
+            return self.length  \ the compiler treats self as @String at this point
         }
     }
 
@@ -167,9 +168,9 @@ String literals are global values of type `String`.
 
 ## Variables
 
-    let text: String = "123"            \ text holds the address to the specified string
+    let text: @String = "123"           \ text holds the address to the specified string
     let number: i32 = text.length + 1   \ number holds the result of the provided expression
-    let root_node = make Node()         \ root_node holds the address of a Node
+    let root_node = make @Node()        \ root_node holds the address of a new Node
 
 The variable names are symbols used by the compiler to know where the value are stored.
 
@@ -207,7 +208,7 @@ instances of a generic function.
 
 Macros look like functions but they are always inlined where _invoked_, and have no return type.
 
-    define for_each = macro (list: List, block: macro (item: Any, index: i32)) {
+    define for_each = macro (list: @List, block: macro (item: @Any, index: i32)) {
         let index = 0
         let item = list.first_item
         while (item != null) {

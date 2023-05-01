@@ -5,8 +5,8 @@ include "./Widget.code"
 struct GUI_Layout {
     extends GUI_Widget(
         name = "GUI_Layout"
-        on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
-            let self = self as GUI_Layout
+        on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
+            let self = self as @GUI_Layout
             if (self.bounds.contains(event.x, event.y)) {
                 self.gui.hovered_widget = self
             }
@@ -18,12 +18,12 @@ struct GUI_Layout {
     )
 
     children_count: i32 = 0
-    children_first: GUI_Layout_Child = null
-    children_last: GUI_Layout_Child = null
+    children_first: @GUI_Layout_Child = null
+    children_last: @GUI_Layout_Child = null
 }
 
-define draw_layout = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
-    let self = self as GUI_Layout
+define draw_layout = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
+    let self = self as @GUI_Layout
     \ self.draw_widget(canvas)
     self.for_each_child() {
         child.draw(canvas)
@@ -31,12 +31,12 @@ define draw_layout = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
 }
 
 struct GUI_Layout_Child {
-    widget: GUI_Widget
-    next_child: GUI_Layout_Child = null
+    widget: @GUI_Widget
+    next_child: @GUI_Layout_Child = null
 }
 
-define add = func (self: GUI_Layout, widget: GUI_Widget) -> Nothing {
-    let child = make GUI_Layout_Child(widget = widget)
+define add = func (self: @GUI_Layout, widget: @GUI_Widget) -> Nothing {
+    let child = make @GUI_Layout_Child(widget = widget)
     if (self.children_first == null) {
         self.children_first = child
     } else {
@@ -46,7 +46,7 @@ define add = func (self: GUI_Layout, widget: GUI_Widget) -> Nothing {
     self.children_count = self.children_count + 1
 }
 
-define for_each_child = macro (self: GUI_Layout, handle: macro (child: GUI_Widget)) {
+define for_each_child = macro (self: @GUI_Layout, handle: macro (child: @GUI_Widget)) {
     let child = self.children_first
     while (child != null) {
         child.widget.handle()

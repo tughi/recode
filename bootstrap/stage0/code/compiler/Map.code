@@ -1,18 +1,18 @@
 \ Copyright (c) 2021, 2023, Stefan Selariu
 
 struct Map[K, V] {
-    first_entry: Map_Entry[K, V] = null
-    last_entry: Map_Entry[K, V] = null
+    first_entry: @Map_Entry[K, V] = null
+    last_entry: @Map_Entry[K, V] = null
 }
 
 struct Map_Entry[K, V] {
     key: K
     value: V
-    prev_entry: Map_Entry[K, V] = null
-    next_entry: Map_Entry[K, V] = null
+    prev_entry: @Map_Entry[K, V] = null
+    next_entry: @Map_Entry[K, V] = null
 }
 
-define get = func [K, V] (self: Map[K, V], key: K) -> V {
+define get = func [K, V] (self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -23,7 +23,7 @@ define get = func [K, V] (self: Map[K, V], key: K) -> V {
     return null
 }
 
-define put = func [K, V] (self: Map[K, V], key: K, value: V) -> V {
+define put = func [K, V] (self: @Map[K, V], key: K, value: V) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -33,7 +33,7 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> V {
         }
         entry = entry.next_entry
     }
-    entry = make Map_Entry[K, V](key = key, value = value, prev_entry = self.last_entry)
+    entry = make @Map_Entry[K, V](key = key, value = value, prev_entry = self.last_entry)
     if (self.last_entry == null) {
         self.first_entry = entry
     } else {
@@ -43,7 +43,7 @@ define put = func [K, V] (self: Map[K, V], key: K, value: V) -> V {
     return null
 }
 
-define remove = func [K, V] (self: Map[K, V], key: K) -> V {
+define remove = func [K, V] (self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.key == key) {
@@ -54,7 +54,7 @@ define remove = func [K, V] (self: Map[K, V], key: K) -> V {
     return null
 }
 
-define remove_values = func [K, V] (self: Map[K, V], value: V) -> Nothing {
+define remove_values = func [K, V] (self: @Map[K, V], value: V) -> Nothing {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.value == value) {
@@ -64,7 +64,7 @@ define remove_values = func [K, V] (self: Map[K, V], value: V) -> Nothing {
     }
 }
 
-define unlink = func [K, V] (self: Map[K, V], entry: Map_Entry[K, V]) -> Map_Entry[K, V] {
+define unlink = func [K, V] (self: @Map[K, V], entry: @Map_Entry[K, V]) -> @Map_Entry[K, V] {
     if (entry.prev_entry != null) {
         entry.prev_entry.next_entry = entry.next_entry
     } else {
@@ -78,7 +78,7 @@ define unlink = func [K, V] (self: Map[K, V], entry: Map_Entry[K, V]) -> Map_Ent
     return entry
 }
 
-define replace_values = func [K, V] (self: Map[K, V], old_value: V, new_value: V) -> Nothing {
+define replace_values = func [K, V] (self: @Map[K, V], old_value: V, new_value: V) -> Nothing {
     let entry = self.first_entry
     while (entry != null) {
         if (entry.value == old_value) {

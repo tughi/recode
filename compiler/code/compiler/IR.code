@@ -4,7 +4,7 @@ include "./Map.code"
 
 struct IR_Type {
     extends Object
-    name: String
+    name: @String
 }
 
 struct IR_Any_Type {
@@ -81,38 +81,38 @@ struct IR_Undefined_Type {
 
 struct IR_Pointer_Type {
     extends IR_Type
-    pointed_type: IR_Type
+    pointed_type: @IR_Type
 }
 
 struct IR_Unchecked_Array_Type {
     extends IR_Type
-    item_type: IR_Type
+    item_type: @IR_Type
 }
 
 struct IR_Fixed_Array_Type {
     extends IR_Type
-    item_type: IR_Type
+    item_type: @IR_Type
     size: i64
 }
 
 struct IR_Callable_Type {
     extends IR_Type
-    parameters: List[IR_Callable_Parameter]
+    parameters: @List[@IR_Callable_Parameter]
 }
 
 struct IR_Callable_Parameter {
-    location: Source_Location
-    name: String
-    type: IR_Type
+    location: @Source_Location
+    name: @String
+    type: @IR_Type
 }
 
 struct IR_Function_Type {
     extends IR_Callable_Type
-    return_type: IR_Type
+    return_type: @IR_Type
 }
 
-define create_ir_function_type = func (parameters: List[IR_Callable_Parameter], return_type: IR_Type) -> IR_Function_Type {
-    let type_name = make String().append("func (")
+define create_ir_function_type = func (parameters: @List[@IR_Callable_Parameter], return_type: @IR_Type) -> @IR_Function_Type {
+    let type_name = make @String().append("func (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
         let parameter = parameters_item.data
@@ -124,7 +124,7 @@ define create_ir_function_type = func (parameters: List[IR_Callable_Parameter], 
     }
     type_name.append(") -> ").append(return_type.name)
 
-    return make IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
+    return make @IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
 }
 
 struct IR_Macro_Body_Type {
@@ -135,8 +135,8 @@ struct IR_Macro_Type {
     extends IR_Callable_Type
 }
 
-define create_ir_macro_type = func (parameters: List[IR_Callable_Parameter]) -> IR_Macro_Type {
-    let type_name = make String().append("macro (")
+define create_ir_macro_type = func (parameters: @List[@IR_Callable_Parameter]) -> @IR_Macro_Type {
+    let type_name = make @String().append("macro (")
     let parameters_item = parameters.first_item
     while (parameters_item != null) {
         let parameter = parameters_item.data
@@ -148,33 +148,33 @@ define create_ir_macro_type = func (parameters: List[IR_Callable_Parameter]) -> 
     }
     type_name.append(')')
 
-    return make IR_Macro_Type(name = type_name, parameters = parameters)
+    return make @IR_Macro_Type(name = type_name, parameters = parameters)
 }
 
 struct IR_Struct_Type {
     extends IR_Type
-    base_type: IR_Struct_Type = null
-    derived_types: List[IR_Struct_Type] = make List[IR_Struct_Type]()
-    members: List[IR_Struct_Type_Member] = make List[IR_Struct_Type_Member]()
-    statement: AST_Struct_Statement
-    object_type_variable: IR_Global_Variable = null
+    base_type: @IR_Struct_Type = null
+    derived_types: @List[@IR_Struct_Type] = make @List[@IR_Struct_Type]()
+    members: @List[@IR_Struct_Type_Member] = make @List[@IR_Struct_Type_Member]()
+    statement: @AST_Struct_Statement
+    object_type_variable: @IR_Global_Variable = null
     object_type_id: u32 = 0
     object_type_max_derivate_id: u32 = 0
 }
 
 struct IR_Struct_Type_Member {
-    struct_type: IR_Struct_Type
-    name: String
-    type: IR_Type
+    struct_type: @IR_Struct_Type
+    name: @String
+    type: @IR_Type
 }
 
-define add_member = func (self: IR_Struct_Type, name: String, type: IR_Type) -> IR_Struct_Type_Member {
-    let member = make IR_Struct_Type_Member(struct_type = self, name = name, type = type)
+define add_member = func (self: @IR_Struct_Type, name: @String, type: @IR_Type) -> @IR_Struct_Type_Member {
+    let member = make @IR_Struct_Type_Member(struct_type = self, name = name, type = type)
     self.members.append(member)
     return member
 }
 
-define get_member = func (self: IR_Struct_Type, name: String) -> IR_Struct_Type_Member {
+define get_member = func (self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
     let struct_type = self
     loop {
         let members_item = struct_type.members.first_item
@@ -192,7 +192,7 @@ define get_member = func (self: IR_Struct_Type, name: String) -> IR_Struct_Type_
     }
 }
 
-define is_base_type = func (self: IR_Struct_Type, other: IR_Struct_Type) -> bool {
+define is_base_type = func (self: @IR_Struct_Type, other: @IR_Struct_Type) -> bool {
     let struct_type = other
     loop {
         if (self == struct_type.base_type) {
@@ -205,7 +205,7 @@ define is_base_type = func (self: IR_Struct_Type, other: IR_Struct_Type) -> bool
     }
 }
 
-define is_object_type = func (self: IR_Struct_Type) -> bool {
+define is_object_type = func (self: @IR_Struct_Type) -> bool {
     let struct_type = self
     loop {
         if (struct_type.name.equals("Object")) {
@@ -220,35 +220,35 @@ define is_object_type = func (self: IR_Struct_Type) -> bool {
 
 struct IR_Specialized_Struct_Type {
     extends IR_Struct_Type
-    type_arguments: List[IR_Type_Argument]
+    type_arguments: @List[@IR_Type_Argument]
 }
 
 struct IR_Type_Argument {
-    type: IR_Type
+    type: @IR_Type
 }
 
 struct IR_Placeholder_Type {
     extends IR_Type
-    ast_type: AST_Placeholder_Type
+    ast_type: @AST_Placeholder_Type
 }
 
 struct IR_Value {
     extends Object
-    type: IR_Type
-    creator_instruction: IR_Instruction = null
-    user_instructions: List[IR_Instruction] = make List[IR_Instruction]()
-    links: List[IR_Link] = make List[IR_Link]()
-    dump: func (value: IR_Value, file: FILE) -> FILE = func (value: IR_Value, file: FILE) -> FILE {
+    type: @IR_Type
+    creator_instruction: @IR_Instruction = null
+    user_instructions: @List[@IR_Instruction] = make @List[@IR_Instruction]()
+    links: @List[@IR_Link] = make @List[@IR_Link]()
+    dump: func (value: @IR_Value, file: @FILE) -> @FILE = func (value: @IR_Value, file: @FILE) -> @FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(value.object_type.name))
     }
 }
 
-define write = func (file: FILE, value: IR_Value, check_users: bool) -> FILE {
+define write = func (file: @FILE, value: @IR_Value, check_users: bool) -> @FILE {
     if (check_users && value.user_instructions.size == 0 as i64) {
         file.flush()
         if (value is IR_Variable_Value) {
-            let value = value as IR_Variable_Value
+            let value = value as @IR_Variable_Value
             let value_version = value.version
         }
         stderr.write("Found ").write(value.object_type.name).write(" without user instructions: ")
@@ -264,19 +264,19 @@ struct IR_Link {
 
 struct IR_Requires_Value_Link {
     extends IR_Link
-    back_link: IR_Required_By_Value_Link
-    value: IR_Value
+    back_link: @IR_Required_By_Value_Link
+    value: @IR_Value
 }
 
 struct IR_Required_By_Value_Link {
     extends IR_Link
-    back_link: IR_Requires_Value_Link
-    value: IR_Value
+    back_link: @IR_Requires_Value_Link
+    value: @IR_Value
 }
 
 struct IR_Undefined_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
             return file.write("undefined")
         }
     )
@@ -284,24 +284,24 @@ struct IR_Undefined_Value {
 
 struct IR_Constant_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            return file.write((value as IR_Constant_Value).literal.lexeme)
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            return file.write((value as @IR_Constant_Value).literal.lexeme)
         }
     )
-    literal: Literal_Token
+    literal: @Literal_Token
 }
 
 struct IR_Struct_Literal_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            let value = value as IR_Struct_Literal_Value
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            let value = value as @IR_Struct_Literal_Value
             file.write(value.type.name).write('(')
             let value_links_item = value.links.first_item
             let is_first_value_link = true
             while (value_links_item != null) {
                 let value_link = value_links_item.data
                 if (value_link is IR_Struct_Literal_Member_Value_Link) {
-                    let value_link = value_link as IR_Struct_Literal_Member_Value_Link
+                    let value_link = value_link as @IR_Struct_Literal_Member_Value_Link
                     if (is_first_value_link) {
                         is_first_value_link = false
                     } else {
@@ -314,20 +314,20 @@ struct IR_Struct_Literal_Value {
             return file.write(')')
         }
     )
-    location: Source_Location
+    location: @Source_Location
 }
 
 struct IR_Struct_Literal_Member_Value_Link {
     extends IR_Requires_Value_Link
-    struct_type_member: IR_Struct_Type_Member
+    struct_type_member: @IR_Struct_Type_Member
 }
 
-define get_member_value = func (self: IR_Struct_Literal_Value, struct_type_member: IR_Struct_Type_Member) -> IR_Value {
+define get_member_value = func (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Value {
     let links_item = self.links.first_item
     while (links_item != null) {
         let link = links_item.data
         if (link is IR_Struct_Literal_Member_Value_Link) {
-            let link = link as IR_Struct_Literal_Member_Value_Link
+            let link = link as @IR_Struct_Literal_Member_Value_Link
             if (link.struct_type_member == struct_type_member) {
                 return link.value
             }
@@ -337,55 +337,55 @@ define get_member_value = func (self: IR_Struct_Literal_Value, struct_type_membe
     return null
 }
 
-define set_member_value = func (self: IR_Struct_Literal_Value, struct_type_member: IR_Struct_Type_Member, value: IR_Value) -> Nothing {
-    let member_value_link = make IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
-    member_value_link.back_link = make IR_Required_By_Value_Link(value = self, back_link = member_value_link)
+define set_member_value = func (self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> Nothing {
+    let member_value_link = make @IR_Struct_Literal_Member_Value_Link(value = value, struct_type_member = struct_type_member, back_link = undefined)
+    member_value_link.back_link = make @IR_Required_By_Value_Link(value = self, back_link = member_value_link)
     self.links.append(member_value_link)
     value.links.append(member_value_link.back_link)
 }
 
 struct IR_Macro_Body_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            let value = value as IR_Macro_Body_Value
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            let value = value as @IR_Macro_Body_Value
             return file.write("{ ... }")
         }
     )
-    macro_body: AST_Block_Statement
+    macro_body: @AST_Block_Statement
 }
 
 struct IR_Global_Variable_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            let value = value as IR_Variable_Value
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            let value = value as @IR_Variable_Value
             return file.write(value.variable.name)
         }
     )
-    variable: IR_Variable
+    variable: @IR_Variable
 }
 
 struct IR_Global_Variable_Address_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            let value = value as IR_Variable_Value
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            let value = value as @IR_Variable_Value
             return file.write(value.variable.name).write(".address")
         }
     )
-    variable: IR_Variable
+    variable: @IR_Variable
 }
 
 struct IR_Variable_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            let value = value as IR_Variable_Value
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            let value = value as @IR_Variable_Value
             return file.write(value.variable.name).write('.').write(value.version)
         }
     )
-    variable: IR_Variable
+    variable: @IR_Variable
     version: i64
 }
 
-define init = func (self: IR_Variable_Value, variable: IR_Variable) -> IR_Variable_Value {
+define init = func (self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Value {
     self.variable = variable
     self.version = variable.values.size + 1
     variable.values.append(self)
@@ -394,39 +394,39 @@ define init = func (self: IR_Variable_Value, variable: IR_Variable) -> IR_Variab
 
 struct IR_Variable_Address_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            let value = value as IR_Variable_Address_Value
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            let value = value as @IR_Variable_Address_Value
             return file.write(value.variable_value, true).write(".address")
         }
     )
-    variable_value: IR_Variable_Value
+    variable_value: @IR_Variable_Value
 }
 
 struct IR_Function_Address_Value {
     extends IR_Value(
-        dump = func (value: IR_Value, file: FILE) -> FILE {
-            let value = value as IR_Function_Address_Value
+        dump = func (value: @IR_Value, file: @FILE) -> @FILE {
+            let value = value as @IR_Function_Address_Value
             return file.write_function_label(value.function).write(".address")
         }
     )
-    function: IR_Function
+    function: @IR_Function
 }
 
 struct IR_Block {
     id: i64
-    function: IR_Function
-    predecessors: List[IR_Block] = make List[IR_Block]()
-    first_instruction: IR_Instruction = null
-    last_instruction: IR_Instruction = null
+    function: @IR_Function
+    predecessors: @List[@IR_Block] = make @List[@IR_Block]()
+    first_instruction: @IR_Instruction = null
+    last_instruction: @IR_Instruction = null
     is_being_generated: bool = false
     is_generated: bool = false
 }
 
-define has_instructions = func (self: IR_Block) -> bool {
+define has_instructions = func (self: @IR_Block) -> bool {
     return self.first_instruction != null
 }
 
-define prepend = func (self: IR_Block, instruction: IR_Instruction) -> IR_Instruction {
+define prepend = func (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.parent_block = self
     instruction.prev_instruction = null
     instruction.next_instruction = self.first_instruction
@@ -439,7 +439,7 @@ define prepend = func (self: IR_Block, instruction: IR_Instruction) -> IR_Instru
     return instruction
 }
 
-define append = func (self: IR_Block, instruction: IR_Instruction) -> IR_Instruction {
+define append = func (self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.parent_block = self
     instruction.prev_instruction = self.last_instruction
     instruction.next_instruction = null
@@ -452,15 +452,15 @@ define append = func (self: IR_Block, instruction: IR_Instruction) -> IR_Instruc
     return instruction
 }
 
-define append_jump = func (self: IR_Block, block: IR_Block) -> IR_Direct_Jump_Instruction {
-    let instruction = make IR_Direct_Jump_Instruction(result_value = null, block = block)
+define append_jump = func (self: @IR_Block, block: @IR_Block) -> @IR_Direct_Jump_Instruction {
+    let instruction = make @IR_Direct_Jump_Instruction(result_value = null, block = block)
     block.predecessors.append(self)
     self.append(instruction)
     return instruction
 }
 
-define append_jump = func (self: IR_Block, condition_value: IR_Value, true_block: IR_Block, false_block: IR_Block) -> IR_Conditional_Jump_Instruction {
-    let instruction = make IR_Conditional_Jump_Instruction(result_value = null, true_block = true_block, false_block = false_block)
+define append_jump = func (self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Block, false_block: @IR_Block) -> @IR_Conditional_Jump_Instruction {
+    let instruction = make @IR_Conditional_Jump_Instruction(result_value = null, true_block = true_block, false_block = false_block)
     instruction.set_operand_value("condition", condition_value)
     true_block.predecessors.append(self)
     false_block.predecessors.append(self)
@@ -468,7 +468,7 @@ define append_jump = func (self: IR_Block, condition_value: IR_Value, true_block
     return instruction
 }
 
-define remove = func (self: IR_Block, instruction: IR_Instruction) -> Nothing {
+define remove = func (self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
     if (instruction.parent_block != self) {
         abort("Tried to remove instruction belonging to another block")
     }
@@ -489,7 +489,7 @@ define remove = func (self: IR_Block, instruction: IR_Instruction) -> Nothing {
     instruction.next_instruction = null
 }
 
-define dump = func (block: IR_Block, file: FILE) -> FILE {
+define dump = func (block: @IR_Block, file: @FILE) -> @FILE {
     file.write("block.").write(block.id)
     let block_predecessors = block.predecessors.create_iterator()
     if (block_predecessors.has_next()) {
@@ -516,27 +516,27 @@ define dump = func (block: IR_Block, file: FILE) -> FILE {
 
 struct IR_Callable {
     extends IR_Symbol
-    type: IR_Callable_Type
+    type: @IR_Callable_Type
 }
 
 struct IR_Function {
     extends IR_Callable
     id: i64
-    statement: AST_Function_Statement
-    return_type: IR_Type
-    parameters: List[IR_Function_Parameter]
+    statement: @AST_Function_Statement
+    return_type: @IR_Type
+    parameters: @List[@IR_Function_Parameter]
     is_external: bool
-    context_type_arguments: List[AST_Type_Argument]
-    blocks: List[IR_Block]
+    context_type_arguments: @List[@AST_Type_Argument]
+    blocks: @List[@IR_Block]
 }
 
-define create_block = func (self: IR_Function) -> IR_Block {
-    let block = make IR_Block(id = self.blocks.size + 1, function = self)
+define create_block = func (self: @IR_Function) -> @IR_Block {
+    let block = make @IR_Block(id = self.blocks.size + 1, function = self)
     self.blocks.append(block)
     return block
 }
 
-define dump = func (function: IR_Function, file: FILE) -> Nothing {
+define dump = func (function: @IR_Function, file: @FILE) -> Nothing {
     file.write_function_label(function).write(" :: (")
     let function_parameters = function.parameters.create_iterator()
     while (function_parameters.has_next()) {
@@ -561,25 +561,25 @@ struct IR_Parameter {
 
 struct IR_Macro {
     extends IR_Callable
-    context: IR_Builder_Context
-    statement: AST_Block_Statement
+    context: @IR_Builder_Context
+    statement: @AST_Block_Statement
 }
 
 struct IR_Symbol {
     extends Object
-    name: String
-    location: Source_Location
+    name: @String
+    location: @Source_Location
 }
 
 struct IR_Variable {
     extends IR_Symbol
-    type: IR_Type
-    values: List[IR_Value] = make List[IR_Value]()
+    type: @IR_Type
+    values: @List[@IR_Value] = make @List[@IR_Value]()
 }
 
 struct IR_Global_Variable {
     extends IR_Variable
-    value: IR_Value
+    value: @IR_Value
     is_external: bool
 }
 
@@ -589,32 +589,32 @@ struct IR_Function_Parameter {
 
 struct IR_Constant {
     extends IR_Symbol
-    value: IR_Constant_Value
+    value: @IR_Constant_Value
 }
 
 struct IR_Instruction {
     extends Object
-    location: Source_Location = null
-    result_value: IR_Variable_Value
-    operand_values: Map[Any, IR_Value] = make Map[Any, IR_Value]()
-    parent_block: IR_Block = undefined
-    prev_instruction: IR_Instruction = null
-    next_instruction: IR_Instruction = null
+    location: @Source_Location = null
+    result_value: @IR_Variable_Value
+    operand_values: @Map[@Any, @IR_Value] = make @Map[@Any, @IR_Value]()
+    parent_block: @IR_Block = undefined
+    prev_instruction: @IR_Instruction = null
+    next_instruction: @IR_Instruction = null
     is_generated: bool = false
-    dump: func (self: IR_Instruction, file: FILE, prefix: String) -> FILE = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+    dump: func (self: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(instruction.object_type.name))
     }
 }
 
-define dump_ir_instruction_result = func (self: IR_Instruction, file: FILE, prefix: String) -> Nothing {
+define dump_ir_instruction_result = func (self: @IR_Instruction, file: @FILE, prefix: @String) -> Nothing {
     file.write(prefix)
     if (self.result_value != null) {
         file.write(self.result_value, false).write(": ").write(self.result_value.type.name).write(" = ")
     }
 }
 
-define is_exit_instruction = func (self: IR_Instruction) -> bool {
+define is_exit_instruction = func (self: @IR_Instruction) -> bool {
     if (self == null) {
         return false
     }
@@ -622,7 +622,7 @@ define is_exit_instruction = func (self: IR_Instruction) -> bool {
         return true
     }
     if (self is IR_Direct_Call_Instruction) {
-        let self = self as IR_Direct_Call_Instruction
+        let self = self as @IR_Direct_Call_Instruction
         let function = self.function
         if (function.name.equals("abort")) {
             return true
@@ -637,12 +637,12 @@ define is_exit_instruction = func (self: IR_Instruction) -> bool {
     return false
 }
 
-define set_operand_value = func (self: IR_Instruction, key: Any, value: IR_Value) -> Nothing {
+define set_operand_value = func (self: @IR_Instruction, key: @Any, value: @IR_Value) -> Nothing {
     self.operand_values.put(key, value)
     value.user_instructions.append(self)
 }
 
-define replace_operand_value = func (self: IR_Instruction, old_value: IR_Value, new_value: IR_Value) -> Nothing {
+define replace_operand_value = func (self: @IR_Instruction, old_value: @IR_Value, new_value: @IR_Value) -> Nothing {
     old_value.user_instructions.remove(self).prune()
     new_value.user_instructions.append(self)
     if (self is IR_Phi_Instruction) {
@@ -658,7 +658,7 @@ struct IR_Call_Instruction {
     arguments_size: i64 = 0
 }
 
-define dump_ir_call_instruction_arguments = func (instruction: IR_Call_Instruction, file: FILE) -> Nothing {
+define dump_ir_call_instruction_arguments = func (instruction: @IR_Call_Instruction, file: @FILE) -> Nothing {
     let call_argument_index = 0 as i64
     while (call_argument_index < instruction.arguments_size) {
         file.write(", ").write(instruction.get_argument_value(call_argument_index), true)
@@ -667,11 +667,11 @@ define dump_ir_call_instruction_arguments = func (instruction: IR_Call_Instructi
 }
 
 struct IR_Call_Argument {
-    name: String = null
-    value: IR_Value
+    name: @String = null
+    value: @IR_Value
 }
 
-define add_arguments = func (self: IR_Call_Instruction, call_arguments: List[IR_Call_Argument]) -> IR_Call_Instruction {
+define add_arguments = func (self: @IR_Call_Instruction, call_arguments: @List[@IR_Call_Argument]) -> @IR_Call_Instruction {
     let call_arguments_item = call_arguments.first_item
     while (call_arguments_item != null) {
         let call_argument = call_arguments_item.data
@@ -682,11 +682,11 @@ define add_arguments = func (self: IR_Call_Instruction, call_arguments: List[IR_
     return self
 }
 
-define get_argument_value = func (self: IR_Call_Instruction, index: i64) -> IR_Value {
+define get_argument_value = func (self: @IR_Call_Instruction, index: i64) -> @IR_Value {
     return self.operand_values.get(get_argument_key(index))
 }
 
-define get_argument_key = func (index: i64) -> String {
+define get_argument_key = func (index: i64) -> @String {
     if (index == 0 as i64) {
         return "argument-0-value"
     } else if (index == 1 as i64) {
@@ -705,19 +705,19 @@ define get_argument_key = func (index: i64) -> String {
 
 struct IR_Direct_Call_Instruction {
     extends IR_Call_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Direct_Call_Instruction
+            let instruction = instruction as @IR_Direct_Call_Instruction
             file.write("call").write('(').write_function_label(instruction.function)
             instruction.dump_ir_call_instruction_arguments(file)
             return file.write(')').end_line()
         }
     )
-    function: IR_Function
+    function: @IR_Function
 }
 
-define create_ir_direct_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List[IR_Call_Argument], function: IR_Function) -> IR_Call_Instruction {
-    let instruction = make IR_Direct_Call_Instruction(result_value = result_value, function = function)
+define create_ir_direct_call_instruction = func (result_value: @IR_Variable_Value, call_arguments: @List[@IR_Call_Argument], function: @IR_Function) -> @IR_Call_Instruction {
+    let instruction = make @IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
     if (result_value != null) {
         result_value.creator_instruction = instruction
@@ -727,9 +727,9 @@ define create_ir_direct_call_instruction = func (result_value: IR_Variable_Value
 
 struct IR_Dynamic_Call_Instruction {
     extends IR_Call_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Dynamic_Call_Instruction
+            let instruction = instruction as @IR_Dynamic_Call_Instruction
             let function_address = instruction.get_function_address()
             file.write("call").write('(').write(function_address.variable.name).write('.').write(function_address.version)
             instruction.dump_ir_call_instruction_arguments(file)
@@ -738,8 +738,8 @@ struct IR_Dynamic_Call_Instruction {
     )
 }
 
-define create_ir_dynamic_call_instruction = func (result_value: IR_Variable_Value, call_arguments: List[IR_Call_Argument], function_address: IR_Variable_Value) -> IR_Call_Instruction {
-    let instruction = make IR_Dynamic_Call_Instruction(result_value = result_value)
+define create_ir_dynamic_call_instruction = func (result_value: @IR_Variable_Value, call_arguments: @List[@IR_Call_Argument], function_address: @IR_Variable_Value) -> @IR_Call_Instruction {
+    let instruction = make @IR_Dynamic_Call_Instruction(result_value = result_value)
     instruction.add_arguments(call_arguments)
     instruction.set_operand_value("function_address", function_address)
     if (result_value != null) {
@@ -748,50 +748,50 @@ define create_ir_dynamic_call_instruction = func (result_value: IR_Variable_Valu
     return instruction
 }
 
-define get_function_address = func (self: IR_Dynamic_Call_Instruction) -> IR_Variable_Value {
-    return self.operand_values.get("function_address") as IR_Variable_Value
+define get_function_address = func (self: @IR_Dynamic_Call_Instruction) -> @IR_Variable_Value {
+    return self.operand_values.get("function_address") as @IR_Variable_Value
 }
 
 struct IR_Cast_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Cast_Instruction
+            let instruction = instruction as @IR_Cast_Instruction
             return file.write("cast").write('(').write(instruction.get_value(), true).write(')').end_line()
         }
     )
 }
 
-define create_ir_cast_instruction = func (result_value: IR_Variable_Value, value: IR_Value) -> IR_Cast_Instruction {
-    let instruction = make IR_Cast_Instruction(result_value = result_value)
+define create_ir_cast_instruction = func (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Cast_Instruction {
+    let instruction = make @IR_Cast_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_value = func (self: IR_Cast_Instruction) -> IR_Value {
+define get_value = func (self: @IR_Cast_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
 struct IR_Is_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Is_Instruction
+            let instruction = instruction as @IR_Is_Instruction
             return file.write("is").write('(').write(instruction.get_value(), true).write(", ").write(instruction.type.name).write(')').end_line()
         }
     )
-    type: IR_Struct_Type
+    type: @IR_Struct_Type
 }
 
-define create_ir_is_instruction = func (result_value: IR_Variable_Value, value: IR_Value, type: IR_Struct_Type) -> IR_Is_Instruction {
-    let instruction = make IR_Is_Instruction(result_value = result_value, type = type)
+define create_ir_is_instruction = func (result_value: @IR_Variable_Value, value: @IR_Value, type: @IR_Struct_Type) -> @IR_Is_Instruction {
+    let instruction = make @IR_Is_Instruction(result_value = result_value, type = type)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_value = func (self: IR_Is_Instruction) -> IR_Value {
+define get_value = func (self: @IR_Is_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
@@ -801,64 +801,64 @@ struct IR_Jump_Instruction {
 
 struct IR_Conditional_Jump_Instruction {
     extends IR_Jump_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Conditional_Jump_Instruction
+            let instruction = instruction as @IR_Conditional_Jump_Instruction
             return file.write("jump").write('(').write(instruction.get_condition_value(), true).write(", ").write_block_label(instruction.true_block).write(", ").write_block_label(instruction.false_block).write(')').end_line()
         }
     )
-    true_block: IR_Block
-    false_block: IR_Block
+    true_block: @IR_Block
+    false_block: @IR_Block
 }
 
-define get_condition_value = func (self: IR_Conditional_Jump_Instruction) -> IR_Value {
+define get_condition_value = func (self: @IR_Conditional_Jump_Instruction) -> @IR_Value {
     return self.operand_values.get("condition")
 }
 
 struct IR_Direct_Jump_Instruction {
     extends IR_Jump_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Direct_Jump_Instruction
+            let instruction = instruction as @IR_Direct_Jump_Instruction
             return file.write("jump").write('(').write_block_label(instruction.block).write(')').end_line()
         }
     )
-    block: IR_Block
+    block: @IR_Block
 }
 
 struct IR_Load_Array_Item_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Load_Array_Item_Instruction
+            let instruction = instruction as @IR_Load_Array_Item_Instruction
             return file.write("load_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(')').end_line()
         }
     )
-    array_item_type: IR_Type
+    array_item_type: @IR_Type
     load_address: bool
 }
 
-define create_ir_load_array_item_instruction = func (result_value: IR_Variable_Value, array_value: IR_Value, index_value: IR_Value, array_item_type: IR_Type, load_address: bool) -> IR_Load_Array_Item_Instruction {
-    let instruction = make IR_Load_Array_Item_Instruction(result_value = result_value, array_item_type = array_item_type, load_address = load_address)
+define create_ir_load_array_item_instruction = func (result_value: @IR_Variable_Value, array_value: @IR_Value, index_value: @IR_Value, array_item_type: @IR_Type, load_address: bool) -> @IR_Load_Array_Item_Instruction {
+    let instruction = make @IR_Load_Array_Item_Instruction(result_value = result_value, array_item_type = array_item_type, load_address = load_address)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_array_value = func (self: IR_Load_Array_Item_Instruction) -> IR_Value {
+define get_array_value = func (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("array_value")
 }
 
-define get_index_value = func (self: IR_Load_Array_Item_Instruction) -> IR_Value {
+define get_index_value = func (self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("index_value")
 }
 
 struct IR_Load_Struct_Member_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Load_Struct_Member_Instruction
+            let instruction = instruction as @IR_Load_Struct_Member_Instruction
             if (instruction.load_address) {
                 file.write("load_struct_member_address")
             } else {
@@ -867,18 +867,18 @@ struct IR_Load_Struct_Member_Instruction {
             return file.write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(')').end_line()
         }
     )
-    struct_type_member: IR_Struct_Type_Member
+    struct_type_member: @IR_Struct_Type_Member
     load_address: bool
 }
 
-define create_ir_load_struct_member_instruction = func (result_value: IR_Variable_Value, struct_pointer_value: IR_Value, struct_type_member: IR_Struct_Type_Member, load_address: bool) -> IR_Load_Struct_Member_Instruction {
-    let instruction = make IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
+define create_ir_load_struct_member_instruction = func (result_value: @IR_Variable_Value, struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, load_address: bool) -> @IR_Load_Struct_Member_Instruction {
+    let instruction = make @IR_Load_Struct_Member_Instruction(result_value = result_value, struct_type_member = struct_type_member, load_address = load_address)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     result_value.creator_instruction = instruction
 
     if (struct_type_member.type is IR_Struct_Type) {
-        let result_value_link = make IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
-        result_value_link.back_link = make IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
+        let result_value_link = make @IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
+        result_value_link.back_link = make @IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
         result_value.links.append(result_value_link)
         struct_pointer_value.links.append(result_value_link.back_link)
     }
@@ -886,80 +886,80 @@ define create_ir_load_struct_member_instruction = func (result_value: IR_Variabl
     return instruction
 }
 
-define get_struct_pointer_value = func (self: IR_Load_Struct_Member_Instruction) -> IR_Value {
+define get_struct_pointer_value = func (self: @IR_Load_Struct_Member_Instruction) -> @IR_Value {
     return self.operand_values.get("struct_pointer_value")
 }
 
 struct IR_Load_Variable_Address_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Load_Variable_Address_Instruction
+            let instruction = instruction as @IR_Load_Variable_Address_Instruction
             return file.write("load_variable_address").write('(').write(instruction.get_variable_value(), true).write(')').end_line()
         }
     )
 }
 
-define create_ir_load_variable_address_instruction = func (result_value: IR_Variable_Value, variable_value: IR_Variable_Value) -> IR_Load_Variable_Address_Instruction {
-    let instruction = make IR_Load_Variable_Address_Instruction(result_value = result_value)
+define create_ir_load_variable_address_instruction = func (result_value: @IR_Variable_Value, variable_value: @IR_Variable_Value) -> @IR_Load_Variable_Address_Instruction {
+    let instruction = make @IR_Load_Variable_Address_Instruction(result_value = result_value)
     instruction.set_operand_value("variable_value", variable_value)
     result_value.creator_instruction = instruction
 
-    let result_value_link = make IR_Requires_Value_Link(value = variable_value, back_link = undefined)
-    result_value_link.back_link = make IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
+    let result_value_link = make @IR_Requires_Value_Link(value = variable_value, back_link = undefined)
+    result_value_link.back_link = make @IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
     result_value.links.append(result_value_link)
     variable_value.links.append(result_value_link.back_link)
 
     return instruction
 }
 
-define get_variable_value = func (self: IR_Load_Variable_Address_Instruction) -> IR_Variable_Value {
-    return self.operand_values.get("variable_value") as IR_Variable_Value
+define get_variable_value = func (self: @IR_Load_Variable_Address_Instruction) -> @IR_Variable_Value {
+    return self.operand_values.get("variable_value") as @IR_Variable_Value
 }
 
 struct IR_Load_Variable_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            return file.write("load_variable").write('(').write((instruction as IR_Load_Variable_Instruction).variable.name).write(')').end_line()
+            return file.write("load_variable").write('(').write((instruction as @IR_Load_Variable_Instruction).variable.name).write(')').end_line()
         }
     )
-    variable: IR_Variable
+    variable: @IR_Variable
 }
 
-define create_ir_load_variable_instruction = func (result_value: IR_Variable_Value) -> IR_Load_Variable_Instruction {
-    let instruction = make IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
+define create_ir_load_variable_instruction = func (result_value: @IR_Variable_Value) -> @IR_Load_Variable_Instruction {
+    let instruction = make @IR_Load_Variable_Instruction(result_value = result_value, variable = result_value.variable)
     result_value.creator_instruction = instruction
     return instruction
 }
 
 struct IR_New_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_New_Instruction
+            let instruction = instruction as @IR_New_Instruction
             return file.write("new").write(' ').write(instruction.get_init_value(), true).end_line()
         }
     )
-    type: IR_Type
+    type: @IR_Type
 }
 
-define create_ir_new_instruction = func (result_value: IR_Variable_Value, type: IR_Type, init_value: IR_Value) -> IR_New_Instruction {
-    let instruction = make IR_New_Instruction(result_value = result_value, type = type)
+define create_ir_new_instruction = func (result_value: @IR_Variable_Value, type: @IR_Type, init_value: @IR_Value) -> @IR_New_Instruction {
+    let instruction = make @IR_New_Instruction(result_value = result_value, type = type)
     instruction.set_operand_value("init_value", init_value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_init_value = func (self: IR_New_Instruction) -> IR_Value {
+define get_init_value = func (self: @IR_New_Instruction) -> @IR_Value {
     return self.operand_values.get("init_value")
 }
 
 struct IR_Return_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Return_Instruction
+            let instruction = instruction as @IR_Return_Instruction
             if (instruction.get_return_value() == null) {
                 return file.write("return").write('(').write(')').end_line()
             }
@@ -968,92 +968,92 @@ struct IR_Return_Instruction {
     )
 }
 
-define create_ir_return_instruction = func (return_value: IR_Value) -> IR_Return_Instruction {
-    let instruction = make IR_Return_Instruction(result_value = null)
+define create_ir_return_instruction = func (return_value: @IR_Value) -> @IR_Return_Instruction {
+    let instruction = make @IR_Return_Instruction(result_value = null)
     if (return_value != null) {
         instruction.set_operand_value("return_value", return_value)
     }
     return instruction
 }
 
-define get_return_value = func (self: IR_Return_Instruction) -> IR_Value {
+define get_return_value = func (self: @IR_Return_Instruction) -> @IR_Value {
     return self.operand_values.get("return_value")
 }
 
 struct IR_Set_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Set_Instruction
+            let instruction = instruction as @IR_Set_Instruction
             return file.write(instruction.get_value(), true).end_line()
         }
     )
 }
 
-define create_ir_set_instruction = func (result_value: IR_Variable_Value, value: IR_Value) -> IR_Set_Instruction {
-    let instruction = make IR_Set_Instruction(result_value = result_value)
+define create_ir_set_instruction = func (result_value: @IR_Variable_Value, value: @IR_Value) -> @IR_Set_Instruction {
+    let instruction = make @IR_Set_Instruction(result_value = result_value)
     instruction.set_operand_value("value", value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define get_value = func (self: IR_Set_Instruction) -> IR_Value {
+define get_value = func (self: @IR_Set_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
 struct IR_Store_Array_Item_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Store_Array_Item_Instruction
+            let instruction = instruction as @IR_Store_Array_Item_Instruction
             return file.write("store_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(", ").write(instruction.get_value(), true).write(')').end_line()
         }
     )
 }
 
-define create_ir_store_array_item_instruction = func (array_value: IR_Value, index_value: IR_Value, value: IR_Value) -> IR_Store_Array_Item_Instruction {
-    let instruction = make IR_Store_Array_Item_Instruction(result_value = null)
+define create_ir_store_array_item_instruction = func (array_value: @IR_Value, index_value: @IR_Value, value: @IR_Value) -> @IR_Store_Array_Item_Instruction {
+    let instruction = make @IR_Store_Array_Item_Instruction(result_value = null)
     instruction.set_operand_value("array_value", array_value)
     instruction.set_operand_value("index_value", index_value)
     instruction.set_operand_value("value", value)
     return instruction
 }
 
-define get_array_value = func (self: IR_Store_Array_Item_Instruction) -> IR_Value {
+define get_array_value = func (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("array_value")
 }
 
-define get_index_value = func (self: IR_Store_Array_Item_Instruction) -> IR_Value {
+define get_index_value = func (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("index_value")
 }
 
-define get_value = func (self: IR_Store_Array_Item_Instruction) -> IR_Value {
+define get_value = func (self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
 struct IR_Store_Struct_Member_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Store_Struct_Member_Instruction
+            let instruction = instruction as @IR_Store_Struct_Member_Instruction
             return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
         }
     )
-    struct_type_member: IR_Struct_Type_Member
+    struct_type_member: @IR_Struct_Type_Member
 }
 
-define create_ir_store_struct_member_instruction = func (struct_pointer_value: IR_Value, struct_type_member: IR_Struct_Type_Member, value: IR_Value) -> IR_Store_Struct_Member_Instruction {
-    let instruction = make IR_Store_Struct_Member_Instruction(result_value = null, struct_type_member = struct_type_member)
+define create_ir_store_struct_member_instruction = func (struct_pointer_value: @IR_Value, struct_type_member: @IR_Struct_Type_Member, value: @IR_Value) -> @IR_Store_Struct_Member_Instruction {
+    let instruction = make @IR_Store_Struct_Member_Instruction(result_value = null, struct_type_member = struct_type_member)
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     instruction.set_operand_value("value", value)
     return instruction
 }
 
-define get_struct_pointer_value = func (self: IR_Store_Struct_Member_Instruction) -> IR_Value {
+define get_struct_pointer_value = func (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
     return self.operand_values.get("struct_pointer_value")
 }
 
-define get_value = func (self: IR_Store_Struct_Member_Instruction) -> IR_Value {
+define get_value = func (self: @IR_Store_Struct_Member_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
@@ -1061,25 +1061,25 @@ struct IR_Binary_Instruction {
     extends IR_Instruction
 }
 
-define init = func (self: IR_Binary_Instruction, left_value: IR_Value, right_value: IR_Value) -> IR_Binary_Instruction {
+define init = func (self: @IR_Binary_Instruction, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
     self.set_operand_value("left_value", left_value)
     self.set_operand_value("right_value", right_value)
     return self
 }
 
-define get_left_value = func (self: IR_Binary_Instruction) -> IR_Value {
+define get_left_value = func (self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("left_value")
 }
 
-define get_right_value = func (self: IR_Binary_Instruction) -> IR_Value {
+define get_right_value = func (self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("right_value")
 }
 
 struct IR_Add_Instruction {
     extends IR_Binary_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" + ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1091,9 +1091,9 @@ struct IR_Comparison_Instruction {
 
 struct IR_Divide_Instruction {
     extends IR_Binary_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" / ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1101,9 +1101,9 @@ struct IR_Divide_Instruction {
 
 struct IR_Equals_Comparison_Instruction {
     extends IR_Comparison_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" == ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1111,9 +1111,9 @@ struct IR_Equals_Comparison_Instruction {
 
 struct IR_Greater_Comparison_Instruction {
     extends IR_Comparison_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" > ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1121,9 +1121,9 @@ struct IR_Greater_Comparison_Instruction {
 
 struct IR_Greater_Or_Equal_Comparison_Instruction {
     extends IR_Comparison_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" >= ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1131,9 +1131,9 @@ struct IR_Greater_Or_Equal_Comparison_Instruction {
 
 struct IR_Less_Comparison_Instruction {
     extends IR_Comparison_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" < ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1141,9 +1141,9 @@ struct IR_Less_Comparison_Instruction {
 
 struct IR_Less_Or_Equal_Comparison_Instruction {
     extends IR_Comparison_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" <= ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1151,9 +1151,9 @@ struct IR_Less_Or_Equal_Comparison_Instruction {
 
 struct IR_Modulo_Instruction {
     extends IR_Binary_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" // ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1161,9 +1161,9 @@ struct IR_Modulo_Instruction {
 
 struct IR_Multiply_Instruction {
     extends IR_Binary_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" * ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1171,9 +1171,9 @@ struct IR_Multiply_Instruction {
 
 struct IR_Not_Equal_Comparison_Instruction {
     extends IR_Comparison_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Binary_Instruction
+            let instruction = instruction as @IR_Binary_Instruction
             return file.write(instruction.get_left_value(), true).write(" != ").write(instruction.get_right_value(), true).end_line()
         }
     )
@@ -1181,8 +1181,8 @@ struct IR_Not_Equal_Comparison_Instruction {
 
 struct IR_Substract_Instruction {
     extends IR_Binary_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
-            let instruction = instruction as IR_Binary_Instruction
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+            let instruction = instruction as @IR_Binary_Instruction
             instruction.dump_ir_instruction_result(file, prefix)
             return file.write(instruction.get_left_value(), true).write(" - ").write(instruction.get_right_value(), true).end_line()
         }
@@ -1191,9 +1191,9 @@ struct IR_Substract_Instruction {
 
 struct IR_Phi_Instruction {
     extends IR_Instruction(
-        dump = func (instruction: IR_Instruction, file: FILE, prefix: String) -> FILE {
+        dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
             instruction.dump_ir_instruction_result(file, prefix)
-            let instruction = instruction as IR_Phi_Instruction
+            let instruction = instruction as @IR_Phi_Instruction
             file.write("phi").write('(')
             let operand_values_entry = instruction.operand_values.first_entry
             if (operand_values_entry != null) {
@@ -1211,17 +1211,17 @@ struct IR_Phi_Instruction {
     )
 }
 
-define create_ir_phi_instruction = func (result_value: IR_Variable_Value) -> IR_Phi_Instruction {
-    let instruction = make IR_Phi_Instruction(result_value = result_value)
+define create_ir_phi_instruction = func (result_value: @IR_Variable_Value) -> @IR_Phi_Instruction {
+    let instruction = make @IR_Phi_Instruction(result_value = result_value)
     result_value.creator_instruction = instruction
     return instruction
 }
 
-define append = func (self: IR_Phi_Instruction, value: IR_Value) -> Nothing {
+define append = func (self: @IR_Phi_Instruction, value: @IR_Value) -> Nothing {
     self.set_operand_value(value, value)
 }
 
-define is_redundant = func (self: IR_Phi_Instruction) -> bool {
+define is_redundant = func (self: @IR_Phi_Instruction) -> bool {
     \ redundant phi instruction:
     \   v.1 = phi(v.2)
 
@@ -1240,7 +1240,7 @@ define is_redundant = func (self: IR_Phi_Instruction) -> bool {
     return true
 }
 
-define is_trivial = func (self: IR_Phi_Instruction) -> bool {
+define is_trivial = func (self: @IR_Phi_Instruction) -> bool {
     \ trivial phi instructions:
     \   v.1 = phi(v.1)
     \   v.1 = phi(v.1, v.2)
@@ -1249,8 +1249,8 @@ define is_trivial = func (self: IR_Phi_Instruction) -> bool {
     if (operand_values_entry == null) {
         abort()
     }
-    let result_value: IR_Value = self.result_value
-    let other_value: IR_Value = null
+    let result_value: @IR_Value = self.result_value
+    let other_value: @IR_Value = null
     while (operand_values_entry != null) {
         let value = operand_values_entry.value
         if (value != result_value) {

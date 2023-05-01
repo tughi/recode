@@ -6,8 +6,8 @@ include "./gui/Layout.code"
 define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
 
-define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
-    let glyph_editor = make Glyph_Editor(gui = parent.gui, parent = parent, glyph = glyph)
+define glyph_editor = func (parent: @GUI_Layout, glyph: @Glyph) -> @Glyph_Editor {
+    let glyph_editor = make @Glyph_Editor(gui = parent.gui, parent = parent, glyph = glyph)
     parent.add(glyph_editor)
 
     let glyph_rows = glyph.mask.length as i32
@@ -21,8 +21,8 @@ define glyph_editor = func (parent: GUI_Layout, glyph: Glyph) -> Glyph_Editor {
 struct Glyph_Editor {
     extends GUI_Widget(
         name = "Glyph_Editor"
-        on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
-            let self = self as Glyph_Editor
+        on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
+            let self = self as @Glyph_Editor
             let last_hovered_row = self.hovered_row
             let last_hovered_column = self.hovered_column
             if (self.bounds.contains(event.x, event.y) && event.x < self.bounds.right && event.y < self.bounds.bottom) {
@@ -41,11 +41,11 @@ struct Glyph_Editor {
                 self.hovered_column = -1
             }
             if (last_hovered_row != self.hovered_row || last_hovered_column != self.hovered_column) {
-                self.gui.post(make GUI_Event_Widget_Updated(widget = self))
+                self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
             }
         }
-        on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
-            let self = self as Glyph_Editor
+        on_mouse_button_pressed = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing {
+            let self = self as @Glyph_Editor
             self.gui.pressed_widget = self
             if (event.button == 1u8) {
                 self.is_drawing = true
@@ -55,12 +55,12 @@ struct Glyph_Editor {
                 self.update_glyph_cell(self.hovered_row, self.hovered_column, 0u8)
             }
         }
-        on_mouse_button_released = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+        on_mouse_button_released = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
             if (self.gui.pressed_widget == self) {
-                let self = self as Glyph_Editor
+                let self = self as @Glyph_Editor
                 if (event.button == 1u8) {
                     self.is_drawing = false
-                } else if (event.button == 2u8 && self.gui.hovered_widget == self as GUI_Widget) {
+                } else if (event.button == 2u8 && self.gui.hovered_widget == self as @GUI_Widget) {
                     let glyph_mask = self.glyph.mask
                     let glyph_row = 0
                     while (glyph_row < glyph_mask.length as i32) {
@@ -72,7 +72,7 @@ struct Glyph_Editor {
                         }
                         glyph_row = glyph_row + 1
                     }
-                    self.gui.post(make GUI_Event_Widget_Updated(widget = self.gui))
+                    self.gui.post(make @GUI_Event_Widget_Updated(widget = self.gui))
                 } else if (event.button == 3u8) {
                     self.is_erasing = false
                 }
@@ -81,7 +81,7 @@ struct Glyph_Editor {
         measure = measure_glyph_editor
         draw = draw_glyph_editor
     )
-    glyph: Glyph
+    glyph: @Glyph
     pixel_size: i32 = 23
     hovered_row: i32 = -1
     hovered_column: i32 = -1
@@ -89,8 +89,8 @@ struct Glyph_Editor {
     is_erasing: bool = false
 }
 
-define measure_glyph_editor = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
-    let self = self as Glyph_Editor
+define measure_glyph_editor = func (self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
+    let self = self as @Glyph_Editor
 
     if (width_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
         self.width_hint = width_spec.size
@@ -119,8 +119,8 @@ define measure_glyph_editor = func (self: GUI_Widget, width_spec: Measure_Spec, 
     \ stdout.write(self.name).write(" size hint: ").write(self.width_hint).write(" x ").write(self.height_hint).end_line()
 }
 
-define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
-    let self = self as Glyph_Editor
+define draw_glyph_editor = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
+    let self = self as @Glyph_Editor
 
     canvas.set_color(COLOR_BACKGROUND)
     canvas.fill_rect(self.bounds)
@@ -175,23 +175,23 @@ define draw_glyph_editor = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top + font.base_line * (self.pixel_size + 1))
 }
 
-define update_glyph_cell = macro (self: Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
+define update_glyph_cell = macro (self: @Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
     if (self.glyph.mask[glyph_row][glyph_column] != value) {
         self.glyph.mask[glyph_row][glyph_column] = value
-        self.gui.post(make GUI_Event_Widget_Updated(widget = self.gui))
+        self.gui.post(make @GUI_Event_Widget_Updated(widget = self.gui))
     }
 }
 
-define glyph_chooser = func (parent: GUI_Layout, selected_glyph: u8) -> Glyph_Chooser {
-    let glyph_chooser = make Glyph_Chooser(gui = parent.gui, parent = parent, selected_glyph = selected_glyph)
+define glyph_chooser = func (parent: @GUI_Layout, selected_glyph: u8) -> @Glyph_Chooser {
+    let glyph_chooser = make @Glyph_Chooser(gui = parent.gui, parent = parent, selected_glyph = selected_glyph)
     parent.add(glyph_chooser)
 
     let glyph = ' '
     while (glyph <= '~') {
-        let button = glyph_chooser.button(make String().append(glyph as u8))
-        button.data = make Glyph_Chooser_Button_Data(glyph_chooser = glyph_chooser, glyph = glyph as u8)
-        button.on_click = func (self: GUI_Button) -> Nothing {
-            let data = (self as GUI_Button).data as Glyph_Chooser_Button_Data
+        let button = glyph_chooser.button(make @String().append(glyph as u8))
+        button.data = make @Glyph_Chooser_Button_Data(glyph_chooser = glyph_chooser, glyph = glyph as u8)
+        button.on_click = func (self: @GUI_Button) -> Nothing {
+            let data = (self as @GUI_Button).data as @Glyph_Chooser_Button_Data
             data.glyph_chooser.handle_glyph_selected(data.glyph)
         }
         glyph = glyph + 1
@@ -208,7 +208,7 @@ struct Glyph_Chooser {
         draw = draw_glyph_chooser
     )
     selected_glyph: u8
-    handle_glyph_selected: func (self: Glyph_Chooser, glyph: u8) -> Nothing = func (self: Glyph_Chooser, glyph: u8) -> Nothing {
+    handle_glyph_selected: func (self: @Glyph_Chooser, glyph: u8) -> Nothing = func (self: @Glyph_Chooser, glyph: u8) -> Nothing {
         stderr.write(self.name).write(" doesn't have the 'handle_glyph_selected' callback").end_line()
         abort()
     }
@@ -216,12 +216,12 @@ struct Glyph_Chooser {
 
 struct Glyph_Chooser_Button_Data {
     extends GUI_Data
-    glyph_chooser: Glyph_Chooser
+    glyph_chooser: @Glyph_Chooser
     glyph: u8
 }
 
-define measure_glyph_chooser = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
-    let self = self as Glyph_Chooser
+define measure_glyph_chooser = func (self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
+    let self = self as @Glyph_Chooser
     if (width_spec.mode == MEASURE_SPEC_MODE_LIMITED) {
         if (self.width_policy.mode == SIZE_POLICY_MODE_STRETCHED) {
             self.width_hint = width_spec.size
@@ -233,8 +233,8 @@ define measure_glyph_chooser = func (self: GUI_Widget, width_spec: Measure_Spec,
     }
     if (height_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
         self.height_hint = -3
-        let child_width_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
-        let child_height_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+        let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+        let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
         let row_width = 0
         let row_height = 0
         self.for_each_child() {
@@ -259,8 +259,8 @@ define measure_glyph_chooser = func (self: GUI_Widget, width_spec: Measure_Spec,
     }
 }
 
-define layout_glyph_chooser = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-    let self = self as Glyph_Chooser
+define layout_glyph_chooser = func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as @Glyph_Chooser
 
     self.bounds.set(left, top, right, bottom)
 
@@ -284,8 +284,8 @@ define layout_glyph_chooser = func (self: GUI_Widget, left: i32, top: i32, right
     }
 }
 
-define draw_glyph_chooser = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
-    let self = self as Glyph_Chooser
+define draw_glyph_chooser = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
+    let self = self as @Glyph_Chooser
 
     \ canvas.set_color(0x00ff77u32)
     \ canvas.draw_rect(self.bounds)

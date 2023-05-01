@@ -4,22 +4,22 @@
 
 external type FILE
 
-let stdin: FILE = external
-let stdout: FILE = external
-let stderr: FILE = external
+let stdin: @FILE = external
+let stdout: @FILE = external
+let stderr: @FILE = external
 
-define fclose = func (file: FILE) -> i32
-define feof = func (file: FILE) -> i32
-define fflush = func (file: FILE) -> i32
-define fgetc = func (file: FILE) -> i32
-define fopen = func (file: [u8; ?], mode: [u8; ?]) -> FILE
-define fputc = func (char: i32, file: FILE) -> i32
-define fputs = func (chars: [u8; ?], file: FILE) -> i32
+define fclose = func (file: @FILE) -> i32
+define feof = func (file: @FILE) -> i32
+define fflush = func (file: @FILE) -> i32
+define fgetc = func (file: @FILE) -> i32
+define fopen = func (file: [u8; ?], mode: [u8; ?]) -> @FILE
+define fputc = func (char: i32, file: @FILE) -> i32
+define fputs = func (chars: [u8; ?], file: @FILE) -> i32
 
 \ stdlib
 
 define abort = func () -> Nothing
 define exit = func (code: i32) -> Nothing
-define free = func (block: Any) -> Nothing
-define malloc = func (size: usize) -> Any
-define realloc = func (block: [u8; ?], size: usize) -> Any
+define free = func (block: @Any) -> Nothing
+define malloc = func (size: usize) -> @Any
+define realloc = func (block: [u8; ?], size: usize) -> @Any

@@ -12,50 +12,50 @@ define COLOR_TEXT = 0xbfbfafu32
 struct GUI {
     extends GUI_Layout(
         name = "GUI"
-        on_mouse_moved = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
-            let self = self as GUI
+        on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
+            let self = self as @GUI
             let last_hovered_widget = self.hovered_widget
             self.hovered_widget = self
             self.for_each_child() {
                 child.on_mouse_moved(event)
             }
             if (last_hovered_widget != self.hovered_widget) {
-                self.post(make GUI_Event_Widget_Updated(widget = last_hovered_widget))
-                self.post(make GUI_Event_Widget_Updated(widget = self.hovered_widget))
+                self.post(make @GUI_Event_Widget_Updated(widget = last_hovered_widget))
+                self.post(make @GUI_Event_Widget_Updated(widget = self.hovered_widget))
             }
         }
-        on_mouse_button_pressed = func (self: GUI, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+        on_mouse_button_pressed = func (self: @GUI, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing {
             self.hovered_widget.on_mouse_button_pressed(event)
         }
-        on_mouse_button_released = func (self: GUI, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+        on_mouse_button_released = func (self: @GUI, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
             self.hovered_widget.on_mouse_button_released(event)
             if (self.pressed_widget != null) {
                 self.pressed_widget.on_mouse_button_released(event)
                 self.pressed_widget = null
             }
         }
-        on_mouse_scrolled = func (self: GUI, event: GUI_Event_Mouse_Scrolled) -> Nothing {
+        on_mouse_scrolled = func (self: @GUI, event: @GUI_Event_Mouse_Scrolled) -> Nothing {
             self.hovered_widget.on_mouse_scrolled(event)
         }
-        layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-            let self = self as GUI
+        layout = func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+            let self = self as @GUI
 
             self.if_size_changes(left, top, right, bottom) {
-                let width_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_EXACTLY, size = right - left + 1)
-                let height_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_EXACTLY, size = bottom - top + 1)
+                let width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_EXACTLY, size = right - left + 1)
+                let height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_EXACTLY, size = bottom - top + 1)
                 self.for_each_child() {
                     child.measure(@width_spec, @height_spec)
                 }
 
                 self.layout_widget(left, top, right, bottom)
-                self.post(make GUI_Event_Widget_Updated(widget = self))
+                self.post(make @GUI_Event_Widget_Updated(widget = self))
 
                 self.for_each_child() {
                     child.layout(left, top, right, bottom)
                 }
             }
         }
-        draw = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+        draw = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
             canvas.set_color(COLOR_BACKGROUND)
             canvas.fill_rect(self.bounds)
 
@@ -63,21 +63,21 @@ struct GUI {
         }
     )
 
-    first_event: GUI_Event = null
-    last_event: GUI_Event = null
+    first_event: @GUI_Event = null
+    last_event: @GUI_Event = null
 
-    hovered_widget: GUI_Widget
-    pressed_widget: GUI_Widget = null
+    hovered_widget: @GUI_Widget
+    pressed_widget: @GUI_Widget = null
 }
 
-define init_gui = func () -> GUI {
-    let gui = make GUI(gui = undefined, parent = null, hovered_widget = undefined)
+define init_gui = func () -> @GUI {
+    let gui = make @GUI(gui = undefined, parent = null, hovered_widget = undefined)
     gui.gui = gui
     gui.hovered_widget = gui
     return gui
 }
 
-define post = func (self: GUI, event: GUI_Event) -> Nothing {
+define post = func (self: @GUI, event: @GUI_Event) -> Nothing {
     if (self.first_event == null) {
         self.first_event = event
     } else {

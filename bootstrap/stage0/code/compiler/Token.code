@@ -2,9 +2,9 @@
 
 struct Token {
     extends Object
-    lexeme: String
-    location: Source_Location
-    next_token: Token = null
+    lexeme: @String
+    location: @Source_Location
+    next_token: @Token = null
 }
 
 struct Literal_Token {
@@ -44,7 +44,7 @@ struct Identifier_Token {
 struct Integer_Token {
     extends Literal_Token
     value: i64
-    type: String
+    type: @String
 }
 
 struct Null_Token {
@@ -62,7 +62,7 @@ struct Space_Token {
 
 struct String_Token {
     extends Literal_Token
-    value: String
+    value: @String
 }
 
 struct Undefined_Token {

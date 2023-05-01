@@ -1,9 +1,9 @@
-let shape: Shape = undefined
+let shape: @Shape = undefined
 
-let polygon: !Polygon
+let polygon: Polygon
 
 define main = func () -> i32 {
-    shape = make Rectangle()
+    shape = make @Rectangle()
     if (shape is Rectangle == false) {
         return 1
     }
@@ -16,10 +16,10 @@ define main = func () -> i32 {
     if (shape is Triangle) {
         return 1
     }
-    stdout.write(shape.object_type.name).write(" has sides: ").write((shape as Polygon).sides).end_line()
-    let shape = shape as Polygon
+    stdout.write(shape.object_type.name).write(" has sides: ").write((shape as @Polygon).sides).end_line()
+    let shape = shape as @Polygon
 
-    polygon = make !Polygon(sides = 4)
+    polygon = make Polygon(sides = 4)
 
     return shape.sides - polygon.sides
 }

@@ -1,433 +1,433 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 struct Compilation_Unit {
-    sources: List[Source] = make List[Source]()
-    function_statements: List[AST_Function_Statement] = make List[AST_Function_Statement]()
-    macro_statements: List[AST_Macro_Statement] = make List[AST_Macro_Statement]()
-    statements: List[AST_Statement] = make List[AST_Statement]()
+    sources: @List[@Source] = make @List[@Source]()
+    function_statements: @List[@AST_Function_Statement] = make @List[@AST_Function_Statement]()
+    macro_statements: @List[@AST_Macro_Statement] = make @List[@AST_Macro_Statement]()
+    statements: @List[@AST_Statement] = make @List[@AST_Statement]()
 }
 
 struct AST_Statement {
     extends Object
-    location: Source_Location
-    convert: func (statement: AST_Statement, builder: IR_Builder) -> Nothing = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
+    location: @Source_Location
+    convert: func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
         abort(statement.location, statement.object_type)
     }
 }
 
 struct AST_Include_Statement {
     extends AST_Statement
-    file_path: String
+    file_path: @String
 }
 
 struct AST_Function_Statement {
     extends AST_Statement
-    name: Identifier_Token
-    type: AST_Function_Type
-    body: AST_Block_Statement
+    name: @Identifier_Token
+    type: @AST_Function_Type
+    body: @AST_Block_Statement
     is_anonymous: bool
 }
 
 struct AST_Macro_Statement {
     extends AST_Statement
-    name: Identifier_Token
-    type: AST_Macro_Type
-    body: AST_Block_Statement
+    name: @Identifier_Token
+    type: @AST_Macro_Type
+    body: @AST_Block_Statement
 }
 
 struct AST_Block_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_block_statement(statement as AST_Block_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_block_statement(statement as @AST_Block_Statement)
         }
     )
-    statements: List[AST_Statement]
+    statements: @List[@AST_Statement]
 }
 
 struct AST_Constant_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_constant_statement(statement as AST_Constant_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_constant_statement(statement as @AST_Constant_Statement)
         }
     )
-    name: Identifier_Token
-    expression: AST_Expression
+    name: @Identifier_Token
+    expression: @AST_Expression
 }
 
 struct AST_Expression_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_expression_statement(statement as AST_Expression_Statement, null)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_expression_statement(statement as @AST_Expression_Statement, null)
         }
     )
-    expression: AST_Expression
+    expression: @AST_Expression
 }
 
 struct AST_If_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_if_statement(statement as AST_If_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_if_statement(statement as @AST_If_Statement)
         }
     )
-    condition_expression: AST_Expression
-    true_statement: AST_Statement
-    false_statement: AST_Statement
+    condition_expression: @AST_Expression
+    true_statement: @AST_Statement
+    false_statement: @AST_Statement
 }
 
 struct AST_Loop_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_loop_statement(statement as AST_Loop_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_loop_statement(statement as @AST_Loop_Statement)
         }
     )
-    block: AST_Block_Statement
+    block: @AST_Block_Statement
 }
 
 struct AST_While_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_while_statement(statement as AST_While_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_while_statement(statement as @AST_While_Statement)
         }
     )
-    condition_expression: AST_Expression
-    block: AST_Block_Statement
+    condition_expression: @AST_Expression
+    block: @AST_Block_Statement
 }
 
 struct AST_Break_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_break_statement(statement as AST_Break_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_break_statement(statement as @AST_Break_Statement)
         }
     )
 }
 
 struct AST_Return_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_return_statement(statement as AST_Return_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_return_statement(statement as @AST_Return_Statement)
         }
     )
-    value_expression: AST_Expression
+    value_expression: @AST_Expression
 }
 
 struct AST_Variable_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_variable_statement(statement as AST_Variable_Statement, false)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_variable_statement(statement as @AST_Variable_Statement, false)
         }
     )
-    name: Identifier_Token
-    type: AST_Type
-    value_expression: AST_Expression = null
+    name: @Identifier_Token
+    type: @AST_Type
+    value_expression: @AST_Expression = null
     is_external: bool = false
 }
 
 struct AST_Struct_Statement {
     extends AST_Statement
-    name: Identifier_Token
-    type_parameters: List[AST_Type_Parameter]
-    base_type: AST_Type
-    members: List[AST_Struct_Member]
-    init_arguments: List[AST_Call_Argument]
+    name: @Identifier_Token
+    type_parameters: @List[@AST_Type_Parameter]
+    base_type: @AST_Type
+    members: @List[@AST_Struct_Member]
+    init_arguments: @List[@AST_Call_Argument]
 }
 
 struct AST_Type_Parameter {
-    name: Identifier_Token
+    name: @Identifier_Token
 }
 
 struct AST_Struct_Member {
-    location: Source_Location
-    name: Identifier_Token
-    type: AST_Type
+    location: @Source_Location
+    name: @Identifier_Token
+    type: @AST_Type
 }
 
 struct AST_Assignment_Statement {
     extends AST_Statement(
-        convert = func (statement: AST_Statement, builder: IR_Builder) -> Nothing {
-            builder.convert_assignment_statement(statement as AST_Assignment_Statement)
+        convert = func (statement: @AST_Statement, builder: @IR_Builder) -> Nothing {
+            builder.convert_assignment_statement(statement as @AST_Assignment_Statement)
         }
     )
-    storage_expression: AST_Expression
-    operator: Other_Token
-    value_expression: AST_Expression
+    storage_expression: @AST_Expression
+    operator: @Other_Token
+    value_expression: @AST_Expression
 }
 
 struct AST_Type {
     extends Object
-    location: Source_Location = null
+    location: @Source_Location = null
 }
 
 struct AST_Named_Type {
     extends AST_Type
-    name: Identifier_Token
+    name: @Identifier_Token
 }
 
 struct AST_Placeholder_Type {
     extends AST_Type
-    name: String
+    name: @String
+}
+
+struct AST_Pointer_Type {
+    extends AST_Type
+    pointed_type: @AST_Type
 }
 
 struct AST_Specialized_Type {
     extends AST_Type
-    name: Identifier_Token
-    type_arguments: List[AST_Type_Argument]
+    name: @Identifier_Token
+    type_arguments: @List[@AST_Type_Argument]
 }
 
 struct AST_Type_Argument {
-    name: String = null
-    type: AST_Type
-}
-
-struct AST_Embedded_Type {
-    extends AST_Type
-    embedded_type: AST_Type
+    name: @String = null
+    type: @AST_Type
 }
 
 struct AST_Array_Type {
     extends AST_Type
-    item_type: AST_Type
-    size_expression: AST_Expression
+    item_type: @AST_Type
+    size_expression: @AST_Expression
     is_checked: bool
 }
 
 struct AST_Function_Type {
     extends AST_Type
-    type_parameters: List[AST_Type_Parameter]
-    parameters: List[AST_Parameter]
-    return_type: AST_Type
+    type_parameters: @List[@AST_Type_Parameter]
+    parameters: @List[@AST_Parameter]
+    return_type: @AST_Type
 }
 
 struct AST_Macro_Type {
     extends AST_Type
-    type_parameters: List[AST_Type_Parameter]
-    parameters: List[AST_Parameter]
+    type_parameters: @List[@AST_Type_Parameter]
+    parameters: @List[@AST_Parameter]
 }
 
 struct AST_Parameter {
-    location: Source_Location
-    name: Identifier_Token
-    type: AST_Type
+    location: @Source_Location
+    name: @Identifier_Token
+    type: @AST_Type
 }
 
 struct AST_Expression {
     extends Object
-    location: Source_Location
-    convert: func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
+    location: @Source_Location
+    convert: func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
         abort(expression.location, expression.object_type)
     }
 }
 
 struct AST_Paren_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return (expression as AST_Paren_Expression).expression.convert(builder, expected_type)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return (expression as @AST_Paren_Expression).expression.convert(builder, expected_type)
         }
     )
-    expression: AST_Expression
+    expression: @AST_Expression
 }
 
 struct AST_Literal_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_literal_expression(expression as AST_Literal_Expression, expected_type)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_literal_expression(expression as @AST_Literal_Expression, expected_type)
         }
     )
-    literal: Literal_Token
+    literal: @Literal_Token
 }
 
 struct AST_Variable_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_variable_expression(expression as AST_Variable_Expression, expected_type)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_variable_expression(expression as @AST_Variable_Expression, expected_type)
         }
     )
-    name: Identifier_Token
+    name: @Identifier_Token
 }
 
 struct AST_Variable_Reference_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_variable_expression_address((expression as AST_Variable_Reference_Expression).variable_expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_variable_expression_address((expression as @AST_Variable_Reference_Expression).variable_expression)
         }
     )
-    variable_expression: AST_Variable_Expression
+    variable_expression: @AST_Variable_Expression
 }
 
 struct AST_Binary_Expression {
     extends AST_Expression
-    left_expression: AST_Expression
-    right_expression: AST_Expression
+    left_expression: @AST_Expression
+    right_expression: @AST_Expression
 }
 
 struct AST_Add_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_add_expression(expression as AST_Add_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_add_expression(expression as @AST_Add_Expression)
         }
     )
 }
 
 struct AST_Divide_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_divide_expression(expression as AST_Divide_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_divide_expression(expression as @AST_Divide_Expression)
         }
     )
 }
 
 struct AST_Equals_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_equals_expression(expression as AST_Equals_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_equals_expression(expression as @AST_Equals_Expression)
         }
     )
 }
 
 struct AST_Greater_Than_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_greater_than_expression(expression as AST_Greater_Than_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_greater_than_expression(expression as @AST_Greater_Than_Expression)
         }
     )
 }
 
 struct AST_Greater_Than_Or_Equals_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_greater_than_or_equals_expression(expression as AST_Greater_Than_Or_Equals_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_greater_than_or_equals_expression(expression as @AST_Greater_Than_Or_Equals_Expression)
         }
     )
 }
 
 struct AST_Less_Than_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_less_than_expression(expression as AST_Less_Than_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_less_than_expression(expression as @AST_Less_Than_Expression)
         }
     )
 }
 
 struct AST_Less_Than_Or_Equals_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_less_than_or_equals_expression(expression as AST_Less_Than_Or_Equals_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_less_than_or_equals_expression(expression as @AST_Less_Than_Or_Equals_Expression)
         }
     )
 }
 
 struct AST_Logic_And_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_logic_and_expression(expression as AST_Logic_And_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_logic_and_expression(expression as @AST_Logic_And_Expression)
         }
     )
 }
 
 struct AST_Logic_Or_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_logic_or_expression(expression as AST_Logic_Or_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_logic_or_expression(expression as @AST_Logic_Or_Expression)
         }
     )
 }
 
 struct AST_Modulo_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_modulo_expression(expression as AST_Modulo_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_modulo_expression(expression as @AST_Modulo_Expression)
         }
     )
 }
 
 struct AST_Multiply_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_multiply_expression(expression as AST_Multiply_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_multiply_expression(expression as @AST_Multiply_Expression)
         }
     )
 }
 
 struct AST_Not_Equals_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_not_equals_expression(expression as AST_Not_Equals_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_not_equals_expression(expression as @AST_Not_Equals_Expression)
         }
     )
 }
 
 struct AST_Substract_Expression {
     extends AST_Binary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_substract_expression(expression as AST_Substract_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_substract_expression(expression as @AST_Substract_Expression)
         }
     )
 }
 
 struct AST_Unary_Expression {
     extends AST_Expression
-    expression: AST_Expression
+    expression: @AST_Expression
 }
 
 struct AST_Negate_Expression {
     extends AST_Unary_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_negate_expression(expression as AST_Negate_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_negate_expression(expression as @AST_Negate_Expression)
         }
     )
 }
 
 struct AST_Cast_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_cast_expression(expression as AST_Cast_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_cast_expression(expression as @AST_Cast_Expression)
         }
     )
-    value_expression: AST_Expression
-    type: AST_Type
+    value_expression: @AST_Expression
+    type: @AST_Type
 }
 
 struct AST_Is_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_is_expression(expression as AST_Is_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_is_expression(expression as @AST_Is_Expression)
         }
     )
-    value_expression: AST_Expression
-    type: AST_Type
+    value_expression: @AST_Expression
+    type: @AST_Type
 }
 
 struct AST_Make_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_make_expression(expression as AST_Make_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_make_expression(expression as @AST_Make_Expression)
         }
     )
-    type: AST_Type
-    init_arguments: List[AST_Call_Argument]
+    type: @AST_Type
+    init_arguments: @List[@AST_Call_Argument]
 }
 
 struct AST_Function_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_function_expression(expression as AST_Function_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_function_expression(expression as @AST_Function_Expression)
         }
     )
-    function_statement: AST_Function_Statement
+    function_statement: @AST_Function_Statement
 }
 
 struct AST_Call_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_call_expression(expression as AST_Call_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_call_expression(expression as @AST_Call_Expression)
         }
     )
-    callee_expression: AST_Expression
-    arguments: List[AST_Call_Argument]
+    callee_expression: @AST_Expression
+    arguments: @List[@AST_Call_Argument]
 }
 
 struct AST_Call_Argument {
-    name: Identifier_Token
-    value_expression: AST_Expression
+    name: @Identifier_Token
+    value_expression: @AST_Expression
 }
 
 struct AST_Access_Expression {
@@ -436,38 +436,38 @@ struct AST_Access_Expression {
 
 struct AST_Member_Access_Expression {
     extends AST_Access_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_member_access_expression(expression as AST_Member_Access_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_member_access_expression(expression as @AST_Member_Access_Expression)
         }
     )
-    object_expression: AST_Expression
-    member_name: Identifier_Token
+    object_expression: @AST_Expression
+    member_name: @Identifier_Token
 }
 
 struct AST_Array_Access_Expression {
     extends AST_Access_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_array_access_expression(expression as AST_Array_Access_Expression)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_array_access_expression(expression as @AST_Array_Access_Expression)
         }
     )
-    array_expression: AST_Expression
-    index_expression: AST_Expression
+    array_expression: @AST_Expression
+    index_expression: @AST_Expression
 }
 
 struct AST_Wrapped_Expression {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return (expression as AST_Wrapped_Expression).expression.convert(builder, expected_type)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return (expression as @AST_Wrapped_Expression).expression.convert(builder, expected_type)
         }
     )
-    expression: AST_Expression
+    expression: @AST_Expression
 }
 
 struct AST_Macro_Body {
     extends AST_Expression(
-        convert = func (expression: AST_Expression, builder: IR_Builder, expected_type: IR_Type) -> IR_Value {
-            return builder.convert_macro_body(expression as AST_Macro_Body)
+        convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+            return builder.convert_macro_body(expression as @AST_Macro_Body)
         }
     )
-    statement: AST_Block_Statement
+    statement: @AST_Block_Statement
 }

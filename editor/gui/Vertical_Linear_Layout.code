@@ -12,8 +12,8 @@ struct GUI_Vertical_Linear_Layout {
     spacing: i32 = 0
 }
 
-define measure_vertical_linear_layout = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
-    let self = self as GUI_Horizontal_Linear_Layout
+define measure_vertical_linear_layout = func (self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
+    let self = self as @GUI_Horizontal_Linear_Layout
 
     if (width_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
         self.width_hint = width_spec.size
@@ -21,8 +21,8 @@ define measure_vertical_linear_layout = func (self: GUI_Widget, width_spec: Meas
         if (self.children_count > 0) {
             let max_child_width = 0
             self.for_each_child() {
-                let child_width_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
-                let child_height_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+                let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+                let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
                 child.measure(@child_width_spec, @child_height_spec)
                 if (child.width_hint > max_child_width) {
                     max_child_width = child.width_hint
@@ -49,9 +49,9 @@ define measure_vertical_linear_layout = func (self: GUI_Widget, width_spec: Meas
             self.height_hint = self.margin * 2
             if (self.children_count > 0) {
                 self.height_hint = self.height_hint + self.spacing * (self.children_count - 1)
-                let child_width_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.width_hint - self.margin * 2)
+                let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.width_hint - self.margin * 2)
                 self.for_each_child() {
-                    let child_height_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+                    let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
                     child.measure(@child_width_spec, @child_height_spec)
                     self.height_hint = self.height_hint + child.height_hint
                 }
@@ -69,8 +69,8 @@ define measure_vertical_linear_layout = func (self: GUI_Widget, width_spec: Meas
     \ stdout.write(self.name).write(" size hint: ").write(self.width_hint).write(" x ").write(self.height_hint).end_line()
 }
 
-define layout_vertical_linear_layout = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-    let self = self as GUI_Vertical_Linear_Layout
+define layout_vertical_linear_layout = func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as @GUI_Vertical_Linear_Layout
     self.bounds.set(left, top, right, bottom)
     if (self.children_count > 0) {
         let stretched_height = self.bounds.height - self.margin * 2 - self.spacing * (self.children_count - 1)
@@ -79,8 +79,8 @@ define layout_vertical_linear_layout = func (self: GUI_Widget, left: i32, top: i
             if (child.height_policy.mode == SIZE_POLICY_MODE_FIXED) {
                 stretched_height = stretched_height - child.height_policy.size
             } else if (child.height_policy.mode == SIZE_POLICY_MODE_WRAP_CONTENT) {
-                let child_width_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.bounds.width - self.margin * 2)
-                let child_height_spec = make !Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+                let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.bounds.width - self.margin * 2)
+                let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
                 child.measure(@child_width_spec, @child_height_spec)
                 stretched_height = stretched_height - child.height_hint
             } else {
@@ -113,8 +113,8 @@ define layout_vertical_linear_layout = func (self: GUI_Widget, left: i32, top: i
     }
 }
 
-define vertical_linear_layout = macro (parent: GUI_Layout, content: macro (gui: GUI_Vertical_Linear_Layout)) {
-    let linear_layout = make GUI_Vertical_Linear_Layout(gui = parent.gui, parent = parent)
+define vertical_linear_layout = macro (parent: @GUI_Layout, content: macro (gui: @GUI_Vertical_Linear_Layout)) {
+    let linear_layout = make @GUI_Vertical_Linear_Layout(gui = parent.gui, parent = parent)
     parent.add(linear_layout)
     linear_layout.content()
 }

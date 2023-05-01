@@ -4,7 +4,7 @@ include "./Widget.code"
 
 struct GUI_Event {
     type: u8
-    next_event: GUI_Event = null
+    next_event: @GUI_Event = null
 }
 
 define GUI_EVENT_TYPE_INIT = 0x00u8
@@ -46,5 +46,5 @@ struct GUI_Event_Mouse_Scrolled {
 
 struct GUI_Event_Widget_Updated {
     extends GUI_Event(type = GUI_EVENT_TYPE_WIDGET_UPDATED)
-    widget: GUI_Widget
+    widget: @GUI_Widget
 }

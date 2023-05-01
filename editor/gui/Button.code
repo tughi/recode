@@ -2,8 +2,8 @@
 
 include "./Layout.code"
 
-define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
-    let button = make GUI_Button(gui = parent.gui, parent = parent, label = label.clone())
+define button = func (parent: @GUI_Layout, label: @String) -> @GUI_Button {
+    let button = make @GUI_Button(gui = parent.gui, parent = parent, label = label.clone())
     parent.add(button)
     label.compute_text_size(button.label_bounds)
     return button
@@ -12,33 +12,33 @@ define button = func (parent: GUI_Layout, label: String) -> GUI_Button {
 struct GUI_Button {
     extends GUI_Widget(
         name = "GUI_Button"
-        on_mouse_button_pressed = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+        on_mouse_button_pressed = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing {
             if (event.button == 1u8) {
                 self.gui.pressed_widget = self
-                self.gui.post(make GUI_Event_Widget_Updated(widget = self))
+                self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
             }
         }
-        on_mouse_button_released = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+        on_mouse_button_released = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
             if (self.gui.pressed_widget == self) {
                 if (self.gui.hovered_widget == self) {
-                    (self as GUI_Button).on_click()
+                    (self as @GUI_Button).on_click()
                 }
-                self.gui.post(make GUI_Event_Widget_Updated(widget = self))
+                self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
             }
         }
         measure = measure_button
         layout = layout_button
         draw = draw_button
     )
-    label: String
-    label_bounds: !Rect = make !Rect()
+    label: @String
+    label_bounds: Rect = make Rect()
 
-    on_click: func (self: GUI_Button) -> Nothing = func (self: GUI_Button) -> Nothing {
+    on_click: func (self: @GUI_Button) -> Nothing = func (self: @GUI_Button) -> Nothing {
     }
 }
 
-define measure_button = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
-    let self = self as GUI_Button
+define measure_button = func (self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
+    let self = self as @GUI_Button
 
     if (width_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
         self.width_hint = width_spec.size
@@ -64,16 +64,16 @@ define measure_button = func (self: GUI_Widget, width_spec: Measure_Spec, height
     \ stdout.write(self.name).write(" size hint: ").write(self.width_hint).write(" x ").write(self.height_hint).end_line()
 }
 
-define layout_button = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-    let self = self as GUI_Button
+define layout_button = func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self as @GUI_Button
     self.bounds.set(left, top, right, bottom)
     self.label_bounds.set_location(left + (self.bounds.width - self.label_bounds.width) / 2, top + (self.bounds.height - self.label_bounds.height) / 2)
 }
 
-define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+define draw_button = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
     let is_hovered = self.gui.hovered_widget == self
     let is_pressed = self.gui.pressed_widget == self
-    let self = self as GUI_Button
+    let self = self as @GUI_Button
 
     define COLOR_SHADOW = 0x1a1a1au32
     define COLOR_LIGHT_BORDER = 0x676767u32
@@ -110,7 +110,7 @@ define draw_button = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
     canvas.draw_text(self.label, self.label_bounds.left, self.label_bounds.top)
 }
 
-define compute_text_size = func (text: String, text_size: Rect) -> Nothing {
+define compute_text_size = func (text: @String, text_size: @Rect) -> Nothing {
     let line_height = font.height
     if (text.length > 0) {
         let width = 0

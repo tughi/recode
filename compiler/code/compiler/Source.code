@@ -2,17 +2,17 @@
 
 struct Source {
     id: i64 = undefined
-    file_path: String
+    file_path: @String
     content: [i8; ?]
 }
 
 struct Source_Location {
-    source: Source
+    source: @Source
     line: i64
     column: i64
 }
 
-define create_source = func (file_path: String) -> Source {
+define create_source = func (file_path: @String) -> @Source {
     let file = fopen(file_path.data, "r".data)
     if (file == null) {
         return null
@@ -35,5 +35,5 @@ define create_source = func (file_path: String) -> Source {
     }
     content[content_length] = '\0'
 
-    return make Source(file_path = file_path, content = content)
+    return make @Source(file_path = file_path, content = content)
 }

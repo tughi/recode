@@ -1,19 +1,19 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> SDL_Window
+define SDL_CreateWindow = func (title: [u8; ?], x: i32, y: i32, w: i32, h: i32, flags: u32) -> @SDL_Window
 define SDL_Delay = func (ms: u32) -> Nothing
-define SDL_DestroyWindow = func (window: SDL_Window) -> Nothing
+define SDL_DestroyWindow = func (window: @SDL_Window) -> Nothing
 define SDL_GetError = func () -> [u8; ?]
 define SDL_GetTicks = func () -> u32
-define SDL_GetWindowSurface = func (window: SDL_Window) -> SDL_Surface
+define SDL_GetWindowSurface = func (window: @SDL_Window) -> @SDL_Surface
 define SDL_Init = func (flags: u32) -> i32
-define SDL_LockSurface = func (surface: SDL_Surface) -> i32
-define SDL_PollEvent = func (event: SDL_Event) -> i32
+define SDL_LockSurface = func (surface: @SDL_Surface) -> i32
+define SDL_PollEvent = func (event: @SDL_Event) -> i32
 define SDL_Quit = func () -> Nothing
 define SDL_ShowCursor = func (toggle: i32) -> i32
-define SDL_UnlockSurface = func (surface: SDL_Surface) -> Nothing
-define SDL_UpdateWindowSurface = func (window: SDL_Window) -> i32
-define SDL_WaitEvent = func (event: SDL_Event) -> i32
+define SDL_UnlockSurface = func (surface: @SDL_Surface) -> Nothing
+define SDL_UpdateWindowSurface = func (window: @SDL_Window) -> i32
+define SDL_WaitEvent = func (event: @SDL_Event) -> i32
 
 define SDL_INIT_VIDEO = 0x20u32
 
@@ -26,22 +26,22 @@ define SDL_WINDOWPOS_UNDEFINED = SDL_WINDOWPOS_UNDEFINED_MASK \| 0
 
 struct SDL_Surface {
     _flags: u32
-    format: SDL_PixelFormat
+    format: @SDL_PixelFormat
     width: i32
     height: i32
     pitch: i32
-    pixels: Any
-    user_data: Any
+    pixels: @Any
+    user_data: @Any
     _locked: i32
-    _lock_data: Any
-    clip_rect: !SDL_Rect
-    _map: Any
+    _lock_data: @Any
+    clip_rect: SDL_Rect
+    _map: @Any
     refcount: i32
 }
 
 struct SDL_PixelFormat {
     format: u32
-    palette: SDL_Palette
+    palette: @SDL_Palette
     bits_per_pixel: u8
     bytes_per_pixel: u8
     red_mask: u32
@@ -57,12 +57,12 @@ struct SDL_PixelFormat {
     _blue_shift: u8
     _alpha_shift: u8
     _refcount: i32
-    _next: SDL_PixelFormat
+    _next: @SDL_PixelFormat
 }
 
 struct SDL_Palette {
     colors_count: i32
-    colors: [!SDL_Color; ?]
+    colors: [SDL_Color; ?]
     _version: u32
     _refcount: i32
 }

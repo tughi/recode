@@ -1,17 +1,17 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 struct Object {
-    object_type: Object_Type = undefined
+    object_type: @Object_Type = undefined
 }
 
 struct Object_Type {
     _id: u32
     _max_derivate_id: u32
-    name: !String
-    base_type: Object_Type
+    name: String
+    base_type: @Object_Type
 }
 
-define is = func (self: Object, object_type: Object_Type) -> bool {
+define is = func (self: @Object, object_type: @Object_Type) -> bool {
     \ let self_type = self.object_type
     \ loop {
     \     if (self_type == object_type) {

@@ -11,15 +11,15 @@ struct Rect {
     height: i32 = undefined
 }
 
-define reference = func (self: Rect) -> Rect {
+define reference = func (self: @Rect) -> @Rect {
     return self
 }
 
-define contains = func (self: Rect, x: i32, y: i32) -> bool {
+define contains = func (self: @Rect, x: i32, y: i32) -> bool {
     return self.left <= x && x <= self.right && self.top <= y && y <= self.bottom
 }
 
-define set = func (self: Rect, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+define set = func (self: @Rect, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     self.left = left
     self.top = top
     self.right = right
@@ -28,18 +28,18 @@ define set = func (self: Rect, left: i32, top: i32, right: i32, bottom: i32) -> 
     self.height = bottom - top + 1
 }
 
-define set = func (self: Rect, other: Rect) -> Nothing {
+define set = func (self: @Rect, other: @Rect) -> Nothing {
     self.set(other.left, other.top, other.right, other.bottom)
 }
 
-define set_location = func (self: Rect, left: i32, top: i32) -> Nothing {
+define set_location = func (self: @Rect, left: i32, top: i32) -> Nothing {
     self.left = left
     self.top = top
     self.right = left + self.width - 1
     self.bottom = top + self.height - 1
 }
 
-define set_size = func (self: Rect, width: i32, height: i32) -> Nothing {
+define set_size = func (self: @Rect, width: i32, height: i32) -> Nothing {
     if (width < 1) {
         self.width = 1
         self.right = self.left
@@ -56,7 +56,7 @@ define set_size = func (self: Rect, width: i32, height: i32) -> Nothing {
     }
 }
 
-define intersect = func (self: Rect, other: Rect) -> Nothing {
+define intersect = func (self: @Rect, other: @Rect) -> Nothing {
     let new_left = max(self.left, other.left)
     let new_right = min(self.right, other.right)
     if (new_left > new_right) {
@@ -70,13 +70,13 @@ define intersect = func (self: Rect, other: Rect) -> Nothing {
     self.set(new_left, new_top, new_right, new_bottom)
 }
 
-define intersects = func (self: Rect, other: Rect) -> bool {
+define intersects = func (self: @Rect, other: @Rect) -> bool {
     if (self.left > other.right || self.top > other.bottom || self.right < other.left || self.bottom < other.top) {
         return false
     }
     return true
 }
 
-define write = func (file: FILE, rect: Rect) -> FILE {
+define write = func (file: @FILE, rect: @Rect) -> @FILE {
     return file.write("[(").write(rect.left).write(", ").write(rect.top).write(") x (").write(rect.right).write(", ").write(rect.bottom).write(")]")
 }

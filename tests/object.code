@@ -1,0 +1,53 @@
+\ Expect:
+\ - output: 'Rectangle\n'
+
+struct Shape {
+    extends Object
+    points: i32
+}
+
+struct Triangle {
+    extends Shape(points = 3)
+}
+
+struct Rectangle {
+    extends Shape(points = 4)
+}
+
+struct String {
+    data: [i8; ?]
+    data_size: usize
+    length: usize
+}
+
+struct Object {
+    object_type: @Object_Type = undefined
+}
+
+struct Object_Type {
+    _id: u32
+    _max_derivate_id: u32
+    name: String
+    base_type: @Object_Type
+}
+
+external type File
+define fputs = func (s: [i8; ?], stream: @File) -> i32
+let stdout: @File = external
+
+define main = func () -> i32 {
+    let shape: @Shape = make @Rectangle()
+
+    if (shape.points != 4) {
+        return 1
+    }
+
+    if (shape is Rectangle == false) {
+        return 2
+    }
+
+    fputs(shape.object_type.name.data, stdout)
+    fputs("\n".data, stdout)
+
+    return 0
+}

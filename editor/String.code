@@ -8,14 +8,14 @@ struct String {
     length: usize = 0
 }
 
-define clear = func (self: String) -> String {
+define clear = func (self: @String) -> @String {
     self.length = 0
     self.data[0] = 0u8
     return self
 }
 
-define clone = func (self: String) -> String {
-    let other = make String(
+define clone = func (self: @String) -> @String {
+    let other = make @String(
         data = malloc(self.length + 1) as [u8; ?]
         data_size = self.length + 1
         length = self.length
@@ -28,7 +28,7 @@ define clone = func (self: String) -> String {
     return other
 }
 
-define copy = func (self: String, other: String) -> String {
+define copy = func (self: @String, other: @String) -> @String {
     if (self.data_size < other.length + 1) {
         self.data_size = other.length + 1
         self.data = realloc(self.data, self.data_size) as [u8; ?]
@@ -42,7 +42,7 @@ define copy = func (self: String, other: String) -> String {
     return self
 }
 
-define equals = func (self: String, other: String) -> bool {
+define equals = func (self: @String, other: @String) -> bool {
     if (other == null || self.length != other.length) {
         return false
     }
@@ -56,7 +56,7 @@ define equals = func (self: String, other: String) -> bool {
     return true
 }
 
-define starts_with = func (self: String, other: String) -> bool {
+define starts_with = func (self: @String, other: @String) -> bool {
     if (self.length < other.length) {
         return false
     }
@@ -70,7 +70,7 @@ define starts_with = func (self: String, other: String) -> bool {
     return true
 }
 
-define append = func (self: String, char: u8) -> String {
+define append = func (self: @String, char: u8) -> @String {
     if (self.length + 1 >= self.data_size) {
         self.data_size = self.data_size + 16
         self.data = realloc(self.data, self.data_size) as [u8; ?]
@@ -81,7 +81,7 @@ define append = func (self: String, char: u8) -> String {
     return self
 }
 
-define for_each_char = macro (self: String, handler: macro (char: u8)) {
+define for_each_char = macro (self: @String, handler: macro (char: u8)) {
     let index = 0
     let length = self.length as i32
     while (index < length) {

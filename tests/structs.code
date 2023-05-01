@@ -2,7 +2,7 @@
 \ - output: ''
 
 struct Source {
-    file: File
+    file: @File
 
     value: i32
 }
@@ -10,6 +10,6 @@ struct Source {
 external type File \ opaque type
 
 define main = func () -> i32 {
-    let result = make !Source(file = null, value = 0)
+    let result = make Source(file = null, value = 0)
     return result.value
 }

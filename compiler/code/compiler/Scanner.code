@@ -1,20 +1,20 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 struct Scanner {
-    source: Source
+    source: @Source
     current_char_index: i64 = 0
     current_line: i64 = 1
     current_column: i64 = 1
-    current_token: Token = undefined
+    current_token: @Token = undefined
 }
 
-define create_scanner = func (source: Source) -> Scanner {
-    let scanner = make Scanner(source = source)
+define create_scanner = func (source: @Source) -> @Scanner {
+    let scanner = make @Scanner(source = source)
     scanner.current_token = scanner.scan_token()
     return scanner
 }
 
-define peek_token = func (self: Scanner, offset: i64) -> Token {
+define peek_token = func (self: @Scanner, offset: i64) -> @Token {
     if (offset < 0) {
         abort("Invalid state")
     }
@@ -31,7 +31,7 @@ define peek_token = func (self: Scanner, offset: i64) -> Token {
     }
 }
 
-define next_token = func (self: Scanner) -> Token {
+define next_token = func (self: @Scanner) -> @Token {
     if (self.current_token.next_token == null) {
         self.current_token.next_token = self.scan_token()
     }
@@ -39,11 +39,11 @@ define next_token = func (self: Scanner) -> Token {
     return self.current_token
 }
 
-define peek_char = func (self: Scanner) -> i8 {
+define peek_char = func (self: @Scanner) -> i8 {
     return self.source.content[self.current_char_index]
 }
 
-define next_char = func (self: Scanner) -> i8 {
+define next_char = func (self: @Scanner) -> i8 {
     let next_char = self.source.content[self.current_char_index]
     if (next_char != '\0') {
         self.current_char_index = self.current_char_index + 1
@@ -57,9 +57,9 @@ define next_char = func (self: Scanner) -> i8 {
     return next_char
 }
 
-define scan_token = func (self: Scanner) -> Token {
-    let token_lexeme = make String()
-    let token_location = make Source_Location(source = self.source, line = self.current_line, column = self.current_column)
+define scan_token = func (self: @Scanner) -> @Token {
+    let token_lexeme = make @String()
+    let token_location = make @Source_Location(source = self.source, line = self.current_line, column = self.current_column)
 
     let next_char = self.peek_char()
     if (next_char.is_identifier_start()) {
@@ -82,14 +82,14 @@ define scan_token = func (self: Scanner) -> Token {
     }
     if (next_char == '\n') {
         self.next_char()
-        return make End_Of_Line_Token(lexeme = token_lexeme, location = token_location)
+        return make @End_Of_Line_Token(lexeme = token_lexeme, location = token_location)
     }
     if (next_char == '\0') {
         self.next_char()
-        return make End_Of_File_Token(lexeme = token_lexeme, location = token_location)
+        return make @End_Of_File_Token(lexeme = token_lexeme, location = token_location)
     }
     token_lexeme.append(self.next_char())
-    return make Other_Token(lexeme = token_lexeme, location = token_location)
+    return make @Other_Token(lexeme = token_lexeme, location = token_location)
 }
 
 define is_digit = func (char: i8) -> bool {
@@ -115,7 +115,7 @@ define is_space = func (char: i8) -> bool {
     return char == ' '
 }
 
-define scan_character_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
+define scan_character_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     if (self.peek_char() != '\'') {
         abort("Invalid state")
     }
@@ -125,13 +125,13 @@ define scan_character_token = func (self: Scanner, token_lexeme: String, token_l
     let char = self.next_char()
     token_lexeme.append(char)
     if (char == '\'') {
-        return make Error_Token(lexeme = token_lexeme, location = token_location)
+        return make @Error_Token(lexeme = token_lexeme, location = token_location)
     }
     if (char == '\\') {
         char = self.next_char()
         token_lexeme.append(char)
         if (char.is_escape() == false) {
-            return make Error_Token(lexeme = token_lexeme, location = token_location)
+            return make @Error_Token(lexeme = token_lexeme, location = token_location)
         }
         if (char == 'n') {
             value = '\n'
@@ -151,53 +151,53 @@ define scan_character_token = func (self: Scanner, token_lexeme: String, token_l
         char = self.next_char()
         token_lexeme.append(char)
         if (char != '\'') {
-            return make Error_Token(lexeme = token_lexeme, location = token_location)
+            return make @Error_Token(lexeme = token_lexeme, location = token_location)
         }
     } else {
         if (char == '\0' || char == '\n' || char == '\t') {
-            return make Error_Token(lexeme = token_lexeme, location = token_location)
+            return make @Error_Token(lexeme = token_lexeme, location = token_location)
         }
         value = char
         char = self.next_char()
         token_lexeme.append(char)
         if (char != '\'') {
-            return make Error_Token(lexeme = token_lexeme, location = token_location)
+            return make @Error_Token(lexeme = token_lexeme, location = token_location)
         }
     }
-    return make Character_Token(lexeme = token_lexeme, location = token_location, value = value)
+    return make @Character_Token(lexeme = token_lexeme, location = token_location, value = value)
 }
 
 define is_escape = func (char: i8) -> bool {
     return char == 'n' || char == 't' || char == '\"' || char == '\'' || char == '\\' || char == '0'
 }
 
-define scan_comment_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
+define scan_comment_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     while (self.peek_char() != '\n') {
         token_lexeme.append(self.next_char())
     }
-    return make Comment_Token(lexeme = token_lexeme, location = token_location)
+    return make @Comment_Token(lexeme = token_lexeme, location = token_location)
 }
 
-define scan_identifier_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
+define scan_identifier_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     while (self.peek_char().is_identifier_body()) {
         token_lexeme.append(self.next_char())
     }
     if (token_lexeme.equals("false")) {
-        return make Boolean_Token(lexeme = token_lexeme, location = token_location, value = false)
+        return make @Boolean_Token(lexeme = token_lexeme, location = token_location, value = false)
     }
     if (token_lexeme.equals("null")) {
-        return make Null_Token(lexeme = token_lexeme, location = token_location)
+        return make @Null_Token(lexeme = token_lexeme, location = token_location)
     }
     if (token_lexeme.equals("true")) {
-        return make Boolean_Token(lexeme = token_lexeme, location = token_location, value = true)
+        return make @Boolean_Token(lexeme = token_lexeme, location = token_location, value = true)
     }
     if (token_lexeme.equals("undefined")) {
-        return make Undefined_Token(lexeme = token_lexeme, location = token_location)
+        return make @Undefined_Token(lexeme = token_lexeme, location = token_location)
     }
-    return make Identifier_Token(lexeme = token_lexeme, location = token_location)
+    return make @Identifier_Token(lexeme = token_lexeme, location = token_location)
 }
 
-define scan_integer_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
+define scan_integer_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     let char = self.next_char()
     token_lexeme.append(char)
     let value = (char - '0') as i64 \ TODO: compute value as u64
@@ -237,7 +237,7 @@ define scan_integer_token = func (self: Scanner, token_lexeme: String, token_loc
         }
     }
     if (self.peek_char() == 'i' || self.peek_char() == 'u') {
-        let type = make String()
+        let type = make @String()
         loop {
             char = self.peek_char()
             if (char.is_digit() == false && char.is_letter() == false) {
@@ -248,50 +248,50 @@ define scan_integer_token = func (self: Scanner, token_lexeme: String, token_loc
             self.next_char()
         }
         if (type.equals("i16") || type.equals("i32") || type.equals("i64") || type.equals("i8") || type.equals("isize") || type.equals("u16") || type.equals("u32") || type.equals("u64") || type.equals("u8") || type.equals("usize")) {
-            return make Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = type)
+            return make @Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = type)
         }
-        return make Error_Token(lexeme = token_lexeme, location = token_location)
+        return make @Error_Token(lexeme = token_lexeme, location = token_location)
     }
-    return make Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = null)
+    return make @Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = null)
 }
 
-define scan_space_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
+define scan_space_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     let count = 0
     while (self.peek_char() == ' ') {
         let char = self.next_char()
         count = count + 1
         token_lexeme.append(char)
     }
-    return make Space_Token(lexeme = token_lexeme, location = token_location, count = count)
+    return make @Space_Token(lexeme = token_lexeme, location = token_location, count = count)
 }
 
-define scan_string_token = func (self: Scanner, token_lexeme: String, token_location: Source_Location) -> Token {
+define scan_string_token = func (self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     if (self.peek_char() != '"') {
         abort("Invalid state")
     }
 
-    let value = make String()
+    let value = make @String()
 
     token_lexeme.append(self.next_char())
     loop {
         let char = self.peek_char()
         if (char == '\0' || char == '\n') {
-            return make Error_Token(lexeme = token_lexeme, location = token_location)
+            return make @Error_Token(lexeme = token_lexeme, location = token_location)
         }
         char = self.next_char()
         token_lexeme.append(char)
         if (char == '"') {
-            return make String_Token(lexeme = token_lexeme, location = token_location, value = value)
+            return make @String_Token(lexeme = token_lexeme, location = token_location, value = value)
         }
         if (char == '\\') {
             char = self.peek_char()
             if (char == '\0' || char == '\n') {
-                return make Error_Token(lexeme = token_lexeme, location = token_location)
+                return make @Error_Token(lexeme = token_lexeme, location = token_location)
             }
             char = self.next_char()
             token_lexeme.append(char)
             if (char.is_escape() == false) {
-                return make Error_Token(lexeme = token_lexeme, location = token_location)
+                return make @Error_Token(lexeme = token_lexeme, location = token_location)
             }
             if (char == 'n') {
                 value.append('\n')

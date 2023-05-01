@@ -3,51 +3,51 @@
 include "../Canvas.code"
 
 struct GUI_Widget {
-    gui: GUI
-    name: String
-    parent: GUI_Layout
+    gui: @GUI
+    name: @String
+    parent: @GUI_Layout
 
-    data: GUI_Data = null
+    data: @GUI_Data = null
 
     width_hint: i32 = 0
-    width_policy: !Size_Policy = make !Size_Policy()
+    width_policy: Size_Policy = make Size_Policy()
     height_hint: i32 = 0
-    height_policy: !Size_Policy = make !Size_Policy()
+    height_policy: Size_Policy = make Size_Policy()
 
-    bounds: !Rect = make !Rect()
+    bounds: Rect = make Rect()
 
-    on_mouse_moved: func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Moved) -> Nothing {
+    on_mouse_moved: func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
         if (self.bounds.contains(event.x, event.y)) {
             self.gui.hovered_widget = self
         }
     }
 
-    on_mouse_button_pressed: func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Pressed) -> Nothing {
+    on_mouse_button_pressed: func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing {
     }
 
-    on_mouse_button_released: func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Button_Released) -> Nothing {
+    on_mouse_button_released: func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Released) -> Nothing = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
     }
 
-    on_mouse_scrolled: func (self: GUI_Widget, event: GUI_Event_Mouse_Scrolled) -> Nothing = func (self: GUI_Widget, event: GUI_Event_Mouse_Scrolled) -> Nothing {
+    on_mouse_scrolled: func (self: @GUI_Widget, event: @GUI_Event_Mouse_Scrolled) -> Nothing = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Scrolled) -> Nothing {
     }
 
-    measure: func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing = measure_widget
-    layout: func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing = layout_widget
-    draw: func (self: GUI_Widget, canvas: Canvas) -> Nothing = draw_widget
+    measure: func (self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing = measure_widget
+    layout: func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing = layout_widget
+    draw: func (self: @GUI_Widget, canvas: @Canvas) -> Nothing = draw_widget
 }
 
 struct GUI_Data {
 }
 
-define measure_widget = func (self: GUI_Widget, width_spec: Measure_Spec, height_spec: Measure_Spec) -> Nothing {
+define measure_widget = func (self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
     stderr.write(self.name).write(" has no 'measure' function").end_line()
 }
 
-define layout_widget = func (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+define layout_widget = func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     self.bounds.set(left, top, right, bottom)
 }
 
-define draw_widget = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+define draw_widget = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
     canvas.set_color(0xff0000u32)
     canvas.draw_rect(self.bounds)
 }
@@ -70,14 +70,14 @@ define MEASURE_SPEC_MODE_EXACTLY = 0u8
 define MEASURE_SPEC_MODE_LIMITED = 1u8
 define MEASURE_SPEC_MODE_UNLIMITED = 2u8
 
-define if_size_changes = macro (self: GUI_Widget, left: i32, top: i32, right: i32, bottom: i32, action: macro ()) {
+define if_size_changes = macro (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32, action: macro ()) {
     let bounds = self.bounds
     if (bounds.width != right - left + 1 || bounds.height != bottom - top + 1) {
         action()
     }
 }
 
-define abort = func (self: GUI_Widget, measure: String, measure_spec: Measure_Spec) -> Nothing {
+define abort = func (self: @GUI_Widget, measure: @String, measure_spec: @Measure_Spec) -> Nothing {
     stderr.write(self.name).write(" cannot handle ").write(measure).write(" spec: ").write("mode=")
     if (measure_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
         stderr.write("EXACTLY").write(", size=").write(measure_spec.size)
@@ -92,7 +92,7 @@ define abort = func (self: GUI_Widget, measure: String, measure_spec: Measure_Sp
     abort()
 }
 
-define abort = func (self: GUI_Widget, measure: String, size_policy: Size_Policy) -> Nothing {
+define abort = func (self: @GUI_Widget, measure: @String, size_policy: @Size_Policy) -> Nothing {
     stderr.write(self.name).write(" cannot handle ").write(measure).write(" policy: ").write("mode=")
     if (size_policy.mode == SIZE_POLICY_MODE_FIXED) {
         stderr.write("FIXED").write(", size=").write(size_policy.size)

@@ -5,9 +5,9 @@ include "./Text_Model.code"
 
 include "../Math.code"
 
-define text = func (parent: GUI_Layout, value: String) -> GUI_Text_Box {
+define text = func (parent: @GUI_Layout, value: @String) -> @GUI_Text_Box {
     let model = create_text_model(value)
-    let text = make GUI_Text_Box(gui = parent.gui, parent = parent, model = model)
+    let text = make @GUI_Text_Box(gui = parent.gui, parent = parent, model = model)
     parent.add(text)
     return text
 }
@@ -16,34 +16,34 @@ struct GUI_Text_Box {
     extends GUI_Widget(
         name = "GUI_Text_Box"
         draw = draw_text_box
-        on_mouse_scrolled = func (self: GUI_Widget, event: GUI_Event_Mouse_Scrolled) -> Nothing {
-            let self = self as GUI_Text_Box
+        on_mouse_scrolled = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Scrolled) -> Nothing {
+            let self = self as @GUI_Text_Box
             if (self.model.lines > 1) {
                 if (event.y > 0) {
                     self.first_visible_line = max(0, self.first_visible_line - event.y)
-                    self.gui.post(make GUI_Event_Widget_Updated(widget = self))
+                    self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
                 } else if (event.y < 0) {
                     self.first_visible_line = min(self.model.lines - 1, self.first_visible_line - event.y)
-                    self.gui.post(make GUI_Event_Widget_Updated(widget = self))
+                    self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
                 }
             }
         }
     )
-    model: GUI_Text_Model
+    model: @GUI_Text_Model
     first_visible_line: i32 = 0
 }
 
-define draw_text_box = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
+define draw_text_box = func (self: @GUI_Widget, canvas: @Canvas) -> Nothing {
     define COLOR_BACKGROUND = 0x1a1a1au32
     define COLOR_DARK_BORDER = 0x000000u32
     define COLOR_TEXT = 0xe6e6e6u32
 
-    let old_clip = make !Rect()
+    let old_clip = make Rect()
     old_clip.set(canvas.clip_rect)
 
     canvas.clip_rect.set(self.bounds)
 
-    let self = self as GUI_Text_Box
+    let self = self as @GUI_Text_Box
 
     canvas.set_color(COLOR_BACKGROUND)
     canvas.fill_rect(self.bounds)
@@ -59,7 +59,7 @@ define draw_text_box = func (self: GUI_Widget, canvas: Canvas) -> Nothing {
             line = line.next_line
             skipped_lines = skipped_lines - 1
         }
-        let line_bounds = make !Rect()
+        let line_bounds = make Rect()
         line_bounds.set_location(self.bounds.left + 2, self.bounds.top + 2)
         while (line != null) {
             canvas.draw_text(line.text, line_bounds.left, line_bounds.top)

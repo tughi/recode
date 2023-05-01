@@ -5,25 +5,25 @@ include "./Rect.code"
 include "./SDL.code"
 
 struct Canvas {
-    pixels: Any
+    pixels: @Any
     width: i32
     height: i32
     color: u32 = 0
-    clip_rect: !Rect
+    clip_rect: Rect
 }
 
-define set_color = func (self: Canvas, red: u8, green: u8, blue: u8, alpha: u8) -> u32 {
+define set_color = func (self: @Canvas, red: u8, green: u8, blue: u8, alpha: u8) -> u32 {
     let color = (red as u32 * 256 + green as u32) * 256 + blue as u32
     self.color = color
     return color
 }
 
-define set_color = func (self: Canvas, color: u32) -> u32 {
+define set_color = func (self: @Canvas, color: u32) -> u32 {
     self.color = color
     return color
 }
 
-define clear = func (self: Canvas) -> Nothing {
+define clear = func (self: @Canvas) -> Nothing {
     let array = self.pixels as [u64; ?]
     let array_size = self.width * self.height / 2
     let array_index = 0
@@ -34,7 +34,7 @@ define clear = func (self: Canvas) -> Nothing {
     }
 }
 
-define draw_pixel = func (self: Canvas, x: i32, y: i32) -> Nothing {
+define draw_pixel = func (self: @Canvas, x: i32, y: i32) -> Nothing {
     if (self.clip_rect.contains(x, y) == false) {
         return
     }
@@ -43,13 +43,13 @@ define draw_pixel = func (self: Canvas, x: i32, y: i32) -> Nothing {
     pixels[offset] = self.color
 }
 
-define draw_on_row = macro (self: Canvas, row: i32, draw: macro (pixels: [u32; ?], row_offset: i32)) {
+define draw_on_row = macro (self: @Canvas, row: i32, draw: macro (pixels: [u32; ?], row_offset: i32)) {
     if (row >= self.clip_rect.top && row <= self.clip_rect.bottom) {
         draw(self.pixels as [u32; ?], self.width * row)
     }
 }
 
-define draw_line = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
+define draw_line = func (self: @Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
     \ TODO: implement line clipping
     let dx: i32
     let sx: i32
@@ -89,7 +89,7 @@ define draw_line = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> No
     }
 }
 
-define draw_horizontal_line = func (self: Canvas, x1: i32, x2: i32, y: i32) -> Nothing {
+define draw_horizontal_line = func (self: @Canvas, x1: i32, x2: i32, y: i32) -> Nothing {
     if (x2 < x1) {
         abort()
     }
@@ -104,7 +104,7 @@ define draw_horizontal_line = func (self: Canvas, x1: i32, x2: i32, y: i32) -> N
     }
 }
 
-define draw_vertical_line = func (self: Canvas, x: i32, y1: i32, y2: i32) -> Nothing {
+define draw_vertical_line = func (self: @Canvas, x: i32, y1: i32, y2: i32) -> Nothing {
     if (y2 < y1) {
         abort()
     }
@@ -119,12 +119,12 @@ define draw_vertical_line = func (self: Canvas, x: i32, y1: i32, y2: i32) -> Not
     }
 }
 
-define draw_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
-    let rect = make !Rect(left = x1, top = y1, right = x2, bottom = y2)
+define draw_rect = func (self: @Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
+    let rect = make Rect(left = x1, top = y1, right = x2, bottom = y2)
     self.draw_rect(@rect)
 }
 
-define draw_rect = func (self: Canvas, rect: Rect) -> Nothing {
+define draw_rect = func (self: @Canvas, rect: @Rect) -> Nothing {
     if (rect.intersects(self.clip_rect)) {
         self.draw_horizontal_line(rect.left, rect.right, rect.top)
         self.draw_horizontal_line(rect.left, rect.right, rect.bottom)
@@ -135,14 +135,14 @@ define draw_rect = func (self: Canvas, rect: Rect) -> Nothing {
     }
 }
 
-define fill_rect = func (self: Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
-    let rect = make !Rect(left = x1, top = y1, right = x2, bottom = y2)
+define fill_rect = func (self: @Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
+    let rect = make Rect(left = x1, top = y1, right = x2, bottom = y2)
     self.fill_rect(@rect)
 }
 
-define fill_rect = func (self: Canvas, rect: Rect) -> Nothing {
+define fill_rect = func (self: @Canvas, rect: @Rect) -> Nothing {
     if (rect.intersects(self.clip_rect)) {
-        let clipped_rect = make !Rect(left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom)
+        let clipped_rect = make Rect(left = rect.left, top = rect.top, right = rect.right, bottom = rect.bottom)
         clipped_rect.intersect(self.clip_rect)
 
         let pixel_color = self.color
@@ -162,7 +162,7 @@ define fill_rect = func (self: Canvas, rect: Rect) -> Nothing {
     }
 }
 
-define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) -> Nothing {
+define draw_text = func (self: @Canvas, text: @String, left: i32, base_line: i32) -> Nothing {
     \ TODO: implement text clipping to avoid using draw_pixel
     let char_left = left
     let char_index = 0usize
@@ -194,7 +194,7 @@ define draw_text = func (self: Canvas, text: String, left: i32, base_line: i32) 
     }
 }
 
-define draw_char = func (self: Canvas, char: u8, left: i32, base_line: i32) -> Nothing {
+define draw_char = func (self: @Canvas, char: u8, left: i32, base_line: i32) -> Nothing {
     \ TODO: implement text clipping to avoid using draw_pixel
     let glyph_mask = font.glyphs[char].mask
     let glyph_line = 0isize

@@ -1,16 +1,16 @@
 include "./String.code"
 
 struct Object {
-    object_type: Object_Type = undefined
+    object_type: @Object_Type = undefined
 }
 
 struct Object_Type {
     id: isize
-    name: !String
-    base_type: Object_Type
+    name: String
+    base_type: @Object_Type
 }
 
-define is = func (self: Object, object_type: Object_Type) -> bool {
+define is = func (self: @Object, object_type: @Object_Type) -> bool {
     let self_type = self.object_type
     loop {
         if (self_type == object_type) {
