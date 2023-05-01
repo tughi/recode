@@ -76,7 +76,7 @@ func layout_horizontal_linear_layout(self: @GUI_Widget, left: i32, top: i32, rig
     }
 }
 
-define horizontal_linear_layout = macro (parent: @GUI_Layout, content: macro (gui: @GUI_Horizontal_Linear_Layout)) {
+macro horizontal_linear_layout(parent: @GUI_Layout, content: macro (gui: @GUI_Horizontal_Linear_Layout)) {
     let linear_layout = make @GUI_Horizontal_Linear_Layout(gui = parent.gui, parent = parent)
     parent.add(linear_layout)
     linear_layout.content()

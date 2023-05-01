@@ -36,7 +36,7 @@ func parse(self: @Parser, file_path: @String, location: @Source_Location) -> Not
     }
     let token = token as @End_Of_File_Token
     if (token.location.column != 1 as i64) {
-        stderr.write(token.location).write(": File doesn't end with a new line").end_line()
+        stderr.write(token.location).write(": ").warning().write("File doesn't end with a new line").reset().end_line()
     }
 
     self.scanner = other_scanner
@@ -154,6 +154,9 @@ func parse_statement(self: @Parser) -> @AST_Statement {
     if (self.matches(required_include)) {
         return self.parse_include()
     }
+    if (self.matches(required_macro)) {
+        return self.parse_macro()
+    }
 
     let expression = self.parse_expression()
 
@@ -181,7 +184,7 @@ func parse_include(self: @Parser) -> @AST_Include_Statement {
 }
 
 \ define
-\   | "define" IDENTIFIER "=" ( struct | function | expression )
+\   | "define" IDENTIFIER "=" expression
 func parse_define(self: @Parser) -> @AST_Statement {
     self.consume(required_define)
     self.consume_space(1)
@@ -189,9 +192,6 @@ func parse_define(self: @Parser) -> @AST_Statement {
     self.consume_space(1)
     self.consume(required_equals)
     self.consume_space(1)
-    if (self.matches(required_macro)) {
-        return self.parse_macro(name)
-    }
     let expression = self.parse_expression()
     return make @AST_Constant_Statement(location = name.location, name = name, expression = expression)
 }
@@ -416,11 +416,6 @@ func parse_function_signature(self: @Parser) -> @AST_Function_Signature {
 func parse_function_type(self: @Parser) -> @AST_Function_Type {
     let location = self.consume(required_func).location
     self.consume_space(1)
-    \ let function_type_parameters: @List[@AST_Type_Parameter] = null
-    \ if (self.matches(required_open_bracket)) {
-    \     function_type_parameters = self.parse_type_parameters()
-    \     self.consume_space(1)
-    \ }
     let function_signature = self.parse_function_signature()
     return make @AST_Function_Type(
         location = location
@@ -461,28 +456,43 @@ func parse_parameter(self: @Parser) -> @AST_Parameter {
 }
 
 \ macro
-\   | macro_type block
-func parse_macro(self: @Parser, macro_name: @Identifier_Token) -> @AST_Macro_Statement {
-    let macro_type = self.parse_macro_type()
+\   | "macro" IDENTIFIER type_parameters? parameters block
+func parse_macro(self: @Parser) -> @AST_Macro_Statement {
+    self.consume(required_macro)
+    self.consume_space(1)
+    let macro_name = self.consume(required_identifier) as @Identifier_Token
+    self.consume_space(0)
+    let macro_type_parameters: @List[@AST_Type_Parameter] = null
+    if (self.matches(required_open_bracket)) {
+        macro_type_parameters = self.parse_type_parameters()
+        self.consume_space(0)
+    }
+    let macro_parameters = self.parse_parameters()
+    if (self.matches(optional_space, required_open_brace) == false) {
+        abort(self.scanner.current_token.location, "Missing macro body")
+    }
     self.consume_space(1)
     let macro_body = self.parse_block()
-    let macro_statement = make @AST_Macro_Statement(location = macro_name.location, name = macro_name, type = macro_type, body = macro_body)
+    let macro_statement = make @AST_Macro_Statement(
+        location = macro_name.location
+        name = macro_name
+        type = make @AST_Macro_Type(
+            type_parameters = macro_type_parameters
+            parameters = macro_parameters
+        )
+        body = macro_body
+    )
     self.compilation_unit.macro_statements.append(macro_statement)
     return macro_statement
 }
 
 \ macro_type
-\   | "macro" type_parameters? parameters
+\   | "macro" parameters
 func parse_macro_type(self: @Parser) -> @AST_Macro_Type {
     let location = self.consume(required_macro).location
     self.consume_space(1)
-    let macro_type_parameters: @List[@AST_Type_Parameter] = null
-    if (self.matches(required_open_bracket)) {
-        macro_type_parameters = self.parse_type_parameters()
-        self.consume_space(1)
-    }
     let macro_parameters = self.parse_parameters()
-    return make @AST_Macro_Type(location = location, type_parameters = macro_type_parameters, parameters = macro_parameters)
+    return make @AST_Macro_Type(location = location, type_parameters = null, parameters = macro_parameters)
 }
 
 \ block

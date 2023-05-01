@@ -123,7 +123,7 @@ def test_with_stage(n):
                 continue
 
         # TODO: Check if compile is needed
-        compiler_command = [f'build/stage{n}/ReCode', f'tests/{test_file_name}', f'build/tests/{test_file_name[:-5]}.s']
+        compiler_command = [f'build/stage{n}/ReCode', f'tests/{test_file_name}', f'build/tests/{test_file_name[:-5]}.s', f'build/tests/{test_file_name[:-5]}.ir']
         logger.info(f"Testing: {compiler_command[1]}")
 
         compiler_result = run(compiler_command, check=False, capture_output=True, text=True)

@@ -180,7 +180,7 @@ func change[T](self: @List_Iterator[T], data: T) -> Nothing {
     }
 }
 
-define for_each_list_item = macro [T] (self: @List[T], block: macro (list_item: @List_Item[T])) {
+macro for_each_list_item[T](self: @List[T], block: macro (list_item: @List_Item[T])) {
     let item = self.first_item
     while (item != null) {
         block(item)

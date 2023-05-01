@@ -81,7 +81,7 @@ func append(self: @String, char: u8) -> @String {
     return self
 }
 
-define for_each_char = macro (self: @String, handler: macro (char: u8)) {
+macro for_each_char(self: @String, handler: macro (char: u8)) {
     let index = 0
     let length = self.length as i32
     while (index < length) {

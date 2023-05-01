@@ -97,7 +97,7 @@ func get[K, V] (self: @Map[K, V], key: K) -> V {
     abort()
 }
 
-define for_each = macro [K, V] (self: @Map[K, V], block: macro (item_key: K, item_value: V)) {
+macro for_each[K, V] (self: @Map[K, V], block: macro (item_key: K, item_value: V)) {
     let item = self.first_item
     while (item != null) {
         block(item.key, item.value)

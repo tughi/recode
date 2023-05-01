@@ -157,7 +157,7 @@ func get_symbol(self: @IR_Builder, name: @String) -> @IR_Symbol {
     }
 }
 
-define for_each_symbol = macro (self: @IR_Builder, block: macro (symbol: @IR_Symbol)) {
+macro for_each_symbol(self: @IR_Builder, block: macro (symbol: @IR_Symbol)) {
     let context = self.context
     let context_symbols_item = context.symbols.first_item
     loop {
@@ -1713,7 +1713,7 @@ func get_callable(self: @IR_Builder, call_location: @Source_Location, callee_nam
     return callable_candidates.first()
 }
 
-define with_context_type_arguments = macro (self: @IR_Builder, type_arguments: @List[@AST_Type_Argument], block: macro ()) {
+macro with_context_type_arguments(self: @IR_Builder, type_arguments: @List[@AST_Type_Argument], block: macro ()) {
     let local_context = make IR_Builder_Context(
         parent = self.context
         symbols = self.context.symbols

@@ -1,0 +1,24 @@
+\ Expect:
+\ - output: ''
+
+macro repeat(times: i32, do: macro (step: i32)) {
+    let i = 0
+    while (i < times) {
+        do(step = i)
+        i = i + 1
+    }
+}
+
+func main() -> i32 {
+    let sum = 1
+
+    repeat(10) {
+        sum = sum + step
+    }
+
+    if (sum != 46) {
+        return 1
+    }
+
+    return 0
+}

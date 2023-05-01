@@ -70,7 +70,7 @@ define MEASURE_SPEC_MODE_EXACTLY = 0u8
 define MEASURE_SPEC_MODE_LIMITED = 1u8
 define MEASURE_SPEC_MODE_UNLIMITED = 2u8
 
-define if_size_changes = macro (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32, action: macro ()) {
+macro if_size_changes(self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32, action: macro ()) {
     let bounds = self.bounds
     if (bounds.width != right - left + 1 || bounds.height != bottom - top + 1) {
         action()

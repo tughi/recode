@@ -43,7 +43,7 @@ func draw_pixel(self: @Canvas, x: i32, y: i32) -> Nothing {
     pixels[offset] = self.color
 }
 
-define draw_on_row = macro (self: @Canvas, row: i32, draw: macro (pixels: [u32; ?], row_offset: i32)) {
+macro draw_on_row(self: @Canvas, row: i32, draw: macro (pixels: [u32; ?], row_offset: i32)) {
     if (row >= self.clip_rect.top && row <= self.clip_rect.bottom) {
         draw(self.pixels as [u32; ?], self.width * row)
     }

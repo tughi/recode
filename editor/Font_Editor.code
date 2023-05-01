@@ -175,7 +175,7 @@ func draw_glyph_editor(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
     canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top + font.base_line * (self.pixel_size + 1))
 }
 
-define update_glyph_cell = macro (self: @Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
+macro update_glyph_cell(self: @Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
     if (self.glyph.mask[glyph_row][glyph_column] != value) {
         self.glyph.mask[glyph_row][glyph_column] = value
         self.gui.post(make @GUI_Event_Widget_Updated(widget = self.gui))

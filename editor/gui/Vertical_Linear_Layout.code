@@ -113,7 +113,7 @@ func layout_vertical_linear_layout(self: @GUI_Widget, left: i32, top: i32, right
     }
 }
 
-define vertical_linear_layout = macro (parent: @GUI_Layout, content: macro (gui: @GUI_Vertical_Linear_Layout)) {
+macro vertical_linear_layout(parent: @GUI_Layout, content: macro (gui: @GUI_Vertical_Linear_Layout)) {
     let linear_layout = make @GUI_Vertical_Linear_Layout(gui = parent.gui, parent = parent)
     parent.add(linear_layout)
     linear_layout.content()

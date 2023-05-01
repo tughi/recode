@@ -46,7 +46,7 @@ func add(self: @GUI_Layout, widget: @GUI_Widget) -> Nothing {
     self.children_count = self.children_count + 1
 }
 
-define for_each_child = macro (self: @GUI_Layout, handle: macro (child: @GUI_Widget)) {
+macro for_each_child(self: @GUI_Layout, handle: macro (child: @GUI_Widget)) {
     let child = self.children_first
     while (child != null) {
         child.widget.handle()
