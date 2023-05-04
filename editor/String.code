@@ -3,9 +3,9 @@
 include "./LibC.code"
 
 struct String {
-    data: [u8; ?] = malloc(16usize) as [u8; ?]
-    data_size: usize = 16
-    length: usize = 0
+    data = malloc(16usize) as [u8; ?]
+    data_size = 16usize
+    length = 0usize
 }
 
 func clear(self: @String) -> @String {

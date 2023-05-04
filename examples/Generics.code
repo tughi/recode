@@ -42,8 +42,7 @@ func main() -> Nothing {
     }
 }
 
-struct Special_Map {
-    extends Map[@String, i32]
+struct Special_Map: Map[@String, i32] {
 }
 
 \ Map and Map[K, T] are different types

@@ -1,14 +1,11 @@
-\\ Expect:
-\ - error: 'tests/struct_super_recursivity.code:13:12: Type recursivity\n'
+\ Expect:
+\ - error: 'tests/struct_super_recursivity.code:4:11: Type recursivity\n'
 
-struct A {
-    extends C
+struct A: C {
 }
 
-struct B {
-    extends A
+struct B: A {
 }
 
-struct C {
-    extends B
+struct C: B {
 }

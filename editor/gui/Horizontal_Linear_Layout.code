@@ -2,14 +2,13 @@
 
 include "./Layout.code"
 
-struct GUI_Horizontal_Linear_Layout {
-    extends GUI_Layout(
-        name = "GUI_Horizontal_Linear_Layout"
-        measure = measure_horizontal_linear_layout
-        layout = layout_horizontal_linear_layout
-    )
-    margin: i32 = 0
-    spacing: i32 = 0
+struct GUI_Horizontal_Linear_Layout: GUI_Layout(
+    name = "GUI_Horizontal_Linear_Layout"
+    measure = measure_horizontal_linear_layout
+    layout = layout_horizontal_linear_layout
+) {
+    margin = 0
+    spacing = 0
 }
 
 func measure_horizontal_linear_layout(self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {

@@ -1329,8 +1329,8 @@ func generate_store_value(self: @MC_Generator, ir_value: @IR_Value, address: @MC
 }
 
 func generate_store_struct_literal_value(self: @MC_Generator, ir_value: @IR_Struct_Literal_Value, struct_type: @IR_Struct_Type, address: @MC_Register_Based_Address) -> Nothing {
-    if (struct_type.base_type != null) {
-        self.generate_store_struct_literal_value(ir_value, struct_type.base_type, address)
+    if (struct_type.super_type != null) {
+        self.generate_store_struct_literal_value(ir_value, struct_type.super_type, address)
     }
     let struct_type_members_item = struct_type.members.first_item
     while (struct_type_members_item != null) {
@@ -1354,8 +1354,8 @@ func generate_store_struct_literal_value(self: @MC_Generator, ir_value: @IR_Stru
 func get_offset(self: @MC_Generator, struct_type_member: @IR_Struct_Type_Member) -> i64 {
     let offset = 0 as i64
     let struct_type = struct_type_member.struct_type
-    if (struct_type.base_type != null) {
-        offset = self.get_type_size(struct_type.base_type)
+    if (struct_type.super_type != null) {
+        offset = self.get_type_size(struct_type.super_type)
     }
     let current_struct_type_member_item = struct_type.members.first_item
     while (current_struct_type_member_item != null) {
@@ -1469,8 +1469,8 @@ struct MC_Generator {
     register_r15: @MC_Register = make @MC_Register_R15(name_q = "r15", name_d = "r15d", name_w = "r15w", name_b = "r15b")
     first_value: @MC_Value = null
     last_value: @MC_Value = null
-    stack_frame_size: i64 = 0
-    strings: @List[@MC_String] = make @List[@MC_String]()
+    stack_frame_size = 0i64
+    strings = make @List[@MC_String]()
 }
 
 func create_mc_generator(output_file_path: @String) -> @MC_Generator {
@@ -1846,13 +1846,12 @@ struct MC_Value {
     address: @MC_Address = null
 }
 
-struct MC_Register {
-    extends Object
+struct MC_Register: Object {
     name_q: @String
     name_d: @String
     name_w: @String
     name_b: @String
-    is_reserved: bool = false
+    is_reserved = false
     value: @MC_Value = null
     loaded_value: @MC_Value = null
 }
@@ -1868,72 +1867,55 @@ func init(self: @MC_Register, name_q: @String, name_d: @String, name_w: @String,
     return self
 }
 
-struct MC_Register_RAX {
-    extends MC_Register
+struct MC_Register_RAX: MC_Register {
 }
 
-struct MC_Register_RCX {
-    extends MC_Register
+struct MC_Register_RCX: MC_Register {
 }
 
-struct MC_Register_RDX {
-    extends MC_Register
+struct MC_Register_RDX: MC_Register {
 }
 
-struct MC_Register_RBX {
-    extends MC_Register
+struct MC_Register_RBX: MC_Register {
 }
 
-struct MC_Register_RSI {
-    extends MC_Register
+struct MC_Register_RSI: MC_Register {
 }
 
-struct MC_Register_RDI {
-    extends MC_Register
+struct MC_Register_RDI: MC_Register {
 }
 
-struct MC_Register_RSP {
-    extends MC_Register
+struct MC_Register_RSP: MC_Register {
 }
 
-struct MC_Register_RBP {
-    extends MC_Register
+struct MC_Register_RBP: MC_Register {
 }
 
-struct MC_Register_R8 {
-    extends MC_Register
+struct MC_Register_R8: MC_Register {
 }
 
-struct MC_Register_R9 {
-    extends MC_Register
+struct MC_Register_R9: MC_Register {
 }
 
-struct MC_Register_R10 {
-    extends MC_Register
+struct MC_Register_R10: MC_Register {
 }
 
-struct MC_Register_R11 {
-    extends MC_Register
+struct MC_Register_R11: MC_Register {
 }
 
-struct MC_Register_R12 {
-    extends MC_Register
+struct MC_Register_R12: MC_Register {
 }
 
-struct MC_Register_R13 {
-    extends MC_Register
+struct MC_Register_R13: MC_Register {
 }
 
-struct MC_Register_R14 {
-    extends MC_Register
+struct MC_Register_R14: MC_Register {
 }
 
-struct MC_Register_R15 {
-    extends MC_Register
+struct MC_Register_R15: MC_Register {
 }
 
-struct MC_Address {
-    extends Object
+struct MC_Address: Object {
 }
 
 func write(file: @FILE, address: @MC_Address) -> @FILE {
@@ -1954,19 +1936,16 @@ func write(file: @FILE, address: @MC_Address) -> @FILE {
     abort(clone("Unsupported type: ").append(address.object_type.name))
 }
 
-struct MC_Global_Variable_Address {
-    extends MC_Address
+struct MC_Global_Variable_Address: MC_Address {
     ir_variable: @IR_Variable
 }
 
-struct MC_Register_Based_Address {
-    extends MC_Address
+struct MC_Register_Based_Address: MC_Address {
     register: @MC_Register
-    offset: i64 = 0
+    offset = 0i64
 }
 
-struct MC_Local_Variable_Address {
-    extends MC_Register_Based_Address
+struct MC_Local_Variable_Address: MC_Register_Based_Address {
 }
 
 func get_type_size(self: @MC_Generator, ir_type: @IR_Type) -> i64 {
@@ -1991,8 +1970,8 @@ func get_type_size(self: @MC_Generator, ir_type: @IR_Type) -> i64 {
     } else if (ir_type is IR_Struct_Type) {
         let ir_type = ir_type as @IR_Struct_Type
         let size = 0 as i64
-        if (ir_type.base_type != null) {
-            size = size + self.get_type_size(ir_type.base_type)
+        if (ir_type.super_type != null) {
+            size = size + self.get_type_size(ir_type.super_type)
         }
         let struct_type_members = ir_type.members.create_iterator()
         while (struct_type_members.has_next()) {
@@ -2075,8 +2054,8 @@ func find_object_type(types: @List[@IR_Type]) -> @IR_Struct_Type {
             let type = type as @IR_Struct_Type
             if (type.object_type_variable != null) {
                 object_type = type
-                while (object_type.base_type != null) {
-                    object_type = object_type.base_type
+                while (object_type.super_type != null) {
+                    object_type = object_type.super_type
                 }
                 break
             }
@@ -2103,8 +2082,8 @@ func generate_object_types(self: @MC_Generator, types: @List[@IR_Type]) -> Nothi
                 self.output_file.write("  .quad .LABEL__").write(type.object_type_variable.name).write("__object_type__name__data").end_line()
                 self.output_file.write("  .quad ").write(type.name.length + 1).end_line()
                 self.output_file.write("  .quad ").write(type.name.length).end_line()
-                if (type.base_type != null) {
-                    self.output_file.write("  .quad .LABEL__").write(type.base_type.object_type_variable.name).write("__object_type").end_line()
+                if (type.super_type != null) {
+                    self.output_file.write("  .quad .LABEL__").write(type.super_type.object_type_variable.name).write("__object_type").end_line()
                 } else {
                     self.output_file.write("  .quad 0").end_line()
                 }

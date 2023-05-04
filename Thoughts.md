@@ -42,9 +42,8 @@ There will be a fixed set of float types:
         type: i32 = 42      \ with default value
     }
 
-    struct Extended_Node {
-        extends Node(type = 7)  \ type has another default value
-        data: alias Data        \ members of Data can be accessed without .data
+    struct Extended_Node: Node(type = 7) {  \ extend Node and type has another default value
+        data: alias Data                    \ members of Data can be accessed without .data
     }
 
 Newly created structs can be initializated using named arguments, which can replace default values.

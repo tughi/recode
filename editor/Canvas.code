@@ -8,7 +8,7 @@ struct Canvas {
     pixels: @Any
     width: i32
     height: i32
-    color: u32 = 0
+    color = 0u32
     clip_rect: Rect
 }
 

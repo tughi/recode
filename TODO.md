@@ -1,7 +1,6 @@
 ## Planned activities:
 
 - Generate function name based on its signature
-- Change struct syntax
 - Create dedicatd AST_Opaque_Type
 - Implement struct super pattern
 - Change cast syntax

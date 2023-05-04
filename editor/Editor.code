@@ -172,7 +172,6 @@ func main() -> i32 {
     return 0
 }
 
-struct Glyph_Chooser_Data {
-    extends GUI_Data
+struct Glyph_Chooser_Data: GUI_Data {
     glyph_editor: @Glyph_Editor
 }

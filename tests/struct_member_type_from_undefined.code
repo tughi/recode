@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/struct_member_type_from_undefined.code:5:12: Cannot infer type from an undefined value\n'
+
+struct Shape {
+    name = undefined
+}

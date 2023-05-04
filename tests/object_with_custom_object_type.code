@@ -1,0 +1,13 @@
+\ Expect:
+\ - output: ''
+
+external type Object
+external type Object_Type
+
+struct Shape: Object {
+    object_type: u8 \ not en error
+}
+
+func main() -> Nothing {
+    let shape = make Shape()
+}

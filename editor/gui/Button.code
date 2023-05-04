@@ -9,31 +9,30 @@ func button(parent: @GUI_Layout, label: @String) -> @GUI_Button {
     return button
 }
 
-struct GUI_Button {
-    extends GUI_Widget(
-        name = "GUI_Button"
-        on_mouse_button_pressed = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing {
-            if (event.button == 1u8) {
-                self.gui.pressed_widget = self
-                self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
-            }
+struct GUI_Button: GUI_Widget(
+    name = "GUI_Button"
+    on_mouse_button_pressed = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing {
+        if (event.button == 1u8) {
+            self.gui.pressed_widget = self
+            self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
         }
-        on_mouse_button_released = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
-            if (self.gui.pressed_widget == self) {
-                if (self.gui.hovered_widget == self) {
-                    (self as @GUI_Button).on_click()
-                }
-                self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
+    }
+    on_mouse_button_released = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
+        if (self.gui.pressed_widget == self) {
+            if (self.gui.hovered_widget == self) {
+                (self as @GUI_Button).on_click()
             }
+            self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
         }
-        measure = measure_button
-        layout = layout_button
-        draw = draw_button
-    )
+    }
+    measure = measure_button
+    layout = layout_button
+    draw = draw_button
+) {
     label: @String
-    label_bounds: Rect = make Rect()
+    label_bounds = make Rect()
 
-    on_click: func (self: @GUI_Button) -> Nothing = func (self: @GUI_Button) -> Nothing {
+    on_click = func (self: @GUI_Button) -> Nothing {
     }
 }
 

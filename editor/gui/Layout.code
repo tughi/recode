@@ -2,22 +2,21 @@
 
 include "./Widget.code"
 
-struct GUI_Layout {
-    extends GUI_Widget(
-        name = "GUI_Layout"
-        on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
-            let self = self as @GUI_Layout
-            if (self.bounds.contains(event.x, event.y)) {
-                self.gui.hovered_widget = self
-            }
-            self.for_each_child() {
-                child.on_mouse_moved(event)
-            }
+struct GUI_Layout: GUI_Widget(
+    name = "GUI_Layout"
+    on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
+        let self = self as @GUI_Layout
+        if (self.bounds.contains(event.x, event.y)) {
+            self.gui.hovered_widget = self
         }
-        draw = draw_layout
-    )
+        self.for_each_child() {
+            child.on_mouse_moved(event)
+        }
+    }
+    draw = draw_layout
+) {
 
-    children_count: i32 = 0
+    children_count = 0
     children_first: @GUI_Layout_Child = null
     children_last: @GUI_Layout_Child = null
 }

@@ -6,8 +6,7 @@ struct Test {
     value: i32
 }
 
-struct ExtendedTest {
-    super: Test
+struct ExtendedTest: Test {
     value: i32
 }
 

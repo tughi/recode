@@ -5,8 +5,7 @@ struct Token {
     line: u32
 }
 
-struct Integer_Token {
-    extends Token
+struct Integer_Token: Token {
     value: i32
 }
 

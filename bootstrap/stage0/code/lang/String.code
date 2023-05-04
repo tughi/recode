@@ -1,9 +1,9 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 struct String {
-    data: [i8; ?] = malloc(16 as i64) as [i8; ?]
-    data_size: i64 = 16
-    length: i64 = 0
+    data = malloc(16 as i64) as [i8; ?]
+    data_size = 16i64
+    length = 0i64
 }
 
 func create_string(data: [i8; ?]) -> @String {

@@ -1,70 +1,55 @@
 \ Copyright (c) 2020, 2023 Stefan Selariu
 
-struct Token {
-    extends Object
+struct Token: Object {
     lexeme: @String
     location: @Source_Location
     next_token: @Token = null
 }
 
-struct Literal_Token {
-    extends Token
+struct Literal_Token: Token {
 }
 
-struct Character_Token {
-    extends Literal_Token
+struct Character_Token: Literal_Token {
     value: i8
 }
 
-struct Boolean_Token {
-    extends Literal_Token
+struct Boolean_Token: Literal_Token {
     value: bool
 }
 
-struct Comment_Token {
-    extends Token
+struct Comment_Token: Token {
 }
 
-struct End_Of_File_Token {
-    extends Token
+struct End_Of_File_Token: Token {
 }
 
-struct End_Of_Line_Token {
-    extends Token
+struct End_Of_Line_Token: Token {
 }
 
-struct Error_Token {
-    extends Token
+struct Error_Token: Token {
 }
 
-struct Identifier_Token {
-    extends Token
+struct Identifier_Token: Token {
 }
 
-struct Integer_Token {
-    extends Literal_Token
+struct Integer_Token: Literal_Token {
     value: i64
     type: @String
 }
 
-struct Null_Token {
-    extends Literal_Token
+struct Null_Token: Literal_Token {
 }
 
-struct Other_Token {
-    extends Token
+struct Other_Token: Token {
 }
 
-struct Space_Token {
-    extends Token
+struct Space_Token: Token {
     count: i32
 }
 
-struct String_Token {
-    extends Literal_Token
+struct String_Token: Literal_Token {
     value: @String
 }
 
-struct Undefined_Token {
-    extends Literal_Token
+struct Undefined_Token: Literal_Token {
 }

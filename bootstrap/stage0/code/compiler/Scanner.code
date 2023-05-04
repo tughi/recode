@@ -2,9 +2,9 @@
 
 struct Scanner {
     source: @Source
-    current_char_index: i64 = 0
-    current_line: i64 = 1
-    current_column: i64 = 1
+    current_char_index = 0i64
+    current_line = 1i64
+    current_column = 1i64
     current_token: @Token = undefined
 }
 

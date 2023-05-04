@@ -5,8 +5,7 @@ func main(argc: i32, argv: [[i8; ?]; ?]) -> i32 {
     return window.bounds.location.x - 42
 }
 
-struct Widget {
-    extends Object
+struct Widget: Object {
     bounds: Rectangle = make Rectangle()
 }
 

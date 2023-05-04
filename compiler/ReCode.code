@@ -171,8 +171,8 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
             return file
         }
         file.write(" {").end_line()
-        if (statement.base_type != null) {
-            file.write_source_line(statement.base_type.location, alignment + 1).write("extends ").write(statement.base_type).end_line()
+        if (statement.super_type != null) {
+            file.write_source_line(statement.super_type.location, alignment + 1).write("extends ").write(statement.super_type).end_line()
         }
         let members = statement.members.create_iterator()
         while (members.has_next()) {
@@ -432,8 +432,8 @@ func write(file: @FILE, expression: @AST_Expression) -> @FILE {
         return file.write('(').write((expression as @AST_Paren_Expression).expression).write(')')
     }
 
-    if (expression is AST_Variable_Expression) {
-        return file.write((expression as @AST_Variable_Expression).name)
+    if (expression is AST_Symbol_Expression) {
+        return file.write((expression as @AST_Symbol_Expression).name)
     }
 
     if (expression is AST_Wrapped_Expression) {

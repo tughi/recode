@@ -87,3 +87,11 @@ func replace_values[K, V](self: @Map[K, V], old_value: V, new_value: V) -> Nothi
         entry = entry.next_entry
     }
 }
+
+macro for_each[K, V](self: @Map[K, V], block: macro (key: K, value: V)) {
+    let entry = self.first_entry
+    while (entry != null) {
+        block(entry.key, entry.value)
+        entry = entry.next_entry
+    }
+}

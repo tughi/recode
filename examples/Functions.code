@@ -19,8 +19,7 @@ struct Value {
     dump: func (self: @Value, file: @FILE) -> Nothing
 }
 
-struct Int_Value {
-    extends Value(dump = dump_int)
+struct Int_Value: Value(dump = dump_int) {
 
     value: i32
 }
@@ -30,13 +29,12 @@ func dump_int(self: @Value, file: @FILE) -> Nothing {
     file.write("Int: ").write(self.value).end_line()
 }
 
-struct String_Value {
-    extends Value(
-        dump = func (self: @Value, file: @FILE) -> Nothing {
-            let self = self as @String_Value
-            file.write("String: ").write(self.value).end_line()
-        }
-    )
+struct String_Value: Value(
+    dump = func (self: @Value, file: @FILE) -> Nothing {
+        let self = self as @String_Value
+        file.write("String: ").write(self.value).end_line()
+    }
+) {
 
     value: @String
 }

@@ -1,17 +1,14 @@
 \ Expect:
 \ - output: 'Rectangle\n'
 
-struct Shape {
-    extends Object
+struct Shape: Object {
     points: i32
 }
 
-struct Triangle {
-    extends Shape(points = 3)
+struct Triangle: Shape(points = 3) {
 }
 
-struct Rectangle {
-    extends Shape(points = 4)
+struct Rectangle: Shape(points = 4) {
 }
 
 struct String {
@@ -28,7 +25,7 @@ struct Object_Type {
     _id: u32
     _max_derivate_id: u32
     name: String
-    base_type: @Object_Type
+    super_type: @Object_Type
 }
 
 external type File
@@ -44,6 +41,10 @@ func main() -> i32 {
 
     if (shape is Rectangle == false) {
         return 2
+    }
+
+    if (shape is Triangle) {
+        return 3
     }
 
     fputs(shape.object_type.name.data, stdout)

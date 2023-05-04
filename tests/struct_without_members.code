@@ -1,0 +1,9 @@
+\ Expect:
+\ - error: 'tests/struct_without_members.code:8:16: Struct has no members\n'
+
+struct Test {
+}
+
+func test() -> Nothing {
+    let test = make Test()
+}

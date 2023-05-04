@@ -1,0 +1,12 @@
+\ Expect:
+\ - error: 'tests/struct_member_type_recursivity.code:8:13: Type recursivity\n'
+
+struct Shape {
+    color: u32
+    points: i32
+
+    bounds: Rectangle
+}
+
+struct Rectangle: Shape(points = 4) {
+}

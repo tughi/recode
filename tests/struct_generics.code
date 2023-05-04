@@ -1,12 +1,13 @@
 \ Expect:
 \ - output: ''
 
-struct String_Values {
-    extends Map[@String, i32]
+struct String_Values: Map[@String, i32] {
 }
 
 \ Map and Map[K, T] are different types
 struct Map {
+    keys: List[@String] = undefined
+    values: List[u64] = undefined
 }
 
 struct Map[K, V] {

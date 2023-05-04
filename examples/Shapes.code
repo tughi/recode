@@ -24,29 +24,23 @@ func main() -> i32 {
     return shape.sides - polygon.sides
 }
 
-struct Shape {
-    extends Object
+struct Shape: Object {
 }
 
-struct Ellipse {
-    extends Shape
+struct Ellipse: Shape {
 }
 
-struct Circle {
-    extends Ellipse
+struct Circle: Ellipse {
 }
 
-struct Polygon {
-    extends Shape
+struct Polygon: Shape {
     sides: i32
 }
 
-struct Triangle {
-    extends Polygon(sides = 3)
+struct Triangle: Polygon(sides = 3) {
 }
 
-struct Rectangle {
-    extends Polygon(sides = 4)
+struct Rectangle: Polygon(sides = 4) {
 }
 
 include "./code/io/File.code"

@@ -3,7 +3,7 @@
 struct List[T] {
     first_item: @List_Item[T] = null
     last_item: @List_Item[T] = null
-    size: i64 = 0
+    size = 0i64
 }
 
 func append[T](self: @List[T], data: T) -> Nothing {
@@ -138,7 +138,7 @@ struct List_Item[T] {
     prev_item: @List_Item[T] = null
     next_item: @List_Item[T] = null
     data: T
-    is_removed: bool = false
+    is_removed = false
 }
 
 struct List_Iterator[T] {
@@ -184,6 +184,14 @@ macro for_each_list_item[T](self: @List[T], block: macro (list_item: @List_Item[
     let item = self.first_item
     while (item != null) {
         block(item)
+        item = item.next_item
+    }
+}
+
+macro for_each[T](self: @List[T], block: macro (it: T)) {
+    let item = self.first_item
+    while (item != null) {
+        block(item.data)
         item = item.next_item
     }
 }
