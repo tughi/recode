@@ -8,5 +8,4 @@
 - Add sizeof operator
 - Implement ! operator
 - Disable "Redundant type declaration" warning for a generic type
-- Fix IR output for jump instructions
 - Fix `sum = sum * 2` and `sum = sum + sum`

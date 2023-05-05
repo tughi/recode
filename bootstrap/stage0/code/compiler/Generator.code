@@ -120,7 +120,7 @@ func output_unreached_ir_instructions(self: @MC_Generator) -> Nothing {
 
 func generate_block(self: @MC_Generator, block: @IR_Block) -> Nothing {
     block.is_being_generated = true
-    self.output_file.write_block_label(block).write(':').end_line()
+    self.output_file.write_block_label(block).write(": # block.").write(block.id).end_line()
     let block_instruction = block.first_instruction
     while (block_instruction != null) {
         self.generate_instruction(block_instruction)

@@ -786,7 +786,7 @@ struct IR_Conditional_Jump_Instruction: IR_Jump_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction as @IR_Conditional_Jump_Instruction
-        return file.write("jump").write('(').write(instruction.get_condition_value(), true).write(", ").write_block_label(instruction.true_block).write(", ").write_block_label(instruction.false_block).write(')').end_line()
+        return file.write("jump(").write(instruction.get_condition_value(), true).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
     }
 ) {
     true_block: @IR_Block
@@ -801,7 +801,7 @@ struct IR_Direct_Jump_Instruction: IR_Jump_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction as @IR_Direct_Jump_Instruction
-        return file.write("jump").write('(').write_block_label(instruction.block).write(')').end_line()
+        return file.write("jump(block.").write(instruction.block.id).write(')').end_line()
     }
 ) {
     block: @IR_Block
