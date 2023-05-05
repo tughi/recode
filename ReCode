@@ -100,7 +100,7 @@ def test_with_stage(n):
     if not os.path.exists(f'build/tests'):
         run(f'mkdir build/tests')
 
-    for test_file_name in os.listdir('tests'):
+    for test_file_name in sorted(os.listdir('tests')):
         if not test_file_name.endswith('.code'):
             continue
 

@@ -2260,11 +2260,10 @@ func convert_logic_or_expression(self: @IR_Builder, expression: @AST_Logic_Or_Ex
 
 func convert_member_access_expression(self: @IR_Builder, member_access_expression: @AST_Member_Access_Expression) -> @IR_Value {
     let object_value = self.convert_expression(member_access_expression.object_expression, null)
-    let object_value_type = object_value.type
     let struct_type: @IR_Struct_Type
-    if (object_value_type is IR_Struct_Type) {
+    if (object_value.type is IR_Struct_Type) {
         if (object_value is IR_Variable_Value) {
-            struct_type = object_value_type as @IR_Struct_Type
+            struct_type = object_value.type as @IR_Struct_Type
             object_value = self.append(
                 create_ir_load_variable_address_instruction(
                     self.create_temp_value(self.create_ir_pointer_type(struct_type))
@@ -2273,7 +2272,7 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
                 member_access_expression.location
             )
         } else if (object_value is IR_Global_Variable_Value) {
-            struct_type = object_value_type as @IR_Struct_Type
+            struct_type = object_value.type as @IR_Struct_Type
             object_value = make @IR_Global_Variable_Address_Value(
                 type = self.create_ir_pointer_type(struct_type)
                 variable = (object_value as @IR_Global_Variable_Value).variable
@@ -2281,8 +2280,8 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
         } else {
             abort(member_access_expression.location, clone("Unsupported value type: ").append(object_value.object_type.name))
         }
-    } else if (object_value_type is IR_Pointer_Type) {
-        let pointed_type = (object_value_type as @IR_Pointer_Type).pointed_type
+    } else if (object_value.type is IR_Pointer_Type) {
+        let pointed_type = (object_value.type as @IR_Pointer_Type).pointed_type
         if (pointed_type is IR_Fixed_Array_Type) {
             let array_type = pointed_type as @IR_Fixed_Array_Type
             if (member_access_expression.member_name.lexeme.equals("length") == false) {
@@ -2298,11 +2297,11 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
                 )
             )
         } else if (pointed_type is IR_Struct_Type == false) {
-            abort(member_access_expression.location, clone("Not a struct pointer value: ").append(object_value_type.name))
+            abort(member_access_expression.location, clone("Not a struct pointer value: ").append(object_value.type.name))
         }
         struct_type = pointed_type as @IR_Struct_Type
-    } else if (object_value_type is IR_Fixed_Array_Type) {
-        let array_type = object_value_type as @IR_Fixed_Array_Type
+    } else if (object_value.type is IR_Fixed_Array_Type) {
+        let array_type = object_value.type as @IR_Fixed_Array_Type
         if (member_access_expression.member_name.lexeme.equals("length") == false) {
             abort(member_access_expression.location, "Did you mean length?")
         }
@@ -2316,10 +2315,22 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
             )
         )
     } else {
-        abort(member_access_expression.location, clone("Not a reference type: ").append(object_value_type.name))
+        abort(member_access_expression.location, clone("Not a reference type: ").append(object_value.type.name))
     }
     let struct_type_member = struct_type.get_member(member_access_expression.member_name.lexeme)
     if (struct_type_member == null) {
+        if (member_access_expression.member_name.lexeme.equals("super")) {
+            if (struct_type.super_type == null) {
+                abort(member_access_expression.member_name.location, clone(struct_type.name).append(" is not a subtype"))
+            }
+            return self.append(
+                instruction = create_ir_set_instruction(
+                    result_value = self.create_temp_value(self.create_ir_pointer_type(struct_type.super_type))
+                    value = object_value
+                )
+                location = member_access_expression.member_name.location
+            )
+        }
         struct_type.dump_struct_members()
         abort(member_access_expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(member_access_expression.member_name.lexeme))
     }
@@ -2690,14 +2701,20 @@ func deduce_member_access_expression_type(self: @IR_Builder, expression: @AST_Me
     if (object_type is IR_Pointer_Type == false) {
         abort(expression.location, object_type.object_type)
     }
-    let object_type = (object_type as @IR_Pointer_Type).pointed_type
-    if (object_type is IR_Struct_Type == false) {
-        abort(expression.location, object_type.object_type)
+    let object_type = (object_type as @IR_Pointer_Type)
+    if (object_type.pointed_type is IR_Struct_Type == false) {
+        abort(expression.location, object_type.pointed_type.object_type)
     }
-    let object_type = object_type as @IR_Struct_Type
-    let member = object_type.get_member(expression.member_name.lexeme)
+    let struct_type = (object_type.pointed_type) as @IR_Struct_Type
+    let member = struct_type.get_member(expression.member_name.lexeme)
     if (member == null) {
-        abort(expression.member_name.location, clone(object_type.name).append(" has no such member: ").append(expression.member_name.lexeme))
+        if (expression.member_name.lexeme.equals("super")) {
+            if (struct_type.super_type == null) {
+                abort(expression.member_name.location, clone(struct_type.name).append(" is not a subtype"))
+            }
+            return self.create_ir_pointer_type(struct_type.super_type)
+        }
+        abort(expression.member_name.location, clone(struct_type.name).append(" has no such member: ").append(expression.member_name.lexeme))
     }
     if (member.type is IR_Struct_Type) {
         return self.create_ir_pointer_type(member.type)
