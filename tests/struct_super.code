@@ -2,7 +2,7 @@
 \ - output: ''
 
 struct Test {
-    result: i32 = 42
+    result = 42
     value: i32
 }
 

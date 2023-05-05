@@ -95,6 +95,30 @@ func get_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
     return null
 }
 
+func is_type_argument(self: @IR_Builder, type: @AST_Type) -> bool {
+    if (type is AST_Named_Type == false) {
+        return false
+    }
+    let type_name = (type as @AST_Named_Type).name.lexeme
+
+    let context = self.context
+    while (context != null) {
+        if (context.type_arguments != null) {
+            for_each(context.type_arguments) {
+                if (it.name == null) {
+                    abort("Invalid state")
+                }
+                if (it.name.equals(type_name)) {
+                    return true
+                }
+            }
+        }
+        context = context.parent
+    }
+
+    return false
+}
+
 func get_struct_statement(self: @IR_Builder, name: @String) -> @AST_Struct_Statement {
     let struct_statement: @AST_Struct_Statement = null
     self.compilation_unit.statements.for_each_list_item() {
@@ -524,7 +548,7 @@ func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_S
                     if (struct_member_type.accepts(struct_member_value_type) == false) {
                         abort(struct_member_value_expression.location, clone("Cannot assign a '").append(struct_member_value_type.name).append("' value to a '").append(struct_member_type.name).append("' struct member"))
                     }
-                    if (struct_member_type.equals(struct_member_value_type)) {
+                    if (struct_member_type.equals(struct_member_value_type) && self.is_type_argument(it.type) == false) {
                         stderr.write(it.type.location).write(": ").warning().write("Redundant type declaration").reset().end_line()
                     }
                 } else {
@@ -1364,7 +1388,7 @@ func convert_variable_statement(self: @IR_Builder, variable_statement: @AST_Vari
                 if (variable_type.accepts(variable_value.type) == false) {
                     abort(variable_statement.value_expression.location, clone("Cannot assign a '").append(variable_value.type.name).append("' value to a '").append(variable_type.name).append("' variable"))
                 }
-                if (variable_type.equals(variable_value.type)) {
+                if (variable_type.equals(variable_value.type) && self.is_type_argument(variable_statement.type) == false) {
                     stderr.write(variable_statement.type.location).write(": ").warning().write("Redundant type declaration").reset().end_line()
                 }
             }
@@ -1446,9 +1470,6 @@ func convert_add_expression(self: @IR_Builder, expression: @AST_Add_Expression) 
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Add_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
@@ -2069,20 +2090,14 @@ func convert_divide_expression(self: @IR_Builder, expression: @AST_Divide_Expres
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Divide_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
 func convert_equals_expression(self: @IR_Builder, expression: @AST_Equals_Expression) -> @IR_Value {
     let left_value = self.convert_expression(expression.left_expression, null)
-    let right_value = self.convert_expression(expression.right_expression, null)
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.type != right_value.type && (left_value.type is IR_Pointer_Type == false || right_value.type is IR_Null_Type == false)) {
         abort(expression.location, "Operands are not the same type")
-    }
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
     }
     return self.append(make @IR_Equals_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
@@ -2110,9 +2125,6 @@ func convert_greater_than_expression(self: @IR_Builder, expression: @AST_Greater
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Greater_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
@@ -2122,9 +2134,6 @@ func convert_greater_than_or_equals_expression(self: @IR_Builder, expression: @A
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Greater_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
@@ -2134,9 +2143,6 @@ func convert_less_than_expression(self: @IR_Builder, expression: @AST_Less_Than_
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Less_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
@@ -2146,9 +2152,6 @@ func convert_less_than_or_equals_expression(self: @IR_Builder, expression: @AST_
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
 
@@ -2387,9 +2390,6 @@ func convert_modulo_expression(self: @IR_Builder, expression: @AST_Modulo_Expres
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Modulo_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
@@ -2399,9 +2399,6 @@ func convert_multiply_expression(self: @IR_Builder, expression: @AST_Multiply_Ex
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Multiply_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
@@ -2516,12 +2513,9 @@ func get_named_argument(list: @List[@IR_Call_Argument], name: @String) -> @IR_Ca
 
 func convert_not_equals_expression(self: @IR_Builder, expression: @AST_Not_Equals_Expression) -> @IR_Value {
     let left_value = self.convert_expression(expression.left_expression, null)
-    let right_value = self.convert_expression(expression.right_expression, null)
+    let right_value = self.convert_expression(expression.right_expression, left_value.type)
     if (left_value.type != right_value.type && (left_value.type is IR_Pointer_Type == false || right_value.type is IR_Null_Type == false)) {
         abort(expression.location, "Operands are not the same type")
-    }
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
     }
     return self.append(make @IR_Not_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.get_named_type("bool"))).init(left_value, right_value), expression.location)
 }
@@ -2532,9 +2526,6 @@ func convert_substract_expression(self: @IR_Builder, expression: @AST_Substract_
         abort(expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(expression.right_expression, left_value.type)
-    if (left_value is IR_Constant_Value && right_value is IR_Constant_Value) {
-        abort(expression.location, "TODO: Evaluate constant expression")
-    }
     return self.append(make @IR_Substract_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), expression.location)
 }
 
