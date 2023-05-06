@@ -74,6 +74,8 @@ func parse_statements(self: @Parser, statements: @List[@AST_Statement], is_globa
             if (is_global) {
                 if (statement is AST_Constant_Statement) {
                     self.compilation_unit.put_named_statement((statement as @AST_Constant_Statement).name.lexeme, statement)
+                } else if (statement is AST_External_Type_Statement) {
+                    self.compilation_unit.put_named_statement((statement as @AST_External_Type_Statement).name.lexeme, statement)
                 } else if (statement is AST_Function_Statement) {
                     self.compilation_unit.put_named_statement((statement as @AST_Function_Statement).name.lexeme, statement)
                 } else if (statement is AST_Macro_Statement) {
@@ -258,18 +260,13 @@ func parse_external_variable(self: @Parser) -> @AST_Variable_Statement {
 
 \ external_type
 \   | "type" IDENTIFIER
-func parse_external_type(self: @Parser) -> @AST_Struct_Statement {
+func parse_external_type(self: @Parser) -> @AST_External_Type_Statement {
     self.consume(required_type)
     self.consume_space(1)
     let name = self.consume(required_identifier) as @Identifier_Token
-    return make @AST_Struct_Statement(
+    return make @AST_External_Type_Statement(
         location = name.location
         name = name
-        type_parameters = null
-        members = null
-        super_type = null
-        super_arguments = null
-        is_external = true
     )
 }
 
@@ -334,14 +331,22 @@ func parse_struct(self: @Parser) -> @AST_Struct_Statement {
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(required_close_brace)
+    if (struct_type_parameters != null) {
+        return make @AST_Generic_Struct_Statement(
+            location = struct_name.location
+            name = struct_name
+            type_parameters = struct_type_parameters
+            members = struct_members
+            super_type = struct_super_type
+            super_arguments = struct_super_arguments
+        )
+    }
     return make @AST_Struct_Statement(
         location = struct_name.location
         name = struct_name
-        type_parameters = struct_type_parameters
         members = struct_members
         super_type = struct_super_type
         super_arguments = struct_super_arguments
-        is_external = false
     )
 }
 

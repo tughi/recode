@@ -5,7 +5,8 @@ struct Object {
 }
 
 struct Object_Type {
-    id: isize
+    _id: u32
+    _max_derivate_id: u32
     name: String
     base_type: @Object_Type
 }

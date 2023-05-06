@@ -128,13 +128,21 @@ struct AST_Variable_Statement: AST_Statement(
     is_external = false
 }
 
-struct AST_Struct_Statement: AST_Statement {
+struct AST_Type_Statement: AST_Statement {
     name: @Identifier_Token
-    type_parameters: @List[@AST_Type_Parameter]
+}
+
+struct AST_External_Type_Statement: AST_Type_Statement {
+}
+
+struct AST_Struct_Statement: AST_Type_Statement {
     super_type: @AST_Type
     super_arguments: @List[@AST_Call_Argument]
     members: @List[@AST_Struct_Member]
-    is_external: bool
+}
+
+struct AST_Generic_Struct_Statement: AST_Struct_Statement {
+    type_parameters: @List[@AST_Type_Parameter]
 }
 
 struct AST_Type_Parameter {

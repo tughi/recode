@@ -155,6 +155,10 @@ func create_ir_macro_type(parameters: @List[@IR_Callable_Parameter]) -> @IR_Macr
     return make @IR_Macro_Type(name = type_name, parameters = parameters)
 }
 
+struct IR_Opaque_Type: IR_Type {
+    statement: @AST_Type_Statement
+}
+
 struct IR_Struct_Type: IR_Type {
     super_type: @IR_Struct_Type = null
     derived_types = make @List[@IR_Struct_Type]()

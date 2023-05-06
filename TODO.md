@@ -1,7 +1,6 @@
 ## Planned activities:
 
 - Generate function name based on its signature
-- Create dedicatd AST_Opaque_Type
 - Change cast syntax
 - Pass all tests
 - Update Thoughts.md

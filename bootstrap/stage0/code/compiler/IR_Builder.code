@@ -119,31 +119,29 @@ func is_type_argument(self: @IR_Builder, type: @AST_Type) -> bool {
     return false
 }
 
-func get_struct_statement(self: @IR_Builder, name: @String) -> @AST_Struct_Statement {
-    let struct_statement: @AST_Struct_Statement = null
-    self.compilation_unit.statements.for_each_list_item() {
-        let statement = list_item.data
-        if (statement is AST_Struct_Statement) {
-            let statement = statement as @AST_Struct_Statement
-            if (statement.name.lexeme.equals(name) && statement.type_parameters == null) {
-                if (struct_statement != null) {
-                    stderr.end_line().write(struct_statement.location).write(": First ").write(name).write(" declaration").end_line()
+func get_type_statement(self: @IR_Builder, name: @String) -> @AST_Type_Statement {
+    let type_statement: @AST_Type_Statement = null
+    for_each(self.compilation_unit.statements) {
+        if (it is AST_Type_Statement && (it is AST_Generic_Struct_Statement == false)) {
+            let statement = it as @AST_Type_Statement
+            if (statement.name.lexeme.equals(name)) {
+                if (type_statement != null) {
+                    stderr.end_line().write(type_statement.location).write(": First ").write(name).write(" declaration").end_line()
                     abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
                 }
-                struct_statement = statement
+                type_statement = statement
             }
         }
     }
-    return struct_statement
+    return type_statement
 }
 
-func get_generic_struct_statement(self: @IR_Builder, name: @String) -> @AST_Struct_Statement {
-    let struct_statement: @AST_Struct_Statement = null
-    self.compilation_unit.statements.for_each_list_item() {
-        let statement = list_item.data
-        if (statement is AST_Struct_Statement) {
-            let statement = statement as @AST_Struct_Statement
-            if (statement.name.lexeme.equals(name) && statement.type_parameters != null) {
+func get_generic_struct_statement(self: @IR_Builder, name: @String) -> @AST_Generic_Struct_Statement {
+    let struct_statement: @AST_Generic_Struct_Statement = null
+    for_each(self.compilation_unit.statements) {
+        if (it is AST_Generic_Struct_Statement) {
+            let statement = it as @AST_Generic_Struct_Statement
+            if (statement.name.lexeme.equals(name)) {
                 if (struct_statement != null) {
                     stderr.end_line().write(struct_statement.location).write(": First ").write(name).write(" declaration").end_line()
                     abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
@@ -443,12 +441,14 @@ func build(self: @IR_Builder) -> Nothing {
     for_each(self.compilation_unit.statements) {
         if (it is AST_Constant_Statement) {
             self.convert_constant_statement(it as @AST_Constant_Statement)
+        } else if (it is AST_External_Type_Statement) {
+            \ ingored
         } else if (it is AST_Function_Statement) {
-            \ nothing to do
+            \ ignored
         } else if (it is AST_Macro_Statement) {
-            \ nothing to do
+            \ ignored
         } else if (it is AST_Struct_Statement) {
-            \ nothing to do
+            \ ignored
         } else if (it is AST_Variable_Statement) {
             self.convert_variable_statement(it as @AST_Variable_Statement, true)
         } else {
@@ -457,10 +457,12 @@ func build(self: @IR_Builder) -> Nothing {
     }
 
     for_each(self.compilation_unit.statements) {
-        if (it is AST_Struct_Statement) {
-            let statement = it as @AST_Struct_Statement
-            if (statement.type_parameters == null) {
-                self.convert_struct_statement(statement, statement.name.lexeme, null)
+        if (it is AST_Type_Statement) {
+            let it = it as @AST_Type_Statement
+            if (it is AST_Struct_Statement && (it is AST_Generic_Struct_Statement == false)) {
+                self.convert_struct_statement(it as @AST_Struct_Statement, it.name.lexeme, null)
+            } else if (it is AST_External_Type_Statement) {
+                self.convert_external_type_statement(it as @AST_External_Type_Statement, it.name.lexeme)
             }
         }
     }
@@ -480,6 +482,37 @@ func build(self: @IR_Builder) -> Nothing {
     for_each(self.functions) {
         self.build_function(it)
     }
+}
+
+func convert_type_statement(self: @IR_Builder, statement: @AST_Type_Statement, type_name: @String) -> @IR_Type {
+    if (statement is AST_Struct_Statement) {
+        return self.convert_struct_statement(statement as @AST_Struct_Statement, type_name, null)
+    }
+    if (statement is AST_External_Type_Statement) {
+        return self.convert_external_type_statement(statement as @AST_External_Type_Statement, type_name)
+    }
+    abort(statement.location, statement.object_type)
+}
+
+func convert_external_type_statement(self: @IR_Builder, statement: @AST_External_Type_Statement, type_name: @String) -> @IR_Opaque_Type {
+    let type = self.get_named_type(type_name)
+    if (type != null) {
+        if (type is IR_Opaque_Type) {
+            let type = type as @IR_Opaque_Type
+            if (type.statement == (statement as @AST_Type_Statement)) {
+                return type
+            }
+        }
+        abort(statement.location, clone("Duplicate type declaration: ").append(type_name))
+    }
+
+    let type = make @IR_Opaque_Type(
+        name = type_name
+        statement = statement
+    )
+    self.types.append(type)
+
+    return type
 }
 
 func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_Statement, type_name: @String, type_arguments: @List[@IR_Type_Argument]) -> @IR_Struct_Type {
@@ -502,9 +535,8 @@ func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_S
             type_arguments = type_arguments
         )
 
-        type_arguments.for_each_list_item() {
-            let type_argument = list_item.data
-            if (type_argument.type is IR_Placeholder_Type) {
+        for_each(type_arguments) {
+            if (it.type is IR_Placeholder_Type) {
                 \ This is an incomplete type
                 return type
             }
@@ -730,9 +762,9 @@ func convert_named_type(self: @IR_Builder, type: @AST_Named_Type) -> @IR_Type {
 
     let named_type = self.get_named_type(type_name)
     if (named_type == null) {
-        let struct_statement = self.get_struct_statement(type_name)
-        if (struct_statement != null) {
-            named_type = self.convert_struct_statement(struct_statement, type_name, null)
+        let type_statement = self.get_type_statement(type_name)
+        if (type_statement != null) {
+            named_type = self.convert_type_statement(type_statement, type_name)
         } else {
             abort(type.name.location, clone("Unknown type: ").append(type_name))
         }
@@ -1377,6 +1409,9 @@ func convert_variable_statement(self: @IR_Builder, variable_statement: @AST_Vari
     let variable_type: @IR_Type = null
     if (variable_statement.type != null) {
         variable_type = self.convert_type(variable_statement.type)
+        if (variable_type is IR_Opaque_Type) {
+            abort(variable_statement.type.location, "Variable cannot have an opaque type")
+        }
     }
     let variable_value: @IR_Value = null
     if (variable_statement.value_expression != null) {

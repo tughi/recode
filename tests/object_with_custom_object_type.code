@@ -1,8 +1,13 @@
 \ Expect:
 \ - output: ''
 
-external type Object
-external type Object_Type
+struct Object {
+    object_type: @Object_Type = undefined
+}
+
+struct Object_Type {
+    _id: u32
+}
 
 struct Shape: Object {
     object_type: u8 \ not en error
