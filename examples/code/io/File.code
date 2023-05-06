@@ -48,6 +48,6 @@ func end_line(file: @FILE) -> @FILE {
 
 define FILE = unknown struct
 
-let stdout: @FILE = external
+external stdout: @FILE
 
 external func fputc(char: i32, file: @FILE) -> i32

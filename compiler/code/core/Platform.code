@@ -4,8 +4,8 @@
 
 external type FILE
 
-let stdout: @FILE = external
-let stderr: @FILE = external
+external stdout: @FILE
+external stderr: @FILE
 
 external func fclose(file: @FILE) -> i32
 external func feof(file: @FILE) -> i32

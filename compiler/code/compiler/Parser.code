@@ -236,7 +236,24 @@ func parse_external(self: @Parser) -> @AST_Statement {
     if (self.matches(required_func)) {
         return self.parse_external_function()
     }
-    abort(location, "Unsupported external statement")
+    return self.parse_external_variable()
+}
+
+\ external_variable
+\   | IDENTIFIER ":" type
+func parse_external_variable(self: @Parser) -> @AST_Variable_Statement {
+    let variable_name = self.consume(required_identifier) as @Identifier_Token
+    self.consume_space(0)
+    self.consume(required_colon)
+    self.consume_space(1)
+    let variable_value_type = self.parse_type()
+    return make @AST_Variable_Statement(
+        location = variable_name.location
+        name = variable_name
+        type = variable_value_type
+        value_expression = null
+        is_external = true
+    )
 }
 
 \ external_type
@@ -556,7 +573,6 @@ func parse_let(self: @Parser) -> @AST_Variable_Statement {
     let variable_value_type: @AST_Type = null
     let variable_value_expression: @AST_Expression = null
     let variable_is_global = self.current_alignment == 0
-    let variable_is_external = false
     if (self.matches(optional_space, required_colon)) {
         self.consume_space(0)
         self.consume(required_colon)
@@ -567,20 +583,15 @@ func parse_let(self: @Parser) -> @AST_Variable_Statement {
         self.consume_space(1)
         self.consume(required_equals)
         self.consume_space(1)
-        if (self.matches(required_external)) {
-            self.consume(required_external)
-            if (variable_is_global == false) {
-                abort(location, "Only global variables can have an external value")
-            }
-            if (variable_value_type == null) {
-                abort(location, "External variables require a type")
-            }
-            variable_is_external = true
-        } else {
-            variable_value_expression = self.parse_expression()
-        }
+        variable_value_expression = self.parse_expression()
     }
-    return make @AST_Variable_Statement(location = variable_name.location, name = variable_name, type = variable_value_type, value_expression = variable_value_expression, is_external = variable_is_external)
+    return make @AST_Variable_Statement(
+        location = variable_name.location
+        name = variable_name
+        type = variable_value_type
+        value_expression = variable_value_expression
+        is_external = false
+    )
 }
 
 \ if

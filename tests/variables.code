@@ -6,9 +6,8 @@ struct String {
 }
 
 external type File
+external stdout: @File
 external func fputs(s: [u8; ?], stream: @File) -> i32
-
-let stdout: @File = external
 
 func main() -> i32 {
     let value_1: i32 = undefined

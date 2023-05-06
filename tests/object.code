@@ -30,7 +30,7 @@ struct Object_Type {
 
 external type File
 external func fputs(s: [i8; ?], stream: @File) -> i32
-let stdout: @File = external
+external stdout: @File
 
 func main() -> i32 {
     let shape: @Shape = make @Rectangle()
