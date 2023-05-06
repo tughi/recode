@@ -1737,7 +1737,7 @@ func get_callable(self: @IR_Builder, call_location: @Source_Location, callee_nam
 
                     if (other_callable != callable && list_item.is_removed == false) {
                         if (callable.type.name.equals(other_callable.type.name)) {
-                            abort("Invalid state")
+                            abort(other_callable.location, clone("Callable declared first here: ").append(callable.location))
                         }
 
                         let other_callable_is_broader = true

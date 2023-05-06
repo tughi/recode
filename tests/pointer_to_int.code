@@ -1,0 +1,9 @@
+\ Expect:
+\ - error: 'tests/pointer_to_int.code:6:22: Variable type without address: i32\n'
+
+func main() -> i32 {
+    let value = 42
+    let value_ref = @value
+    return 0
+}
+

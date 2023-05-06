@@ -12,6 +12,10 @@ struct Source_Location {
     column: i64
 }
 
+func append(self: @String, location: @Source_Location) -> @String {
+    return self.append(location.source.file_path).append(':').append(location.line).append(':').append(location.column)
+}
+
 func create_source(file_path: @String) -> @Source {
     let file = fopen(file_path.data, "r".data)
     if (file == null) {

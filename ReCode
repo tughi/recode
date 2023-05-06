@@ -110,7 +110,7 @@ def test_with_stage(n):
             line = next(test_file)
             if line == '\\ Expect:\n':
                 line = next(test_file)
-                line_match = re.match(r'\\ - (error|output): (\'.*\')\n', line)
+                line_match = re.match(r'\\ - (error|output): (.*)\n', line)
                 if line_match:
                     if line_match.group(1) == 'error':
                         expected_error = line_match.group(2)
@@ -132,7 +132,8 @@ def test_with_stage(n):
             compiler_error = repr(re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr)) if compiler_result.stderr else None
             if expected_error is None or expected_error != compiler_error:
                 print(compiler_result.stderr, end='')
-                logger.error(f"{COLOR_ERROR}Unexpected compiler error{COLOR_RESET}")
+                logger.error(f"{COLOR_ERROR}Unexpected compiler error{COLOR_RESET}: {compiler_error}")
+                logger.error(f"{COLOR_WARNING}Expected compiler error{COLOR_RESET}: {expected_error}")
                 trace(*compiler_command[:2], '-')
                 exit(1)
         else:

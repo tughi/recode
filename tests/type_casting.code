@@ -2,7 +2,7 @@
 \ - output: ''
 
 struct Token {
-    line: u32
+    line = 0u32
 }
 
 struct Integer_Token: Token {

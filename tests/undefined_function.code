@@ -1,5 +1,5 @@
-\\ Expect:
-\ - error: 'tests/undefined_function.code:5:23: Undefined symbol\n'
+\ Expect:
+\ - error: "tests/undefined_function.code:5:23: Found 0 matching 'get_answer' callables: ()\n"
 
 func main() -> i32 {
     let answer: i32 = get_answer()
