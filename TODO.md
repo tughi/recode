@@ -5,5 +5,4 @@
 - Pass all tests
 - Update Thoughts.md
 - Add sizeof operator
-- Implement ! operator
 - Fix `sum = sum * 2` and `sum = sum + sum`

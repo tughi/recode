@@ -1050,6 +1050,18 @@ func get_right_value(self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("right_value")
 }
 
+struct IR_Unary_Instruction: IR_Instruction {
+}
+
+func init(self: @IR_Unary_Instruction, value: @IR_Value) -> @IR_Unary_Instruction {
+    self.set_operand_value("value", value)
+    return self
+}
+
+func get_value(self: @IR_Unary_Instruction) -> @IR_Value {
+    return self.operand_values.get("value")
+}
+
 struct IR_Add_Instruction: IR_Binary_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
@@ -1139,6 +1151,15 @@ struct IR_Not_Equal_Comparison_Instruction: IR_Comparison_Instruction(
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction as @IR_Binary_Instruction
         return file.write(instruction.get_left_value(), true).write(" != ").write(instruction.get_right_value(), true).end_line()
+    }
+) {
+}
+
+struct IR_Not_Instruction: IR_Unary_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
+        instruction.dump_ir_instruction_result(file, prefix)
+        let instruction = instruction as @IR_Not_Instruction
+        return file.write("not").write('(').write(instruction.get_value(), true).write(')').end_line()
     }
 ) {
 }

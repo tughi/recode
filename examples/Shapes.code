@@ -4,10 +4,10 @@ let polygon: Polygon
 
 func main() -> i32 {
     shape = make @Rectangle()
-    if (shape is Rectangle == false) {
+    if (!(shape is Rectangle)) {
         return 1
     }
-    if (shape is Polygon == false) {
+    if (!(shape is Polygon)) {
         return 1
     }
     if (shape is Circle) {

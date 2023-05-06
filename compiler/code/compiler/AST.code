@@ -361,6 +361,13 @@ struct AST_Negate_Expression: AST_Unary_Expression(
 ) {
 }
 
+struct AST_Not_Expression: AST_Unary_Expression(
+    convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_not_expression(expression as @AST_Not_Expression)
+    }
+) {
+}
+
 struct AST_Cast_Expression: AST_Expression(
     convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
         return builder.convert_cast_expression(expression as @AST_Cast_Expression)

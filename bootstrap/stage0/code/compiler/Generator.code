@@ -180,6 +180,8 @@ func generate_instruction(self: @MC_Generator, instruction: @IR_Instruction) -> 
         self.generate_multiply_instruction(instruction as @IR_Multiply_Instruction)
     } else if (instruction is IR_New_Instruction) {
         self.generate_new_instruction(instruction as @IR_New_Instruction)
+    } else if (instruction is IR_Not_Instruction) {
+        self.generate_not_instruction(instruction as @IR_Not_Instruction)
     } else if (instruction is IR_Phi_Instruction) {
         self.generate_phi_instruction(instruction as @IR_Phi_Instruction)
     } else if (instruction is IR_Return_Instruction) {
@@ -834,6 +836,21 @@ func generate_new_instruction(self: @MC_Generator, instruction: @IR_New_Instruct
     self.output_file.write("  call ").write("malloc").end_line()
     self.map_variable_value(instruction.result_value, self.register_rax)
     self.generate_store_value(instruction.get_init_value(), make @MC_Register_Based_Address(register = self.register_rax))
+}
+
+func generate_not_instruction(self: @MC_Generator, instruction: @IR_Not_Instruction) -> Nothing {
+    let result_register = self.find_unused_register()
+    let type_size = self.get_type_size(instruction.result_value.type)
+    let value = instruction.get_value()
+    self.generate_load_value(result_register, value)
+    self.map_variable_value(instruction.result_value, result_register)
+    self.output_file.write("  xor ")
+    if (type_size == 1 as i64) {
+        self.output_file.write(result_register.name_b)
+    } else {
+        self.abort(clone("Unsupported type size: ").append(type_size))
+    }
+    self.output_file.write(", ").write(1).end_line()
 }
 
 func generate_phi_instruction(self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {

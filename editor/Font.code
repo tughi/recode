@@ -19,16 +19,16 @@ func init_font() -> Nothing {
     let file = open_file("editor/Font.data", "r")
     let line = make String()
 
-    if ((file.read_line(@line) && line.starts_with("\\ Copyright ") && file.read_line(@line) && line.equals("")) == false) {
+    if (!(file.read_line(@line) && line.starts_with("\\ Copyright ") && file.read_line(@line) && line.equals(""))) {
         abort()
     }
 
-    if ((file.read_line(@line) && line.starts_with("font.height: 18")) == false) {
+    if (!(file.read_line(@line) && line.starts_with("font.height: 18"))) {
         abort()
     }
     font.height = 18
 
-    if ((file.read_line(@line) && line.starts_with("font.base_line: 13")) == false) {
+    if (!(file.read_line(@line) && line.starts_with("font.base_line: 13"))) {
         abort()
     }
     font.base_line = 13
@@ -40,20 +40,20 @@ func init_font() -> Nothing {
     }
 
     while (file.read_line(@line)) {
-        if (line.equals("") == false) {
+        if (!line.equals("")) {
             abort()
         }
 
-        if (file.read_line(@line) == false) {
+        if (!file.read_line(@line)) {
             break
         }
 
-        if (line.starts_with("glyph: ") == false) {
+        if (!line.starts_with("glyph: ")) {
             abort()
         }
         let glyph = font.glyphs[line.data[line.length - 1]]
 
-        if ((file.read_line(@line) && line.equals("glyph.width: 9")) == false) {
+        if (!(file.read_line(@line) && line.equals("glyph.width: 9"))) {
             abort()
         }
         glyph.width = 9

@@ -35,7 +35,7 @@ func clear(self: @Canvas) -> Nothing {
 }
 
 func draw_pixel(self: @Canvas, x: i32, y: i32) -> Nothing {
-    if (self.clip_rect.contains(x, y) == false) {
+    if (!self.clip_rect.contains(x, y)) {
         return
     }
     let pixels = self.pixels as [u32; ?]

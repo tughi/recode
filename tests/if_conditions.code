@@ -1,4 +1,4 @@
-\\ Expect:
+\ Expect:
 \ - output: ''
 
 func main() -> i32 {
