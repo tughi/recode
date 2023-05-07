@@ -901,6 +901,9 @@ func convert_type(self: @IR_Type) -> @AST_Type {
             parameters = macro_parameters
         )
     }
+    if (self is IR_Opaque_Type) {
+        return make @AST_Named_Type(name = make @Identifier_Token(location = null, lexeme = self.name))
+    }
     if (self is IR_Placeholder_Type) {
         return (self as @IR_Placeholder_Type).ast_type
     }

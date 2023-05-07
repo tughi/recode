@@ -121,11 +121,13 @@ func make_relative_path(file_path: @String, base_file_path: @String) -> @String 
 \   | let
 \   | loop
 \   | macro
+\   | macro_call
 \   | while
 \   | break
 \   | return
 \   | struct
-\   | expression ( "=" expression )?
+\   | expression "=" expression
+\   | expression
 func parse_statement(self: @Parser, is_global: bool) -> @AST_Statement {
     while (self.consume_empty_line()) {
     }
@@ -190,16 +192,38 @@ func parse_statement(self: @Parser, is_global: bool) -> @AST_Statement {
 
         let expression = self.parse_expression()
 
-        if (self.matches(optional_space, optional_comment, required_end_of_line)) {
-            return make @AST_Expression_Statement(location = expression.location, expression = expression)
-        }
-
         if (self.matches(optional_space, required_equals)) {
             self.consume_space(1)
             let operator = self.consume(required_equals) as @Other_Token
             self.consume_space(1)
-            return make @AST_Assignment_Statement(location = expression.location, storage_expression = expression, operator = operator, value_expression = self.parse_expression())
+            return make @AST_Assignment_Statement(
+                location = expression.location
+                storage_expression = expression
+                operator = operator
+                value_expression = self.parse_expression()
+            )
         }
+
+        if (self.matches(optional_space, required_open_brace)) {
+            if (expression is AST_Call_Expression) {
+                let expression = expression as @AST_Call_Expression
+                self.consume_space(1)
+                let block_statement = self.parse_block()
+                expression.arguments.append(
+                    make @AST_Call_Argument(
+                        name = null
+                        value_expression = make @AST_Macro_Body(location = block_statement.location, statement = block_statement)
+                    )
+                )
+            } else {
+                self.consume_end_of_line()
+            }
+        }
+
+        return make @AST_Expression_Statement(
+            location = expression.location
+            expression = expression
+        )
     }
 
     return null
@@ -914,7 +938,7 @@ func parse_is_expression(self: @Parser) -> @AST_Expression {
 }
 
 \ access_expression
-\   | primary_expression ( "." IDENTIFIER | "(" call_arguments? ")" block? | "[" expression "]" )*
+\   | primary_expression ( "." IDENTIFIER | "(" call_arguments? ")" | "[" expression "]" )*
 func parse_access_expression(self: @Parser) -> @AST_Expression {
     let expression = self.parse_primary_expression()
     if (expression != null) {
@@ -936,16 +960,6 @@ func parse_access_expression(self: @Parser) -> @AST_Expression {
                 }
                 self.consume_space(0)
                 self.consume(required_close_paren)
-                if (self.matches(optional_space, required_open_brace)) {
-                    self.consume_space(1)
-                    let block_statement = self.parse_block()
-                    call_arguments.append(
-                        make @AST_Call_Argument(
-                            name = null
-                            value_expression = make @AST_Macro_Body(location = block_statement.location, statement = block_statement)
-                        )
-                    )
-                }
                 expression = make @AST_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
             }
             if (self.matches(optional_space, required_open_bracket)) {

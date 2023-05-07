@@ -420,10 +420,6 @@ func write(file: @FILE, expression: @AST_Expression) -> @FILE {
         return file.write("- ").write((expression as @AST_Negate_Expression).expression)
     }
 
-    if (expression is AST_Macro_Body) {
-        return file.write("{ ... }")
-    }
-
     if (expression is AST_Member_Access_Expression) {
         return file.write((expression as @AST_Member_Access_Expression).object_expression).write('.').write((expression as @AST_Member_Access_Expression).member_name)
     }
