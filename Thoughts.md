@@ -112,7 +112,7 @@ Nullable types have a similar in-memory structure with the following struct:
 The compiler will complain of missing a null-checks.
 
     func length(self: @String?) -> i32 {
-        if (self != null) {
+        if self != null {
             return self.length  \ the compiler treats self as @String at this point
         }
     }
@@ -176,7 +176,7 @@ The variable names are symbols used by the compiler to know where the value are 
 ## Functions
 
     func max(v1: i32, v2: i32) -> i32 {
-        if (v1 > v2) {
+        if v1 > v2 {
             return v1
         }
         return v2
@@ -194,7 +194,7 @@ UFCS is useful to chain function calls.
 ## Generic functions
 
     func max[T](v1: T, v2: T) -> T {
-        if (v1 > v2) {
+        if v1 > v2 {
             return v1
         }
         return v2
@@ -210,7 +210,7 @@ Macros look like functions but they are always inlined where _invoked_, and have
     define for_each = macro (list: @List, block: macro (item: @Any, index: i32)) {
         let index = 0
         let item = list.first_item
-        while (item != null) {
+        while item != null {
             block(item.data, index)
             index = index + 1
             item = item.next_item

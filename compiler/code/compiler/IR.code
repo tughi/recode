@@ -7,28 +7,28 @@ struct IR_Type: Object {
 }
 
 func equals(self: @IR_Type, other: @IR_Type) -> bool {
-    if (self.object_type != other.object_type) {
+    if self.object_type != other.object_type {
         return false
     }
-    if (self is IR_Pointer_Type) {
+    if self is IR_Pointer_Type {
         return (self as @IR_Pointer_Type).pointed_type.equals((other as @IR_Pointer_Type).pointed_type)
     }
-    if (self is IR_Function_Type) {
+    if self is IR_Function_Type {
         let self = self as @IR_Function_Type
         let other = other as @IR_Function_Type
-        if (self.return_type.equals(other.return_type) == false) {
+        if not self.return_type.equals(other.return_type) {
             return false
         }
         let self_parameters_item = self.parameters.first_item
         let other_parameters_item = other.parameters.first_item
-        while (self_parameters_item != null && other_parameters_item != null) {
-            if (self_parameters_item.data.type.equals(other_parameters_item.data.type) == false) {
+        while self_parameters_item != null and other_parameters_item != null {
+            if not self_parameters_item.data.type.equals(other_parameters_item.data.type) {
                 return false
             }
             self_parameters_item = self_parameters_item.next_item
             other_parameters_item = other_parameters_item.next_item
         }
-        if (self_parameters_item != null || other_parameters_item != null) {
+        if self_parameters_item != null or other_parameters_item != null {
             return false
         }
         return true
@@ -120,11 +120,11 @@ struct IR_Function_Type: IR_Callable_Type {
 func create_ir_function_type(parameters: @List[@IR_Callable_Parameter], return_type: @IR_Type) -> @IR_Function_Type {
     let type_name = make @String().append("func (")
     let parameters_item = parameters.first_item
-    while (parameters_item != null) {
+    while parameters_item != null {
         let parameter = parameters_item.data
         type_name.append(parameter.name).append(": ").append(parameter.type.name)
         parameters_item = parameters_item.next_item
-        if (parameters_item != null) {
+        if parameters_item != null {
             type_name.append(", ")
         }
     }
@@ -142,11 +142,11 @@ struct IR_Macro_Type: IR_Callable_Type {
 func create_ir_macro_type(parameters: @List[@IR_Callable_Parameter]) -> @IR_Macro_Type {
     let type_name = make @String().append("macro (")
     let parameters_item = parameters.first_item
-    while (parameters_item != null) {
+    while parameters_item != null {
         let parameter = parameters_item.data
         type_name.append(parameter.name).append(": ").append(parameter.type.name)
         parameters_item = parameters_item.next_item
-        if (parameters_item != null) {
+        if parameters_item != null {
             type_name.append(", ")
         }
     }
@@ -186,15 +186,15 @@ func get_member(self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member 
     let struct_type = self
     loop {
         let members_item = struct_type.members.first_item
-        while (members_item != null) {
+        while members_item != null {
             let member = members_item.data
-            if (member.name.equals(name)) {
+            if member.name.equals(name) {
                 return member
             }
             members_item = members_item.next_item
         }
         struct_type = struct_type.super_type
-        if (struct_type == null) {
+        if struct_type == null {
             return null
         }
     }
@@ -203,11 +203,11 @@ func get_member(self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member 
 func has_members(self: @IR_Struct_Type) -> bool {
     let struct_type = self
     loop {
-        if (struct_type.members.size != 0i64) {
+        if struct_type.members.size != 0i64 {
             return true
         }
         struct_type = struct_type.super_type
-        if (struct_type == null) {
+        if struct_type == null {
             return false
         }
     }
@@ -215,8 +215,8 @@ func has_members(self: @IR_Struct_Type) -> bool {
 
 func has_super_type(self: @IR_Struct_Type, other: @IR_Struct_Type) -> bool {
     let struct_type = self
-    while (struct_type.super_type != null) {
-        if (struct_type.super_type == other) {
+    while struct_type.super_type != null {
+        if struct_type.super_type == other {
             return true
         }
         struct_type = struct_type.super_type
@@ -227,11 +227,11 @@ func has_super_type(self: @IR_Struct_Type, other: @IR_Struct_Type) -> bool {
 func is_object_type(self: @IR_Struct_Type) -> bool {
     let struct_type = self
     loop {
-        if (struct_type.name.equals("Object")) {
+        if struct_type.name.equals("Object") {
             return true
         }
         struct_type = struct_type.super_type
-        if (struct_type == null) {
+        if struct_type == null {
             return false
         }
     }
@@ -261,9 +261,9 @@ struct IR_Value: Object {
 }
 
 func write(file: @FILE, value: @IR_Value, check_users: bool) -> @FILE {
-    if (check_users && value.user_instructions.size == 0 as i64) {
+    if check_users and value.user_instructions.size == 0 {
         file.flush()
-        if (value is IR_Variable_Value) {
+        if value is IR_Variable_Value {
             let value = value as @IR_Variable_Value
             let value_version = value.version
         }
@@ -308,11 +308,11 @@ struct IR_Struct_Literal_Value: IR_Value(
         file.write(value.type.name).write('(')
         let value_links_item = value.links.first_item
         let is_first_value_link = true
-        while (value_links_item != null) {
+        while value_links_item != null {
             let value_link = value_links_item.data
-            if (value_link is IR_Struct_Literal_Member_Value_Link) {
+            if value_link is IR_Struct_Literal_Member_Value_Link {
                 let value_link = value_link as @IR_Struct_Literal_Member_Value_Link
-                if (is_first_value_link) {
+                if is_first_value_link {
                     is_first_value_link = false
                 } else {
                     file.write(", ")
@@ -333,11 +333,11 @@ struct IR_Struct_Literal_Member_Value_Link: IR_Requires_Value_Link {
 
 func get_member_value(self: @IR_Struct_Literal_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Value {
     let links_item = self.links.first_item
-    while (links_item != null) {
+    while links_item != null {
         let link = links_item.data
-        if (link is IR_Struct_Literal_Member_Value_Link) {
+        if link is IR_Struct_Literal_Member_Value_Link {
             let link = link as @IR_Struct_Literal_Member_Value_Link
-            if (link.struct_type_member == struct_type_member) {
+            if link.struct_type_member == struct_type_member {
                 return link.value
             }
         }
@@ -433,7 +433,7 @@ func prepend(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.parent_block = self
     instruction.prev_instruction = null
     instruction.next_instruction = self.first_instruction
-    if (self.first_instruction == null) {
+    if self.first_instruction == null {
         self.last_instruction = instruction
     } else {
         self.first_instruction.prev_instruction = instruction
@@ -446,7 +446,7 @@ func append(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.parent_block = self
     instruction.prev_instruction = self.last_instruction
     instruction.next_instruction = null
-    if (self.last_instruction == null) {
+    if self.last_instruction == null {
         self.first_instruction = instruction
     } else {
         self.last_instruction.next_instruction = instruction
@@ -472,19 +472,19 @@ func append_jump(self: @IR_Block, condition_value: @IR_Value, true_block: @IR_Bl
 }
 
 func remove(self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
-    if (instruction.parent_block != self) {
+    if instruction.parent_block != self {
         abort("Tried to remove instruction belonging to another block")
     }
-    if (instruction.prev_instruction != null) {
+    if instruction.prev_instruction != null {
         instruction.prev_instruction.next_instruction = instruction.next_instruction
     }
-    if (instruction.next_instruction != null) {
+    if instruction.next_instruction != null {
         instruction.next_instruction.prev_instruction = instruction.prev_instruction
     }
-    if (self.first_instruction == instruction) {
+    if self.first_instruction == instruction {
         self.first_instruction = instruction.next_instruction
     }
-    if (self.last_instruction == instruction) {
+    if self.last_instruction == instruction {
         self.last_instruction = instruction.prev_instruction
     }
     instruction.parent_block = null
@@ -495,12 +495,12 @@ func remove(self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
 func dump(block: @IR_Block, file: @FILE) -> @FILE {
     file.write("block.").write(block.id)
     let block_predecessors = block.predecessors.create_iterator()
-    if (block_predecessors.has_next()) {
+    if block_predecessors.has_next() {
         file.write('(')
         loop {
             let block_predecessor = block_predecessors.next()
             file.write("block.").write(block_predecessor.id)
-            if (block_predecessors.has_next()) {
+            if block_predecessors.has_next() {
                 file.write(", ")
             } else {
                 break
@@ -510,7 +510,7 @@ func dump(block: @IR_Block, file: @FILE) -> @FILE {
     }
     file.write(':').end_line()
     let block_instruction = block.first_instruction
-    while (block_instruction != null) {
+    while block_instruction != null {
         block_instruction.dump(file, "   ")
         block_instruction = block_instruction.next_instruction
     }
@@ -540,16 +540,16 @@ func create_block(self: @IR_Function) -> @IR_Block {
 func dump(function: @IR_Function, file: @FILE) -> Nothing {
     file.write_function_label(function).write(" :: (")
     let function_parameters = function.parameters.create_iterator()
-    while (function_parameters.has_next()) {
+    while function_parameters.has_next() {
         let function_parameter = function_parameters.next()
         file.write(function_parameter.name).write(": ").write(function_parameter.type.name)
-        if (function_parameters.has_next()) {
+        if function_parameters.has_next() {
             file.write(", ")
         }
     }
     file.write(") -> ").write(function.return_type.name).write(" {").end_line()
     let block_item = function.blocks.first_item
-    while (block_item != null) {
+    while block_item != null {
         block_item.data.dump(file)
         block_item = block_item.next_item
     }
@@ -602,27 +602,27 @@ struct IR_Instruction: Object {
 
 func dump_ir_instruction_result(self: @IR_Instruction, file: @FILE, prefix: @String) -> Nothing {
     file.write(prefix)
-    if (self.result_value != null) {
+    if self.result_value != null {
         file.write(self.result_value, false).write(": ").write(self.result_value.type.name).write(" = ")
     }
 }
 
 func is_exit_instruction(self: @IR_Instruction) -> bool {
-    if (self == null) {
+    if self == null {
         return false
     }
-    if (self is IR_Jump_Instruction || self is IR_Return_Instruction) {
+    if self is IR_Jump_Instruction or self is IR_Return_Instruction {
         return true
     }
-    if (self is IR_Direct_Call_Instruction) {
+    if self is IR_Direct_Call_Instruction {
         let self = self as @IR_Direct_Call_Instruction
         let function = self.function
-        if (function.name.equals("abort")) {
+        if function.name.equals("abort") {
             return true
         }
-        if (function.name.equals("exit") && function.parameters.size == 1 as i64) {
+        if function.name.equals("exit") and function.parameters.size == 1 {
             let function_parameter = function.parameters.get(0 as i64)
-            if (function_parameter.type is IR_IntMax_Type) {
+            if function_parameter.type is IR_IntMax_Type {
                 return true
             }
         }
@@ -638,7 +638,7 @@ func set_operand_value(self: @IR_Instruction, key: @Any, value: @IR_Value) -> No
 func replace_operand_value(self: @IR_Instruction, old_value: @IR_Value, new_value: @IR_Value) -> Nothing {
     old_value.user_instructions.remove(self).prune()
     new_value.user_instructions.append(self)
-    if (self is IR_Phi_Instruction) {
+    if self is IR_Phi_Instruction {
         self.operand_values.remove(old_value)
         self.operand_values.put(new_value, new_value)
     } else {
@@ -651,8 +651,8 @@ struct IR_Call_Instruction: IR_Instruction {
 }
 
 func dump_ir_call_instruction_arguments(instruction: @IR_Call_Instruction, file: @FILE) -> Nothing {
-    let call_argument_index = 0 as i64
-    while (call_argument_index < instruction.arguments_size) {
+    let call_argument_index = 0i64
+    while call_argument_index < instruction.arguments_size {
         file.write(", ").write(instruction.get_argument_value(call_argument_index), true)
         call_argument_index = call_argument_index + 1
     }
@@ -665,7 +665,7 @@ struct IR_Call_Argument {
 
 func add_arguments(self: @IR_Call_Instruction, call_arguments: @List[@IR_Call_Argument]) -> @IR_Call_Instruction {
     let call_arguments_item = call_arguments.first_item
-    while (call_arguments_item != null) {
+    while call_arguments_item != null {
         let call_argument = call_arguments_item.data
         self.set_operand_value(get_argument_key(self.arguments_size), call_argument.value)
         self.arguments_size = self.arguments_size + 1
@@ -679,17 +679,17 @@ func get_argument_value(self: @IR_Call_Instruction, index: i64) -> @IR_Value {
 }
 
 func get_argument_key(index: i64) -> @String {
-    if (index == 0 as i64) {
+    if index == 0 {
         return "argument-0-value"
-    } else if (index == 1 as i64) {
+    } else if index == 1 {
         return "argument-1-value"
-    } else if (index == 2 as i64) {
+    } else if index == 2 {
         return "argument-2-value"
-    } else if (index == 3 as i64) {
+    } else if index == 3 {
         return "argument-3-value"
-    } else if (index == 4 as i64) {
+    } else if index == 4 {
         return "argument-4-value"
-    } else if (index == 5 as i64) {
+    } else if index == 5 {
         return "argument-5-value"
     }
     abort(clone("Missing argument index: ").append(index))
@@ -710,7 +710,7 @@ struct IR_Direct_Call_Instruction: IR_Call_Instruction(
 func create_ir_direct_call_instruction(result_value: @IR_Variable_Value, call_arguments: @List[@IR_Call_Argument], function: @IR_Function) -> @IR_Call_Instruction {
     let instruction = make @IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
-    if (result_value != null) {
+    if result_value != null {
         result_value.creator_instruction = instruction
     }
     return instruction
@@ -732,7 +732,7 @@ func create_ir_dynamic_call_instruction(result_value: @IR_Variable_Value, call_a
     let instruction = make @IR_Dynamic_Call_Instruction(result_value = result_value)
     instruction.add_arguments(call_arguments)
     instruction.set_operand_value("function_address", function_address)
-    if (result_value != null) {
+    if result_value != null {
         result_value.creator_instruction = instruction
     }
     return instruction
@@ -842,7 +842,7 @@ struct IR_Load_Struct_Member_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction as @IR_Load_Struct_Member_Instruction
-        if (instruction.load_address) {
+        if instruction.load_address {
             file.write("load_struct_member_address")
         } else {
             file.write("load_struct_member")
@@ -859,7 +859,7 @@ func create_ir_load_struct_member_instruction(result_value: @IR_Variable_Value, 
     instruction.set_operand_value("struct_pointer_value", struct_pointer_value)
     result_value.creator_instruction = instruction
 
-    if (struct_type_member.type is IR_Struct_Type) {
+    if struct_type_member.type is IR_Struct_Type {
         let result_value_link = make @IR_Requires_Value_Link(value = struct_pointer_value, back_link = undefined)
         result_value_link.back_link = make @IR_Required_By_Value_Link(value = result_value, back_link = result_value_link)
         result_value.links.append(result_value_link)
@@ -939,7 +939,7 @@ struct IR_Return_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction as @IR_Return_Instruction
-        if (instruction.get_return_value() == null) {
+        if instruction.get_return_value() == null {
             return file.write("return").write('(').write(')').end_line()
         }
         return file.write("return").write('(').write(instruction.get_return_value(), true).write(')').end_line()
@@ -949,7 +949,7 @@ struct IR_Return_Instruction: IR_Instruction(
 
 func create_ir_return_instruction(return_value: @IR_Value) -> @IR_Return_Instruction {
     let instruction = make @IR_Return_Instruction(result_value = null)
-    if (return_value != null) {
+    if return_value != null {
         instruction.set_operand_value("return_value", return_value)
     }
     return instruction
@@ -1179,11 +1179,11 @@ struct IR_Phi_Instruction: IR_Instruction(
         let instruction = instruction as @IR_Phi_Instruction
         file.write("phi").write('(')
         let operand_values_entry = instruction.operand_values.first_entry
-        if (operand_values_entry != null) {
+        if operand_values_entry != null {
             loop {
                 file.write(operand_values_entry.value, true)
                 operand_values_entry = operand_values_entry.next_entry
-                if (operand_values_entry == null) {
+                if operand_values_entry == null {
                     break
                 }
                 file.write(", ")
@@ -1209,13 +1209,13 @@ func is_redundant(self: @IR_Phi_Instruction) -> bool {
     \   v.1 = phi(v.2)
 
     let operand_values_entry = self.operand_values.first_entry
-    if (operand_values_entry == null) {
+    if operand_values_entry == null {
         abort()
     }
     let other_value = operand_values_entry.value
     operand_values_entry = operand_values_entry.next_entry
-    while (operand_values_entry != null) {
-        if (operand_values_entry.value != other_value) {
+    while operand_values_entry != null {
+        if operand_values_entry.value != other_value {
             return false
         }
         operand_values_entry = operand_values_entry.next_entry
@@ -1229,16 +1229,16 @@ func is_trivial(self: @IR_Phi_Instruction) -> bool {
     \   v.1 = phi(v.1, v.2)
 
     let operand_values_entry = self.operand_values.first_entry
-    if (operand_values_entry == null) {
+    if operand_values_entry == null {
         abort()
     }
     let result_value: @IR_Value = self.result_value
     let other_value: @IR_Value = null
-    while (operand_values_entry != null) {
+    while operand_values_entry != null {
         let value = operand_values_entry.value
-        if (value != result_value) {
-            if (value != other_value) {
-                if (other_value != null) {
+        if value != result_value {
+            if value != other_value {
+                if other_value != null {
                     return false
                 }
                 other_value = value

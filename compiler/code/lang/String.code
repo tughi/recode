@@ -7,10 +7,10 @@ struct String {
 }
 
 func create_string(data: [i8; ?]) -> @String {
-    let data_length = 0 as i64
+    let data_length = 0i64
     loop {
         let char = data[data_length]
-        if (char == '\0') {
+        if char == '\0' {
             break
         }
         data_length = data_length + 1
@@ -26,10 +26,10 @@ func clone(self: @String) -> @String {
 }
 
 func equals(self: @String, other: @String) -> bool {
-    if (self.length == other.length) {
-        let index = 0 as i64
-        while (index < self.length) {
-            if (self.data[index] != other.data[index]) {
+    if self.length == other.length {
+        let index = 0i64
+        while index < self.length {
+            if self.data[index] != other.data[index] {
                 return false
             }
             index = index + 1
@@ -40,13 +40,13 @@ func equals(self: @String, other: @String) -> bool {
 }
 
 func index_of(self: @String, other: @String) -> i64 {
-    let self_index = 0 as i64
-    while (self_index <= self.length - other.length) {
-        let other_index = 0 as i64
-        while (other_index < other.length && self.data[self_index + other_index] == other.data[other_index]) {
+    let self_index = 0i64
+    while self_index <= self.length - other.length {
+        let other_index = 0i64
+        while other_index < other.length and self.data[self_index + other_index] == other.data[other_index] {
             other_index = other_index + 1
         }
-        if (other_index == other.length) {
+        if other_index == other.length {
             return self_index
         }
         self_index = self_index + 1
@@ -55,12 +55,12 @@ func index_of(self: @String, other: @String) -> i64 {
 }
 
 func starts_with(self: @String, other: @String) -> bool {
-    if (self.length < other.length) {
+    if self.length < other.length {
         return false
     }
-    let index = 0 as i64
-    while (index < other.length) {
-        if (self.data[index] != other.data[index]) {
+    let index = 0i64
+    while index < other.length {
+        if self.data[index] != other.data[index] {
             return false
         }
         index = index + 1
@@ -69,12 +69,12 @@ func starts_with(self: @String, other: @String) -> bool {
 }
 
 func ends_with(self: @String, other: @String) -> bool {
-    if (self.length < other.length) {
+    if self.length < other.length {
         return false
     }
-    let index = 0 as i64
-    while (index < other.length) {
-        if (self.data[self.length - other.length + index] != other.data[index]) {
+    let index = 0i64
+    while index < other.length {
+        if self.data[self.length - other.length + index] != other.data[index] {
             return false
         }
         index = index + 1
@@ -88,14 +88,14 @@ func last_index_of(self: @String, char: i8) -> i64 {
 
 func last_index_of(self: @String, char: i8, from_index: i64) -> i64 {
     let index = from_index
-    while (index >= 0 && self.data[index] != char) {
+    while index >= 0 and self.data[index] != char {
         index = index - 1
     }
     return index
 }
 
 func append(self: @String, char: i8) -> @String {
-    if (self.length + 1 >= self.data_size) {
+    if self.length + 1 >= self.data_size {
         self.data_size = self.data_size + 16
         self.data = realloc(self.data, self.data_size) as [i8; ?]
     }
@@ -106,27 +106,27 @@ func append(self: @String, char: i8) -> @String {
 }
 
 func append(self: @String, number: i32) -> @String {
-    if (number < 0) {
+    if number < 0 {
         return self.append('-').append(-number)
     }
-    if (number >= 10) {
+    if number >= 10 {
         self.append(number / 10)
     }
     return self.append((number // 10) as i8 + '0')
 }
 
 func append(self: @String, number: i64) -> @String {
-    if (number < 0) {
+    if number < 0 {
         return self.append('-').append(-number)
     }
-    if (number >= 10) {
+    if number >= 10 {
         self.append(number / 10)
     }
     return self.append((number // 10) as i8 + '0')
 }
 
 func append(self: @String, other: @String) -> @String {
-    if (self.length + other.length >= self.data_size) {
+    if self.length + other.length >= self.data_size {
         self.data_size = self.length + other.length + 1
         self.data = realloc(self.data, self.data_size) as [i8; ?]
     }
@@ -137,7 +137,7 @@ func append(self: @String, other: @String) -> @String {
     loop {
         let char = other_data[index]
         self_data[self_length] = char
-        if (char == '\0') {
+        if char == '\0' {
             break
         }
         self_length = self_length + 1
@@ -148,11 +148,11 @@ func append(self: @String, other: @String) -> @String {
 }
 
 func remove(self: @String, begin_index: i64, end_index: i64) -> @String {
-    if (begin_index < 0 || begin_index > end_index || end_index >= self.length) {
+    if begin_index < 0 or begin_index > end_index or end_index >= self.length {
         abort("Invalid state")
     }
-    let index = 0 as i64
-    while (index + end_index <= self.length) {
+    let index = 0i64
+    while index + end_index <= self.length {
         self.data[begin_index + index] = self.data[end_index + index]
         index = index + 1
     }

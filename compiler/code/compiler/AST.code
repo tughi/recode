@@ -10,7 +10,7 @@ struct Compilation_Unit {
 
 func get_named_statements(self: @Compilation_Unit, name: @String) -> @List[@AST_Statement] {
     for_each(self.named_statements) {
-        if (name.equals(key)) {
+        if name.equals(key) {
             return value
         }
     }
@@ -19,7 +19,7 @@ func get_named_statements(self: @Compilation_Unit, name: @String) -> @List[@AST_
 
 func put_named_statement(self: @Compilation_Unit, name: @String, statement: @AST_Statement) -> Nothing {
     let named_statements = self.get_named_statements(name)
-    if (named_statements == null) {
+    if named_statements == null {
         named_statements = make @List[@AST_Statement]()
         self.named_statements.put(name, named_statements)
     }

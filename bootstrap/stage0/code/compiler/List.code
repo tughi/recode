@@ -8,7 +8,7 @@ struct List[T] {
 
 func append[T](self: @List[T], data: T) -> Nothing {
     let item = make @List_Item[T](data = data, prev_item = self.last_item)
-    if (self.last_item == null) {
+    if self.last_item == null {
         self.first_item = item
     } else {
         self.last_item.next_item = item
@@ -19,7 +19,7 @@ func append[T](self: @List[T], data: T) -> Nothing {
 
 func prepend[T](self: @List[T], data: T) -> Nothing {
     let item = make @List_Item[T](data = data, next_item = self.first_item)
-    if (self.first_item == null) {
+    if self.first_item == null {
         self.last_item = item
     } else {
         self.first_item.prev_item = item
@@ -30,8 +30,8 @@ func prepend[T](self: @List[T], data: T) -> Nothing {
 
 func remove[T](self: @List[T], data: T) -> @List[T] {
     let item = self.first_item
-    while (item != null) {
-        if (item.data == data) {
+    while item != null {
+        if item.data == data {
             item.is_removed = true
             break
         }
@@ -42,8 +42,8 @@ func remove[T](self: @List[T], data: T) -> @List[T] {
 
 func remove_all[T](self: @List[T], data: T) -> @List[T] {
     let item = self.first_item
-    while (item != null) {
-        if (item.data == data) {
+    while item != null {
+        if item.data == data {
             item.is_removed = true
         }
         item = item.next_item
@@ -53,18 +53,18 @@ func remove_all[T](self: @List[T], data: T) -> @List[T] {
 
 func prune[T](self: @List[T]) -> @List[T] {
     let item = self.first_item
-    while (item != null) {
-        if (item.is_removed) {
-            if (item.prev_item != null) {
+    while item != null {
+        if item.is_removed {
+            if item.prev_item != null {
                 item.prev_item.next_item = item.next_item
             }
-            if (item.next_item != null) {
+            if item.next_item != null {
                 item.next_item.prev_item = item.prev_item
             }
-            if (self.first_item == item) {
+            if self.first_item == item {
                 self.first_item = item.next_item
             }
-            if (self.last_item == item) {
+            if self.last_item == item {
                 self.last_item = item.prev_item
             }
             self.size = self.size - 1
@@ -76,8 +76,8 @@ func prune[T](self: @List[T]) -> @List[T] {
 
 func replace[T](self: @List[T], data: T, new_data: T) -> Nothing {
     let item = self.first_item
-    while (item != null) {
-        if (item.data == data) {
+    while item != null {
+        if item.data == data {
             item.data = new_data
         }
         item = item.next_item
@@ -86,8 +86,8 @@ func replace[T](self: @List[T], data: T, new_data: T) -> Nothing {
 
 func contains[T](self: @List[T], data: T) -> bool {
     let item = self.first_item
-    while (item != null) {
-        if (item.data == data) {
+    while item != null {
+        if item.data == data {
             return true
         }
         item = item.next_item
@@ -96,10 +96,10 @@ func contains[T](self: @List[T], data: T) -> bool {
 }
 
 func index_of[T](self: @List[T], data: T) -> i64 {
-    let index = 0 as i64
+    let index = 0i64
     let item = self.first_item
-    while (item != null) {
-        if (item.data == data) {
+    while item != null {
+        if item.data == data {
             return index
         }
         item = item.next_item
@@ -109,11 +109,11 @@ func index_of[T](self: @List[T], data: T) -> i64 {
 }
 
 func get[T](self: @List[T], index: i64) -> T {
-    if (index >= self.size || index < 0) {
+    if index >= self.size or index < 0 {
         return null
     }
     let item = self.first_item
-    while (index > 0) {
+    while index > 0 {
         item = item.next_item
         index = index - 1
     }
@@ -121,14 +121,14 @@ func get[T](self: @List[T], index: i64) -> T {
 }
 
 func first[T](self: @List[T]) -> T {
-    if (self.first_item == null) {
+    if self.first_item == null {
         return null
     }
     return self.first_item.data
 }
 
 func last[T](self: @List[T]) -> T {
-    if (self.last_item == null) {
+    if self.last_item == null {
         return null
     }
     return self.last_item.data
@@ -151,7 +151,7 @@ func create_iterator[T](list: @List[T]) -> @List_Iterator[T] {
 }
 
 func current[T](self: @List_Iterator[T]) -> T {
-    if (self.current_item != null) {
+    if self.current_item != null {
         return self.current_item.data
     }
     return null
@@ -166,7 +166,7 @@ func has_next[T](self: @List_Iterator[T]) -> bool {
 }
 
 func next[T](self: @List_Iterator[T]) -> T {
-    if (self.next_item == null) {
+    if self.next_item == null {
         return null
     }
     self.current_item = self.next_item
@@ -175,14 +175,14 @@ func next[T](self: @List_Iterator[T]) -> T {
 }
 
 func change[T](self: @List_Iterator[T], data: T) -> Nothing {
-    if (self.current_item != null) {
+    if self.current_item != null {
         self.current_item.data = data
     }
 }
 
 macro for_each_list_item[T](self: @List[T], block: macro (list_item: @List_Item[T])) {
     let item = self.first_item
-    while (item != null) {
+    while item != null {
         block(item)
         item = item.next_item
     }
@@ -190,7 +190,7 @@ macro for_each_list_item[T](self: @List[T], block: macro (list_item: @List_Item[
 
 macro for_each[T](self: @List[T], block: macro (it: T)) {
     let item = self.first_item
-    while (item != null) {
+    while item != null {
         block(item.data)
         item = item.next_item
     }

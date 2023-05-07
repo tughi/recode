@@ -14,8 +14,8 @@ struct Map_Entry[K, V] {
 
 func get[K, V](self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
-    while (entry != null) {
-        if (entry.key == key) {
+    while entry != null {
+        if entry.key == key {
             return entry.value
         }
         entry = entry.next_entry
@@ -25,8 +25,8 @@ func get[K, V](self: @Map[K, V], key: K) -> V {
 
 func put[K, V](self: @Map[K, V], key: K, value: V) -> V {
     let entry = self.first_entry
-    while (entry != null) {
-        if (entry.key == key) {
+    while entry != null {
+        if entry.key == key {
             let old_value = entry.value
             entry.value = value
             return old_value
@@ -34,7 +34,7 @@ func put[K, V](self: @Map[K, V], key: K, value: V) -> V {
         entry = entry.next_entry
     }
     entry = make @Map_Entry[K, V](key = key, value = value, prev_entry = self.last_entry)
-    if (self.last_entry == null) {
+    if self.last_entry == null {
         self.first_entry = entry
     } else {
         self.last_entry.next_entry = entry
@@ -45,8 +45,8 @@ func put[K, V](self: @Map[K, V], key: K, value: V) -> V {
 
 func remove[K, V](self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
-    while (entry != null) {
-        if (entry.key == key) {
+    while entry != null {
+        if entry.key == key {
             return self.unlink(entry).value
         }
         entry = entry.next_entry
@@ -56,8 +56,8 @@ func remove[K, V](self: @Map[K, V], key: K) -> V {
 
 func remove_values[K, V](self: @Map[K, V], value: V) -> Nothing {
     let entry = self.first_entry
-    while (entry != null) {
-        if (entry.value == value) {
+    while entry != null {
+        if entry.value == value {
             self.unlink(entry)
         }
         entry = entry.next_entry
@@ -65,12 +65,12 @@ func remove_values[K, V](self: @Map[K, V], value: V) -> Nothing {
 }
 
 func unlink[K, V](self: @Map[K, V], entry: @Map_Entry[K, V]) -> @Map_Entry[K, V] {
-    if (entry.prev_entry != null) {
+    if entry.prev_entry != null {
         entry.prev_entry.next_entry = entry.next_entry
     } else {
         self.first_entry = entry.next_entry
     }
-    if (entry.next_entry != null) {
+    if entry.next_entry != null {
         entry.next_entry.prev_entry = entry.prev_entry
     } else {
         self.last_entry = entry.prev_entry
@@ -80,8 +80,8 @@ func unlink[K, V](self: @Map[K, V], entry: @Map_Entry[K, V]) -> @Map_Entry[K, V]
 
 func replace_values[K, V](self: @Map[K, V], old_value: V, new_value: V) -> Nothing {
     let entry = self.first_entry
-    while (entry != null) {
-        if (entry.value == old_value) {
+    while entry != null {
+        if entry.value == old_value {
             entry.value = new_value
         }
         entry = entry.next_entry
@@ -90,7 +90,7 @@ func replace_values[K, V](self: @Map[K, V], old_value: V, new_value: V) -> Nothi
 
 macro for_each[K, V](self: @Map[K, V], block: macro (key: K, value: V)) {
     let entry = self.first_entry
-    while (entry != null) {
+    while entry != null {
         block(entry.key, entry.value)
         entry = entry.next_entry
     }

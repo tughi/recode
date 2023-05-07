@@ -4,7 +4,7 @@ func generate(build: @IR_Build, output_file_path: @String) -> Nothing {
     let generator = create_mc_generator(output_file_path)
 
     let build_sources_item = build.sources.first_item
-    while (build_sources_item != null) {
+    while build_sources_item != null {
         let build_source = build_sources_item.data
         generator.output_file.write("  .file ").write(build_source.id).write(" \"").write(build_source.file_path).write("\"").end_line()
         build_sources_item = build_sources_item.next_item
@@ -13,7 +13,7 @@ func generate(build: @IR_Build, output_file_path: @String) -> Nothing {
     generator.output_file.write_line("  .intel_syntax noprefix").end_line()
 
     let object_type = find_object_type(build.named_types)
-    if (object_type != null) {
+    if object_type != null {
         let counter = make Counter[u32]()
         object_type.assign_object_type_ids(@counter)
     }
@@ -21,11 +21,11 @@ func generate(build: @IR_Build, output_file_path: @String) -> Nothing {
     generator.generate_global_variables(build.global_symbols, build.named_types)
 
     let symbols_item = build.global_symbols.first_item
-    while (symbols_item != null) {
+    while symbols_item != null {
         let symbol = symbols_item.data
-        if (symbol is IR_Function) {
+        if symbol is IR_Function {
             let function = symbol as @IR_Function
-            if (function.is_external == false) {
+            if not function.is_external {
                 generator.generate_function(function)
             }
         }
@@ -34,7 +34,7 @@ func generate(build: @IR_Build, output_file_path: @String) -> Nothing {
 
     generator.generate_strings()
 
-    if (object_type != null) {
+    if object_type != null {
         generator.generate_object_types(build.named_types)
     }
 
@@ -45,7 +45,7 @@ func generate_function(self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.end_line()
     self.output_file.write("  .loc ").write(function.location.source.id).write(' ').write(function.location.line).write(' ').write(function.location.column).end_line()
     self.output_file.write("  .text").end_line()
-    if (function.name.equals("main")) {
+    if function.name.equals("main") {
         self.output_file.write("  .globl main").end_line()
         self.output_file.write("main:").end_line()
     }
@@ -56,11 +56,11 @@ func generate_function(self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write("  sub rsp, rax").end_line()
 
     let blocks = function.blocks.create_iterator()
-    while (blocks.has_next()) {
+    while blocks.has_next() {
         let block = blocks.next()
         let block_instruction = block.first_instruction
-        while (block_instruction != null) {
-            if (block_instruction.result_value != null) {
+        while block_instruction != null {
+            if block_instruction.result_value != null {
                 self.create_mc_value(block_instruction)
             }
             block_instruction = block_instruction.next_instruction
@@ -74,13 +74,13 @@ func generate_function(self: @MC_Generator, function: @IR_Function) -> Nothing {
     self.output_file.write_function_end_label(function).write(":").end_line()
     self.output_file.write("  mov rsp, rbp").end_line()
     self.output_file.write("  pop rbp").end_line()
-    if (function.name.equals("main") && function.return_type is IR_Nothing_Type) {
+    if function.name.equals("main") and function.return_type is IR_Nothing_Type {
         self.output_file.write("  xor rax, rax").end_line()
     }
     self.output_file.write("  ret").end_line().end_line()
 
     let stack_frame_size = self.stack_frame_size
-    if (stack_frame_size // 16 != 0 as i64) {
+    if stack_frame_size // 16 != 0 {
         stack_frame_size = stack_frame_size + 16 - stack_frame_size // 16
     }
     self.output_file.write_function_label(function).write("__stack_frame_size").write(": .word ").write(stack_frame_size).end_line()
@@ -90,7 +90,7 @@ func generate_function(self: @MC_Generator, function: @IR_Function) -> Nothing {
 
 func write_function_label(file: @FILE, function: @IR_Function) -> @FILE {
     file.write(function.name)
-    if (function.is_external == false) {
+    if not function.is_external {
         file.write('_').write(function.id)
     }
     return file
@@ -101,15 +101,15 @@ func write_function_end_label(file: @FILE, function: @IR_Function) -> @FILE {
 }
 
 func output_unreached_ir_instructions(self: @MC_Generator) -> Nothing {
-    if (self.output_debug_comments == false) {
+    if not self.output_debug_comments {
         return
     }
     let mc_value = self.first_value
-    while (mc_value != null) {
+    while mc_value != null {
         let ir_instruction_item = mc_value.ir_variable_value.user_instructions.first_item
-        while (ir_instruction_item != null) {
+        while ir_instruction_item != null {
             let ir_instruction = ir_instruction_item.data
-            if (ir_instruction.is_generated == false) {
+            if not ir_instruction.is_generated {
                 ir_instruction.dump(self.output_file, "  # [unreachable instruction]: ")
             }
             ir_instruction_item = ir_instruction_item.next_item
@@ -122,9 +122,9 @@ func generate_block(self: @MC_Generator, block: @IR_Block) -> Nothing {
     block.is_being_generated = true
     self.output_file.write_block_label(block).write(": # block.").write(block.id).end_line()
     let block_instruction = block.first_instruction
-    while (block_instruction != null) {
+    while block_instruction != null {
         self.generate_instruction(block_instruction)
-        if (block_instruction is IR_Load_Variable_Instruction == false && block_instruction.result_value != null && block_instruction.result_value.variable is IR_Global_Variable) {
+        if block_instruction is not IR_Load_Variable_Instruction and block_instruction.result_value != null and block_instruction.result_value.variable is IR_Global_Variable {
             self.spill_global_variable(self.get_value(block_instruction.result_value))
         }
         self.discard_used_values()
@@ -133,7 +133,7 @@ func generate_block(self: @MC_Generator, block: @IR_Block) -> Nothing {
         block_instruction = block_instruction.next_instruction
     }
     block.is_generated = true
-    if (self.discard_used_values() > 0) {
+    if self.discard_used_values() > 0 {
         self.output_live_values()
         self.output_used_registers()
     }
@@ -144,55 +144,55 @@ func write_block_label(file: @FILE, block: @IR_Block) -> @FILE {
 }
 
 func generate_instruction(self: @MC_Generator, instruction: @IR_Instruction) -> Nothing {
-    if (instruction.location != null) {
+    if instruction.location != null {
         self.output_file.write("  .loc ").write(instruction.location.source.id).write(' ').write(instruction.location.line).write(' ').write(instruction.location.column).end_line()
     }
-    if (self.output_debug_comments) {
+    if self.output_debug_comments {
         instruction.dump(self.output_file, "  # ")
     }
-    if (instruction is IR_Add_Instruction) {
+    if instruction is IR_Add_Instruction {
         self.generate_add_instruction(instruction as @IR_Add_Instruction)
-    } else if (instruction is IR_Call_Instruction) {
+    } else if instruction is IR_Call_Instruction {
         self.generate_call_instruction(instruction as @IR_Call_Instruction)
-    } else if (instruction is IR_Cast_Instruction) {
+    } else if instruction is IR_Cast_Instruction {
         self.generate_cast_instruction(instruction as @IR_Cast_Instruction)
-    } else if (instruction is IR_Conditional_Jump_Instruction) {
+    } else if instruction is IR_Conditional_Jump_Instruction {
         self.generate_conditional_jump_instruction(instruction as @IR_Conditional_Jump_Instruction)
-    } else if (instruction is IR_Comparison_Instruction) {
+    } else if instruction is IR_Comparison_Instruction {
         self.generate_comparison_instruction(instruction as @IR_Comparison_Instruction)
-    } else if (instruction is IR_Direct_Jump_Instruction) {
+    } else if instruction is IR_Direct_Jump_Instruction {
         self.generate_direct_jump_instruction(instruction as @IR_Direct_Jump_Instruction)
-    } else if (instruction is IR_Divide_Instruction) {
+    } else if instruction is IR_Divide_Instruction {
         self.generate_divide_instruction(instruction as @IR_Divide_Instruction)
-    } else if (instruction is IR_Is_Instruction) {
+    } else if instruction is IR_Is_Instruction {
         self.generate_is_instruction(instruction as @IR_Is_Instruction)
-    } else if (instruction is IR_Load_Array_Item_Instruction) {
+    } else if instruction is IR_Load_Array_Item_Instruction {
         self.generate_load_array_item_instruction(instruction as @IR_Load_Array_Item_Instruction)
-    } else if (instruction is IR_Load_Struct_Member_Instruction) {
+    } else if instruction is IR_Load_Struct_Member_Instruction {
         self.generate_load_struct_member_instruction(instruction as @IR_Load_Struct_Member_Instruction)
-    } else if (instruction is IR_Load_Variable_Instruction) {
+    } else if instruction is IR_Load_Variable_Instruction {
         self.generate_load_variable_instruction(instruction as @IR_Load_Variable_Instruction)
-    } else if (instruction is IR_Load_Variable_Address_Instruction) {
+    } else if instruction is IR_Load_Variable_Address_Instruction {
         self.generate_load_variable_address_instruction(instruction as @IR_Load_Variable_Address_Instruction)
-    } else if (instruction is IR_Modulo_Instruction) {
+    } else if instruction is IR_Modulo_Instruction {
         self.generate_modulo_instruction(instruction as @IR_Modulo_Instruction)
-    } else if (instruction is IR_Multiply_Instruction) {
+    } else if instruction is IR_Multiply_Instruction {
         self.generate_multiply_instruction(instruction as @IR_Multiply_Instruction)
-    } else if (instruction is IR_New_Instruction) {
+    } else if instruction is IR_New_Instruction {
         self.generate_new_instruction(instruction as @IR_New_Instruction)
-    } else if (instruction is IR_Not_Instruction) {
+    } else if instruction is IR_Not_Instruction {
         self.generate_not_instruction(instruction as @IR_Not_Instruction)
-    } else if (instruction is IR_Phi_Instruction) {
+    } else if instruction is IR_Phi_Instruction {
         self.generate_phi_instruction(instruction as @IR_Phi_Instruction)
-    } else if (instruction is IR_Return_Instruction) {
+    } else if instruction is IR_Return_Instruction {
         self.generate_return_instruction(instruction as @IR_Return_Instruction)
-    } else if (instruction is IR_Set_Instruction) {
+    } else if instruction is IR_Set_Instruction {
         self.generate_set_instruction(instruction as @IR_Set_Instruction)
-    } else if (instruction is IR_Store_Array_Item_Instruction) {
+    } else if instruction is IR_Store_Array_Item_Instruction {
         self.generate_store_array_item_instruction(instruction as @IR_Store_Array_Item_Instruction)
-    } else if (instruction is IR_Store_Struct_Member_Instruction) {
+    } else if instruction is IR_Store_Struct_Member_Instruction {
         self.generate_store_struct_member_instruction(instruction as @IR_Store_Struct_Member_Instruction)
-    } else if (instruction is IR_Substract_Instruction) {
+    } else if instruction is IR_Substract_Instruction {
         self.generate_substract_instruction(instruction as @IR_Substract_Instruction)
     } else {
         self.abort(clone("Unsupported instruction: ").append(instruction.object_type.name))
@@ -206,17 +206,17 @@ func generate_add_instruction(self: @MC_Generator, instruction: @IR_Add_Instruct
     self.map_variable_value(instruction.result_value, result_register)
     let type_size = self.get_type_size(instruction.result_value.type)
     let right_value = instruction.get_right_value()
-    if (right_value is IR_Constant_Value) {
+    if right_value is IR_Constant_Value {
         let right_value = right_value as @IR_Constant_Value
-        if ((right_value.literal as @Integer_Token).value == 1 as i64) {
+        if (right_value.literal as @Integer_Token).value == 1 {
             self.output_file.write("  inc ")
-            if (type_size == 8 as i64) {
+            if type_size == 8 {
                 self.output_file.write(result_register.name_q)
-            } else if (type_size == 4 as i64) {
+            } else if type_size == 4 {
                 self.output_file.write(result_register.name_d)
-            } else if (type_size == 2 as i64) {
+            } else if type_size == 2 {
                 self.output_file.write(result_register.name_w)
-            } else if (type_size == 1 as i64) {
+            } else if type_size == 1 {
                 self.output_file.write(result_register.name_b)
             } else {
                 self.abort(clone("Unsupported type size: ").append(type_size))
@@ -226,13 +226,13 @@ func generate_add_instruction(self: @MC_Generator, instruction: @IR_Add_Instruct
         }
     }
     self.output_file.write("  add ")
-    if (type_size == 8 as i64) {
+    if type_size == 8 {
         self.output_file.write(result_register.name_q)
-    } else if (type_size == 4 as i64) {
+    } else if type_size == 4 {
         self.output_file.write(result_register.name_d)
-    } else if (type_size == 2 as i64) {
+    } else if type_size == 2 {
         self.output_file.write(result_register.name_w)
-    } else if (type_size == 1 as i64) {
+    } else if type_size == 1 {
         self.output_file.write(result_register.name_b)
     } else {
         self.abort(clone("Unsupported type size: ").append(type_size))
@@ -241,17 +241,17 @@ func generate_add_instruction(self: @MC_Generator, instruction: @IR_Add_Instruct
 }
 
 func generate_call_instruction(self: @MC_Generator, instruction: @IR_Call_Instruction) -> Nothing {
-    if (instruction.arguments_size > 0) {
+    if instruction.arguments_size > 0 {
         self.generate_load_value(self.register_rdi, instruction.get_argument_value(0i64))
-        if (instruction.arguments_size > 1) {
+        if instruction.arguments_size > 1 {
             self.generate_load_value(self.register_rsi, instruction.get_argument_value(1i64))
-            if (instruction.arguments_size > 2) {
+            if instruction.arguments_size > 2 {
                 self.generate_load_value(self.register_rdx, instruction.get_argument_value(2i64))
-                if (instruction.arguments_size > 3) {
+                if instruction.arguments_size > 3 {
                     self.generate_load_value(self.register_rcx, instruction.get_argument_value(3i64))
-                    if (instruction.arguments_size > 4) {
+                    if instruction.arguments_size > 4 {
                         self.generate_load_value(self.register_r8, instruction.get_argument_value(4i64))
-                        if (instruction.arguments_size > 5) {
+                        if instruction.arguments_size > 5 {
                             self.generate_load_value(self.register_r9, instruction.get_argument_value(5i64))
                         }
                     }
@@ -259,11 +259,11 @@ func generate_call_instruction(self: @MC_Generator, instruction: @IR_Call_Instru
             }
         }
     }
-    if (instruction is IR_Direct_Call_Instruction) {
+    if instruction is IR_Direct_Call_Instruction {
         instruction.is_generated = true
         self.release_all_registers()
         self.output_file.write("  call ").write_function_label((instruction as @IR_Direct_Call_Instruction).function).end_line()
-    } else if (instruction is IR_Dynamic_Call_Instruction) {
+    } else if instruction is IR_Dynamic_Call_Instruction {
         self.generate_load_value(self.register_rax, (instruction as @IR_Dynamic_Call_Instruction).get_function_address())
         instruction.is_generated = true
         self.release_all_registers()
@@ -271,7 +271,7 @@ func generate_call_instruction(self: @MC_Generator, instruction: @IR_Call_Instru
     } else {
         abort(instruction.location, instruction.object_type)
     }
-    if (instruction.result_value != null) {
+    if instruction.result_value != null {
         self.map_variable_value(instruction.result_value, self.register_rax)
     }
 }
@@ -282,115 +282,115 @@ func generate_cast_instruction(self: @MC_Generator, instruction: @IR_Cast_Instru
     self.generate_load_value(result_register, ir_value)
     self.map_variable_value(instruction.result_value, result_register)
     let is_supported = true
-    if (instruction.result_value.type is IR_Int16_Type) {
-        if (ir_value.type is IR_Int16_Type) {
+    if instruction.result_value.type is IR_Int16_Type {
+        if ir_value.type is IR_Int16_Type {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
-        } else if (ir_value.type is IR_Int32_Type) {
+        } else if ir_value.type is IR_Int32_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int64_Type) {
+        } else if ir_value.type is IR_Int64_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int8_Type) {
+        } else if ir_value.type is IR_Int8_Type {
             self.output_file.write("  movsx ").write(result_register.name_w).write(", ").write(result_register.name_b).end_line()
-        } else if (ir_value.type is IR_IntMax_Type) {
+        } else if ir_value.type is IR_IntMax_Type {
             \ nothing to do
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_Int32_Type) {
-        if (ir_value.type is IR_IntMax_Type) {
-        } else if (ir_value.type is IR_Int16_Type) {
+    } else if instruction.result_value.type is IR_Int32_Type {
+        if ir_value.type is IR_IntMax_Type {
+        } else if ir_value.type is IR_Int16_Type {
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_w).end_line()
-        } else if (ir_value.type is IR_Int32_Type) {
+        } else if ir_value.type is IR_Int32_Type {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
-        } else if (ir_value.type is IR_Int64_Type) {
+        } else if ir_value.type is IR_Int64_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int8_Type) {
+        } else if ir_value.type is IR_Int8_Type {
             self.output_file.write("  movsx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
-        } else if (ir_value.type is IR_UInt32_Type) {
+        } else if ir_value.type is IR_UInt32_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_UInt8_Type) {
+        } else if ir_value.type is IR_UInt8_Type {
             self.output_file.write("  movzx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
-        } else if (ir_value.type is IR_UInt64_Type) {
+        } else if ir_value.type is IR_UInt64_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_UIntMax_Type) {
+        } else if ir_value.type is IR_UIntMax_Type {
             \ nothing to do
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_Int64_Type) {
-        if (ir_value.type is IR_IntMax_Type) {
+    } else if instruction.result_value.type is IR_Int64_Type {
+        if ir_value.type is IR_IntMax_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int16_Type) {
+        } else if ir_value.type is IR_Int16_Type {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_w).end_line()
-        } else if (ir_value.type is IR_Int32_Type) {
+        } else if ir_value.type is IR_Int32_Type {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
-        } else if (ir_value.type is IR_Int64_Type) {
+        } else if ir_value.type is IR_Int64_Type {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
-        } else if (ir_value.type is IR_Int8_Type) {
+        } else if ir_value.type is IR_Int8_Type {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_Int8_Type) {
-        if (ir_value.type is IR_IntMax_Type) {
+    } else if instruction.result_value.type is IR_Int8_Type {
+        if ir_value.type is IR_IntMax_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int16_Type) {
+        } else if ir_value.type is IR_Int16_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int32_Type) {
+        } else if ir_value.type is IR_Int32_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int64_Type) {
+        } else if ir_value.type is IR_Int64_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int8_Type) {
+        } else if ir_value.type is IR_Int8_Type {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_IntMax_Type) {
-        if (ir_value.type is IR_Int16_Type) {
+    } else if instruction.result_value.type is IR_IntMax_Type {
+        if ir_value.type is IR_Int16_Type {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_w).end_line()
-        } else if (ir_value.type is IR_Int32_Type) {
+        } else if ir_value.type is IR_Int32_Type {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_d).end_line()
-        } else if (ir_value.type is IR_Int64_Type) {
+        } else if ir_value.type is IR_Int64_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int8_Type) {
+        } else if ir_value.type is IR_Int8_Type {
             self.output_file.write("  movsx ").write(result_register.name_q).write(", ").write(result_register.name_b).end_line()
-        } else if (ir_value.type is IR_IntMax_Type) {
+        } else if ir_value.type is IR_IntMax_Type {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_UInt32_Type) {
-        if (ir_value.type is IR_Int32_Type) {
+    } else if instruction.result_value.type is IR_UInt32_Type {
+        if ir_value.type is IR_Int32_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_UInt8_Type) {
+        } else if ir_value.type is IR_UInt8_Type {
             self.output_file.write("  movzx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_UInt64_Type) {
-        if (ir_value.type is IR_UInt32_Type) {
+    } else if instruction.result_value.type is IR_UInt64_Type {
+        if ir_value.type is IR_UInt32_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_UInt8_Type) {
+        } else if ir_value.type is IR_UInt8_Type {
             self.output_file.write("  movzx ").write(result_register.name_d).write(", ").write(result_register.name_b).end_line()
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_UInt8_Type) {
-        if (ir_value.type is IR_Int32_Type) {
+    } else if instruction.result_value.type is IR_UInt8_Type {
+        if ir_value.type is IR_Int32_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_Int8_Type) {
+        } else if ir_value.type is IR_Int8_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_IntMax_Type) {
+        } else if ir_value.type is IR_IntMax_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_UInt8_Type) {
+        } else if ir_value.type is IR_UInt8_Type {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
         } else {
             is_supported = false
         }
-    } else if (instruction.result_value.type is IR_UIntMax_Type) {
-        if (ir_value.type is IR_IntMax_Type) {
+    } else if instruction.result_value.type is IR_UIntMax_Type {
+        if ir_value.type is IR_IntMax_Type {
             \ nothing to do
-        } else if (ir_value.type is IR_UIntMax_Type) {
+        } else if ir_value.type is IR_UIntMax_Type {
             stderr.write(instruction.location).write(": Redundant cast").end_line()
         } else {
             is_supported = false
@@ -398,25 +398,25 @@ func generate_cast_instruction(self: @MC_Generator, instruction: @IR_Cast_Instru
     } else {
         is_supported = false
     }
-    if (is_supported == false) {
+    if not is_supported {
         self.abort(instruction.location, clone("Cannot cast ").append(ir_value.type.name).append(" to ").append(instruction.result_value.type.name))
     }
 }
 
 func generate_conditional_jump_instruction(self: @MC_Generator, instruction: @IR_Conditional_Jump_Instruction) -> Nothing {
     let condition_value = instruction.get_condition_value()
-    if (condition_value.type is IR_Boolean_Type == false) {
+    if condition_value.type is not IR_Boolean_Type {
         self.abort("Unsupported value type")
     }
     let condition_register: @MC_Register
-    if (condition_value is IR_Variable_Value) {
+    if condition_value is IR_Variable_Value {
         let condition_value = condition_value as @IR_Variable_Value
         let mc_value = self.get_value(condition_value)
-        if (mc_value == null) {
+        if mc_value == null {
             self.abort("Invalid state")
         }
         condition_register = mc_value.register
-        if (condition_register == null) {
+        if condition_register == null {
             condition_register = self.find_unused_register()
             self.generate_load_value(condition_register, condition_value)
         }
@@ -426,9 +426,9 @@ func generate_conditional_jump_instruction(self: @MC_Generator, instruction: @IR
     }
     self.output_file.write("  test ").write(condition_register.name_b).write(", ").write(condition_register.name_b).end_line()
     self.release_all_registers()
-    if (instruction.true_block.is_being_generated) {
+    if instruction.true_block.is_being_generated {
         self.output_file.write("  jnz ").write_block_label(instruction.true_block).end_line()
-        if (instruction.false_block.is_being_generated) {
+        if instruction.false_block.is_being_generated {
             self.output_file.write("  jmp ").write_block_label(instruction.false_block).end_line()
         } else {
             self.generate_block(instruction.false_block)
@@ -436,7 +436,7 @@ func generate_conditional_jump_instruction(self: @MC_Generator, instruction: @IR
     } else {
         self.output_file.write("  jz ").write_block_label(instruction.false_block).end_line()
         self.generate_block(instruction.true_block)
-        if (instruction.false_block.is_being_generated == false) {
+        if not instruction.false_block.is_being_generated {
             self.generate_block(instruction.false_block)
         }
     }
@@ -445,11 +445,11 @@ func generate_conditional_jump_instruction(self: @MC_Generator, instruction: @IR
 func generate_comparison_instruction(self: @MC_Generator, instruction: @IR_Comparison_Instruction) -> Nothing {
     let left_value = instruction.get_left_value()
     let right_value = instruction.get_right_value()
-    if (left_value is IR_Variable_Value && right_value is IR_Variable_Value) {
+    if left_value is IR_Variable_Value and right_value is IR_Variable_Value {
         let mc_left_value = self.get_value(left_value as @IR_Variable_Value)
-        if (mc_left_value.register == null) {
+        if mc_left_value.register == null {
             let mc_right_value = self.get_value(right_value as @IR_Variable_Value)
-            if (mc_right_value.register == null) {
+            if mc_right_value.register == null {
                 let register = self.find_unused_register()
                 self.generate_load_value(register, left_value)
                 self.map_variable_value(left_value as @IR_Variable_Value, register)
@@ -458,33 +458,33 @@ func generate_comparison_instruction(self: @MC_Generator, instruction: @IR_Compa
     }
     self.output_file.write("  cmp ").write_operand(self, left_value).write(", ").write_operand(self, right_value).end_line()
     let register = self.find_unused_register()
-    if (instruction is IR_Equals_Comparison_Instruction) {
+    if instruction is IR_Equals_Comparison_Instruction {
         self.output_file.write("  sete ").write(register.name_b).end_line()
-    } else if (instruction is IR_Greater_Comparison_Instruction) {
-        if (left_value.type is IR_UInt_Type) {
+    } else if instruction is IR_Greater_Comparison_Instruction {
+        if left_value.type is IR_UInt_Type {
             self.output_file.write("  seta ").write(register.name_b).end_line()
         } else {
             self.output_file.write("  setg ").write(register.name_b).end_line()
         }
-    } else if (instruction is IR_Greater_Or_Equal_Comparison_Instruction) {
-        if (left_value.type is IR_UInt_Type) {
+    } else if instruction is IR_Greater_Or_Equal_Comparison_Instruction {
+        if left_value.type is IR_UInt_Type {
             self.output_file.write("  setae ").write(register.name_b).end_line()
         } else {
             self.output_file.write("  setge ").write(register.name_b).end_line()
         }
-    } else if (instruction is IR_Less_Comparison_Instruction) {
-        if (left_value.type is IR_UInt_Type) {
+    } else if instruction is IR_Less_Comparison_Instruction {
+        if left_value.type is IR_UInt_Type {
             self.output_file.write("  setb ").write(register.name_b).end_line()
         } else {
             self.output_file.write("  setl ").write(register.name_b).end_line()
         }
-    } else if (instruction is IR_Less_Or_Equal_Comparison_Instruction) {
-        if (left_value.type is IR_UInt_Type) {
+    } else if instruction is IR_Less_Or_Equal_Comparison_Instruction {
+        if left_value.type is IR_UInt_Type {
             self.output_file.write("  setbe ").write(register.name_b).end_line()
         } else {
             self.output_file.write("  setle ").write(register.name_b).end_line()
         }
-    } else if (instruction is IR_Not_Equal_Comparison_Instruction) {
+    } else if instruction is IR_Not_Equal_Comparison_Instruction {
         self.output_file.write("  setne ").write(register.name_b).end_line()
     } else {
         self.abort(clone("Unsupported comparison instruction type: ").append(instruction.object_type.name))
@@ -494,7 +494,7 @@ func generate_comparison_instruction(self: @MC_Generator, instruction: @IR_Compa
 
 func generate_direct_jump_instruction(self: @MC_Generator, instruction: @IR_Direct_Jump_Instruction) -> Nothing {
     self.release_all_registers()
-    if (instruction.block.is_being_generated) {
+    if instruction.block.is_being_generated {
         self.output_file.write("  jmp ").write_block_label(instruction.block).end_line()
     } else {
         self.generate_block(instruction.block)
@@ -524,18 +524,18 @@ func generate_divide_instruction(self: @MC_Generator, instruction: @IR_Divide_In
     self.register_rdx.is_reserved = true
 
     let type_size = self.get_type_size(instruction.result_value.type)
-    if (instruction.result_value.type is IR_UInt_Type) {
-        if (type_size == 1i64) {
+    if instruction.result_value.type is IR_UInt_Type {
+        if type_size == 1 {
             self.output_file.write("  mov ").write("ah").write(", ").write(0).end_line()
         } else {
             self.output_file.write("  xor ").write(self.register_rdx.name_q).write(", ").write(self.register_rdx.name_q).end_line()
         }
     } else {
-        if (type_size == 8 as i64) {
+        if type_size == 8 {
             self.output_file.write("  cqo").end_line()
-        } else if (type_size == 4 as i64) {
+        } else if type_size == 4 {
             self.output_file.write("  cdq").end_line()
-        } else if (type_size == 2 as i64) {
+        } else if type_size == 2 {
             self.output_file.write("  cwd").end_line()
         } else {
             self.output_file.write("  cbw").end_line()
@@ -543,20 +543,20 @@ func generate_divide_instruction(self: @MC_Generator, instruction: @IR_Divide_In
     }
 
     let right_value = instruction.get_right_value()
-    if (right_value is IR_Constant_Value) {
+    if right_value is IR_Constant_Value {
         let register = self.find_unused_register()
         register.is_reserved = true
         self.generate_load_value(register, right_value)
-        if (instruction.result_value.type is IR_UInt_Type) {
+        if instruction.result_value.type is IR_UInt_Type {
             self.output_file.write("  div ")
         } else {
             self.output_file.write("  idiv ")
         }
-        if (type_size == 8 as i64) {
+        if type_size == 8 {
             self.output_file.write(register.name_q)
-        } else if (type_size == 4 as i64) {
+        } else if type_size == 4 {
             self.output_file.write(register.name_d)
-        } else if (type_size == 2 as i64) {
+        } else if type_size == 2 {
             self.output_file.write(register.name_w)
         } else {
             self.abort(clone("Unsupported type size: ").append(type_size))
@@ -564,7 +564,7 @@ func generate_divide_instruction(self: @MC_Generator, instruction: @IR_Divide_In
         self.output_file.end_line()
         register.is_reserved = false
     } else {
-        if (instruction.result_value.type is IR_UInt_Type) {
+        if instruction.result_value.type is IR_UInt_Type {
             self.output_file.write("  div ")
         } else {
             self.output_file.write("  idiv ")
@@ -585,14 +585,14 @@ func generate_load_array_item_instruction(self: @MC_Generator, instruction: @IR_
     let array_item_type_size = self.get_type_size(instruction.array_item_type)
 
     let index_value = instruction.get_index_value()
-    if (index_value is IR_Constant_Value) {
+    if index_value is IR_Constant_Value {
         let index_value = index_value as @IR_Constant_Value
-        if (index_value.literal is Integer_Token == false) {
+        if index_value.literal is not Integer_Token {
             self.abort(index_value.literal.location, "Not an integer literal")
         }
         let index_value = (index_value.literal as @Integer_Token).value
-        if (index_value != 0 as i64) {
-            if (index_value < 0) {
+        if index_value != 0 {
+            if index_value < 0 {
                 self.abort("Invalid state")
             }
             self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * array_item_type_size).end_line()
@@ -600,37 +600,37 @@ func generate_load_array_item_instruction(self: @MC_Generator, instruction: @IR_
     } else {
         let index_register = self.find_unused_register()
         self.generate_load_value(index_register, index_value)
-        if (index_value.type is IR_Int16_Type) {
+        if index_value.type is IR_Int16_Type {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
-        } else if (index_value.type is IR_Int32_Type) {
+        } else if index_value.type is IR_Int32_Type {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
-        } else if (index_value.type is IR_Int64_Type) {
+        } else if index_value.type is IR_Int64_Type {
             \ nothing to do
-        } else if (index_value.type is IR_Int8_Type) {
+        } else if index_value.type is IR_Int8_Type {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
-        } else if (index_value.type is IR_IntMax_Type) {
+        } else if index_value.type is IR_IntMax_Type {
             \ nothing to do
-        } else if (index_value.type is IR_UInt8_Type) {
+        } else if index_value.type is IR_UInt8_Type {
             self.output_file.write("  movzx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
-        } else if (index_value.type is IR_UIntMax_Type) {
+        } else if index_value.type is IR_UIntMax_Type {
             \ nothing to do
         } else {
             self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
         }
-        if (array_item_type_size > 1) {
+        if array_item_type_size > 1 {
             self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(array_item_type_size).end_line()
         }
         self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_register.name_q).end_line()
     }
-    if (instruction.load_address == false) {
+    if not instruction.load_address {
         let address = make @MC_Register_Based_Address(register = result_register)
-        if (array_item_type_size == 8i64) {
+        if array_item_type_size == 8 {
             self.output_file.write("  mov ").write(result_register.name_q).write(", ").write(address).end_line()
-        } else if (array_item_type_size == 4i64) {
+        } else if array_item_type_size == 4 {
             self.output_file.write("  mov ").write(result_register.name_d).write(", ").write(address).end_line()
-        } else if (array_item_type_size == 2i64) {
+        } else if array_item_type_size == 2 {
             self.output_file.write("  mov ").write(result_register.name_w).write(", ").write(address).end_line()
-        } else if (array_item_type_size == 1i64) {
+        } else if array_item_type_size == 1 {
             self.output_file.write("  mov ").write(result_register.name_b).write(", ").write(address).end_line()
         } else {
             self.abort(instruction.location, clone("Unsupported array-item type size: ").append(array_item_type_size))
@@ -640,10 +640,10 @@ func generate_load_array_item_instruction(self: @MC_Generator, instruction: @IR_
 
 func generate_load_variable_address_instruction(self: @MC_Generator, instruction: @IR_Load_Variable_Address_Instruction) -> Nothing {
     let variable_value = self.get_value(instruction.get_variable_value())
-    if (variable_value == null) {
+    if variable_value == null {
         self.abort("Invalid state")
     }
-    if (variable_value.address == null) {
+    if variable_value.address == null {
         self.abort("Variable has no address")
     }
     let result_value = self.map_variable_value(instruction.result_value, self.find_unused_register())
@@ -651,23 +651,23 @@ func generate_load_variable_address_instruction(self: @MC_Generator, instruction
 }
 
 func generate_load_variable_instruction(self: @MC_Generator, instruction: @IR_Load_Variable_Instruction) -> Nothing {
-    if (instruction.variable is IR_Function_Parameter) {
+    if instruction.variable is IR_Function_Parameter {
         let parameter = instruction.variable as @IR_Function_Parameter
         let parameter_index = instruction.parent_block.function.parameters.index_of(parameter)
-        if (parameter_index < 0) {
+        if parameter_index < 0 {
             self.abort("Invalid state")
         }
-        if (parameter_index == 0 as i64) {
+        if parameter_index == 0 {
             self.map_variable_value(instruction.result_value, self.register_rdi)
-        } else if (parameter_index == 1 as i64) {
+        } else if parameter_index == 1 {
             self.map_variable_value(instruction.result_value, self.register_rsi)
-        } else if (parameter_index == 2 as i64) {
+        } else if parameter_index == 2 {
             self.map_variable_value(instruction.result_value, self.register_rdx)
-        } else if (parameter_index == 3 as i64) {
+        } else if parameter_index == 3 {
             self.map_variable_value(instruction.result_value, self.register_rcx)
-        } else if (parameter_index == 4 as i64) {
+        } else if parameter_index == 4 {
             self.map_variable_value(instruction.result_value, self.register_r8)
-        } else if (parameter_index == 5 as i64) {
+        } else if parameter_index == 5 {
             self.map_variable_value(instruction.result_value, self.register_r9)
         } else {
             self.abort(clone("Invalid state"))
@@ -680,15 +680,15 @@ func generate_load_variable_instruction(self: @MC_Generator, instruction: @IR_Lo
 func generate_load_struct_member_instruction(self: @MC_Generator, instruction: @IR_Load_Struct_Member_Instruction) -> Nothing {
     let ir_struct_pointer_value = instruction.get_struct_pointer_value()
     let struct_pointer_register: @MC_Register
-    if (ir_struct_pointer_value is IR_Variable_Value) {
+    if ir_struct_pointer_value is IR_Variable_Value {
         let ir_struct_pointer_value = ir_struct_pointer_value as @IR_Variable_Value
         let mc_struct_pointer_value = self.get_value(ir_struct_pointer_value)
-        if (mc_struct_pointer_value == null) {
+        if mc_struct_pointer_value == null {
             self.abort("Invalid state")
         }
         struct_pointer_register = mc_struct_pointer_value.register
-        if (struct_pointer_register == null) {
-            if (mc_struct_pointer_value.address == null) {
+        if struct_pointer_register == null {
+            if mc_struct_pointer_value.address == null {
                 self.abort("Invalid state")
             }
             struct_pointer_register = self.find_unused_register()
@@ -704,21 +704,21 @@ func generate_load_struct_member_instruction(self: @MC_Generator, instruction: @
     let result_register = self.find_unused_register()
     self.map_variable_value(instruction.result_value, result_register)
     let struct_type_member_offset = self.get_offset(instruction.struct_type_member)
-    if (instruction.load_address) {
+    if instruction.load_address {
         self.output_file.write("  mov ").write(result_register.name_q).write(", ").write(struct_pointer_register.name_q).end_line()
-        if (struct_type_member_offset > 0) {
+        if struct_type_member_offset > 0 {
             self.output_file.write("  add ").write(result_register.name_q).write(", ").write(struct_type_member_offset).end_line()
         }
     } else {
         let result_value_type_size = self.get_type_size(instruction.result_value.type)
         self.output_file.write("  mov ")
-        if (result_value_type_size == 8 as i64) {
+        if result_value_type_size == 8 {
             self.output_file.write(result_register.name_q)
-        } else if (result_value_type_size == 4 as i64) {
+        } else if result_value_type_size == 4 {
             self.output_file.write(result_register.name_d)
-        } else if (result_value_type_size == 2 as i64) {
+        } else if result_value_type_size == 2 {
             self.output_file.write(result_register.name_w)
-        } else if (result_value_type_size == 1 as i64) {
+        } else if result_value_type_size == 1 {
             self.output_file.write(result_register.name_b)
         } else {
             self.abort("Invalid state")
@@ -736,18 +736,18 @@ func generate_modulo_instruction(self: @MC_Generator, instruction: @IR_Modulo_In
     self.register_rdx.is_reserved = true
 
     let type_size = self.get_type_size(instruction.result_value.type)
-    if (instruction.result_value.type is IR_UInt_Type) {
-        if (type_size == 1i64) {
+    if instruction.result_value.type is IR_UInt_Type {
+        if type_size == 1i64 {
             self.output_file.write("  mov ").write("ah").write(", ").write(0).end_line()
         } else {
             self.output_file.write("  xor ").write(self.register_rdx.name_q).write(", ").write(self.register_rdx.name_q).end_line()
         }
     } else {
-        if (type_size == 8 as i64) {
+        if type_size == 8 {
             self.output_file.write("  cqo").end_line()
-        } else if (type_size == 4 as i64) {
+        } else if type_size == 4 {
             self.output_file.write("  cdq").end_line()
-        } else if (type_size == 2 as i64) {
+        } else if type_size == 2 {
             self.output_file.write("  cwd").end_line()
         } else {
             self.output_file.write("  cbw").end_line()
@@ -755,20 +755,20 @@ func generate_modulo_instruction(self: @MC_Generator, instruction: @IR_Modulo_In
     }
 
     let right_value = instruction.get_right_value()
-    if (right_value is IR_Constant_Value) {
+    if right_value is IR_Constant_Value {
         let register = self.find_unused_register()
         register.is_reserved = true
         self.generate_load_value(register, right_value)
-        if (instruction.result_value.type is IR_UInt_Type) {
+        if instruction.result_value.type is IR_UInt_Type {
             self.output_file.write("  div ")
         } else {
             self.output_file.write("  idiv ")
         }
-        if (type_size == 8 as i64) {
+        if type_size == 8 {
             self.output_file.write(register.name_q)
-        } else if (type_size == 4 as i64) {
+        } else if type_size == 4 {
             self.output_file.write(register.name_d)
-        } else if (type_size == 2 as i64) {
+        } else if type_size == 2 {
             self.output_file.write(register.name_w)
         } else {
             self.output_file.write(register.name_b)
@@ -776,7 +776,7 @@ func generate_modulo_instruction(self: @MC_Generator, instruction: @IR_Modulo_In
         self.output_file.end_line()
         register.is_reserved = false
     } else {
-        if (instruction.result_value.type is IR_UInt_Type) {
+        if instruction.result_value.type is IR_UInt_Type {
             self.output_file.write("  div ")
         } else {
             self.output_file.write("  idiv ")
@@ -797,20 +797,20 @@ func generate_multiply_instruction(self: @MC_Generator, instruction: @IR_Multipl
 
     let type_size = self.get_type_size(instruction.result_value.type)
     let right_value = instruction.get_right_value()
-    if (right_value is IR_Constant_Value) {
+    if right_value is IR_Constant_Value {
         let register = self.find_unused_register()
         register.is_reserved = true
         self.generate_load_value(register, right_value)
-        if (instruction.result_value.type is IR_UInt_Type) {
+        if instruction.result_value.type is IR_UInt_Type {
             self.output_file.write("  mul ")
         } else {
             self.output_file.write("  imul ")
         }
-        if (type_size == 8 as i64) {
+        if type_size == 8 {
             self.output_file.write(register.name_q)
-        } else if (type_size == 4 as i64) {
+        } else if type_size == 4 {
             self.output_file.write(register.name_d)
-        } else if (type_size == 2 as i64) {
+        } else if type_size == 2 {
             self.output_file.write(register.name_w)
         } else {
             self.output_file.write(register.name_b)
@@ -818,7 +818,7 @@ func generate_multiply_instruction(self: @MC_Generator, instruction: @IR_Multipl
         self.output_file.end_line()
         register.is_reserved = false
     } else {
-        if (instruction.result_value.type is IR_UInt_Type) {
+        if instruction.result_value.type is IR_UInt_Type {
             self.output_file.write("  mul ")
         } else {
             self.output_file.write("  imul ")
@@ -843,7 +843,7 @@ func generate_not_instruction(self: @MC_Generator, instruction: @IR_Not_Instruct
     let value = instruction.get_value()
     self.generate_load_value(result_register, value)
     self.map_variable_value(instruction.result_value, result_register)
-    if (value.type is IR_Boolean_Type) {
+    if value.type is IR_Boolean_Type {
         self.output_file.write("  xor ").write(result_register.name_b).write(", ").write(1)
     } else {
         self.abort(clone("Unsupported value type: ").append(value.type.object_type.name))
@@ -854,9 +854,9 @@ func generate_not_instruction(self: @MC_Generator, instruction: @IR_Not_Instruct
 func generate_phi_instruction(self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {
     let result_variable = instruction.result_value.variable
     let instruction_values_entry = instruction.operand_values.first_entry
-    while (instruction_values_entry != null) {
+    while instruction_values_entry != null {
         let instruction_value = instruction_values_entry.value as @IR_Variable_Value
-        if (result_variable != instruction_value.variable) {
+        if result_variable != instruction_value.variable {
             let result_register = self.find_unused_register()
             self.generate_load_value(result_register, instruction_value)
             self.map_variable_value(instruction.result_value, result_register)
@@ -868,7 +868,7 @@ func generate_phi_instruction(self: @MC_Generator, instruction: @IR_Phi_Instruct
 
 func generate_return_instruction(self: @MC_Generator, instruction: @IR_Return_Instruction) -> Nothing {
     let return_value = instruction.get_return_value()
-    if (return_value != null) {
+    if return_value != null {
         self.generate_load_value(self.register_rax, return_value)
     }
     self.release_all_registers()
@@ -877,23 +877,23 @@ func generate_return_instruction(self: @MC_Generator, instruction: @IR_Return_In
 
 func generate_set_instruction(self: @MC_Generator, instruction: @IR_Set_Instruction) -> Nothing {
     let ir_value = instruction.get_value()
-    if (ir_value is IR_Undefined_Value) {
+    if ir_value is IR_Undefined_Value {
         self.abort(clone("Looks like ").append(instruction.result_value.variable.name).append(" is not properly initialized"))
     }
-    if (ir_value.type is IR_Struct_Type) {
+    if ir_value.type is IR_Struct_Type {
         let mc_value = self.get_value(instruction.result_value)
-        if (mc_value.address == null) {
+        if mc_value.address == null {
             let mc_value_address = self.create_local_variable_address(self.get_type_size(ir_value.type))
             self.map_variable_value(instruction.result_value, mc_value_address)
         }
         self.generate_store_value(ir_value, mc_value.address)
     } else {
         let result_register: @MC_Register
-        if (ir_value is IR_Variable_Value) {
+        if ir_value is IR_Variable_Value {
             let ir_value = ir_value as @IR_Variable_Value
             let mc_value = self.get_value(ir_value)
             result_register = mc_value.register
-            if (result_register != null) {
+            if result_register != null {
                 self.release_register(result_register)
             } else {
                 result_register = self.find_unused_register()
@@ -916,14 +916,14 @@ func generate_store_array_item_instruction(self: @MC_Generator, instruction: @IR
     let ir_value_type_size = self.get_type_size(ir_value.type)
 
     let index_value = instruction.get_index_value()
-    if (index_value is IR_Constant_Value) {
+    if index_value is IR_Constant_Value {
         let index_value = index_value as @IR_Constant_Value
-        if (index_value.literal is Integer_Token == false) {
+        if index_value.literal is not Integer_Token {
             self.abort("Invalid state")
         }
         let index_value = (index_value.literal as @Integer_Token).value
-        if (index_value != 0 as i64) {
-            if (index_value < 0) {
+        if index_value != 0 {
+            if index_value < 0 {
                 self.abort("Invalid state")
             }
             self.output_file.write("  add ").write(address_register.name_q).write(", ").write(index_value * ir_value_type_size).end_line()
@@ -932,30 +932,30 @@ func generate_store_array_item_instruction(self: @MC_Generator, instruction: @IR
         let index_register = self.find_unused_register()
         index_register.is_reserved = true
         self.generate_load_value(index_register, index_value)
-        if (index_value.type is IR_Int16_Type) {
+        if index_value.type is IR_Int16_Type {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
-        } else if (index_value.type is IR_Int32_Type) {
+        } else if index_value.type is IR_Int32_Type {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_d).end_line()
-        } else if (index_value.type is IR_Int64_Type) {
+        } else if index_value.type is IR_Int64_Type {
             \ nothing to do
-        } else if (index_value.type is IR_Int8_Type) {
+        } else if index_value.type is IR_Int8_Type {
             self.output_file.write("  movsx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
-        } else if (index_value.type is IR_IntMax_Type) {
+        } else if index_value.type is IR_IntMax_Type {
             \ nothing to do
-        } else if (index_value.type is IR_UInt16_Type) {
+        } else if index_value.type is IR_UInt16_Type {
             self.output_file.write("  movzx ").write(index_register.name_q).write(", ").write(index_register.name_w).end_line()
-        } else if (index_value.type is IR_UInt32_Type) {
+        } else if index_value.type is IR_UInt32_Type {
             \ nothing to do
-        } else if (index_value.type is IR_UInt64_Type) {
+        } else if index_value.type is IR_UInt64_Type {
             \ nothing to do
-        } else if (index_value.type is IR_UInt8_Type) {
+        } else if index_value.type is IR_UInt8_Type {
             self.output_file.write("  movzx ").write(index_register.name_q).write(", ").write(index_register.name_b).end_line()
-        } else if (index_value.type is IR_UIntMax_Type) {
+        } else if index_value.type is IR_UIntMax_Type {
             \ nothing to do
         } else {
             self.abort(clone("Unsupported index value type: ").append(index_value.type.name))
         }
-        if (ir_value_type_size > 1) {
+        if ir_value_type_size > 1 {
             self.output_file.write("  imul ").write(index_register.name_q).write(", ").write(ir_value_type_size).end_line()
         }
         self.output_file.write("  add ").write(address_register.name_q).write(", ").write(index_register.name_q).end_line()
@@ -969,14 +969,14 @@ func generate_store_array_item_instruction(self: @MC_Generator, instruction: @IR
 
 func generate_store_struct_member_instruction(self: @MC_Generator, instruction: @IR_Store_Struct_Member_Instruction) -> Nothing {
     let ir_struct_pointer_value = instruction.get_struct_pointer_value()
-    if (ir_struct_pointer_value is IR_Variable_Value) {
+    if ir_struct_pointer_value is IR_Variable_Value {
         let ir_struct_pointer_value = ir_struct_pointer_value as @IR_Variable_Value
         let mc_struct_pointer_value = self.get_value(ir_struct_pointer_value)
-        if (mc_struct_pointer_value == null) {
+        if mc_struct_pointer_value == null {
             self.abort("Invalid state")
         }
         let struct_pointer_register = mc_struct_pointer_value.register
-        if (struct_pointer_register == null) {
+        if struct_pointer_register == null {
             struct_pointer_register = self.find_unused_register()
             self.generate_load_value(struct_pointer_register, ir_struct_pointer_value)
             self.map_variable_value(ir_struct_pointer_value, struct_pointer_register)
@@ -984,10 +984,10 @@ func generate_store_struct_member_instruction(self: @MC_Generator, instruction: 
 
         let struct_type_member_offset = self.get_offset(instruction.struct_type_member)
         let ir_value = instruction.get_value()
-        if (ir_value is IR_Variable_Value && ir_value.type is IR_Struct_Type == false) {
+        if ir_value is IR_Variable_Value and ir_value.type is not IR_Struct_Type {
             let ir_value = ir_value as @IR_Variable_Value
             let mc_value = self.get_value(ir_value)
-            if (mc_value.register == null) {
+            if mc_value.register == null {
                 let register = self.find_unused_register()
                 self.generate_load_value(register, ir_value)
                 self.map_variable_value(ir_value, register)
@@ -995,7 +995,7 @@ func generate_store_struct_member_instruction(self: @MC_Generator, instruction: 
         }
         let struct_type_member_address = make @MC_Register_Based_Address(register = struct_pointer_register, offset = struct_type_member_offset)
         self.generate_store_value(ir_value, struct_type_member_address)
-    } else if (ir_struct_pointer_value is IR_Global_Variable_Address_Value) {
+    } else if ir_struct_pointer_value is IR_Global_Variable_Address_Value {
         let struct_pointer_register = self.find_unused_register()
         struct_pointer_register.is_reserved = true
         self.generate_load_value(struct_pointer_register, ir_struct_pointer_value)
@@ -1013,18 +1013,18 @@ func generate_substract_instruction(self: @MC_Generator, instruction: @IR_Substr
     let type_size = self.get_type_size(instruction.result_value.type)
     let left_value = instruction.get_left_value()
     let right_value = instruction.get_right_value()
-    if (left_value is IR_Constant_Value) {
+    if left_value is IR_Constant_Value {
         let left_value = left_value as @IR_Constant_Value
-        if ((left_value.literal as @Integer_Token).value == 0 as i64) {
+        if (left_value.literal as @Integer_Token).value == 0 {
             self.generate_load_value(result_register, right_value)
             self.output_file.write("  neg ")
-            if (type_size == 8 as i64) {
+            if type_size == 8 {
                 self.output_file.write(result_register.name_q)
-            } else if (type_size == 4 as i64) {
+            } else if type_size == 4 {
                 self.output_file.write(result_register.name_d)
-            } else if (type_size == 2 as i64) {
+            } else if type_size == 2 {
                 self.output_file.write(result_register.name_w)
-            } else if (type_size == 1 as i64) {
+            } else if type_size == 1 {
                 self.output_file.write(result_register.name_b)
             } else {
                 self.abort(clone("Unsupported type size: ").append(type_size))
@@ -1036,17 +1036,17 @@ func generate_substract_instruction(self: @MC_Generator, instruction: @IR_Substr
     }
     self.generate_load_value(result_register, left_value)
     self.map_variable_value(instruction.result_value, result_register)
-    if (right_value is IR_Constant_Value) {
+    if right_value is IR_Constant_Value {
         let right_value = right_value as @IR_Constant_Value
-        if ((right_value.literal as @Integer_Token).value == 1 as i64) {
+        if (right_value.literal as @Integer_Token).value == 1 {
             self.output_file.write("  dec ")
-            if (type_size == 8 as i64) {
+            if type_size == 8 {
                 self.output_file.write(result_register.name_q)
-            } else if (type_size == 4 as i64) {
+            } else if type_size == 4 {
                 self.output_file.write(result_register.name_d)
-            } else if (type_size == 2 as i64) {
+            } else if type_size == 2 {
                 self.output_file.write(result_register.name_w)
-            } else if (type_size == 1 as i64) {
+            } else if type_size == 1 {
                 self.output_file.write(result_register.name_b)
             } else {
                 self.abort(clone("Unsupported type size: ").append(type_size))
@@ -1056,13 +1056,13 @@ func generate_substract_instruction(self: @MC_Generator, instruction: @IR_Substr
         }
     }
     self.output_file.write("  sub ")
-    if (type_size == 8 as i64) {
+    if type_size == 8 {
         self.output_file.write(result_register.name_q)
-    } else if (type_size == 4 as i64) {
+    } else if type_size == 4 {
         self.output_file.write(result_register.name_d)
-    } else if (type_size == 2 as i64) {
+    } else if type_size == 2 {
         self.output_file.write(result_register.name_w)
-    } else if (type_size == 1 as i64) {
+    } else if type_size == 1 {
         self.output_file.write(result_register.name_b)
     } else {
         self.abort(clone("Unsupported type size: ").append(type_size))
@@ -1071,130 +1071,130 @@ func generate_substract_instruction(self: @MC_Generator, instruction: @IR_Substr
 }
 
 func generate_load_value(self: @MC_Generator, register: @MC_Register, ir_value: @IR_Value) -> Nothing {
-    if (register.value != null) {
-        if (ir_value is IR_Variable_Value) {
+    if register.value != null {
+        if ir_value is IR_Variable_Value {
             let ir_value = ir_value as @IR_Variable_Value
-            if (ir_value == register.value.ir_variable_value) {
+            if ir_value == register.value.ir_variable_value {
                 return
             }
         }
         self.release_register(register)
     }
-    if (ir_value is IR_Constant_Value) {
+    if ir_value is IR_Constant_Value {
         let ir_value = ir_value as @IR_Constant_Value
-        if (ir_value.literal is Boolean_Token) {
+        if ir_value.literal is Boolean_Token {
             let literal = ir_value.literal as @Boolean_Token
-            if (literal.value) {
+            if literal.value {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(1 as i64).end_line()
             } else {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(0 as i64).end_line()
             }
-        } else if (ir_value.literal is Character_Token) {
+        } else if ir_value.literal is Character_Token {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write((ir_value.literal as @Character_Token).value as i64).end_line()
-        } else if (ir_value.literal is Integer_Token) {
+        } else if ir_value.literal is Integer_Token {
             let literal = ir_value.literal as @Integer_Token
-            if (literal.value == 0 as i64) {
+            if literal.value == 0 {
                 self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
             } else {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(literal.value).end_line()
             }
-        } else if (ir_value.literal is Null_Token) {
+        } else if ir_value.literal is Null_Token {
             self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
-        } else if (ir_value.literal is String_Token) {
+        } else if ir_value.literal is String_Token {
             let mc_string = self.convert_string(ir_value.literal as @String_Token)
             self.output_file.write("  lea ").write(register.name_q).write(", ").write_string_label(mc_string).write("[rip]").write(" # ").write(mc_string.literal.lexeme).end_line()
-        } else if (ir_value.literal is Undefined_Token) {
+        } else if ir_value.literal is Undefined_Token {
             \ do nothing
         } else {
             self.abort(clone("Unsupported literal type: ").append(ir_value.literal.object_type.name))
         }
-    } else if (ir_value is IR_Variable_Value) {
+    } else if ir_value is IR_Variable_Value {
         let ir_value = ir_value as @IR_Variable_Value
         let ir_value_type = ir_value.type
         let mc_value = self.get_value(ir_value)
-        if (mc_value == null) {
+        if mc_value == null {
             self.abort("Invalid state")
         }
         register.loaded_value = mc_value
-        if (mc_value.register != null) {
-            if (ir_value_type is IR_Boolean_Type) {
+        if mc_value.register != null {
+            if ir_value_type is IR_Boolean_Type {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
-            } else if (ir_value_type is IR_Function_Type) {
+            } else if ir_value_type is IR_Function_Type {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type is IR_Int16_Type || ir_value_type is IR_UInt16_Type) {
+            } else if ir_value_type is IR_Int16_Type or ir_value_type is IR_UInt16_Type {
                 self.output_file.write("  mov ").write(register.name_w).write(", ").write(mc_value.register.name_w).end_line()
-            } else if (ir_value_type is IR_Int32_Type || ir_value_type is IR_UInt32_Type) {
+            } else if ir_value_type is IR_Int32_Type or ir_value_type is IR_UInt32_Type {
                 self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.register.name_d).end_line()
-            } else if (ir_value_type is IR_Int64_Type || ir_value_type is IR_UInt64_Type) {
+            } else if ir_value_type is IR_Int64_Type or ir_value_type is IR_UInt64_Type {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type is IR_Int8_Type || ir_value_type is IR_UInt8_Type) {
+            } else if ir_value_type is IR_Int8_Type or ir_value_type is IR_UInt8_Type {
                 self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.register.name_b).end_line()
-            } else if (ir_value_type is IR_IntMax_Type || ir_value_type is IR_UIntMax_Type) {
+            } else if ir_value_type is IR_IntMax_Type or ir_value_type is IR_UIntMax_Type {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type is IR_Pointer_Type) {
+            } else if ir_value_type is IR_Pointer_Type {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
-            } else if (ir_value_type is IR_Unchecked_Array_Type) {
+            } else if ir_value_type is IR_Unchecked_Array_Type {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.register.name_q).end_line()
             } else {
                 self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
             }
-        } else if (mc_value.address == null) {
+        } else if mc_value.address == null {
             self.abort("Invalid state")
-        } else if (ir_value_type is IR_Boolean_Type) {
+        } else if ir_value_type is IR_Boolean_Type {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type is IR_Function_Type) {
+        } else if ir_value_type is IR_Function_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type is IR_Int32_Type || ir_value_type is IR_UInt32_Type) {
+        } else if ir_value_type is IR_Int32_Type or ir_value_type is IR_UInt32_Type {
             self.output_file.write("  mov ").write(register.name_d).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type is IR_Int64_Type || ir_value_type is IR_UInt64_Type) {
+        } else if ir_value_type is IR_Int64_Type or ir_value_type is IR_UInt64_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type is IR_Int8_Type || ir_value_type is IR_UInt8_Type) {
+        } else if ir_value_type is IR_Int8_Type or ir_value_type is IR_UInt8_Type {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type is IR_IntMax_Type || ir_value_type is IR_UIntMax_Type) {
+        } else if ir_value_type is IR_IntMax_Type or ir_value_type is IR_UIntMax_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type is IR_Pointer_Type) {
+        } else if ir_value_type is IR_Pointer_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-        } else if (ir_value_type is IR_Unchecked_Array_Type) {
+        } else if ir_value_type is IR_Unchecked_Array_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(mc_value.address).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
-    } else if (ir_value is IR_Variable_Address_Value) {
+    } else if ir_value is IR_Variable_Address_Value {
         let ir_value = ir_value as @IR_Variable_Address_Value
         let ir_variable_value = ir_value.variable_value
         let mc_value = self.get_value(ir_variable_value)
-        if (mc_value == null) {
+        if mc_value == null {
             self.abort("The required variable value has been discarded already?")
         }
         self.output_file.write("  lea ").write(register.name_q).write(", ").write(mc_value.address).end_line()
-    } else if (ir_value is IR_Global_Variable_Value) {
+    } else if ir_value is IR_Global_Variable_Value {
         let ir_value = ir_value as @IR_Global_Variable_Value
         let ir_value_type = ir_value.type
         let variable_address = make @MC_Global_Variable_Address(ir_variable = ir_value.variable)
-        if (ir_value_type is IR_Boolean_Type) {
+        if ir_value_type is IR_Boolean_Type {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(variable_address).end_line()
-        } else if (ir_value_type is IR_Function_Type) {
+        } else if ir_value_type is IR_Function_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
-        } else if (ir_value_type is IR_Int32_Type || ir_value_type is IR_UInt32_Type) {
+        } else if ir_value_type is IR_Int32_Type or ir_value_type is IR_UInt32_Type {
             self.output_file.write("  mov ").write(register.name_d).write(", ").write(variable_address).end_line()
-        } else if (ir_value_type is IR_Int64_Type || ir_value_type is IR_UInt64_Type) {
+        } else if ir_value_type is IR_Int64_Type or ir_value_type is IR_UInt64_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
-        } else if (ir_value_type is IR_Int8_Type || ir_value_type is IR_UInt8_Type) {
+        } else if ir_value_type is IR_Int8_Type or ir_value_type is IR_UInt8_Type {
             self.output_file.write("  mov ").write(register.name_b).write(", ").write(variable_address).end_line()
-        } else if (ir_value_type is IR_IntMax_Type || ir_value_type is IR_UIntMax_Type) {
+        } else if ir_value_type is IR_IntMax_Type or ir_value_type is IR_UIntMax_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
-        } else if (ir_value_type is IR_Pointer_Type) {
+        } else if ir_value_type is IR_Pointer_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
-        } else if (ir_value_type is IR_Unchecked_Array_Type) {
+        } else if ir_value_type is IR_Unchecked_Array_Type {
             self.output_file.write("  mov ").write(register.name_q).write(", ").write(variable_address).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
-    } else if (ir_value is IR_Global_Variable_Address_Value) {
+    } else if ir_value is IR_Global_Variable_Address_Value {
         let ir_value = ir_value as @IR_Global_Variable_Address_Value
         let variable_address = make @MC_Global_Variable_Address(ir_variable = ir_value.variable)
         self.output_file.write("  lea ").write(register.name_q).write(", ").write(variable_address).end_line()
-    } else if (ir_value is IR_Function_Address_Value) {
+    } else if ir_value is IR_Function_Address_Value {
         let ir_value = ir_value as @IR_Function_Address_Value
         self.output_file.write("  lea ").write(register.name_q).write(", ").write_function_label(ir_value.function).write("[rip]").end_line()
     } else {
@@ -1204,58 +1204,58 @@ func generate_load_value(self: @MC_Generator, register: @MC_Register, ir_value: 
 
 func generate_store_value(self: @MC_Generator, ir_value: @IR_Value, address: @MC_Address) -> Nothing {
     let ir_value_type = ir_value.type
-    if (ir_value is IR_Variable_Value && ir_value_type is IR_Struct_Type == false) {
+    if ir_value is IR_Variable_Value and ir_value_type is not IR_Struct_Type {
         let mc_value = self.get_value(ir_value as @IR_Variable_Value)
-        if (mc_value.register == null) {
+        if mc_value.register == null {
             let register = self.find_unused_register()
             self.generate_load_value(register, ir_value)
             self.map_variable_value(mc_value.ir_variable_value, register)
         }
     }
-    if (ir_value is IR_Constant_Value && (ir_value as @IR_Constant_Value).literal is String_Token) {
+    if ir_value is IR_Constant_Value and (ir_value as @IR_Constant_Value).literal is String_Token {
         let register = self.find_unused_register()
         self.generate_load_value(register, ir_value)
         self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
-    } else if (ir_value is IR_Global_Variable_Value) {
+    } else if ir_value is IR_Global_Variable_Value {
         let register = self.find_unused_register()
         self.generate_load_value(register, ir_value)
-        if (ir_value_type is IR_Int32_Type) {
+        if ir_value_type is IR_Int32_Type {
             self.output_file.write("  mov ").write(address).write(", ").write(register.name_d).end_line()
-        } else if (ir_value_type is IR_Pointer_Type) {
+        } else if ir_value_type is IR_Pointer_Type {
             self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
-    } else if (ir_value is IR_Function_Address_Value) {
+    } else if ir_value is IR_Function_Address_Value {
         let register = self.find_unused_register()
         self.generate_load_value(register, ir_value)
-        if (ir_value_type is IR_Function_Type) {
+        if ir_value_type is IR_Function_Type {
             self.output_file.write("  mov ").write(address).write(", ").write(register.name_q).end_line()
         } else {
             self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
         }
-    } else if (ir_value_type is IR_Int16_Type || ir_value_type is IR_UInt16_Type) {
+    } else if ir_value_type is IR_Int16_Type or ir_value_type is IR_UInt16_Type {
         self.output_file.write("  mov WORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_Int32_Type || ir_value_type is IR_UInt32_Type) {
+    } else if ir_value_type is IR_Int32_Type or ir_value_type is IR_UInt32_Type {
         self.output_file.write("  mov DWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_Int64_Type || ir_value_type is IR_UInt64_Type) {
+    } else if ir_value_type is IR_Int64_Type or ir_value_type is IR_UInt64_Type {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_Int8_Type || ir_value_type is IR_UInt8_Type) {
+    } else if ir_value_type is IR_Int8_Type or ir_value_type is IR_UInt8_Type {
         self.output_file.write("  mov BYTE PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_IntMax_Type || ir_value_type is IR_UIntMax_Type) {
+    } else if ir_value_type is IR_IntMax_Type or ir_value_type is IR_UIntMax_Type {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_Pointer_Type) {
+    } else if ir_value_type is IR_Pointer_Type {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_Null_Type) {
+    } else if ir_value_type is IR_Null_Type {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", 0").end_line()
-    } else if (ir_value_type is IR_Boolean_Type) {
+    } else if ir_value_type is IR_Boolean_Type {
         self.output_file.write("  mov BYTE PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_Struct_Type) {
+    } else if ir_value_type is IR_Struct_Type {
         let struct_type = ir_value_type as @IR_Struct_Type
         let destination_register: @MC_Register
         let destination_address: @MC_Register_Based_Address
         let destination_address_extra_offset: i64
-        if (address is MC_Register_Based_Address) {
+        if address is MC_Register_Based_Address {
             let address = address as @MC_Register_Based_Address
             destination_register = null
             destination_address = make @MC_Register_Based_Address(register = address.register)
@@ -1267,17 +1267,17 @@ func generate_store_value(self: @MC_Generator, ir_value: @IR_Value, address: @MC
             destination_address = make @MC_Register_Based_Address(register = destination_register)
             destination_address_extra_offset = 0
         }
-        if (ir_value is IR_Variable_Value) {
+        if ir_value is IR_Variable_Value {
             let ir_value = ir_value as @IR_Variable_Value
             let mc_value = self.get_value(ir_value)
-            if (mc_value == null) {
+            if mc_value == null {
                 self.abort("Invalid state")
             }
             let source_register: @MC_Register
             let source_address: @MC_Register_Based_Address
             let source_address_extra_offset: i64
             let mc_value_address = mc_value.address
-            if (mc_value_address is MC_Register_Based_Address) {
+            if mc_value_address is MC_Register_Based_Address {
                 let mc_value_address = mc_value_address as @MC_Register_Based_Address
                 source_register = null
                 source_address = make @MC_Register_Based_Address(register = mc_value_address.register)
@@ -1292,29 +1292,29 @@ func generate_store_value(self: @MC_Generator, ir_value: @IR_Value, address: @MC
             let ir_value_type_size = self.get_type_size(ir_value_type)
             let data_register = self.find_unused_register()
             data_register.is_reserved = true
-            let copied_bytes = 0 as i64
-            while (ir_value_type_size - copied_bytes >= 8) {
+            let copied_bytes = 0i64
+            while ir_value_type_size - copied_bytes >= 8 {
                 source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_q).write(", ").write(source_address).end_line()
                 destination_address.offset = destination_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_q).end_line()
                 copied_bytes = copied_bytes + 8
             }
-            if (ir_value_type_size - copied_bytes >= 4) {
+            if ir_value_type_size - copied_bytes >= 4 {
                 source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_d).write(", ").write(source_address).end_line()
                 destination_address.offset = destination_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_d).end_line()
                 copied_bytes = copied_bytes + 4
             }
-            if (ir_value_type_size - copied_bytes >= 2) {
+            if ir_value_type_size - copied_bytes >= 2 {
                 source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_w).write(", ").write(source_address).end_line()
                 destination_address.offset = destination_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(destination_address).write(", ").write(data_register.name_w).end_line()
                 copied_bytes = copied_bytes + 2
             }
-            if (ir_value_type_size - copied_bytes == 1 as i64) {
+            if ir_value_type_size - copied_bytes == 1 {
                 source_address.offset = source_address_extra_offset + copied_bytes
                 self.output_file.write("  mov ").write(data_register.name_b).write(", ").write(source_address).end_line()
                 destination_address.offset = destination_address_extra_offset + copied_bytes
@@ -1322,21 +1322,21 @@ func generate_store_value(self: @MC_Generator, ir_value: @IR_Value, address: @MC
                 copied_bytes = copied_bytes + 1
             }
             data_register.is_reserved = false
-            if (source_register != null) {
+            if source_register != null {
                 source_register.is_reserved = false
             }
-        } else if (ir_value is IR_Struct_Literal_Value) {
+        } else if ir_value is IR_Struct_Literal_Value {
             destination_address.offset = destination_address_extra_offset
             self.generate_store_struct_literal_value(ir_value as @IR_Struct_Literal_Value, ir_value.type as @IR_Struct_Type, destination_address)
         } else {
             self.abort(clone("Unsupported value: ").append(ir_value.object_type.name))
         }
-        if (destination_register != null) {
+        if destination_register != null {
             destination_register.is_reserved = false
         }
-    } else if (ir_value_type is IR_Function_Type) {
+    } else if ir_value_type is IR_Function_Type {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
-    } else if (ir_value_type is IR_Unchecked_Array_Type) {
+    } else if ir_value_type is IR_Unchecked_Array_Type {
         self.output_file.write("  mov QWORD PTR ").write(address).write(", ").write_operand(self, ir_value).end_line()
     } else {
         self.abort(clone("Unsupported value type: ").append(ir_value_type.object_type.name))
@@ -1344,16 +1344,16 @@ func generate_store_value(self: @MC_Generator, ir_value: @IR_Value, address: @MC
 }
 
 func generate_store_struct_literal_value(self: @MC_Generator, ir_value: @IR_Struct_Literal_Value, struct_type: @IR_Struct_Type, address: @MC_Register_Based_Address) -> Nothing {
-    if (struct_type.super_type != null) {
+    if struct_type.super_type != null {
         self.generate_store_struct_literal_value(ir_value, struct_type.super_type, address)
     }
     let struct_type_members_item = struct_type.members.first_item
-    while (struct_type_members_item != null) {
+    while struct_type_members_item != null {
         let struct_type_member = struct_type_members_item.data
         let struct_type_member_value = ir_value.get_member_value(struct_type_member)
-        if (struct_type_member_value != null) {
+        if struct_type_member_value != null {
             self.output_file.write("  #     .").write(struct_type_member.name).write(" = ").write(struct_type_member_value, false).end_line()
-            if (struct_type_member_value.type is IR_Undefined_Type == false) {
+            if struct_type_member_value.type is not IR_Undefined_Type {
                 let struct_type_member_offset = self.get_offset(struct_type_member)
                 address.offset = address.offset + struct_type_member_offset
                 self.generate_store_value(struct_type_member_value, address)
@@ -1367,20 +1367,20 @@ func generate_store_struct_literal_value(self: @MC_Generator, ir_value: @IR_Stru
 }
 
 func get_offset(self: @MC_Generator, struct_type_member: @IR_Struct_Type_Member) -> i64 {
-    let offset = 0 as i64
+    let offset = 0i64
     let struct_type = struct_type_member.struct_type
-    if (struct_type.super_type != null) {
+    if struct_type.super_type != null {
         offset = self.get_type_size(struct_type.super_type)
     }
     let current_struct_type_member_item = struct_type.members.first_item
-    while (current_struct_type_member_item != null) {
+    while current_struct_type_member_item != null {
         let current_struct_type_member = current_struct_type_member_item.data
         let current_struct_type_member_type_size = self.get_type_size(current_struct_type_member.type)
         let current_struct_type_member_alignment = self.get_type_alignment(current_struct_type_member_type_size)
-        if (current_struct_type_member_alignment > 1 && offset // current_struct_type_member_alignment != 0i64) {
+        if current_struct_type_member_alignment > 1 and offset // current_struct_type_member_alignment != 0i64 {
             offset = offset + current_struct_type_member_alignment - offset // current_struct_type_member_alignment
         }
-        if (current_struct_type_member == struct_type_member) {
+        if current_struct_type_member == struct_type_member {
             return offset
         }
         offset = offset + current_struct_type_member_type_size
@@ -1390,58 +1390,58 @@ func get_offset(self: @MC_Generator, struct_type_member: @IR_Struct_Type_Member)
 }
 
 func write_operand(file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -> @FILE {
-    if (ir_value is IR_Constant_Value) {
+    if ir_value is IR_Constant_Value {
         let ir_value = ir_value as @IR_Constant_Value
-        if (ir_value.literal is Boolean_Token) {
-            if ((ir_value.literal as @Boolean_Token).value) {
+        if ir_value.literal is Boolean_Token {
+            if (ir_value.literal as @Boolean_Token).value {
                 return file.write(1)
             }
             return file.write(0)
         }
-        if (ir_value.literal is Character_Token) {
+        if ir_value.literal is Character_Token {
             return file.write((ir_value.literal as @Character_Token).value as isize)
         }
-        if (ir_value.literal is Integer_Token) {
+        if ir_value.literal is Integer_Token {
             return file.write((ir_value.literal as @Integer_Token).value)
         }
-        if (ir_value.literal is Null_Token) {
+        if ir_value.literal is Null_Token {
             return file.write(0)
         }
         generator.abort(clone("Unsupported constant literal: ").append(ir_value.literal.object_type.name))
     }
-    if (ir_value is IR_Variable_Value) {
+    if ir_value is IR_Variable_Value {
         let ir_value = ir_value as @IR_Variable_Value
         let mc_value = generator.get_value(ir_value)
-        if (mc_value == null) {
+        if mc_value == null {
             generator.abort("Invalid state")
         }
         let value_type_size = generator.get_type_size(ir_value.type)
-        if (mc_value.register != null) {
-            if (value_type_size == 8 as i64) {
+        if mc_value.register != null {
+            if value_type_size == 8 {
                 return file.write(mc_value.register.name_q)
             }
-            if (value_type_size == 4 as i64) {
+            if value_type_size == 4 {
                 return file.write(mc_value.register.name_d)
             }
-            if (value_type_size == 2 as i64) {
+            if value_type_size == 2 {
                 return file.write(mc_value.register.name_w)
             }
-            if (value_type_size == 1 as i64) {
+            if value_type_size == 1 {
                 return file.write(mc_value.register.name_b)
             }
             generator.abort(clone("Unsupported type size: ").append(value_type_size))
         }
-        if (mc_value.address != null) {
-            if (value_type_size == 8 as i64) {
+        if mc_value.address != null {
+            if value_type_size == 8 {
                 return file.write("QWORD PTR ").write(mc_value.address)
             }
-            if (value_type_size == 4 as i64) {
+            if value_type_size == 4 {
                 return file.write("DWORD PTR ").write(mc_value.address)
             }
-            if (value_type_size == 2 as i64) {
+            if value_type_size == 2 {
                 return file.write("WORD PTR ").write(mc_value.address)
             }
-            if (value_type_size == 1 as i64) {
+            if value_type_size == 1 {
                 return file.write("BYTE PTR ").write(mc_value.address)
             }
             generator.abort(clone("Unsupported type size: ").append(value_type_size))
@@ -1490,7 +1490,7 @@ struct MC_Generator {
 
 func create_mc_generator(output_file_path: @String) -> @MC_Generator {
     let output_file: @FILE = undefined
-    if (output_file_path.equals("-")) {
+    if output_file_path.equals("-") {
         output_file = stdout
     } else {
         output_file = fopen(output_file_path.data, "w".data)
@@ -1504,12 +1504,12 @@ func create_mc_generator(output_file_path: @String) -> @MC_Generator {
 }
 
 func reset(self: @MC_Generator) -> Nothing {
-    while (self.first_value != null) {
+    while self.first_value != null {
         let value = self.first_value
         self.first_value = value.next_value
         value.prev_value = null
         value.next_value = null
-        if (value.register != null) {
+        if value.register != null {
             self.abort("Invalid state")
         }
     }
@@ -1518,49 +1518,49 @@ func reset(self: @MC_Generator) -> Nothing {
 }
 
 func find_unused_register(self: @MC_Generator) -> @MC_Register {
-    if (self.register_rax.is_reserved == false && self.register_rax.value == null) {
+    if not self.register_rax.is_reserved and self.register_rax.value == null {
         return self.register_rax
     }
-    if (self.register_rbx.is_reserved == false && self.register_rbx.value == null) {
+    if not self.register_rbx.is_reserved and self.register_rbx.value == null {
         return self.register_rbx
     }
-    if (self.register_r15.is_reserved == false && self.register_r15.value == null) {
+    if not self.register_r15.is_reserved and self.register_r15.value == null {
         return self.register_r15
     }
-    if (self.register_r14.is_reserved == false && self.register_r14.value == null) {
+    if not self.register_r14.is_reserved and self.register_r14.value == null {
         return self.register_r14
     }
-    if (self.register_r13.is_reserved == false && self.register_r13.value == null) {
+    if not self.register_r13.is_reserved and self.register_r13.value == null {
         return self.register_r13
     }
-    if (self.register_r12.is_reserved == false && self.register_r12.value == null) {
+    if not self.register_r12.is_reserved and self.register_r12.value == null {
         return self.register_r12
     }
-    if (self.register_r11.is_reserved == false && self.register_r11.value == null) {
+    if not self.register_r11.is_reserved and self.register_r11.value == null {
         return self.register_r11
     }
-    if (self.register_r10.is_reserved == false && self.register_r10.value == null) {
+    if not self.register_r10.is_reserved and self.register_r10.value == null {
         return self.register_r10
     }
-    if (self.register_r9.is_reserved == false && self.register_r9.value == null) {
+    if not self.register_r9.is_reserved and self.register_r9.value == null {
         return self.register_r9
     }
-    if (self.register_r8.is_reserved == false && self.register_r8.value == null) {
+    if not self.register_r8.is_reserved and self.register_r8.value == null {
         return self.register_r8
     }
-    if (self.register_rcx.is_reserved == false && self.register_rcx.value == null) {
+    if not self.register_rcx.is_reserved and self.register_rcx.value == null {
         return self.register_rcx
     }
-    if (self.register_rdx.is_reserved == false && self.register_rdx.value == null) {
+    if not self.register_rdx.is_reserved and self.register_rdx.value == null {
         return self.register_rdx
     }
-    if (self.register_rsi.is_reserved == false && self.register_rsi.value == null) {
+    if not self.register_rsi.is_reserved and self.register_rsi.value == null {
         return self.register_rsi
     }
-    if (self.register_rdi.is_reserved == false && self.register_rdi.value == null) {
+    if not self.register_rdi.is_reserved and self.register_rdi.value == null {
         return self.register_rdi
     }
-    if (self.register_rbx.is_reserved == false && self.register_rbx.value == self.register_rbx.loaded_value) {
+    if not self.register_rbx.is_reserved and self.register_rbx.value == self.register_rbx.loaded_value {
         self.release_register(self.register_rbx)
         return self.register_rbx
     }
@@ -1573,7 +1573,7 @@ func create_mc_value(self: @MC_Generator, ir_instruction: @IR_Instruction) -> No
         ir_variable_value = ir_instruction.result_value
         ir_instruction = ir_instruction
     )
-    if (self.first_value == null) {
+    if self.first_value == null {
         self.first_value = mc_value
     } else {
         self.last_value.next_value = mc_value
@@ -1582,13 +1582,13 @@ func create_mc_value(self: @MC_Generator, ir_instruction: @IR_Instruction) -> No
 }
 
 func map_variable_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Value, address: @MC_Address) -> Nothing {
-    if (address == null) {
+    if address == null {
         self.abort("Invalid state")
     }
     let mc_value = self.first_value
-    while (mc_value != null) {
-        if (mc_value.ir_variable_value.variable == ir_variable_value.variable) {
-            if (mc_value.address != null) {
+    while mc_value != null {
+        if mc_value.ir_variable_value.variable == ir_variable_value.variable {
+            if mc_value.address != null {
                 self.abort("Invalid state")
             }
             mc_value.address = address
@@ -1599,16 +1599,16 @@ func map_variable_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Val
 
 func map_variable_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Value, register: @MC_Register) -> @MC_Value {
     let mc_value = self.first_value
-    while (mc_value != null && mc_value.ir_variable_value != ir_variable_value) {
-        if (mc_value.ir_variable_value.variable == ir_variable_value.variable && mc_value.register != null) {
+    while mc_value != null and mc_value.ir_variable_value != ir_variable_value {
+        if mc_value.ir_variable_value.variable == ir_variable_value.variable and mc_value.register != null {
             self.release_register(mc_value.register)
         }
         mc_value = mc_value.next_value
     }
-    if (mc_value == null) {
+    if mc_value == null {
         self.abort("Invalid state")
     }
-    if (register.value != null) {
+    if register.value != null {
         self.abort(clone("Register ").append(register.name_q).append(" already mapped to variable: ").append(register.value.ir_variable_value.variable.name).append('.').append(register.value.ir_variable_value.version))
     }
     mc_value.register = register
@@ -1618,7 +1618,7 @@ func map_variable_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Val
 
 func get_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Value) -> @MC_Value {
     let mc_value = self.first_value
-    while (mc_value != null && mc_value.ir_variable_value != ir_variable_value) {
+    while mc_value != null and mc_value.ir_variable_value != ir_variable_value {
         mc_value = mc_value.next_value
     }
     return mc_value
@@ -1626,16 +1626,16 @@ func get_value(self: @MC_Generator, ir_variable_value: @IR_Variable_Value) -> @M
 
 func spill_local_variable(self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
     let variable_type_size = self.get_type_size(mc_value.ir_variable_value.type)
-    if (mc_value.address == null) {
+    if mc_value.address == null {
         self.map_variable_value(mc_value.ir_variable_value, self.create_local_variable_address(variable_type_size))
     }
-    if (variable_type_size == 8 as i64) {
+    if variable_type_size == 8 {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_q).end_line()
-    } else if (variable_type_size == 4 as i64) {
+    } else if variable_type_size == 4 {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_d).end_line()
-    } else if (variable_type_size == 2 as i64) {
+    } else if variable_type_size == 2 {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_w).end_line()
-    } else if (variable_type_size == 1 as i64) {
+    } else if variable_type_size == 1 {
         self.output_file.write("  mov ").write(mc_value.address).write(", ").write(mc_value.register.name_b).end_line()
     }
 }
@@ -1643,11 +1643,11 @@ func spill_local_variable(self: @MC_Generator, mc_value: @MC_Value) -> Nothing {
 func create_local_variable_address(self: @MC_Generator, variable_type_size: i64) -> @MC_Local_Variable_Address {
     let offset = 0i64
     let mc_value = self.first_value
-    while (mc_value != null) {
+    while mc_value != null {
         let mc_value_address = mc_value.address
-        if (mc_value_address != null && mc_value_address is MC_Local_Variable_Address) {
+        if mc_value_address != null and mc_value_address is MC_Local_Variable_Address {
             let mc_value_address = mc_value_address as @MC_Local_Variable_Address
-            if (offset > mc_value_address.offset) {
+            if offset > mc_value_address.offset {
                 offset = mc_value_address.offset
             }
         }
@@ -1655,10 +1655,10 @@ func create_local_variable_address(self: @MC_Generator, variable_type_size: i64)
     }
     offset = offset - variable_type_size
     let variable_alignment = self.get_type_alignment(variable_type_size)
-    if (variable_alignment > 1 && offset // variable_alignment != 0i64) {
+    if variable_alignment > 1 and offset // variable_alignment != 0i64 {
         offset = offset - variable_alignment - offset // variable_alignment
     }
-    if (-offset > self.stack_frame_size) {
+    if -offset > self.stack_frame_size {
         self.stack_frame_size = -offset
     }
     return make @MC_Local_Variable_Address(register = self.register_rbp, offset = offset)
@@ -1688,15 +1688,15 @@ func release_all_registers(self: @MC_Generator) -> Nothing {
 
 func release_register(self: @MC_Generator, register: @MC_Register) -> Nothing {
     let mc_value = register.value
-    if (mc_value != null) {
-        if (register.loaded_value != mc_value) {
-            let persist_value = mc_value.ir_variable_value.is_used() == false
+    if mc_value != null {
+        if register.loaded_value != mc_value {
+            let persist_value = not mc_value.ir_variable_value.is_used()
 
-            if (persist_value == false) {
+            if not persist_value {
                 let ir_value_user_instructions_item = mc_value.ir_variable_value.user_instructions.first_item
-                while (ir_value_user_instructions_item != null) {
+                while ir_value_user_instructions_item != null {
                     let ir_value_user_instruction = ir_value_user_instructions_item.data
-                    if (ir_value_user_instruction.is_generated == false || ir_value_user_instruction is IR_Phi_Instruction) {
+                    if not ir_value_user_instruction.is_generated or ir_value_user_instruction is IR_Phi_Instruction {
                         persist_value = true
                         break
                     }
@@ -1704,7 +1704,7 @@ func release_register(self: @MC_Generator, register: @MC_Register) -> Nothing {
                 }
             }
 
-            if (persist_value) {
+            if persist_value {
                 self.spill_local_variable(mc_value)
             }
         }
@@ -1716,33 +1716,33 @@ func release_register(self: @MC_Generator, register: @MC_Register) -> Nothing {
 }
 
 func discard_used_values(self: @MC_Generator) -> i64 {
-    let removed_values = 0 as i64
+    let removed_values = 0i64
 
     let mc_value = self.last_value
-    while (mc_value != null) {
-        if (mc_value.ir_instruction.is_generated && mc_value.ir_instruction.parent_block.is_being_generated && mc_value.ir_variable_value.is_used()) {
+    while mc_value != null {
+        if mc_value.ir_instruction.is_generated and mc_value.ir_instruction.parent_block.is_being_generated and mc_value.ir_variable_value.is_used() {
             let discard_value = true
             let value_is_phi_argument = false
 
             let user_instructions_item = mc_value.ir_variable_value.user_instructions.first_item
-            while (discard_value && user_instructions_item != null) {
+            while discard_value and user_instructions_item != null {
                 let user_instruction = user_instructions_item.data
-                if (user_instruction is IR_Phi_Instruction) {
+                if user_instruction is IR_Phi_Instruction {
                     value_is_phi_argument = true
                 }
-                if (user_instruction.is_generated == false) {
+                if not user_instruction.is_generated {
                     \ there is at least one more user instruction that requires this value
                     discard_value = false
-                } else if (user_instruction.parent_block != mc_value.ir_instruction.parent_block && mc_value.ir_instruction.parent_block.is_generated == false) {
+                } else if user_instruction.parent_block != mc_value.ir_instruction.parent_block and not mc_value.ir_instruction.parent_block.is_generated {
                     \ there is at least one user instruction in another block that requires this value and the value's parent block hasn't been generated yet
                     discard_value = false
                 }
                 user_instructions_item = user_instructions_item.next_item
             }
 
-            if (discard_value) {
-                if (mc_value.register != null) {
-                    if (value_is_phi_argument) {
+            if discard_value {
+                if mc_value.register != null {
+                    if value_is_phi_argument {
                         self.spill_local_variable(mc_value)
                     }
 
@@ -1751,19 +1751,19 @@ func discard_used_values(self: @MC_Generator) -> i64 {
                 }
 
                 \ remove
-                if (mc_value.prev_value != null) {
+                if mc_value.prev_value != null {
                     mc_value.prev_value.next_value = mc_value.next_value
                 } else {
                     self.first_value = mc_value.next_value
                 }
-                if (mc_value.next_value != null) {
+                if mc_value.next_value != null {
                     mc_value.next_value.prev_value = mc_value.prev_value
                 } else {
                     self.last_value = mc_value.prev_value
                 }
                 removed_values = removed_values + 1
 
-                if (self.output_debug_comments) {
+                if self.output_debug_comments {
                     self.output_file.write("  # [discarded value]: ").write(mc_value.ir_variable_value.variable.name).write('.').write(mc_value.ir_variable_value.version).end_line()
                 }
             }
@@ -1777,19 +1777,19 @@ func discard_used_values(self: @MC_Generator) -> i64 {
 
 func is_used(self: @IR_Value) -> bool {
     let user_instructions_item = self.user_instructions.first_item
-    while (user_instructions_item != null) {
+    while user_instructions_item != null {
         let user_instruction = user_instructions_item.data
-        if (user_instruction.is_generated == false) {
+        if not user_instruction.is_generated {
             return false
         }
         user_instructions_item = user_instructions_item.next_item
     }
     let links_item = self.links.first_item
-    while (links_item != null) {
+    while links_item != null {
         let link = links_item.data
-        if (link is IR_Required_By_Value_Link) {
+        if link is IR_Required_By_Value_Link {
             let link = link as @IR_Required_By_Value_Link
-            if (link.value.is_used() == false) {
+            if not link.value.is_used() {
                 return false
             }
         }
@@ -1803,18 +1803,18 @@ func output_live_values(self: @MC_Generator) -> Nothing {
 }
 
 func output_live_values(self: @MC_Generator, output_file: @FILE) -> Nothing {
-    if (self.output_debug_comments == false) {
+    if not self.output_debug_comments {
         return
     }
     output_file.write("  # [live values]: ")
     let mc_value = self.first_value
-    while (mc_value != null) {
-        if (mc_value.ir_instruction.is_generated) {
+    while mc_value != null {
+        if mc_value.ir_instruction.is_generated {
             output_file.write(mc_value.ir_variable_value.variable.name).write('.').write(mc_value.ir_variable_value.version)
-            if (mc_value.register != null) {
+            if mc_value.register != null {
                 output_file.write(':').write(mc_value.register.name_q)
             }
-            if (mc_value.address != null) {
+            if mc_value.address != null {
                 output_file.write(':').write(mc_value.address)
             }
             output_file.write(' ')
@@ -1825,7 +1825,7 @@ func output_live_values(self: @MC_Generator, output_file: @FILE) -> Nothing {
 }
 
 func output_used_registers(self: @MC_Generator) -> Nothing {
-    if (true) {
+    if true {
         return
     }
     self.output_file.write("  # [used registers]: ")
@@ -1847,7 +1847,7 @@ func output_used_registers(self: @MC_Generator) -> Nothing {
 }
 
 func output_used_register(self: @MC_Generator, register: @MC_Register) -> Nothing {
-    if (register.value != null) {
+    if register.value != null {
         self.output_file.write(register.name_q).write(':').write(register.value.ir_variable_value.variable.name).write('.').write(register.value.ir_variable_value.version).write(' ')
     }
 }
@@ -1934,16 +1934,16 @@ struct MC_Address: Object {
 }
 
 func write(file: @FILE, address: @MC_Address) -> @FILE {
-    if (address is MC_Global_Variable_Address) {
+    if address is MC_Global_Variable_Address {
         let address = address as @MC_Global_Variable_Address
         return file.write(address.ir_variable.name).write("[rip]")
     }
-    if (address is MC_Register_Based_Address) {
+    if address is MC_Register_Based_Address {
         let address = address as @MC_Register_Based_Address
         file.write('[').write(address.register.name_q)
-        if (address.offset > 0) {
+        if address.offset > 0 {
             file.write('+').write(address.offset)
-        } else if (address.offset < 0) {
+        } else if address.offset < 0 {
             file.write(address.offset)
         }
         return file.write(']')
@@ -1964,48 +1964,48 @@ struct MC_Local_Variable_Address: MC_Register_Based_Address {
 }
 
 func get_type_size(self: @MC_Generator, ir_type: @IR_Type) -> i64 {
-    if (ir_type is IR_Boolean_Type) {
+    if ir_type is IR_Boolean_Type {
         return 1
-    } else if (ir_type is IR_Function_Type) {
+    } else if ir_type is IR_Function_Type {
         return 8
-    } else if (ir_type is IR_Int16_Type || ir_type is IR_UInt16_Type) {
+    } else if ir_type is IR_Int16_Type or ir_type is IR_UInt16_Type {
         return 2
-    } else if (ir_type is IR_Int32_Type || ir_type is IR_UInt32_Type) {
+    } else if ir_type is IR_Int32_Type or ir_type is IR_UInt32_Type {
         return 4
-    } else if (ir_type is IR_Int64_Type || ir_type is IR_UInt64_Type) {
+    } else if ir_type is IR_Int64_Type or ir_type is IR_UInt64_Type {
         return 8
-    } else if (ir_type is IR_Int8_Type || ir_type is IR_UInt8_Type) {
+    } else if ir_type is IR_Int8_Type or ir_type is IR_UInt8_Type {
         return 1
-    } else if (ir_type is IR_IntMax_Type || ir_type is IR_UIntMax_Type) {
+    } else if ir_type is IR_IntMax_Type or ir_type is IR_UIntMax_Type {
         return 8
-    } else if (ir_type is IR_Null_Type) {
+    } else if ir_type is IR_Null_Type {
         return 8
-    } else if (ir_type is IR_Pointer_Type) {
+    } else if ir_type is IR_Pointer_Type {
         return 8
-    } else if (ir_type is IR_Struct_Type) {
+    } else if ir_type is IR_Struct_Type {
         let ir_type = ir_type as @IR_Struct_Type
-        let size = 0 as i64
-        if (ir_type.super_type != null) {
+        let size = 0i64
+        if ir_type.super_type != null {
             size = size + self.get_type_size(ir_type.super_type)
         }
         let struct_type_members = ir_type.members.create_iterator()
-        while (struct_type_members.has_next()) {
+        while struct_type_members.has_next() {
             let struct_type_member = struct_type_members.next()
             let struct_type_member_type_size = self.get_type_size(struct_type_member.type)
             let struct_type_member_alignment = self.get_type_alignment(struct_type_member_type_size)
-            if (struct_type_member_alignment > 1 && size // struct_type_member_alignment != 0i64) {
+            if struct_type_member_alignment > 1 and size // struct_type_member_alignment != 0i64 {
                 size = size + struct_type_member_alignment - size // struct_type_member_alignment
             }
             size = size + struct_type_member_type_size
         }
         let type_alignment = self.get_type_alignment(size)
-        if (type_alignment > 1 && size // type_alignment != 0i64) {
+        if type_alignment > 1 and size // type_alignment != 0i64 {
             size = size + type_alignment - size // type_alignment
         }
         return size
-    } else if (ir_type is IR_Unchecked_Array_Type) {
+    } else if ir_type is IR_Unchecked_Array_Type {
         return 8
-    } else if (ir_type is IR_Fixed_Array_Type) {
+    } else if ir_type is IR_Fixed_Array_Type {
         let ir_type = ir_type as @IR_Fixed_Array_Type
         return self.get_type_size(ir_type.item_type) * ir_type.size
     }
@@ -2013,13 +2013,13 @@ func get_type_size(self: @MC_Generator, ir_type: @IR_Type) -> i64 {
 }
 
 func get_type_alignment(self: @MC_Generator, type_size: i64) -> i64 {
-    if (type_size == 1i64) {
+    if type_size == 1i64 {
         return 1
     }
-    if (type_size == 2i64) {
+    if type_size == 2i64 {
         return 2
     }
-    if (type_size <= 4i64) {
+    if type_size <= 4i64 {
         return 4
     }
     return 8
@@ -2033,7 +2033,7 @@ struct MC_String {
 func convert_string(self: @MC_Generator, literal: @String_Token) -> @MC_String {
     self.strings.for_each_list_item() {
         let string = list_item.data
-        if (string.literal.lexeme.equals(literal.lexeme)) {
+        if string.literal.lexeme.equals(literal.lexeme) {
             return string
         }
     }
@@ -2065,11 +2065,11 @@ func find_object_type(types: @List[@IR_Type]) -> @IR_Struct_Type {
     let object_type: @IR_Struct_Type = null
     for_each_list_item(types) {
         let type = list_item.data
-        if (type is IR_Struct_Type) {
+        if type is IR_Struct_Type {
             let type = type as @IR_Struct_Type
-            if (type.object_type_variable != null) {
+            if type.object_type_variable != null {
                 object_type = type
-                while (object_type.super_type != null) {
+                while object_type.super_type != null {
                     object_type = object_type.super_type
                 }
                 break
@@ -2082,11 +2082,11 @@ func find_object_type(types: @List[@IR_Type]) -> @IR_Struct_Type {
 func generate_object_types(self: @MC_Generator, types: @List[@IR_Type]) -> Nothing {
     self.output_file.end_line().write("  .section .rodata").end_line()
     let type_item = types.first_item
-    while (type_item != null) {
+    while type_item != null {
         let type = type_item.data
-        if (type is IR_Struct_Type) {
+        if type is IR_Struct_Type {
             let type = type as @IR_Struct_Type
-            if (type.object_type_variable != null) {
+            if type.object_type_variable != null {
                 self.output_file.end_line()
                 self.output_file.write("  .align 8").end_line()
                 self.output_file.write(type.object_type_variable.name).write(':').end_line()
@@ -2097,7 +2097,7 @@ func generate_object_types(self: @MC_Generator, types: @List[@IR_Type]) -> Nothi
                 self.output_file.write("  .quad .LABEL__").write(type.object_type_variable.name).write("__object_type__name__data").end_line()
                 self.output_file.write("  .quad ").write(type.name.length + 1).end_line()
                 self.output_file.write("  .quad ").write(type.name.length).end_line()
-                if (type.super_type != null) {
+                if type.super_type != null {
                     self.output_file.write("  .quad .LABEL__").write(type.super_type.object_type_variable.name).write("__object_type").end_line()
                 } else {
                     self.output_file.write("  .quad 0").end_line()
@@ -2122,29 +2122,29 @@ func generate_global_variables(self: @MC_Generator, symbols: @List[@IR_Symbol], 
     self.output_file.end_line().write("  .bss").end_line()
 
     let symbols_item = symbols.last_item
-    while (symbols_item != null) {
+    while symbols_item != null {
         let symbol = symbols_item.data
-        if (symbol is IR_Variable) {
+        if symbol is IR_Variable {
             let variable = symbol as @IR_Variable
-            if (variable is IR_Global_Variable == false) {
+            if variable is not IR_Global_Variable {
                 self.abort(variable.location, "Invalid state")
             }
             let variable = variable as @IR_Global_Variable
-            if (variable.is_external == false) {
+            if not variable.is_external {
                 let is_object_type_variable = false
                 for_each_list_item(types) {
                     let type = list_item.data
-                    if (type is IR_Struct_Type) {
+                    if type is IR_Struct_Type {
                         let type = type as @IR_Struct_Type
-                        if (type.object_type_variable == variable) {
+                        if type.object_type_variable == variable {
                             is_object_type_variable = true
                             break
                         }
                     }
                 }
 
-                if (is_object_type_variable == false) {
-                    if (variable.value is IR_Undefined_Value == false) {
+                if not is_object_type_variable {
+                    if variable.value is not IR_Undefined_Value {
                         self.abort("Global variables must be declared as undefined for now")
                     }
                     self.output_file.end_line()

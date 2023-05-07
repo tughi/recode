@@ -18,19 +18,19 @@ func append(self: @String, location: @Source_Location) -> @String {
 
 func create_source(file_path: @String) -> @Source {
     let file = fopen(file_path.data, "r".data)
-    if (file == null) {
+    if file == null {
         return null
     }
 
-    let content_size = 1024 as i64
+    let content_size = 1024i64
     let content = malloc(content_size) as [i8; ?]
-    let content_length = 0 as i64
+    let content_length = 0i64
     loop {
         let char = fgetc(file)
-        if (feof(file) != 0) {
+        if feof(file) != 0 {
             break
         }
-        if (content_length + 1 > content_size - 1) {
+        if content_length + 1 > content_size - 1 {
             content_size = content_size + 1024
             content = realloc(content, content_size) as [i8; ?]
         }
