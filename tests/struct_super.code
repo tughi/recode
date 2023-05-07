@@ -13,25 +13,25 @@ struct ExtendedTest: Test(value = 13) {
 func main() -> i32 {
     let test = make ExtendedTest(value = 42)
 
-    if (test.result != 42) {
+    if test.result != 42 {
         return 1
     }
 
-    if (test.value != 42) {
+    if test.value != 42 {
         return 2
     }
 
     test.value = 13
-    if (test.value != 13) {
+    if test.value != 13 {
         return 3
     }
 
-    if (test.super.value != 13) {
+    if test.super.value != 13 {
         return 4
     }
 
     test.super.value = 42
-    if (test.super.value != 42) {
+    if test.super.value != 42 {
         return 5
     }
 

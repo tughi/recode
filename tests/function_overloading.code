@@ -6,17 +6,17 @@ struct String {
 }
 
 func get_answer(question: @String) -> i32 {
-    if (question.data == "ultimate question of life, the universe, and everything".data) {
+    if question.data == "ultimate question of life, the universe, and everything".data {
         return 42
     }
     return 0
 }
 
 func main() -> i32 {
-    if (get_answer("ultimate question of life, the universe, and everything") != 42) {
+    if get_answer("ultimate question of life, the universe, and everything") != 42 {
         return 1
     }
-    if (get_answer() != 13) {
+    if get_answer() != 13 {
         return 2
     }
     return 0

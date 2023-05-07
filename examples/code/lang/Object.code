@@ -14,11 +14,11 @@ struct Object_Type {
 func is(self: @Object, object_type: @Object_Type) -> bool {
     let self_type = self.object_type
     loop {
-        if (self_type == object_type) {
+        if self_type == object_type {
             return true
         }
         self_type = self_type.base_type
-        if (self_type == null) {
+        if self_type == null {
             return false
         }
     }

@@ -6,7 +6,7 @@ struct GUI_Layout: GUI_Widget(
     name = "GUI_Layout"
     on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
         let self = self as @GUI_Layout
-        if (self.bounds.contains(event.x, event.y)) {
+        if self.bounds.contains(event.x, event.y) {
             self.gui.hovered_widget = self
         }
         self.for_each_child() {
@@ -36,7 +36,7 @@ struct GUI_Layout_Child {
 
 func add(self: @GUI_Layout, widget: @GUI_Widget) -> Nothing {
     let child = make @GUI_Layout_Child(widget = widget)
-    if (self.children_first == null) {
+    if self.children_first == null {
         self.children_first = child
     } else {
         self.children_last.next_child = child
@@ -47,7 +47,7 @@ func add(self: @GUI_Layout, widget: @GUI_Widget) -> Nothing {
 
 macro for_each_child(self: @GUI_Layout, handle: macro (child: @GUI_Widget)) {
     let child = self.children_first
-    while (child != null) {
+    while child != null {
         child.widget.handle()
         child = child.next_child
     }

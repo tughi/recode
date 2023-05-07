@@ -61,7 +61,7 @@ func main() -> Nothing {
             value = 3
         )
     )
-    while (expression.evaluate() > 0) {
+    while expression.evaluate() > 0 {
         expression = make @Substraction_Expression(
             left_expression = expression
             right_expression = one

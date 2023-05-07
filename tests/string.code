@@ -13,13 +13,13 @@ external stdout: @File
 
 func main() -> i32 {
     let text = "PASS\n"
-    if (text.data_size != 6usize) {
+    if text.data_size != 6usize {
         return 1
     }
-    if (text.length != 5usize) {
+    if text.length != 5usize {
         return 2
     }
-    if (text.data[0] != 'P') {
+    if text.data[0] != 'P' {
         return 3
     }
     fputs(text.data, stdout)

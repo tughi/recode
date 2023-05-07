@@ -5,7 +5,7 @@ func main() -> Nothing {
     map.put("One", 0)
     map.put("One", 1)
 
-    if (map.get("One") != 1) {
+    if map.get("One") != 1 {
         abort()
     }
 
@@ -13,7 +13,7 @@ func main() -> Nothing {
     map.for_each() {
         count = count + 1
     }
-    if (count != 1) {
+    if count != 1 {
         abort()
     }
 
@@ -25,19 +25,19 @@ func main() -> Nothing {
     map.for_each() {
         sum = sum + item_value
     }
-    if (sum != 5) {
+    if sum != 5 {
         abort()
     }
 
-    if (map.get("Three") != 3) {
+    if map.get("Three") != 3 {
         abort()
     }
 
-    if (max(100, 2i32) != 100) {
+    if max(100, 2i32) != 100 {
         abort()
     }
 
-    if (max(100u8, 2u8) != 100u8) {
+    if max(100u8, 2u8) != 100u8 {
         abort()
     }
 }
@@ -66,8 +66,8 @@ external func abort() -> Nothing
 
 func put[K, V] (self: @Map[K, V], key: K, value: V) -> Nothing {
     let item = self.first_item
-    while (item != null) {
-        if (item.key == key) {
+    while item != null {
+        if item.key == key {
             item.value = value
             return
         }
@@ -79,7 +79,7 @@ func put[K, V] (self: @Map[K, V], key: K, value: V) -> Nothing {
         value = value
         prev_item = self.last_item
     )
-    if (self.first_item == null) {
+    if self.first_item == null {
         self.first_item = item
     } else {
         self.last_item.next_item = item
@@ -89,7 +89,7 @@ func put[K, V] (self: @Map[K, V], key: K, value: V) -> Nothing {
 
 func get[K, V] (self: @Map[K, V], key: K) -> V {
     self.for_each() {
-        if (item_key == key) {
+        if item_key == key {
             return item_value
         }
     }
@@ -98,14 +98,14 @@ func get[K, V] (self: @Map[K, V], key: K) -> V {
 
 macro for_each[K, V] (self: @Map[K, V], block: macro (item_key: K, item_value: V)) {
     let item = self.first_item
-    while (item != null) {
+    while item != null {
         block(item.key, item.value)
         item = item.next_item
     }
 }
 
 func max[T] (self: T, other: T) -> T {
-    if (self < other) {
+    if self < other {
         return other
     }
     return self

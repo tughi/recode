@@ -14,7 +14,7 @@ func main() -> i32 {
     let node = make Node(data = @data)
     let node_ref = @node
 
-    if (node_ref.data.value != 42) {
+    if node_ref.data.value != 42 {
         return 1
     }
 

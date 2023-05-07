@@ -21,7 +21,7 @@ func clone(self: @String) -> @String {
         length = self.length
     )
     let index = 0usize
-    while (index <= self.length) {
+    while index <= self.length {
         other.data[index] = self.data[index]
         index = index + 1
     }
@@ -29,12 +29,12 @@ func clone(self: @String) -> @String {
 }
 
 func copy(self: @String, other: @String) -> @String {
-    if (self.data_size < other.length + 1) {
+    if self.data_size < other.length + 1 {
         self.data_size = other.length + 1
         self.data = realloc(self.data, self.data_size) as [u8; ?]
     }
     let index = 0usize
-    while (index <= other.length) {
+    while index <= other.length {
         self.data[index] = other.data[index]
         index = index + 1
     }
@@ -43,12 +43,12 @@ func copy(self: @String, other: @String) -> @String {
 }
 
 func equals(self: @String, other: @String) -> bool {
-    if (other == null or self.length != other.length) {
+    if other == null or self.length != other.length {
         return false
     }
     let index = 0usize
-    while (index < self.length) {
-        if (self.data[index] != other.data[index]) {
+    while index < self.length {
+        if self.data[index] != other.data[index] {
             return false
         }
         index = index + 1
@@ -57,12 +57,12 @@ func equals(self: @String, other: @String) -> bool {
 }
 
 func starts_with(self: @String, other: @String) -> bool {
-    if (self.length < other.length) {
+    if self.length < other.length {
         return false
     }
     let index = 0usize
-    while (index < other.length) {
-        if (self.data[index] != other.data[index]) {
+    while index < other.length {
+        if self.data[index] != other.data[index] {
             return false
         }
         index = index + 1
@@ -71,7 +71,7 @@ func starts_with(self: @String, other: @String) -> bool {
 }
 
 func append(self: @String, char: u8) -> @String {
-    if (self.length + 1 >= self.data_size) {
+    if self.length + 1 >= self.data_size {
         self.data_size = self.data_size + 16
         self.data = realloc(self.data, self.data_size) as [u8; ?]
     }
@@ -84,7 +84,7 @@ func append(self: @String, char: u8) -> @String {
 macro for_each_char(self: @String, handler: macro (char: u8)) {
     let index = 0
     let length = self.length as i32
-    while (index < length) {
+    while index < length {
         handler(self.data[index])
         index = index + 1
     }

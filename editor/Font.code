@@ -19,56 +19,56 @@ func init_font() -> Nothing {
     let file = open_file("editor/Font.data", "r")
     let line = make String()
 
-    if (not (file.read_line(@line) and line.starts_with("\\ Copyright ") and file.read_line(@line) and line.equals(""))) {
+    if not (file.read_line(@line) and line.starts_with("\\ Copyright ") and file.read_line(@line) and line.equals("")) {
         abort()
     }
 
-    if (not (file.read_line(@line) and line.starts_with("font.height: 18"))) {
+    if not (file.read_line(@line) and line.starts_with("font.height: 18")) {
         abort()
     }
     font.height = 18
 
-    if (not (file.read_line(@line) and line.starts_with("font.base_line: 13"))) {
+    if not (file.read_line(@line) and line.starts_with("font.base_line: 13")) {
         abort()
     }
     font.base_line = 13
 
     let index = 0isize
-    while (index < font.glyphs.length) {
+    while index < font.glyphs.length {
         font.glyphs[index].width = 9
         index = index + 1
     }
 
-    while (file.read_line(@line)) {
-        if (not line.equals("")) {
+    while file.read_line(@line) {
+        if not line.equals("") {
             abort()
         }
 
-        if (not file.read_line(@line)) {
+        if not file.read_line(@line) {
             break
         }
 
-        if (not line.starts_with("glyph: ")) {
+        if not line.starts_with("glyph: ") {
             abort()
         }
         let glyph = font.glyphs[line.data[line.length - 1]]
 
-        if (not (file.read_line(@line) and line.equals("glyph.width: 9"))) {
+        if not (file.read_line(@line) and line.equals("glyph.width: 9")) {
             abort()
         }
         glyph.width = 9
 
         let glyph_row = 0
-        while (glyph_row < font.height and file.read_line(@line)) {
-            if (line.length != 18usize) {
+        while glyph_row < font.height and file.read_line(@line) {
+            if line.length != 18usize {
                 abort()
             }
 
             let glyph_column = 0
-            while (glyph_column < glyph.width) {
-                if (line.data[glyph_column * 2] == 'F' as u8 and line.data[glyph_column * 2 + 1] == 'F' as u8) {
+            while glyph_column < glyph.width {
+                if line.data[glyph_column * 2] == 'F' as u8 and line.data[glyph_column * 2 + 1] == 'F' as u8 {
                     glyph.mask[glyph_row][glyph_column] = 0xffu8
-                } else if (line.data[glyph_column * 2] == '-' as u8 and line.data[glyph_column * 2 + 1] == '-' as u8) {
+                } else if line.data[glyph_column * 2] == '-' as u8 and line.data[glyph_column * 2 + 1] == '-' as u8 {
                     \ glyph.mask[glyph_row][glyph_column] = 0x00u8
                 } else {
                     abort()

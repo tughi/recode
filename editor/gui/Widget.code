@@ -17,7 +17,7 @@ struct GUI_Widget {
     bounds = make Rect()
 
     on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
-        if (self.bounds.contains(event.x, event.y)) {
+        if self.bounds.contains(event.x, event.y) {
             self.gui.hovered_widget = self
         }
     }
@@ -72,18 +72,18 @@ define MEASURE_SPEC_MODE_UNLIMITED = 2u8
 
 macro if_size_changes(self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32, action: macro ()) {
     let bounds = self.bounds
-    if (bounds.width != right - left + 1 or bounds.height != bottom - top + 1) {
+    if bounds.width != right - left + 1 or bounds.height != bottom - top + 1 {
         action()
     }
 }
 
 func abort(self: @GUI_Widget, measure: @String, measure_spec: @Measure_Spec) -> Nothing {
     stderr.write(self.name).write(" cannot handle ").write(measure).write(" spec: ").write("mode=")
-    if (measure_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
+    if measure_spec.mode == MEASURE_SPEC_MODE_EXACTLY {
         stderr.write("EXACTLY").write(", size=").write(measure_spec.size)
-    } else if (measure_spec.mode == MEASURE_SPEC_MODE_LIMITED) {
+    } else if measure_spec.mode == MEASURE_SPEC_MODE_LIMITED {
         stderr.write("LIMITED").write(", size=").write(measure_spec.size)
-    } else if (measure_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
+    } else if measure_spec.mode == MEASURE_SPEC_MODE_UNLIMITED {
         stderr.write("UNLIMITED")
     } else {
         stderr.write("???")
@@ -94,11 +94,11 @@ func abort(self: @GUI_Widget, measure: @String, measure_spec: @Measure_Spec) -> 
 
 func abort(self: @GUI_Widget, measure: @String, size_policy: @Size_Policy) -> Nothing {
     stderr.write(self.name).write(" cannot handle ").write(measure).write(" policy: ").write("mode=")
-    if (size_policy.mode == SIZE_POLICY_MODE_FIXED) {
+    if size_policy.mode == SIZE_POLICY_MODE_FIXED {
         stderr.write("FIXED").write(", size=").write(size_policy.size)
-    } else if (size_policy.mode == SIZE_POLICY_MODE_STRETCHED) {
+    } else if size_policy.mode == SIZE_POLICY_MODE_STRETCHED {
         stderr.write("STRETCHED")
-    } else if (size_policy.mode == SIZE_POLICY_MODE_WRAP_CONTENT) {
+    } else if size_policy.mode == SIZE_POLICY_MODE_WRAP_CONTENT {
         stderr.write("WRAP_CONTENT")
     } else {
         stderr.write("???")

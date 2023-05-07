@@ -3,7 +3,7 @@
 
 macro repeat[T](times: T, do: macro (step: T)) {
     let i: T = 0
-    while (i < times) {
+    while i < times {
         do(step = i)
         i = i + 1
     }
@@ -16,7 +16,7 @@ func main() -> i32 {
         sum = sum + (step as i32)
     }
 
-    if (sum != 46) {
+    if sum != 46 {
         return 1
     }
 

@@ -24,55 +24,55 @@ struct Glyph_Editor: GUI_Widget(
         let self = self as @Glyph_Editor
         let last_hovered_row = self.hovered_row
         let last_hovered_column = self.hovered_column
-        if (self.bounds.contains(event.x, event.y) and event.x < self.bounds.right and event.y < self.bounds.bottom) {
+        if self.bounds.contains(event.x, event.y) and event.x < self.bounds.right and event.y < self.bounds.bottom {
             self.gui.hovered_widget = self
 
             self.hovered_row = (event.y - self.bounds.left) / (self.pixel_size + 1)
             self.hovered_column = (event.x - self.bounds.left) / (self.pixel_size + 1)
 
-            if (self.is_drawing) {
+            if self.is_drawing {
                 self.update_glyph_cell(self.hovered_row, self.hovered_column, 255u8)
-            } else if (self.is_erasing) {
+            } else if self.is_erasing {
                 self.update_glyph_cell(self.hovered_row, self.hovered_column, 0u8)
             }
         } else {
             self.hovered_row = -1
             self.hovered_column = -1
         }
-        if (last_hovered_row != self.hovered_row or last_hovered_column != self.hovered_column) {
+        if last_hovered_row != self.hovered_row or last_hovered_column != self.hovered_column {
             self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
         }
     }
     on_mouse_button_pressed = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Pressed) -> Nothing {
         let self = self as @Glyph_Editor
         self.gui.pressed_widget = self
-        if (event.button == 1u8) {
+        if event.button == 1u8 {
             self.is_drawing = true
             self.update_glyph_cell(self.hovered_row, self.hovered_column, 255u8)
-        } else if (event.button == 3u8) {
+        } else if event.button == 3u8 {
             self.is_erasing = true
             self.update_glyph_cell(self.hovered_row, self.hovered_column, 0u8)
         }
     }
     on_mouse_button_released = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
-        if (self.gui.pressed_widget == self) {
+        if self.gui.pressed_widget == self {
             let self = self as @Glyph_Editor
-            if (event.button == 1u8) {
+            if event.button == 1u8 {
                 self.is_drawing = false
-            } else if (event.button == 2u8 and self.gui.hovered_widget == self as @GUI_Widget) {
+            } else if event.button == 2u8 and self.gui.hovered_widget == self as @GUI_Widget {
                 let glyph_mask = self.glyph.mask
                 let glyph_row = 0
-                while (glyph_row < glyph_mask.length as i32) {
+                while glyph_row < glyph_mask.length as i32 {
                     let glyph_row_mask = glyph_mask[glyph_row]
                     let glyph_column = 0
-                    while (glyph_column < glyph_row_mask.length as i32) {
+                    while glyph_column < glyph_row_mask.length as i32 {
                         glyph_row_mask[glyph_column] = 0u8
                         glyph_column = glyph_column + 1
                     }
                     glyph_row = glyph_row + 1
                 }
                 self.gui.post(make @GUI_Event_Widget_Updated(widget = self.gui))
-            } else if (event.button == 3u8) {
+            } else if event.button == 3u8 {
                 self.is_erasing = false
             }
         }
@@ -91,24 +91,24 @@ struct Glyph_Editor: GUI_Widget(
 func measure_glyph_editor(self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
     let self = self as @Glyph_Editor
 
-    if (width_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
+    if width_spec.mode == MEASURE_SPEC_MODE_EXACTLY {
         self.width_hint = width_spec.size
-    } else if (width_spec.mode == MEASURE_SPEC_MODE_LIMITED) {
+    } else if width_spec.mode == MEASURE_SPEC_MODE_LIMITED {
         let glyph_columns = self.glyph.mask[0].length as i32
         self.width_hint = (self.pixel_size + 1) * glyph_columns + 1
-        if (self.width_hint > width_spec.size) {
+        if self.width_hint > width_spec.size {
             self.width_hint = width_spec.size
         }
-    } else if (width_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
+    } else if width_spec.mode == MEASURE_SPEC_MODE_UNLIMITED {
         let glyph_columns = self.glyph.mask[0].length as i32
         self.width_hint = (self.pixel_size + 1) * glyph_columns + 1
     } else {
         self.abort("width", width_spec)
     }
 
-    if (height_spec.mode == MEASURE_SPEC_MODE_EXACTLY) {
+    if height_spec.mode == MEASURE_SPEC_MODE_EXACTLY {
         self.height_hint = height_spec.size
-    } else if (height_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
+    } else if height_spec.mode == MEASURE_SPEC_MODE_UNLIMITED {
         let glyph_rows = self.glyph.mask.length as i32
         self.height_hint = (self.pixel_size + 1) * glyph_rows + 1
     } else {
@@ -128,22 +128,22 @@ func draw_glyph_editor(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
 
     let glyph_mask = self.glyph.mask
     let glyph_row = 0
-    while (glyph_row <= glyph_mask.length as i32) {
+    while glyph_row <= glyph_mask.length as i32 {
         canvas.draw_horizontal_line(self.bounds.left, self.bounds.right, self.bounds.top + glyph_row * (self.pixel_size + 1))
         glyph_row = glyph_row + 1
     }
     let glyph_column = 0
-    while (glyph_column <= glyph_mask[0].length as i32) {
+    while glyph_column <= glyph_mask[0].length as i32 {
         canvas.draw_vertical_line(self.bounds.left + glyph_column * (self.pixel_size + 1), self.bounds.top, self.bounds.bottom)
         glyph_column = glyph_column + 1
     }
 
     let glyph_row = 0
-    while (glyph_row < glyph_mask.length as i32) {
+    while glyph_row < glyph_mask.length as i32 {
         let glyph_row_mask = glyph_mask[glyph_row]
         let glyph_column = 0
-        while (glyph_column < glyph_row_mask.length as i32) {
-            if (glyph_row_mask[glyph_column] != 0u8) {
+        while glyph_column < glyph_row_mask.length as i32 {
+            if glyph_row_mask[glyph_column] != 0u8 {
                 canvas.fill_rect(
                     self.bounds.left + glyph_column * (self.pixel_size + 1) + 1
                     self.bounds.top + glyph_row * (self.pixel_size + 1) + 1
@@ -156,8 +156,8 @@ func draw_glyph_editor(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
         glyph_row = glyph_row + 1
     }
 
-    if (self.hovered_row >= 0 and self.hovered_column >= 0) {
-        if (glyph_mask[self.hovered_row][self.hovered_column] == 0u8) {
+    if self.hovered_row >= 0 and self.hovered_column >= 0 {
+        if glyph_mask[self.hovered_row][self.hovered_column] == 0u8 {
             canvas.set_color(0x666600u32)
         } else {
             canvas.set_color(0xcccc00u32)
@@ -175,7 +175,7 @@ func draw_glyph_editor(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
 }
 
 macro update_glyph_cell(self: @Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
-    if (self.glyph.mask[glyph_row][glyph_column] != value) {
+    if self.glyph.mask[glyph_row][glyph_column] != value {
         self.glyph.mask[glyph_row][glyph_column] = value
         self.gui.post(make @GUI_Event_Widget_Updated(widget = self.gui))
     }
@@ -186,7 +186,7 @@ func glyph_chooser(parent: @GUI_Layout, selected_glyph: u8) -> @Glyph_Chooser {
     parent.add(glyph_chooser)
 
     let glyph = ' '
-    while (glyph <= '~') {
+    while glyph <= '~' {
         let button = glyph_chooser.button(make @String().append(glyph as u8))
         button.data = make @Glyph_Chooser_Button_Data(glyph_chooser = glyph_chooser, glyph = glyph as u8)
         button.on_click = func (self: @GUI_Button) -> Nothing {
@@ -219,8 +219,8 @@ struct Glyph_Chooser_Button_Data: GUI_Data {
 
 func measure_glyph_chooser(self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
     let self = self as @Glyph_Chooser
-    if (width_spec.mode == MEASURE_SPEC_MODE_LIMITED) {
-        if (self.width_policy.mode == SIZE_POLICY_MODE_STRETCHED) {
+    if width_spec.mode == MEASURE_SPEC_MODE_LIMITED {
+        if self.width_policy.mode == SIZE_POLICY_MODE_STRETCHED {
             self.width_hint = width_spec.size
         } else {
             self.abort("width", self.width_policy)
@@ -228,7 +228,7 @@ func measure_glyph_chooser(self: @GUI_Widget, width_spec: @Measure_Spec, height_
     } else {
         self.abort("width", width_spec)
     }
-    if (height_spec.mode == MEASURE_SPEC_MODE_UNLIMITED) {
+    if height_spec.mode == MEASURE_SPEC_MODE_UNLIMITED {
         self.height_hint = -3
         let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
         let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
@@ -236,9 +236,9 @@ func measure_glyph_chooser(self: @GUI_Widget, width_spec: @Measure_Spec, height_
         let row_height = 0
         self.for_each_child() {
             child.measure(@child_width_spec, @child_height_spec)
-            if (row_width + child.width_hint < self.width_hint) {
+            if row_width + child.width_hint < self.width_hint {
                 row_width = row_width + child.width_hint + 4
-                if (row_height < child.height_hint) {
+                if row_height < child.height_hint {
                     row_height = child.height_hint
                 }
             } else {
@@ -269,7 +269,7 @@ func layout_glyph_chooser(self: @GUI_Widget, left: i32, top: i32, right: i32, bo
     self.for_each_child() {
         row_child = row_child + 1
         let child_right = left + (self.bounds.width + 4) * row_child / row_children - 5
-        if (child_right > right) {
+        if child_right > right {
             row_child = 1
             child_left = left
             child_right = left + (self.bounds.width + 4) * row_child / row_children - 5
@@ -301,18 +301,18 @@ func dump_font() -> Nothing {
     file.write("font.base_line: ").write(font.base_line).end_line()
 
     let char = '!' as i32
-    while (char < 127) {
+    while char < 127 {
         file.end_line()
         file.write("glyph: ").write(char as u8).end_line()
         let glyph = font.glyphs[char]
         file.write("glyph.width: ").write(glyph.width).end_line()
         let row = 0isize
-        while (row < glyph.mask.length) {
+        while row < glyph.mask.length {
             let column = 0isize
-            while (column < glyph.mask[0].length) {
+            while column < glyph.mask[0].length {
                 let alpha = glyph.mask[row][column] as u32
-                if (alpha > 0) {
-                    if (alpha < 0x10) {
+                if alpha > 0 {
+                    if alpha < 0x10 {
                         file.write("-")
                     }
                     file.write(alpha, 16u8)

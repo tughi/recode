@@ -6,7 +6,7 @@ func main() -> i32 {
         return true
     }
 
-    if (test() == false) {
+    if test() == false {
         return 1
     }
 

@@ -17,11 +17,11 @@ struct GUI_Text_Box: GUI_Widget(
     draw = draw_text_box
     on_mouse_scrolled = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Scrolled) -> Nothing {
         let self = self as @GUI_Text_Box
-        if (self.model.lines > 1) {
-            if (event.y > 0) {
+        if self.model.lines > 1 {
+            if event.y > 0 {
                 self.first_visible_line = max(0, self.first_visible_line - event.y)
                 self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
-            } else if (event.y < 0) {
+            } else if event.y < 0 {
                 self.first_visible_line = min(self.model.lines - 1, self.first_visible_line - event.y)
                 self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
             }
@@ -50,21 +50,21 @@ func draw_text_box(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
     canvas.set_color(COLOR_DARK_BORDER)
     canvas.draw_rect(self.bounds)
 
-    if (self.model.lines > 0) {
+    if self.model.lines > 0 {
         canvas.set_color(COLOR_TEXT)
         let line = self.model.first_line
         let skipped_lines = self.first_visible_line
-        while (line != null and skipped_lines > 0) {
+        while line != null and skipped_lines > 0 {
             line = line.next_line
             skipped_lines = skipped_lines - 1
         }
         let line_bounds = make Rect()
         line_bounds.set_location(self.bounds.left + 2, self.bounds.top + 2)
-        while (line != null) {
+        while line != null {
             canvas.draw_text(line.text, line_bounds.left, line_bounds.top)
 
             line.text.compute_text_size(@line_bounds)
-            if (line_bounds.top + line_bounds.height > self.bounds.bottom) {
+            if line_bounds.top + line_bounds.height > self.bounds.bottom {
                 break
             }
 

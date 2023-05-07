@@ -40,14 +40,14 @@ func set_location(self: @Rect, left: i32, top: i32) -> Nothing {
 }
 
 func set_size(self: @Rect, width: i32, height: i32) -> Nothing {
-    if (width < 1) {
+    if width < 1 {
         self.width = 1
         self.right = self.left
     } else {
         self.width = width
         self.right = self.left + width - 1
     }
-    if (height < 1) {
+    if height < 1 {
         self.height = 1
         self.bottom = self.top
     } else {
@@ -59,19 +59,19 @@ func set_size(self: @Rect, width: i32, height: i32) -> Nothing {
 func intersect(self: @Rect, other: @Rect) -> Nothing {
     let new_left = max(self.left, other.left)
     let new_right = min(self.right, other.right)
-    if (new_left > new_right) {
+    if new_left > new_right {
         abort()
     }
     let new_top = max(self.top, other.top)
     let new_bottom = min(self.bottom, other.bottom)
-    if (new_top > new_bottom) {
+    if new_top > new_bottom {
         abort()
     }
     self.set(new_left, new_top, new_right, new_bottom)
 }
 
 func intersects(self: @Rect, other: @Rect) -> bool {
-    if (self.left > other.right or self.top > other.bottom or self.right < other.left or self.bottom < other.top) {
+    if self.left > other.right or self.top > other.bottom or self.right < other.left or self.bottom < other.top {
         return false
     }
     return true

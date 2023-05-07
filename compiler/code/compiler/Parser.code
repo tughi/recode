@@ -624,15 +624,14 @@ func parse_let(self: @Parser) -> @AST_Variable_Statement {
 }
 
 \ if
-\   | "if" "(" expression ")" block ( "else" ( block | if ) )?
+\   | "if" expression block ( "else" ( block | if ) )?
 func parse_if(self: @Parser) -> @AST_Statement {
     let location = self.consume(required_if).location
     self.consume_space(1)
-    self.consume(required_open_paren)
-    self.consume_space(0)
     let condition_expression = self.parse_expression()
-    self.consume_space(0)
-    self.consume(required_close_paren)
+    if (condition_expression is AST_Paren_Expression) {
+        stderr.write(condition_expression.location).write(": ").warning().write("Redundant parentheses").reset().end_line()
+    }
     self.consume_space(1)
     let true_statement = self.parse_block()
     let false_statement: @AST_Statement = null
@@ -659,15 +658,14 @@ func parse_loop(self: @Parser) -> @AST_Statement {
 }
 
 \ while
-\   | "while" "(" expression ")" block
+\   | "while" expression block
 func parse_while(self: @Parser) -> @AST_Statement {
     let location = self.consume(required_while).location
     self.consume_space(1)
-    self.consume(required_open_paren)
-    self.consume_space(0)
     let condition_expression = self.parse_expression()
-    self.consume_space(0)
-    self.consume(required_close_paren)
+    if (condition_expression is AST_Paren_Expression) {
+        stderr.write(condition_expression.location).write(": ").warning().write("Redundant parentheses").reset().end_line()
+    }
     self.consume_space(1)
     let loop_block = self.parse_block()
     return make @AST_While_Statement(location = location, condition_expression = condition_expression, block = loop_block)

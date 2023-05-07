@@ -18,7 +18,7 @@ struct GUI: GUI_Layout(
         self.for_each_child() {
             child.on_mouse_moved(event)
         }
-        if (last_hovered_widget != self.hovered_widget) {
+        if last_hovered_widget != self.hovered_widget {
             self.post(make @GUI_Event_Widget_Updated(widget = last_hovered_widget))
             self.post(make @GUI_Event_Widget_Updated(widget = self.hovered_widget))
         }
@@ -28,7 +28,7 @@ struct GUI: GUI_Layout(
     }
     on_mouse_button_released = func (self: @GUI, event: @GUI_Event_Mouse_Button_Released) -> Nothing {
         self.hovered_widget.on_mouse_button_released(event)
-        if (self.pressed_widget != null) {
+        if self.pressed_widget != null {
             self.pressed_widget.on_mouse_button_released(event)
             self.pressed_widget = null
         }
@@ -77,7 +77,7 @@ func init_gui() -> @GUI {
 }
 
 func post(self: @GUI, event: @GUI_Event) -> Nothing {
-    if (self.first_event == null) {
+    if self.first_event == null {
         self.first_event = event
     } else {
         self.last_event.next_event = event

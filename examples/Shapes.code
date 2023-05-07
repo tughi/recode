@@ -4,16 +4,16 @@ let polygon: Polygon
 
 func main() -> i32 {
     shape = make @Rectangle()
-    if (not (shape is Rectangle)) {
+    if not (shape is Rectangle) {
         return 1
     }
-    if (not (shape is Polygon)) {
+    if not (shape is Polygon) {
         return 1
     }
-    if (shape is Circle) {
+    if shape is Circle {
         return 1
     }
-    if (shape is Triangle) {
+    if shape is Triangle {
         return 1
     }
     stdout.write(shape.object_type.name).write(" has sides: ").write((shape as @Polygon).sides).end_line()

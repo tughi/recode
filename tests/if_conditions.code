@@ -9,105 +9,105 @@ func main() -> i32 {
     let check5 = true
     let check6 = false
 
-    if (check1) {
+    if check1 {
         \ pass
     } else {
         return 1
     }
 
-    if (not check1) {
+    if not check1 {
         return 2
     }
 
-    if (check2) {
+    if check2 {
         return 3
     }
 
-    if (not check2) {
+    if not check2 {
         \ pass
     } else {
         return 4
     }
 
-    if (check1 and check2) {
+    if check1 and check2 {
         return 5
     }
 
-    if (not (check1 and check2)) {
+    if not (check1 and check2) {
         \ pass
     } else {
         return 6
     }
 
-    if (not not (check1 and check2)) {
+    if not not (check1 and check2) {
         return 7
     } else {
         \ pass
     }
 
-    if (check1 or check2) {
+    if check1 or check2 {
         \ pass
     } else {
         return 8
     }
 
-    if (not (check1 or check2)) {
+    if not (check1 or check2) {
         return 9
     } else {
         \ pass
     }
 
-    if ((check1 and check2) or (check3 and check4)) {
+    if (check1 and check2) or (check3 and check4) {
         return 10
     }
 
-    if ((check2 and check4) or (check1 and check3)) {
+    if (check2 and check4) or (check1 and check3) {
         \ pass
     } else {
         return 11
     }
 
-    if ((check1 and (check2 or check3) and check4)) {
+    if check1 and (check2 or check3) and check4 {
         return 12
     } else {
         \ pass
     }
 
-    if ((check1 or check2) and (check3 or check4)) {
+    if (check1 or check2) and (check3 or check4) {
         \ pass
     } else {
         return 13
     }
 
-    if ((check1 or check4) and (check2 or check3)) {
+    if (check1 or check4) and (check2 or check3) {
         \ pass
     } else {
         return 14
     }
 
-    if ((check2 or (check3 and check4) or check5)) {
+    if check2 or (check3 and check4) or check5 {
         \ pass
     } else {
         return 15
     }
 
-    if ((((check1 and check2) or (check3 and check4)) and check5) or check6) {
+    if (((check1 and check2) or (check3 and check4)) and check5) or check6 {
         return 16
     } else {
         \ pass
     }
 
-    if ((check1 and check2) or (((check3 and check4) or check6) and check5)) {
+    if (check1 and check2) or (((check3 and check4) or check6) and check5) {
         return 17
     }
 
-    if (check1 and not check2) {
+    if check1 and not check2 {
         \ pass
     } else {
         return 18
     }
 
-    if (not check1 or check2) {
+    if not check1 or check2 {
         return 19
     }
 

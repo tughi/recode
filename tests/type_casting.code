@@ -13,7 +13,7 @@ func main() -> i32 {
     let token = make Integer_Token(value = 42)
     let token_ref = @token as @Token
 
-    if ((token_ref as @Integer_Token).value != 42) {
+    if (token_ref as @Integer_Token).value != 42 {
         return 1
     }
 
