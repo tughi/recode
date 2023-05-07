@@ -1,7 +1,7 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 struct String {
-    data = malloc(16 as i64) as [i8; ?]
+    data = malloc(16i64).as([i8; ?])
     data_size = 16i64
     length = 0i64
 }
@@ -20,7 +20,7 @@ func create_string(data: [i8; ?]) -> @String {
 }
 
 func clone(self: @String) -> @String {
-    let clone = make @String(data = malloc(self.data_size) as [i8; ?], data_size = self.data_size)
+    let clone = make @String(data = malloc(self.data_size).as([i8; ?]), data_size = self.data_size)
     clone.append(self)
     return clone
 }
@@ -51,7 +51,7 @@ func index_of(self: @String, other: @String) -> i64 {
         }
         self_index = self_index + 1
     }
-    return -1 as i64
+    return -1i64
 }
 
 func starts_with(self: @String, other: @String) -> bool {
@@ -97,7 +97,7 @@ func last_index_of(self: @String, char: i8, from_index: i64) -> i64 {
 func append(self: @String, char: i8) -> @String {
     if self.length + 1 >= self.data_size {
         self.data_size = self.data_size + 16
-        self.data = realloc(self.data, self.data_size) as [i8; ?]
+        self.data = realloc(self.data, self.data_size).as([i8; ?])
     }
     self.data[self.length] = char
     self.length = self.length + 1
@@ -112,7 +112,7 @@ func append(self: @String, number: i32) -> @String {
     if number >= 10 {
         self.append(number / 10)
     }
-    return self.append((number // 10) as i8 + '0')
+    return self.append((number // 10).as(i8) + '0')
 }
 
 func append(self: @String, number: i64) -> @String {
@@ -122,15 +122,15 @@ func append(self: @String, number: i64) -> @String {
     if number >= 10 {
         self.append(number / 10)
     }
-    return self.append((number // 10) as i8 + '0')
+    return self.append((number // 10).as(i8) + '0')
 }
 
 func append(self: @String, other: @String) -> @String {
     if self.length + other.length >= self.data_size {
         self.data_size = self.length + other.length + 1
-        self.data = realloc(self.data, self.data_size) as [i8; ?]
+        self.data = realloc(self.data, self.data_size).as([i8; ?])
     }
-    let index = 0 as isize
+    let index = 0isize
     let other_data = other.data
     let self_data = self.data
     let self_length = self.length

@@ -21,7 +21,7 @@ func dump(build: @IR_Build, file: @FILE) -> Nothing {
     while symbols_iterator.has_next() {
         let symbol = symbols_iterator.next()
         if symbol is IR_Function {
-            let function = symbol as @IR_Function
+            let function = symbol.as(@IR_Function)
             if not function.is_external {
                 function.dump(file)
                 file.end_line()
@@ -99,7 +99,7 @@ func is_type_argument(self: @IR_Builder, type: @AST_Type) -> bool {
     if type is not AST_Named_Type {
         return false
     }
-    let type_name = (type as @AST_Named_Type).name.lexeme
+    let type_name = type.as(@AST_Named_Type).name.lexeme
 
     let context = self.context
     while context != null {
@@ -123,7 +123,7 @@ func get_type_statement(self: @IR_Builder, name: @String) -> @AST_Type_Statement
     let type_statement: @AST_Type_Statement = null
     for_each(self.compilation_unit.statements) {
         if it is AST_Type_Statement and (it is not AST_Generic_Struct_Statement) {
-            let statement = it as @AST_Type_Statement
+            let statement = it.as(@AST_Type_Statement)
             if statement.name.lexeme.equals(name) {
                 if type_statement != null {
                     stderr.end_line().write(type_statement.location).write(": First ").write(name).write(" declaration").end_line()
@@ -140,7 +140,7 @@ func get_generic_struct_statement(self: @IR_Builder, name: @String) -> @AST_Gene
     let struct_statement: @AST_Generic_Struct_Statement = null
     for_each(self.compilation_unit.statements) {
         if it is AST_Generic_Struct_Statement {
-            let statement = it as @AST_Generic_Struct_Statement
+            let statement = it.as(@AST_Generic_Struct_Statement)
             if statement.name.lexeme.equals(name) {
                 if struct_statement != null {
                     stderr.end_line().write(struct_statement.location).write(": First ").write(name).write(" declaration").end_line()
@@ -206,7 +206,7 @@ func get_variable(self: @IR_Builder, name: @String) -> @IR_Variable {
         while symbols_item != null {
             let symbol = symbols_item.data
             if symbol is IR_Variable and symbol.name.equals(name) {
-                return symbol as @IR_Variable
+                return symbol.as(@IR_Variable)
             }
             symbols_item = symbols_item.next_item
         }
@@ -258,7 +258,7 @@ func get_named_function(self: @IR_Builder, name: @String, argument_types: @List[
     let function: @IR_Function = null
     self.for_each_symbol() {
         if symbol is IR_Function {
-            let named_function = symbol as @IR_Function
+            let named_function = symbol.as(@IR_Function)
             if name.equals(named_function.name) {
                 let is_match = true
                 let argument_types = argument_types.create_iterator()
@@ -287,7 +287,7 @@ func get_named_function(self: @IR_Builder, name: @String, function_type: @IR_Fun
     let function: @IR_Function = null
     self.for_each_symbol() {
         if symbol is IR_Function {
-            let named_function = symbol as @IR_Function
+            let named_function = symbol.as(@IR_Function)
             if name.equals(named_function.name) and named_function.return_type == function_type.return_type and named_function.parameters.size == function_type.parameters.size {
                 let is_match = true
                 let function_type_parameters = function_type.parameters.create_iterator()
@@ -317,12 +317,12 @@ func accepts(self: @IR_Type, other: @IR_Type) -> bool {
         return true
     }
     if self is IR_Pointer_Type {
-        let self = self as @IR_Pointer_Type
+        let self = self.as(@IR_Pointer_Type)
         if self.pointed_type is IR_Pointer_Type {
             let stop = true
         }
         if other is IR_Pointer_Type {
-            let other = other as @IR_Pointer_Type
+            let other = other.as(@IR_Pointer_Type)
             if self.pointed_type == other.pointed_type {
                 return true
             }
@@ -330,10 +330,10 @@ func accepts(self: @IR_Type, other: @IR_Type) -> bool {
                 return true
             }
             if self.pointed_type is IR_Struct_Type and other.pointed_type is IR_Struct_Type {
-                let self_struct_type = self.pointed_type as @IR_Struct_Type
+                let self_struct_type = self.pointed_type.as(@IR_Struct_Type)
 
                 \ Find matching base struct
-                let other_struct_type = other.pointed_type as @IR_Struct_Type
+                let other_struct_type = other.pointed_type.as(@IR_Struct_Type)
                 while other_struct_type != null {
                     if other_struct_type.statement == self_struct_type.statement {
                         break
@@ -348,9 +348,9 @@ func accepts(self: @IR_Type, other: @IR_Type) -> bool {
                     return true
                 }
 
-                let self_struct_type = self_struct_type as @IR_Specialized_Struct_Type
+                let self_struct_type = self_struct_type.as(@IR_Specialized_Struct_Type)
                 let self_struct_type_arguments_item = self_struct_type.type_arguments.first_item
-                let other_struct_type = other_struct_type as @IR_Specialized_Struct_Type
+                let other_struct_type = other_struct_type.as(@IR_Specialized_Struct_Type)
                 let other_struct_type_arguments_item = other_struct_type.type_arguments.first_item
                 while self_struct_type_arguments_item != null and other_struct_type_arguments_item != null {
                     let self_struct_type_argument = self_struct_type_arguments_item.data
@@ -379,8 +379,8 @@ func accepts(self: @IR_Type, other: @IR_Type) -> bool {
             return true
         }
         if other is IR_Function_Type {
-            let self = self as @IR_Function_Type
-            let other = other as @IR_Function_Type
+            let self = self.as(@IR_Function_Type)
+            let other = other.as(@IR_Function_Type)
             let self_parameters_item = self.parameters.first_item
             let other_parameters_item = other.parameters.first_item
             while self_parameters_item != null and other_parameters_item != null {
@@ -403,8 +403,8 @@ func accepts(self: @IR_Type, other: @IR_Type) -> bool {
             return true
         }
         if other is IR_Macro_Type {
-            let self_parameters_item = (self as @IR_Macro_Type).parameters.first_item
-            let other_parameters_item = (other as @IR_Macro_Type).parameters.first_item
+            let self_parameters_item = self.as(@IR_Macro_Type).parameters.first_item
+            let other_parameters_item = other.as(@IR_Macro_Type).parameters.first_item
             while self_parameters_item != null and other_parameters_item != null {
                 let self_parameter = self_parameters_item.data
                 let other_parameter = other_parameters_item.data
@@ -440,7 +440,7 @@ func append(self: @IR_Builder, instruction: @IR_Instruction, location: @Source_L
 func build(self: @IR_Builder) -> Nothing {
     for_each(self.compilation_unit.statements) {
         if it is AST_Constant_Statement {
-            self.convert_constant_statement(it as @AST_Constant_Statement)
+            self.convert_constant_statement(it.as(@AST_Constant_Statement))
         } else if it is AST_External_Type_Statement {
             \ ingored
         } else if it is AST_Function_Statement {
@@ -450,7 +450,7 @@ func build(self: @IR_Builder) -> Nothing {
         } else if it is AST_Struct_Statement {
             \ ignored
         } else if it is AST_Variable_Statement {
-            self.convert_variable_statement(it as @AST_Variable_Statement, true)
+            self.convert_variable_statement(it.as(@AST_Variable_Statement), true)
         } else {
             abort(it.location, clone("Unsupported statement type: ").append(it.object_type.name))
         }
@@ -458,11 +458,11 @@ func build(self: @IR_Builder) -> Nothing {
 
     for_each(self.compilation_unit.statements) {
         if it is AST_Type_Statement {
-            let it = it as @AST_Type_Statement
+            let it = it.as(@AST_Type_Statement)
             if it is AST_Struct_Statement and (it is not AST_Generic_Struct_Statement) {
-                self.convert_struct_statement(it as @AST_Struct_Statement, it.name.lexeme, null)
+                self.convert_struct_statement(it.as(@AST_Struct_Statement), it.name.lexeme, null)
             } else if it is AST_External_Type_Statement {
-                self.convert_external_type_statement(it as @AST_External_Type_Statement, it.name.lexeme)
+                self.convert_external_type_statement(it.as(@AST_External_Type_Statement), it.name.lexeme)
             }
         }
     }
@@ -486,10 +486,10 @@ func build(self: @IR_Builder) -> Nothing {
 
 func convert_type_statement(self: @IR_Builder, statement: @AST_Type_Statement, type_name: @String) -> @IR_Type {
     if statement is AST_Struct_Statement {
-        return self.convert_struct_statement(statement as @AST_Struct_Statement, type_name, null)
+        return self.convert_struct_statement(statement.as(@AST_Struct_Statement), type_name, null)
     }
     if statement is AST_External_Type_Statement {
-        return self.convert_external_type_statement(statement as @AST_External_Type_Statement, type_name)
+        return self.convert_external_type_statement(statement.as(@AST_External_Type_Statement), type_name)
     }
     abort(statement.location, statement.object_type)
 }
@@ -498,8 +498,8 @@ func convert_external_type_statement(self: @IR_Builder, statement: @AST_External
     let type = self.get_named_type(type_name)
     if type != null {
         if type is IR_Opaque_Type {
-            let type = type as @IR_Opaque_Type
-            if type.statement == (statement as @AST_Type_Statement) {
+            let type = type.as(@IR_Opaque_Type)
+            if type.statement == statement.as(@AST_Type_Statement) {
                 return type
             }
         }
@@ -519,7 +519,7 @@ func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_S
     let type = self.get_named_type(type_name)
     if type != null {
         if type is IR_Struct_Type {
-            let type = type as @IR_Struct_Type
+            let type = type.as(@IR_Struct_Type)
             if type.statement == struct_statement {
                 return type
             }
@@ -554,7 +554,7 @@ func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_S
         if super_type is not IR_Struct_Type {
             abort(struct_statement.super_type.location, "Not a struct type")
         }
-        let super_type = super_type as @IR_Struct_Type
+        let super_type = super_type.as(@IR_Struct_Type)
         if super_type == type or super_type.has_super_type(type) {
             abort(struct_statement.super_type.location, "Type recursivity")
         }
@@ -597,7 +597,7 @@ func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_S
                 abort(it.name.location, "Cannot infer type of struct member")
             }
             if struct_member_type is IR_Struct_Type {
-                let struct_member_type = struct_member_type as @IR_Struct_Type
+                let struct_member_type = struct_member_type.as(@IR_Struct_Type)
                 if struct_member_type == type or struct_member_type.has_super_type(type) {
                     if it.type != null {
                         abort(it.type.location, "Type recursivity")
@@ -615,7 +615,7 @@ func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_S
         if object_type_type is not IR_Pointer_Type {
             abort(struct_statement.location, "Invalid state")
         }
-        let object_type_struct_type = (object_type_type as @IR_Pointer_Type).pointed_type
+        let object_type_struct_type = object_type_type.as(@IR_Pointer_Type).pointed_type
         if object_type_struct_type is not IR_Struct_Type {
             abort(struct_statement.location, "Invalid state")
         }
@@ -640,26 +640,26 @@ func convert_struct_statement(self: @IR_Builder, struct_statement: @AST_Struct_S
 
 func convert_type(self: @IR_Builder, type: @AST_Type) -> @IR_Type {
     if type is AST_Array_Type {
-        return self.convert_array_type(type as @AST_Array_Type)
+        return self.convert_array_type(type.as(@AST_Array_Type))
     }
     if type is AST_Function_Type {
-        return self.convert_function_type(type as @AST_Function_Type)
+        return self.convert_function_type(type.as(@AST_Function_Type))
     }
     if type is AST_Macro_Type {
-        return self.convert_macro_type(type as @AST_Macro_Type)
+        return self.convert_macro_type(type.as(@AST_Macro_Type))
     }
     if type is AST_Named_Type {
-        return self.convert_named_type(type as @AST_Named_Type)
+        return self.convert_named_type(type.as(@AST_Named_Type))
     }
     if type is AST_Placeholder_Type {
-        let type = type as @AST_Placeholder_Type
+        let type = type.as(@AST_Placeholder_Type)
         return make @IR_Placeholder_Type(name = type.name, ast_type = type)
     }
     if type is AST_Pointer_Type {
-        return self.convert_pointer_type(type as @AST_Pointer_Type)
+        return self.convert_pointer_type(type.as(@AST_Pointer_Type))
     }
     if type is AST_Specialized_Type {
-        return self.convert_specialized_type(type as @AST_Specialized_Type)
+        return self.convert_specialized_type(type.as(@AST_Specialized_Type))
     }
     abort(type.location, type.object_type)
 }
@@ -675,8 +675,8 @@ func convert_array_type(self: @IR_Builder, type: @AST_Array_Type) -> @IR_Type {
             if size_value is not IR_Constant_Value {
                 abort(type.size_expression.location, "Not an constant expression")
             }
-            let size_value = size_value as @IR_Constant_Value
-            return self.create_ir_fixed_array_type(item_type, (size_value.literal as @Integer_Token).value)
+            let size_value = size_value.as(@IR_Constant_Value)
+            return self.create_ir_fixed_array_type(item_type, size_value.literal.as(@Integer_Token).value)
         }
         abort(type.location, "Checked array types are not supported yet")
     }
@@ -688,7 +688,7 @@ func create_ir_fixed_array_type(self: @IR_Builder, item_type: @IR_Type, array_si
     while types_item != null {
         let type = types_item.data
         if type is IR_Fixed_Array_Type {
-            let type = type as @IR_Fixed_Array_Type
+            let type = type.as(@IR_Fixed_Array_Type)
             if type.item_type == item_type and type.size == array_size {
                 return type
             }
@@ -712,7 +712,7 @@ func create_ir_unchecked_array_type(self: @IR_Builder, item_type: @IR_Type) -> @
     while types_item != null {
         let type = types_item.data
         if type is IR_Unchecked_Array_Type {
-            let type = type as @IR_Unchecked_Array_Type
+            let type = type.as(@IR_Unchecked_Array_Type)
             if type.item_type == item_type {
                 return type
             }
@@ -836,10 +836,10 @@ func convert_specialized_type(self: @IR_Builder, type: @AST_Specialized_Type) ->
 
 func convert_type(self: @IR_Type) -> @AST_Type {
     if self is IR_Pointer_Type {
-        return make @AST_Pointer_Type(pointed_type = (self as @IR_Pointer_Type).pointed_type.convert_type())
+        return make @AST_Pointer_Type(pointed_type = self.as(@IR_Pointer_Type).pointed_type.convert_type())
     }
     if self is IR_Specialized_Struct_Type {
-        let self = self as @IR_Specialized_Struct_Type
+        let self = self.as(@IR_Specialized_Struct_Type)
         let type_arguments = make @List[@AST_Type_Argument]()
         self.type_arguments.for_each_list_item() {
             let type_argument = list_item.data
@@ -860,7 +860,7 @@ func convert_type(self: @IR_Type) -> @AST_Type {
         return make @AST_Named_Type(name = make @Identifier_Token(location = null, lexeme = self.name))
     }
     if self is IR_Function_Type {
-        let self = self as @IR_Function_Type
+        let self = self.as(@IR_Function_Type)
         let function_parameters = make @List[@AST_Parameter]()
         self.parameters.for_each_list_item() {
             let parameter = list_item.data
@@ -878,7 +878,7 @@ func convert_type(self: @IR_Type) -> @AST_Type {
         )
     }
     if self is IR_Unchecked_Array_Type {
-        let self = self as @IR_Unchecked_Array_Type
+        let self = self.as(@IR_Unchecked_Array_Type)
         return make @AST_Array_Type(
             item_type = self.item_type.convert_type()
             size_expression = null
@@ -886,7 +886,7 @@ func convert_type(self: @IR_Type) -> @AST_Type {
         )
     }
     if self is IR_Macro_Type {
-        let self = self as @IR_Macro_Type
+        let self = self.as(@IR_Macro_Type)
         let macro_parameters = make @List[@AST_Parameter]()
         self.parameters.for_each_list_item() {
             let parameter = list_item.data
@@ -905,7 +905,7 @@ func convert_type(self: @IR_Type) -> @AST_Type {
         return make @AST_Named_Type(name = make @Identifier_Token(location = null, lexeme = self.name))
     }
     if self is IR_Placeholder_Type {
-        return (self as @IR_Placeholder_Type).ast_type
+        return self.as(@IR_Placeholder_Type).ast_type
     }
     abort(null, self.object_type)
 }
@@ -919,7 +919,7 @@ func create_ir_pointer_type(self: @IR_Builder, pointed_type: @IR_Type) -> @IR_Po
     while types_item != null {
         let type = types_item.data
         if type is IR_Pointer_Type {
-            let type = type as @IR_Pointer_Type
+            let type = type.as(@IR_Pointer_Type)
             if type.pointed_type == pointed_type {
                 return type
             }
@@ -1087,7 +1087,7 @@ func remove_redundant_blocks(self: @IR_Builder, function: @IR_Function) -> Nothi
                     if block.last_instruction == null {
                         blocks.remove_current()
                     } else if block.last_instruction == block.first_instruction and block.last_instruction is IR_Direct_Jump_Instruction {
-                        let block_instruction = block.last_instruction as @IR_Direct_Jump_Instruction
+                        let block_instruction = block.last_instruction.as(@IR_Direct_Jump_Instruction)
                         block_instruction.block.predecessors.remove(block)
                         block_instruction.block.predecessors.prune()
                         blocks.remove_current()
@@ -1100,10 +1100,10 @@ func remove_redundant_blocks(self: @IR_Builder, function: @IR_Function) -> Nothi
                 if block.first_instruction == block.last_instruction and block.first_instruction is IR_Direct_Jump_Instruction {
                     \ found jump block
                     let block_predecessor = block.predecessors.last()
-                    let block_successor = (block.first_instruction as @IR_Direct_Jump_Instruction).block
+                    let block_successor = block.first_instruction.as(@IR_Direct_Jump_Instruction).block
                     if block_predecessor.last_instruction is IR_Conditional_Jump_Instruction {
                         block.predecessors.remove(block_predecessor).prune()
-                        let block_predecessor_instruction = block_predecessor.last_instruction as @IR_Conditional_Jump_Instruction
+                        let block_predecessor_instruction = block_predecessor.last_instruction.as(@IR_Conditional_Jump_Instruction)
                         if block_predecessor_instruction.false_block == block {
                             block_predecessor_instruction.false_block = block_successor
                         } else {
@@ -1115,7 +1115,7 @@ func remove_redundant_blocks(self: @IR_Builder, function: @IR_Function) -> Nothi
                     }
                     if block_predecessor.last_instruction is IR_Direct_Jump_Instruction {
                         block.predecessors.remove(block_predecessor).prune()
-                        let block_predecessor_instruction = block_predecessor.last_instruction as @IR_Direct_Jump_Instruction
+                        let block_predecessor_instruction = block_predecessor.last_instruction.as(@IR_Direct_Jump_Instruction)
                         block_predecessor_instruction.block = block_successor
                         block_successor.predecessors.remove(block).prune().append(block_predecessor)
                         repeat = true
@@ -1137,7 +1137,7 @@ func populate_phi_instructions(self: @IR_Builder, function: @IR_Function) -> Not
         let block = blocks.next()
         let block_instruction = block.first_instruction
         while block_instruction != null and block_instruction is IR_Phi_Instruction {
-            let instruction = block_instruction as @IR_Phi_Instruction
+            let instruction = block_instruction.as(@IR_Phi_Instruction)
             if instruction.operand_values.first_entry == null {
                 let block_predecessors = block.predecessors.create_iterator()
                 while block_predecessors.has_next() {
@@ -1184,7 +1184,7 @@ func remove_trivial_phi_instructions(self: @IR_Builder, function: @IR_Function) 
             let block = blocks.next()
             let block_instruction = block.first_instruction
             while block_instruction != null and block_instruction is IR_Phi_Instruction {
-                let instruction = block_instruction as @IR_Phi_Instruction
+                let instruction = block_instruction.as(@IR_Phi_Instruction)
                 let instruction_is_redundant = instruction.is_redundant()
                 if not instruction_is_redundant and instruction.is_trivial() {
                     \ found a trivial phi instruction
@@ -1205,7 +1205,7 @@ func remove_trivial_phi_instructions(self: @IR_Builder, function: @IR_Function) 
                     while old_value_links_item != null {
                         let old_value_link = old_value_links_item.data
                         if old_value_link is IR_Required_By_Value_Link {
-                            let old_value_link = old_value_link as @IR_Required_By_Value_Link
+                            let old_value_link = old_value_link.as(@IR_Required_By_Value_Link)
                             old_value_link.back_link.value = new_value
                             new_value.links.append(old_value_link)
                         }
@@ -1235,7 +1235,7 @@ func remove_redundant_set_instructions(self: @IR_Builder, function: @IR_Function
             let block_instruction = block.first_instruction
             while block_instruction != null {
                 if block_instruction is IR_Set_Instruction {
-                    let value = (block_instruction as @IR_Set_Instruction).get_value()
+                    let value = block_instruction.as(@IR_Set_Instruction).get_value()
                     if value is IR_Undefined_Value and block_instruction.result_value.user_instructions.size == 0 {
                         block.remove(block_instruction)
                         repeat = true
@@ -1250,7 +1250,7 @@ func remove_redundant_set_instructions(self: @IR_Builder, function: @IR_Function
                             while redundant_value_links_item != null {
                                 let redundant_value_link = redundant_value_links_item.data
                                 if redundant_value_link is IR_Requires_Value_Link {
-                                    let redundant_value_link = redundant_value_link as @IR_Requires_Value_Link
+                                    let redundant_value_link = redundant_value_link.as(@IR_Requires_Value_Link)
                                     redundant_value_link.back_link.value = replacement_value
                                     replacement_value.links.append(redundant_value_link)
                                 }
@@ -1283,34 +1283,34 @@ func convert_statement(self: @IR_Builder, statement: @AST_Statement) -> Nothing 
 
 func convert_assignment_statement(self: @IR_Builder, assignment_statement: @AST_Assignment_Statement) -> Nothing {
     if assignment_statement.storage_expression is AST_Array_Access_Expression {
-        let array_access_expression = assignment_statement.storage_expression as @AST_Array_Access_Expression
+        let array_access_expression = assignment_statement.storage_expression.as(@AST_Array_Access_Expression)
         let array_item_index_value = self.convert_expression(array_access_expression.index_expression, null)
         if array_item_index_value.type is not IR_Integer_Type {
             abort(array_access_expression.index_expression.location, "Not an integer expression")
         }
         let array_address = self.convert_expression_address(array_access_expression.array_expression)
         if array_address.type is IR_Unchecked_Array_Type {
-            let array_item_type = (array_address.type as @IR_Unchecked_Array_Type).item_type
+            let array_item_type = array_address.type.as(@IR_Unchecked_Array_Type).item_type
             let value = self.convert_expression(assignment_statement.value_expression, array_item_type)
             self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
-        } else if array_address.type is IR_Pointer_Type and (array_address.type as @IR_Pointer_Type).pointed_type is IR_Fixed_Array_Type {
-            let array_item_type = ((array_address.type as @IR_Pointer_Type).pointed_type as @IR_Fixed_Array_Type).item_type
+        } else if array_address.type is IR_Pointer_Type and array_address.type.as(@IR_Pointer_Type).pointed_type is IR_Fixed_Array_Type {
+            let array_item_type = array_address.type.as(@IR_Pointer_Type).pointed_type.as(@IR_Fixed_Array_Type).item_type
             let value = self.convert_expression(assignment_statement.value_expression, array_item_type)
             self.append(create_ir_store_array_item_instruction(array_address, array_item_index_value, value), assignment_statement.location)
         } else {
             abort(assignment_statement.location, clone("Not an array reference. Unexpected value type: ").append(array_address.type.name))
         }
     } else if assignment_statement.storage_expression is AST_Member_Access_Expression {
-        let member_access_expression = assignment_statement.storage_expression as @AST_Member_Access_Expression
+        let member_access_expression = assignment_statement.storage_expression.as(@AST_Member_Access_Expression)
         let object_address_value = self.convert_expression_address(member_access_expression.object_expression)
         if object_address_value.type is not IR_Pointer_Type {
             abort(assignment_statement.location, clone("Not a pointer value"))
         }
-        let object_type = (object_address_value.type as @IR_Pointer_Type).pointed_type
+        let object_type = object_address_value.type.as(@IR_Pointer_Type).pointed_type
         if object_type is not IR_Struct_Type {
             abort(assignment_statement.location, clone(object_type.name).append(" is not a struct type"))
         }
-        let struct_type = (object_type as @IR_Struct_Type)
+        let struct_type = object_type.as(@IR_Struct_Type)
         let struct_type_member = struct_type.get_member(member_access_expression.member_name.lexeme)
         if struct_type_member == null {
             struct_type.dump_struct_members()
@@ -1319,7 +1319,7 @@ func convert_assignment_statement(self: @IR_Builder, assignment_statement: @AST_
         let value = self.convert_expression(assignment_statement.value_expression, struct_type_member.type)
         self.append(create_ir_store_struct_member_instruction(object_address_value, struct_type_member, value), assignment_statement.location)
     } else if assignment_statement.storage_expression is AST_Symbol_Expression {
-        let symbol_expression = assignment_statement.storage_expression as @AST_Symbol_Expression
+        let symbol_expression = assignment_statement.storage_expression.as(@AST_Symbol_Expression)
         let variable_name = symbol_expression.name.lexeme
         let variable = self.get_variable(variable_name)
         if variable == null {
@@ -1394,7 +1394,7 @@ func convert_constant_statement(self: @IR_Builder, statement: @AST_Constant_Stat
     if value is not IR_Constant_Value {
         abort(statement.expression.location, "Not a constant expression")
     }
-    self.add_symbol(make @IR_Constant(name = statement.name.lexeme, location = statement.name.location, value = value as @IR_Constant_Value))
+    self.add_symbol(make @IR_Constant(name = statement.name.lexeme, location = statement.name.location, value = value.as(@IR_Constant_Value)))
 }
 
 func convert_return_statement(self: @IR_Builder, statement: @AST_Return_Statement) -> Nothing {
@@ -1491,13 +1491,13 @@ func convert_expression(self: @IR_Builder, expression: @AST_Expression, expected
 
 func convert_expression_address(self: @IR_Builder, expression: @AST_Expression) -> @IR_Value {
     if expression is AST_Array_Access_Expression {
-        return self.convert_array_access_expression_address(expression as @AST_Array_Access_Expression)
+        return self.convert_array_access_expression_address(expression.as(@AST_Array_Access_Expression))
     }
     if expression is AST_Member_Access_Expression {
-        return self.convert_member_access_expression_address(expression as @AST_Member_Access_Expression)
+        return self.convert_member_access_expression_address(expression.as(@AST_Member_Access_Expression))
     }
     if expression is AST_Symbol_Expression {
-        return self.convert_variable_expression_address(expression as @AST_Symbol_Expression)
+        return self.convert_variable_expression_address(expression.as(@AST_Symbol_Expression))
     }
     abort(expression.location, expression.object_type)
 }
@@ -1522,25 +1522,25 @@ func convert_array_access_expression(self: @IR_Builder, array_access_expression:
     let array_item_type: @IR_Type
     if object_value_type is IR_Unchecked_Array_Type {
         array_value = object_value
-        array_item_type = (object_value_type as @IR_Unchecked_Array_Type).item_type
-    } else if object_value_type is IR_Pointer_Type and (object_value_type as @IR_Pointer_Type).pointed_type is IR_Fixed_Array_Type {
+        array_item_type = object_value_type.as(@IR_Unchecked_Array_Type).item_type
+    } else if object_value_type is IR_Pointer_Type and object_value_type.as(@IR_Pointer_Type).pointed_type is IR_Fixed_Array_Type {
         array_value = object_value
-        array_item_type = ((object_value_type as @IR_Pointer_Type).pointed_type as @IR_Fixed_Array_Type).item_type
+        array_item_type = object_value_type.as(@IR_Pointer_Type).pointed_type.as(@IR_Fixed_Array_Type).item_type
     } else if object_value_type is IR_Fixed_Array_Type {
-        let array_type = object_value_type as @IR_Fixed_Array_Type
+        let array_type = object_value_type.as(@IR_Fixed_Array_Type)
         array_item_type = array_type.item_type
         if object_value is IR_Variable_Value {
             array_value = self.append(
                 create_ir_load_variable_address_instruction(
                     self.create_temp_value(self.create_ir_pointer_type(array_type))
-                    object_value as @IR_Variable_Value
+                    object_value.as(@IR_Variable_Value)
                 )
                 array_access_expression.location
             )
         } else if object_value is IR_Global_Variable_Value {
             array_value = make @IR_Global_Variable_Address_Value(
                 type = self.create_ir_pointer_type(array_type)
-                variable = (object_value as @IR_Global_Variable_Value).variable
+                variable = object_value.as(@IR_Global_Variable_Value).variable
             )
         } else {
             abort(array_access_expression.location, clone("Unsupported value type: ").append(object_value.object_type.name))
@@ -1589,13 +1589,13 @@ func convert_call_expression(self: @IR_Builder, call_expression: @AST_Call_Expre
         return self.convert_dynamic_call_expression(call_expression, callee_value, null)
     }
     if call_expression.callee_expression is AST_Member_Access_Expression {
-        let callee_expression = call_expression.callee_expression as @AST_Member_Access_Expression
+        let callee_expression = call_expression.callee_expression.as(@AST_Member_Access_Expression)
         let callee_value = self.convert_expression(callee_expression.object_expression, null)
         let callee_value_type = callee_value.type
         if callee_value_type is IR_Pointer_Type {
-            let callee_value_type = callee_value_type as @IR_Pointer_Type
+            let callee_value_type = callee_value_type.as(@IR_Pointer_Type)
             if callee_value_type.pointed_type is IR_Struct_Type {
-                let struct_type_member = (callee_value_type.pointed_type as @IR_Struct_Type).get_member(callee_expression.member_name.lexeme)
+                let struct_type_member = callee_value_type.pointed_type.as(@IR_Struct_Type).get_member(callee_expression.member_name.lexeme)
                 if struct_type_member != null and struct_type_member.type is IR_Function_Type {
                     let call_function_value = self.append(create_ir_load_struct_member_instruction(self.create_temp_value(struct_type_member.type), callee_value, struct_type_member, false), call_expression.location)
                     return self.convert_dynamic_call_expression(call_expression, call_function_value, callee_value)
@@ -1605,7 +1605,7 @@ func convert_call_expression(self: @IR_Builder, call_expression: @AST_Call_Expre
         return self.convert_direct_call_expression(call_expression, callee_expression.member_name, callee_value)
     }
     if call_expression.callee_expression is AST_Symbol_Expression {
-        let callee_expression = call_expression.callee_expression as @AST_Symbol_Expression
+        let callee_expression = call_expression.callee_expression.as(@AST_Symbol_Expression)
         let variable = self.get_variable(callee_expression.name.lexeme)
         if variable != null and variable.type is IR_Function_Type {
             let call_function_value = self.convert_expression(callee_expression, null)
@@ -1624,7 +1624,7 @@ func convert_direct_call_expression(self: @IR_Builder, call_expression: @AST_Cal
                 first_argument = self.append(
                     create_ir_load_variable_address_instruction(
                         self.create_temp_value(self.create_ir_pointer_type(first_argument.type))
-                        first_argument as @IR_Variable_Value
+                        first_argument.as(@IR_Variable_Value)
                     )
                     call_expression.callee_expression.location
                 )
@@ -1636,7 +1636,7 @@ func convert_direct_call_expression(self: @IR_Builder, call_expression: @AST_Cal
     let callable = self.get_callable(call_expression.location, callee_name.lexeme, call_arguments)
 
     if callable is IR_Macro {
-        self.convert_macro_call_expression(call_expression, call_arguments, callable as @IR_Macro)
+        self.convert_macro_call_expression(call_expression, call_arguments, callable.as(@IR_Macro))
         return null
     }
 
@@ -1644,7 +1644,7 @@ func convert_direct_call_expression(self: @IR_Builder, call_expression: @AST_Cal
         abort(call_expression.location, "Not a function call")
     }
 
-    let call_function = callable as @IR_Function
+    let call_function = callable.as(@IR_Function)
     let result_value: @IR_Variable_Value = null
     if call_function.return_type is not IR_Nothing_Type {
         result_value = self.create_temp_value(call_function.return_type)
@@ -1658,7 +1658,7 @@ func get_callable(self: @IR_Builder, call_location: @Source_Location, callee_nam
     \ Collect all existing callable candidates
     self.for_each_symbol() {
         if symbol is IR_Callable {
-            let symbol = symbol as @IR_Callable
+            let symbol = symbol.as(@IR_Callable)
             if symbol.name.equals(callee_name) {
                 if symbol.type.accepts(call_arguments) {
                     let is_duplicate = false
@@ -1777,7 +1777,7 @@ func get_callable(self: @IR_Builder, call_location: @Source_Location, callee_nam
         if callable_candidates.size == 0i64 {
             self.for_each_symbol() {
                 if symbol is IR_Callable {
-                    let callable = symbol as @IR_Callable
+                    let callable = symbol.as(@IR_Callable)
                     if callable.name.equals(callee_name) {
                         stderr.write(callable.location).write(": ").debug().write(callable.name).write(" = ").write(callable.type.convert_type()).reset().end_line()
                     }
@@ -1866,17 +1866,17 @@ func specialize(self: @IR_Builder, callable_type_parameters: @List[@AST_Type_Par
 
         \ Search parameter type for placeholders
         if parameter_type is IR_Pointer_Type {
-            let parameter_pointed_type = (parameter_type as @IR_Pointer_Type).pointed_type
+            let parameter_pointed_type = parameter_type.as(@IR_Pointer_Type).pointed_type
             if parameter_pointed_type is IR_Specialized_Struct_Type {
-                let parameter_pointed_type = parameter_pointed_type as @IR_Specialized_Struct_Type
+                let parameter_pointed_type = parameter_pointed_type.as(@IR_Specialized_Struct_Type)
                 if call_argument_type is not IR_Pointer_Type {
                     abort("Invalid state")
                 }
-                let call_argument_pointed_type = (call_argument_type as @IR_Pointer_Type).pointed_type
+                let call_argument_pointed_type = call_argument_type.as(@IR_Pointer_Type).pointed_type
                 if call_argument_pointed_type is not IR_Struct_Type {
                     abort("Invalid state")
                 }
-                let call_argument_pointed_type = call_argument_pointed_type as @IR_Struct_Type
+                let call_argument_pointed_type = call_argument_pointed_type.as(@IR_Struct_Type)
                 while call_argument_pointed_type != null {
                     if call_argument_pointed_type.statement == parameter_pointed_type.statement {
                         break
@@ -1889,13 +1889,13 @@ func specialize(self: @IR_Builder, callable_type_parameters: @List[@AST_Type_Par
                 if call_argument_pointed_type is not IR_Specialized_Struct_Type {
                     abort("Invalid state")
                 }
-                let call_argument_pointed_type_arguments_item = (call_argument_pointed_type as @IR_Specialized_Struct_Type).type_arguments.first_item
+                let call_argument_pointed_type_arguments_item = call_argument_pointed_type.as(@IR_Specialized_Struct_Type).type_arguments.first_item
                 let parameter_pointed_type_arguments_item = parameter_pointed_type.type_arguments.first_item
                 while call_argument_pointed_type_arguments_item != null and parameter_pointed_type_arguments_item != null {
                     let parameter_pointed_type_argument = parameter_pointed_type_arguments_item.data
                     if parameter_pointed_type_argument.type is IR_Placeholder_Type {
                         \ Replace placeholer type with type from the call argument type
-                        let placeholder_type: @AST_Type = (parameter_pointed_type_argument.type as @IR_Placeholder_Type).ast_type
+                        let placeholder_type: @AST_Type = parameter_pointed_type_argument.type.as(@IR_Placeholder_Type).ast_type
                         context_type_arguments.for_each_list_item() {
                             let type_argument = list_item.data
                             if type_argument.type == placeholder_type {
@@ -1915,7 +1915,7 @@ func specialize(self: @IR_Builder, callable_type_parameters: @List[@AST_Type_Par
             }
         } else if parameter_type is IR_Placeholder_Type {
             \ Replace placeholer type with type from the call argument type
-            let placeholder_type: @AST_Type = (parameter_type as @IR_Placeholder_Type).ast_type
+            let placeholder_type: @AST_Type = parameter_type.as(@IR_Placeholder_Type).ast_type
             context_type_arguments.for_each_list_item() {
                 let type_argument = list_item.data
                 if type_argument.type == placeholder_type {
@@ -1950,7 +1950,7 @@ func convert_dynamic_call_expression(self: @IR_Builder, call_expression: @AST_Ca
     if first_argument != null {
         call_arguments.prepend(make @IR_Call_Argument(value = first_argument))
     }
-    let call_function_type = call_function.type as @IR_Function_Type
+    let call_function_type = call_function.type.as(@IR_Function_Type)
     if not call_function_type.accepts(call_arguments) {
         abort(call_expression.location, "Unsupported arguments")
     }
@@ -1958,7 +1958,7 @@ func convert_dynamic_call_expression(self: @IR_Builder, call_expression: @AST_Ca
     if call_function_type.return_type is not IR_Nothing_Type {
         result_value = self.create_temp_value(call_function_type.return_type)
     }
-    return self.append(create_ir_dynamic_call_instruction(result_value, call_arguments, call_function as @IR_Variable_Value), call_expression.location)
+    return self.append(create_ir_dynamic_call_instruction(result_value, call_arguments, call_function.as(@IR_Variable_Value)), call_expression.location)
 }
 
 func convert_macro_call_expression(self: @IR_Builder, call_expression: @AST_Call_Expression, call_arguments: @List[@IR_Call_Argument], called_macro: @IR_Macro) -> Nothing {
@@ -1979,8 +1979,8 @@ func convert_macro_call_expression(self: @IR_Builder, call_expression: @AST_Call
                 make @IR_Macro(
                     name = parameter.name
                     location = parameter.location
-                    type = parameter.type as @IR_Macro_Type
-                    statement = (call_argument.value as @IR_Macro_Body_Value).macro_body
+                    type = parameter.type.as(@IR_Macro_Type)
+                    statement = call_argument.value.as(@IR_Macro_Body_Value).macro_body
                     context = caller_context
                 )
             )
@@ -2043,11 +2043,11 @@ func convert_is_expression(self: @IR_Builder, is_expression: @AST_Is_Expression)
     if value.type is not IR_Pointer_Type {
         abort(is_expression.value_expression.location, "Not an Object value")
     }
-    let value_struct_type = (value.type as @IR_Pointer_Type).pointed_type
+    let value_struct_type = value.type.as(@IR_Pointer_Type).pointed_type
     if value_struct_type is not IR_Struct_Type {
         abort(is_expression.value_expression.location, "Not an Object value")
     }
-    let value_struct_type = value_struct_type as @IR_Struct_Type
+    let value_struct_type = value_struct_type.as(@IR_Struct_Type)
     if value_struct_type.object_type_variable == null {
         abort(is_expression.value_expression.location, "Not an Object value")
     }
@@ -2056,7 +2056,7 @@ func convert_is_expression(self: @IR_Builder, is_expression: @AST_Is_Expression)
     if type is not IR_Struct_Type {
         abort(is_expression.type.location, "Not an Object type")
     }
-    let struct_type = type as @IR_Struct_Type
+    let struct_type = type.as(@IR_Struct_Type)
     if struct_type.object_type_variable == null {
         abort(is_expression.type.location, "Not an Object type")
     }
@@ -2087,7 +2087,7 @@ func convert_is_expression(self: @IR_Builder, is_expression: @AST_Is_Expression)
     \ if callable is not IR_Function {
     \     abort(callable.location, "Not a function")
     \ }
-    \ let function = callable as @IR_Function
+    \ let function = callable.as(@IR_Function)
     \ let result_value = self.create_temp_value(function.return_type)
     \ return self.append(create_ir_direct_call_instruction(result_value, call_arguments, function), is_expression.location)
 }
@@ -2105,13 +2105,13 @@ func convert_cast_expression(self: @IR_Builder, cast_expression: @AST_Cast_Expre
         return self.append(create_ir_cast_instruction(result_value, value), cast_expression.location)
     }
     if value.type is IR_Fixed_Array_Type and result_value.type is IR_Unchecked_Array_Type {
-        let value_type = value.type as @IR_Fixed_Array_Type
-        let result_value_type = result_value.type as @IR_Unchecked_Array_Type
+        let value_type = value.type.as(@IR_Fixed_Array_Type)
+        let result_value_type = result_value.type.as(@IR_Unchecked_Array_Type)
         if value_type.item_type == result_value_type.item_type {
             if value is IR_Global_Variable_Value {
                 value = make @IR_Global_Variable_Address_Value(
                     type = self.create_ir_pointer_type(value_type)
-                    variable = (value as @IR_Global_Variable_Value).variable
+                    variable = value.as(@IR_Global_Variable_Value).variable
                 )
             } else {
                 abort(cast_expression.location, clone("Unsupported value type: ").append(value.object_type.name))
@@ -2144,7 +2144,7 @@ func convert_function_expression(self: @IR_Builder, expression: @AST_Function_Ex
     let function: @IR_Function = null
     self.for_each_symbol() {
         if symbol is IR_Function {
-            let named_function = symbol as @IR_Function
+            let named_function = symbol.as(@IR_Function)
             if named_function.name == expression.function_statement.name.lexeme {
                 function = named_function
                 break
@@ -2201,7 +2201,7 @@ func convert_literal_expression(self: @IR_Builder, expression: @AST_Literal_Expr
         return make @IR_Constant_Value(type = self.get_named_type("i8"), literal = expression.literal)
     }
     if expression.literal is Integer_Token {
-        let integer_literal = expression.literal as @Integer_Token
+        let integer_literal = expression.literal.as(@Integer_Token)
         if integer_literal.type != null {
             expected_type = self.get_named_type(integer_literal.type)
         } else if expected_type == null or expected_type is not IR_Integer_Type {
@@ -2317,27 +2317,27 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
     let struct_type: @IR_Struct_Type
     if object_value.type is IR_Struct_Type {
         if object_value is IR_Variable_Value {
-            struct_type = object_value.type as @IR_Struct_Type
+            struct_type = object_value.type.as(@IR_Struct_Type)
             object_value = self.append(
                 create_ir_load_variable_address_instruction(
                     self.create_temp_value(self.create_ir_pointer_type(struct_type))
-                    object_value as @IR_Variable_Value
+                    object_value.as(@IR_Variable_Value)
                 )
                 member_access_expression.location
             )
         } else if object_value is IR_Global_Variable_Value {
-            struct_type = object_value.type as @IR_Struct_Type
+            struct_type = object_value.type.as(@IR_Struct_Type)
             object_value = make @IR_Global_Variable_Address_Value(
                 type = self.create_ir_pointer_type(struct_type)
-                variable = (object_value as @IR_Global_Variable_Value).variable
+                variable = object_value.as(@IR_Global_Variable_Value).variable
             )
         } else {
             abort(member_access_expression.location, clone("Unsupported value type: ").append(object_value.object_type.name))
         }
     } else if object_value.type is IR_Pointer_Type {
-        let pointed_type = (object_value.type as @IR_Pointer_Type).pointed_type
+        let pointed_type = object_value.type.as(@IR_Pointer_Type).pointed_type
         if pointed_type is IR_Fixed_Array_Type {
-            let array_type = pointed_type as @IR_Fixed_Array_Type
+            let array_type = pointed_type.as(@IR_Fixed_Array_Type)
             if not member_access_expression.member_name.lexeme.equals("length") {
                 abort(member_access_expression.location, "Did you mean length?")
             }
@@ -2353,9 +2353,9 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
         } else if pointed_type is not IR_Struct_Type {
             abort(member_access_expression.location, clone("Not a struct pointer value: ").append(object_value.type.name))
         }
-        struct_type = pointed_type as @IR_Struct_Type
+        struct_type = pointed_type.as(@IR_Struct_Type)
     } else if object_value.type is IR_Fixed_Array_Type {
-        let array_type = object_value.type as @IR_Fixed_Array_Type
+        let array_type = object_value.type.as(@IR_Fixed_Array_Type)
         if not member_access_expression.member_name.lexeme.equals("length") {
             abort(member_access_expression.location, "Did you mean length?")
         }
@@ -2474,16 +2474,16 @@ func convert_make_expression(self: @IR_Builder, expression: @AST_Make_Expression
     let expression_type = expression.type
     let type = self.convert_type(expression_type)
     if type is IR_Struct_Type {
-        return self.convert_struct_literal_expression(expression, type as @IR_Struct_Type)
+        return self.convert_struct_literal_expression(expression, type.as(@IR_Struct_Type))
     }
     if type is not IR_Pointer_Type {
         abort(expression_type.location, clone(type.name).append(" is not a pointer type"))
     }
-    type = (type as @IR_Pointer_Type).pointed_type
+    type = type.as(@IR_Pointer_Type).pointed_type
     if type is not IR_Struct_Type {
         abort(expression_type.location, clone(type.name).append(" is not a struct type"))
     }
-    let type = type as @IR_Struct_Type
+    let type = type.as(@IR_Struct_Type)
     let init_value = self.convert_struct_literal_expression(expression, type)
     return self.append(create_ir_new_instruction(self.create_temp_value(self.create_ir_pointer_type(type)), type, init_value), expression.location)
 }
@@ -2491,9 +2491,9 @@ func convert_make_expression(self: @IR_Builder, expression: @AST_Make_Expression
 func convert_struct_literal_expression(self: @IR_Builder, expression: @AST_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Literal_Value {
     let call_arguments: @List[@AST_Call_Argument]
     if expression is AST_Call_Expression {
-        call_arguments = (expression as @AST_Call_Expression).arguments
+        call_arguments = expression.as(@AST_Call_Expression).arguments
     } else if expression is AST_Make_Expression {
-        call_arguments = (expression as @AST_Make_Expression).init_arguments
+        call_arguments = expression.as(@AST_Make_Expression).init_arguments
     } else {
         abort(expression.location, clone("Unsupported type: ").append(expression.object_type.name))
     }
@@ -2586,17 +2586,17 @@ func convert_symbol_expression(self: @IR_Builder, expression: @AST_Symbol_Expres
         abort(expression.location, clone("Undeclared symbol: ").append(expression.name.lexeme))
     }
     if symbol is IR_Variable {
-        let value = self.get_variable_value(symbol as @IR_Variable)
+        let value = self.get_variable_value(symbol.as(@IR_Variable))
         if value == null {
             abort(expression.location, clone("Undeclared variable value: ").append(expression.name.lexeme))
         }
         return value
     }
     if symbol is IR_Constant {
-        return (symbol as @IR_Constant).value
+        return symbol.as(@IR_Constant).value
     }
     if symbol is IR_Function {
-        let function = symbol as @IR_Function
+        let function = symbol.as(@IR_Function)
         if expected_type != null and expected_type is IR_Function_Type {
             if expected_type.accepts(function.type) {
                 return make @IR_Function_Address_Value(type = expected_type, function = function)
@@ -2605,7 +2605,7 @@ func convert_symbol_expression(self: @IR_Builder, expression: @AST_Symbol_Expres
         abort(expression.location, clone("Unsupported function usage: ").append(function.name))
     }
     if symbol is IR_Macro {
-        let symbol = symbol as @IR_Macro
+        let symbol = symbol.as(@IR_Macro)
         return make @IR_Macro_Body_Value(
             type = self.get_named_type("Macro_Body")
             macro_body = symbol.statement
@@ -2629,7 +2629,7 @@ func convert_variable_expression_address(self: @IR_Builder, expression: @AST_Sym
         return self.append(
             create_ir_load_variable_address_instruction(
                 self.create_temp_value(self.create_ir_pointer_type(variable.type))
-                self.get_variable_value(variable) as @IR_Variable_Value
+                self.get_variable_value(variable).as(@IR_Variable_Value)
             )
             expression.location
         )
@@ -2642,31 +2642,31 @@ func convert_variable_expression_address(self: @IR_Builder, expression: @AST_Sym
 
 func deduce_expression_type(self: @IR_Builder, expression: @AST_Expression, expected_type: @IR_Type) -> @IR_Type {
     if expression is AST_Array_Access_Expression {
-        return self.deduce_array_access_expression_type(expression as @AST_Array_Access_Expression)
+        return self.deduce_array_access_expression_type(expression.as(@AST_Array_Access_Expression))
     }
     if expression is AST_Call_Expression {
-        return self.deduce_call_expression_type(expression as @AST_Call_Expression)
+        return self.deduce_call_expression_type(expression.as(@AST_Call_Expression))
     }
     if expression is AST_Cast_Expression {
-        return self.convert_type((expression as @AST_Cast_Expression).type)
+        return self.convert_type(expression.as(@AST_Cast_Expression).type)
     }
     if expression is AST_Function_Expression {
-        return self.convert_type((expression as @AST_Function_Expression).function_statement.type)
+        return self.convert_type(expression.as(@AST_Function_Expression).function_statement.type)
     }
     if expression is AST_Literal_Expression {
-        return self.deduce_literal_expression_type(expression as @AST_Literal_Expression, expected_type)
+        return self.deduce_literal_expression_type(expression.as(@AST_Literal_Expression), expected_type)
     }
     if expression is AST_Make_Expression {
-        return self.deduce_make_expression_type(expression as @AST_Make_Expression)
+        return self.deduce_make_expression_type(expression.as(@AST_Make_Expression))
     }
     if expression is AST_Member_Access_Expression {
-        return self.deduce_member_access_expression_type(expression as @AST_Member_Access_Expression)
+        return self.deduce_member_access_expression_type(expression.as(@AST_Member_Access_Expression))
     }
     if expression is AST_Symbol_Expression {
-        return self.deduce_symbol_expression_type(expression as @AST_Symbol_Expression)
+        return self.deduce_symbol_expression_type(expression.as(@AST_Symbol_Expression))
     }
     if expression is AST_Wrapped_Expression {
-        return self.deduce_expression_type((expression as @AST_Wrapped_Expression).expression, expected_type)
+        return self.deduce_expression_type(expression.as(@AST_Wrapped_Expression).expression, expected_type)
     }
     abort(expression.location, expression.object_type)
 }
@@ -2674,7 +2674,7 @@ func deduce_expression_type(self: @IR_Builder, expression: @AST_Expression, expe
 func deduce_array_access_expression_type(self: @IR_Builder, expression: @AST_Array_Access_Expression) -> @IR_Type {
     let array_type = self.deduce_expression_type(expression.array_expression, null)
     if array_type is IR_Fixed_Array_Type {
-        let array_item_type = (array_type as @IR_Fixed_Array_Type).item_type
+        let array_item_type = array_type.as(@IR_Fixed_Array_Type).item_type
         if array_item_type is IR_Struct_Type or array_item_type is IR_Fixed_Array_Type {
             return self.create_ir_pointer_type(array_item_type)
         }
@@ -2687,12 +2687,12 @@ func deduce_call_expression_type(self: @IR_Builder, expression: @AST_Call_Expres
     let argument_types = make @List[@IR_Type]()
     let arguments = expression.arguments.create_iterator()
     while arguments.has_next() {
-        let argument = arguments.next() as @AST_Expression
+        let argument = arguments.next().as(@AST_Expression)
         let argument_type = self.deduce_expression_type(argument, null)
         argument_types.append(argument_type)
     }
     if expression.callee_expression is AST_Member_Access_Expression {
-        let callee_expression = expression.callee_expression as @AST_Member_Access_Expression
+        let callee_expression = expression.callee_expression.as(@AST_Member_Access_Expression)
         let object_type = self.deduce_expression_type(callee_expression.object_expression, null)
         if object_type is IR_Struct_Type {
             argument_types.prepend(self.create_ir_pointer_type(object_type))
@@ -2713,7 +2713,7 @@ func deduce_literal_expression_type(self: @IR_Builder, expression: @AST_Literal_
     if literal is Boolean_Token {
         return self.get_named_type("bool")
     } else if literal is Integer_Token {
-        let type_name = (literal as @Integer_Token).type
+        let type_name = literal.as(@Integer_Token).type
         if type_name == null {
             if expected_type != null and expected_type is IR_Integer_Type {
                 return expected_type
@@ -2743,11 +2743,11 @@ func deduce_member_access_expression_type(self: @IR_Builder, expression: @AST_Me
     if object_type is not IR_Pointer_Type {
         abort(expression.location, object_type.object_type)
     }
-    let object_type = (object_type as @IR_Pointer_Type)
+    let object_type = object_type.as(@IR_Pointer_Type)
     if object_type.pointed_type is not IR_Struct_Type {
         abort(expression.location, object_type.pointed_type.object_type)
     }
-    let struct_type = (object_type.pointed_type) as @IR_Struct_Type
+    let struct_type = (object_type.pointed_type).as(@IR_Struct_Type)
     let member = struct_type.get_member(expression.member_name.lexeme)
     if member == null {
         if expression.member_name.lexeme.equals("super") {
@@ -2774,7 +2774,7 @@ func deduce_symbol_expression_type(self: @IR_Builder, expression: @AST_Symbol_Ex
             }
             let statement = named_statements.first_item.data
             if statement is AST_Function_Statement {
-                return self.convert_type((statement as @AST_Function_Statement).type)
+                return self.convert_type(statement.as(@AST_Function_Statement).type)
             }
             abort(statement.location, clone("Unsupported statement type: ").append(statement.object_type.name))
         }
@@ -2783,10 +2783,10 @@ func deduce_symbol_expression_type(self: @IR_Builder, expression: @AST_Symbol_Ex
         abort(expression.location, clone("Unknown symbol: ").append(expression.name.lexeme))
     }
     if symbol is IR_Variable {
-        return (symbol as @IR_Variable).type
+        return symbol.as(@IR_Variable).type
     }
     if symbol is IR_Constant {
-        return (symbol as @IR_Constant).value.type
+        return symbol.as(@IR_Constant).value.type
     }
     abort(expression.location, clone("Unsupported symbol type: ").append(symbol.object_type.name))
 }

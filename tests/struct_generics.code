@@ -34,8 +34,8 @@ func main() -> i32 {
 
     let size = 1usize
     let map = make @String_Values(
-        keys = make List[@String](items = malloc(size * 8) as [@String; ?])
-        values = make List[i32](items = malloc(size * 4) as [i32; ?])
+        keys = make List[@String](items = malloc(size * 8).as([@String; ?]))
+        values = make List[i32](items = malloc(size * 4).as([i32; ?]))
     )
 
     map.keys.items[0] = "forty-two"

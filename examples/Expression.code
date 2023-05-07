@@ -10,12 +10,12 @@ struct Int_Expression: Expression(dump = dump_int, evaluate = evaluate_int) {
 }
 
 func dump_int(self: @Expression) -> Nothing {
-    let self = self as @Int_Expression
+    let self = self.as(@Int_Expression)
     stdout.write(self.value)
 }
 
 func evaluate_int(self: @Expression) -> i32 {
-    let self = self as @Int_Expression
+    let self = self.as(@Int_Expression)
     return self.value
 }
 
@@ -26,7 +26,7 @@ struct Binary_Expression: Expression(dump = dump_binary_expression) {
 }
 
 func dump_binary_expression(self: @Expression) -> Nothing {
-    let self = self as @Binary_Expression
+    let self = self.as(@Binary_Expression)
     stdout.write('(')
     self.left_expression.dump()
     stdout.write(' ').write(self.operator).write(' ')
@@ -38,7 +38,7 @@ struct Addition_Expression: Binary_Expression(operator = "+", evaluate = evaluat
 }
 
 func evaluate_addition(self: @Expression) -> i32 {
-    let self = self as @Addition_Expression
+    let self = self.as(@Addition_Expression)
     return self.left_expression.evaluate() + self.right_expression.evaluate()
 }
 
@@ -46,7 +46,7 @@ struct Substraction_Expression: Binary_Expression(operator = "-", evaluate = eva
 }
 
 func evaluate_substraction(self: @Expression) -> i32 {
-    let self = self as @Substraction_Expression
+    let self = self.as(@Substraction_Expression)
     return self.left_expression.evaluate() - self.right_expression.evaluate()
 }
 

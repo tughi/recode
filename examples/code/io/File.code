@@ -23,7 +23,7 @@ func write(file: @FILE, number: i32) -> @FILE {
     if number >= 10 {
         file.write(number / 10)
     }
-    fputc(number // 10 + '0' as i32, file)
+    fputc(number // 10 + '0'.as(i32), file)
     return file
 }
 
@@ -34,11 +34,11 @@ func write(file: @FILE, number: isize) -> @FILE {
     if number >= 10 {
         file.write(number / 10)
     }
-    return file.write((number // 10) as i8 + '0')
+    return file.write((number // 10).as(i8) + '0')
 }
 
 func write(file: @FILE, char: i8) -> @FILE {
-    fputc(char as i32, file)
+    fputc(char.as(i32), file)
     return file
 }
 

@@ -18,7 +18,7 @@ func create_text_model(text: @String) -> @GUI_Text_Model {
 
     let line_text = "".clone()
     text.for_each_char() {
-        if char == '\n' as u8 {
+        if char == '\n'.as(u8) {
             model.append(make @GUI_Text_Model_Line(text = line_text))
             line_text = "".clone()
         } else {

@@ -65,7 +65,7 @@ func main() -> i32 {
         gui.vertical_linear_layout() {
             gui.spacing = 32
 
-            glyph_editor = gui.glyph_editor(font.glyphs['A' as u8])
+            glyph_editor = gui.glyph_editor(font.glyphs['A'.as(u8)])
 
             save_button = gui.button("Save")
             save_button.width_policy = make Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
@@ -79,11 +79,11 @@ func main() -> i32 {
             gui.height_policy = make Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
             gui.spacing = 32
 
-            let glyph_chooser = gui.glyph_chooser('A' as u8)
+            let glyph_chooser = gui.glyph_chooser('A'.as(u8))
             glyph_chooser.width_policy = make Size_Policy(mode = SIZE_POLICY_MODE_STRETCHED)
             glyph_chooser.data = make @Glyph_Chooser_Data(glyph_editor = glyph_editor)
             glyph_chooser.handle_glyph_selected = func (self: @Glyph_Chooser, glyph: u8) -> Nothing {
-                let glyph_editor = (self.data as @Glyph_Chooser_Data).glyph_editor
+                let glyph_editor = self.data.as(@Glyph_Chooser_Data).glyph_editor
                 glyph_editor.glyph = font.glyphs[glyph]
                 glyph_editor.gui.post(make @GUI_Event_Widget_Updated(widget = glyph_editor))
             }
@@ -100,15 +100,15 @@ func main() -> i32 {
         while gui.first_event != null {
             let event = gui.first_event
             if event.type == GUI_EVENT_TYPE_WIDGET_UPDATED {
-                let event = event as @GUI_Event_Widget_Updated
+                let event = event.as(@GUI_Event_Widget_Updated)
                 stdout.write(event.widget.name).write(event.widget.bounds).write(" updated").end_line()
                 event.widget.draw(canvas)
 
                 SDL_UpdateWindowSurface(window)
             } else if event.type == GUI_EVENT_TYPE_MOUSE_MOVED {
-                gui.on_mouse_moved(event as @GUI_Event_Mouse_Moved)
+                gui.on_mouse_moved(event.as(@GUI_Event_Mouse_Moved))
             } else {
-                stderr.write("Unsupported event type: 0x").write(event.type as u32, 16u8).write("u8").end_line()
+                stderr.write("Unsupported event type: 0x").write(event.type.as(u32), 16u8).write("u8").end_line()
                 abort()
             }
             gui.first_event = event.next_event
@@ -120,29 +120,29 @@ func main() -> i32 {
             if sdl_event.type == SDL_QUIT {
                 break
             } else if sdl_event.type == SDL_MOUSEMOTION {
-                let sdl_event = sdl_event as @SDL_MouseMotionEvent
+                let sdl_event = sdl_event.as(@SDL_MouseMotionEvent)
                 gui_event_mouse_moved.x = sdl_event.x
                 gui_event_mouse_moved.y = sdl_event.y
                 gui.post(gui_event_mouse_moved)
             } else if sdl_event.type == SDL_MOUSEBUTTONDOWN {
-                let sdl_event = sdl_event as @SDL_MouseButtonEvent
+                let sdl_event = sdl_event.as(@SDL_MouseButtonEvent)
                 gui_event_mouse_button_pressed.button = sdl_event.button
                 gui_event_mouse_button_pressed.x = gui_event_mouse_moved.x
                 gui_event_mouse_button_pressed.y = gui_event_mouse_moved.y
                 gui.on_mouse_button_pressed(gui_event_mouse_button_pressed)
             } else if sdl_event.type == SDL_MOUSEBUTTONUP {
-                let sdl_event = sdl_event as @SDL_MouseButtonEvent
+                let sdl_event = sdl_event.as(@SDL_MouseButtonEvent)
                 gui_event_mouse_button_released.button = sdl_event.button
                 gui_event_mouse_button_released.x = gui_event_mouse_moved.x
                 gui_event_mouse_button_released.y = gui_event_mouse_moved.y
                 gui.on_mouse_button_released(gui_event_mouse_button_released)
             } else if sdl_event.type == SDL_MOUSEWHEEL {
-                let sdl_event = sdl_event as @SDL_MouseWheelEvent
+                let sdl_event = sdl_event.as(@SDL_MouseWheelEvent)
                 gui_event_mouse_scrolled.x = sdl_event.x
                 gui_event_mouse_scrolled.y = sdl_event.y
                 gui.on_mouse_scrolled(gui_event_mouse_scrolled)
             } else if sdl_event.type == SDL_WINDOWEVENT {
-                let sdl_event = sdl_event as @SDL_WindowEvent
+                let sdl_event = sdl_event.as(@SDL_WindowEvent)
                 if sdl_event.event == SDL_WINDOWEVENT_RESIZED {
                     let window_surface = SDL_GetWindowSurface(window)
                     if window_surface == null {

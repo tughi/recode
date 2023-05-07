@@ -12,7 +12,7 @@ define COLOR_TEXT = 0xbfbfafu32
 struct GUI: GUI_Layout(
     name = "GUI"
     on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
-        let self = self as @GUI
+        let self = self.as(@GUI)
         let last_hovered_widget = self.hovered_widget
         self.hovered_widget = self
         self.for_each_child() {
@@ -37,7 +37,7 @@ struct GUI: GUI_Layout(
         self.hovered_widget.on_mouse_scrolled(event)
     }
     layout = func (self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-        let self = self as @GUI
+        let self = self.as(@GUI)
 
         self.if_size_changes(left, top, right, bottom) {
             let width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_EXACTLY, size = right - left + 1)

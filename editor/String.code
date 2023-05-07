@@ -3,7 +3,7 @@
 include "./LibC.code"
 
 struct String {
-    data = malloc(16usize) as [u8; ?]
+    data = malloc(16usize).as([u8; ?])
     data_size = 16usize
     length = 0usize
 }
@@ -16,7 +16,7 @@ func clear(self: @String) -> @String {
 
 func clone(self: @String) -> @String {
     let other = make @String(
-        data = malloc(self.length + 1) as [u8; ?]
+        data = malloc(self.length + 1).as([u8; ?])
         data_size = self.length + 1
         length = self.length
     )
@@ -31,7 +31,7 @@ func clone(self: @String) -> @String {
 func copy(self: @String, other: @String) -> @String {
     if self.data_size < other.length + 1 {
         self.data_size = other.length + 1
-        self.data = realloc(self.data, self.data_size) as [u8; ?]
+        self.data = realloc(self.data, self.data_size).as([u8; ?])
     }
     let index = 0usize
     while index <= other.length {
@@ -73,7 +73,7 @@ func starts_with(self: @String, other: @String) -> bool {
 func append(self: @String, char: u8) -> @String {
     if self.length + 1 >= self.data_size {
         self.data_size = self.data_size + 16
-        self.data = realloc(self.data, self.data_size) as [u8; ?]
+        self.data = realloc(self.data, self.data_size).as([u8; ?])
     }
     self.data[self.length] = char
     self.length = self.length + 1
@@ -83,7 +83,7 @@ func append(self: @String, char: u8) -> @String {
 
 macro for_each_char(self: @String, handler: macro (char: u8)) {
     let index = 0
-    let length = self.length as i32
+    let length = self.length.as(i32)
     while index < length {
         handler(self.data[index])
         index = index + 1

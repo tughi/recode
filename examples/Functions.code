@@ -25,13 +25,13 @@ struct Int_Value: Value(dump = dump_int) {
 }
 
 func dump_int(self: @Value, file: @FILE) -> Nothing {
-    let self = self as @Int_Value
+    let self = self.as(@Int_Value)
     file.write("Int: ").write(self.value).end_line()
 }
 
 struct String_Value: Value(
     dump = func (self: @Value, file: @FILE) -> Nothing {
-        let self = self as @String_Value
+        let self = self.as(@String_Value)
         file.write("String: ").write(self.value).end_line()
     }
 ) {

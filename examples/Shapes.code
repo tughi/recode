@@ -16,8 +16,8 @@ func main() -> i32 {
     if shape is Triangle {
         return 1
     }
-    stdout.write(shape.object_type.name).write(" has sides: ").write((shape as @Polygon).sides).end_line()
-    let shape = shape as @Polygon
+    stdout.write(shape.object_type.name).write(" has sides: ").write(shape.as(@Polygon).sides).end_line()
+    let shape = shape.as(@Polygon)
 
     polygon = make Polygon(sides = 4)
 

@@ -11,7 +11,7 @@ func write(file: @FILE, chars: [u8; ?]) -> @FILE {
     let index = 0isize
     loop {
         let char = chars[index]
-        if char == '\0' as u8 {
+        if char == '\0'.as(u8) {
             return file
         }
         file.write(char)
@@ -21,12 +21,12 @@ func write(file: @FILE, chars: [u8; ?]) -> @FILE {
 
 func write(file: @FILE, number: i32) -> @FILE {
     if number < 0 {
-        return file.write('-' as u8).write(-number)
+        return file.write('-'.as(u8)).write(-number)
     }
     if number >= 10 {
         file.write(number / 10)
     }
-    fputc(number // 10 + '0' as i32, file)
+    fputc(number // 10 + '0'.as(i32), file)
     return file
 }
 
@@ -34,40 +34,40 @@ func write(file: @FILE, number: u32) -> @FILE {
     if number >= 10 {
         file.write(number / 10)
     }
-    fputc((number // 10) as i32 + '0' as i32, file)
+    fputc((number // 10).as(i32) + '0'.as(i32), file)
     return file
 }
 
 func write(file: @FILE, number: u32, base: u8) -> @FILE {
-    if number >= base as u32 {
-        file.write(number / base as u32, base)
+    if number >= base.as(u32) {
+        file.write(number / base.as(u32), base)
     }
-    let digit = (number // base as u32 * 1) as i32
+    let digit = (number // base.as(u32) * 1).as(i32)
     if digit >= 10 {
-        fputc(digit - 10 + 'A' as i32, file)
+        fputc(digit - 10 + 'A'.as(i32), file)
     } else {
-        fputc(digit + '0' as i32, file)
+        fputc(digit + '0'.as(i32), file)
     }
     return file
 }
 
 func write(file: @FILE, number: isize) -> @FILE {
     if number < 0 {
-        return file.write('-' as u8).write(-number)
+        return file.write('-'.as(u8)).write(-number)
     }
     if number >= 10 {
         file.write(number / 10)
     }
-    return file.write((number // 10) as u8 + '0' as u8)
+    return file.write((number // 10).as(u8) + '0'.as(u8))
 }
 
 func write(file: @FILE, char: u8) -> @FILE {
-    fputc(char as i32, file)
+    fputc(char.as(i32), file)
     return file
 }
 
 func end_line(file: @FILE) -> @FILE {
-    return file.write('\n' as u8)
+    return file.write('\n'.as(u8))
 }
 
 func read_file(file_path: @String) -> @String {
@@ -95,7 +95,7 @@ func read_all(file: @FILE) -> @String {
         if char < 0 {
             break
         }
-        content.append(char as u8)
+        content.append(char.as(u8))
     }
     return content
 }
@@ -107,10 +107,10 @@ func read_line(file: @FILE, line: @String) -> bool {
     line.clear()
     loop {
         let char = fgetc(file)
-        if char < 0 or char == '\n' as i32 {
+        if char < 0 or char == '\n'.as(i32) {
             break
         }
-        line.append(char as u8)
+        line.append(char.as(u8))
     }
     return true
 }

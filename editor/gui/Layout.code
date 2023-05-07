@@ -5,7 +5,7 @@ include "./Widget.code"
 struct GUI_Layout: GUI_Widget(
     name = "GUI_Layout"
     on_mouse_moved = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Moved) -> Nothing {
-        let self = self as @GUI_Layout
+        let self = self.as(@GUI_Layout)
         if self.bounds.contains(event.x, event.y) {
             self.gui.hovered_widget = self
         }
@@ -22,7 +22,7 @@ struct GUI_Layout: GUI_Widget(
 }
 
 func draw_layout(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
-    let self = self as @GUI_Layout
+    let self = self.as(@GUI_Layout)
     \ self.draw_widget(canvas)
     self.for_each_child() {
         child.draw(canvas)

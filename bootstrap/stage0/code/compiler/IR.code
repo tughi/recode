@@ -11,11 +11,11 @@ func equals(self: @IR_Type, other: @IR_Type) -> bool {
         return false
     }
     if self is IR_Pointer_Type {
-        return (self as @IR_Pointer_Type).pointed_type.equals((other as @IR_Pointer_Type).pointed_type)
+        return self.as(@IR_Pointer_Type).pointed_type.equals(other.as(@IR_Pointer_Type).pointed_type)
     }
     if self is IR_Function_Type {
-        let self = self as @IR_Function_Type
-        let other = other as @IR_Function_Type
+        let self = self.as(@IR_Function_Type)
+        let other = other.as(@IR_Function_Type)
         if not self.return_type.equals(other.return_type) {
             return false
         }
@@ -264,7 +264,7 @@ func write(file: @FILE, value: @IR_Value, check_users: bool) -> @FILE {
     if check_users and value.user_instructions.size == 0 {
         file.flush()
         if value is IR_Variable_Value {
-            let value = value as @IR_Variable_Value
+            let value = value.as(@IR_Variable_Value)
             let value_version = value.version
         }
         stderr.write("Found ").write(value.object_type.name).write(" without user instructions: ")
@@ -296,7 +296,7 @@ struct IR_Undefined_Value: IR_Value(
 
 struct IR_Constant_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        return file.write((value as @IR_Constant_Value).literal.lexeme)
+        return file.write(value.as(@IR_Constant_Value).literal.lexeme)
     }
 ) {
     literal: @Literal_Token
@@ -304,14 +304,14 @@ struct IR_Constant_Value: IR_Value(
 
 struct IR_Struct_Literal_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        let value = value as @IR_Struct_Literal_Value
+        let value = value.as(@IR_Struct_Literal_Value)
         file.write(value.type.name).write('(')
         let value_links_item = value.links.first_item
         let is_first_value_link = true
         while value_links_item != null {
             let value_link = value_links_item.data
             if value_link is IR_Struct_Literal_Member_Value_Link {
-                let value_link = value_link as @IR_Struct_Literal_Member_Value_Link
+                let value_link = value_link.as(@IR_Struct_Literal_Member_Value_Link)
                 if is_first_value_link {
                     is_first_value_link = false
                 } else {
@@ -336,7 +336,7 @@ func get_member_value(self: @IR_Struct_Literal_Value, struct_type_member: @IR_St
     while links_item != null {
         let link = links_item.data
         if link is IR_Struct_Literal_Member_Value_Link {
-            let link = link as @IR_Struct_Literal_Member_Value_Link
+            let link = link.as(@IR_Struct_Literal_Member_Value_Link)
             if link.struct_type_member == struct_type_member {
                 return link.value
             }
@@ -355,7 +355,7 @@ func set_member_value(self: @IR_Struct_Literal_Value, struct_type_member: @IR_St
 
 struct IR_Macro_Body_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        let value = value as @IR_Macro_Body_Value
+        let value = value.as(@IR_Macro_Body_Value)
         return file.write("{ ... }")
     }
 ) {
@@ -364,7 +364,7 @@ struct IR_Macro_Body_Value: IR_Value(
 
 struct IR_Global_Variable_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        let value = value as @IR_Variable_Value
+        let value = value.as(@IR_Variable_Value)
         return file.write(value.variable.name)
     }
 ) {
@@ -373,7 +373,7 @@ struct IR_Global_Variable_Value: IR_Value(
 
 struct IR_Global_Variable_Address_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        let value = value as @IR_Variable_Value
+        let value = value.as(@IR_Variable_Value)
         return file.write(value.variable.name).write(".address")
     }
 ) {
@@ -382,7 +382,7 @@ struct IR_Global_Variable_Address_Value: IR_Value(
 
 struct IR_Variable_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        let value = value as @IR_Variable_Value
+        let value = value.as(@IR_Variable_Value)
         return file.write(value.variable.name).write('.').write(value.version)
     }
 ) {
@@ -399,7 +399,7 @@ func init(self: @IR_Variable_Value, variable: @IR_Variable) -> @IR_Variable_Valu
 
 struct IR_Variable_Address_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        let value = value as @IR_Variable_Address_Value
+        let value = value.as(@IR_Variable_Address_Value)
         return file.write(value.variable_value, true).write(".address")
     }
 ) {
@@ -408,7 +408,7 @@ struct IR_Variable_Address_Value: IR_Value(
 
 struct IR_Function_Address_Value: IR_Value(
     dump = func (value: @IR_Value, file: @FILE) -> @FILE {
-        let value = value as @IR_Function_Address_Value
+        let value = value.as(@IR_Function_Address_Value)
         return file.write_function_label(value.function).write(".address")
     }
 ) {
@@ -615,13 +615,13 @@ func is_exit_instruction(self: @IR_Instruction) -> bool {
         return true
     }
     if self is IR_Direct_Call_Instruction {
-        let self = self as @IR_Direct_Call_Instruction
+        let self = self.as(@IR_Direct_Call_Instruction)
         let function = self.function
         if function.name.equals("abort") {
             return true
         }
         if function.name.equals("exit") and function.parameters.size == 1 {
-            let function_parameter = function.parameters.get(0 as i64)
+            let function_parameter = function.parameters.get(0i64)
             if function_parameter.type is IR_IntMax_Type {
                 return true
             }
@@ -698,7 +698,7 @@ func get_argument_key(index: i64) -> @String {
 struct IR_Direct_Call_Instruction: IR_Call_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Direct_Call_Instruction
+        let instruction = instruction.as(@IR_Direct_Call_Instruction)
         file.write("call").write('(').write_function_label(instruction.function)
         instruction.dump_ir_call_instruction_arguments(file)
         return file.write(')').end_line()
@@ -719,7 +719,7 @@ func create_ir_direct_call_instruction(result_value: @IR_Variable_Value, call_ar
 struct IR_Dynamic_Call_Instruction: IR_Call_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Dynamic_Call_Instruction
+        let instruction = instruction.as(@IR_Dynamic_Call_Instruction)
         let function_address = instruction.get_function_address()
         file.write("call").write('(').write(function_address.variable.name).write('.').write(function_address.version)
         instruction.dump_ir_call_instruction_arguments(file)
@@ -739,13 +739,13 @@ func create_ir_dynamic_call_instruction(result_value: @IR_Variable_Value, call_a
 }
 
 func get_function_address(self: @IR_Dynamic_Call_Instruction) -> @IR_Variable_Value {
-    return self.operand_values.get("function_address") as @IR_Variable_Value
+    return self.operand_values.get("function_address").as(@IR_Variable_Value)
 }
 
 struct IR_Cast_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Cast_Instruction
+        let instruction = instruction.as(@IR_Cast_Instruction)
         return file.write("cast").write('(').write(instruction.get_value(), true).write(')').end_line()
     }
 ) {
@@ -765,7 +765,7 @@ func get_value(self: @IR_Cast_Instruction) -> @IR_Value {
 struct IR_Is_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Is_Instruction
+        let instruction = instruction.as(@IR_Is_Instruction)
         return file.write("is").write('(').write(instruction.get_value(), true).write(", ").write(instruction.type.name).write(')').end_line()
     }
 ) {
@@ -789,7 +789,7 @@ struct IR_Jump_Instruction: IR_Instruction {
 struct IR_Conditional_Jump_Instruction: IR_Jump_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Conditional_Jump_Instruction
+        let instruction = instruction.as(@IR_Conditional_Jump_Instruction)
         return file.write("jump(").write(instruction.get_condition_value(), true).write(", block.").write(instruction.true_block.id).write(", block.").write(instruction.false_block.id).write(')').end_line()
     }
 ) {
@@ -804,7 +804,7 @@ func get_condition_value(self: @IR_Conditional_Jump_Instruction) -> @IR_Value {
 struct IR_Direct_Jump_Instruction: IR_Jump_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Direct_Jump_Instruction
+        let instruction = instruction.as(@IR_Direct_Jump_Instruction)
         return file.write("jump(block.").write(instruction.block.id).write(')').end_line()
     }
 ) {
@@ -814,7 +814,7 @@ struct IR_Direct_Jump_Instruction: IR_Jump_Instruction(
 struct IR_Load_Array_Item_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Load_Array_Item_Instruction
+        let instruction = instruction.as(@IR_Load_Array_Item_Instruction)
         return file.write("load_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(')').end_line()
     }
 ) {
@@ -841,7 +841,7 @@ func get_index_value(self: @IR_Load_Array_Item_Instruction) -> @IR_Value {
 struct IR_Load_Struct_Member_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Load_Struct_Member_Instruction
+        let instruction = instruction.as(@IR_Load_Struct_Member_Instruction)
         if instruction.load_address {
             file.write("load_struct_member_address")
         } else {
@@ -876,7 +876,7 @@ func get_struct_pointer_value(self: @IR_Load_Struct_Member_Instruction) -> @IR_V
 struct IR_Load_Variable_Address_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Load_Variable_Address_Instruction
+        let instruction = instruction.as(@IR_Load_Variable_Address_Instruction)
         return file.write("load_variable_address").write('(').write(instruction.get_variable_value(), true).write(')').end_line()
     }
 ) {
@@ -896,13 +896,13 @@ func create_ir_load_variable_address_instruction(result_value: @IR_Variable_Valu
 }
 
 func get_variable_value(self: @IR_Load_Variable_Address_Instruction) -> @IR_Variable_Value {
-    return self.operand_values.get("variable_value") as @IR_Variable_Value
+    return self.operand_values.get("variable_value").as(@IR_Variable_Value)
 }
 
 struct IR_Load_Variable_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        return file.write("load_variable").write('(').write((instruction as @IR_Load_Variable_Instruction).variable.name).write(')').end_line()
+        return file.write("load_variable").write('(').write(instruction.as(@IR_Load_Variable_Instruction).variable.name).write(')').end_line()
     }
 ) {
     variable: @IR_Variable
@@ -917,7 +917,7 @@ func create_ir_load_variable_instruction(result_value: @IR_Variable_Value) -> @I
 struct IR_New_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_New_Instruction
+        let instruction = instruction.as(@IR_New_Instruction)
         return file.write("new").write(' ').write(instruction.get_init_value(), true).end_line()
     }
 ) {
@@ -938,7 +938,7 @@ func get_init_value(self: @IR_New_Instruction) -> @IR_Value {
 struct IR_Return_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Return_Instruction
+        let instruction = instruction.as(@IR_Return_Instruction)
         if instruction.get_return_value() == null {
             return file.write("return").write('(').write(')').end_line()
         }
@@ -962,7 +962,7 @@ func get_return_value(self: @IR_Return_Instruction) -> @IR_Value {
 struct IR_Set_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Set_Instruction
+        let instruction = instruction.as(@IR_Set_Instruction)
         return file.write(instruction.get_value(), true).end_line()
     }
 ) {
@@ -982,7 +982,7 @@ func get_value(self: @IR_Set_Instruction) -> @IR_Value {
 struct IR_Store_Array_Item_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Store_Array_Item_Instruction
+        let instruction = instruction.as(@IR_Store_Array_Item_Instruction)
         return file.write("store_array_item").write('(').write(instruction.get_array_value(), true).write(", ").write(instruction.get_index_value(), true).write(", ").write(instruction.get_value(), true).write(')').end_line()
     }
 ) {
@@ -1011,7 +1011,7 @@ func get_value(self: @IR_Store_Array_Item_Instruction) -> @IR_Value {
 struct IR_Store_Struct_Member_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Store_Struct_Member_Instruction
+        let instruction = instruction.as(@IR_Store_Struct_Member_Instruction)
         return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
     }
 ) {
@@ -1065,7 +1065,7 @@ func get_value(self: @IR_Unary_Instruction) -> @IR_Value {
 struct IR_Add_Instruction: IR_Binary_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" + ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1077,7 +1077,7 @@ struct IR_Comparison_Instruction: IR_Binary_Instruction {
 struct IR_Divide_Instruction: IR_Binary_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" / ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1086,7 +1086,7 @@ struct IR_Divide_Instruction: IR_Binary_Instruction(
 struct IR_Equals_Comparison_Instruction: IR_Comparison_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" == ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1095,7 +1095,7 @@ struct IR_Equals_Comparison_Instruction: IR_Comparison_Instruction(
 struct IR_Greater_Comparison_Instruction: IR_Comparison_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" > ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1104,7 +1104,7 @@ struct IR_Greater_Comparison_Instruction: IR_Comparison_Instruction(
 struct IR_Greater_Or_Equal_Comparison_Instruction: IR_Comparison_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" >= ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1113,7 +1113,7 @@ struct IR_Greater_Or_Equal_Comparison_Instruction: IR_Comparison_Instruction(
 struct IR_Less_Comparison_Instruction: IR_Comparison_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" < ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1122,7 +1122,7 @@ struct IR_Less_Comparison_Instruction: IR_Comparison_Instruction(
 struct IR_Less_Or_Equal_Comparison_Instruction: IR_Comparison_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" <= ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1131,7 +1131,7 @@ struct IR_Less_Or_Equal_Comparison_Instruction: IR_Comparison_Instruction(
 struct IR_Modulo_Instruction: IR_Binary_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" // ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1140,7 +1140,7 @@ struct IR_Modulo_Instruction: IR_Binary_Instruction(
 struct IR_Multiply_Instruction: IR_Binary_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" * ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1149,7 +1149,7 @@ struct IR_Multiply_Instruction: IR_Binary_Instruction(
 struct IR_Not_Equal_Comparison_Instruction: IR_Comparison_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         return file.write(instruction.get_left_value(), true).write(" != ").write(instruction.get_right_value(), true).end_line()
     }
 ) {
@@ -1158,7 +1158,7 @@ struct IR_Not_Equal_Comparison_Instruction: IR_Comparison_Instruction(
 struct IR_Not_Instruction: IR_Unary_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Not_Instruction
+        let instruction = instruction.as(@IR_Not_Instruction)
         return file.write("not").write('(').write(instruction.get_value(), true).write(')').end_line()
     }
 ) {
@@ -1166,7 +1166,7 @@ struct IR_Not_Instruction: IR_Unary_Instruction(
 
 struct IR_Substract_Instruction: IR_Binary_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
-        let instruction = instruction as @IR_Binary_Instruction
+        let instruction = instruction.as(@IR_Binary_Instruction)
         instruction.dump_ir_instruction_result(file, prefix)
         return file.write(instruction.get_left_value(), true).write(" - ").write(instruction.get_right_value(), true).end_line()
     }
@@ -1176,7 +1176,7 @@ struct IR_Substract_Instruction: IR_Binary_Instruction(
 struct IR_Phi_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
-        let instruction = instruction as @IR_Phi_Instruction
+        let instruction = instruction.as(@IR_Phi_Instruction)
         file.write("phi").write('(')
         let operand_values_entry = instruction.operand_values.first_entry
         if operand_values_entry != null {

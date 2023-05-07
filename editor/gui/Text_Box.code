@@ -16,7 +16,7 @@ struct GUI_Text_Box: GUI_Widget(
     name = "GUI_Text_Box"
     draw = draw_text_box
     on_mouse_scrolled = func (self: @GUI_Widget, event: @GUI_Event_Mouse_Scrolled) -> Nothing {
-        let self = self as @GUI_Text_Box
+        let self = self.as(@GUI_Text_Box)
         if self.model.lines > 1 {
             if event.y > 0 {
                 self.first_visible_line = max(0, self.first_visible_line - event.y)
@@ -42,7 +42,7 @@ func draw_text_box(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
 
     canvas.clip_rect.set(self.bounds)
 
-    let self = self as @GUI_Text_Box
+    let self = self.as(@GUI_Text_Box)
 
     canvas.set_color(COLOR_BACKGROUND)
     canvas.fill_rect(self.bounds)

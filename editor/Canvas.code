@@ -13,7 +13,7 @@ struct Canvas {
 }
 
 func set_color(self: @Canvas, red: u8, green: u8, blue: u8, alpha: u8) -> u32 {
-    let color = (red as u32 * 256 + green as u32) * 256 + blue as u32
+    let color = (red.as(u32) * 256 + green.as(u32)) * 256 + blue.as(u32)
     self.color = color
     return color
 }
@@ -24,10 +24,10 @@ func set_color(self: @Canvas, color: u32) -> u32 {
 }
 
 func clear(self: @Canvas) -> Nothing {
-    let array = self.pixels as [u64; ?]
+    let array = self.pixels.as([u64; ?])
     let array_size = self.width * self.height / 2
     let array_index = 0
-    let value = self.color as u64 * 0x1_0000_0001u64
+    let value = self.color.as(u64) * 0x1_0000_0001u64
     while array_index < array_size {
         array[array_index] = value
         array_index = array_index + 1
@@ -38,14 +38,14 @@ func draw_pixel(self: @Canvas, x: i32, y: i32) -> Nothing {
     if not self.clip_rect.contains(x, y) {
         return
     }
-    let pixels = self.pixels as [u32; ?]
+    let pixels = self.pixels.as([u32; ?])
     let offset = self.width * y + x
     pixels[offset] = self.color
 }
 
 macro draw_on_row(self: @Canvas, row: i32, draw: macro (pixels: [u32; ?], row_offset: i32)) {
     if row >= self.clip_rect.top and row <= self.clip_rect.bottom {
-        draw(self.pixels as [u32; ?], self.width * row)
+        draw(self.pixels.as([u32; ?]), self.width * row)
     }
 }
 
@@ -169,7 +169,7 @@ func draw_text(self: @Canvas, text: @String, left: i32, base_line: i32) -> Nothi
     while char_index < text.length and base_line < self.height {
         let char = text.data[char_index]
         let glyph_mask = font.glyphs[char].mask
-        if char == '\n' as u8 {
+        if char == '\n'.as(u8) {
             char_left = left
             base_line = base_line + font.height
         } else {
@@ -181,13 +181,13 @@ func draw_text(self: @Canvas, text: @String, left: i32, base_line: i32) -> Nothi
                     while glyph_cell < glyph_line_mask.length {
                         let glyph_cell_mask = glyph_line_mask[glyph_cell]
                         if glyph_cell_mask != 0u8 {
-                            self.draw_pixel(char_left + glyph_cell as i32, base_line + glyph_line as i32)
+                            self.draw_pixel(char_left + glyph_cell.as(i32), base_line + glyph_line.as(i32))
                         }
                         glyph_cell = glyph_cell + 1
                     }
                     glyph_line = glyph_line + 1
                 }
-                char_left = char_left + glyph_mask[0].length as i32
+                char_left = char_left + glyph_mask[0].length.as(i32)
             }
         }
         char_index = char_index + 1
@@ -204,7 +204,7 @@ func draw_char(self: @Canvas, char: u8, left: i32, base_line: i32) -> Nothing {
         while glyph_cell < glyph_line_mask.length {
             let glyph_cell_mask = glyph_line_mask[glyph_cell]
             if glyph_cell_mask != 0u8 {
-                self.draw_pixel(left + glyph_cell as i32, base_line + glyph_line as i32)
+                self.draw_pixel(left + glyph_cell.as(i32), base_line + glyph_line.as(i32))
             }
             glyph_cell = glyph_cell + 1
         }

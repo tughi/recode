@@ -66,9 +66,9 @@ func init_font() -> Nothing {
 
             let glyph_column = 0
             while glyph_column < glyph.width {
-                if line.data[glyph_column * 2] == 'F' as u8 and line.data[glyph_column * 2 + 1] == 'F' as u8 {
+                if line.data[glyph_column * 2] == 'F'.as(u8) and line.data[glyph_column * 2 + 1] == 'F'.as(u8) {
                     glyph.mask[glyph_row][glyph_column] = 0xffu8
-                } else if line.data[glyph_column * 2] == '-' as u8 and line.data[glyph_column * 2 + 1] == '-' as u8 {
+                } else if line.data[glyph_column * 2] == '-'.as(u8) and line.data[glyph_column * 2 + 1] == '-'.as(u8) {
                     \ glyph.mask[glyph_row][glyph_column] = 0x00u8
                 } else {
                     abort()
