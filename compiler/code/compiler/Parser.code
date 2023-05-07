@@ -777,7 +777,7 @@ func parse_logic_and_expression(self: @Parser) -> @AST_Expression {
 
 \ logic_not_expression
 \   | "not" logic_not_expression
-\   | equality_expression
+\   | comparison_expression
 func parse_logic_not_expression(self: @Parser) -> @AST_Expression {
     if (self.matches(required_not)) {
         let location = self.consume(required_not).location
@@ -785,54 +785,67 @@ func parse_logic_not_expression(self: @Parser) -> @AST_Expression {
         let expression = self.parse_logic_not_expression()
         return make @AST_Logic_Not_Expression(location = expression.location, expression = expression)
     }
-    return self.parse_equality_expression()
-}
-
-\ equality_expression
-\   | comparison_expression ( ( "==" | "!=" ) comparison_expression )?
-func parse_equality_expression(self: @Parser) -> @AST_Expression {
-    let expression = self.parse_comparison_expression()
-    if (self.matches(optional_space, required_equals, required_equals) || self.matches(optional_space, required_exclamation_mark, required_equals)) {
-        self.consume_space(1)
-        if (self.matches(required_equals)) {
-            self.consume(required_equals, required_equals)
-            self.consume_space(1)
-            expression = make @AST_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
-        } else {
-            self.consume(required_exclamation_mark, required_equals)
-            self.consume_space(1)
-            expression = make @AST_Not_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_comparison_expression())
-        }
-    }
-    return expression
+    return self.parse_comparison_expression()
 }
 
 \ comparison_expression
-\   | addition_expression ( ( "<" | "<=" | ">" | ">=" ) addition_expression )?
+\   | addition_expression ( ( "==" | "!=" | ">" | ">=" | "<" | "<=" ) addition_expression )?
+\   | addition_expression ( "is" "not"? type )?
 func parse_comparison_expression(self: @Parser) -> @AST_Expression {
     let expression = self.parse_addition_expression()
-    if (self.matches(optional_space, required_less_than) || self.matches(optional_space, required_greater_than)) {
+    if (self.matches(optional_space, required_equals, required_equals)) {
         self.consume_space(1)
-        if (self.matches(required_less_than)) {
-            self.consume(required_less_than)
-            if (self.matches(required_equals)) {
-                self.consume(required_equals)
-                self.consume_space(1)
-                expression = make @AST_Less_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
-            } else {
-                self.consume_space(1)
-                expression = make @AST_Less_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
-            }
+        self.consume(required_equals, required_equals)
+        self.consume_space(1)
+        expression = make @AST_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+    } else if (self.matches(optional_space, required_exclamation_mark, required_equals)) {
+        self.consume_space(1)
+        self.consume(required_exclamation_mark, required_equals)
+        self.consume_space(1)
+        expression = make @AST_Not_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+    } else if (self.matches(optional_space, required_greater_than)) {
+        self.consume_space(1)
+        self.consume(required_greater_than)
+        if (self.matches(required_equals)) {
+            self.consume(required_equals)
+            self.consume_space(1)
+            expression = make @AST_Greater_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
         } else {
-            self.consume(required_greater_than)
-            if (self.matches(required_equals)) {
-                self.consume(required_equals)
-                self.consume_space(1)
-                expression = make @AST_Greater_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
-            } else {
-                self.consume_space(1)
-                expression = make @AST_Greater_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
-            }
+            self.consume_space(1)
+            expression = make @AST_Greater_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+        }
+    } else if (self.matches(optional_space, required_less_than)) {
+        self.consume_space(1)
+        self.consume(required_less_than)
+        if (self.matches(required_equals)) {
+            self.consume(required_equals)
+            self.consume_space(1)
+            expression = make @AST_Less_Than_Or_Equals_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+        } else {
+            self.consume_space(1)
+            expression = make @AST_Less_Than_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_addition_expression())
+        }
+    } else if (self.matches(optional_space, required_is)) {
+        self.consume_space(1)
+        self.consume(required_is)
+        self.consume_space(1)
+        if (self.matches(optional_space, required_not)) {
+            self.consume(required_not)
+            self.consume_space(1)
+            expression = make @AST_Logic_Not_Expression(
+                location = expression.location
+                expression = make @AST_Is_Expression(
+                    location = expression.location
+                    value_expression = expression
+                    type = self.parse_type()
+                )
+            )
+        } else {
+            expression = make @AST_Is_Expression(
+                location = expression.location
+                value_expression = expression
+                type = self.parse_type()
+            )
         }
     }
     return expression
@@ -908,29 +921,15 @@ func parse_unary_expression(self: @Parser) -> @AST_Expression {
 }
 
 \ cast_expression
-\   | is_expression ( "as" type )?
+\   | access_expression ( "as" type )?
 func parse_cast_expression(self: @Parser) -> @AST_Expression {
-    let expression = self.parse_is_expression()
+    let expression = self.parse_access_expression()
     if (self.matches(optional_space, required_as)) {
         self.consume_space(1)
         self.consume(required_as)
         self.consume_space(1)
         let type = self.parse_type()
         return make @AST_Cast_Expression(location = expression.location, value_expression = expression, type = type)
-    }
-    return expression
-}
-
-\ is_expression
-\   | access_expression ( "is" type )?
-func parse_is_expression(self: @Parser) -> @AST_Expression {
-    let expression = self.parse_access_expression()
-    if (self.matches(optional_space, required_is)) {
-        self.consume_space(1)
-        self.consume(required_is)
-        self.consume_space(1)
-        let type = self.parse_type()
-        return make @AST_Is_Expression(location = expression.location, value_expression = expression, type = type)
     }
     return expression
 }

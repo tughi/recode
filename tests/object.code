@@ -39,7 +39,7 @@ func main() -> i32 {
         return 1
     }
 
-    if shape is Rectangle == false {
+    if shape is not Rectangle {
         return 2
     }
 
