@@ -720,29 +720,50 @@ func parse_expression(self: @Parser) -> @AST_Expression {
 }
 
 \ logic_or_expression
-\   | logic_and_expression ( "||" logic_and_expression )*
+\   | logic_and_expression ( "or" logic_and_expression )*
 func parse_logic_or_expression(self: @Parser) -> @AST_Expression {
     let expression = self.parse_logic_and_expression()
-    while (self.matches(optional_space, required_vertical_bar, required_vertical_bar)) {
+    while (self.matches(optional_space, required_or)) {
         self.consume_space(1)
-        self.consume(required_vertical_bar, required_vertical_bar)
+        self.consume(required_or)
         self.consume_space(1)
-        expression = make @AST_Logic_Or_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_logic_and_expression())
+        expression = make @AST_Logic_Or_Expression(
+            location = expression.location
+            left_expression = expression
+            right_expression = self.parse_logic_and_expression()
+        )
     }
     return expression
 }
 
 \ logic_and_expression
-\   | equality_expression ( "&&" equality_expression )*
+\   | logic_not_expression ( "and" logic_not_expression )*
 func parse_logic_and_expression(self: @Parser) -> @AST_Expression {
-    let expression = self.parse_equality_expression()
-    while (self.matches(optional_space, required_ampersand, required_ampersand)) {
+    let expression = self.parse_logic_not_expression()
+    while (self.matches(optional_space, required_and)) {
         self.consume_space(1)
-        self.consume(required_ampersand, required_ampersand)
+        self.consume(required_and)
         self.consume_space(1)
-        expression = make @AST_Logic_And_Expression(location = expression.location, left_expression = expression, right_expression = self.parse_equality_expression())
+        expression = make @AST_Logic_And_Expression(
+            location = expression.location
+            left_expression = expression
+            right_expression = self.parse_logic_not_expression()
+        )
     }
     return expression
+}
+
+\ logic_not_expression
+\   | "not" logic_not_expression
+\   | equality_expression
+func parse_logic_not_expression(self: @Parser) -> @AST_Expression {
+    if (self.matches(required_not)) {
+        let location = self.consume(required_not).location
+        self.consume_space(1)
+        let expression = self.parse_logic_not_expression()
+        return make @AST_Logic_Not_Expression(location = expression.location, expression = expression)
+    }
+    return self.parse_equality_expression()
 }
 
 \ equality_expression
@@ -842,15 +863,8 @@ func parse_multiplication_expression(self: @Parser) -> @AST_Expression {
 
 \ unary_expression
 \   | "-" unary_expression
-\   | "!" unary_expression
 \   | cast_expression
 func parse_unary_expression(self: @Parser) -> @AST_Expression {
-    if (self.matches(required_exclamation_mark)) {
-        let location = self.consume(required_exclamation_mark).location
-        self.consume_space(0)
-        let expression = self.parse_unary_expression()
-        return make @AST_Not_Expression(location = location, expression = expression)
-    }
     if (self.matches(required_hyphen)) {
         let location = self.consume(required_hyphen).location
         self.consume_space(0)
@@ -1255,6 +1269,7 @@ struct String_Literal_Matcher: Matcher(
 let optional_comment: @Matcher = undefined
 let optional_space: @Matcher = undefined
 let required_ampersand: @Matcher = undefined
+let required_and: @Matcher = undefined
 let required_as: @Matcher = undefined
 let required_asterisk: @Matcher = undefined
 let required_at: @Matcher = undefined
@@ -1288,9 +1303,11 @@ let required_literal: @Matcher = undefined
 let required_loop: @Matcher = undefined
 let required_macro: @Matcher = undefined
 let required_make: @Matcher = undefined
+let required_not: @Matcher = undefined
 let required_open_brace: @Matcher = undefined
 let required_open_bracket: @Matcher = undefined
 let required_open_paren: @Matcher = undefined
+let required_or: @Matcher = undefined
 let required_plus: @Matcher = undefined
 let required_question_mark: @Matcher = undefined
 let required_return: @Matcher = undefined
@@ -1305,6 +1322,7 @@ func init_matchers() -> Nothing {
     optional_comment = make @Comment_Matcher(is_required = false)
     optional_space = make @Space_Matcher(is_required = false)
     required_ampersand = make @Other_Matcher(is_required = true, lexeme = "&")
+    required_and = make @Keyword_Matcher(is_required = true, lexeme = "and")
     required_as = make @Keyword_Matcher(is_required = true, lexeme = "as")
     required_asterisk = make @Other_Matcher(is_required = true, lexeme = "*")
     required_at = make @Other_Matcher(is_required = true, lexeme = "@")
@@ -1338,9 +1356,11 @@ func init_matchers() -> Nothing {
     required_loop = make @Keyword_Matcher(is_required = true, lexeme = "loop")
     required_macro = make @Keyword_Matcher(is_required = true, lexeme = "macro")
     required_make = make @Keyword_Matcher(is_required = true, lexeme = "make")
+    required_not = make @Keyword_Matcher(is_required = true, lexeme = "not")
     required_open_brace = make @Other_Matcher(is_required = true, lexeme = "{")
     required_open_bracket = make @Other_Matcher(is_required = true, lexeme = "[")
     required_open_paren = make @Other_Matcher(is_required = true, lexeme = "(")
+    required_or = make @Keyword_Matcher(is_required = true, lexeme = "or")
     required_plus = make @Other_Matcher(is_required = true, lexeme = "+")
     required_question_mark = make @Other_Matcher(is_required = true, lexeme = "?")
     required_return = make @Keyword_Matcher(is_required = true, lexeme = "return")

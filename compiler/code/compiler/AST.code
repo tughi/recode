@@ -322,6 +322,13 @@ struct AST_Logic_Or_Expression: AST_Binary_Expression(
 ) {
 }
 
+struct AST_Logic_Not_Expression: AST_Unary_Expression(
+    convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_logic_not_expression(expression as @AST_Logic_Not_Expression)
+    }
+) {
+}
+
 struct AST_Modulo_Expression: AST_Binary_Expression(
     convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
         return builder.convert_modulo_expression(expression as @AST_Modulo_Expression)
@@ -357,13 +364,6 @@ struct AST_Unary_Expression: AST_Expression {
 struct AST_Negate_Expression: AST_Unary_Expression(
     convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
         return builder.convert_negate_expression(expression as @AST_Negate_Expression)
-    }
-) {
-}
-
-struct AST_Not_Expression: AST_Unary_Expression(
-    convert = func (expression: @AST_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
-        return builder.convert_not_expression(expression as @AST_Not_Expression)
     }
 ) {
 }

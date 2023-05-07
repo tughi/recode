@@ -43,7 +43,7 @@ func copy(self: @String, other: @String) -> @String {
 }
 
 func equals(self: @String, other: @String) -> bool {
-    if (other == null || self.length != other.length) {
+    if (other == null or self.length != other.length) {
         return false
     }
     let index = 0usize

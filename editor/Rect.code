@@ -16,7 +16,7 @@ func reference(self: @Rect) -> @Rect {
 }
 
 func contains(self: @Rect, x: i32, y: i32) -> bool {
-    return self.left <= x && x <= self.right && self.top <= y && y <= self.bottom
+    return self.left <= x and x <= self.right and self.top <= y and y <= self.bottom
 }
 
 func set(self: @Rect, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
@@ -71,7 +71,7 @@ func intersect(self: @Rect, other: @Rect) -> Nothing {
 }
 
 func intersects(self: @Rect, other: @Rect) -> bool {
-    if (self.left > other.right || self.top > other.bottom || self.right < other.left || self.bottom < other.top) {
+    if (self.left > other.right or self.top > other.bottom or self.right < other.left or self.bottom < other.top) {
         return false
     }
     return true

@@ -54,7 +54,7 @@ func draw_text_box(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
         canvas.set_color(COLOR_TEXT)
         let line = self.model.first_line
         let skipped_lines = self.first_visible_line
-        while (line != null && skipped_lines > 0) {
+        while (line != null and skipped_lines > 0) {
             line = line.next_line
             skipped_lines = skipped_lines - 1
         }

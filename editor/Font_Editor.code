@@ -24,7 +24,7 @@ struct Glyph_Editor: GUI_Widget(
         let self = self as @Glyph_Editor
         let last_hovered_row = self.hovered_row
         let last_hovered_column = self.hovered_column
-        if (self.bounds.contains(event.x, event.y) && event.x < self.bounds.right && event.y < self.bounds.bottom) {
+        if (self.bounds.contains(event.x, event.y) and event.x < self.bounds.right and event.y < self.bounds.bottom) {
             self.gui.hovered_widget = self
 
             self.hovered_row = (event.y - self.bounds.left) / (self.pixel_size + 1)
@@ -39,7 +39,7 @@ struct Glyph_Editor: GUI_Widget(
             self.hovered_row = -1
             self.hovered_column = -1
         }
-        if (last_hovered_row != self.hovered_row || last_hovered_column != self.hovered_column) {
+        if (last_hovered_row != self.hovered_row or last_hovered_column != self.hovered_column) {
             self.gui.post(make @GUI_Event_Widget_Updated(widget = self))
         }
     }
@@ -59,7 +59,7 @@ struct Glyph_Editor: GUI_Widget(
             let self = self as @Glyph_Editor
             if (event.button == 1u8) {
                 self.is_drawing = false
-            } else if (event.button == 2u8 && self.gui.hovered_widget == self as @GUI_Widget) {
+            } else if (event.button == 2u8 and self.gui.hovered_widget == self as @GUI_Widget) {
                 let glyph_mask = self.glyph.mask
                 let glyph_row = 0
                 while (glyph_row < glyph_mask.length as i32) {
@@ -156,7 +156,7 @@ func draw_glyph_editor(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
         glyph_row = glyph_row + 1
     }
 
-    if (self.hovered_row >= 0 && self.hovered_column >= 0) {
+    if (self.hovered_row >= 0 and self.hovered_column >= 0) {
         if (glyph_mask[self.hovered_row][self.hovered_column] == 0u8) {
             canvas.set_color(0x666600u32)
         } else {

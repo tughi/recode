@@ -840,17 +840,15 @@ func generate_new_instruction(self: @MC_Generator, instruction: @IR_New_Instruct
 
 func generate_not_instruction(self: @MC_Generator, instruction: @IR_Not_Instruction) -> Nothing {
     let result_register = self.find_unused_register()
-    let type_size = self.get_type_size(instruction.result_value.type)
     let value = instruction.get_value()
     self.generate_load_value(result_register, value)
     self.map_variable_value(instruction.result_value, result_register)
-    self.output_file.write("  xor ")
-    if (type_size == 1 as i64) {
-        self.output_file.write(result_register.name_b)
+    if (value.type is IR_Boolean_Type) {
+        self.output_file.write("  xor ").write(result_register.name_b).write(", ").write(1)
     } else {
-        self.abort(clone("Unsupported type size: ").append(type_size))
+        self.abort(clone("Unsupported value type: ").append(value.type.object_type.name))
     }
-    self.output_file.write(", ").write(1).end_line()
+    self.output_file.end_line()
 }
 
 func generate_phi_instruction(self: @MC_Generator, instruction: @IR_Phi_Instruction) -> Nothing {

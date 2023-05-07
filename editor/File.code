@@ -107,7 +107,7 @@ func read_line(file: @FILE, line: @String) -> bool {
     line.clear()
     loop {
         let char = fgetc(file)
-        if (char < 0 || char == '\n' as i32) {
+        if (char < 0 or char == '\n' as i32) {
             break
         }
         line.append(char as u8)
