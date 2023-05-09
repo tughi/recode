@@ -1773,8 +1773,8 @@ func get_callable(self: @IR_Builder, call_location: @Source_Location, callee_nam
         }
     }
 
-    if callable_candidates.size != 1i64 {
-        if callable_candidates.size == 0i64 {
+    if callable_candidates.size != 1 {
+        if callable_candidates.size == 0 {
             self.for_each_symbol() {
                 if symbol is IR_Callable {
                     let callable = symbol.as(@IR_Callable)
