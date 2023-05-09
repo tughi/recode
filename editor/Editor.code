@@ -1,6 +1,6 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-include "./gui/GUI.code"
+include "code/gui/GUI.code"
 include "./Font_Editor.code"
 
 let text: @String

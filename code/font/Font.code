@@ -1,6 +1,6 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-include "./LibC.code"
+include "code/system/Platform.code"
 
 let font: Font
 
@@ -16,7 +16,7 @@ struct Glyph {
 }
 
 func init_font() -> Nothing {
-    let file = open_file("editor/Font.data", "r")
+    let file = open_file("code/font/Font.data", "r")
     let line = make String()
 
     if not (file.read_line(@line) and line.starts_with("\\ Copyright ") and file.read_line(@line) and line.equals("")) {

@@ -3,4 +3,4 @@ func main() -> i32 {
     return value.as(@String).length.as(i32) - 6
 }
 
-include "./code/lang/String.code"
+include "code/lang/String.code"

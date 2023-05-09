@@ -1,6 +1,6 @@
 \ Copyright (c) 2021, 2023, Stefan Selariu
 
-include "./Widget.code"
+include "code/gui/Widget.code"
 
 struct GUI_Layout: GUI_Widget(
     name = "GUI_Layout"

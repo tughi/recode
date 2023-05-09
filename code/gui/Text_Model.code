@@ -1,6 +1,6 @@
 \ Copyright (c) 2021, 2023, Stefan Selariu
 
-include "../String.code"
+include "code/lang/String.code"
 
 struct GUI_Text_Model {
     first_line: @GUI_Text_Model_Line = null

@@ -1,7 +1,7 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-include "./File.code"
-include "./gui/Layout.code"
+include "code/system/File.code"
+include "code/gui/Layout.code"
 
 define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
@@ -293,7 +293,7 @@ func draw_glyph_chooser(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
 }
 
 func dump_font() -> Nothing {
-    let file = open_file("editor/Font.data", "w")
+    let file = open_file("code/font/Font.data", "w")
 
     file.write("\\ Copyright (c) 2021, 2023, Stefan Selariu").end_line()
     file.end_line()

@@ -1,10 +1,10 @@
 \ Copyright (c) 2021, 2023, Stefan Selariu
 
-include "./Button.code"
-include "./Event.code"
-include "./Horizontal_Linear_Layout.code"
-include "./Text_Box.code"
-include "./Vertical_Linear_Layout.code"
+include "code/gui/Button.code"
+include "code/gui/Event.code"
+include "code/gui/Horizontal_Linear_Layout.code"
+include "code/gui/Text_Box.code"
+include "code/gui/Vertical_Linear_Layout.code"
 
 define COLOR_BACKGROUND = 0x333333u32
 define COLOR_TEXT = 0xbfbfafu32
