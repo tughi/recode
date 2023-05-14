@@ -261,18 +261,18 @@ func layout_glyph_chooser(self: @GUI_Widget, left: i32, top: i32, right: i32, bo
 
     self.bounds.set(left, top, right, bottom)
 
-    let row_children = (self.bounds.width + 4) / (self.children_first.widget.width_hint + 4)
+    let row_children = (self.bounds.width() + 4) / (self.children_first.widget.width_hint + 4)
 
     let row_child = 0
     let child_left = left
     let child_top = top
     self.for_each_child() {
         row_child = row_child + 1
-        let child_right = left + (self.bounds.width + 4) * row_child / row_children - 5
+        let child_right = left + (self.bounds.width() + 4) * row_child / row_children - 5
         if child_right > right {
             row_child = 1
             child_left = left
-            child_right = left + (self.bounds.width + 4) * row_child / row_children - 5
+            child_right = left + (self.bounds.width() + 4) * row_child / row_children - 5
             child_top = child_top + child.height_hint + 3
         }
         let child_bottom = child_top + child.height_hint - 1

@@ -3,16 +3,18 @@
 include "code/utils/Math.code"
 
 struct Rect {
-    left: i32 = undefined
-    top: i32 = undefined
-    right: i32 = undefined
-    bottom: i32 = undefined
-    width: i32 = undefined
-    height: i32 = undefined
+    left = 0i32
+    top = 0i32
+    right = 0i32
+    bottom = 0i32
 }
 
-func reference(self: @Rect) -> @Rect {
-    return self
+func width(self: @Rect) -> i32 {
+    return self.right - self.left + 1
+}
+
+func height(self: @Rect) -> i32 {
+    return self.bottom - self.top + 1
 }
 
 func contains(self: @Rect, x: i32, y: i32) -> bool {
@@ -24,8 +26,6 @@ func set(self: @Rect, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     self.top = top
     self.right = right
     self.bottom = bottom
-    self.width = right - left + 1
-    self.height = bottom - top + 1
 }
 
 func set(self: @Rect, other: @Rect) -> Nothing {
@@ -33,25 +33,21 @@ func set(self: @Rect, other: @Rect) -> Nothing {
 }
 
 func set_location(self: @Rect, left: i32, top: i32) -> Nothing {
+    self.right = self.right - self.left + left
+    self.bottom = self.bottom - self.top + top
     self.left = left
     self.top = top
-    self.right = left + self.width - 1
-    self.bottom = top + self.height - 1
 }
 
 func set_size(self: @Rect, width: i32, height: i32) -> Nothing {
     if width < 1 {
-        self.width = 1
         self.right = self.left
     } else {
-        self.width = width
         self.right = self.left + width - 1
     }
     if height < 1 {
-        self.height = 1
         self.bottom = self.top
     } else {
-        self.height = height
         self.bottom = self.top + height - 1
     }
 }
@@ -60,12 +56,12 @@ func intersect(self: @Rect, other: @Rect) -> Nothing {
     let new_left = max(self.left, other.left)
     let new_right = min(self.right, other.right)
     if new_left > new_right {
-        abort()
+        new_right = new_left
     }
     let new_top = max(self.top, other.top)
     let new_bottom = min(self.bottom, other.bottom)
     if new_top > new_bottom {
-        abort()
+        new_bottom = new_top
     }
     self.set(new_left, new_top, new_right, new_bottom)
 }

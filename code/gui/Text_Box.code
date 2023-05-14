@@ -64,11 +64,11 @@ func draw_text_box(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
             canvas.draw_text(line.text, line_bounds.left, line_bounds.top)
 
             line.text.compute_text_size(@line_bounds)
-            if line_bounds.top + line_bounds.height > self.bounds.bottom {
+            if line_bounds.top + line_bounds.height() > self.bounds.bottom {
                 break
             }
 
-            line_bounds.set_location(line_bounds.left, line_bounds.top + line_bounds.height)
+            line_bounds.set_location(line_bounds.left, line_bounds.top + line_bounds.height())
             line = line.next_line
         }
     }

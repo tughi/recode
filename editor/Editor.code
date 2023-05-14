@@ -42,8 +42,6 @@ func main() -> i32 {
             top = 0
             right = window_surface.width - 1
             bottom = window_surface.height - 1
-            width = window_surface.width
-            height = window_surface.height
         )
     )
 
@@ -157,8 +155,6 @@ func main() -> i32 {
                         top = 0
                         right = window_surface.width - 1
                         bottom = window_surface.height - 1
-                        width = window_surface.width
-                        height = window_surface.height
                     )
                     gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
                 }

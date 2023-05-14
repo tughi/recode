@@ -1,8 +1,8 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
+include "code/app/SDL.code"
 include "code/font/Font.code"
 include "./Rect.code"
-include "code/graphics/SDL.code"
 
 struct Canvas {
     pixels: @Any
@@ -91,7 +91,7 @@ func draw_line(self: @Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
 
 func draw_horizontal_line(self: @Canvas, x1: i32, x2: i32, y: i32) -> Nothing {
     if x2 < x1 {
-        abort()
+        return
     }
     let pixel_color = self.color
     self.draw_on_row(y) {
@@ -106,7 +106,7 @@ func draw_horizontal_line(self: @Canvas, x1: i32, x2: i32, y: i32) -> Nothing {
 
 func draw_vertical_line(self: @Canvas, x: i32, y1: i32, y2: i32) -> Nothing {
     if y2 < y1 {
-        abort()
+        return
     }
     let pixel_color = self.color
     let y = max(y1, self.clip_rect.top)
@@ -128,7 +128,7 @@ func draw_rect(self: @Canvas, rect: @Rect) -> Nothing {
     if rect.intersects(self.clip_rect) {
         self.draw_horizontal_line(rect.left, rect.right, rect.top)
         self.draw_horizontal_line(rect.left, rect.right, rect.bottom)
-        if rect.height > 2 {
+        if rect.bottom > rect.top {
             self.draw_vertical_line(rect.left, rect.top + 1, rect.bottom - 1)
             self.draw_vertical_line(rect.right, rect.top + 1, rect.bottom - 1)
         }

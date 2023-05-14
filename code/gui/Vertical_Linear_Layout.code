@@ -72,13 +72,13 @@ func layout_vertical_linear_layout(self: @GUI_Widget, left: i32, top: i32, right
     let self = self.as(@GUI_Vertical_Linear_Layout)
     self.bounds.set(left, top, right, bottom)
     if self.children_count > 0 {
-        let stretched_height = self.bounds.height - self.margin * 2 - self.spacing * (self.children_count - 1)
+        let stretched_height = self.bounds.height() - self.margin * 2 - self.spacing * (self.children_count - 1)
         let stretched_children = 0
         self.for_each_child() {
             if child.height_policy.mode == SIZE_POLICY_MODE_FIXED {
                 stretched_height = stretched_height - child.height_policy.size
             } else if child.height_policy.mode == SIZE_POLICY_MODE_WRAP_CONTENT {
-                let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.bounds.width - self.margin * 2)
+                let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.bounds.width() - self.margin * 2)
                 let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
                 child.measure(@child_width_spec, @child_height_spec)
                 stretched_height = stretched_height - child.height_hint

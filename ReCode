@@ -78,7 +78,7 @@ def assemble(source_file, output_file, sdl=False, **kwargs):
         run(['gcc', source_file, '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else [])], **kwargs)
 
 
-def trace(*command):
+def trace(*command, ignore_output=True):
     logger.info(f"Tracing: {' '.join(command)}")
     subprocess.run(
         ' '.join([
@@ -88,7 +88,7 @@ def trace(*command):
             '-ex=\'set confirm off\'',
             '-ex=\'set style enabled on\'',
             '-ex=\'set print thread-events off\'',
-            f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'',
+            f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'' if ignore_output else f'-ex=\'run {" ".join(command[1:])}\'',
             '-ex=backtrace',
             '-ex=quit',
         ]),
@@ -195,7 +195,7 @@ def editor():
         trace(*compiler_command[:2], '-')
         exit(1)
     assemble('build/editor/Editor.s', 'build/editor/Editor', sdl=True)
-    trace('build/editor/Editor')
+    trace('build/editor/Editor', ignore_output=False)
 
 
 def time():

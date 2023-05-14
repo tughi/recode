@@ -35,14 +35,14 @@ func layout_horizontal_linear_layout(self: @GUI_Widget, left: i32, top: i32, rig
     self.bounds.set(left, top, right, bottom)
 
     if self.children_count > 0 {
-        let stretched_width = self.bounds.width - self.margin * 2 - self.spacing * (self.children_count - 1)
+        let stretched_width = self.bounds.width() - self.margin * 2 - self.spacing * (self.children_count - 1)
         let stretched_children = 0
         self.for_each_child() {
             if child.width_policy.mode == SIZE_POLICY_MODE_FIXED {
                 stretched_width = stretched_width - child.width_policy.size
             } else if child.width_policy.mode == SIZE_POLICY_MODE_WRAP_CONTENT {
                 let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
-                let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.bounds.height - self.margin * 2)
+                let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_LIMITED, size = self.bounds.height() - self.margin * 2)
                 child.measure(@child_width_spec, @child_height_spec)
                 stretched_width = stretched_width - child.width_hint
             } else {
