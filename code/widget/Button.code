@@ -1,0 +1,69 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+include "code/widget/Widget.code"
+
+struct Button: Widget(
+    compute_size_hint = compute_button_size_hint
+    layout = layout_button
+    draw = draw_button
+) {
+    label: @String
+    label_bounds = make Rect()
+
+    is_hovered = false
+    is_pressed = false
+}
+
+func compute_button_size_hint(self: @Button) -> Nothing {
+    if self.label_bounds.left == self.label_bounds.right {
+        @font.compute_text_bounds(self.label, self.label_bounds)
+    }
+    self.width_hint = self.label_bounds.right - self.label_bounds.left + 17
+    self.height_hint = self.label_bounds.bottom - self.label_bounds.top + 9
+}
+
+func layout_button(self: @Button, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    self.layout_widget(left, top, right, bottom)
+
+    self.label_bounds.set_location(
+        (left + right + self.label_bounds.left - self.label_bounds.right) / 2
+        (top + bottom + self.label_bounds.top - self.label_bounds.bottom) / 2
+    )
+    stdout.write(self.label_bounds).end_line()
+}
+
+func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
+    define COLOR_SHADOW = 0x1a1a1au32
+    define COLOR_LIGHT_BORDER = 0x676767u32
+    define COLOR_DARK_BORDER = 0x333333u32
+    define COLOR_BACKGROUND = 0x4d4d4du32
+    define COLOR_TEXT = 0xe6e6e6u32
+
+    canvas.set_color(COLOR_SHADOW)
+    canvas.draw_rect(self)
+
+    if self.is_pressed {
+        canvas.set_color(COLOR_DARK_BORDER)
+        canvas.fill_rect(self.left + 1, self.top + 1, self.right - 1, self.bottom - 1)
+    } else {
+        canvas.set_color(COLOR_LIGHT_BORDER)
+        canvas.draw_horizontal_line(self.left + 1, self.right - 2, self.top + 1)
+        canvas.draw_vertical_line(self.left + 1, self.top + 2, self.bottom - 2)
+
+        if self.is_hovered {
+            canvas.set_color(COLOR_LIGHT_BORDER)
+        } else {
+            canvas.set_color(COLOR_BACKGROUND)
+        }
+        canvas.fill_rect(self.left + 2, self.top + 2, self.right - 2, self.bottom - 2)
+        canvas.draw_pixel(self.left + 1, self.bottom - 1)
+        canvas.draw_pixel(self.right - 1, self.top + 1)
+
+        canvas.set_color(COLOR_DARK_BORDER)
+        canvas.draw_horizontal_line(self.left + 2, self.right - 1, self.bottom - 1)
+        canvas.draw_vertical_line(self.right - 1, self.top + 2, self.bottom - 2)
+    }
+
+    canvas.set_color(COLOR_TEXT)
+    canvas.draw_text(self.label, self.label_bounds.left, self.label_bounds.top)
+}

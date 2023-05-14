@@ -1,0 +1,53 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+include "code/app/SDL.code"
+include "code/app/Window.code"
+
+struct Application {
+    window: @Window
+}
+
+func run(self: @Application) -> i32 {
+    if SDL_Init(SDL_INIT_VIDEO) != 0 {
+        stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
+        return 1
+    }
+
+    init_font()
+
+    self.window.init()
+
+    let quit = false
+
+    let sdl_event = make SDL_Undefined_Event()
+    let sdl_event: @SDL_Event = @sdl_event
+
+    let frames_start = SDL_GetTicks()
+    let frames = 0u32
+    while not quit {
+        let frame_time = SDL_GetTicks()
+        if frame_time > frames_start + 1000 {
+            stderr.write("FPS: ").write((frames * 1000 / (frame_time - frames_start)).as(i32)).end_line()
+            frames_start = frame_time
+            frames = 0
+        }
+
+        self.window.draw()
+
+        if SDL_WaitEvent(sdl_event) != 0 {
+            if sdl_event.type == SDL_QUIT {
+                quit = true
+            } else if sdl_event.type == SDL_WINDOWEVENT {
+                self.window.on_window_event(sdl_event.as(@SDL_WindowEvent))
+            }
+        }
+
+        frames = frames + 1
+    }
+
+    SDL_DestroyWindow(self.window.sdl_window)
+
+    SDL_Quit()
+
+    return 0
+}

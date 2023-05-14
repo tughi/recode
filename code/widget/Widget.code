@@ -1,0 +1,27 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+include "code/lang/String.code"
+include "code/widget/Widget_Group.code"
+
+struct Widget: Rect {
+    parent: @Widget_Group = null
+
+    width_hint: i32 = undefined
+    height_hint: i32 = undefined
+    compute_size_hint = compute_widget_size_hint
+
+    layout = layout_widget
+    draw = draw_widget
+}
+
+func compute_widget_size_hint(self: @Widget) -> Nothing {
+    self.width_hint = 0
+    self.height_hint = 0
+}
+
+func layout_widget(self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    self.set(left, top, right, bottom)
+}
+
+func draw_widget(self: @Widget, canvas: @Canvas) -> Nothing {
+}

@@ -17,7 +17,7 @@ struct Glyph {
 }
 
 func init_font() -> Nothing {
-    font.file = "code/font/Font.data"
+    font.file = "code/graphics/Font.data"
 
     let file = open_file(font.file, "r")
     let line = make String()
@@ -123,4 +123,30 @@ func save(self: @Font) -> Nothing {
     }
 
     file.close()
+}
+
+func compute_text_bounds(self: @Font, text: @String, bounds: @Rect) -> Nothing {
+    let line_height = self.height
+    if text.length > 0 {
+        let width = 0
+        let height = line_height
+        let char_right = 0
+        text.for_each_char() {
+            if char == '\n'.as(u8) {
+                if char_right > width {
+                    width = char_right
+                }
+                height = height + line_height
+                char_right = 0
+            } else {
+                char_right = char_right + self.glyphs[char].width
+            }
+        }
+        if char_right > width {
+            width = char_right
+        }
+        bounds.set_size(width, height)
+    } else {
+        bounds.set_size(0, line_height)
+    }
 }

@@ -1,0 +1,89 @@
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
+
+include "code/widget/Widget.code"
+
+struct Glyph_Editor: Widget(
+    compute_size_hint = compute_glyph_editor_size_hint
+    draw = draw_glyph_editor
+) {
+    glyph: @Glyph
+    pixel_size = 23
+    hovered_row = -1
+    hovered_column = -1
+    is_drawing = false
+    is_erasing = false
+}
+
+func compute_glyph_editor_size_hint(self: @Glyph_Editor) -> Nothing {
+    let glyph_rows = self.glyph.mask.length.as(i32)
+    let glyph_columns = self.glyph.mask[0].length.as(i32)
+    self.width_hint = (self.pixel_size + 1) * glyph_columns + 1
+    self.height_hint = (self.pixel_size + 1) * glyph_rows + 1
+}
+
+func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
+    define COLOR_BACKGROUND = 0x4d4d4du32
+    define COLOR_BASELINE = 0xff0000u32
+    define COLOR_HOVER = 0x666600u32
+    define COLOR_PIXEL = 0xffff00u32
+    define COLOR_PIXEL_HOVER = 0xcccc00u32
+
+    canvas.set_color(COLOR_BACKGROUND)
+    canvas.fill_rect(self)
+
+    canvas.set_color(COLOR_PIXEL)
+
+    let glyph_mask = self.glyph.mask
+    let glyph_row = 0
+    while glyph_row <= glyph_mask.length.as(i32) {
+        canvas.draw_horizontal_line(self.left, self.right, self.top + glyph_row * (self.pixel_size + 1))
+        glyph_row = glyph_row + 1
+    }
+    let glyph_column = 0
+    while glyph_column <= glyph_mask[0].length.as(i32) {
+        canvas.draw_vertical_line(self.left + glyph_column * (self.pixel_size + 1), self.top, self.bottom)
+        glyph_column = glyph_column + 1
+    }
+
+    let glyph_row = 0
+    while glyph_row < glyph_mask.length.as(i32) {
+        let glyph_row_mask = glyph_mask[glyph_row]
+        let glyph_column = 0
+        while glyph_column < glyph_row_mask.length.as(i32) {
+            if glyph_row_mask[glyph_column] != 0u8 {
+                canvas.fill_rect(
+                    self.left + glyph_column * (self.pixel_size + 1) + 1
+                    self.top + glyph_row * (self.pixel_size + 1) + 1
+                    self.left + glyph_column * (self.pixel_size + 1) + self.pixel_size
+                    self.top + glyph_row * (self.pixel_size + 1) + self.pixel_size
+                )
+            }
+            glyph_column = glyph_column + 1
+        }
+        glyph_row = glyph_row + 1
+    }
+
+    if self.hovered_row >= 0 and self.hovered_column >= 0 {
+        if glyph_mask[self.hovered_row][self.hovered_column] == 0u8 {
+            canvas.set_color(COLOR_HOVER)
+        } else {
+            canvas.set_color(COLOR_PIXEL_HOVER)
+        }
+        canvas.fill_rect(
+            self.left + self.hovered_column * (self.pixel_size + 1) + 1
+            self.top + self.hovered_row * (self.pixel_size + 1) + 1
+            self.left + self.hovered_column * (self.pixel_size + 1) + self.pixel_size
+            self.top + self.hovered_row * (self.pixel_size + 1) + self.pixel_size
+        )
+    }
+
+    canvas.set_color(COLOR_BASELINE)
+    canvas.draw_horizontal_line(self.left, self.right, self.top + font.base_line * (self.pixel_size + 1))
+}
+
+macro update_glyph_cell(self: @Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
+    if self.glyph.mask[glyph_row][glyph_column] != value {
+        self.glyph.mask[glyph_row][glyph_column] = value
+        self.gui.post(make @GUI_Event_Widget_Updated(widget = self.gui))
+    }
+}

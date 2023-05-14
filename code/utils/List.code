@@ -1,0 +1,31 @@
+struct List[T] {
+    size = 0usize
+    first_node: @List_Node[T] = null
+    last_node: @List_Node[T] = null
+}
+
+struct List_Node[T] {
+    data: T
+    prev_node: @List_Node[T] = null
+    next_node: @List_Node[T] = null
+}
+
+func append[T](self: @List[T], data: T) -> Nothing {
+    let node = make @List_Node[T](data = data)
+    if self.last_node != null {
+        node.prev_node = self.last_node
+        self.last_node.next_node = node
+    } else {
+        self.first_node = node
+    }
+    self.last_node = node
+    self.size = self.size + 1
+}
+
+macro for_each[T](self: @List[T], iterate: macro (it: T)) {
+    let node = self.first_node
+    while node != null {
+        iterate(node.data)
+        node = node.next_node
+    }
+}

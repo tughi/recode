@@ -1,0 +1,85 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+include "code/graphics/Canvas.code"
+include "code/widget/Widget.code"
+
+struct Window {
+    sdl_window: @SDL_Window = null
+
+    title: @String
+    width: i32
+    height: i32
+
+    canvas: @Canvas = null
+
+    content: @Widget = null
+
+    on_close = func (self: @Window) -> bool {
+        return true
+    }
+}
+
+func init(self: @Window) -> Nothing {
+    self.sdl_window = SDL_CreateWindow(
+        self.title.data
+        SDL_WINDOWPOS_UNDEFINED
+        SDL_WINDOWPOS_UNDEFINED
+        self.width
+        self.height
+        SDL_WINDOW_RESIZABLE
+    )
+    if self.sdl_window == null {
+        stderr.write("Failed to create window: ").write(SDL_GetError()).end_line()
+        exit(1)
+    }
+
+    let sdl_window_surface = SDL_GetWindowSurface(self.sdl_window)
+    if sdl_window_surface == null {
+        stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
+        exit(1)
+    }
+    if sdl_window_surface.format.bits_per_pixel != 32 {
+        stderr.write("Unsupported surface format").end_line()
+        exit(1)
+    }
+
+    let width = sdl_window_surface.width
+    let height = sdl_window_surface.height
+
+    self.canvas = make @Canvas(
+        pixels = sdl_window_surface.pixels
+        width = width
+        height = height
+        clip_rect = make Rect()
+    )
+    self.canvas.clip_rect.set(0, 0, width - 1, height - 1)
+
+    self.content.layout(0, 0, self.width - 1, self.height - 1)
+}
+
+func on_window_event(self: @Window, sdl_event: @SDL_WindowEvent) -> Nothing {
+    if sdl_event.event == SDL_WINDOWEVENT_RESIZED {
+        let sdl_window_surface = SDL_GetWindowSurface(self.sdl_window)
+        if sdl_window_surface == null {
+            stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
+            exit(1)
+        }
+        let width = sdl_window_surface.width
+        let height = sdl_window_surface.height
+        self.width = width
+        self.height = height
+        self.canvas.pixels = sdl_window_surface.pixels
+        self.canvas.width = width
+        self.canvas.height = height
+        self.canvas.clip_rect.set(0, 0, width - 1, height - 1)
+
+        self.content.layout(0, 0, self.width - 1, self.height - 1)
+    }
+}
+
+func draw(self: @Window) -> Nothing {
+    self.content.draw(self.canvas)
+
+    SDL_UpdateWindowSurface(self.sdl_window)
+}
+

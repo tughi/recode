@@ -1,0 +1,26 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+include "code/utils/List.code"
+include "code/widget/Widget.code"
+
+struct Widget_Group: Widget(
+    layout = layout_stacked
+    draw = func (self: @Widget_Group, canvas: @Canvas) -> Nothing {
+        for_each(self.children) {
+            it.draw(canvas)
+        }
+    }
+) {
+    children = make List[@Widget]()
+}
+
+func add(self: @Widget_Group, child: @Widget) -> Nothing {
+    self.children.append(child)
+    child.parent = self
+}
+
+func layout_stacked(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    for_each(self.children) {
+        it.layout(left, top, right, bottom)
+    }
+}

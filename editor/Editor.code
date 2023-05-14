@@ -1,139 +1,50 @@
-\ Copyright (c) 2020-2021, 2023, Stefan Selariu
+\ Copyright (c) 2023, Stefan Selariu
 
-include "code/gui/GUI.code"
-include "./gui/Font_Editor.code"
-include "./gui/Glyph_Chooser.code"
-include "./gui/Glyph_Editor.code"
-
-let text: @String
+include "code/app/Application.code"
+include "code/widget/Button.code"
+include "./widget/Glyph_Editor.code"
 
 func main() -> i32 {
-    text = read_file("editor/Editor.code")
+    let glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'.as(isize)])
 
-    if SDL_Init(SDL_INIT_VIDEO) != 0 {
-        stderr.write("Unable to initialize SDL: ").write(SDL_GetError()).end_line()
-        return 1
-    }
+    let save_button = make @Button(label = "Save")
 
-    let window_width = 1024
-    let window_height = 768
+    let window_content = make @Widget_Group(
+        layout = func (self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+            \ TODO: Implement closure to capture the childen instead
+            let glyph_editor = self.children.first_node.data.as(@Glyph_Editor)
+            let save_button = self.children.first_node.next_node.data.as(@Button)
 
-    let window = SDL_CreateWindow("ReCode".data, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, window_width, window_height, SDL_WINDOW_RESIZABLE)
-    if window == null {
-        stderr.write("Failed to create window: ").write(SDL_GetError()).end_line()
-        return 1
-    }
+            define MARGIN = 16
 
-    let window_surface = SDL_GetWindowSurface(window)
-    if window_surface == null {
-        stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
-        return 1
-    }
+            glyph_editor.compute_size_hint()
+            glyph_editor.layout(
+                left + MARGIN
+                top + MARGIN
+                left + MARGIN + glyph_editor.width_hint - 1
+                top + MARGIN + glyph_editor.height_hint - 1
+            )
 
-    if window_surface.format.bits_per_pixel != 32u8 {
-        stderr.write("Unsupported surface format").end_line()
-        return 1
-    }
+            save_button.compute_size_hint()
+            save_button.layout(
+                glyph_editor.left
+                glyph_editor.bottom + MARGIN + 1
+                glyph_editor.right
+                glyph_editor.bottom + MARGIN + save_button.height_hint
+            )
+        }
+    )
+    window_content.add(glyph_editor)
+    window_content.add(save_button)
 
-    let canvas = make @Canvas(
-        pixels = window_surface.pixels
-        width = window_surface.width
-        height = window_surface.height
-        clip_rect = make Rect(
-            left = 0
-            top = 0
-            right = window_surface.width - 1
-            bottom = window_surface.height - 1
+    let app = make Application(
+        window = make @Window(
+            title = "Font Editor"
+            width = 1024
+            height = 768
+            content = window_content
         )
     )
 
-    init_font()
-
-    let gui_event_init = make @GUI_Event_Init()
-    let gui_event_mouse_button_pressed = make @GUI_Event_Mouse_Button_Pressed(button = undefined, x = undefined, y = undefined)
-    let gui_event_mouse_button_released = make @GUI_Event_Mouse_Button_Released(button = undefined, x = undefined, y = undefined)
-    let gui_event_mouse_moved = make @GUI_Event_Mouse_Moved(x = undefined, y = undefined)
-    let gui_event_mouse_scrolled = make @GUI_Event_Mouse_Scrolled(x = undefined, y = undefined)
-
-    let gui = init_gui()
-    gui.font_editor()
-    gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
-
-    let sdl_event = make @SDL_Undefined_Event()
-    loop {
-        while gui.first_event != null {
-            let event = gui.first_event
-            if event.type == GUI_EVENT_TYPE_WIDGET_UPDATED {
-                let event = event.as(@GUI_Event_Widget_Updated)
-                stdout.write(event.widget.name).write(event.widget.bounds).write(" updated").end_line()
-                event.widget.draw(canvas)
-
-                SDL_UpdateWindowSurface(window)
-            } else if event.type == GUI_EVENT_TYPE_MOUSE_MOVED {
-                gui.on_mouse_moved(event.as(@GUI_Event_Mouse_Moved))
-            } else {
-                stderr.write("Unsupported event type: 0x").write(event.type.as(u32), 16u8).write("u8").end_line()
-                abort()
-            }
-            gui.first_event = event.next_event
-            \ TODO: recycle event
-            event.next_event = null
-        }
-
-        if SDL_WaitEvent(sdl_event) != 0 {
-            if sdl_event.type == SDL_QUIT {
-                break
-            } else if sdl_event.type == SDL_MOUSEMOTION {
-                let sdl_event = sdl_event.as(@SDL_MouseMotionEvent)
-                gui_event_mouse_moved.x = sdl_event.x
-                gui_event_mouse_moved.y = sdl_event.y
-                gui.post(gui_event_mouse_moved)
-            } else if sdl_event.type == SDL_MOUSEBUTTONDOWN {
-                let sdl_event = sdl_event.as(@SDL_MouseButtonEvent)
-                gui_event_mouse_button_pressed.button = sdl_event.button
-                gui_event_mouse_button_pressed.x = gui_event_mouse_moved.x
-                gui_event_mouse_button_pressed.y = gui_event_mouse_moved.y
-                gui.on_mouse_button_pressed(gui_event_mouse_button_pressed)
-            } else if sdl_event.type == SDL_MOUSEBUTTONUP {
-                let sdl_event = sdl_event.as(@SDL_MouseButtonEvent)
-                gui_event_mouse_button_released.button = sdl_event.button
-                gui_event_mouse_button_released.x = gui_event_mouse_moved.x
-                gui_event_mouse_button_released.y = gui_event_mouse_moved.y
-                gui.on_mouse_button_released(gui_event_mouse_button_released)
-            } else if sdl_event.type == SDL_MOUSEWHEEL {
-                let sdl_event = sdl_event.as(@SDL_MouseWheelEvent)
-                gui_event_mouse_scrolled.x = sdl_event.x
-                gui_event_mouse_scrolled.y = sdl_event.y
-                gui.on_mouse_scrolled(gui_event_mouse_scrolled)
-            } else if sdl_event.type == SDL_WINDOWEVENT {
-                let sdl_event = sdl_event.as(@SDL_WindowEvent)
-                if sdl_event.event == SDL_WINDOWEVENT_RESIZED {
-                    let window_surface = SDL_GetWindowSurface(window)
-                    if window_surface == null {
-                        stderr.write("Failed to get window surface: ").write(SDL_GetError()).end_line()
-                        return 1
-                    }
-                    canvas.pixels = window_surface.pixels
-                    canvas.width = window_surface.width
-                    canvas.height = window_surface.height
-                    canvas.clip_rect = make Rect(
-                        left = 0
-                        top = 0
-                        right = window_surface.width - 1
-                        bottom = window_surface.height - 1
-                    )
-                    gui.layout(0, 0, canvas.width - 1, canvas.height - 1)
-                }
-            }
-        }
-    }
-
-    SDL_DestroyWindow(window)
-
-    SDL_Quit()
-    return 0
-}
-
-struct Glyph_Chooser_Data: GUI_Data {
-    glyph_editor: @Glyph_Editor
+    return app.run()
 }
