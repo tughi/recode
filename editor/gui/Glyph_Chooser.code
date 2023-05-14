@@ -1,0 +1,114 @@
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
+
+include "code/gui/Layout.code"
+
+func glyph_chooser(parent: @GUI_Layout, selected_glyph: u8) -> @Glyph_Chooser {
+    let glyph_chooser = make @Glyph_Chooser(gui = parent.gui, parent = parent, selected_glyph = selected_glyph)
+    parent.add(glyph_chooser)
+
+    let glyph = ' '
+    while glyph <= '~' {
+        let button = glyph_chooser.button(make @String().append(glyph.as(u8)))
+        button.data = make @Glyph_Chooser_Button_Data(glyph_chooser = glyph_chooser, glyph = glyph.as(u8))
+        button.on_click = func (self: @GUI_Button) -> Nothing {
+            let data = self.data.as(@Glyph_Chooser_Button_Data)
+            data.glyph_chooser.handle_glyph_selected(data.glyph)
+        }
+        glyph = glyph + 1
+    }
+
+    return glyph_chooser
+}
+
+struct Glyph_Chooser: GUI_Layout(
+    name = "Glyph_Chooser"
+    measure = measure_glyph_chooser
+    layout = layout_glyph_chooser
+    draw = draw_glyph_chooser
+) {
+    selected_glyph: u8
+    handle_glyph_selected = func (self: @Glyph_Chooser, glyph: u8) -> Nothing {
+        stderr.write(self.name).write(" doesn't have the 'handle_glyph_selected' callback").end_line()
+        abort()
+    }
+}
+
+struct Glyph_Chooser_Button_Data: GUI_Data {
+    glyph_chooser: @Glyph_Chooser
+    glyph: u8
+}
+
+func measure_glyph_chooser(self: @GUI_Widget, width_spec: @Measure_Spec, height_spec: @Measure_Spec) -> Nothing {
+    let self = self.as(@Glyph_Chooser)
+    if width_spec.mode == MEASURE_SPEC_MODE_LIMITED {
+        if self.width_policy.mode == SIZE_POLICY_MODE_STRETCHED {
+            self.width_hint = width_spec.size
+        } else {
+            self.abort("width", self.width_policy)
+        }
+    } else {
+        self.abort("width", width_spec)
+    }
+    if height_spec.mode == MEASURE_SPEC_MODE_UNLIMITED {
+        self.height_hint = -3
+        let child_width_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+        let child_height_spec = make Measure_Spec(mode = MEASURE_SPEC_MODE_UNLIMITED)
+        let row_width = 0
+        let row_height = 0
+        self.for_each_child() {
+            child.measure(@child_width_spec, @child_height_spec)
+            if row_width + child.width_hint < self.width_hint {
+                row_width = row_width + child.width_hint + 4
+                if row_height < child.height_hint {
+                    row_height = child.height_hint
+                }
+            } else {
+                row_width = child.width_hint + 4
+                self.height_hint = self.height_hint + row_height + 3
+                row_height = 0
+            }
+        }
+        self.height_hint = self.height_hint + row_height + 3
+
+
+        \ self.abort("height", height_spec)
+    } else {
+        self.abort("height", height_spec)
+    }
+}
+
+func layout_glyph_chooser(self: @GUI_Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self.as(@Glyph_Chooser)
+
+    self.bounds.set(left, top, right, bottom)
+
+    let row_children = (self.bounds.width() + 4) / (self.children_first.widget.width_hint + 4)
+
+    let row_child = 0
+    let child_left = left
+    let child_top = top
+    self.for_each_child() {
+        row_child = row_child + 1
+        let child_right = left + (self.bounds.width() + 4) * row_child / row_children - 5
+        if child_right > right {
+            row_child = 1
+            child_left = left
+            child_right = left + (self.bounds.width() + 4) * row_child / row_children - 5
+            child_top = child_top + child.height_hint + 3
+        }
+        let child_bottom = child_top + child.height_hint - 1
+        child.layout(child_left, child_top, child_right, child_bottom)
+        child_left = child_right + 5
+    }
+}
+
+func draw_glyph_chooser(self: @GUI_Widget, canvas: @Canvas) -> Nothing {
+    let self = self.as(@Glyph_Chooser)
+
+    \ canvas.set_color(0x00ff77u32)
+    \ canvas.draw_rect(self.bounds)
+
+    self.for_each_child() {
+        child.draw(canvas)
+    }
+}

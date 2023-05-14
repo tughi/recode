@@ -5,6 +5,7 @@ include "code/system/File.code"
 let font: Font
 
 struct Font {
+    file: @String
     height: i32
     base_line: i32
     glyphs: [Glyph; 256]
@@ -16,7 +17,9 @@ struct Glyph {
 }
 
 func init_font() -> Nothing {
-    let file = open_file("code/font/Font.data", "r")
+    font.file = "code/font/Font.data"
+
+    let file = open_file(font.file, "r")
     let line = make String()
 
     if not (file.read_line(@line) and line.starts_with("\\ Copyright ") and file.read_line(@line) and line.equals("")) {
@@ -78,6 +81,45 @@ func init_font() -> Nothing {
 
             glyph_row = glyph_row + 1
         }
+    }
+
+    file.close()
+}
+
+func save(self: @Font) -> Nothing {
+    let file = open_file(self.file, "w")
+
+    file.write("\\ Copyright (c) 2021, 2023, Stefan Selariu").end_line()
+    file.end_line()
+    file.write("font.height: ").write(font.height).end_line()
+    file.write("font.base_line: ").write(font.base_line).end_line()
+
+    let char = '!'.as(i32)
+    while char < 127 {
+        file.end_line()
+        file.write("glyph: ").write(char.as(u8)).end_line()
+        let glyph = font.glyphs[char]
+        file.write("glyph.width: ").write(glyph.width).end_line()
+        let row = 0isize
+        while row < glyph.mask.length {
+            let column = 0isize
+            while column < glyph.mask[0].length {
+                let alpha = glyph.mask[row][column].as(u32)
+                if alpha > 0 {
+                    if alpha < 0x10 {
+                        file.write("-")
+                    }
+                    file.write(alpha, 16u8)
+                } else {
+                    file.write("--")
+                }
+                column = column + 1
+            }
+            file.end_line()
+            row = row + 1
+        }
+
+        char = char + 1
     }
 
     file.close()
