@@ -413,6 +413,7 @@ struct AST_Call_Expression: AST_Expression(
 }
 
 struct AST_Call_Argument {
+    location: @Source_Location
     name: @Identifier_Token
     value_expression: @AST_Expression
 }

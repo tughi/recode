@@ -6,6 +6,7 @@ include "code/widget/Widget.code"
 struct Widget_Group: Widget(
     layout = layout_stacked
     draw = draw_widget_group
+
     dispatch_mouse_motion_event = func (self: @Widget_Group, event: @Mouse_Motion_Event) -> Nothing {
         let is_hovered = true
 

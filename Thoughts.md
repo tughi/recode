@@ -191,6 +191,13 @@ UFCS is useful to chain function calls.
 
     file.write("An example of ").write(4).write(" chained calls").end_line()
 
+Call arguments are separated by `,` or new lines.
+
+    execute(
+        command
+        first_parameter, second_parameter, third_parameter
+    )
+
 ## Generic functions
 
     func max[T](v1: T, v2: T) -> T {

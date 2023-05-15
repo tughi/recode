@@ -211,6 +211,7 @@ func parse_statement(self: @Parser, is_global: bool) -> @AST_Statement {
                 let block_statement = self.parse_block()
                 expression.arguments.append(
                     make @AST_Call_Argument(
+                        location = block_statement.location
                         name = null
                         value_expression = make @AST_Macro_Body(location = block_statement.location, statement = block_statement)
                     )
@@ -974,27 +975,66 @@ func parse_access_expression(self: @Parser) -> @AST_Expression {
 }
 
 \ call_arguments
-\   | call_argument ( "," call_argument )*
-\   | END_OF_LINE call_argument ( END_OF_LINE call_argument )*
+\   | call_argument ( ("," | END_OF_LINE) call_argument )*
 func parse_call_arguments(self: @Parser, call_arguments: @List[@AST_Call_Argument]) -> Nothing {
+    let multiline = false
+    let space_before_argument_list = 0
+
     if self.matches_end_of_line() {
         self.consume_end_of_line()
+        multiline = true
         self.current_alignment = self.current_alignment + 1
-        while not self.matches(optional_space, required_close_paren) {
-            self.consume_space(self.current_alignment * 4)
-            call_arguments.append(self.parse_call_argument())
-            self.consume_end_of_line()
+        space_before_argument_list = self.current_alignment * 4
+
+        while self.consume_empty_line() {
+            \ continue
         }
-        self.current_alignment = self.current_alignment - 1
-        self.consume_space(self.current_alignment * 4)
-    } else {
+    }
+
+    while not self.matches(optional_space, required_close_paren) {
+        self.consume_space(space_before_argument_list)
         call_arguments.append(self.parse_call_argument())
         while self.matches(optional_space, required_comma) {
             self.consume_space(0)
-            self.consume(required_comma)
-            self.consume_space(1)
-            call_arguments.append(self.parse_call_argument())
+            let comma_token = self.consume(required_comma)
+            if self.matches_end_of_line() {
+                self.abort(comma_token)
+            } else {
+                self.consume_space(1)
+                if self.matches(required_close_paren) {
+                    self.abort(self.scanner.current_token)
+                }
+                call_arguments.append(self.parse_call_argument())
+            }
         }
+
+        if self.matches_end_of_line() {
+            self.consume_end_of_line()
+
+            if not multiline {
+                stderr.write(call_arguments.get(0i64).location).write(": ").warning().write("Multi-line argument list must start on a new line").reset().end_line()
+
+                multiline = true
+                self.current_alignment = self.current_alignment + 1
+                space_before_argument_list = self.current_alignment * 4
+            }
+        } else if multiline and self.matches(optional_space, required_close_paren) {
+            stderr.write(self.scanner.current_token.location).write(": ").warning().write("Multi-line argument list must end on a new line").reset().end_line()
+
+            multiline = false
+            self.current_alignment = self.current_alignment - 1
+        }
+
+        if multiline {
+            while self.consume_empty_line() {
+                \ continue
+            }
+        }
+    }
+
+    if multiline {
+        self.current_alignment = self.current_alignment - 1
+        self.consume_space(self.current_alignment * 4)
     }
 }
 
@@ -1006,11 +1046,17 @@ func parse_call_argument(self: @Parser) -> @AST_Call_Argument {
         self.consume_space(1)
         self.consume(required_equals)
         self.consume_space(1)
-        let value = self.parse_expression()
-        return make @AST_Call_Argument(name = name, value_expression = value)
+        let value_expression = self.parse_expression()
+        if value_expression == null {
+            self.abort(self.scanner.current_token)
+        }
+        return make @AST_Call_Argument(location = name.location, name = name, value_expression = value_expression)
     }
-    let value = self.parse_expression()
-    return make @AST_Call_Argument(name = null, value_expression = value)
+    let value_expression = self.parse_expression()
+    if value_expression == null {
+        self.abort(self.scanner.current_token)
+    }
+    return make @AST_Call_Argument(location = value_expression.location, name = null, value_expression = value_expression)
 }
 
 \ primary_expression
