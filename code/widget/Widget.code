@@ -1,9 +1,11 @@
 \ Copyright (c) 2023, Stefan Selariu
 
+include "code/app/Event.code"
 include "code/lang/String.code"
 include "code/widget/Widget_Group.code"
 
 struct Widget: Rect {
+    window: @Window = null
     parent: @Widget_Group = null
 
     width_hint: i32 = undefined
@@ -12,6 +14,20 @@ struct Widget: Rect {
 
     layout = layout_widget
     draw = draw_widget
+
+    dispatch_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
+        self.window.hovered_widget = self
+
+        self.on_mouse_motion_event(event)
+    }
+
+    on_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
+        self.window.hovered_widget = self
+    }
+}
+
+func is_hovered(self: @Widget) -> bool {
+    return self.window.hovered_widget == self
 }
 
 func compute_widget_size_hint(self: @Widget) -> Nothing {

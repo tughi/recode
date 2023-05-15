@@ -5,9 +5,23 @@ include "code/widget/Widget.code"
 
 struct Widget_Group: Widget(
     layout = layout_stacked
-    draw = func (self: @Widget_Group, canvas: @Canvas) -> Nothing {
+    draw = draw_widget_group
+    dispatch_mouse_motion_event = func (self: @Widget_Group, event: @Mouse_Motion_Event) -> Nothing {
+        let is_hovered = true
+
         for_each(self.children) {
-            it.draw(canvas)
+            if it.contains(event.x, event.y) {
+                it.dispatch_mouse_motion_event(event)
+
+                self.window.hovered_widget = it
+                if is_hovered {
+                    is_hovered = false
+                }
+            }
+        }
+
+        if is_hovered {
+            self.window.hovered_widget = self.as(@Widget)
         }
     }
 ) {
@@ -16,11 +30,18 @@ struct Widget_Group: Widget(
 
 func add(self: @Widget_Group, child: @Widget) -> Nothing {
     self.children.append(child)
+    child.window = self.window
     child.parent = self
 }
 
 func layout_stacked(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     for_each(self.children) {
         it.layout(left, top, right, bottom)
+    }
+}
+
+func draw_widget_group(self: @Widget_Group, canvas: @Canvas) -> Nothing {
+    for_each(self.children) {
+        it.draw(canvas)
     }
 }

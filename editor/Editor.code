@@ -5,46 +5,57 @@ include "code/widget/Button.code"
 include "./widget/Glyph_Editor.code"
 
 func main() -> i32 {
-    let glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'.as(isize)])
-
-    let save_button = make @Button(label = "Save")
-
-    let window_content = make @Widget_Group(
-        layout = func (self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-            \ TODO: Implement closure to capture the childen instead
-            let glyph_editor = self.children.first_node.data.as(@Glyph_Editor)
-            let save_button = self.children.first_node.next_node.data.as(@Button)
-
-            define MARGIN = 16
-
-            glyph_editor.compute_size_hint()
-            glyph_editor.layout(
-                left + MARGIN
-                top + MARGIN
-                left + MARGIN + glyph_editor.width_hint - 1
-                top + MARGIN + glyph_editor.height_hint - 1
-            )
-
-            save_button.compute_size_hint()
-            save_button.layout(
-                glyph_editor.left
-                glyph_editor.bottom + MARGIN + 1
-                glyph_editor.right
-                glyph_editor.bottom + MARGIN + save_button.height_hint
-            )
-        }
-    )
-    window_content.add(glyph_editor)
-    window_content.add(save_button)
-
     let app = make Application(
         window = make @Window(
             title = "Font Editor"
             width = 1024
             height = 768
-            content = window_content
         )
     )
 
+    let window_content = make @Widget_Group(
+        layout = layout_font_editor
+        draw = draw_font_editor
+    )
+    app.window.set_content(window_content)
+
+    let glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'.as(isize)])
+    window_content.add(glyph_editor)
+
+    let save_button = make @Button(label = "Save")
+    window_content.add(save_button)
+
     return app.run()
+}
+
+func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    self.layout_widget(left, top, right, bottom)
+
+    let glyph_editor = self.children.first_node.data.as(@Glyph_Editor)
+    let save_button = self.children.first_node.next_node.data.as(@Button)
+
+    define MARGIN = 16
+
+    glyph_editor.compute_size_hint()
+    glyph_editor.layout(
+        left + MARGIN
+        top + MARGIN
+        left + MARGIN + glyph_editor.width_hint - 1
+        top + MARGIN + glyph_editor.height_hint - 1
+    )
+
+    save_button.compute_size_hint()
+    save_button.layout(
+        glyph_editor.left
+        glyph_editor.bottom + MARGIN + 1
+        glyph_editor.right
+        glyph_editor.bottom + MARGIN + save_button.height_hint
+    )
+}
+
+func draw_font_editor(self: @Widget_Group, canvas: @Canvas) -> Nothing {
+    canvas.set_color(0x4d4d4du32)
+    canvas.fill_rect(self)
+
+    self.draw_widget_group(canvas)
 }

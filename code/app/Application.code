@@ -37,6 +37,8 @@ func run(self: @Application) -> i32 {
         if SDL_WaitEvent(sdl_event) != 0 {
             if sdl_event.type == SDL_QUIT {
                 quit = true
+            } else if sdl_event.type == SDL_MOUSEMOTION {
+                self.window.dispatch_mouse_motion_event(sdl_event.as(@SDL_MouseMotionEvent))
             } else if sdl_event.type == SDL_WINDOWEVENT {
                 self.window.on_window_event(sdl_event.as(@SDL_WindowEvent))
             }

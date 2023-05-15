@@ -1,5 +1,6 @@
 \ Copyright (c) 2023, Stefan Selariu
 
+include "code/app/Event.code"
 include "code/graphics/Canvas.code"
 include "code/widget/Widget.code"
 
@@ -13,6 +14,8 @@ struct Window {
     canvas: @Canvas = null
 
     content: @Widget = null
+
+    hovered_widget: @Widget = null
 
     on_close = func (self: @Window) -> bool {
         return true
@@ -54,7 +57,22 @@ func init(self: @Window) -> Nothing {
     )
     self.canvas.clip_rect.set(0, 0, width - 1, height - 1)
 
+    self.content.window = self
     self.content.layout(0, 0, self.width - 1, self.height - 1)
+}
+
+func set_content(self: @Window, content: @Widget) -> Nothing {
+    self.content = content
+    content.window = self
+}
+
+func dispatch_mouse_motion_event(self: @Window, sdl_event: @SDL_MouseMotionEvent) -> Nothing {
+    let event = make Mouse_Motion_Event(
+        x = sdl_event.x
+        y = sdl_event.y
+    )
+
+    self.content.dispatch_mouse_motion_event(@event)
 }
 
 func on_window_event(self: @Window, sdl_event: @SDL_WindowEvent) -> Nothing {

@@ -5,11 +5,15 @@ include "code/widget/Widget.code"
 struct Glyph_Editor: Widget(
     compute_size_hint = compute_glyph_editor_size_hint
     draw = draw_glyph_editor
+    on_mouse_motion_event = func (self: @Glyph_Editor, event: @Mouse_Motion_Event) -> Nothing {
+        self.hovered_column = (event.x - self.left) / (self.pixel_size + 1)
+        self.hovered_row = (event.y - self.top) / (self.pixel_size + 1)
+    }
 ) {
     glyph: @Glyph
     pixel_size = 23
-    hovered_row = -1
     hovered_column = -1
+    hovered_row = -1
     is_drawing = false
     is_erasing = false
 }
@@ -22,14 +26,10 @@ func compute_glyph_editor_size_hint(self: @Glyph_Editor) -> Nothing {
 }
 
 func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
-    define COLOR_BACKGROUND = 0x4d4d4du32
     define COLOR_BASELINE = 0xff0000u32
     define COLOR_HOVER = 0x666600u32
     define COLOR_PIXEL = 0xffff00u32
     define COLOR_PIXEL_HOVER = 0xcccc00u32
-
-    canvas.set_color(COLOR_BACKGROUND)
-    canvas.fill_rect(self)
 
     canvas.set_color(COLOR_PIXEL)
 
@@ -63,7 +63,7 @@ func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
         glyph_row = glyph_row + 1
     }
 
-    if self.hovered_row >= 0 and self.hovered_column >= 0 {
+    if self.is_hovered() {
         if glyph_mask[self.hovered_row][self.hovered_column] == 0u8 {
             canvas.set_color(COLOR_HOVER)
         } else {

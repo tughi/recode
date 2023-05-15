@@ -10,7 +10,6 @@ struct Button: Widget(
     label: @String
     label_bounds = make Rect()
 
-    is_hovered = false
     is_pressed = false
 }
 
@@ -50,7 +49,7 @@ func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
         canvas.draw_horizontal_line(self.left + 1, self.right - 2, self.top + 1)
         canvas.draw_vertical_line(self.left + 1, self.top + 2, self.bottom - 2)
 
-        if self.is_hovered {
+        if self.is_hovered() {
             canvas.set_color(COLOR_LIGHT_BORDER)
         } else {
             canvas.set_color(COLOR_BACKGROUND)
