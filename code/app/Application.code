@@ -32,7 +32,9 @@ func run(self: @Application) -> i32 {
             frames = 0
         }
 
-        self.window.draw()
+        if self.window.must_draw {
+            self.window.draw()
+        }
 
         if SDL_WaitEvent(sdl_event) != 0 {
             if sdl_event.type == SDL_QUIT {

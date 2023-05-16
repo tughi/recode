@@ -14,6 +14,7 @@ struct Window {
     canvas: @Canvas = null
 
     content: @Widget = null
+    must_draw = true
 
     hovered_widget: @Widget = null
 
@@ -67,12 +68,17 @@ func set_content(self: @Window, content: @Widget) -> Nothing {
 }
 
 func dispatch_mouse_motion_event(self: @Window, sdl_event: @SDL_MouseMotionEvent) -> Nothing {
+    let hovered_widget = self.hovered_widget
     let event = make Mouse_Motion_Event(
         x = sdl_event.x
         y = sdl_event.y
     )
 
     self.content.dispatch_mouse_motion_event(@event)
+
+    if self.hovered_widget != hovered_widget {
+        self.must_draw = true
+    }
 }
 
 func on_window_event(self: @Window, sdl_event: @SDL_WindowEvent) -> Nothing {
@@ -92,12 +98,13 @@ func on_window_event(self: @Window, sdl_event: @SDL_WindowEvent) -> Nothing {
         self.canvas.clip_rect.set(0, 0, width - 1, height - 1)
 
         self.content.layout(0, 0, self.width - 1, self.height - 1)
+        self.must_draw = true
     }
 }
 
 func draw(self: @Window) -> Nothing {
     self.content.draw(self.canvas)
+    self.must_draw = false
 
     SDL_UpdateWindowSurface(self.sdl_window)
 }
-
