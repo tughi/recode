@@ -6,8 +6,8 @@ struct Glyph_Editor: Widget(
     compute_size_hint = compute_glyph_editor_size_hint
     draw = draw_glyph_editor
     on_mouse_motion_event = func (self: @Glyph_Editor, event: @Mouse_Motion_Event) -> Nothing {
-        let hovered_column = (event.x - self.left) / (self.pixel_size + 1)
-        let hovered_row = (event.y - self.top) / (self.pixel_size + 1)
+        let hovered_column = (min(event.x, self.right - 1) - self.left) / (self.pixel_size + 1)
+        let hovered_row = (min(event.y, self.bottom - 1) - self.top) / (self.pixel_size + 1)
 
         if self.hovered_column != hovered_column or self.hovered_row != hovered_row {
             self.hovered_column = hovered_column
@@ -41,8 +41,15 @@ func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
 
     let glyph_mask = self.glyph.mask
     let glyph_row = 0
+    let baseline = font.base_line
     while glyph_row <= glyph_mask.length.as(i32) {
-        canvas.draw_horizontal_line(self.left, self.right, self.top + glyph_row * (self.pixel_size + 1))
+        if glyph_row == baseline {
+            canvas.set_color(COLOR_BASELINE)
+            canvas.draw_horizontal_line(self.left, self.right, self.top + glyph_row * (self.pixel_size + 1))
+            canvas.set_color(COLOR_PIXEL)
+        } else {
+            canvas.draw_horizontal_line(self.left, self.right, self.top + glyph_row * (self.pixel_size + 1))
+        }
         glyph_row = glyph_row + 1
     }
     let glyph_column = 0
@@ -82,9 +89,6 @@ func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
             self.top + self.hovered_row * (self.pixel_size + 1) + self.pixel_size
         )
     }
-
-    canvas.set_color(COLOR_BASELINE)
-    canvas.draw_horizontal_line(self.left, self.right, self.top + font.base_line * (self.pixel_size + 1))
 }
 
 macro update_glyph_cell(self: @Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {

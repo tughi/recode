@@ -90,7 +90,7 @@ func draw_line(self: @Canvas, x1: i32, y1: i32, x2: i32, y2: i32) -> Nothing {
 }
 
 func draw_horizontal_line(self: @Canvas, x1: i32, x2: i32, y: i32) -> Nothing {
-    if x2 < x1 {
+    if x2 < x1 or y < self.clip_rect.top or y > self.clip_rect.bottom {
         return
     }
     let pixel_color = self.color
@@ -105,7 +105,7 @@ func draw_horizontal_line(self: @Canvas, x1: i32, x2: i32, y: i32) -> Nothing {
 }
 
 func draw_vertical_line(self: @Canvas, x: i32, y1: i32, y2: i32) -> Nothing {
-    if y2 < y1 {
+    if y2 < y1 or x < self.clip_rect.left or x > self.clip_rect.right {
         return
     }
     let pixel_color = self.color

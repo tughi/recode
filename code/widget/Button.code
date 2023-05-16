@@ -18,7 +18,7 @@ func compute_button_size_hint(self: @Button) -> Nothing {
         @font.compute_text_bounds(self.label, self.label_bounds)
     }
     self.width_hint = self.label_bounds.right - self.label_bounds.left + 17
-    self.height_hint = self.label_bounds.bottom - self.label_bounds.top + 9
+    self.height_hint = self.label_bounds.bottom - self.label_bounds.top + 11
 }
 
 func layout_button(self: @Button, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
@@ -28,7 +28,6 @@ func layout_button(self: @Button, left: i32, top: i32, right: i32, bottom: i32) 
         (left + right + self.label_bounds.left - self.label_bounds.right) / 2
         (top + bottom + self.label_bounds.top - self.label_bounds.bottom) / 2
     )
-    stdout.write(self.label_bounds).end_line()
 }
 
 func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
