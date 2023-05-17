@@ -1,4 +1,5 @@
 /.vscode
 /build
 /stage0
+/temp
 /tests/__new__.code
