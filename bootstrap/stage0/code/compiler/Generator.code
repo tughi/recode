@@ -731,13 +731,16 @@ func generate_modulo_instruction(self: @MC_Generator, instruction: @IR_Modulo_In
     self.release_register(self.register_rax)
     self.generate_load_value(self.register_rax, instruction.get_left_value())
     self.register_rax.is_reserved = true
-    self.release_register(self.register_rdx)
-    self.register_rdx.is_reserved = true
 
     let type_size = self.get_type_size(instruction.result_value.type)
+    if type_size != 1 {
+        self.release_register(self.register_rdx)
+        self.register_rdx.is_reserved = true
+    }
+
     if instruction.result_value.type is IR_UInt_Type {
-        if type_size == 1i64 {
-            self.output_file.write("  mov ").write("ah").write(", ").write(0).end_line()
+        if type_size == 1 {
+            self.output_file.write("  xor ").write("ah").write(", ").write("ah").end_line()
         } else {
             self.output_file.write("  xor ").write(self.register_rdx.name_q).write(", ").write(self.register_rdx.name_q).end_line()
         }
@@ -782,9 +785,15 @@ func generate_modulo_instruction(self: @MC_Generator, instruction: @IR_Modulo_In
         }
         self.output_file.write_operand(self, right_value).end_line()
     }
-    self.register_rdx.is_reserved = false
-    self.register_rax.is_reserved = false
-    self.map_variable_value(instruction.result_value, self.register_rdx)
+    if type_size != 1 {
+        self.register_rdx.is_reserved = false
+        self.register_rax.is_reserved = false
+        self.map_variable_value(instruction.result_value, self.register_rdx)
+    } else {
+        self.register_rax.is_reserved = false
+        self.output_file.write("  mov ").write("al").write(", ").write("ah").end_line()
+        self.map_variable_value(instruction.result_value, self.register_rax)
+    }
 }
 
 func generate_multiply_instruction(self: @MC_Generator, instruction: @IR_Multiply_Instruction) -> Nothing {
