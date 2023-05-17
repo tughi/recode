@@ -17,6 +17,7 @@ struct Window {
     must_draw = true
 
     hovered_widget: @Widget = null
+    pressed_widget: @Widget = null
 
     on_close = func (self: @Window) -> bool {
         return true
@@ -68,7 +69,7 @@ func set_content(self: @Window, content: @Widget) -> Nothing {
 }
 
 func dispatch_mouse_motion_event(self: @Window, sdl_event: @SDL_MouseMotionEvent) -> Nothing {
-    let hovered_widget = self.hovered_widget
+    let prev_hovered_widget = self.hovered_widget
     let event = make Mouse_Motion_Event(
         x = sdl_event.x
         y = sdl_event.y
@@ -76,8 +77,31 @@ func dispatch_mouse_motion_event(self: @Window, sdl_event: @SDL_MouseMotionEvent
 
     self.content.dispatch_mouse_motion_event(@event)
 
-    if self.hovered_widget != hovered_widget {
+    if self.hovered_widget != prev_hovered_widget {
         self.must_draw = true
+    }
+}
+
+func dispatch_mouse_button_pressed_event(self: @Window, sdl_event: @SDL_MouseButtonEvent) -> Nothing {
+    let event = make Mouse_Button_Pressed_Event(
+        button = sdl_event.button
+        x = sdl_event.x
+        y = sdl_event.y
+    )
+
+    self.hovered_widget.on_mouse_button_pressed_event(@event)
+}
+
+func dispatch_mouse_button_released_event(self: @Window, sdl_event: @SDL_MouseButtonEvent) -> Nothing {
+    let event = make Mouse_Button_Released_Event(
+        button = sdl_event.button
+        x = sdl_event.x
+        y = sdl_event.y
+    )
+
+    self.hovered_widget.on_mouse_button_released_event(@event)
+    if self.pressed_widget != null {
+        self.pressed_widget.on_mouse_button_released_event(@event)
     }
 }
 

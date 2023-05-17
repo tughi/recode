@@ -8,21 +8,12 @@ struct Widget_Group: Widget(
     draw = draw_widget_group
 
     dispatch_mouse_motion_event = func (self: @Widget_Group, event: @Mouse_Motion_Event) -> Nothing {
-        let is_hovered = true
+        self.window.hovered_widget = self.as(@Widget)
 
         for_each(self.children) {
             if it.contains(event.x, event.y) {
                 it.dispatch_mouse_motion_event(event)
-
-                self.window.hovered_widget = it
-                if is_hovered {
-                    is_hovered = false
-                }
             }
-        }
-
-        if is_hovered {
-            self.window.hovered_widget = self.as(@Widget)
         }
     }
 ) {

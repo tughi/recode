@@ -24,10 +24,18 @@ struct Widget: Rect {
     on_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
         self.window.hovered_widget = self
     }
+    on_mouse_button_pressed_event = func (self: @Widget, event: @Mouse_Button_Pressed_Event) -> Nothing {
+    }
+    on_mouse_button_released_event = func (self: @Widget, event: @Mouse_Button_Released_Event) -> Nothing {
+    }
 }
 
 func is_hovered(self: @Widget) -> bool {
     return self.window.hovered_widget == self
+}
+
+func is_pressed(self: @Widget) -> bool {
+    return self.window.pressed_widget == self
 }
 
 func compute_widget_size_hint(self: @Widget) -> Nothing {
@@ -37,6 +45,10 @@ func compute_widget_size_hint(self: @Widget) -> Nothing {
 
 func layout_widget(self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     self.set(left, top, right, bottom)
+}
+
+func request_draw(self: @Widget) -> Nothing {
+    self.window.must_draw = true
 }
 
 func draw_widget(self: @Widget, canvas: @Canvas) -> Nothing {

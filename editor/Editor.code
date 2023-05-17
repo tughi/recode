@@ -22,10 +22,39 @@ func main() -> i32 {
     let glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'.as(isize)])
     window_content.add(glyph_editor)
 
-    let save_button = make @Button(label = "Save")
+    let save_button = make @Save_Button(glyph_editor = @glyph_editor)
     window_content.add(save_button)
 
+    let glyph = ' '
+    while glyph <= '~' {
+        let glyph_button = make @Glyph_Button(
+            label = make @String().append(glyph.as(u8))
+            glyph = glyph
+            glyph_editor = glyph_editor
+        )
+        window_content.add(glyph_button)
+        glyph = glyph + 1
+    }
+
     return app.run()
+}
+
+struct Save_Button: Button(
+    label = "Save"
+    on_click = func (self: @Save_Button) -> Nothing {
+        @font.save()
+    }
+) {
+    glyph_editor: @Glyph_Editor
+}
+
+struct Glyph_Button: Button(
+    on_click = func (self: @Glyph_Button) -> Nothing {
+        self.glyph_editor.glyph = font.glyphs[self.glyph.as(isize)]
+    }
+) {
+    glyph_editor: @Glyph_Editor
+    glyph: i8
 }
 
 func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
@@ -51,6 +80,29 @@ func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bo
         glyph_editor.right
         glyph_editor.bottom + MARGIN + save_button.height_hint
     )
+
+    let glyph_button_left = glyph_editor.right + MARGIN + 1
+    let glyph_button_top = glyph_editor.top
+    let glyph_button_child_node = self.children.first_node.next_node.next_node
+    while glyph_button_child_node != null {
+        let glyph_button = glyph_button_child_node.data.as(@Glyph_Button)
+
+        glyph_button.compute_size_hint()
+        glyph_button.layout(
+            glyph_button_left
+            glyph_button_top
+            glyph_button_left + glyph_button.width_hint - 1
+            glyph_button_top + glyph_button.height_hint - 1
+        )
+
+        if glyph_button.glyph // 8 == 0 {
+            glyph_button_left = glyph_editor.right + MARGIN + 1
+            glyph_button_top = glyph_button.bottom + 2
+        } else {
+            glyph_button_left = glyph_button.right + 2
+        }
+        glyph_button_child_node = glyph_button_child_node.next_node
+    }
 }
 
 func draw_font_editor(self: @Widget_Group, canvas: @Canvas) -> Nothing {

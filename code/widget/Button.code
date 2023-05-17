@@ -6,11 +6,30 @@ struct Button: Widget(
     compute_size_hint = compute_button_size_hint
     layout = layout_button
     draw = draw_button
+
+    on_mouse_button_pressed_event = func (self: @Button, event: @Mouse_Button_Pressed_Event) -> Nothing {
+        if event.button == 1u8 {
+            self.window.pressed_widget = self
+            self.request_draw()
+        }
+    }
+
+    on_mouse_button_released_event = func (self: @Button, event: @Mouse_Button_Released_Event) -> Nothing {
+        if event.button == 1u8 and self.is_pressed() {
+            self.window.pressed_widget = null
+            if self.is_hovered() and self.on_click != null {
+                self.on_click()
+            }
+            self.request_draw()
+        }
+    }
 ) {
     label: @String
     label_bounds = make Rect()
 
     is_pressed = false
+
+    on_click: func (self: @Button) -> Nothing = null
 }
 
 func compute_button_size_hint(self: @Button) -> Nothing {
@@ -36,12 +55,14 @@ func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
     define COLOR_DARK_BORDER = 0x333333u32
     define COLOR_BACKGROUND = 0x4d4d4du32
     define COLOR_TEXT = 0xe6e6e6u32
+    define COLOR_HOVER = 0x5a5a5au32
+    define COLOR_PRESSED = 0x464646u32
 
     canvas.set_color(COLOR_SHADOW)
     canvas.draw_rect(self)
 
-    if self.is_pressed {
-        canvas.set_color(COLOR_DARK_BORDER)
+    if self.is_pressed() {
+        canvas.set_color(COLOR_PRESSED)
         canvas.fill_rect(self.left + 1, self.top + 1, self.right - 1, self.bottom - 1)
     } else {
         canvas.set_color(COLOR_LIGHT_BORDER)
@@ -49,7 +70,7 @@ func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
         canvas.draw_vertical_line(self.left + 1, self.top + 2, self.bottom - 2)
 
         if self.is_hovered() {
-            canvas.set_color(COLOR_LIGHT_BORDER)
+            canvas.set_color(COLOR_HOVER)
         } else {
             canvas.set_color(COLOR_BACKGROUND)
         }

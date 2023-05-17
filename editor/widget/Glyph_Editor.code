@@ -12,7 +12,7 @@ struct Glyph_Editor: Widget(
         if self.hovered_column != hovered_column or self.hovered_row != hovered_row {
             self.hovered_column = hovered_column
             self.hovered_row = hovered_row
-            self.window.must_draw = true
+            self.request_draw()
         }
     }
 ) {
