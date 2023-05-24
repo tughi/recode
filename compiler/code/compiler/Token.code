@@ -10,7 +10,7 @@ struct Literal_Token: Token {
 }
 
 struct Character_Token: Literal_Token {
-    value: i8
+    value: u8
 }
 
 struct Boolean_Token: Literal_Token {

@@ -2,13 +2,13 @@
 \ - output: 'PASS\n'
 
 struct String {
-    data: [i8; ?]
+    data: [u8; ?]
     data_size: usize
     length: usize
 }
 
 external type File
-external func fputs(s: [i8; ?], stream: @File) -> i32
+external func fputs(s: [u8; ?], stream: @File) -> i32
 external stdout: @File
 
 func main() -> i32 {

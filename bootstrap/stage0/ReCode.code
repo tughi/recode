@@ -1,6 +1,6 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
-func main(argc: i32, argv: [[i8; ?]; ?]) -> Nothing {
+func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
     if argc < 3 {
         stdout.write("Usage:").end_line()
         stdout.write('\t').write(argv[0]).write(" <INPUT FILE> <OUTPUT FILE>").end_line()
@@ -521,7 +521,7 @@ func write(self: @FILE, string: @String) -> @FILE {
     return self.write(string.data)
 }
 
-func write(self: @FILE, chars: [i8; ?]) -> @FILE {
+func write(self: @FILE, chars: [u8; ?]) -> @FILE {
     if fputs(chars, self).as(isize) < 0 {
         stderr.end_line().end_line().write("Failed to write text").end_line()
         abort()
@@ -529,7 +529,7 @@ func write(self: @FILE, chars: [i8; ?]) -> @FILE {
     return self
 }
 
-func write(self: @FILE, char: i8) -> @FILE {
+func write(self: @FILE, char: u8) -> @FILE {
     let c = char.as(i32)
     if fputc(c, self) != c {
         stderr.end_line().end_line().write("Failed to write character: ").write(c.as(isize)).end_line()
@@ -558,17 +558,17 @@ include "./code/lang/String.code"
 include "./code/core/Platform.code"
 
 func debug(self: @FILE) -> @FILE {
-    return self.write(27i8).write("[2;37m")
+    return self.write(27u8).write("[2;37m")
 }
 
 func warning(self: @FILE) -> @FILE {
-    return self.write(27i8).write("[0;93m")
+    return self.write(27u8).write("[0;93m")
 }
 
 func error(self: @FILE) -> @FILE {
-    return self.write(27i8).write("[0;91m")
+    return self.write(27u8).write("[0;91m")
 }
 
 func reset(self: @FILE) -> @FILE {
-    return self.write(27i8).write("[0m")
+    return self.write(27u8).write("[0m")
 }

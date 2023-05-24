@@ -158,7 +158,7 @@ An `[i32; 7]` array has the following in-memory structure:
 The `String` type has the following structure:
 
     struct String {
-        data: [i8; ?]
+        data: [u8; ?]
         data_size: i32
         length: i32
     }

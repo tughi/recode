@@ -20,7 +20,7 @@ struct List[T] {
 }
 
 struct String {
-    data: [i8; ?]
+    data: [u8; ?]
     data_size: usize
     length: usize
 }

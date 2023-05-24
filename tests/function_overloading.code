@@ -2,7 +2,7 @@
 \ - output: ''
 
 struct String {
-    data: @i8
+    data: @u8
 }
 
 func get_answer(question: @String) -> i32 {

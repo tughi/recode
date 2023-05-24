@@ -2198,7 +2198,7 @@ func convert_literal_expression(self: @IR_Builder, expression: @AST_Literal_Expr
         return make @IR_Constant_Value(type = self.get_named_type("bool"), literal = expression.literal)
     }
     if expression.literal is Character_Token {
-        return make @IR_Constant_Value(type = self.get_named_type("i8"), literal = expression.literal)
+        return make @IR_Constant_Value(type = self.get_named_type("u8"), literal = expression.literal)
     }
     if expression.literal is Integer_Token {
         let integer_literal = expression.literal.as(@Integer_Token)

@@ -11,9 +11,9 @@ external func fclose(file: @FILE) -> i32
 external func feof(file: @FILE) -> i32
 external func fflush(file: @FILE) -> i32
 external func fgetc(file: @FILE) -> i32
-external func fopen(file: [i8; ?], mode: [i8; ?]) -> @FILE
+external func fopen(file: [u8; ?], mode: [u8; ?]) -> @FILE
 external func fputc(char: i32, file: @FILE) -> i32
-external func fputs(chars: [i8; ?], file: @FILE) -> i32
+external func fputs(chars: [u8; ?], file: @FILE) -> i32
 
 \ stdlib
 
@@ -21,4 +21,4 @@ external func abort() -> Nothing
 external func exit(code: i32) -> Nothing
 external func free(block: @Any) -> Nothing
 external func malloc(size: i64) -> @Any
-external func realloc(block: [i8; ?], size: i64) -> @Any
+external func realloc(block: [u8; ?], size: i64) -> @Any

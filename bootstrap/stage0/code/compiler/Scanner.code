@@ -39,11 +39,11 @@ func next_token(self: @Scanner) -> @Token {
     return self.current_token
 }
 
-func peek_char(self: @Scanner) -> i8 {
+func peek_char(self: @Scanner) -> u8 {
     return self.source.content[self.current_char_index]
 }
 
-func next_char(self: @Scanner) -> i8 {
+func next_char(self: @Scanner) -> u8 {
     let next_char = self.source.content[self.current_char_index]
     if next_char != '\0' {
         self.current_char_index = self.current_char_index + 1
@@ -92,26 +92,26 @@ func scan_token(self: @Scanner) -> @Token {
     return make @Other_Token(lexeme = token_lexeme, location = token_location)
 }
 
-func is_digit(char: i8) -> bool {
+func is_digit(char: u8) -> bool {
     return char >= '0' and char <= '9'
 }
 
-func is_identifier_start(char: i8) -> bool {
+func is_identifier_start(char: u8) -> bool {
     return char.is_letter() or char == '_'
 }
 
-func is_identifier_body(char: i8) -> bool {
+func is_identifier_body(char: u8) -> bool {
     if char.is_identifier_start() {
         return true
     }
     return char.is_digit()
 }
 
-func is_letter(char: i8) -> bool {
+func is_letter(char: u8) -> bool {
     return (char >= 'a' and char <= 'z') or (char >= 'A' and char <= 'Z')
 }
 
-func is_space(char: i8) -> bool {
+func is_space(char: u8) -> bool {
     return char == ' '
 }
 
@@ -120,7 +120,7 @@ func scan_character_token(self: @Scanner, token_lexeme: @String, token_location:
         abort("Invalid state")
     }
 
-    let value: i8
+    let value: u8
     token_lexeme.append(self.next_char())
     let char = self.next_char()
     token_lexeme.append(char)
@@ -167,7 +167,7 @@ func scan_character_token(self: @Scanner, token_lexeme: @String, token_location:
     return make @Character_Token(lexeme = token_lexeme, location = token_location, value = value)
 }
 
-func is_escape(char: i8) -> bool {
+func is_escape(char: u8) -> bool {
     return char == 'n' or char == 't' or char == '\"' or char == '\'' or char == '\\' or char == '0'
 }
 
