@@ -718,15 +718,19 @@ func generate_load_array_item_instruction(self: @MC_Generator, instruction: @IR_
     let index_value = instruction.get_index_value()
     if index_value is IR_Constant_Value {
         let index_value = index_value.as(@IR_Constant_Value)
-        if index_value.literal is not Integer_Token {
+        let index: i64
+        if index_value.literal is Integer_Token {
+            index = index_value.literal.as(@Integer_Token).value
+        } else if index_value.literal is Character_Token {
+            index = index_value.literal.as(@Character_Token).value.as(i64)
+        } else {
             self.abort(index_value.literal.location, "Not an integer literal")
         }
-        let index_value = index_value.literal.as(@Integer_Token).value
-        if index_value != 0 {
-            if index_value < 0 {
-                self.abort("Invalid state")
+        if index != 0 {
+            if index < 0 {
+                abort(index_value.literal.location, "Unexpected negative index value")
             }
-            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index_value * array_item_type_size).end_line()
+            self.output_file.write("  add ").write(result_register.name_q).write(", ").write(index * array_item_type_size).end_line()
         }
     } else {
         let index_register = self.find_unused_register()
@@ -1058,15 +1062,19 @@ func generate_store_array_item_instruction(self: @MC_Generator, instruction: @IR
     let index_value = instruction.get_index_value()
     if index_value is IR_Constant_Value {
         let index_value = index_value.as(@IR_Constant_Value)
-        if index_value.literal is not Integer_Token {
-            self.abort("Invalid state")
+        let index: i64
+        if index_value.literal is Integer_Token {
+            index = index_value.literal.as(@Integer_Token).value
+        } else if index_value.literal is Character_Token {
+            index = index_value.literal.as(@Character_Token).value.as(i64)
+        } else {
+            self.abort(index_value.literal.location, "Not an integer literal")
         }
-        let index_value = index_value.literal.as(@Integer_Token).value
-        if index_value != 0 {
-            if index_value < 0 {
-                self.abort("Invalid state")
+        if index != 0 {
+            if index < 0 {
+                abort(index_value.literal.location, "Unexpected negative index value")
             }
-            self.output_file.write("  add ").write(address_register.name_q).write(", ").write(index_value * ir_value_type_size).end_line()
+            self.output_file.write("  add ").write(address_register.name_q).write(", ").write(index * ir_value_type_size).end_line()
         }
     } else {
         let index_register = self.find_unused_register()
