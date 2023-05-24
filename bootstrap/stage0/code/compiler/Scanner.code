@@ -200,19 +200,19 @@ func scan_identifier_token(self: @Scanner, token_lexeme: @String, token_location
 func scan_integer_token(self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
     let char = self.next_char()
     token_lexeme.append(char)
-    let value = (char - '0').as(i64) \ TODO: compute value as u64
+    let value = (char - '0').as(u64)
     char = self.peek_char()
-    if value == 0i64 and char == 'x' {
+    if value == 0 and char == 'x' {
         token_lexeme.append(self.next_char())
         loop {
             let old_value = value
             char = self.peek_char()
             if char.is_digit() {
-                value = value * 16 + (char - '0').as(i64)
+                value = value * 16 + (char - '0').as(u64)
             } else if char >= 'A' and char <= 'F' {
-                value = value * 16 + (char - 'A').as(i64) + 10
+                value = value * 16 + (char - 'A').as(u64) + 10
             } else if char >= 'a' and char <= 'f' {
-                value = value * 16 + (char - 'a').as(i64) + 10
+                value = value * 16 + (char - 'a').as(u64) + 10
             } else if char != '_' {
                 break
             }
@@ -226,7 +226,7 @@ func scan_integer_token(self: @Scanner, token_lexeme: @String, token_location: @
             char = self.peek_char()
             if char.is_digit() {
                 let old_value = value
-                value = value * 10 + (char - '0').as(i64)
+                value = value * 10 + (char - '0').as(u64)
                 if old_value > value {
                     abort(token_location, "Integer literal is too large")
                 }
@@ -248,11 +248,11 @@ func scan_integer_token(self: @Scanner, token_lexeme: @String, token_location: @
             self.next_char()
         }
         if type.equals("i16") or type.equals("i32") or type.equals("i64") or type.equals("i8") or type.equals("isize") or type.equals("u16") or type.equals("u32") or type.equals("u64") or type.equals("u8") or type.equals("usize") {
-            return make @Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = type)
+            return make @Integer_Token(lexeme = token_lexeme, location = token_location, value = value.as(i64), type = type)
         }
         return make @Error_Token(lexeme = token_lexeme, location = token_location)
     }
-    return make @Integer_Token(lexeme = token_lexeme, location = token_location, value = value, type = null)
+    return make @Integer_Token(lexeme = token_lexeme, location = token_location, value = value.as(i64), type = null)
 }
 
 func scan_space_token(self: @Scanner, token_lexeme: @String, token_location: @Source_Location) -> @Token {
