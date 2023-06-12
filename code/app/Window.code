@@ -65,7 +65,7 @@ func init(self: @Window) -> Nothing {
 
 func set_content(self: @Window, content: @Widget) -> Nothing {
     self.content = content
-    content.window = self
+    content.set_window(self)
 }
 
 func dispatch_mouse_motion_event(self: @Window, sdl_event: @SDL_MouseMotionEvent) -> Nothing {

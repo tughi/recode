@@ -69,9 +69,9 @@ func init_font() -> Nothing {
 
             let glyph_column = 0
             while glyph_column < glyph.width {
-                if line.data[glyph_column * 2] == 'F'.as(u8) and line.data[glyph_column * 2 + 1] == 'F'.as(u8) {
+                if line.data[glyph_column * 2] == 'F' and line.data[glyph_column * 2 + 1] == 'F' {
                     glyph.mask[glyph_row][glyph_column] = 0xffu8
-                } else if line.data[glyph_column * 2] == '-'.as(u8) and line.data[glyph_column * 2 + 1] == '-'.as(u8) {
+                } else if line.data[glyph_column * 2] == '-' and line.data[glyph_column * 2 + 1] == '-' {
                     \ glyph.mask[glyph_row][glyph_column] = 0x00u8
                 } else {
                     abort()
@@ -132,7 +132,7 @@ func compute_text_bounds(self: @Font, text: @String, bounds: @Rect) -> Nothing {
         let height = line_height
         let char_right = 0
         text.for_each_char() {
-            if char == '\n'.as(u8) {
+            if char == '\n' {
                 if char_right > width {
                     width = char_right
                 }

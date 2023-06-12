@@ -5,6 +5,7 @@ include "code/widget/Widget.code"
 struct Glyph_Editor: Widget(
     compute_size_hint = compute_glyph_editor_size_hint
     draw = draw_glyph_editor
+
     on_mouse_motion_event = func (self: @Glyph_Editor, event: @Mouse_Motion_Event) -> Nothing {
         let hovered_column = (min(event.x, self.right - 1) - self.left) / (self.pixel_size + 1)
         let hovered_row = (min(event.y, self.bottom - 1) - self.top) / (self.pixel_size + 1)
@@ -12,7 +13,31 @@ struct Glyph_Editor: Widget(
         if self.hovered_column != hovered_column or self.hovered_row != hovered_row {
             self.hovered_column = hovered_column
             self.hovered_row = hovered_row
+
+            self.update_glyph_cell(self.hovered_row, self.hovered_column)
+
             self.request_draw()
+        }
+    }
+
+    on_mouse_button_pressed_event = func (self: @Glyph_Editor, event: @Mouse_Button_Pressed_Event) -> Nothing {
+        self.window.pressed_widget = self
+
+        self.is_drawing = event.button == 1u8
+        self.is_erasing = event.button == 3u8
+
+        self.update_glyph_cell(self.hovered_row, self.hovered_column)
+    }
+
+    on_mouse_button_released_event = func (self: @Glyph_Editor, event: @Mouse_Button_Released_Event) -> Nothing {
+        if self.is_pressed() {
+            self.window.pressed_widget = null
+
+            if event.button == 1u8 {
+                self.is_drawing = false
+            } else if event.button == 3u8 {
+                self.is_erasing = false
+            }
         }
     }
 ) {
@@ -33,31 +58,36 @@ func compute_glyph_editor_size_hint(self: @Glyph_Editor) -> Nothing {
 
 func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
     define COLOR_BASELINE = 0xff0000u32
-    define COLOR_HOVER = 0x666600u32
-    define COLOR_PIXEL = 0xffff00u32
-    define COLOR_PIXEL_HOVER = 0xcccc00u32
+    define COLOR_BORDER = 0x666666u32
+    define COLOR_GRID = 0xeeeeeeu32
+    define COLOR_HOVER = 0xddddddu32
+    define COLOR_PIXEL = 0xffffffu32
+    define COLOR_PIXEL_HOVER = 0xeeeeeeu32
 
-    canvas.set_color(COLOR_PIXEL)
+    canvas.set_color(COLOR_BORDER)
+    canvas.draw_rect(self)
 
+    canvas.set_color(COLOR_GRID)
     let glyph_mask = self.glyph.mask
-    let glyph_row = 0
+    let glyph_column = 1
+    while glyph_column < glyph_mask[0].length.as(i32) {
+        canvas.draw_vertical_line(self.left + glyph_column * (self.pixel_size + 1), self.top + 1, self.bottom - 1)
+        glyph_column = glyph_column + 1
+    }
+    let glyph_row = 1
     let baseline = font.base_line
-    while glyph_row <= glyph_mask.length.as(i32) {
+    while glyph_row < glyph_mask.length.as(i32) {
         if glyph_row == baseline {
             canvas.set_color(COLOR_BASELINE)
-            canvas.draw_horizontal_line(self.left, self.right, self.top + glyph_row * (self.pixel_size + 1))
-            canvas.set_color(COLOR_PIXEL)
+            canvas.draw_horizontal_line(self.left + 1, self.right - 1, self.top + glyph_row * (self.pixel_size + 1))
+            canvas.set_color(COLOR_GRID)
         } else {
-            canvas.draw_horizontal_line(self.left, self.right, self.top + glyph_row * (self.pixel_size + 1))
+            canvas.draw_horizontal_line(self.left + 1, self.right - 1, self.top + glyph_row * (self.pixel_size + 1))
         }
         glyph_row = glyph_row + 1
     }
-    let glyph_column = 0
-    while glyph_column <= glyph_mask[0].length.as(i32) {
-        canvas.draw_vertical_line(self.left + glyph_column * (self.pixel_size + 1), self.top, self.bottom)
-        glyph_column = glyph_column + 1
-    }
 
+    canvas.set_color(COLOR_PIXEL)
     let glyph_row = 0
     while glyph_row < glyph_mask.length.as(i32) {
         let glyph_row_mask = glyph_mask[glyph_row]
@@ -91,9 +121,10 @@ func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
     }
 }
 
-macro update_glyph_cell(self: @Glyph_Editor, glyph_row: i32, glyph_column: i32, value: u8) {
-    if self.glyph.mask[glyph_row][glyph_column] != value {
-        self.glyph.mask[glyph_row][glyph_column] = value
-        self.gui.post(make @GUI_Event_Widget_Updated(widget = self.gui))
+macro update_glyph_cell(self: @Glyph_Editor, glyph_row: i32, glyph_column: i32) {
+    if self.is_drawing {
+        self.glyph.mask[glyph_row][glyph_column] = 255u8
+    } else if self.is_erasing {
+        self.glyph.mask[glyph_row][glyph_column] = 0u8
     }
 }

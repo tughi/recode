@@ -36,7 +36,7 @@ func compute_button_size_hint(self: @Button) -> Nothing {
     if self.label_bounds.left == self.label_bounds.right {
         @font.compute_text_bounds(self.label, self.label_bounds)
     }
-    self.width_hint = self.label_bounds.right - self.label_bounds.left + 17
+    self.width_hint = self.label_bounds.right - self.label_bounds.left + 21
     self.height_hint = self.label_bounds.bottom - self.label_bounds.top + 11
 }
 
@@ -50,13 +50,13 @@ func layout_button(self: @Button, left: i32, top: i32, right: i32, bottom: i32) 
 }
 
 func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
-    define COLOR_SHADOW = 0x1a1a1au32
-    define COLOR_LIGHT_BORDER = 0x676767u32
-    define COLOR_DARK_BORDER = 0x333333u32
-    define COLOR_BACKGROUND = 0x4d4d4du32
-    define COLOR_TEXT = 0xe6e6e6u32
-    define COLOR_HOVER = 0x5a5a5au32
-    define COLOR_PRESSED = 0x464646u32
+    define COLOR_SHADOW = 0x666666u32
+    define COLOR_LIGHT_BORDER = 0xffffffu32
+    define COLOR_DARK_BORDER = 0xaaaaaau32
+    define COLOR_BACKGROUND = 0xccccccu32
+    define COLOR_TEXT = 0x000000u32
+    define COLOR_HOVER = 0xddddddau32
+    define COLOR_PRESSED = 0xaaaaaau32
 
     canvas.set_color(COLOR_SHADOW)
     canvas.draw_rect(self)
@@ -67,7 +67,7 @@ func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
     } else {
         canvas.set_color(COLOR_LIGHT_BORDER)
         canvas.draw_horizontal_line(self.left + 1, self.right - 2, self.top + 1)
-        canvas.draw_vertical_line(self.left + 1, self.top + 2, self.bottom - 2)
+        canvas.draw_vertical_line(self.left + 1, self.top + 2, self.bottom - 1)
 
         if self.is_hovered() {
             canvas.set_color(COLOR_HOVER)
@@ -75,12 +75,10 @@ func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
             canvas.set_color(COLOR_BACKGROUND)
         }
         canvas.fill_rect(self.left + 2, self.top + 2, self.right - 2, self.bottom - 2)
-        canvas.draw_pixel(self.left + 1, self.bottom - 1)
-        canvas.draw_pixel(self.right - 1, self.top + 1)
 
         canvas.set_color(COLOR_DARK_BORDER)
         canvas.draw_horizontal_line(self.left + 2, self.right - 1, self.bottom - 1)
-        canvas.draw_vertical_line(self.right - 1, self.top + 2, self.bottom - 2)
+        canvas.draw_vertical_line(self.right - 1, self.top + 1, self.bottom - 2)
     }
 
     canvas.set_color(COLOR_TEXT)

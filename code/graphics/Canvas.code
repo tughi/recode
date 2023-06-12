@@ -169,7 +169,7 @@ func draw_text(self: @Canvas, text: @String, left: i32, base_line: i32) -> Nothi
     while char_index < text.length and base_line < self.height {
         let char = text.data[char_index]
         let glyph_mask = font.glyphs[char].mask
-        if char == '\n'.as(u8) {
+        if char == '\n' {
             char_left = left
             base_line = base_line + font.height
         } else {

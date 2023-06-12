@@ -1,0 +1,74 @@
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
+
+include "code/widget/Button.code"
+include "code/widget/Widget_Group.code"
+include "editor/widget/Glyph_Chooser.code"
+include "editor/widget/Glyph_Editor.code"
+
+func make_font_editor() -> @Widget_Group {
+    let font_editor = make @Widget_Group(
+        layout = layout_font_editor
+        draw = draw_font_editor
+    )
+
+    let glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'])
+    font_editor.add(glyph_editor)
+
+    let save_button = make @Save_Button(glyph_editor = @glyph_editor)
+    font_editor.add(save_button)
+
+    let glyph_chooser = make_glyph_chooser(glyph_editor)
+    font_editor.add(glyph_chooser)
+
+    return font_editor
+}
+
+struct Save_Button: Button(
+    label = "Save"
+    on_click = func (self: @Save_Button) -> Nothing {
+        @font.save()
+    }
+) {
+    glyph_editor: @Glyph_Editor
+}
+
+func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    self.layout_widget(left, top, right, bottom)
+
+    let glyph_editor = self.children.first_node.data.as(@Glyph_Editor)
+    let save_button = self.children.first_node.next_node.data.as(@Button)
+    let glyph_chooser = self.children.first_node.next_node.next_node.data.as(@Button)
+
+    define MARGIN = 16
+
+    glyph_editor.compute_size_hint()
+    glyph_editor.layout(
+        left + MARGIN
+        top + MARGIN
+        left + MARGIN + glyph_editor.width_hint - 1
+        top + MARGIN + glyph_editor.height_hint - 1
+    )
+
+    save_button.compute_size_hint()
+    save_button.layout(
+        glyph_editor.left
+        glyph_editor.bottom + MARGIN + 1
+        glyph_editor.right
+        glyph_editor.bottom + MARGIN + save_button.height_hint
+    )
+
+    glyph_chooser.compute_size_hint()
+    glyph_chooser.layout(
+        glyph_editor.right + MARGIN + 1
+        glyph_editor.top
+        right - MARGIN
+        bottom - MARGIN
+    )
+}
+
+func draw_font_editor(self: @Widget_Group, canvas: @Canvas) -> Nothing {
+    canvas.set_color(0xccccccu32)
+    canvas.fill_rect(self)
+
+    self.draw_widget_group(canvas)
+}

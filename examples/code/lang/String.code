@@ -1,5 +1,0 @@
-struct String {
-    data: [i8; ?] = undefined
-    data_size: isize = undefined
-    length: isize = undefined
-}

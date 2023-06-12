@@ -28,6 +28,10 @@ struct Widget: Rect {
     }
     on_mouse_button_released_event = func (self: @Widget, event: @Mouse_Button_Released_Event) -> Nothing {
     }
+
+    set_window = func (self: @Widget, window: @Window) -> Nothing {
+        self.window = window
+    }
 }
 
 func is_hovered(self: @Widget) -> bool {

@@ -1,0 +1,64 @@
+\ Copyright (c) 2020-2021, 2023, Stefan Selariu
+
+include "code/widget/Button.code"
+include "code/widget/Widget_Group.code"
+include "editor/widget/Glyph_Editor.code"
+
+func make_glyph_chooser(glyph_editor: @Glyph_Editor) -> @Glyph_Chooser {
+    let glyph_chooser = make @Glyph_Chooser()
+
+    let glyph = '!'
+    while glyph <= '~' {
+        let glyph_button = make @Glyph_Button(
+            label = make @String().append(glyph)
+            glyph = glyph
+            glyph_editor = glyph_editor
+        )
+        glyph_chooser.add(glyph_button)
+        glyph = glyph + 1
+    }
+
+    return glyph_chooser
+}
+
+struct Glyph_Chooser: Widget_Group(
+    layout = func (self: @Glyph_Chooser, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+        self.layout_widget(left, top, right, bottom)
+
+        let glyph_button = self.children.first_node.data
+        glyph_button.compute_size_hint()
+        let glyph_button_width_hint = glyph_button.width_hint
+        let glyph_button_height_hint = glyph_button.height_hint
+
+        let glyph_button_left = left
+        let glyph_button_top = top
+        for_each(self.children) {
+            let glyph_button = it.as(@Glyph_Button)
+
+            glyph_button.compute_size_hint()
+            glyph_button.layout(
+                glyph_button_left
+                glyph_button_top
+                glyph_button_left + glyph_button_width_hint - 1
+                glyph_button_top + glyph_button_height_hint - 1
+            )
+
+            if glyph_button.right + glyph_button_width_hint > right {
+                glyph_button_left = left
+                glyph_button_top = glyph_button.bottom
+            } else {
+                glyph_button_left = glyph_button.right
+            }
+        }
+    }
+) {
+}
+
+struct Glyph_Button: Button(
+    on_click = func (self: @Glyph_Button) -> Nothing {
+        self.glyph_editor.glyph = font.glyphs[self.glyph.as(isize)]
+    }
+) {
+    glyph_editor: @Glyph_Editor
+    glyph: u8
+}

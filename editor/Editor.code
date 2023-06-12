@@ -2,7 +2,7 @@
 
 include "code/app/Application.code"
 include "code/widget/Button.code"
-include "./widget/Glyph_Editor.code"
+include "editor/widget/Font_Editor.code"
 
 func main() -> i32 {
     let app = make Application(
@@ -13,101 +13,7 @@ func main() -> i32 {
         )
     )
 
-    let window_content = make @Widget_Group(
-        layout = layout_font_editor
-        draw = draw_font_editor
-    )
-    app.window.set_content(window_content)
-
-    let glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'.as(isize)])
-    window_content.add(glyph_editor)
-
-    let save_button = make @Save_Button(glyph_editor = @glyph_editor)
-    window_content.add(save_button)
-
-    let glyph = ' '
-    while glyph <= '~' {
-        let glyph_button = make @Glyph_Button(
-            label = make @String().append(glyph.as(u8))
-            glyph = glyph
-            glyph_editor = glyph_editor
-        )
-        window_content.add(glyph_button)
-        glyph = glyph + 1
-    }
+    app.window.set_content(make_font_editor())
 
     return app.run()
-}
-
-struct Save_Button: Button(
-    label = "Save"
-    on_click = func (self: @Save_Button) -> Nothing {
-        @font.save()
-    }
-) {
-    glyph_editor: @Glyph_Editor
-}
-
-struct Glyph_Button: Button(
-    on_click = func (self: @Glyph_Button) -> Nothing {
-        self.glyph_editor.glyph = font.glyphs[self.glyph.as(isize)]
-    }
-) {
-    glyph_editor: @Glyph_Editor
-    glyph: i8
-}
-
-func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
-    self.layout_widget(left, top, right, bottom)
-
-    let glyph_editor = self.children.first_node.data.as(@Glyph_Editor)
-    let save_button = self.children.first_node.next_node.data.as(@Button)
-
-    define MARGIN = 16
-
-    glyph_editor.compute_size_hint()
-    glyph_editor.layout(
-        left + MARGIN
-        top + MARGIN
-        left + MARGIN + glyph_editor.width_hint - 1
-        top + MARGIN + glyph_editor.height_hint - 1
-    )
-
-    save_button.compute_size_hint()
-    save_button.layout(
-        glyph_editor.left
-        glyph_editor.bottom + MARGIN + 1
-        glyph_editor.right
-        glyph_editor.bottom + MARGIN + save_button.height_hint
-    )
-
-    let glyph_button_left = glyph_editor.right + MARGIN + 1
-    let glyph_button_top = glyph_editor.top
-    let glyph_button_child_node = self.children.first_node.next_node.next_node
-    while glyph_button_child_node != null {
-        let glyph_button = glyph_button_child_node.data.as(@Glyph_Button)
-
-        glyph_button.compute_size_hint()
-        glyph_button.layout(
-            glyph_button_left
-            glyph_button_top
-            glyph_button_left + glyph_button.width_hint - 1
-            glyph_button_top + glyph_button.height_hint - 1
-        )
-
-        if glyph_button.glyph // 8 == 0 {
-            glyph_button_left = glyph_editor.right + MARGIN + 1
-            glyph_button_top = glyph_button.bottom + 2
-        } else {
-            glyph_button_left = glyph_button.right + 2
-        }
-        glyph_button_child_node = glyph_button_child_node.next_node
-    }
-}
-
-func draw_font_editor(self: @Widget_Group, canvas: @Canvas) -> Nothing {
-    canvas.set_color(0x4d4d4du32)
-    canvas.fill_rect(self)
-
-    self.draw_widget_group(canvas)
 }
