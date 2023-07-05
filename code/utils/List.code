@@ -29,3 +29,7 @@ macro for_each[T](self: @List[T], iterate: macro (it: T)) {
         node = node.next_node
     }
 }
+
+func last[T](self: @List[T]) -> T {
+    return self.last_node.data
+}

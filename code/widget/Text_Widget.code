@@ -1,0 +1,16 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+include "code/widget/Widget.code"
+
+struct Text_Widget: Widget(
+    draw = draw_text_widget
+) {
+    text: @String
+}
+
+func draw_text_widget(self: @Text_Widget, canvas: @Canvas) -> Nothing {
+    define COLOR_TEXT = 0x000000u32
+
+    canvas.set_color(COLOR_TEXT)
+    canvas.draw_text(self.text, self.left, self.top)
+}
