@@ -1,0 +1,90 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+include "code/widget/Widget.code"
+
+struct Scrollbar: Widget {
+}
+
+struct Horizontal_Scrollbar: Scrollbar(
+    compute_size_hint = compute_horizontal_scrollbar_size_hint
+    draw = draw_horizontal_scrollbar
+) {
+}
+
+struct Vertival_Scrollbar: Scrollbar(
+    compute_size_hint = compute_vertical_scrollbar_size_hint
+    draw = draw_vertical_scrollbar
+) {
+}
+
+func compute_horizontal_scrollbar_size_hint(self: @Scrollbar) -> Nothing {
+    self.width_hint = 0
+    self.height_hint = 21
+}
+
+func compute_vertical_scrollbar_size_hint(self: @Scrollbar) -> Nothing {
+    self.width_hint = 21
+    self.height_hint = 0
+}
+
+func draw_horizontal_scrollbar(self: @Scrollbar, canvas: @Canvas) -> Nothing {
+    let COLOR_SHADOW = 0x666666u32
+    let COLOR_LIGHT_BORDER = 0xffffffu32
+    let COLOR_DARK_BORDER = 0xaaaaaau32
+
+    canvas.set_color(COLOR_SHADOW)
+    canvas.draw_rect(self)
+    canvas.draw_vertical_line(self.left + 20, self.top + 1, self.bottom - 1)
+    canvas.draw_vertical_line(self.right - 20, self.top + 1, self.bottom - 1)
+
+    \ left button
+    canvas.set_color(COLOR_LIGHT_BORDER)
+    canvas.draw_vertical_line(self.left + 1, self.top + 1, self.bottom - 1)
+    canvas.draw_horizontal_line(self.left + 1, self.left + 18, self.top + 1)
+    canvas.set_color(COLOR_DARK_BORDER)
+    canvas.draw_vertical_line(self.left + 19, self.top + 1, self.bottom - 1)
+    canvas.draw_horizontal_line(self.left + 2, self.left + 18, self.bottom - 1)
+
+    \ left arrow
+    canvas.set_color(COLOR_SHADOW)
+    canvas.draw_horizontal_line(self.left + 11, self.left + 12, self.top + 7)
+    canvas.draw_horizontal_line(self.left + 9, self.left + 10, self.top + 8)
+    canvas.draw_horizontal_line(self.left + 7, self.left + 8, self.top + 9)
+    canvas.draw_horizontal_line(self.left + 5, self.left + 6, self.top + 10)
+    canvas.draw_horizontal_line(self.left + 7, self.left + 8, self.top + 11)
+    canvas.draw_horizontal_line(self.left + 9, self.left + 10, self.top + 12)
+    canvas.draw_horizontal_line(self.left + 11, self.left + 12, self.top + 13)
+    canvas.draw_vertical_line(self.left + 13, self.top + 6, self.top + 14)
+
+    \ right button
+    canvas.set_color(COLOR_LIGHT_BORDER)
+    canvas.draw_vertical_line(self.right - 19, self.top + 2, self.bottom - 1)
+    canvas.draw_horizontal_line(self.right - 19, self.right - 2, self.top + 1)
+    canvas.set_color(COLOR_DARK_BORDER)
+    canvas.draw_vertical_line(self.right - 1, self.top + 1, self.bottom - 1)
+    canvas.draw_horizontal_line(self.right - 18, self.right - 2, self.bottom - 1)
+
+    \ right arrow
+    canvas.set_color(COLOR_SHADOW)
+    canvas.draw_horizontal_line(self.right - 12, self.right - 11, self.top + 7)
+    canvas.draw_horizontal_line(self.right - 10, self.right - 9, self.top + 8)
+    canvas.draw_horizontal_line(self.right - 8, self.right - 7, self.top + 9)
+    canvas.draw_horizontal_line(self.right - 6, self.right - 5, self.top + 10)
+    canvas.draw_horizontal_line(self.right - 8, self.right - 7, self.top + 11)
+    canvas.draw_horizontal_line(self.right - 10, self.right - 9, self.top + 12)
+    canvas.draw_horizontal_line(self.right - 12, self.right - 11, self.top + 13)
+    canvas.draw_vertical_line(self.right - 13, self.top + 6, self.top + 14)
+
+    \ knob button
+    let knob_left = self.left + 42
+    let knob_right = self.right - 42
+    canvas.set_color(COLOR_LIGHT_BORDER)
+    canvas.draw_vertical_line(knob_left + 1, self.top + 2, self.bottom - 1)
+    canvas.draw_horizontal_line(knob_left + 1, knob_right - 1, self.top + 1)
+    canvas.set_color(COLOR_DARK_BORDER)
+    canvas.draw_vertical_line(knob_right - 1, self.top + 1, self.bottom - 1)
+    canvas.draw_horizontal_line(knob_left + 1, knob_right - 1, self.bottom - 1)
+    canvas.set_color(COLOR_SHADOW)
+    canvas.draw_vertical_line(knob_left, self.top + 1, self.bottom - 1)
+    canvas.draw_vertical_line(knob_right, self.top + 1, self.bottom - 1)
+}

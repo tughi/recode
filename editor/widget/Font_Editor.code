@@ -1,6 +1,7 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
 include "code/widget/Button.code"
+include "code/widget/Scrollbar.code"
 include "code/widget/Text_Widget.code"
 include "code/widget/Widget_Group.code"
 include "editor/widget/Glyph_Chooser.code"
@@ -24,6 +25,9 @@ func make_font_editor() -> @Widget_Group {
     let text_widget = make @Text_Widget(text = "the quick brown fox jumps over the lazy dog...\nThe Quick Brown Fox Jumps Over The Lazy Dog...\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG...")
     font_editor.add(text_widget)
 
+    let scrollbar = make @Horizontal_Scrollbar()
+    font_editor.add(scrollbar)
+
     return font_editor
 }
 
@@ -43,6 +47,7 @@ func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bo
     let save_button = self.children.first_node.next_node.data.as(@Button)
     let glyph_chooser = self.children.first_node.next_node.next_node.data.as(@Glyph_Chooser)
     let text_widget = self.children.first_node.next_node.next_node.next_node.data.as(@Text_Widget)
+    let scrollbar = self.children.first_node.next_node.next_node.next_node.next_node.data.as(@Scrollbar)
 
     define MARGIN = 16
 
@@ -60,6 +65,14 @@ func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bo
         glyph_editor.bottom + MARGIN + 1
         glyph_editor.right
         glyph_editor.bottom + MARGIN + save_button.height_hint
+    )
+
+    scrollbar.compute_size_hint()
+    scrollbar.layout(
+        save_button.left
+        save_button.bottom + MARGIN + 1
+        save_button.right
+        save_button.bottom + MARGIN + scrollbar.height_hint
     )
 
     glyph_chooser.layout(
