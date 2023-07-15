@@ -2,6 +2,7 @@
 
 include "code/widget/Button.code"
 include "code/widget/Scrollbar.code"
+include "code/widget/Style.code"
 include "code/widget/Text_Widget.code"
 include "code/widget/Widget_Group.code"
 include "editor/widget/Glyph_Chooser.code"
@@ -95,7 +96,7 @@ func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bo
 }
 
 func draw_font_editor(self: @Widget_Group, canvas: @Canvas) -> Nothing {
-    canvas.set_color(0xccccccu32)
+    canvas.set_color(COLOR_BACKGROUND)
     canvas.fill_rect(self)
 
     self.draw_widget_group(canvas)

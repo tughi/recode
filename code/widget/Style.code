@@ -1,0 +1,11 @@
+\ Copyright (c) 2023, Stefan Selariu
+
+define COLOR_BACKGROUND = 0xccccccu32
+define COLOR_BUTTON_SHADOW = 0x666666u32
+define COLOR_BUTTON_BORDER_LIGHT = 0xffffffu32
+define COLOR_BUTTON_BORDER_DARK = 0xaaaaaau32
+define COLOR_BUTTON_HOVER = 0xd6d6d6u32
+define COLOR_BUTTON_PRESSED = 0xaaaaaau32
+define COLOR_BUTTON_TEXT = 0x333333u32
+define COLOR_SCROLLBAR_TRACK = 0xc3c3c3u32
+define COLOR_TEXT = 0x333333u32

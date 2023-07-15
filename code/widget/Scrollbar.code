@@ -1,5 +1,6 @@
 \ Copyright (c) 2023, Stefan Selariu
 
+include "code/widget/Style.code"
 include "code/widget/Widget.code"
 
 struct Scrollbar: Widget {
@@ -31,12 +32,7 @@ func compute_vertical_scrollbar_size_hint(self: @Scrollbar) -> Nothing {
 }
 
 func draw_horizontal_scrollbar(self: @Scrollbar, canvas: @Canvas) -> Nothing {
-    let COLOR_SHADOW = 0x666666u32
-    let COLOR_LIGHT_BORDER = 0xffffffu32
-    let COLOR_DARK_BORDER = 0xaaaaaau32
-    let COLOR_TRACK = 0xbbbbbbu32
-
-    canvas.set_color(COLOR_SHADOW)
+    canvas.set_color(COLOR_BUTTON_SHADOW)
     canvas.draw_rect(self)
     canvas.draw_vertical_line(self.left + 20, self.top + 1, self.bottom - 1)
     canvas.draw_vertical_line(self.right - 20, self.top + 1, self.bottom - 1)
@@ -45,7 +41,7 @@ func draw_horizontal_scrollbar(self: @Scrollbar, canvas: @Canvas) -> Nothing {
     canvas.draw_scrollbar_button(self.left + 1, self.top + 1, self.left + 19, self.bottom - 1)
 
     \ left arrow
-    canvas.set_color(COLOR_SHADOW)
+    canvas.set_color(COLOR_BUTTON_TEXT)
     canvas.draw_horizontal_line(self.left + 12, self.left + 13, self.top + 7)
     canvas.draw_horizontal_line(self.left + 10, self.left + 11, self.top + 8)
     canvas.draw_horizontal_line(self.left + 8, self.left + 9, self.top + 9)
@@ -59,7 +55,7 @@ func draw_horizontal_scrollbar(self: @Scrollbar, canvas: @Canvas) -> Nothing {
     canvas.draw_scrollbar_button(self.right - 19, self.top + 1, self.right - 1, self.bottom - 1)
 
     \ right arrow
-    canvas.set_color(COLOR_SHADOW)
+    canvas.set_color(COLOR_BUTTON_TEXT)
     canvas.draw_horizontal_line(self.right - 13, self.right - 12, self.top + 7)
     canvas.draw_horizontal_line(self.right - 11, self.right - 10, self.top + 8)
     canvas.draw_horizontal_line(self.right - 9, self.right - 8, self.top + 9)
@@ -75,28 +71,25 @@ func draw_horizontal_scrollbar(self: @Scrollbar, canvas: @Canvas) -> Nothing {
     let knob_left = self.left + track_size * self.visible_from / self.content_size + 20
     let knob_right = knob_left + knob_size
     canvas.draw_scrollbar_button(knob_left + 1, self.top + 1, knob_right - 1, self.bottom - 1)
-    canvas.set_color(COLOR_SHADOW)
+    canvas.set_color(COLOR_BUTTON_SHADOW)
     canvas.draw_vertical_line(knob_left, self.top + 1, self.bottom - 1)
     canvas.draw_vertical_line(knob_right, self.top + 1, self.bottom - 1)
 
     \ track
-    canvas.set_color(COLOR_TRACK)
+    canvas.set_color(COLOR_SCROLLBAR_TRACK)
     if knob_left > self.left + 21 {
         canvas.fill_rect(self.left + 21, self.top + 1, knob_left - 1, self.bottom - 1)
     }
-    if knob_right < self.right - 21 { 
+    if knob_right < self.right - 21 {
         canvas.fill_rect(knob_right + 1, self.top + 1, self.right - 21, self.bottom - 1)
     }
 }
 
 macro draw_scrollbar_button(canvas: @Canvas, left: i32, top: i32, right: i32, bottom: i32) {
-    let COLOR_LIGHT_BORDER = 0xffffffu32
-    let COLOR_DARK_BORDER = 0xaaaaaau32
-
-    canvas.set_color(COLOR_LIGHT_BORDER)
+    canvas.set_color(COLOR_BUTTON_BORDER_LIGHT)
     canvas.draw_vertical_line(left, top, bottom)
     canvas.draw_horizontal_line(left + 1, right - 1, top)
-    canvas.set_color(COLOR_DARK_BORDER)
+    canvas.set_color(COLOR_BUTTON_BORDER_DARK)
     canvas.draw_vertical_line(right, top, bottom)
     canvas.draw_horizontal_line(left + 1, right - 1, bottom)
 }

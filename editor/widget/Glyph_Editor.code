@@ -1,5 +1,6 @@
 \ Copyright (c) 2020-2021, 2023, Stefan Selariu
 
+include "code/widget/Style.code"
 include "code/widget/Widget.code"
 
 struct Glyph_Editor: Widget(
@@ -58,13 +59,12 @@ func compute_glyph_editor_size_hint(self: @Glyph_Editor) -> Nothing {
 
 func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
     define COLOR_BASELINE = 0xff0000u32
-    define COLOR_BORDER = 0x666666u32
-    define COLOR_GRID = 0xeeeeeeu32
-    define COLOR_HOVER = 0xddddddu32
-    define COLOR_PIXEL = 0xffffffu32
+    define COLOR_GRID = COLOR_BUTTON_BORDER_DARK
+    define COLOR_HOVER = COLOR_BUTTON_HOVER
+    define COLOR_PIXEL = COLOR_BUTTON_BORDER_LIGHT
     define COLOR_PIXEL_HOVER = 0xeeeeeeu32
 
-    canvas.set_color(COLOR_BORDER)
+    canvas.set_color(COLOR_BUTTON_SHADOW)
     canvas.draw_rect(self)
 
     canvas.set_color(COLOR_GRID)

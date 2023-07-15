@@ -1,5 +1,6 @@
 \ Copyright (c) 2023, Stefan Selariu
 
+include "code/widget/Style.code"
 include "code/widget/Widget.code"
 
 struct Button: Widget(
@@ -50,37 +51,29 @@ func layout_button(self: @Button, left: i32, top: i32, right: i32, bottom: i32) 
 }
 
 func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
-    define COLOR_SHADOW = 0x666666u32
-    define COLOR_LIGHT_BORDER = 0xffffffu32
-    define COLOR_DARK_BORDER = 0xaaaaaau32
-    define COLOR_BACKGROUND = 0xccccccu32
-    define COLOR_TEXT = 0x000000u32
-    define COLOR_HOVER = 0xddddddau32
-    define COLOR_PRESSED = 0xaaaaaau32
-
-    canvas.set_color(COLOR_SHADOW)
+    canvas.set_color(COLOR_BUTTON_SHADOW)
     canvas.draw_rect(self)
 
     if self.is_pressed() {
-        canvas.set_color(COLOR_PRESSED)
+        canvas.set_color(COLOR_BUTTON_PRESSED)
         canvas.fill_rect(self.left + 1, self.top + 1, self.right - 1, self.bottom - 1)
     } else {
-        canvas.set_color(COLOR_LIGHT_BORDER)
+        canvas.set_color(COLOR_BUTTON_BORDER_LIGHT)
         canvas.draw_horizontal_line(self.left + 1, self.right - 2, self.top + 1)
         canvas.draw_vertical_line(self.left + 1, self.top + 2, self.bottom - 1)
 
         if self.is_hovered() {
-            canvas.set_color(COLOR_HOVER)
+            canvas.set_color(COLOR_BUTTON_HOVER)
         } else {
             canvas.set_color(COLOR_BACKGROUND)
         }
         canvas.fill_rect(self.left + 2, self.top + 2, self.right - 2, self.bottom - 2)
 
-        canvas.set_color(COLOR_DARK_BORDER)
+        canvas.set_color(COLOR_BUTTON_BORDER_DARK)
         canvas.draw_horizontal_line(self.left + 2, self.right - 1, self.bottom - 1)
         canvas.draw_vertical_line(self.right - 1, self.top + 1, self.bottom - 2)
     }
 
-    canvas.set_color(COLOR_TEXT)
+    canvas.set_color(COLOR_BUTTON_TEXT)
     canvas.draw_text(self.label, self.label_bounds.left, self.label_bounds.top)
 }
