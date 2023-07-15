@@ -124,7 +124,9 @@ func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
 macro update_glyph_cell(self: @Glyph_Editor, glyph_row: i32, glyph_column: i32) {
     if self.is_drawing {
         self.glyph.mask[glyph_row][glyph_column] = 255u8
+        self.request_draw()
     } else if self.is_erasing {
         self.glyph.mask[glyph_row][glyph_column] = 0u8
+        self.request_draw()
     }
 }
