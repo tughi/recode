@@ -34,6 +34,7 @@ func draw_horizontal_scrollbar(self: @Scrollbar, canvas: @Canvas) -> Nothing {
     let COLOR_SHADOW = 0x666666u32
     let COLOR_LIGHT_BORDER = 0xffffffu32
     let COLOR_DARK_BORDER = 0xaaaaaau32
+    let COLOR_TRACK = 0xbbbbbbu32
 
     canvas.set_color(COLOR_SHADOW)
     canvas.draw_rect(self)
@@ -77,6 +78,15 @@ func draw_horizontal_scrollbar(self: @Scrollbar, canvas: @Canvas) -> Nothing {
     canvas.set_color(COLOR_SHADOW)
     canvas.draw_vertical_line(knob_left, self.top + 1, self.bottom - 1)
     canvas.draw_vertical_line(knob_right, self.top + 1, self.bottom - 1)
+
+    \ track
+    canvas.set_color(COLOR_TRACK)
+    if knob_left > self.left + 21 {
+        canvas.fill_rect(self.left + 21, self.top + 1, knob_left - 1, self.bottom - 1)
+    }
+    if knob_right < self.right - 21 { 
+        canvas.fill_rect(knob_right + 1, self.top + 1, self.right - 21, self.bottom - 1)
+    }
 }
 
 macro draw_scrollbar_button(canvas: @Canvas, left: i32, top: i32, right: i32, bottom: i32) {
