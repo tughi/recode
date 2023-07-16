@@ -26,7 +26,7 @@ func make_font_editor() -> @Widget_Group {
     let text_widget = make @Text_Widget(text = "the quick brown fox jumps over the lazy dog...\nThe Quick Brown Fox Jumps Over The Lazy Dog...\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG...")
     font_editor.add(text_widget)
 
-    let scrollbar = make @Horizontal_Scrollbar(
+    let scrollbar = make_horizontal_scrollbar(
         content_size = 42
         visible_size = 13
         visible_from = 24
