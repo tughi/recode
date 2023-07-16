@@ -30,6 +30,7 @@ func make_font_editor() -> @Widget_Group {
         content_size = 42
         visible_size = 13
         visible_from = 24
+        step = 3
     )
     font_editor.add(scrollbar)
 

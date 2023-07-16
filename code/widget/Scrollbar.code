@@ -6,16 +6,17 @@ include "code/widget/Widget_Group.code"
 
 define SCROLLBAR_BUTTON_SIZE = 21
 
-func make_horizontal_scrollbar(content_size: i32, visible_size: i32, visible_from: i32) -> @Horizontal_Scrollbar {
+func make_horizontal_scrollbar(content_size: i32, visible_size: i32, visible_from: i32, step: i32) -> @Horizontal_Scrollbar {
     let scrollbar = make @Horizontal_Scrollbar(
         content_size = content_size
         visible_size = visible_size
         visible_from = visible_from
+        step = step
     )
 
-    scrollbar.add(scrollbar.decrement_button)
+    scrollbar.add(scrollbar.backward_button)
     scrollbar.add(scrollbar.knob_button)
-    scrollbar.add(scrollbar.increment_button)
+    scrollbar.add(scrollbar.forward_button)
 
     return scrollbar
 }
@@ -24,15 +25,33 @@ struct Scrollbar: Widget_Group {
     content_size: i32
     visible_size: i32
     visible_from: i32 \ max visible_from is (content_size - visible_size)
+    step: i32
 
-    decrement_button = make Button(label = "")
-    increment_button = make Button(label = "")
+    backward_button = make Button(label = "", on_click = on_scrollbar_backward_button_click)
+    forward_button = make Button(label = "", on_click = on_scrollbar_forward_button_click)
     knob_button = make Button(label = "")
+
+    layout_knob: func (self: @Scrollbar) -> Nothing
+}
+
+func on_scrollbar_backward_button_click(self: @Button) -> Nothing {
+    let scrollbar = self.parent.as(@Scrollbar)
+    scrollbar.visible_from = max(scrollbar.visible_from - scrollbar.step, 0)
+    scrollbar.layout_knob()
+    scrollbar.request_draw()
+}
+
+func on_scrollbar_forward_button_click(self: @Button) -> Nothing {
+    let scrollbar = self.parent.as(@Scrollbar)
+    scrollbar.visible_from = min(scrollbar.visible_from + scrollbar.step, scrollbar.content_size - scrollbar.visible_size)
+    scrollbar.layout_knob()
+    scrollbar.request_draw()
 }
 
 struct Horizontal_Scrollbar: Scrollbar(
     compute_size_hint = compute_horizontal_scrollbar_size_hint
     layout = layout_horizontal_scrollbar
+    layout_knob = layout_horizontal_scrollbar_knob
     draw = draw_horizontal_scrollbar
 ) {
 }
@@ -57,14 +76,18 @@ func compute_vertical_scrollbar_size_hint(self: @Vertival_Scrollbar) -> Nothing 
 func layout_horizontal_scrollbar(self: @Horizontal_Scrollbar, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     self.layout_widget(left, top, right, bottom)
 
-    self.decrement_button.layout(left, top, left + SCROLLBAR_BUTTON_SIZE - 1, bottom)
-    self.increment_button.layout(right - SCROLLBAR_BUTTON_SIZE + 1, top, right, bottom)
+    self.backward_button.layout(left, top, left + SCROLLBAR_BUTTON_SIZE - 1, bottom)
+    self.forward_button.layout(right - SCROLLBAR_BUTTON_SIZE + 1, top, right, bottom)
 
-    let track_size = right - left - SCROLLBAR_BUTTON_SIZE
+    self.layout_horizontal_scrollbar_knob()
+}
+
+func layout_horizontal_scrollbar_knob(self: @Horizontal_Scrollbar) -> Nothing {
+    let track_size = self.right - self.left - SCROLLBAR_BUTTON_SIZE - SCROLLBAR_BUTTON_SIZE + 2
     let knob_size = track_size * self.visible_size / self.content_size
-    let knob_left = self.left + track_size * self.visible_from / self.content_size + 20
+    let knob_left = self.left + track_size * self.visible_from / self.content_size + SCROLLBAR_BUTTON_SIZE - 1
     let knob_right = knob_left + knob_size
-    self.knob_button.layout(knob_left, top, knob_right, bottom)
+    self.knob_button.layout(knob_left, self.top, knob_right, self.bottom)
 }
 
 func draw_horizontal_scrollbar(self: @Horizontal_Scrollbar, canvas: @Canvas) -> Nothing {
@@ -95,16 +118,16 @@ func draw_horizontal_scrollbar(self: @Horizontal_Scrollbar, canvas: @Canvas) -> 
     \ track
     if self.knob_button.left > self.left + 21 {
         canvas.set_color(COLOR_BUTTON_SHADOW)
-        canvas.draw_horizontal_line(self.decrement_button.right + 1, self.knob_button.left - 1, self.top)
-        canvas.draw_horizontal_line(self.decrement_button.right + 1, self.knob_button.left - 1, self.bottom)
+        canvas.draw_horizontal_line(self.backward_button.right + 1, self.knob_button.left - 1, self.top)
+        canvas.draw_horizontal_line(self.backward_button.right + 1, self.knob_button.left - 1, self.bottom)
         canvas.set_color(COLOR_SCROLLBAR_TRACK)
-        canvas.fill_rect(self.decrement_button.right + 1, self.top + 1, self.knob_button.left - 1, self.bottom - 1)
+        canvas.fill_rect(self.backward_button.right + 1, self.top + 1, self.knob_button.left - 1, self.bottom - 1)
     }
     if self.knob_button.right < self.right - 21 {
         canvas.set_color(COLOR_BUTTON_SHADOW)
-        canvas.draw_horizontal_line(self.knob_button.right + 1, self.increment_button.left - 1, self.top)
-        canvas.draw_horizontal_line(self.knob_button.right + 1, self.increment_button.left - 1, self.bottom)
+        canvas.draw_horizontal_line(self.knob_button.right + 1, self.forward_button.left - 1, self.top)
+        canvas.draw_horizontal_line(self.knob_button.right + 1, self.forward_button.left - 1, self.bottom)
         canvas.set_color(COLOR_SCROLLBAR_TRACK)
-        canvas.fill_rect(self.knob_button.right + 1, self.top + 1, self.increment_button.left - 1, self.bottom - 1)
+        canvas.fill_rect(self.knob_button.right + 1, self.top + 1, self.forward_button.left - 1, self.bottom - 1)
     }
 }
