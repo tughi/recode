@@ -9,32 +9,49 @@ include "editor/widget/Glyph_Chooser.code"
 include "editor/widget/Glyph_Editor.code"
 
 func make_font_editor() -> @Widget_Group {
-    let font_editor = make @Widget_Group(
-        layout = layout_font_editor
-        draw = draw_font_editor
-    )
+    let font_editor = make @Font_Editor()
 
-    let glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'])
-    font_editor.add(glyph_editor)
+    font_editor.glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'])
+    font_editor.add(font_editor.glyph_editor)
 
-    let save_button = make @Save_Button(glyph_editor = @glyph_editor)
-    font_editor.add(save_button)
+    font_editor.save_button = make @Save_Button(glyph_editor = @font_editor.glyph_editor)
+    font_editor.add(font_editor.save_button)
 
-    let glyph_chooser = make_glyph_chooser(glyph_editor)
-    font_editor.add(glyph_chooser)
+    font_editor.glyph_chooser = make_glyph_chooser(font_editor.glyph_editor)
+    font_editor.add(font_editor.glyph_chooser)
 
-    let text_widget = make @Text_Widget(text = "the quick brown fox jumps over the lazy dog...\nThe Quick Brown Fox Jumps Over The Lazy Dog...\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG...")
-    font_editor.add(text_widget)
+    font_editor.text_widget = make @Text_Widget(text = "the quick brown fox jumps over the lazy dog...\nThe Quick Brown Fox Jumps Over The Lazy Dog...\nTHE QUICK BROWN FOX JUMPS OVER THE LAZY DOG...")
+    font_editor.add(font_editor.text_widget)
 
-    let scrollbar = make_horizontal_scrollbar(
+    font_editor.horizontal_scrollbar = make_horizontal_scrollbar(
         content_size = 42
         visible_size = 13
         visible_from = 24
         step = 3
     )
-    font_editor.add(scrollbar)
+    font_editor.add(font_editor.horizontal_scrollbar)
+
+    font_editor.vertical_scrollbar = make_vertical_scrollbar(
+        content_size = 42
+        visible_size = 13
+        visible_from = 24
+        step = 3
+    )
+    font_editor.add(font_editor.vertical_scrollbar)
 
     return font_editor
+}
+
+struct Font_Editor: Widget_Group(
+    layout = layout_font_editor
+    draw = draw_font_editor
+) {
+    glyph_editor: @Glyph_Editor = undefined
+    glyph_chooser: @Glyph_Chooser = undefined
+    save_button: @Save_Button = undefined
+    text_widget: @Text_Widget = undefined
+    horizontal_scrollbar: @Horizontal_Scrollbar = undefined
+    vertical_scrollbar: @Vertical_Scrollbar = undefined
 }
 
 struct Save_Button: Button(
@@ -46,53 +63,56 @@ struct Save_Button: Button(
     glyph_editor: @Glyph_Editor
 }
 
-func layout_font_editor(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+func layout_font_editor(self: @Font_Editor, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     self.layout_widget(left, top, right, bottom)
-
-    let glyph_editor = self.children.first_node.data.as(@Glyph_Editor)
-    let save_button = self.children.first_node.next_node.data.as(@Button)
-    let glyph_chooser = self.children.first_node.next_node.next_node.data.as(@Glyph_Chooser)
-    let text_widget = self.children.first_node.next_node.next_node.next_node.data.as(@Text_Widget)
-    let scrollbar = self.children.first_node.next_node.next_node.next_node.next_node.data.as(@Scrollbar)
 
     define MARGIN = 16
 
-    glyph_editor.compute_size_hint()
-    glyph_editor.layout(
+    self.glyph_editor.compute_size_hint()
+    self.glyph_editor.layout(
         left + MARGIN
         top + MARGIN
-        left + MARGIN + glyph_editor.width_hint - 1
-        top + MARGIN + glyph_editor.height_hint - 1
+        left + MARGIN + self.glyph_editor.width_hint - 1
+        top + MARGIN + self.glyph_editor.height_hint - 1
     )
 
-    save_button.compute_size_hint()
-    save_button.layout(
-        glyph_editor.left
-        glyph_editor.bottom + MARGIN + 1
-        glyph_editor.right
-        glyph_editor.bottom + MARGIN + save_button.height_hint
+    self.save_button.compute_size_hint()
+    self.save_button.layout(
+        self.glyph_editor.left
+        self.glyph_editor.bottom + MARGIN + 1
+        self.glyph_editor.right
+        self.glyph_editor.bottom + MARGIN + self.save_button.height_hint
     )
 
-    scrollbar.compute_size_hint()
-    scrollbar.layout(
-        save_button.left
-        save_button.bottom + MARGIN + 1
-        save_button.right
-        save_button.bottom + MARGIN + scrollbar.height_hint
-    )
-
-    glyph_chooser.layout(
-        glyph_editor.right + MARGIN + 1
-        glyph_editor.top
+    self.glyph_chooser.layout(
+        self.glyph_editor.right + MARGIN + 1
+        self.glyph_editor.top
         right - MARGIN
         bottom - MARGIN
     )
 
-    text_widget.layout(
-        glyph_chooser.left
-        glyph_chooser.children.last().bottom + MARGIN + 1
-        glyph_chooser.right
-        bottom - MARGIN
+    self.horizontal_scrollbar.compute_size_hint()
+    self.vertical_scrollbar.compute_size_hint()
+
+    self.text_widget.layout(
+        self.glyph_chooser.left
+        self.glyph_chooser.children.last().bottom + MARGIN + 1
+        self.glyph_chooser.right - self.vertical_scrollbar.width_hint
+        bottom - self.horizontal_scrollbar.height_hint - MARGIN
+    )
+
+    self.horizontal_scrollbar.layout(
+        self.text_widget.left
+        self.text_widget.bottom + 1
+        self.text_widget.right + 1
+        self.text_widget.bottom + self.horizontal_scrollbar.height_hint
+    )
+
+    self.vertical_scrollbar.layout(
+        self.text_widget.right + 1
+        self.text_widget.top
+        self.text_widget.right + self.vertical_scrollbar.width_hint
+        self.text_widget.bottom + 1
     )
 }
 
