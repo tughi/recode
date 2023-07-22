@@ -80,6 +80,10 @@ func dispatch_mouse_motion_event(self: @Window, sdl_event: @SDL_MouseMotionEvent
     if self.hovered_widget != prev_hovered_widget {
         self.must_draw = true
     }
+
+    if self.pressed_widget != null and self.pressed_widget != self.hovered_widget {
+        self.pressed_widget.on_mouse_motion_event(@event)
+    }
 }
 
 func dispatch_mouse_button_pressed_event(self: @Window, sdl_event: @SDL_MouseButtonEvent) -> Nothing {

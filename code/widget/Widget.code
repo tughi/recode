@@ -22,7 +22,6 @@ struct Widget: Rect {
     }
 
     on_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
-        self.window.hovered_widget = self
     }
     on_mouse_button_pressed_event = func (self: @Widget, event: @Mouse_Button_Pressed_Event) -> Nothing {
     }

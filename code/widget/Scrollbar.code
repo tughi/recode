@@ -44,7 +44,7 @@ struct Scrollbar: Widget_Group {
 
     backward_button = make Button(label = "", on_click = on_scrollbar_backward_button_click)
     forward_button = make Button(label = "", on_click = on_scrollbar_forward_button_click)
-    knob_button = make Button(label = "")
+    knob_button: @Button
 
     layout_knob: func (self: @Scrollbar) -> Nothing
 }
@@ -64,6 +64,8 @@ func on_scrollbar_forward_button_click(self: @Button) -> Nothing {
 }
 
 struct Horizontal_Scrollbar: Scrollbar(
+    knob_button = make @Horizontal_Scrollbar_Knob()
+
     compute_size_hint = compute_horizontal_scrollbar_size_hint
     layout = layout_horizontal_scrollbar
     layout_knob = layout_horizontal_scrollbar_knob
@@ -72,6 +74,8 @@ struct Horizontal_Scrollbar: Scrollbar(
 }
 
 struct Vertical_Scrollbar: Scrollbar(
+    knob_button = make @Vertical_Scrollbar_Knob()
+
     compute_size_hint = compute_vertical_scrollbar_size_hint
     layout = layout_vertical_scrollbar
     layout_knob = layout_vertical_scrollbar_knob
@@ -108,18 +112,18 @@ func layout_vertical_scrollbar(self: @Vertical_Scrollbar, left: i32, top: i32, r
 }
 
 func layout_horizontal_scrollbar_knob(self: @Horizontal_Scrollbar) -> Nothing {
-    let track_size = self.right - self.left - SCROLLBAR_BUTTON_SIZE - SCROLLBAR_BUTTON_SIZE + 2
-    let knob_size = track_size * self.visible_size / self.content_size
-    let knob_left = self.left + track_size * self.visible_from / self.content_size + SCROLLBAR_BUTTON_SIZE - 1
-    let knob_right = knob_left + knob_size
+    let track_width = self.forward_button.left - self.backward_button.right
+    let knob_width = track_width * self.visible_size / self.content_size
+    let knob_left = self.backward_button.right + track_width * self.visible_from / self.content_size
+    let knob_right = knob_left + knob_width
     self.knob_button.layout(knob_left, self.top, knob_right, self.bottom)
 }
 
 func layout_vertical_scrollbar_knob(self: @Vertical_Scrollbar) -> Nothing {
-    let track_size = self.bottom - self.top - SCROLLBAR_BUTTON_SIZE - SCROLLBAR_BUTTON_SIZE + 2
-    let knob_size = track_size * self.visible_size / self.content_size
-    let knob_top = self.top + track_size * self.visible_from / self.content_size + SCROLLBAR_BUTTON_SIZE - 1
-    let knob_bottom = knob_top + knob_size
+    let track_height = self.forward_button.top - self.backward_button.bottom
+    let knob_height = track_height * self.visible_size / self.content_size
+    let knob_top = self.backward_button.bottom + track_height * self.visible_from / self.content_size
+    let knob_bottom = knob_top + knob_height
     self.knob_button.layout(self.left, knob_top, self.right, knob_bottom)
 }
 
@@ -184,4 +188,64 @@ func draw_vertical_scrollbar(self: @Vertical_Scrollbar, canvas: @Canvas) -> Noth
         canvas.set_color(COLOR_SCROLLBAR_TRACK)
         canvas.fill_rect(self.left + 1, self.knob_button.bottom + 1, self.right - 1, self.forward_button.top - 1)
     }
+}
+
+struct Horizontal_Scrollbar_Knob: Button(
+    label = ""
+
+    on_mouse_button_pressed_event = func (self: @Horizontal_Scrollbar_Knob, event: @Mouse_Button_Pressed_Event) -> Nothing {
+        self.mouse_motion_delta = event.x - self.left
+
+        self.on_button_mouse_pressed_event(event)
+    }
+
+    on_mouse_motion_event = func (self: @Horizontal_Scrollbar_Knob, event: @Mouse_Motion_Event) -> Nothing {
+        if self.is_pressed() {
+            let scrollbar = self.parent.as(@Vertical_Scrollbar)
+            let new_left = event.x - self.mouse_motion_delta
+            if new_left < scrollbar.backward_button.right {
+                new_left = scrollbar.backward_button.right
+            } else if new_left + self.width() > scrollbar.forward_button.left + 1 {
+                new_left = scrollbar.forward_button.left - self.width() + 1
+            }
+
+            let track_width = scrollbar.forward_button.left - scrollbar.backward_button.right
+            scrollbar.visible_from = (new_left - scrollbar.backward_button.right) * scrollbar.content_size / track_width
+
+            scrollbar.layout_knob()
+            self.request_draw()
+        }
+    }
+) {
+    mouse_motion_delta: i32 = undefined
+}
+
+struct Vertical_Scrollbar_Knob: Button(
+    label = ""
+
+    on_mouse_button_pressed_event = func (self: @Vertical_Scrollbar_Knob, event: @Mouse_Button_Pressed_Event) -> Nothing {
+        self.mouse_motion_delta = event.y - self.top
+
+        self.on_button_mouse_pressed_event(event)
+    }
+
+    on_mouse_motion_event = func (self: @Vertical_Scrollbar_Knob, event: @Mouse_Motion_Event) -> Nothing {
+        if self.is_pressed() {
+            let scrollbar = self.parent.as(@Vertical_Scrollbar)
+            let new_top = event.y - self.mouse_motion_delta
+            if new_top < scrollbar.backward_button.bottom {
+                new_top = scrollbar.backward_button.bottom
+            } else if new_top + self.height() > scrollbar.forward_button.top + 1 {
+                new_top = scrollbar.forward_button.top - self.height() + 1
+            }
+
+            let track_height = scrollbar.forward_button.top - scrollbar.backward_button.bottom
+            scrollbar.visible_from = (new_top - scrollbar.backward_button.bottom) * scrollbar.content_size / track_height
+
+            scrollbar.layout_knob()
+            self.request_draw()
+        }
+    }
+) {
+    mouse_motion_delta: i32 = undefined
 }
