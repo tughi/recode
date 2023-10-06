@@ -1,7 +1,7 @@
-\\ Expect:
+\ Expect:
 \ - output: ''
 
-func run_test(test: (func (number: i32) -> bool)) -> bool {
+func run_test(test: func (number: i32) -> bool) -> bool {
     return test(42)
 }
 

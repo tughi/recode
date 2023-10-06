@@ -312,6 +312,35 @@ func get_named_function(self: @IR_Builder, name: @String, function_type: @IR_Fun
     return function
 }
 
+func get_unique_named_function(self: @IR_Builder, name: @Identifier_Token) -> @IR_Function {
+    let count = 0
+    let named_function: @IR_Function = null
+    self.for_each_symbol() {
+        if symbol is IR_Function {
+            let function = symbol.as(@IR_Function)
+            if name.lexeme.equals(function.name) {
+                if named_function == null {
+                    named_function = function
+                    count = count + 1
+                } else {
+                    if count == 1 {
+                        stderr.write(named_function.location).write(": ").debug().write(named_function.name).write(" = ").write(named_function.statement.type).reset().end_line()
+                    }
+                    stderr.write(function.location).write(": ").debug().write(function.name).write(" = ").write(function.statement.type).reset().end_line()
+                    count = count + 1
+                }
+            }
+        }
+    }
+    if count == 0 {
+        abort(name.location, clone("No function found: ").append(name.lexeme))
+    }
+    if count > 1 {
+        abort(name.location, clone("Found more than one '").append(name.lexeme).append("' function"))
+    }
+    return named_function
+}
+
 func accepts(self: @IR_Type, other: @IR_Type) -> bool {
     if self == other or self is IR_Placeholder_Type or other is IR_Undefined_Type {
         return true
@@ -2601,13 +2630,26 @@ func convert_symbol_expression(self: @IR_Builder, expression: @AST_Symbol_Expres
         return symbol.as(@IR_Constant).value
     }
     if symbol is IR_Function {
-        let function = symbol.as(@IR_Function)
-        if expected_type != null and expected_type is IR_Function_Type {
-            if expected_type.accepts(function.type) {
-                return make @IR_Function_Address_Value(type = expected_type, function = function)
+        if expected_type != null {
+            if expected_type is IR_Function_Type {
+                let expected_type = expected_type.as(@IR_Function_Type)
+                let callable_arguments = make List[@IR_Call_Argument]()
+                expected_type.parameters.for_each() {
+                    callable_arguments.append(make @IR_Call_Argument(
+                        value = make @IR_Value(type = it.type)
+                    ))
+                }
+                let callable = self.get_callable(expression.location, symbol.name, @callable_arguments)
+                \ TODO: Dispose of callable_argmunets
+                if callable is IR_Function {
+                    return make @IR_Function_Address_Value(type = expected_type, function = callable.as(@IR_Function))
+                }
+                abort(expression.location, "Not a function")
             }
+        } else {
+            let function = self.get_unique_named_function(expression.name)
+            return make @IR_Function_Address_Value(type = function.type, function = function)
         }
-        abort(expression.location, clone("Unsupported function usage: ").append(function.name))
     }
     if symbol is IR_Macro {
         let symbol = symbol.as(@IR_Macro)
