@@ -1,0 +1,44 @@
+\ Expect:
+\ - output: ''
+
+external func abort() -> Nothing
+
+struct Data[T] {
+    _has_value = false
+    _value: T = undefined
+}
+
+func has_value[Data](self: @Data) -> bool {
+    return self._has_value
+}
+
+func get_value[T](self: @Data[T]) -> T {
+    if not self._has_value {
+        abort()
+    }
+    return self._value
+}
+
+func set_value[T](self: @Data[T], value: T) -> Nothing {
+    self._value = value
+    self._has_value = true
+}
+
+struct Integer_Data: Data[i32] {
+}
+
+func main() -> i32 {
+    let data = make Integer_Data()
+
+    if data.has_value() {
+        return 1
+    }
+
+    data.set_value(42)
+
+    if data.get_value() != 42 {
+        return 2
+    }
+
+    return 0
+}
