@@ -28,10 +28,10 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
 
     init_matchers()
 
-    let compilation_unit = parse(source_file_path)
-    \ stdout.write(compilation_unit).end_line()
+    let parsed_code = parse(source_file_path)
+    \ stdout.write(parsed_code).end_line()
 
-    let build = build(compilation_unit)
+    let build = build(parsed_code)
     if dump_file_path != null {
         let dump_file = fopen(dump_file_path.data, "w".data)
         build.dump(dump_file)
@@ -61,10 +61,8 @@ func abort(self: @Parser, unexpected_token: @Token) -> Nothing {
     abort()
 }
 
-include "./code/compiler/AST.code"
-
-func write(file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
-    let statements = compilation_unit.statements.create_iterator()
+func write(file: @FILE, parsed_code: @Parsed_Code) -> @FILE {
+    let statements = parsed_code.statements.create_iterator()
     while statements.has_next() {
         let statement = statements.next()
         file.write_source_line(statement.location, 0i64).write(statement, 0i64).end_line()
@@ -72,15 +70,15 @@ func write(file: @FILE, compilation_unit: @Compilation_Unit) -> @FILE {
     return file
 }
 
-func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
-    if statement is AST_Assignment_Statement {
-        let statement = statement.as(@AST_Assignment_Statement)
+func write(file: @FILE, statement: @Parsed_Statement, alignment: i64) -> @FILE {
+    if statement is Parsed_Assignment_Statement {
+        let statement = statement.as(@Parsed_Assignment_Statement)
         return file.write(statement.storage_expression).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
     }
 
-    if statement is AST_Block_Statement {
+    if statement is Parsed_Block_Statement {
         file.write('{').end_line()
-        let block_statements = statement.as(@AST_Block_Statement).statements.create_iterator()
+        let block_statements = statement.as(@Parsed_Block_Statement).statements.create_iterator()
         while block_statements.has_next() {
             let block_statement = block_statements.next()
             file.write_source_line(block_statement.location, alignment + 1).write(block_statement, alignment + 1).end_line()
@@ -88,21 +86,21 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
         return file.write_source_line(statement.location, alignment).write('}')
     }
 
-    if statement is AST_Break_Statement {
+    if statement is Parsed_Break_Statement {
         return file.write("break")
     }
 
-    if statement is AST_Constant_Statement {
-        let statement = statement.as(@AST_Constant_Statement)
+    if statement is Parsed_Constant_Statement {
+        let statement = statement.as(@Parsed_Constant_Statement)
         return file.write("define ").write(statement.name).write(" = ").write(statement.expression)
     }
 
-    if statement is AST_Expression_Statement {
-        return file.write(statement.as(@AST_Expression_Statement).expression)
+    if statement is Parsed_Expression_Statement {
+        return file.write(statement.as(@Parsed_Expression_Statement).expression)
     }
 
-    if statement is AST_Function_Statement {
-        let statement = statement.as(@AST_Function_Statement)
+    if statement is Parsed_Function_Statement {
+        let statement = statement.as(@Parsed_Function_Statement)
         file.write("define ").write(statement.name).write(" = func (")
         let parameters = statement.type.parameters.create_iterator()
         if parameters.has_next() {
@@ -122,8 +120,8 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
         return file.write(" ").write(statement.body, alignment)
     }
 
-    if statement is AST_If_Statement {
-        let statement = statement.as(@AST_If_Statement)
+    if statement is Parsed_If_Statement {
+        let statement = statement.as(@Parsed_If_Statement)
         file.write("if (").write(statement.condition_expression).write(") ").write(statement.true_statement, alignment)
         if statement.false_statement != null {
             file.write(" else ").write(statement.false_statement, alignment)
@@ -131,13 +129,13 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
         return file
     }
 
-    if statement is AST_Loop_Statement {
-        let statement = statement.as(@AST_Loop_Statement)
+    if statement is Parsed_Loop_Statement {
+        let statement = statement.as(@Parsed_Loop_Statement)
         return file.write("loop ").write(statement.block, alignment)
     }
 
-    if statement is AST_Macro_Statement {
-        let statement = statement.as(@AST_Macro_Statement)
+    if statement is Parsed_Macro_Statement {
+        let statement = statement.as(@Parsed_Macro_Statement)
         file.write("define ").write(statement.name).write(" = func (")
         let parameters = statement.type.parameters.create_iterator()
         if parameters.has_next() {
@@ -153,8 +151,8 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
         return file.write(") ").write(statement.body, alignment)
     }
 
-    if statement is AST_Return_Statement {
-        let statement = statement.as(@AST_Return_Statement)
+    if statement is Parsed_Return_Statement {
+        let statement = statement.as(@Parsed_Return_Statement)
         file.write("return")
         if statement.value_expression != null {
             file.write(" ").write(statement.value_expression)
@@ -162,8 +160,8 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
         return file
     }
 
-    if statement is AST_Struct_Statement {
-        let statement = statement.as(@AST_Struct_Statement)
+    if statement is Parsed_Struct_Statement {
+        let statement = statement.as(@Parsed_Struct_Statement)
         file.write("define ").write(statement.name).write(" = struct")
         if statement.members == null {
             return file
@@ -180,8 +178,8 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
         return file.write_source_line(statement.location, alignment).write('}')
     }
 
-    if statement is AST_Variable_Statement {
-        let statement = statement.as(@AST_Variable_Statement)
+    if statement is Parsed_Variable_Statement {
+        let statement = statement.as(@Parsed_Variable_Statement)
         file.write(statement.name)
         if statement.type != null {
             file.write(": ").write(statement.type)
@@ -197,13 +195,13 @@ func write(file: @FILE, statement: @AST_Statement, alignment: i64) -> @FILE {
         return file
     }
 
-    if statement is AST_While_Statement {
-        let statement = statement.as(@AST_While_Statement)
+    if statement is Parsed_While_Statement {
+        let statement = statement.as(@Parsed_While_Statement)
         return file.write("while (").write(statement.condition_expression).write(") ").write(statement.block, alignment)
     }
 
     file.flush()
-    abort(statement.location, "Unsupported AST_Statement type: ".clone().append(statement.object_type.name))
+    abort(statement.location, "Unsupported Parsed_Statement type: ".clone().append(statement.object_type.name))
 }
 
 func write_source_line(file: @FILE, location: @Source_Location, alignment: i64) -> @FILE {
@@ -229,21 +227,21 @@ func write_source_line(file: @FILE, location: @Source_Location, alignment: i64) 
     return file
 }
 
-func write(file: @FILE, parameter: @AST_Parameter) -> @FILE {
+func write(file: @FILE, parameter: @Parsed_Parameter) -> @FILE {
     return file.write(parameter.name).write(": ").write(parameter.type)
 }
 
-func write(file: @FILE, type: @AST_Type) -> @FILE {
-    if type is AST_Array_Type {
-        let type = type.as(@AST_Array_Type)
+func write(file: @FILE, type: @Parsed_Type) -> @FILE {
+    if type is Parsed_Array_Type {
+        let type = type.as(@Parsed_Array_Type)
         if type.size_expression != null {
             return file.write('[').write(type.item_type).write("; ").write(type.size_expression).write(']')
         }
         return file.write('[').write(type.item_type).write(']')
     }
 
-    if type is AST_Function_Type {
-        let type = type.as(@AST_Function_Type)
+    if type is Parsed_Function_Type {
+        let type = type.as(@Parsed_Function_Type)
         file.write("func ")
         if type.type_parameters != null {
             file.write('[')
@@ -269,16 +267,16 @@ func write(file: @FILE, type: @AST_Type) -> @FILE {
         return file.write(") -> ").write(type.return_type)
     }
 
-    if type is AST_Named_Type {
-        return file.write(type.as(@AST_Named_Type).name)
+    if type is Parsed_Named_Type {
+        return file.write(type.as(@Parsed_Named_Type).name)
     }
 
-    if type is AST_Pointer_Type {
-        return file.write('@').write(type.as(@AST_Pointer_Type).pointed_type)
+    if type is Parsed_Pointer_Type {
+        return file.write('@').write(type.as(@Parsed_Pointer_Type).pointed_type)
     }
 
-    if type is AST_Specialized_Type {
-        let type = type.as(@AST_Specialized_Type)
+    if type is Parsed_Specialized_Type {
+        let type = type.as(@Parsed_Specialized_Type)
         file.write(type.name).write('[')
         type.type_arguments.for_each_list_item() {
             let type_argument = list_item.data
@@ -290,12 +288,12 @@ func write(file: @FILE, type: @AST_Type) -> @FILE {
         return file.write(']')
     }
 
-    if type is AST_Placeholder_Type {
-        return file.write(type.as(@AST_Placeholder_Type).name)
+    if type is Parsed_Placeholder_Type {
+        return file.write(type.as(@Parsed_Placeholder_Type).name)
     }
 
-    if type is AST_Macro_Type {
-        let type = type.as(@AST_Macro_Type)
+    if type is Parsed_Macro_Type {
+        let type = type.as(@Parsed_Macro_Type)
         file.write("macro ")
         if type.type_parameters != null {
             file.write('[')
@@ -322,60 +320,60 @@ func write(file: @FILE, type: @AST_Type) -> @FILE {
     }
 
     file.flush()
-    abort(type.location, "Unsupported AST_Type type: ".clone().append(type.object_type.name))
+    abort(type.location, "Unsupported Parsed_Type type: ".clone().append(type.object_type.name))
 }
 
-func write(file: @FILE, expression: @AST_Expression) -> @FILE {
-    if expression is AST_Array_Access_Expression {
-        return file.write(expression.as(@AST_Array_Access_Expression).array_expression).write('[').write(expression.as(@AST_Array_Access_Expression).index_expression).write(']')
+func write(file: @FILE, expression: @Parsed_Expression) -> @FILE {
+    if expression is Parsed_Array_Access_Expression {
+        return file.write(expression.as(@Parsed_Array_Access_Expression).array_expression).write('[').write(expression.as(@Parsed_Array_Access_Expression).index_expression).write(']')
     }
 
-    if expression is AST_Binary_Expression {
-        file.write('(').write(expression.as(@AST_Binary_Expression).left_expression)
-        if expression is AST_Add_Expression {
-            return file.write(" + ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+    if expression is Parsed_Binary_Expression {
+        file.write('(').write(expression.as(@Parsed_Binary_Expression).left_expression)
+        if expression is Parsed_Add_Expression {
+            return file.write(" + ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Divide_Expression {
-            return file.write(" / ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Divide_Expression {
+            return file.write(" / ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Equals_Expression {
-            return file.write(" == ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Equals_Expression {
+            return file.write(" == ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Greater_Than_Expression {
-            return file.write(" > ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Greater_Than_Expression {
+            return file.write(" > ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Greater_Than_Or_Equals_Expression {
-            return file.write(" >= ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Greater_Than_Or_Equals_Expression {
+            return file.write(" >= ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Less_Than_Expression {
-            return file.write(" < ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Less_Than_Expression {
+            return file.write(" < ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Less_Than_Or_Equals_Expression {
-            return file.write(" <= ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Less_Than_Or_Equals_Expression {
+            return file.write(" <= ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Logic_And_Expression {
-            return file.write(" and ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Logic_And_Expression {
+            return file.write(" and ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Logic_Or_Expression {
-            return file.write(" or ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Logic_Or_Expression {
+            return file.write(" or ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Modulo_Expression {
-            return file.write(" // ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Modulo_Expression {
+            return file.write(" // ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Multiply_Expression {
-            return file.write(" * ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Multiply_Expression {
+            return file.write(" * ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Not_Equals_Expression {
-            return file.write(" != ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Not_Equals_Expression {
+            return file.write(" != ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
-        if expression is AST_Substract_Expression {
-            return file.write(" - ").write(expression.as(@AST_Binary_Expression).right_expression).write(')')
+        if expression is Parsed_Substract_Expression {
+            return file.write(" - ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
         }
     }
 
-    if expression is AST_Call_Expression {
-        file.write(expression.as(@AST_Call_Expression).callee_expression).write('(')
-        let call_arguments_item = expression.as(@AST_Call_Expression).arguments.first_item
+    if expression is Parsed_Call_Expression {
+        file.write(expression.as(@Parsed_Call_Expression).callee_expression).write('(')
+        let call_arguments_item = expression.as(@Parsed_Call_Expression).arguments.first_item
         while call_arguments_item != null {
             let call_argument = call_arguments_item.data
             if call_argument.name != null {
@@ -390,16 +388,16 @@ func write(file: @FILE, expression: @AST_Expression) -> @FILE {
         return file.write(')')
     }
 
-    if expression is AST_Cast_Expression {
-        return file.write(expression.as(@AST_Cast_Expression).value_expression).write(" as ").write(expression.as(@AST_Cast_Expression).type)
+    if expression is Parsed_Cast_Expression {
+        return file.write(expression.as(@Parsed_Cast_Expression).value_expression).write(" as ").write(expression.as(@Parsed_Cast_Expression).type)
     }
 
-    if expression is AST_Literal_Expression {
-        return file.write(expression.as(@AST_Literal_Expression).literal)
+    if expression is Parsed_Literal_Expression {
+        return file.write(expression.as(@Parsed_Literal_Expression).literal)
     }
 
-    if expression is AST_Make_Expression {
-        let expression = expression.as(@AST_Make_Expression)
+    if expression is Parsed_Make_Expression {
+        let expression = expression.as(@Parsed_Make_Expression)
         file.write("make ").write(expression.type)
         for_each_list_item(expression.init_arguments) {
             let call_argument = list_item.data
@@ -414,28 +412,28 @@ func write(file: @FILE, expression: @AST_Expression) -> @FILE {
         return file.write(')')
     }
 
-    if expression is AST_Negate_Expression {
-        return file.write("- ").write(expression.as(@AST_Negate_Expression).expression)
+    if expression is Parsed_Negate_Expression {
+        return file.write("- ").write(expression.as(@Parsed_Negate_Expression).expression)
     }
 
-    if expression is AST_Member_Access_Expression {
-        return file.write(expression.as(@AST_Member_Access_Expression).object_expression).write('.').write(expression.as(@AST_Member_Access_Expression).member_name)
+    if expression is Parsed_Member_Access_Expression {
+        return file.write(expression.as(@Parsed_Member_Access_Expression).object_expression).write('.').write(expression.as(@Parsed_Member_Access_Expression).member_name)
     }
 
-    if expression is AST_Paren_Expression {
-        return file.write('(').write(expression.as(@AST_Paren_Expression).expression).write(')')
+    if expression is Parsed_Paren_Expression {
+        return file.write('(').write(expression.as(@Parsed_Paren_Expression).expression).write(')')
     }
 
-    if expression is AST_Symbol_Expression {
-        return file.write(expression.as(@AST_Symbol_Expression).name)
+    if expression is Parsed_Symbol_Expression {
+        return file.write(expression.as(@Parsed_Symbol_Expression).name)
     }
 
-    if expression is AST_Wrapped_Expression {
-        return file.write(expression.as(@AST_Wrapped_Expression).expression)
+    if expression is Parsed_Wrapped_Expression {
+        return file.write(expression.as(@Parsed_Wrapped_Expression).expression)
     }
 
     file.flush()
-    abort(expression.location, "Unsupported AST_Expression type: ".clone().append(expression.object_type.name))
+    abort(expression.location, "Unsupported Parsed_Expression type: ".clone().append(expression.object_type.name))
 }
 
 include "./code/compiler/Scanner.code"

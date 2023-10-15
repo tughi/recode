@@ -154,14 +154,14 @@ func create_ir_macro_type(parameters: @List[@IR_Callable_Parameter]) -> @IR_Macr
 }
 
 struct IR_Opaque_Type: IR_Type {
-    statement: @AST_Type_Statement
+    statement: @Parsed_Type_Statement
 }
 
 struct IR_Struct_Type: IR_Type {
     super_type: @IR_Struct_Type = null
     derived_types = make @List[@IR_Struct_Type]()
     members = make @List[@IR_Struct_Type_Member]()
-    statement: @AST_Struct_Statement
+    statement: @Parsed_Struct_Statement
     object_type_variable: @IR_Global_Variable = null
     object_type_id = 0u32
     object_type_max_derivate_id = 0u32
@@ -171,10 +171,10 @@ struct IR_Struct_Type_Member {
     struct_type: @IR_Struct_Type
     name: @String
     type: @IR_Type
-    default_value_expression: @AST_Expression
+    default_value_expression: @Parsed_Expression
 }
 
-func add_member(self: @IR_Struct_Type, name: @String, type: @IR_Type, default_value_expression: @AST_Expression) -> @IR_Struct_Type_Member {
+func add_member(self: @IR_Struct_Type, name: @String, type: @IR_Type, default_value_expression: @Parsed_Expression) -> @IR_Struct_Type_Member {
     let member = make @IR_Struct_Type_Member(struct_type = self, name = name, type = type, default_value_expression = default_value_expression)
     self.members.append(member)
     return member
@@ -244,7 +244,7 @@ struct IR_Type_Argument {
 }
 
 struct IR_Placeholder_Type: IR_Type {
-    ast_type: @AST_Placeholder_Type
+    parsed_type: @Parsed_Placeholder_Type
 }
 
 struct IR_Value: Object {
@@ -357,7 +357,7 @@ struct IR_Macro_Body_Value: IR_Value(
         return file.write("{ ... }")
     }
 ) {
-    macro_body: @AST_Block_Statement
+    macro_body: @Parsed_Block_Statement
 }
 
 struct IR_Global_Variable_Value: IR_Value(
@@ -521,11 +521,11 @@ struct IR_Callable: IR_Symbol {
 
 struct IR_Function: IR_Callable {
     id: i64
-    statement: @AST_Function_Statement
+    statement: @Parsed_Function_Statement
     return_type: @IR_Type
     parameters: @List[@IR_Function_Parameter]
     is_external: bool
-    context_type_arguments: @List[@AST_Type_Argument]
+    context_type_arguments: @List[@Parsed_Type_Argument]
     blocks: @List[@IR_Block]
 }
 
@@ -559,7 +559,7 @@ struct IR_Parameter: IR_Function_Parameter {
 
 struct IR_Macro: IR_Callable {
     context: @IR_Builder_Context
-    statement: @AST_Block_Statement
+    statement: @Parsed_Block_Statement
 }
 
 struct IR_Symbol: Object {

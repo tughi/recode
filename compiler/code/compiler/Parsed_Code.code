@@ -1,0 +1,454 @@
+struct Parsed_Code {
+    sources = make @List[@Source]()
+    function_statements = make @List[@Parsed_Function_Statement]()
+    macro_statements = make @List[@Parsed_Macro_Statement]()
+    statements = make @List[@Parsed_Statement]()
+    named_statements = make @Map[@String, @List[@Parsed_Statement]]()
+}
+
+func get_named_statements(self: @Parsed_Code, name: @String) -> @List[@Parsed_Statement] {
+    for_each(self.named_statements) {
+        if name.equals(key) {
+            return value
+        }
+    }
+    return null
+}
+
+func put_named_statement(self: @Parsed_Code, name: @String, statement: @Parsed_Statement) -> Nothing {
+    let named_statements = self.get_named_statements(name)
+    if named_statements == null {
+        named_statements = make @List[@Parsed_Statement]()
+        self.named_statements.put(name, named_statements)
+    }
+    named_statements.append(statement)
+}
+
+struct Parsed_Statement: Object {
+    location: @Source_Location
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        abort(statement.location, statement.object_type)
+    }
+}
+
+struct Parsed_Include_Statement: Parsed_Statement {
+    file_path: @String
+}
+
+struct Parsed_Function_Statement: Parsed_Statement {
+    name: @Identifier_Token
+    type: @Parsed_Function_Type
+    body: @Parsed_Block_Statement
+    is_anonymous: bool
+}
+
+struct Parsed_Macro_Statement: Parsed_Statement {
+    name: @Identifier_Token
+    type: @Parsed_Macro_Type
+    body: @Parsed_Block_Statement
+}
+
+struct Parsed_Block_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_block_statement(statement.as(@Parsed_Block_Statement))
+    }
+) {
+    statements: @List[@Parsed_Statement]
+}
+
+struct Parsed_Constant_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_constant_statement(statement.as(@Parsed_Constant_Statement))
+    }
+) {
+    name: @Identifier_Token
+    expression: @Parsed_Expression
+}
+
+struct Parsed_Expression_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_expression_statement(statement.as(@Parsed_Expression_Statement), null)
+    }
+) {
+    expression: @Parsed_Expression
+}
+
+struct Parsed_If_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_if_statement(statement.as(@Parsed_If_Statement))
+    }
+) {
+    condition_expression: @Parsed_Expression
+    true_statement: @Parsed_Statement
+    false_statement: @Parsed_Statement
+}
+
+struct Parsed_Loop_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_loop_statement(statement.as(@Parsed_Loop_Statement))
+    }
+) {
+    block: @Parsed_Block_Statement
+}
+
+struct Parsed_While_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_while_statement(statement.as(@Parsed_While_Statement))
+    }
+) {
+    condition_expression: @Parsed_Expression
+    block: @Parsed_Block_Statement
+}
+
+struct Parsed_Break_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_break_statement(statement.as(@Parsed_Break_Statement))
+    }
+) {
+}
+
+struct Parsed_Return_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_return_statement(statement.as(@Parsed_Return_Statement))
+    }
+) {
+    value_expression: @Parsed_Expression
+}
+
+struct Parsed_Variable_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_variable_statement(statement.as(@Parsed_Variable_Statement), false)
+    }
+) {
+    name: @Identifier_Token
+    type: @Parsed_Type
+    value_expression: @Parsed_Expression = null
+    is_external = false
+}
+
+struct Parsed_Type_Statement: Parsed_Statement {
+    name: @Identifier_Token
+}
+
+struct Parsed_External_Type_Statement: Parsed_Type_Statement {
+}
+
+struct Parsed_Struct_Statement: Parsed_Type_Statement {
+    super_type: @Parsed_Type
+    super_arguments: @List[@Parsed_Call_Argument]
+    members: @List[@Parsed_Struct_Member]
+}
+
+struct Parsed_Generic_Struct_Statement: Parsed_Struct_Statement {
+    type_parameters: @List[@Parsed_Type_Parameter]
+}
+
+struct Parsed_Type_Parameter {
+    name: @Identifier_Token
+}
+
+struct Parsed_Struct_Member {
+    location: @Source_Location
+    name: @Identifier_Token
+    type: @Parsed_Type
+    default_value_expression: @Parsed_Expression
+}
+
+struct Parsed_Assignment_Statement: Parsed_Statement(
+    convert = func (statement: @Parsed_Statement, builder: @IR_Builder) -> Nothing {
+        builder.convert_assignment_statement(statement.as(@Parsed_Assignment_Statement))
+    }
+) {
+    storage_expression: @Parsed_Expression
+    operator: @Other_Token
+    value_expression: @Parsed_Expression
+}
+
+struct Parsed_Type: Object {
+    location: @Source_Location = null
+}
+
+struct Parsed_Named_Type: Parsed_Type {
+    name: @Identifier_Token
+}
+
+struct Parsed_Placeholder_Type: Parsed_Type {
+    name: @String
+}
+
+struct Parsed_Pointer_Type: Parsed_Type {
+    pointed_type: @Parsed_Type
+}
+
+struct Parsed_Specialized_Type: Parsed_Type {
+    name: @Identifier_Token
+    type_arguments: @List[@Parsed_Type_Argument]
+}
+
+struct Parsed_Type_Argument {
+    name: @String = null
+    type: @Parsed_Type
+}
+
+struct Parsed_Array_Type: Parsed_Type {
+    item_type: @Parsed_Type
+    size_expression: @Parsed_Expression
+    is_checked: bool
+}
+
+struct Parsed_Function_Type: Parsed_Type {
+    type_parameters: @List[@Parsed_Type_Parameter]
+    parameters: @List[@Parsed_Parameter]
+    return_type: @Parsed_Type
+}
+
+struct Parsed_Macro_Type: Parsed_Type {
+    type_parameters: @List[@Parsed_Type_Parameter]
+    parameters: @List[@Parsed_Parameter]
+}
+
+struct Parsed_Parameter {
+    location: @Source_Location
+    name: @Identifier_Token
+    type: @Parsed_Type
+}
+
+struct Parsed_Expression: Object {
+    location: @Source_Location
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        abort(expression.location, expression.object_type)
+    }
+}
+
+struct Parsed_Paren_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return expression.as(@Parsed_Paren_Expression).expression.convert(builder, expected_type)
+    }
+) {
+    expression: @Parsed_Expression
+}
+
+struct Parsed_Literal_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_literal_expression(expression.as(@Parsed_Literal_Expression), expected_type)
+    }
+) {
+    literal: @Literal_Token
+}
+
+struct Parsed_Symbol_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_symbol_expression(expression.as(@Parsed_Symbol_Expression), expected_type)
+    }
+) {
+    name: @Identifier_Token
+}
+
+struct Parsed_Variable_Reference_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_variable_expression_address(expression.as(@Parsed_Variable_Reference_Expression).variable_expression)
+    }
+) {
+    variable_expression: @Parsed_Symbol_Expression
+}
+
+struct Parsed_Binary_Expression: Parsed_Expression {
+    left_expression: @Parsed_Expression
+    right_expression: @Parsed_Expression
+}
+
+struct Parsed_Add_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_add_expression(expression.as(@Parsed_Add_Expression))
+    }
+) {
+}
+
+struct Parsed_Divide_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_divide_expression(expression.as(@Parsed_Divide_Expression))
+    }
+) {
+}
+
+struct Parsed_Equals_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_equals_expression(expression.as(@Parsed_Equals_Expression))
+    }
+) {
+}
+
+struct Parsed_Greater_Than_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_greater_than_expression(expression.as(@Parsed_Greater_Than_Expression))
+    }
+) {
+}
+
+struct Parsed_Greater_Than_Or_Equals_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_greater_than_or_equals_expression(expression.as(@Parsed_Greater_Than_Or_Equals_Expression))
+    }
+) {
+}
+
+struct Parsed_Less_Than_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_less_than_expression(expression.as(@Parsed_Less_Than_Expression))
+    }
+) {
+}
+
+struct Parsed_Less_Than_Or_Equals_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_less_than_or_equals_expression(expression.as(@Parsed_Less_Than_Or_Equals_Expression))
+    }
+) {
+}
+
+struct Parsed_Logic_And_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_logic_and_expression(expression.as(@Parsed_Logic_And_Expression))
+    }
+) {
+}
+
+struct Parsed_Logic_Or_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_logic_or_expression(expression.as(@Parsed_Logic_Or_Expression))
+    }
+) {
+}
+
+struct Parsed_Logic_Not_Expression: Parsed_Unary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_logic_not_expression(expression.as(@Parsed_Logic_Not_Expression))
+    }
+) {
+}
+
+struct Parsed_Modulo_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_modulo_expression(expression.as(@Parsed_Modulo_Expression))
+    }
+) {
+}
+
+struct Parsed_Multiply_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_multiply_expression(expression.as(@Parsed_Multiply_Expression))
+    }
+) {
+}
+
+struct Parsed_Not_Equals_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_not_equals_expression(expression.as(@Parsed_Not_Equals_Expression))
+    }
+) {
+}
+
+struct Parsed_Substract_Expression: Parsed_Binary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_substract_expression(expression.as(@Parsed_Substract_Expression))
+    }
+) {
+}
+
+struct Parsed_Unary_Expression: Parsed_Expression {
+    expression: @Parsed_Expression
+}
+
+struct Parsed_Negate_Expression: Parsed_Unary_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_negate_expression(expression.as(@Parsed_Negate_Expression))
+    }
+) {
+}
+
+struct Parsed_Cast_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_cast_expression(expression.as(@Parsed_Cast_Expression))
+    }
+) {
+    value_expression: @Parsed_Expression
+    type: @Parsed_Type
+}
+
+struct Parsed_Is_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_is_expression(expression.as(@Parsed_Is_Expression))
+    }
+) {
+    value_expression: @Parsed_Expression
+    type: @Parsed_Type
+}
+
+struct Parsed_Make_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_make_expression(expression.as(@Parsed_Make_Expression))
+    }
+) {
+    type: @Parsed_Type
+    init_arguments: @List[@Parsed_Call_Argument]
+}
+
+struct Parsed_Function_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_function_expression(expression.as(@Parsed_Function_Expression))
+    }
+) {
+    function_statement: @Parsed_Function_Statement
+}
+
+struct Parsed_Call_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_call_expression(expression.as(@Parsed_Call_Expression))
+    }
+) {
+    callee_expression: @Parsed_Expression
+    arguments: @List[@Parsed_Call_Argument]
+}
+
+struct Parsed_Call_Argument {
+    location: @Source_Location
+    name: @Identifier_Token
+    value_expression: @Parsed_Expression
+}
+
+struct Parsed_Access_Expression: Parsed_Expression {
+}
+
+struct Parsed_Member_Access_Expression: Parsed_Access_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_member_access_expression(expression.as(@Parsed_Member_Access_Expression))
+    }
+) {
+    object_expression: @Parsed_Expression
+    member_name: @Identifier_Token
+}
+
+struct Parsed_Array_Access_Expression: Parsed_Access_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_array_access_expression(expression.as(@Parsed_Array_Access_Expression))
+    }
+) {
+    array_expression: @Parsed_Expression
+    index_expression: @Parsed_Expression
+}
+
+struct Parsed_Wrapped_Expression: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return expression.as(@Parsed_Wrapped_Expression).expression.convert(builder, expected_type)
+    }
+) {
+    expression: @Parsed_Expression
+}
+
+struct Parsed_Macro_Body: Parsed_Expression(
+    convert = func (expression: @Parsed_Expression, builder: @IR_Builder, expected_type: @IR_Type) -> @IR_Value {
+        return builder.convert_macro_body(expression.as(@Parsed_Macro_Body))
+    }
+) {
+    statement: @Parsed_Block_Statement
+}
