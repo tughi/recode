@@ -1,5 +1,3 @@
-\ Copyright (c) 2020-2021, 2023, Stefan Selariu
-
 struct Parser {
     scanner: @Scanner = null
     compilation_unit = make @Compilation_Unit()

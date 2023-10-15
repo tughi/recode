@@ -1,5 +1,3 @@
-\ Copyright (c) 2023, Stefan Selariu
-
 include "code/app/Application.code"
 include "code/widget/Button.code"
 include "editor/widget/Font_Editor.code"

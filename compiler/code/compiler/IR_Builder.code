@@ -1,5 +1,3 @@
-\ Copyright (c) 2020-2021, 2023 Stefan Selariu
-
 func build(compilation_unit: @Compilation_Unit) -> @IR_Build {
     let builder = create_ir_builder(compilation_unit)
     builder.build()

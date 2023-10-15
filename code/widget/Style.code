@@ -1,5 +1,3 @@
-\ Copyright (c) 2023, Stefan Selariu
-
 define COLOR_BACKGROUND = 0xccccccu32
 define COLOR_BUTTON_SHADOW = 0x666666u32
 define COLOR_BUTTON_BORDER_LIGHT = 0xffffffu32
