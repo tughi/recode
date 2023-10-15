@@ -9,7 +9,9 @@ struct Text_Widget: Widget(
     text: @String
 }
 
-func draw_text_widget(self: @Text_Widget, canvas: @Canvas) -> Nothing {
+func draw_text_widget(self: @Widget, canvas: @Canvas) -> Nothing {
+    let self = self.as(@Text_Widget)
+
     canvas.set_color(COLOR_TEXT)
     canvas.draw_text(self.text, self.left, self.top)
 }

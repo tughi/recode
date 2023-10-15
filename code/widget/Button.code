@@ -27,7 +27,8 @@ struct Button: Widget(
     on_click: func (self: @Button) -> Nothing = null
 }
 
-func compute_button_size_hint(self: @Button) -> Nothing {
+func compute_button_size_hint(self: @Widget) -> Nothing {
+    let self = self.as(@Button)
     if self.label_bounds.left == self.label_bounds.right {
         @font.compute_text_bounds(self.label, self.label_bounds)
     }
@@ -35,7 +36,8 @@ func compute_button_size_hint(self: @Button) -> Nothing {
     self.height_hint = self.label_bounds.bottom - self.label_bounds.top + 11
 }
 
-func layout_button(self: @Button, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+func layout_button(self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self.as(@Button)
     self.layout_widget(left, top, right, bottom)
 
     self.label_bounds.set_location(
@@ -44,7 +46,8 @@ func layout_button(self: @Button, left: i32, top: i32, right: i32, bottom: i32) 
     )
 }
 
-func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
+func draw_button(self: @Widget, canvas: @Canvas) -> Nothing {
+    let self = self.as(@Button)
     canvas.set_color(COLOR_BUTTON_SHADOW)
     canvas.draw_rect(self)
 
@@ -72,7 +75,7 @@ func draw_button(self: @Button, canvas: @Canvas) -> Nothing {
     canvas.draw_text(self.label, self.label_bounds.left, self.label_bounds.top)
 }
 
-func on_button_mouse_pressed_event(self: @Button, event: @Mouse_Button_Pressed_Event) -> Nothing {
+func on_button_mouse_pressed_event(self: @Widget, event: @Mouse_Button_Pressed_Event) -> Nothing {
     if event.button == 1u8 {
         self.window.pressed_widget = self
         self.request_draw()

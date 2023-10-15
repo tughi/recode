@@ -63,7 +63,9 @@ struct Save_Button: Button(
     glyph_editor: @Glyph_Editor
 }
 
-func layout_font_editor(self: @Font_Editor, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+func layout_font_editor(self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self.as(@Font_Editor)
+
     self.layout_widget(left, top, right, bottom)
 
     define MARGIN = 16
@@ -116,7 +118,7 @@ func layout_font_editor(self: @Font_Editor, left: i32, top: i32, right: i32, bot
     )
 }
 
-func draw_font_editor(self: @Widget_Group, canvas: @Canvas) -> Nothing {
+func draw_font_editor(self: @Widget, canvas: @Canvas) -> Nothing {
     canvas.set_color(COLOR_BACKGROUND)
     canvas.fill_rect(self)
 

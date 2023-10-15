@@ -83,17 +83,19 @@ struct Vertical_Scrollbar: Scrollbar(
 ) {
 }
 
-func compute_horizontal_scrollbar_size_hint(self: @Horizontal_Scrollbar) -> Nothing {
+func compute_horizontal_scrollbar_size_hint(self: @Widget) -> Nothing {
     self.width_hint = 0
     self.height_hint = SCROLLBAR_BUTTON_SIZE
 }
 
-func compute_vertical_scrollbar_size_hint(self: @Vertical_Scrollbar) -> Nothing {
+func compute_vertical_scrollbar_size_hint(self: @Widget) -> Nothing {
     self.width_hint = SCROLLBAR_BUTTON_SIZE
     self.height_hint = 0
 }
 
-func layout_horizontal_scrollbar(self: @Horizontal_Scrollbar, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+func layout_horizontal_scrollbar(self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self.as(@Horizontal_Scrollbar)
+
     self.layout_widget(left, top, right, bottom)
 
     self.backward_button.layout(left, top, left + SCROLLBAR_BUTTON_SIZE - 1, bottom)
@@ -102,7 +104,9 @@ func layout_horizontal_scrollbar(self: @Horizontal_Scrollbar, left: i32, top: i3
     self.layout_knob()
 }
 
-func layout_vertical_scrollbar(self: @Vertical_Scrollbar, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+func layout_vertical_scrollbar(self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    let self = self.as(@Vertical_Scrollbar)
+
     self.layout_widget(left, top, right, bottom)
 
     self.backward_button.layout(left, top, right, top + SCROLLBAR_BUTTON_SIZE - 1)
@@ -111,7 +115,9 @@ func layout_vertical_scrollbar(self: @Vertical_Scrollbar, left: i32, top: i32, r
     self.layout_knob()
 }
 
-func layout_horizontal_scrollbar_knob(self: @Horizontal_Scrollbar) -> Nothing {
+func layout_horizontal_scrollbar_knob(self: @Widget) -> Nothing {
+    let self = self.as(@Horizontal_Scrollbar)
+
     let track_width = self.forward_button.left - self.backward_button.right
     let knob_width = track_width * self.visible_size / self.content_size
     let knob_left = self.backward_button.right + track_width * self.visible_from / self.content_size
@@ -119,7 +125,9 @@ func layout_horizontal_scrollbar_knob(self: @Horizontal_Scrollbar) -> Nothing {
     self.knob_button.layout(knob_left, self.top, knob_right, self.bottom)
 }
 
-func layout_vertical_scrollbar_knob(self: @Vertical_Scrollbar) -> Nothing {
+func layout_vertical_scrollbar_knob(self: @Widget) -> Nothing {
+    let self = self.as(@Vertical_Scrollbar)
+
     let track_height = self.forward_button.top - self.backward_button.bottom
     let knob_height = track_height * self.visible_size / self.content_size
     let knob_top = self.backward_button.bottom + track_height * self.visible_from / self.content_size
@@ -127,7 +135,9 @@ func layout_vertical_scrollbar_knob(self: @Vertical_Scrollbar) -> Nothing {
     self.knob_button.layout(self.left, knob_top, self.right, knob_bottom)
 }
 
-func draw_horizontal_scrollbar(self: @Horizontal_Scrollbar, canvas: @Canvas) -> Nothing {
+func draw_horizontal_scrollbar(self: @Widget, canvas: @Canvas) -> Nothing {
+    let self = self.as(@Horizontal_Scrollbar)
+
     self.draw_widget_group(canvas)
 
     \ left arrow
@@ -159,7 +169,9 @@ func draw_horizontal_scrollbar(self: @Horizontal_Scrollbar, canvas: @Canvas) -> 
     }
 }
 
-func draw_vertical_scrollbar(self: @Vertical_Scrollbar, canvas: @Canvas) -> Nothing {
+func draw_vertical_scrollbar(self: @Widget, canvas: @Canvas) -> Nothing {
+    let self = self.as(@Vertical_Scrollbar)
+
     self.draw_widget_group(canvas)
 
     \ up arrow

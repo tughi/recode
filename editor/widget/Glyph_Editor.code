@@ -50,14 +50,18 @@ struct Glyph_Editor: Widget(
     is_erasing = false
 }
 
-func compute_glyph_editor_size_hint(self: @Glyph_Editor) -> Nothing {
+func compute_glyph_editor_size_hint(self: @Widget) -> Nothing {
+    let self = self.as(@Glyph_Editor)
+
     let glyph_rows = self.glyph.mask.length.as(i32)
     let glyph_columns = self.glyph.mask[0].length.as(i32)
     self.width_hint = (self.pixel_size + 1) * glyph_columns + 1
     self.height_hint = (self.pixel_size + 1) * glyph_rows + 1
 }
 
-func draw_glyph_editor(self: @Glyph_Editor, canvas: @Canvas) -> Nothing {
+func draw_glyph_editor(self: @Widget, canvas: @Canvas) -> Nothing {
+    let self = self.as(@Glyph_Editor)
+
     define COLOR_BASELINE = 0xff0000u32
     define COLOR_GRID = COLOR_BUTTON_BORDER_DARK
     define COLOR_HOVER = COLOR_BUTTON_HOVER
