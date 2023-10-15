@@ -117,40 +117,6 @@ func is_type_argument(self: @IR_Builder, type: @Parsed_Type) -> bool {
     return false
 }
 
-func get_type_statement(self: @IR_Builder, name: @String) -> @Parsed_Type_Statement {
-    let type_statement: @Parsed_Type_Statement = null
-    for_each(self.parsed_code.statements) {
-        if it is Parsed_Type_Statement and (it is not Parsed_Generic_Struct_Statement) {
-            let statement = it.as(@Parsed_Type_Statement)
-            if statement.name.lexeme.equals(name) {
-                if type_statement != null {
-                    stderr.end_line().write(type_statement.location).write(": First ").write(name).write(" declaration").end_line()
-                    abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
-                }
-                type_statement = statement
-            }
-        }
-    }
-    return type_statement
-}
-
-func get_generic_struct_statement(self: @IR_Builder, name: @String) -> @Parsed_Generic_Struct_Statement {
-    let struct_statement: @Parsed_Generic_Struct_Statement = null
-    for_each(self.parsed_code.statements) {
-        if it is Parsed_Generic_Struct_Statement {
-            let statement = it.as(@Parsed_Generic_Struct_Statement)
-            if statement.name.lexeme.equals(name) {
-                if struct_statement != null {
-                    stderr.end_line().write(struct_statement.location).write(": First ").write(name).write(" declaration").end_line()
-                    abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
-                }
-                struct_statement = statement
-            }
-        }
-    }
-    return struct_statement
-}
-
 func add_symbol(self: @IR_Builder, symbol: @IR_Symbol) -> Nothing {
     if symbol is IR_Function {
         self.root_context.symbols.append(symbol)
@@ -789,7 +755,7 @@ func convert_named_type(self: @IR_Builder, type: @Parsed_Named_Type) -> @IR_Type
 
     let named_type = self.get_named_type(type_name)
     if named_type == null {
-        let type_statement = self.get_type_statement(type_name)
+        let type_statement = self.parsed_code.get_type_statement(type_name)
         if type_statement != null {
             named_type = self.convert_type_statement(type_statement, type_name)
         } else {
@@ -825,7 +791,7 @@ func convert_specialized_type(self: @IR_Builder, type: @Parsed_Specialized_Type)
 
     let named_type = self.get_named_type(type_name)
     if named_type == null {
-        let struct_statement = self.get_generic_struct_statement(type.name.lexeme)
+        let struct_statement = self.parsed_code.get_generic_struct_statement(type.name.lexeme)
         if struct_statement != null {
             let context_type_arguments = make @List[@Parsed_Type_Argument]()
             let type_arguments_item = type_arguments.first_item

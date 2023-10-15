@@ -1,0 +1,115 @@
+include "./List.code"
+
+struct Checked_Code {
+    globals = make List[@Checked_Symbol]()
+    functions = make List[@Checked_Function]()
+}
+
+struct Checked_Type: Object {
+    name: @String
+}
+
+func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
+    return false
+}
+
+struct Checked_Named_Type: Checked_Type {
+}
+
+struct Checked_Builtin_Type: Checked_Named_Type {
+}
+
+struct Checked_Any_Type: Checked_Builtin_Type(name = "Any") {
+}
+
+struct Checked_Bool_Type: Checked_Builtin_Type(name = "bool") {
+}
+
+struct Checked_Nothing_Type: Checked_Builtin_Type(name = "Nothing") {
+}
+
+struct Checked_Null_Type: Checked_Builtin_Type(name = "null") {
+}
+
+struct Checked_Undefined_Type: Checked_Builtin_Type(name = "undefined") {
+}
+
+struct Checked_Int_Type: Checked_Builtin_Type {
+}
+
+struct Checked_Int16_Type: Checked_Int_Type(name = "i16") {
+}
+
+struct Checked_Int32_Type: Checked_Int_Type(name = "i32") {
+}
+
+struct Checked_Int64_Type: Checked_Int_Type(name = "i64") {
+}
+
+struct Checked_Int8_Type: Checked_Int_Type(name = "i8") {
+}
+
+struct Checked_UInt_Type: Checked_Builtin_Type {
+}
+
+struct Checked_UInt16_Type: Checked_UInt_Type(name = "u16") {
+}
+
+struct Checked_UInt32_Type: Checked_UInt_Type(name = "u32") {
+}
+
+struct Checked_UInt64_Type: Checked_UInt_Type(name = "u64") {
+}
+
+struct Checked_UInt8_Type: Checked_UInt_Type(name = "u8") {
+}
+
+struct Checked_Function_Type: Checked_Type {
+    parameters = make List[@Checked_Function_Parameter]()
+    return_type: @Checked_Type
+}
+
+struct Checked_Function_Parameter {
+    location: @Source_Location
+    name: @String
+    type: @Checked_Type
+}
+
+struct Checked_Opaque_Type: Checked_Named_Type {
+}
+
+struct Checked_Pointer_Type: Checked_Type {
+    pointed_type: @Checked_Type
+}
+
+struct Checked_Symbol: Object {
+    location: @Source_Location
+    name: @String
+    type: @Checked_Type
+}
+
+struct Checked_Function: Checked_Symbol {
+    parsed_function: @Parsed_Function_Statement
+}
+
+struct Checked_Statement: Object {
+    location: @Source_Location
+}
+
+struct Checked_Block_Statement: Checked_Statement {
+    statements = make List[@Checked_Statement]()
+}
+
+struct Checked_Variable_Statement: Checked_Statement {
+    variable: @Checked_Symbol
+    expression: @Checked_Expression
+}
+
+struct Checked_Expression: Object {
+    location: @Source_Location
+    type: @Checked_Type
+}
+
+struct Checked_Symbol_Expression: Checked_Expression {
+    symbol: @Checked_Symbol
+}

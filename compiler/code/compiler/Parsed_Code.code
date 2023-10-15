@@ -15,6 +15,40 @@ func get_named_statements(self: @Parsed_Code, name: @String) -> @List[@Parsed_St
     return null
 }
 
+func get_type_statement(self: @Parsed_Code, name: @String) -> @Parsed_Type_Statement {
+    let type_statement: @Parsed_Type_Statement = null
+    for_each(self.statements) {
+        if it is Parsed_Type_Statement and (it is not Parsed_Generic_Struct_Statement) {
+            let statement = it.as(@Parsed_Type_Statement)
+            if statement.name.lexeme.equals(name) {
+                if type_statement != null {
+                    stderr.end_line().write(type_statement.location).write(": First ").write(name).write(" declaration").end_line()
+                    abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
+                }
+                type_statement = statement
+            }
+        }
+    }
+    return type_statement
+}
+
+func get_generic_struct_statement(self: @Parsed_Code, name: @String) -> @Parsed_Generic_Struct_Statement {
+    let struct_statement: @Parsed_Generic_Struct_Statement = null
+    for_each(self.statements) {
+        if it is Parsed_Generic_Struct_Statement {
+            let statement = it.as(@Parsed_Generic_Struct_Statement)
+            if statement.name.lexeme.equals(name) {
+                if struct_statement != null {
+                    stderr.end_line().write(struct_statement.location).write(": First ").write(name).write(" declaration").end_line()
+                    abort(statement.location, clone("Duplicate ").append(name).append(" declaration"))
+                }
+                struct_statement = statement
+            }
+        }
+    }
+    return struct_statement
+}
+
 func put_named_statement(self: @Parsed_Code, name: @String, statement: @Parsed_Statement) -> Nothing {
     let named_statements = self.get_named_statements(name)
     if named_statements == null {

@@ -1,0 +1,276 @@
+include "./Checked_Code.code"
+
+func check(parsed_code: @Parsed_Code) -> @Checked_Code {
+    let checker = make Checker(
+        parsed_code = parsed_code
+        checked_code = make @Checked_Code()
+        current_context = undefined
+    )
+    checker.current_context = checker.root_context
+
+    \ add builtin types
+    checker.put_named_type(make @Checked_Any_Type())
+    checker.put_named_type(make @Checked_Bool_Type())
+    checker.put_named_type(make @Checked_Int16_Type())
+    checker.put_named_type(make @Checked_Int32_Type())
+    checker.put_named_type(make @Checked_Int64_Type())
+    checker.put_named_type(make @Checked_Int8_Type())
+    checker.put_named_type(make @Checked_UInt16_Type())
+    checker.put_named_type(make @Checked_UInt32_Type())
+    checker.put_named_type(make @Checked_UInt64_Type())
+    checker.put_named_type(make @Checked_UInt8_Type())
+
+    checker.check(parsed_code)
+
+    return checker.checked_code
+}
+
+struct Checker {
+    parsed_code: @Parsed_Code
+    checked_code: @Checked_Code
+
+    root_context = make Checker_Context()
+    current_context: @Checker_Context
+
+    named_types = make Map[@String, @Checked_Named_Type]()
+    functions = make List[@Checked_Function]()
+}
+
+func put_named_type(self: @Checker, type: @Checked_Named_Type) -> Nothing {
+    self.named_types.put(type.name, type)
+}
+
+struct Checker_Context {
+    parent: @Checker_Context = null
+
+    symbols = make List[@Checked_Symbol]()
+}
+
+func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
+    \ create root statements
+    parsed_code.statements.for_each() {
+        if it is Parsed_Function_Statement {
+            self.check_function(it.as(@Parsed_Function_Statement))
+        } else {
+            abort(it.location, "Unsupported Parsed_Statement: ".clone().append(it.object_type.name))
+        }
+    }
+
+    \ check functions
+    self.checked_code.functions.for_each() {
+        self.check_function_body(it)
+    }
+}
+
+func check_function(self: @Checker, parsed_function: @Parsed_Function_Statement) -> @Checked_Function {
+    \ create function type
+    let checked_function_type = make @Checked_Function_Type(
+        name = "func (".clone()
+        return_type = self.convert_type(parsed_function.type.return_type)
+    )
+    if parsed_function.type.parameters.size > 0 {
+        abort("TODO: Check function parameters")
+        abort("TODO: Check function parameters for unique names")
+        abort("TODO: Add function parameters to checked_function_type name")
+    }
+    checked_function_type.name.append(") -> ").append(checked_function_type.return_type.name)
+
+    \ check for duplicates
+    self.checked_code.functions.for_each() {
+        if it.name.equals(parsed_function.name) {
+            abort(parsed_function.location, "TODO: Compare function types")
+        }
+    }
+
+    \ create function
+    let checked_function = make @Checked_Function(
+        location = parsed_function.location
+        name = parsed_function.name.lexeme
+        type = make @Checked_Pointer_Type(
+            name = "@(".clone().append(checked_function_type.name).append(')')
+            pointed_type = checked_function_type
+        )
+
+        parsed_function = parsed_function
+    )
+    self.checked_code.functions.append(checked_function)
+    if not parsed_function.is_anonymous {
+        self.root_context.symbols.prepend(checked_function)
+    }
+
+    return checked_function
+}
+
+func check_function_body(self: @Checker, checked_function: @Checked_Function) -> Nothing {
+    let parsed_function = checked_function.parsed_function
+
+    \ create function context
+    self.current_context = make @Checker_Context(
+        parent = self.current_context
+    )
+    let checked_function_type = checked_function.type.as(@Checked_Pointer_Type).pointed_type.as(@Checked_Function_Type)
+    if checked_function_type.parameters.size > 0 {
+        abort(checked_function.location, "TODO: Check function parameters")
+        abort("TODO: Check function parameters for unique names")
+    }
+
+    \ check function body
+    self.check_block_statement(parsed_function.body)
+
+    \ restore context
+    self.current_context = self.current_context.parent
+}
+
+func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Checked_Statement {
+    if parsed_statement is Parsed_Variable_Statement {
+        return self.check_variable_statement(parsed_statement.as(@Parsed_Variable_Statement))
+    }
+    abort("TODO: Check ".clone().append(parsed_statement.object_type.name))
+}
+
+func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_Statement) -> @Checked_Block_Statement {
+    let checked_statement = make @Checked_Block_Statement(
+        location = parsed_statement.location
+    )
+
+    \ create function context
+    self.current_context = make @Checker_Context(
+        parent = self.current_context
+    )
+
+    \ check function body
+    parsed_statement.statements.for_each() {
+        checked_statement.statements.append(self.check_statement(it))
+    }
+
+    \ restore context
+    self.current_context = self.current_context.parent
+
+    return checked_statement
+}
+
+func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable_Statement) -> @Checked_Variable_Statement {
+    \ check variable type
+    let checked_type: @Checked_Type = null
+    if parsed_statement.type != null {
+        checked_type = self.convert_type(parsed_statement.type)
+        if checked_type is Checked_Opaque_Type {
+            abort(parsed_statement.type.location, "Variable cannot have an opaque type")
+        }
+        if checked_type is Checked_Any_Type or checked_type is Checked_Nothing_Type {
+            abort(parsed_statement.type.location, "Variable cannot have the ".clone().append(checked_type.name).append(" type"))
+        }
+    }
+
+    \ check variable expression
+    let checked_expression: @Checked_Expression = null
+    if parsed_statement.value_expression != null {
+        checked_expression = self.check_expression(parsed_statement.value_expression, checked_type)
+        if checked_type == null {
+            checked_type = checked_expression.type
+            if checked_type is Checked_Null_Type or checked_type is Checked_Undefined_Type {
+                abort(checked_expression.location, "Cannot infer variable type from ".clone().append(checked_type.name).append(" value"))
+            }
+        } else {
+            if not checked_type.accepts(checked_expression.type) {
+                abort(checked_expression.location, "Cannot assign a '".clone().append(checked_expression.type.name).append("' value to a '").append(checked_type.name).append("' variable"))
+            }
+            if checked_type.equals(checked_expression.type) { \ TODO: and not self.is_type_argument(parsed_statement.type) {
+                stderr.write(parsed_statement.type.location).write(": ").warning().write("Redundant type declaration").reset().end_line()
+            }
+        }
+    } else if not parsed_statement.is_external and checked_type == null {
+        abort(parsed_statement.location, "Missing variable type")
+    }
+
+    \ create variable statement
+    let checked_statement = make @Checked_Variable_Statement(
+        location = parsed_statement.location
+        variable = make @Checked_Symbol(
+            location = parsed_statement.name.location
+            name = parsed_statement.name.lexeme
+            type = checked_type
+        )
+        expression = checked_expression
+    )
+    self.current_context.symbols.prepend(checked_statement.variable)
+
+    return checked_statement
+}
+
+func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, expected_type: @Checked_Type) -> @Checked_Expression {
+    if parsed_expression is Parsed_Function_Expression {
+        return self.check_function_expression(parsed_expression.as(@Parsed_Function_Expression))
+    }
+
+    abort("TODO: Check ".clone().append(parsed_expression.object_type.name))
+}
+
+func check_function_expression(self: @Checker, parsed_expression: @Parsed_Function_Expression) -> @Checked_Expression {
+    let checked_function = self.check_function(parsed_expression.function_statement)
+    return make @Checked_Symbol_Expression(
+        location = parsed_expression.location
+        type = checked_function.type
+        symbol = checked_function
+    )
+}
+
+func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
+    \ if parsed_type is Parsed_Array_Type {
+    \     return self.convert_array_type(parsed_type.as(@Parsed_Array_Type))
+    \ }
+    \ if parsed_type is Parsed_Function_Type {
+    \     return self.convert_function_type(parsed_type.as(@Parsed_Function_Type))
+    \ }
+    \ if parsed_type is Parsed_Macro_Type {
+    \     return self.convert_macro_type(parsed_type.as(@Parsed_Macro_Type))
+    \ }
+    if parsed_type is Parsed_Named_Type {
+        return self.convert_named_type(parsed_type.as(@Parsed_Named_Type))
+    }
+    \ if parsed_type is Parsed_Placeholder_Type {
+    \     let parsed_type = parsed_type.as(@Parsed_Placeholder_Type)
+    \     return make @IR_Placeholder_Type(name = parsed_type.name, parsed_type = parsed_type)
+    \ }
+    \ if parsed_type is Parsed_Pointer_Type {
+    \     return self.convert_pointer_type(parsed_type.as(@Parsed_Pointer_Type))
+    \ }
+    \ if parsed_type is Parsed_Specialized_Type {
+    \     return self.convert_specialized_type(parsed_type.as(@Parsed_Specialized_Type))
+    \ }
+    abort("TODO: Convert ".clone().append(parsed_type.object_type.name))
+}
+
+func convert_named_type(self: @Checker, parsed_type: @Parsed_Named_Type) -> @Checked_Type {
+    let type_name = parsed_type.name.lexeme
+
+    \ let context = self.context
+    \ while context != null {
+    \     if context.type_arguments != null {
+    \         for_each(context.type_arguments) {
+    \             let type_argument = it
+    \             if type_argument.name == null {
+    \                 abort("Invalid state")
+    \             }
+    \             if type_argument.name.equals(type_name) {
+    \                 return self.convert_type(type_argument.type)
+    \             }
+    \         }
+    \     }
+    \     context = context.parent
+    \ }
+
+    let checked_type = self.named_types.get(type_name)
+    if checked_type == null {
+        \ find 
+        let type_statement = self.parsed_code.get_type_statement(type_name)
+        abort("TODO: Create new Parsed_Named_Type: ".clone().append(type_name))
+        \ if type_statement != null {
+        \     checked_type = self.convert_type_statement(type_statement, type_name)
+        \ } else {
+        \     abort(type.name.location, clone("Unknown type: ").append(type_name))
+        \ }
+    }
+
+    return checked_type
+}
