@@ -13,7 +13,7 @@ struct Map_Entry[K, V] {
 func get[K, V](self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while entry != null {
-        if entry.key == key {
+        if equals(entry.key, key) {
             return entry.value
         }
         entry = entry.next_entry
@@ -24,7 +24,7 @@ func get[K, V](self: @Map[K, V], key: K) -> V {
 func put[K, V](self: @Map[K, V], key: K, value: V) -> V {
     let entry = self.first_entry
     while entry != null {
-        if entry.key == key {
+        if equals(entry.key, key) {
             let old_value = entry.value
             entry.value = value
             return old_value
@@ -44,7 +44,7 @@ func put[K, V](self: @Map[K, V], key: K, value: V) -> V {
 func remove[K, V](self: @Map[K, V], key: K) -> V {
     let entry = self.first_entry
     while entry != null {
-        if entry.key == key {
+        if equals(entry.key, key) {
             return self.unlink(entry).value
         }
         entry = entry.next_entry
@@ -92,4 +92,8 @@ macro for_each[K, V](self: @Map[K, V], block: macro (key: K, value: V)) {
         block(entry.key, entry.value)
         entry = entry.next_entry
     }
+}
+
+func equals(self: @Any, other: @Any) -> bool {
+    return self == other
 }
