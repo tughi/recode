@@ -33,7 +33,6 @@ struct Checker {
     current_context: @Checker_Context
 
     named_types = make Map[@String, @Checked_Named_Type]()
-    functions = make List[@Checked_Function]()
 }
 
 func put_named_type(self: @Checker, type: @Checked_Named_Type) -> Nothing {
@@ -50,7 +49,14 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
     \ create root statements
     parsed_code.statements.for_each() {
         if it is Parsed_Function_Statement {
-            self.check_function(it.as(@Parsed_Function_Statement))
+            self.check_function_statement(it.as(@Parsed_Function_Statement))
+        } else if it is Parsed_Variable_Statement {
+            let checked_statement = self.check_variable_statement(it.as(@Parsed_Variable_Statement))
+            let variable = checked_statement.variable
+            if variable.expression != null {
+                abort("TODO: Check constant expression")
+            }
+            self.checked_code.globals.append(variable)
         } else {
             abort(it.location, "Unsupported Parsed_Statement: ".clone().append(it.object_type.name))
         }
@@ -58,11 +64,11 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
 
     \ check functions
     self.checked_code.functions.for_each() {
-        self.check_function_body(it)
+        self.check_function_symbol(it)
     }
 }
 
-func check_function(self: @Checker, parsed_function: @Parsed_Function_Statement) -> @Checked_Function {
+func check_function_statement(self: @Checker, parsed_function: @Parsed_Function_Statement) -> @Checked_Function_Symbol {
     \ create function type
     let checked_function_type = make @Checked_Function_Type(
         name = "func (".clone()
@@ -83,7 +89,7 @@ func check_function(self: @Checker, parsed_function: @Parsed_Function_Statement)
     }
 
     \ create function
-    let checked_function = make @Checked_Function(
+    let checked_function = make @Checked_Function_Symbol(
         location = parsed_function.location
         name = parsed_function.name.lexeme
         type = make @Checked_Pointer_Type(
@@ -101,7 +107,7 @@ func check_function(self: @Checker, parsed_function: @Parsed_Function_Statement)
     return checked_function
 }
 
-func check_function_body(self: @Checker, checked_function: @Checked_Function) -> Nothing {
+func check_function_symbol(self: @Checker, checked_function: @Checked_Function_Symbol) -> Nothing {
     let parsed_function = checked_function.parsed_function
 
     \ create function context
@@ -186,12 +192,12 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
     \ create variable statement
     let checked_statement = make @Checked_Variable_Statement(
         location = parsed_statement.location
-        variable = make @Checked_Symbol(
+        variable = make @Checked_Variable_Symbol(
             location = parsed_statement.name.location
             name = parsed_statement.name.lexeme
             type = checked_type
+            expression = checked_expression
         )
-        expression = checked_expression
     )
     self.current_context.symbols.prepend(checked_statement.variable)
 
@@ -207,7 +213,7 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
 }
 
 func check_function_expression(self: @Checker, parsed_expression: @Parsed_Function_Expression) -> @Checked_Expression {
-    let checked_function = self.check_function(parsed_expression.function_statement)
+    let checked_function = self.check_function_statement(parsed_expression.function_statement)
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location
         type = checked_function.type

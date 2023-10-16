@@ -2,7 +2,7 @@ include "./List.code"
 
 struct Checked_Code {
     globals = make List[@Checked_Symbol]()
-    functions = make List[@Checked_Function]()
+    functions = make List[@Checked_Function_Symbol]()
 }
 
 struct Checked_Type: Object {
@@ -88,8 +88,12 @@ struct Checked_Symbol: Object {
     type: @Checked_Type
 }
 
-struct Checked_Function: Checked_Symbol {
+struct Checked_Function_Symbol: Checked_Symbol {
     parsed_function: @Parsed_Function_Statement
+}
+
+struct Checked_Variable_Symbol: Checked_Symbol {
+    expression: @Checked_Expression
 }
 
 struct Checked_Statement: Object {
@@ -101,8 +105,7 @@ struct Checked_Block_Statement: Checked_Statement {
 }
 
 struct Checked_Variable_Statement: Checked_Statement {
-    variable: @Checked_Symbol
-    expression: @Checked_Expression
+    variable: @Checked_Variable_Symbol
 }
 
 struct Checked_Expression: Object {
