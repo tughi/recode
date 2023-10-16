@@ -31,7 +31,8 @@ struct Identifier_Token: Token {
 }
 
 struct Integer_Token: Literal_Token {
-    value: i64
+    value: u64
+    negative: bool
     type: @String
 }
 

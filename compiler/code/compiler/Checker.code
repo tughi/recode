@@ -10,15 +10,17 @@ func check(parsed_code: @Parsed_Code) -> @Checked_Code {
 
     \ add builtin types
     checker.put_named_type(make @Checked_Any_Type())
-    checker.put_named_type(make @Checked_Bool_Type())
-    checker.put_named_type(make @Checked_Int16_Type())
-    checker.put_named_type(make @Checked_Int32_Type())
-    checker.put_named_type(make @Checked_Int64_Type())
-    checker.put_named_type(make @Checked_Int8_Type())
-    checker.put_named_type(make @Checked_UInt16_Type())
-    checker.put_named_type(make @Checked_UInt32_Type())
-    checker.put_named_type(make @Checked_UInt64_Type())
-    checker.put_named_type(make @Checked_UInt8_Type())
+    checker.bool_type = checker.put_named_type(make @Checked_Bool_Type())
+    checker.i16_type = checker.put_named_type(make @Checked_Int16_Type())
+    checker.i32_type = checker.put_named_type(make @Checked_Int32_Type())
+    checker.i64_type = checker.put_named_type(make @Checked_Int64_Type())
+    checker.null_type = checker.put_named_type(make @Checked_Null_Type())
+    checker.i8_type = checker.put_named_type(make @Checked_Int8_Type())
+    checker.u16_type = checker.put_named_type(make @Checked_UInt16_Type())
+    checker.u32_type = checker.put_named_type(make @Checked_UInt32_Type())
+    checker.u64_type = checker.put_named_type(make @Checked_UInt64_Type())
+    checker.u8_type = checker.put_named_type(make @Checked_UInt8_Type())
+    checker.undefined_type = checker.put_named_type(make @Checked_Undefined_Type())
 
     checker.check(parsed_code)
 
@@ -32,17 +34,53 @@ struct Checker {
     root_context = make Checker_Context()
     current_context: @Checker_Context
 
+    expected_return_type: @Checked_Type = null
+
     named_types = make Map[@String, @Checked_Named_Type]()
+
+    bool_type: @Checked_Type = undefined
+    i16_type: @Checked_Type = undefined
+    i32_type: @Checked_Type = undefined
+    i64_type: @Checked_Type = undefined
+    i8_type: @Checked_Type = undefined
+    null_type: @Checked_Type = undefined
+    u16_type: @Checked_Type = undefined
+    u32_type: @Checked_Type = undefined
+    u64_type: @Checked_Type = undefined
+    u8_type: @Checked_Type = undefined
+    undefined_type: @Checked_Type = undefined
 }
 
-func put_named_type(self: @Checker, type: @Checked_Named_Type) -> Nothing {
+func get_named_type(self: @Checker, name: @String) -> @Checked_Named_Type {
+    return self.named_types.get(name)
+}
+
+func put_named_type(self: @Checker, type: @Checked_Named_Type) -> @Checked_Named_Type {
     self.named_types.put(type.name, type)
+    return type
 }
 
 struct Checker_Context {
     parent: @Checker_Context = null
 
     symbols = make List[@Checked_Symbol]()
+}
+
+func find_symbol(self: @Checker_Context, name: @String) -> @Checked_Symbol {
+    \ search local symbols
+    self.symbols.for_each() {
+        if it.name.equals(name) {
+            return it
+        }
+    }
+
+    \ search parent symbols
+    if self.parent != null {
+        return self.parent.find_symbol(name)
+    }
+
+    \ not found
+    return null
 }
 
 func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
@@ -121,13 +159,24 @@ func check_function_symbol(self: @Checker, checked_function: @Checked_Function_S
     }
 
     \ check function body
+    self.expected_return_type = checked_function_type.return_type
     self.check_block_statement(parsed_function.body)
+    self.expected_return_type = null
 
     \ restore context
     self.current_context = self.current_context.parent
 }
 
 func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Checked_Statement {
+    if parsed_statement is Parsed_Block_Statement {
+        return self.check_block_statement(parsed_statement.as(@Parsed_Block_Statement))
+    }
+    if parsed_statement is Parsed_If_Statement {
+        return self.check_if_statement(parsed_statement.as(@Parsed_If_Statement))
+    }
+    if parsed_statement is Parsed_Return_Statement {
+        return self.check_return_statement(parsed_statement.as(@Parsed_Return_Statement))
+    }
     if parsed_statement is Parsed_Variable_Statement {
         return self.check_variable_statement(parsed_statement.as(@Parsed_Variable_Statement))
     }
@@ -153,6 +202,32 @@ func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_State
     self.current_context = self.current_context.parent
 
     return checked_statement
+}
+
+func check_if_statement(self: @Checker, parsed_statement: @Parsed_If_Statement) -> @Checked_Statement {
+    let checked_condition_expression = self.check_expression(parsed_statement.condition_expression, self.bool_type)
+    let checked_true_statement = self.check_statement(parsed_statement.true_statement)
+    let checked_false_statement: @Checked_Statement = null
+    if parsed_statement.false_statement != null {
+        checked_false_statement = self.check_statement(parsed_statement.true_statement)
+    }
+    return make @Checked_If_Statement(
+        location = parsed_statement.location
+        condition_expression = checked_condition_expression
+        true_statement = checked_true_statement
+        false_statement = checked_false_statement
+    )
+}
+
+func check_return_statement(self: @Checker, parsed_statement: @Parsed_Return_Statement) -> @Checked_Statement {
+    let checked_expression: @Checked_Expression = null
+    if parsed_statement.value_expression != null {
+        checked_expression = self.check_expression(parsed_statement.value_expression, self.expected_return_type)
+    }
+    return make @Checked_Return_Statement(
+        location = parsed_statement.location
+        expression = checked_expression
+    )
 }
 
 func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable_Statement) -> @Checked_Variable_Statement {
@@ -205,19 +280,193 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
 }
 
 func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, expected_type: @Checked_Type) -> @Checked_Expression {
-    if parsed_expression is Parsed_Function_Expression {
-        return self.check_function_expression(parsed_expression.as(@Parsed_Function_Expression))
+    let checked_expression: @Checked_Expression
+    if parsed_expression is Parsed_Call_Expression {
+        checked_expression = self.check_call_expression(parsed_expression.as(@Parsed_Call_Expression))
+    } else if parsed_expression is Parsed_Function_Expression {
+        checked_expression = self.check_function_expression(parsed_expression.as(@Parsed_Function_Expression))
+    } else if parsed_expression is Parsed_Literal_Expression {
+        checked_expression = self.check_literal_expression(parsed_expression.as(@Parsed_Literal_Expression), expected_type)
+    } else if parsed_expression is Parsed_Logic_Not_Expression {
+        checked_expression = self.check_logic_not_expression(parsed_expression.as(@Parsed_Logic_Not_Expression))
+    } else if parsed_expression is Parsed_Symbol_Expression {
+        checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
+    } else {
+        abort("TODO: Check ".clone().append(parsed_expression.object_type.name))
     }
 
-    abort("TODO: Check ".clone().append(parsed_expression.object_type.name))
+    if expected_type != null and not expected_type.accepts(checked_expression.type) {
+        abort(parsed_expression.location, "TODO: Report unexpected type")
+    }
+
+    return checked_expression
+}
+
+func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression) -> @Checked_Expression {
+    let checked_call_arguments = make @List[@Checked_Call_Argument]()
+    parsed_expression.arguments.for_each() {
+        abort("TODO: Check call argument")
+    }
+
+    let checked_callee_expression = self.check_expression(parsed_expression.callee_expression, null)
+    if checked_callee_expression is Checked_Symbol_Expression {
+        let checked_callee_expression = checked_callee_expression.as(@Checked_Symbol_Expression)
+        let checked_symbol = checked_callee_expression.symbol
+        if checked_symbol is Checked_Variable_Symbol { \ dynamic calls have higher priority
+            let checked_symbol_type = checked_symbol.type
+            if checked_symbol_type is Checked_Pointer_Type {
+                let checked_symbol_type = checked_symbol_type.as(@Checked_Pointer_Type)
+                if checked_symbol_type.pointed_type is Checked_Function_Type {
+                    let checked_function_type = checked_symbol_type.pointed_type.as(@Checked_Function_Type)
+                    if not checked_function_type.accepts(checked_call_arguments) {
+                        abort(parsed_expression.location, "TODO: Report call arguments error")
+                    }
+                    return make @Checked_Dynamic_Call_Expression(
+                        location = parsed_expression.location
+                        type = checked_function_type.return_type
+                        callee_expression = checked_callee_expression
+                        call_arguments = checked_call_arguments
+                    )
+                }
+            }
+            abort(parsed_expression.location, "TODO: Report non-callable symbol error")
+        }
+        abort("TODO: Check variable and function symbols")
+        abort("TODO: Return function call")
+    }
+    abort("TODO: Return dynamic call")
 }
 
 func check_function_expression(self: @Checker, parsed_expression: @Parsed_Function_Expression) -> @Checked_Expression {
-    let checked_function = self.check_function_statement(parsed_expression.function_statement)
+    let checked_function_symbol = self.check_function_statement(parsed_expression.function_statement)
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location
-        type = checked_function.type
-        symbol = checked_function
+        type = checked_function_symbol.type
+        symbol = checked_function_symbol
+    )
+}
+
+func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal_Expression, expected_type: @Checked_Type) -> @Checked_Expression {
+    let literal = parsed_expression.literal
+    if literal is Boolean_Token {
+        return make @Checked_Boolean_Constant_Expression(
+            location = parsed_expression.location
+            type = self.bool_type
+            literal = parsed_expression.literal.as(@Boolean_Token)
+        )
+    }
+    if literal is Character_Token {
+        return make @Checked_Character_Constant_Expression(
+            location = parsed_expression.location
+            type = self.u8_type
+            literal = parsed_expression.literal.as(@Character_Token)
+        )
+    }
+    if literal is Integer_Token {
+        let literal = literal.as(@Integer_Token)
+
+        \ decide on literal type
+        let literal_type: @Checked_Type
+        if literal.type != null {
+            \ type is part of the literal
+            literal_type = self.get_named_type(literal.type)
+        } else if expected_type == null or expected_type is not Checked_Int_Type {
+            \ invalid expected_type
+            literal_type = self.i32_type
+        } else {
+            \ use expected_type
+            literal_type = expected_type
+        }
+
+        \ check value range
+        let max_negative_value: u64
+        let max_positive_value: u64
+        if literal_type is Checked_Int16_Type {
+            max_negative_value = 0x0000_0000_0000_8000u64
+            max_positive_value = 0x0000_0000_0000_7fffu64
+        } else if literal_type is Checked_Int32_Type {
+            max_negative_value = 0x0000_0000_8000_0000u64
+            max_positive_value = 0x0000_0000_7fff_ffffu64
+        } else if literal_type is Checked_Int64_Type or literal_type is Checked_IntMax_Type {
+            max_negative_value = 0x800_0000_0000_0000u64 \ TODO: Use 0x8000_0000_0000_0000u64
+            max_positive_value = 0x7ff_ffff_ffff_ffffu64 \ TODO: Use 0x7fff_ffff_ffff_ffffu64
+        } else if literal_type is Checked_Int8_Type {
+            max_negative_value = 0x0000_0000_0000_0080u64
+            max_positive_value = 0x0000_0000_0000_007fu64
+        } else if literal_type is Checked_UInt16_Type {
+            max_negative_value = 0x0000_0000_0000_0000u64
+            max_positive_value = 0x0000_0000_0000_ffffu64
+        } else if literal_type is Checked_UInt32_Type {
+            max_negative_value = 0x0000_0000_0000_0000u64
+            max_positive_value = 0x0000_0000_ffff_ffffu64
+        } else if literal_type is Checked_UInt64_Type or literal_type is Checked_UIntMax_Type {
+            max_negative_value = 0x000_0000_0000_0000u64 \ TODO: Use 0x0000_0000_0000_0000u64
+            max_positive_value = 0xfff_ffff_ffff_ffffu64 \ TODO: Use 0xffff_ffff_ffff_ffffu64
+        } else if literal_type is Checked_UInt8_Type {
+            max_negative_value = 0x0000_0000_0000_0000u64
+            max_positive_value = 0x0000_0000_0000_00ffu64
+        } else {
+            abort(parsed_expression.location, literal_type.object_type)
+        }
+        if (literal.negative and literal.value > max_negative_value) or (not literal.negative and literal.value > max_positive_value) {
+            abort(parsed_expression.location, clone("Value out of ").append(literal_type.name).append(" range: -").append(max_negative_value).append(" .. ").append(max_positive_value))
+        }
+
+        return make @Checked_Integer_Constant_Expression(
+            location = parsed_expression.location
+            type = expected_type
+            literal = literal
+        )
+    }
+    if literal is Null_Token {
+        return make @Checked_Constant_Expression(
+            location = parsed_expression.location
+            type = self.null_type
+        )
+    }
+    if literal is String_Token {
+        return make @Checked_String_Constant_Expression(
+            location = parsed_expression.location
+            type = self.convert_type(
+                make @Parsed_Pointer_Type(
+                    location = null
+                    pointed_type = make @Parsed_Named_Type(
+                        name = make @Identifier_Token(
+                            location = null
+                            lexeme = "String"
+                        )
+                    )
+                )
+            )
+            literal = literal.as(@String_Token)
+        )
+    }
+    if literal is Undefined_Token {
+        return make @Checked_Constant_Expression(
+            location = parsed_expression.location
+            type = self.undefined_type
+        )
+    }
+    abort(parsed_expression.location, literal.object_type)
+}
+
+func check_logic_not_expression(self: @Checker, parsed_expression: @Parsed_Logic_Not_Expression) -> @Checked_Expression {
+    return make @Checked_Logic_Not_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        expression = self.check_expression(parsed_expression.expression, self.bool_type)
+    )
+}
+
+func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression) -> @Checked_Expression {
+    let symbol = self.current_context.find_symbol(parsed_expression.name.lexeme)
+    if symbol == null {
+        abort(parsed_expression.location, clone("Undeclared symbol: ").append(parsed_expression.name.lexeme))
+    }
+    return make @Checked_Symbol_Expression(
+        location = parsed_expression.location
+        type = symbol.type
+        symbol = symbol
     )
 }
 

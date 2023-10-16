@@ -10,7 +10,10 @@ struct Checked_Type: Object {
 }
 
 func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
-    return false
+    if self == other {
+        return true
+    }
+    abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
 
 struct Checked_Named_Type: Checked_Type {
@@ -28,10 +31,10 @@ struct Checked_Bool_Type: Checked_Builtin_Type(name = "bool") {
 struct Checked_Nothing_Type: Checked_Builtin_Type(name = "Nothing") {
 }
 
-struct Checked_Null_Type: Checked_Builtin_Type(name = "null") {
+struct Checked_Null_Type: Checked_Builtin_Type(name = "Null") {
 }
 
-struct Checked_Undefined_Type: Checked_Builtin_Type(name = "undefined") {
+struct Checked_Undefined_Type: Checked_Builtin_Type(name = "Undefined") {
 }
 
 struct Checked_Int_Type: Checked_Builtin_Type {
@@ -49,6 +52,9 @@ struct Checked_Int64_Type: Checked_Int_Type(name = "i64") {
 struct Checked_Int8_Type: Checked_Int_Type(name = "i8") {
 }
 
+struct Checked_IntMax_Type: Checked_Int_Type(name = "isize") {
+}
+
 struct Checked_UInt_Type: Checked_Builtin_Type {
 }
 
@@ -64,6 +70,9 @@ struct Checked_UInt64_Type: Checked_UInt_Type(name = "u64") {
 struct Checked_UInt8_Type: Checked_UInt_Type(name = "u8") {
 }
 
+struct Checked_UIntMax_Type: Checked_UInt_Type(name = "usize") {
+}
+
 struct Checked_Function_Type: Checked_Type {
     parameters = make List[@Checked_Function_Parameter]()
     return_type: @Checked_Type
@@ -73,6 +82,22 @@ struct Checked_Function_Parameter {
     location: @Source_Location
     name: @String
     type: @Checked_Type
+}
+
+func accepts(self: @Checked_Function_Type, call_arguments: @List[@Checked_Call_Argument]) -> bool {
+    \ Check each argument
+    let argument_item = call_arguments.first_item
+    let parameter_item = self.parameters.first_item
+    while argument_item != null and parameter_item != null {
+        abort("TODO: Check arguments size")
+    }
+
+    if argument_item != null or parameter_item != null {
+        \ Arguments number differs from parameters number 
+        return false
+    }
+
+    return true
 }
 
 struct Checked_Opaque_Type: Checked_Named_Type {
@@ -104,6 +129,16 @@ struct Checked_Block_Statement: Checked_Statement {
     statements = make List[@Checked_Statement]()
 }
 
+struct Checked_If_Statement: Checked_Statement {
+    condition_expression: @Checked_Expression
+    true_statement: @Checked_Statement
+    false_statement: @Checked_Statement
+}
+
+struct Checked_Return_Statement: Checked_Statement {
+    expression: @Checked_Expression
+}
+
 struct Checked_Variable_Statement: Checked_Statement {
     variable: @Checked_Variable_Symbol
 }
@@ -111,6 +146,43 @@ struct Checked_Variable_Statement: Checked_Statement {
 struct Checked_Expression: Object {
     location: @Source_Location
     type: @Checked_Type
+}
+
+struct Checked_Constant_Expression: Checked_Expression {
+}
+
+struct Checked_Boolean_Constant_Expression: Checked_Constant_Expression {
+    literal: @Boolean_Token
+}
+
+struct Checked_Character_Constant_Expression: Checked_Constant_Expression {
+    literal: @Character_Token
+}
+
+struct Checked_Integer_Constant_Expression: Checked_Constant_Expression {
+    literal: @Integer_Token
+}
+
+struct Checked_String_Constant_Expression: Checked_Constant_Expression {
+    literal: @String_Token
+}
+
+struct Checked_Call_Expression: Checked_Expression {
+    call_arguments: @List[@Checked_Call_Argument]
+}
+
+struct Checked_Call_Argument {
+    location: @Source_Location
+    name: @String
+    expression: @Checked_Expression
+}
+
+struct Checked_Dynamic_Call_Expression: Checked_Call_Expression {
+    callee_expression: @Checked_Expression
+}
+
+struct Checked_Logic_Not_Expression: Checked_Expression {
+    expression: @Checked_Expression
 }
 
 struct Checked_Symbol_Expression: Checked_Expression {

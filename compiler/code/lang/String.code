@@ -123,6 +123,13 @@ func append(self: @String, number: i64) -> @String {
     return self.append((number // 10).as(u8) + '0')
 }
 
+func append(self: @String, number: u64) -> @String {
+    if number >= 10 {
+        self.append(number / 10)
+    }
+    return self.append((number // 10).as(u8) + '0')
+}
+
 func append(self: @String, other: @String) -> @String {
     if self.length + other.length >= self.data_size {
         self.data_size = self.length + other.length + 1

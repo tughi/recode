@@ -718,7 +718,7 @@ func generate_load_array_item_instruction(self: @MC_Generator, instruction: @IR_
         let index_value = index_value.as(@IR_Constant_Value)
         let index: i64
         if index_value.literal is Integer_Token {
-            index = index_value.literal.as(@Integer_Token).value
+            index = index_value.literal.as(@Integer_Token).value.as(i64)
         } else if index_value.literal is Character_Token {
             index = index_value.literal.as(@Character_Token).value.as(i64)
         } else {
@@ -1062,7 +1062,7 @@ func generate_store_array_item_instruction(self: @MC_Generator, instruction: @IR
         let index_value = index_value.as(@IR_Constant_Value)
         let index: i64
         if index_value.literal is Integer_Token {
-            index = index_value.literal.as(@Integer_Token).value
+            index = index_value.literal.as(@Integer_Token).value.as(i64)
         } else if index_value.literal is Character_Token {
             index = index_value.literal.as(@Character_Token).value.as(i64)
         } else {

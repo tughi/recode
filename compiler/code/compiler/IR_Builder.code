@@ -669,7 +669,7 @@ func convert_array_type(self: @IR_Builder, type: @Parsed_Array_Type) -> @IR_Type
                 abort(type.size_expression.location, "Not an constant expression")
             }
             let size_value = size_value.as(@IR_Constant_Value)
-            return self.create_ir_fixed_array_type(item_type, size_value.literal.as(@Integer_Token).value)
+            return self.create_ir_fixed_array_type(item_type, size_value.literal.as(@Integer_Token).value.as(i64))
         }
         abort(type.location, "Checked array types are not supported yet")
     }
@@ -2215,54 +2215,6 @@ func convert_literal_expression(self: @IR_Builder, expression: @Parsed_Literal_E
         } else if expected_type == null or expected_type is not IR_Integer_Type {
             expected_type = self.get_named_type("i32")
         }
-        if expected_type is IR_Int16_Type {
-            let max = 32_767i64
-            let min = -32_768i64
-            if integer_literal.value < min or integer_literal.value > max {
-                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" range: ").append(min).append(" .. ").append(max))
-            }
-        } else if expected_type is IR_Int32_Type {
-            let max = 2_147_483_647i64
-            let min = -2_147_483_648i64
-            if integer_literal.value < min or integer_literal.value > max {
-                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" range: ").append(min).append(" .. ").append(max))
-            }
-        } else if expected_type is IR_Int64_Type or expected_type is IR_IntMax_Type {
-            \ TODO: validate i64 value
-            \ let max = 9_223_372_036_854_775_807i64
-            \ let min = -9_223_372_036_854_775_808i64
-            \ if integer_literal.value < min or integer_literal.value > max {
-            \     abort(expression.location, clone("Value out of ").append(expected_type.name).append(" range: ").append(min).append(" .. ").append(max))
-            \ }
-        } else if expected_type is IR_Int8_Type {
-            let max = 127i64
-            let min = -128i64
-            if integer_literal.value < min or integer_literal.value > max {
-                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" range: ").append(min).append(" .. ").append(max))
-            }
-        } else if expected_type is IR_UInt16_Type {
-            let max = 65_535i64
-            let min = 0i64
-            if integer_literal.value < min or integer_literal.value > max {
-                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" range: ").append(min).append(" .. ").append(max))
-            }
-        } else if expected_type is IR_UInt32_Type {
-            let max = 4_294_967_295i64
-            let min = 0i64
-            if integer_literal.value < min or integer_literal.value > max {
-                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" range: ").append(min).append(" .. ").append(max))
-            }
-        } else if expected_type is IR_UInt64_Type or expected_type is IR_UIntMax_Type {
-            \ validated by the scanner
-        } else if expected_type is IR_UInt8_Type {
-            let max = 255i64
-            let min = 0i64
-            if integer_literal.value < min or integer_literal.value > max {
-                abort(expression.location, clone("Value out of ").append(expected_type.name).append(" range: ").append(min).append(" .. ").append(max))
-            }
-        } else {
-            abort(expression.location, clone("Unsupported integer type: ").append(expected_type.name))
-        }
         return make @IR_Constant_Value(type = expected_type, literal = expression.literal)
     }
     if expression.literal is Null_Token {
@@ -2359,7 +2311,8 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
                 literal = make @Integer_Token(
                     location = null
                     lexeme = clone(array_type.name).append('.').append("length")
-                    value = array_type.size
+                    value = array_type.size.as(u64)
+                    negative = false
                     type = null
                 )
             )
@@ -2377,7 +2330,8 @@ func convert_member_access_expression(self: @IR_Builder, member_access_expressio
             literal = make @Integer_Token(
                 location = null
                 lexeme = clone(array_type.name).append('.').append("length")
-                value = array_type.size
+                value = array_type.size.as(u64)
+                negative = false
                 type = null
             )
         )
@@ -2475,7 +2429,7 @@ func convert_negate_expression(self: @IR_Builder, expression: @Parsed_Negate_Exp
         make @IR_Substract_Instruction(result_value = self.create_temp_value(value.type)).init(
             make @IR_Constant_Value(
                 type = value.type
-                literal = make @Integer_Token(lexeme = "", location = expression.location, value = 0, type = null)
+                literal = make @Integer_Token(lexeme = "", location = expression.location, value = 0, negative = false, type = null)
             )
             value
         )
