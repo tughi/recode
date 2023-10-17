@@ -16,10 +16,34 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
     abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
 
-struct Checked_Named_Type: Checked_Type {
-}
-
-struct Checked_Builtin_Type: Checked_Named_Type {
+func equals(self: @Checked_Type, other: @Checked_Type) -> bool {
+    if self.object_type != other.object_type {
+        return false
+    }
+    if self is Checked_Pointer_Type {
+        return self.as(@Checked_Pointer_Type).pointed_type.equals(other.as(@Checked_Pointer_Type).pointed_type)
+    }
+    if self is Checked_Function_Type {
+        let self = self.as(@Checked_Function_Type)
+        let other = other.as(@Checked_Function_Type)
+        if not self.return_type.equals(other.return_type) {
+            return false
+        }
+        let self_parameters_item = self.parameters.first_item
+        let other_parameters_item = other.parameters.first_item
+        while self_parameters_item != null and other_parameters_item != null {
+            if not self_parameters_item.data.type.equals(other_parameters_item.data.type) {
+                return false
+            }
+            self_parameters_item = self_parameters_item.next_item
+            other_parameters_item = other_parameters_item.next_item
+        }
+        if self_parameters_item != null or other_parameters_item != null {
+            return false
+        }
+        return true
+    }
+    return self == other
 }
 
 struct Checked_Any_Type: Checked_Builtin_Type(name = "Any") {
@@ -28,49 +52,12 @@ struct Checked_Any_Type: Checked_Builtin_Type(name = "Any") {
 struct Checked_Bool_Type: Checked_Builtin_Type(name = "bool") {
 }
 
-struct Checked_Nothing_Type: Checked_Builtin_Type(name = "Nothing") {
+struct Checked_Builtin_Type: Checked_Named_Type {
 }
 
-struct Checked_Null_Type: Checked_Builtin_Type(name = "Null") {
-}
-
-struct Checked_Undefined_Type: Checked_Builtin_Type(name = "Undefined") {
-}
-
-struct Checked_Int_Type: Checked_Builtin_Type {
-}
-
-struct Checked_Int16_Type: Checked_Int_Type(name = "i16") {
-}
-
-struct Checked_Int32_Type: Checked_Int_Type(name = "i32") {
-}
-
-struct Checked_Int64_Type: Checked_Int_Type(name = "i64") {
-}
-
-struct Checked_Int8_Type: Checked_Int_Type(name = "i8") {
-}
-
-struct Checked_IntMax_Type: Checked_Int_Type(name = "isize") {
-}
-
-struct Checked_UInt_Type: Checked_Builtin_Type {
-}
-
-struct Checked_UInt16_Type: Checked_UInt_Type(name = "u16") {
-}
-
-struct Checked_UInt32_Type: Checked_UInt_Type(name = "u32") {
-}
-
-struct Checked_UInt64_Type: Checked_UInt_Type(name = "u64") {
-}
-
-struct Checked_UInt8_Type: Checked_UInt_Type(name = "u8") {
-}
-
-struct Checked_UIntMax_Type: Checked_UInt_Type(name = "usize") {
+struct Checked_Fixed_Array_Type: Checked_Type {
+    item_type: @Checked_Type
+    size: u64
 }
 
 struct Checked_Function_Type: Checked_Type {
@@ -100,11 +87,66 @@ func accepts(self: @Checked_Function_Type, call_arguments: @List[@Checked_Call_A
     return true
 }
 
+struct Checked_Int_Type: Checked_Integer_Type {
+}
+
+struct Checked_Integer_Type: Checked_Builtin_Type {
+}
+
+struct Checked_IntMax_Type: Checked_Int_Type(name = "isize") {
+}
+
+struct Checked_Int16_Type: Checked_Int_Type(name = "i16") {
+}
+
+struct Checked_Int32_Type: Checked_Int_Type(name = "i32") {
+}
+
+struct Checked_Int64_Type: Checked_Int_Type(name = "i64") {
+}
+
+struct Checked_Int8_Type: Checked_Int_Type(name = "i8") {
+}
+
+struct Checked_Named_Type: Checked_Type {
+}
+
+struct Checked_Nothing_Type: Checked_Builtin_Type(name = "Nothing") {
+}
+
+struct Checked_Null_Type: Checked_Builtin_Type(name = "Null") {
+}
+
 struct Checked_Opaque_Type: Checked_Named_Type {
 }
 
 struct Checked_Pointer_Type: Checked_Type {
     pointed_type: @Checked_Type
+}
+
+struct Checked_UInt_Type: Checked_Integer_Type {
+}
+
+struct Checked_UIntMax_Type: Checked_UInt_Type(name = "usize") {
+}
+
+struct Checked_UInt16_Type: Checked_UInt_Type(name = "u16") {
+}
+
+struct Checked_UInt32_Type: Checked_UInt_Type(name = "u32") {
+}
+
+struct Checked_UInt64_Type: Checked_UInt_Type(name = "u64") {
+}
+
+struct Checked_UInt8_Type: Checked_UInt_Type(name = "u8") {
+}
+
+struct Checked_Unchecked_Array_Type: Checked_Type {
+    item_type: @Checked_Type
+}
+
+struct Checked_Undefined_Type: Checked_Builtin_Type(name = "Undefined") {
 }
 
 struct Checked_Symbol: Object {
@@ -148,23 +190,13 @@ struct Checked_Expression: Object {
     type: @Checked_Type
 }
 
-struct Checked_Constant_Expression: Checked_Expression {
+struct Checked_Binary_Expression: Checked_Expression {
+    left_expression: @Checked_Expression
+    right_expression: @Checked_Expression
 }
 
-struct Checked_Boolean_Constant_Expression: Checked_Constant_Expression {
+struct Checked_Boolean_Literal_Expression: Checked_Literal_Expression {
     literal: @Boolean_Token
-}
-
-struct Checked_Character_Constant_Expression: Checked_Constant_Expression {
-    literal: @Character_Token
-}
-
-struct Checked_Integer_Constant_Expression: Checked_Constant_Expression {
-    literal: @Integer_Token
-}
-
-struct Checked_String_Constant_Expression: Checked_Constant_Expression {
-    literal: @String_Token
 }
 
 struct Checked_Call_Expression: Checked_Expression {
@@ -177,12 +209,37 @@ struct Checked_Call_Argument {
     expression: @Checked_Expression
 }
 
+struct Checked_Cast_Expression: Checked_Expression {
+    expression: @Checked_Expression
+}
+
+struct Checked_Character_Literal_Expression: Checked_Literal_Expression {
+    literal: @Character_Token
+}
+
 struct Checked_Dynamic_Call_Expression: Checked_Call_Expression {
     callee_expression: @Checked_Expression
 }
 
+struct Checked_Integer_Literal_Expression: Checked_Literal_Expression {
+    literal: @Integer_Token
+}
+
+struct Checked_Literal_Expression: Checked_Expression {
+}
+
 struct Checked_Logic_Not_Expression: Checked_Expression {
     expression: @Checked_Expression
+}
+
+struct Checked_Modulo_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_Not_Equals_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_String_Literal_Expression: Checked_Literal_Expression {
+    literal: @String_Token
 }
 
 struct Checked_Symbol_Expression: Checked_Expression {

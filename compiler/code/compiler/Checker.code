@@ -14,12 +14,14 @@ func check(parsed_code: @Parsed_Code) -> @Checked_Code {
     checker.i16_type = checker.put_named_type(make @Checked_Int16_Type())
     checker.i32_type = checker.put_named_type(make @Checked_Int32_Type())
     checker.i64_type = checker.put_named_type(make @Checked_Int64_Type())
-    checker.null_type = checker.put_named_type(make @Checked_Null_Type())
     checker.i8_type = checker.put_named_type(make @Checked_Int8_Type())
+    checker.isize_type = checker.put_named_type(make @Checked_IntMax_Type())
+    checker.null_type = checker.put_named_type(make @Checked_Null_Type())
     checker.u16_type = checker.put_named_type(make @Checked_UInt16_Type())
     checker.u32_type = checker.put_named_type(make @Checked_UInt32_Type())
     checker.u64_type = checker.put_named_type(make @Checked_UInt64_Type())
     checker.u8_type = checker.put_named_type(make @Checked_UInt8_Type())
+    checker.usize_type = checker.put_named_type(make @Checked_UIntMax_Type())
     checker.undefined_type = checker.put_named_type(make @Checked_Undefined_Type())
 
     checker.check(parsed_code)
@@ -43,11 +45,13 @@ struct Checker {
     i32_type: @Checked_Type = undefined
     i64_type: @Checked_Type = undefined
     i8_type: @Checked_Type = undefined
+    isize_type: @Checked_Type = undefined
     null_type: @Checked_Type = undefined
     u16_type: @Checked_Type = undefined
     u32_type: @Checked_Type = undefined
     u64_type: @Checked_Type = undefined
     u8_type: @Checked_Type = undefined
+    usize_type: @Checked_Type = undefined
     undefined_type: @Checked_Type = undefined
 }
 
@@ -283,14 +287,22 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
     let checked_expression: @Checked_Expression
     if parsed_expression is Parsed_Call_Expression {
         checked_expression = self.check_call_expression(parsed_expression.as(@Parsed_Call_Expression))
+    } else if parsed_expression is Parsed_Cast_Expression {
+        checked_expression = self.check_cast_expression(parsed_expression.as(@Parsed_Cast_Expression))
     } else if parsed_expression is Parsed_Function_Expression {
         checked_expression = self.check_function_expression(parsed_expression.as(@Parsed_Function_Expression))
     } else if parsed_expression is Parsed_Literal_Expression {
         checked_expression = self.check_literal_expression(parsed_expression.as(@Parsed_Literal_Expression), expected_type)
     } else if parsed_expression is Parsed_Logic_Not_Expression {
         checked_expression = self.check_logic_not_expression(parsed_expression.as(@Parsed_Logic_Not_Expression))
+    } else if parsed_expression is Parsed_Modulo_Expression {
+        checked_expression = self.check_modulo_expression(parsed_expression.as(@Parsed_Modulo_Expression))
+    } else if parsed_expression is Parsed_Not_Equals_Expression {
+        checked_expression = self.check_not_equals_expression(parsed_expression.as(@Parsed_Not_Equals_Expression))
     } else if parsed_expression is Parsed_Symbol_Expression {
         checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
+    } else if parsed_expression is Parsed_Wrapped_Expression {
+        checked_expression = self.check_expression(parsed_expression.as(@Parsed_Wrapped_Expression).expression, expected_type)
     } else {
         abort("TODO: Check ".clone().append(parsed_expression.object_type.name))
     }
@@ -337,6 +349,44 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
     abort("TODO: Return dynamic call")
 }
 
+func check_cast_expression(self: @Checker, parsed_expression: @Parsed_Cast_Expression) -> @Checked_Expression {
+    let checked_expression = self.check_expression(parsed_expression.value_expression, null)
+    let checked_type = self.convert_type(parsed_expression.type)
+    if checked_expression.type.equals(checked_type) {
+        stderr.write(parsed_expression.type.location).write(": ").warning().write("Redundant cast").reset().end_line()
+    }
+    if checked_expression.type is Checked_Pointer_Type {
+        if checked_type is Checked_Pointer_Type or checked_type is Checked_Unchecked_Array_Type {
+            return make @Checked_Cast_Expression(
+                location = parsed_expression.location
+                type = checked_type
+                expression = checked_expression
+            )
+        }
+    } else if checked_expression.type is Checked_Integer_Type {
+        if checked_type is Checked_Integer_Type {
+            return make @Checked_Cast_Expression(
+                location = parsed_expression.location
+                type = checked_type
+                expression = checked_expression
+            )
+        }
+    } else if checked_expression.type is Checked_Fixed_Array_Type {
+        if checked_type is Checked_Unchecked_Array_Type {
+            let checked_expression_type = checked_expression.type.as(@Checked_Fixed_Array_Type)
+            let checked_type = checked_type.as(@Checked_Unchecked_Array_Type)
+            if checked_expression_type.item_type == checked_type.item_type {
+                return make @Checked_Cast_Expression(
+                    location = parsed_expression.location
+                    type = checked_type
+                    expression = checked_expression
+                )
+            }
+        }
+    }
+    abort(parsed_expression.location, clone("Cannot cast ").append(checked_expression.type.name).append(" to ").append(checked_type.name))
+}
+
 func check_function_expression(self: @Checker, parsed_expression: @Parsed_Function_Expression) -> @Checked_Expression {
     let checked_function_symbol = self.check_function_statement(parsed_expression.function_statement)
     return make @Checked_Symbol_Expression(
@@ -349,14 +399,14 @@ func check_function_expression(self: @Checker, parsed_expression: @Parsed_Functi
 func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal_Expression, expected_type: @Checked_Type) -> @Checked_Expression {
     let literal = parsed_expression.literal
     if literal is Boolean_Token {
-        return make @Checked_Boolean_Constant_Expression(
+        return make @Checked_Boolean_Literal_Expression(
             location = parsed_expression.location
             type = self.bool_type
             literal = parsed_expression.literal.as(@Boolean_Token)
         )
     }
     if literal is Character_Token {
-        return make @Checked_Character_Constant_Expression(
+        return make @Checked_Character_Literal_Expression(
             location = parsed_expression.location
             type = self.u8_type
             literal = parsed_expression.literal.as(@Character_Token)
@@ -370,7 +420,7 @@ func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal
         if literal.type != null {
             \ type is part of the literal
             literal_type = self.get_named_type(literal.type)
-        } else if expected_type == null or expected_type is not Checked_Int_Type {
+        } else if expected_type == null or expected_type is not Checked_Integer_Type {
             \ invalid expected_type
             literal_type = self.i32_type
         } else {
@@ -412,20 +462,20 @@ func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal
             abort(parsed_expression.location, clone("Value out of ").append(literal_type.name).append(" range: -").append(max_negative_value).append(" .. ").append(max_positive_value))
         }
 
-        return make @Checked_Integer_Constant_Expression(
+        return make @Checked_Integer_Literal_Expression(
             location = parsed_expression.location
-            type = expected_type
+            type = literal_type
             literal = literal
         )
     }
     if literal is Null_Token {
-        return make @Checked_Constant_Expression(
+        return make @Checked_Literal_Expression(
             location = parsed_expression.location
             type = self.null_type
         )
     }
     if literal is String_Token {
-        return make @Checked_String_Constant_Expression(
+        return make @Checked_String_Literal_Expression(
             location = parsed_expression.location
             type = self.convert_type(
                 make @Parsed_Pointer_Type(
@@ -442,7 +492,7 @@ func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal
         )
     }
     if literal is Undefined_Token {
-        return make @Checked_Constant_Expression(
+        return make @Checked_Literal_Expression(
             location = parsed_expression.location
             type = self.undefined_type
         )
@@ -455,6 +505,35 @@ func check_logic_not_expression(self: @Checker, parsed_expression: @Parsed_Logic
         location = parsed_expression.location
         type = self.bool_type
         expression = self.check_expression(parsed_expression.expression, self.bool_type)
+    )
+}
+
+func check_modulo_expression(self: @Checker, parsed_expression: @Parsed_Modulo_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    if left_expression.type is not Checked_Integer_Type {
+        abort(parsed_expression.left_expression.location, "Not an integer value")
+    }
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Modulo_Expression(
+        location = parsed_expression.location
+        type = left_expression.type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
+}
+
+func check_not_equals_expression(self: @Checker, parsed_expression: @Parsed_Not_Equals_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    \ TODO: Check if this if is still needed
+    \ if not left_expression.type.accepts(right_expression.type) and not right_expression.type.accepts(left_expression.type) {
+    \     abort(parsed_expression.location, "Operands are not the same type")
+    \ }
+    return make @Checked_Not_Equals_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        left_expression = left_expression
+        right_expression = right_expression
     )
 }
 

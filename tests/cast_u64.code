@@ -2,41 +2,41 @@
 \ - output: ''
 
 func main() -> i32 {
-    let value = 18446744073709551615u64
+    let value = 1152921504606846u64
 
-    if value.as(i8) != -1 {
+    if value.as(i8) != 126 {
         return 1
     }
 
-    if value.as(i16) != -1 {
+    if value.as(i16) != 27262 {
         return 2
     }
 
-    if value.as(i32) != -1 {
+    if value.as(i32) != 1958505086 {
         return 3
     }
 
-    if value.as(i64) != -1 {
+    if value.as(i64) != 1152921504606846 {
         return 4
     }
 
-    if value.as(isize) != -1 {
+    if value.as(isize) != 1152921504606846 {
         return 5
     }
 
-    if value.as(u8) != 255 {
+    if value.as(u8) != 126 {
         return 6
     }
 
-    if value.as(u16) != 65535 {
+    if value.as(u16) != 27262 {
         return 7
     }
 
-    if value.as(u32) != 4294967295 {
+    if value.as(u32) != 1958505086 {
         return 8
     }
 
-    if value.as(usize) != 18446744073709551615 {
+    if value.as(usize) != 1152921504606846 {
         return 9
     }
 

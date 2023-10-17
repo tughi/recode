@@ -205,7 +205,7 @@ func generate_add_instruction(self: @MC_Generator, instruction: @IR_Add_Instruct
     let right_value = instruction.get_right_value()
     if right_value is IR_Constant_Value {
         let right_value = right_value.as(@IR_Constant_Value)
-        if right_value.literal.as(@Integer_Token).value == 1 {
+        if right_value.literal.as(@Integer_Token).value == 1 and not right_value.literal.as(@Integer_Token).negative {
             self.output_file.write("  inc ")
             if type_size == 8 {
                 self.output_file.write(result_register.name_q)
@@ -719,6 +719,9 @@ func generate_load_array_item_instruction(self: @MC_Generator, instruction: @IR_
         let index: i64
         if index_value.literal is Integer_Token {
             index = index_value.literal.as(@Integer_Token).value.as(i64)
+            if index_value.literal.as(@Integer_Token).negative {
+                index = -index
+            }
         } else if index_value.literal is Character_Token {
             index = index_value.literal.as(@Character_Token).value.as(i64)
         } else {
@@ -1063,6 +1066,9 @@ func generate_store_array_item_instruction(self: @MC_Generator, instruction: @IR
         let index: i64
         if index_value.literal is Integer_Token {
             index = index_value.literal.as(@Integer_Token).value.as(i64)
+            if index_value.literal.as(@Integer_Token).negative {
+                index = -index
+            }
         } else if index_value.literal is Character_Token {
             index = index_value.literal.as(@Character_Token).value.as(i64)
         } else {
@@ -1184,7 +1190,7 @@ func generate_substract_instruction(self: @MC_Generator, instruction: @IR_Substr
     self.map_variable_value(instruction.result_value, result_register)
     if right_value is IR_Constant_Value {
         let right_value = right_value.as(@IR_Constant_Value)
-        if right_value.literal.as(@Integer_Token).value == 1 {
+        if right_value.literal.as(@Integer_Token).value == 1 and not right_value.literal.as(@Integer_Token).negative {
             self.output_file.write("  dec ")
             if type_size == 8 {
                 self.output_file.write(result_register.name_q)
@@ -1241,6 +1247,8 @@ func generate_load_value(self: @MC_Generator, register: @MC_Register, ir_value: 
             let literal = ir_value.literal.as(@Integer_Token)
             if literal.value == 0 {
                 self.output_file.write("  xor ").write(register.name_q).write(", ").write(register.name_q).end_line()
+            } else if literal.negative {
+                self.output_file.write("  mov ").write(register.name_q).write(", -").write(literal.value).end_line()
             } else {
                 self.output_file.write("  mov ").write(register.name_q).write(", ").write(literal.value).end_line()
             }
@@ -1550,6 +1558,9 @@ func write_operand(file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -
             return file.write(ir_value.literal.as(@Character_Token).value.as(isize))
         }
         if ir_value.literal is Integer_Token {
+            if ir_value.literal.as(@Integer_Token).negative {
+                file.write('-')
+            }
             return file.write(ir_value.literal.as(@Integer_Token).value)
         }
         if ir_value.literal is Null_Token {
