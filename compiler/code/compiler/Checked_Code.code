@@ -1,7 +1,7 @@
 include "./List.code"
 
 struct Checked_Code {
-    globals = make List[@Checked_Symbol]()
+    globals = make Map[@String, @Checked_Symbol]()
     functions = make List[@Checked_Function_Symbol]()
 }
 
@@ -124,6 +124,51 @@ struct Checked_Pointer_Type: Checked_Type {
     pointed_type: @Checked_Type
 }
 
+struct Checked_Struct_Type: Checked_Named_Type {
+    super_type: @Checked_Struct_Type = null
+    derived_types = make List[@Checked_Struct_Type]()
+    members = make List[@Checked_Struct_Type_Member]()
+}
+
+struct Checked_Struct_Type_Member {
+    struct_type: @Checked_Struct_Type
+    name: @String
+    type: @Checked_Type
+    default_value_expression: @Checked_Expression
+}
+
+func add_member(self: @Checked_Struct_Type, name: @String, type: @Checked_Type, default_value_expression: @Checked_Expression) -> @Checked_Struct_Type_Member {
+    let member = make @Checked_Struct_Type_Member(struct_type = self, name = name, type = type, default_value_expression = default_value_expression)
+    self.members.append(member)
+    return member
+}
+
+func get_member(self: @Checked_Struct_Type, name: @String) -> @Checked_Struct_Type_Member {
+    let struct_type = self
+    loop {
+        struct_type.members.for_each() {
+            if name.equals(it.name) {
+                return it
+            }
+        }
+        struct_type = struct_type.super_type
+        if struct_type == null {
+            return null
+        }
+    }
+}
+
+func has_super_type(self: @Checked_Struct_Type, other: @Checked_Struct_Type) -> bool {
+    let struct_type = self
+    while struct_type.super_type != null {
+        if struct_type.super_type == other {
+            return true
+        }
+        struct_type = struct_type.super_type
+    }
+    return false
+}
+
 struct Checked_UInt_Type: Checked_Integer_Type {
 }
 
@@ -159,6 +204,10 @@ struct Checked_Function_Symbol: Checked_Symbol {
     parsed_function: @Parsed_Function_Statement
 }
 
+struct Checked_Struct_Symbol: Checked_Symbol {
+    parsed_struct_statement: @Parsed_Struct_Statement
+}
+
 struct Checked_Variable_Symbol: Checked_Symbol {
     expression: @Checked_Expression
 }
@@ -188,6 +237,9 @@ struct Checked_Variable_Statement: Checked_Statement {
 struct Checked_Expression: Object {
     location: @Source_Location
     type: @Checked_Type
+}
+
+struct Checked_Access_Expression: Checked_Expression {
 }
 
 struct Checked_Binary_Expression: Checked_Expression {
@@ -221,6 +273,9 @@ struct Checked_Dynamic_Call_Expression: Checked_Call_Expression {
     callee_expression: @Checked_Expression
 }
 
+struct Checked_Equals_Expression: Checked_Binary_Expression {
+}
+
 struct Checked_Integer_Literal_Expression: Checked_Literal_Expression {
     literal: @Integer_Token
 }
@@ -230,6 +285,11 @@ struct Checked_Literal_Expression: Checked_Expression {
 
 struct Checked_Logic_Not_Expression: Checked_Expression {
     expression: @Checked_Expression
+}
+
+struct Checked_Member_Access_Expression: Checked_Access_Expression {
+    object_expression: @Checked_Expression
+    struct_member: @Checked_Struct_Type_Member
 }
 
 struct Checked_Modulo_Expression: Checked_Binary_Expression {
