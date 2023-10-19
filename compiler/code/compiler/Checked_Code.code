@@ -13,6 +13,19 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
     if self == other {
         return true
     }
+    if self is Checked_Pointer_Type {
+        if other is Checked_Pointer_Type {
+            let self_pointed_type = self.as(@Checked_Pointer_Type).pointed_type
+            let other_pointed_type = other.as(@Checked_Pointer_Type).pointed_type
+            if self_pointed_type == other_pointed_type {
+                return true
+            }
+            if self_pointed_type is Checked_Struct_Type and other_pointed_type is Checked_Struct_Type {
+                return other_pointed_type.as(@Checked_Struct_Type).has_super_type(self_pointed_type.as(@Checked_Struct_Type))
+            }
+        }
+        return false
+    }
     abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
 
@@ -73,10 +86,14 @@ struct Checked_Function_Parameter {
 
 func accepts(self: @Checked_Function_Type, call_arguments: @List[@Checked_Call_Argument]) -> bool {
     \ Check each argument
-    let argument_item = call_arguments.first_item
     let parameter_item = self.parameters.first_item
-    while argument_item != null and parameter_item != null {
-        abort("TODO: Check arguments size")
+    let argument_item = call_arguments.first_item
+    while parameter_item != null and argument_item != null {
+        if not parameter_item.data.type.accepts(argument_item.data.expression.type) {
+            return false
+        }
+        parameter_item = parameter_item.next_item
+        argument_item = argument_item.next_item
     }
 
     if argument_item != null or parameter_item != null {
@@ -201,7 +218,9 @@ struct Checked_Symbol: Object {
 }
 
 struct Checked_Function_Symbol: Checked_Symbol {
+    function_type: @Checked_Function_Type
     parsed_function: @Parsed_Function_Statement
+    _is_match = false \ flag used while searching for matching functions
 }
 
 struct Checked_Struct_Symbol: Checked_Symbol {
@@ -274,6 +293,10 @@ struct Checked_Dynamic_Call_Expression: Checked_Call_Expression {
 }
 
 struct Checked_Equals_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_Function_Call_Expression: Checked_Call_Expression {
+    function_symbol: @Checked_Function_Symbol
 }
 
 struct Checked_Integer_Literal_Expression: Checked_Literal_Expression {

@@ -172,6 +172,7 @@ func check_function_statement(self: @Checker, parsed_function: @Parsed_Function_
             name = "@(".clone().append(checked_function_type.name).append(')')
             pointed_type = checked_function_type
         )
+        function_type = checked_function_type
 
         parsed_function = parsed_function
     )
@@ -190,7 +191,7 @@ func check_function_symbol(self: @Checker, checked_function: @Checked_Function_S
     self.current_context = make @Checker_Context(
         parent = self.current_context
     )
-    let checked_function_type = checked_function.type.as(@Checked_Pointer_Type).pointed_type.as(@Checked_Function_Type)
+    let checked_function_type = checked_function.function_type
     checked_function_type.parameters.for_each() {
         self.current_context.symbols.prepend(make @Checked_Symbol(
             location = it.location
@@ -443,16 +444,31 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
 }
 
 func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression) -> @Checked_Expression {
+    \ check call arguments
     let checked_call_arguments = make @List[@Checked_Call_Argument]()
     parsed_expression.arguments.for_each() {
-        abort("TODO: Check call argument")
+        let checked_call_argument_name: @String = null
+        if it.name != null {
+            checked_call_argument_name = it.name.lexeme
+            abort("TODO: Check for duplicate argument names")
+        }
+        checked_call_arguments.append(make @Checked_Call_Argument(
+            location = it.location
+            name = checked_call_argument_name
+            expression = self.check_expression(it.value_expression, null)
+        ))
     }
 
-    let checked_callee_expression = self.check_expression(parsed_expression.callee_expression, null)
+    \ check callee expression
+    let parsed_callee_expression = parsed_expression.callee_expression
+    let checked_callee_expression = self.check_expression(parsed_callee_expression, null)
     if checked_callee_expression is Checked_Symbol_Expression {
+        \ we have a `symbol(...)` call
         let checked_callee_expression = checked_callee_expression.as(@Checked_Symbol_Expression)
         let checked_symbol = checked_callee_expression.symbol
-        if checked_symbol is Checked_Variable_Symbol { \ dynamic calls have higher priority
+
+        \ dynamic calls have highest priority
+        if checked_symbol is Checked_Variable_Symbol {
             let checked_symbol_type = checked_symbol.type
             if checked_symbol_type is Checked_Pointer_Type {
                 let checked_symbol_type = checked_symbol_type.as(@Checked_Pointer_Type)
@@ -464,17 +480,26 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
                     return make @Checked_Dynamic_Call_Expression(
                         location = parsed_expression.location
                         type = checked_function_type.return_type
-                        callee_expression = checked_callee_expression
                         call_arguments = checked_call_arguments
+                        callee_expression = checked_callee_expression
                     )
                 }
             }
             abort(parsed_expression.location, "TODO: Report non-callable symbol error")
         }
-        abort("TODO: Check variable and function symbols")
-        abort("TODO: Return function call")
+
+        \ should be a function call
+        if checked_symbol is Checked_Function_Symbol {
+            if parsed_callee_expression is not Parsed_Symbol_Expression {
+                abort(parsed_callee_expression.location, parsed_callee_expression.object_type)
+            }
+            return self.check_function_call_expression(parsed_callee_expression.as(@Parsed_Symbol_Expression), checked_call_arguments)
+        }
+
+        \ unsupported symbol
+        abort(checked_callee_expression.location, checked_callee_expression.object_type)
     }
-    abort("TODO: Return dynamic call")
+    abort(checked_callee_expression.location, checked_callee_expression.object_type)
 }
 
 func check_cast_expression(self: @Checker, parsed_expression: @Parsed_Cast_Expression) -> @Checked_Expression {
@@ -532,6 +557,45 @@ func check_function_expression(self: @Checker, parsed_expression: @Parsed_Functi
         location = parsed_expression.location
         type = checked_function_symbol.type
         symbol = checked_function_symbol
+    )
+}
+
+func check_function_call_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
+    let function_name = parsed_expression.name.lexeme
+
+    \ search all functions and mark the matching ones
+    let function_symbol: @Checked_Function_Symbol = null
+    let function_matches = 0
+    self.checked_code.functions.for_each() {
+        if function_name.equals(it.name) and it.function_type.accepts(checked_call_arguments) {
+            it._is_match = true
+            function_symbol = it
+            function_matches = function_matches + 1
+        } else {
+            it._is_match = false
+        }
+    }
+
+    if function_matches == 0 {
+        \ list all similar functions and report error
+        abort(parsed_expression.location, "TODO: List all similar functions")
+    }
+
+    if function_matches > 1 {
+        abort(parsed_expression.location, "TODO: Pick best matching function")
+    }
+
+    \ validate match
+    if function_matches != 1 or function_symbol == null {
+        \ there is a bug
+        abort()
+    }
+
+    return make @Checked_Function_Call_Expression(
+        location = parsed_expression.location
+        type = function_symbol.function_type.return_type
+        call_arguments = checked_call_arguments
+        function_symbol = function_symbol
     )
 }
 
