@@ -193,7 +193,7 @@ func check_function_symbol(self: @Checker, checked_function: @Checked_Function_S
     )
     let checked_function_type = checked_function.function_type
     checked_function_type.parameters.for_each() {
-        self.current_context.symbols.prepend(make @Checked_Symbol(
+        self.current_context.symbols.prepend(make @Checked_Parameter_Symbol(
             location = it.location
             name = it.name
             type = it.type
@@ -468,7 +468,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
         let checked_symbol = checked_callee_expression.symbol
 
         \ dynamic calls have highest priority
-        if checked_symbol is Checked_Variable_Symbol {
+        if checked_symbol is Checked_Variable_Symbol or checked_symbol is Checked_Parameter_Symbol {
             let checked_symbol_type = checked_symbol.type
             if checked_symbol_type is Checked_Pointer_Type {
                 let checked_symbol_type = checked_symbol_type.as(@Checked_Pointer_Type)
@@ -587,7 +587,7 @@ func check_function_call_expression(self: @Checker, parsed_expression: @Parsed_S
 
     \ validate match
     if function_matches != 1 or function_symbol == null {
-        \ there is a bug
+        \ invalid state
         abort()
     }
 
@@ -774,9 +774,9 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     \ if parsed_type is Parsed_Array_Type {
     \     return self.convert_array_type(parsed_type.as(@Parsed_Array_Type))
     \ }
-    \ if parsed_type is Parsed_Function_Type {
-    \     return self.convert_function_type(parsed_type.as(@Parsed_Function_Type))
-    \ }
+    if parsed_type is Parsed_Function_Type {
+        return self.convert_function_type(parsed_type.as(@Parsed_Function_Type))
+    }
     \ if parsed_type is Parsed_Macro_Type {
     \     return self.convert_macro_type(parsed_type.as(@Parsed_Macro_Type))
     \ }
@@ -794,6 +794,37 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     \     return self.convert_specialized_type(parsed_type.as(@Parsed_Specialized_Type))
     \ }
     abort("TODO: Convert ".clone().append(parsed_type.object_type.name))
+}
+
+func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -> @Checked_Type {
+    if parsed_type.type_parameters != null {
+        abort(parsed_type.location, "TODO: Handle type parameters")
+    }
+
+    let checked_function_type = make @Checked_Function_Type(
+        name = "func (".clone()
+        return_type = self.convert_type(parsed_type.return_type)
+    )
+    parsed_type.parameters.for_each() {
+        let parsed_function_parameter = it
+        let checked_function_parameter_name = it.name.lexeme
+        checked_function_type.parameters.for_each() {
+            if checked_function_parameter_name.equals(it.name) {
+                abort(parsed_function_parameter.name.location, "Duplicate function parameter name")
+            }
+        }
+        checked_function_type.parameters.append(make @Checked_Function_Parameter(
+            location = parsed_function_parameter.name.location
+            name = checked_function_parameter_name
+            type = self.convert_type(parsed_function_parameter.type)
+        ))
+    }
+    checked_function_type.name.append(") -> ").append(checked_function_type.return_type.name)
+
+    return make @Checked_Pointer_Type(
+        name = "@(".clone().append(checked_function_type.name).append(')')
+        pointed_type = checked_function_type
+    )
 }
 
 func convert_named_type(self: @Checker, parsed_type: @Parsed_Named_Type) -> @Checked_Type {
