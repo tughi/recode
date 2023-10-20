@@ -244,7 +244,7 @@ struct Checked_Symbol: Object {
 
 struct Checked_Function_Symbol: Checked_Symbol {
     function_type: @Checked_Function_Type
-    parsed_function: @Parsed_Function_Statement
+    parsed_function_statement: @Parsed_Function_Statement
     _is_match = false \ flag used while searching for matching functions
 }
 

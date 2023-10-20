@@ -21,6 +21,17 @@ func get[K, V](self: @Map[K, V], key: K) -> V {
     return null
 }
 
+func has[K, V](self: @Map[K, V], key: K) -> bool {
+    let entry = self.first_entry
+    while entry != null {
+        if equals(entry.key, key) {
+            return true
+        }
+        entry = entry.next_entry
+    }
+    return false
+}
+
 func put[K, V](self: @Map[K, V], key: K, value: V) -> V {
     let entry = self.first_entry
     while entry != null {
