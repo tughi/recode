@@ -255,8 +255,6 @@ struct Checked_Parameter_Symbol: Checked_Symbol {
 }
 
 struct Checked_Struct_Symbol: Checked_Symbol {
-    specialization_types: @Map[@String, @Checked_Named_Type]
-    parsed_struct_statement: @Parsed_Struct_Statement
 }
 
 struct Checked_Variable_Symbol: Checked_Symbol {
