@@ -438,6 +438,8 @@ func build(self: @IR_Builder) -> Nothing {
             \ ingored
         } else if it is Parsed_Function_Statement {
             \ ignored
+        } else if it is Parsed_Generic_Struct_Statement {
+            \ ignored
         } else if it is Parsed_Macro_Statement {
             \ ignored
         } else if it is Parsed_Struct_Statement {
@@ -452,7 +454,7 @@ func build(self: @IR_Builder) -> Nothing {
     for_each(self.parsed_code.statements) {
         if it is Parsed_Type_Statement {
             let it = it.as(@Parsed_Type_Statement)
-            if it is Parsed_Struct_Statement and (it is not Parsed_Generic_Struct_Statement) {
+            if it is Parsed_Struct_Statement {
                 self.convert_struct_statement(it.as(@Parsed_Struct_Statement), it.name.lexeme, null)
             } else if it is Parsed_External_Type_Statement {
                 self.convert_external_type_statement(it.as(@Parsed_External_Type_Statement), it.name.lexeme)
@@ -791,11 +793,11 @@ func convert_specialized_type(self: @IR_Builder, type: @Parsed_Specialized_Type)
 
     let named_type = self.get_named_type(type_name)
     if named_type == null {
-        let struct_statement = self.parsed_code.get_generic_struct_statement(type.name.lexeme)
-        if struct_statement != null {
+        let generic_struct_statement = self.parsed_code.get_generic_struct_statement(type.name.lexeme)
+        if generic_struct_statement != null {
             let context_type_arguments = make @List[@Parsed_Type_Argument]()
             let type_arguments_item = type_arguments.first_item
-            let type_parameters_item = struct_statement.type_parameters.first_item
+            let type_parameters_item = generic_struct_statement.type_parameters.first_item
             while type_arguments_item != null and type_parameters_item != null {
                 context_type_arguments.append(
                     make @Parsed_Type_Argument(
@@ -817,7 +819,7 @@ func convert_specialized_type(self: @IR_Builder, type: @Parsed_Specialized_Type)
             )
             self.context = @local_context
 
-            named_type = self.convert_struct_statement(struct_statement, type_name, type_arguments)
+            named_type = self.convert_struct_statement(generic_struct_statement.struct_statement, type_name, type_arguments)
 
             self.context = local_context.parent
         } else {
@@ -1425,7 +1427,7 @@ func convert_variable_statement(self: @IR_Builder, variable_statement: @Parsed_V
             }
         } else {
             if variable_value == null {
-                abort(variable_statement.location, "Invalid state")
+                abort(variable_statement.location, "Missing variable type")
             }
             if variable_value.type is IR_Null_Type {
                 abort(variable_statement.value_expression.location, "Cannot infer type from null value")

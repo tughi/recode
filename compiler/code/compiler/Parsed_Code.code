@@ -173,8 +173,9 @@ struct Parsed_Struct_Statement: Parsed_Type_Statement {
     members: @List[@Parsed_Struct_Member]
 }
 
-struct Parsed_Generic_Struct_Statement: Parsed_Struct_Statement {
+struct Parsed_Generic_Struct_Statement: Parsed_Type_Statement {
     type_parameters: @List[@Parsed_Type_Parameter]
+    struct_statement: @Parsed_Struct_Statement
 }
 
 struct Parsed_Type_Parameter {

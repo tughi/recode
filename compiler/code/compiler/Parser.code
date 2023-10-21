@@ -78,6 +78,8 @@ func parse_statements(self: @Parser, statements: @List[@Parsed_Statement], is_gl
                     self.parsed_code.put_named_statement(statement.as(@Parsed_External_Type_Statement).name.lexeme, statement)
                 } else if statement is Parsed_Function_Statement {
                     self.parsed_code.put_named_statement(statement.as(@Parsed_Function_Statement).name.lexeme, statement)
+                } else if statement is Parsed_Generic_Struct_Statement {
+                    self.parsed_code.put_named_statement(statement.as(@Parsed_Generic_Struct_Statement).name.lexeme, statement)
                 } else if statement is Parsed_Macro_Statement {
                     self.parsed_code.put_named_statement(statement.as(@Parsed_Macro_Statement).name.lexeme, statement)
                 } else if statement is Parsed_Struct_Statement {
@@ -297,7 +299,7 @@ func parse_external_type(self: @Parser) -> @Parsed_External_Type_Statement {
 
 \ struct
 \   | "struct" IDENTIFIER type_parameters? ( ":" type ( "(" call_arguments? ")" )? )? "{" <EOL> ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
-func parse_struct(self: @Parser) -> @Parsed_Struct_Statement {
+func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
     self.consume(required_struct)
     self.consume_space(1)
     let struct_name = self.consume(required_identifier).as(@Identifier_Token)
@@ -356,23 +358,22 @@ func parse_struct(self: @Parser) -> @Parsed_Struct_Statement {
     self.current_alignment = self.current_alignment - 1
     self.consume_space(self.current_alignment * 4)
     self.consume(required_close_brace)
-    if struct_type_parameters != null {
-        return make @Parsed_Generic_Struct_Statement(
-            location = struct_name.location
-            name = struct_name
-            type_parameters = struct_type_parameters
-            members = struct_members
-            super_type = struct_super_type
-            super_arguments = struct_super_arguments
-        )
-    }
-    return make @Parsed_Struct_Statement(
+    let struct_statement = make @Parsed_Struct_Statement(
         location = struct_name.location
         name = struct_name
         members = struct_members
         super_type = struct_super_type
         super_arguments = struct_super_arguments
     )
+    if struct_type_parameters != null {
+        return make @Parsed_Generic_Struct_Statement(
+            location = struct_name.location
+            name = struct_name
+            type_parameters = struct_type_parameters
+            struct_statement = struct_statement
+        )
+    }
+    return struct_statement
 }
 
 \ type_parameters
