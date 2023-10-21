@@ -9,21 +9,21 @@ func check(parsed_code: @Parsed_Code) -> @Checked_Code {
     checker.current_context = checker.root_context
 
     \ add builtin types
-    checker.put_named_type(make @Checked_Any_Type())
-    checker.bool_type = checker.put_named_type(make @Checked_Bool_Type())
-    checker.i16_type = checker.put_named_type(make @Checked_Int16_Type())
-    checker.i32_type = checker.put_named_type(make @Checked_Int32_Type())
-    checker.i64_type = checker.put_named_type(make @Checked_Int64_Type())
-    checker.i8_type = checker.put_named_type(make @Checked_Int8_Type())
-    checker.isize_type = checker.put_named_type(make @Checked_IntMax_Type())
-    checker.nothing_type = checker.put_named_type(make @Checked_Nothing_Type())
-    checker.null_type = checker.put_named_type(make @Checked_Null_Type())
-    checker.u16_type = checker.put_named_type(make @Checked_UInt16_Type())
-    checker.u32_type = checker.put_named_type(make @Checked_UInt32_Type())
-    checker.u64_type = checker.put_named_type(make @Checked_UInt64_Type())
-    checker.u8_type = checker.put_named_type(make @Checked_UInt8_Type())
-    checker.usize_type = checker.put_named_type(make @Checked_UIntMax_Type())
-    checker.undefined_type = checker.put_named_type(make @Checked_Undefined_Type())
+    checker.put_global_type(make @Checked_Any_Type())
+    checker.bool_type = checker.put_global_type(make @Checked_Bool_Type())
+    checker.i16_type = checker.put_global_type(make @Checked_Int16_Type())
+    checker.i32_type = checker.put_global_type(make @Checked_Int32_Type())
+    checker.i64_type = checker.put_global_type(make @Checked_Int64_Type())
+    checker.i8_type = checker.put_global_type(make @Checked_Int8_Type())
+    checker.isize_type = checker.put_global_type(make @Checked_IntMax_Type())
+    checker.nothing_type = checker.put_global_type(make @Checked_Nothing_Type())
+    checker.null_type = checker.put_global_type(make @Checked_Null_Type())
+    checker.u16_type = checker.put_global_type(make @Checked_UInt16_Type())
+    checker.u32_type = checker.put_global_type(make @Checked_UInt32_Type())
+    checker.u64_type = checker.put_global_type(make @Checked_UInt64_Type())
+    checker.u8_type = checker.put_global_type(make @Checked_UInt8_Type())
+    checker.usize_type = checker.put_global_type(make @Checked_UIntMax_Type())
+    checker.undefined_type = checker.put_global_type(make @Checked_Undefined_Type())
 
     checker.check(parsed_code)
 
@@ -34,12 +34,13 @@ struct Checker {
     parsed_code: @Parsed_Code
     checked_code: @Checked_Code
 
-    root_context = make Checker_Context()
+    root_context = make Checker_Context(parent = null)
     current_context: @Checker_Context
 
     expected_return_type: @Checked_Type = null
 
-    named_types = make Map[@String, @Checked_Named_Type]()
+    global_types = make Map[@String, @Checked_Type]()
+    local_types: @Map[@String, @Checked_Type] = null
 
     generic_struct_statements = make Map[@String, @Parsed_Generic_Struct_Statement]()
     generic_function_statements = make List[@Parsed_Function_Statement]()
@@ -60,17 +61,20 @@ struct Checker {
     undefined_type: @Checked_Type = undefined
 }
 
-func get_named_type(self: @Checker, name: @String) -> @Checked_Named_Type {
-    return self.named_types.get(name)
+func get_global_type(self: @Checker, name: @String) -> @Checked_Type {
+    if self.local_types != null and self.local_types.has(name) {
+        return self.local_types.get(name)
+    }
+    return self.global_types.get(name)
 }
 
-func put_named_type(self: @Checker, type: @Checked_Named_Type) -> @Checked_Named_Type {
-    self.named_types.put(type.name, type)
+func put_global_type(self: @Checker, type: @Checked_Named_Type) -> @Checked_Type {
+    self.global_types.put(type.name, type)
     return type
 }
 
 struct Checker_Context {
-    parent: @Checker_Context = null
+    parent: @Checker_Context
 
     symbols = make List[@Checked_Symbol]()
 }
@@ -127,8 +131,21 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
 
     \ check types
     self.checked_code.globals.for_each() {
+        if self.local_types != null {
+            \ something went wrong
+            abort()
+        }
         if value is Checked_Struct_Symbol {
-            self.check_struct_symbol(value.as(@Checked_Struct_Symbol))
+            let checked_struct_symbol = value.as(@Checked_Struct_Symbol)
+            if checked_struct_symbol.specialization_types != null {
+                \ create local types
+                self.local_types = checked_struct_symbol.specialization_types
+            }
+            self.check_struct_symbol(checked_struct_symbol)
+            if checked_struct_symbol.specialization_types != null {
+                \ remove local types
+                self.local_types = null
+            }
         } else if value is Checked_Variable_Symbol {
             \ not a type symbol
         } else {
@@ -138,7 +155,9 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
 
     \ check functions
     self.checked_code.functions.for_each() {
-        self.check_function_symbol(it)
+        if it.parsed_function_statement.body != null {
+            self.check_function_symbol(it)
+        }
     }
 }
 
@@ -291,7 +310,10 @@ func check_return_statement(self: @Checker, parsed_statement: @Parsed_Return_Sta
 }
 
 func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement) -> @Checked_Struct_Symbol {
-    let checked_struct_name = parsed_struct_statement.name.lexeme
+    return self.check_struct_statement(parsed_struct_statement, parsed_struct_statement.name.lexeme, null)
+}
+
+func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement, checked_struct_name: @String, specialization_types: @Map[@String, @Checked_Named_Type]) -> @Checked_Struct_Symbol {
     let checked_symbol = self.checked_code.globals.get(checked_struct_name)
     if checked_symbol != null {
         if checked_symbol is not Checked_Struct_Symbol or checked_symbol.as(@Checked_Struct_Symbol).parsed_struct_statement != parsed_struct_statement {
@@ -306,6 +328,7 @@ func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Str
         type = make @Checked_Struct_Type(
             name = checked_struct_name
         )
+        specialization_types = specialization_types
         parsed_struct_statement = parsed_struct_statement
     )
 
@@ -333,7 +356,7 @@ func check_struct_symbol(self: @Checker, checked_struct_symbol: @Checked_Struct_
         checked_super_type.super_type = checked_super_type
         checked_super_type.super_type.derived_types.append(checked_struct_type)
 
-        if parsed_struct_statement.super_arguments != null {
+        if parsed_struct_statement.super_arguments.size > 0 {
             abort(parsed_struct_statement.super_type.location, "TODO: Check super arguments")
         }
     }
@@ -654,7 +677,7 @@ func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal
         let literal_type: @Checked_Type
         if literal.type != null {
             \ type is part of the literal
-            literal_type = self.get_named_type(literal.type)
+            literal_type = self.get_global_type(literal.type)
         } else if expected_type == null or expected_type is not Checked_Integer_Type {
             \ invalid expected_type
             literal_type = self.i32_type
@@ -822,9 +845,9 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     if parsed_type is Parsed_Pointer_Type {
         return self.convert_pointer_type(parsed_type.as(@Parsed_Pointer_Type))
     }
-    \ if parsed_type is Parsed_Specialized_Type {
-    \     return self.convert_specialized_type(parsed_type.as(@Parsed_Specialized_Type))
-    \ }
+    if parsed_type is Parsed_Specialized_Type {
+        return self.convert_specialized_type(parsed_type.as(@Parsed_Specialized_Type))
+    }
     abort("TODO: Convert ".clone().append(parsed_type.object_type.name))
 }
 
@@ -878,7 +901,7 @@ func convert_named_type(self: @Checker, parsed_type: @Parsed_Named_Type) -> @Che
     \     context = context.parent
     \ }
 
-    let checked_type: @Checked_Type = self.named_types.get(checked_type_name)
+    let checked_type = self.get_global_type(checked_type_name)
     if checked_type == null {
         \ find type statement
         let parsed_type_statement = self.parsed_code.get_type_statement(checked_type_name)
@@ -898,4 +921,39 @@ func convert_pointer_type(self: @Checker, parsed_pointer_type: @Parsed_Pointer_T
         name = "@".clone().append(checked_pointed_type.name)
         pointed_type = checked_pointed_type
     )
+}
+
+func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_Specialized_Type) -> @Checked_Type {
+    \ check if generic type exists
+    let parsed_generic_struct_statement = self.generic_struct_statements.get(parsed_specialized_type.name.lexeme)
+    if parsed_generic_struct_statement == null {
+        abort(parsed_specialized_type.location, "No such generic struct")
+    }
+
+    \ create type name
+    let specialization_types = make @Map[@String, @Checked_Named_Type]()
+    let checked_type_name = parsed_specialized_type.name.lexeme.clone().append('[')
+    let parsed_type_parameter_item = parsed_generic_struct_statement.type_parameters.first_item
+    let parsed_type_argument_item = parsed_specialized_type.type_arguments.first_item
+    while parsed_type_parameter_item != null and parsed_type_argument_item != null {
+        let checked_type_argument = self.convert_type(parsed_type_argument_item.data.type)
+        specialization_types.put(parsed_type_parameter_item.data.name.lexeme, checked_type_argument)
+        checked_type_name.append(checked_type_argument.name)
+        parsed_type_parameter_item = parsed_type_parameter_item.next_item
+        parsed_type_argument_item = parsed_type_argument_item.next_item
+        if parsed_type_argument_item != null {
+            checked_type_name.append(", ")
+        }
+    }
+    checked_type_name.append(']')
+
+    \ check if type already exists
+    let checked_type = self.get_global_type(checked_type_name)
+    if checked_type != null {
+        return checked_type
+    }
+
+    \ create struct symbol
+    let checked_struct_symbol = self.check_struct_statement(parsed_generic_struct_statement.struct_statement, checked_type_name, specialization_types)
+    return checked_struct_symbol.type
 }

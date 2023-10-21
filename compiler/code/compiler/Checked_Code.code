@@ -31,6 +31,9 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         }
         return false
     }
+    if other is Checked_Undefined_Type {
+        return true
+    }
     abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
 
@@ -252,6 +255,7 @@ struct Checked_Parameter_Symbol: Checked_Symbol {
 }
 
 struct Checked_Struct_Symbol: Checked_Symbol {
+    specialization_types: @Map[@String, @Checked_Named_Type]
     parsed_struct_statement: @Parsed_Struct_Statement
 }
 
