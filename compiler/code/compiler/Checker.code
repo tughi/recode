@@ -477,6 +477,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_literal_expression(parsed_expression.as(@Parsed_Literal_Expression), expected_type)
     } else if parsed_expression is Parsed_Logic_Not_Expression {
         checked_expression = self.check_logic_not_expression(parsed_expression.as(@Parsed_Logic_Not_Expression))
+    } else if parsed_expression is Parsed_Make_Expression {
+        checked_expression = self.check_make_expression(parsed_expression.as(@Parsed_Make_Expression))
     } else if parsed_expression is Parsed_Member_Access_Expression {
         checked_expression = self.check_member_access_expression(parsed_expression.as(@Parsed_Member_Access_Expression))
     } else if parsed_expression is Parsed_Modulo_Expression {
@@ -488,7 +490,7 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
     } else if parsed_expression is Parsed_Wrapped_Expression {
         checked_expression = self.check_expression(parsed_expression.as(@Parsed_Wrapped_Expression).expression, expected_type)
     } else {
-        abort("TODO: Check ".clone().append(parsed_expression.object_type.name))
+        abort(parsed_expression.location, "TODO: Check ".clone().append(parsed_expression.object_type.name))
     }
 
     if expected_type != null and not expected_type.accepts(checked_expression.type) {
@@ -764,6 +766,32 @@ func check_logic_not_expression(self: @Checker, parsed_expression: @Parsed_Logic
         type = self.bool_type
         expression = self.check_expression(parsed_expression.expression, self.bool_type)
     )
+}
+
+func check_make_expression(self: @Checker, parsed_expression: @Parsed_Make_Expression) -> @Checked_Expression {
+    let checked_type = self.convert_type(parsed_expression.type)
+    if checked_type is Checked_Struct_Type {
+        return self.check_make_struct_expression(parsed_expression, checked_type.as(@Checked_Struct_Type))
+    }
+    abort(parsed_expression.location, checked_type.object_type)
+}
+
+func check_make_struct_expression(self: @Checker, parsed_expression: @Parsed_Make_Expression, checked_struct_type: @Checked_Struct_Type) -> @Checked_Expression {
+    let checked_expression = make @Checked_Make_Expression(
+        location = parsed_expression.location
+        type = checked_struct_type
+    )
+
+    \ check init arguments
+    parsed_expression.init_arguments.for_each() {
+        abort(it.location, "TODO: Require argument name")
+        abort(it.location, "TODO: Find member type")
+        abort(it.location, "TODO: Check argument expression")
+        abort(it.location, "TODO: Check member type")
+        abort(it.location, "TODO: Create init argument")
+    }
+
+    return checked_expression
 }
 
 func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_Member_Access_Expression) -> @Checked_Expression {

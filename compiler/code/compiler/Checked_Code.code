@@ -342,6 +342,10 @@ struct Checked_Logic_Not_Expression: Checked_Expression {
     expression: @Checked_Expression
 }
 
+struct Checked_Make_Expression: Checked_Expression {
+    init_arguments = make List[@Checked_Call_Argument]()
+}
+
 struct Checked_Member_Access_Expression: Checked_Access_Expression {
     object_expression: @Checked_Expression
     struct_member: @Checked_Struct_Type_Member
