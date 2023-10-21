@@ -315,13 +315,27 @@ func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Str
     return checked_struct
 }
 
-func check_struct_symbol(self: @Checker, check_struct: @Checked_Struct_Symbol) -> Nothing {
-    let checked_struct_type = check_struct.type.as(@Checked_Struct_Type)
-    let parsed_struct_statement = check_struct.parsed_struct_statement
+func check_struct_symbol(self: @Checker, checked_struct_symbol: @Checked_Struct_Symbol) -> Nothing {
+    let checked_struct_type = checked_struct_symbol.type.as(@Checked_Struct_Type)
+    let parsed_struct_statement = checked_struct_symbol.parsed_struct_statement
 
-    \ check super
+    \ check super type
     if parsed_struct_statement.super_type != null {
-        abort(parsed_struct_statement.super_type.location, "TODO: check super type")
+        let checked_super_type = self.convert_type(parsed_struct_statement.super_type)
+        if checked_super_type is not Checked_Struct_Type {
+            abort(parsed_struct_statement.super_type.location, "Not a struct type")
+        }
+        let checked_super_type = checked_super_type.as(@Checked_Struct_Type)
+        if checked_super_type == checked_struct_type or checked_super_type.has_super_type(checked_struct_type) {
+            abort(parsed_struct_statement.super_type.location, "Type recursivity")
+        }
+
+        checked_super_type.super_type = checked_super_type
+        checked_super_type.super_type.derived_types.append(checked_struct_type)
+
+        if parsed_struct_statement.super_arguments != null {
+            abort(parsed_struct_statement.super_type.location, "TODO: Check super arguments")
+        }
     }
 
     \ check struct members
