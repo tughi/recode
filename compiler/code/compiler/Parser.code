@@ -411,6 +411,7 @@ func parse_external_function(self: @Parser) -> @Parsed_Function_Statement {
         location = function_name.location
         name = function_name
         type = make @Parsed_Function_Type(
+            location = function_name.location
             type_parameters = null
             parameters = function_signature.parameters
             return_type = function_signature.return_type
@@ -444,6 +445,7 @@ func parse_function(self: @Parser) -> @Parsed_Function_Statement {
         location = function_name.location
         name = function_name
         type = make @Parsed_Function_Type(
+            location = function_name.location
             type_parameters = function_type_parameters
             parameters = function_signature.parameters
             return_type = function_signature.return_type
@@ -470,6 +472,7 @@ func parse_anonymous_function(self: @Parser, function_name: @Identifier_Token) -
         location = function_name.location
         name = function_name
         type = make @Parsed_Function_Type(
+            location = function_name.location
             type_parameters = null
             parameters = function_signature.parameters
             return_type = function_signature.return_type

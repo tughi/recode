@@ -96,6 +96,23 @@ func find_symbol(self: @Checker_Context, name: @String) -> @Checked_Symbol {
     return null
 }
 
+func find_function_symbol(self: @Checker_Context, name: @String) -> @Checked_Function_Symbol {
+    \ search local symbols
+    self.symbols.for_each() {
+        if it is Checked_Function_Symbol and it.name.equals(name) {
+            return it.as(@Checked_Function_Symbol)
+        }
+    }
+
+    \ search parent symbols
+    if self.parent != null {
+        return self.parent.find_function_symbol(name)
+    }
+
+    \ not found
+    return null
+}
+
 func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
     \ create root statements
     parsed_code.statements.for_each() {
@@ -139,36 +156,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
 
 func check_function_statement(self: @Checker, parsed_function_statement: @Parsed_Function_Statement) -> @Checked_Function_Symbol {
     \ create function type
-    let checked_function_type = make @Checked_Function_Type(
-        name = "func (".clone()
-        return_type = self.convert_type(parsed_function_statement.type.return_type)
-    )
-    parsed_function_statement.type.parameters.for_each() {
-        let parsed_function_parameter = it
-
-        \ check parameter name
-        let checked_function_parameter_name = parsed_function_parameter.name.lexeme
-        checked_function_type.parameters.for_each() {
-            if it.name.equals(checked_function_parameter_name) {
-                abort(parsed_function_parameter.name.location, "Duplicate function parameter name")
-            }
-        }
-
-        \ create parameter
-        let checked_function_parameter = make @Checked_Function_Parameter(
-            location = parsed_function_parameter.location
-            name = checked_function_parameter_name
-            type = self.convert_type(parsed_function_parameter.type)
-        )
-        checked_function_type.parameters.append(checked_function_parameter)
-
-        \ add function parameter to function name
-        if checked_function_type.parameters.size > 1 {
-            checked_function_type.name.append(", ")
-        }
-        checked_function_type.name.append(checked_function_parameter.type.name)
-    }
-    checked_function_type.name.append(") -> ").append(checked_function_type.return_type.name)
+    let checked_function_type = self.convert_function_type(parsed_function_statement.type)
 
     \ check for duplicates
     self.checked_code.functions.for_each() {
@@ -235,7 +223,7 @@ func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Ch
     if parsed_statement is Parsed_Variable_Statement {
         return self.check_variable_statement(parsed_statement.as(@Parsed_Variable_Statement))
     }
-    abort("TODO: Check ".clone().append(parsed_statement.object_type.name))
+    abort(parsed_statement.location, parsed_statement.object_type)
 }
 
 func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_Statement) -> @Checked_Block_Statement {
@@ -408,6 +396,13 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
         if checked_type is Checked_Any_Type or checked_type is Checked_Nothing_Type {
             abort(parsed_statement.type.location, "Variable cannot have the ".clone().append(checked_type.name).append(" type"))
         }
+        if checked_type is Checked_Function_Type {
+            \ make function pointer type
+            checked_type = make @Checked_Pointer_Type(
+                name = "@(".clone().append(checked_type.name).append(')')
+                pointed_type = checked_type
+            )
+        }
     }
 
     \ check variable expression
@@ -484,6 +479,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
 }
 
 func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression) -> @Checked_Expression {
+    let parsed_callee_expression = parsed_expression.callee_expression
+
     \ check call arguments
     let checked_call_arguments = make @List[@Checked_Call_Argument]()
     parsed_expression.arguments.for_each() {
@@ -499,11 +496,55 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
         ))
     }
 
+    \ treat Parsed_Member_Access_Expression specially
+    if parsed_callee_expression is Parsed_Member_Access_Expression {
+        \ we have a foo.bar(...) call which needs special attention
+        let parsed_member_access_expression = parsed_callee_expression.as(@Parsed_Member_Access_Expression)
+        let parsed_member_name = parsed_member_access_expression.member_name.lexeme
+
+        \ check object expression
+        let checked_object_expression = self.check_expression(parsed_member_access_expression.object_expression, null)
+        let checked_object_type = checked_object_expression.type
+        if checked_object_type is Checked_Struct_Type {
+            let checked_object_type = checked_object_type.as(@Checked_Struct_Type)
+            let checked_struct_member = checked_object_type.get_member(parsed_member_name)
+            if checked_struct_member != null {
+                \ check if member is callable
+                abort(parsed_member_access_expression.member_name.location, "TODO: Check if member is callable")
+                abort(parsed_member_access_expression.member_name.location, "TODO: Check callable member accepts arguments")
+                abort(parsed_member_access_expression.member_name.location, "TODO: Create callable expression")
+            }
+
+            \ add object reference as first call argument
+            checked_call_arguments.prepend(make @Checked_Call_Argument(
+                location = checked_object_expression.location
+                name = null
+                expression = make @Checked_Reference_Expression( \ struct objects have always an address
+                    location = checked_object_expression.location
+                    type = make @Checked_Pointer_Type(
+                        name = "@".clone().append(checked_object_type.name)
+                        pointed_type = checked_object_type
+                    )
+                    object_expression = checked_object_expression
+                )
+            ))
+        } else {
+            \ add object as first call argument
+            checked_call_arguments.prepend(make @Checked_Call_Argument(
+                location = checked_object_expression.location
+                name = null
+                expression = checked_object_expression
+            ))
+        }
+
+        \ treat as uniform function call syntax
+        return self.check_function_call_expression(parsed_member_access_expression.member_name, checked_call_arguments)
+    }
+
     \ check callee expression
-    let parsed_callee_expression = parsed_expression.callee_expression
     let checked_callee_expression = self.check_expression(parsed_callee_expression, null)
     if checked_callee_expression is Checked_Symbol_Expression {
-        \ we have a `symbol(...)` call
+        \ we have a `baz(...)` call
         let checked_callee_expression = checked_callee_expression.as(@Checked_Symbol_Expression)
         let checked_symbol = checked_callee_expression.symbol
 
@@ -533,7 +574,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
             if parsed_callee_expression is not Parsed_Symbol_Expression {
                 abort(parsed_callee_expression.location, parsed_callee_expression.object_type)
             }
-            return self.check_function_call_expression(parsed_callee_expression.as(@Parsed_Symbol_Expression), checked_call_arguments)
+            return self.check_function_call_expression(parsed_callee_expression.as(@Parsed_Symbol_Expression).name, checked_call_arguments)
         }
 
         \ unsupported symbol
@@ -600,42 +641,138 @@ func check_function_expression(self: @Checker, parsed_expression: @Parsed_Functi
     )
 }
 
-func check_function_call_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
-    let function_name = parsed_expression.name.lexeme
+struct Callable_Match: Object {
+    function_type: @Checked_Function_Type
+}
 
-    \ search all functions and mark the matching ones
-    let function_symbol: @Checked_Function_Symbol = null
-    let function_matches = 0
+struct Checked_Function_Match: Callable_Match {
+    function_symbol: @Checked_Function_Symbol
+}
+
+struct Parsed_Generic_Function_Match: Callable_Match {
+    function_statement: @Parsed_Function_Statement
+    specialization_types: @Map[@String, @Checked_Type]
+}
+
+func check_function_call_expression(self: @Checker, function_name: @Identifier_Token, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
+    let callable_matches = make List[@Callable_Match]()
+
+    \ find all matching functions
     self.checked_code.functions.for_each() {
-        if function_name.equals(it.name) and it.function_type.accepts(checked_call_arguments) {
-            it._is_match = true
-            function_symbol = it
-            function_matches = function_matches + 1
-        } else {
-            it._is_match = false
+        if function_name.lexeme.equals(it.name) and it.function_type.accepts(checked_call_arguments) {
+            callable_matches.append(make @Checked_Function_Match(
+                function_type = it.function_type
+                function_symbol = it
+            ))
+        }
+    }
+    self.generic_function_statements.for_each() {
+        if function_name.lexeme.equals(it.name.lexeme) {
+            \ create function type
+            let specialized_function_type = self.specialize_function_type(it.type, checked_call_arguments)
+            if specialized_function_type != null and specialized_function_type.checked_function_type.accepts(checked_call_arguments) {
+                \ abort(function_name.location, "TODO: Check if generic funtion was already specialized")
+                callable_matches.append(make @Parsed_Generic_Function_Match(
+                    function_type = specialized_function_type.checked_function_type
+                    function_statement = it
+                    specialization_types = specialized_function_type.specialization_types
+                ))
+            }
         }
     }
 
-    if function_matches == 0 {
-        \ list all similar functions and report error
-        abort(parsed_expression.location, "TODO: List all similar functions")
+    if callable_matches.size == 0 {
+        \ list all named functions and report error
+        abort(function_name.location, "TODO: List all named functions")
     }
 
-    if function_matches > 1 {
-        abort(parsed_expression.location, "TODO: Pick best matching function")
+    if callable_matches.size > 1 {
+        abort(function_name.location, "TODO: Pick best matching function")
     }
 
-    \ validate match
-    if function_matches != 1 or function_symbol == null {
-        \ invalid state
-        abort()
+    let callable_match = callable_matches.first()
+    if callable_match is Checked_Function_Match {
+        let callable_match = callable_match.as(@Checked_Function_Match)
+        return make @Checked_Function_Call_Expression(
+            location = function_name.location
+            type = callable_match.function_symbol.function_type.return_type
+            call_arguments = checked_call_arguments
+            function_symbol = callable_match.function_symbol
+        )
+    }
+    if callable_match is Parsed_Generic_Function_Match {
+        let callable_match = callable_match.as(@Parsed_Generic_Function_Match)
+
+        let local_types = self.local_types
+        self.local_types = callable_match.specialization_types
+
+        let checked_function_symbol = self.check_function_statement(callable_match.function_statement)
+
+        self.local_types = local_types
+
+        return make @Checked_Function_Call_Expression(
+            location = function_name.location
+            type = checked_function_symbol.function_type.return_type
+            call_arguments = checked_call_arguments
+            function_symbol = checked_function_symbol
+        )
+    }
+    abort(function_name.location, callable_match.object_type)
+}
+
+struct Specialized_Function_Type {
+    checked_function_type: @Checked_Function_Type
+    specialization_types: @Map[@String, @Checked_Type]
+}
+
+func specialize_function_type(self: @Checker, parsed_function_type: @Parsed_Function_Type, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Specialized_Function_Type {
+    let local_types = self.local_types
+    self.local_types = make @Map[@String, @Checked_Type]()
+    parsed_function_type.type_parameters.for_each() {
+        self.local_types.put(it.name.lexeme, make @Checked_Placeholder_Type(
+            name = it.name.lexeme
+        ))
     }
 
-    return make @Checked_Function_Call_Expression(
-        location = parsed_expression.location
-        type = function_symbol.function_type.return_type
-        call_arguments = checked_call_arguments
-        function_symbol = function_symbol
+    \ check each argument
+    let parsed_parameter_item = parsed_function_type.parameters.first_item
+    let checked_argument_item = checked_call_arguments.first_item
+    while parsed_parameter_item != null and checked_argument_item != null {
+        let checked_parameter_type = self.convert_type(parsed_parameter_item.data.type)
+        if not checked_parameter_type.accepts(checked_argument_item.data.expression.type) {
+            self.local_types = local_types
+            return null
+        }
+        parsed_parameter_item = parsed_parameter_item.next_item
+        checked_argument_item = checked_argument_item.next_item
+    }
+
+    if checked_argument_item != null or parsed_parameter_item != null {
+        \ arguments number differs from parameters number 
+        self.local_types = local_types
+        return null
+    }
+
+    \ check placeholder types
+    self.local_types.for_each() {
+        if value is Checked_Placeholder_Type {
+            let checked_type = value.as(@Checked_Placeholder_Type)
+            if checked_type.solved_type == null {
+                abort(parsed_function_type.location, "TODO: Handle unsolved placeholder type")
+            }
+            \ replace placeholder type with solved type
+            self.local_types.put(key, checked_type.solved_type)
+        }
+    }
+    let specialization_types = self.local_types
+
+    \ create function type
+    let checked_function_type = self.convert_function_type(parsed_function_type)
+
+    self.local_types = local_types
+    return make @Specialized_Function_Type(
+        checked_function_type = checked_function_type
+        specialization_types = specialization_types
     )
 }
 
@@ -849,10 +986,6 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     if parsed_type is Parsed_Named_Type {
         return self.convert_named_type(parsed_type.as(@Parsed_Named_Type))
     }
-    \ if parsed_type is Parsed_Placeholder_Type {
-    \     let parsed_type = parsed_type.as(@Parsed_Placeholder_Type)
-    \     return make @Checked_Placeholder_Type(name = parsed_type.name, parsed_type = parsed_type)
-    \ }
     if parsed_type is Parsed_Pointer_Type {
         return self.convert_pointer_type(parsed_type.as(@Parsed_Pointer_Type))
     }
@@ -862,9 +995,11 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     abort("TODO: Convert ".clone().append(parsed_type.object_type.name))
 }
 
-func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -> @Checked_Type {
+func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -> @Checked_Function_Type {
     if parsed_type.type_parameters != null {
-        abort(parsed_type.location, "TODO: Handle type parameters")
+        if self.local_types == null {
+            abort(parsed_type.location, "TODO: Handle type parameters")
+        }
     }
 
     let checked_function_type = make @Checked_Function_Type(
@@ -873,44 +1008,42 @@ func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -
     )
     parsed_type.parameters.for_each() {
         let parsed_function_parameter = it
-        let checked_function_parameter_name = it.name.lexeme
+
+        \ check parameter name
+        let checked_function_parameter_name = parsed_function_parameter.name.lexeme
         checked_function_type.parameters.for_each() {
             if checked_function_parameter_name.equals(it.name) {
                 abort(parsed_function_parameter.name.location, "Duplicate function parameter name")
             }
         }
+
+        \ check parameter type
+        let checked_function_parameter_type = self.convert_type(parsed_function_parameter.type)
+        if checked_function_parameter_type is Checked_Function_Type {
+            checked_function_parameter_type = make @Checked_Pointer_Type(
+                name = "@(".clone().append(checked_function_parameter_type.name).append(')')
+                pointed_type = checked_function_parameter_type
+            )
+        }
+
+        \ create parameter
         checked_function_type.parameters.append(make @Checked_Function_Parameter(
             location = parsed_function_parameter.name.location
             name = checked_function_parameter_name
-            type = self.convert_type(parsed_function_parameter.type)
+            type = checked_function_parameter_type
         ))
+        if checked_function_type.parameters.size > 1 {
+            checked_function_type.name.append(", ")
+        }
+        checked_function_type.name.append(checked_function_parameter_type.name)
     }
     checked_function_type.name.append(") -> ").append(checked_function_type.return_type.name)
 
-    return make @Checked_Pointer_Type(
-        name = "@(".clone().append(checked_function_type.name).append(')')
-        pointed_type = checked_function_type
-    )
+    return checked_function_type
 }
 
 func convert_named_type(self: @Checker, parsed_type: @Parsed_Named_Type) -> @Checked_Type {
     let checked_type_name = parsed_type.name.lexeme
-
-    \ let context = self.context
-    \ while context != null {
-    \     if context.type_arguments != null {
-    \         for_each(context.type_arguments) {
-    \             let type_argument = it
-    \             if type_argument.name == null {
-    \                 abort("Invalid state")
-    \             }
-    \             if type_argument.name.equals(checked_type_name) {
-    \                 return self.convert_type(type_argument.type)
-    \             }
-    \         }
-    \     }
-    \     context = context.parent
-    \ }
 
     let checked_type = self.get_global_type(checked_type_name)
     if checked_type == null {
