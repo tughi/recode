@@ -10,7 +10,16 @@ struct Checked_Type: Object {
 }
 
 func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
-    if self == other {
+    if self == other or other is Checked_Undefined_Type {
+        return true
+    }
+    if self is Checked_Placeholder_Type {
+        let self = self.as(@Checked_Placeholder_Type)
+        if self.solved_type != null and self.solved_type != other {
+            \ impossible state
+            abort()
+        }
+        self.solved_type = other
         return true
     }
     if self is Checked_Pointer_Type {
@@ -28,19 +37,36 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
             if self_pointed_type is Checked_Struct_Type and other_pointed_type is Checked_Struct_Type {
                 return other_pointed_type.as(@Checked_Struct_Type).has_super_type(self_pointed_type.as(@Checked_Struct_Type))
             }
-            if self_pointed_type is Checked_Placeholder_Type {
-                let self_pointed_type = self_pointed_type.as(@Checked_Placeholder_Type)
-                if self_pointed_type.solved_type != null {
-                    abort("TODO: Check solved type")
+            if self_pointed_type is Checked_Specialized_Placeholder_Type and other_pointed_type is Checked_Struct_Type {
+                \ check if other_pointed_type is a derivate from the same generic struct as self_pointed_type
+                let placeholder_type = self_pointed_type.as(@Checked_Specialized_Placeholder_Type)
+                let struct_type = other_pointed_type.as(@Checked_Struct_Type)
+                loop {
+                    if struct_type is Checked_Specialized_Struct_Type {
+                        let struct_type = struct_type.as(@Checked_Specialized_Struct_Type)
+                        if struct_type.generic_struct_name == placeholder_type.generic_struct_name {
+                            \ found specialized type
+                            \ check if specialization types are compatible
+                            placeholder_type.specialization_types.for_each() {
+                                if not value.accepts(struct_type.specialization_types.get(key)) {
+                                    return false
+                                }
+                            }
+                            \ accepted
+                            return true
+                        }
+                    }
+                    struct_type = struct_type.super_type
+                    if struct_type == null {
+                        return false
+                    }
                 }
-                self_pointed_type.solved_type = other_pointed_type
-                return true
+            }
+            if self_pointed_type is Checked_Placeholder_Type {
+                return self_pointed_type.accepts(other_pointed_type)
             }
         }
         return false
-    }
-    if other is Checked_Undefined_Type {
-        return true
     }
     abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
@@ -177,8 +203,18 @@ struct Checked_Placeholder_Type: Checked_Named_Type {
     solved_type: @Checked_Type = null
 }
 
+struct Checked_Specialized_Placeholder_Type: Checked_Named_Type {
+    generic_struct_name: @String
+    specialization_types: @Map[@String, @Checked_Type] \ contains at least one Checked_Placeholder_Type
+}
+
 struct Checked_Pointer_Type: Checked_Type {
     pointed_type: @Checked_Type
+}
+
+struct Checked_Specialized_Struct_Type: Checked_Struct_Type {
+    generic_struct_name: @String
+    specialization_types: @Map[@String, @Checked_Type]
 }
 
 struct Checked_Struct_Type: Checked_Named_Type {

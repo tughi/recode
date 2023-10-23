@@ -302,9 +302,19 @@ func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Str
     }
 
     \ create struct type
-    let checked_struct_type = make @Checked_Struct_Type(
-        name = checked_struct_name
-    )
+    let checked_struct_type: @Checked_Struct_Type
+    if specialization_types != null {
+        checked_struct_type = make @Checked_Specialized_Struct_Type(
+            name = checked_struct_name
+            generic_struct_name = parsed_struct_statement.name.lexeme
+            specialization_types = specialization_types
+        )
+    } else {
+        checked_struct_type = make @Checked_Struct_Type(
+            name = checked_struct_name
+        )
+    }
+
     self.put_global_type(checked_struct_type)
 
     \ create struct symbol
@@ -1089,6 +1099,7 @@ func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_S
     }
 
     \ create type name
+    let has_placeholder_specialization_type = false
     let specialization_types = make @Map[@String, @Checked_Named_Type]()
     let checked_type_name = parsed_specialized_type.name.lexeme.clone().append('[')
     let parsed_type_parameter_item = parsed_generic_struct_statement.type_parameters.first_item
@@ -1096,6 +1107,9 @@ func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_S
     while parsed_type_parameter_item != null and parsed_type_argument_item != null {
         let checked_type_argument = self.convert_type(parsed_type_argument_item.data.type)
         specialization_types.put(parsed_type_parameter_item.data.name.lexeme, checked_type_argument)
+        if checked_type_argument is Checked_Placeholder_Type {
+            has_placeholder_specialization_type = true
+        }
         checked_type_name.append(checked_type_argument.name)
         parsed_type_parameter_item = parsed_type_parameter_item.next_item
         parsed_type_argument_item = parsed_type_argument_item.next_item
@@ -1104,6 +1118,15 @@ func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_S
         }
     }
     checked_type_name.append(']')
+
+    \ check if we have a placeholder type
+    if has_placeholder_specialization_type {
+        return make @Checked_Specialized_Placeholder_Type(
+            name = checked_type_name
+            generic_struct_name = parsed_generic_struct_statement.name.lexeme
+            specialization_types = specialization_types
+        )
+    }
 
     \ check if type already exists
     let checked_type = self.get_global_type(checked_type_name)
