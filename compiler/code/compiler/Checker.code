@@ -214,6 +214,9 @@ func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Ch
     if parsed_statement is Parsed_Block_Statement {
         return self.check_block_statement(parsed_statement.as(@Parsed_Block_Statement))
     }
+    if parsed_statement is Parsed_Expression_Statement {
+        return self.check_expression_statement(parsed_statement.as(@Parsed_Expression_Statement))
+    }
     if parsed_statement is Parsed_If_Statement {
         return self.check_if_statement(parsed_statement.as(@Parsed_If_Statement))
     }
@@ -245,6 +248,17 @@ func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_State
     self.current_context = self.current_context.parent
 
     return checked_statement
+}
+
+func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expression_Statement) -> @Checked_Statement {
+    let checked_expression = self.check_expression(parsed_statement.expression, null)
+    if checked_expression.type is not Checked_Nothing_Type {
+        abort(checked_expression.location, "TODO: Warn about unhandled expression value")
+    }
+    return make @Checked_Expression_Statement(
+        location = parsed_statement.location
+        expression = checked_expression
+    )
 }
 
 func check_if_statement(self: @Checker, parsed_statement: @Parsed_If_Statement) -> @Checked_Statement {
