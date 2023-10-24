@@ -211,6 +211,9 @@ func check_function_symbol(self: @Checker, checked_function: @Checked_Function_S
 }
 
 func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Checked_Statement {
+    if parsed_statement is Parsed_Assignment_Statement {
+        return self.check_assignment_statement(parsed_statement.as(@Parsed_Assignment_Statement))
+    }
     if parsed_statement is Parsed_Block_Statement {
         return self.check_block_statement(parsed_statement.as(@Parsed_Block_Statement))
     }
@@ -227,6 +230,21 @@ func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Ch
         return self.check_variable_statement(parsed_statement.as(@Parsed_Variable_Statement))
     }
     abort(parsed_statement.location, parsed_statement.object_type)
+}
+
+func check_assignment_statement(self: @Checker, parsed_statement: @Parsed_Assignment_Statement) -> @Checked_Statement {
+    let checked_destination_expression = self.check_expression(parsed_statement.storage_expression, null)
+    if checked_destination_expression.type is Checked_Struct_Type {
+        abort(parsed_statement.location, "Struct assignement is currently not supported")
+    }
+    if checked_destination_expression is Checked_Member_Access_Expression {
+        return make @Checked_Assignment_Statement(
+            location = parsed_statement.location
+            destination_expression = checked_destination_expression
+            value_expression = self.check_expression(parsed_statement.value_expression, checked_destination_expression.type)
+        )
+    }
+    abort(checked_destination_expression.location, checked_destination_expression.object_type)
 }
 
 func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_Statement) -> @Checked_Block_Statement {

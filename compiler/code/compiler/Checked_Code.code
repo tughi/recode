@@ -312,6 +312,11 @@ struct Checked_Statement: Object {
     location: @Source_Location
 }
 
+struct Checked_Assignment_Statement: Checked_Statement {
+    destination_expression: @Checked_Expression
+    value_expression: @Checked_Expression
+}
+
 struct Checked_Block_Statement: Checked_Statement {
     statements = make List[@Checked_Statement]()
 }
