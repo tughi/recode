@@ -298,6 +298,10 @@ struct Checked_Function_Symbol: Checked_Symbol {
     parsed_function_statement: @Parsed_Function_Statement
 }
 
+struct Checked_Macro_Symbol: Checked_Symbol {
+    parsed_macro_statement: @Parsed_Macro_Statement
+}
+
 struct Checked_Parameter_Symbol: Checked_Symbol {
 }
 

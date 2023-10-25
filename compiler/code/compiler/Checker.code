@@ -44,6 +44,7 @@ struct Checker {
 
     generic_struct_statements = make Map[@String, @Parsed_Generic_Struct_Statement]()
     generic_function_statements = make List[@Parsed_Function_Statement]()
+    macro_statements = make List[@Parsed_Macro_Statement]()
 
     bool_type: @Checked_Type = undefined
     i16_type: @Checked_Type = undefined
@@ -131,6 +132,15 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             } else {
                 self.check_function_statement(parsed_function_statement)
             }
+        } else if it is Parsed_Macro_Statement {
+            let parsed_macro_statement = it.as(@Parsed_Macro_Statement)
+            self.macro_statements.append(parsed_macro_statement)
+            self.root_context.symbols.append(make @Checked_Macro_Symbol(
+                location = parsed_macro_statement.location
+                name = parsed_macro_statement.name.lexeme
+                type = self.nothing_type
+                parsed_macro_statement = parsed_macro_statement
+            ))
         } else if it is Parsed_Struct_Statement {
             self.check_struct_statement(it.as(@Parsed_Struct_Statement))
         } else if it is Parsed_Variable_Statement {
