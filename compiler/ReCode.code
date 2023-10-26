@@ -232,7 +232,7 @@ func write_source_line(file: @FILE, location: @Source_Location, alignment: i64) 
     return file
 }
 
-func write(file: @FILE, parameter: @Parsed_Parameter) -> @FILE {
+func write(file: @FILE, parameter: @Parsed_Callable_Parameter) -> @FILE {
     return file.write(parameter.name).write(": ").write(parameter.type)
 }
 

@@ -485,7 +485,7 @@ func parse_anonymous_function(self: @Parser, function_name: @Identifier_Token) -
 }
 
 struct Parsed_Function_Signature {
-    parameters: @List[@Parsed_Parameter]
+    parameters: @List[@Parsed_Callable_Parameter]
     return_type: @Parsed_Type
 }
 
@@ -516,8 +516,8 @@ func parse_function_type(self: @Parser) -> @Parsed_Function_Type {
 
 \ parameters
 \   | "(" ( parameter ( "," parameter )* )? ")"
-func parse_parameters(self: @Parser) -> @List[@Parsed_Parameter] {
-    let parameters = make @List[@Parsed_Parameter]()
+func parse_parameters(self: @Parser) -> @List[@Parsed_Callable_Parameter] {
+    let parameters = make @List[@Parsed_Callable_Parameter]()
     self.consume(required_open_paren)
     self.consume_space(0)
     if not self.matches(required_close_paren) {
@@ -535,13 +535,13 @@ func parse_parameters(self: @Parser) -> @List[@Parsed_Parameter] {
 
 \ parameter
 \   | IDENTIFIER ":" type
-func parse_parameter(self: @Parser) -> @Parsed_Parameter {
+func parse_parameter(self: @Parser) -> @Parsed_Callable_Parameter {
     let parameter_name = self.consume(required_identifier).as(@Identifier_Token)
     self.consume_space(0)
     self.consume(required_colon)
     self.consume_space(1)
     let parameter_type = self.parse_type()
-    return make @Parsed_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
+    return make @Parsed_Callable_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
 }
 
 \ macro

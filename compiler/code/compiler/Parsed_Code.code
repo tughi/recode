@@ -231,18 +231,19 @@ struct Parsed_Array_Type: Parsed_Type {
     is_checked: bool
 }
 
-struct Parsed_Function_Type: Parsed_Type {
+struct Parsed_Callable_Type: Parsed_Type {
     type_parameters: @List[@Parsed_Type_Parameter]
-    parameters: @List[@Parsed_Parameter]
+    parameters: @List[@Parsed_Callable_Parameter]
+}
+
+struct Parsed_Function_Type: Parsed_Callable_Type {
     return_type: @Parsed_Type
 }
 
-struct Parsed_Macro_Type: Parsed_Type {
-    type_parameters: @List[@Parsed_Type_Parameter]
-    parameters: @List[@Parsed_Parameter]
+struct Parsed_Macro_Type: Parsed_Callable_Type {
 }
 
-struct Parsed_Parameter {
+struct Parsed_Callable_Parameter {
     location: @Source_Location
     name: @Identifier_Token
     type: @Parsed_Type

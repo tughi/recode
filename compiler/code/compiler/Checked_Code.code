@@ -110,23 +110,17 @@ struct Checked_Bool_Type: Checked_Builtin_Type(name = "bool") {
 struct Checked_Builtin_Type: Checked_Named_Type {
 }
 
-struct Checked_Fixed_Array_Type: Checked_Type {
-    item_type: @Checked_Type
-    size: u64
+struct Checked_Callable_Type: Checked_Type {
+    parameters = make List[@Checked_Callable_Parameter]()
 }
 
-struct Checked_Function_Type: Checked_Type {
-    parameters = make List[@Checked_Function_Parameter]()
-    return_type: @Checked_Type
-}
-
-struct Checked_Function_Parameter {
+struct Checked_Callable_Parameter {
     location: @Source_Location
     name: @String
     type: @Checked_Type
 }
 
-func accepts(self: @Checked_Function_Type, call_arguments: @List[@Checked_Call_Argument]) -> bool {
+func accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_Argument]) -> bool {
     \ Check each argument
     let parameter_item = self.parameters.first_item
     let argument_item = call_arguments.first_item
@@ -146,7 +140,7 @@ func accepts(self: @Checked_Function_Type, call_arguments: @List[@Checked_Call_A
     return true
 }
 
-func accepts(self: @Checked_Function_Type, other_parameters: @List[@Checked_Function_Parameter]) -> bool {
+func accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Callable_Parameter]) -> bool {
     \ Check each argument
     let self_parameter_item = self.parameters.first_item
     let other_parameter_item = other_parameters.first_item
@@ -164,6 +158,15 @@ func accepts(self: @Checked_Function_Type, other_parameters: @List[@Checked_Func
     }
 
     return true
+}
+
+struct Checked_Fixed_Array_Type: Checked_Type {
+    item_type: @Checked_Type
+    size: u64
+}
+
+struct Checked_Function_Type: Checked_Callable_Type {
+    return_type: @Checked_Type
 }
 
 struct Checked_Int_Type: Checked_Integer_Type {
@@ -185,6 +188,9 @@ struct Checked_Int64_Type: Checked_Int_Type(name = "i64") {
 }
 
 struct Checked_Int8_Type: Checked_Int_Type(name = "i8") {
+}
+
+struct Checked_Macro_Type: Checked_Callable_Type {
 }
 
 struct Checked_Named_Type: Checked_Type {
@@ -398,6 +404,10 @@ struct Checked_Literal_Expression: Checked_Expression {
 
 struct Checked_Logic_Not_Expression: Checked_Expression {
     expression: @Checked_Expression
+}
+
+struct Checked_Macro_Body: Checked_Expression {
+    parsed_statement: @Parsed_Block_Statement
 }
 
 struct Checked_Make_Expression: Checked_Expression {

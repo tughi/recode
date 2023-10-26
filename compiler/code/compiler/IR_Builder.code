@@ -856,10 +856,10 @@ func convert_type(self: @IR_Type) -> @Parsed_Type {
     }
     if self is IR_Function_Type {
         let self = self.as(@IR_Function_Type)
-        let function_parameters = make @List[@Parsed_Parameter]()
+        let function_parameters = make @List[@Parsed_Callable_Parameter]()
         self.parameters.for_each_list_item() {
             let parameter = list_item.data
-            function_parameters.append(make @Parsed_Parameter(
+            function_parameters.append(make @Parsed_Callable_Parameter(
                 location = parameter.location
                 name = make @Identifier_Token(location = parameter.location, lexeme = parameter.name)
                 type = parameter.type.convert_type()
@@ -882,10 +882,10 @@ func convert_type(self: @IR_Type) -> @Parsed_Type {
     }
     if self is IR_Macro_Type {
         let self = self.as(@IR_Macro_Type)
-        let macro_parameters = make @List[@Parsed_Parameter]()
+        let macro_parameters = make @List[@Parsed_Callable_Parameter]()
         self.parameters.for_each_list_item() {
             let parameter = list_item.data
-            macro_parameters.append(make @Parsed_Parameter(
+            macro_parameters.append(make @Parsed_Callable_Parameter(
                 location = parameter.location
                 name = make @Identifier_Token(location = parameter.location, lexeme = parameter.name)
                 type = parameter.type.convert_type()
@@ -1825,7 +1825,7 @@ macro with_context_type_arguments(self: @IR_Builder, type_arguments: @List[@Pars
     self.context = local_context.parent
 }
 
-func specialize(self: @IR_Builder, callable_type_parameters: @List[@Parsed_Type_Parameter], callable_parameters: @List[@Parsed_Parameter], call_arguments: @List[@IR_Call_Argument]) -> @List[@Parsed_Type_Argument] {
+func specialize(self: @IR_Builder, callable_type_parameters: @List[@Parsed_Type_Parameter], callable_parameters: @List[@Parsed_Callable_Parameter], call_arguments: @List[@IR_Call_Argument]) -> @List[@Parsed_Type_Argument] {
     let context_type_arguments = make @List[@Parsed_Type_Argument]()
     callable_type_parameters.for_each_list_item() {
         let callable_type_parameter = list_item.data
