@@ -68,6 +68,9 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         }
         return false
     }
+    if self is Checked_Macro_Type and other is Checked_Macro_Body_Type {
+        return true
+    }
     abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
 
@@ -191,6 +194,9 @@ struct Checked_Int8_Type: Checked_Int_Type(name = "i8") {
 }
 
 struct Checked_Macro_Type: Checked_Callable_Type {
+}
+
+struct Checked_Macro_Body_Type: Checked_Type {
 }
 
 struct Checked_Named_Type: Checked_Type {

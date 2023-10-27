@@ -283,6 +283,9 @@ func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expres
     if checked_expression.type is not Checked_Nothing_Type {
         abort(checked_expression.location, "TODO: Warn about unhandled expression value")
     }
+    if checked_expression is Checked_Macro_Call_Expression {
+        abort(parsed_statement.location, "TODO: Inline macro call")
+    }
     return make @Checked_Expression_Statement(
         location = parsed_statement.location
         expression = checked_expression
@@ -696,7 +699,7 @@ func check_function_expression(self: @Checker, parsed_expression: @Parsed_Functi
 }
 
 struct Callable_Match: Object {
-    function_type: @Checked_Function_Type
+    callable_type: @Checked_Callable_Type
 }
 
 struct Checked_Function_Match: Callable_Match {
@@ -708,6 +711,11 @@ struct Parsed_Generic_Function_Match: Callable_Match {
     specialization_types: @Map[@String, @Checked_Type]
 }
 
+struct Parsed_Macro_Match: Callable_Match {
+    macro_statement: @Parsed_Macro_Statement
+    specialization_types: @Map[@String, @Checked_Type]
+}
+
 func check_callable_call_expression(self: @Checker, callable_name: @Identifier_Token, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
     let callable_matches = make List[@Callable_Match]()
 
@@ -715,7 +723,7 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
     self.checked_code.functions.for_each() {
         if callable_name.lexeme.equals(it.name) and it.function_type.accepts(checked_call_arguments) {
             callable_matches.append(make @Checked_Function_Match(
-                function_type = it.function_type
+                callable_type = it.function_type
                 function_symbol = it
             ))
         }
@@ -724,11 +732,11 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
     self.generic_function_statements.for_each() {
         if callable_name.lexeme.equals(it.name.lexeme) {
             \ create function type
-            let specialized_function_type = self.specialize_function_type(it.type, checked_call_arguments)
-            if specialized_function_type != null and specialized_function_type.checked_function_type.accepts(checked_call_arguments) {
+            let specialized_function_type = self.specialize_callable_type(it.type, checked_call_arguments)
+            if specialized_function_type != null and specialized_function_type.checked_callable_type.accepts(checked_call_arguments) {
                 \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
                 callable_matches.append(make @Parsed_Generic_Function_Match(
-                    function_type = specialized_function_type.checked_function_type
+                    callable_type = specialized_function_type.checked_callable_type
                     function_statement = it
                     specialization_types = specialized_function_type.specialization_types
                 ))
@@ -739,16 +747,15 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
     self.macro_statements.for_each() {
         if callable_name.lexeme.equals(it.name.lexeme) {
             \ create function type
-            \ let specialized_function_type = self.specialize_function_type(it.type, checked_call_arguments)
-            \ if specialized_function_type != null and specialized_function_type.checked_function_type.accepts(checked_call_arguments) {
-            \     \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
-            \     callable_matches.append(make @Parsed_Generic_Function_Match(
-            \         function_type = specialized_function_type.checked_function_type
-            \         function_statement = it
-            \         specialization_types = specialized_function_type.specialization_types
-            \     ))
-            \ }
-            abort(it.location, "TODO: Create specialized function type")
+            let specialized_macro_type = self.specialize_callable_type(it.type, checked_call_arguments)
+            if specialized_macro_type != null and specialized_macro_type.checked_callable_type.accepts(checked_call_arguments) {
+                \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
+                callable_matches.append(make @Parsed_Macro_Match(
+                    callable_type = specialized_macro_type.checked_callable_type
+                    macro_statement = it
+                    specialization_types = specialized_macro_type.specialization_types
+                ))
+            }
         }
     }
 
@@ -788,25 +795,42 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
             function_symbol = checked_function_symbol
         )
     }
+    if callable_match is Parsed_Macro_Match {
+        let callable_match = callable_match.as(@Parsed_Macro_Match)
+        \ return macro expression to be inlined at the statement level
+        return make @Checked_Macro_Call_Expression(
+            location = callable_name.location
+            type = self.nothing_type
+            parsed_macro_statement = callable_match.macro_statement
+            specialization_types = callable_match.specialization_types
+            call_arguments = checked_call_arguments
+        )
+    }
     abort(callable_name.location, callable_match.object_type)
 }
 
-struct Specialized_Function_Type {
-    checked_function_type: @Checked_Function_Type
+struct Checked_Macro_Call_Expression: Checked_Expression {
+    parsed_macro_statement: @Parsed_Macro_Statement
+    specialization_types: @Map[@String, @Checked_Type]
+    call_arguments: @List[@Checked_Call_Argument]
+}
+
+struct Specialized_Callable_Type {
+    checked_callable_type: @Checked_Callable_Type
     specialization_types: @Map[@String, @Checked_Type]
 }
 
-func specialize_function_type(self: @Checker, parsed_function_type: @Parsed_Function_Type, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Specialized_Function_Type {
+func specialize_callable_type(self: @Checker, parsed_callable_type: @Parsed_Callable_Type, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Specialized_Callable_Type {
     let local_types = self.local_types
     self.local_types = make @Map[@String, @Checked_Type]()
-    parsed_function_type.type_parameters.for_each() {
+    parsed_callable_type.type_parameters.for_each() {
         self.local_types.put(it.name.lexeme, make @Checked_Placeholder_Type(
             name = it.name.lexeme
         ))
     }
 
-    \ check each argument
-    let parsed_parameter_item = parsed_function_type.parameters.first_item
+    \ check if callable parameters accept call arguments
+    let parsed_parameter_item = parsed_callable_type.parameters.first_item
     let checked_argument_item = checked_call_arguments.first_item
     while parsed_parameter_item != null and checked_argument_item != null {
         let checked_parameter_type = self.convert_type(parsed_parameter_item.data.type)
@@ -829,7 +853,7 @@ func specialize_function_type(self: @Checker, parsed_function_type: @Parsed_Func
         if value is Checked_Placeholder_Type {
             let checked_type = value.as(@Checked_Placeholder_Type)
             if checked_type.solved_type == null {
-                abort(parsed_function_type.location, "TODO: Handle unsolved placeholder type")
+                abort(parsed_callable_type.location, "TODO: Handle unsolved placeholder type")
             }
             \ replace placeholder type with solved type
             self.local_types.put(key, checked_type.solved_type)
@@ -837,12 +861,15 @@ func specialize_function_type(self: @Checker, parsed_function_type: @Parsed_Func
     }
     let specialization_types = self.local_types
 
-    \ create function type
-    let checked_function_type = self.convert_function_type(parsed_function_type)
+    \ create callable type
+    let checked_callable_type = self.convert_type(parsed_callable_type)
+    if checked_callable_type is not Checked_Callable_Type {
+        abort(parsed_callable_type.location, checked_callable_type.object_type)
+    }
 
     self.local_types = local_types
-    return make @Specialized_Function_Type(
-        checked_function_type = checked_function_type
+    return make @Specialized_Callable_Type(
+        checked_callable_type = checked_callable_type.as(@Checked_Callable_Type)
         specialization_types = specialization_types
     )
 }
@@ -962,7 +989,7 @@ func check_logic_not_expression(self: @Checker, parsed_expression: @Parsed_Logic
 func check_macro_body(self: @Checker, parsed_macro_body: @Parsed_Macro_Body) -> @Checked_Expression {
     return make @Checked_Macro_Body(
         location = parsed_macro_body.location
-        type = self.nothing_type
+        type = make @Checked_Macro_Body_Type(name = "__macro__")
         parsed_statement = parsed_macro_body.statement
     )
 }
@@ -1059,9 +1086,9 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     if parsed_type is Parsed_Function_Type {
         return self.convert_function_type(parsed_type.as(@Parsed_Function_Type))
     }
-    \ if parsed_type is Parsed_Macro_Type {
-    \     return self.convert_macro_type(parsed_type.as(@Parsed_Macro_Type))
-    \ }
+    if parsed_type is Parsed_Macro_Type {
+        return self.convert_macro_type(parsed_type.as(@Parsed_Macro_Type))
+    }
     if parsed_type is Parsed_Named_Type {
         return self.convert_named_type(parsed_type.as(@Parsed_Named_Type))
     }
@@ -1071,7 +1098,7 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     if parsed_type is Parsed_Specialized_Type {
         return self.convert_specialized_type(parsed_type.as(@Parsed_Specialized_Type))
     }
-    abort("TODO: Convert ".clone().append(parsed_type.object_type.name))
+    abort(parsed_type.location, "TODO: Convert ".clone().append(parsed_type.object_type.name))
 }
 
 func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -> @Checked_Function_Type {
