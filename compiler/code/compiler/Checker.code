@@ -117,13 +117,8 @@ func find_function_symbol(self: @Checker_Context, name: @String) -> @Checked_Fun
 func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
     \ create root statements
     parsed_code.statements.for_each() {
-        if it is Parsed_Generic_Struct_Statement {
-            \ generic structs are checked only during specialization
-            let parsed_generic_struct_statement = it.as(@Parsed_Generic_Struct_Statement)
-            if self.generic_struct_statements.has(parsed_generic_struct_statement.name.lexeme) {
-                abort(it.location, "TODO: Report duplicate generic type error")
-            }
-            self.generic_struct_statements.put(parsed_generic_struct_statement.name.lexeme, parsed_generic_struct_statement)
+        if it is Parsed_External_Type_Statement {
+            self.check_external_type_statement(it.as(@Parsed_External_Type_Statement))
         } else if it is Parsed_Function_Statement {
             let parsed_function_statement = it.as(@Parsed_Function_Statement)
             if parsed_function_statement.type.type_parameters != null {
@@ -132,6 +127,13 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             } else {
                 self.check_function_statement(parsed_function_statement)
             }
+        } else if it is Parsed_Generic_Struct_Statement {
+            \ generic structs are checked only during specialization
+            let parsed_generic_struct_statement = it.as(@Parsed_Generic_Struct_Statement)
+            if self.generic_struct_statements.has(parsed_generic_struct_statement.name.lexeme) {
+                abort(it.location, "TODO: Report duplicate generic type error")
+            }
+            self.generic_struct_statements.put(parsed_generic_struct_statement.name.lexeme, parsed_generic_struct_statement)
         } else if it is Parsed_Macro_Statement {
             let parsed_macro_statement = it.as(@Parsed_Macro_Statement)
             self.macro_statements.append(parsed_macro_statement)
@@ -292,6 +294,36 @@ func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_State
     return checked_statement
 }
 
+func check_external_type_statement(self: @Checker, parsed_statement: @Parsed_External_Type_Statement) -> @Checked_Opaque_Type_Symbol {
+    let checked_opaque_type_name = parsed_statement.name.lexeme
+
+    \ check for uniqueness
+    let checked_symbol = self.checked_code.globals.get(checked_opaque_type_name)
+    if checked_symbol != null {
+        if checked_symbol.location != parsed_statement.name.location or checked_symbol is not Checked_Opaque_Type_Symbol {
+            abort(parsed_statement.location, clone("Duplicate declaration: ").append(checked_opaque_type_name))
+        }
+        return checked_symbol.as(@Checked_Opaque_Type_Symbol)
+    }
+
+    \ create opaque type
+    let checked_opaque_type = make @Checked_Opaque_Type(
+        name = checked_opaque_type_name
+    )
+    self.put_global_type(checked_opaque_type)
+
+    \ create opaque type symbol
+    let checked_opaque_type_symbol = make @Checked_Opaque_Type_Symbol(
+        location = parsed_statement.name.location
+        name = checked_opaque_type_name
+        type = checked_opaque_type
+    )
+    self.checked_code.globals.put(checked_opaque_type_name, checked_opaque_type_symbol)
+    self.root_context.symbols.append(checked_opaque_type_symbol)
+
+    return checked_opaque_type_symbol
+}
+
 func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expression_Statement) -> @Checked_Statement {
     let checked_expression = self.check_expression(parsed_statement.expression, null)
     if checked_expression.type is not Checked_Nothing_Type {
@@ -332,18 +364,18 @@ func check_return_statement(self: @Checker, parsed_statement: @Parsed_Return_Sta
     )
 }
 
-func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement) -> @Checked_Struct_Symbol {
+func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement) -> @Checked_Struct_Type_Symbol {
     return self.check_struct_statement(parsed_struct_statement, parsed_struct_statement.name.lexeme, null)
 }
 
-func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement, checked_struct_name: @String, specialization_types: @Map[@String, @Checked_Named_Type]) -> @Checked_Struct_Symbol {
+func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement, checked_struct_name: @String, specialization_types: @Map[@String, @Checked_Named_Type]) -> @Checked_Struct_Type_Symbol {
     \ check for uniqueness
     let checked_symbol = self.checked_code.globals.get(checked_struct_name)
     if checked_symbol != null {
-        if checked_symbol is not Checked_Struct_Symbol {
+        if checked_symbol is not Checked_Struct_Type_Symbol {
             abort(parsed_struct_statement.location, clone("Duplicate declaration: ").append(checked_struct_name))
         }
-        return checked_symbol.as(@Checked_Struct_Symbol)
+        return checked_symbol.as(@Checked_Struct_Type_Symbol)
     }
 
     \ create struct type
@@ -363,7 +395,7 @@ func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Str
     self.put_global_type(checked_struct_type)
 
     \ create struct symbol
-    let checked_struct_symbol = make @Checked_Struct_Symbol(
+    let checked_struct_symbol = make @Checked_Struct_Type_Symbol(
         location = parsed_struct_statement.name.location
         name = checked_struct_name
         type = checked_struct_type

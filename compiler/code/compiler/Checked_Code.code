@@ -319,10 +319,16 @@ struct Checked_Macro_Parameter_Symbol: Checked_Symbol {
     parsed_macro_body: @Parsed_Statement
 }
 
+struct Checked_Opaque_Type_Symbol: Checked_Type_Symbol {
+}
+
 struct Checked_Parameter_Symbol: Checked_Symbol {
 }
 
-struct Checked_Struct_Symbol: Checked_Symbol {
+struct Checked_Type_Symbol: Checked_Symbol {
+}
+
+struct Checked_Struct_Type_Symbol: Checked_Type_Symbol {
 }
 
 struct Checked_Variable_Symbol: Checked_Symbol {
