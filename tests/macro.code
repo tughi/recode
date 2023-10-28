@@ -13,8 +13,8 @@ func yes() -> bool {
     return true
 }
 
-macro say_hi() {
-    fputs("Hi!\n".data, stdout)
+macro say_hi(step: i32) {
+    let _ = fputs("Hi!\n".data, stdout)
 }
 
 func main() -> i32 {

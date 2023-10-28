@@ -13,6 +13,14 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
     if self == other or other is Checked_Undefined_Type {
         return true
     }
+    if self is Checked_Macro_Type {
+        if other is Checked_Lazy_Macro_Type {
+            return true
+        }
+        if other is Checked_Macro_Type {
+            return self.as(@Checked_Macro_Type).accepts(other.as(@Checked_Macro_Type).parameters)
+        }
+    }
     if self is Checked_Placeholder_Type {
         let self = self.as(@Checked_Placeholder_Type)
         if self.solved_type != null and self.solved_type != other {
@@ -67,9 +75,6 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
             }
         }
         return false
-    }
-    if self is Checked_Macro_Type and other is Checked_Macro_Body_Type {
-        return true
     }
     abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
@@ -193,10 +198,10 @@ struct Checked_Int64_Type: Checked_Int_Type(name = "i64") {
 struct Checked_Int8_Type: Checked_Int_Type(name = "i8") {
 }
 
-struct Checked_Macro_Type: Checked_Callable_Type {
+struct Checked_Lazy_Macro_Type: Checked_Type(name = "macro (...)") {
 }
 
-struct Checked_Macro_Body_Type: Checked_Type {
+struct Checked_Macro_Type: Checked_Callable_Type {
 }
 
 struct Checked_Named_Type: Checked_Type {

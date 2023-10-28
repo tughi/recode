@@ -140,7 +140,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             self.root_context.symbols.append(make @Checked_Macro_Symbol(
                 location = parsed_macro_statement.location
                 name = parsed_macro_statement.name.lexeme
-                type = self.nothing_type
+                type = make @Checked_Lazy_Macro_Type()
                 parsed_macro_statement = parsed_macro_statement
             ))
         } else if it is Parsed_Struct_Statement {
@@ -639,10 +639,11 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
                 }
             }
         }
+        let checked_call_argument_expression = self.check_expression(parsed_call_argument.value_expression, null)
         checked_call_arguments.append(make @Checked_Call_Argument(
             location = parsed_call_argument.location
             name = checked_call_argument_name
-            expression = self.check_expression(parsed_call_argument.value_expression, null)
+            expression = checked_call_argument_expression
         ))
     }
 
@@ -851,7 +852,7 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
     \ find all matching macros
     self.macro_statements.for_each() {
         if callable_name.lexeme.equals(it.name.lexeme) {
-            \ create function type
+            \ create macro type
             let specialized_macro_type = self.specialize_callable_type(it.type, checked_call_arguments)
             if specialized_macro_type != null and specialized_macro_type.checked_callable_type.accepts(checked_call_arguments) {
                 \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
@@ -930,10 +931,12 @@ struct Specialized_Callable_Type {
 func specialize_callable_type(self: @Checker, parsed_callable_type: @Parsed_Callable_Type, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Specialized_Callable_Type {
     let local_types = self.local_types
     self.local_types = make @Map[@String, @Checked_Type]()
-    parsed_callable_type.type_parameters.for_each() {
-        self.local_types.put(it.name.lexeme, make @Checked_Placeholder_Type(
-            name = it.name.lexeme
-        ))
+    if parsed_callable_type.type_parameters != null {
+        parsed_callable_type.type_parameters.for_each() {
+            self.local_types.put(it.name.lexeme, make @Checked_Placeholder_Type(
+                name = it.name.lexeme
+            ))
+        }
     }
 
     \ check if callable parameters accept call arguments
@@ -1158,7 +1161,7 @@ func check_logic_or_expression(self: @Checker, parsed_expression: @Parsed_Logic_
 func check_macro_body(self: @Checker, parsed_macro_body: @Parsed_Macro_Body) -> @Checked_Expression {
     return make @Checked_Macro_Body(
         location = parsed_macro_body.location
-        type = make @Checked_Macro_Body_Type(name = "__macro__")
+        type = make @Checked_Lazy_Macro_Type()
         parsed_macro_body = parsed_macro_body
     )
 }
@@ -1237,14 +1240,14 @@ func check_not_equals_expression(self: @Checker, parsed_expression: @Parsed_Not_
 }
 
 func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression) -> @Checked_Expression {
-    let symbol = self.current_context.find_symbol(parsed_expression.name.lexeme)
-    if symbol == null {
+    let checked_symbol = self.current_context.find_symbol(parsed_expression.name.lexeme)
+    if checked_symbol == null {
         abort(parsed_expression.location, clone("Undeclared symbol: ").append(parsed_expression.name.lexeme))
     }
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location
-        type = symbol.type
-        symbol = symbol
+        type = checked_symbol.type
+        symbol = checked_symbol
     )
 }
 
@@ -1437,37 +1440,63 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
     let checked_call_argument_item = checked_macro_call_expression.call_arguments.first_item
     while parsed_parameter_item != null and checked_call_argument_item != null {
         let parsed_parameter = parsed_parameter_item.data
-        let checked_call_argument = checked_call_argument_item.data
+        let checked_call_argument_expression = checked_call_argument_item.data.expression
+        let checked_call_argument_expression_type = checked_call_argument_expression.type
 
         \ check parameter type
         let checked_parameter_type = self.convert_type(parsed_parameter.type)
-        if not checked_parameter_type.accepts(checked_call_argument.expression.type) {
-            abort(checked_call_argument.expression.location, "TODO: Convert type or recheck parsed argument")
+        if not checked_parameter_type.accepts(checked_call_argument_expression_type) {
+            abort(checked_call_argument_expression.location, "TODO: Convert type or recheck parsed argument")
         }
 
         if checked_parameter_type is Checked_Macro_Type {
             if parsed_parameter.type is not Parsed_Macro_Type {
                 abort(parsed_parameter.type.location, parsed_parameter.type.object_type)
             }
-            if checked_call_argument.expression is not Checked_Macro_Body {
-                abort(checked_call_argument.expression.location, checked_call_argument.expression.type.object_type)
+            if checked_call_argument_expression_type is not Checked_Lazy_Macro_Type {
+                abort(checked_call_argument_expression.location, checked_call_argument_expression_type.object_type)
             }
-            self.current_context.symbols.prepend(make @Checked_Macro_Parameter_Symbol(
-                location = parsed_parameter.name.location
-                name = parsed_parameter.name.lexeme
-                type = checked_parameter_type
-                parsed_macro_type = parsed_parameter.type.as(@Parsed_Macro_Type)
-                parsed_macro_body = checked_call_argument.expression.as(@Checked_Macro_Body).parsed_macro_body.statement
-            ))
+            let checked_call_argument_expression_type = checked_call_argument_expression_type.as(@Checked_Lazy_Macro_Type)
+            \ create macro parameter
+            if checked_call_argument_expression is Checked_Macro_Body {
+                self.current_context.symbols.prepend(make @Checked_Macro_Parameter_Symbol(
+                    location = parsed_parameter.name.location
+                    name = parsed_parameter.name.lexeme
+                    type = checked_parameter_type
+                    parsed_macro_type = parsed_parameter.type.as(@Parsed_Macro_Type)
+                    parsed_macro_body = checked_call_argument_expression.as(@Checked_Macro_Body).parsed_macro_body.statement
+                ))
+            } else if checked_call_argument_expression is Checked_Symbol_Expression {
+                let checked_symbol = checked_call_argument_expression.as(@Checked_Symbol_Expression).symbol
+                if checked_symbol is not Checked_Macro_Symbol {
+                    \ invalid state
+                    abort()
+                }
+                let checked_symbol = checked_symbol.as(@Checked_Macro_Symbol)
+                \ check macro type
+                let checked_macro_type = self.convert_type(checked_symbol.parsed_macro_statement.type)
+                if not checked_parameter_type.accepts(checked_macro_type) {
+                    abort(checked_call_argument_expression.location, "Incompatible macro types")
+                }
+                self.current_context.symbols.prepend(make @Checked_Macro_Parameter_Symbol(
+                    location = parsed_parameter.name.location
+                    name = parsed_parameter.name.lexeme
+                    type = checked_parameter_type
+                    parsed_macro_type = parsed_parameter.type.as(@Parsed_Macro_Type)
+                    parsed_macro_body = checked_symbol.parsed_macro_statement.body
+                ))
+            } else {
+                abort(checked_call_argument_expression.location, checked_call_argument_expression.object_type)
+            }
         } else {
             \ create variable statement
             let checked_variable_statement = make @Checked_Variable_Statement(
-                location = checked_call_argument.expression.location
+                location = checked_call_argument_expression.location
                 variable = make @Checked_Variable_Symbol(
                     location = parsed_parameter.name.location
                     name = parsed_parameter.name.lexeme
                     type = checked_parameter_type
-                    expression = checked_call_argument.expression
+                    expression = checked_call_argument_expression
                 )
             )
             self.current_context.symbols.prepend(checked_variable_statement.variable)
