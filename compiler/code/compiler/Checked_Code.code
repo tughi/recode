@@ -433,8 +433,14 @@ struct Checked_Less_Than_Or_Equals_Expression: Checked_Binary_Expression {
 struct Checked_Literal_Expression: Checked_Expression {
 }
 
+struct Checked_Logic_And_Expression: Checked_Binary_Expression {
+}
+
 struct Checked_Logic_Not_Expression: Checked_Expression {
     expression: @Checked_Expression
+}
+
+struct Checked_Logic_Or_Expression: Checked_Binary_Expression {
 }
 
 struct Checked_Macro_Body: Checked_Expression {

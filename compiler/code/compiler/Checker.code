@@ -542,8 +542,12 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_less_than_or_equal_expression(parsed_expression.as(@Parsed_Less_Than_Or_Equals_Expression))
     } else if parsed_expression is Parsed_Literal_Expression {
         checked_expression = self.check_literal_expression(parsed_expression.as(@Parsed_Literal_Expression), expected_type)
+    } else if parsed_expression is Parsed_Logic_And_Expression {
+        checked_expression = self.check_logic_and_expression(parsed_expression.as(@Parsed_Logic_And_Expression))
     } else if parsed_expression is Parsed_Logic_Not_Expression {
         checked_expression = self.check_logic_not_expression(parsed_expression.as(@Parsed_Logic_Not_Expression))
+    } else if parsed_expression is Parsed_Logic_Or_Expression {
+        checked_expression = self.check_logic_or_expression(parsed_expression.as(@Parsed_Logic_Or_Expression))
     } else if parsed_expression is Parsed_Macro_Body {
         checked_expression = self.check_macro_body(parsed_expression.as(@Parsed_Macro_Body))
     } else if parsed_expression is Parsed_Make_Expression {
@@ -554,6 +558,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_modulo_expression(parsed_expression.as(@Parsed_Modulo_Expression))
     } else if parsed_expression is Parsed_Not_Equals_Expression {
         checked_expression = self.check_not_equals_expression(parsed_expression.as(@Parsed_Not_Equals_Expression))
+    } else if parsed_expression is Parsed_Paren_Expression {
+        checked_expression = self.check_expression(parsed_expression.as(@Parsed_Paren_Expression).expression, expected_type)
     } else if parsed_expression is Parsed_Symbol_Expression {
         checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
     } else if parsed_expression is Parsed_Wrapped_Expression {
@@ -1091,11 +1097,29 @@ func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal
     abort(parsed_expression.location, literal.object_type)
 }
 
+func check_logic_and_expression(self: @Checker, parsed_expression: @Parsed_Logic_And_Expression) -> @Checked_Expression {
+    return make @Checked_Logic_And_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        left_expression = self.check_expression(parsed_expression.left_expression, self.bool_type)
+        right_expression = self.check_expression(parsed_expression.right_expression, self.bool_type)
+    )
+}
+
 func check_logic_not_expression(self: @Checker, parsed_expression: @Parsed_Logic_Not_Expression) -> @Checked_Expression {
     return make @Checked_Logic_Not_Expression(
         location = parsed_expression.location
         type = self.bool_type
         expression = self.check_expression(parsed_expression.expression, self.bool_type)
+    )
+}
+
+func check_logic_or_expression(self: @Checker, parsed_expression: @Parsed_Logic_Or_Expression) -> @Checked_Expression {
+    return make @Checked_Logic_Or_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        left_expression = self.check_expression(parsed_expression.left_expression, self.bool_type)
+        right_expression = self.check_expression(parsed_expression.right_expression, self.bool_type)
     )
 }
 
