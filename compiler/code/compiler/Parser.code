@@ -673,7 +673,7 @@ func parse_while(self: @Parser) -> @Parsed_Statement {
     }
     self.consume_space(1)
     let loop_block = self.parse_block()
-    return make @Parsed_While_Statement(location = location, condition_expression = condition_expression, block = loop_block)
+    return make @Parsed_While_Statement(location = location, condition_expression = condition_expression, body_statement = loop_block)
 }
 
 \ type

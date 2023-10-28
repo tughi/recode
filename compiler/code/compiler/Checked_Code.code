@@ -359,6 +359,11 @@ struct Checked_Variable_Statement: Checked_Statement {
     variable: @Checked_Variable_Symbol
 }
 
+struct Checked_While_Statement: Checked_Statement {
+    condition_expression: @Checked_Expression
+    body_statement: @Checked_Statement
+}
+
 struct Checked_Expression: Object {
     location: @Source_Location
     type: @Checked_Type

@@ -239,6 +239,9 @@ func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Ch
     if parsed_statement is Parsed_Variable_Statement {
         return self.check_variable_statement(parsed_statement.as(@Parsed_Variable_Statement))
     }
+    if parsed_statement is Parsed_While_Statement {
+        return self.check_while_statement(parsed_statement.as(@Parsed_While_Statement))
+    }
     abort(parsed_statement.location, parsed_statement.object_type)
 }
 
@@ -494,6 +497,16 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
     self.current_context.symbols.prepend(checked_statement.variable)
 
     return checked_statement
+}
+
+func check_while_statement(self: @Checker, parsed_statement: @Parsed_While_Statement) -> @Checked_Statement {
+    let checked_condition_expression = self.check_expression(parsed_statement.condition_expression, self.bool_type)
+    let checked_body_statement = self.check_statement(parsed_statement.body_statement)
+    return make @Checked_While_Statement(
+        location = parsed_statement.location
+        condition_expression = checked_condition_expression
+        body_statement = checked_body_statement
+    )
 }
 
 func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, expected_type: @Checked_Type) -> @Checked_Expression {

@@ -1470,7 +1470,7 @@ func convert_while_statement(self: @IR_Builder, statement: @Parsed_While_Stateme
     self.current_block.append_jump(condition_value, loop_block, end_block)
     self.current_block = loop_block
     self.current_loop = make @IR_Loop(parent = self.current_loop, end_block = end_block)
-    self.convert_block_statement(statement.block)
+    self.convert_block_statement(statement.body_statement)
     self.current_block.append_jump(condition_block)
     self.current_block = end_block
     self.current_loop = self.current_loop.parent

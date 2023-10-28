@@ -202,7 +202,7 @@ func write(file: @FILE, statement: @Parsed_Statement, alignment: i64) -> @FILE {
 
     if statement is Parsed_While_Statement {
         let statement = statement.as(@Parsed_While_Statement)
-        return file.write("while (").write(statement.condition_expression).write(") ").write(statement.block, alignment)
+        return file.write("while (").write(statement.condition_expression).write(") ").write(statement.body_statement, alignment)
     }
 
     file.flush()

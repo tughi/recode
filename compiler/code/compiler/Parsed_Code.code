@@ -131,7 +131,7 @@ struct Parsed_While_Statement: Parsed_Statement(
     }
 ) {
     condition_expression: @Parsed_Expression
-    block: @Parsed_Block_Statement
+    body_statement: @Parsed_Block_Statement
 }
 
 struct Parsed_Break_Statement: Parsed_Statement(
