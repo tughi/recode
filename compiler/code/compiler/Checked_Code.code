@@ -377,6 +377,18 @@ struct Checked_Binary_Expression: Checked_Expression {
     right_expression: @Checked_Expression
 }
 
+struct Checked_Greater_Than_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_Greater_Than_Or_Equals_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_Less_Than_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_Less_Than_Or_Equals_Expression: Checked_Binary_Expression {
+}
+
 struct Checked_Boolean_Literal_Expression: Checked_Literal_Expression {
     literal: @Boolean_Token
 }

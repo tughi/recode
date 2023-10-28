@@ -519,6 +519,14 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_equals_expression(parsed_expression.as(@Parsed_Equals_Expression))
     } else if parsed_expression is Parsed_Function_Expression {
         checked_expression = self.check_function_expression(parsed_expression.as(@Parsed_Function_Expression))
+    } else if parsed_expression is Parsed_Greater_Than_Expression {
+        checked_expression = self.check_greater_than_expression(parsed_expression.as(@Parsed_Greater_Than_Expression))
+    } else if parsed_expression is Parsed_Greater_Than_Or_Equals_Expression {
+        checked_expression = self.check_greater_than_or_equal_expression(parsed_expression.as(@Parsed_Greater_Than_Or_Equals_Expression))
+    } else if parsed_expression is Parsed_Less_Than_Expression {
+        checked_expression = self.check_less_than_expression(parsed_expression.as(@Parsed_Less_Than_Expression))
+    } else if parsed_expression is Parsed_Less_Than_Or_Equals_Expression {
+        checked_expression = self.check_less_than_or_equal_expression(parsed_expression.as(@Parsed_Less_Than_Or_Equals_Expression))
     } else if parsed_expression is Parsed_Literal_Expression {
         checked_expression = self.check_literal_expression(parsed_expression.as(@Parsed_Literal_Expression), expected_type)
     } else if parsed_expression is Parsed_Logic_Not_Expression {
@@ -884,6 +892,50 @@ func specialize_callable_type(self: @Checker, parsed_callable_type: @Parsed_Call
     return make @Specialized_Callable_Type(
         checked_callable_type = checked_callable_type.as(@Checked_Callable_Type)
         specialization_types = specialization_types
+    )
+}
+
+func check_greater_than_expression(self: @Checker, parsed_expression: @Parsed_Greater_Than_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Greater_Than_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
+}
+
+func check_greater_than_or_equal_expression(self: @Checker, parsed_expression: @Parsed_Greater_Than_Or_Equals_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Greater_Than_Or_Equals_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
+}
+
+func check_less_than_expression(self: @Checker, parsed_expression: @Parsed_Less_Than_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Less_Than_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
+}
+
+func check_less_than_or_equal_expression(self: @Checker, parsed_expression: @Parsed_Less_Than_Or_Equals_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Less_Than_Or_Equals_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        left_expression = left_expression
+        right_expression = right_expression
     )
 }
 
