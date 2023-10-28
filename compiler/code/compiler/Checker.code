@@ -284,7 +284,7 @@ func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expres
         abort(checked_expression.location, "TODO: Warn about unhandled expression value")
     }
     if checked_expression is Checked_Macro_Call_Expression {
-        abort(parsed_statement.location, "TODO: Inline macro call")
+        return self.inline_macro_call_expression(checked_expression.as(@Checked_Macro_Call_Expression))
     }
     return make @Checked_Expression_Statement(
         location = parsed_statement.location
@@ -990,7 +990,7 @@ func check_macro_body(self: @Checker, parsed_macro_body: @Parsed_Macro_Body) -> 
     return make @Checked_Macro_Body(
         location = parsed_macro_body.location
         type = make @Checked_Macro_Body_Type(name = "__macro__")
-        parsed_statement = parsed_macro_body.statement
+        parsed_macro_body = parsed_macro_body
     )
 }
 
@@ -1248,4 +1248,75 @@ func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_S
     \ create struct symbol
     let checked_struct_symbol = self.check_struct_statement(parsed_generic_struct_statement.struct_statement, checked_type_name, specialization_types)
     return checked_struct_symbol.type
+}
+
+func inline_macro_call_expression(self: @Checker, checked_macro_call_expression: @Checked_Macro_Call_Expression) -> @Checked_Statement {
+    let parsed_macro_statement = checked_macro_call_expression.parsed_macro_statement
+
+    \ prepare local context
+    self.current_context = make @Checker_Context(
+        parent = self.current_context
+    )
+    let local_types = self.local_types
+    if checked_macro_call_expression.specialization_types != null {
+        self.local_types = checked_macro_call_expression.specialization_types
+    }
+
+    \ create surrounding block
+    let checked_statement = make @Checked_Block_Statement(location = checked_macro_call_expression.location)
+
+    \ create local variable for each macro parameter
+    let parsed_parameter_item = parsed_macro_statement.type.parameters.first_item
+    let checked_call_argument_item = checked_macro_call_expression.call_arguments.first_item
+    while parsed_parameter_item != null and checked_call_argument_item != null {
+        let parsed_parameter = parsed_parameter_item.data
+        let checked_call_argument = checked_call_argument_item.data
+
+        \ check parameter type
+        let checked_parameter_type = self.convert_type(parsed_parameter.type)
+        if not checked_parameter_type.accepts(checked_call_argument.expression.type) {
+            abort(checked_call_argument.expression.location, "TODO: Convert type or recheck parsed argument")
+        }
+
+        if checked_parameter_type is Checked_Macro_Type {
+            if checked_call_argument.expression is not Checked_Macro_Body {
+                abort(checked_call_argument.expression.location, checked_call_argument.expression.type.object_type)
+            }
+            self.current_context.symbols.prepend(make @Checked_Macro_Parameter_Symbol(
+                location = parsed_parameter.name.location
+                name = parsed_parameter.name.lexeme
+                type = checked_parameter_type
+                parsed_macro_body = checked_call_argument.expression.as(@Checked_Macro_Body).parsed_macro_body
+            ))
+        } else {
+            \ create variable statement
+            let checked_variable_statement = make @Checked_Variable_Statement(
+                location = checked_call_argument.expression.location
+                variable = make @Checked_Variable_Symbol(
+                    location = parsed_parameter.name.location
+                    name = parsed_parameter.name.lexeme
+                    type = checked_parameter_type
+                    expression = checked_call_argument.expression
+                )
+            )
+            self.current_context.symbols.prepend(checked_variable_statement.variable)
+            checked_statement.statements.append(checked_variable_statement)
+        }
+
+        parsed_parameter_item = parsed_parameter_item.next_item
+        checked_call_argument_item = checked_call_argument_item.next_item
+    }
+    if parsed_parameter_item != null or checked_call_argument_item != null {
+        \ found a bug in the check_callable_call_expression
+        abort()
+    }
+
+    \ inline macro body
+    checked_statement.statements.append(self.check_statement(parsed_macro_statement.body))
+
+    \ restore type context
+    self.local_types = local_types
+    self.current_context = self.current_context.parent
+
+    return checked_statement
 }

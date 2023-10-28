@@ -314,6 +314,10 @@ struct Checked_Macro_Symbol: Checked_Symbol {
     parsed_macro_statement: @Parsed_Macro_Statement
 }
 
+struct Checked_Macro_Parameter_Symbol: Checked_Symbol {
+    parsed_macro_body: @Parsed_Macro_Body
+}
+
 struct Checked_Parameter_Symbol: Checked_Symbol {
 }
 
@@ -413,7 +417,7 @@ struct Checked_Logic_Not_Expression: Checked_Expression {
 }
 
 struct Checked_Macro_Body: Checked_Expression {
-    parsed_statement: @Parsed_Block_Statement
+    parsed_macro_body: @Parsed_Macro_Body
 }
 
 struct Checked_Make_Expression: Checked_Expression {
