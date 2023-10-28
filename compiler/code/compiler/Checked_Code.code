@@ -315,7 +315,8 @@ struct Checked_Macro_Symbol: Checked_Symbol {
 }
 
 struct Checked_Macro_Parameter_Symbol: Checked_Symbol {
-    parsed_macro_body: @Parsed_Macro_Body
+    parsed_macro_type: @Parsed_Macro_Type
+    parsed_macro_body: @Parsed_Statement
 }
 
 struct Checked_Parameter_Symbol: Checked_Symbol {
@@ -369,24 +370,15 @@ struct Checked_Expression: Object {
     type: @Checked_Type
 }
 
+struct Checked_Add_Expression: Checked_Binary_Expression {
+}
+
 struct Checked_Access_Expression: Checked_Expression {
 }
 
 struct Checked_Binary_Expression: Checked_Expression {
     left_expression: @Checked_Expression
     right_expression: @Checked_Expression
-}
-
-struct Checked_Greater_Than_Expression: Checked_Binary_Expression {
-}
-
-struct Checked_Greater_Than_Or_Equals_Expression: Checked_Binary_Expression {
-}
-
-struct Checked_Less_Than_Expression: Checked_Binary_Expression {
-}
-
-struct Checked_Less_Than_Or_Equals_Expression: Checked_Binary_Expression {
 }
 
 struct Checked_Boolean_Literal_Expression: Checked_Literal_Expression {
@@ -422,8 +414,20 @@ struct Checked_Function_Call_Expression: Checked_Call_Expression {
     function_symbol: @Checked_Function_Symbol
 }
 
+struct Checked_Greater_Than_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_Greater_Than_Or_Equals_Expression: Checked_Binary_Expression {
+}
+
 struct Checked_Integer_Literal_Expression: Checked_Literal_Expression {
     literal: @Integer_Token
+}
+
+struct Checked_Less_Than_Expression: Checked_Binary_Expression {
+}
+
+struct Checked_Less_Than_Or_Equals_Expression: Checked_Binary_Expression {
 }
 
 struct Checked_Literal_Expression: Checked_Expression {

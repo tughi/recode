@@ -257,6 +257,17 @@ func check_assignment_statement(self: @Checker, parsed_statement: @Parsed_Assign
             value_expression = self.check_expression(parsed_statement.value_expression, checked_destination_expression.type)
         )
     }
+    if checked_destination_expression is Checked_Symbol_Expression {
+        let checked_symbol = checked_destination_expression.as(@Checked_Symbol_Expression).symbol
+        if checked_symbol is Checked_Variable_Symbol {
+            return make @Checked_Assignment_Statement(
+                location = parsed_statement.location
+                destination_expression = checked_destination_expression
+                value_expression = self.check_expression(parsed_statement.value_expression, checked_destination_expression.type)
+            )
+        }
+        abort(checked_destination_expression.location, checked_symbol.object_type)
+    }
     abort(checked_destination_expression.location, checked_destination_expression.object_type)
 }
 
@@ -284,7 +295,7 @@ func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_State
 func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expression_Statement) -> @Checked_Statement {
     let checked_expression = self.check_expression(parsed_statement.expression, null)
     if checked_expression.type is not Checked_Nothing_Type {
-        abort(checked_expression.location, "TODO: Warn about unhandled expression value")
+        abort(checked_expression.location, "TODO: Warn about unhandled expression value of ".clone().append(checked_expression.type.object_type.name).append(" type"))
     }
     if checked_expression is Checked_Macro_Call_Expression {
         return self.inline_macro_call_expression(checked_expression.as(@Checked_Macro_Call_Expression))
@@ -513,6 +524,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
     let checked_expression: @Checked_Expression
     if parsed_expression is Parsed_Call_Expression {
         checked_expression = self.check_call_expression(parsed_expression.as(@Parsed_Call_Expression))
+    } else if parsed_expression is Parsed_Add_Expression {
+        checked_expression = self.check_add_expression(parsed_expression.as(@Parsed_Add_Expression))
     } else if parsed_expression is Parsed_Cast_Expression {
         checked_expression = self.check_cast_expression(parsed_expression.as(@Parsed_Cast_Expression))
     } else if parsed_expression is Parsed_Equals_Expression {
@@ -556,21 +569,42 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
     return checked_expression
 }
 
+func check_add_expression(self: @Checker, parsed_expression: @Parsed_Add_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    if left_expression.type is not Checked_Integer_Type {
+        abort(parsed_expression.left_expression.location, "Not an integer value")
+    }
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Add_Expression(
+        location = parsed_expression.location
+        type = left_expression.type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
+}
+
 func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression) -> @Checked_Expression {
     let parsed_callee_expression = parsed_expression.callee_expression
 
     \ check call arguments
     let checked_call_arguments = make @List[@Checked_Call_Argument]()
     parsed_expression.arguments.for_each() {
+        let parsed_call_argument = it
         let checked_call_argument_name: @String = null
-        if it.name != null {
-            checked_call_argument_name = it.name.lexeme
-            abort("TODO: Check for duplicate argument names")
+        if parsed_call_argument.name != null {
+            checked_call_argument_name = parsed_call_argument.name.lexeme
+            \ check for duplicate named arguments
+            checked_call_arguments.for_each() {
+                let checked_call_argument = it
+                if checked_call_argument.name != null and checked_call_argument.name.equals(checked_call_argument_name) {
+                    abort(parsed_expression.location, "Duplicate argument name")
+                }
+            }
         }
         checked_call_arguments.append(make @Checked_Call_Argument(
-            location = it.location
+            location = parsed_call_argument.location
             name = checked_call_argument_name
-            expression = self.check_expression(it.value_expression, null)
+            expression = self.check_expression(parsed_call_argument.value_expression, null)
         ))
     }
 
@@ -645,6 +679,18 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
                 }
             }
             abort(parsed_expression.location, "TODO: Report non-callable symbol error")
+        }
+        if checked_symbol is Checked_Macro_Parameter_Symbol {
+            let checked_symbol = checked_symbol.as(@Checked_Macro_Parameter_Symbol)
+            \ create macro call expression to be inlined at the statement level
+            return make @Checked_Macro_Call_Expression(
+                location = parsed_callee_expression.location
+                type = self.nothing_type
+                parsed_macro_type = checked_symbol.parsed_macro_type
+                parsed_macro_body = checked_symbol.parsed_macro_body
+                specialization_types = null
+                call_arguments = checked_call_arguments
+            )
         }
 
         \ should be a callable symbol
@@ -822,7 +868,8 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
         return make @Checked_Macro_Call_Expression(
             location = callable_name.location
             type = self.nothing_type
-            parsed_macro_statement = callable_match.macro_statement
+            parsed_macro_type = callable_match.macro_statement.type
+            parsed_macro_body = callable_match.macro_statement.body
             specialization_types = callable_match.specialization_types
             call_arguments = checked_call_arguments
         )
@@ -831,7 +878,8 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
 }
 
 struct Checked_Macro_Call_Expression: Checked_Expression {
-    parsed_macro_statement: @Parsed_Macro_Statement
+    parsed_macro_type: @Parsed_Macro_Type
+    parsed_macro_body: @Parsed_Statement
     specialization_types: @Map[@String, @Checked_Type]
     call_arguments: @List[@Checked_Call_Argument]
 }
@@ -1316,8 +1364,6 @@ func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_S
 }
 
 func inline_macro_call_expression(self: @Checker, checked_macro_call_expression: @Checked_Macro_Call_Expression) -> @Checked_Statement {
-    let parsed_macro_statement = checked_macro_call_expression.parsed_macro_statement
-
     \ prepare local context
     self.current_context = make @Checker_Context(
         parent = self.current_context
@@ -1331,7 +1377,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
     let checked_statement = make @Checked_Block_Statement(location = checked_macro_call_expression.location)
 
     \ create local variable for each macro parameter
-    let parsed_parameter_item = parsed_macro_statement.type.parameters.first_item
+    let parsed_parameter_item = checked_macro_call_expression.parsed_macro_type.parameters.first_item
     let checked_call_argument_item = checked_macro_call_expression.call_arguments.first_item
     while parsed_parameter_item != null and checked_call_argument_item != null {
         let parsed_parameter = parsed_parameter_item.data
@@ -1344,6 +1390,9 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
         }
 
         if checked_parameter_type is Checked_Macro_Type {
+            if parsed_parameter.type is not Parsed_Macro_Type {
+                abort(parsed_parameter.type.location, parsed_parameter.type.object_type)
+            }
             if checked_call_argument.expression is not Checked_Macro_Body {
                 abort(checked_call_argument.expression.location, checked_call_argument.expression.type.object_type)
             }
@@ -1351,7 +1400,8 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
                 location = parsed_parameter.name.location
                 name = parsed_parameter.name.lexeme
                 type = checked_parameter_type
-                parsed_macro_body = checked_call_argument.expression.as(@Checked_Macro_Body).parsed_macro_body
+                parsed_macro_type = parsed_parameter.type.as(@Parsed_Macro_Type)
+                parsed_macro_body = checked_call_argument.expression.as(@Checked_Macro_Body).parsed_macro_body.statement
             ))
         } else {
             \ create variable statement
@@ -1377,7 +1427,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
     }
 
     \ inline macro body
-    checked_statement.statements.append(self.check_statement(parsed_macro_statement.body))
+    checked_statement.statements.append(self.check_statement(checked_macro_call_expression.parsed_macro_body))
 
     \ restore type context
     self.local_types = local_types
