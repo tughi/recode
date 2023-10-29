@@ -181,10 +181,7 @@ func check_function_statement(self: @Checker, parsed_function_statement: @Parsed
     let checked_function = make @Checked_Function_Symbol(
         location = parsed_function_statement.location
         name = parsed_function_statement.name.lexeme
-        type = make @Checked_Pointer_Type(
-            name = "@(".clone().append(checked_function_type.name).append(')')
-            pointed_type = checked_function_type
-        )
+        type = make_checked_function_pointer_type(checked_function_type)
         function_type = checked_function_type
 
         parsed_function_statement = parsed_function_statement
@@ -508,10 +505,7 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
         }
         if checked_type is Checked_Function_Type {
             \ make function pointer type
-            checked_type = make @Checked_Pointer_Type(
-                name = "@(".clone().append(checked_type.name).append(')')
-                pointed_type = checked_type
-            )
+            checked_type = make_checked_function_pointer_type(checked_type.as(@Checked_Function_Type))
         }
     }
 
@@ -684,10 +678,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
                 name = null
                 expression = make @Checked_Reference_Expression( \ struct objects have always an address
                     location = checked_object_expression.location
-                    type = make @Checked_Pointer_Type(
-                        name = "@".clone().append(checked_object_type.name)
-                        pointed_type = checked_object_type
-                    )
+                    type = make_checked_pointer_type(checked_object_type)
                     object_expression = checked_object_expression
                 )
             ))
@@ -1180,16 +1171,26 @@ func check_macro_body(self: @Checker, parsed_macro_body: @Parsed_Macro_Body) -> 
 
 func check_make_expression(self: @Checker, parsed_expression: @Parsed_Make_Expression) -> @Checked_Expression {
     let checked_type = self.convert_type(parsed_expression.type)
-    if checked_type is Checked_Struct_Type {
-        return self.check_make_struct_expression(parsed_expression, checked_type.as(@Checked_Struct_Type))
+    if checked_type is Checked_Pointer_Type and checked_type.as(@Checked_Pointer_Type).pointed_type is Checked_Struct_Type {
+        return self.check_make_struct_expression(parsed_expression, checked_type.as(@Checked_Pointer_Type).pointed_type.as(@Checked_Struct_Type), true)
     }
-    abort(parsed_expression.location, checked_type.object_type)
+    if checked_type is Checked_Struct_Type {
+        return self.check_make_struct_expression(parsed_expression, checked_type.as(@Checked_Struct_Type), false)
+    }
+    abort(parsed_expression.location, "Cannot make ".clone().append(checked_type.name))
 }
 
-func check_make_struct_expression(self: @Checker, parsed_expression: @Parsed_Make_Expression, checked_struct_type: @Checked_Struct_Type) -> @Checked_Expression {
+func check_make_struct_expression(self: @Checker, parsed_expression: @Parsed_Make_Expression, checked_struct_type: @Checked_Struct_Type, make_pointer: bool) -> @Checked_Expression {
+    let checked_expression_type: @Checked_Type
+    if make_pointer {
+        checked_expression_type = make_checked_pointer_type(checked_struct_type)
+    } else {
+        checked_expression_type = checked_struct_type
+    }
+    checked_struct_type
     let checked_expression = make @Checked_Make_Expression(
         location = parsed_expression.location
-        type = checked_struct_type
+        type = checked_expression_type
     )
 
     \ check init arguments
@@ -1345,10 +1346,7 @@ func check_callable_parameter(self: @Checker, checked_callable_type: @Checked_Ca
     \ check parameter type
     let checked_callable_parameter_type = self.convert_type(parsed_callable_parameter.type)
     if checked_callable_parameter_type is Checked_Function_Type {
-        checked_callable_parameter_type = make @Checked_Pointer_Type(
-            name = "@(".clone().append(checked_callable_parameter_type.name).append(')')
-            pointed_type = checked_callable_parameter_type
-        )
+        checked_callable_parameter_type = make_checked_function_pointer_type(checked_callable_parameter_type.as(@Checked_Function_Type))
     }
 
     \ create parameter
@@ -1404,8 +1402,19 @@ func convert_named_type(self: @Checker, parsed_type: @Parsed_Named_Type) -> @Che
 
 func convert_pointer_type(self: @Checker, parsed_pointer_type: @Parsed_Pointer_Type) -> @Checked_Type {
     let checked_pointed_type = self.convert_type(parsed_pointer_type.pointed_type)
+    return make_checked_pointer_type(checked_pointed_type)
+}
+
+func make_checked_pointer_type(checked_pointed_type: @Checked_Type) -> @Checked_Pointer_Type {
     return make @Checked_Pointer_Type(
         name = "@".clone().append(checked_pointed_type.name)
+        pointed_type = checked_pointed_type
+    )
+}
+
+func make_checked_function_pointer_type(checked_pointed_type: @Checked_Function_Type) -> @Checked_Pointer_Type {
+    return make @Checked_Pointer_Type(
+        name = "@(".clone().append(checked_pointed_type.name).append(')')
         pointed_type = checked_pointed_type
     )
 }
