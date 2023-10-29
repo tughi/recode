@@ -574,6 +574,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_greater_than_expression(parsed_expression.as(@Parsed_Greater_Than_Expression))
     } else if parsed_expression is Parsed_Greater_Than_Or_Equals_Expression {
         checked_expression = self.check_greater_than_or_equal_expression(parsed_expression.as(@Parsed_Greater_Than_Or_Equals_Expression))
+    } else if parsed_expression is Parsed_Is_Expression {
+        checked_expression = self.check_is_expression(parsed_expression.as(@Parsed_Is_Expression))
     } else if parsed_expression is Parsed_Less_Than_Expression {
         checked_expression = self.check_less_than_expression(parsed_expression.as(@Parsed_Less_Than_Expression))
     } else if parsed_expression is Parsed_Less_Than_Or_Equals_Expression {
@@ -1006,6 +1008,53 @@ func check_greater_than_or_equal_expression(self: @Checker, parsed_expression: @
         type = self.bool_type
         left_expression = left_expression
         right_expression = right_expression
+    )
+}
+
+func check_is_expression(self: @Checker, parsed_expression: @Parsed_Is_Expression) -> @Checked_Expression {
+    \ check value expression
+    let checked_value_expression = self.check_expression(parsed_expression.value_expression, null)
+    if checked_value_expression.type is not Checked_Pointer_Type {
+        abort(checked_value_expression.location, "Not a pointer value")
+    }
+    let checked_value_type = checked_value_expression.type.as(@Checked_Pointer_Type).pointed_type
+    if checked_value_type is not Checked_Struct_Type {
+        abort(checked_value_expression.location, "Not a struct value")
+    }
+    let checked_value_type = checked_value_type.as(@Checked_Struct_Type)
+    let checked_object_type = self.convert_type(make @Parsed_Named_Type(name = make @Identifier_Token(location = null, lexeme = "Object")))
+    if checked_object_type is not Checked_Struct_Type {
+        abort("Object is not a struct type")
+    }
+    let checked_object_type = checked_object_type.as(@Checked_Struct_Type)
+    if not checked_value_type.has_super_type(checked_object_type) {
+        abort(checked_value_expression.location, "Not an Object value")
+    }
+
+    \ check other type
+    let checked_type = self.convert_type(parsed_expression.type)
+    if checked_type is not Checked_Struct_Type {
+        abort(parsed_expression.type.location, "Not a struct type")
+    }
+    let checked_type = checked_type.as(@Checked_Struct_Type)
+    if not checked_type.has_super_type(checked_object_type) {
+        abort(parsed_expression.type.location, "Not an Object type")
+    }
+
+    \ check type hierarchy
+    if not checked_type.has_super_type(checked_value_type) {
+        abort(parsed_expression.type.location, checked_type.name.clone().append(" is not a super type of ").append(checked_value_type.name))
+    }
+    \ if checked_value_type == checked_type or checked_value_type.has_super_type(checked_type) {
+    \     stderr.write(parsed_expression.location).write(": ").warning().write("Redundant is operation").reset().end_line()
+    \ }
+
+    \ make expression
+    return make @Checked_Is_Expression(
+        location = parsed_expression.location
+        type = self.bool_type
+        value_expression = checked_value_expression
+        other_type = checked_type
     )
 }
 

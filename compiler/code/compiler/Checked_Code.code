@@ -449,6 +449,11 @@ struct Checked_Integer_Literal_Expression: Checked_Literal_Expression {
     literal: @Integer_Token
 }
 
+struct Checked_Is_Expression: Checked_Expression {
+    value_expression: @Checked_Expression
+    other_type: @Checked_Struct_Type
+}
+
 struct Checked_Less_Than_Expression: Checked_Binary_Expression {
 }
 
