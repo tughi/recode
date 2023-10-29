@@ -14,5 +14,5 @@ struct Shape: Object {
 }
 
 func main() -> Nothing {
-    let shape = make Shape()
+    let shape = make Shape(object_type = 0)
 }

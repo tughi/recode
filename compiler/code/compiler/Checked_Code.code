@@ -464,7 +464,7 @@ struct Checked_Integer_Literal_Expression: Checked_Literal_Expression {
 
 struct Checked_Is_Expression: Checked_Expression {
     value_expression: @Checked_Expression
-    other_type: @Checked_Struct_Type
+    object_type: @Checked_Struct_Type
 }
 
 struct Checked_Less_Than_Expression: Checked_Binary_Expression {
@@ -491,7 +491,7 @@ struct Checked_Macro_Body: Checked_Expression {
 }
 
 struct Checked_Make_Expression: Checked_Expression {
-    init_arguments = make List[@Checked_Call_Argument]()
+    values = make Map[@Checked_Struct_Type_Member, @Checked_Expression]()
 }
 
 struct Checked_Member_Access_Expression: Checked_Access_Expression {

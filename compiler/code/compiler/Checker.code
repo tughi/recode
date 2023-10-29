@@ -1054,7 +1054,7 @@ func check_is_expression(self: @Checker, parsed_expression: @Parsed_Is_Expressio
         location = parsed_expression.location
         type = self.bool_type
         value_expression = checked_value_expression
-        other_type = checked_type
+        object_type = checked_type
     )
 }
 
@@ -1236,22 +1236,51 @@ func check_make_struct_expression(self: @Checker, parsed_expression: @Parsed_Mak
     } else {
         checked_expression_type = checked_struct_type
     }
-    checked_struct_type
     let checked_expression = make @Checked_Make_Expression(
         location = parsed_expression.location
         type = checked_expression_type
     )
 
+    \ put default values
+    checked_struct_type.put_default_values(checked_expression.values)
+
     \ check init arguments
     parsed_expression.init_arguments.for_each() {
-        abort(it.location, "TODO: Require argument name")
-        abort(it.location, "TODO: Find member type")
-        abort(it.location, "TODO: Check argument expression")
-        abort(it.location, "TODO: Check member type")
-        abort(it.location, "TODO: Create init argument")
+        if it.name == null {
+            abort(it.location, "Missing member name")
+        }
+        let checked_struct_member = checked_struct_type.get_member(it.name.lexeme)
+        if checked_struct_member == null {
+            abort(it.name.location, "TODO: List super type members")
+        }
+        let checked_value_expression = self.check_expression(it.value_expression, checked_struct_member.type)
+        checked_expression.values.put(checked_struct_member, checked_value_expression)
     }
 
+    \ check if all members are initialized
+    checked_struct_type.check_missing_values(parsed_expression.location, checked_expression.values)
+
     return checked_expression
+}
+
+func put_default_values(self: @Checked_Struct_Type, values: @Map[@Checked_Struct_Type_Member, @Checked_Expression]) -> Nothing {
+    if self.super_type != null {
+        self.super_type.put_default_values(values)
+    }
+    self.default_values.for_each() {
+        values.put(key, value)
+    }
+}
+
+func check_missing_values(self: @Checked_Struct_Type, location: @Source_Location, values: @Map[@Checked_Struct_Type_Member, @Checked_Expression]) -> Nothing {
+    if self.super_type != null {
+        self.super_type.check_missing_values(location, values)
+    }
+    self.members.for_each() {
+        if not values.has(it) {
+            stderr.write(location).write(": ").warning().write(self.name).write('.').write(it.name).write(" is not initialized").reset().end_line()
+        }
+    }
 }
 
 func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_Member_Access_Expression) -> @Checked_Expression {
