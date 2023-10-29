@@ -256,7 +256,7 @@ func check_assignment_statement(self: @Checker, parsed_statement: @Parsed_Assign
     if checked_destination_expression.type is Checked_Struct_Type {
         abort(parsed_statement.location, "Struct assignement is currently not supported")
     }
-    if checked_destination_expression is Checked_Member_Access_Expression {
+    if checked_destination_expression is Checked_Array_Access_Expression or checked_destination_expression is Checked_Member_Access_Expression {
         return make @Checked_Assignment_Statement(
             location = parsed_statement.location
             destination_expression = checked_destination_expression
@@ -493,6 +493,9 @@ func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Str
 }
 
 func check_type_statement(self: @Checker, parsed_type_statement: @Parsed_Type_Statement) -> @Checked_Symbol {
+    if parsed_type_statement is Parsed_External_Type_Statement {
+        return self.check_external_type_statement(parsed_type_statement.as(@Parsed_External_Type_Statement))
+    }
     if parsed_type_statement is Parsed_Struct_Statement {
         return self.check_struct_statement(parsed_type_statement.as(@Parsed_Struct_Statement))
     }
@@ -1437,7 +1440,7 @@ func check_substract_expression(self: @Checker, parsed_expression: @Parsed_Subst
 func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression) -> @Checked_Expression {
     let checked_symbol = self.current_context.find_symbol(parsed_expression.name.lexeme)
     if checked_symbol == null {
-        abort(parsed_expression.location, clone("Undeclared symbol: ").append(parsed_expression.name.lexeme))
+        abort(parsed_expression.location, clone("Undefined symbol ").append(parsed_expression.name.lexeme))
     }
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location
