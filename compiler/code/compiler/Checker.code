@@ -115,6 +115,18 @@ func find_function_symbol(self: @Checker_Context, name: @String) -> @Checked_Fun
 }
 
 func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
+    \ collect all generic struct statements
+    parsed_code.statements.for_each() {
+        if it is Parsed_Generic_Struct_Statement {
+            \ generic structs are checked only during specialization
+            let parsed_generic_struct_statement = it.as(@Parsed_Generic_Struct_Statement)
+            if self.generic_struct_statements.has(parsed_generic_struct_statement.name.lexeme) {
+                abort(it.location, "TODO: Report duplicate generic type error")
+            }
+            self.generic_struct_statements.put(parsed_generic_struct_statement.name.lexeme, parsed_generic_struct_statement)
+        }
+    }
+
     \ create root statements
     parsed_code.statements.for_each() {
         if it is Parsed_External_Type_Statement {
@@ -128,12 +140,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 self.check_function_statement(parsed_function_statement)
             }
         } else if it is Parsed_Generic_Struct_Statement {
-            \ generic structs are checked only during specialization
-            let parsed_generic_struct_statement = it.as(@Parsed_Generic_Struct_Statement)
-            if self.generic_struct_statements.has(parsed_generic_struct_statement.name.lexeme) {
-                abort(it.location, "TODO: Report duplicate generic type error")
-            }
-            self.generic_struct_statements.put(parsed_generic_struct_statement.name.lexeme, parsed_generic_struct_statement)
+            \ already processed
         } else if it is Parsed_Macro_Statement {
             let parsed_macro_statement = it.as(@Parsed_Macro_Statement)
             self.macro_statements.append(parsed_macro_statement)
