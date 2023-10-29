@@ -13,12 +13,18 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
     if self == other or other is Checked_Undefined_Type {
         return true
     }
-    if self is Checked_Macro_Type {
-        if other is Checked_Lazy_Macro_Type {
-            return true
+    if self is Checked_Callable_Type {
+        if other is Checked_Callable_Type {
+            return self.as(@Checked_Callable_Type).accepts(other.as(@Checked_Callable_Type).parameters)
         }
-        if other is Checked_Macro_Type {
-            return self.as(@Checked_Macro_Type).accepts(other.as(@Checked_Macro_Type).parameters)
+        if self is Checked_Macro_Type {
+            if other is Checked_Lazy_Macro_Type {
+                return true
+            }
+            if other is Checked_Macro_Type {
+                return self.as(@Checked_Macro_Type).accepts(other.as(@Checked_Macro_Type).parameters)
+            }
+            abort(other.object_type)
         }
         abort(other.object_type)
     }

@@ -812,6 +812,7 @@ func check_function_expression(self: @Checker, parsed_expression: @Parsed_Functi
 }
 
 struct Callable_Match: Object {
+    location: @Source_Location
     callable_type: @Checked_Callable_Type
 }
 
@@ -836,6 +837,7 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
     self.checked_code.functions.for_each() {
         if callable_name.lexeme.equals(it.name) and it.function_type.accepts(checked_call_arguments) {
             callable_matches.append(make @Checked_Function_Match(
+                location = it.location
                 callable_type = it.function_type
                 function_symbol = it
             ))
@@ -849,6 +851,7 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
             if specialized_function_type != null and specialized_function_type.checked_callable_type.accepts(checked_call_arguments) {
                 \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
                 callable_matches.append(make @Parsed_Generic_Function_Match(
+                    location = it.location
                     callable_type = specialized_function_type.checked_callable_type
                     function_statement = it
                     specialization_types = specialized_function_type.specialization_types
@@ -864,6 +867,7 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
             if specialized_macro_type != null and specialized_macro_type.checked_callable_type.accepts(checked_call_arguments) {
                 \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
                 callable_matches.append(make @Parsed_Macro_Match(
+                    location = it.location
                     callable_type = specialized_macro_type.checked_callable_type
                     macro_statement = it
                     specialization_types = specialized_macro_type.specialization_types
@@ -878,6 +882,23 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
     }
 
     if callable_matches.size > 1 {
+        \ eliminate matches that accept parameters from another match
+        callable_matches.for_each() {
+            let current_match = it
+            callable_matches.for_each() {
+                let another_match = it
+                if current_match != another_match {
+                    if another_match.callable_type.accepts(current_match.callable_type) {
+                        if current_match.callable_type.name.equals(another_match.callable_type.name) {
+                            abort(another_match.location, clone("Callable declared first here: ").append(current_match.location))
+                        }
+                        \ TODO: eliminate another_match
+                        abort(another_match.location, clone("This callable matches another one defined here: ").append(current_match.location))
+                    }
+                }
+            }
+        }
+
         abort(callable_name.location, "TODO: Pick best matching function")
     }
 
