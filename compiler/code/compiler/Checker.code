@@ -1365,7 +1365,7 @@ func check_missing_values(self: @Checked_Struct_Type, location: @Source_Location
 func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_Member_Access_Expression) -> @Checked_Expression {
     let checked_object_expression = self.check_expression(parsed_expression.object_expression, null)
     let checked_object_type = checked_object_expression.type
-    while checked_object_type is Checked_Pointer_Type {
+    if checked_object_type is Checked_Pointer_Type {
         checked_object_type = checked_object_type.as(@Checked_Pointer_Type).pointed_type
     }
     if checked_object_type is not Checked_Struct_Type {
@@ -1374,7 +1374,25 @@ func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_M
     let checked_struct_type = checked_object_type.as(@Checked_Struct_Type)
     let checked_struct_type_member = checked_struct_type.get_member(parsed_expression.member_name.lexeme)
     if checked_struct_type_member == null {
-        abort(parsed_expression.member_name.location, clone(checked_struct_type.name).append(" has no such member: ").append(parsed_expression.member_name.lexeme))
+        if parsed_expression.member_name.lexeme.equals("super") {
+            \ super access works as a cast
+            if checked_struct_type.super_type == null {
+                abort(parsed_expression.member_name.location, checked_struct_type.name.clone().append(" has no super type"))
+            }
+            if checked_object_expression.type is Checked_Pointer_Type {
+                return make @Checked_Cast_Expression(
+                    location = parsed_expression.member_name.location
+                    type = make_checked_pointer_type(checked_struct_type.super_type)
+                    expression = checked_object_expression
+                )
+            }
+            return make @Checked_Cast_Expression(
+                location = parsed_expression.member_name.location
+                type = checked_struct_type.super_type
+                expression = checked_object_expression
+            )
+        }
+        abort(parsed_expression.member_name.location, clone(checked_struct_type.name).append(" has no ").append(parsed_expression.member_name.lexeme).append(" member"))
     }
     return make @Checked_Member_Access_Expression(
         location = parsed_expression.location
