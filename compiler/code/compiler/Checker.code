@@ -602,6 +602,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_expression(parsed_expression.as(@Parsed_Paren_Expression).expression, expected_type)
     } else if parsed_expression is Parsed_Symbol_Expression {
         checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
+    } else if parsed_expression is Parsed_Variable_Reference_Expression {
+        checked_expression = self.check_variable_reference_expression(parsed_expression.as(@Parsed_Variable_Reference_Expression))
     } else if parsed_expression is Parsed_Wrapped_Expression {
         checked_expression = self.check_expression(parsed_expression.as(@Parsed_Wrapped_Expression).expression, expected_type)
     } else {
@@ -1339,6 +1341,25 @@ func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_E
         location = parsed_expression.location
         type = checked_symbol.type
         symbol = checked_symbol
+    )
+}
+
+func check_variable_reference_expression(self: @Checker, parsed_expression: @Parsed_Variable_Reference_Expression) -> @Checked_Expression {
+    let checked_variable_expression = self.check_expression(parsed_expression.variable_expression, null)
+    if checked_variable_expression is not Checked_Symbol_Expression {
+        abort(checked_variable_expression.location, "Not a symbol expression")
+    }
+    let checked_symbol = checked_variable_expression.as(@Checked_Symbol_Expression).symbol
+    if checked_symbol is not Checked_Variable_Symbol {
+        abort(checked_variable_expression.location, "Not a variable")
+    }
+    if checked_symbol.type is not Checked_Struct_Type {
+        abort(checked_variable_expression.location, "Cannot reference ".clone().append(checked_symbol.type.name).append(" variables yet"))
+    }
+    return make @Checked_Reference_Expression(
+        location = parsed_expression.location
+        type = make_checked_pointer_type(checked_variable_expression.type)
+        object_expression = checked_variable_expression
     )
 }
 
