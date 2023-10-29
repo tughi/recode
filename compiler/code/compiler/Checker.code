@@ -575,6 +575,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_call_expression(parsed_expression.as(@Parsed_Call_Expression))
     } else if parsed_expression is Parsed_Cast_Expression {
         checked_expression = self.check_cast_expression(parsed_expression.as(@Parsed_Cast_Expression))
+    } else if parsed_expression is Parsed_Divide_Expression {
+        checked_expression = self.check_divide_expression(parsed_expression.as(@Parsed_Divide_Expression))
     } else if parsed_expression is Parsed_Equals_Expression {
         checked_expression = self.check_equals_expression(parsed_expression.as(@Parsed_Equals_Expression))
     } else if parsed_expression is Parsed_Function_Expression {
@@ -605,10 +607,14 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_member_access_expression(parsed_expression.as(@Parsed_Member_Access_Expression))
     } else if parsed_expression is Parsed_Modulo_Expression {
         checked_expression = self.check_modulo_expression(parsed_expression.as(@Parsed_Modulo_Expression))
+    } else if parsed_expression is Parsed_Multiply_Expression {
+        checked_expression = self.check_multiply_expression(parsed_expression.as(@Parsed_Multiply_Expression))
     } else if parsed_expression is Parsed_Not_Equals_Expression {
         checked_expression = self.check_not_equals_expression(parsed_expression.as(@Parsed_Not_Equals_Expression))
     } else if parsed_expression is Parsed_Paren_Expression {
         checked_expression = self.check_expression(parsed_expression.as(@Parsed_Paren_Expression).expression, expected_type)
+    } else if parsed_expression is Parsed_Substract_Expression {
+        checked_expression = self.check_substract_expression(parsed_expression.as(@Parsed_Substract_Expression))
     } else if parsed_expression is Parsed_Symbol_Expression {
         checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
     } else if parsed_expression is Parsed_Variable_Reference_Expression {
@@ -822,6 +828,20 @@ func check_cast_expression(self: @Checker, parsed_expression: @Parsed_Cast_Expre
         }
     }
     abort(parsed_expression.location, clone("Cannot cast ").append(checked_expression.type.name).append(" to ").append(checked_type.name))
+}
+
+func check_divide_expression(self: @Checker, parsed_expression: @Parsed_Divide_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    if left_expression.type is not Checked_Integer_Type {
+        abort(parsed_expression.left_expression.location, "Not an integer value")
+    }
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Divide_Expression(
+        location = parsed_expression.location
+        type = left_expression.type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
 }
 
 func check_equals_expression(self: @Checker, parsed_expression: @Parsed_Equals_Expression) -> @Checked_Expression {
@@ -1375,12 +1395,40 @@ func check_modulo_expression(self: @Checker, parsed_expression: @Parsed_Modulo_E
     )
 }
 
+func check_multiply_expression(self: @Checker, parsed_expression: @Parsed_Multiply_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    if left_expression.type is not Checked_Integer_Type {
+        abort(parsed_expression.left_expression.location, "Not an integer value")
+    }
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Multiply_Expression(
+        location = parsed_expression.location
+        type = left_expression.type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
+}
+
 func check_not_equals_expression(self: @Checker, parsed_expression: @Parsed_Not_Equals_Expression) -> @Checked_Expression {
     let left_expression = self.check_expression(parsed_expression.left_expression, null)
     let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
     return make @Checked_Not_Equals_Expression(
         location = parsed_expression.location
         type = self.bool_type
+        left_expression = left_expression
+        right_expression = right_expression
+    )
+}
+
+func check_substract_expression(self: @Checker, parsed_expression: @Parsed_Substract_Expression) -> @Checked_Expression {
+    let left_expression = self.check_expression(parsed_expression.left_expression, null)
+    if left_expression.type is not Checked_Integer_Type {
+        abort(parsed_expression.left_expression.location, "Not an integer value")
+    }
+    let right_expression = self.check_expression(parsed_expression.right_expression, left_expression.type)
+    return make @Checked_Substract_Expression(
+        location = parsed_expression.location
+        type = left_expression.type
         left_expression = left_expression
         right_expression = right_expression
     )
