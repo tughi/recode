@@ -7,3 +7,4 @@
 - [ ] Implement _virtual_ methods
 - [ ] Replace UFCS with methods and extension methods
 - [ ] Break `if` conditions and apply auto-casting for `is` expressions
+- [ ] Implement `discard` expression and treat unhandled values as error

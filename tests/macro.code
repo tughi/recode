@@ -14,7 +14,7 @@ func yes() -> bool {
 }
 
 macro say_hi(step: i32) {
-    let _ = fputs("Hi!\n".data, stdout)
+    fputs("Hi!\n".data, stdout)
 }
 
 func main() -> i32 {

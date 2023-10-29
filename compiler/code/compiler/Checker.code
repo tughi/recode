@@ -324,7 +324,7 @@ func check_external_type_statement(self: @Checker, parsed_statement: @Parsed_Ext
 func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expression_Statement) -> @Checked_Statement {
     let checked_expression = self.check_expression(parsed_statement.expression, null)
     if checked_expression.type is not Checked_Nothing_Type {
-        abort(checked_expression.location, "TODO: Warn about unhandled expression value of ".clone().append(checked_expression.type.object_type.name).append(" type"))
+        stderr.write(checked_expression.location).write(": ").warning().write("Unhandled value").reset().end_line()
     }
     if checked_expression is Checked_Macro_Call_Expression {
         return self.inline_macro_call_expression(checked_expression.as(@Checked_Macro_Call_Expression))

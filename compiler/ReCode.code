@@ -53,6 +53,11 @@ func abort(location: @Source_Location, unexpected_type: @Object_Type) -> Nothing
     abort()
 }
 
+func abort(unexpected_type: @Object_Type) -> Nothing {
+    stderr.error().write("Unexpected type: ").write(unexpected_type.name).reset().end_line()
+    abort()
+}
+
 include "./code/compiler/Counter.code"
 
 include "./code/compiler/IR.code"

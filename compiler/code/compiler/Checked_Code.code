@@ -20,6 +20,7 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         if other is Checked_Macro_Type {
             return self.as(@Checked_Macro_Type).accepts(other.as(@Checked_Macro_Type).parameters)
         }
+        abort(other.object_type)
     }
     if self is Checked_Placeholder_Type {
         let self = self.as(@Checked_Placeholder_Type)
@@ -74,12 +75,24 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
                 return self_pointed_type.accepts(other_pointed_type)
             }
         }
-        return false
+        if other is Checked_Null_Type {
+            return true
+        }
+        abort(other.object_type)
+    }
+    if self is Checked_Unchecked_Array_Type {
+        let self = self.as(@Checked_Unchecked_Array_Type)
+        if other is Checked_Unchecked_Array_Type {
+            let other = other.as(@Checked_Unchecked_Array_Type)
+            return self.item_type.accepts(other.item_type)
+        }
+        abort(other.object_type)
     }
     if other is Checked_Null_Type {
+        \ only a pointer can accept null
         return false
     }
-    abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
+    abort(self.object_type)
 }
 
 func equals(self: @Checked_Type, other: @Checked_Type) -> bool {
