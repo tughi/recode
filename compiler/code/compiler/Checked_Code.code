@@ -420,6 +420,11 @@ struct Checked_Add_Expression: Checked_Binary_Expression {
 struct Checked_Access_Expression: Checked_Expression {
 }
 
+struct Checked_Array_Access_Expression: Checked_Expression {
+    array_expression: @Checked_Expression
+    index_expression: @Checked_Expression
+}
+
 struct Checked_Binary_Expression: Checked_Expression {
     left_expression: @Checked_Expression
     right_expression: @Checked_Expression

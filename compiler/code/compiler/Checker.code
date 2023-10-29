@@ -560,10 +560,12 @@ func check_while_statement(self: @Checker, parsed_statement: @Parsed_While_State
 
 func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, expected_type: @Checked_Type) -> @Checked_Expression {
     let checked_expression: @Checked_Expression
-    if parsed_expression is Parsed_Call_Expression {
-        checked_expression = self.check_call_expression(parsed_expression.as(@Parsed_Call_Expression))
-    } else if parsed_expression is Parsed_Add_Expression {
+    if parsed_expression is Parsed_Add_Expression {
         checked_expression = self.check_add_expression(parsed_expression.as(@Parsed_Add_Expression))
+    } else if parsed_expression is Parsed_Array_Access_Expression {
+        checked_expression = self.check_array_access_expression(parsed_expression.as(@Parsed_Array_Access_Expression))
+    } else if parsed_expression is Parsed_Call_Expression {
+        checked_expression = self.check_call_expression(parsed_expression.as(@Parsed_Call_Expression))
     } else if parsed_expression is Parsed_Cast_Expression {
         checked_expression = self.check_cast_expression(parsed_expression.as(@Parsed_Cast_Expression))
     } else if parsed_expression is Parsed_Equals_Expression {
@@ -607,7 +609,7 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
     } else if parsed_expression is Parsed_Wrapped_Expression {
         checked_expression = self.check_expression(parsed_expression.as(@Parsed_Wrapped_Expression).expression, expected_type)
     } else {
-        abort(parsed_expression.location, "TODO: Check ".clone().append(parsed_expression.object_type.name))
+        abort(parsed_expression.location, parsed_expression.object_type)
     }
 
     if expected_type != null and not expected_type.accepts(checked_expression.type) {
@@ -628,6 +630,30 @@ func check_add_expression(self: @Checker, parsed_expression: @Parsed_Add_Express
         type = left_expression.type
         left_expression = left_expression
         right_expression = right_expression
+    )
+}
+
+func check_array_access_expression(self: @Checker, parsed_expression: @Parsed_Array_Access_Expression) -> @Checked_Expression {
+    \ check array expression
+    let checked_array_expression = self.check_expression(parsed_expression.array_expression, null)
+    let checked_array_type = checked_array_expression.type
+    if checked_array_type is not Checked_Array_Type {
+        abort(checked_array_expression.location, "Not an array type")
+    }
+    let checked_array_type = checked_array_type.as(@Checked_Array_Type)
+
+    \ check index expression
+    let checked_index_expression = self.check_expression(parsed_expression.index_expression, null)
+    if checked_index_expression.type is not Checked_Integer_Type {
+        abort(checked_index_expression.location, "Not an integer expression")
+    }
+
+    \ create expression
+    return make @Checked_Array_Access_Expression(
+        location = parsed_expression.location
+        type = checked_array_type.item_type
+        array_expression = checked_array_expression
+        index_expression = checked_index_expression
     )
 }
 
