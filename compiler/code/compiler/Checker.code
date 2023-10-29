@@ -423,8 +423,17 @@ func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Str
         checked_struct_type.super_type = checked_super_type
         checked_super_type.derived_types.append(checked_struct_type)
 
-        if parsed_struct_statement.super_arguments.size > 0 {
-            abort(parsed_struct_statement.super_type.location, "TODO: Check super arguments")
+        parsed_struct_statement.super_arguments.for_each() {
+            \ check super argument
+            if it.name == null {
+                abort(it.location, "Missing member name")
+            }
+            let checked_struct_member = checked_super_type.get_member(it.name.lexeme)
+            if checked_struct_member == null {
+                abort(it.name.location, "TODO: List super type members")
+            }
+            let checked_expression = self.check_expression(it.value_expression, checked_struct_member.type)
+            checked_struct_type.default_values.put(checked_struct_member, checked_expression)
         }
     }
 
@@ -469,7 +478,7 @@ func check_struct_statement(self: @Checker, parsed_struct_statement: @Parsed_Str
                     abort(parsed_struct_member.type.location, "Type recursivity")
                 }
             }
-            checked_struct_type.add_member(checked_struct_member_name, checked_struct_member_type, checked_struct_member_value_expression)
+            checked_struct_type.add_member(parsed_struct_member.location, checked_struct_member_name, checked_struct_member_type, checked_struct_member_value_expression)
         }
     }
 

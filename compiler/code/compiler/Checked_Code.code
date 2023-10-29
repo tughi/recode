@@ -244,18 +244,27 @@ struct Checked_Struct_Type: Checked_Named_Type {
     super_type: @Checked_Struct_Type = null
     derived_types = make List[@Checked_Struct_Type]()
     members = make List[@Checked_Struct_Type_Member]()
+    default_values = make @Map[@Checked_Struct_Type_Member, @Checked_Expression]()
 }
 
 struct Checked_Struct_Type_Member {
-    struct_type: @Checked_Struct_Type
+    location: @Source_Location
     name: @String
     type: @Checked_Type
-    default_value_expression: @Checked_Expression
+    struct_type: @Checked_Struct_Type
 }
 
-func add_member(self: @Checked_Struct_Type, name: @String, type: @Checked_Type, default_value_expression: @Checked_Expression) -> @Checked_Struct_Type_Member {
-    let member = make @Checked_Struct_Type_Member(struct_type = self, name = name, type = type, default_value_expression = default_value_expression)
+func add_member(self: @Checked_Struct_Type, location: @Source_Location, name: @String, type: @Checked_Type, default_value_expression: @Checked_Expression) -> @Checked_Struct_Type_Member {
+    let member = make @Checked_Struct_Type_Member(
+        location = location
+        name = name
+        type = type
+        struct_type = self
+    )
     self.members.append(member)
+    if default_value_expression != null {
+        self.default_values.put(member, default_value_expression)
+    }
     return member
 }
 
