@@ -76,6 +76,9 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         }
         return false
     }
+    if other is Checked_Null_Type {
+        return false
+    }
     abort("TOOD: Check if ".clone().append(self.object_type.name).append(" accepts ").append(other.object_type.name))
 }
 

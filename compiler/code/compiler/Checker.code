@@ -512,8 +512,11 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
         checked_expression = self.check_expression(parsed_statement.value_expression, checked_type)
         if checked_type == null {
             checked_type = checked_expression.type
-            if checked_type is Checked_Null_Type or checked_type is Checked_Undefined_Type {
-                abort(checked_expression.location, "Cannot infer variable type from ".clone().append(checked_type.name).append(" value"))
+            if checked_type is Checked_Null_Type {
+                abort(checked_expression.location, "Cannot infer variable type from null value")
+            }
+            if checked_type is Checked_Undefined_Type {
+                abort(checked_expression.location, "Cannot infer variable type from undefined value")
             }
         } else {
             if not checked_type.accepts(checked_expression.type) {
@@ -601,7 +604,7 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
     }
 
     if expected_type != null and not expected_type.accepts(checked_expression.type) {
-        abort(parsed_expression.location, "TODO: Report unexpected type")
+        abort(parsed_expression.location, "Incompatible types: got ".clone().append(checked_expression.type.name).append(" instead of ").append(expected_type.name))
     }
 
     return checked_expression
