@@ -1255,9 +1255,9 @@ func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_E
 }
 
 func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
-    \ if parsed_type is Parsed_Array_Type {
-    \     return self.convert_array_type(parsed_type.as(@Parsed_Array_Type))
-    \ }
+    if parsed_type is Parsed_Array_Type {
+        return self.convert_array_type(parsed_type.as(@Parsed_Array_Type))
+    }
     if parsed_type is Parsed_Function_Type {
         return self.convert_function_type(parsed_type.as(@Parsed_Function_Type))
     }
@@ -1274,6 +1274,30 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
         return self.convert_specialized_type(parsed_type.as(@Parsed_Specialized_Type))
     }
     abort(parsed_type.location, "TODO: Convert ".clone().append(parsed_type.object_type.name))
+}
+
+func convert_array_type(self: @Checker, parsed_type: @Parsed_Array_Type) -> @Checked_Array_Type {
+    let checked_item_type = self.convert_type(parsed_type.item_type)
+    if parsed_type.is_checked {
+        if parsed_type.size_expression != null {
+            let checked_size_expression = self.check_expression(parsed_type.size_expression, null)
+            if checked_size_expression is not Checked_Integer_Literal_Expression {
+                abort(parsed_type.size_expression.location, "Not an integer literal")
+            }
+            let checked_size_expression = checked_size_expression.as(@Checked_Integer_Literal_Expression)
+            let checked_size = checked_size_expression.literal.value
+            return make @Checked_Fixed_Array_Type(
+                name = "[".clone().append(checked_item_type.name).append("; ").append(checked_size).append(']')
+                item_type = checked_item_type
+                size = checked_size
+            )
+        }
+        abort(parsed_type.location, "Resizable checked array types are not supported yet")
+    }
+    return make @Checked_Unchecked_Array_Type(
+        name = "[".clone().append(checked_item_type.name).append("; ?]")
+        item_type = checked_item_type
+    )
 }
 
 func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -> @Checked_Function_Type {

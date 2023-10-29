@@ -673,7 +673,7 @@ func convert_array_type(self: @IR_Builder, type: @Parsed_Array_Type) -> @IR_Type
             let size_value = size_value.as(@IR_Constant_Value)
             return self.create_ir_fixed_array_type(item_type, size_value.literal.as(@Integer_Token).value.as(i64))
         }
-        abort(type.location, "Checked array types are not supported yet")
+        abort(type.location, "Resizable checked array types are not supported yet")
     }
     return self.create_ir_unchecked_array_type(item_type)
 }

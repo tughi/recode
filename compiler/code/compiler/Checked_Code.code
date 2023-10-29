@@ -115,6 +115,10 @@ func equals(self: @Checked_Type, other: @Checked_Type) -> bool {
 struct Checked_Any_Type: Checked_Builtin_Type(name = "Any") {
 }
 
+struct Checked_Array_Type: Checked_Type {
+    item_type: @Checked_Type
+}
+
 struct Checked_Bool_Type: Checked_Builtin_Type(name = "bool") {
 }
 
@@ -171,8 +175,7 @@ func accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Call
     return true
 }
 
-struct Checked_Fixed_Array_Type: Checked_Type {
-    item_type: @Checked_Type
+struct Checked_Fixed_Array_Type: Checked_Array_Type {
     size: u64
 }
 
@@ -300,8 +303,7 @@ struct Checked_UInt64_Type: Checked_UInt_Type(name = "u64") {
 struct Checked_UInt8_Type: Checked_UInt_Type(name = "u8") {
 }
 
-struct Checked_Unchecked_Array_Type: Checked_Type {
-    item_type: @Checked_Type
+struct Checked_Unchecked_Array_Type: Checked_Array_Type {
 }
 
 struct Checked_Undefined_Type: Checked_Builtin_Type(name = "Undefined") {
