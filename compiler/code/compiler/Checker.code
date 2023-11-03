@@ -568,6 +568,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_modulo_expression(parsed_expression.as(@Parsed_Modulo_Expression))
     } else if parsed_expression is Parsed_Multiply_Expression {
         checked_expression = self.check_multiply_expression(parsed_expression.as(@Parsed_Multiply_Expression))
+    } else if parsed_expression is Parsed_Negate_Expression {
+        checked_expression = self.check_negate_expression(parsed_expression.as(@Parsed_Negate_Expression))
     } else if parsed_expression is Parsed_Not_Equals_Expression {
         checked_expression = self.check_not_equals_expression(parsed_expression.as(@Parsed_Not_Equals_Expression))
     } else if parsed_expression is Parsed_Paren_Expression {
@@ -1435,6 +1437,18 @@ func check_multiply_expression(self: @Checker, parsed_expression: @Parsed_Multip
         type = left_expression.type
         left_expression = left_expression
         right_expression = right_expression
+    )
+}
+
+func check_negate_expression(self: @Checker, parsed_expression: @Parsed_Negate_Expression) -> @Checked_Expression {
+    let checked_expression = self.check_expression(parsed_expression.expression, null)
+    if checked_expression.type is not Checked_Integer_Type {
+        abort(parsed_expression.expression.location, "Not an integer value")
+    }
+    return make @Checked_Negate_Expression(
+        location = parsed_expression.location
+        type = checked_expression.type
+        expression = checked_expression
     )
 }
 

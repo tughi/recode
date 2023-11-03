@@ -607,6 +607,10 @@ struct Checked_Modulo_Expression: Checked_Binary_Expression {
 struct Checked_Multiply_Expression: Checked_Binary_Expression {
 }
 
+struct Checked_Negate_Expression: Checked_Expression {
+    expression: @Checked_Expression
+}
+
 struct Checked_Not_Equals_Expression: Checked_Binary_Expression {
 }
 
