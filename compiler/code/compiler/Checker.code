@@ -112,8 +112,8 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
         } else if it is Parsed_Variable_Statement {
             let checked_statement = self.check_variable_statement(it.as(@Parsed_Variable_Statement))
             let variable = checked_statement.variable
-            if variable.expression != null {
-                abort("TODO: Check constant expression")
+            if variable.expression != null and not variable.expression.is_constant() {
+                abort(variable.expression.location, "Initialized global variables are not yet supported")
             }
             self.checked_code.globals.put(variable.name, variable)
             self.global_symbols.append(variable)

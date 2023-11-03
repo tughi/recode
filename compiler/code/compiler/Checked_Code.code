@@ -454,6 +454,13 @@ struct Checked_Expression: Object {
     type: @Checked_Type
 }
 
+func is_constant(self: @Checked_Expression) -> bool {
+    if self.type is Checked_Undefined_Type {
+        return true
+    }
+    return false
+}
+
 struct Checked_Add_Expression: Checked_Binary_Expression {
 }
 

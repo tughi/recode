@@ -1,0 +1,7 @@
+\ Expect:
+\ - output: ''
+
+let value: i32 = undefined
+
+func main() -> Nothing {
+}
