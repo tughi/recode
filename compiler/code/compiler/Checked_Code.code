@@ -11,6 +11,16 @@ struct Checked_Type: Object {
 }
 
 func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
+    let result = self._accepts(other)
+    \ if result {
+    \     stderr.debug().write(self.name).write(" accepts ").write(other.name).reset().end_line()
+    \ } else {
+    \     stderr.debug().write(self.name).write(" doesn't accept ").write(other.name).reset().end_line()
+    \ }
+    return result
+}
+
+func _accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
     if self == other or other is Checked_Undefined_Type {
         return true
     }
@@ -25,11 +35,8 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
             if other is Checked_Macro_Type {
                 return self.as(@Checked_Macro_Type).accepts(other.as(@Checked_Macro_Type).parameters)
             }
-            abort(other.object_type)
         }
-        abort(other.object_type)
-    }
-    if self is Checked_Placeholder_Type {
+    } else if self is Checked_Placeholder_Type {
         let self = self.as(@Checked_Placeholder_Type)
         if self.solved_type != null and self.solved_type != other {
             \ impossible state
@@ -37,8 +44,7 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         }
         self.solved_type = other
         return true
-    }
-    if self is Checked_Pointer_Type {
+    } else if self is Checked_Pointer_Type {
         if other is Checked_Pointer_Type {
             let self_pointed_type = self.as(@Checked_Pointer_Type).pointed_type
             let other_pointed_type = other.as(@Checked_Pointer_Type).pointed_type
@@ -85,21 +91,14 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         if other is Checked_Null_Type {
             return true
         }
-        abort(other.object_type)
-    }
-    if self is Checked_Unchecked_Array_Type {
+    } else if self is Checked_Unchecked_Array_Type {
         let self = self.as(@Checked_Unchecked_Array_Type)
         if other is Checked_Unchecked_Array_Type {
             let other = other.as(@Checked_Unchecked_Array_Type)
             return self.item_type.accepts(other.item_type)
         }
-        abort(other.object_type)
     }
-    if other is Checked_Null_Type {
-        \ only a pointer can accept null
-        return false
-    }
-    abort(self.object_type)
+    return false
 }
 
 func equals(self: @Checked_Type, other: @Checked_Type) -> bool {
@@ -156,6 +155,25 @@ struct Checked_Callable_Parameter {
 }
 
 func accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_Argument]) -> bool {
+    let result = self._accepts(call_arguments)
+    \ if result {
+    \     stderr.warning().write(self.name).write(" accepts ").write(call_arguments).reset().end_line()
+    \ } else {
+    \     stderr.warning().write(self.name).write(" doesn't accept ").write(call_arguments).reset().end_line()
+    \ }
+    return result
+}
+
+func write(out: @FILE, checked_call_arguments: @List[@Checked_Call_Argument]) -> @FILE {
+    out.write("arguments (")
+    checked_call_arguments.for_each() {
+        out.write(it.expression.type.name)
+    }
+    out.write(")")
+    return out
+}
+
+func _accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_Argument]) -> bool {
     \ Check each argument
     let parameter_item = self.parameters.first_item
     let argument_item = call_arguments.first_item
@@ -176,6 +194,25 @@ func accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_A
 }
 
 func accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Callable_Parameter]) -> bool {
+    let result = self._accepts(other_parameters)
+    \ if result {
+    \     stderr.warning().write(self.name).write(" accepts ").write(other_parameters).reset().end_line()
+    \ } else {
+    \     stderr.warning().write(self.name).write(" doesn't accept ").write(other_parameters).reset().end_line()
+    \ }
+    return result
+}
+
+func write(out: @FILE, checked_callable_parameters: @List[@Checked_Callable_Parameter]) -> @FILE {
+    out.write("arguments (")
+    checked_callable_parameters.for_each() {
+        out.write(it.type.name)
+    }
+    out.write(")")
+    return out
+}
+
+func _accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Callable_Parameter]) -> bool {
     \ Check each argument
     let self_parameter_item = self.parameters.first_item
     let other_parameter_item = other_parameters.first_item
@@ -201,6 +238,10 @@ struct Checked_Fixed_Array_Type: Checked_Array_Type {
 
 struct Checked_Function_Type: Checked_Callable_Type {
     return_type: @Checked_Type
+}
+
+struct Checked_Function_Pointer_Type: Checked_Pointer_Type {
+    function_type: @Checked_Function_Type
 }
 
 struct Checked_Int_Type: Checked_Integer_Type {

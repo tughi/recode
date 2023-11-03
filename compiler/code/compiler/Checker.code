@@ -276,6 +276,9 @@ func check_struct_type_symbol(self: @Checker, checked_struct_type_symbol: @Check
             let checked_struct_member_type: @Checked_Type = null
             if parsed_struct_member.type != null {
                 checked_struct_member_type = self.convert_type(parsed_struct_member.type)
+                if checked_struct_member_type is Checked_Function_Type {
+                    checked_struct_member_type = make_checked_function_pointer_type(checked_struct_member_type.as(@Checked_Function_Type))
+                }
             }
             let checked_struct_member_value_expression: @Checked_Expression = null
             if parsed_struct_member.default_value_expression != null {
@@ -681,16 +684,10 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
         \ check object expression
         let checked_object_expression = self.check_expression(parsed_member_access_expression.object_expression, null)
         let checked_object_type = checked_object_expression.type
+        if checked_object_type is Checked_Pointer_Type {
+            checked_object_type = checked_object_type.as(@Checked_Pointer_Type).pointed_type
+        }
         if checked_object_type is Checked_Struct_Type {
-            let checked_object_type = checked_object_type.as(@Checked_Struct_Type)
-            let checked_struct_member = checked_object_type.get_member(parsed_member_name)
-            if checked_struct_member != null {
-                \ check if member is callable
-                abort(parsed_member_access_expression.member_name.location, "TODO: Check if member is callable")
-                abort(parsed_member_access_expression.member_name.location, "TODO: Check callable member accepts arguments")
-                abort(parsed_member_access_expression.member_name.location, "TODO: Create callable expression")
-            }
-
             \ add object reference as first call argument
             checked_call_arguments.prepend(make @Checked_Call_Argument(
                 location = checked_object_expression.location
@@ -701,6 +698,27 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
                     object_expression = checked_object_expression
                 )
             ))
+
+            let checked_object_type = checked_object_type.as(@Checked_Struct_Type)
+            let checked_struct_member = checked_object_type.get_member(parsed_member_name)
+            if checked_struct_member != null and checked_struct_member.type is Checked_Function_Pointer_Type {
+                \ create member call
+                let checked_function_type = checked_struct_member.type.as(@Checked_Function_Pointer_Type).function_type
+                if checked_function_type.accepts(checked_call_arguments) {
+                    return make @Checked_Dynamic_Call_Expression(
+                        location = parsed_expression.location
+                        type = checked_function_type.return_type
+                        call_arguments = checked_call_arguments
+                        callee_expression = make @Checked_Member_Access_Expression(
+                            location = parsed_expression.location
+                            type = checked_struct_member.type
+                            object_expression = checked_object_expression
+                            struct_member = checked_struct_member
+                        )
+                    )
+                }
+                abort(parsed_member_access_expression.member_name.location, "Cannot call member of type: ".clone().append(checked_struct_member.type.name))
+            }
         } else {
             \ add object as first call argument
             checked_call_arguments.prepend(make @Checked_Call_Argument(
@@ -908,6 +926,7 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
 
     if callable_matches.size == 0 {
         \ list all named functions and report error
+        stderr.write(callable_name.location).write(": ").error().write("Found no matching callable").reset().end_line()
         abort(callable_name.location, "TODO: List all named functions")
     }
 
@@ -1644,11 +1663,12 @@ func make_checked_pointer_type(checked_pointed_type: @Checked_Type) -> @Checked_
     )
 }
 
-func make_checked_function_pointer_type(checked_function_type: @Checked_Function_Type) -> @Checked_Pointer_Type {
-    return make @Checked_Pointer_Type(
+func make_checked_function_pointer_type(checked_function_type: @Checked_Function_Type) -> @Checked_Function_Pointer_Type {
+    return make @Checked_Function_Pointer_Type(
         name = "@(".clone().append(checked_function_type.name).append(')')
         is_checked_type = checked_function_type.is_checked_type
         pointed_type = checked_function_type
+        function_type = checked_function_type
     )
 }
 
