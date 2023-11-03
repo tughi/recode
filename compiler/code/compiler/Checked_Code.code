@@ -7,6 +7,7 @@ struct Checked_Code {
 
 struct Checked_Type: Object {
     name: @String
+    is_checked_type = true
 }
 
 func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
@@ -62,8 +63,8 @@ func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
                         if struct_type.generic_struct_name == placeholder_type.generic_struct_name {
                             \ found specialized type
                             \ check if specialization types are compatible
-                            placeholder_type.specialization_types.for_each() {
-                                if not value.accepts(struct_type.specialization_types.get(key)) {
+                            placeholder_type.specialization_symbols.for_each() {
+                                if not it.type.accepts(struct_type.specialization_symbols.find_type_symbol(it.name).type) {
                                     return false
                                 }
                             }
@@ -247,7 +248,7 @@ struct Checked_Placeholder_Type: Checked_Named_Type {
 
 struct Checked_Specialized_Placeholder_Type: Checked_Named_Type {
     generic_struct_name: @String
-    specialization_types: @Map[@String, @Checked_Type] \ contains at least one Checked_Placeholder_Type
+    specialization_symbols: @Checked_Symbols \ contains at least one Checked_Placeholder_Type
 }
 
 struct Checked_Pointer_Type: Checked_Type {
@@ -256,7 +257,7 @@ struct Checked_Pointer_Type: Checked_Type {
 
 struct Checked_Specialized_Struct_Type: Checked_Struct_Type {
     generic_struct_name: @String
-    specialization_types: @Map[@String, @Checked_Type]
+    specialization_symbols: @Checked_Symbols
 }
 
 struct Checked_Struct_Type: Checked_Named_Type {
@@ -337,10 +338,45 @@ struct Checked_Unchecked_Array_Type: Checked_Array_Type {
 struct Checked_Undefined_Type: Checked_Builtin_Type(name = "Undefined") {
 }
 
+struct Checked_Symbols: List[@Checked_Symbol] {
+    parent: @Checked_Symbols
+}
+
+func find_symbol(self: @Checked_Symbols, name: @String) -> @Checked_Symbol {
+    let list_item = self.last_item
+    while list_item != null {
+        if list_item.data.name.equals(name) {
+            return list_item.data
+        }
+        list_item = list_item.prev_item
+    }
+    if self.parent != null {
+        return self.parent.find_symbol(name)
+    }
+    return null
+}
+
+func find_type_symbol(self: @Checked_Symbols, name: @String) -> @Checked_Type_Symbol {
+    let list_item = self.last_item
+    while list_item != null {
+        if list_item.data is Checked_Type_Symbol and list_item.data.name.equals(name) {
+            return list_item.data.as(@Checked_Type_Symbol)
+        }
+        list_item = list_item.prev_item
+    }
+    if self.parent != null {
+        return self.parent.find_type_symbol(name)
+    }
+    return null
+}
+
 struct Checked_Symbol: Object {
     location: @Source_Location
     name: @String
     type: @Checked_Type
+}
+
+struct Checked_Builtin_Type_Symbol: Checked_Type_Symbol {
 }
 
 struct Checked_Function_Symbol: Checked_Symbol {
@@ -366,7 +402,11 @@ struct Checked_Parameter_Symbol: Checked_Symbol {
 struct Checked_Type_Symbol: Checked_Symbol {
 }
 
+struct Checked_Specialization_Type_Symbol: Checked_Type_Symbol {
+}
+
 struct Checked_Struct_Type_Symbol: Checked_Type_Symbol {
+    parsed_struct_statement: @Parsed_Struct_Statement
 }
 
 struct Checked_Variable_Symbol: Checked_Symbol {

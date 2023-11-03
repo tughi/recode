@@ -1,0 +1,20 @@
+\ Expect:
+\ - output: ''
+
+func main() -> i32 {
+    let text = make_string()
+
+    return text.length.as(i32)
+}
+
+func make_string() -> @String {
+    return make @String()
+}
+
+struct String {
+    data = malloc(16usize).as([u8; ?])
+    data_size = 16usize
+    length = 0usize
+}
+
+external func malloc(size: usize) -> @Any
