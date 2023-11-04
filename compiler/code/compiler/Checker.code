@@ -1416,6 +1416,19 @@ func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_M
         }
         abort(parsed_expression.member_name.location, clone(checked_struct_type.name).append(" has no ").append(parsed_expression.member_name.lexeme).append(" member"))
     }
+    if checked_struct_type_member.type is Checked_Struct_Type {
+        \ accessing a struct member requires the object to be a pointer
+        if checked_object_expression.type is Checked_Pointer_Type {
+            return make @Checked_Member_Access_Expression(
+                location = parsed_expression.location
+                type = make_checked_pointer_type(checked_struct_type_member.type)
+                object_expression = checked_object_expression
+                struct_member = checked_struct_type_member
+            )
+        }
+
+        abort(checked_object_expression.location, "Not a pointer")
+    }
     return make @Checked_Member_Access_Expression(
         location = parsed_expression.location
         type = checked_struct_type_member.type
