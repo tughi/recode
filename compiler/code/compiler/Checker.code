@@ -902,13 +902,23 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
             \ create function type
             let specialized_function_type = self.specialize_callable_type(it.type, checked_call_arguments)
             if specialized_function_type != null and specialized_function_type.checked_callable_type.accepts(checked_call_arguments) {
-                \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
-                callable_matches.append(make @Parsed_Generic_Function_Match(
-                    location = it.location
-                    callable_type = specialized_function_type.checked_callable_type
-                    function_statement = it
-                    specialization_symbols = specialized_function_type.specialization_symbols
-                ))
+                \ check if generic funtion was already specialized
+                let specialized_function_exists = false
+                callable_matches.for_each() {
+                    if it.callable_type.equals(specialized_function_type.checked_callable_type) {
+                        specialized_function_exists = true
+                        break
+                    }
+                }
+
+                if not specialized_function_exists {
+                    callable_matches.append(make @Parsed_Generic_Function_Match(
+                        location = it.location
+                        callable_type = specialized_function_type.checked_callable_type
+                        function_statement = it
+                        specialization_symbols = specialized_function_type.specialization_symbols
+                    ))
+                }
             }
         }
     }
@@ -918,7 +928,6 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
             \ create macro type
             let specialized_macro_type = self.specialize_callable_type(it.type, checked_call_arguments)
             if specialized_macro_type != null and specialized_macro_type.checked_callable_type.accepts(checked_call_arguments) {
-                \ abort(callable_name.location, "TODO: Check if generic funtion was already specialized")
                 callable_matches.append(make @Parsed_Macro_Match(
                     location = it.location
                     callable_type = specialized_macro_type.checked_callable_type
