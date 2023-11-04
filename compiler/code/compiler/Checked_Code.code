@@ -1,5 +1,7 @@
 include "./List.code"
 
+let DEBUG: bool
+
 struct Checked_Code {
     globals = make Map[@String, @Checked_Symbol]()
     functions = make List[@Checked_Function_Symbol]()
@@ -12,11 +14,13 @@ struct Checked_Type: Object {
 
 func accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
     let result = self._accepts(other)
-    \ if result {
-    \     stderr.debug().write(self.name).write(" accepts ").write(other.name).reset().end_line()
-    \ } else {
-    \     stderr.debug().write(self.name).write(" doesn't accept ").write(other.name).reset().end_line()
-    \ }
+    if DEBUG {
+        if result {
+            stderr.debug().write(self.name).write(" accepts ").write(other.name).reset().end_line()
+        } else {
+            stderr.debug().write(self.name).write(" doesn't accept ").write(other.name).reset().end_line()
+        }
+    }
     return result
 }
 
@@ -38,9 +42,9 @@ func _accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         }
     } else if self is Checked_Placeholder_Type {
         let self = self.as(@Checked_Placeholder_Type)
-        if self.solved_type != null and self.solved_type != other {
+        if self.solved_type != null and not self.solved_type.equals(other) {
             \ impossible state
-            abort()
+            abort(self.solved_type.name.clone().append(" != ").append(other.name))
         }
         self.solved_type = other
         return true
@@ -156,11 +160,13 @@ struct Checked_Callable_Parameter {
 
 func accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_Argument]) -> bool {
     let result = self._accepts(call_arguments)
-    \ if result {
-    \     stderr.warning().write(self.name).write(" accepts ").write(call_arguments).reset().end_line()
-    \ } else {
-    \     stderr.warning().write(self.name).write(" doesn't accept ").write(call_arguments).reset().end_line()
-    \ }
+    if DEBUG {
+        if result {
+            stderr.warning().write(self.name).write(" accepts ").write(call_arguments).reset().end_line()
+        } else {
+            stderr.warning().write(self.name).write(" doesn't accept ").write(call_arguments).reset().end_line()
+        }
+    }
     return result
 }
 
@@ -195,11 +201,13 @@ func _accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_
 
 func accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Callable_Parameter]) -> bool {
     let result = self._accepts(other_parameters)
-    \ if result {
-    \     stderr.warning().write(self.name).write(" accepts ").write(other_parameters).reset().end_line()
-    \ } else {
-    \     stderr.warning().write(self.name).write(" doesn't accept ").write(other_parameters).reset().end_line()
-    \ }
+    if DEBUG {
+        if result {
+            stderr.warning().write(self.name).write(" accepts ").write(other_parameters).reset().end_line()
+        } else {
+            stderr.warning().write(self.name).write(" doesn't accept ").write(other_parameters).reset().end_line()
+        }
+    }
     return result
 }
 

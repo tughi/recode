@@ -71,6 +71,8 @@ func create_builtin_type_symbol(self: @Checker, type: @Checked_Builtin_Type) -> 
 }
 
 func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
+    DEBUG = false
+
     \ collect all generic struct statements
     parsed_code.statements.for_each() {
         if it is Parsed_Generic_Struct_Statement {
