@@ -172,7 +172,10 @@ func accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_A
 
 func write(out: @FILE, checked_call_arguments: @List[@Checked_Call_Argument]) -> @FILE {
     out.write("arguments (")
-    checked_call_arguments.for_each() {
+    checked_call_arguments.for_each_indexed() {
+        if it_index > 0 {
+            out.write(", ")
+        }
         out.write(it.expression.type.name)
     }
     out.write(")")
@@ -213,7 +216,10 @@ func accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Call
 
 func write(out: @FILE, checked_callable_parameters: @List[@Checked_Callable_Parameter]) -> @FILE {
     out.write("arguments (")
-    checked_callable_parameters.for_each() {
+    checked_callable_parameters.for_each_indexed() {
+        if it_index > 0 {
+            out.write(", ")
+        }
         out.write(it.type.name)
     }
     out.write(")")

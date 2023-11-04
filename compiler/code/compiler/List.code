@@ -193,3 +193,13 @@ macro for_each[T](self: @List[T], block: macro (it: T)) {
         item = item.next_item
     }
 }
+
+macro for_each_indexed[T](self: @List[T], block: macro (it: T, it_index: usize)) {
+    let item = self.first_item
+    let item_index = 0usize
+    while item != null {
+        block(item.data, item_index)
+        item = item.next_item
+        item_index = item_index + 1
+    }
+}
