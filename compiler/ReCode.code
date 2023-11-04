@@ -141,7 +141,7 @@ func write(file: @FILE, statement: @Parsed_Statement, alignment: i64) -> @FILE {
 
     if statement is Parsed_Loop_Statement {
         let statement = statement.as(@Parsed_Loop_Statement)
-        return file.write("loop ").write(statement.block, alignment)
+        return file.write("loop ").write(statement.body_statement, alignment)
     }
 
     if statement is Parsed_Macro_Statement {

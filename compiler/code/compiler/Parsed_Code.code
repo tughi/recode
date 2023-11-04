@@ -122,7 +122,7 @@ struct Parsed_Loop_Statement: Parsed_Statement(
         builder.convert_loop_statement(statement.as(@Parsed_Loop_Statement))
     }
 ) {
-    block: @Parsed_Block_Statement
+    body_statement: @Parsed_Block_Statement
 }
 
 struct Parsed_While_Statement: Parsed_Statement(

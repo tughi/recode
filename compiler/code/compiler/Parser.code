@@ -659,7 +659,7 @@ func parse_loop(self: @Parser) -> @Parsed_Statement {
     let location = self.consume(required_loop).location
     self.consume_space(1)
     let loop_block = self.parse_block()
-    return make @Parsed_Loop_Statement(location = location, block = loop_block)
+    return make @Parsed_Loop_Statement(location = location, body_statement = loop_block)
 }
 
 \ while

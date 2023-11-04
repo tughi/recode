@@ -355,11 +355,17 @@ func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Ch
     if parsed_statement is Parsed_Block_Statement {
         return self.check_block_statement(parsed_statement.as(@Parsed_Block_Statement))
     }
+    if parsed_statement is Parsed_Break_Statement {
+        return self.check_break_statement(parsed_statement.as(@Parsed_Break_Statement))
+    }
     if parsed_statement is Parsed_Expression_Statement {
         return self.check_expression_statement(parsed_statement.as(@Parsed_Expression_Statement))
     }
     if parsed_statement is Parsed_If_Statement {
         return self.check_if_statement(parsed_statement.as(@Parsed_If_Statement))
+    }
+    if parsed_statement is Parsed_Loop_Statement {
+        return self.check_loop_statement(parsed_statement.as(@Parsed_Loop_Statement))
     }
     if parsed_statement is Parsed_Return_Statement {
         return self.check_return_statement(parsed_statement.as(@Parsed_Return_Statement))
@@ -420,6 +426,13 @@ func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_State
     return checked_statement
 }
 
+func check_break_statement(self: @Checker, parsed_statement: @Parsed_Break_Statement) -> @Checked_Statement {
+    \ TODO: Check if break is inside a loop or while statement
+    return make @Checked_Break_Statement(
+        location = parsed_statement.location
+    )
+}
+
 func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expression_Statement) -> @Checked_Statement {
     let checked_expression = self.check_expression(parsed_statement.expression, null)
     if checked_expression.type is not Checked_Nothing_Type {
@@ -446,6 +459,14 @@ func check_if_statement(self: @Checker, parsed_statement: @Parsed_If_Statement) 
         condition_expression = checked_condition_expression
         true_statement = checked_true_statement
         false_statement = checked_false_statement
+    )
+}
+
+func check_loop_statement(self: @Checker, parsed_statement: @Parsed_Loop_Statement) -> @Checked_Statement {
+    let checked_body_statement = self.check_statement(parsed_statement.body_statement)
+    return make @Checked_Loop_Statement(
+        location = parsed_statement.location
+        body_statement = checked_body_statement
     )
 }
 

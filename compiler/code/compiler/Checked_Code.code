@@ -481,6 +481,9 @@ struct Checked_Block_Statement: Checked_Statement {
     statements = make List[@Checked_Statement]()
 }
 
+struct Checked_Break_Statement: Checked_Statement {
+}
+
 struct Checked_Expression_Statement: Checked_Statement {
     expression: @Checked_Expression
 }
@@ -489,6 +492,10 @@ struct Checked_If_Statement: Checked_Statement {
     condition_expression: @Checked_Expression
     true_statement: @Checked_Statement
     false_statement: @Checked_Statement
+}
+
+struct Checked_Loop_Statement: Checked_Statement {
+    body_statement: @Checked_Statement
 }
 
 struct Checked_Return_Statement: Checked_Statement {
