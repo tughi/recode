@@ -1,0 +1,25 @@
+\ Expect:
+\ - output: ''
+
+func compare[T](self: T, other: T) -> i32 {
+    if self == other {
+        return 0
+    }
+    if self < other {
+        return -1
+    }
+    return 1
+}
+
+func main() -> i32 {
+    if compare(42, 42) != 0 {
+        return 1
+    }
+    if compare(42u8, 42u8) != 0 {
+        return 1
+    }
+    if compare(42u8, 41u8) <= 0 {
+        return 2
+    }
+    return 0
+}

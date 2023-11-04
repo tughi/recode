@@ -777,7 +777,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
         }
 
         \ should be a callable symbol
-        if checked_symbol is Checked_Function_Symbol or checked_symbol is Checked_Macro_Symbol {
+        if checked_symbol is Checked_Function_Symbol or checked_symbol is Checked_Macro_Symbol or checked_symbol is Checked_Generic_Function_Symbol {
             if parsed_callee_expression is not Parsed_Symbol_Expression {
                 abort(parsed_callee_expression.location, parsed_callee_expression.object_type)
             }
@@ -787,6 +787,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
         \ unsupported symbol
         abort(checked_symbol.location, checked_symbol.object_type)
     }
+
     abort(checked_callee_expression.location, checked_callee_expression.object_type)
 }
 
@@ -1480,15 +1481,40 @@ func check_substract_expression(self: @Checker, parsed_expression: @Parsed_Subst
 }
 
 func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression) -> @Checked_Expression {
-    let checked_symbol = self.local_symbols.find_symbol(parsed_expression.name.lexeme)
+    let checked_symbol_name = parsed_expression.name.lexeme
+    let checked_symbol = self.local_symbols.find_symbol(checked_symbol_name)
     if checked_symbol == null {
-        abort(parsed_expression.location, clone("Undefined symbol ").append(parsed_expression.name.lexeme))
+        \ symbol might refer to a generic function
+        self.generic_function_statements.for_each() {
+            if it.name.lexeme.equals(checked_symbol_name) {
+                \ create special symbol
+                let checked_function_type = make @Checked_Function_Type(
+                    name = "func (...) -> Any"
+                    return_type = self.any_type
+                )
+                checked_symbol = make @Checked_Generic_Function_Symbol(
+                    location = parsed_expression.location
+                    name = checked_symbol_name
+                    type = make_checked_function_pointer_type(checked_function_type)
+                )
+                return make @Checked_Symbol_Expression(
+                    location = parsed_expression.location
+                    type = checked_symbol.type
+                    symbol = checked_symbol
+                )
+            }
+        }
+
+        abort(parsed_expression.location, clone("Undefined symbol ").append(checked_symbol_name))
     }
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location
         type = checked_symbol.type
         symbol = checked_symbol
     )
+}
+
+struct Checked_Generic_Function_Symbol: Checked_Symbol {
 }
 
 func check_variable_reference_expression(self: @Checker, parsed_expression: @Parsed_Variable_Reference_Expression) -> @Checked_Expression {
