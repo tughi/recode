@@ -163,13 +163,16 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
 func check_function_symbol(self: @Checker, checked_function: @Checked_Function_Symbol) -> Nothing {
     let parsed_function_statement = checked_function.parsed_function_statement
 
+    \ remember parent symbols
+    let parent_symbols = self.local_symbols
+
     \ create function context
     self.local_symbols = make @Checked_Symbols(
         parent = self.local_symbols
     )
     let checked_function_type = checked_function.function_type
     checked_function_type.parameters.for_each() {
-        self.local_symbols.prepend(make @Checked_Parameter_Symbol(
+        self.local_symbols.append(make @Checked_Parameter_Symbol(
             location = it.location
             name = it.name
             type = it.type
@@ -182,7 +185,7 @@ func check_function_symbol(self: @Checker, checked_function: @Checked_Function_S
     self.expected_return_type = null
 
     \ restore context
-    self.local_symbols = self.local_symbols.parent
+    self.local_symbols = parent_symbols
 }
 
 func create_struct_type_symbol(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement, checked_struct_name: @String, specialization_symbols: @Checked_Symbols) -> @Checked_Struct_Type_Symbol {
@@ -410,7 +413,7 @@ func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_State
     let parent_symbols = self.local_symbols
 
     \ create block symbols
-    let block_symbols = make @Checked_Symbols(
+    self.local_symbols = make @Checked_Symbols(
         parent = parent_symbols
     )
 
@@ -534,7 +537,7 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
             expression = checked_expression
         )
     )
-    self.local_symbols.prepend(checked_statement.variable)
+    self.local_symbols.append(checked_statement.variable)
 
     return checked_statement
 }
@@ -1851,7 +1854,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
             let checked_call_argument_expression_type = checked_call_argument_expression_type.as(@Checked_Lazy_Macro_Type)
             \ create macro parameter
             if checked_call_argument_expression is Checked_Macro_Body {
-                self.local_symbols.prepend(make @Checked_Macro_Parameter_Symbol(
+                self.local_symbols.append(make @Checked_Macro_Parameter_Symbol(
                     location = parsed_parameter.name.location
                     name = parsed_parameter.name.lexeme
                     type = checked_parameter_type
@@ -1871,7 +1874,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
                 if not checked_parameter_type.accepts(checked_macro_type) {
                     abort(checked_call_argument_expression.location, "Incompatible macro types")
                 }
-                self.local_symbols.prepend(make @Checked_Macro_Parameter_Symbol(
+                self.local_symbols.append(make @Checked_Macro_Parameter_Symbol(
                     location = parsed_parameter.name.location
                     name = parsed_parameter.name.lexeme
                     type = checked_parameter_type
@@ -1893,7 +1896,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
                     expression = checked_call_argument_expression
                 )
             )
-            self.local_symbols.prepend(checked_variable_statement.variable)
+            self.local_symbols.append(checked_variable_statement.variable)
             checked_statement.statements.append(checked_variable_statement)
         }
 
