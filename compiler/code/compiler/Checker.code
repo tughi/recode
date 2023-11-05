@@ -406,22 +406,24 @@ func check_assignment_statement(self: @Checker, parsed_statement: @Parsed_Assign
 }
 
 func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_Statement) -> @Checked_Block_Statement {
+    \ remember parent symbols
+    let parent_symbols = self.local_symbols
+
+    \ create block symbols
+    let block_symbols = make @Checked_Symbols(
+        parent = parent_symbols
+    )
+
+    \ check block
     let checked_statement = make @Checked_Block_Statement(
         location = parsed_statement.location
     )
-
-    \ create function context
-    self.local_symbols = make @Checked_Symbols(
-        parent = self.local_symbols
-    )
-
-    \ check function body
     parsed_statement.statements.for_each() {
         checked_statement.statements.append(self.check_statement(it))
     }
 
-    \ restore context
-    self.local_symbols = self.local_symbols.parent
+    \ restore parent symbols
+    self.local_symbols = parent_symbols
 
     return checked_statement
 }
@@ -792,7 +794,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
                 type = self.nothing_type
                 parsed_macro_type = checked_symbol.parsed_macro_type
                 parsed_macro_body = checked_symbol.parsed_macro_body
-                specialization_symbols = null
+                specialization_symbols = checked_symbol.local_symbols
                 call_arguments = checked_call_arguments
             )
         }
@@ -1041,7 +1043,9 @@ struct Specialized_Callable_Type {
 }
 
 func specialize_callable_type(self: @Checker, parsed_callable_type: @Parsed_Callable_Type, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Specialized_Callable_Type {
-    self.local_symbols = make @Checked_Symbols(parent = self.local_symbols)
+    self.local_symbols = make @Checked_Symbols(
+        parent = self.local_symbols
+    )
     if parsed_callable_type.type_parameters != null {
         parsed_callable_type.type_parameters.for_each() {
             self.local_symbols.append(make @Checked_Specialization_Type_Symbol(
@@ -1766,7 +1770,9 @@ func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_S
 
     \ create type name
     let has_placeholder_specialization_type = false
-    let specialization_symbols = make @Checked_Symbols(parent = self.local_symbols)
+    let specialization_symbols = make @Checked_Symbols(
+        parent = self.local_symbols
+    )
     let checked_type_name = parsed_specialized_type.name.lexeme.clone().append('[')
     let parsed_type_parameter_item = parsed_generic_struct_statement.type_parameters.first_item
     let parsed_type_argument_item = parsed_specialized_type.type_arguments.first_item
@@ -1810,11 +1816,13 @@ func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_S
 }
 
 func inline_macro_call_expression(self: @Checker, checked_macro_call_expression: @Checked_Macro_Call_Expression) -> @Checked_Statement {
+    \ remember parent symbols
+    let parent_symbols = self.local_symbols
+
     \ prepare local symbols
-    let local_symbols = self.local_symbols
-    if checked_macro_call_expression.specialization_symbols != null {
-        self.local_symbols = checked_macro_call_expression.specialization_symbols
-    }
+    let specialization_symbols = checked_macro_call_expression.specialization_symbols
+    let macro_symbols = make @Checked_Symbols(parent = specialization_symbols)
+    self.local_symbols = macro_symbols
 
     \ create surrounding block
     let checked_statement = make @Checked_Block_Statement(location = checked_macro_call_expression.location)
@@ -1849,6 +1857,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
                     type = checked_parameter_type
                     parsed_macro_type = parsed_parameter.type.as(@Parsed_Macro_Type)
                     parsed_macro_body = checked_call_argument_expression.as(@Checked_Macro_Body).parsed_macro_body.statement
+                    local_symbols = specialization_symbols
                 ))
             } else if checked_call_argument_expression is Checked_Symbol_Expression {
                 let checked_symbol = checked_call_argument_expression.as(@Checked_Symbol_Expression).symbol
@@ -1868,6 +1877,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
                     type = checked_parameter_type
                     parsed_macro_type = parsed_parameter.type.as(@Parsed_Macro_Type)
                     parsed_macro_body = checked_symbol.parsed_macro_statement.body
+                    local_symbols = specialization_symbols
                 ))
             } else {
                 abort(checked_call_argument_expression.location, checked_call_argument_expression.object_type)
@@ -1898,8 +1908,8 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
     \ inline macro body
     checked_statement.statements.append(self.check_statement(checked_macro_call_expression.parsed_macro_body))
 
-    \ restore type context
-    self.local_symbols = local_symbols
+    \ restore parent symbols
+    self.local_symbols = parent_symbols
 
     return checked_statement
 }

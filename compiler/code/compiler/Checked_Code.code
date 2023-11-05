@@ -446,6 +446,7 @@ struct Checked_Macro_Symbol: Checked_Symbol {
 struct Checked_Macro_Parameter_Symbol: Checked_Symbol {
     parsed_macro_type: @Parsed_Macro_Type
     parsed_macro_body: @Parsed_Statement
+    local_symbols: @Checked_Symbols
 }
 
 struct Checked_Opaque_Type_Symbol: Checked_Type_Symbol {

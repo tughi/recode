@@ -1,0 +1,18 @@
+\ Expect:
+\ - error: 'tests/macro_context_isolation.code:15:18: Undefined symbol times\n'
+
+macro repeat(times: i32, code: macro (iteration: i32)) {
+    let i = 0
+    while i < times {
+        code(i)
+        i = i + 1
+    }
+}
+
+func main() -> i32 {
+    let result = 0
+    repeat(10) {
+        result = times \ times is not visible here
+    }
+    return result
+}
