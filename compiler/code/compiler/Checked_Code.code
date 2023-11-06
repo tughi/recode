@@ -42,9 +42,8 @@ func _accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
         }
     } else if self is Checked_Placeholder_Type {
         let self = self.as(@Checked_Placeholder_Type)
-        if self.solved_type != null and not self.solved_type.equals(other) {
-            \ impossible state
-            abort(self.solved_type.name.clone().append(" != ").append(other.name))
+        if self.solved_type != null {
+            return self.solved_type.accepts(other)
         }
         self.solved_type = other
         return true
@@ -53,6 +52,9 @@ func _accepts(self: @Checked_Type, other: @Checked_Type) -> bool {
             let self_pointed_type = self.as(@Checked_Pointer_Type).pointed_type
             let other_pointed_type = other.as(@Checked_Pointer_Type).pointed_type
             if self_pointed_type == other_pointed_type {
+                return true
+            }
+            if self_pointed_type is Checked_Any_Type {
                 return true
             }
             if self_pointed_type is Checked_Function_Type and other_pointed_type is Checked_Function_Type {
@@ -162,9 +164,9 @@ func accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_A
     let result = self._accepts(call_arguments)
     if DEBUG {
         if result {
-            stderr.warning().write(self.name).write(" accepts ").write(call_arguments).reset().end_line()
+            stderr.debug().write(self.name).write(" accepts ").write(call_arguments).reset().end_line()
         } else {
-            stderr.warning().write(self.name).write(" doesn't accept ").write(call_arguments).reset().end_line()
+            stderr.debug().write(self.name).write(" doesn't accept ").write(call_arguments).reset().end_line()
         }
     }
     return result
@@ -206,9 +208,9 @@ func accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Call
     let result = self._accepts(other_parameters)
     if DEBUG {
         if result {
-            stderr.warning().write(self.name).write(" accepts ").write(other_parameters).reset().end_line()
+            stderr.debug().write(self.name).write(" accepts ").write(other_parameters).reset().end_line()
         } else {
-            stderr.warning().write(self.name).write(" doesn't accept ").write(other_parameters).reset().end_line()
+            stderr.debug().write(self.name).write(" doesn't accept ").write(other_parameters).reset().end_line()
         }
     }
     return result
