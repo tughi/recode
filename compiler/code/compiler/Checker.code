@@ -970,25 +970,38 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
         abort(callable_name.location, "TODO: List all named functions")
     }
 
-    if callable_matches.size > 1 {
-        \ eliminate matches that accept parameters from another match
-        callable_matches.for_each() {
-            let current_match = it
-            callable_matches.for_each() {
-                let another_match = it
-                if current_match != another_match {
-                    if another_match.callable_type.accepts(current_match.callable_type) {
-                        if current_match.callable_type.name.equals(another_match.callable_type.name) {
-                            abort(another_match.location, clone("Callable declared first here: ").append(current_match.location))
-                        }
-                        \ TODO: eliminate another_match
-                        abort(another_match.location, clone("This callable matches another one defined here: ").append(current_match.location))
-                    }
+    while callable_matches.size > 1 {
+        \ find matches that accept parameters from another match
+        let removed_callable_match = false
+        let current_matches_item = callable_matches.first_item
+        while current_matches_item != null {
+            let current_match = current_matches_item.data
+            let another_matches_item = current_matches_item.next_item
+            while another_matches_item != null {
+                let another_match = another_matches_item.data
+                if current_match.callable_type.name.equals(another_match.callable_type.name) {
+                    abort(another_match.location, clone("Callable declared first here: ").append(current_match.location))
                 }
+                if current_match.callable_type.accepts(another_match.callable_type) {
+                    \ eliminate current_match
+                    current_matches_item.is_removed = true
+                    removed_callable_match = true
+                }
+                if another_match.callable_type.accepts(current_match.callable_type) {
+                    \ eliminate current_match
+                    another_matches_item.is_removed = true
+                    removed_callable_match = true
+                }
+                another_matches_item = another_matches_item.next_item
             }
+            current_matches_item = current_matches_item.next_item
         }
 
-        abort(callable_name.location, "TODO: Pick best matching function")
+        if removed_callable_match {
+            callable_matches.prune()
+        } else {
+            abort(callable_name.location, "TODO: Report ambiguous call")
+        }
     }
 
     let callable_match = callable_matches.first()
