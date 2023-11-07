@@ -21,7 +21,7 @@ COLOR_RESET = '\x1b[0m'
 
 def clean():
     logger.info("Cleaning")
-    run('rm -fr build')
+    run('rm -fr build stage0')
 
 
 def run(command, **kwargs):
