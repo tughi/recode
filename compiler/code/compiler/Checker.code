@@ -396,7 +396,7 @@ func check_assignment_statement(self: @Checker, parsed_statement: @Parsed_Assign
     }
     if checked_destination_expression is Checked_Symbol_Expression {
         let checked_symbol = checked_destination_expression.as(@Checked_Symbol_Expression).symbol
-        if checked_symbol is Checked_Variable_Symbol {
+        if checked_symbol is Checked_Variable_Symbol or checked_symbol is Checked_Parameter_Symbol {
             return make @Checked_Assignment_Statement(
                 location = parsed_statement.location
                 destination_expression = checked_destination_expression
