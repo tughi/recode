@@ -436,6 +436,10 @@ struct Checked_Symbol: Object {
 struct Checked_Builtin_Type_Symbol: Checked_Type_Symbol {
 }
 
+struct Checked_Constant_Symbol: Checked_Symbol {
+    value_expression: @Checked_Expression
+}
+
 struct Checked_Function_Symbol: Checked_Symbol {
     function_type: @Checked_Function_Type
     parsed_function_statement: @Parsed_Function_Statement
@@ -521,8 +525,12 @@ struct Checked_Expression: Object {
 }
 
 func is_constant(self: @Checked_Expression) -> bool {
-    if self.type is Checked_Undefined_Type {
+    if self is Checked_Literal_Expression {
         return true
+    }
+    if self is Checked_Symbol_Expression {
+        let checked_symbol = self.as(@Checked_Symbol_Expression).symbol
+        return checked_symbol is Checked_Constant_Symbol
     }
     return false
 }

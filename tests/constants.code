@@ -1,0 +1,9 @@
+\ Expect:
+\ - output: ''
+
+define CONSTANT = 0
+define ANOTHER_CONSTANT = CONSTANT
+
+func main() -> i32 {
+    return CONSTANT
+}

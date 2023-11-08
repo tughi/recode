@@ -87,7 +87,20 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
 
     \ create root statements
     parsed_code.statements.for_each() {
-        if it is Parsed_External_Type_Statement {
+        if it is Parsed_Constant_Statement {
+            let parsed_constant_statement = it.as(@Parsed_Constant_Statement)
+            let checked_expression = self.check_expression(parsed_constant_statement.expression, null)
+            if not checked_expression.is_constant() {
+                abort(checked_expression.location, "Not a constant expression")
+            }
+            self.global_symbols.append(make @Checked_Constant_Symbol(
+                location = parsed_constant_statement.name.location
+                location = parsed_constant_statement.name.lexeme
+                name = parsed_constant_statement.name.lexeme
+                type = checked_expression.type
+                value_expression = checked_expression
+            ))
+        } else if it is Parsed_External_Type_Statement {
             self.create_opaque_type_symbol(it.as(@Parsed_External_Type_Statement))
         } else if it is Parsed_Function_Statement {
             let parsed_function_statement = it.as(@Parsed_Function_Statement)
@@ -114,8 +127,13 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
         } else if it is Parsed_Variable_Statement {
             let checked_statement = self.check_variable_statement(it.as(@Parsed_Variable_Statement))
             let variable = checked_statement.variable
-            if variable.expression != null and not variable.expression.is_constant() {
-                abort(variable.expression.location, "Initialized global variables are not yet supported")
+            if variable.expression != null {
+                if not variable.expression.is_constant() {
+                    abort(variable.expression.location, "Not a constant expression")
+                }
+                if variable.expression.type is not Checked_Undefined_Type {
+                    abort(variable.expression.location, "Initialized global variables are not yet supported")
+                }
             }
             self.checked_code.globals.put(variable.name, variable)
             self.global_symbols.append(variable)
