@@ -301,7 +301,7 @@ func check_struct_type_symbol(self: @Checker, checked_struct_type_symbol: @Check
                     if not checked_struct_member_type.accepts(checked_struct_member_value_expression.type) {
                         abort(checked_struct_member_value_expression.location, clone("Cannot assign a '").append(checked_struct_member_value_expression.type.name).append("' value to a '").append(checked_struct_member_type.name).append("' struct member"))
                     }
-                    if checked_struct_member_type.equals(checked_struct_member_value_expression.type) { \ and not self.is_type_argument(parsed_struct_member.type) {
+                    if checked_struct_member_type.equals(checked_struct_member_value_expression.type) and not self.is_specialization_type(parsed_struct_member.type) {
                         stderr.write(parsed_struct_member.type.location).write(": ").warning().write("Redundant type declaration").reset().end_line()
                     }
                 } else {
@@ -529,7 +529,7 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
             if not checked_type.accepts(checked_expression.type) {
                 abort(checked_expression.location, "Cannot assign a '".clone().append(checked_expression.type.name).append("' value to a '").append(checked_type.name).append("' variable"))
             }
-            if checked_type.equals(checked_expression.type) { \ TODO: and not self.is_type_argument(parsed_statement.type) {
+            if checked_type.equals(checked_expression.type) and not self.is_specialization_type(parsed_statement.type) {
                 stderr.write(parsed_statement.type.location).write(": ").warning().write("Redundant type declaration").reset().end_line()
             }
         }
@@ -1931,4 +1931,18 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
     self.local_symbols = parent_symbols
 
     return checked_statement
+}
+
+func is_specialization_type(self: @Checker, parsed_type: @Parsed_Type) -> bool {
+    if parsed_type is not Parsed_Named_Type {
+        return false
+    }
+
+    let checked_type_name = parsed_type.as(@Parsed_Named_Type).name.lexeme
+    let checked_type_symbol = self.local_symbols.find_type_symbol(checked_type_name)
+    if checked_type_symbol == null {
+        \ unexpected state
+        abort(parsed_type.location, "Type symbol not found")
+    }
+    return checked_type_symbol is Checked_Specialization_Type_Symbol
 }
