@@ -6,7 +6,7 @@ func check(parsed_code: @Parsed_Code) -> @Checked_Code {
         checked_code = make @Checked_Code()
         local_symbols = undefined
     )
-    checker.local_symbols = checker.global_symbols
+    checker.local_symbols = @checker.global_symbols
 
     \ add builtin types
     checker.any_type = checker.create_builtin_type_symbol(make @Checked_Any_Type()).type
@@ -95,7 +95,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 \ generic functions are checked only during specialization
                 self.generic_function_statements.append(parsed_function_statement)
             } else {
-                self.create_function_symbol(parsed_function_statement)
+                self.create_function_symbol(parsed_function_statement, null)
             }
         } else if it is Parsed_Generic_Struct_Statement {
             \ already processed
@@ -132,9 +132,14 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
     }
 }
 
-func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_Function_Statement) -> @Checked_Function_Symbol {
+func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_Function_Statement, specialization_symbols: @Checked_Symbols) -> @Checked_Function_Symbol {
     \ create function type
+    let parent_symbols = self.local_symbols
+    if specialization_symbols != null {
+        self.local_symbols = specialization_symbols
+    }
     let checked_function_type = self.convert_function_type(parsed_function_statement.type)
+    self.local_symbols = parent_symbols
 
     \ check for duplicates
     self.checked_code.functions.for_each() {
@@ -144,33 +149,37 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
     }
 
     \ create function
-    let checked_function = make @Checked_Function_Symbol(
+    let checked_function_symbol = make @Checked_Function_Symbol(
         location = parsed_function_statement.location
         name = parsed_function_statement.name.lexeme
         type = make_checked_function_pointer_type(checked_function_type)
         function_type = checked_function_type
 
         parsed_function_statement = parsed_function_statement
+        specialization_symbols = specialization_symbols
     )
-    self.checked_code.functions.append(checked_function)
+    self.checked_code.functions.append(checked_function_symbol)
     if not parsed_function_statement.is_anonymous {
-        self.global_symbols.append(checked_function)
+        self.global_symbols.append(checked_function_symbol)
     }
 
-    return checked_function
+    return checked_function_symbol
 }
 
-func check_function_symbol(self: @Checker, checked_function: @Checked_Function_Symbol) -> Nothing {
-    let parsed_function_statement = checked_function.parsed_function_statement
+func check_function_symbol(self: @Checker, checked_function_symbol: @Checked_Function_Symbol) -> Nothing {
+    let parsed_function_statement = checked_function_symbol.parsed_function_statement
 
     \ remember parent symbols
     let parent_symbols = self.local_symbols
+    if checked_function_symbol.specialization_symbols != null {
+        self.local_symbols = checked_function_symbol.specialization_symbols
+    }
 
     \ create function context
     self.local_symbols = make @Checked_Symbols(
         parent = self.local_symbols
     )
-    let checked_function_type = checked_function.function_type
+    let checked_function_type = checked_function_symbol.function_type
     checked_function_type.parameters.for_each() {
         self.local_symbols.append(make @Checked_Parameter_Symbol(
             location = it.location
@@ -441,7 +450,8 @@ func check_break_statement(self: @Checker, parsed_statement: @Parsed_Break_State
 func check_expression_statement(self: @Checker, parsed_statement: @Parsed_Expression_Statement) -> @Checked_Statement {
     let checked_expression = self.check_expression(parsed_statement.expression, null)
     if checked_expression.type is not Checked_Nothing_Type {
-        stderr.write(checked_expression.location).write(": ").warning().write("Unhandled value").reset().end_line()
+        \ TODO: Report error once `discard` statement is implemented
+        \ abort(checked_expression.location, "Unhandled value")
     }
     if checked_expression is Checked_Macro_Call_Expression {
         return self.inline_macro_call_expression(checked_expression.as(@Checked_Macro_Call_Expression))
@@ -882,7 +892,7 @@ func check_equals_expression(self: @Checker, parsed_expression: @Parsed_Equals_E
 }
 
 func check_function_expression(self: @Checker, parsed_expression: @Parsed_Function_Expression) -> @Checked_Expression {
-    let checked_function_symbol = self.create_function_symbol(parsed_expression.function_statement)
+    let checked_function_symbol = self.create_function_symbol(parsed_expression.function_statement, null)
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location
         type = checked_function_symbol.type
@@ -1016,14 +1026,7 @@ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_T
     }
     if callable_match is Parsed_Generic_Function_Match {
         let callable_match = callable_match.as(@Parsed_Generic_Function_Match)
-
-        let local_symbols = self.local_symbols
-        self.local_symbols = callable_match.specialization_symbols
-
-        let checked_function_symbol = self.create_function_symbol(callable_match.function_statement)
-
-        self.local_symbols = local_symbols
-
+        let checked_function_symbol = self.create_function_symbol(callable_match.function_statement, callable_match.specialization_symbols)
         return make @Checked_Function_Call_Expression(
             location = callable_name.location
             type = checked_function_symbol.function_type.return_type

@@ -439,6 +439,7 @@ struct Checked_Builtin_Type_Symbol: Checked_Type_Symbol {
 struct Checked_Function_Symbol: Checked_Symbol {
     function_type: @Checked_Function_Type
     parsed_function_statement: @Parsed_Function_Statement
+    specialization_symbols: @Checked_Symbols
 }
 
 struct Checked_Macro_Symbol: Checked_Symbol {
