@@ -657,7 +657,9 @@ func check_type(self: @Checker, checked_type: @Checked_Type) -> Nothing {
     }
 
     checked_type.is_checked_type = true
-    if checked_type is Checked_Pointer_Type {
+    if checked_type is Checked_Fixed_Array_Type {
+        self.check_type(checked_type.as(@Checked_Fixed_Array_Type).item_type)
+    } else if checked_type is Checked_Pointer_Type {
         self.check_type(checked_type.as(@Checked_Pointer_Type).pointed_type)
     } else if checked_type is Checked_Struct_Type {
         let checked_type_symbol = self.local_symbols.find_type_symbol(checked_type.name)
@@ -1449,6 +1451,12 @@ func check_missing_values(self: @Checked_Struct_Type, location: @Source_Location
 func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_Member_Access_Expression) -> @Checked_Expression {
     let checked_object_expression = self.check_expression(parsed_expression.object_expression, null)
     let checked_object_type = checked_object_expression.type
+    if checked_object_type is Checked_Fixed_Array_Type {
+        if not parsed_expression.member_name.lexeme.equals("length") {
+            abort(parsed_expression.member_name.location, "Did you mean length?")
+        }
+        return checked_object_type.as(@Checked_Fixed_Array_Type).size_expression
+    }
     if checked_object_type is Checked_Pointer_Type {
         checked_object_type = checked_object_type.as(@Checked_Pointer_Type).pointed_type
     }
@@ -1646,9 +1654,9 @@ func convert_array_type(self: @Checker, parsed_type: @Parsed_Array_Type) -> @Che
     let checked_item_type = self.convert_type(parsed_type.item_type)
     if parsed_type.is_checked {
         if parsed_type.size_expression != null {
-            let checked_size_expression = self.check_expression(parsed_type.size_expression, null)
-            if checked_size_expression is not Checked_Integer_Literal_Expression {
-                abort(parsed_type.size_expression.location, "Not an integer literal")
+            let checked_size_expression = self.check_expression(parsed_type.size_expression, self.isize_type)
+            if not checked_size_expression.is_constant() {
+                abort(parsed_type.size_expression.location, "Not a constant")
             }
             let checked_size_expression = checked_size_expression.as(@Checked_Integer_Literal_Expression)
             let checked_size = checked_size_expression.literal.value
@@ -1657,6 +1665,7 @@ func convert_array_type(self: @Checker, parsed_type: @Parsed_Array_Type) -> @Che
                 is_checked_type = checked_item_type.is_checked_type
                 item_type = checked_item_type
                 size = checked_size
+                size_expression = checked_size_expression
             )
         }
         abort(parsed_type.location, "Resizable checked array types are not supported yet")

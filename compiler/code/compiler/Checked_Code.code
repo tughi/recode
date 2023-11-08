@@ -250,6 +250,7 @@ func _accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Cal
 
 struct Checked_Fixed_Array_Type: Checked_Array_Type {
     size: u64
+    size_expression: @Checked_Expression
 }
 
 struct Checked_Function_Type: Checked_Callable_Type {
