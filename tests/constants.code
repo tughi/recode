@@ -1,9 +1,13 @@
 \ Expect:
 \ - output: ''
 
-define CONSTANT = 0
-define ANOTHER_CONSTANT = CONSTANT
+define FORTY_TWO = 42
+define CONSTANT = FORTY_TWO
 
 func main() -> i32 {
-    return CONSTANT
+    define LOCAL_CONSTANT = 42
+
+    let value = LOCAL_CONSTANT
+
+    return value - CONSTANT
 }

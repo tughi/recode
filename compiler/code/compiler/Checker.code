@@ -85,21 +85,13 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
         }
     }
 
+    let constants = make List[@Checked_Constant_Symbol]()
+
     \ create root statements
     parsed_code.statements.for_each() {
         if it is Parsed_Constant_Statement {
-            let parsed_constant_statement = it.as(@Parsed_Constant_Statement)
-            let checked_expression = self.check_expression(parsed_constant_statement.expression, null)
-            if not checked_expression.is_constant() {
-                abort(checked_expression.location, "Not a constant expression")
-            }
-            self.global_symbols.append(make @Checked_Constant_Symbol(
-                location = parsed_constant_statement.name.location
-                location = parsed_constant_statement.name.lexeme
-                name = parsed_constant_statement.name.lexeme
-                type = checked_expression.type
-                value_expression = checked_expression
-            ))
+            let checked_constant_symbol = self.create_constant_symbol(it.as(@Parsed_Constant_Statement))
+            constants.append(checked_constant_symbol)
         } else if it is Parsed_External_Type_Statement {
             self.create_opaque_type_symbol(it.as(@Parsed_External_Type_Statement))
         } else if it is Parsed_Function_Statement {
@@ -142,12 +134,42 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
         }
     }
 
+    \ check constants
+    constants.for_each() {
+        if it.type == null {
+            self.check_constant_symbol(it)
+        }
+    }
+
     \ check functions
     self.checked_code.functions.for_each() {
         if it.parsed_function_statement.body != null {
             self.check_function_symbol(it)
         }
     }
+}
+
+func create_constant_symbol(self: @Checker, parsed_constant_statement: @Parsed_Constant_Statement) -> @Checked_Constant_Symbol {
+    let checked_constant_symbol = make @Checked_Constant_Symbol(
+        location = parsed_constant_statement.name.location
+        name = parsed_constant_statement.name.lexeme
+        type = null
+        parsed_constant_statement = parsed_constant_statement
+        value_expression = null
+    )
+    self.local_symbols.append(checked_constant_symbol)
+
+    return checked_constant_symbol
+}
+
+func check_constant_symbol(self: @Checker, checked_constant_symbol: @Checked_Constant_Symbol) -> Nothing {
+    let checked_value_expression = self.check_expression(checked_constant_symbol.parsed_constant_statement.expression, null)
+    if not checked_value_expression.is_constant() {
+        abort(checked_value_expression.location, "Not a constant expression")
+    }
+
+    checked_constant_symbol.type = checked_value_expression.type
+    checked_constant_symbol.value_expression = checked_value_expression
 }
 
 func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_Function_Statement, specialization_symbols: @Checked_Symbols) -> @Checked_Function_Symbol {
@@ -387,6 +409,13 @@ func check_statement(self: @Checker, parsed_statement: @Parsed_Statement) -> @Ch
     }
     if parsed_statement is Parsed_Break_Statement {
         return self.check_break_statement(parsed_statement.as(@Parsed_Break_Statement))
+    }
+    if parsed_statement is Parsed_Constant_Statement {
+        let checked_constant_symbol = self.create_constant_symbol(parsed_statement.as(@Parsed_Constant_Statement))
+        self.check_constant_symbol(checked_constant_symbol)
+        return make @Checked_Ignored_Statement(
+            location = parsed_statement.location
+        )
     }
     if parsed_statement is Parsed_Expression_Statement {
         return self.check_expression_statement(parsed_statement.as(@Parsed_Expression_Statement))
@@ -1598,6 +1627,9 @@ func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_E
         }
 
         abort(parsed_expression.location, clone("Undefined symbol ").append(checked_symbol_name))
+    }
+    if checked_symbol is Checked_Constant_Symbol and checked_symbol.type == null {
+        self.check_constant_symbol(checked_symbol.as(@Checked_Constant_Symbol))
     }
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location

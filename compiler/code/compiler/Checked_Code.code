@@ -438,6 +438,7 @@ struct Checked_Builtin_Type_Symbol: Checked_Type_Symbol {
 }
 
 struct Checked_Constant_Symbol: Checked_Symbol {
+    parsed_constant_statement: @Parsed_Constant_Statement
     value_expression: @Checked_Expression
 }
 
@@ -505,6 +506,9 @@ struct Checked_If_Statement: Checked_Statement {
 
 struct Checked_Loop_Statement: Checked_Statement {
     body_statement: @Checked_Statement
+}
+
+struct Checked_Ignored_Statement: Checked_Statement {
 }
 
 struct Checked_Return_Statement: Checked_Statement {
