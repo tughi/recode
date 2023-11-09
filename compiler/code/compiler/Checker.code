@@ -729,7 +729,17 @@ func check_array_access_expression(self: @Checker, parsed_expression: @Parsed_Ar
         abort(checked_index_expression.location, "Not an integer expression")
     }
 
-    \ create expression
+    if checked_array_type.item_type is Checked_Struct_Type {
+        \ create reference expression
+        return make @Checked_Array_Access_Expression(
+            location = parsed_expression.location
+            type = make_checked_pointer_type(checked_array_type.item_type)
+            array_expression = checked_array_expression
+            index_expression = checked_index_expression
+        )
+    }
+
+    \ create value expression
     return make @Checked_Array_Access_Expression(
         location = parsed_expression.location
         type = checked_array_type.item_type
