@@ -20,7 +20,9 @@ func make_glyph_chooser(glyph_editor: @Glyph_Editor) -> @Glyph_Chooser {
 }
 
 struct Glyph_Chooser: Widget_Group(
-    layout = func (self: @Glyph_Chooser, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+    layout = func (self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+        let self = self.as(@Glyph_Chooser)
+
         self.layout_widget(left, top, right, bottom)
 
         let glyph_button = self.children.first_node.data
@@ -53,7 +55,8 @@ struct Glyph_Chooser: Widget_Group(
 }
 
 struct Glyph_Button: Button(
-    on_click = func (self: @Glyph_Button) -> Nothing {
+    on_click = func (self: @Button) -> Nothing {
+        let self = self.as(@Glyph_Button)
         self.glyph_editor.glyph = font.glyphs[self.glyph.as(isize)]
     }
 ) {

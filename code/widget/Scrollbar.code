@@ -203,13 +203,17 @@ func draw_vertical_scrollbar(self: @Widget, canvas: @Canvas) -> Nothing {
 struct Horizontal_Scrollbar_Knob: Button(
     label = ""
 
-    on_mouse_button_pressed_event = func (self: @Horizontal_Scrollbar_Knob, event: @Mouse_Button_Pressed_Event) -> Nothing {
+    on_mouse_button_pressed_event = func (self: @Widget, event: @Mouse_Button_Pressed_Event) -> Nothing {
+        let self = self.as(@Horizontal_Scrollbar_Knob)
+
         self.mouse_motion_delta = event.x - self.left
 
         self.on_button_mouse_pressed_event(event)
     }
 
-    on_mouse_motion_event = func (self: @Horizontal_Scrollbar_Knob, event: @Mouse_Motion_Event) -> Nothing {
+    on_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
+        let self = self.as(@Horizontal_Scrollbar_Knob)
+
         if self.is_pressed() {
             let scrollbar = self.parent.as(@Vertical_Scrollbar)
             let new_left = event.x - self.mouse_motion_delta
@@ -233,13 +237,17 @@ struct Horizontal_Scrollbar_Knob: Button(
 struct Vertical_Scrollbar_Knob: Button(
     label = ""
 
-    on_mouse_button_pressed_event = func (self: @Vertical_Scrollbar_Knob, event: @Mouse_Button_Pressed_Event) -> Nothing {
+    on_mouse_button_pressed_event = func (self: @Widget, event: @Mouse_Button_Pressed_Event) -> Nothing {
+        let self = self.as(@Vertical_Scrollbar_Knob)
+
         self.mouse_motion_delta = event.y - self.top
 
         self.on_button_mouse_pressed_event(event)
     }
 
-    on_mouse_motion_event = func (self: @Vertical_Scrollbar_Knob, event: @Mouse_Motion_Event) -> Nothing {
+    on_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
+        let self = self.as(@Vertical_Scrollbar_Knob)
+
         if self.is_pressed() {
             let scrollbar = self.parent.as(@Vertical_Scrollbar)
             let new_top = event.y - self.mouse_motion_delta

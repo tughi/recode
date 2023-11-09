@@ -5,20 +5,20 @@ struct Widget_Group: Widget(
     layout = layout_stacked
     draw = draw_widget_group
 
-    dispatch_mouse_motion_event = func (self: @Widget_Group, event: @Mouse_Motion_Event) -> Nothing {
-        self.window.hovered_widget = self.as(@Widget)
+    dispatch_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
+        self.window.hovered_widget = self
 
-        for_each(self.children) {
+        for_each(self.as(@Widget_Group).children) {
             if it.contains(event.x, event.y) {
                 it.dispatch_mouse_motion_event(event)
             }
         }
     }
 
-    set_window = func (self: @Widget_Group, window: @Window) -> Nothing {
+    set_window = func (self: @Widget, window: @Window) -> Nothing {
         self.window = window
 
-        for_each(self.children) {
+        for_each(self.as(@Widget_Group).children) {
             it.set_window(window)
         }
     }
@@ -32,10 +32,10 @@ func add(self: @Widget_Group, child: @Widget) -> Nothing {
     self.children.append(child)
 }
 
-func layout_stacked(self: @Widget_Group, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
+func layout_stacked(self: @Widget, left: i32, top: i32, right: i32, bottom: i32) -> Nothing {
     self.layout_widget(left, top, right, bottom)
 
-    for_each(self.children) {
+    for_each(self.as(@Widget_Group).children) {
         it.layout(left, top, right, bottom)
     }
 }

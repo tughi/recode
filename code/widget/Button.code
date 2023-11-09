@@ -7,11 +7,11 @@ struct Button: Widget(
     draw = draw_button
 
     on_mouse_button_pressed_event = on_button_mouse_pressed_event
-    on_mouse_button_released_event = func (self: @Button, event: @Mouse_Button_Released_Event) -> Nothing {
+    on_mouse_button_released_event = func (self: @Widget, event: @Mouse_Button_Released_Event) -> Nothing {
         if event.button == 1u8 and self.is_pressed() {
             self.window.pressed_widget = null
-            if self.is_hovered() and self.on_click != null {
-                self.on_click()
+            if self.is_hovered() and self.as(@Button).on_click != null {
+                self.as(@Button).on_click()
             }
             self.request_draw()
         }

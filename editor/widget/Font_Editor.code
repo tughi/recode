@@ -12,7 +12,7 @@ func make_font_editor() -> @Widget_Group {
     font_editor.glyph_editor = make @Glyph_Editor(glyph = font.glyphs['A'])
     font_editor.add(font_editor.glyph_editor)
 
-    font_editor.save_button = make @Save_Button(glyph_editor = @font_editor.glyph_editor)
+    font_editor.save_button = make @Save_Button(glyph_editor = font_editor.glyph_editor)
     font_editor.add(font_editor.save_button)
 
     font_editor.glyph_chooser = make_glyph_chooser(font_editor.glyph_editor)
@@ -54,7 +54,7 @@ struct Font_Editor: Widget_Group(
 
 struct Save_Button: Button(
     label = "Save"
-    on_click = func (self: @Save_Button) -> Nothing {
+    on_click = func (self: @Button) -> Nothing {
         @font.save()
     }
 ) {

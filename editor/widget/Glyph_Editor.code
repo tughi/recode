@@ -5,7 +5,8 @@ struct Glyph_Editor: Widget(
     compute_size_hint = compute_glyph_editor_size_hint
     draw = draw_glyph_editor
 
-    on_mouse_motion_event = func (self: @Glyph_Editor, event: @Mouse_Motion_Event) -> Nothing {
+    on_mouse_motion_event = func (self: @Widget, event: @Mouse_Motion_Event) -> Nothing {
+        let self = self.as(@Glyph_Editor)
         let hovered_column = (min(event.x, self.right - 1) - self.left) / (self.pixel_size + 1)
         let hovered_row = (min(event.y, self.bottom - 1) - self.top) / (self.pixel_size + 1)
 
@@ -19,7 +20,8 @@ struct Glyph_Editor: Widget(
         }
     }
 
-    on_mouse_button_pressed_event = func (self: @Glyph_Editor, event: @Mouse_Button_Pressed_Event) -> Nothing {
+    on_mouse_button_pressed_event = func (self: @Widget, event: @Mouse_Button_Pressed_Event) -> Nothing {
+        let self = self.as(@Glyph_Editor)
         self.window.pressed_widget = self
 
         self.is_drawing = event.button == 1u8
@@ -28,7 +30,9 @@ struct Glyph_Editor: Widget(
         self.update_glyph_cell(self.hovered_row, self.hovered_column)
     }
 
-    on_mouse_button_released_event = func (self: @Glyph_Editor, event: @Mouse_Button_Released_Event) -> Nothing {
+    on_mouse_button_released_event = func (self: @Widget, event: @Mouse_Button_Released_Event) -> Nothing {
+        let self = self.as(@Glyph_Editor)
+
         if self.is_pressed() {
             self.window.pressed_widget = null
 
