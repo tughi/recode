@@ -1,0 +1,7 @@
+\ Expect:
+\ - error: 'tests/111.code:5:13: Cannot infer variable type from null value\n'
+
+func main() -> i32 {
+    let x = null
+    return 0
+}

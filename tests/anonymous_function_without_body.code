@@ -1,4 +1,0 @@
-\ Expect:
-\ - error: 'tests/anonymous_function_without_body.code:4:12: Anonymous function without body\n'
-
-let test = func () -> bool

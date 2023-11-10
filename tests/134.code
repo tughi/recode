@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/134.code:5:12: Cannot infer type from a null value\n'
+
+struct Shape {
+    name = null
+}

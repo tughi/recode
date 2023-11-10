@@ -1,5 +1,0 @@
-\ Expect:
-\ - error: 'tests/external_function_with_body.code:4:29: External function with function body\n'
-
-external func test() -> void {
-}

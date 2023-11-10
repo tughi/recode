@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/110.code:5:18: Incompatible types: got Null instead of i32\n'
+
+func test() -> Nothing {
+    let x: i32 = null
+}

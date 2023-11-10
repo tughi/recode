@@ -1,6 +1,0 @@
-\ Expect:
-\ - error: 'tests/undefined_variable_without_type.code:5:17: Cannot infer variable type from undefined value\n'
-
-func test() -> Nothing {
-    let value = undefined
-}

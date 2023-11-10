@@ -1,6 +1,0 @@
-\ Expect:
-\ - error: 'tests/struct_member_type_from_null.code:5:12: Cannot infer type from a null value\n'
-
-struct Shape {
-    name = null
-}

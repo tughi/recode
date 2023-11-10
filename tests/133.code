@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/struct_without_members.code:8:16: Struct has no members\n'
+\ - error: 'tests/133.code:8:16: Struct has no members\n'
 
 struct Test {
 }

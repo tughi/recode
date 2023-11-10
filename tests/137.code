@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/137.code:5:5: Cannot infer type of struct member\n'
+
+struct Shape {
+    points
+}

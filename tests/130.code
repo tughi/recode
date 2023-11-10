@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/macro_context_isolation.code:15:18: Undefined symbol times\n'
+\ - error: 'tests/130.code:15:18: Undefined symbol times\n'
 
 macro repeat(times: i32, code: macro (iteration: i32)) {
     let i = 0
