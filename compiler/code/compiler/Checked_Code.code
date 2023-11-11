@@ -3,7 +3,8 @@ include "./List.code"
 let DEBUG: bool
 
 struct Checked_Code {
-    globals = make Map[@String, @Checked_Symbol]()
+    sources: @List[@Source]
+    global_symbols = make Map[@String, @Checked_Symbol]()
     functions = make List[@Checked_Function_Symbol]()
 }
 

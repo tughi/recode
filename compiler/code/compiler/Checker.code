@@ -3,7 +3,9 @@ include "./Checked_Code.code"
 func check(parsed_code: @Parsed_Code) -> @Checked_Code {
     let checker = make Checker(
         parsed_code = parsed_code
-        checked_code = make @Checked_Code()
+        checked_code = make @Checked_Code(
+            sources = parsed_code.sources
+        )
         local_symbols = undefined
     )
     checker.local_symbols = @checker.global_symbols
@@ -127,7 +129,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                     abort(variable.expression.location, "Initialized global variables are not yet supported")
                 }
             }
-            self.checked_code.globals.put(variable.name, variable)
+            self.checked_code.global_symbols.put(variable.name, variable)
             self.global_symbols.append(variable)
         } else {
             abort(it.location, it.object_type)
@@ -198,10 +200,19 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
         parsed_function_statement = parsed_function_statement
         specialization_symbols = specialization_symbols
     )
-    self.checked_code.functions.append(checked_function_symbol)
-    if not parsed_function_statement.is_anonymous {
+
+    let global_symbol_id: @String
+    if parsed_function_statement.is_anonymous {
+        abort(parsed_function_statement.location, "TODO: Create unique function name")
+    } else {
         self.global_symbols.append(checked_function_symbol)
+
+        global_symbol_id = checked_function_symbol.name.clone()
     }
+    global_symbol_id.append(": ").append(checked_function_type.name)
+
+    self.checked_code.global_symbols.put(global_symbol_id, checked_function_symbol)
+    self.checked_code.functions.append(checked_function_symbol)
 
     return checked_function_symbol
 }
@@ -239,7 +250,7 @@ func check_function_symbol(self: @Checker, checked_function_symbol: @Checked_Fun
 
 func create_struct_type_symbol(self: @Checker, parsed_struct_statement: @Parsed_Struct_Statement, checked_struct_name: @String, specialization_symbols: @Checked_Symbols) -> @Checked_Struct_Type_Symbol {
     \ check for uniqueness
-    let checked_symbol = self.checked_code.globals.get(checked_struct_name)
+    let checked_symbol = self.checked_code.global_symbols.get(checked_struct_name)
     if checked_symbol != null {
         if checked_symbol is not Checked_Struct_Type_Symbol {
             abort(parsed_struct_statement.location, clone("Duplicate declaration: ").append(checked_struct_name))
@@ -270,7 +281,7 @@ func create_struct_type_symbol(self: @Checker, parsed_struct_statement: @Parsed_
         type = checked_struct_type
         parsed_struct_statement = parsed_struct_statement
     )
-    self.checked_code.globals.put(checked_struct_name, checked_struct_type_symbol)
+    self.checked_code.global_symbols.put(checked_struct_name, checked_struct_type_symbol)
     self.global_symbols.append(checked_struct_type_symbol)
 
     return checked_struct_type_symbol
@@ -375,7 +386,7 @@ func create_opaque_type_symbol(self: @Checker, parsed_statement: @Parsed_Externa
     let checked_opaque_type_name = parsed_statement.name.lexeme
 
     \ check for uniqueness
-    let checked_symbol = self.checked_code.globals.get(checked_opaque_type_name)
+    let checked_symbol = self.checked_code.global_symbols.get(checked_opaque_type_name)
     if checked_symbol != null {
         if checked_symbol.location != parsed_statement.name.location or checked_symbol is not Checked_Opaque_Type_Symbol {
             abort(parsed_statement.location, clone("Duplicate declaration: ").append(checked_opaque_type_name))
@@ -394,7 +405,7 @@ func create_opaque_type_symbol(self: @Checker, parsed_statement: @Parsed_Externa
         name = checked_opaque_type_name
         type = checked_opaque_type
     )
-    self.checked_code.globals.put(checked_opaque_type_name, checked_opaque_type_symbol)
+    self.checked_code.global_symbols.put(checked_opaque_type_name, checked_opaque_type_symbol)
     self.global_symbols.append(checked_opaque_type_symbol)
 
     return checked_opaque_type_symbol
