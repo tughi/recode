@@ -1,5 +1,25 @@
 include "./Map.code"
 
+struct IR_Code {
+    sources: @List[@Source]
+    named_types: @List[@IR_Type]
+    global_symbols: @List[@IR_Symbol]
+}
+
+func dump(build: @IR_Code, file: @FILE) -> Nothing {
+    let symbols_iterator = build.global_symbols.create_iterator()
+    while symbols_iterator.has_next() {
+        let symbol = symbols_iterator.next()
+        if symbol is IR_Function {
+            let function = symbol.as(@IR_Function)
+            if not function.is_external {
+                function.dump(file)
+                file.end_line()
+            }
+        }
+    }
+}
+
 struct IR_Type: Object {
     name: @String
 }

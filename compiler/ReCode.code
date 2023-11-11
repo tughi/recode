@@ -33,14 +33,14 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
 
     let checked_code = check(parsed_code)
 
-    let build = build(parsed_code)
+    let ir_code = build(checked_code)
     if dump_file_path != null {
         let dump_file = fopen(dump_file_path.data, "w".data)
-        build.dump(dump_file)
+        ir_code.dump(dump_file)
         dump_file.fclose()
     }
 
-    generate(build, output_file_path)
+    generate(ir_code, output_file_path)
 }
 
 

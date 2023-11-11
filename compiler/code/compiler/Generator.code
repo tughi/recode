@@ -1,39 +1,35 @@
-func generate(build: @IR_Build, output_file_path: @String) -> Nothing {
+func generate(ir_code: @IR_Code, output_file_path: @String) -> Nothing {
     let generator = create_mc_generator(output_file_path)
 
-    let build_sources_item = build.sources.first_item
-    while build_sources_item != null {
-        let build_source = build_sources_item.data
-        generator.output_file.write("  .file ").write(build_source.id).write(" \"").write(build_source.file_path).write("\"").end_line()
-        build_sources_item = build_sources_item.next_item
+    ir_code.sources.for_each() {
+        let ir_code_source = it
+        generator.output_file.write("  .file ").write(ir_code_source.id).write(" \"").write(ir_code_source.file_path).write("\"").end_line()
     }
 
     generator.output_file.write_line("  .intel_syntax noprefix").end_line()
 
-    let object_type = find_object_type(build.named_types)
+    let object_type = find_object_type(ir_code.named_types)
     if object_type != null {
         let counter = make Counter[u32]()
         object_type.assign_object_type_ids(@counter)
     }
 
-    generator.generate_global_variables(build.global_symbols, build.named_types)
+    generator.generate_global_variables(ir_code.global_symbols, ir_code.named_types)
 
-    let symbols_item = build.global_symbols.first_item
-    while symbols_item != null {
-        let symbol = symbols_item.data
+    ir_code.global_symbols.for_each() {
+        let symbol = it
         if symbol is IR_Function {
             let function = symbol.as(@IR_Function)
             if not function.is_external {
                 generator.generate_function(function)
             }
         }
-        symbols_item = symbols_item.next_item
     }
 
     generator.generate_strings()
 
     if object_type != null {
-        generator.generate_object_types(build.named_types)
+        generator.generate_object_types(ir_code.named_types)
     }
 
     generator.output_file.fclose()
