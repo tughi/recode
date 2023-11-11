@@ -117,6 +117,7 @@ def test_with_stage(n):
                     else:
                         expected_output = line_match.group(2)
             elif line == '\\ Skip\n':
+                logger.info(f"Skipping: tests/{test_file_name}")
                 continue
             if expected_error is None and expected_output is None:
                 logger.warning(f"{COLOR_WARNING}Skipping unsupported test: tests/{test_file_name}{COLOR_RESET}")
