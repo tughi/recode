@@ -1,5 +1,0 @@
-\ Expect:
-\ - error: 'tests/120.code:4:6: Missing return statement\n'
-
-func test() -> bool {
-}

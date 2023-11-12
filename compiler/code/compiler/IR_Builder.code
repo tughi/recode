@@ -89,7 +89,6 @@ func find_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
 
 func build(self: @IR_Builder) -> Nothing {
     self.checked_code.global_symbols.for_each() {
-        stderr.write(value.location).write(": ").debug().write(key).reset().end_line()
         if value is Checked_Function_Symbol {
             self.create_function(value.as(@Checked_Function_Symbol))
         } else {
@@ -143,6 +142,7 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
             } else if ir_function.return_type is IR_Nothing_Type {
                 self.append(create_ir_return_instruction(null), null)
             } else {
+                \ TODO: use block end's location 
                 abort(checked_function_symbol.location, "Missing return statement")
             }
         }
