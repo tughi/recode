@@ -60,143 +60,478 @@ func create_ir_builder(checked_code: @Checked_Code) -> @IR_Builder {
     )
 }
 
+func add_symbol(self: @IR_Builder, symbol: @IR_Symbol) -> Nothing {
+    if symbol is IR_Function {
+        self.root_context.symbols.append(symbol)
+    } else {
+        self.context.symbols.prepend(symbol)
+    }
+}
+
+func add_variable(self: @IR_Builder, variable: @IR_Variable) -> Nothing {
+    self.add_symbol(variable)
+}
+
+func append(self: @IR_Builder, instruction: @IR_Instruction, location: @Source_Location) -> @IR_Variable_Value {
+    instruction.location = location
+    self.current_block.append(instruction)
+    return instruction.result_value
+}
+
+func find_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
+    self.types.for_each() {
+        if name.equals(it.name) {
+            return it
+        }
+    }
+    return null
+}
+
 func build(self: @IR_Builder) -> Nothing {
     self.checked_code.global_symbols.for_each() {
         stderr.write(value.location).write(": ").debug().write(key).reset().end_line()
-        abort(value.location, value.object_type)
+        if value is Checked_Function_Symbol {
+            self.create_function(value.as(@Checked_Function_Symbol))
+        } else {
+            abort(value.location, value.object_type)
+        }
     }
+}
+
+func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Function_Symbol) -> Nothing {
+    let local_context = make IR_Builder_Context(
+        parent = self.context
+        symbols = self.context.symbols
+    )
+    self.context = @local_context
+
+    let ir_function_type = self.convert_function_type(checked_function_symbol.function_type)
+    let ir_function = make @IR_Function(
+        id = self.functions_counter.next()
+        checked_function_symbol = checked_function_symbol
+        location = checked_function_symbol.location
+        blocks = make @List[@IR_Block]()
+        name = checked_function_symbol.name
+        parameters = make @List[@IR_Function_Parameter]()
+        return_type = ir_function_type.return_type
+        is_external = checked_function_symbol.body == null
+        type = ir_function_type
+    )
+    self.add_symbol(ir_function)
+    self.functions.append(ir_function)
+
+    if checked_function_symbol.body != null {
+        self.counter.reset()
+
+        self.current_block = ir_function.create_block()
+
+        ir_function_type.parameters.for_each() {
+            let ir_variable = make @IR_Function_Parameter(
+                location = it.location
+                name = it.name
+                type = it.type
+            )
+            self.add_variable(ir_variable)
+            self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(ir_variable)))
+        }
+
+        self.convert_block_statement(checked_function_symbol.body)
+        if self.current_block.last_instruction == null or not self.current_block.last_instruction.is_exit_instruction() {
+            if self.current_block.predecessors.size == 0 and self.current_block.id != 1 {
+                \ this block is unreachable
+                ir_function.blocks.remove(self.current_block).prune()
+            } else if ir_function.return_type is IR_Nothing_Type {
+                self.append(create_ir_return_instruction(null), null)
+            } else {
+                abort(checked_function_symbol.location, "Missing return statement")
+            }
+        }
+        self.current_block = null
+
+        self.remove_redundant_blocks(ir_function)
+        self.populate_phi_instructions(ir_function)
+        self.remove_trivial_phi_instructions(ir_function)
+        self.remove_redundant_set_instructions(ir_function)
+    }
+
+    self.context = local_context.parent
+}
+
+func create_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
+    return make @IR_Variable_Value(type = variable.type, variable = undefined, version = undefined).init(variable)
+}
+
+func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
+    if checked_type is Checked_Named_Type {
+        let ir_type = self.find_named_type(checked_type.name)
+        if ir_type != null {
+            return ir_type
+        }
+
+        abort(checked_type.object_type)
+    }
+    abort(checked_type.object_type)
+}
+
+func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Function_Type) -> @IR_Function_Type {
+    let ir_function_type_name = make @String().append("func (")
+    let ir_function_type_parameters = make @List[@IR_Callable_Parameter]()
+    checked_function_type.parameters.for_each_indexed() {
+        let checked_callable_parameter = it
+        if it_index > 0 {
+            ir_function_type_name.append(", ")
+        }
+        let ir_callable_parameter_name = checked_callable_parameter.name
+        let ir_callable_parameter_type = self.convert_type(checked_callable_parameter.type)
+        ir_function_type_name.append(ir_callable_parameter_name).append(": ").append(ir_callable_parameter_type.name)
+        ir_function_type_parameters.append(make @IR_Callable_Parameter(
+            location = checked_callable_parameter.location
+            name = ir_callable_parameter_name
+            type = ir_callable_parameter_type
+        ))
+    }
+    let ir_function_type_return_type = self.convert_type(checked_function_type.return_type)
+    ir_function_type_name.append(") -> ").append(ir_function_type_return_type.name)
+    return make @IR_Function_Type(name = ir_function_type_name, parameters = ir_function_type_parameters, return_type = ir_function_type_return_type)
 }
 
 func convert_assignment_statement(self: @IR_Builder, statement: @Checked_Assignment_Statement) -> Nothing {
     abort(statement.location, statement.object_type)
 }
 
-func convert_block_statement(self: @IR_Builder, statement: @Checked_Block_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_break_statement(self: @IR_Builder, statement: @Checked_Break_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_block_statement(self: @IR_Builder, checked_block_statement: @Checked_Block_Statement) -> Nothing {
+    self.context = make @IR_Builder_Context(parent = self.context)
+    checked_block_statement.statements.for_each() {
+        self.convert_statement(it)
+    }
+    self.context = self.context.parent
 }
 
-func convert_expression_statement(self: @IR_Builder, statement: @Checked_Expression_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_break_statement(self: @IR_Builder, checked_statement: @Checked_Break_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_if_statement(self: @IR_Builder, statement: @Checked_If_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked_Expression_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_loop_statement(self: @IR_Builder, statement: @Checked_Loop_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_return_statement(self: @IR_Builder, statement: @Checked_Return_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_loop_statement(self: @IR_Builder, checked_statement: @Checked_Loop_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_variable_statement(self: @IR_Builder, statement: @Checked_Variable_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_return_statement(self: @IR_Builder, checked_statement: @Checked_Return_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_while_statement(self: @IR_Builder, statement: @Checked_While_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
+func convert_variable_statement(self: @IR_Builder, checked_statement: @Checked_Variable_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_add_expression(self: @IR_Builder, expression: @Checked_Add_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_While_Statement) -> Nothing {
+    abort(checked_statement.location, checked_statement.object_type)
 }
 
-func convert_array_access_expression(self: @IR_Builder, expression: @Checked_Array_Access_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_add_expression(self: @IR_Builder, checked_expression: @Checked_Add_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_call_expression(self: @IR_Builder, expression: @Checked_Call_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_array_access_expression(self: @IR_Builder, checked_expression: @Checked_Array_Access_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_cast_expression(self: @IR_Builder, expression: @Checked_Cast_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_call_expression(self: @IR_Builder, checked_expression: @Checked_Call_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_divide_expression(self: @IR_Builder, expression: @Checked_Divide_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_equals_expression(self: @IR_Builder, expression: @Checked_Equals_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_divide_expression(self: @IR_Builder, checked_expression: @Checked_Divide_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_greater_than_expression(self: @IR_Builder, expression: @Checked_Greater_Than_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_equals_expression(self: @IR_Builder, checked_expression: @Checked_Equals_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_greater_than_or_equals_expression(self: @IR_Builder, expression: @Checked_Greater_Than_Or_Equals_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_greater_than_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_is_expression(self: @IR_Builder, expression: @Checked_Is_Expression) -> Nothing {
-    abort(expression.location, expression.super.object_type)
+func convert_greater_than_or_equals_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Or_Equals_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_less_than_expression(self: @IR_Builder, expression: @Checked_Less_Than_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_is_expression(self: @IR_Builder, checked_expression: @Checked_Is_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.super.object_type)
 }
 
-func convert_less_than_or_equals_expression(self: @IR_Builder, expression: @Checked_Less_Than_Or_Equals_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_less_than_expression(self: @IR_Builder, checked_expression: @Checked_Less_Than_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_literal_expression(self: @IR_Builder, expression: @Checked_Literal_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_less_than_or_equals_expression(self: @IR_Builder, checked_expression: @Checked_Less_Than_Or_Equals_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_logic_and_expression(self: @IR_Builder, expression: @Checked_Logic_And_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_literal_expression(self: @IR_Builder, checked_expression: @Checked_Literal_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_logic_not_expression(self: @IR_Builder, expression: @Checked_Logic_Not_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_logic_and_expression(self: @IR_Builder, checked_expression: @Checked_Logic_And_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_logic_or_expression(self: @IR_Builder, expression: @Checked_Logic_Or_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_logic_not_expression(self: @IR_Builder, checked_expression: @Checked_Logic_Not_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_make_expression(self: @IR_Builder, expression: @Checked_Make_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_logic_or_expression(self: @IR_Builder, checked_expression: @Checked_Logic_Or_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_member_access_expression(self: @IR_Builder, expression: @Checked_Member_Access_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_make_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_modulo_expression(self: @IR_Builder, expression: @Checked_Modulo_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_member_access_expression(self: @IR_Builder, checked_expression: @Checked_Member_Access_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_multiply_expression(self: @IR_Builder, expression: @Checked_Multiply_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_modulo_expression(self: @IR_Builder, checked_expression: @Checked_Modulo_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_negate_expression(self: @IR_Builder, expression: @Checked_Negate_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_multiply_expression(self: @IR_Builder, checked_expression: @Checked_Multiply_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_not_equals_expression(self: @IR_Builder, expression: @Checked_Not_Equals_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_negate_expression(self: @IR_Builder, checked_expression: @Checked_Negate_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_substract_expression(self: @IR_Builder, expression: @Checked_Substract_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Checked_Not_Equals_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_symbol_expression(self: @IR_Builder, expression: @Checked_Symbol_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_substract_expression(self: @IR_Builder, checked_expression: @Checked_Substract_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_reference_expression(self: @IR_Builder, expression: @Checked_Reference_Expression) -> Nothing {
-    abort(expression.location, expression.object_type)
+func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_Symbol_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
 }
 
+func convert_reference_expression(self: @IR_Builder, checked_expression: @Checked_Reference_Expression) -> Nothing {
+    abort(checked_expression.location, checked_expression.object_type)
+}
 
+func remove_redundant_blocks(self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        let repeat = false
+
+        let blocks = function.blocks.prune().create_iterator()
+
+        while blocks.has_next() {
+            let block = blocks.next()
+            if block.id != 1 {
+                if block.predecessors.size == 0 {
+                    \ found unreachable block
+                    if block.last_instruction == null {
+                        blocks.remove_current()
+                    } else if block.last_instruction == block.first_instruction and block.last_instruction is IR_Direct_Jump_Instruction {
+                        let block_instruction = block.last_instruction.as(@IR_Direct_Jump_Instruction)
+                        block_instruction.block.predecessors.remove(block)
+                        block_instruction.block.predecessors.prune()
+                        blocks.remove_current()
+                        repeat = true
+                        break
+                    } else {
+                        abort(function.location, clone("Found non-empty unreachable block: block.").append(block.id))
+                    }
+                }
+                if block.first_instruction == block.last_instruction and block.first_instruction is IR_Direct_Jump_Instruction {
+                    \ found jump block
+                    let block_predecessor = block.predecessors.last()
+                    let block_successor = block.first_instruction.as(@IR_Direct_Jump_Instruction).block
+                    if block_predecessor.last_instruction is IR_Conditional_Jump_Instruction {
+                        block.predecessors.remove(block_predecessor).prune()
+                        let block_predecessor_instruction = block_predecessor.last_instruction.as(@IR_Conditional_Jump_Instruction)
+                        if block_predecessor_instruction.false_block == block {
+                            block_predecessor_instruction.false_block = block_successor
+                        } else {
+                            block_predecessor_instruction.true_block = block_successor
+                        }
+                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
+                        repeat = true
+                        break
+                    }
+                    if block_predecessor.last_instruction is IR_Direct_Jump_Instruction {
+                        block.predecessors.remove(block_predecessor).prune()
+                        let block_predecessor_instruction = block_predecessor.last_instruction.as(@IR_Direct_Jump_Instruction)
+                        block_predecessor_instruction.block = block_successor
+                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
+                        repeat = true
+                        break
+                    }
+                }
+            }
+        }
+
+        if not repeat {
+            break
+        }
+    }
+}
+
+func populate_phi_instructions(self: @IR_Builder, function: @IR_Function) -> Nothing {
+    let blocks = function.blocks.create_iterator()
+    while blocks.has_next() {
+        let block = blocks.next()
+        let block_instruction = block.first_instruction
+        while block_instruction != null and block_instruction is IR_Phi_Instruction {
+            let instruction = block_instruction.as(@IR_Phi_Instruction)
+            if instruction.operand_values.first_entry == null {
+                let block_predecessors = block.predecessors.create_iterator()
+                while block_predecessors.has_next() {
+                    let block_predecessor = block_predecessors.next()
+                    instruction.append(self.get_block_variable_value(block_predecessor, instruction.result_value.variable))
+                }
+            }
+            block_instruction = block_instruction.next_instruction
+        }
+    }
+}
+
+func get_block_variable_value(self: @IR_Builder, block: @IR_Block, variable: @IR_Variable) -> @IR_Value {
+    let block_instruction = block.last_instruction
+    while block_instruction != null {
+        if block_instruction.result_value != null and block_instruction.result_value.variable == variable {
+            return block_instruction.result_value
+        }
+        block_instruction = block_instruction.prev_instruction
+    }
+    if block.predecessors.size == 1 {
+        return self.get_block_variable_value(block.predecessors.last(), variable)
+    }
+    let instruction = create_ir_phi_instruction(self.create_variable_value(variable))
+    block.prepend(instruction)
+    let block_predecessors = block.predecessors.create_iterator()
+    while block_predecessors.has_next() {
+        let block_predecessor = block_predecessors.next()
+        instruction.append(self.get_block_variable_value(block_predecessor, variable))
+    }
+    return instruction.result_value
+}
+
+func remove_trivial_phi_instructions(self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        let repeat = false
+
+        let blocks = function.blocks.prune().create_iterator()
+
+        \ skip entry block
+        blocks.next()
+
+        while blocks.has_next() {
+            let block = blocks.next()
+            let block_instruction = block.first_instruction
+            while block_instruction != null and block_instruction is IR_Phi_Instruction {
+                let instruction = block_instruction.as(@IR_Phi_Instruction)
+                let instruction_is_redundant = instruction.is_redundant()
+                if not instruction_is_redundant and instruction.is_trivial() {
+                    \ found a trivial phi instruction
+                    instruction.operand_values.remove_values(instruction.result_value)
+                    instruction_is_redundant = true
+                }
+                if instruction_is_redundant {
+                    \ found redundant phi instruction
+                    let old_value = instruction.result_value
+                    let new_value = instruction.operand_values.first_entry.value
+                    let user_instructions = old_value.user_instructions.create_iterator()
+                    while user_instructions.has_next() {
+                        let user_instruction = user_instructions.next()
+                        user_instruction.replace_operand_value(old_value, new_value)
+                    }
+                    new_value.user_instructions.remove_all(instruction).prune()
+                    let old_value_links_item = old_value.links.first_item
+                    while old_value_links_item != null {
+                        let old_value_link = old_value_links_item.data
+                        if old_value_link is IR_Required_By_Value_Link {
+                            let old_value_link = old_value_link.as(@IR_Required_By_Value_Link)
+                            old_value_link.back_link.value = new_value
+                            new_value.links.append(old_value_link)
+                        }
+                        old_value_links_item = old_value_links_item.next_item
+                    }
+                    block.remove(instruction)
+                    repeat = true
+                }
+                block_instruction = block_instruction.next_instruction
+            }
+        }
+
+        if not repeat {
+            break
+        }
+    }
+}
+
+func remove_redundant_set_instructions(self: @IR_Builder, function: @IR_Function) -> Nothing {
+    loop {
+        let repeat = false
+
+        let blocks = function.blocks.prune().create_iterator()
+        while blocks.has_next() {
+            let block = blocks.next()
+
+            let block_instruction = block.first_instruction
+            while block_instruction != null {
+                if block_instruction is IR_Set_Instruction {
+                    let value = block_instruction.as(@IR_Set_Instruction).get_value()
+                    if value is IR_Undefined_Value and block_instruction.result_value.user_instructions.size == 0 {
+                        block.remove(block_instruction)
+                        repeat = true
+                        break
+                    }
+                    if value.user_instructions.size == 1 and value.user_instructions.first_item.data == block_instruction {
+                        let value_creator_instruction = value.creator_instruction
+                        if value_creator_instruction != null and value_creator_instruction.parent_block == block {
+                            let redundant_value = value_creator_instruction.result_value
+                            let replacement_value: @IR_Value = block_instruction.result_value
+                            let redundant_value_links_item = redundant_value.links.first_item
+                            while redundant_value_links_item != null {
+                                let redundant_value_link = redundant_value_links_item.data
+                                if redundant_value_link is IR_Requires_Value_Link {
+                                    let redundant_value_link = redundant_value_link.as(@IR_Requires_Value_Link)
+                                    redundant_value_link.back_link.value = replacement_value
+                                    replacement_value.links.append(redundant_value_link)
+                                }
+                                redundant_value_links_item = redundant_value_links_item.next_item
+                            }
+                            value_creator_instruction.result_value = block_instruction.result_value
+                            value_creator_instruction.result_value.creator_instruction = value_creator_instruction
+                            block.remove(block_instruction)
+                            repeat = true
+                            break
+                        }
+                    }
+                }
+                block_instruction = block_instruction.next_instruction
+            }
+        }
+
+        if not repeat {
+            break
+        }
+    }
+}

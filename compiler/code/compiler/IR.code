@@ -135,22 +135,6 @@ struct IR_Function_Type: IR_Callable_Type {
     return_type: @IR_Type
 }
 
-func create_ir_function_type(parameters: @List[@IR_Callable_Parameter], return_type: @IR_Type) -> @IR_Function_Type {
-    let type_name = make @String().append("func (")
-    let parameters_item = parameters.first_item
-    while parameters_item != null {
-        let parameter = parameters_item.data
-        type_name.append(parameter.name).append(": ").append(parameter.type.name)
-        parameters_item = parameters_item.next_item
-        if parameters_item != null {
-            type_name.append(", ")
-        }
-    }
-    type_name.append(") -> ").append(return_type.name)
-
-    return make @IR_Function_Type(name = type_name, parameters = parameters, return_type = return_type)
-}
-
 struct IR_Macro_Body_Type: IR_Type {
 }
 
@@ -541,11 +525,10 @@ struct IR_Callable: IR_Symbol {
 
 struct IR_Function: IR_Callable {
     id: i64
-    statement: @Parsed_Function_Statement
+    checked_function_symbol: @Checked_Function_Symbol
     return_type: @IR_Type
     parameters: @List[@IR_Function_Parameter]
     is_external: bool
-    context_type_arguments: @List[@Parsed_Type_Argument]
     blocks: @List[@IR_Block]
 }
 

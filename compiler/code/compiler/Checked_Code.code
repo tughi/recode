@@ -447,6 +447,7 @@ struct Checked_Function_Symbol: Checked_Symbol {
     function_type: @Checked_Function_Type
     parsed_function_statement: @Parsed_Function_Statement
     specialization_symbols: @Checked_Symbols
+    body: @Checked_Block_Statement
 }
 
 struct Checked_Macro_Symbol: Checked_Symbol {

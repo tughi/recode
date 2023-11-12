@@ -199,6 +199,7 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
 
         parsed_function_statement = parsed_function_statement
         specialization_symbols = specialization_symbols
+        body = null
     )
 
     let global_symbol_id: @String
@@ -241,7 +242,7 @@ func check_function_symbol(self: @Checker, checked_function_symbol: @Checked_Fun
 
     \ check function body
     self.expected_return_type = checked_function_type.return_type
-    self.check_block_statement(parsed_function_statement.body)
+    checked_function_symbol.body = self.check_block_statement(parsed_function_statement.body)
     self.expected_return_type = null
 
     \ restore context
