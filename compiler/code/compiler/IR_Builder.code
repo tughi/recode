@@ -98,12 +98,6 @@ func build(self: @IR_Builder) -> Nothing {
 }
 
 func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Function_Symbol) -> Nothing {
-    let local_context = make IR_Builder_Context(
-        parent = self.context
-        symbols = self.context.symbols
-    )
-    self.context = @local_context
-
     let ir_function_type = self.convert_function_type(checked_function_symbol.function_type)
     let ir_function = make @IR_Function(
         id = self.functions_counter.next()
@@ -116,22 +110,29 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
         is_external = checked_function_symbol.body == null
         type = ir_function_type
     )
+    ir_function_type.parameters.for_each() {
+        ir_function.parameters.append(make @IR_Function_Parameter(
+            location = it.location
+            name = it.name
+            type = it.type
+        ))
+    }
     self.add_symbol(ir_function)
     self.functions.append(ir_function)
 
     if checked_function_symbol.body != null {
+        let local_context = make IR_Builder_Context(
+            parent = self.context
+        )
+        self.context = @local_context
+
         self.counter.reset()
 
         self.current_block = ir_function.create_block()
 
-        ir_function_type.parameters.for_each() {
-            let ir_variable = make @IR_Function_Parameter(
-                location = it.location
-                name = it.name
-                type = it.type
-            )
-            self.add_variable(ir_variable)
-            self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(ir_variable)))
+        ir_function.parameters.for_each() {
+            self.add_variable(it)
+            self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(it)))
         }
 
         self.convert_block_statement(checked_function_symbol.body)
@@ -152,9 +153,9 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
         self.populate_phi_instructions(ir_function)
         self.remove_trivial_phi_instructions(ir_function)
         self.remove_redundant_set_instructions(ir_function)
-    }
 
-    self.context = local_context.parent
+        self.context = local_context.parent
+    }
 }
 
 func create_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {

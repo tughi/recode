@@ -1,0 +1,8 @@
+\ Expect:
+\ - output: ''
+
+func main() -> Nothing {
+}
+
+func test(expected: bool, error: i32) -> Nothing {
+}

@@ -1748,15 +1748,19 @@ func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -
         name = "func (".clone()
         return_type = self.convert_type(parsed_type.return_type)
     )
-    parsed_type.parameters.for_each() {
+    parsed_type.parameters.for_each_indexed() {
         let checked_function_parameter = self.check_callable_parameter(checked_function_type, it)
 
-        if checked_function_type.parameters.size > 1 {
+        if it_index > 0 {
             checked_function_type.name.append(", ")
         }
         checked_function_type.name.append(checked_function_parameter.type.name)
     }
     checked_function_type.name.append(") -> ").append(checked_function_type.return_type.name)
+
+    if checked_function_type.return_type is Checked_Any_Type {
+        abort(parsed_type.return_type.location, "Unsupported return type")
+    }
 
     return checked_function_type
 }
@@ -1772,8 +1776,12 @@ func check_callable_parameter(self: @Checker, checked_callable_type: @Checked_Ca
 
     \ check parameter type
     let checked_callable_parameter_type = self.convert_type(parsed_callable_parameter.type)
-    if checked_callable_parameter_type is Checked_Function_Type {
+    if checked_callable_parameter_type is Checked_Any_Type {
+        abort(parsed_callable_parameter.type.location, "Unsupported parameter type")
+    } else if checked_callable_parameter_type is Checked_Function_Type {
         checked_callable_parameter_type = make_checked_function_pointer_type(checked_callable_parameter_type.as(@Checked_Function_Type))
+    } else if checked_callable_parameter_type is Checked_Nothing_Type {
+        abort(parsed_callable_parameter.type.location, "Unsupported parameter type")
     }
 
     \ create parameter
