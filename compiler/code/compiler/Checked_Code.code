@@ -654,6 +654,10 @@ struct Checked_Negate_Expression: Checked_Expression {
 struct Checked_Not_Equals_Expression: Checked_Binary_Expression {
 }
 
+struct Checked_Null_Literal_Expression: Checked_Literal_Expression {
+    literal: @Null_Token
+}
+
 struct Checked_Reference_Expression: Checked_Expression {
     object_expression: @Checked_Expression
 }
@@ -667,4 +671,8 @@ struct Checked_Substract_Expression: Checked_Binary_Expression {
 
 struct Checked_Symbol_Expression: Checked_Expression {
     symbol: @Checked_Symbol
+}
+
+struct Checked_Undefined_Literal_Expression: Checked_Literal_Expression {
+    literal: @Undefined_Token
 }

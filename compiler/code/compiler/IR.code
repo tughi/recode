@@ -24,6 +24,117 @@ struct IR_Type: Object {
     name: @String
 }
 
+func accepts(self: @IR_Type, other: @IR_Type) -> bool {
+    if self == other or self is IR_Placeholder_Type or other is IR_Undefined_Type {
+        return true
+    }
+    if self is IR_Pointer_Type {
+        let self = self.as(@IR_Pointer_Type)
+        if self.pointed_type is IR_Pointer_Type {
+            let stop = true
+        }
+        if other is IR_Pointer_Type {
+            let other = other.as(@IR_Pointer_Type)
+            if self.pointed_type == other.pointed_type {
+                return true
+            }
+            if self.pointed_type is IR_Any_Type {
+                return true
+            }
+            if self.pointed_type is IR_Struct_Type and other.pointed_type is IR_Struct_Type {
+                let self_struct_type = self.pointed_type.as(@IR_Struct_Type)
+
+                \ Find matching base struct
+                let other_struct_type = other.pointed_type.as(@IR_Struct_Type)
+                while other_struct_type != null {
+                    if other_struct_type.statement == self_struct_type.statement {
+                        break
+                    }
+                    other_struct_type = other_struct_type.super_type
+                }
+                if other_struct_type == null {
+                    return false
+                }
+
+                if self_struct_type is not IR_Specialized_Struct_Type {
+                    return true
+                }
+
+                let self_struct_type = self_struct_type.as(@IR_Specialized_Struct_Type)
+                let self_struct_type_arguments_item = self_struct_type.type_arguments.first_item
+                let other_struct_type = other_struct_type.as(@IR_Specialized_Struct_Type)
+                let other_struct_type_arguments_item = other_struct_type.type_arguments.first_item
+                while self_struct_type_arguments_item != null and other_struct_type_arguments_item != null {
+                    let self_struct_type_argument = self_struct_type_arguments_item.data
+                    let other_struct_type_argument = other_struct_type_arguments_item.data
+                    if not self_struct_type_argument.type.accepts(other_struct_type_argument.type) {
+                        return false
+                    }
+                    self_struct_type_arguments_item = self_struct_type_arguments_item.next_item
+                    other_struct_type_arguments_item = other_struct_type_arguments_item.next_item
+                }
+                if self_struct_type_arguments_item != null or other_struct_type_arguments_item != null {
+                    abort("Invalid state")
+                }
+
+                return true
+            }
+            return self.pointed_type.accepts(other.pointed_type)
+        }
+        if other is IR_Null_Type {
+            return true
+        }
+        return false
+    }
+    if self is IR_Function_Type {
+        if other is IR_Null_Type {
+            return true
+        }
+        if other is IR_Function_Type {
+            let self = self.as(@IR_Function_Type)
+            let other = other.as(@IR_Function_Type)
+            let self_parameters_item = self.parameters.first_item
+            let other_parameters_item = other.parameters.first_item
+            while self_parameters_item != null and other_parameters_item != null {
+                let self_parameter = self_parameters_item.data
+                let other_parameter = other_parameters_item.data
+                if not self_parameter.type.accepts(other_parameter.type) {
+                    return false
+                }
+                self_parameters_item = self_parameters_item.next_item
+                other_parameters_item = other_parameters_item.next_item
+            }
+            if self_parameters_item != null or other_parameters_item != null {
+                return false
+            }
+            return self.return_type.accepts(other.return_type)
+        }
+    }
+    if self is IR_Macro_Type {
+        if other is IR_Macro_Body_Type {
+            return true
+        }
+        if other is IR_Macro_Type {
+            let self_parameters_item = self.as(@IR_Macro_Type).parameters.first_item
+            let other_parameters_item = other.as(@IR_Macro_Type).parameters.first_item
+            while self_parameters_item != null and other_parameters_item != null {
+                let self_parameter = self_parameters_item.data
+                let other_parameter = other_parameters_item.data
+                if not self_parameter.type.accepts(other_parameter.type) {
+                    return false
+                }
+                self_parameters_item = self_parameters_item.next_item
+                other_parameters_item = other_parameters_item.next_item
+            }
+            if self_parameters_item != null or other_parameters_item != null {
+                return false
+            }
+            return true
+        }
+    }
+    return false
+}
+
 func equals(self: @IR_Type, other: @IR_Type) -> bool {
     if self.object_type != other.object_type {
         return false

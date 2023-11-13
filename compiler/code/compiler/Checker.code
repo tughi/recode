@@ -1361,9 +1361,10 @@ func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal
         )
     }
     if literal is Null_Token {
-        return make @Checked_Literal_Expression(
+        return make @Checked_Null_Literal_Expression(
             location = parsed_expression.location
             type = self.null_type
+            literal = literal.as(@Null_Token)
         )
     }
     if literal is String_Token {
@@ -1384,9 +1385,10 @@ func check_literal_expression(self: @Checker, parsed_expression: @Parsed_Literal
         )
     }
     if literal is Undefined_Token {
-        return make @Checked_Literal_Expression(
+        return make @Checked_Undefined_Literal_Expression(
             location = parsed_expression.location
             type = self.undefined_type
+            literal = literal.as(@Undefined_Token)
         )
     }
     abort(parsed_expression.location, literal.object_type)
