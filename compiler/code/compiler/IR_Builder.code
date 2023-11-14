@@ -78,6 +78,19 @@ func append(self: @IR_Builder, instruction: @IR_Instruction, location: @Source_L
     return instruction.result_value
 }
 
+func create_temp_value(self: @IR_Builder, type: @IR_Type) -> @IR_Variable_Value {
+    return self.create_variable_value(self.create_temp_variable(type))
+}
+
+func create_temp_variable(self: @IR_Builder, type: @IR_Type) -> @IR_Variable {
+    return make @IR_Variable(
+        location = null
+        checked_symbol = null
+        name = clone("$").append(self.counter.next())
+        type = type
+    )
+}
+
 func find_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
     self.types.for_each() {
         if name.equals(it.name) {
@@ -85,6 +98,51 @@ func find_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
         }
     }
     return null
+}
+
+func find_symbol(self: @IR_Builder, name: @String) -> @IR_Symbol {
+    let context = self.context
+    loop {
+        context.symbols.for_each() {
+            if it.name.equals(name) {
+                return it
+            }
+        }
+        context = context.parent
+        if context == null {
+            return null
+        }
+    }
+}
+
+func find_symbol(self: @IR_Builder, checked_symbol: @Checked_Symbol) -> @IR_Symbol {
+    let context = self.context
+    loop {
+        context.symbols.for_each() {
+            if it.checked_symbol == checked_symbol {
+                return it
+            }
+        }
+        context = context.parent
+        if context == null {
+            return null
+        }
+    }
+}
+
+func get_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
+    if variable is IR_Global_Variable {
+        return make @IR_Global_Variable_Value(type = variable.type, variable = variable)
+    }
+    let current_block_instruction = self.current_block.last_instruction
+    while current_block_instruction != null {
+        if current_block_instruction.result_value != null and current_block_instruction.result_value.variable == variable {
+            return current_block_instruction.result_value
+        }
+        current_block_instruction = current_block_instruction.prev_instruction
+    }
+    let instruction = self.current_block.prepend(create_ir_phi_instruction(self.create_variable_value(variable)))
+    return instruction.result_value
 }
 
 func build(self: @IR_Builder) -> Nothing {
@@ -101,6 +159,7 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
     let ir_function_type = self.convert_function_type(checked_function_symbol.function_type)
     let ir_function = make @IR_Function(
         id = self.functions_counter.next()
+        checked_symbol = checked_function_symbol
         checked_function_symbol = checked_function_symbol
         location = checked_function_symbol.location
         blocks = make @List[@IR_Block]()
@@ -113,6 +172,7 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
     ir_function_type.parameters.for_each() {
         ir_function.parameters.append(make @IR_Function_Parameter(
             location = it.location
+            checked_symbol = checked_function_symbol.body.local_symbols.parent.find_symbol(it.name)
             name = it.name
             type = it.type
         ))
@@ -254,6 +314,10 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
     let value: @IR_Value
     if checked_expression is Checked_Literal_Expression {
         value = self.convert_literal_expression(checked_expression.as(@Checked_Literal_Expression), expected_type)
+    } else if checked_expression is Checked_Substract_Expression {
+        value = self.convert_substract_expression(checked_expression.as(@Checked_Substract_Expression), expected_type)
+    } else if checked_expression is Checked_Symbol_Expression {
+        value = self.convert_symbol_expression(checked_expression.as(@Checked_Symbol_Expression), expected_type)
     } else {
         abort(checked_expression.location, checked_expression.object_type)
     }
@@ -375,11 +439,49 @@ func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Check
 }
 
 func convert_substract_expression(self: @IR_Builder, checked_expression: @Checked_Substract_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(make @IR_Substract_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), checked_expression.location)
 }
 
 func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_Symbol_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let ir_symbol = self.find_symbol(checked_expression.symbol)
+    if ir_symbol == null {
+        abort(checked_expression.location, clone("Undeclared symbol: ").append(checked_expression.symbol.name))
+    }
+    if ir_symbol is IR_Variable {
+        let ir_value = self.get_variable_value(ir_symbol.as(@IR_Variable))
+        if ir_value == null {
+            abort(checked_expression.location, clone("Undeclared variable value: ").append(checked_expression.symbol.name))
+        }
+        return ir_value
+    }
+    if ir_symbol is IR_Constant {
+        \ return ir_symbol.as(@IR_Constant).value
+    }
+    if ir_symbol is IR_Function {
+        \ if expected_type != null {
+        \     if expected_type is IR_Function_Type {
+        \         let expected_type = expected_type.as(@IR_Function_Type)
+        \         let callable_arguments = make List[@IR_Call_Argument]()
+        \         expected_type.parameters.for_each() {
+        \             callable_arguments.append(make @IR_Call_Argument(
+        \                 value = make @IR_Value(type = it.type)
+        \             ))
+        \         }
+        \         let callable = self.get_callable(checked_expression.location, ir_symbol.name, @callable_arguments)
+        \         \ TODO: Dispose of callable_argmunets
+        \         if callable is IR_Function {
+        \             return make @IR_Function_Address_Value(type = expected_type, function = callable.as(@IR_Function))
+        \         }
+        \         abort(checked_expression.location, "Not a function")
+        \     }
+        \ } else {
+        \     let function = self.get_unique_named_function(checked_expression.symbol.name)
+        \     return make @IR_Function_Address_Value(type = function.type, function = function)
+        \ }
+    }
+    abort(checked_expression.location, clone("Unsupported symbol type: ").append(ir_symbol.object_type.name))
 }
 
 func convert_reference_expression(self: @IR_Builder, checked_expression: @Checked_Reference_Expression, expected_type: @IR_Type) -> @IR_Value {

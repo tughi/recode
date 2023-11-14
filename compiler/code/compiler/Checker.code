@@ -488,6 +488,7 @@ func check_block_statement(self: @Checker, parsed_statement: @Parsed_Block_State
     \ check block
     let checked_statement = make @Checked_Block_Statement(
         location = parsed_statement.location
+        local_symbols = self.local_symbols
     )
     parsed_statement.statements.for_each() {
         checked_statement.statements.append(self.check_statement(it))
@@ -1940,7 +1941,10 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
     self.local_symbols = macro_symbols
 
     \ create surrounding block
-    let checked_statement = make @Checked_Block_Statement(location = checked_macro_call_expression.location)
+    let checked_statement = make @Checked_Block_Statement(
+        location = checked_macro_call_expression.location
+        local_symbols = macro_symbols
+    )
 
     \ create local variable for each macro parameter
     let parsed_parameter_item = checked_macro_call_expression.parsed_macro_type.parameters.first_item

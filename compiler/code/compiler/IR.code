@@ -679,6 +679,7 @@ struct IR_Macro: IR_Callable {
 struct IR_Symbol: Object {
     name: @String
     location: @Source_Location
+    checked_symbol: @Checked_Symbol
 }
 
 struct IR_Variable: IR_Symbol {

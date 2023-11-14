@@ -1,0 +1,6 @@
+\ Expect:
+\ - output: ''
+
+func main(argc: i32) -> i32 {
+    return argc - 1
+}

@@ -490,6 +490,7 @@ struct Checked_Assignment_Statement: Checked_Statement {
 }
 
 struct Checked_Block_Statement: Checked_Statement {
+    local_symbols: @Checked_Symbols
     statements = make List[@Checked_Statement]()
 }
 
