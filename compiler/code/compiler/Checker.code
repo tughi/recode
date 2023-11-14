@@ -548,6 +548,11 @@ func check_return_statement(self: @Checker, parsed_statement: @Parsed_Return_Sta
     let checked_expression: @Checked_Expression = null
     if parsed_statement.value_expression != null {
         checked_expression = self.check_expression(parsed_statement.value_expression, self.expected_return_type)
+        if checked_expression.type is Checked_Undefined_Type {
+            abort(parsed_statement.value_expression.location, "Returned expression cannot be ".clone().append(checked_expression.type.name))
+        }
+    } else if self.expected_return_type != null {
+        abort(parsed_statement.location, "Missing return expression")
     }
     return make @Checked_Return_Statement(
         location = parsed_statement.location

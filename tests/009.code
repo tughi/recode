@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/009.code:5:12: Returned expression cannot be Undefined\n'
+
+func main() -> i32 {
+    return undefined
+}
