@@ -153,6 +153,10 @@ func build(self: @IR_Builder) -> Nothing {
             abort(value.location, value.object_type)
         }
     }
+
+    self.functions.for_each() {
+        self.convert_function(it)
+    }
 }
 
 func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Function_Symbol) -> Nothing {
@@ -179,7 +183,10 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
     }
     self.add_symbol(ir_function)
     self.functions.append(ir_function)
+}
 
+func convert_function(self: @IR_Builder, ir_function: @IR_Function) -> Nothing {
+    let checked_function_symbol = ir_function.checked_function_symbol
     if checked_function_symbol.body != null {
         let local_context = make IR_Builder_Context(
             parent = self.context
@@ -312,7 +319,9 @@ func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_Whil
 
 func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
     let value: @IR_Value
-    if checked_expression is Checked_Literal_Expression {
+    if checked_expression is Checked_Function_Call_Expression {
+        value = self.convert_function_call_expression(checked_expression.as(@Checked_Function_Call_Expression), expected_type)
+    } else if checked_expression is Checked_Literal_Expression {
         value = self.convert_literal_expression(checked_expression.as(@Checked_Literal_Expression), expected_type)
     } else if checked_expression is Checked_Substract_Expression {
         value = self.convert_substract_expression(checked_expression.as(@Checked_Substract_Expression), expected_type)
@@ -335,8 +344,23 @@ func convert_array_access_expression(self: @IR_Builder, checked_expression: @Che
     abort(checked_expression.location, checked_expression.object_type)
 }
 
-func convert_call_expression(self: @IR_Builder, checked_expression: @Checked_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+func convert_call_arguments(self: @IR_Builder, checked_call_arguments: @List[@Checked_Call_Argument]) -> @List[@IR_Call_Argument] {
+    let has_named_arguments = false
+    let ir_call_arguments = make @List[@IR_Call_Argument]()
+    checked_call_arguments.for_each() {
+        let call_argument = it
+        let call_argument_value = self.convert_expression(call_argument.expression, null)
+        if call_argument.name != null {
+            ir_call_arguments.append(make @IR_Call_Argument(name = call_argument.name, value = call_argument_value))
+            has_named_arguments = true
+        } else {
+            if has_named_arguments {
+                abort(call_argument.expression.location, "Positional arguments cannot be added after named ones")
+            }
+            ir_call_arguments.append(make @IR_Call_Argument(value = call_argument_value))
+        }
+    }
+    return ir_call_arguments
 }
 
 func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -349,6 +373,22 @@ func convert_divide_expression(self: @IR_Builder, checked_expression: @Checked_D
 
 func convert_equals_expression(self: @IR_Builder, checked_expression: @Checked_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
     abort(checked_expression.location, checked_expression.object_type)
+}
+
+func convert_function_call_expression(self: @IR_Builder, checked_expression: @Checked_Function_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let ir_function = self.find_symbol(checked_expression.function_symbol)
+    if ir_function == null or ir_function is not IR_Function {
+        abort(checked_expression.location, "Missing IR_Function for Checked_Function_Symbol: ".clone().append(checked_expression.function_symbol.name))
+    }
+    let ir_function = ir_function.as(@IR_Function)
+
+    let ir_call_arguments = self.convert_call_arguments(checked_expression.call_arguments)
+
+    let result_value: @IR_Variable_Value = null
+    if ir_function.return_type is not IR_Nothing_Type {
+        result_value = self.create_temp_value(ir_function.return_type)
+    }
+    return self.append(create_ir_direct_call_instruction(result_value, ir_call_arguments, ir_function), checked_expression.location)
 }
 
 func convert_greater_than_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Expression, expected_type: @IR_Type) -> @IR_Value {

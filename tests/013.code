@@ -1,0 +1,10 @@
+\ Expect:
+\ - output: ''
+
+func main() -> i32 {
+    return echo(42) - 42
+}
+
+func echo(value: i32) -> i32 {
+    return value
+}

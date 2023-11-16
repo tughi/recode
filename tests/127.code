@@ -1,4 +1,0 @@
-\ Expect:
-\ - error: 'tests/127.code:4:26: Missing function body\n'
-
-func get_answer() -> void
