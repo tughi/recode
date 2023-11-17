@@ -193,6 +193,9 @@ func _accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_
         if not parameter_item.data.type.accepts(argument_item.data.expression.type) {
             return false
         }
+        if argument_item.data.name != null and not parameter_item.data.name.equals(argument_item.data.name) {
+            return false
+        }
         parameter_item = parameter_item.next_item
         argument_item = argument_item.next_item
     }

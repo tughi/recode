@@ -771,6 +771,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
 
     \ check call arguments
     let checked_call_arguments = make @List[@Checked_Call_Argument]()
+    let expect_checked_call_argument_name = false
     parsed_expression.arguments.for_each() {
         let parsed_call_argument = it
         let checked_call_argument_name: @String = null
@@ -783,6 +784,9 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
                     abort(parsed_expression.location, "Duplicate argument name")
                 }
             }
+            expect_checked_call_argument_name = true
+        } else if expect_checked_call_argument_name {
+            abort(parsed_call_argument.location, "Argument name expected")
         }
         let checked_call_argument_expression = self.check_expression(parsed_call_argument.value_expression, null)
         checked_call_arguments.append(make @Checked_Call_Argument(
