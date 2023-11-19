@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/107.code:5:23: Undefined symbol get_answer\n'
+\ - error: 'tests/025.code:5:23: Undefined symbol get_answer\n'
 
 func main() -> i32 {
     let answer: i32 = get_answer()

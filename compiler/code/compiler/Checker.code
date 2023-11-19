@@ -610,6 +610,7 @@ func check_variable_statement(self: @Checker, parsed_statement: @Parsed_Variable
             name = parsed_statement.name.lexeme
             type = checked_type
             expression = checked_expression
+            is_external = parsed_statement.is_external
         )
     )
     self.local_symbols.append(checked_statement.variable)
@@ -2014,6 +2015,7 @@ func inline_macro_call_expression(self: @Checker, checked_macro_call_expression:
                     name = parsed_parameter.name.lexeme
                     type = checked_parameter_type
                     expression = checked_call_argument_expression
+                    is_external = false
                 )
             )
             self.local_symbols.append(checked_variable_statement.variable)

@@ -1,4 +1,0 @@
-\ Expect:
-\ - error: 'tests/152.code:4:5: Missing variable type\n'
-
-let value

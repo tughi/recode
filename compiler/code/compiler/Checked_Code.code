@@ -481,6 +481,7 @@ struct Checked_Struct_Type_Symbol: Checked_Type_Symbol {
 
 struct Checked_Variable_Symbol: Checked_Symbol {
     expression: @Checked_Expression
+    is_external: bool
 }
 
 struct Checked_Statement: Object {

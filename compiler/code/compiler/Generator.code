@@ -1564,6 +1564,10 @@ func write_operand(file: @FILE, generator: @MC_Generator, ir_value: @IR_Value) -
         }
         generator.abort(clone("Unsupported constant literal: ").append(ir_value.literal.object_type.name))
     }
+    if ir_value is IR_Global_Variable_Value {
+        let variable_address = make @MC_Global_Variable_Address(ir_variable = ir_value.as(@IR_Global_Variable_Value).variable)
+        return file.write(variable_address)
+    }
     if ir_value is IR_Variable_Value {
         let ir_value = ir_value.as(@IR_Variable_Value)
         let mc_value = generator.get_value(ir_value)
