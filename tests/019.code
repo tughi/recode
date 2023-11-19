@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/112.code:12:6: Callable declared first here: tests/112.code:4:6\n'
+\ - error: 'tests/019.code:12:6: Callable declared first here: tests/019.code:4:6\n'
 
 func get_answer() -> i32 {
     return 1
