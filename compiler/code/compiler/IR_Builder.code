@@ -305,8 +305,12 @@ func convert_assignment_statement(self: @IR_Builder, statement: @Checked_Assignm
 }
 
 func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement) -> Nothing {
-    if checked_statement is Checked_Expression_Statement {
+    if checked_statement is Checked_Block_Statement {
+        self.convert_block_statement(checked_statement.as(@Checked_Block_Statement))
+    } else if checked_statement is Checked_Expression_Statement {
         self.convert_expression_statement(checked_statement.as(@Checked_Expression_Statement))
+    } else if checked_statement is Checked_If_Statement {
+        self.convert_if_statement(checked_statement.as(@Checked_If_Statement))
     } else if checked_statement is Checked_Return_Statement {
         self.convert_return_statement(checked_statement.as(@Checked_Return_Statement))
     } else if checked_statement is Checked_Variable_Statement {
@@ -333,7 +337,26 @@ func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked
 }
 
 func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Statement) -> Nothing {
-    abort(checked_statement.location, checked_statement.object_type)
+    let condition_value = self.convert_expression(checked_statement.condition_expression, self.find_named_type("bool"))
+    let true_block = self.current_block.function.create_block()
+    let end_block = self.current_block.function.create_block()
+    if checked_statement.false_statement != null {
+        let false_block = self.current_block.function.create_block()
+        self.current_block.append_jump(condition_value, true_block, false_block)
+        self.current_block = false_block
+        self.convert_statement(checked_statement.false_statement)
+        if not self.current_block.last_instruction.is_exit_instruction() {
+            self.current_block.append_jump(end_block)
+        }
+    } else {
+        self.current_block.append_jump(condition_value, true_block, end_block)
+    }
+    self.current_block = true_block
+    self.convert_statement(checked_statement.true_statement)
+    if not self.current_block.last_instruction.is_exit_instruction() {
+        self.current_block.append_jump(end_block)
+    }
+    self.current_block = end_block
 }
 
 func convert_loop_statement(self: @IR_Builder, checked_statement: @Checked_Loop_Statement) -> Nothing {
@@ -379,6 +402,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_function_call_expression(checked_expression.as(@Checked_Function_Call_Expression), expected_type)
     } else if checked_expression is Checked_Literal_Expression {
         value = self.convert_literal_expression(checked_expression.as(@Checked_Literal_Expression), expected_type)
+    } else if checked_expression is Checked_Not_Equals_Expression {
+        value = self.convert_not_equals_expression(checked_expression.as(@Checked_Not_Equals_Expression), expected_type)
     } else if checked_expression is Checked_Substract_Expression {
         value = self.convert_substract_expression(checked_expression.as(@Checked_Substract_Expression), expected_type)
     } else if checked_expression is Checked_Symbol_Expression {
@@ -531,7 +556,17 @@ func convert_negate_expression(self: @IR_Builder, checked_expression: @Checked_N
 }
 
 func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Checked_Not_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, null)
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    if left_value.type != right_value.type and not (right_value.type is IR_Null_Type and (left_value.type is IR_Pointer_Type or left_value.type is IR_Function_Type)) {
+        abort(checked_expression.location, "Operands are not the same type")
+    }
+    return self.append(
+        make @IR_Not_Equal_Comparison_Instruction(
+            result_value = self.create_temp_value(self.find_named_type("bool"))
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_substract_expression(self: @IR_Builder, checked_expression: @Checked_Substract_Expression, expected_type: @IR_Type) -> @IR_Value {
