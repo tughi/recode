@@ -149,6 +149,8 @@ func build(self: @IR_Builder) -> Nothing {
     self.checked_code.global_symbols.for_each() {
         if value is Checked_Function_Symbol {
             self.create_function(value.as(@Checked_Function_Symbol))
+        } else if value is Checked_Type_Symbol {
+            \ ignored
         } else if value is Checked_Variable_Symbol {
             let checked_variable_symbol = value.as(@Checked_Variable_Symbol)
             let ir_variable_type = self.convert_type(checked_variable_symbol.type)
@@ -188,14 +190,6 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
         is_external = checked_function_symbol.body == null
         type = ir_function_type
     )
-    ir_function_type.parameters.for_each() {
-        ir_function.parameters.append(make @IR_Function_Parameter(
-            location = it.location
-            checked_symbol = checked_function_symbol.body.local_symbols.parent.find_symbol(it.name)
-            name = it.name
-            type = it.type
-        ))
-    }
     self.add_symbol(ir_function)
     self.functions.append(ir_function)
 }
@@ -212,9 +206,16 @@ func convert_function(self: @IR_Builder, ir_function: @IR_Function) -> Nothing {
 
         self.current_block = ir_function.create_block()
 
-        ir_function.parameters.for_each() {
-            self.add_variable(it)
-            self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(it)))
+        ir_function.type.parameters.for_each() {
+            let ir_function_parameter = make @IR_Function_Parameter(
+                location = it.location
+                checked_symbol = checked_function_symbol.body.local_symbols.parent.find_symbol(it.name)
+                name = it.name
+                type = it.type
+            )
+            ir_function.parameters.append(ir_function_parameter)
+            self.add_variable(ir_function_parameter)
+            self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(ir_function_parameter)))
         }
 
         self.convert_block_statement(checked_function_symbol.body)
@@ -245,15 +246,36 @@ func create_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Var
 }
 
 func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
+    let ir_type: @IR_Type
     if checked_type is Checked_Named_Type {
-        let ir_type = self.find_named_type(checked_type.name)
+        let ir_type_name = checked_type.name
+        ir_type = self.find_named_type(ir_type_name)
         if ir_type != null {
             return ir_type
         }
-
+        if checked_type is Checked_Opaque_Type {
+            ir_type = make @IR_Opaque_Type(
+                name = ir_type_name
+            )
+        } else {
+            abort(checked_type.object_type)
+        }
+    } else if checked_type is Checked_Pointer_Type {
+        let ir_pointed_type = self.convert_type(checked_type.as(@Checked_Pointer_Type).pointed_type)
+        self.types.for_each() {
+            if it is IR_Pointer_Type and it.as(@IR_Pointer_Type).pointed_type == ir_pointed_type {
+                return it
+            }
+        }
+        ir_type = make @IR_Pointer_Type(
+            name = "@".clone().append(ir_pointed_type.name)
+            pointed_type = ir_pointed_type
+        )
+    } else {
         abort(checked_type.object_type)
     }
-    abort(checked_type.object_type)
+    self.types.append(ir_type)
+    return ir_type
 }
 
 func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Function_Type) -> @IR_Function_Type {
@@ -283,7 +305,9 @@ func convert_assignment_statement(self: @IR_Builder, statement: @Checked_Assignm
 }
 
 func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement) -> Nothing {
-    if checked_statement is Checked_Return_Statement {
+    if checked_statement is Checked_Expression_Statement {
+        self.convert_expression_statement(checked_statement.as(@Checked_Expression_Statement))
+    } else if checked_statement is Checked_Return_Statement {
         self.convert_return_statement(checked_statement.as(@Checked_Return_Statement))
     } else if checked_statement is Checked_Variable_Statement {
         self.convert_variable_statement(checked_statement.as(@Checked_Variable_Statement))
@@ -305,7 +329,7 @@ func convert_break_statement(self: @IR_Builder, checked_statement: @Checked_Brea
 }
 
 func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked_Expression_Statement) -> Nothing {
-    abort(checked_statement.location, checked_statement.object_type)
+    self.convert_expression(checked_statement.expression, null)
 }
 
 func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Statement) -> Nothing {

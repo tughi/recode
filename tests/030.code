@@ -1,0 +1,14 @@
+\ Expect:
+\ - output: '42\n'
+
+external type File
+
+external stdout: @File
+
+external func fputc(char: u8, file: @File) -> i32
+
+func main() -> Nothing {
+    fputc('4', stdout)
+    fputc('2', stdout)
+    fputc('\n', stdout)
+}
