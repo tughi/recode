@@ -130,6 +130,14 @@ func find_symbol(self: @IR_Builder, checked_symbol: @Checked_Symbol) -> @IR_Symb
     }
 }
 
+func find_variable(self: @IR_Builder, checked_symbol: @Checked_Symbol) -> @IR_Variable {
+    let ir_symbol = self.find_symbol(checked_symbol)
+    if ir_symbol != null and ir_symbol is IR_Variable {
+        return ir_symbol.as(@IR_Variable)
+    }
+    return null
+}
+
 func get_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
     if variable is IR_Global_Variable {
         return make @IR_Global_Variable_Value(type = variable.type, variable = variable)
@@ -306,12 +314,10 @@ func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Fu
     return make @IR_Function_Type(name = ir_function_type_name, parameters = ir_function_type_parameters, return_type = ir_function_type_return_type)
 }
 
-func convert_assignment_statement(self: @IR_Builder, statement: @Checked_Assignment_Statement) -> Nothing {
-    abort(statement.location, statement.object_type)
-}
-
 func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement) -> Nothing {
-    if checked_statement is Checked_Block_Statement {
+    if checked_statement is Checked_Assignment_Statement {
+        self.convert_assignment_statement(checked_statement.as(@Checked_Assignment_Statement))
+    } else if checked_statement is Checked_Block_Statement {
         self.convert_block_statement(checked_statement.as(@Checked_Block_Statement))
     } else if checked_statement is Checked_Break_Statement {
         self.convert_break_statement(checked_statement.as(@Checked_Break_Statement))
@@ -329,6 +335,21 @@ func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement)
         self.convert_while_statement(checked_statement.as(@Checked_While_Statement))
     } else {
         abort(checked_statement.location, checked_statement.object_type)
+    }
+}
+
+func convert_assignment_statement(self: @IR_Builder, checked_statement: @Checked_Assignment_Statement) -> Nothing {
+    let checked_destination_expression = checked_statement.destination_expression
+    if checked_destination_expression is Checked_Symbol_Expression {
+        let checked_symbol = checked_destination_expression.as(@Checked_Symbol_Expression).symbol
+        let variable = self.find_variable(checked_symbol)
+        if variable == null {
+            abort(checked_destination_expression.location, "Invalid state")
+        }
+        let value = self.convert_expression(checked_statement.value_expression, variable.type)
+        self.append(create_ir_set_instruction(self.create_variable_value(variable), value), checked_statement.location)
+    } else {
+        abort(checked_statement.location, checked_destination_expression.object_type)
     }
 }
 
