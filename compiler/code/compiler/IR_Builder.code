@@ -313,14 +313,20 @@ func convert_assignment_statement(self: @IR_Builder, statement: @Checked_Assignm
 func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement) -> Nothing {
     if checked_statement is Checked_Block_Statement {
         self.convert_block_statement(checked_statement.as(@Checked_Block_Statement))
+    } else if checked_statement is Checked_Break_Statement {
+        self.convert_break_statement(checked_statement.as(@Checked_Break_Statement))
     } else if checked_statement is Checked_Expression_Statement {
         self.convert_expression_statement(checked_statement.as(@Checked_Expression_Statement))
     } else if checked_statement is Checked_If_Statement {
         self.convert_if_statement(checked_statement.as(@Checked_If_Statement))
+    } else if checked_statement is Checked_Loop_Statement {
+        self.convert_loop_statement(checked_statement.as(@Checked_Loop_Statement))
     } else if checked_statement is Checked_Return_Statement {
         self.convert_return_statement(checked_statement.as(@Checked_Return_Statement))
     } else if checked_statement is Checked_Variable_Statement {
         self.convert_variable_statement(checked_statement.as(@Checked_Variable_Statement))
+    } else if checked_statement is Checked_While_Statement {
+        self.convert_while_statement(checked_statement.as(@Checked_While_Statement))
     } else {
         abort(checked_statement.location, checked_statement.object_type)
     }
@@ -335,7 +341,11 @@ func convert_block_statement(self: @IR_Builder, checked_block_statement: @Checke
 }
 
 func convert_break_statement(self: @IR_Builder, checked_statement: @Checked_Break_Statement) -> Nothing {
-    abort(checked_statement.location, checked_statement.object_type)
+    if self.current_loop == null {
+        abort(checked_statement.location, "Break outside of a loop?")
+    }
+    self.current_block.append_jump(self.current_loop.end_block)
+    self.current_block = self.current_block.function.create_block()
 }
 
 func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked_Expression_Statement) -> Nothing {
@@ -366,7 +376,15 @@ func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Stat
 }
 
 func convert_loop_statement(self: @IR_Builder, checked_statement: @Checked_Loop_Statement) -> Nothing {
-    abort(checked_statement.location, checked_statement.object_type)
+    let loop_block = self.current_block.function.create_block()
+    let end_block = self.current_block.function.create_block()
+    self.current_block.append_jump(loop_block)
+    self.current_block = loop_block
+    self.current_loop = make @IR_Loop(parent = self.current_loop, end_block = end_block)
+    self.convert_statement(checked_statement.body_statement)
+    self.current_block.append_jump(loop_block)
+    self.current_block = end_block
+    self.current_loop = self.current_loop.parent
 }
 
 func convert_return_statement(self: @IR_Builder, checked_statement: @Checked_Return_Statement) -> Nothing {
@@ -399,7 +417,19 @@ func convert_variable_statement(self: @IR_Builder, variable_statement: @Checked_
 }
 
 func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_While_Statement) -> Nothing {
-    abort(checked_statement.location, checked_statement.object_type)
+    let condition_block = self.current_block.function.create_block()
+    let loop_block = self.current_block.function.create_block()
+    let end_block = self.current_block.function.create_block()
+    self.current_block.append_jump(condition_block)
+    self.current_block = condition_block
+    let condition_value = self.convert_expression(checked_statement.condition_expression, self.find_named_type("bool"))
+    self.current_block.append_jump(condition_value, loop_block, end_block)
+    self.current_block = loop_block
+    self.current_loop = make @IR_Loop(parent = self.current_loop, end_block = end_block)
+    self.convert_statement(checked_statement.body_statement)
+    self.current_block.append_jump(condition_block)
+    self.current_block = end_block
+    self.current_loop = self.current_loop.parent
 }
 
 func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -408,10 +438,22 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_function_call_expression(checked_expression.as(@Checked_Function_Call_Expression), expected_type)
     } else if checked_expression is Checked_Cast_Expression {
         value = self.convert_cast_expression(checked_expression.as(@Checked_Cast_Expression), expected_type)
+    } else if checked_expression is Checked_Greater_Than_Expression {
+        value = self.convert_greater_than_expression(checked_expression.as(@Checked_Greater_Than_Expression), expected_type)
+    } else if checked_expression is Checked_Greater_Than_Or_Equals_Expression {
+        value = self.convert_greater_than_or_equals_expression(checked_expression.as(@Checked_Greater_Than_Or_Equals_Expression), expected_type)
+    } else if checked_expression is Checked_Less_Than_Expression {
+        value = self.convert_less_than_expression(checked_expression.as(@Checked_Less_Than_Expression), expected_type)
+    } else if checked_expression is Checked_Less_Than_Or_Equals_Expression {
+        value = self.convert_less_than_or_equals_expression(checked_expression.as(@Checked_Less_Than_Or_Equals_Expression), expected_type)
     } else if checked_expression is Checked_Literal_Expression {
         value = self.convert_literal_expression(checked_expression.as(@Checked_Literal_Expression), expected_type)
     } else if checked_expression is Checked_Modulo_Expression {
         value = self.convert_modulo_expression(checked_expression.as(@Checked_Modulo_Expression), expected_type)
+    } else if checked_expression is Checked_Multiply_Expression {
+        value = self.convert_multiply_expression(checked_expression.as(@Checked_Multiply_Expression), expected_type)
+    } else if checked_expression is Checked_Negate_Expression {
+        value = self.convert_negate_expression(checked_expression.as(@Checked_Negate_Expression), expected_type)
     } else if checked_expression is Checked_Not_Equals_Expression {
         value = self.convert_not_equals_expression(checked_expression.as(@Checked_Not_Equals_Expression), expected_type)
     } else if checked_expression is Checked_Substract_Expression {
@@ -506,11 +548,21 @@ func convert_function_call_expression(self: @IR_Builder, checked_expression: @Ch
 }
 
 func convert_greater_than_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, null)
+    if left_value.type is not IR_Integer_Type {
+        abort(checked_expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(make @IR_Greater_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
 }
 
 func convert_greater_than_or_equals_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Or_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, null)
+    if left_value.type is not IR_Integer_Type {
+        abort(checked_expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(make @IR_Greater_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
 }
 
 func convert_is_expression(self: @IR_Builder, checked_expression: @Checked_Is_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -518,11 +570,21 @@ func convert_is_expression(self: @IR_Builder, checked_expression: @Checked_Is_Ex
 }
 
 func convert_less_than_expression(self: @IR_Builder, checked_expression: @Checked_Less_Than_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, null)
+    if left_value.type is not IR_Integer_Type {
+        abort(checked_expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(make @IR_Less_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
 }
 
 func convert_less_than_or_equals_expression(self: @IR_Builder, checked_expression: @Checked_Less_Than_Or_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, null)
+    if left_value.type is not IR_Integer_Type {
+        abort(checked_expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(make @IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
 }
 
 func convert_literal_expression(self: @IR_Builder, checked_expression: @Checked_Literal_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -586,11 +648,29 @@ func convert_modulo_expression(self: @IR_Builder, checked_expression: @Checked_M
 }
 
 func convert_multiply_expression(self: @IR_Builder, checked_expression: @Checked_Multiply_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, null)
+    if left_value.type is not IR_Integer_Type {
+        abort(checked_expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(make @IR_Multiply_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), checked_expression.location)
 }
 
 func convert_negate_expression(self: @IR_Builder, checked_expression: @Checked_Negate_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let value = self.convert_expression(checked_expression.expression, null)
+    if value.type is not IR_Integer_Type {
+        abort(checked_expression.expression.location, "Not an integer value")
+    }
+    return self.append(
+        make @IR_Substract_Instruction(result_value = self.create_temp_value(value.type)).init(
+            make @IR_Constant_Value(
+                type = value.type
+                literal = make @Integer_Token(lexeme = "", location = checked_expression.location, value = 0, negative = false, type = null)
+            )
+            value
+        )
+        checked_expression.location
+    )
 }
 
 func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Checked_Not_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
