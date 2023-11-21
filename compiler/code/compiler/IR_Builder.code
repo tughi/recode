@@ -262,18 +262,24 @@ func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
         }
     } else if checked_type is Checked_Pointer_Type {
         let ir_pointed_type = self.convert_type(checked_type.as(@Checked_Pointer_Type).pointed_type)
-        self.types.for_each() {
-            if it is IR_Pointer_Type and it.as(@IR_Pointer_Type).pointed_type == ir_pointed_type {
-                return it
-            }
-        }
-        ir_type = make @IR_Pointer_Type(
-            name = "@".clone().append(ir_pointed_type.name)
-            pointed_type = ir_pointed_type
-        )
+        return self.create_ir_pointer_type(ir_pointed_type)
     } else {
         abort(checked_type.object_type)
     }
+    self.types.append(ir_type)
+    return ir_type
+}
+
+func create_ir_pointer_type(self: @IR_Builder, ir_pointed_type: @IR_Type) -> @IR_Pointer_Type {
+    self.types.for_each() {
+        if it is IR_Pointer_Type and it.as(@IR_Pointer_Type).pointed_type == ir_pointed_type {
+            return it.as(@IR_Pointer_Type)
+        }
+    }
+    let ir_type = make @IR_Pointer_Type(
+        name = "@".clone().append(ir_pointed_type.name)
+        pointed_type = ir_pointed_type
+    )
     self.types.append(ir_type)
     return ir_type
 }
@@ -400,6 +406,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
     let value: @IR_Value
     if checked_expression is Checked_Function_Call_Expression {
         value = self.convert_function_call_expression(checked_expression.as(@Checked_Function_Call_Expression), expected_type)
+    } else if checked_expression is Checked_Cast_Expression {
+        value = self.convert_cast_expression(checked_expression.as(@Checked_Cast_Expression), expected_type)
     } else if checked_expression is Checked_Literal_Expression {
         value = self.convert_literal_expression(checked_expression.as(@Checked_Literal_Expression), expected_type)
     } else if checked_expression is Checked_Modulo_Expression {
@@ -447,7 +455,30 @@ func convert_call_arguments(self: @IR_Builder, checked_call_arguments: @List[@Ch
 }
 
 func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let value = self.convert_expression(checked_expression.expression, null)
+    let result_value = self.create_temp_value(self.convert_type(checked_expression.type))
+    if value.type is IR_Pointer_Type and (result_value.type is IR_Pointer_Type or result_value.type is IR_Unchecked_Array_Type) {
+        return self.append(create_ir_set_instruction(result_value, value), checked_expression.location)
+    }
+    if value.type is IR_Integer_Type and result_value.type is IR_Integer_Type {
+        return self.append(create_ir_cast_instruction(result_value, value), checked_expression.location)
+    }
+    if value.type is IR_Fixed_Array_Type and result_value.type is IR_Unchecked_Array_Type {
+        let value_type = value.type.as(@IR_Fixed_Array_Type)
+        let result_value_type = result_value.type.as(@IR_Unchecked_Array_Type)
+        if value_type.item_type == result_value_type.item_type {
+            if value is IR_Global_Variable_Value {
+                value = make @IR_Global_Variable_Address_Value(
+                    type = self.create_ir_pointer_type(value_type)
+                    variable = value.as(@IR_Global_Variable_Value).variable
+                )
+            } else {
+                abort(checked_expression.location, clone("Unsupported value type: ").append(value.object_type.name))
+            }
+            return self.append(create_ir_set_instruction(result_value, value), checked_expression.location)
+        }
+    }
+    abort(checked_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
 }
 
 func convert_divide_expression(self: @IR_Builder, checked_expression: @Checked_Divide_Expression, expected_type: @IR_Type) -> @IR_Value {
