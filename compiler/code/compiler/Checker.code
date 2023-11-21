@@ -527,7 +527,7 @@ func check_if_statement(self: @Checker, parsed_statement: @Parsed_If_Statement) 
     let checked_true_statement = self.check_statement(parsed_statement.true_statement)
     let checked_false_statement: @Checked_Statement = null
     if parsed_statement.false_statement != null {
-        checked_false_statement = self.check_statement(parsed_statement.true_statement)
+        checked_false_statement = self.check_statement(parsed_statement.false_statement)
     }
     return make @Checked_If_Statement(
         location = parsed_statement.location
