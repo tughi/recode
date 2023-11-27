@@ -255,7 +255,9 @@ func create_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Var
 
 func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
     let ir_type: @IR_Type
-    if checked_type is Checked_Named_Type {
+    if checked_type is Checked_Function_Type {
+        return self.convert_function_type(checked_type.as(@Checked_Function_Type))
+    } else if checked_type is Checked_Named_Type {
         let ir_type_name = checked_type.name
         ir_type = self.find_named_type(ir_type_name)
         if ir_type != null {
@@ -284,8 +286,14 @@ func create_ir_pointer_type(self: @IR_Builder, ir_pointed_type: @IR_Type) -> @IR
             return it.as(@IR_Pointer_Type)
         }
     }
+    let ir_type_name: @String
+    if ir_pointed_type is IR_Function_Type {
+        ir_type_name = "@(".clone().append(ir_pointed_type.name).append(')')
+    } else {
+        ir_type_name = "@".clone().append(ir_pointed_type.name)
+    }
     let ir_type = make @IR_Pointer_Type(
-        name = "@".clone().append(ir_pointed_type.name)
+        name = ir_type_name
         pointed_type = ir_pointed_type
     )
     self.types.append(ir_type)
@@ -455,10 +463,12 @@ func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_Whil
 
 func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
     let value: @IR_Value
-    if checked_expression is Checked_Function_Call_Expression {
-        value = self.convert_function_call_expression(checked_expression.as(@Checked_Function_Call_Expression), expected_type)
-    } else if checked_expression is Checked_Cast_Expression {
+    if checked_expression is Checked_Cast_Expression {
         value = self.convert_cast_expression(checked_expression.as(@Checked_Cast_Expression), expected_type)
+    } else if checked_expression is Checked_Dynamic_Call_Expression {
+        value = self.convert_dynamic_call_expression(checked_expression.as(@Checked_Dynamic_Call_Expression), expected_type)
+    } else if checked_expression is Checked_Function_Call_Expression {
+        value = self.convert_function_call_expression(checked_expression.as(@Checked_Function_Call_Expression), expected_type)
     } else if checked_expression is Checked_Greater_Than_Expression {
         value = self.convert_greater_than_expression(checked_expression.as(@Checked_Greater_Than_Expression), expected_type)
     } else if checked_expression is Checked_Greater_Than_Or_Equals_Expression {
@@ -552,6 +562,28 @@ func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cas
 
 func convert_divide_expression(self: @IR_Builder, checked_expression: @Checked_Divide_Expression, expected_type: @IR_Type) -> @IR_Value {
     abort(checked_expression.location, checked_expression.object_type)
+}
+
+func convert_dynamic_call_expression(self: @IR_Builder, checked_expression: @Checked_Dynamic_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let ir_call_arguments = self.convert_call_arguments(checked_expression.call_arguments)
+    let ir_callee = self.convert_expression(checked_expression.callee_expression, null)
+    if ir_callee is not IR_Variable_Value {
+        abort(checked_expression.callee_expression.location, ir_callee.object_type)
+    }
+    let ir_callee_type = ir_callee.type
+    if ir_callee_type is not IR_Pointer_Type {
+        abort(checked_expression.callee_expression.location, ir_callee_type.object_type)
+    }
+    let ir_function_type = ir_callee_type.as(@IR_Pointer_Type).pointed_type
+    if ir_function_type is not IR_Function_Type {
+        abort(checked_expression.callee_expression.location, ir_function_type.object_type)
+    }
+    let ir_function_type = ir_function_type.as(@IR_Function_Type)
+    let result_value: @IR_Variable_Value = null
+    if ir_function_type.return_type is not IR_Nothing_Type {
+        result_value = self.create_temp_value(ir_function_type.return_type)
+    }
+    return self.append(create_ir_dynamic_call_instruction(result_value, ir_call_arguments, ir_callee.as(@IR_Variable_Value)), checked_expression.location)
 }
 
 func convert_equals_expression(self: @IR_Builder, checked_expression: @Checked_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -769,26 +801,26 @@ func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_S
         \ return ir_symbol.as(@IR_Constant).value
     }
     if ir_symbol is IR_Function {
-        \ if expected_type != null {
-        \     if expected_type is IR_Function_Type {
-        \         let expected_type = expected_type.as(@IR_Function_Type)
-        \         let callable_arguments = make List[@IR_Call_Argument]()
-        \         expected_type.parameters.for_each() {
-        \             callable_arguments.append(make @IR_Call_Argument(
-        \                 value = make @IR_Value(type = it.type)
-        \             ))
-        \         }
-        \         let callable = self.get_callable(checked_expression.location, ir_symbol.name, @callable_arguments)
-        \         \ TODO: Dispose of callable_argmunets
-        \         if callable is IR_Function {
-        \             return make @IR_Function_Address_Value(type = expected_type, function = callable.as(@IR_Function))
-        \         }
-        \         abort(checked_expression.location, "Not a function")
-        \     }
-        \ } else {
-        \     let function = self.get_unique_named_function(checked_expression.symbol.name)
-        \     return make @IR_Function_Address_Value(type = function.type, function = function)
-        \ }
+        let ir_function = ir_symbol.as(@IR_Function)
+        if expected_type != null {
+            \ if expected_type is IR_Function_Type {
+            \     let expected_type = expected_type.as(@IR_Function_Type)
+            \     let callable_arguments = make List[@IR_Call_Argument]()
+            \     expected_type.parameters.for_each() {
+            \         callable_arguments.append(make @IR_Call_Argument(
+            \             value = make @IR_Value(type = it.type)
+            \         ))
+            \     }
+            \     let callable = self.get_callable(checked_expression.location, ir_symbol.name, @callable_arguments)
+            \     \ TODO: Dispose of callable_argmunets
+            \     if callable is IR_Function {
+            \         return make @IR_Function_Address_Value(type = expected_type, function = callable.as(@IR_Function))
+            \     }
+            \     abort(checked_expression.location, "Not a function")
+            \ }
+        } else {
+            return make @IR_Function_Address_Value(type = ir_function.type, function = ir_function)
+        }
     }
     abort(checked_expression.location, clone("Unsupported symbol type: ").append(ir_symbol.object_type.name))
 }
