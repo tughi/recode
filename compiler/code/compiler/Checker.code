@@ -185,8 +185,8 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
 
     \ check for duplicates
     self.checked_code.functions.for_each() {
-        if it.name.equals(parsed_function_statement.name) {
-            abort(parsed_function_statement.location, "TODO: Compare function types")
+        if it.name.equals(parsed_function_statement.name.lexeme) and it.function_type.name.equals(checked_function_type.name) {
+            abort(parsed_function_statement.location, "Function declared first here: ".clone().append(it.location))
         }
     }
 
