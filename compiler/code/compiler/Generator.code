@@ -683,6 +683,8 @@ func generate_divide_instruction(self: @MC_Generator, instruction: @IR_Divide_In
             self.output_file.write(register.name_d)
         } else if type_size == 2 {
             self.output_file.write(register.name_w)
+        } else if type_size == 1 {
+            self.output_file.write(register.name_b)
         } else {
             self.abort(clone("Unsupported type size: ").append(type_size))
         }

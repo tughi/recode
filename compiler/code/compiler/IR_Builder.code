@@ -465,6 +465,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
     let value: @IR_Value
     if checked_expression is Checked_Cast_Expression {
         value = self.convert_cast_expression(checked_expression.as(@Checked_Cast_Expression), expected_type)
+    } else if checked_expression is Checked_Divide_Expression {
+        value = self.convert_divide_expression(checked_expression.as(@Checked_Divide_Expression), expected_type)
     } else if checked_expression is Checked_Dynamic_Call_Expression {
         value = self.convert_dynamic_call_expression(checked_expression.as(@Checked_Dynamic_Call_Expression), expected_type)
     } else if checked_expression is Checked_Equals_Expression {
@@ -563,7 +565,17 @@ func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cas
 }
 
 func convert_divide_expression(self: @IR_Builder, checked_expression: @Checked_Divide_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, null)
+    if left_value.type is not IR_Integer_Type {
+        abort(checked_expression.left_expression.location, "Not an integer value")
+    }
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(
+        make @IR_Divide_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_dynamic_call_expression(self: @IR_Builder, checked_expression: @Checked_Dynamic_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -748,7 +760,12 @@ func convert_modulo_expression(self: @IR_Builder, checked_expression: @Checked_M
         abort(checked_expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(make @IR_Modulo_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), checked_expression.location)
+    return self.append(
+        make @IR_Modulo_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_multiply_expression(self: @IR_Builder, checked_expression: @Checked_Multiply_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -757,7 +774,12 @@ func convert_multiply_expression(self: @IR_Builder, checked_expression: @Checked
         abort(checked_expression.left_expression.location, "Not an integer value")
     }
     let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(make @IR_Multiply_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), checked_expression.location)
+    return self.append(
+        make @IR_Multiply_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_negate_expression(self: @IR_Builder, checked_expression: @Checked_Negate_Expression, expected_type: @IR_Type) -> @IR_Value {
