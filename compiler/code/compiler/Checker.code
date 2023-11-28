@@ -202,18 +202,15 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
         body = null
     )
 
-    let global_symbol_id: @String
-    if parsed_function_statement.is_anonymous {
-        abort(parsed_function_statement.location, "TODO: Create unique function name")
-    } else {
-        self.global_symbols.append(checked_function_symbol)
-
-        global_symbol_id = checked_function_symbol.name.clone()
-    }
-    global_symbol_id.append(": ").append(checked_function_type.name)
+    \ TODO: create symbol ID based on parameter types
+    let global_symbol_id = checked_function_symbol.name.clone().append(": ").append(checked_function_type.name)
 
     self.checked_code.global_symbols.put(global_symbol_id, checked_function_symbol)
     self.checked_code.functions.append(checked_function_symbol)
+
+    if not parsed_function_statement.is_anonymous {
+        self.global_symbols.append(checked_function_symbol)
+    }
 
     return checked_function_symbol
 }
