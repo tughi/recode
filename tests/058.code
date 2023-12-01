@@ -1,0 +1,8 @@
+\ Expect:
+\ - error: 'tests/058.code:7:6: Generic function declared first here: tests/058.code:4:6\n'
+
+func foo[T](bar: [T; 42]) -> Nothing {
+}
+
+func foo[V](bar: [V; 42]) -> Nothing {
+}

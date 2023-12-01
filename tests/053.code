@@ -1,0 +1,10 @@
+\ Expect:
+\ - error: 'tests/053.code:8:6: Generic function declared first here: tests/053.code:4:6\n'
+
+func half_of[T](value: T) -> T {
+    return value / 2
+}
+
+func half_of[V](value: V) -> V {
+    return value / 2
+}

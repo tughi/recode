@@ -73,6 +73,119 @@ struct Parsed_Function_Statement: Parsed_Statement {
     is_anonymous: bool
 }
 
+func is_duplicate(self: @Parsed_Function_Statement, other: @Parsed_Function_Statement) -> bool {
+    if not self.name.lexeme.equals(other.name.lexeme) {
+        \ different name
+        return false
+    }
+
+    let self_type = self.type
+    let other_type = other.type
+
+    \ check number of type parameters
+    if self_type.type_parameters != null {
+        if other_type.type_parameters == null {
+            return false
+        }
+        if self_type.type_parameters.size != other_type.type_parameters.size {
+            return false
+        }
+    } else if other_type.type_parameters != null {
+        return false
+    }
+
+    \ check number of parameters
+    if self_type.parameters.size != other_type.parameters.size {
+        return false
+    }
+
+    \ check each parameter
+    self_type.parameters.for_each_indexed() {
+        let self_parameter = it
+        let other_parameter = other_type.parameters.get(it_index.as(i64))
+        if not same_types(self_parameter.type, self_type.type_parameters, other_parameter.type, other_type.type_parameters) {
+            return false
+        }
+    }
+
+    return true
+}
+
+func same_types(self: @Parsed_Type, self_context: @List[@Parsed_Type_Parameter], other: @Parsed_Type, other_context: @List[@Parsed_Type_Parameter]) -> bool {
+    if self.object_type != other.object_type {
+        return false
+    }
+    if self is Parsed_Array_Type {
+        let self = self.as(@Parsed_Array_Type)
+        let other = other.as(@Parsed_Array_Type)
+        if self.is_checked != other.is_checked {
+            return false
+        }
+        if not self.size_expression.same_expressions(other.size_expression) {
+            return false
+        }
+        return same_types(self.item_type, self_context, other.item_type, other_context)
+    }
+    if self is Parsed_Function_Type {
+        let self = self.as(@Parsed_Function_Type)
+        let other = other.as(@Parsed_Function_Type)
+        if self.parameters.size != other.parameters.size {
+            return false
+        }
+        self.parameters.for_each_indexed() {
+            let self_parameter = it
+            let other_parameter = other.parameters.get(it_index.as(i64))
+            if not same_types(self_parameter.type, self_context, other_parameter.type, other_context) {
+                return false
+            }
+        }
+        return same_types(self.return_type, self_context, other.return_type, other_context)
+    }
+    if self is Parsed_Named_Type {
+        let self = self.as(@Parsed_Named_Type)
+        let other = other.as(@Parsed_Named_Type)
+        if self_context != null {
+            self_context.for_each_indexed() {
+                let self_type_parameter = it
+                let other_type_parameter = other_context.get(it_index.as(i64))
+                if self.name.lexeme.equals(self_type_parameter.name.lexeme) {
+                    if other.name.lexeme.equals(other_type_parameter.name.lexeme) {
+                        return true
+                    }
+                    return false
+                } else if other.name.lexeme.equals(other_type_parameter.name.lexeme) {
+                    return false
+                }
+            }
+        }
+        return self.name.lexeme.equals(other.name.lexeme)
+    }
+    if self is Parsed_Pointer_Type {
+        return same_types(self.as(@Parsed_Pointer_Type).pointed_type, self_context, other.as(@Parsed_Pointer_Type).pointed_type, other_context)
+    }
+    abort(self.location, self.object_type)
+}
+
+func same_expressions(self: @Parsed_Expression, other: @Parsed_Expression) -> bool {
+    if self == null {
+        return other == null
+    }
+    if self.object_type != other.object_type {
+        return false
+    }
+    if self is Parsed_Literal_Expression {
+        return same_literals(self.as(@Parsed_Literal_Expression).literal, other.as(@Parsed_Literal_Expression).literal)
+    }
+    abort(self.location, self.object_type)
+}
+
+func same_literals(self: @Literal_Token, other: @Literal_Token) -> bool {
+    if self.object_type != other.object_type {
+        return false
+    }
+    return self.lexeme.equals(other.lexeme)
+}
+
 struct Parsed_Macro_Statement: Parsed_Statement {
     name: @Identifier_Token
     type: @Parsed_Macro_Type

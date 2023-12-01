@@ -99,6 +99,13 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
         } else if it is Parsed_Function_Statement {
             let parsed_function_statement = it.as(@Parsed_Function_Statement)
             if parsed_function_statement.type.type_parameters != null {
+                \ check for duplicates
+                self.generic_function_statements.for_each() {
+                    if parsed_function_statement.is_duplicate(it) {
+                        abort(parsed_function_statement.location, "Generic function declared first here: ".clone().append(it.location))
+                    }
+                }
+
                 \ generic functions are checked only during specialization
                 self.generic_function_statements.append(parsed_function_statement)
             } else {
