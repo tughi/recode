@@ -1,6 +1,0 @@
-\ Expect:
-\ - error: 'tests/116.code:4:14: Type recursivity\n'
-
-struct Test: Test {
-    value: i32
-}

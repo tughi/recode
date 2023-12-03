@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/136.code:8:13: Type recursivity\n'
+\ - error: 'tests/068.code:8:5: Type recursivity\n'
 
 struct Shape {
     color: u32

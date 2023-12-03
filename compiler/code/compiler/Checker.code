@@ -156,6 +156,13 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             self.check_function_symbol(it)
         }
     }
+
+    \ check unused types
+    self.global_symbols.for_each() {
+        if it is Checked_Type_Symbol and not it.type.is_checked_type {
+            self.check_type(it.type)
+        }
+    }
 }
 
 func create_constant_symbol(self: @Checker, parsed_constant_statement: @Parsed_Constant_Statement) -> @Checked_Constant_Symbol {
@@ -373,13 +380,19 @@ func check_struct_type_symbol(self: @Checker, checked_struct_type_symbol: @Check
             if checked_struct_member_type == null {
                 abort(parsed_struct_member.name.location, "Cannot infer type of struct member")
             }
-            if checked_struct_member_type is Checked_Struct_Type {
-                let checked_struct_member_type = checked_struct_member_type.as(@Checked_Struct_Type)
-                if checked_struct_member_type == checked_struct_type or checked_struct_member_type.has_super_type(checked_struct_type) {
-                    abort(parsed_struct_member.type.location, "Type recursivity")
+            checked_struct_type.add_member(parsed_struct_member.location, checked_struct_member_name, checked_struct_member_type, checked_struct_member_value_expression)
+        }
+
+        \ check all types
+        checked_struct_type.members.for_each() {
+            if not it.type.is_checked_type {
+                self.check_type(it.type)
+            }
+            if it.type is Checked_Struct_Type {
+                if it.type == checked_struct_type.as(@Checked_Type) or it.type.as(@Checked_Struct_Type).has_super_type(checked_struct_type) {
+                    abort(it.location, "Type recursivity")
                 }
             }
-            checked_struct_type.add_member(parsed_struct_member.location, checked_struct_member_name, checked_struct_member_type, checked_struct_member_value_expression)
         }
     }
 

@@ -1,5 +1,5 @@
 \ Expect:
-\ - error: 'tests/118.code:4:11: Type recursivity\n'
+\ - error: 'tests/064.code:4:11: Type recursivity\n'
 
 struct A: C {
 }

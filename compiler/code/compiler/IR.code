@@ -47,7 +47,7 @@ func accepts(self: @IR_Type, other: @IR_Type) -> bool {
                 \ Find matching base struct
                 let other_struct_type = other.pointed_type.as(@IR_Struct_Type)
                 while other_struct_type != null {
-                    if other_struct_type.statement == self_struct_type.statement {
+                    if other_struct_type.checked_struct_type == self_struct_type.checked_struct_type {
                         break
                     }
                     other_struct_type = other_struct_type.super_type
@@ -275,7 +275,7 @@ struct IR_Struct_Type: IR_Type {
     super_type: @IR_Struct_Type = null
     derived_types = make @List[@IR_Struct_Type]()
     members = make @List[@IR_Struct_Type_Member]()
-    statement: @Parsed_Struct_Statement
+    checked_struct_type: @Checked_Struct_Type
     object_type_variable: @IR_Global_Variable = null
     object_type_id = 0u32
     object_type_max_derivate_id = 0u32

@@ -267,6 +267,8 @@ func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
             ir_type = make @IR_Opaque_Type(
                 name = ir_type_name
             )
+        } else if checked_type is Checked_Struct_Type {
+            return self.convert_struct_type(checked_type.as(@Checked_Struct_Type))
         } else {
             abort(checked_type.object_type)
         }
@@ -320,6 +322,61 @@ func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Fu
     let ir_function_type_return_type = self.convert_type(checked_function_type.return_type)
     ir_function_type_name.append(") -> ").append(ir_function_type_return_type.name)
     return make @IR_Function_Type(name = ir_function_type_name, parameters = ir_function_type_parameters, return_type = ir_function_type_return_type)
+}
+
+func convert_struct_type(self: @IR_Builder, checked_struct_type: @Checked_Struct_Type) -> @IR_Struct_Type {
+    let ir_struct_type = make @IR_Struct_Type(
+        name = checked_struct_type.name
+        checked_struct_type = checked_struct_type
+    )
+    self.types.append(ir_struct_type)
+
+    if checked_struct_type.super_type != null {
+        let super_type = self.convert_type(checked_struct_type.super_type)
+        if super_type is not IR_Struct_Type {
+            abort("Invalid state")
+        }
+        let super_type = super_type.as(@IR_Struct_Type)
+        ir_struct_type.super_type = super_type
+        ir_struct_type.super_type.derived_types.append(ir_struct_type)
+    }
+
+    checked_struct_type.members.for_each() {
+        ir_struct_type.add_member(
+            it.name
+            self.convert_type(it.type)
+            null \ TODO: checked_struct_type.default_values.get(it)
+        )
+    }
+
+    if ir_struct_type.is_object_type() {
+        \ let object_type_type = self.convert_type(make @Parsed_Pointer_Type(pointed_type = make @Parsed_Named_Type(name = make @Identifier_Token(location = null, lexeme = "Object_Type"))))
+        \ if object_type_type is not IR_Pointer_Type {
+        \     abort(struct_statement.location, "Invalid state")
+        \ }
+        \ let object_type_struct_type = object_type_type.as(@IR_Pointer_Type).pointed_type
+        \ if object_type_struct_type is not IR_Struct_Type {
+        \     abort(struct_statement.location, "Invalid state")
+        \ }
+
+        \ \ TODO: Build Object_Type value
+        \ let object_type_value = make @IR_Undefined_Value(type = object_type_type)
+
+        \ let object_type_variable = make @IR_Global_Variable(
+        \     location = type.statement.location
+        \     name = clone(struct_statement.name.lexeme).append("__").append(self.types_counter.next())
+        \     type = object_type_type
+        \     value = object_type_value
+        \     is_external = false
+        \ )
+        \ type.object_type_variable = object_type_variable
+
+        \ self.add_symbol(object_type_variable) \ TODO: add symbol to root context
+
+        abort("TODO: Prepare object type")
+    }
+
+    return ir_struct_type
 }
 
 func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement) -> Nothing {
@@ -463,7 +520,9 @@ func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_Whil
 
 func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
     let value: @IR_Value
-    if checked_expression is Checked_Cast_Expression {
+    if checked_expression is Checked_Add_Expression {
+        value = self.convert_add_expression(checked_expression.as(@Checked_Add_Expression), expected_type)
+    } else if checked_expression is Checked_Cast_Expression {
         value = self.convert_cast_expression(checked_expression.as(@Checked_Cast_Expression), expected_type)
     } else if checked_expression is Checked_Divide_Expression {
         value = self.convert_divide_expression(checked_expression.as(@Checked_Divide_Expression), expected_type)
@@ -489,6 +548,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_logic_not_expression(checked_expression.as(@Checked_Logic_Not_Expression), expected_type)
     } else if checked_expression is Checked_Logic_Or_Expression {
         value = self.convert_logic_or_expression(checked_expression.as(@Checked_Logic_Or_Expression), expected_type)
+    } else if checked_expression is Checked_Member_Access_Expression {
+        value = self.convert_member_access_expression(checked_expression.as(@Checked_Member_Access_Expression), expected_type)
     } else if checked_expression is Checked_Modulo_Expression {
         value = self.convert_modulo_expression(checked_expression.as(@Checked_Modulo_Expression), expected_type)
     } else if checked_expression is Checked_Multiply_Expression {
@@ -511,7 +572,14 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
 }
 
 func convert_add_expression(self: @IR_Builder, checked_expression: @Checked_Add_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(
+        make @IR_Add_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_array_access_expression(self: @IR_Builder, checked_expression: @Checked_Array_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -751,7 +819,60 @@ func convert_make_expression(self: @IR_Builder, checked_expression: @Checked_Mak
 }
 
 func convert_member_access_expression(self: @IR_Builder, checked_expression: @Checked_Member_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    let object_value = self.convert_expression(checked_expression.object_expression, null)
+    let struct_type: @IR_Struct_Type
+    if object_value.type is IR_Struct_Type {
+        if object_value is IR_Variable_Value {
+            struct_type = object_value.type.as(@IR_Struct_Type)
+            object_value = self.append(
+                create_ir_load_variable_address_instruction(
+                    self.create_temp_value(self.create_ir_pointer_type(struct_type))
+                    object_value.as(@IR_Variable_Value)
+                )
+                checked_expression.location
+            )
+        } else if object_value is IR_Global_Variable_Value {
+            struct_type = object_value.type.as(@IR_Struct_Type)
+            object_value = make @IR_Global_Variable_Address_Value(
+                type = self.create_ir_pointer_type(struct_type)
+                variable = object_value.as(@IR_Global_Variable_Value).variable
+            )
+        } else {
+            abort(checked_expression.location, clone("Unsupported value type: ").append(object_value.object_type.name))
+        }
+    } else if object_value.type is IR_Pointer_Type {
+        let pointed_type = object_value.type.as(@IR_Pointer_Type).pointed_type
+        if pointed_type is not IR_Struct_Type {
+            abort(checked_expression.location, clone("Not a struct pointer value: ").append(object_value.type.name))
+        }
+        struct_type = pointed_type.as(@IR_Struct_Type)
+    } else {
+        abort(checked_expression.location, clone("Not a reference type: ").append(object_value.type.name))
+    }
+
+    \ TODO: Add test for "foo = bar.super"
+
+    let struct_type_member = struct_type.get_member(checked_expression.struct_member.name)
+    if struct_type_member.type is IR_Struct_Type or struct_type_member.type is IR_Fixed_Array_Type {
+        return self.append(
+            create_ir_load_struct_member_instruction(
+                self.create_temp_value(self.create_ir_pointer_type(struct_type_member.type))
+                object_value
+                struct_type_member
+                true
+            )
+            checked_expression.location
+        )
+    }
+    return self.append(
+        create_ir_load_struct_member_instruction(
+            self.create_temp_value(struct_type_member.type)
+            object_value
+            struct_type_member
+            false
+        )
+        checked_expression.location
+    )
 }
 
 func convert_modulo_expression(self: @IR_Builder, checked_expression: @Checked_Modulo_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -816,7 +937,12 @@ func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Check
 func convert_substract_expression(self: @IR_Builder, checked_expression: @Checked_Substract_Expression, expected_type: @IR_Type) -> @IR_Value {
     let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
     let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(make @IR_Substract_Instruction(result_value = self.create_temp_value(left_value.type)).init(left_value, right_value), checked_expression.location)
+    return self.append(
+        make @IR_Substract_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_Symbol_Expression, expected_type: @IR_Type) -> @IR_Value {
