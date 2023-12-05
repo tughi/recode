@@ -558,6 +558,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_negate_expression(checked_expression.as(@Checked_Negate_Expression), expected_type)
     } else if checked_expression is Checked_Not_Equals_Expression {
         value = self.convert_not_equals_expression(checked_expression.as(@Checked_Not_Equals_Expression), expected_type)
+    } else if checked_expression is Checked_Reference_Expression {
+        value = self.convert_reference_expression(checked_expression.as(@Checked_Reference_Expression), expected_type)
     } else if checked_expression is Checked_Substract_Expression {
         value = self.convert_substract_expression(checked_expression.as(@Checked_Substract_Expression), expected_type)
     } else if checked_expression is Checked_Symbol_Expression {
@@ -850,8 +852,6 @@ func convert_member_access_expression(self: @IR_Builder, checked_expression: @Ch
         abort(checked_expression.location, clone("Not a reference type: ").append(object_value.type.name))
     }
 
-    \ TODO: Add test for "foo = bar.super"
-
     let struct_type_member = struct_type.get_member(checked_expression.struct_member.name)
     if struct_type_member.type is IR_Struct_Type or struct_type_member.type is IR_Fixed_Array_Type {
         return self.append(
@@ -971,7 +971,39 @@ func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_S
 }
 
 func convert_reference_expression(self: @IR_Builder, checked_expression: @Checked_Reference_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+    if checked_expression.object_expression is Checked_Symbol_Expression {
+        let checked_symbol = checked_expression.object_expression.as(@Checked_Symbol_Expression).symbol
+        let ir_symbol = self.find_symbol(checked_symbol)
+        if ir_symbol == null {
+            abort(checked_symbol.location, clone("Undeclared symbol: ").append(checked_symbol.name))
+        }
+        if ir_symbol is not IR_Variable {
+            abort(checked_symbol.location, clone("Undeclared variable: ").append(checked_symbol.name))
+        }
+        let ir_variable = ir_symbol.as(@IR_Variable)
+        if ir_variable is IR_Global_Variable {
+            let ir_variable = ir_variable.as(@IR_Global_Variable)
+            return make @IR_Global_Variable_Address_Value(type = self.create_ir_pointer_type(ir_variable.type), variable = ir_variable)
+        }
+        if ir_variable.type is IR_Pointer_Type {
+            return self.get_variable_value(ir_variable)
+        }
+        if ir_variable.type is IR_Struct_Type {
+            return self.append(
+                create_ir_load_variable_address_instruction(
+                    self.create_temp_value(self.create_ir_pointer_type(ir_variable.type))
+                    self.get_variable_value(ir_variable).as(@IR_Variable_Value)
+                )
+                checked_expression.location
+            )
+        }
+        if ir_variable.type is IR_Unchecked_Array_Type {
+            return self.get_variable_value(ir_variable)
+        }
+        abort(checked_expression.object_expression.location, clone("Variable type without address: ").append(ir_variable.type.name))
+    }
+
+    abort(checked_expression.location, checked_expression.object_expression.object_type)
 }
 
 func remove_redundant_blocks(self: @IR_Builder, function: @IR_Function) -> Nothing {
