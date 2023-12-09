@@ -172,6 +172,8 @@ func build(self: @IR_Builder) -> Nothing {
             )
             if checked_variable_symbol.expression != null {
                 ir_variable.value = self.convert_expression(checked_variable_symbol.expression, ir_variable_type)
+            } else {
+                ir_variable.value = make @IR_Undefined_Value(type = ir_variable_type)
             }
             self.add_variable(ir_variable)
         } else {
