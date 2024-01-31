@@ -55,14 +55,12 @@ func prune[T](self: @List[T]) -> @List[T] {
         if item.is_removed {
             if item.prev_item != null {
                 item.prev_item.next_item = item.next_item
+            } else {
+                self.first_item = item.next_item
             }
             if item.next_item != null {
                 item.next_item.prev_item = item.prev_item
-            }
-            if self.first_item == item {
-                self.first_item = item.next_item
-            }
-            if self.last_item == item {
+            } else {
                 self.last_item = item.prev_item
             }
             self.size = self.size - 1
