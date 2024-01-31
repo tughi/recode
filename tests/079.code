@@ -12,7 +12,7 @@ struct Two: Integer(value = 2) {
 }
 
 func equals(self: @Any, other: @Any) -> bool {
-    return true
+    return false
 }
 
 func main() -> i32 {

@@ -285,22 +285,29 @@ struct IR_Struct_Type_Member {
     struct_type: @IR_Struct_Type
     name: @String
     type: @IR_Type
+    checked_struct_type_member: @Checked_Struct_Type_Member
     default_value_expression: @Parsed_Expression
 }
 
-func add_member(self: @IR_Struct_Type, name: @String, type: @IR_Type, default_value_expression: @Parsed_Expression) -> @IR_Struct_Type_Member {
-    let member = make @IR_Struct_Type_Member(struct_type = self, name = name, type = type, default_value_expression = default_value_expression)
+func add_member(self: @IR_Struct_Type, name: @String, type: @IR_Type, checked_struct_type_member: @Checked_Struct_Type_Member, default_value_expression: @Parsed_Expression) -> @IR_Struct_Type_Member {
+    let member = make @IR_Struct_Type_Member(
+        struct_type = self
+        name = name
+        type = type
+        checked_struct_type_member = checked_struct_type_member
+        default_value_expression = default_value_expression
+    )
     self.members.append(member)
     return member
 }
 
-func get_member(self: @IR_Struct_Type, name: @String) -> @IR_Struct_Type_Member {
+func get_member(self: @IR_Struct_Type, checked_struct_type_member: @Checked_Struct_Type_Member) -> @IR_Struct_Type_Member {
     let struct_type = self
     loop {
         let members_item = struct_type.members.first_item
         while members_item != null {
             let member = members_item.data
-            if member.name.equals(name) {
+            if member.checked_struct_type_member == checked_struct_type_member {
                 return member
             }
             members_item = members_item.next_item
