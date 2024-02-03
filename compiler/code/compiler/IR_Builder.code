@@ -408,7 +408,41 @@ func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement)
 
 func convert_assignment_statement(self: @IR_Builder, checked_statement: @Checked_Assignment_Statement) -> Nothing {
     let checked_destination_expression = checked_statement.destination_expression
-    if checked_destination_expression is Checked_Symbol_Expression {
+    if checked_destination_expression is Checked_Member_Access_Expression {
+        let checked_member_access_expression = checked_destination_expression.as(@Checked_Member_Access_Expression)
+        let object_value = self.convert_expression(checked_member_access_expression.object_expression, null)
+        let struct_type: @IR_Struct_Type
+        if object_value.type is IR_Struct_Type {
+            struct_type = object_value.type.as(@IR_Struct_Type)
+            if object_value is not IR_Variable_Value {
+                abort(checked_member_access_expression.object_expression.location, "Not a variable value")
+            }
+            \ create pointer to object_value
+            object_value = self.append(
+                create_ir_load_variable_address_instruction(
+                    self.create_temp_value(self.create_ir_pointer_type(struct_type))
+                    object_value.as(@IR_Variable_Value)
+                )
+                checked_member_access_expression.location
+            )
+        } else {
+            if object_value.type is not IR_Pointer_Type {
+                abort(checked_destination_expression.location, clone("Not a pointer value"))
+            }
+            let object_type = object_value.type.as(@IR_Pointer_Type).pointed_type
+            if object_type is not IR_Struct_Type {
+                abort(checked_destination_expression.location, clone(object_type.name).append(" is not a struct type"))
+            }
+            struct_type = object_type.as(@IR_Struct_Type)
+        }
+        let struct_type_member = struct_type.get_member(checked_member_access_expression.struct_member)
+        if struct_type_member == null {
+            \ TODO: struct_type.dump_struct_members()
+            abort(checked_member_access_expression.struct_member.location, clone(struct_type.name).append(" doesn't have a ").append(checked_member_access_expression.struct_member.name).append(" member"))
+        }
+        let value = self.convert_expression(checked_statement.value_expression, struct_type_member.type)
+        self.append(create_ir_store_struct_member_instruction(object_value, struct_type_member, value), checked_statement.location)
+    } else if checked_destination_expression is Checked_Symbol_Expression {
         let checked_symbol = checked_destination_expression.as(@Checked_Symbol_Expression).symbol
         let variable = self.find_variable(checked_symbol)
         if variable == null {
