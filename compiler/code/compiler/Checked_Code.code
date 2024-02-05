@@ -674,6 +674,10 @@ struct Checked_String_Literal_Expression: Checked_Literal_Expression {
 struct Checked_Substract_Expression: Checked_Binary_Expression {
 }
 
+struct Checked_Super_Access_Expression: Checked_Access_Expression {
+    object_expression: @Checked_Expression
+}
+
 struct Checked_Symbol_Expression: Checked_Expression {
     symbol: @Checked_Symbol
 }

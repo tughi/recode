@@ -21,8 +21,8 @@ func main() -> i32 {
         return 2
     }
 
-    test.value = 13
-    if test.value != 13 {
+    test.value = 0
+    if test.value != 0 {
         return 3
     }
 
@@ -33,6 +33,16 @@ func main() -> i32 {
     test.super.value = 42
     if test.super.value != 42 {
         return 5
+    }
+
+    let test_ref = @test
+    test_ref.super.value = 13
+    if test_ref.super.value != 13 {
+        return 6
+    }
+
+    if test.value != 0 {
+        return 7
     }
 
     return 0

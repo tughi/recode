@@ -601,6 +601,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_reference_expression(checked_expression.as(@Checked_Reference_Expression), expected_type)
     } else if checked_expression is Checked_Substract_Expression {
         value = self.convert_substract_expression(checked_expression.as(@Checked_Substract_Expression), expected_type)
+    } else if checked_expression is Checked_Super_Access_Expression {
+        value = self.convert_super_access_expression(checked_expression.as(@Checked_Super_Access_Expression), expected_type)
     } else if checked_expression is Checked_Symbol_Expression {
         value = self.convert_symbol_expression(checked_expression.as(@Checked_Symbol_Expression), expected_type)
     } else {
@@ -1063,6 +1065,11 @@ func convert_substract_expression(self: @IR_Builder, checked_expression: @Checke
         ).init(left_value, right_value)
         checked_expression.location
     )
+}
+
+func convert_super_access_expression(self: @IR_Builder, checked_expression: @Checked_Super_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
+    \ type checking is done in convert_member_access_expression(...)
+    return self.convert_expression(checked_expression.object_expression, null)
 }
 
 func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_Symbol_Expression, expected_type: @IR_Type) -> @IR_Value {

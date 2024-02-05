@@ -1548,21 +1548,21 @@ func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_M
     let checked_struct_type_member = checked_struct_type.get_member(parsed_expression.member_name.lexeme)
     if checked_struct_type_member == null {
         if parsed_expression.member_name.lexeme.equals("super") {
-            \ super access works as a cast
+            \ super access works like a cast
             if checked_struct_type.super_type == null {
                 abort(parsed_expression.member_name.location, checked_struct_type.name.clone().append(" has no super type"))
             }
             if checked_object_expression.type is Checked_Pointer_Type {
-                return make @Checked_Cast_Expression(
+                return make @Checked_Super_Access_Expression(
                     location = parsed_expression.member_name.location
                     type = make_checked_pointer_type(checked_struct_type.super_type)
-                    expression = checked_object_expression
+                    object_expression = checked_object_expression
                 )
             }
-            return make @Checked_Cast_Expression(
+            return make @Checked_Super_Access_Expression(
                 location = parsed_expression.member_name.location
                 type = checked_struct_type.super_type
-                expression = checked_object_expression
+                object_expression = checked_object_expression
             )
         }
         abort(parsed_expression.member_name.location, clone(checked_struct_type.name).append(" has no ").append(parsed_expression.member_name.lexeme).append(" member"))

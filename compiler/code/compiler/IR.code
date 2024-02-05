@@ -436,7 +436,7 @@ struct IR_Struct_Literal_Value: IR_Value(
                 } else {
                     file.write(", ")
                 }
-                file.write(value_link.struct_type_member.name).write(" = ").write(value_link.value, false)
+                file.write(value_link.struct_type_member.struct_type.name).write('.').write(value_link.struct_type_member.name).write(" = ").write(value_link.value, false)
             }
             value_links_item = value_links_item.next_item
         }
@@ -966,7 +966,7 @@ struct IR_Load_Struct_Member_Instruction: IR_Instruction(
         } else {
             file.write("load_struct_member")
         }
-        return file.write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(')').end_line()
+        return file.write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.struct_type.name).write(".").write(instruction.struct_type_member.name).write(')').end_line()
     }
 ) {
     struct_type_member: @IR_Struct_Type_Member
@@ -1131,7 +1131,7 @@ struct IR_Store_Struct_Member_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction.as(@IR_Store_Struct_Member_Instruction)
-        return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
+        return file.write("store_struct_member").write('(').write(instruction.get_struct_pointer_value(), true).write(", ").write(instruction.struct_type_member.struct_type.name).write(".").write(instruction.struct_type_member.name).write(", ").write(instruction.get_value(), true).write(')').end_line()
     }
 ) {
     struct_type_member: @IR_Struct_Type_Member
