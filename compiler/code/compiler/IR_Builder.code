@@ -277,6 +277,9 @@ func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
     } else if checked_type is Checked_Pointer_Type {
         let ir_pointed_type = self.convert_type(checked_type.as(@Checked_Pointer_Type).pointed_type)
         return self.create_ir_pointer_type(ir_pointed_type)
+    } else if checked_type is Checked_Unchecked_Array_Type {
+        let ir_item_type = self.convert_type(checked_type.as(@Checked_Unchecked_Array_Type).item_type)
+        return self.create_ir_unchecked_array_type(ir_item_type)
     } else {
         abort(checked_type.object_type)
     }
@@ -299,6 +302,20 @@ func create_ir_pointer_type(self: @IR_Builder, ir_pointed_type: @IR_Type) -> @IR
     let ir_type = make @IR_Pointer_Type(
         name = ir_type_name
         pointed_type = ir_pointed_type
+    )
+    self.types.append(ir_type)
+    return ir_type
+}
+
+func create_ir_unchecked_array_type(self: @IR_Builder, ir_item_type: @IR_Type) -> @IR_Unchecked_Array_Type {
+    self.types.for_each() {
+        if it is IR_Unchecked_Array_Type and it.as(@IR_Unchecked_Array_Type).item_type == ir_item_type {
+            return it.as(@IR_Unchecked_Array_Type)
+        }
+    }
+    let ir_type = make @IR_Unchecked_Array_Type(
+        name = clone("[").append(ir_item_type.name).append(", ?").append(']')
+        item_type = ir_item_type
     )
     self.types.append(ir_type)
     return ir_type
