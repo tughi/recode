@@ -60,7 +60,7 @@ def build_stage(n):
             break
 
     if compiler_changed or not os.path.exists(f'build/stage{n}/ReCode'):
-        if run([f'build/stage{n - 1}/ReCode', f'{compiler}/ReCode.code', f'build/stage{n}/ReCode.s'], check=False).returncode != 0:
+        if run([f'build/stage{n - 1}/ReCode', f'{compiler}/ReCode.code', f'build/stage{n}/ReCode.s', f'build/stage{n}/ReCode.ir'], check=False).returncode != 0:
             if os.path.exists(f'build/stage{n}/ReCode.s'):
                 run(f'rm build/stage{n}/ReCode.s')
             trace(f'build/stage{n - 1}/ReCode', f'{compiler}/ReCode.code', '-')
@@ -159,7 +159,7 @@ def build():
     build_stage(0)
     build_stage(1)
 
-    if subprocess.run('turnt tests/ir/*.code', shell=True).returncode != 0:
+    if subprocess.run('turnt --diff tests/ir/*.code', shell=True).returncode != 0:
         exit(1)
 
     test_with_stage(1)

@@ -8,13 +8,17 @@ struct IR_Code {
 
 func dump(build: @IR_Code, file: @FILE) -> Nothing {
     let symbols_iterator = build.global_symbols.create_iterator()
-    while symbols_iterator.has_next() {
-        let symbol = symbols_iterator.next()
-        if symbol is IR_Function {
-            let function = symbol.as(@IR_Function)
-            if not function.is_external {
+    if symbols_iterator.has_next() {
+        loop {
+            let symbol = symbols_iterator.next()
+            if symbol is IR_Function {
+                let function = symbol.as(@IR_Function)
                 function.dump(file)
+            }
+            if symbols_iterator.has_next() {
                 file.end_line()
+            } else {
+                break
             }
         }
     }
@@ -612,7 +616,7 @@ func remove(self: @IR_Block, instruction: @IR_Instruction) -> Nothing {
 }
 
 func dump(block: @IR_Block, file: @FILE) -> @FILE {
-    file.write("block.").write(block.id)
+    file.write('@').write(block.id)
     let block_predecessors = block.predecessors.create_iterator()
     if block_predecessors.has_next() {
         file.write('(')
@@ -656,7 +660,7 @@ func create_block(self: @IR_Function) -> @IR_Block {
 }
 
 func dump(function: @IR_Function, file: @FILE) -> Nothing {
-    file.write_function_label(function).write(" :: (")
+    file.write('$').write(function.name).write("(")
     let function_parameters = function.parameters.create_iterator()
     while function_parameters.has_next() {
         let function_parameter = function_parameters.next()
@@ -665,7 +669,12 @@ func dump(function: @IR_Function, file: @FILE) -> Nothing {
             file.write(", ")
         }
     }
-    file.write(") -> ").write(function.return_type.name).write(" {").end_line()
+    if function.return_type is IR_Nothing_Type {
+        file.write(")")
+    } else {
+        file.write("): ").write(function.return_type.name)
+    }
+    file.write(" {").end_line()
     let block_item = function.blocks.first_item
     while block_item != null {
         block_item.data.dump(file)
@@ -818,9 +827,9 @@ struct IR_Direct_Call_Instruction: IR_Call_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE, prefix: @String) -> @FILE {
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction.as(@IR_Direct_Call_Instruction)
-        file.write("call").write('(').write_function_label(instruction.function)
+        file.write("call $").write(instruction.function.name)
         instruction.dump_ir_call_instruction_arguments(file)
-        return file.write(')').end_line()
+        return file.end_line()
     }
 ) {
     function: @IR_Function
@@ -840,9 +849,9 @@ struct IR_Dynamic_Call_Instruction: IR_Call_Instruction(
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction.as(@IR_Dynamic_Call_Instruction)
         let function_address = instruction.get_function_address()
-        file.write("call").write('(').write(function_address.variable.name).write('.').write(function_address.version)
+        file.write("call ").write(function_address.variable.name).write('.').write(function_address.version)
         instruction.dump_ir_call_instruction_arguments(file)
-        return file.write(')').end_line()
+        return file.end_line()
     }
 ) {
 }
@@ -1059,9 +1068,9 @@ struct IR_Return_Instruction: IR_Instruction(
         instruction.dump_ir_instruction_result(file, prefix)
         let instruction = instruction.as(@IR_Return_Instruction)
         if instruction.get_return_value() == null {
-            return file.write("return").write('(').write(')').end_line()
+            return file.write("ret").end_line()
         }
-        return file.write("return").write('(').write(instruction.get_return_value(), true).write(')').end_line()
+        return file.write("ret ").write(instruction.get_return_value(), true).end_line()
     }
 ) {
 }

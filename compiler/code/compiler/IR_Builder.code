@@ -88,7 +88,7 @@ func create_temp_variable(self: @IR_Builder, type: @IR_Type) -> @IR_Variable {
     return make @IR_Variable(
         location = null
         checked_symbol = null
-        name = clone("$").append(self.counter.next())
+        name = clone("%").append(self.counter.next())
         type = type
     )
 }
@@ -598,6 +598,17 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_less_than_or_equals_expression(checked_expression.as(@Checked_Less_Than_Or_Equals_Expression), expected_type)
     } else if checked_expression is Checked_Literal_Expression {
         value = self.convert_literal_expression(checked_expression.as(@Checked_Literal_Expression), expected_type)
+        if value is IR_Constant_Value {
+            value = self.append(
+                create_ir_set_instruction(
+                    self.create_variable_value(
+                        self.create_temp_variable(value.type)
+                    )
+                    value
+                )
+                checked_expression.location
+            )
+        }
     } else if checked_expression is Checked_Logic_And_Expression {
         value = self.convert_logic_and_expression(checked_expression.as(@Checked_Logic_And_Expression), expected_type)
     } else if checked_expression is Checked_Logic_Not_Expression {
