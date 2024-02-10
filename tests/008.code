@@ -1,6 +1,0 @@
-\ Expect:
-\ - error: 'tests/008.code:5:12: Incompatible types: got u8 instead of i32\n'
-
-func main() -> i32 {
-    return 0u8
-}

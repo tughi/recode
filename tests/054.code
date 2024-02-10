@@ -1,8 +1,0 @@
-\ Expect:
-\ - error: 'tests/054.code:7:6: Generic function declared first here: tests/054.code:4:6\n'
-
-func foo[T](bar: @T) -> Nothing {
-}
-
-func foo[V](bar: @V) -> Nothing {
-}

@@ -1,0 +1,4 @@
+\ Expect:
+\ - error: 'tests/all/021.code:4:5: Missing variable type\n'
+
+let value

@@ -2,5 +2,4 @@
 /build
 /stage0
 /temp
-/tests/000.code
-/tests/000.ir
+/tests/all/000.code

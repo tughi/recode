@@ -1,0 +1,4 @@
+\ Expect:
+\ - error: 'tests/all/022.code:4:13: Initialized global variables are not yet supported\n'
+
+let value = 42

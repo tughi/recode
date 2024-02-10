@@ -1,9 +1,0 @@
-\ Expect:
-\ - error: 'tests/071.code:6:22: Cannot reference i32 variables yet\n'
-
-func main() -> i32 {
-    let value = 42
-    let value_ref = @value
-    return 0
-}
-

@@ -1,0 +1,5 @@
+\ Expect:
+\ - error: 'tests/all/014.code:4:32: External function with function body\n'
+
+external func test() -> Nothing {
+}

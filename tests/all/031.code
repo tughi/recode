@@ -1,0 +1,6 @@
+\ Expect:
+\ - error: 'tests/all/031.code:6:11: Variable cannot have an opaque type\n'
+
+external type Test
+
+let test: Test = undefined

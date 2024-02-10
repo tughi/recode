@@ -1,0 +1,11 @@
+\ Expect:
+\ - error: 'tests/all/064.code:4:11: Type recursivity\n'
+
+struct A: C {
+}
+
+struct B: A {
+}
+
+struct C: B {
+}

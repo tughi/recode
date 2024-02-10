@@ -1,5 +1,0 @@
-\ Expect:
-\ - error: 'tests/005.code:4:18: Unsupported parameter type\n'
-
-func test(value: Nothing) -> Nothing {
-}
