@@ -1,0 +1,10 @@
+digraph {
+    Code -> Scanner [label="Text"];
+    Scanner -> Parser [label="Token"];
+    Parser -> Checker [label="Parsed_Code"];
+    Checker -> SSA [label="Checked_Code"];
+    SSA -> Optimizers [label="IR"];
+    SSA -> Generator [label="IR"];
+    Optimizers -> Generator [label="IR"];
+    Generator -> GCC [label="ASM"];
+}

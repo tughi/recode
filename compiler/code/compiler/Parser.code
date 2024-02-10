@@ -1,3 +1,4 @@
+include "./Counter.code"
 include "./Parsed_Code.code"
 
 struct Parser {
@@ -5,6 +6,11 @@ struct Parser {
     parsed_code = make @Parsed_Code()
     current_alignment = 0
     anonymous_functions_counter = make Counter[i64]()
+}
+
+func abort(self: @Parser, unexpected_token: @Token) -> Nothing {
+    stderr.write(unexpected_token.location).write(": ").error().write("Unexpected ").write(unexpected_token.object_type.name).write(": ").write(unexpected_token).reset().end_line()
+    abort()
 }
 
 func parse(file_path: @String) -> @Parsed_Code {

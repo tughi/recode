@@ -39,3 +39,10 @@ func create_source(file_path: @String) -> @Source {
 
     return make @Source(file_path = file_path, content = content)
 }
+
+func write(self: @FILE, location: @Source_Location) -> @FILE {
+    if location == null {
+        return self.write("null")
+    }
+    return self.write(location.source.file_path).write(':').write(location.line).write(':').write(location.column)
+}

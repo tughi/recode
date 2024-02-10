@@ -1,0 +1,82 @@
+func write_line(file: @FILE, string: @String) -> @FILE {
+    return file.end_line().write(string)
+}
+
+func write(self: @FILE, number: i32) -> @FILE {
+    if number < 0 {
+        return self.write('-').write(-number)
+    }
+    if number >= 10 {
+        self.write(number / 10)
+    }
+    fputc(number // 10 + '0'.as(i32), self)
+    return self
+}
+
+func write(self: @FILE, number: u32) -> @FILE {
+    if number >= 10 {
+        self.write(number / 10)
+    }
+    fputc((number // 10).as(i32) + '0'.as(i32), self)
+    return self
+}
+
+func write(self: @FILE, number: i64) -> @FILE {
+    if number < 0 {
+        return self.write('-').write(-number)
+    }
+    if number >= 10 {
+        self.write(number / 10)
+    }
+    fputc((number // 10).as(i32) + '0'.as(i32), self)
+    return self
+}
+
+func write(self: @FILE, number: u64) -> @FILE {
+    if number >= 10 {
+        self.write(number / 10)
+    }
+    fputc((number // 10).as(i32) + '0'.as(i32), self)
+    return self
+}
+
+func write(self: @FILE, number: isize) -> @FILE {
+    if number < 0 {
+        return self.write('-').write(-number)
+    }
+    if number >= 10 {
+        self.write(number / 10)
+    }
+    fputc((number // 10).as(i32) + '0'.as(i32), self)
+    return self
+}
+
+func write(self: @FILE, string: @String) -> @FILE {
+    return self.write(string.data)
+}
+
+func write(self: @FILE, chars: [u8; ?]) -> @FILE {
+    if fputs(chars, self).as(isize) < 0 {
+        stderr.end_line().end_line().write("Failed to write text").end_line()
+        abort()
+    }
+    return self
+}
+
+func write(self: @FILE, char: u8) -> @FILE {
+    let c = char.as(i32)
+    if fputc(c, self) != c {
+        stderr.end_line().end_line().write("Failed to write character: ").write(c.as(isize)).end_line()
+        abort()
+    }
+    return self
+}
+
+func end_line(self: @FILE) -> @FILE {
+    return self.write('\n')
+}
+
+func flush(file: @FILE) -> @FILE {
+    file.fflush()
+    return file
+}

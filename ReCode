@@ -158,6 +158,10 @@ def test_with_stage(n):
 def build():
     build_stage(0)
     build_stage(1)
+
+    if subprocess.run('turnt tests/ir/*.code', shell=True).returncode != 0:
+        exit(1)
+
     test_with_stage(1)
 
 

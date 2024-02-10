@@ -1,5 +1,5 @@
-func generate(ir_code: @IR_Code, output_file_path: @String) -> Nothing {
-    let generator = create_mc_generator(output_file_path)
+func generate(ir_code: @IR_Code, file: @FILE) -> Nothing {
+    let generator = create_mc_generator(file)
 
     ir_code.sources.for_each() {
         let ir_code_source = it
@@ -32,7 +32,7 @@ func generate(ir_code: @IR_Code, output_file_path: @String) -> Nothing {
         generator.generate_object_types(ir_code.named_types)
     }
 
-    generator.output_file.fclose()
+    generator.output_file.flush()
 }
 
 func generate_function(self: @MC_Generator, function: @IR_Function) -> Nothing {
@@ -1649,17 +1649,10 @@ struct MC_Generator {
     strings = make @List[@MC_String]()
 }
 
-func create_mc_generator(output_file_path: @String) -> @MC_Generator {
-    let output_file: @FILE = undefined
-    if output_file_path.equals("-") {
-        output_file = stdout
-    } else {
-        output_file = fopen(output_file_path.data, "w".data)
-    }
-
+func create_mc_generator(file: @FILE) -> @MC_Generator {
     return make @MC_Generator(
-        output_file_path = output_file_path
-        output_file = output_file
+        output_file_path = null
+        output_file = file
         output_debug_comments = true
     )
 }
@@ -2318,4 +2311,3 @@ func generate_global_variables(self: @MC_Generator, symbols: @List[@IR_Symbol], 
         symbols_item = symbols_item.prev_item
     }
 }
-

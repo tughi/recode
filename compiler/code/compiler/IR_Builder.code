@@ -1,3 +1,5 @@
+include "./IR_Code.code"
+
 func build(checked_code: @Checked_Code) -> @IR_Code {
     let builder = create_ir_builder(checked_code)
     builder.build()

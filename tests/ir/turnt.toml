@@ -1,0 +1,2 @@
+command = "../../build/stage1/ReCode --ir {filename} -"
+output.ir = "-"

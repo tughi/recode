@@ -443,3 +443,378 @@ struct Parsed_Wrapped_Expression: Parsed_Expression {
 struct Parsed_Macro_Body: Parsed_Expression {
     statement: @Parsed_Block_Statement
 }
+
+func write(file: @FILE, parsed_code: @Parsed_Code) -> @FILE {
+    let statements = parsed_code.statements.create_iterator()
+    while statements.has_next() {
+        let statement = statements.next()
+        file.write_source_line(statement.location, 0i64).write(statement, 0i64).end_line()
+    }
+    return file
+}
+
+func write(file: @FILE, statement: @Parsed_Statement, alignment: i64) -> @FILE {
+    if statement is Parsed_Assignment_Statement {
+        let statement = statement.as(@Parsed_Assignment_Statement)
+        return file.write(statement.storage_expression).write(' ').write(statement.operator).write(' ').write(statement.value_expression)
+    }
+
+    if statement is Parsed_Block_Statement {
+        file.write('{').end_line()
+        let block_statements = statement.as(@Parsed_Block_Statement).statements.create_iterator()
+        while block_statements.has_next() {
+            let block_statement = block_statements.next()
+            file.write_source_line(block_statement.location, alignment + 1).write(block_statement, alignment + 1).end_line()
+        }
+        return file.write_source_line(statement.location, alignment).write('}')
+    }
+
+    if statement is Parsed_Break_Statement {
+        return file.write("break")
+    }
+
+    if statement is Parsed_Constant_Statement {
+        let statement = statement.as(@Parsed_Constant_Statement)
+        return file.write("define ").write(statement.name).write(" = ").write(statement.expression)
+    }
+
+    if statement is Parsed_Expression_Statement {
+        return file.write(statement.as(@Parsed_Expression_Statement).expression)
+    }
+
+    if statement is Parsed_Function_Statement {
+        let statement = statement.as(@Parsed_Function_Statement)
+        file.write("define ").write(statement.name).write(" = func (")
+        let parameters = statement.type.parameters.create_iterator()
+        if parameters.has_next() {
+            loop {
+                file.write(parameters.next())
+                if parameters.has_next() {
+                    file.write(", ")
+                } else {
+                    break
+                }
+            }
+        }
+        file.write(") -> ").write(statement.type.return_type)
+        if statement.body == null {
+            return file
+        }
+        return file.write(" ").write(statement.body, alignment)
+    }
+
+    if statement is Parsed_If_Statement {
+        let statement = statement.as(@Parsed_If_Statement)
+        file.write("if (").write(statement.condition_expression).write(") ").write(statement.true_statement, alignment)
+        if statement.false_statement != null {
+            file.write(" else ").write(statement.false_statement, alignment)
+        }
+        return file
+    }
+
+    if statement is Parsed_Loop_Statement {
+        let statement = statement.as(@Parsed_Loop_Statement)
+        return file.write("loop ").write(statement.body_statement, alignment)
+    }
+
+    if statement is Parsed_Macro_Statement {
+        let statement = statement.as(@Parsed_Macro_Statement)
+        file.write("define ").write(statement.name).write(" = func (")
+        let parameters = statement.type.parameters.create_iterator()
+        if parameters.has_next() {
+            loop {
+                file.write(parameters.next())
+                if parameters.has_next() {
+                    file.write(", ")
+                } else {
+                    break
+                }
+            }
+        }
+        return file.write(") ").write(statement.body, alignment)
+    }
+
+    if statement is Parsed_Return_Statement {
+        let statement = statement.as(@Parsed_Return_Statement)
+        file.write("return")
+        if statement.value_expression != null {
+            file.write(" ").write(statement.value_expression)
+        }
+        return file
+    }
+
+    if statement is Parsed_Struct_Statement {
+        let statement = statement.as(@Parsed_Struct_Statement)
+        file.write("define ").write(statement.name).write(" = struct")
+        if statement.members == null {
+            return file
+        }
+        file.write(" {").end_line()
+        if statement.super_type != null {
+            file.write_source_line(statement.super_type.location, alignment + 1).write("extends ").write(statement.super_type).end_line()
+        }
+        let members = statement.members.create_iterator()
+        while members.has_next() {
+            let member = members.next()
+            file.write_source_line(member.location, alignment + 1).write(member.name).write(": ").write(member.type).end_line()
+        }
+        return file.write_source_line(statement.location, alignment).write('}')
+    }
+
+    if statement is Parsed_Variable_Statement {
+        let statement = statement.as(@Parsed_Variable_Statement)
+        file.write(statement.name)
+        if statement.type != null {
+            file.write(": ").write(statement.type)
+            if statement.value_expression != null {
+                file.write(" = ").write(statement.value_expression)
+            }
+            if statement.is_external {
+                file.write(" = external")
+            }
+        } else {
+            file.write(" := ").write(statement.value_expression)
+        }
+        return file
+    }
+
+    if statement is Parsed_While_Statement {
+        let statement = statement.as(@Parsed_While_Statement)
+        return file.write("while (").write(statement.condition_expression).write(") ").write(statement.body_statement, alignment)
+    }
+
+    file.flush()
+    abort(statement.location, "Unsupported Parsed_Statement type: ".clone().append(statement.object_type.name))
+}
+
+func write_source_line(file: @FILE, location: @Source_Location, alignment: i64) -> @FILE {
+    file.write(location.source.file_path).write(':')
+    let line = location.line
+    if line < 1000 {
+        file.write('0')
+    }
+    if line < 100 {
+        file.write('0')
+    }
+    if line < 10 {
+        file.write('0')
+    }
+    file.write(line).write(": ")
+
+    let space_count = alignment * 2
+    while space_count > 0 {
+        file.write(' ')
+        space_count = space_count - 1
+    }
+
+    return file
+}
+
+func write(file: @FILE, parameter: @Parsed_Callable_Parameter) -> @FILE {
+    return file.write(parameter.name).write(": ").write(parameter.type)
+}
+
+func write(file: @FILE, type: @Parsed_Type) -> @FILE {
+    if type is Parsed_Array_Type {
+        let type = type.as(@Parsed_Array_Type)
+        if type.size_expression != null {
+            return file.write('[').write(type.item_type).write("; ").write(type.size_expression).write(']')
+        }
+        return file.write('[').write(type.item_type).write(']')
+    }
+
+    if type is Parsed_Function_Type {
+        let type = type.as(@Parsed_Function_Type)
+        file.write("func ")
+        if type.type_parameters != null {
+            file.write('[')
+            type.type_parameters.for_each_list_item() {
+                let type_parameter = list_item.data
+                file.write(type_parameter.name)
+                if list_item.next_item != null {
+                    file.write(", ")
+                }
+            }
+            file.write("] ")
+        }
+        file.write('(')
+        let parameters_item = type.parameters.first_item
+        while parameters_item != null {
+            let parameter = parameters_item.data
+            file.write(parameter.name).write(": ").write(parameter.type)
+            parameters_item = parameters_item.next_item
+            if parameters_item != null {
+                file.write(", ")
+            }
+        }
+        return file.write(") -> ").write(type.return_type)
+    }
+
+    if type is Parsed_Named_Type {
+        return file.write(type.as(@Parsed_Named_Type).name)
+    }
+
+    if type is Parsed_Pointer_Type {
+        return file.write('@').write(type.as(@Parsed_Pointer_Type).pointed_type)
+    }
+
+    if type is Parsed_Specialized_Type {
+        let type = type.as(@Parsed_Specialized_Type)
+        file.write(type.name).write('[')
+        type.type_arguments.for_each_list_item() {
+            let type_argument = list_item.data
+            file.write(type_argument.type)
+            if list_item.next_item != null {
+                file.write(", ")
+            }
+        }
+        return file.write(']')
+    }
+
+    if type is Parsed_Placeholder_Type {
+        return file.write(type.as(@Parsed_Placeholder_Type).name)
+    }
+
+    if type is Parsed_Macro_Type {
+        let type = type.as(@Parsed_Macro_Type)
+        file.write("macro ")
+        if type.type_parameters != null {
+            file.write('[')
+            type.type_parameters.for_each_list_item() {
+                let type_parameter = list_item.data
+                file.write(type_parameter.name)
+                if list_item.next_item != null {
+                    file.write(", ")
+                }
+            }
+            file.write("] ")
+        }
+        file.write('(')
+        let parameters_item = type.parameters.first_item
+        while parameters_item != null {
+            let parameter = parameters_item.data
+            file.write(parameter.name).write(": ").write(parameter.type)
+            parameters_item = parameters_item.next_item
+            if parameters_item != null {
+                file.write(", ")
+            }
+        }
+        return file.write(")")
+    }
+
+    file.flush()
+    abort(type.location, "Unsupported Parsed_Type type: ".clone().append(type.object_type.name))
+}
+
+func write(file: @FILE, expression: @Parsed_Expression) -> @FILE {
+    if expression is Parsed_Array_Access_Expression {
+        return file.write(expression.as(@Parsed_Array_Access_Expression).array_expression).write('[').write(expression.as(@Parsed_Array_Access_Expression).index_expression).write(']')
+    }
+
+    if expression is Parsed_Binary_Expression {
+        file.write('(').write(expression.as(@Parsed_Binary_Expression).left_expression)
+        if expression is Parsed_Add_Expression {
+            return file.write(" + ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Divide_Expression {
+            return file.write(" / ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Equals_Expression {
+            return file.write(" == ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Greater_Than_Expression {
+            return file.write(" > ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Greater_Than_Or_Equals_Expression {
+            return file.write(" >= ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Less_Than_Expression {
+            return file.write(" < ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Less_Than_Or_Equals_Expression {
+            return file.write(" <= ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Logic_And_Expression {
+            return file.write(" and ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Logic_Or_Expression {
+            return file.write(" or ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Modulo_Expression {
+            return file.write(" // ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Multiply_Expression {
+            return file.write(" * ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Not_Equals_Expression {
+            return file.write(" != ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+        if expression is Parsed_Substract_Expression {
+            return file.write(" - ").write(expression.as(@Parsed_Binary_Expression).right_expression).write(')')
+        }
+    }
+
+    if expression is Parsed_Call_Expression {
+        file.write(expression.as(@Parsed_Call_Expression).callee_expression).write('(')
+        let call_arguments_item = expression.as(@Parsed_Call_Expression).arguments.first_item
+        while call_arguments_item != null {
+            let call_argument = call_arguments_item.data
+            if call_argument.name != null {
+                file.write(call_argument.name).write(" = ")
+            }
+            file.write(call_argument.value_expression)
+            call_arguments_item = call_arguments_item.next_item
+            if call_arguments_item != null {
+                file.write(", ")
+            }
+        }
+        return file.write(')')
+    }
+
+    if expression is Parsed_Cast_Expression {
+        return file.write(expression.as(@Parsed_Cast_Expression).value_expression).write(" as ").write(expression.as(@Parsed_Cast_Expression).type)
+    }
+
+    if expression is Parsed_Literal_Expression {
+        return file.write(expression.as(@Parsed_Literal_Expression).literal)
+    }
+
+    if expression is Parsed_Make_Expression {
+        let expression = expression.as(@Parsed_Make_Expression)
+        file.write("make ").write(expression.type)
+        for_each_list_item(expression.init_arguments) {
+            let call_argument = list_item.data
+            if call_argument.name != null {
+                file.write(call_argument.name).write(" = ")
+            }
+            file.write(call_argument.value_expression)
+            if list_item.next_item != null {
+                file.write(", ")
+            }
+        }
+        return file.write(')')
+    }
+
+    if expression is Parsed_Negate_Expression {
+        return file.write("- ").write(expression.as(@Parsed_Negate_Expression).expression)
+    }
+
+    if expression is Parsed_Member_Access_Expression {
+        return file.write(expression.as(@Parsed_Member_Access_Expression).object_expression).write('.').write(expression.as(@Parsed_Member_Access_Expression).member_name)
+    }
+
+    if expression is Parsed_Paren_Expression {
+        return file.write('(').write(expression.as(@Parsed_Paren_Expression).expression).write(')')
+    }
+
+    if expression is Parsed_Symbol_Expression {
+        return file.write(expression.as(@Parsed_Symbol_Expression).name)
+    }
+
+    if expression is Parsed_Wrapped_Expression {
+        return file.write(expression.as(@Parsed_Wrapped_Expression).expression)
+    }
+
+    file.flush()
+    abort(expression.location, "Unsupported Parsed_Expression type: ".clone().append(expression.object_type.name))
+}

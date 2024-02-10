@@ -1,0 +1,5 @@
+main_1 :: () -> i32 {
+block.1:
+   return(0)
+}
+

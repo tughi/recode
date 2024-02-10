@@ -52,3 +52,7 @@ struct String_Token: Literal_Token {
 
 struct Undefined_Token: Literal_Token {
 }
+
+func write(file: @FILE, token: @Token) -> @FILE {
+    return file.write(token.lexeme)
+}
