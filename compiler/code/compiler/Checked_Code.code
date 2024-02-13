@@ -450,6 +450,7 @@ struct Checked_Function_Symbol: Checked_Symbol {
     function_type: @Checked_Function_Type
     parsed_function_statement: @Parsed_Function_Statement
     specialization_symbols: @Checked_Symbols
+    parameters = make List[@Checked_Parameter_Symbol]()
     body: @Checked_Block_Statement
 }
 

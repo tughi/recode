@@ -59,6 +59,10 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
     }
 }
 
+func generate(self: @IR_Code, output_file: @FILE) -> Nothing {
+    abort("Not implemented")
+}
+
 func abort(location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
     stderr.write(location).error().write(": Unexpected type: ").write(unexpected_type.name).reset().end_line()
     abort()
@@ -69,7 +73,7 @@ func abort(unexpected_type: @Object_Type) -> Nothing {
     abort()
 }
 
-include "./code/compiler/Generator.code"
+\ include "./code/compiler/Generator.code"
 
 include "./code/compiler/IR_Builder.code"
 

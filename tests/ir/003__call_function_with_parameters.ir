@@ -1,0 +1,11 @@
+$main(): i32 {
+@1:
+   %1: i32 = const 0
+   %2: i32 = call $echo %1
+   ret %2
+}
+
+$echo(%value: i32): i32 {
+@1:
+   ret %value
+}

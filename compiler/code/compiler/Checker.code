@@ -244,11 +244,13 @@ func check_function_symbol(self: @Checker, checked_function_symbol: @Checked_Fun
     )
     let checked_function_type = checked_function_symbol.function_type
     checked_function_type.parameters.for_each() {
-        self.local_symbols.append(make @Checked_Parameter_Symbol(
+        let checked_parameter_symbol = make @Checked_Parameter_Symbol(
             location = it.location
             name = it.name
             type = it.type
-        ))
+        )
+        checked_function_symbol.parameters.append(checked_parameter_symbol)
+        self.local_symbols.append(checked_parameter_symbol)
     }
 
     \ check function body

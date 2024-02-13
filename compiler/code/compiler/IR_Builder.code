@@ -4,121 +4,27 @@ func build(checked_code: @Checked_Code) -> @IR_Code {
     let builder = create_ir_builder(checked_code)
     builder.build()
     return make @IR_Code(
-        sources = checked_code.sources
-        named_types = builder.types
-        global_symbols = builder.context.symbols
+        global_symbols = builder.global_context.symbols
     )
 }
 
 struct IR_Builder {
     checked_code: @Checked_Code
-    context: @IR_Builder_Context
-    root_context: @IR_Builder_Context
+
     types: @List[@IR_Type]
-    functions = make @List[@IR_Function]()
-    current_block: @IR_Block = null
-    current_loop: @IR_Loop = null
-    counter = make Counter[i64]()
-    functions_counter = make Counter[i64]()
-    types_counter = make Counter[i64]()
+    global_context = make IR_Context()
+
+    current_function_context: @IR_Function_Context = null
+    current_block_context: @IR_Block_Context = null
 }
 
-struct IR_Builder_Context {
-    parent: @IR_Builder_Context
-    symbols = make @List[@IR_Symbol]()
-    type_arguments: @List[@Parsed_Type_Argument] = null
+struct IR_Context {
+    parent: @IR_Context = null
+    symbols = make List[@IR_Symbol]()
 }
 
-struct IR_Loop {
-    parent: @IR_Loop
-    end_block: @IR_Block
-}
-
-func create_ir_builder(checked_code: @Checked_Code) -> @IR_Builder {
-    let types = make @List[@IR_Type]()
-    types.append(make @IR_Any_Type(name = "Any"))
-    types.append(make @IR_Boolean_Type(name = "bool"))
-    types.append(make @IR_Int8_Type(name = "i8"))
-    types.append(make @IR_Int16_Type(name = "i16"))
-    types.append(make @IR_Int32_Type(name = "i32"))
-    types.append(make @IR_Int64_Type(name = "i64"))
-    types.append(make @IR_IntMax_Type(name = "isize"))
-    types.append(make @IR_Nothing_Type(name = "Nothing"))
-    types.append(make @IR_Null_Type(name = "Null"))
-    types.append(make @IR_UInt8_Type(name = "u8"))
-    types.append(make @IR_UInt16_Type(name = "u16"))
-    types.append(make @IR_UInt32_Type(name = "u32"))
-    types.append(make @IR_UInt64_Type(name = "u64"))
-    types.append(make @IR_UIntMax_Type(name = "usize"))
-    types.append(make @IR_Undefined_Type(name = "Undefined"))
-
-    let context = make @IR_Builder_Context(parent = null)
-
-    return make @IR_Builder(
-        context = context
-        root_context = context
-        checked_code = checked_code
-        types = types
-    )
-}
-
-func add_symbol(self: @IR_Builder, symbol: @IR_Symbol) -> Nothing {
-    if symbol is IR_Function {
-        self.root_context.symbols.append(symbol)
-    } else {
-        self.context.symbols.prepend(symbol)
-    }
-}
-
-func add_variable(self: @IR_Builder, variable: @IR_Variable) -> Nothing {
-    self.add_symbol(variable)
-}
-
-func append(self: @IR_Builder, instruction: @IR_Instruction, location: @Source_Location) -> @IR_Variable_Value {
-    instruction.location = location
-    self.current_block.append(instruction)
-    return instruction.result_value
-}
-
-func create_temp_value(self: @IR_Builder, type: @IR_Type) -> @IR_Variable_Value {
-    return self.create_variable_value(self.create_temp_variable(type))
-}
-
-func create_temp_variable(self: @IR_Builder, type: @IR_Type) -> @IR_Variable {
-    return make @IR_Variable(
-        location = null
-        checked_symbol = null
-        name = clone("%").append(self.counter.next())
-        type = type
-    )
-}
-
-func find_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
-    self.types.for_each() {
-        if name.equals(it.name) {
-            return it
-        }
-    }
-    return null
-}
-
-func find_symbol(self: @IR_Builder, name: @String) -> @IR_Symbol {
-    let context = self.context
-    loop {
-        context.symbols.for_each() {
-            if it.name.equals(name) {
-                return it
-            }
-        }
-        context = context.parent
-        if context == null {
-            return null
-        }
-    }
-}
-
-func find_symbol(self: @IR_Builder, checked_symbol: @Checked_Symbol) -> @IR_Symbol {
-    let context = self.context
+func find_symbol(self: @IR_Context, checked_symbol: @Checked_Symbol) -> @IR_Symbol {
+    let context = self
     loop {
         context.symbols.for_each() {
             if it.checked_symbol == checked_symbol {
@@ -132,27 +38,60 @@ func find_symbol(self: @IR_Builder, checked_symbol: @Checked_Symbol) -> @IR_Symb
     }
 }
 
-func find_variable(self: @IR_Builder, checked_symbol: @Checked_Symbol) -> @IR_Variable {
-    let ir_symbol = self.find_symbol(checked_symbol)
-    if ir_symbol != null and ir_symbol is IR_Variable {
-        return ir_symbol.as(@IR_Variable)
-    }
-    return null
+struct IR_Function_Context: IR_Context {
+    function: @IR_Function
+    value_counter = make Counter[i32]()
 }
 
-func get_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Value {
-    if variable is IR_Global_Variable {
-        return make @IR_Global_Variable_Value(type = variable.type, variable = variable)
-    }
-    let current_block_instruction = self.current_block.last_instruction
-    while current_block_instruction != null {
-        if current_block_instruction.result_value != null and current_block_instruction.result_value.variable == variable {
-            return current_block_instruction.result_value
-        }
-        current_block_instruction = current_block_instruction.prev_instruction
-    }
-    let instruction = self.current_block.prepend(create_ir_phi_instruction(self.create_variable_value(variable)))
+struct IR_Block_Context: IR_Context {
+    block: @IR_Block
+}
+
+struct IR_Loop {
+    parent: @IR_Loop
+    end_block: @IR_Block
+}
+
+func create_ir_builder(checked_code: @Checked_Code) -> @IR_Builder {
+    let types = make @List[@IR_Type]()
+    types.append(make @IR_Boolean_Type())
+    types.append(make @IR_Int8_Type())
+    types.append(make @IR_Int16_Type())
+    types.append(make @IR_Int32_Type())
+    types.append(make @IR_Int64_Type())
+    types.append(make @IR_Null_Type())
+    types.append(make @IR_UInt8_Type())
+    types.append(make @IR_UInt16_Type())
+    types.append(make @IR_UInt32_Type())
+    types.append(make @IR_UInt64_Type())
+    types.append(make @IR_Undefined_Type())
+
+    return make @IR_Builder(
+        checked_code = checked_code
+        types = types
+    )
+}
+
+func append(self: @IR_Builder, instruction: @IR_Instruction, location: @Source_Location) -> @IR_Value {
+    instruction.location = location
+    self.current_block_context.block.append(instruction)
     return instruction.result_value
+}
+
+func create_temp_value(self: @IR_Builder, type: @IR_Type) -> @IR_Value {
+    return make @IR_Value(
+        type = type
+        name = clone("%").append(self.current_function_context.value_counter.next())
+    )
+}
+
+func find_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
+    self.types.for_each() {
+        if name.equals(it.name) {
+            return it
+        }
+    }
+    return null
 }
 
 func build(self: @IR_Builder) -> Nothing {
@@ -161,100 +100,94 @@ func build(self: @IR_Builder) -> Nothing {
             self.create_function(value.as(@Checked_Function_Symbol))
         } else if value is Checked_Type_Symbol {
             \ ignored
-        } else if value is Checked_Variable_Symbol {
-            let checked_variable_symbol = value.as(@Checked_Variable_Symbol)
-            let ir_variable_type = self.convert_type(checked_variable_symbol.type)
-            let ir_variable = make @IR_Global_Variable(
-                name = checked_variable_symbol.name
-                location = checked_variable_symbol.location
-                checked_symbol = checked_variable_symbol
-                type = ir_variable_type
-                value = null
-                is_external = checked_variable_symbol.is_external
-            )
-            if checked_variable_symbol.expression != null {
-                ir_variable.value = self.convert_expression(checked_variable_symbol.expression, ir_variable_type)
-            } else {
-                ir_variable.value = make @IR_Undefined_Value(type = ir_variable_type)
-            }
-            self.add_variable(ir_variable)
         } else {
             abort(value.location, value.object_type)
         }
     }
 
-    self.functions.for_each() {
-        self.convert_function(it)
+    self.global_context.symbols.for_each() {
+        if it is IR_Function {
+            self.convert_function(it.as(@IR_Function))
+        }
     }
 }
 
 func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Function_Symbol) -> Nothing {
     let ir_function_type = self.convert_function_type(checked_function_symbol.function_type)
+
+    \ create IR function parameters
+    let ir_function_parameters = make @List[@IR_Function_Parameter]()
+    let ir_function_type_parameters_iterator = ir_function_type.parameters.create_iterator()
+    let checked_function_symbol_parameters_iterator = checked_function_symbol.parameters.create_iterator()
+    while ir_function_type_parameters_iterator.has_next() and checked_function_symbol_parameters_iterator.has_next() {
+        let ir_function_type_parameter = ir_function_type_parameters_iterator.next()
+        let checked_function_symbol_parameter = checked_function_symbol_parameters_iterator.next()
+        ir_function_parameters.append(make @IR_Function_Parameter(
+            checked_symbol = checked_function_symbol_parameter
+            name = ir_function_type_parameter.name
+            type = ir_function_type_parameter.type
+            value = make @IR_Value(
+                name = clone("%").append(ir_function_type_parameter.name)
+                type = ir_function_type_parameter.type
+            )
+        ))
+    }
+
+    \ Prepare IR function blocks
+    let ir_function_blocks: @List[@IR_Block]
+    if checked_function_symbol.body != null {
+        ir_function_blocks = make @List[@IR_Block]()
+    } else {
+        ir_function_blocks = null
+    }
+
     let ir_function = make @IR_Function(
-        id = self.functions_counter.next()
         checked_symbol = checked_function_symbol
-        checked_function_symbol = checked_function_symbol
-        location = checked_function_symbol.location
-        blocks = make @List[@IR_Block]()
-        name = checked_function_symbol.name
-        parameters = make @List[@IR_Function_Parameter]()
+        name = clone("$").append(checked_function_symbol.name) \ TODO: Generate unique name using hex hash of parameter types
+        type = self.create_ir_pointer_type(ir_function_type)
+        function_type = ir_function_type
+        parameters = ir_function_parameters
         return_type = ir_function_type.return_type
-        is_external = checked_function_symbol.body == null
-        type = ir_function_type
+        blocks = ir_function_blocks
     )
-    self.add_symbol(ir_function)
-    self.functions.append(ir_function)
+    self.global_context.symbols.append(ir_function)
 }
 
 func convert_function(self: @IR_Builder, ir_function: @IR_Function) -> Nothing {
-    let checked_function_symbol = ir_function.checked_function_symbol
-    if checked_function_symbol.body != null {
-        let local_context = make IR_Builder_Context(
-            parent = self.context
-        )
-        self.context = @local_context
-
-        self.counter.reset()
-
-        self.current_block = ir_function.create_block()
-
-        ir_function.type.parameters.for_each() {
-            let ir_function_parameter = make @IR_Function_Parameter(
-                location = it.location
-                checked_symbol = checked_function_symbol.body.local_symbols.parent.find_symbol(it.name)
-                name = it.name
-                type = it.type
-            )
-            ir_function.parameters.append(ir_function_parameter)
-            self.add_variable(ir_function_parameter)
-            self.current_block.append(create_ir_load_variable_instruction(self.create_variable_value(ir_function_parameter)))
-        }
-
-        self.convert_block_statement(checked_function_symbol.body)
-        if self.current_block.last_instruction == null or not self.current_block.last_instruction.is_exit_instruction() {
-            if self.current_block.predecessors.size == 0 and self.current_block.id != 1 {
-                \ this block is unreachable
-                ir_function.blocks.remove(self.current_block).prune()
-            } else if ir_function.return_type is IR_Nothing_Type {
-                self.append(create_ir_return_instruction(null), null)
-            } else {
-                \ TODO: use block end's location 
-                abort(checked_function_symbol.location, "Missing return statement")
-            }
-        }
-        self.current_block = null
-
-        self.remove_redundant_blocks(ir_function)
-        self.populate_phi_instructions(ir_function)
-        self.remove_trivial_phi_instructions(ir_function)
-        self.remove_redundant_set_instructions(ir_function)
-
-        self.context = local_context.parent
+    if ir_function.checked_symbol is not Checked_Function_Symbol {
+        abort("Invalid state")
     }
-}
+    let checked_function_symbol = ir_function.checked_symbol.as(@Checked_Function_Symbol)
+    if checked_function_symbol.body != null {
+        self.current_function_context = make @IR_Function_Context(function = ir_function)
 
-func create_variable_value(self: @IR_Builder, variable: @IR_Variable) -> @IR_Variable_Value {
-    return make @IR_Variable_Value(type = variable.type, variable = undefined, version = undefined).init(variable)
+        ir_function.parameters.for_each() {
+            self.current_function_context.symbols.append(it)
+        }
+
+        self.current_block_context = make @IR_Block_Context(
+            parent = self.current_function_context
+            block = ir_function.create_block()
+        )
+        self.convert_block_statement(checked_function_symbol.body)
+        \ if self.current_block.last_instruction == null or not self.current_block.last_instruction.is_exit_instruction() {
+        \     if self.current_block.predecessors.size == 0 and self.current_block.id != 1 {
+        \         \ this block is unreachable
+        \         ir_function.blocks.remove(self.current_block).prune()
+        \     } else if ir_function.return_type is IR_Nothing_Type {
+        \         self.append(create_ir_return_instruction(null), null)
+        \     } else {
+        \         \ TODO: use block end's location 
+        \         abort(checked_function_symbol.location, "Missing return statement")
+        \     }
+        \ }
+        \ self.current_block = null
+
+        \ self.remove_redundant_blocks(ir_function)
+        \ self.populate_phi_instructions(ir_function)
+        \ self.remove_trivial_phi_instructions(ir_function)
+        \ self.remove_redundant_set_instructions(ir_function)
+    }
 }
 
 func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
@@ -324,8 +257,9 @@ func create_ir_unchecked_array_type(self: @IR_Builder, ir_item_type: @IR_Type) -
 }
 
 func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Function_Type) -> @IR_Function_Type {
+    \ TODO: Check if function type already exists
     let ir_function_type_name = make @String().append("func (")
-    let ir_function_type_parameters = make @List[@IR_Callable_Parameter]()
+    let ir_function_type_parameters = make @List[@IR_Function_Type_Parameter]()
     checked_function_type.parameters.for_each_indexed() {
         let checked_callable_parameter = it
         if it_index > 0 {
@@ -334,8 +268,7 @@ func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Fu
         let ir_callable_parameter_name = checked_callable_parameter.name
         let ir_callable_parameter_type = self.convert_type(checked_callable_parameter.type)
         ir_function_type_name.append(ir_callable_parameter_name).append(": ").append(ir_callable_parameter_type.name)
-        ir_function_type_parameters.append(make @IR_Callable_Parameter(
-            location = checked_callable_parameter.location
+        ir_function_type_parameters.append(make @IR_Function_Type_Parameter(
             name = ir_callable_parameter_name
             type = ir_callable_parameter_type
         ))
@@ -426,152 +359,47 @@ func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement)
 }
 
 func convert_assignment_statement(self: @IR_Builder, checked_statement: @Checked_Assignment_Statement) -> Nothing {
-    let checked_destination_expression = checked_statement.destination_expression
-    if checked_destination_expression is Checked_Member_Access_Expression {
-        let checked_member_access_expression = checked_destination_expression.as(@Checked_Member_Access_Expression)
-        let object_value = self.convert_expression(checked_member_access_expression.object_expression, null)
-        let struct_type: @IR_Struct_Type
-        if object_value.type is IR_Struct_Type {
-            struct_type = object_value.type.as(@IR_Struct_Type)
-            if object_value is not IR_Variable_Value {
-                abort(checked_member_access_expression.object_expression.location, "Not a variable value")
-            }
-            \ create pointer to object_value
-            object_value = self.append(
-                create_ir_load_variable_address_instruction(
-                    self.create_temp_value(self.create_ir_pointer_type(struct_type))
-                    object_value.as(@IR_Variable_Value)
-                )
-                checked_member_access_expression.location
-            )
-        } else {
-            if object_value.type is not IR_Pointer_Type {
-                abort(checked_destination_expression.location, clone("Not a pointer value"))
-            }
-            let object_type = object_value.type.as(@IR_Pointer_Type).pointed_type
-            if object_type is not IR_Struct_Type {
-                abort(checked_destination_expression.location, clone(object_type.name).append(" is not a struct type"))
-            }
-            struct_type = object_type.as(@IR_Struct_Type)
-        }
-        let struct_type_member = struct_type.get_member(checked_member_access_expression.struct_member)
-        if struct_type_member == null {
-            \ TODO: struct_type.dump_struct_members()
-            abort(checked_member_access_expression.struct_member.location, clone(struct_type.name).append(" doesn't have a ").append(checked_member_access_expression.struct_member.name).append(" member"))
-        }
-        let value = self.convert_expression(checked_statement.value_expression, struct_type_member.type)
-        self.append(create_ir_store_struct_member_instruction(object_value, struct_type_member, value), checked_statement.location)
-    } else if checked_destination_expression is Checked_Symbol_Expression {
-        let checked_symbol = checked_destination_expression.as(@Checked_Symbol_Expression).symbol
-        let variable = self.find_variable(checked_symbol)
-        if variable == null {
-            abort(checked_destination_expression.location, "Invalid state")
-        }
-        let value = self.convert_expression(checked_statement.value_expression, variable.type)
-        self.append(create_ir_set_instruction(self.create_variable_value(variable), value), checked_statement.location)
-    } else {
-        abort(checked_statement.location, checked_destination_expression.object_type)
-    }
+    abort("TODO: Convert assignment statement")
 }
 
 func convert_block_statement(self: @IR_Builder, checked_block_statement: @Checked_Block_Statement) -> Nothing {
-    self.context = make @IR_Builder_Context(parent = self.context)
     checked_block_statement.statements.for_each() {
         self.convert_statement(it)
     }
-    self.context = self.context.parent
 }
 
 func convert_break_statement(self: @IR_Builder, checked_statement: @Checked_Break_Statement) -> Nothing {
-    if self.current_loop == null {
-        abort(checked_statement.location, "Break outside of a loop?")
-    }
-    self.current_block.append_jump(self.current_loop.end_block)
-    self.current_block = self.current_block.function.create_block()
+    abort("TODO: Convert break statement")
 }
 
 func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked_Expression_Statement) -> Nothing {
-    self.convert_expression(checked_statement.expression, null)
+    abort("TODO: Convert expression statement")
 }
 
 func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Statement) -> Nothing {
-    let condition_value = self.convert_expression(checked_statement.condition_expression, self.find_named_type("bool"))
-    let true_block = self.current_block.function.create_block()
-    let end_block = self.current_block.function.create_block()
-    if checked_statement.false_statement != null {
-        let false_block = self.current_block.function.create_block()
-        self.current_block.append_jump(condition_value, true_block, false_block)
-        self.current_block = false_block
-        self.convert_statement(checked_statement.false_statement)
-        if not self.current_block.last_instruction.is_exit_instruction() {
-            self.current_block.append_jump(end_block)
-        }
-    } else {
-        self.current_block.append_jump(condition_value, true_block, end_block)
-    }
-    self.current_block = true_block
-    self.convert_statement(checked_statement.true_statement)
-    if not self.current_block.last_instruction.is_exit_instruction() {
-        self.current_block.append_jump(end_block)
-    }
-    self.current_block = end_block
+    abort("TODO: Convert if statement")
 }
 
 func convert_loop_statement(self: @IR_Builder, checked_statement: @Checked_Loop_Statement) -> Nothing {
-    let loop_block = self.current_block.function.create_block()
-    let end_block = self.current_block.function.create_block()
-    self.current_block.append_jump(loop_block)
-    self.current_block = loop_block
-    self.current_loop = make @IR_Loop(parent = self.current_loop, end_block = end_block)
-    self.convert_statement(checked_statement.body_statement)
-    self.current_block.append_jump(loop_block)
-    self.current_block = end_block
-    self.current_loop = self.current_loop.parent
+    abort("TODO: Convert loop statement")
 }
 
 func convert_return_statement(self: @IR_Builder, checked_statement: @Checked_Return_Statement) -> Nothing {
     if checked_statement.expression != null {
-        let return_value = self.convert_expression(checked_statement.expression, self.current_block.function.return_type)
+        let return_value = self.convert_expression(checked_statement.expression, self.current_function_context.function.return_type)
         self.append(create_ir_return_instruction(return_value), checked_statement.location)
     } else {
         self.append(create_ir_return_instruction(null), checked_statement.location)
     }
-    self.current_block = self.current_block.function.create_block()
+    \ self.current_block = self.current_block.function.create_block()
 }
 
-func convert_variable_statement(self: @IR_Builder, variable_statement: @Checked_Variable_Statement) -> Nothing {
-    let variable_type = self.convert_type(variable_statement.variable.type)
-    let variable_value: @IR_Value = null
-    if variable_statement.variable.expression != null {
-        variable_value = self.convert_expression(variable_statement.variable.expression, variable_type)
-    } else {
-        variable_value = make @IR_Undefined_Value(type = variable_type)
-    }
-
-    let variable = make @IR_Variable(
-        location = variable_statement.location
-        name = variable_statement.variable.name
-        checked_symbol = variable_statement.variable
-        type = variable_type
-    )
-    self.add_variable(variable)
-    self.append(create_ir_set_instruction(self.create_variable_value(variable), variable_value), variable_statement.location)
+func convert_variable_statement(self: @IR_Builder, checked_statement: @Checked_Variable_Statement) -> Nothing {
+    abort("TODO: Convert variable statement")
 }
 
 func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_While_Statement) -> Nothing {
-    let condition_block = self.current_block.function.create_block()
-    let loop_block = self.current_block.function.create_block()
-    let end_block = self.current_block.function.create_block()
-    self.current_block.append_jump(condition_block)
-    self.current_block = condition_block
-    let condition_value = self.convert_expression(checked_statement.condition_expression, self.find_named_type("bool"))
-    self.current_block.append_jump(condition_value, loop_block, end_block)
-    self.current_block = loop_block
-    self.current_loop = make @IR_Loop(parent = self.current_loop, end_block = end_block)
-    self.convert_statement(checked_statement.body_statement)
-    self.current_block.append_jump(condition_block)
-    self.current_block = end_block
-    self.current_loop = self.current_loop.parent
+    abort("TODO: Convert while statement")
 }
 
 func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -598,17 +426,6 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_less_than_or_equals_expression(checked_expression.as(@Checked_Less_Than_Or_Equals_Expression), expected_type)
     } else if checked_expression is Checked_Literal_Expression {
         value = self.convert_literal_expression(checked_expression.as(@Checked_Literal_Expression), expected_type)
-        if value is IR_Constant_Value {
-            value = self.append(
-                create_ir_set_instruction(
-                    self.create_variable_value(
-                        self.create_temp_variable(value.type)
-                    )
-                    value
-                )
-                checked_expression.location
-            )
-        }
     } else if checked_expression is Checked_Logic_And_Expression {
         value = self.convert_logic_and_expression(checked_expression.as(@Checked_Logic_And_Expression), expected_type)
     } else if checked_expression is Checked_Logic_Not_Expression {
@@ -638,25 +455,18 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
     } else {
         abort(checked_expression.location, checked_expression.object_type)
     }
-    if expected_type != null and not expected_type.accepts(value.type) {
-        abort(checked_expression.location, clone("Incompatible types: got ").append(value.type.name).append(" instead of ").append(expected_type.name))
-    }
+    \ if expected_type != null and not expected_type.accepts(value.type) {
+    \     abort(checked_expression.location, clone("Incompatible types: got ").append(value.type.name).append(" instead of ").append(expected_type.name))
+    \ }
     return value
 }
 
 func convert_add_expression(self: @IR_Builder, checked_expression: @Checked_Add_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(
-        make @IR_Add_Instruction(
-            result_value = self.create_temp_value(left_value.type)
-        ).init(left_value, right_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert add expression")
 }
 
-func convert_array_access_expression(self: @IR_Builder, checked_expression: @Checked_Array_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.object_type)
+func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression, expected_type: @IR_Type) -> @IR_Value {
+    abort("TODO: Convert cast expression")
 }
 
 func convert_call_arguments(self: @IR_Builder, checked_call_arguments: @List[@Checked_Call_Argument]) -> @List[@IR_Call_Argument] {
@@ -678,85 +488,20 @@ func convert_call_arguments(self: @IR_Builder, checked_call_arguments: @List[@Ch
     return ir_call_arguments
 }
 
-func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let value = self.convert_expression(checked_expression.expression, null)
-    let result_value = self.create_temp_value(self.convert_type(checked_expression.type))
-    if value.type is IR_Pointer_Type and (result_value.type is IR_Pointer_Type or result_value.type is IR_Unchecked_Array_Type) {
-        return self.append(create_ir_set_instruction(result_value, value), checked_expression.location)
-    }
-    if value.type is IR_Integer_Type and result_value.type is IR_Integer_Type {
-        return self.append(create_ir_cast_instruction(result_value, value), checked_expression.location)
-    }
-    if value.type is IR_Fixed_Array_Type and result_value.type is IR_Unchecked_Array_Type {
-        let value_type = value.type.as(@IR_Fixed_Array_Type)
-        let result_value_type = result_value.type.as(@IR_Unchecked_Array_Type)
-        if value_type.item_type == result_value_type.item_type {
-            if value is IR_Global_Variable_Value {
-                value = make @IR_Global_Variable_Address_Value(
-                    type = self.create_ir_pointer_type(value_type)
-                    variable = value.as(@IR_Global_Variable_Value).variable
-                )
-            } else {
-                abort(checked_expression.location, clone("Unsupported value type: ").append(value.object_type.name))
-            }
-            return self.append(create_ir_set_instruction(result_value, value), checked_expression.location)
-        }
-    }
-    abort(checked_expression.location, clone("Cannot cast ").append(value.type.name).append(" to ").append(result_value.type.name))
-}
-
 func convert_divide_expression(self: @IR_Builder, checked_expression: @Checked_Divide_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    if left_value.type is not IR_Integer_Type {
-        abort(checked_expression.left_expression.location, "Not an integer value")
-    }
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(
-        make @IR_Divide_Instruction(
-            result_value = self.create_temp_value(left_value.type)
-        ).init(left_value, right_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert divide expression")
 }
 
 func convert_dynamic_call_expression(self: @IR_Builder, checked_expression: @Checked_Dynamic_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let ir_call_arguments = self.convert_call_arguments(checked_expression.call_arguments)
-    let ir_callee = self.convert_expression(checked_expression.callee_expression, null)
-    if ir_callee is not IR_Variable_Value {
-        abort(checked_expression.callee_expression.location, ir_callee.object_type)
-    }
-    let ir_callee_type = ir_callee.type
-    if ir_callee_type is not IR_Pointer_Type {
-        abort(checked_expression.callee_expression.location, ir_callee_type.object_type)
-    }
-    let ir_function_type = ir_callee_type.as(@IR_Pointer_Type).pointed_type
-    if ir_function_type is not IR_Function_Type {
-        abort(checked_expression.callee_expression.location, ir_function_type.object_type)
-    }
-    let ir_function_type = ir_function_type.as(@IR_Function_Type)
-    let result_value: @IR_Variable_Value = null
-    if ir_function_type.return_type is not IR_Nothing_Type {
-        result_value = self.create_temp_value(ir_function_type.return_type)
-    }
-    return self.append(create_ir_dynamic_call_instruction(result_value, ir_call_arguments, ir_callee.as(@IR_Variable_Value)), checked_expression.location)
+    abort("TODO: Convert dynamic call expression")
 }
 
 func convert_equals_expression(self: @IR_Builder, checked_expression: @Checked_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    if left_value.type != right_value.type and (left_value.type is not IR_Pointer_Type or right_value.type is not IR_Null_Type) {
-        abort(checked_expression.location, "Operands are not the same type")
-    }
-    return self.append(
-        make @IR_Equals_Comparison_Instruction(
-            result_value = self.create_temp_value(self.find_named_type("bool"))
-        ).init(left_value, right_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert equals expression")
 }
 
 func convert_function_call_expression(self: @IR_Builder, checked_expression: @Checked_Function_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let ir_function = self.find_symbol(checked_expression.function_symbol)
+    let ir_function = self.global_context.find_symbol(checked_expression.function_symbol)
     if ir_function == null or ir_function is not IR_Function {
         abort(checked_expression.location, "Missing IR_Function for Checked_Function_Symbol: ".clone().append(checked_expression.function_symbol.name))
     }
@@ -764,7 +509,7 @@ func convert_function_call_expression(self: @IR_Builder, checked_expression: @Ch
 
     let ir_call_arguments = self.convert_call_arguments(checked_expression.call_arguments)
 
-    let result_value: @IR_Variable_Value = null
+    let result_value: @IR_Value = null
     if ir_function.return_type is not IR_Nothing_Type {
         result_value = self.create_temp_value(ir_function.return_type)
     }
@@ -772,51 +517,39 @@ func convert_function_call_expression(self: @IR_Builder, checked_expression: @Ch
 }
 
 func convert_greater_than_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    if left_value.type is not IR_Integer_Type {
-        abort(checked_expression.left_expression.location, "Not an integer value")
-    }
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(make @IR_Greater_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
+    abort("TODO: Convert greater than expression")
 }
 
 func convert_greater_than_or_equals_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Or_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    if left_value.type is not IR_Integer_Type {
-        abort(checked_expression.left_expression.location, "Not an integer value")
-    }
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(make @IR_Greater_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
-}
-
-func convert_is_expression(self: @IR_Builder, checked_expression: @Checked_Is_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort(checked_expression.location, checked_expression.super.object_type)
+    abort("TODO: Convert greater than or equals expression")
 }
 
 func convert_less_than_expression(self: @IR_Builder, checked_expression: @Checked_Less_Than_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    if left_value.type is not IR_Integer_Type {
-        abort(checked_expression.left_expression.location, "Not an integer value")
-    }
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(make @IR_Less_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
+    abort("TODO: Convert less than expression")
 }
 
 func convert_less_than_or_equals_expression(self: @IR_Builder, checked_expression: @Checked_Less_Than_Or_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    if left_value.type is not IR_Integer_Type {
-        abort(checked_expression.left_expression.location, "Not an integer value")
-    }
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(make @IR_Less_Or_Equal_Comparison_Instruction(result_value = self.create_temp_value(self.find_named_type("bool"))).init(left_value, right_value), checked_expression.location)
+    abort("TODO: Convert less than or equals expression")
 }
 
 func convert_literal_expression(self: @IR_Builder, checked_expression: @Checked_Literal_Expression, expected_type: @IR_Type) -> @IR_Value {
     if checked_expression is Checked_Boolean_Literal_Expression {
-        return make @IR_Constant_Value(type = self.find_named_type("bool"), literal = checked_expression.as(@Checked_Boolean_Literal_Expression).literal)
+        return self.append(
+            create_ir_constant_instruction(
+                self.create_temp_value(self.find_named_type("bool"))
+                checked_expression.as(@Checked_Boolean_Literal_Expression).literal
+            )
+            checked_expression.location
+        )
     }
     if checked_expression is Checked_Character_Literal_Expression {
-        return make @IR_Constant_Value(type = self.find_named_type("u8"), literal = checked_expression.as(@Checked_Character_Literal_Expression).literal)
+        return self.append(
+            create_ir_constant_instruction(
+                self.create_temp_value(self.find_named_type("u8"))
+                checked_expression.as(@Checked_Character_Literal_Expression).literal
+            )
+            checked_expression.location
+        )
     }
     if checked_expression is Checked_Integer_Literal_Expression {
         let integer_literal = checked_expression.as(@Checked_Integer_Literal_Expression).literal
@@ -825,505 +558,98 @@ func convert_literal_expression(self: @IR_Builder, checked_expression: @Checked_
         } else if expected_type == null or expected_type is not IR_Integer_Type {
             expected_type = self.find_named_type("i32")
         }
-        return make @IR_Constant_Value(type = expected_type, literal = integer_literal)
-    }
-    if checked_expression is Checked_Null_Literal_Expression {
-        return make @IR_Constant_Value(type = self.find_named_type("Null"), literal = checked_expression.as(@Checked_Null_Literal_Expression).literal)
-    }
-    if checked_expression is Checked_String_Literal_Expression {
-        return make @IR_Constant_Value(
-            type = self.convert_type(checked_expression.type)
-            literal = checked_expression.as(@Checked_String_Literal_Expression).literal
+        return self.append(
+            create_ir_constant_instruction(
+                self.create_temp_value(expected_type)
+                checked_expression.as(@Checked_Integer_Literal_Expression).literal
+            )
+            checked_expression.location
         )
     }
-    if checked_expression is Checked_Undefined_Literal_Expression {
-        return make @IR_Undefined_Value(type = self.find_named_type("Undefined"))
+    if checked_expression is Checked_Null_Literal_Expression {
+        return self.append(
+            create_ir_constant_instruction(
+                self.create_temp_value(self.find_named_type("Null"))
+                checked_expression.as(@Checked_Null_Literal_Expression).literal
+            )
+            checked_expression.location
+        )
     }
     abort(checked_expression.location, checked_expression.object_type)
 }
 
 func convert_logic_and_expression(self: @IR_Builder, checked_expression: @Checked_Logic_And_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let next_block = self.current_block.function.create_block()
-    let end_block = self.current_block.function.create_block()
-    let left_value = self.convert_expression(checked_expression.left_expression, self.find_named_type("bool"))
-    let result_variable = self.create_temp_variable(self.find_named_type("bool"))
-    let result_value_left = self.create_variable_value(result_variable)
-    self.append(create_ir_set_instruction(result_value_left, left_value), checked_expression.location)
-    self.current_block.append_jump(result_value_left, next_block, end_block)
-    self.current_block = next_block
-    let right_value = self.convert_expression(checked_expression.right_expression, self.find_named_type("bool"))
-    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), checked_expression.location)
-    self.current_block.append_jump(end_block)
-    self.current_block = end_block
-    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)), checked_expression.location)
+    abort("TODO: Convert logic and expression")
 }
 
 func convert_logic_not_expression(self: @IR_Builder, checked_expression: @Checked_Logic_Not_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let value = self.convert_expression(checked_expression.expression, null)
-    if value.type is not IR_Boolean_Type {
-        abort(checked_expression.expression.location, "Not a boolean value")
-    }
-    return self.append(
-        make @IR_Not_Instruction(
-            result_value = self.create_temp_value(value.type)
-        ).init(value)
-        checked_expression.location
-    )
+    abort("TODO: Convert logic not expression")
 }
 
 func convert_logic_or_expression(self: @IR_Builder, checked_expression: @Checked_Logic_Or_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let next_block = self.current_block.function.create_block()
-    let end_block = self.current_block.function.create_block()
-    let left_value = self.convert_expression(checked_expression.left_expression, self.find_named_type("bool"))
-    let result_variable = self.create_temp_variable(self.find_named_type("bool"))
-    let result_value_left = self.create_variable_value(result_variable)
-    self.append(create_ir_set_instruction(result_value_left, left_value), checked_expression.location)
-    self.current_block.append_jump(result_value_left, end_block, next_block)
-    self.current_block = next_block
-    let right_value = self.convert_expression(checked_expression.right_expression, self.find_named_type("bool"))
-    self.append(create_ir_set_instruction(self.create_variable_value(result_variable), right_value), checked_expression.location)
-    self.current_block.append_jump(end_block)
-    self.current_block = end_block
-    return self.append(create_ir_phi_instruction(self.create_variable_value(result_variable)), checked_expression.location)
+    abort("TODO: Convert logic or expression")
 }
 
 func convert_make_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let ir_type = self.convert_type(checked_expression.type)
-    if ir_type is IR_Struct_Type {
-        return self.convert_struct_literal_expression(checked_expression, ir_type.as(@IR_Struct_Type))
-    }
-    if ir_type is not IR_Pointer_Type {
-        abort(checked_expression.location, ir_type.name.clone().append(" is not a pointer type"))
-    }
-    ir_type = ir_type.as(@IR_Pointer_Type).pointed_type
-    if ir_type is not IR_Struct_Type {
-        abort(checked_expression.location, ir_type.name.clone().append(" is not a struct type"))
-    }
-    let ir_type = ir_type.as(@IR_Struct_Type)
-    let init_value = self.convert_struct_literal_expression(checked_expression, ir_type)
-    return self.append(
-        create_ir_new_instruction(self.create_temp_value(self.create_ir_pointer_type(ir_type)), ir_type, init_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert make expression")
 }
 
 func convert_member_access_expression(self: @IR_Builder, checked_expression: @Checked_Member_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let object_value = self.convert_expression(checked_expression.object_expression, null)
-    let struct_type: @IR_Struct_Type
-    if object_value.type is IR_Struct_Type {
-        if object_value is IR_Variable_Value {
-            struct_type = object_value.type.as(@IR_Struct_Type)
-            object_value = self.append(
-                create_ir_load_variable_address_instruction(
-                    self.create_temp_value(self.create_ir_pointer_type(struct_type))
-                    object_value.as(@IR_Variable_Value)
-                )
-                checked_expression.location
-            )
-        } else if object_value is IR_Global_Variable_Value {
-            struct_type = object_value.type.as(@IR_Struct_Type)
-            object_value = make @IR_Global_Variable_Address_Value(
-                type = self.create_ir_pointer_type(struct_type)
-                variable = object_value.as(@IR_Global_Variable_Value).variable
-            )
-        } else {
-            abort(checked_expression.location, clone("Unsupported value type: ").append(object_value.object_type.name))
-        }
-    } else if object_value.type is IR_Pointer_Type {
-        let pointed_type = object_value.type.as(@IR_Pointer_Type).pointed_type
-        if pointed_type is not IR_Struct_Type {
-            abort(checked_expression.location, clone("Not a struct pointer value: ").append(object_value.type.name))
-        }
-        struct_type = pointed_type.as(@IR_Struct_Type)
-    } else {
-        abort(checked_expression.location, clone("Not a reference type: ").append(object_value.type.name))
-    }
-
-    let struct_type_member = struct_type.get_member(checked_expression.struct_member)
-    if struct_type_member.type is IR_Struct_Type or struct_type_member.type is IR_Fixed_Array_Type {
-        return self.append(
-            create_ir_load_struct_member_instruction(
-                self.create_temp_value(self.create_ir_pointer_type(struct_type_member.type))
-                object_value
-                struct_type_member
-                true
-            )
-            checked_expression.location
-        )
-    }
-    return self.append(
-        create_ir_load_struct_member_instruction(
-            self.create_temp_value(struct_type_member.type)
-            object_value
-            struct_type_member
-            false
-        )
-        checked_expression.location
-    )
+    abort("TODO: Convert member access expression")
 }
 
 func convert_modulo_expression(self: @IR_Builder, checked_expression: @Checked_Modulo_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    if left_value.type is not IR_Integer_Type {
-        abort(checked_expression.left_expression.location, "Not an integer value")
-    }
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(
-        make @IR_Modulo_Instruction(
-            result_value = self.create_temp_value(left_value.type)
-        ).init(left_value, right_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert modulo expression")
 }
 
 func convert_multiply_expression(self: @IR_Builder, checked_expression: @Checked_Multiply_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    if left_value.type is not IR_Integer_Type {
-        abort(checked_expression.left_expression.location, "Not an integer value")
-    }
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(
-        make @IR_Multiply_Instruction(
-            result_value = self.create_temp_value(left_value.type)
-        ).init(left_value, right_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert multiply expression")
 }
 
 func convert_negate_expression(self: @IR_Builder, checked_expression: @Checked_Negate_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let value = self.convert_expression(checked_expression.expression, null)
-    if value.type is not IR_Integer_Type {
-        abort(checked_expression.expression.location, "Not an integer value")
-    }
-    return self.append(
-        make @IR_Substract_Instruction(result_value = self.create_temp_value(value.type)).init(
-            make @IR_Constant_Value(
-                type = value.type
-                literal = make @Integer_Token(lexeme = "", location = checked_expression.location, value = 0, negative = false, type = null)
-            )
-            value
-        )
-        checked_expression.location
-    )
+    abort("TODO: Convert negate expression")
 }
 
 func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Checked_Not_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, null)
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    if left_value.type != right_value.type and not (right_value.type is IR_Null_Type and (left_value.type is IR_Pointer_Type or left_value.type is IR_Function_Type)) {
-        abort(checked_expression.location, "Operands are not the same type")
-    }
-    return self.append(
-        make @IR_Not_Equal_Comparison_Instruction(
-            result_value = self.create_temp_value(self.find_named_type("bool"))
-        ).init(left_value, right_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert not equals expression")
 }
 
 func convert_reference_expression(self: @IR_Builder, checked_expression: @Checked_Reference_Expression, expected_type: @IR_Type) -> @IR_Value {
-    if checked_expression.object_expression is Checked_Symbol_Expression {
-        let checked_symbol = checked_expression.object_expression.as(@Checked_Symbol_Expression).symbol
-        let ir_symbol = self.find_symbol(checked_symbol)
-        if ir_symbol == null {
-            abort(checked_symbol.location, clone("Undeclared symbol: ").append(checked_symbol.name))
-        }
-        if ir_symbol is not IR_Variable {
-            abort(checked_symbol.location, clone("Undeclared variable: ").append(checked_symbol.name))
-        }
-        let ir_variable = ir_symbol.as(@IR_Variable)
-        if ir_variable is IR_Global_Variable {
-            let ir_variable = ir_variable.as(@IR_Global_Variable)
-            return make @IR_Global_Variable_Address_Value(type = self.create_ir_pointer_type(ir_variable.type), variable = ir_variable)
-        }
-        if ir_variable.type is IR_Pointer_Type {
-            return self.get_variable_value(ir_variable)
-        }
-        if ir_variable.type is IR_Struct_Type {
-            return self.append(
-                create_ir_load_variable_address_instruction(
-                    self.create_temp_value(self.create_ir_pointer_type(ir_variable.type))
-                    self.get_variable_value(ir_variable).as(@IR_Variable_Value)
-                )
-                checked_expression.location
-            )
-        }
-        if ir_variable.type is IR_Unchecked_Array_Type {
-            return self.get_variable_value(ir_variable)
-        }
-        abort(checked_expression.object_expression.location, clone("Variable type without address: ").append(ir_variable.type.name))
-    }
-
-    abort(checked_expression.location, checked_expression.object_expression.object_type)
-}
-
-func convert_struct_literal_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression, struct_type: @IR_Struct_Type) -> @IR_Struct_Literal_Value {
-    if not struct_type.has_members() {
-        abort(checked_expression.location, "Struct has no members")
-    }
-
-    let struct_literal_value = make @IR_Struct_Literal_Value(type = struct_type, location = checked_expression.location)
-    if struct_type.object_type_variable != null {
-        abort("TODO: Init object_type")
-        \ let object_type_member = struct_type.get_member("object_type")
-        \ struct_literal_value.set_member_value(object_type_member, make @IR_Global_Variable_Value(type = struct_type.object_type_variable.type, variable = struct_type.object_type_variable))
-    }
-
-    checked_expression.values.for_each() {
-        let checked_struct_type_member = key
-        let struct_type_member = struct_type.get_member(checked_struct_type_member)
-        if struct_type_member == null {
-            abort(checked_struct_type_member.location, clone(struct_type.name).append(" has no such member: ").append(checked_struct_type_member.name))
-        }
-        if struct_literal_value.get_member_value(struct_type_member) == null {
-            let checked_expression = value
-            struct_literal_value.set_member_value(struct_type_member, self.convert_expression(checked_expression, struct_type_member.type))
-        } else {
-            abort(checked_struct_type_member.location, clone(struct_type.name).append(" already has a value for member: ").append(checked_struct_type_member.name))
-        }
-    }
-
-    return struct_literal_value
+    abort("TODO: Convert reference expression")
 }
 
 func convert_substract_expression(self: @IR_Builder, checked_expression: @Checked_Substract_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
-    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
-    return self.append(
-        make @IR_Substract_Instruction(
-            result_value = self.create_temp_value(left_value.type)
-        ).init(left_value, right_value)
-        checked_expression.location
-    )
+    abort("TODO: Convert substract expression")
 }
 
 func convert_super_access_expression(self: @IR_Builder, checked_expression: @Checked_Super_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
-    \ type checking is done in convert_member_access_expression(...)
-    return self.convert_expression(checked_expression.object_expression, null)
+    abort("TODO: Convert super access expression")
 }
 
 func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_Symbol_Expression, expected_type: @IR_Type) -> @IR_Value {
-    let ir_symbol = self.find_symbol(checked_expression.symbol)
+    let ir_symbol = self.current_block_context.find_symbol(checked_expression.symbol)
     if ir_symbol == null {
-        abort(checked_expression.location, clone("Undeclared symbol: ").append(checked_expression.symbol.name))
+        abort(checked_expression.location, clone("Unknown symbol: ").append(checked_expression.symbol.name))
     }
-    if ir_symbol is IR_Variable {
-        let ir_value = self.get_variable_value(ir_symbol.as(@IR_Variable))
-        if ir_value == null {
-            abort(checked_expression.location, clone("Undeclared variable value: ").append(checked_expression.symbol.name))
-        }
-        return ir_value
+    if ir_symbol is IR_Function_Parameter {
+        return ir_symbol.as(@IR_Function_Parameter).value
     }
-    if ir_symbol is IR_Constant {
-        \ return ir_symbol.as(@IR_Constant).value
-    }
-    if ir_symbol is IR_Function {
-        let ir_function = ir_symbol.as(@IR_Function)
-        return make @IR_Function_Address_Value(
-            type = self.create_ir_pointer_type(ir_function.type)
-            function = ir_function
-        )
-    }
+    \ if ir_symbol is IR_Variable {
+    \     let ir_value = self.get_variable_value(ir_symbol.as(@IR_Variable))
+    \     if ir_value == null {
+    \         abort(checked_expression.location, clone("Undeclared variable value: ").append(checked_expression.symbol.name))
+    \     }
+    \     return ir_value
+    \ }
+    \ if ir_symbol is IR_Constant {
+    \     \ return ir_symbol.as(@IR_Constant).value
+    \ }
+    \ if ir_symbol is IR_Function {
+    \     let ir_function = ir_symbol.as(@IR_Function)
+    \     return make @IR_Function_Address_Value(
+    \         type = self.create_ir_pointer_type(ir_function.type)
+    \         function = ir_function
+    \     )
+    \ }
     abort(checked_expression.location, clone("Unsupported symbol type: ").append(ir_symbol.object_type.name))
-}
-
-func remove_redundant_blocks(self: @IR_Builder, function: @IR_Function) -> Nothing {
-    loop {
-        let repeat = false
-
-        let blocks = function.blocks.prune().create_iterator()
-
-        while blocks.has_next() {
-            let block = blocks.next()
-            if block.id != 1 {
-                if block.predecessors.size == 0 {
-                    \ found unreachable block
-                    if block.last_instruction == null {
-                        blocks.remove_current()
-                    } else if block.last_instruction == block.first_instruction and block.last_instruction is IR_Direct_Jump_Instruction {
-                        let block_instruction = block.last_instruction.as(@IR_Direct_Jump_Instruction)
-                        block_instruction.block.predecessors.remove(block)
-                        block_instruction.block.predecessors.prune()
-                        blocks.remove_current()
-                        repeat = true
-                        break
-                    } else {
-                        abort(function.location, clone("Found non-empty unreachable block: block.").append(block.id))
-                    }
-                }
-                if block.first_instruction == block.last_instruction and block.first_instruction is IR_Direct_Jump_Instruction {
-                    \ found jump block
-                    let block_predecessor = block.predecessors.last()
-                    let block_successor = block.first_instruction.as(@IR_Direct_Jump_Instruction).block
-                    if block_predecessor.last_instruction is IR_Conditional_Jump_Instruction {
-                        block.predecessors.remove(block_predecessor).prune()
-                        let block_predecessor_instruction = block_predecessor.last_instruction.as(@IR_Conditional_Jump_Instruction)
-                        if block_predecessor_instruction.false_block == block {
-                            block_predecessor_instruction.false_block = block_successor
-                        } else {
-                            block_predecessor_instruction.true_block = block_successor
-                        }
-                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
-                        repeat = true
-                        break
-                    }
-                    if block_predecessor.last_instruction is IR_Direct_Jump_Instruction {
-                        block.predecessors.remove(block_predecessor).prune()
-                        let block_predecessor_instruction = block_predecessor.last_instruction.as(@IR_Direct_Jump_Instruction)
-                        block_predecessor_instruction.block = block_successor
-                        block_successor.predecessors.remove(block).prune().append(block_predecessor)
-                        repeat = true
-                        break
-                    }
-                }
-            }
-        }
-
-        if not repeat {
-            break
-        }
-    }
-}
-
-func populate_phi_instructions(self: @IR_Builder, function: @IR_Function) -> Nothing {
-    let blocks = function.blocks.create_iterator()
-    while blocks.has_next() {
-        let block = blocks.next()
-        let block_instruction = block.first_instruction
-        while block_instruction != null and block_instruction is IR_Phi_Instruction {
-            let instruction = block_instruction.as(@IR_Phi_Instruction)
-            if instruction.operand_values.first_entry == null {
-                let block_predecessors = block.predecessors.create_iterator()
-                while block_predecessors.has_next() {
-                    let block_predecessor = block_predecessors.next()
-                    instruction.append(self.get_block_variable_value(block_predecessor, instruction.result_value.variable))
-                }
-            }
-            block_instruction = block_instruction.next_instruction
-        }
-    }
-}
-
-func get_block_variable_value(self: @IR_Builder, block: @IR_Block, variable: @IR_Variable) -> @IR_Value {
-    let block_instruction = block.last_instruction
-    while block_instruction != null {
-        if block_instruction.result_value != null and block_instruction.result_value.variable == variable {
-            return block_instruction.result_value
-        }
-        block_instruction = block_instruction.prev_instruction
-    }
-    if block.predecessors.size == 1 {
-        return self.get_block_variable_value(block.predecessors.last(), variable)
-    }
-    let instruction = create_ir_phi_instruction(self.create_variable_value(variable))
-    block.prepend(instruction)
-    let block_predecessors = block.predecessors.create_iterator()
-    while block_predecessors.has_next() {
-        let block_predecessor = block_predecessors.next()
-        instruction.append(self.get_block_variable_value(block_predecessor, variable))
-    }
-    return instruction.result_value
-}
-
-func remove_trivial_phi_instructions(self: @IR_Builder, function: @IR_Function) -> Nothing {
-    loop {
-        let repeat = false
-
-        let blocks = function.blocks.prune().create_iterator()
-
-        \ skip entry block
-        blocks.next()
-
-        while blocks.has_next() {
-            let block = blocks.next()
-            let block_instruction = block.first_instruction
-            while block_instruction != null and block_instruction is IR_Phi_Instruction {
-                let instruction = block_instruction.as(@IR_Phi_Instruction)
-                let instruction_is_redundant = instruction.is_redundant()
-                if not instruction_is_redundant and instruction.is_trivial() {
-                    \ found a trivial phi instruction
-                    instruction.operand_values.remove_values(instruction.result_value)
-                    instruction_is_redundant = true
-                }
-                if instruction_is_redundant {
-                    \ found redundant phi instruction
-                    let old_value = instruction.result_value
-                    let new_value = instruction.operand_values.first_entry.value
-                    let user_instructions = old_value.user_instructions.create_iterator()
-                    while user_instructions.has_next() {
-                        let user_instruction = user_instructions.next()
-                        user_instruction.replace_operand_value(old_value, new_value)
-                    }
-                    new_value.user_instructions.remove_all(instruction).prune()
-                    let old_value_links_item = old_value.links.first_item
-                    while old_value_links_item != null {
-                        let old_value_link = old_value_links_item.data
-                        if old_value_link is IR_Required_By_Value_Link {
-                            let old_value_link = old_value_link.as(@IR_Required_By_Value_Link)
-                            old_value_link.back_link.value = new_value
-                            new_value.links.append(old_value_link)
-                        }
-                        old_value_links_item = old_value_links_item.next_item
-                    }
-                    block.remove(instruction)
-                    repeat = true
-                }
-                block_instruction = block_instruction.next_instruction
-            }
-        }
-
-        if not repeat {
-            break
-        }
-    }
-}
-
-func remove_redundant_set_instructions(self: @IR_Builder, function: @IR_Function) -> Nothing {
-    loop {
-        let repeat = false
-
-        let blocks = function.blocks.prune().create_iterator()
-        while blocks.has_next() {
-            let block = blocks.next()
-
-            let block_instruction = block.first_instruction
-            while block_instruction != null {
-                if block_instruction is IR_Set_Instruction {
-                    let value = block_instruction.as(@IR_Set_Instruction).get_value()
-                    if value is IR_Undefined_Value and block_instruction.result_value.user_instructions.size == 0 {
-                        block.remove(block_instruction)
-                        repeat = true
-                        break
-                    }
-                    if value.user_instructions.size == 1 and value.user_instructions.first_item.data == block_instruction {
-                        let value_creator_instruction = value.creator_instruction
-                        if value_creator_instruction != null and value_creator_instruction.parent_block == block {
-                            let redundant_value = value_creator_instruction.result_value
-                            let replacement_value: @IR_Value = block_instruction.result_value
-                            let redundant_value_links_item = redundant_value.links.first_item
-                            while redundant_value_links_item != null {
-                                let redundant_value_link = redundant_value_links_item.data
-                                if redundant_value_link is IR_Requires_Value_Link {
-                                    let redundant_value_link = redundant_value_link.as(@IR_Requires_Value_Link)
-                                    redundant_value_link.back_link.value = replacement_value
-                                    replacement_value.links.append(redundant_value_link)
-                                }
-                                redundant_value_links_item = redundant_value_links_item.next_item
-                            }
-                            value_creator_instruction.result_value = block_instruction.result_value
-                            value_creator_instruction.result_value.creator_instruction = value_creator_instruction
-                            block.remove(block_instruction)
-                            repeat = true
-                            break
-                        }
-                    }
-                }
-                block_instruction = block_instruction.next_instruction
-            }
-        }
-
-        if not repeat {
-            break
-        }
-    }
 }
