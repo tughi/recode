@@ -248,6 +248,32 @@ func set_operand_value(self: @IR_Instruction, key: @Any, value: @IR_Value) -> No
     value.user_instructions.append(self)
 }
 
+struct IR_Add_Instruction: IR_Binary_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        instruction.dump_ir_instruction_result(file)
+        let instruction = instruction.as(@IR_Binary_Instruction)
+        return file.write("add ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value()).end_line()
+    }
+) {
+}
+
+struct IR_Binary_Instruction: IR_Instruction {
+}
+
+func init(self: @IR_Binary_Instruction, left_value: @IR_Value, right_value: @IR_Value) -> @IR_Binary_Instruction {
+    self.set_operand_value("left_value", left_value)
+    self.set_operand_value("right_value", right_value)
+    return self
+}
+
+func get_left_value(self: @IR_Binary_Instruction) -> @IR_Value {
+    return self.operand_values.get("left_value")
+}
+
+func get_right_value(self: @IR_Binary_Instruction) -> @IR_Value {
+    return self.operand_values.get("right_value")
+}
+
 struct IR_Call_Instruction: IR_Instruction {
     arguments_size = 0i64
 }
@@ -359,4 +385,13 @@ func create_ir_return_instruction(return_value: @IR_Value) -> @IR_Return_Instruc
 
 func get_return_value(self: @IR_Return_Instruction) -> @IR_Value {
     return self.operand_values.get("return_value")
+}
+
+struct IR_Substract_Instruction: IR_Binary_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Binary_Instruction)
+        instruction.dump_ir_instruction_result(file)
+        return file.write("sub ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value()).end_line()
+    }
+) {
 }

@@ -462,7 +462,14 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
 }
 
 func convert_add_expression(self: @IR_Builder, checked_expression: @Checked_Add_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert add expression")
+    let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(
+        make @IR_Add_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -619,7 +626,14 @@ func convert_reference_expression(self: @IR_Builder, checked_expression: @Checke
 }
 
 func convert_substract_expression(self: @IR_Builder, checked_expression: @Checked_Substract_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert substract expression")
+    let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    return self.append(
+        make @IR_Substract_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).init(left_value, right_value)
+        checked_expression.location
+    )
 }
 
 func convert_super_access_expression(self: @IR_Builder, checked_expression: @Checked_Super_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
