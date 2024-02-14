@@ -119,22 +119,36 @@ def test(paths, save=False, stage=1):
                     compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
                     diff = compute_diff(f'{test_code[:-5]}.error', compiler_error)
                     if diff:
+                        if save:
+                            open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
+                            continue
                         logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         trace(*compiler_command[:2], '-')
                         exit(1)
                 else:
+                    if save:
+                        compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
+                        open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
+                        continue
                     logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_RESET}{compiler_result.stderr}")
                     trace(*compiler_command[:2], '-')
                     exit(1)
             else:
                 test_file = compiler_command[-1][6:]
+                compiler_output = open(compiler_command[-1]).read()
                 if os.path.exists(test_file):
-                    diff = compute_diff(test_file, open(compiler_command[-1]).read())
+                    diff = compute_diff(test_file, compiler_output, compiler_command[-1])
                     if diff:
+                        if save:
+                            open(test_file, 'w').write(compiler_output)
+                            continue
                         logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         exit(1)
                 else:
-                    logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_result.stdout}{COLOR_RESET}")
+                    if save:
+                        open(test_file, 'w').write(compiler_output)
+                        continue
+                    logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_output}{COLOR_RESET}")
                     exit(1)
 
 
@@ -149,13 +163,13 @@ def code_files(paths):
                         yield os.path.join(root, file)
 
 
-def compute_diff(expected, actual):
+def compute_diff(expected, actual, actual_name='-'):
     with open(expected) as f:
         expected_lines = f.read().splitlines()
     actual_lines = actual.splitlines()
     if actual_lines == expected_lines:
         return None
-    return '\n'.join(difflib.unified_diff(expected_lines, actual_lines, fromfile=expected, tofile='-'))
+    return '\n'.join(difflib.unified_diff(expected_lines, actual_lines, fromfile=expected, tofile=actual_name))
 
 
 def build():
