@@ -25,13 +25,17 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
     let output_file: @FILE = null
     if output_file_path.equals("-") {
         output_file = stdout
-    } else if ir_mode and not output_file_path.ends_with(".ir") {
-        stdout.write("'").write(output_file_path).write("' doesn't end with '.ir'.").end_line()
-        exit(3)
-    } else if not output_file_path.ends_with(".s") {
-        stdout.write("'").write(output_file_path).write("' doesn't end with '.s'.").end_line()
-        exit(3)
     } else {
+        if ir_mode {
+            if not output_file_path.ends_with(".ir") {
+                stdout.write("'").write(output_file_path).write("' doesn't end with '.ir'.").end_line()
+                exit(3)
+            }
+        } else if not output_file_path.ends_with(".s") {
+            stdout.write("'").write(output_file_path).write("' doesn't end with '.s'.").end_line()
+            exit(3)
+        }
+
         output_file = fopen(output_file_path.data, "w".data)
         if output_file == null {
             stdout.write("Failed to open '").write(output_file_path).write("'.").end_line()
@@ -48,7 +52,7 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
 
     let ir_code = build(checked_code)
     if ir_mode {
-        ir_code.dump(stdout)
+        ir_code.dump(output_file)
         exit(0)
     }
 

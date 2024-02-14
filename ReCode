@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
+import difflib
 import logging
 import os
 import re
@@ -96,73 +98,69 @@ def trace(*command, ignore_output=True):
     )
 
 
-def test_with_stage(n):
-    if not os.path.exists(f'build/tests'):
-        run(f'mkdir build/tests')
+def test(paths, save=False, stage=1):
+    build()
 
-    for test_file_name in sorted(os.listdir('tests/all')):
-        if not test_file_name.endswith('.code'):
-            continue
+    for test_code in sorted(code_files(paths)):
+        test_code_name = os.path.basename(test_code)
 
-        expected_error = None
-        expected_output = None
-        with open(f'tests/all/{test_file_name}') as test_file:
-            line = next(test_file)
-            if line == '\\ Expect:\n':
-                line = next(test_file)
-                line_match = re.match(r'\\ - (error|output): (.*)\n', line)
-                if line_match:
-                    if line_match.group(1) == 'error':
-                        expected_error = line_match.group(2)
-                    else:
-                        expected_output = line_match.group(2)
-            elif line == '\\ Skip\n':
-                logger.info(f"Skipping: tests/{test_file_name}")
-                continue
-            if expected_error is None and expected_output is None:
-                logger.warning(f"{COLOR_WARNING}Skipping unsupported test: tests/{test_file_name}{COLOR_RESET}")
-                continue
+        if not os.path.exists(os.path.join('build', os.path.dirname(test_code))):
+            run(f'mkdir -p build/{os.path.dirname(test_code)}')
 
-        # TODO: Check if compile is needed
-        compiler_command = [f'build/stage{n}/ReCode', f'tests/all/{test_file_name}', f'build/tests/{test_file_name[:-5]}.s']
-        logger.info(f"Testing: {compiler_command[1]}")
+        logger.info(f"Testing: {test_code}")
 
-        compiler_result = run(compiler_command, check=False, capture_output=True, text=True)
+        for compiler_command in [
+            [f'build/stage{stage}/ReCode', '--ir', test_code, f'build/{test_code[:-5]}.ir'],
+            # [f'build/stage{stage}/ReCode', test_code, f'build/{test_code[:-5]}.s'],
+        ]:
+            compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
+            if compiler_result.returncode != 0:
+                if os.path.exists(f'{test_code[:-5]}.error'):
+                    compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
+                    diff = compute_diff(f'{test_code[:-5]}.error', compiler_error)
+                    if diff:
+                        logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
+                        trace(*compiler_command[:2], '-')
+                        exit(1)
+                else:
+                    logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_RESET}{compiler_result.stderr}")
+                    trace(*compiler_command[:2], '-')
+                    exit(1)
+            else:
+                test_file = compiler_command[-1][6:]
+                if os.path.exists(test_file):
+                    diff = compute_diff(test_file, open(compiler_command[-1]).read())
+                    if diff:
+                        logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
+                        exit(1)
+                else:
+                    logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_result.stdout}{COLOR_RESET}")
+                    exit(1)
 
-        if compiler_result.returncode != 0:
-            compiler_error = repr(re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr)) if compiler_result.stderr else None
-            if expected_error is None or expected_error != compiler_error:
-                print(compiler_result.stderr, end='')
-                logger.error(f"{COLOR_ERROR}Unexpected compiler error{COLOR_RESET}: {compiler_error}")
-                logger.error(f"{COLOR_WARNING}Expected compiler error{COLOR_RESET}: {expected_error}")
-                trace(*compiler_command[:2], '-')
-                exit(1)
-        else:
-            print(compiler_result.stderr, end='')
 
-            if expected_error:
-                logger.error(f"{COLOR_ERROR}Expected compile error{COLOR_RESET}")
-                exit(1)
+def code_files(paths):
+    for path in sorted(paths):
+        if os.path.isfile(path) and path.endswith('.code'):
+            yield path
+        elif os.path.isdir(path):
+            for root, dirs, files in os.walk(path):
+                for file in files:
+                    if file.endswith('.code'):
+                        yield os.path.join(root, file)
 
-            assemble(f'build/tests/{test_file_name[:-5]}.s', f'build/tests/{test_file_name[:-5]}')
 
-            test_result = run([f'build/tests/{test_file_name[:-5]}'], capture_output=expected_output is not None, text=True, check=False)
-            if test_result.returncode != 0:
-                logger.error(f"{COLOR_ERROR}Unexpected exit code: {test_result.returncode}{COLOR_RESET}")
-                exit(test_result.returncode)
-            if expected_output and repr(test_result.stdout) != expected_output:
-                logger.error(f"{COLOR_ERROR}Unexpected output: {repr(test_result.stdout)}{COLOR_RESET}")
-                exit(1)
+def compute_diff(expected, actual):
+    with open(expected) as f:
+        expected_lines = f.read().splitlines()
+    actual_lines = actual.splitlines()
+    if actual_lines == expected_lines:
+        return None
+    return '\n'.join(difflib.unified_diff(expected_lines, actual_lines, fromfile=expected, tofile='-'))
 
 
 def build():
     build_stage(0)
     build_stage(1)
-
-    if subprocess.run('turnt --diff tests/ir/*.code', shell=True).returncode != 0:
-        exit(1)
-
-    test_with_stage(1)
 
 
 def stage():
@@ -216,19 +214,34 @@ def time():
     logger.info(f"Average time: {((finish_time - start_time) / count).total_seconds()}s")
 
 
-TASKS = OrderedDict(
-    clean=clean,
-    build=build,
-    editor=editor,
-    stage=stage,
-    time=time,
-)
+if __name__ == '__main__':
+    args_parsers = argparse.ArgumentParser(prog='ReCode')
+    args_command_parser = args_parsers.add_subparsers(dest='command')
 
-if len(sys.argv) > 1:
-    for task_name in sys.argv[1:]:
-        if task_name in TASKS:
-            TASKS[task_name]()
+    clean_args_parser = args_command_parser.add_parser('clean', help='clean the build directory')
+
+    build_args_parser = args_command_parser.add_parser('build', help='build the compiler')
+    build_args_parser.add_argument('--clean', action='store_true', help='clean before building')
+
+    stage_args_parser = args_command_parser.add_parser('stage', help='stage the compiler')
+    stage_args_parser.add_argument('--clean', action='store_true', help='clean before staging')
+
+    test_args_parser = args_command_parser.add_parser('test', help='test the compiler')
+    test_args_parser.add_argument('path', nargs='*', default=['tests/ir'], help='path to the test file(s)')
+    test_args_parser.add_argument('--clean', action='store_true', help='clean before testing')
+    test_args_parser.add_argument('--save', action='store_true', help='save the compiler output')
+
+    args = args_parsers.parse_args()
+    if args.command == 'clean':
+        clean()
+    else:
+        if args.clean:
+            clean()
+        if args.command == 'build':
+            build()
+        elif args.command == 'stage':
+            stage()
+        elif args.command == 'test':
+            test(args.path, save=args.save, stage=1)
         else:
-            print(f"Unrecognized task: {task_name}")
-else:
-    print(f"Usage: {sys.argv[0]} [ {' | '.join(TASKS.keys())} ]+ ")
+            args_parsers.print_help()
