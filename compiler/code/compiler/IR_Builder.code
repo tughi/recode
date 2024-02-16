@@ -368,7 +368,22 @@ func convert_statement(self: @IR_Builder, checked_statement: @Checked_Statement)
 }
 
 func convert_assignment_statement(self: @IR_Builder, checked_statement: @Checked_Assignment_Statement) -> Nothing {
-    abort("TODO: Convert assignment statement")
+    let checked_destination_expression = checked_statement.destination_expression
+    if checked_destination_expression is Checked_Symbol_Expression {
+        let ir_symbol = self.current_block_context.find_symbol(checked_destination_expression.as(@Checked_Symbol_Expression).symbol)
+        if ir_symbol is IR_Local_Variable {
+            let ir_symbol = ir_symbol.as(@IR_Local_Variable)
+            let value = self.convert_expression(checked_statement.value_expression, ir_symbol.type)
+            self.append(
+                make @IR_Store_Instruction().init(ir_symbol.value_pointer, value)
+                checked_statement.location
+            )
+        } else {
+            abort(checked_destination_expression.location, ir_symbol.object_type)
+        }
+    } else {
+        abort(checked_destination_expression.location, checked_destination_expression.object_type)
+    }
 }
 
 func convert_block_statement(self: @IR_Builder, checked_block_statement: @Checked_Block_Statement) -> Nothing {
