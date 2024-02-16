@@ -213,6 +213,7 @@ func write(file: @FILE, value: @IR_Value) -> @FILE {
 struct IR_Block {
     name: @String
     instructions = make List[@IR_Instruction]()
+    predecessors = make List[@IR_Block]()
 }
 
 func append(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
@@ -246,6 +247,29 @@ func dump_ir_instruction_result(self: @IR_Instruction, file: @FILE) -> Nothing {
     if self.result_value != null {
         file.write(self.result_value).write(": ").write(self.result_value.type.name).write(" = ")
     }
+}
+
+func is_exit_instruction(self: @IR_Instruction) -> bool {
+    if self == null {
+        return false
+    }
+    if self is IR_Branch_Instruction or self is IR_Jump_Instruction or self is IR_Return_Instruction {
+        return true
+    }
+    if self is IR_Direct_Call_Instruction {
+        let self = self.as(@IR_Direct_Call_Instruction)
+        let function = self.function
+        if function.name.equals("abort") and function.parameters.size == 0 {
+            return true
+        }
+        if function.name.equals("exit") and function.parameters.size == 1 {
+            let function_parameter = function.parameters.get(0i64)
+            if function_parameter.type is IR_Int32_Type {
+                return true
+            }
+        }
+    }
+    return false
 }
 
 func set_operand_value(self: @IR_Instruction, key: @Any, value: @IR_Value) -> Nothing {
@@ -287,6 +311,28 @@ func get_left_value(self: @IR_Binary_Instruction) -> @IR_Value {
 
 func get_right_value(self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("right_value")
+}
+
+struct IR_Branch_Instruction: IR_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Branch_Instruction)
+        return file.write("br ").write(instruction.get_condition()).write(' ').write(instruction.true_block.name).write(' ').write(instruction.false_block.name).end_line()
+    }
+) {
+    true_block: @IR_Block
+    false_block: @IR_Block
+}
+
+func init(self: @IR_Branch_Instruction, condition: @IR_Value) -> @IR_Branch_Instruction {
+    if condition.type is not IR_Boolean_Type {
+        abort(clone("Not a boolean type: ").append(condition.type.name))
+    }
+    self.set_operand_value("condition", condition)
+    return self
+}
+
+func get_condition(self: @IR_Branch_Instruction) -> @IR_Value {
+    return self.operand_values.get("condition")
 }
 
 struct IR_Call_Instruction: IR_Instruction {
@@ -376,6 +422,15 @@ func create_ir_direct_call_instruction(result_value: @IR_Value, call_arguments: 
         result_value.init_instruction = instruction
     }
     return instruction
+}
+
+struct IR_Jump_Instruction: IR_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Jump_Instruction)
+        return file.write("jmp ").write(instruction.block.name).end_line()
+    }
+) {
+    block: @IR_Block
 }
 
 struct IR_Load_Instruction: IR_Instruction(

@@ -78,6 +78,21 @@ func append(self: @IR_Builder, instruction: @IR_Instruction, location: @Source_L
     return instruction.result_value
 }
 
+func append_branch(self: @IR_Builder, condition: @IR_Value, true_block: @IR_Block, false_block: @IR_Block, location: @Source_Location) -> Nothing {
+    self.current_block_context.block.append(
+        make @IR_Branch_Instruction(location = location, true_block = true_block, false_block = false_block).init(condition)
+    )
+    true_block.predecessors.append(self.current_block_context.block)
+    false_block.predecessors.append(self.current_block_context.block)
+}
+
+func append_jump(self: @IR_Builder, block: @IR_Block, location: @Source_Location) -> Nothing {
+    self.current_block_context.block.append(
+        make @IR_Jump_Instruction(location = location, block = block)
+    )
+    block.predecessors.append(self.current_block_context.block)
+}
+
 func create_named_value(self: @IR_Builder, name: @String, type: @IR_Type) -> @IR_Value {
     return make @IR_Value(
         type = type
@@ -401,7 +416,44 @@ func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked
 }
 
 func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Statement) -> Nothing {
-    abort("TODO: Convert if statement")
+    \ create blocks
+    let true_block = self.current_function_context.function.create_block()
+    let end_block = self.current_function_context.function.create_block()
+    let false_block = end_block
+    if checked_statement.false_statement != null {
+        end_block = self.current_function_context.function.create_block()
+    }
+
+    let condition_value = self.convert_expression(checked_statement.condition_expression, self.find_named_type("bool"))
+    self.append_branch(condition_value, true_block, false_block, checked_statement.location)
+
+    \ true block
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = true_block
+    )
+    self.convert_statement(checked_statement.true_statement)
+    if not true_block.instructions.last().is_exit_instruction() {
+        self.append_jump(end_block, checked_statement.location)
+    }
+
+    \ false block
+    if end_block != false_block {
+        self.current_block_context = make @IR_Block_Context(
+            parent = self.current_block_context.parent
+            block = false_block
+        )
+        self.convert_statement(checked_statement.false_statement)
+        if not false_block.instructions.last().is_exit_instruction() {
+            self.append_jump(end_block, checked_statement.location)
+        }
+    }
+
+    \ end block
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context.parent
+        block = end_block
+    )
 }
 
 func convert_loop_statement(self: @IR_Builder, checked_statement: @Checked_Loop_Statement) -> Nothing {
