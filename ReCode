@@ -123,7 +123,7 @@ def test(paths, save=False, stage=1):
                             open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
                             continue
                         logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
-                        trace(*compiler_command[:2], '-')
+                        trace(*compiler_command)
                         exit(1)
                 else:
                     if save:
@@ -131,7 +131,7 @@ def test(paths, save=False, stage=1):
                         open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
                         continue
                     logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_RESET}{compiler_result.stderr}")
-                    trace(*compiler_command[:2], '-')
+                    trace(*compiler_command)
                     exit(1)
             else:
                 test_file = compiler_command[-1][6:]

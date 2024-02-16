@@ -194,6 +194,11 @@ func dump(function: @IR_Function, file: @FILE) -> Nothing {
     file.write('}').end_line()
 }
 
+struct IR_Local_Variable: IR_Symbol {
+    value_pointer: @IR_Value
+    value_counter = make Counter[i32]()
+}
+
 struct IR_Value: Object {
     name: @String
     type: @IR_Type
@@ -255,6 +260,16 @@ struct IR_Add_Instruction: IR_Binary_Instruction(
         return file.write("add ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value()).end_line()
     }
 ) {
+}
+
+struct IR_Alloc_Instruction: IR_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        instruction.dump_ir_instruction_result(file)
+        let instruction = instruction.as(@IR_Alloc_Instruction)
+        return file.write("alloc ").write(instruction.type.name).end_line()
+    }
+) {
+    type: @IR_Type
 }
 
 struct IR_Binary_Instruction: IR_Instruction {
@@ -363,6 +378,59 @@ func create_ir_direct_call_instruction(result_value: @IR_Value, call_arguments: 
     return instruction
 }
 
+struct IR_Load_Instruction: IR_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        instruction.dump_ir_instruction_result(file)
+        let instruction = instruction.as(@IR_Load_Instruction)
+        return file.write("load ").write(instruction.get_value_pointer()).end_line()
+    }
+) {
+}
+
+func init(self: @IR_Load_Instruction, value_pointer: @IR_Value) -> @IR_Load_Instruction {
+    if value_pointer.type is not IR_Pointer_Type {
+        abort(clone("Not a pointer type: ").append(value_pointer.type.name))
+    }
+    let pointed_type = value_pointer.type.as(@IR_Pointer_Type).pointed_type
+    if pointed_type != self.result_value.type {
+        abort(clone("Type mismatch: ").append(pointed_type.name).append(" != ").append(self.result_value.type.name))
+    }
+    self.set_operand_value("value_pointer", value_pointer)
+    return self
+}
+
+func get_value_pointer(self: @IR_Load_Instruction) -> @IR_Value {
+    return self.operand_values.get("value_pointer")
+}
+
+struct IR_Store_Instruction: IR_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Store_Instruction)
+        return file.write("store ").write(instruction.get_value_pointer()).write(' ').write(instruction.get_value()).end_line()
+    }
+) {
+}
+
+func init(self: @IR_Store_Instruction, value_pointer: @IR_Value, value: @IR_Value) -> @IR_Store_Instruction {
+    if value_pointer.type is not IR_Pointer_Type {
+        abort(clone("Not a pointer type: ").append(value_pointer.type.name))
+    }
+    let pointed_type = value_pointer.type.as(@IR_Pointer_Type).pointed_type
+    if pointed_type != value.type {
+        abort(clone("Type mismatch: ").append(pointed_type.name).append(" != ").append(value.type.name))
+    }
+    self.set_operand_value("value_pointer", value_pointer)
+    self.set_operand_value("value", value)
+    return self
+}
+
+func get_value_pointer(self: @IR_Store_Instruction) -> @IR_Value {
+    return self.operand_values.get("value_pointer")
+}
+
+func get_value(self: @IR_Store_Instruction) -> @IR_Value {
+    return self.operand_values.get("value")
+}
 
 struct IR_Return_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {

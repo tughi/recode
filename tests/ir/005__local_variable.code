@@ -1,0 +1,4 @@
+func main() -> i32 {
+    let result = 0
+    return result
+}

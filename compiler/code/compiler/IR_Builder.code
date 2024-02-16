@@ -78,10 +78,24 @@ func append(self: @IR_Builder, instruction: @IR_Instruction, location: @Source_L
     return instruction.result_value
 }
 
+func create_named_value(self: @IR_Builder, name: @String, type: @IR_Type) -> @IR_Value {
+    return make @IR_Value(
+        type = type
+        name = clone("%").append(name)
+    )
+}
+
 func create_temp_value(self: @IR_Builder, type: @IR_Type) -> @IR_Value {
     return make @IR_Value(
         type = type
         name = clone("%").append(self.current_function_context.value_counter.next())
+    )
+}
+
+func create_variable_value(self: @IR_Builder, variable: @IR_Local_Variable) -> @IR_Value {
+    return make @IR_Value(
+        type = variable.type
+        name = clone("%").append(variable.name).append('.').append(variable.value_counter.next())
     )
 }
 
@@ -228,12 +242,7 @@ func create_ir_pointer_type(self: @IR_Builder, ir_pointed_type: @IR_Type) -> @IR
             return it.as(@IR_Pointer_Type)
         }
     }
-    let ir_type_name: @String
-    if ir_pointed_type is IR_Function_Type {
-        ir_type_name = "@(".clone().append(ir_pointed_type.name).append(')')
-    } else {
-        ir_type_name = "@".clone().append(ir_pointed_type.name)
-    }
+    let ir_type_name = clone("ptr<").append(ir_pointed_type.name).append('>')
     let ir_type = make @IR_Pointer_Type(
         name = ir_type_name
         pointed_type = ir_pointed_type
@@ -395,7 +404,32 @@ func convert_return_statement(self: @IR_Builder, checked_statement: @Checked_Ret
 }
 
 func convert_variable_statement(self: @IR_Builder, checked_statement: @Checked_Variable_Statement) -> Nothing {
-    abort("TODO: Convert variable statement")
+    let variable_type = self.convert_type(checked_statement.variable.type)
+    let variable = make @IR_Local_Variable(
+        checked_symbol = checked_statement.variable
+        name = checked_statement.variable.name
+        type = variable_type
+        value_pointer = undefined
+    )
+    self.current_block_context.symbols.append(variable)
+    let value_pointer = self.append(
+        make @IR_Alloc_Instruction(
+            result_value = self.create_named_value(
+                clone(checked_statement.variable.name).append(".ptr")
+                self.create_ir_pointer_type(variable_type)
+            )
+            type = variable_type
+        )
+        checked_statement.location
+    )
+    variable.value_pointer = value_pointer
+    if checked_statement.variable.expression != null {
+        let variable_value = self.convert_expression(checked_statement.variable.expression, variable_type)
+        self.append(
+            make @IR_Store_Instruction().init(value_pointer, variable_value)
+            checked_statement.location
+        )
+    }
 }
 
 func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_While_Statement) -> Nothing {
@@ -648,13 +682,15 @@ func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_S
     if ir_symbol is IR_Function_Parameter {
         return ir_symbol.as(@IR_Function_Parameter).value
     }
-    \ if ir_symbol is IR_Variable {
-    \     let ir_value = self.get_variable_value(ir_symbol.as(@IR_Variable))
-    \     if ir_value == null {
-    \         abort(checked_expression.location, clone("Undeclared variable value: ").append(checked_expression.symbol.name))
-    \     }
-    \     return ir_value
-    \ }
+    if ir_symbol is IR_Local_Variable {
+        let ir_symbol = ir_symbol.as(@IR_Local_Variable)
+        return self.append(
+            make @IR_Load_Instruction(
+                result_value = self.create_variable_value(ir_symbol)
+            ).init(ir_symbol.value_pointer)
+            checked_expression.location
+        )
+    }
     \ if ir_symbol is IR_Constant {
     \     \ return ir_symbol.as(@IR_Constant).value
     \ }
