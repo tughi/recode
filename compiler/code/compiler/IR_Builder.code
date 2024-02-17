@@ -720,7 +720,26 @@ func convert_logic_not_expression(self: @IR_Builder, checked_expression: @Checke
 }
 
 func convert_logic_or_expression(self: @IR_Builder, checked_expression: @Checked_Logic_Or_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert logic or expression")
+    let next_block = self.current_function_context.function.create_block()
+    let end_block = self.current_function_context.function.create_block()
+    let left_value = self.convert_expression(checked_expression.left_expression, self.find_named_type("bool"))
+    self.append_branch(left_value, end_block, next_block, checked_expression.location)
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = next_block
+    )
+    let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
+    self.append_jump(end_block, checked_expression.location)
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = end_block
+    )
+    return self.append(
+        make @IR_Phi_Instruction(
+            result_value = self.create_temp_value(left_value.type)
+        ).append(left_value).append(right_value)
+        checked_expression.location
+    )
 }
 
 func convert_make_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression, expected_type: @IR_Type) -> @IR_Value {

@@ -1,0 +1,28 @@
+func main() -> i32 {
+    if test_or(true, false) {
+        \ correct
+    } else {
+        return 1
+    }
+    if test_or(false, true) {
+        \ correct
+    } else {
+        return 2
+    }
+    if test_or(true, true) {
+        \ correct
+    } else {
+        return 3
+    }
+    if test_or(false, false) {
+        return 4
+    }
+    if test_or(false, false) or test_or(false, false) {
+        return 5
+    }
+    return 0
+}
+
+func test_or(v1: bool, v2: bool) -> bool {
+    return v1 or v2
+}
