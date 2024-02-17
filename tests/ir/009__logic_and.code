@@ -1,24 +1,26 @@
 func main() -> i32 {
-    if test_and(true, false) {
+    let t = echo(true)
+    let f = echo(false)
+    if t and f {
         return 1
     }
-    if test_and(false, true) {
+    if f and t {
         return 2
     }
-    if test_and(true, true) {
+    if t and t {
         \ correct
     } else {
         return 3
     }
-    if test_and(false, false) {
+    if f and f {
         return 4
     }
-    if test_and(true, true) and test_and(false, false) {
+    if (t and t) and (f and f) {
         return 5
     }
     return 0
 }
 
-func test_and(v1: bool, v2: bool) -> bool {
-    return v1 and v2
+func echo(v: bool) -> bool {
+    return v
 }

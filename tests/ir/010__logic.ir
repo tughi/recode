@@ -1,0 +1,67 @@
+$main(): i32 {
+@1:
+   %t.ptr: ptr<bool> = alloc bool
+   %1: bool = const true
+   %2: bool = call $echo %1
+   store %t.ptr %2
+   %f.ptr: ptr<bool> = alloc bool
+   %3: bool = const false
+   %4: bool = call $echo %3
+   store %f.ptr %4
+   %t.1: bool = load %t.ptr
+   br %t.1 @4 @5
+@2:
+   %13: i32 = const 1
+   ret %13
+@3:
+   %14: i32 = const 0
+   ret %14
+@4:
+   %f.1: bool = load %f.ptr
+   jmp @5
+@5:
+   %5: bool = phi %t.1 @1 %f.1 @4
+   br %5 @7 @6
+@6:
+   %f.2: bool = load %f.ptr
+   br %f.2 @8 @9
+@7:
+   %7: bool = phi %5 @5 %6 @9
+   br %7 @11 @10
+@8:
+   %t.2: bool = load %t.ptr
+   jmp @9
+@9:
+   %6: bool = phi %f.2 @6 %t.2 @8
+   jmp @7
+@10:
+   %t.3: bool = load %t.ptr
+   br %t.3 @13 @12
+@11:
+   %12: bool = phi %7 @7 %11 @15
+   br %12 @2 @3
+@12:
+   %f.3: bool = load %f.ptr
+   jmp @13
+@13:
+   %8: bool = phi %t.3 @10 %f.3 @12
+   br %8 @14 @15
+@14:
+   %f.4: bool = load %f.ptr
+   br %f.4 @17 @16
+@15:
+   %10: bool = phi %8 @13 %9 @17
+   %11: bool = not %10
+   jmp @11
+@16:
+   %t.4: bool = load %t.ptr
+   jmp @17
+@17:
+   %9: bool = phi %f.4 @14 %t.4 @16
+   jmp @15
+}
+
+$echo(%v: bool): bool {
+@1:
+   ret %v
+}
