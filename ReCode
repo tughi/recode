@@ -121,6 +121,7 @@ def test(paths, save=False, stage=1):
                     if diff:
                         if save:
                             open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
+                            save = False
                             continue
                         logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         trace(*compiler_command)
@@ -129,6 +130,7 @@ def test(paths, save=False, stage=1):
                     if save:
                         compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
                         open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
+                        save = False
                         continue
                     logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_RESET}{compiler_result.stderr}")
                     trace(*compiler_command)
@@ -141,12 +143,14 @@ def test(paths, save=False, stage=1):
                     if diff:
                         if save:
                             open(test_file, 'w').write(compiler_output)
+                            save = False
                             continue
                         logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         exit(1)
                 else:
                     if save:
                         open(test_file, 'w').write(compiler_output)
+                        save = False
                         continue
                     logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_output}{COLOR_RESET}")
                     exit(1)
@@ -243,7 +247,7 @@ if __name__ == '__main__':
     test_args_parser = args_command_parser.add_parser('test', help='test the compiler')
     test_args_parser.add_argument('path', nargs='*', default=['tests/ir'], help='path to the test file(s)')
     test_args_parser.add_argument('--clean', action='store_true', help='clean before testing')
-    test_args_parser.add_argument('--save', action='store_true', help='save the compiler output')
+    test_args_parser.add_argument('--save', action='store_true', help='save the first unexpected compiler output')
 
     args = args_parsers.parse_args()
     if args.command == 'clean':
