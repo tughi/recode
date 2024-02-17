@@ -458,12 +458,32 @@ func get_value_pointer(self: @IR_Load_Instruction) -> @IR_Value {
     return self.operand_values.get("value_pointer")
 }
 
+struct IR_Phi_Instruction: IR_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        instruction.dump_ir_instruction_result(file)
+        let instruction = instruction.as(@IR_Phi_Instruction)
+        file.write("phi")
+        let operand_values_entry = instruction.operand_values.first_entry
+        while operand_values_entry != null {
+            file.write(' ').write(operand_values_entry.value)
+            operand_values_entry = operand_values_entry.next_entry
+        }
+        return file.end_line()
+    }
+) {
+}
+
 struct IR_Store_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Store_Instruction)
         return file.write("store ").write(instruction.get_value_pointer()).write(' ').write(instruction.get_value()).end_line()
     }
 ) {
+}
+
+func append(self: @IR_Phi_Instruction, value: @IR_Value) -> @IR_Phi_Instruction {
+    self.set_operand_value(value, value)
+    return self
 }
 
 func init(self: @IR_Store_Instruction, value_pointer: @IR_Value, value: @IR_Value) -> @IR_Store_Instruction {

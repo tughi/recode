@@ -1,0 +1,24 @@
+func main() -> i32 {
+    if test_and(true, false) {
+        return 1
+    }
+    if test_and(false, true) {
+        return 2
+    }
+    if test_and(true, true) {
+        \ correct
+    } else {
+        return 3
+    }
+    if test_and(false, false) {
+        return 4
+    }
+    if test_and(true, true) and test_and(false, false) {
+        return 5
+    }
+    return 0
+}
+
+func test_and(v1: bool, v2: bool) -> bool {
+    return v1 and v2
+}
