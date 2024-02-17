@@ -1,0 +1,21 @@
+func main() -> i32 {
+    if test_not(true) {
+        return 1
+    }
+    if test_not(false) {
+        \ correct
+    } else {
+        return 2
+    }
+    if not test_not(false) {
+        return 3
+    }
+    if not not test_not(true) {
+        return 4
+    }
+    return 0
+}
+
+func test_not(v: bool) -> bool {
+    return not v
+}

@@ -1,0 +1,44 @@
+$main(): i32 {
+@1:
+   %1: bool = const true
+   %2: bool = call $test_not %1
+   br %2 @2 @3
+@2:
+   %3: i32 = const 1
+   ret %3
+@3:
+   %4: bool = const false
+   %5: bool = call $test_not %4
+   br %5 @4 @5
+@4:
+   jmp @6
+@5:
+   %6: i32 = const 2
+   ret %6
+@6:
+   %7: bool = const false
+   %8: bool = call $test_not %7
+   %9: bool = not %8
+   br %9 @7 @8
+@7:
+   %10: i32 = const 3
+   ret %10
+@8:
+   %11: bool = const true
+   %12: bool = call $test_not %11
+   %13: bool = not %12
+   %14: bool = not %13
+   br %14 @9 @10
+@9:
+   %15: i32 = const 4
+   ret %15
+@10:
+   %16: i32 = const 0
+   ret %16
+}
+
+$test_not(%v: bool): bool {
+@1:
+   %1: bool = not %v
+   ret %1
+}

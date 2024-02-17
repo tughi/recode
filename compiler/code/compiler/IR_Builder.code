@@ -710,7 +710,13 @@ func convert_logic_and_expression(self: @IR_Builder, checked_expression: @Checke
 }
 
 func convert_logic_not_expression(self: @IR_Builder, checked_expression: @Checked_Logic_Not_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert logic not expression")
+    let value = self.convert_expression(checked_expression.expression, self.find_named_type("bool"))
+    return self.append(
+        make @IR_Not_Instruction(
+            result_value = self.create_temp_value(value.type)
+        ).init(value)
+        checked_expression.location
+    )
 }
 
 func convert_logic_or_expression(self: @IR_Builder, checked_expression: @Checked_Logic_Or_Expression, expected_type: @IR_Type) -> @IR_Value {

@@ -458,6 +458,15 @@ func get_value_pointer(self: @IR_Load_Instruction) -> @IR_Value {
     return self.operand_values.get("value_pointer")
 }
 
+struct IR_Not_Instruction: IR_Unary_Instruction(
+    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        instruction.dump_ir_instruction_result(file)
+        let instruction = instruction.as(@IR_Not_Instruction)
+        return file.write("not ").write(instruction.get_value()).end_line()
+    }
+) {
+}
+
 struct IR_Phi_Instruction: IR_Instruction(
     dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         instruction.dump_ir_instruction_result(file)
@@ -537,4 +546,16 @@ struct IR_Substract_Instruction: IR_Binary_Instruction(
         return file.write("sub ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value()).end_line()
     }
 ) {
+}
+
+struct IR_Unary_Instruction: IR_Instruction {
+}
+
+func init(self: @IR_Unary_Instruction, value: @IR_Value) -> @IR_Unary_Instruction {
+    self.set_operand_value("value", value)
+    return self
+}
+
+func get_value(self: @IR_Unary_Instruction) -> @IR_Value {
+    return self.operand_values.get("value")
 }
