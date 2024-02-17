@@ -474,12 +474,19 @@ struct IR_Phi_Instruction: IR_Instruction(
         file.write("phi")
         let operand_values_entry = instruction.operand_values.first_entry
         while operand_values_entry != null {
-            file.write(' ').write(operand_values_entry.value)
+            file.write(' ').write(operand_values_entry.value).write(' ').write(instruction.value_block_mapping.get(operand_values_entry.value).name)
             operand_values_entry = operand_values_entry.next_entry
         }
         return file.end_line()
     }
 ) {
+    value_block_mapping = make Map[@IR_Value, @IR_Block]()
+}
+
+func append(self: @IR_Phi_Instruction, value: @IR_Value, block: @IR_Block) -> @IR_Phi_Instruction {
+    self.value_block_mapping.put(value, block)
+    self.set_operand_value(value, value)
+    return self
 }
 
 struct IR_Store_Instruction: IR_Instruction(
@@ -488,11 +495,6 @@ struct IR_Store_Instruction: IR_Instruction(
         return file.write("store ").write(instruction.get_value_pointer()).write(' ').write(instruction.get_value()).end_line()
     }
 ) {
-}
-
-func append(self: @IR_Phi_Instruction, value: @IR_Value) -> @IR_Phi_Instruction {
-    self.set_operand_value(value, value)
-    return self
 }
 
 func init(self: @IR_Store_Instruction, value_pointer: @IR_Value, value: @IR_Value) -> @IR_Store_Instruction {
