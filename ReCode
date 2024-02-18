@@ -109,9 +109,9 @@ def test(paths, save=False, stage=1):
 
         logger.info(f"Testing: {test_code}")
 
-        for compiler_command in [
-            [f'build/stage{stage}/ReCode', '--ir', test_code, f'build/{test_code[:-5]}.ir'],
-            # [f'build/stage{stage}/ReCode', test_code, f'build/{test_code[:-5]}.s'],
+        for compiler_command, test_file in [
+            ((f'build/stage{stage}/ReCode', '--ir', test_code, '-'), f'{test_code[:-5]}.ir'),
+            # ((f'build/stage{stage}/ReCode', test_code, '-'), f'{test_code[:-5]}.s'),
         ]:
             compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
             if compiler_result.returncode != 0:
@@ -136,23 +136,21 @@ def test(paths, save=False, stage=1):
                     trace(*compiler_command)
                     exit(1)
             else:
-                test_file = compiler_command[-1][6:]
-                compiler_output = open(compiler_command[-1]).read()
                 if os.path.exists(test_file):
-                    diff = compute_diff(test_file, compiler_output, compiler_command[-1])
+                    diff = compute_diff(test_file, compiler_result.stdout)
                     if diff:
                         if save:
-                            open(test_file, 'w').write(compiler_output)
+                            open(test_file, 'w').write(compiler_result.stdout)
                             save = False
                             continue
                         logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         exit(1)
                 else:
                     if save:
-                        open(test_file, 'w').write(compiler_output)
+                        open(test_file, 'w').write(compiler_result.stdout)
                         save = False
                         continue
-                    logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_output}{COLOR_RESET}")
+                    logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_result.stdout}{COLOR_RESET}")
                     exit(1)
 
 
