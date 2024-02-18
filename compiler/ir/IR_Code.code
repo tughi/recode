@@ -1,5 +1,3 @@
-include "./Map.code"
-
 struct IR_Code {
     types = make Map[@String, @IR_Type]()
     global_symbols: @List[@IR_Symbol]

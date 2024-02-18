@@ -1,6 +1,3 @@
-include "./Counter.code"
-include "./Parsed_Code.code"
-
 struct Parser {
     scanner: @Scanner = null
     parsed_code = make @Parsed_Code()

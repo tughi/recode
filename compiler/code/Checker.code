@@ -1,5 +1,3 @@
-include "./Checked_Code.code"
-
 func check(parsed_code: @Parsed_Code) -> @Checked_Code {
     let checker = make Checker(
         parsed_code = parsed_code

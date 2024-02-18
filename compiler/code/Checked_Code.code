@@ -1,5 +1,3 @@
-include "./Map.code"
-
 let DEBUG: bool
 
 struct Checked_Code {

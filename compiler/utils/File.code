@@ -80,3 +80,19 @@ func flush(file: @FILE) -> @FILE {
     file.fflush()
     return file
 }
+
+func debug(self: @FILE) -> @FILE {
+    return self.write(27u8).write("[2;37m")
+}
+
+func warning(self: @FILE) -> @FILE {
+    return self.write(27u8).write("[0;93m")
+}
+
+func error(self: @FILE) -> @FILE {
+    return self.write(27u8).write("[0;91m")
+}
+
+func reset(self: @FILE) -> @FILE {
+    return self.write(27u8).write("[0m")
+}
