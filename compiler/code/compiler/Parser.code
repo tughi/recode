@@ -13,22 +13,13 @@ func abort(self: @Parser, unexpected_token: @Token) -> Nothing {
     abort()
 }
 
-func parse(file_path: @String) -> @Parsed_Code {
+func parse(source: @Source) -> @Parsed_Code {
     let parser = make @Parser()
-    parser.parse(file_path, null)
+    parser.parse(source, null)
     return parser.parsed_code
 }
 
-func parse(self: @Parser, file_path: @String, location: @Source_Location) -> Nothing {
-    let source = create_source(file_path)
-    if source == null {
-        let message = clone("Failed to open file: ").append(file_path)
-        if location != null {
-            abort(location, message)
-        }
-        abort(message)
-    }
-
+func parse(self: @Parser, source: @Source, location: @Source_Location) -> Nothing {
     self.parsed_code.sources.append(source)
     source.id = self.parsed_code.sources.size
 
@@ -60,21 +51,26 @@ func parse_statements(self: @Parser, statements: @List[@Parsed_Statement], is_gl
         if is_global and statement is Parsed_Include_Statement {
             let statement = statement.as(@Parsed_Include_Statement)
 
-            let statement_file_path = statement.file_path.make_relative_path(statement.location.source.file_path)
-            if statement_file_path == null {
+            let source_file_path = statement.file_path.make_relative_path(statement.location.source.file_path)
+            if source_file_path == null {
                 abort(statement.location, clone("Unsupported file path: ").append(statement.file_path))
             }
 
             let parsed_code_sources_item = self.parsed_code.sources.first_item
             while parsed_code_sources_item != null {
-                if parsed_code_sources_item.data.file_path.equals(statement_file_path) {
+                if parsed_code_sources_item.data.file_path.equals(source_file_path) {
                     break
                 }
                 parsed_code_sources_item = parsed_code_sources_item.next_item
             }
 
             if parsed_code_sources_item == null {
-                self.parse(statement_file_path, statement.location)
+                let source_file = fopen(source_file_path.data, "r".data)
+                if source_file == null {
+                    abort(statement.location, clone("Failed to open file: ").append(source_file_path))
+                }
+                let source = create_source(source_file, source_file_path)
+                self.parse(source, statement.location)
             }
         } else {
             if is_global {

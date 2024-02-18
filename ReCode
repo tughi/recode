@@ -110,7 +110,7 @@ def test(paths, save=False, stage=1):
         logger.info(f"Testing: {test_code}")
 
         for compiler_command, test_file in [
-            ((f'build/stage{stage}/ReCode', '--ir', test_code, '-'), f'{test_code[:-5]}.ir'),
+            ((f'build/stage{stage}/ReCode', '--file', test_code, 'ir'), f'{test_code[:-5]}.ir'),
             # ((f'build/stage{stage}/ReCode', test_code, '-'), f'{test_code[:-5]}.s'),
         ]:
             compiler_result = run(compiler_command, capture_output=True, text=True, check=False)

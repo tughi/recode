@@ -14,12 +14,7 @@ func append(self: @String, location: @Source_Location) -> @String {
     return self.append(location.source.file_path).append(':').append(location.line).append(':').append(location.column)
 }
 
-func create_source(file_path: @String) -> @Source {
-    let file = fopen(file_path.data, "r".data)
-    if file == null {
-        return null
-    }
-
+func create_source(file: @FILE, file_path: @String) -> @Source {
     let content_size = 1024i64
     let content = malloc(content_size).as([u8; ?])
     let content_length = 0i64

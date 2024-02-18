@@ -2,6 +2,7 @@
 
 external type FILE
 
+external stdin: @FILE
 external stdout: @FILE
 external stderr: @FILE
 
