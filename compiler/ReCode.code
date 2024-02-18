@@ -40,7 +40,7 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
     }
 
     if command.output.equals("ir") {
-        ir_code.dump(command.output_file)
+        command.output_file.write(ir_code)
     } else {
         abort(clone("Unsupported output: ").append(command.output))
     }

@@ -3,12 +3,12 @@ struct IR_Code {
     global_symbols: @List[@IR_Symbol]
 }
 
-func dump(code: @IR_Code, file: @FILE) -> Nothing {
+func write(file: @FILE, code: @IR_Code) -> @FILE {
     let symbols_iterator = code.global_symbols.create_iterator()
     if symbols_iterator.has_next() {
         loop {
             let symbol = symbols_iterator.next()
-            symbol.dump(file)
+            file.write(symbol)
             if symbols_iterator.has_next() {
                 file.end_line()
             } else {
@@ -16,6 +16,7 @@ func dump(code: @IR_Code, file: @FILE) -> Nothing {
             }
         }
     }
+    return file
 }
 
 struct IR_Type: Object {
@@ -142,9 +143,9 @@ struct IR_Symbol: Object {
     type: @IR_Type
 }
 
-func dump(self: @IR_Symbol, file: @FILE) -> Nothing {
+func write(file: @FILE, self: @IR_Symbol) -> Nothing {
     if self is IR_Function {
-        self.as(@IR_Function).dump(file)
+        file.write(self.as(@IR_Function))
     } else {
         abort(self.object_type)
     }
@@ -167,7 +168,7 @@ func create_block(self: @IR_Function) -> @IR_Block {
     return block
 }
 
-func dump(function: @IR_Function, file: @FILE) -> Nothing {
+func write(file: @FILE, function: @IR_Function) -> @FILE {
     file.write(function.name).write("(")
     let function_type = function.function_type
     let function_parameters = function.parameters.create_iterator()
@@ -186,10 +187,11 @@ func dump(function: @IR_Function, file: @FILE) -> Nothing {
     file.write(" {").end_line()
     let block_item = function.blocks.first_item
     while block_item != null {
-        block_item.data.dump(file)
+        file.write(block_item.data)
         block_item = block_item.next_item
     }
     file.write('}').end_line()
+    return file
 }
 
 struct IR_Local_Variable: IR_Symbol {
@@ -220,12 +222,11 @@ func append(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     return instruction
 }
 
-func dump(block: @IR_Block, file: @FILE) -> @FILE {
+func write(file: @FILE, block: @IR_Block) -> @FILE {
     file.write(block.name).write(':').end_line()
     block.instructions.for_each() {
         let block_instruction = it
-        file.write("   ")
-        block_instruction.dump(file)
+        file.write("   ").write(block_instruction).end_line()
     }
     return file
 }
@@ -235,15 +236,9 @@ struct IR_Instruction: Object {
     result_value: @IR_Value = null
     operand_values = make Map[@Any, @IR_Value]()
     block: @IR_Block = undefined
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(instruction.object_type.name))
-    }
-}
-
-func dump_ir_instruction_result(self: @IR_Instruction, file: @FILE) -> Nothing {
-    if self.result_value != null {
-        file.write(self.result_value).write(": ").write(self.result_value.type.name).write(" = ")
     }
 }
 
@@ -275,20 +270,25 @@ func set_operand_value(self: @IR_Instruction, key: @Any, value: @IR_Value) -> No
     value.user_instructions.append(self)
 }
 
+func write(file: @FILE, instruction: @IR_Instruction) -> @FILE {
+    if instruction.result_value != null {
+        file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ")
+    }
+    return instruction.write(file)
+}
+
 struct IR_Add_Instruction: IR_Binary_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-        instruction.dump_ir_instruction_result(file)
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Binary_Instruction)
-        return file.write("add ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value()).end_line()
+        return file.write("add ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
     }
 ) {
 }
 
 struct IR_Alloc_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-        instruction.dump_ir_instruction_result(file)
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Alloc_Instruction)
-        return file.write("alloc ").write(instruction.type.name).end_line()
+        return file.write("alloc ").write(instruction.type.name)
     }
 ) {
     type: @IR_Type
@@ -312,9 +312,9 @@ func get_right_value(self: @IR_Binary_Instruction) -> @IR_Value {
 }
 
 struct IR_Branch_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Branch_Instruction)
-        return file.write("br ").write(instruction.get_condition()).write(' ').write(instruction.true_block.name).write(' ').write(instruction.false_block.name).end_line()
+        return file.write("br ").write(instruction.get_condition()).write(' ').write(instruction.true_block.name).write(' ').write(instruction.false_block.name)
     }
 ) {
     true_block: @IR_Block
@@ -337,12 +337,13 @@ struct IR_Call_Instruction: IR_Instruction {
     arguments_size = 0i64
 }
 
-func dump_ir_call_instruction_arguments(instruction: @IR_Call_Instruction, file: @FILE) -> Nothing {
+func write_call_arguments(file: @FILE, instruction: @IR_Call_Instruction) -> @FILE {
     let call_argument_index = 0i64
     while call_argument_index < instruction.arguments_size {
         file.write(' ').write(instruction.get_argument_value(call_argument_index))
         call_argument_index = call_argument_index + 1
     }
+    return file
 }
 
 struct IR_Call_Argument {
@@ -383,10 +384,9 @@ func get_argument_key(index: i64) -> @String {
 }
 
 struct IR_Constant_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-        instruction.dump_ir_instruction_result(file)
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Constant_Instruction)
-        return file.write("const ").write(instruction.literal).end_line()
+        return file.write("const ").write(instruction.literal)
     }
 ) {
     literal: @Literal_Token
@@ -402,12 +402,9 @@ func create_ir_constant_instruction(result_value: @IR_Value, literal: @Literal_T
 }
 
 struct IR_Direct_Call_Instruction: IR_Call_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-        instruction.dump_ir_instruction_result(file)
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Direct_Call_Instruction)
-        file.write("call ").write(instruction.function.name)
-        instruction.dump_ir_call_instruction_arguments(file)
-        return file.end_line()
+        return file.write("call ").write(instruction.function.name).write_call_arguments(instruction)
     }
 ) {
     function: @IR_Function
@@ -423,19 +420,18 @@ func create_ir_direct_call_instruction(result_value: @IR_Value, call_arguments: 
 }
 
 struct IR_Jump_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Jump_Instruction)
-        return file.write("jmp ").write(instruction.block.name).end_line()
+        return file.write("jmp ").write(instruction.block.name)
     }
 ) {
     block: @IR_Block
 }
 
 struct IR_Load_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-        instruction.dump_ir_instruction_result(file)
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Load_Instruction)
-        return file.write("load ").write(instruction.get_value_pointer()).end_line()
+        return file.write("load ").write(instruction.get_value_pointer())
     }
 ) {
 }
@@ -457,17 +453,15 @@ func get_value_pointer(self: @IR_Load_Instruction) -> @IR_Value {
 }
 
 struct IR_Not_Instruction: IR_Unary_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-        instruction.dump_ir_instruction_result(file)
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Not_Instruction)
-        return file.write("not ").write(instruction.get_value()).end_line()
+        return file.write("not ").write(instruction.get_value())
     }
 ) {
 }
 
 struct IR_Phi_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
-        instruction.dump_ir_instruction_result(file)
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Phi_Instruction)
         file.write("phi")
         let operand_values_entry = instruction.operand_values.first_entry
@@ -475,7 +469,7 @@ struct IR_Phi_Instruction: IR_Instruction(
             file.write(' ').write(operand_values_entry.value).write(' ').write(instruction.value_block_mapping.get(operand_values_entry.value).name)
             operand_values_entry = operand_values_entry.next_entry
         }
-        return file.end_line()
+        return file
     }
 ) {
     value_block_mapping = make Map[@IR_Value, @IR_Block]()
@@ -488,9 +482,9 @@ func append(self: @IR_Phi_Instruction, value: @IR_Value, block: @IR_Block) -> @I
 }
 
 struct IR_Store_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Store_Instruction)
-        return file.write("store ").write(instruction.get_value_pointer()).write(' ').write(instruction.get_value()).end_line()
+        return file.write("store ").write(instruction.get_value_pointer()).write(' ').write(instruction.get_value())
     }
 ) {
 }
@@ -517,12 +511,12 @@ func get_value(self: @IR_Store_Instruction) -> @IR_Value {
 }
 
 struct IR_Return_Instruction: IR_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Return_Instruction)
         if instruction.get_return_value() == null {
-            return file.write("ret").end_line()
+            return file.write("ret")
         }
-        return file.write("ret ").write(instruction.get_return_value().name).end_line()
+        return file.write("ret ").write(instruction.get_return_value().name)
     }
 ) {
 }
@@ -540,10 +534,9 @@ func get_return_value(self: @IR_Return_Instruction) -> @IR_Value {
 }
 
 struct IR_Substract_Instruction: IR_Binary_Instruction(
-    dump = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Binary_Instruction)
-        instruction.dump_ir_instruction_result(file)
-        return file.write("sub ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value()).end_line()
+        return file.write("sub ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
     }
 ) {
 }
