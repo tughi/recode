@@ -1,87 +1,97 @@
 digraph {
-   node [shape=record width=5.5 fontname="monospace" ]
+   node [shape=record,width=5.5,fontname=monospace]
 
-   "@1" [label="@1|%t.ptr: ptr&lt;bool&gt; = alloc bool\l%1: bool = const true\l%2: bool = call $echo %1\lstore %t.ptr %2\l%f.ptr: ptr&lt;bool&gt; = alloc bool\l%3: bool = const false\l%4: bool = call $echo %3\lstore %f.ptr %4\l%t.1: bool = load %t.ptr\lbr %t.1 @4 @5\l"]
-   "@1" -> "@4" [label="true"]
-   "@1" -> "@5" [label="false"]
+   subgraph {
+      "$main(): i32" -> "$main@1"
 
-   "@2" [label="@2|%6: i32 = const 1\lret %6\l"]
+      "$main@1" [label="@1|%t.ptr: ptr&lt;bool&gt; = alloc bool\l%1: bool = const true\l%2: bool = call $echo %1\lstore %t.ptr %2\l%f.ptr: ptr&lt;bool&gt; = alloc bool\l%3: bool = const false\l%4: bool = call $echo %3\lstore %f.ptr %4\l%t.1: bool = load %t.ptr\lbr %t.1 @4 @5\l"]
+      "$main@1" -> "$main@4" [label="true"]
+      "$main@1" -> "$main@5" [label="false"]
 
-   "@3" [label="@3|%f.2: bool = load %f.ptr\lbr %f.2 @8 @9\l"]
-   "@3" -> "@8" [label="true"]
-   "@3" -> "@9" [label="false"]
+      "$main@2" [label="@2|%6: i32 = const 1\lret %6\l"]
 
-   "@4" [label="@4|%f.1: bool = load %f.ptr\ljmp @5\l"]
-   "@4" -> "@5"
+      "$main@3" [label="@3|%f.2: bool = load %f.ptr\lbr %f.2 @8 @9\l"]
+      "$main@3" -> "$main@8" [label="true"]
+      "$main@3" -> "$main@9" [label="false"]
 
-   "@5" [label="@5|%5: bool = phi %t.1 @1 %f.1 @4\lbr %5 @2 @3\l"]
-   "@5" -> "@2" [label="true"]
-   "@5" -> "@3" [label="false"]
+      "$main@4" [label="@4|%f.1: bool = load %f.ptr\ljmp @5\l"]
+      "$main@4" -> "$main@5"
 
-   "@6" [label="@6|%8: i32 = const 2\lret %8\l"]
+      "$main@5" [label="@5|%5: bool = phi %t.1 @1 %f.1 @4\lbr %5 @2 @3\l"]
+      "$main@5" -> "$main@2" [label="true"]
+      "$main@5" -> "$main@3" [label="false"]
 
-   "@7" [label="@7|%t.3: bool = load %t.ptr\lbr %t.3 @13 @14\l"]
-   "@7" -> "@13" [label="true"]
-   "@7" -> "@14" [label="false"]
+      "$main@6" [label="@6|%8: i32 = const 2\lret %8\l"]
 
-   "@8" [label="@8|%t.2: bool = load %t.ptr\ljmp @9\l"]
-   "@8" -> "@9"
+      "$main@7" [label="@7|%t.3: bool = load %t.ptr\lbr %t.3 @13 @14\l"]
+      "$main@7" -> "$main@13" [label="true"]
+      "$main@7" -> "$main@14" [label="false"]
 
-   "@9" [label="@9|%7: bool = phi %f.2 @3 %t.2 @8\lbr %7 @6 @7\l"]
-   "@9" -> "@6" [label="true"]
-   "@9" -> "@7" [label="false"]
+      "$main@8" [label="@8|%t.2: bool = load %t.ptr\ljmp @9\l"]
+      "$main@8" -> "$main@9"
 
-   "@10" [label="@10|jmp @12\l"]
-   "@10" -> "@12"
+      "$main@9" [label="@9|%7: bool = phi %f.2 @3 %t.2 @8\lbr %7 @6 @7\l"]
+      "$main@9" -> "$main@6" [label="true"]
+      "$main@9" -> "$main@7" [label="false"]
 
-   "@11" [label="@11|%10: i32 = const 3\lret %10\l"]
+      "$main@10" [label="@10|jmp @12\l"]
+      "$main@10" -> "$main@12"
 
-   "@12" [label="@12|%f.3: bool = load %f.ptr\lbr %f.3 @17 @18\l"]
-   "@12" -> "@17" [label="true"]
-   "@12" -> "@18" [label="false"]
+      "$main@11" [label="@11|%10: i32 = const 3\lret %10\l"]
 
-   "@13" [label="@13|%t.4: bool = load %t.ptr\ljmp @14\l"]
-   "@13" -> "@14"
+      "$main@12" [label="@12|%f.3: bool = load %f.ptr\lbr %f.3 @17 @18\l"]
+      "$main@12" -> "$main@17" [label="true"]
+      "$main@12" -> "$main@18" [label="false"]
 
-   "@14" [label="@14|%9: bool = phi %t.3 @7 %t.4 @13\lbr %9 @10 @11\l"]
-   "@14" -> "@10" [label="true"]
-   "@14" -> "@11" [label="false"]
+      "$main@13" [label="@13|%t.4: bool = load %t.ptr\ljmp @14\l"]
+      "$main@13" -> "$main@14"
 
-   "@15" [label="@15|%12: i32 = const 4\lret %12\l"]
+      "$main@14" [label="@14|%9: bool = phi %t.3 @7 %t.4 @13\lbr %9 @10 @11\l"]
+      "$main@14" -> "$main@10" [label="true"]
+      "$main@14" -> "$main@11" [label="false"]
 
-   "@16" [label="@16|%t.5: bool = load %t.ptr\lbr %t.5 @21 @22\l"]
-   "@16" -> "@21" [label="true"]
-   "@16" -> "@22" [label="false"]
+      "$main@15" [label="@15|%12: i32 = const 4\lret %12\l"]
 
-   "@17" [label="@17|%f.4: bool = load %f.ptr\ljmp @18\l"]
-   "@17" -> "@18"
+      "$main@16" [label="@16|%t.5: bool = load %t.ptr\lbr %t.5 @21 @22\l"]
+      "$main@16" -> "$main@21" [label="true"]
+      "$main@16" -> "$main@22" [label="false"]
 
-   "@18" [label="@18|%11: bool = phi %f.3 @12 %f.4 @17\lbr %11 @15 @16\l"]
-   "@18" -> "@15" [label="true"]
-   "@18" -> "@16" [label="false"]
+      "$main@17" [label="@17|%f.4: bool = load %f.ptr\ljmp @18\l"]
+      "$main@17" -> "$main@18"
 
-   "@19" [label="@19|%16: i32 = const 5\lret %16\l"]
+      "$main@18" [label="@18|%11: bool = phi %f.3 @12 %f.4 @17\lbr %11 @15 @16\l"]
+      "$main@18" -> "$main@15" [label="true"]
+      "$main@18" -> "$main@16" [label="false"]
 
-   "@20" [label="@20|%17: i32 = const 0\lret %17\l"]
+      "$main@19" [label="@19|%16: i32 = const 5\lret %16\l"]
 
-   "@21" [label="@21|%t.6: bool = load %t.ptr\ljmp @22\l"]
-   "@21" -> "@22"
+      "$main@20" [label="@20|%17: i32 = const 0\lret %17\l"]
 
-   "@22" [label="@22|%13: bool = phi %t.5 @16 %t.6 @21\lbr %13 @23 @24\l"]
-   "@22" -> "@23" [label="true"]
-   "@22" -> "@24" [label="false"]
+      "$main@21" [label="@21|%t.6: bool = load %t.ptr\ljmp @22\l"]
+      "$main@21" -> "$main@22"
 
-   "@23" [label="@23|%f.5: bool = load %f.ptr\lbr %f.5 @25 @26\l"]
-   "@23" -> "@25" [label="true"]
-   "@23" -> "@26" [label="false"]
+      "$main@22" [label="@22|%13: bool = phi %t.5 @16 %t.6 @21\lbr %13 @23 @24\l"]
+      "$main@22" -> "$main@23" [label="true"]
+      "$main@22" -> "$main@24" [label="false"]
 
-   "@24" [label="@24|%15: bool = phi %13 @22 %14 @26\lbr %15 @19 @20\l"]
-   "@24" -> "@19" [label="true"]
-   "@24" -> "@20" [label="false"]
+      "$main@23" [label="@23|%f.5: bool = load %f.ptr\lbr %f.5 @25 @26\l"]
+      "$main@23" -> "$main@25" [label="true"]
+      "$main@23" -> "$main@26" [label="false"]
 
-   "@25" [label="@25|%f.6: bool = load %f.ptr\ljmp @26\l"]
-   "@25" -> "@26"
+      "$main@24" [label="@24|%15: bool = phi %13 @22 %14 @26\lbr %15 @19 @20\l"]
+      "$main@24" -> "$main@19" [label="true"]
+      "$main@24" -> "$main@20" [label="false"]
 
-   "@26" [label="@26|%14: bool = phi %f.5 @23 %f.6 @25\ljmp @24\l"]
-   "@26" -> "@24"
+      "$main@25" [label="@25|%f.6: bool = load %f.ptr\ljmp @26\l"]
+      "$main@25" -> "$main@26"
+
+      "$main@26" [label="@26|%14: bool = phi %f.5 @23 %f.6 @25\ljmp @24\l"]
+      "$main@26" -> "$main@24"
+   }
+
+   subgraph {
+      "$echo(%v: bool): bool" -> "$echo@1"
+
+      "$echo@1" [label="@1|ret %v\l"]
+   }
 }

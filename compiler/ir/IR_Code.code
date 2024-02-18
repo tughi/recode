@@ -19,8 +19,26 @@ func write(file: @FILE, code: @IR_Code) -> @FILE {
     return file
 }
 
+func write_cfg(file: @FILE, code: @IR_Code) -> @FILE {
+    file.write("digraph {").end_line()
+    file.write("   node [shape=record,width=5.5,fontname=monospace]").end_line()
+    code.global_symbols.for_each() {
+        if it is IR_Function {
+            file.write_cfg(it.as(@IR_Function))
+        }
+    }
+    return file.write('}').end_line()
+}
+
 struct IR_Type: Object {
     name: @String
+}
+
+func write_cfg(file: @FILE, type: @IR_Type) -> @FILE {
+    if type is IR_Pointer_Type {
+        return file.write("ptr&lt;").write_cfg(type.as(@IR_Pointer_Type).pointed_type).write("&gt;")
+    }
+    return file.write(type.name)
 }
 
 struct IR_Boolean_Type: IR_Type(name = "bool") {
@@ -163,7 +181,10 @@ struct IR_Function_Parameter: IR_Symbol {
 }
 
 func create_block(self: @IR_Function) -> @IR_Block {
-    let block = make @IR_Block(name = clone("@").append(self.blocks.size + 1))
+    let block = make @IR_Block(
+        function = self
+        name = clone("@").append(self.blocks.size + 1)
+    )
     self.blocks.append(block)
     return block
 }
@@ -194,6 +215,28 @@ func write(file: @FILE, function: @IR_Function) -> @FILE {
     return file
 }
 
+func write_cfg(file: @FILE, function: @IR_Function) -> @FILE {
+    file.end_line().write("   subgraph {").end_line()
+    file.write("      \"").write(function.name).write('(')
+    let function_parameters = function.parameters.create_iterator()
+    while function_parameters.has_next() {
+        let function_parameter = function_parameters.next()
+        file.write(function_parameter.value.name).write(": ").write_cfg(function_parameter.type)
+        if function_parameters.has_next() {
+            file.write(", ")
+        }
+    }
+    file.write(')')
+    if function.return_type != null {
+        file.write(": ").write_cfg(function.return_type)
+    }
+    file.write("\" -> ").write_cfg_name(function.blocks.first_item.data).end_line()
+    function.blocks.for_each() {
+        file.end_line().write_cfg(it)
+    }
+    return file.write("   }").end_line()
+}
+
 struct IR_Local_Variable: IR_Symbol {
     value_pointer: @IR_Value
     value_counter = make Counter[i32]()
@@ -211,6 +254,7 @@ func write(file: @FILE, value: @IR_Value) -> @FILE {
 }
 
 struct IR_Block {
+    function: @IR_Function
     name: @String
     instructions = make List[@IR_Instruction]()
     predecessors = make List[@IR_Block]()
@@ -229,6 +273,31 @@ func write(file: @FILE, block: @IR_Block) -> @FILE {
         file.write("   ").write(block_instruction).end_line()
     }
     return file
+}
+
+func write_cfg(file: @FILE, block: @IR_Block) -> @FILE {
+    file.write("      ").write_cfg_name(block).write(" [label=\"").write(block.name).write('|')
+    block.instructions.for_each() {
+        file.write_cfg(it).write("\\l")
+    }
+    file.write("\"]").end_line()
+    let last_instruction = block.instructions.last()
+    if last_instruction != null {
+        if last_instruction is IR_Jump_Instruction {
+            let last_instruction = last_instruction.as(@IR_Jump_Instruction)
+            file.write("      ").write_cfg_name(block).write(" -> ").write_cfg_name(last_instruction.block).end_line()
+        } else if last_instruction is IR_Branch_Instruction {
+            let last_instruction = last_instruction.as(@IR_Branch_Instruction)
+            file.write("      ").write_cfg_name(block).write(" -> ").write_cfg_name(last_instruction.true_block).write(" [label=\"true\"]").end_line()
+            file.write("      ").write_cfg_name(block).write(" -> ").write_cfg_name(last_instruction.false_block).write(" [label=\"false\"]").end_line()
+        }
+        return file
+    }
+    return file
+}
+
+func write_cfg_name(file: @FILE, block: @IR_Block) -> @FILE {
+    return file.write('"').write(block.function.name).write(block.name).write('"')
 }
 
 struct IR_Instruction: Object {
@@ -273,6 +342,13 @@ func set_operand_value(self: @IR_Instruction, key: @Any, value: @IR_Value) -> No
 func write(file: @FILE, instruction: @IR_Instruction) -> @FILE {
     if instruction.result_value != null {
         file.write(instruction.result_value).write(": ").write(instruction.result_value.type.name).write(" = ")
+    }
+    return instruction.write(file)
+}
+
+func write_cfg(file: @FILE, instruction: @IR_Instruction) -> @FILE {
+    if instruction.result_value != null {
+        file.write(instruction.result_value.name).write(": ").write_cfg(instruction.result_value.type).write(" = ")
     }
     return instruction.write(file)
 }

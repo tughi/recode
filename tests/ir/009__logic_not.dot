@@ -1,0 +1,42 @@
+digraph {
+   node [shape=record,width=5.5,fontname=monospace]
+
+   subgraph {
+      "$main(): i32" -> "$main@1"
+
+      "$main@1" [label="@1|%1: bool = const true\l%2: bool = call $test_not %1\lbr %2 @2 @3\l"]
+      "$main@1" -> "$main@2" [label="true"]
+      "$main@1" -> "$main@3" [label="false"]
+
+      "$main@2" [label="@2|%3: i32 = const 1\lret %3\l"]
+
+      "$main@3" [label="@3|%4: bool = const false\l%5: bool = call $test_not %4\lbr %5 @4 @5\l"]
+      "$main@3" -> "$main@4" [label="true"]
+      "$main@3" -> "$main@5" [label="false"]
+
+      "$main@4" [label="@4|jmp @6\l"]
+      "$main@4" -> "$main@6"
+
+      "$main@5" [label="@5|%6: i32 = const 2\lret %6\l"]
+
+      "$main@6" [label="@6|%7: bool = const false\l%8: bool = call $test_not %7\l%9: bool = not %8\lbr %9 @7 @8\l"]
+      "$main@6" -> "$main@7" [label="true"]
+      "$main@6" -> "$main@8" [label="false"]
+
+      "$main@7" [label="@7|%10: i32 = const 3\lret %10\l"]
+
+      "$main@8" [label="@8|%11: bool = const true\l%12: bool = call $test_not %11\l%13: bool = not %12\l%14: bool = not %13\lbr %14 @9 @10\l"]
+      "$main@8" -> "$main@9" [label="true"]
+      "$main@8" -> "$main@10" [label="false"]
+
+      "$main@9" [label="@9|%15: i32 = const 4\lret %15\l"]
+
+      "$main@10" [label="@10|%16: i32 = const 0\lret %16\l"]
+   }
+
+   subgraph {
+      "$test_not(%v: bool): bool" -> "$test_not@1"
+
+      "$test_not@1" [label="@1|%1: bool = not %v\lret %1\l"]
+   }
+}

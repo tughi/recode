@@ -1,0 +1,9 @@
+digraph {
+   node [shape=record,width=5.5,fontname=monospace]
+
+   subgraph {
+      "$main(): i32" -> "$main@1"
+
+      "$main@1" [label="@1|%result.ptr: ptr&lt;i32&gt; = alloc i32\l%1: i32 = const 0\lstore %result.ptr %1\l%result.1: i32 = load %result.ptr\lret %result.1\l"]
+   }
+}

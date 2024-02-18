@@ -39,7 +39,9 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
         abort(clone("Unsupported pass: ").append(pass))
     }
 
-    if command.output.equals("ir") {
+    if command.output.equals("cfg") {
+        command.output_file.write_cfg(ir_code)
+    } else if command.output.equals("ir") {
         command.output_file.write(ir_code)
     } else {
         abort(clone("Unsupported output: ").append(command.output))

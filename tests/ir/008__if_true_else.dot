@@ -1,0 +1,19 @@
+digraph {
+   node [shape=record,width=5.5,fontname=monospace]
+
+   subgraph {
+      "$main(): i32" -> "$main@1"
+
+      "$main@1" [label="@1|%result.ptr: ptr&lt;i32&gt; = alloc i32\l%1: i32 = const 2\lstore %result.ptr %1\l%2: bool = const true\lbr %2 @2 @3\l"]
+      "$main@1" -> "$main@2" [label="true"]
+      "$main@1" -> "$main@3" [label="false"]
+
+      "$main@2" [label="@2|%3: i32 = const 0\lstore %result.ptr %3\ljmp @4\l"]
+      "$main@2" -> "$main@4"
+
+      "$main@3" [label="@3|%4: i32 = const 1\lstore %result.ptr %4\ljmp @4\l"]
+      "$main@3" -> "$main@4"
+
+      "$main@4" [label="@4|%result.1: i32 = load %result.ptr\lret %result.1\l"]
+   }
+}
