@@ -1,0 +1,30 @@
+func main() -> i32 {
+    let errors = 6
+    if echo(42) == 42 {
+        errors = errors - 1
+    }
+    if echo(42) != 42 {
+        \ ignored
+    } else {
+        errors = errors - 1
+    }
+    if echo(42) < 13 {
+        \ ignored
+    } else {
+        errors = errors - 1
+    }
+    if echo(42) <= 42 {
+        errors = errors - 1
+    }
+    if echo(42) > 13 {
+        errors = errors - 1
+    }
+    if echo(42) >= 42 {
+        errors = errors - 1
+    }
+    return errors
+}
+
+func echo(v: i32) -> i32 {
+    return v
+}

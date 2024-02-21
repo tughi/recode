@@ -459,6 +459,9 @@ func get_argument_key(index: i64) -> @String {
     abort(clone("Missing argument index: ").append(index))
 }
 
+struct IR_Comparison_Instruction: IR_Binary_Instruction {
+}
+
 struct IR_Constant_Instruction: IR_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Constant_Instruction)
@@ -495,6 +498,38 @@ func create_ir_direct_call_instruction(result_value: @IR_Value, call_arguments: 
     return instruction
 }
 
+struct IR_Equality_Instruction: IR_Comparison_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Comparison_Instruction)
+        return file.write("cmp_eq ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
+}
+
+struct IR_Greater_Than_Instruction: IR_Comparison_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Comparison_Instruction)
+        return file.write("cmp_gt ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
+}
+
+struct IR_Greater_Than_Or_Equal_Instruction: IR_Comparison_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Comparison_Instruction)
+        return file.write("cmp_ge ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
+}
+
+struct IR_Inequality_Instruction: IR_Comparison_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Comparison_Instruction)
+        return file.write("cmp_ne ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
+}
+
 struct IR_Jump_Instruction: IR_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Jump_Instruction)
@@ -502,6 +537,22 @@ struct IR_Jump_Instruction: IR_Instruction(
     }
 ) {
     block: @IR_Block
+}
+
+struct IR_Less_Than_Instruction: IR_Comparison_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Comparison_Instruction)
+        return file.write("cmp_lt ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
+}
+
+struct IR_Less_Than_Or_Equal_Instruction: IR_Comparison_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Comparison_Instruction)
+        return file.write("cmp_le ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
 }
 
 struct IR_Load_Instruction: IR_Instruction(
