@@ -256,19 +256,36 @@ func write(file: @FILE, value: @IR_Value) -> @FILE {
 struct IR_Block {
     function: @IR_Function
     name: @String
-    instructions = make List[@IR_Instruction]()
     predecessors = make List[@IR_Block]()
+    first_instruction: @IR_Instruction = null
+    last_instruction: @IR_Instruction = null
+
+    processed = false
 }
 
 func append(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
     instruction.block = self
-    self.instructions.append(instruction)
+    if self.last_instruction == null {
+        self.first_instruction = instruction
+    } else {
+        self.last_instruction.next_instruction = instruction
+        instruction.prev_instruction = self.last_instruction
+    }
+    self.last_instruction = instruction
     return instruction
+}
+
+macro for_each_instruction(self: @IR_Block, body: macro (it: @IR_Instruction)) {
+    let instruction = self.first_instruction
+    while instruction != null {
+        body(instruction)
+        instruction = instruction.next_instruction
+    }
 }
 
 func write(file: @FILE, block: @IR_Block) -> @FILE {
     file.write(block.name).write(':').end_line()
-    block.instructions.for_each() {
+    block.for_each_instruction() {
         let block_instruction = it
         file.write("   ").write(block_instruction).end_line()
     }
@@ -277,11 +294,11 @@ func write(file: @FILE, block: @IR_Block) -> @FILE {
 
 func write_cfg(file: @FILE, block: @IR_Block) -> @FILE {
     file.write("      ").write_cfg_name(block).write(" [label=\"").write(block.name).write('|')
-    block.instructions.for_each() {
+    block.for_each_instruction() {
         file.write_cfg(it).write("\\l")
     }
     file.write("\"]").end_line()
-    let last_instruction = block.instructions.last()
+    let last_instruction = block.last_instruction
     if last_instruction != null {
         if last_instruction is IR_Jump_Instruction {
             let last_instruction = last_instruction.as(@IR_Jump_Instruction)
@@ -305,6 +322,8 @@ struct IR_Instruction: Object {
     result_value: @IR_Value = null
     operand_values = make Map[@Any, @IR_Value]()
     block: @IR_Block = undefined
+    prev_instruction: @IR_Instruction = null
+    next_instruction: @IR_Instruction = null
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(instruction.object_type.name))
@@ -530,7 +549,7 @@ struct IR_Inequality_Instruction: IR_Comparison_Instruction(
 ) {
 }
 
-struct IR_Jump_Instruction: IR_Instruction(
+struct IR_Jump_Instruction: IR_Terminator_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Jump_Instruction)
         return file.write("jmp ").write(instruction.block.name)
@@ -637,7 +656,7 @@ func get_value(self: @IR_Store_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
 
-struct IR_Return_Instruction: IR_Instruction(
+struct IR_Return_Instruction: IR_Terminator_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Return_Instruction)
         if instruction.get_return_value() == null {
@@ -666,6 +685,9 @@ struct IR_Substract_Instruction: IR_Binary_Instruction(
         return file.write("sub ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
     }
 ) {
+}
+
+struct IR_Terminator_Instruction: IR_Instruction {
 }
 
 struct IR_Unary_Instruction: IR_Instruction {
