@@ -3,12 +3,12 @@ struct IR_Code {
     global_symbols: @List[@IR_Symbol]
 }
 
-func write(file: @FILE, code: @IR_Code) -> @FILE {
+func write(file: @FILE, code: @IR_Code, live: bool) -> @FILE {
     let symbols_iterator = code.global_symbols.create_iterator()
     if symbols_iterator.has_next() {
         loop {
             let symbol = symbols_iterator.next()
-            file.write(symbol)
+            file.write(symbol, live)
             if symbols_iterator.has_next() {
                 file.end_line()
             } else {
@@ -161,9 +161,9 @@ struct IR_Symbol: Object {
     type: @IR_Type
 }
 
-func write(file: @FILE, self: @IR_Symbol) -> Nothing {
+func write(file: @FILE, self: @IR_Symbol, live: bool) -> Nothing {
     if self is IR_Function {
-        file.write(self.as(@IR_Function))
+        file.write(self.as(@IR_Function), live)
     } else {
         abort(self.object_type)
     }
@@ -189,7 +189,7 @@ func create_block(self: @IR_Function) -> @IR_Block {
     return block
 }
 
-func write(file: @FILE, function: @IR_Function) -> @FILE {
+func write(file: @FILE, function: @IR_Function, live: bool) -> @FILE {
     file.write(function.name).write("(")
     let function_type = function.function_type
     let function_parameters = function.parameters.create_iterator()
@@ -208,7 +208,7 @@ func write(file: @FILE, function: @IR_Function) -> @FILE {
     file.write(" {").end_line()
     let block_item = function.blocks.first_item
     while block_item != null {
-        file.write(block_item.data)
+        file.write(block_item.data, live)
         block_item = block_item.next_item
     }
     file.write('}').end_line()
@@ -283,10 +283,17 @@ macro for_each_instruction(self: @IR_Block, body: macro (it: @IR_Instruction)) {
     }
 }
 
-func write(file: @FILE, block: @IR_Block) -> @FILE {
+func write(file: @FILE, block: @IR_Block, live: bool) -> @FILE {
     file.write(block.name).write(':').end_line()
     block.for_each_instruction() {
         let block_instruction = it
+        if live {
+            file.write("   [")
+            block_instruction.live_values.for_each() {
+                file.write(' ').write(it)
+            }
+            file.write(" ]").end_line()
+        }
         file.write("   ").write(block_instruction).end_line()
     }
     return file
@@ -324,6 +331,7 @@ struct IR_Instruction: Object {
     block: @IR_Block = undefined
     prev_instruction: @IR_Instruction = null
     next_instruction: @IR_Instruction = null
+    live_values = make List[@IR_Value]()
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(instruction.object_type.name))
@@ -406,7 +414,7 @@ func get_right_value(self: @IR_Binary_Instruction) -> @IR_Value {
     return self.operand_values.get("right_value")
 }
 
-struct IR_Branch_Instruction: IR_Instruction(
+struct IR_Branch_Instruction: IR_Terminator_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Branch_Instruction)
         return file.write("br ").write(instruction.get_condition()).write(' ').write(instruction.true_block.name).write(' ').write(instruction.false_block.name)
@@ -612,7 +620,7 @@ struct IR_Phi_Instruction: IR_Instruction(
         file.write("phi")
         let operand_values_entry = instruction.operand_values.first_entry
         while operand_values_entry != null {
-            file.write(' ').write(operand_values_entry.value).write(' ').write(instruction.value_block_mapping.get(operand_values_entry.value).name)
+            file.write(' ').write(instruction.value_block_mapping.get(operand_values_entry.value).name).write(' ').write(operand_values_entry.value)
             operand_values_entry = operand_values_entry.next_entry
         }
         return file

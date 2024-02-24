@@ -4,6 +4,7 @@ include "./code/Parsed_Code.code"
 include "./code/Parser.code"
 include "./ir/IR_Builder.code"
 include "./ir/IR_Code.code"
+include "./ir/IR_Liveness_Analysis.code"
 include "./scanner/Scanner.code"
 include "./scanner/Token.code"
 include "./source/Source.code"
@@ -42,7 +43,10 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
     if command.output.equals("cfg") {
         command.output_file.write_cfg(ir_code)
     } else if command.output.equals("ir") {
-        command.output_file.write(ir_code)
+        command.output_file.write(ir_code, false)
+    } else if command.output.equals("irl") {
+        ir_code.compute_live_values()
+        command.output_file.write(ir_code, true)
     } else {
         abort(clone("Unsupported output: ").append(command.output))
     }
@@ -126,10 +130,10 @@ func parse_args(argc: i32, argv: [[u8; ?]; ?]) -> @Command {
         exit(1)
     }
     let output = arguments_item.data
-    if not output.equals("asm") and not output.equals("cfg") and not output.equals("ir") {
+    if not output.equals("asm") and not output.equals("cfg") and not output.equals("ir") and not output.equals("irl") {
         stderr.error().write("Unsupported output: ").write(output).reset().end_line().end_line()
         print_help(argv[0])
-        exit(1)
+        abort()
     }
 
     arguments_item = arguments_item.next_item
@@ -170,6 +174,7 @@ func print_help(path: [u8; ?]) -> Nothing {
     stderr.write("    \033[1masm\033[0m - Assembly").end_line()
     stderr.write("    \033[1mcfg\033[0m - Control Flow Graph").end_line()
     stderr.write("    \033[1mir\033[0m  - Intermediate Representation").end_line()
+    stderr.write("    \033[1mirl\033[0m - Intermediate Representation with liveness analysis").end_line()
 }
 
 func abort(location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {

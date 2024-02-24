@@ -1,0 +1,25 @@
+$main(): i32 {
+@1:
+   [ ]
+   %x.ptr: ptr<i32> = alloc i32
+   [ %x.ptr ]
+   %1: i32 = const 0
+   [ %x.ptr %1 ]
+   store %x.ptr %1
+   [ %x.ptr ]
+   %x.1: i32 = load %x.ptr
+   [ %x.ptr %x.1 ]
+   %2: i32 = const 1
+   [ %x.ptr %x.1 %2 ]
+   %3: i32 = add %x.1 %2
+   [ %x.ptr %3 ]
+   store %x.ptr %3
+   [ %x.ptr ]
+   %x.2: i32 = load %x.ptr
+   [ %x.2 ]
+   %4: i32 = const 1
+   [ %x.2 %4 ]
+   %5: i32 = sub %x.2 %4
+   [ %5 ]
+   ret %5
+}

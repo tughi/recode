@@ -1,0 +1,79 @@
+func compute_live_values(self: @IR_Code) -> Nothing {
+    self.global_symbols.for_each() {
+        let symbol = it
+        if symbol is IR_Function {
+            symbol.as(@IR_Function).compute_live_values()
+        }
+    }
+}
+
+func compute_live_values(self: @IR_Function) -> Nothing {
+    let blocks = make List[@IR_Block]()
+    self.blocks.for_each() {
+        let block = it
+        blocks.append(block)
+        \ add live values from phi instructions to last intruction of each predecessor block
+        block.for_each_instruction() {
+            let instruction = it
+            if instruction is IR_Phi_Instruction {
+                instruction.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
+                    let predecessor_block = value
+                    let value = key
+                    predecessor_block.last_instruction.live_values.append(value)
+                }
+            } else {
+                break
+            }
+        }
+    }
+
+    if blocks.size >= 0 {
+        \ return
+    }
+
+    blocks.for_each() {
+        let block = it
+        let instruction = block.last_instruction
+        loop {
+            if instruction is not IR_Phi_Instruction {
+                \ mark all operands as live
+                instruction.operand_values.for_each() {
+                    let use_value = value
+                    if not instruction.live_values.contains(use_value) {
+                        instruction.live_values.append(use_value)
+                    }
+                }
+            }
+            \ remove defined value from live values
+            let def_value = instruction.result_value
+            if def_value != null and instruction.live_values.contains(def_value) {
+                instruction.live_values.remove(def_value).prune()
+            }
+            if instruction.prev_instruction == null {
+                \ check predecessor blocks
+                block.predecessors.for_each() {
+                    let predecessor_block = it
+                    if predecessor_block.last_instruction.append_live_values(instruction.live_values) {
+                        \ new live values were added, so we need to reprocess this block
+                        blocks.append(predecessor_block)
+                    }
+                }
+                \ no more instructions to process
+                break
+            }
+            instruction = instruction.prev_instruction
+            instruction.append_live_values(instruction.next_instruction.live_values)
+        }
+    }
+}
+
+func append_live_values(self: @IR_Instruction, live_values: @List[@IR_Value]) -> bool {
+    let added = false
+    live_values.for_each() {
+        if not self.live_values.contains(it) and it != self.result_value {
+            self.live_values.append(it)
+            added = true
+        }
+    }
+    return added
+}
