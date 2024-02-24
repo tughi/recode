@@ -113,6 +113,7 @@ def test(paths, save=False, stage=1):
             ((f'build/stage{stage}/ReCode', '--file', test_code, 'ir'), f'{test_code[:-5]}.ir'),
             ((f'build/stage{stage}/ReCode', '--file', test_code, 'cfg'), f'{test_code[:-5]}.dot'),
             ((f'build/stage{stage}/ReCode', '--file', test_code, 'irl'), f'{test_code[:-5]}.irl'),
+            ((f'build/stage{stage}/ReCode', '--file', test_code, 'ig'), f'{test_code[:-5]}.ig.dot'),
             # ((f'build/stage{stage}/ReCode', test_code, '-'), f'{test_code[:-5]}.s'),
         ]:
             compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
