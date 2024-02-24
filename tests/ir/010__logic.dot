@@ -1,8 +1,9 @@
 digraph {
-   node [shape=record,width=5.5,fontname=monospace]
+   fontname=monospace
+   node [shape=record]
 
-   subgraph {
-      "$main(): i32" -> "$main@1"
+   subgraph cluster_0 {
+      label="$main(): i32"
 
       "$main@1" [label="@1|%t.ptr: ptr&lt;bool&gt; = alloc bool\l%1: bool = const true\l%2: bool = call $echo %1\lstore %t.ptr %2\l%f.ptr: ptr&lt;bool&gt; = alloc bool\l%3: bool = const false\l%4: bool = call $echo %3\lstore %f.ptr %4\l%t.1: bool = load %t.ptr\lbr %t.1 @4 @5\l"]
       "$main@1" -> "$main@4" [label="true"]
@@ -62,8 +63,8 @@ digraph {
       "$main@17" -> "$main@15"
    }
 
-   subgraph {
-      "$echo(%v: bool): bool" -> "$echo@1"
+   subgraph cluster_1 {
+      label="$echo(%v: bool): bool"
 
       "$echo@1" [label="@1|ret %v\l"]
    }

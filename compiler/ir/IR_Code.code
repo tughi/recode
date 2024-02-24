@@ -20,11 +20,14 @@ func write(file: @FILE, code: @IR_Code, live: bool) -> @FILE {
 }
 
 func write_cfg(file: @FILE, code: @IR_Code) -> @FILE {
+    let cluster = 0
     file.write("digraph {").end_line()
-    file.write("   node [shape=record,width=5.5,fontname=monospace]").end_line()
+    file.write("   fontname=monospace").end_line()
+    file.write("   node [shape=record]").end_line()
     code.global_symbols.for_each() {
         if it is IR_Function {
-            file.write_cfg(it.as(@IR_Function))
+            file.write_cfg(it.as(@IR_Function), cluster)
+            cluster = cluster + 1
         }
     }
     return file.write('}').end_line()
@@ -215,9 +218,9 @@ func write(file: @FILE, function: @IR_Function, live: bool) -> @FILE {
     return file
 }
 
-func write_cfg(file: @FILE, function: @IR_Function) -> @FILE {
-    file.end_line().write("   subgraph {").end_line()
-    file.write("      \"").write(function.name).write('(')
+func write_cfg(file: @FILE, function: @IR_Function, cluster: i32) -> @FILE {
+    file.end_line().write("   subgraph cluster_").write(cluster).write(" {").end_line()
+    file.write("      label=\"").write(function.name).write('(')
     let function_parameters = function.parameters.create_iterator()
     while function_parameters.has_next() {
         let function_parameter = function_parameters.next()
@@ -230,7 +233,7 @@ func write_cfg(file: @FILE, function: @IR_Function) -> @FILE {
     if function.return_type != null {
         file.write(": ").write_cfg(function.return_type)
     }
-    file.write("\" -> ").write_cfg_name(function.blocks.first_item.data).end_line()
+    file.write('"').end_line()
     function.blocks.for_each() {
         file.end_line().write_cfg(it)
     }
