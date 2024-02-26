@@ -1,0 +1,64 @@
+graph {
+   fontname=monospace
+   layout=fdp
+
+   subgraph cluster_0 {
+      label="$main"
+      "$main%1" [label="%1"]
+      "$main%1" -- "$main%2"
+      "$main%2" [label="%2"]
+      "$main%3" [label="%3"]
+      "$main%3" -- "$main%4"
+      "$main%4" [label="%4"]
+      "$main%5" [label="%5"]
+      "$main%5" -- "$main%6"
+      "$main%6" [label="%6"]
+      "$main%7" [label="%7"]
+      "$main%7" -- "$main%8"
+      "$main%8" [label="%8"]
+      "$main%9" [label="%9"]
+      "$main%9" -- "$main%10"
+      "$main%10" [label="%10"]
+      "$main%11" [label="%11"]
+   }
+
+   subgraph cluster_1 {
+      label="$add"
+      "$add%v1" [label="%v1"]
+      "$add%v1" -- "$add%v2"
+      "$add%v2" [label="%v2"]
+      "$add%1" [label="%1"]
+   }
+
+   subgraph cluster_2 {
+      label="$sub"
+      "$sub%v1" [label="%v1"]
+      "$sub%v1" -- "$sub%v2"
+      "$sub%v2" [label="%v2"]
+      "$sub%1" [label="%1"]
+   }
+
+   subgraph cluster_3 {
+      label="$mul"
+      "$mul%v1" [label="%v1"]
+      "$mul%v1" -- "$mul%v2"
+      "$mul%v2" [label="%v2"]
+      "$mul%1" [label="%1"]
+   }
+
+   subgraph cluster_4 {
+      label="$div"
+      "$div%v1" [label="%v1"]
+      "$div%v1" -- "$div%v2"
+      "$div%v2" [label="%v2"]
+      "$div%1" [label="%1"]
+   }
+
+   subgraph cluster_5 {
+      label="$mod"
+      "$mod%v1" [label="%v1"]
+      "$mod%v1" -- "$mod%v2"
+      "$mod%v2" [label="%v2"]
+      "$mod%1" [label="%1"]
+   }
+}

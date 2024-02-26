@@ -1,0 +1,23 @@
+func main() -> i32 {
+    return mod(div(mul(sub(add(1, 2), 3), 4), 5), 6)
+}
+
+func add(v1: i32, v2: i32) -> i32 {
+    return v1 + v2
+}
+
+func sub(v1: i32, v2: i32) -> i32 {
+    return v1 - v2
+}
+
+func mul(v1: i32, v2: i32) -> i32 {
+    return v1 * v2
+}
+
+func div(v1: i32, v2: i32) -> i32 {
+    return v1 / v2
+}
+
+func mod(v1: i32, v2: i32) -> i32 {
+    return v1 // v2
+}

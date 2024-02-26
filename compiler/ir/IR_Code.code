@@ -528,6 +528,14 @@ func create_ir_direct_call_instruction(result_value: @IR_Value, call_arguments: 
     return instruction
 }
 
+struct IR_Divide_Instruction: IR_Binary_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Binary_Instruction)
+        return file.write("div ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
+}
+
 struct IR_Equality_Instruction: IR_Comparison_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Comparison_Instruction)
@@ -607,6 +615,22 @@ func init(self: @IR_Load_Instruction, value_pointer: @IR_Value) -> @IR_Load_Inst
 
 func get_value_pointer(self: @IR_Load_Instruction) -> @IR_Value {
     return self.operand_values.get("value_pointer")
+}
+
+struct IR_Modulo_Instruction: IR_Binary_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Binary_Instruction)
+        return file.write("mod ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
+}
+
+struct IR_Multiply_Instruction: IR_Binary_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Binary_Instruction)
+        return file.write("mul ").write(instruction.get_left_value()).write(' ').write(instruction.get_right_value())
+    }
+) {
 }
 
 struct IR_Not_Instruction: IR_Unary_Instruction(
