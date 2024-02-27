@@ -1,0 +1,12 @@
+graph {
+   fontname=monospace
+   layout=fdp
+
+   subgraph cluster_0 {
+      label="$main"
+   }
+
+   subgraph cluster_1 {
+      label="$nop"
+   }
+}

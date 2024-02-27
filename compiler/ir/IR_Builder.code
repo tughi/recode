@@ -57,6 +57,7 @@ func create_ir_builder(checked_code: @Checked_Code) -> @IR_Builder {
     types.append(make @IR_Int16_Type())
     types.append(make @IR_Int32_Type())
     types.append(make @IR_Int64_Type())
+    types.append(make @IR_Nothing_Type())
     types.append(make @IR_Null_Type())
     types.append(make @IR_UInt8_Type())
     types.append(make @IR_UInt16_Type())
@@ -197,18 +198,21 @@ func convert_function(self: @IR_Builder, ir_function: @IR_Function) -> Nothing {
             block = ir_function.create_block()
         )
         self.convert_block_statement(checked_function_symbol.body)
-        \ if self.current_block.last_instruction == null or not self.current_block.last_instruction.is_exit_instruction() {
-        \     if self.current_block.predecessors.size == 0 and self.current_block.id != 1 {
-        \         \ this block is unreachable
-        \         ir_function.blocks.remove(self.current_block).prune()
-        \     } else if ir_function.return_type is IR_Nothing_Type {
-        \         self.append(create_ir_return_instruction(null), null)
-        \     } else {
-        \         \ TODO: use block end's location 
-        \         abort(checked_function_symbol.location, "Missing return statement")
-        \     }
-        \ }
-        \ self.current_block = null
+
+        \ cleanup last block
+        let last_block = self.current_block_context.block
+        if last_block.last_instruction == null {
+            if last_block.predecessors.size == 0 and last_block != ir_function.blocks.first() {
+                \ unreachable empty block
+                ir_function.blocks.remove(last_block).prune()
+            } else if ir_function.return_type is IR_Nothing_Type {
+                self.append(create_ir_return_instruction(null), null)
+            } else {
+                abort(checked_function_symbol.location, "Missing return statement")
+            }
+        }
+
+        self.current_block_context = null
 
         \ self.remove_redundant_blocks(ir_function)
         \ self.populate_phi_instructions(ir_function)
@@ -295,8 +299,11 @@ func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Fu
             type = ir_callable_parameter_type
         ))
     }
+    ir_function_type_name.append(')')
     let ir_function_type_return_type = self.convert_type(checked_function_type.return_type)
-    ir_function_type_name.append(") -> ").append(ir_function_type_return_type.name)
+    if ir_function_type_return_type is not IR_Nothing_Type {
+        ir_function_type_name.append(" -> ").append(ir_function_type_return_type.name)
+    }
     return make @IR_Function_Type(name = ir_function_type_name, parameters = ir_function_type_parameters, return_type = ir_function_type_return_type)
 }
 
@@ -410,7 +417,7 @@ func convert_break_statement(self: @IR_Builder, checked_statement: @Checked_Brea
 }
 
 func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked_Expression_Statement) -> Nothing {
-    abort("TODO: Convert expression statement")
+    self.convert_expression(checked_statement.expression, null)
 }
 
 func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Statement) -> Nothing {

@@ -1774,9 +1774,16 @@ func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -
         }
     }
 
+    let checked_function_return_type: @Checked_Type
+    if parsed_type.return_type == null {
+        checked_function_return_type = self.nothing_type
+    } else {
+        checked_function_return_type = self.convert_type(parsed_type.return_type)
+    }
+
     let checked_function_type = make @Checked_Function_Type(
         name = "func (".clone()
-        return_type = self.convert_type(parsed_type.return_type)
+        return_type = checked_function_return_type
     )
     parsed_type.parameters.for_each_indexed() {
         let checked_function_parameter = self.check_callable_parameter(checked_function_type, it)

@@ -1,0 +1,6 @@
+func main() {
+    nop()
+}
+
+func nop() {
+}

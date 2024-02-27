@@ -489,13 +489,16 @@ struct Parsed_Function_Signature {
 }
 
 \ function_signature
-\   | parameters "->" type
+\   | parameters ( "->" type )?
 func parse_function_signature(self: @Parser) -> @Parsed_Function_Signature {
     let function_parameters = self.parse_parameters()
-    self.consume_space(1)
-    self.consume(required_hyphen, required_greater_than)
-    self.consume_space(1)
-    let function_return_type = self.parse_type()
+    let function_return_type: @Parsed_Type = null
+    if self.matches(optional_space, required_hyphen) {
+        self.consume_space(1)
+        self.consume(required_hyphen, required_greater_than)
+        self.consume_space(1)
+        function_return_type = self.parse_type()
+    }
     return make @Parsed_Function_Signature(parameters = function_parameters, return_type = function_return_type)
 }
 

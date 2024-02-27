@@ -1,0 +1,9 @@
+$main() {
+@1:
+   call $nop
+}
+
+$nop() {
+@1:
+   ret
+}
