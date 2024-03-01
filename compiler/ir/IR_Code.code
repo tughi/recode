@@ -186,7 +186,7 @@ struct IR_Function_Parameter: IR_Symbol {
 func create_block(self: @IR_Function) -> @IR_Block {
     let block = make @IR_Block(
         function = self
-        name = clone("@").append(self.blocks.size + 1)
+        name = clone("").append(self.blocks.size + 1)
     )
     self.blocks.append(block)
     return block
@@ -287,7 +287,7 @@ macro for_each_instruction(self: @IR_Block, body: macro (it: @IR_Instruction)) {
 }
 
 func write(file: @FILE, block: @IR_Block, live: bool) -> @FILE {
-    file.write(block.name).write(':').end_line()
+    file.write_name(block).write(':').end_line()
     block.for_each_instruction() {
         let block_instruction = it
         if live {
@@ -302,8 +302,12 @@ func write(file: @FILE, block: @IR_Block, live: bool) -> @FILE {
     return file
 }
 
+func write_name(file: @FILE, block: @IR_Block) -> @FILE {
+    return file.write('@').write(block.name)
+}
+
 func write_cfg(file: @FILE, block: @IR_Block) -> @FILE {
-    file.write("      ").write_cfg_name(block).write(" [label=\"").write(block.name).write('|')
+    file.write("      ").write_cfg_name(block).write(" [label=\"").write_name(block).write('|')
     block.for_each_instruction() {
         file.write_cfg(it).write("\\l")
     }
@@ -324,7 +328,7 @@ func write_cfg(file: @FILE, block: @IR_Block) -> @FILE {
 }
 
 func write_cfg_name(file: @FILE, block: @IR_Block) -> @FILE {
-    return file.write('"').write(block.function.name).write(block.name).write('"')
+    return file.write('"').write(block.function.name).write_name(block).write('"')
 }
 
 struct IR_Instruction: Object {

@@ -1,0 +1,191 @@
+struct MC_Code {
+    functions = make List[@MC_Function]()
+}
+
+func write(file: @FILE, code: @MC_Code) -> @FILE {
+    code.functions.for_each() {
+        file.write(it)
+    }
+    return file
+}
+
+struct MC_Function {
+    name: @String
+    blocks = make List[@MC_Block]()
+}
+
+func write(file: @FILE, function: @MC_Function) -> @FILE {
+    if function.name.equals("$main") {
+        file.write(".globl main").end_line()
+        file.write("main:").end_line()
+    }
+    file.write(function.name).write(':').end_line()
+    function.blocks.for_each() {
+        file.write(it)
+    }
+    return file
+}
+
+struct MC_Block {
+    name: @String
+    first_instruction: @MC_Instruction = null
+    last_instruction: @MC_Instruction = null
+    live_values = make List[@MC_Value]()
+}
+
+func append(block: @MC_Block, instruction: @MC_Instruction) -> Nothing {
+    if block.last_instruction == null {
+        block.first_instruction = instruction
+    } else {
+        block.last_instruction.next_instruction = instruction
+        instruction.prev_instruction = block.last_instruction
+    }
+    block.last_instruction = instruction
+}
+
+func write(file: @FILE, block: @MC_Block) -> @FILE {
+    file.write_name(block).write(':').end_line()
+    let instruction = block.first_instruction
+    while instruction != null {
+        file.write("  ")
+        instruction.write(file)
+        file.end_line()
+        instruction = instruction.next_instruction
+    }
+    return file
+}
+
+func write_name(file: @FILE, block: @MC_Block) -> @FILE {
+    return file.write(".L").write(block.name)
+}
+
+struct MC_Value {
+    ir_value: @IR_Value
+    literal: @Literal_Token
+    register: @MC_Register
+}
+
+struct MC_Instruction: Object {
+    name: @String
+    data_size = 0u8 \ 0: none, 1: byte, 2: word, 4: double, 8: quad
+    prev_instruction: @MC_Instruction = null
+    next_instruction: @MC_Instruction = null
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        abort(clone("Unsupported type: ").append(self.object_type.name))
+    }
+}
+
+struct MC_Instruction_Operand: Object {
+    write = func (self: @MC_Instruction_Operand, file: @FILE) -> @FILE {
+        abort(clone("Unsupported type: ").append(self.object_type.name))
+    }
+}
+
+struct MC_Register_Instruction_Operand: MC_Instruction_Operand(
+    write = func (self: @MC_Instruction_Operand, file: @FILE) -> @FILE {
+        let self = self.as(@MC_Register_Instruction_Operand)
+        if self.data_size == 1 {
+            return file.write(self.register.name_b)
+        }
+        if self.data_size == 2 {
+            return file.write(self.register.name_w)
+        }
+        if self.data_size == 4 {
+            return file.write(self.register.name_d)
+        }
+        if self.data_size == 8 {
+            return file.write(self.register.name_q)
+        }
+        abort(clone("Unsupported data size: ").append(self.data_size))
+    }
+) {
+    register: @MC_Register
+    data_size: i32
+}
+
+struct MC_Value_Instruction_Operand: MC_Instruction_Operand(
+    write = func (self: @MC_Instruction_Operand, file: @FILE) -> @FILE {
+        return file.write('$').write(self.as(@MC_Value_Instruction_Operand).literal)
+    }
+) {
+    literal: @Literal_Token
+}
+
+struct MC_MOV_Instruction: MC_Instruction(
+    name = "mov"
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_MOV_Instruction)
+        file.write(instruction.name).write("  ")
+        instruction.source.write(file)
+        file.write(", ")
+        instruction.destination.write(file)
+        return file
+    }
+) {
+    source: @MC_Instruction_Operand
+    destination: @MC_Instruction_Operand
+}
+
+struct MC_RET_Instruction: MC_Instruction(
+    name = "ret"
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write(self.as(@MC_RET_Instruction).name)
+    }
+) {
+}
+
+struct MC_Register: Object {
+    name_q: @String
+    name_d: @String
+    name_w: @String
+    name_b: @String
+    value: @MC_Value = null
+}
+
+struct MC_Register_RAX: MC_Register(name_q = "%rax", name_d = "%eax", name_w = "%ax", name_b = "%al") {
+}
+
+struct MC_Register_RCX: MC_Register(name_q = "%rcx", name_d = "%ecx", name_w = "%cx", name_b = "%cl") {
+}
+
+struct MC_Register_RDX: MC_Register(name_q = "%rdx", name_d = "%edx", name_w = "%dx", name_b = "%dl") {
+}
+
+struct MC_Register_RBX: MC_Register(name_q = "%rbx", name_d = "%ebx", name_w = "%bx", name_b = "%bl") {
+}
+
+struct MC_Register_RSP: MC_Register(name_q = "%rsp", name_d = "%esp", name_w = "%sp", name_b = "%spl") {
+}
+
+struct MC_Register_RBP: MC_Register(name_q = "%rbp", name_d = "%ebp", name_w = "%bp", name_b = "%bpl") {
+}
+
+struct MC_Register_RSI: MC_Register(name_q = "%rsi", name_d = "%esi", name_w = "%si", name_b = "%sil") {
+}
+
+struct MC_Register_RDI: MC_Register(name_q = "%rdi", name_d = "%edi", name_w = "%di", name_b = "%dil") {
+}
+
+struct MC_Register_R8: MC_Register(name_q = "%r8", name_d = "%r8d", name_w = "%r8w", name_b = "%r8b") {
+}
+
+struct MC_Register_R9: MC_Register(name_q = "%r9", name_d = "%r9d", name_w = "%r9w", name_b = "%r9b") {
+}
+
+struct MC_Register_R10: MC_Register(name_q = "%r10", name_d = "%r10d", name_w = "%r10w", name_b = "%r10b") {
+}
+
+struct MC_Register_R11: MC_Register(name_q = "%r11", name_d = "%r11d", name_w = "%r11w", name_b = "%r11b") {
+}
+
+struct MC_Register_R12: MC_Register(name_q = "%r12", name_d = "%r12d", name_w = "%r12w", name_b = "%r12b") {
+}
+
+struct MC_Register_R13: MC_Register(name_q = "%r13", name_d = "%r13d", name_w = "%r13w", name_b = "%r13b") {
+}
+
+struct MC_Register_R14: MC_Register(name_q = "%r14", name_d = "%r14d", name_w = "%r14w", name_b = "%r14b") {
+}
+
+struct MC_Register_R15: MC_Register(name_q = "%r15", name_d = "%r15d", name_w = "%r15w", name_b = "%r15b") {
+}

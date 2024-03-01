@@ -76,7 +76,9 @@ def build_stage(n):
 
 
 def assemble(source_file, output_file, sdl=False, **kwargs):
-    if not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
+    if source_file is None:
+        run(['gcc', '-x', 'assembler', '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else []), '-'], **kwargs)
+    elif not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
         run(['gcc', source_file, '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else [])], **kwargs)
 
 
@@ -114,7 +116,7 @@ def test(paths, save=False, stage=1):
             ((f'build/stage{stage}/ReCode', '--file', test_code, 'cfg'), f'{test_code[:-5]}.dot'),
             ((f'build/stage{stage}/ReCode', '--file', test_code, 'irl'), f'{test_code[:-5]}.irl'),
             ((f'build/stage{stage}/ReCode', '--file', test_code, 'ig'), f'{test_code[:-5]}.ig.dot'),
-            # ((f'build/stage{stage}/ReCode', test_code, '-'), f'{test_code[:-5]}.s'),
+            ((f'build/stage{stage}/ReCode', '--file', test_code, 'mc'), f'{test_code[:-5]}.s'),
         ]:
             compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
             if compiler_result.returncode != 0:
@@ -143,6 +145,11 @@ def test(paths, save=False, stage=1):
                     diff = compute_diff(test_file, compiler_result.stdout)
                     if diff:
                         if save:
+                            if test_file.endswith('.s'):
+                                # Check if the assembly is valid
+                                assemble(None, f'build/{test_code[:-5]}', input=compiler_result.stdout, text=True, check=True)
+                                run(f'build/{test_code[:-5]}', check=True)
+
                             open(test_file, 'w').write(compiler_result.stdout)
                             save = False
                             continue

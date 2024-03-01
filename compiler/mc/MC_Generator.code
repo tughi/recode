@@ -1,0 +1,174 @@
+func convert(code: @IR_Code, file: @FILE) -> @MC_Code {
+    let generator = make MC_Generator(file = file)
+    return generator.convert(code)
+}
+
+struct MC_Generator {
+    file: @FILE
+
+    register_rax = make @MC_Register_RAX()
+    register_rcx = make @MC_Register_RCX()
+    register_rdx = make @MC_Register_RDX()
+    register_rbx = make @MC_Register_RBX()
+    register_rsp = make @MC_Register_RSP()
+    register_rbp = make @MC_Register_RBP()
+    register_rsi = make @MC_Register_RSI()
+    register_rdi = make @MC_Register_RDI()
+    register_r8 = make @MC_Register_R8()
+    register_r9 = make @MC_Register_R9()
+    register_r10 = make @MC_Register_R10()
+    register_r11 = make @MC_Register_R11()
+    register_r12 = make @MC_Register_R12()
+    register_r13 = make @MC_Register_R13()
+    register_r14 = make @MC_Register_R14()
+    register_r15 = make @MC_Register_R15()
+
+    current_function: @MC_Function = null
+}
+
+func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
+    let mc_code = make @MC_Code()
+    ir_code.global_symbols.for_each() {
+        let symbol = it
+        if symbol is IR_Function {
+            let function = self.convert_function(symbol.as(@IR_Function))
+            mc_code.functions.append(function)
+        }
+    }
+    return mc_code
+}
+
+func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Function {
+    let function = make @MC_Function(
+        name = ir_function.name
+    )
+    self.current_function = function
+
+    \ TODO: spill test
+    \   - the spill check has to take into account caller and callee saved registers
+    \   - check if we have enough callee saved registers to store all live values after all calls
+    \   - values that are live after a call are stored in two places to be avaiable before and after the call
+    \   - max live values after all calls give the required number of callee saved registers
+    \   - if spilling is required, the stack size is increased and the live values are stored in the stack
+    \   - constant values and stack slots are not spilled, nor moved to callee saved registers
+    \   - spilling is calculated for each live value based on spill cost formula:
+    \       (sum of ((block_uses + block_defs) * 10 ^ loop_depth) for each block in the function) / interference_degree
+    \   - interference degree is the number of neighbors in the interference graph
+    \   - the spill cost is calculated for each live value and the live value with the lowest spill cost is spilled
+
+    \ TODO: stack size - calculate stack size
+
+    \ TODO: map each live value to a register, stack slot or memory location
+
+    \ reset processed flag
+    ir_function.blocks.for_each() {
+        it.processed = false
+    }
+
+    \ convert blocks via forward traversal
+    self.convert_block(ir_function.blocks.first(), null)
+
+    return function
+}
+
+func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block_values: @List[@MC_Value]) -> Nothing {
+    if ir_block.processed {
+        abort("Block already processed")
+    }
+
+    let mc_block = make @MC_Block(
+        name = ir_block.name
+    )
+    self.current_function.blocks.append(mc_block)
+
+    \ init block's live values
+    if predecessor_block_values != null {
+        \ merge live values from predecessor block
+        predecessor_block_values.for_each() {
+            mc_block.live_values.append(it)
+        }
+    } else {
+        \ this must be the first block
+        if ir_block.function.parameters.size > 0 {
+            \ create live values from function parameters
+            abort("TODO: Assign parameters to registers or stack slots")
+        }
+    }
+
+    ir_block.for_each_instruction() {
+        self.convert_instruction(it, mc_block)
+    }
+
+    \ mark block as processed
+    ir_block.processed = true
+
+    \ convert successors
+    if ir_block.last_instruction is IR_Branch_Instruction {
+        let ir_branch_instruction = ir_block.last_instruction.as(@IR_Branch_Instruction)
+        self.convert_block(ir_branch_instruction.true_block, mc_block.live_values)
+        self.convert_block(ir_branch_instruction.false_block, mc_block.live_values)
+    } else if ir_block.last_instruction is IR_Jump_Instruction {
+        let ir_jump_instruction = ir_block.last_instruction.as(@IR_Jump_Instruction)
+        self.convert_block(ir_jump_instruction.block, mc_block.live_values)
+    }
+}
+
+func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, mc_block: @MC_Block) -> Nothing {
+    if ir_instruction is IR_Constant_Instruction {
+        mc_block.live_values.append(make @MC_Value(
+            ir_value = ir_instruction.result_value
+            literal = ir_instruction.as(@IR_Constant_Instruction).literal
+            register = null \ delay register assignment
+        ))
+    } else if ir_instruction is IR_Return_Instruction {
+        self.convert_return_instruction(ir_instruction.as(@IR_Return_Instruction), mc_block)
+    } else {
+        abort(ir_instruction.object_type)
+    }
+}
+
+func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_Return_Instruction, mc_block: @MC_Block) -> Nothing {
+    let ir_return_value = ir_return_instruction.get_return_value()
+    if ir_return_value != null {
+        self.assign_value(ir_return_value, self.register_rax, mc_block)
+    }
+
+    mc_block.append(make @MC_RET_Instruction())
+}
+
+func assign_value(self: @MC_Generator, ir_value: @IR_Value, mc_register: @MC_Register, mc_block: @MC_Block) -> Nothing {
+    if mc_register.value != null {
+        abort("Register already assigned")
+    }
+
+    mc_block.live_values.for_each() {
+        if it.ir_value == ir_value {
+            if it.register != null {
+                abort("TODO: Move value to new register")
+            } else if it.literal != null {
+                let literal = it.literal
+                if literal is Integer_Token {
+                    mc_block.append(make @MC_MOV_Instruction(
+                        source = make @MC_Value_Instruction_Operand(literal = literal)
+                        destination = make @MC_Register_Instruction_Operand(register = mc_register, data_size = ir_value.type.size_of())
+                    ))
+                    return
+                } else {
+                    abort(literal.object_type)
+                }
+            } else {
+                abort("TODO: Check other value holder")
+            }
+        }
+    }
+
+    \ value not assigned yet
+    abort("TODO: Assign value to register")
+}
+
+func size_of(self: @IR_Type) -> i32 {
+    if self is IR_Int32_Type {
+        return 4
+    }
+    abort(self.object_type)
+}

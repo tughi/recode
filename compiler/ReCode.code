@@ -6,6 +6,8 @@ include "./ir/IR_Builder.code"
 include "./ir/IR_Code.code"
 include "./ir/IR_Interference_Graph.code"
 include "./ir/IR_Liveness_Analysis.code"
+include "./mc/MC_Code.code"
+include "./mc/MC_Generator.code"
 include "./scanner/Scanner.code"
 include "./scanner/Token.code"
 include "./source/Source.code"
@@ -51,6 +53,9 @@ func main(argc: i32, argv: [[u8; ?]; ?]) -> Nothing {
     } else if command.output.equals("ig") {
         let function_interference_graphs = ir_code.build_interference_graphs()
         command.output_file.write(function_interference_graphs)
+    } else if command.output.equals("mc") {
+        let mc_code = convert(ir_code, command.output_file)
+        command.output_file.write(mc_code)
     } else {
         abort(clone("Unsupported output: ").append(command.output))
     }
@@ -134,7 +139,7 @@ func parse_args(argc: i32, argv: [[u8; ?]; ?]) -> @Command {
         exit(1)
     }
     let output = arguments_item.data
-    if not output.equals("asm") and not output.equals("cfg") and not output.equals("ig") and not output.equals("ir") and not output.equals("irl") {
+    if not output.equals("cfg") and not output.equals("ig") and not output.equals("ir") and not output.equals("irl") and not output.equals("mc") {
         stderr.error().write("Unsupported output: ").write(output).reset().end_line().end_line()
         print_help(argv[0])
         abort()
@@ -175,7 +180,7 @@ func print_help(path: [u8; ?]) -> Nothing {
     stderr.write("    \033[1mm2r\033[0m - Move to Register").end_line()
     stderr.end_line()
     stderr.write("Outputs:").end_line()
-    stderr.write("    \033[1masm\033[0m - Assembly").end_line()
+    stderr.write("    \033[1mmc\033[0m  - Machine Code (x86-64/linux)").end_line()
     stderr.write("    \033[1mcfg\033[0m - Control Flow Graph").end_line()
     stderr.write("    \033[1mir\033[0m  - Intermediate Representation").end_line()
     stderr.write("    \033[1mirl\033[0m - Intermediate Representation with liveness analysis").end_line()
