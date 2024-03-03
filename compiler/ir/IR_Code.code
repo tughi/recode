@@ -449,11 +449,11 @@ func get_condition(self: @IR_Branch_Instruction) -> @IR_Value {
 }
 
 struct IR_Call_Instruction: IR_Instruction {
-    arguments_size = 0i64
+    arguments_size = 0
 }
 
 func write_call_arguments(file: @FILE, instruction: @IR_Call_Instruction) -> @FILE {
-    let call_argument_index = 0i64
+    let call_argument_index = 0
     while call_argument_index < instruction.arguments_size {
         file.write(' ').write(instruction.get_argument_value(call_argument_index))
         call_argument_index = call_argument_index + 1
@@ -477,11 +477,11 @@ func add_arguments(self: @IR_Call_Instruction, call_arguments: @List[@IR_Call_Ar
     return self
 }
 
-func get_argument_value(self: @IR_Call_Instruction, index: i64) -> @IR_Value {
+func get_argument_value(self: @IR_Call_Instruction, index: i32) -> @IR_Value {
     return self.operand_values.get(get_argument_key(index))
 }
 
-func get_argument_key(index: i64) -> @String {
+func get_argument_key(index: i32) -> @String {
     if index == 0 {
         return "argument-0-value"
     } else if index == 1 {

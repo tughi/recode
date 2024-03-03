@@ -26,6 +26,26 @@ struct MC_Generator {
     current_function: @MC_Function = null
 }
 
+func parameter_register(self: @MC_Generator, index: i32) -> @MC_Register {
+    let register: @MC_Register
+    if index == 0 {
+        register = self.register_rdi
+    } else if index == 1 {
+        register = self.register_rsi
+    } else if index == 2 {
+        register = self.register_rdx
+    } else if index == 3 {
+        register = self.register_rcx
+    } else if index == 4 {
+        register = self.register_r8
+    } else if index == 5 {
+        register = self.register_r9
+    } else {
+        register = null
+    }
+    return register
+}
+
 func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
     let mc_code = make @MC_Code()
     ir_code.global_symbols.for_each() {
@@ -92,7 +112,14 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block_v
         \ this must be the first block
         if ir_block.function.parameters.size > 0 {
             \ create live values from function parameters
-            abort("TODO: Assign parameters to registers or stack slots")
+            ir_block.function.parameters.for_each_indexed() {
+                let ir_parameter = it
+                let mc_parameter = make @MC_Register_Value(
+                    ir_value = ir_parameter.value
+                    register = self.parameter_register(it_index.as(i32))
+                )
+                mc_block.live_values.append(mc_parameter)
+            }
         }
     }
 
@@ -138,8 +165,18 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
 func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruction: @IR_Direct_Call_Instruction, mc_block: @MC_Block) -> Nothing {
     let ir_function = ir_direct_call_instruction.function
 
-    if ir_function.parameters.size > 0 {
-        abort("TODO: Assign function parameters")
+    if ir_direct_call_instruction.arguments_size > 0 {
+        let argument_index = 0
+        while argument_index < ir_direct_call_instruction.arguments_size {
+            self.make_register_value(
+                mc_block
+                ir_direct_call_instruction.get_argument_value(argument_index)
+                self.parameter_register(argument_index)
+            )
+            argument_index = argument_index + 1
+        }
+
+        \ TODO: move live values to callee saved registers or stack slots
     }
 
     let mc_call_instruction = make @MC_CALL_Instruction(
@@ -186,11 +223,29 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
         }
     }
 
+    \ check if live value is already mapped
     mc_block.live_values.for_each() {
         let mc_value = it
         if mc_value.ir_value == ir_value {
             if mc_value is MC_Register_Value {
-                abort("TODO: Check register")
+                let old_mc_register_value = mc_value.as(@MC_Register_Value)
+                if old_mc_register_value.register != mc_register {
+                    \ move value to other register
+                    let new_mc_register_value = make @MC_Register_Value(
+                        ir_value = ir_value
+                        register = mc_register
+                    )
+                    mc_block.append(make @MC_MOV_Instruction(
+                        source = old_mc_register_value
+                        destination = new_mc_register_value
+                    ))
+
+                    \ replace old register value with new one
+                    mc_block.live_values.prepend(new_mc_register_value)
+                    mc_block.live_values.remove(old_mc_register_value)
+                    mc_block.live_values.prune()
+                }
+                return
             } else if mc_value is MC_Immediate_Value {
                 \ move value to register
                 let mc_immediate_value = mc_value.as(@MC_Immediate_Value)
