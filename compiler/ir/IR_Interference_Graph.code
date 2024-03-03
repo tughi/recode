@@ -22,16 +22,16 @@ func write(file: @FILE, graphs: @Map[@IR_Function, @IR_Interference_Graph]) -> @
         let function = key
         let graph = value
         file.end_line().write("   subgraph cluster_").write(cluster).write(" {").end_line()
-        file.write("      label=\"").write(function.name).write('"').end_line()
+        file.write("      label=\"").write_name(function).write('"').end_line()
         let visited_nodes = make List[@IR_Value]()
         graph.nodes.for_each() {
             let node = key
             let neighbours = value
-            file.write("      \"").write(function.name).write(node).write("\" [label=\"").write(node).write("\"]").end_line()
+            file.write("      \"").write_name(function).write(node).write("\" [label=\"").write(node).write("\"]").end_line()
             neighbours.for_each() {
                 let neighbour = it
                 if not visited_nodes.contains(neighbour) {
-                    file.write("      \"").write(function.name).write(node).write("\" -- \"").write(function.name).write(neighbour).write('"').end_line()
+                    file.write("      \"").write_name(function).write(node).write("\" -- \"").write_name(function).write(neighbour).write('"').end_line()
                 }
             }
             visited_nodes.append(node)

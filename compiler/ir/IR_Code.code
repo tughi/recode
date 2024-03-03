@@ -164,13 +164,18 @@ struct IR_Symbol: Object {
     type: @IR_Type
 }
 
-func write(file: @FILE, self: @IR_Symbol, live: bool) -> Nothing {
-    if self is IR_Function {
-        file.write(self.as(@IR_Function), live)
+func write(file: @FILE, symbol: @IR_Symbol, live: bool) -> Nothing {
+    if symbol is IR_Function {
+        file.write(symbol.as(@IR_Function), live)
     } else {
-        abort(self.object_type)
+        abort(symbol.object_type)
     }
 }
+
+func write_name(file: @FILE, symbol: @IR_Symbol) -> @FILE {
+    return file.write('$').write(symbol.name)
+}
+
 
 struct IR_Function: IR_Symbol {
     function_type: @IR_Function_Type
@@ -193,7 +198,7 @@ func create_block(self: @IR_Function) -> @IR_Block {
 }
 
 func write(file: @FILE, function: @IR_Function, live: bool) -> @FILE {
-    file.write(function.name).write("(")
+    file.write_name(function).write("(")
     let function_type = function.function_type
     let function_parameters = function.parameters.create_iterator()
     while function_parameters.has_next() {
@@ -220,7 +225,7 @@ func write(file: @FILE, function: @IR_Function, live: bool) -> @FILE {
 
 func write_cfg(file: @FILE, function: @IR_Function, cluster: i32) -> @FILE {
     file.end_line().write("   subgraph cluster_").write(cluster).write(" {").end_line()
-    file.write("      label=\"").write(function.name).write('(')
+    file.write("      label=\"").write_name(function).write('(')
     let function_parameters = function.parameters.create_iterator()
     while function_parameters.has_next() {
         let function_parameter = function_parameters.next()
@@ -328,7 +333,7 @@ func write_cfg(file: @FILE, block: @IR_Block) -> @FILE {
 }
 
 func write_cfg_name(file: @FILE, block: @IR_Block) -> @FILE {
-    return file.write('"').write(block.function.name).write_name(block).write('"')
+    return file.write('"').write_name(block.function).write_name(block).write('"')
 }
 
 struct IR_Instruction: Object {
@@ -517,7 +522,7 @@ func create_ir_constant_instruction(result_value: @IR_Value, literal: @Literal_T
 struct IR_Direct_Call_Instruction: IR_Call_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Direct_Call_Instruction)
-        return file.write("call ").write(instruction.function.name).write_call_arguments(instruction)
+        return file.write("call ").write_name(instruction.function).write_call_arguments(instruction)
     }
 ) {
     function: @IR_Function

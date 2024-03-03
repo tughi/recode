@@ -15,9 +15,8 @@ struct MC_Function {
 }
 
 func write(file: @FILE, function: @MC_Function) -> @FILE {
-    if function.name.equals("$main") {
+    if function.name.equals("main") {
         file.write(".globl main").end_line()
-        file.write("main:").end_line()
     }
     file.write(function.name).write(':').end_line()
     function.blocks.for_each() {
@@ -27,6 +26,7 @@ func write(file: @FILE, function: @MC_Function) -> @FILE {
 }
 
 struct MC_Block {
+    function: @MC_Function
     name: @String
     first_instruction: @MC_Instruction = null
     last_instruction: @MC_Instruction = null
@@ -47,26 +47,102 @@ func write(file: @FILE, block: @MC_Block) -> @FILE {
     file.write_name(block).write(':').end_line()
     let instruction = block.first_instruction
     while instruction != null {
-        file.write("  ")
-        instruction.write(file)
-        file.end_line()
+        file.write("  ").write(instruction).end_line()
         instruction = instruction.next_instruction
     }
     return file
 }
 
 func write_name(file: @FILE, block: @MC_Block) -> @FILE {
-    return file.write(".L").write(block.name)
+    return file.write(".L__").write(block.function.name).write("__").write(block.name)
 }
 
-struct MC_Value {
+\ MC_Value represents where is the IR_Value stored at the moment of execution 
+struct MC_Value: Object {
     ir_value: @IR_Value
-    literal: @Literal_Token
+    data_size = 0
+
+    write = func (self: @MC_Value, file: @FILE) -> @FILE {
+        abort(clone("Unsupported type: ").append(self.object_type.name))
+    }
+}
+
+func write(file: @FILE, value: @MC_Value) -> @FILE {
+    return value.write(file)
+}
+
+func data_size(self: @MC_Value) -> i32 {
+    let data_size = self.data_size
+    if data_size == 0 {
+        let ir_type = self.ir_value.type
+        if ir_type is IR_Boolean_Type {
+            data_size = 1
+        } else if ir_type is IR_Int16_Type {
+            data_size = 2
+        } else if ir_type is IR_Int32_Type {
+            data_size = 4
+        } else if ir_type is IR_Int64_Type {
+            data_size = 8
+        } else if ir_type is IR_Int8_Type {
+            data_size = 1
+        } else if ir_type is IR_Pointer_Type {
+            data_size = 8
+        } else if ir_type is IR_UInt16_Type {
+            data_size = 2
+        } else if ir_type is IR_UInt32_Type {
+            data_size = 4
+        } else if ir_type is IR_UInt64_Type {
+            data_size = 8
+        } else if ir_type is IR_UInt8_Type {
+            data_size = 1
+        } else {
+            abort(clone("Unsupported type: ").append(self.object_type.name))
+        }
+        self.data_size = data_size
+    }
+    return data_size
+}
+
+\ MC_Global_Value points to an absolute offset
+struct MC_Global_Value: MC_Value(
+    write = func (self: @MC_Value, file: @FILE) -> @FILE {
+        return file.write(self.as(@MC_Global_Value).name)
+    }
+) {
+    name: @String
+}
+
+\ MC_Immediate_Value is for constants
+struct MC_Immediate_Value: MC_Value(
+    write = func (self: @MC_Value, file: @FILE) -> @FILE {
+        return file.write('$').write(self.as(@MC_Immediate_Value).literal.value)
+    }
+) {
+    literal: @Integer_Token
+}
+
+struct MC_Register_Value: MC_Value(
+    write = func (self: @MC_Value, file: @FILE) -> @FILE {
+        let self = self.as(@MC_Register_Value)
+        let data_size = self.data_size()
+        if data_size == 1 {
+            file.write(self.register.name_b)
+        } else if data_size == 2 {
+            file.write(self.register.name_w)
+        } else if data_size == 4 {
+            file.write(self.register.name_d)
+        } else if data_size == 8 {
+            file.write(self.register.name_q)
+        } else {
+            abort(clone("Unsupported data size: ").append(data_size))
+        }
+        return file
+    }
+) {
     register: @MC_Register
 }
 
 struct MC_Instruction: Object {
-    name: @String
     data_size = 0u8 \ 0: none, 1: byte, 2: word, 4: double, 8: quad
     prev_instruction: @MC_Instruction = null
     next_instruction: @MC_Instruction = null
@@ -75,61 +151,33 @@ struct MC_Instruction: Object {
     }
 }
 
-struct MC_Instruction_Operand: Object {
-    write = func (self: @MC_Instruction_Operand, file: @FILE) -> @FILE {
-        abort(clone("Unsupported type: ").append(self.object_type.name))
-    }
+func write(file: @FILE, instruction: @MC_Instruction) -> @FILE {
+    return instruction.write(file)
 }
 
-struct MC_Register_Instruction_Operand: MC_Instruction_Operand(
-    write = func (self: @MC_Instruction_Operand, file: @FILE) -> @FILE {
-        let self = self.as(@MC_Register_Instruction_Operand)
-        if self.data_size == 1 {
-            return file.write(self.register.name_b)
-        }
-        if self.data_size == 2 {
-            return file.write(self.register.name_w)
-        }
-        if self.data_size == 4 {
-            return file.write(self.register.name_d)
-        }
-        if self.data_size == 8 {
-            return file.write(self.register.name_q)
-        }
-        abort(clone("Unsupported data size: ").append(self.data_size))
-    }
-) {
-    register: @MC_Register
-    data_size: i32
-}
-
-struct MC_Value_Instruction_Operand: MC_Instruction_Operand(
-    write = func (self: @MC_Instruction_Operand, file: @FILE) -> @FILE {
-        return file.write('$').write(self.as(@MC_Value_Instruction_Operand).literal)
-    }
-) {
-    literal: @Literal_Token
-}
-
-struct MC_MOV_Instruction: MC_Instruction(
-    name = "mov"
+struct MC_CALL_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
-        let instruction = self.as(@MC_MOV_Instruction)
-        file.write(instruction.name).write("  ")
-        instruction.source.write(file)
-        file.write(", ")
-        instruction.destination.write(file)
+        file.write("call").write(' ')
+        self.as(@MC_CALL_Instruction).callee.write(file)
         return file
     }
 ) {
-    source: @MC_Instruction_Operand
-    destination: @MC_Instruction_Operand
+    callee: @MC_Value
+}
+
+struct MC_MOV_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_MOV_Instruction)
+        return file.write("mov").write(' ').write(instruction.source).write(", ").write(instruction.destination)
+    }
+) {
+    source: @MC_Value
+    destination: @MC_Value
 }
 
 struct MC_RET_Instruction: MC_Instruction(
-    name = "ret"
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
-        return file.write(self.as(@MC_RET_Instruction).name)
+        return file.write("ret")
     }
 ) {
 }

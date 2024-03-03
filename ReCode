@@ -149,7 +149,6 @@ def test(paths, save=False, stage=1):
                                 # Check if the assembly is valid
                                 assemble(None, f'build/{test_code[:-5]}', input=compiler_result.stdout, text=True, check=True)
                                 run(f'build/{test_code[:-5]}', check=True)
-
                             open(test_file, 'w').write(compiler_result.stdout)
                             save = False
                             continue
@@ -157,6 +156,10 @@ def test(paths, save=False, stage=1):
                         exit(1)
                 else:
                     if save:
+                        if test_file.endswith('.s'):
+                            # Check if the assembly is valid
+                            assemble(None, f'build/{test_code[:-5]}', input=compiler_result.stdout, text=True, check=True)
+                            run(f'build/{test_code[:-5]}', check=True)
                         open(test_file, 'w').write(compiler_result.stdout)
                         save = False
                         continue

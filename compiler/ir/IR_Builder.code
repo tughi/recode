@@ -171,7 +171,7 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
 
     let ir_function = make @IR_Function(
         checked_symbol = checked_function_symbol
-        name = clone("$").append(checked_function_symbol.name) \ TODO: Generate unique name using hex hash of parameter types
+        name = clone("").append(checked_function_symbol.name) \ TODO: Generate unique name using hex hash of parameter types
         type = self.create_ir_pointer_type(ir_function_type)
         function_type = ir_function_type
         parameters = ir_function_parameters
