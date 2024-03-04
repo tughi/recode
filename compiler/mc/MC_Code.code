@@ -155,6 +155,16 @@ func write(file: @FILE, instruction: @MC_Instruction) -> @FILE {
     return instruction.write(file)
 }
 
+struct MC_ADD_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_ADD_Instruction)
+        return file.write("add").write(' ').write(instruction.source).write(", ").write(instruction.destination)
+    }
+) {
+    source: @MC_Value
+    destination: @MC_Value
+}
+
 struct MC_CALL_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         file.write("call").write(' ')
@@ -163,6 +173,29 @@ struct MC_CALL_Instruction: MC_Instruction(
     }
 ) {
     callee: @MC_Value
+}
+
+struct MC_CLTD_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("cltd")
+    }
+) {
+}
+
+struct MC_DIV_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("div").write(' ').write(self.as(@MC_DIV_Instruction).source)
+    }
+) {
+    source: @MC_Value
+}
+
+struct MC_IDIV_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("idiv").write(' ').write(self.as(@MC_DIV_Instruction).source)
+    }
+) {
+    source: @MC_Value
 }
 
 struct MC_MOV_Instruction: MC_Instruction(
@@ -175,11 +208,29 @@ struct MC_MOV_Instruction: MC_Instruction(
     destination: @MC_Value
 }
 
+struct MC_MUL_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("mul").write(' ').write(self.as(@MC_MUL_Instruction).source)
+    }
+) {
+    source: @MC_Value
+}
+
 struct MC_RET_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         return file.write("ret")
     }
 ) {
+}
+
+struct MC_SUB_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SUB_Instruction)
+        return file.write("sub").write(' ').write(instruction.source).write(", ").write(instruction.destination)
+    }
+) {
+    source: @MC_Value
+    destination: @MC_Value
 }
 
 struct MC_Register: Object {
@@ -188,52 +239,55 @@ struct MC_Register: Object {
     name_w: @String
     name_b: @String
     value: @MC_Value = null
+    is_callee_saved = false
+    is_caller_saved = false
+    is_reserved = false
 }
 
-struct MC_Register_RAX: MC_Register(name_q = "%rax", name_d = "%eax", name_w = "%ax", name_b = "%al") {
+struct MC_Register_RAX: MC_Register(name_q = "%rax", name_d = "%eax", name_w = "%ax", name_b = "%al", is_caller_saved = true) {
 }
 
-struct MC_Register_RCX: MC_Register(name_q = "%rcx", name_d = "%ecx", name_w = "%cx", name_b = "%cl") {
+struct MC_Register_RCX: MC_Register(name_q = "%rcx", name_d = "%ecx", name_w = "%cx", name_b = "%cl", is_caller_saved = true) {
 }
 
-struct MC_Register_RDX: MC_Register(name_q = "%rdx", name_d = "%edx", name_w = "%dx", name_b = "%dl") {
+struct MC_Register_RDX: MC_Register(name_q = "%rdx", name_d = "%edx", name_w = "%dx", name_b = "%dl", is_caller_saved = true) {
 }
 
-struct MC_Register_RBX: MC_Register(name_q = "%rbx", name_d = "%ebx", name_w = "%bx", name_b = "%bl") {
+struct MC_Register_RBX: MC_Register(name_q = "%rbx", name_d = "%ebx", name_w = "%bx", name_b = "%bl", is_callee_saved = true) {
 }
 
 struct MC_Register_RSP: MC_Register(name_q = "%rsp", name_d = "%esp", name_w = "%sp", name_b = "%spl") {
 }
 
-struct MC_Register_RBP: MC_Register(name_q = "%rbp", name_d = "%ebp", name_w = "%bp", name_b = "%bpl") {
+struct MC_Register_RBP: MC_Register(name_q = "%rbp", name_d = "%ebp", name_w = "%bp", name_b = "%bpl", is_callee_saved = true) {
 }
 
-struct MC_Register_RSI: MC_Register(name_q = "%rsi", name_d = "%esi", name_w = "%si", name_b = "%sil") {
+struct MC_Register_RSI: MC_Register(name_q = "%rsi", name_d = "%esi", name_w = "%si", name_b = "%sil", is_caller_saved = true) {
 }
 
-struct MC_Register_RDI: MC_Register(name_q = "%rdi", name_d = "%edi", name_w = "%di", name_b = "%dil") {
+struct MC_Register_RDI: MC_Register(name_q = "%rdi", name_d = "%edi", name_w = "%di", name_b = "%dil", is_caller_saved = true) {
 }
 
-struct MC_Register_R8: MC_Register(name_q = "%r8", name_d = "%r8d", name_w = "%r8w", name_b = "%r8b") {
+struct MC_Register_R8: MC_Register(name_q = "%r8", name_d = "%r8d", name_w = "%r8w", name_b = "%r8b", is_caller_saved = true) {
 }
 
-struct MC_Register_R9: MC_Register(name_q = "%r9", name_d = "%r9d", name_w = "%r9w", name_b = "%r9b") {
+struct MC_Register_R9: MC_Register(name_q = "%r9", name_d = "%r9d", name_w = "%r9w", name_b = "%r9b", is_caller_saved = true) {
 }
 
-struct MC_Register_R10: MC_Register(name_q = "%r10", name_d = "%r10d", name_w = "%r10w", name_b = "%r10b") {
+struct MC_Register_R10: MC_Register(name_q = "%r10", name_d = "%r10d", name_w = "%r10w", name_b = "%r10b", is_caller_saved = true) {
 }
 
-struct MC_Register_R11: MC_Register(name_q = "%r11", name_d = "%r11d", name_w = "%r11w", name_b = "%r11b") {
+struct MC_Register_R11: MC_Register(name_q = "%r11", name_d = "%r11d", name_w = "%r11w", name_b = "%r11b", is_caller_saved = true) {
 }
 
-struct MC_Register_R12: MC_Register(name_q = "%r12", name_d = "%r12d", name_w = "%r12w", name_b = "%r12b") {
+struct MC_Register_R12: MC_Register(name_q = "%r12", name_d = "%r12d", name_w = "%r12w", name_b = "%r12b", is_callee_saved = true) {
 }
 
-struct MC_Register_R13: MC_Register(name_q = "%r13", name_d = "%r13d", name_w = "%r13w", name_b = "%r13b") {
+struct MC_Register_R13: MC_Register(name_q = "%r13", name_d = "%r13d", name_w = "%r13w", name_b = "%r13b", is_callee_saved = true) {
 }
 
-struct MC_Register_R14: MC_Register(name_q = "%r14", name_d = "%r14d", name_w = "%r14w", name_b = "%r14b") {
+struct MC_Register_R14: MC_Register(name_q = "%r14", name_d = "%r14d", name_w = "%r14w", name_b = "%r14b", is_callee_saved = true) {
 }
 
-struct MC_Register_R15: MC_Register(name_q = "%r15", name_d = "%r15d", name_w = "%r15w", name_b = "%r15b") {
+struct MC_Register_R15: MC_Register(name_q = "%r15", name_d = "%r15d", name_w = "%r15w", name_b = "%r15b", is_callee_saved = true) {
 }

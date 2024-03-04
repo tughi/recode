@@ -1,17 +1,19 @@
 $main(): i32 {
 @1:
-   %1: i32 = const 1
-   %2: i32 = const 2
-   %3: i32 = call $add %1 %2
-   %4: i32 = const 3
-   %5: i32 = call $sub %3 %4
-   %6: i32 = const 4
-   %7: i32 = call $mul %5 %6
-   %8: i32 = const 5
-   %9: i32 = call $div %7 %8
-   %10: i32 = const 6
-   %11: i32 = call $mod %9 %10
-   ret %11
+   %1: i32 = const 42
+   %2: i32 = const 10
+   %3: i32 = call $div %1 %2
+   %4: i32 = const 2
+   %5: i32 = call $add %3 %4
+   %6: i32 = const 42
+   %7: i32 = const 10
+   %8: i32 = call $mod %6 %7
+   %9: i32 = const 5
+   %10: i32 = call $add %8 %9
+   %11: i32 = call $mul %5 %10
+   %12: i32 = const 42
+   %13: i32 = call $sub %11 %12
+   ret %13
 }
 
 $add(%v1: i32, %v2: i32): i32 {

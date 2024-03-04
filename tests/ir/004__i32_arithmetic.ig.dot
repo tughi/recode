@@ -12,14 +12,21 @@ graph {
       "$main%4" [label="%4"]
       "$main%5" [label="%5"]
       "$main%5" -- "$main%6"
+      "$main%5" -- "$main%7"
+      "$main%5" -- "$main%8"
+      "$main%5" -- "$main%9"
+      "$main%5" -- "$main%10"
       "$main%6" [label="%6"]
+      "$main%6" -- "$main%7"
       "$main%7" [label="%7"]
-      "$main%7" -- "$main%8"
       "$main%8" [label="%8"]
+      "$main%8" -- "$main%9"
       "$main%9" [label="%9"]
-      "$main%9" -- "$main%10"
       "$main%10" [label="%10"]
       "$main%11" [label="%11"]
+      "$main%11" -- "$main%12"
+      "$main%12" [label="%12"]
+      "$main%13" [label="%13"]
    }
 
    subgraph cluster_1 {

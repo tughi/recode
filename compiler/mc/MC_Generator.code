@@ -47,6 +47,8 @@ func parameter_register(self: @MC_Generator, index: i32) -> @MC_Register {
 }
 
 func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
+    ir_code.compute_live_values()
+
     let mc_code = make @MC_Code()
     ir_code.global_symbols.for_each() {
         let symbol = it
@@ -142,7 +144,9 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block_v
 }
 
 func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, mc_block: @MC_Block) -> Nothing {
-    if ir_instruction is IR_Constant_Instruction {
+    if ir_instruction is IR_Add_Instruction {
+        self.convert_add_instruction(ir_instruction.as(@IR_Add_Instruction), mc_block)
+    } else if ir_instruction is IR_Constant_Instruction {
         let literal = ir_instruction.as(@IR_Constant_Instruction).literal
         if literal is Integer_Token {
             mc_block.live_values.append(make @MC_Immediate_Value(
@@ -154,17 +158,54 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         }
     } else if ir_instruction is IR_Direct_Call_Instruction {
         self.convert_direct_call_instruction(ir_instruction.as(@IR_Direct_Call_Instruction), mc_block)
+    } else if ir_instruction is IR_Divide_Instruction {
+        self.convert_divide_instruction(ir_instruction.as(@IR_Divide_Instruction), mc_block)
+    } else if ir_instruction is IR_Modulo_Instruction {
+        self.convert_modulo_instruction(ir_instruction.as(@IR_Modulo_Instruction), mc_block)
+    } else if ir_instruction is IR_Multiply_Instruction {
+        self.convert_multiply_instruction(ir_instruction.as(@IR_Multiply_Instruction), mc_block)
     } else if ir_instruction is IR_Return_Instruction {
         self.convert_return_instruction(ir_instruction.as(@IR_Return_Instruction), mc_block)
+    } else if ir_instruction is IR_Substract_Instruction {
+        self.convert_substract_instruction(ir_instruction.as(@IR_Substract_Instruction), mc_block)
     } else {
+        stderr.write(self.current_function).end_line()
         abort(ir_instruction.object_type)
     }
     \ TODO: cleanup live values
 }
 
-func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruction: @IR_Direct_Call_Instruction, mc_block: @MC_Block) -> Nothing {
-    let ir_function = ir_direct_call_instruction.function
+func convert_add_instruction(self: @MC_Generator, ir_add_instruction: @IR_Add_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_register_value = self.make_register_value(
+        mc_block
+        ir_add_instruction.result_value
+        self.find_free_caller_saved_register(mc_block)
+    )
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_block.find_value(ir_add_instruction.get_left_value())
+        destination = mc_register_value
+    ))
+    mc_block.append(make @MC_ADD_Instruction(
+        source = mc_block.find_value(ir_add_instruction.get_right_value())
+        destination = mc_register_value
+    ))
+}
 
+func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruction: @IR_Direct_Call_Instruction, mc_block: @MC_Block) -> Nothing {
+    \ move live values to callee saved registers or stack slots
+    ir_direct_call_instruction.next_instruction.live_values.for_each() {
+        let ir_value = it
+        if ir_value != ir_direct_call_instruction.result_value {
+            let mc_register_value = mc_block.find_register_value(it)
+            if mc_register_value != null and mc_register_value.register.is_caller_saved {
+                \ move value to callee saved register
+                let mc_register = self.find_free_callee_saved_register(mc_block)
+                self.make_register_value(mc_block, ir_value, mc_register)
+            }
+        }
+    }
+
+    \ map arguments to registers
     if ir_direct_call_instruction.arguments_size > 0 {
         let argument_index = 0
         while argument_index < ir_direct_call_instruction.arguments_size {
@@ -175,26 +216,111 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
             )
             argument_index = argument_index + 1
         }
-
-        \ TODO: move live values to callee saved registers or stack slots
     }
 
-    let mc_call_instruction = make @MC_CALL_Instruction(
+    \ create call instruction
+    let ir_function = ir_direct_call_instruction.function
+    mc_block.append(make @MC_CALL_Instruction(
         callee = make @MC_Global_Value(
             ir_value = null
             name = ir_function.name
         )
-    )
-    mc_block.append(mc_call_instruction)
+    ))
 
+    \ remove all caller-saved register values
+    mc_block.live_values.for_each() {
+        let mc_value = it
+        if mc_value is MC_Register_Value {
+            let mc_register_value = mc_value.as(@MC_Register_Value)
+            if mc_register_value.register.is_caller_saved {
+                mc_block.live_values.remove(mc_register_value)
+            }
+        }
+    }
+    mc_block.live_values.prune()
+
+    \ map return value to rax
     if ir_function.return_type != null {
-        \ map return value to rax
         let return_value = make @MC_Register_Value(
             ir_value = ir_direct_call_instruction.result_value
             register = self.register_rax
         )
         mc_block.live_values.append(return_value)
     }
+}
+
+func convert_divide_instruction(self: @MC_Generator, ir_divide_instruction: @IR_Divide_Instruction, mc_block: @MC_Block) -> Nothing {
+    if not self.register_rax.is_free(mc_block) {
+        \ move rax value to another register
+        abort("rax is not free")
+    }
+    self.register_rax.is_reserved = true
+    if not self.register_rdx.is_free(mc_block) {
+        \ move rdx value to another register
+        abort("rdx is not free")
+    }
+    self.register_rdx.is_reserved = true
+    let mc_register_value = make @MC_Register_Value(
+        ir_value = ir_divide_instruction.result_value
+        register = self.register_rax
+    )
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_block.find_value(ir_divide_instruction.get_left_value())
+        destination = mc_register_value
+    ))
+    mc_block.append(make @MC_CLTD_Instruction())
+    mc_block.append(make @MC_IDIV_Instruction(
+        source = mc_block.find_value(ir_divide_instruction.get_right_value())
+    ))
+    mc_block.live_values.append(mc_register_value)
+    self.register_rdx.is_reserved = false
+    self.register_rax.is_reserved = false
+}
+
+func convert_modulo_instruction(self: @MC_Generator, ir_modulo_instruction: @IR_Modulo_Instruction, mc_block: @MC_Block) -> Nothing {
+    if not self.register_rax.is_free(mc_block) {
+        \ move rax value to another register
+        abort("rax is not free")
+    }
+    self.register_rax.is_reserved = true
+    if not self.register_rdx.is_free(mc_block) {
+        \ move rdx value to another register
+        abort("rdx is not free")
+    }
+    self.register_rdx.is_reserved = true
+    let mc_register_value = make @MC_Register_Value(
+        ir_value = ir_modulo_instruction.result_value
+        register = self.register_rax
+    )
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_block.find_value(ir_modulo_instruction.get_left_value())
+        destination = mc_register_value
+    ))
+    mc_block.append(make @MC_CLTD_Instruction())
+    mc_block.append(make @MC_IDIV_Instruction(
+        source = mc_block.find_value(ir_modulo_instruction.get_right_value())
+    ))
+    mc_block.live_values.append(make @MC_Register_Value(
+        ir_value = ir_modulo_instruction.result_value
+        register = self.register_rdx
+    ))
+    self.register_rdx.is_reserved = false
+    self.register_rax.is_reserved = false
+}
+
+func convert_multiply_instruction(self: @MC_Generator, ir_multiply_instruction: @IR_Multiply_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_register_value = self.make_register_value(
+        mc_block
+        ir_multiply_instruction.result_value
+        self.register_rax
+    )
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_block.find_value(ir_multiply_instruction.get_left_value())
+        destination = mc_register_value
+    ))
+    mc_block.append(make @MC_MUL_Instruction(
+        source = mc_block.find_value(ir_multiply_instruction.get_right_value())
+    ))
 }
 
 func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_Return_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -206,7 +332,115 @@ func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_
     mc_block.append(make @MC_RET_Instruction())
 }
 
-func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR_Value, mc_register: @MC_Register) -> Nothing {
+func convert_substract_instruction(self: @MC_Generator, ir_substract_instruction: @IR_Substract_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_register_value = self.make_register_value(
+        mc_block
+        ir_substract_instruction.result_value
+        self.find_free_caller_saved_register(mc_block)
+    )
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_block.find_value(ir_substract_instruction.get_left_value())
+        destination = mc_register_value
+    ))
+    mc_block.append(make @MC_SUB_Instruction(
+        source = mc_block.find_value(ir_substract_instruction.get_right_value())
+        destination = mc_register_value
+    ))
+}
+
+func find_free_callee_saved_register(self: @MC_Generator, mc_block: @MC_Block) -> @MC_Register {
+    if self.register_rbx.is_free(mc_block) {
+        return self.register_rbx
+    }
+    if self.register_rbp.is_free(mc_block) {
+        return self.register_rbp
+    }
+    if self.register_r12.is_free(mc_block) {
+        return self.register_r12
+    }
+    if self.register_r13.is_free(mc_block) {
+        return self.register_r13
+    }
+    if self.register_r14.is_free(mc_block) {
+        return self.register_r14
+    }
+    if self.register_r15.is_free(mc_block) {
+        return self.register_r15
+    }
+    abort("No free callee saved register")
+}
+
+func find_free_caller_saved_register(self: @MC_Generator, mc_block: @MC_Block) -> @MC_Register {
+    if self.register_r11.is_free(mc_block) {
+        return self.register_r11
+    }
+    if self.register_r10.is_free(mc_block) {
+        return self.register_r10
+    }
+    if self.register_r9.is_free(mc_block) {
+        return self.register_r9
+    }
+    if self.register_r8.is_free(mc_block) {
+        return self.register_r8
+    }
+    if self.register_rax.is_free(mc_block) {
+        return self.register_rax
+    }
+    if self.register_rdi.is_free(mc_block) {
+        return self.register_rdi
+    }
+    if self.register_rsi.is_free(mc_block) {
+        return self.register_rsi
+    }
+    if self.register_rdx.is_free(mc_block) {
+        return self.register_rdx
+    }
+    if self.register_rcx.is_free(mc_block) {
+        return self.register_rcx
+    }
+    abort("No free caller saved register")
+}
+
+func is_free(self: @MC_Register, mc_block: @MC_Block) -> bool {
+    if self.is_reserved {
+        return false
+    }
+    mc_block.live_values.for_each() {
+        let mc_value = it
+        if mc_value is MC_Register_Value {
+            let mc_register_value = mc_value.as(@MC_Register_Value)
+            if mc_register_value.register == self {
+                return false
+            }
+        }
+    }
+    return true
+}
+
+func find_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Value {
+    self.live_values.for_each() {
+        let mc_value = it
+        if mc_value.ir_value == ir_value {
+            return mc_value
+        }
+    }
+    return null
+}
+
+func find_register_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Register_Value {
+    self.live_values.for_each() {
+        let mc_value = it
+        if mc_value is MC_Register_Value {
+            let mc_register_value = mc_value.as(@MC_Register_Value)
+            if mc_register_value.ir_value == ir_value {
+                return mc_register_value
+            }
+        }
+    }
+    return null
+}
+
+func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR_Value, mc_register: @MC_Register) -> @MC_Register_Value {
     \ check if register is already mapped to another live value
     mc_block.live_values.for_each() {
         let mc_value = it
@@ -215,7 +449,7 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
             if mc_value.register == mc_register {
                 if mc_value.ir_value == ir_value {
                     \ mapping already exists
-                    return
+                    return mc_value
                 }
                 stderr.write(mc_block).end_line()
                 abort("Register ".clone().append(mc_register.name_q).append(" is mapped to value ").append(mc_value.ir_value.name))
@@ -244,8 +478,10 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
                     mc_block.live_values.prepend(new_mc_register_value)
                     mc_block.live_values.remove(old_mc_register_value)
                     mc_block.live_values.prune()
+
+                    return new_mc_register_value
                 }
-                return
+                return old_mc_register_value
             } else if mc_value is MC_Immediate_Value {
                 \ move value to register
                 let mc_immediate_value = mc_value.as(@MC_Immediate_Value)
@@ -258,7 +494,7 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
                     destination = mc_register_value
                 ))
                 mc_block.live_values.prepend(mc_register_value)
-                return
+                return mc_register_value
             } else {
                 abort(mc_value.object_type)
             }
@@ -266,5 +502,10 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
     }
 
     \ value not assigned yet
-    abort("TODO: Assign value ".clone().append(ir_value.name).append(" to register ").append(mc_register.name_q))
+    let mc_register_value = make @MC_Register_Value(
+        ir_value = ir_value
+        register = mc_register
+    )
+    mc_block.live_values.prepend(mc_register_value)
+    return mc_register_value
 }
