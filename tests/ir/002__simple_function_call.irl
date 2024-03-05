@@ -4,6 +4,7 @@ $main(): i32 {
    %1: i32 = call $zero
    [ %1 ]
    ret %1
+   [ ]
 }
 
 $zero(): i32 {
@@ -12,4 +13,5 @@ $zero(): i32 {
    %1: i32 = const 0
    [ %1 ]
    ret %1
+   [ ]
 }

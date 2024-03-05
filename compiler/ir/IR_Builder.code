@@ -210,6 +210,12 @@ func convert_function(self: @IR_Builder, ir_function: @IR_Function) -> Nothing {
             } else {
                 abort(checked_function_symbol.location, "Missing return statement")
             }
+        } else if not last_block.last_instruction.is_exit_instruction() {
+            if ir_function.return_type is IR_Nothing_Type {
+                self.append(create_ir_return_instruction(null), null)
+            } else {
+                abort(checked_function_symbol.location, "Missing return statement")
+            }
         }
 
         self.current_block_context = null

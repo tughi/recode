@@ -6,10 +6,12 @@ $main(): i32 {
    %2: i32 = call $echo %1
    [ %2 ]
    ret %2
+   [ ]
 }
 
 $echo(%value: i32): i32 {
 @1:
    [ %value ]
    ret %value
+   [ ]
 }

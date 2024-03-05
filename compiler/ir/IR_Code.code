@@ -297,12 +297,19 @@ func write(file: @FILE, block: @IR_Block, live: bool) -> @FILE {
         let block_instruction = it
         if live {
             file.write("   [")
-            block_instruction.live_values.for_each() {
+            block_instruction.live_in_values.for_each() {
                 file.write(' ').write(it)
             }
             file.write(" ]").end_line()
         }
         file.write("   ").write(block_instruction).end_line()
+    }
+    if live {
+        file.write("   [")
+        block.last_instruction.live_out_values.for_each() {
+            file.write(' ').write(it)
+        }
+        file.write(" ]").end_line()
     }
     return file
 }
@@ -343,7 +350,8 @@ struct IR_Instruction: Object {
     block: @IR_Block = undefined
     prev_instruction: @IR_Instruction = null
     next_instruction: @IR_Instruction = null
-    live_values = make List[@IR_Value]()
+    live_in_values = make List[@IR_Value]()
+    live_out_values: @List[@IR_Value] = null
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         file.flush()
         abort(clone("Unsupported type: ").append(instruction.object_type.name))
@@ -429,7 +437,7 @@ func get_right_value(self: @IR_Binary_Instruction) -> @IR_Value {
 struct IR_Branch_Instruction: IR_Terminator_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Branch_Instruction)
-        return file.write("br ").write(instruction.get_condition()).write(' ').write(instruction.true_block.name).write(' ').write(instruction.false_block.name)
+        return file.write("br ").write(instruction.get_condition()).write(' ').write_name(instruction.true_block).write(' ').write_name(instruction.false_block)
     }
 ) {
     true_block: @IR_Block
@@ -580,7 +588,7 @@ struct IR_Inequality_Instruction: IR_Comparison_Instruction(
 struct IR_Jump_Instruction: IR_Terminator_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Jump_Instruction)
-        return file.write("jmp ").write(instruction.block.name)
+        return file.write("jmp ").write_name(instruction.block)
     }
 ) {
     block: @IR_Block
@@ -656,7 +664,7 @@ struct IR_Phi_Instruction: IR_Instruction(
         file.write("phi")
         let operand_values_entry = instruction.operand_values.first_entry
         while operand_values_entry != null {
-            file.write(' ').write(instruction.value_block_mapping.get(operand_values_entry.value).name).write(' ').write(operand_values_entry.value)
+            file.write(' ').write_name(instruction.value_block_mapping.get(operand_values_entry.value)).write(' ').write(operand_values_entry.value)
             operand_values_entry = operand_values_entry.next_entry
         }
         return file

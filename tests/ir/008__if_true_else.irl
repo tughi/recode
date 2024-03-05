@@ -10,6 +10,7 @@ $main(): i32 {
    %2: bool = const true
    [ %2 %result.ptr ]
    br %2 @2 @3
+   [ %result.ptr ]
 @2:
    [ %result.ptr ]
    %3: i32 = const 0
@@ -17,6 +18,7 @@ $main(): i32 {
    store %result.ptr %3
    [ %result.ptr ]
    jmp @4
+   [ %result.ptr ]
 @3:
    [ %result.ptr ]
    %4: i32 = const 1
@@ -24,9 +26,11 @@ $main(): i32 {
    store %result.ptr %4
    [ %result.ptr ]
    jmp @4
+   [ %result.ptr ]
 @4:
    [ %result.ptr ]
    %result.1: i32 = load %result.ptr
    [ %result.1 ]
    ret %result.1
+   [ ]
 }

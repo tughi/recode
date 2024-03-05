@@ -10,4 +10,5 @@ $main(): i32 {
    %result.1: i32 = load %result.ptr
    [ %result.1 ]
    ret %result.1
+   [ ]
 }

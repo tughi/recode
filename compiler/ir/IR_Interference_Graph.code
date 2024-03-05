@@ -68,9 +68,9 @@ func build_interference_graph(function: @IR_Function) -> @IR_Interference_Graph 
         block.for_each_instruction() {
             let instruction = it
             \ add edges between all live values
-            instruction.live_values.for_each() {
+            instruction.live_in_values.for_each() {
                 let node = it
-                instruction.live_values.for_each() {
+                instruction.live_in_values.for_each() {
                     let neighbour = it
                     graph.add_edge(node, neighbour)
                 }

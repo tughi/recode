@@ -19,7 +19,7 @@ func compute_live_values(self: @IR_Function) -> Nothing {
                 instruction.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
                     let predecessor_block = value
                     let value = key
-                    predecessor_block.last_instruction.live_values.append(value)
+                    predecessor_block.last_instruction.live_in_values.append(value)
                 }
             } else {
                 break
@@ -31,6 +31,7 @@ func compute_live_values(self: @IR_Function) -> Nothing {
         \ return
     }
 
+    \ compute live-in values for each instruction
     blocks.for_each() {
         let block = it
         let instruction = block.last_instruction
@@ -39,21 +40,21 @@ func compute_live_values(self: @IR_Function) -> Nothing {
                 \ mark all operands as live
                 instruction.operand_values.for_each() {
                     let use_value = value
-                    if not instruction.live_values.contains(use_value) {
-                        instruction.live_values.append(use_value)
+                    if not instruction.live_in_values.contains(use_value) {
+                        instruction.live_in_values.append(use_value)
                     }
                 }
             }
             \ remove defined value from live values
             let def_value = instruction.result_value
-            if def_value != null and instruction.live_values.contains(def_value) {
-                instruction.live_values.remove(def_value).prune()
+            if def_value != null and instruction.live_in_values.contains(def_value) {
+                instruction.live_in_values.remove(def_value).prune()
             }
             if instruction.prev_instruction == null {
                 \ check predecessor blocks
                 block.predecessors.for_each() {
                     let predecessor_block = it
-                    if predecessor_block.last_instruction.append_live_values(instruction.live_values) {
+                    if predecessor_block.last_instruction.append_live_values(instruction.live_in_values) {
                         \ new live values were added, so we need to reprocess this block
                         blocks.append(predecessor_block)
                     }
@@ -62,7 +63,93 @@ func compute_live_values(self: @IR_Function) -> Nothing {
                 break
             }
             instruction = instruction.prev_instruction
-            instruction.append_live_values(instruction.next_instruction.live_values)
+            instruction.append_live_values(instruction.next_instruction.live_in_values)
+        }
+    }
+
+    \ compute live-out values for each instruction
+    blocks.for_each() {
+        let block = it
+
+        let instruction = block.last_instruction
+        instruction.live_out_values = make @List[@IR_Value]()
+        if instruction is IR_Branch_Instruction {
+            let instruction = instruction.as(@IR_Branch_Instruction)
+            instruction.true_block.first_instruction.live_in_values.for_each() {
+                instruction.live_out_values.append(it)
+            }
+            instruction.true_block.for_each_instruction() {
+                if it is IR_Phi_Instruction {
+                    it.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
+                        if value == block {
+                            if not instruction.live_out_values.contains(key) {
+                                instruction.live_out_values.append(key)
+                            }
+                        }
+                    }
+                } else {
+                    break
+                }
+            }
+            instruction.false_block.first_instruction.live_in_values.for_each() {
+                if not instruction.live_out_values.contains(it) {
+                    instruction.live_out_values.append(it)
+                }
+            }
+            instruction.false_block.for_each_instruction() {
+                if it is IR_Phi_Instruction {
+                    it.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
+                        if value == block {
+                            if not instruction.live_out_values.contains(key) {
+                                instruction.live_out_values.append(key)
+                            }
+                        }
+                    }
+                } else {
+                    break
+                }
+            }
+        } else if instruction is IR_Jump_Instruction {
+            let instruction = instruction.as(@IR_Jump_Instruction)
+            instruction.block.first_instruction.live_in_values.for_each() {
+                instruction.live_out_values.append(it)
+            }
+            instruction.block.for_each_instruction() {
+                if it is IR_Phi_Instruction {
+                    it.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
+                        if value == block {
+                            if not instruction.live_out_values.contains(key) {
+                                instruction.live_out_values.append(key)
+                            }
+                        }
+                    }
+                } else {
+                    break
+                }
+            }
+        } else if instruction is IR_Return_Instruction {
+            \ validate that live-out values are empty
+            let return_value = instruction.as(@IR_Return_Instruction).get_return_value()
+            let live_out_values_count = 0
+            if return_value != null {
+                instruction.live_in_values.for_each() {
+                    if it != return_value {
+                        live_out_values_count = live_out_values_count + 1
+                    }
+                }
+            }
+            if live_out_values_count != 0 {
+                abort("Invalid state: live-out values for return instruction should be empty")
+            }
+        } else {
+            abort(instruction.object_type)
+        }
+
+        instruction = instruction.prev_instruction
+        while instruction != null {
+            \ live-out values are live-in values of the next instruction
+            instruction.live_out_values = instruction.next_instruction.live_in_values
+            instruction = instruction.prev_instruction
         }
     }
 }
@@ -70,8 +157,8 @@ func compute_live_values(self: @IR_Function) -> Nothing {
 func append_live_values(self: @IR_Instruction, live_values: @List[@IR_Value]) -> bool {
     let added = false
     live_values.for_each() {
-        if not self.live_values.contains(it) and it != self.result_value {
-            self.live_values.append(it)
+        if not self.live_in_values.contains(it) and it != self.result_value {
+            self.live_in_values.append(it)
             added = true
         }
     }
