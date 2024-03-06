@@ -1,5 +1,6 @@
 .globl main
 main:
+.L__main__S:
 .L__main__1:
   mov $42, %edi
   mov $10, %esi
@@ -20,34 +21,59 @@ main:
   mov %eax, %edi
   mov $42, %esi
   call sub
+  jmp .L__main__E
+.L__main__E:
   ret
+
+
 add:
+.L__add__S:
 .L__add__1:
-  mov %edi, %r11d
-  add %esi, %r11d
-  mov %r11d, %eax
+  mov %edi, %eax
+  add %esi, %eax
+  jmp .L__add__E
+.L__add__E:
   ret
+
+
 sub:
+.L__sub__S:
 .L__sub__1:
-  mov %edi, %r11d
-  sub %esi, %r11d
-  mov %r11d, %eax
+  mov %edi, %eax
+  sub %esi, %eax
+  jmp .L__sub__E
+.L__sub__E:
   ret
+
+
 mul:
+.L__mul__S:
 .L__mul__1:
   mov %edi, %eax
   mul %esi
+  jmp .L__mul__E
+.L__mul__E:
   ret
+
+
 div:
+.L__div__S:
 .L__div__1:
   mov %edi, %eax
   cltd
   idiv %esi
+  jmp .L__div__E
+.L__div__E:
   ret
+
+
 mod:
+.L__mod__S:
 .L__mod__1:
   mov %edi, %eax
   cltd
   idiv %esi
   mov %edx, %eax
+  jmp .L__mod__E
+.L__mod__E:
   ret

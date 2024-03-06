@@ -3,8 +3,16 @@ struct MC_Code {
 }
 
 func write(file: @FILE, code: @MC_Code) -> @FILE {
-    code.functions.for_each() {
-        file.write(it)
+    let functions_iterator = code.functions.create_iterator()
+    if functions_iterator.has_next() {
+        loop {
+            file.write(functions_iterator.next())
+            if functions_iterator.has_next() {
+                file.end_line().end_line()
+            } else {
+                break
+            }
+        }
     }
     return file
 }
@@ -12,6 +20,8 @@ func write(file: @FILE, code: @MC_Code) -> @FILE {
 struct MC_Function {
     name: @String
     blocks = make List[@MC_Block]()
+    prologue_block = make MC_Block(function = undefined, name = "S")
+    epilogue_block = make MC_Block(function = undefined, name = "E")
 }
 
 func write(file: @FILE, function: @MC_Function) -> @FILE {
@@ -196,6 +206,14 @@ struct MC_IDIV_Instruction: MC_Instruction(
     }
 ) {
     source: @MC_Value
+}
+
+struct MC_JMP_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("jmp").write(' ').write_name(self.as(@MC_JMP_Instruction).block)
+    }
+) {
+    block: @MC_Block
 }
 
 struct MC_MOV_Instruction: MC_Instruction(
