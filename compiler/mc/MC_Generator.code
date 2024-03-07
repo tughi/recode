@@ -164,15 +164,11 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
 
 func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block_values: @List[@MC_Value], stack_size: i32) -> Nothing {
     if ir_block.processed {
-        abort("Block already processed")
+        return
     }
 
-    let mc_block = make @MC_Block(
-        function = self.current_function
-        name = ir_block.name
-        stack_size = stack_size
-    )
-    self.current_function.blocks.append(mc_block)
+    let mc_block = self.current_function.get_block(ir_block)
+    mc_block.stack_size = stack_size
 
     \ init block's live values
     if predecessor_block_values != null {
@@ -220,12 +216,16 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_add_instruction(ir_instruction.as(@IR_Add_Instruction), mc_block)
     } else if ir_instruction is IR_Alloc_Instruction {
         self.convert_alloc_instruction(ir_instruction.as(@IR_Alloc_Instruction), mc_block)
+    } else if ir_instruction is IR_Branch_Instruction {
+        self.convert_branch_instruction(ir_instruction.as(@IR_Branch_Instruction), mc_block)
     } else if ir_instruction is IR_Constant_Instruction {
         self.convert_constant_instruction(ir_instruction.as(@IR_Constant_Instruction), mc_block)
     } else if ir_instruction is IR_Direct_Call_Instruction {
         self.convert_direct_call_instruction(ir_instruction.as(@IR_Direct_Call_Instruction), mc_block)
     } else if ir_instruction is IR_Divide_Instruction {
         self.convert_divide_instruction(ir_instruction.as(@IR_Divide_Instruction), mc_block)
+    } else if ir_instruction is IR_Jump_Instruction {
+        self.convert_jump_instruction(ir_instruction.as(@IR_Jump_Instruction), mc_block)
     } else if ir_instruction is IR_Load_Instruction {
         self.convert_load_instruction(ir_instruction.as(@IR_Load_Instruction), mc_block)
     } else if ir_instruction is IR_Modulo_Instruction {
@@ -279,6 +279,31 @@ func convert_alloc_instruction(self: @MC_Generator, ir_alloc_instruction: @IR_Al
         stack_offset = mc_block.stack_size
     )
     mc_block.live_values.prepend(mc_stack_value)
+}
+
+func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_Branch_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_value = mc_block.find_value(ir_branch_instruction.get_condition())
+    if mc_value is not MC_Register_Value {
+        mc_value = self.make_register_value(
+            mc_block = mc_block
+            ir_value = ir_branch_instruction.get_condition()
+            mc_register = self.find_free_caller_saved_register(mc_block)
+            load_value = true
+        )
+    }
+    mc_block.append(make @MC_CMP_Instruction(
+        source = make @MC_Immediate_Value(
+            ir_value = null
+            value = 0u64
+        )
+        destination = mc_value
+    ))
+    mc_block.append(make @MC_JNE_Instruction(
+        block = mc_block.function.get_block(ir_branch_instruction.true_block)
+    ))
+    mc_block.append(make @MC_JMP_Instruction(
+        block = mc_block.function.get_block(ir_branch_instruction.false_block)
+    ))
 }
 
 func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Constant_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -410,6 +435,12 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
     \ unreserve rax and rdx
     self.register_rdx.is_reserved = false
     self.register_rax.is_reserved = false
+}
+
+func convert_jump_instruction(self: @MC_Generator, ir_jump_instruction: @IR_Jump_Instruction, mc_block: @MC_Block) -> Nothing {
+    mc_block.append(make @MC_JMP_Instruction(
+        block = mc_block.function.get_block(ir_jump_instruction.block)
+    ))
 }
 
 func convert_load_instruction(self: @MC_Generator, ir_load_instruction: @IR_Load_Instruction, mc_block: @MC_Block) -> Nothing {

@@ -25,6 +25,20 @@ struct MC_Function {
     stack_size = 0
 }
 
+func get_block(self: @MC_Function, ir_block: @IR_Block) -> @MC_Block {
+    self.blocks.for_each() {
+        if it.name == ir_block.name {
+            return it
+        }
+    }
+    let block = make @MC_Block(
+        function = self
+        name = ir_block.name
+    )
+    self.blocks.append(block)
+    return block
+}
+
 func write(file: @FILE, function: @MC_Function) -> @FILE {
     if function.name.equals("main") {
         file.write(".globl main").end_line()
@@ -208,6 +222,16 @@ struct MC_CLTD_Instruction: MC_Instruction(
 ) {
 }
 
+struct MC_CMP_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_CMP_Instruction)
+        return file.write("cmp").write(' ').write(instruction.source).write(", ").write(instruction.destination)
+    }
+) {
+    source: @MC_Value
+    destination: @MC_Value
+}
+
 struct MC_DIV_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         return file.write("div").write(' ').write(self.as(@MC_DIV_Instruction).source)
@@ -227,6 +251,14 @@ struct MC_IDIV_Instruction: MC_Instruction(
 struct MC_JMP_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         return file.write("jmp").write(' ').write_name(self.as(@MC_JMP_Instruction).block)
+    }
+) {
+    block: @MC_Block
+}
+
+struct MC_JNE_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("jne").write(' ').write_name(self.as(@MC_JNE_Instruction).block)
     }
 ) {
     block: @MC_Block

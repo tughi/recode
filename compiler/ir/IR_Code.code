@@ -55,7 +55,7 @@ func write_cfg(file: @FILE, type: @IR_Type) -> @FILE {
     return file.write(type.name)
 }
 
-struct IR_Boolean_Type: IR_Type(name = "bool") {
+struct IR_Boolean_Type: IR_Type(name = "bool", size = 1) {
 }
 
 struct IR_Integer_Type: IR_Type {
