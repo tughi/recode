@@ -72,6 +72,19 @@ func write(self: @FILE, char: u8) -> @FILE {
     return self
 }
 
+func write_hex(self: @FILE, number: u64) -> @FILE {
+    if number >= 16 {
+        self.write(number / 16)
+    }
+    let digit = number // 16
+    if digit < 10 {
+        fputc(digit.as(i32) + '0'.as(i32), self)
+    } else {
+        fputc(digit.as(i32) - 10 + 'a'.as(i32), self)
+    }
+    return self
+}
+
 func end_line(self: @FILE) -> @FILE {
     return self.write('\n')
 }

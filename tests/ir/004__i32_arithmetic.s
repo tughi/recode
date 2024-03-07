@@ -2,24 +2,24 @@
 main:
 .L__main__S:
 .L__main__1:
-  mov $42, %edi
-  mov $10, %esi
+  mov $0x2a, %edi
+  mov $0xa, %esi
   call div
   mov %eax, %edi
-  mov $2, %esi
+  mov $0x2, %esi
   call add
   mov %eax, %ebx
-  mov $42, %edi
-  mov $10, %esi
+  mov $0x2a, %edi
+  mov $0xa, %esi
   call mod
   mov %eax, %edi
-  mov $5, %esi
+  mov $0x5, %esi
   call add
   mov %ebx, %edi
   mov %eax, %esi
   call mul
   mov %eax, %edi
-  mov $42, %esi
+  mov $0x2a, %esi
   call sub
   jmp .L__main__E
 .L__main__E:

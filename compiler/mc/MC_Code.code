@@ -129,10 +129,10 @@ struct MC_Global_Value: MC_Value(
 \ MC_Immediate_Value is for constants
 struct MC_Immediate_Value: MC_Value(
     write = func (self: @MC_Value, file: @FILE) -> @FILE {
-        return file.write('$').write(self.as(@MC_Immediate_Value).literal.value)
+        return file.write("$0x").write_hex(self.as(@MC_Immediate_Value).value)
     }
 ) {
-    literal: @Integer_Token
+    value: u64
 }
 
 \ MC_Local_Value points to a stack offset
@@ -144,16 +144,6 @@ struct MC_Local_Value: MC_Value(
 ) {
     function: @MC_Function
     stack_offset: i32
-}
-
-\ MC_Stack_Size_Value holds the stack size
-struct MC_Stack_Size_Value: MC_Value(
-    write = func (self: @MC_Value, file: @FILE) -> @FILE {
-        let self = self.as(@MC_Stack_Size_Value)
-        return file.write('$').write(self.function.stack_size)
-    }
-) {
-    function: @MC_Function
 }
 
 struct MC_Register_Value: MC_Value(

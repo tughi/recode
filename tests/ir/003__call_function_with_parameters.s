@@ -2,7 +2,7 @@
 main:
 .L__main__S:
 .L__main__1:
-  mov $0, %edi
+  mov $0x0, %edi
   call echo
   jmp .L__main__E
 .L__main__E:

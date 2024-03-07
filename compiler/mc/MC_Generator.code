@@ -119,15 +119,19 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
             function.stack_size = block.stack_size
         }
     }
+    if function.stack_size > 0 {
+        \ align stack size to 16 bytes
+        function.stack_size = (function.stack_size / 16 + 1) * 16
+    }
 
     \ update prologue block
     function.blocks.prepend(function.prologue_block)
     if function.stack_size > 0 {
         function.prologue_block.append(make @MC_SUB_Instruction(
-            source = make @MC_Stack_Size_Value(
+            source = make @MC_Immediate_Value(
                 ir_value = null
                 data_size = 8
-                function = function
+                value = function.stack_size.as(u64)
             )
             destination = make @MC_Register_Value(
                 ir_value = null
@@ -141,10 +145,10 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
     function.blocks.append(function.epilogue_block)
     if function.stack_size > 0 {
         function.epilogue_block.append(make @MC_ADD_Instruction(
-            source = make @MC_Stack_Size_Value(
+            source = make @MC_Immediate_Value(
                 ir_value = null
                 data_size = 8
-                function = function
+                value = function.stack_size.as(u64)
             )
             destination = make @MC_Register_Value(
                 ir_value = null
@@ -279,10 +283,24 @@ func convert_alloc_instruction(self: @MC_Generator, ir_alloc_instruction: @IR_Al
 
 func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Constant_Instruction, mc_block: @MC_Block) -> Nothing {
     let literal = ir_instruction.literal
-    if literal is Integer_Token {
+    if literal is Boolean_Token {
+        let value = 0u64
+        if literal.as(@Boolean_Token).value {
+            value = 1u64
+        }
         mc_block.live_values.prepend(make @MC_Immediate_Value(
             ir_value = ir_instruction.result_value
-            literal = literal.as(@Integer_Token)
+            value = value
+        ))
+    } else if literal is Integer_Token {
+        let literal = literal.as(@Integer_Token)
+        let value = literal.value
+        if literal.negative {
+            value = -value
+        }
+        mc_block.live_values.prepend(make @MC_Immediate_Value(
+            ir_value = ir_instruction.result_value
+            value = value
         ))
     } else {
         abort(literal.object_type)

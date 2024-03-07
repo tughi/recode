@@ -11,7 +11,7 @@ main:
 zero:
 .L__zero__S:
 .L__zero__1:
-  mov $0, %eax
+  mov $0x0, %eax
   jmp .L__zero__E
 .L__zero__E:
   ret
