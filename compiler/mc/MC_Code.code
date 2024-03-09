@@ -20,8 +20,8 @@ func write(file: @FILE, code: @MC_Code) -> @FILE {
 struct MC_Function {
     name: @String
     blocks = make List[@MC_Block]()
-    prologue_block = make MC_Block(function = undefined, name = "S")
-    epilogue_block = make MC_Block(function = undefined, name = "E")
+    prologue_block = make MC_Block(ir_block = null, function = undefined, name = "S")
+    epilogue_block = make MC_Block(ir_block = null, function = undefined, name = "E")
     stack_size = 0
 }
 
@@ -32,6 +32,7 @@ func get_block(self: @MC_Function, ir_block: @IR_Block) -> @MC_Block {
         }
     }
     let block = make @MC_Block(
+        ir_block = ir_block
         function = self
         name = ir_block.name
     )
@@ -51,10 +52,12 @@ func write(file: @FILE, function: @MC_Function) -> @FILE {
 }
 
 struct MC_Block {
+    ir_block: @IR_Block
     function: @MC_Function
     name: @String
     first_instruction: @MC_Instruction = null
     last_instruction: @MC_Instruction = null
+    phi_values = make List[@MC_Value]()
     live_values = make List[@MC_Value]()
     stack_size = 0
 }
@@ -183,7 +186,6 @@ struct MC_Register_Value: MC_Value(
 
 struct MC_Instruction: Object {
     block: @MC_Block = undefined
-    data_size = 0u8 \ 0: none, 1: byte, 2: word, 4: double, 8: quad
     prev_instruction: @MC_Instruction = null
     next_instruction: @MC_Instruction = null
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
@@ -267,10 +269,18 @@ struct MC_JNE_Instruction: MC_Instruction(
 struct MC_MOV_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_MOV_Instruction)
-        if instruction.destination is MC_Local_Value or instruction.source is MC_Local_Value {
-            return file.write("movl").write(' ').write(instruction.source).write(", ").write(instruction.destination)
+        let instruction_data_size = min(instruction.source.data_size(), instruction.destination.data_size())
+        let suffix = ' '
+        if instruction_data_size == 1 {
+            suffix = 'b'
+        } else if instruction_data_size == 2 {
+            suffix = 'w'
+        } else if instruction_data_size == 4 {
+            suffix = 'l'
+        } else if instruction_data_size == 8 {
+            suffix = 'q'
         }
-        return file.write("mov").write(' ').write(instruction.source).write(", ").write(instruction.destination)
+        return file.write("mov").write(suffix).write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
     source: @MC_Value

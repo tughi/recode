@@ -4,7 +4,7 @@ main:
   sub $0x10, %rsp
 .L__main__1:
   movl $0x1, 12(%rsp)
-  mov $0x1, %al
+  movb $0x1, %al
   cmp $0x0, %al
   jne .L__main__2
   jmp .L__main__3

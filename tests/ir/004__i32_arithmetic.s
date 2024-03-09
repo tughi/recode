@@ -2,24 +2,24 @@
 main:
 .L__main__S:
 .L__main__1:
-  mov $0x2a, %edi
-  mov $0xa, %esi
+  movl $0x2a, %edi
+  movl $0xa, %esi
   call div
-  mov %eax, %edi
-  mov $0x2, %esi
+  movl %eax, %edi
+  movl $0x2, %esi
   call add
-  mov %eax, %ebx
-  mov $0x2a, %edi
-  mov $0xa, %esi
+  movl %eax, %ebx
+  movl $0x2a, %edi
+  movl $0xa, %esi
   call mod
-  mov %eax, %edi
-  mov $0x5, %esi
+  movl %eax, %edi
+  movl $0x5, %esi
   call add
-  mov %ebx, %edi
-  mov %eax, %esi
+  movl %ebx, %edi
+  movl %eax, %esi
   call mul
-  mov %eax, %edi
-  mov $0x2a, %esi
+  movl %eax, %edi
+  movl $0x2a, %esi
   call sub
   jmp .L__main__E
 .L__main__E:
@@ -29,7 +29,7 @@ main:
 add:
 .L__add__S:
 .L__add__1:
-  mov %edi, %eax
+  movl %edi, %eax
   add %esi, %eax
   jmp .L__add__E
 .L__add__E:
@@ -39,7 +39,7 @@ add:
 sub:
 .L__sub__S:
 .L__sub__1:
-  mov %edi, %eax
+  movl %edi, %eax
   sub %esi, %eax
   jmp .L__sub__E
 .L__sub__E:
@@ -49,7 +49,7 @@ sub:
 mul:
 .L__mul__S:
 .L__mul__1:
-  mov %edi, %eax
+  movl %edi, %eax
   mul %esi
   jmp .L__mul__E
 .L__mul__E:
@@ -59,7 +59,7 @@ mul:
 div:
 .L__div__S:
 .L__div__1:
-  mov %edi, %eax
+  movl %edi, %eax
   cltd
   idiv %esi
   jmp .L__div__E
@@ -70,10 +70,10 @@ div:
 mod:
 .L__mod__S:
 .L__mod__1:
-  mov %edi, %eax
+  movl %edi, %eax
   cltd
   idiv %esi
-  mov %edx, %eax
+  movl %edx, %eax
   jmp .L__mod__E
 .L__mod__E:
   ret
