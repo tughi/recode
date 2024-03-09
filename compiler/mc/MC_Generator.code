@@ -225,6 +225,8 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_modulo_instruction(ir_instruction.as(@IR_Modulo_Instruction), mc_block)
     } else if ir_instruction is IR_Multiply_Instruction {
         self.convert_multiply_instruction(ir_instruction.as(@IR_Multiply_Instruction), mc_block)
+    } else if ir_instruction is IR_Not_Instruction {
+        self.convert_not_instruction(ir_instruction.as(@IR_Not_Instruction), mc_block)
     } else if ir_instruction is IR_Phi_Instruction {
         self.convert_phi_instruction(ir_instruction.as(@IR_Phi_Instruction), mc_block)
     } else if ir_instruction is IR_Return_Instruction {
@@ -572,6 +574,31 @@ func convert_multiply_instruction(self: @MC_Generator, ir_multiply_instruction: 
     mc_block.append(make @MC_MUL_Instruction(
         source = mc_block.find_value(ir_multiply_instruction.get_right_value())
     ))
+}
+
+func convert_not_instruction(self: @MC_Generator, ir_not_instruction: @IR_Not_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_register_value = self.make_register_value(
+        mc_block = mc_block
+        ir_value = ir_not_instruction.result_value
+        mc_register = self.find_free_caller_saved_register(mc_block)
+        load_value = false
+    )
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_block.find_value(ir_not_instruction.get_value())
+        destination = mc_register_value
+    ))
+    if ir_not_instruction.result_value.type is IR_Boolean_Type {
+        mc_block.append(make @MC_XOR_Instruction(
+            source = make @MC_Immediate_Value(
+                ir_value = null
+                data_size = 1
+                value = 1u64
+            )
+            destination = mc_register_value
+        ))
+    } else {
+        abort(ir_not_instruction.result_value.type.object_type)
+    }
 }
 
 func convert_phi_instruction(self: @MC_Generator, ir_phi_instruction: @IR_Phi_Instruction, mc_block: @MC_Block) -> Nothing {

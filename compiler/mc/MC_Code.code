@@ -312,6 +312,16 @@ struct MC_SUB_Instruction: MC_Instruction(
     destination: @MC_Value
 }
 
+struct MC_XOR_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_XOR_Instruction)
+        return file.write("xor").write(' ').write(instruction.source).write(", ").write(instruction.destination)
+    }
+) {
+    source: @MC_Value
+    destination: @MC_Value
+}
+
 struct MC_Register: Object {
     name_q: @String
     name_d: @String
