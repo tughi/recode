@@ -25,21 +25,6 @@ struct MC_Function {
     stack_size = 0
 }
 
-func get_block(self: @MC_Function, ir_block: @IR_Block) -> @MC_Block {
-    self.blocks.for_each() {
-        if it.name == ir_block.name {
-            return it
-        }
-    }
-    let block = make @MC_Block(
-        ir_block = ir_block
-        function = self
-        name = ir_block.name
-    )
-    self.blocks.append(block)
-    return block
-}
-
 func write(file: @FILE, function: @MC_Function) -> @FILE {
     if function.name.equals("main") {
         file.write(".globl main").end_line()

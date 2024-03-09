@@ -291,6 +291,9 @@ func append(self: @IR_Block, instruction: @IR_Instruction) -> @IR_Instruction {
         instruction.prev_instruction = self.last_instruction
     }
     self.last_instruction = instruction
+    if instruction.result_value != null {
+        instruction.result_value.init_instruction = instruction
+    }
     return instruction
 }
 
@@ -534,7 +537,6 @@ func create_ir_constant_instruction(result_value: @IR_Value, literal: @Literal_T
         result_value = result_value
         literal = literal
     )
-    result_value.init_instruction = instruction
     return instruction
 }
 
@@ -550,9 +552,6 @@ struct IR_Direct_Call_Instruction: IR_Call_Instruction(
 func create_ir_direct_call_instruction(result_value: @IR_Value, call_arguments: @List[@IR_Call_Argument], function: @IR_Function) -> @IR_Call_Instruction {
     let instruction = make @IR_Direct_Call_Instruction(result_value = result_value, function = function)
     instruction.add_arguments(call_arguments)
-    if result_value != null {
-        result_value.init_instruction = instruction
-    }
     return instruction
 }
 

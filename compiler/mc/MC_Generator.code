@@ -172,7 +172,7 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block: 
 
     stderr.write("Converting block ").write_name(ir_block).end_line()
 
-    let mc_block = self.current_function.get_block(ir_block)
+    let mc_block = self.get_block(ir_block)
     mc_block.stack_size = stack_size
 
     \ init block's live values
@@ -202,6 +202,119 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block: 
     ir_block.for_each_instruction() {
         self.convert_instruction(it, mc_block)
     }
+}
+
+func get_block(self: @MC_Generator, ir_block: @IR_Block) -> @MC_Block {
+    self.current_function.blocks.for_each() {
+        if it.name == ir_block.name {
+            return it
+        }
+    }
+    let block = make @MC_Block(
+        ir_block = ir_block
+        function = self.current_function
+        name = ir_block.name
+    )
+    self.current_function.blocks.append(block)
+    return block
+}
+
+func get_jump_block(self: @MC_Generator, source_mc_block: @MC_Block, target_ir_block: @IR_Block) -> @MC_Block {
+    let target_mc_block = self.get_block(target_ir_block)
+    if target_ir_block.first_instruction is not IR_Phi_Instruction {
+        \ no need for a jump block
+        return target_mc_block
+    }
+
+    let jump_mc_block = make @MC_Block(
+        ir_block = null
+        function = self.current_function
+        name = target_ir_block.name.clone().append("_F_").append(source_mc_block.ir_block.name)
+    )
+    self.current_function.blocks.append(jump_mc_block)
+
+    \ copy live values from source block
+    source_mc_block.live_values.for_each() {
+        jump_mc_block.live_values.append(it)
+    }
+
+    \ map live values from phi instructions
+    if target_mc_block.phi_values.size > 0 {
+        \ move source block live values to phi values
+        target_mc_block.phi_values.for_each() {
+            let phi_value = it
+            if phi_value.ir_value.init_instruction is not IR_Phi_Instruction {
+                abort("Invalid state: phi value not initialized by a phi instruction")
+            }
+            if phi_value is MC_Register_Value {
+                let phi_value = phi_value.as(@MC_Register_Value)
+
+                let ir_phi_instruction = phi_value.ir_value.init_instruction.as(@IR_Phi_Instruction)
+                ir_phi_instruction.value_block_mapping.for_each() {
+                    if value == source_mc_block.ir_block {
+                        let live_value = jump_mc_block.find_value(key)
+                        if live_value == null {
+                            abort("Invalid state: phi value not live")
+                        }
+                        if live_value is MC_Register_Value {
+                            let live_value = live_value.as(@MC_Register_Value)
+                            if live_value.register != phi_value.register {
+                                if not phi_value.register.is_free(jump_mc_block) {
+                                    self.release_register(jump_mc_block, phi_value.register)
+                                }
+                                let new_live_value = self.make_register_value(
+                                    mc_block = jump_mc_block
+                                    ir_value = phi_value.ir_value
+                                    register = phi_value.register
+                                    load_value = false
+                                )
+                                jump_mc_block.append(make @MC_MOV_Instruction(
+                                    source = live_value
+                                    destination = new_live_value
+                                ))
+                            }
+                        } else {
+                            abort(live_value.object_type)
+                        }
+                    }
+                }
+            } else {
+                abort(phi_value.object_type)
+            }
+        }
+    } else {
+        \ map phi values to source block live values
+        target_ir_block.for_each_instruction() {
+            if it is IR_Phi_Instruction {
+                let ir_phi_instruction = it.as(@IR_Phi_Instruction)
+                ir_phi_instruction.value_block_mapping.for_each() {
+                    if value == source_mc_block.ir_block {
+                        let mc_value = jump_mc_block.find_value(key)
+                        if mc_value == null {
+                            abort("Invalid state: phi value not live")
+                        }
+                        if mc_value is MC_Register_Value {
+                            let mc_value = mc_value.as(@MC_Register_Value)
+                            target_mc_block.phi_values.prepend(make @MC_Register_Value(
+                                ir_value = ir_phi_instruction.result_value
+                                register = mc_value.register
+                            ))
+                        } else {
+                            abort(mc_value.object_type)
+                        }
+                    }
+                }
+            } else {
+                break
+            }
+        }
+    }
+
+    jump_mc_block.append(make @MC_JMP_Instruction(
+        block = target_mc_block
+    ))
+
+    return jump_mc_block
 }
 
 func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -297,100 +410,19 @@ func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_
         destination = mc_value
     ))
 
-    \ check if the true block contains a phi instruction that uses a live-out value
-    ir_branch_instruction.true_block.for_each_instruction() {
-        if it is IR_Phi_Instruction {
-            let phi_instruction = it.as(@IR_Phi_Instruction)
-            phi_instruction.value_block_mapping.for_each() {
-                abort()
-            }
-        } else {
-            break
-        }
-    }
+    \ jump to true block
     mc_block.append(make @MC_JNE_Instruction(
-        block = mc_block.function.get_block(ir_branch_instruction.true_block)
+        block = self.get_jump_block(mc_block, ir_branch_instruction.true_block)
     ))
-
-    \ prepare live-in values for false block
-    self.map_target_block_phi_values(mc_block, ir_branch_instruction.false_block)
 
     \ jump to false block
     mc_block.append(make @MC_JMP_Instruction(
-        block = mc_block.function.get_block(ir_branch_instruction.false_block)
+        block = self.get_jump_block(mc_block, ir_branch_instruction.false_block)
     ))
 
     \ convert successor blocks
     self.convert_block(ir_branch_instruction.true_block, mc_block, mc_block.stack_size)
     self.convert_block(ir_branch_instruction.false_block, mc_block, mc_block.stack_size)
-}
-
-func map_target_block_phi_values(self: @MC_Generator, mc_block: @MC_Block, target_ir_block: @IR_Block) -> Nothing {
-    let target_mc_block = mc_block.function.get_block(target_ir_block)
-    if target_mc_block.phi_values.size > 0 {
-        target_mc_block.phi_values.for_each() {
-            let phi_value = it
-
-            \ find mapped value from predecessor block
-            let source_value: @MC_Value = null
-            target_ir_block.for_each_instruction() {
-                if it is IR_Phi_Instruction {
-                    let phi_instruction = it.as(@IR_Phi_Instruction)
-                    phi_instruction.value_block_mapping.for_each() {
-                        if value == mc_block.ir_block {
-                            source_value = mc_block.find_value(key)
-                            break
-                        }
-                    }
-                } else {
-                    break
-                }
-            }
-            if source_value == null {
-                abort("Invalid state: phi value not live")
-            }
-
-            \ move value
-            if phi_value is MC_Register_Value {
-                let phi_value = phi_value.as(@MC_Register_Value)
-                if phi_value.register.is_free(mc_block) {
-                    mc_block.append(make @MC_MOV_Instruction(
-                        source = source_value
-                        destination = phi_value
-                    ))
-                } else {
-                    abort("Register ".clone().append(phi_value.register.name_q).append(" is not free"))
-                }
-            } else {
-                abort(phi_value.object_type)
-            }
-        }
-    } else {
-        target_ir_block.for_each_instruction() {
-            if it is IR_Phi_Instruction {
-                let phi_instruction = it.as(@IR_Phi_Instruction)
-                phi_instruction.value_block_mapping.for_each() {
-                    if value == mc_block.ir_block {
-                        let mc_value = mc_block.find_value(key)
-                        if mc_value == null {
-                            abort("Invalid state: phi source not live")
-                        }
-                        if mc_value is not MC_Register_Value {
-                            abort("TODO: move phi value to register value")
-                        }
-                        \ map phi value to the same register
-                        target_mc_block.phi_values.prepend(make @MC_Register_Value(
-                            ir_value = phi_instruction.result_value
-                            register = mc_value.as(@MC_Register_Value).register
-                        ))
-                        stderr.write("Mapped phi value ").write(phi_instruction.result_value).write(" to ").write(mc_value).end_line()
-                    }
-                }
-            } else {
-                break
-            }
-        }
-    }
 }
 
 func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Constant_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -525,12 +557,8 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
 }
 
 func convert_jump_instruction(self: @MC_Generator, ir_jump_instruction: @IR_Jump_Instruction, mc_block: @MC_Block) -> Nothing {
-    \ prepare live-in values for next block
-    self.map_target_block_phi_values(mc_block, ir_jump_instruction.block)
-
-    \ jump to next block
     mc_block.append(make @MC_JMP_Instruction(
-        block = mc_block.function.get_block(ir_jump_instruction.block)
+        block = self.get_jump_block(mc_block, ir_jump_instruction.block)
     ))
 
     \ convert successor block
@@ -611,6 +639,7 @@ func convert_phi_instruction(self: @MC_Generator, ir_phi_instruction: @IR_Phi_In
         }
     }
 
+    stderr.write(self.current_function).end_line()
     abort("Invalid state: unmapped phi value: ".clone().append(ir_phi_instruction.result_value.name))
 }
 
