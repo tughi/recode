@@ -511,7 +511,35 @@ func convert_variable_statement(self: @IR_Builder, checked_statement: @Checked_V
 }
 
 func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_While_Statement) -> Nothing {
-    abort("TODO: Convert while statement")
+    \ create blocks
+    let condition_block = self.current_function_context.function.create_block()
+    let body_block = self.current_function_context.function.create_block()
+    let end_block = self.current_function_context.function.create_block()
+
+    \ condition block
+    self.append_jump(condition_block, checked_statement.location)
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = condition_block
+    )
+    let condition_value = self.convert_expression(checked_statement.condition_expression, self.find_named_type("bool"))
+    self.append_branch(condition_value, body_block, end_block, checked_statement.location)
+
+    \ body block
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = body_block
+    )
+    self.convert_statement(checked_statement.body_statement)
+    if not body_block.last_instruction.is_exit_instruction() {
+        self.append_jump(condition_block, checked_statement.location)
+    }
+
+    \ end block
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = end_block
+    )
 }
 
 func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
