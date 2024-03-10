@@ -158,6 +158,20 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
             )
         ))
     }
+    if ir_function.return_type is IR_Nothing_Type and ir_function.name.equals("main") {
+        function.epilogue_block.append(make @MC_XOR_Instruction(
+            source = make @MC_Register_Value(
+                ir_value = null
+                data_size = 8
+                register = self.register_rax
+            )
+            destination = make @MC_Register_Value(
+                ir_value = null
+                data_size = 8
+                register = self.register_rax
+            )
+        ))
+    }
     function.epilogue_block.append(make @MC_RET_Instruction())
 
     return function
@@ -549,7 +563,7 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
     mc_block.live_values.prune()
 
     \ map return value to rax
-    if ir_function.return_type != null {
+    if ir_function.return_type is not IR_Nothing_Type {
         let return_value = self.make_register_value(
             mc_block = mc_block
             ir_value = ir_direct_call_instruction.result_value
