@@ -287,6 +287,60 @@ struct MC_RET_Instruction: MC_Instruction(
 ) {
 }
 
+struct MC_SETE_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETE_Instruction)
+        return file.write("sete").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Value
+}
+
+struct MC_SETG_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETG_Instruction)
+        return file.write("setg").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Value
+}
+
+struct MC_SETGE_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETGE_Instruction)
+        return file.write("setge").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Value
+}
+
+struct MC_SETL_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETL_Instruction)
+        return file.write("setl").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Value
+}
+
+struct MC_SETLE_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETLE_Instruction)
+        return file.write("setle").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Value
+}
+
+struct MC_SETNE_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETNE_Instruction)
+        return file.write("setne").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Value
+}
+
 struct MC_SUB_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_SUB_Instruction)

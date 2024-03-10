@@ -324,6 +324,8 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_alloc_instruction(ir_instruction.as(@IR_Alloc_Instruction), mc_block)
     } else if ir_instruction is IR_Branch_Instruction {
         self.convert_branch_instruction(ir_instruction.as(@IR_Branch_Instruction), mc_block)
+    } else if ir_instruction is IR_Comparison_Instruction {
+        self.convert_comparison_instruction(ir_instruction.as(@IR_Comparison_Instruction), mc_block)
     } else if ir_instruction is IR_Constant_Instruction {
         self.convert_constant_instruction(ir_instruction.as(@IR_Constant_Instruction), mc_block)
     } else if ir_instruction is IR_Direct_Call_Instruction {
@@ -423,6 +425,44 @@ func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_
     \ convert successor blocks
     self.convert_block(ir_branch_instruction.true_block, mc_block, mc_block.stack_size)
     self.convert_block(ir_branch_instruction.false_block, mc_block, mc_block.stack_size)
+}
+
+func convert_comparison_instruction(self: @MC_Generator, ir_comparison_instruction: @IR_Comparison_Instruction, mc_block: @MC_Block) -> Nothing {
+    let left_mc_value = mc_block.find_value(ir_comparison_instruction.get_left_value())
+    if left_mc_value is not MC_Register_Value {
+        left_mc_value = self.make_register_value(
+            mc_block = mc_block
+            ir_value = left_mc_value.ir_value
+            mc_register = self.find_free_caller_saved_register(mc_block)
+            load_value = true
+        )
+    }
+    let right_mc_value = mc_block.find_value(ir_comparison_instruction.get_right_value())
+    mc_block.append(make @MC_CMP_Instruction(
+        source = right_mc_value
+        destination = left_mc_value
+    ))
+    let result_mc_value = self.make_register_value(
+        mc_block = mc_block
+        ir_value = ir_comparison_instruction.result_value
+        mc_register = self.find_free_caller_saved_register(mc_block)
+        load_value = false
+    )
+    if ir_comparison_instruction is IR_Equality_Instruction {
+        mc_block.append(make @MC_SETE_Instruction(destination = result_mc_value))
+    } else if ir_comparison_instruction is IR_Greater_Than_Instruction {
+        mc_block.append(make @MC_SETG_Instruction(destination = result_mc_value))
+    } else if ir_comparison_instruction is IR_Greater_Than_Or_Equal_Instruction {
+        mc_block.append(make @MC_SETGE_Instruction(destination = result_mc_value))
+    } else if ir_comparison_instruction is IR_Inequality_Instruction {
+        mc_block.append(make @MC_SETNE_Instruction(destination = result_mc_value))
+    } else if ir_comparison_instruction is IR_Less_Than_Instruction {
+        mc_block.append(make @MC_SETL_Instruction(destination = result_mc_value))
+    } else if ir_comparison_instruction is IR_Less_Than_Or_Equal_Instruction {
+        mc_block.append(make @MC_SETLE_Instruction(destination = result_mc_value))
+    } else {
+        abort(ir_comparison_instruction.object_type)
+    }
 }
 
 func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Constant_Instruction, mc_block: @MC_Block) -> Nothing {
