@@ -255,17 +255,7 @@ struct MC_MOV_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_MOV_Instruction)
         let instruction_data_size = min(instruction.source.data_size(), instruction.destination.data_size())
-        let suffix = ' '
-        if instruction_data_size == 1 {
-            suffix = 'b'
-        } else if instruction_data_size == 2 {
-            suffix = 'w'
-        } else if instruction_data_size == 4 {
-            suffix = 'l'
-        } else if instruction_data_size == 8 {
-            suffix = 'q'
-        }
-        return file.write("mov").write(suffix).write(' ').write(instruction.source).write(", ").write(instruction.destination)
+        return file.write("mov").write_size_suffix(instruction_data_size).write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
     source: @MC_Value
@@ -284,17 +274,7 @@ struct MC_POP_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_POP_Instruction)
         let instruction_data_size = instruction.destination.data_size()
-        let suffix = ' '
-        if instruction_data_size == 1 {
-            suffix = 'b'
-        } else if instruction_data_size == 2 {
-            suffix = 'w'
-        } else if instruction_data_size == 4 {
-            suffix = 'l'
-        } else if instruction_data_size == 8 {
-            suffix = 'q'
-        }
-        return file.write("pop").write(suffix).write(' ').write(instruction.destination)
+        return file.write("pop").write_size_suffix(instruction_data_size).write(' ').write(instruction.destination)
     }
 ) {
     destination: @MC_Value
@@ -304,17 +284,7 @@ struct MC_PUSH_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_PUSH_Instruction)
         let instruction_data_size = instruction.source.data_size()
-        let suffix = ' '
-        if instruction_data_size == 1 {
-            suffix = 'b'
-        } else if instruction_data_size == 2 {
-            suffix = 'w'
-        } else if instruction_data_size == 4 {
-            suffix = 'l'
-        } else if instruction_data_size == 8 {
-            suffix = 'q'
-        }
-        return file.write("push").write(suffix).write(' ').write(instruction.source)
+        return file.write("push").write_size_suffix(instruction_data_size).write(' ').write(instruction.source)
     }
 ) {
     source: @MC_Value
@@ -399,6 +369,19 @@ struct MC_XOR_Instruction: MC_Instruction(
 ) {
     source: @MC_Value
     destination: @MC_Value
+}
+
+func write_size_suffix(file: @FILE, data_size: i32) -> @FILE {
+    if data_size == 1 {
+        file.write('b')
+    } else if data_size == 2 {
+        file.write('w')
+    } else if data_size == 4 {
+        file.write('l')
+    } else if data_size == 8 {
+        file.write('q')
+    }
+    return file
 }
 
 struct MC_Register: Object {
