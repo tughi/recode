@@ -280,6 +280,46 @@ struct MC_MUL_Instruction: MC_Instruction(
     source: @MC_Value
 }
 
+struct MC_POP_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_POP_Instruction)
+        let instruction_data_size = instruction.destination.data_size()
+        let suffix = ' '
+        if instruction_data_size == 1 {
+            suffix = 'b'
+        } else if instruction_data_size == 2 {
+            suffix = 'w'
+        } else if instruction_data_size == 4 {
+            suffix = 'l'
+        } else if instruction_data_size == 8 {
+            suffix = 'q'
+        }
+        return file.write("pop").write(suffix).write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Value
+}
+
+struct MC_PUSH_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_PUSH_Instruction)
+        let instruction_data_size = instruction.source.data_size()
+        let suffix = ' '
+        if instruction_data_size == 1 {
+            suffix = 'b'
+        } else if instruction_data_size == 2 {
+            suffix = 'w'
+        } else if instruction_data_size == 4 {
+            suffix = 'l'
+        } else if instruction_data_size == 8 {
+            suffix = 'q'
+        }
+        return file.write("push").write(suffix).write(' ').write(instruction.source)
+    }
+) {
+    source: @MC_Value
+}
+
 struct MC_RET_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         return file.write("ret")
@@ -370,6 +410,7 @@ struct MC_Register: Object {
     is_callee_saved = false
     is_caller_saved = false
     is_reserved = false
+    is_used = false
 }
 
 struct MC_Register_RAX: MC_Register(name_q = "%rax", name_d = "%eax", name_w = "%ax", name_b = "%al", is_caller_saved = true) {

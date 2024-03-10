@@ -84,6 +84,11 @@ func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
 }
 
 func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Function {
+    \ reset register state
+    self.registers.for_each() {
+        it.is_used = false
+    }
+
     let function = make @MC_Function(
         name = ir_function.name
     )
@@ -127,6 +132,7 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
 
     \ update prologue block
     function.blocks.prepend(function.prologue_block)
+    self.save_callee_saved_registers(function.prologue_block)
     if function.stack_size > 0 {
         function.prologue_block.append(make @MC_SUB_Instruction(
             source = make @MC_Immediate_Value(
@@ -158,6 +164,7 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
             )
         ))
     }
+    self.restore_callee_saved_registers(function.epilogue_block)
     if ir_function.return_type is IR_Nothing_Type and ir_function.name.equals("main") {
         function.epilogue_block.append(make @MC_XOR_Instruction(
             source = make @MC_Register_Value(
@@ -175,6 +182,40 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
     function.epilogue_block.append(make @MC_RET_Instruction())
 
     return function
+}
+
+func save_callee_saved_registers(self: @MC_Generator, mc_block: @MC_Block) -> Nothing {
+    let mc_register_item = self.registers.first_item
+    while mc_register_item != null {
+        let mc_register = mc_register_item.data
+        if mc_register.is_callee_saved and mc_register.is_used {
+            mc_block.append(make @MC_PUSH_Instruction(
+                source = make @MC_Register_Value(
+                    ir_value = null
+                    data_size = 8
+                    register = mc_register
+                )
+            ))
+        }
+        mc_register_item = mc_register_item.next_item
+    }
+}
+
+func restore_callee_saved_registers(self: @MC_Generator, mc_block: @MC_Block) -> Nothing {
+    let mc_register_item = self.registers.last_item
+    while mc_register_item != null {
+        let mc_register = mc_register_item.data
+        if mc_register.is_callee_saved and mc_register.is_used {
+            mc_block.append(make @MC_POP_Instruction(
+                destination = make @MC_Register_Value(
+                    ir_value = null
+                    data_size = 8
+                    register = mc_register
+                )
+            ))
+        }
+        mc_register_item = mc_register_item.prev_item
+    }
 }
 
 func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block: @MC_Block, stack_size: i32) -> Nothing {
@@ -207,7 +248,6 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block: 
                     register = self.parameter_register(it_index.as(i32))
                     load_value = false
                 )
-                mc_block.live_values.prepend(mc_parameter)
             }
         }
     }
@@ -215,6 +255,16 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block: 
 
     ir_block.for_each_instruction() {
         self.convert_instruction(it, mc_block)
+    }
+
+    \ convert successor blocks
+    if ir_block.last_instruction is IR_Branch_Instruction {
+        let ir_branch_instruction = ir_block.last_instruction.as(@IR_Branch_Instruction)
+        self.convert_block(ir_branch_instruction.true_block, mc_block, mc_block.stack_size)
+        self.convert_block(ir_branch_instruction.false_block, mc_block, mc_block.stack_size)
+    } else if ir_block.last_instruction is IR_Jump_Instruction {
+        let ir_jump_instruction = ir_block.last_instruction.as(@IR_Jump_Instruction)
+        self.convert_block(ir_jump_instruction.block, mc_block, mc_block.stack_size)
     }
 }
 
@@ -332,6 +382,15 @@ func get_jump_block(self: @MC_Generator, source_mc_block: @MC_Block, target_ir_b
 }
 
 func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, mc_block: @MC_Block) -> Nothing {
+    stderr.debug().write("Converting instruction: ").reset().write(ir_instruction).end_line()
+
+    \ dump live values
+    stderr.write("Live-in values: ")
+    mc_block.live_values.for_each() {
+        stderr.write(it.ir_value).write('(').write(it).write(") ")
+    }
+    stderr.end_line()
+
     if ir_instruction is IR_Add_Instruction {
         self.convert_add_instruction(ir_instruction.as(@IR_Add_Instruction), mc_block)
     } else if ir_instruction is IR_Alloc_Instruction {
@@ -370,15 +429,20 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
     }
 
     \ cleanup live values
-    if ir_instruction.next_instruction != null {
-        mc_block.live_values.for_each() {
-            if not ir_instruction.live_out_values.contains(it.ir_value) {
-                mc_block.live_values.remove(it)
-                stderr.write("Removed dead value ").write(it.ir_value).write(" after ").write(ir_instruction).end_line()
-            }
+    mc_block.live_values.for_each() {
+        if not ir_instruction.live_out_values.contains(it.ir_value) {
+            mc_block.live_values.remove(it)
+            stderr.write("Removed dead value ").write(it.ir_value).end_line()
         }
-        mc_block.live_values.prune()
     }
+    mc_block.live_values.prune()
+
+    \ dump live values
+    stderr.write("Live-out values: ")
+    mc_block.live_values.for_each() {
+        stderr.write(it.ir_value).write('(').write(it).write(") ")
+    }
+    stderr.end_line()
 }
 
 func convert_add_instruction(self: @MC_Generator, ir_add_instruction: @IR_Add_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -435,10 +499,6 @@ func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_
     mc_block.append(make @MC_JMP_Instruction(
         block = self.get_jump_block(mc_block, ir_branch_instruction.false_block)
     ))
-
-    \ convert successor blocks
-    self.convert_block(ir_branch_instruction.true_block, mc_block, mc_block.stack_size)
-    self.convert_block(ir_branch_instruction.false_block, mc_block, mc_block.stack_size)
 }
 
 func convert_comparison_instruction(self: @MC_Generator, ir_comparison_instruction: @IR_Comparison_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -513,12 +573,14 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
             let mc_register_value = mc_block.find_register_value(it)
             if mc_register_value != null and mc_register_value.register.is_caller_saved {
                 \ move value to callee saved register
-                self.make_register_value(
+                let new_mc_register_value = self.make_register_value(
                     mc_block = mc_block
                     ir_value = ir_value
                     mc_register = self.find_free_callee_saved_register(mc_block)
                     load_value = true
                 )
+                new_mc_register_value.register.is_used = true
+                mc_block.live_values.remove(mc_register_value).prune()
             }
         }
     }
@@ -614,9 +676,6 @@ func convert_jump_instruction(self: @MC_Generator, ir_jump_instruction: @IR_Jump
     mc_block.append(make @MC_JMP_Instruction(
         block = self.get_jump_block(mc_block, ir_jump_instruction.block)
     ))
-
-    \ convert successor block
-    self.convert_block(ir_jump_instruction.block, mc_block, mc_block.stack_size)
 }
 
 func convert_load_instruction(self: @MC_Generator, ir_load_instruction: @IR_Load_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -698,14 +757,27 @@ func convert_phi_instruction(self: @MC_Generator, ir_phi_instruction: @IR_Phi_In
 }
 
 func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_Return_Instruction, mc_block: @MC_Block) -> Nothing {
-    let ir_return_value = ir_return_instruction.get_return_value()
-    if ir_return_value != null {
-        self.make_register_value(
-            mc_block = mc_block
-            ir_value = ir_return_value
-            mc_register = self.register_rax
-            load_value = true
-        )
+    let return_ir_value = ir_return_instruction.get_return_value()
+    if return_ir_value != null {
+        let return_mc_value = mc_block.find_value(return_ir_value)
+        if return_mc_value is MC_Register_Value {
+            let return_mc_value = return_mc_value.as(@MC_Register_Value)
+            if return_mc_value.register is not MC_Register_RAX {
+                return_mc_value = self.make_register_value(
+                    mc_block = mc_block
+                    ir_value = return_mc_value.ir_value
+                    mc_register = self.register_rax
+                    load_value = true
+                )
+            }
+        } else {
+            return_mc_value = self.make_register_value(
+                mc_block = mc_block
+                ir_value = return_mc_value.ir_value
+                mc_register = self.register_rax
+                load_value = true
+            )
+        }
     }
 
     mc_block.append(make @MC_JMP_Instruction(

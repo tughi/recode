@@ -1,6 +1,7 @@
 .globl main
 main:
 .L__main__S:
+  pushq %rbx
 .L__main__1:
   movl $0x2a, %edi
   movl $0xa, %esi
@@ -23,6 +24,7 @@ main:
   call sub
   jmp .L__main__E
 .L__main__E:
+  popq %rbx
   ret
 
 

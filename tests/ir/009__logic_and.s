@@ -29,21 +29,21 @@ main:
   movl $0x1, %eax
   jmp .L__main__E
 .L__main__3:
-  movb 14(%rsp), %cl
-  cmp $0x0, %cl
+  movb 14(%rsp), %al
+  cmp $0x0, %al
   jne .L__main__8
   jmp .L__main__9_F_3
 .L__main__8:
-  movb 15(%rsp), %al
+  movb 15(%rsp), %cl
   jmp .L__main__9_F_8
 .L__main__9:
-  cmp $0x0, %cl
+  cmp $0x0, %al
   jne .L__main__6
   jmp .L__main__7
 .L__main__9_F_3:
   jmp .L__main__9
 .L__main__9_F_8:
-  movb %al, %cl
+  movb %cl, %al
   jmp .L__main__9
 .L__main__6:
   movl $0x2, %eax
@@ -71,21 +71,21 @@ main:
   movl $0x3, %eax
   jmp .L__main__E
 .L__main__12:
-  movb 14(%rsp), %cl
-  cmp $0x0, %cl
+  movb 14(%rsp), %al
+  cmp $0x0, %al
   jne .L__main__17
   jmp .L__main__18_F_12
 .L__main__17:
-  movb 14(%rsp), %al
+  movb 14(%rsp), %cl
   jmp .L__main__18_F_17
 .L__main__18:
-  cmp $0x0, %cl
+  cmp $0x0, %al
   jne .L__main__15
   jmp .L__main__16
 .L__main__18_F_12:
   jmp .L__main__18
 .L__main__18_F_17:
-  movb %al, %cl
+  movb %cl, %al
   jmp .L__main__18
 .L__main__15:
   movl $0x4, %eax
