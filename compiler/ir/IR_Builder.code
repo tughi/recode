@@ -14,6 +14,7 @@ struct IR_Builder {
 
     current_function_context: @IR_Function_Context = null
     current_block_context: @IR_Block_Context = null
+    current_loop: @IR_Loop = null
 }
 
 struct IR_Context {
@@ -419,7 +420,10 @@ func convert_block_statement(self: @IR_Builder, checked_block_statement: @Checke
 }
 
 func convert_break_statement(self: @IR_Builder, checked_statement: @Checked_Break_Statement) -> Nothing {
-    abort("TODO: Convert break statement")
+    if self.current_loop == null {
+        abort(checked_statement.location, "Break statement outside of a loop")
+    }
+    self.append_jump(self.current_loop.end_block, checked_statement.location)
 }
 
 func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked_Expression_Statement) -> Nothing {
@@ -478,7 +482,6 @@ func convert_return_statement(self: @IR_Builder, checked_statement: @Checked_Ret
     } else {
         self.append(create_ir_return_instruction(null), checked_statement.location)
     }
-    \ self.current_block = self.current_block.function.create_block()
 }
 
 func convert_variable_statement(self: @IR_Builder, checked_statement: @Checked_Variable_Statement) -> Nothing {
@@ -530,8 +533,12 @@ func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_Whil
         parent = self.current_block_context
         block = body_block
     )
+    self.current_loop = make @IR_Loop(
+        parent = self.current_loop
+        end_block = end_block
+    )
     self.convert_statement(checked_statement.body_statement)
-    if not body_block.last_instruction.is_exit_instruction() {
+    if not self.current_block_context.block.last_instruction.is_exit_instruction() {
         self.append_jump(condition_block, checked_statement.location)
     }
 
@@ -540,6 +547,7 @@ func convert_while_statement(self: @IR_Builder, checked_statement: @Checked_Whil
         parent = self.current_block_context
         block = end_block
     )
+    self.current_loop = self.current_loop.parent
 }
 
 func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
