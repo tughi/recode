@@ -50,21 +50,15 @@ $fibonacci(%n: i32): i32 {
    [ %n %i.ptr %v2.ptr %v1.ptr ]
 @4:
    [ %n %i.ptr %v2.ptr %v1.ptr ]
-   %6: bool = const true
-   [ %6 %n %i.ptr %v2.ptr %v1.ptr ]
-   br %6 @5 @6
-   [ %n %i.ptr %v2.ptr %v1.ptr ]
-@5:
-   [ %n %i.ptr %v2.ptr %v1.ptr ]
    %v3.ptr: ptr<i32> = alloc i32
    [ %n %i.ptr %v2.ptr %v3.ptr %v1.ptr ]
    %v1.1: i32 = load %v1.ptr
    [ %n %i.ptr %v2.ptr %v3.ptr %v1.ptr %v1.1 ]
    %v2.1: i32 = load %v2.ptr
    [ %n %i.ptr %v2.ptr %v3.ptr %v1.ptr %v1.1 %v2.1 ]
-   %7: i32 = add %v1.1 %v2.1
-   [ %n %i.ptr %v2.ptr %v3.ptr %v1.ptr %7 ]
-   store %v3.ptr %7
+   %6: i32 = add %v1.1 %v2.1
+   [ %n %i.ptr %v2.ptr %v3.ptr %v1.ptr %6 ]
+   store %v3.ptr %6
    [ %n %i.ptr %v2.ptr %v3.ptr %v1.ptr ]
    %v2.2: i32 = load %v2.ptr
    [ %n %i.ptr %v2.ptr %v3.ptr %v1.ptr %v2.2 ]
@@ -76,34 +70,34 @@ $fibonacci(%n: i32): i32 {
    [ %n %i.ptr %v2.ptr %v1.ptr ]
    %i.1: i32 = load %i.ptr
    [ %i.1 %n %v2.ptr %i.ptr %v1.ptr ]
-   %8: bool = cmp_eq %i.1 %n
-   [ %8 %v2.ptr %i.ptr %n %v1.ptr ]
-   br %8 @7 @8
-   [ %v2.ptr %i.ptr %n %v1.ptr ]
-@6:
+   %7: bool = cmp_eq %i.1 %n
+   [ %7 %v2.ptr %n %i.ptr %v1.ptr ]
+   br %7 @6 @7
+   [ %v2.ptr %n %i.ptr %v1.ptr ]
+@5:
    [ %v2.ptr ]
    %v2.3: i32 = load %v2.ptr
    [ %v2.3 ]
    ret %v2.3
    [ ]
+@6:
+   [ %v2.ptr ]
+   jmp @5
+   [ %v2.ptr ]
 @7:
-   [ %v2.ptr ]
-   jmp @6
-   [ %v2.ptr ]
-@8:
-   [ %i.ptr %n %v2.ptr %v1.ptr ]
+   [ %n %i.ptr %v2.ptr %v1.ptr ]
    %i.2: i32 = load %i.ptr
-   [ %i.ptr %i.2 %n %v2.ptr %v1.ptr ]
-   %9: i32 = const 1
-   [ %i.ptr %i.2 %9 %n %v2.ptr %v1.ptr ]
-   %10: i32 = add %i.2 %9
-   [ %i.ptr %10 %n %v2.ptr %v1.ptr ]
-   store %i.ptr %10
+   [ %n %i.ptr %v2.ptr %v1.ptr %i.2 ]
+   %8: i32 = const 1
+   [ %n %i.ptr %v2.ptr %v1.ptr %i.2 %8 ]
+   %9: i32 = add %i.2 %8
+   [ %n %i.ptr %v2.ptr %v1.ptr %9 ]
+   store %i.ptr %9
    [ %n %i.ptr %v2.ptr %v1.ptr ]
    jmp @4
    [ %n %i.ptr %v2.ptr %v1.ptr ]
-@9:
-   [ %i.ptr %n %v2.ptr %v1.ptr ]
-   jmp @8
-   [ %i.ptr %n %v2.ptr %v1.ptr ]
+@8:
+   [ %n %i.ptr %v2.ptr %v1.ptr ]
+   jmp @7
+   [ %n %i.ptr %v2.ptr %v1.ptr ]
 }

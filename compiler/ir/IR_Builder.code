@@ -424,6 +424,12 @@ func convert_break_statement(self: @IR_Builder, checked_statement: @Checked_Brea
         abort(checked_statement.location, "Break statement outside of a loop")
     }
     self.append_jump(self.current_loop.end_block, checked_statement.location)
+
+    \ code after break will be added to an unreachable block
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context.parent
+        block = self.current_function_context.function.create_block()
+    )
 }
 
 func convert_expression_statement(self: @IR_Builder, checked_statement: @Checked_Expression_Statement) -> Nothing {
@@ -448,7 +454,7 @@ func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Stat
         block = true_block
     )
     self.convert_statement(checked_statement.true_statement)
-    if not true_block.last_instruction.is_exit_instruction() {
+    if not self.current_block_context.block.last_instruction.is_exit_instruction() {
         self.append_jump(end_block, checked_statement.location)
     }
 
@@ -459,7 +465,7 @@ func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Stat
             block = false_block
         )
         self.convert_statement(checked_statement.false_statement)
-        if not false_block.last_instruction.is_exit_instruction() {
+        if not self.current_block_context.block.last_instruction.is_exit_instruction() {
             self.append_jump(end_block, checked_statement.location)
         }
     }
@@ -472,7 +478,32 @@ func convert_if_statement(self: @IR_Builder, checked_statement: @Checked_If_Stat
 }
 
 func convert_loop_statement(self: @IR_Builder, checked_statement: @Checked_Loop_Statement) -> Nothing {
-    abort("TODO: Convert loop statement")
+    \ create blocks
+    let body_block = self.current_function_context.function.create_block()
+    let end_block = self.current_function_context.function.create_block()
+
+    self.append_jump(body_block, checked_statement.location)
+
+    \ body block
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = body_block
+    )
+    self.current_loop = make @IR_Loop(
+        parent = self.current_loop
+        end_block = end_block
+    )
+    self.convert_statement(checked_statement.body_statement)
+    if not self.current_block_context.block.last_instruction.is_exit_instruction() {
+        self.append_jump(body_block, checked_statement.location)
+    }
+
+    \ end block
+    self.current_block_context = make @IR_Block_Context(
+        parent = self.current_block_context
+        block = end_block
+    )
+    self.current_loop = self.current_loop.parent
 }
 
 func convert_return_statement(self: @IR_Builder, checked_statement: @Checked_Return_Statement) -> Nothing {

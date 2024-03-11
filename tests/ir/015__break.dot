@@ -35,5 +35,8 @@ digraph {
 
       "$fibonacci@8" [label="@8|%i.2: i32 = load %i.ptr\l%9: i32 = const 1\l%10: i32 = add %i.2 %9\lstore %i.ptr %10\ljmp @4\l"]
       "$fibonacci@8" -> "$fibonacci@4"
+
+      "$fibonacci@9" [label="@9|jmp @8\l"]
+      "$fibonacci@9" -> "$fibonacci@8"
    }
 }

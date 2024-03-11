@@ -1,0 +1,38 @@
+digraph {
+   fontname=monospace
+   node [shape=record]
+
+   subgraph cluster_0 {
+      label="$main(): i32"
+
+      "$main@1" [label="@1|%1: i32 = const 12\l%2: i32 = call $fibonacci %1\l%3: i32 = const 144\l%4: i32 = sub %2 %3\lret %4\l"]
+   }
+
+   subgraph cluster_1 {
+      label="$fibonacci(%n: i32): i32"
+
+      "$fibonacci@1" [label="@1|%1: i32 = const 1\l%2: bool = cmp_le %n %1\lbr %2 @2 @3\l"]
+      "$fibonacci@1" -> "$fibonacci@2" [label="true"]
+      "$fibonacci@1" -> "$fibonacci@3" [label="false"]
+
+      "$fibonacci@2" [label="@2|ret %n\l"]
+
+      "$fibonacci@3" [label="@3|%v1.ptr: ptr&lt;i32&gt; = alloc i32\l%3: i32 = const 0\lstore %v1.ptr %3\l%v2.ptr: ptr&lt;i32&gt; = alloc i32\l%4: i32 = const 1\lstore %v2.ptr %4\l%i.ptr: ptr&lt;i32&gt; = alloc i32\l%5: i32 = const 2\lstore %i.ptr %5\ljmp @4\l"]
+      "$fibonacci@3" -> "$fibonacci@4"
+
+      "$fibonacci@4" [label="@4|%v3.ptr: ptr&lt;i32&gt; = alloc i32\l%v1.1: i32 = load %v1.ptr\l%v2.1: i32 = load %v2.ptr\l%6: i32 = add %v1.1 %v2.1\lstore %v3.ptr %6\l%v2.2: i32 = load %v2.ptr\lstore %v1.ptr %v2.2\l%v3.1: i32 = load %v3.ptr\lstore %v2.ptr %v3.1\l%i.1: i32 = load %i.ptr\l%7: bool = cmp_eq %i.1 %n\lbr %7 @6 @7\l"]
+      "$fibonacci@4" -> "$fibonacci@6" [label="true"]
+      "$fibonacci@4" -> "$fibonacci@7" [label="false"]
+
+      "$fibonacci@5" [label="@5|%v2.3: i32 = load %v2.ptr\lret %v2.3\l"]
+
+      "$fibonacci@6" [label="@6|jmp @5\l"]
+      "$fibonacci@6" -> "$fibonacci@5"
+
+      "$fibonacci@7" [label="@7|%i.2: i32 = load %i.ptr\l%8: i32 = const 1\l%9: i32 = add %i.2 %8\lstore %i.ptr %9\ljmp @4\l"]
+      "$fibonacci@7" -> "$fibonacci@4"
+
+      "$fibonacci@8" [label="@8|jmp @7\l"]
+      "$fibonacci@8" -> "$fibonacci@7"
+   }
+}
