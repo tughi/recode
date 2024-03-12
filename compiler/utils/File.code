@@ -74,7 +74,7 @@ func write(self: @FILE, char: u8) -> @FILE {
 
 func write_hex(self: @FILE, number: u64) -> @FILE {
     if number >= 16 {
-        self.write(number / 16)
+        self.write_hex(number / 16)
     }
     let digit = number // 16
     if digit < 10 {

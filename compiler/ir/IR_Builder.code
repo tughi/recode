@@ -909,7 +909,16 @@ func convert_multiply_expression(self: @IR_Builder, checked_expression: @Checked
 }
 
 func convert_negate_expression(self: @IR_Builder, checked_expression: @Checked_Negate_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert negate expression")
+    let value = self.convert_expression(checked_expression.expression, expected_type)
+    if value.type is not IR_Int_Type {
+        abort(checked_expression.expression.location, "Not a signed integer type: ".clone().append(value.type.name))
+    }
+    return self.append(
+        make @IR_Negate_Instruction(
+            result_value = self.create_temp_value(value.type)
+        ).init(value)
+        checked_expression.location
+    )
 }
 
 func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Checked_Not_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {

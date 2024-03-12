@@ -264,10 +264,19 @@ struct MC_MOV_Instruction: MC_Instruction(
 
 struct MC_MUL_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
-        return file.write("mul").write(' ').write(self.as(@MC_MUL_Instruction).source)
+        let self = self.as(@MC_MUL_Instruction)
+        return file.write("mul").write_size_suffix(self.source.data_size()).write(' ').write(self.source)
     }
 ) {
     source: @MC_Value
+}
+
+struct MC_NEG_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("neg").write(' ').write(self.as(@MC_NEG_Instruction).destination)
+    }
+) {
+    destination: @MC_Value
 }
 
 struct MC_POP_Instruction: MC_Instruction(

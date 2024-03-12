@@ -660,6 +660,14 @@ struct IR_Multiply_Instruction: IR_Binary_Instruction(
 ) {
 }
 
+struct IR_Negate_Instruction: IR_Unary_Instruction(
+    write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
+        let instruction = instruction.as(@IR_Negate_Instruction)
+        return file.write("neg ").write(instruction.get_value())
+    }
+) {
+}
+
 struct IR_Not_Instruction: IR_Unary_Instruction(
     write = func (instruction: @IR_Instruction, file: @FILE) -> @FILE {
         let instruction = instruction.as(@IR_Not_Instruction)

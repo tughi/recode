@@ -52,7 +52,7 @@ mul:
 .L__mul__S:
 .L__mul__1:
   movl %edi, %eax
-  mul %esi
+  mull %esi
   jmp .L__mul__E
 .L__mul__E:
   ret
