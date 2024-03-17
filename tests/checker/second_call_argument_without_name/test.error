@@ -1,0 +1,1 @@
+tests/checker/second_call_argument_without_name/test.code:2:31: Argument name expected

@@ -103,40 +103,40 @@ def trace(*command, ignore_output=True):
 def test(paths, save=False, stage=1):
     build()
 
-    for test_code in sorted(code_files(paths)):
-        test_code_name = os.path.basename(test_code)
+    for test_dir in sorted(test_dirs(paths)):
+        if not os.path.exists(f'build/{test_dir}'):
+            run(f'mkdir -p build/{test_dir}')
 
-        if not os.path.exists(os.path.join('build', os.path.dirname(test_code))):
-            run(f'mkdir -p build/{os.path.dirname(test_code)}')
-
-        logger.info(f"Testing: {test_code}")
+        logger.info(f"Testing: {test_dir}")
 
         for compiler_command, test_file in [
-            ((f'build/stage{stage}/ReCode', '--file', test_code, 'ir'), f'{test_code[:-5]}.ir'),
-            ((f'build/stage{stage}/ReCode', '--file', test_code, 'cfg'), f'{test_code[:-5]}.dot'),
-            ((f'build/stage{stage}/ReCode', '--file', test_code, 'irl'), f'{test_code[:-5]}.irl'),
-            ((f'build/stage{stage}/ReCode', '--file', test_code, 'ig'), f'{test_code[:-5]}.ig.dot'),
-            ((f'build/stage{stage}/ReCode', '--file', test_code, 'mc'), f'{test_code[:-5]}.s'),
+            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'ir'), f'{test_dir}/test.ir'),
+            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'cfg'), f'{test_dir}/test.dot'),
+            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'irl'), f'{test_dir}/test.irl'),
+            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'ig'), f'{test_dir}/test.ig.dot'),
+            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'mc'), f'{test_dir}/test.s'),
         ]:
             compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
             if compiler_result.returncode != 0:
-                if os.path.exists(f'{test_code[:-5]}.error'):
+                error_file = f'{test_dir}/test.error'
+                if os.path.exists(error_file):
                     compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
-                    diff = compute_diff(f'{test_code[:-5]}.error', compiler_error)
+                    diff = compute_diff(error_file, compiler_error)
                     if diff:
                         if save:
-                            open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
+                            open(error_file, 'w').write(compiler_error)
                             save = False
-                            continue
+                            break
                         logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         trace(*compiler_command)
                         exit(1)
+                    break
                 else:
                     if save:
                         compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
-                        open(f'{test_code[:-5]}.error', 'w').write(compiler_error)
+                        open(error_file, 'w').write(compiler_error)
                         save = False
-                        continue
+                        break
                     logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_RESET}{compiler_result.stderr}")
                     trace(*compiler_command)
                     exit(1)
@@ -147,8 +147,8 @@ def test(paths, save=False, stage=1):
                         if save:
                             if test_file.endswith('.s'):
                                 # Check if the assembly is valid
-                                assemble(None, f'build/{test_code[:-5]}', input=compiler_result.stdout, text=True, check=True)
-                                run(f'build/{test_code[:-5]}', check=True)
+                                assemble(None, f'build/{test_dir}/test', input=compiler_result.stdout, text=True, check=True)
+                                run(f'build/{test_dir}/test', check=True)
                             open(test_file, 'w').write(compiler_result.stdout)
                             save = False
                             continue
@@ -158,8 +158,8 @@ def test(paths, save=False, stage=1):
                     if save:
                         if test_file.endswith('.s'):
                             # Check if the assembly is valid
-                            assemble(None, f'build/{test_code[:-5]}', input=compiler_result.stdout, text=True, check=True)
-                            run(f'build/{test_code[:-5]}', check=True)
+                            assemble(None, f'build/{test_dir}/test', input=compiler_result.stdout, text=True, check=True)
+                            run(f'build/{test_dir}/test', check=True)
                         open(test_file, 'w').write(compiler_result.stdout)
                         save = False
                         continue
@@ -167,16 +167,14 @@ def test(paths, save=False, stage=1):
                     exit(1)
 
 
-def code_files(paths):
+def test_dirs(paths):
     for path in sorted(paths):
-        if os.path.isfile(path) and path.endswith('.code'):
-            yield path
-        elif os.path.isdir(path):
+        if os.path.isdir(path):
             for root, dirs, files in os.walk(path):
-                for file in files:
-                    if file.endswith('.code'):
-                        yield os.path.join(root, file)
-
+                if 'test.code' in files:
+                    yield root
+        else:
+            logger.warning(f"{COLOR_WARNING}Not a folder path: {path}{COLOR_RESET}")
 
 def compute_diff(expected, actual, actual_name='-'):
     with open(expected) as f:
@@ -256,7 +254,7 @@ if __name__ == '__main__':
     stage_args_parser.add_argument('--clean', action='store_true', help='clean before staging')
 
     test_args_parser = args_command_parser.add_parser('test', help='test the compiler')
-    test_args_parser.add_argument('path', nargs='*', default=['tests/ir'], help='path to the test file(s)')
+    test_args_parser.add_argument('path', nargs='*', default=['tests'], help='path to the test file(s)')
     test_args_parser.add_argument('--clean', action='store_true', help='clean before testing')
     test_args_parser.add_argument('--save', action='store_true', help='save the first unexpected compiler output')
 

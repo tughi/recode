@@ -1,5 +1,0 @@
-\ Expect:
-\ - error: 'tests/all/006.code:4:26: Unsupported return type\n'
-
-func test(value: i32) -> Any {
-}

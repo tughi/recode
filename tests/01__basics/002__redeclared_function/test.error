@@ -1,0 +1,1 @@
+tests/01__basics/002__redeclared_function/test.code:9:6: Function declared first here: tests/01__basics/002__redeclared_function/test.code:1:6

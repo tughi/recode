@@ -1,0 +1,2 @@
+tests/checker/named_call_arguments_order/test.code:2:12: Found no matching callable
+tests/checker/named_call_arguments_order/test.code:2:12: TODO: List all named functions

@@ -1,6 +1,0 @@
-\ Expect:
-\ - error: 'tests/all/010.code:5:5: Missing return expression\n'
-
-func main() -> i32 {
-    return
-}
