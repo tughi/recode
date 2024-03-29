@@ -8,6 +8,11 @@ func compute_live_values(self: @IR_Code) -> Nothing {
 }
 
 func compute_live_values(self: @IR_Function) -> Nothing {
+    if self.blocks == null {
+        \ external function
+        return
+    }
+
     let blocks = make List[@IR_Block]()
     self.blocks.for_each() {
         let block = it

@@ -63,16 +63,18 @@ func build_interference_graph(function: @IR_Function) -> @IR_Interference_Graph 
 
     let graph = make @IR_Interference_Graph()
 
-    function.blocks.for_each() {
-        let block = it
-        block.for_each_instruction() {
-            let instruction = it
-            \ add edges between all live values
-            instruction.live_in_values.for_each() {
-                let node = it
+    if function.blocks != null {
+        function.blocks.for_each() {
+            let block = it
+            block.for_each_instruction() {
+                let instruction = it
+                \ add edges between all live values
                 instruction.live_in_values.for_each() {
-                    let neighbour = it
-                    graph.add_edge(node, neighbour)
+                    let node = it
+                    instruction.live_in_values.for_each() {
+                        let neighbour = it
+                        graph.add_edge(node, neighbour)
+                    }
                 }
             }
         }

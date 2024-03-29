@@ -150,9 +150,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
 
     \ check functions
     self.checked_code.functions.for_each() {
-        if it.parsed_function_statement.body != null {
-            self.check_function_symbol(it)
-        }
+        self.check_function_symbol(it)
     }
 
     \ check unused types
@@ -230,6 +228,23 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
 func check_function_symbol(self: @Checker, checked_function_symbol: @Checked_Function_Symbol) -> Nothing {
     let parsed_function_statement = checked_function_symbol.parsed_function_statement
 
+    let checked_function_type = checked_function_symbol.function_type
+
+    if parsed_function_statement.body == null {
+        \ check external function
+
+        checked_function_type.parameters.for_each() {
+            let checked_parameter_symbol = make @Checked_Parameter_Symbol(
+                location = it.location
+                name = it.name
+                type = it.type
+            )
+            checked_function_symbol.parameters.append(checked_parameter_symbol)
+        }
+
+        return
+    }
+
     \ remember parent symbols
     let parent_symbols = self.local_symbols
     if checked_function_symbol.specialization_symbols != null {
@@ -240,7 +255,6 @@ func check_function_symbol(self: @Checker, checked_function_symbol: @Checked_Fun
     self.local_symbols = make @Checked_Symbols(
         parent = self.local_symbols
     )
-    let checked_function_type = checked_function_symbol.function_type
     checked_function_type.parameters.for_each() {
         let checked_parameter_symbol = make @Checked_Parameter_Symbol(
             location = it.location

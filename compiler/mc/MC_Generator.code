@@ -76,8 +76,11 @@ func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
     ir_code.global_symbols.for_each() {
         let symbol = it
         if symbol is IR_Function {
-            let function = self.convert_function(symbol.as(@IR_Function))
-            mc_code.functions.append(function)
+            let ir_function = symbol.as(@IR_Function)
+            if ir_function.blocks != null {
+                let function = self.convert_function(ir_function)
+                mc_code.functions.append(function)
+            }
         }
     }
     return mc_code

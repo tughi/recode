@@ -184,7 +184,12 @@ func write(file: @FILE, symbol: @IR_Symbol, live: bool) -> Nothing {
 }
 
 func write_name(file: @FILE, symbol: @IR_Symbol) -> @FILE {
-    return file.write('$').write(symbol.name)
+    if symbol is IR_Function_Parameter {
+        file.write("%")
+    } else {
+        file.write("$")
+    }
+    return file.write(symbol.name)
 }
 
 
@@ -214,7 +219,7 @@ func write(file: @FILE, function: @IR_Function, live: bool) -> @FILE {
     let function_parameters = function.parameters.create_iterator()
     while function_parameters.has_next() {
         let function_parameter = function_parameters.next()
-        file.write(function_parameter.value.name).write(": ").write(function_parameter.type.name)
+        file.write_name(function_parameter).write(": ").write(function_parameter.type.name)
         if function_parameters.has_next() {
             file.write(", ")
         }
@@ -224,14 +229,16 @@ func write(file: @FILE, function: @IR_Function, live: bool) -> @FILE {
     } else {
         file.write("): ").write(function_type.return_type.name)
     }
-    file.write(" {").end_line()
-    let block_item = function.blocks.first_item
-    while block_item != null {
-        file.write(block_item.data, live)
-        block_item = block_item.next_item
+    if function.blocks != null {
+        file.write(" {").end_line()
+        let block_item = function.blocks.first_item
+        while block_item != null {
+            file.write(block_item.data, live)
+            block_item = block_item.next_item
+        }
+        file.write('}')
     }
-    file.write('}').end_line()
-    return file
+    return file.end_line()
 }
 
 func write_cfg(file: @FILE, function: @IR_Function, cluster: i32) -> @FILE {
@@ -250,8 +257,10 @@ func write_cfg(file: @FILE, function: @IR_Function, cluster: i32) -> @FILE {
         file.write(": ").write_cfg(function.return_type)
     }
     file.write('"').end_line()
-    function.blocks.for_each() {
-        file.end_line().write_cfg(it)
+    if function.blocks != null {
+        function.blocks.for_each() {
+            file.end_line().write_cfg(it)
+        }
     }
     return file.write("   }").end_line()
 }
