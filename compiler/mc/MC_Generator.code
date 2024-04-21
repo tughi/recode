@@ -24,6 +24,8 @@ struct MC_Generator {
     register_r15 = make @MC_Register_R15()
     registers = make List[@MC_Register]()
 
+    global_values = make @List[@MC_Global_Value]()
+
     current_function: @MC_Function = null
     predecessor_block: @MC_Block = null
 }
@@ -72,7 +74,23 @@ func parameter_register(self: @MC_Generator, index: i32) -> @MC_Register {
 func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
     ir_code.compute_live_values()
 
-    let mc_code = make @MC_Code()
+    let mc_code = make @MC_Code(
+        global_values = self.global_values
+    )
+
+    ir_code.global_symbols.for_each() {
+        let symbol = it
+        if symbol is IR_Global_Variable {
+            let ir_global_variable = symbol.as(@IR_Global_Variable)
+            let global_value = make @MC_Global_Value(
+                name = ir_global_variable.name
+                ir_value = ir_global_variable.value_pointer
+                data_size = ir_global_variable.type.get_size()
+            )
+            mc_code.global_values.append(global_value)
+        }
+    }
+
     ir_code.global_symbols.for_each() {
         let symbol = it
         if symbol is IR_Function {
@@ -83,6 +101,7 @@ func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
             }
         }
     }
+
     return mc_code
 }
 
@@ -95,8 +114,10 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
     let function = make @MC_Function(
         name = ir_function.name
     )
-    function.prologue_block.function = function
     function.epilogue_block.function = function
+    function.epilogue_block.global_values = self.global_values
+    function.prologue_block.function = function
+    function.prologue_block.global_values = self.global_values
 
     self.current_function = function
 
@@ -281,6 +302,7 @@ func get_block(self: @MC_Generator, ir_block: @IR_Block) -> @MC_Block {
         ir_block = ir_block
         function = self.current_function
         name = ir_block.name
+        global_values = self.global_values
     )
     self.current_function.blocks.append(block)
     return block
@@ -297,6 +319,7 @@ func get_jump_block(self: @MC_Generator, source_mc_block: @MC_Block, target_ir_b
         ir_block = null
         function = self.current_function
         name = target_ir_block.name.clone().append("_F_").append(source_mc_block.ir_block.name)
+        global_values = self.global_values
     )
     self.current_function.blocks.append(jump_mc_block)
 
@@ -885,7 +908,15 @@ func find_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Value {
             return mc_value
         }
     }
-    return null
+
+    self.global_values.for_each() {
+        let mc_global_value = it
+        if mc_global_value.ir_value == ir_value {
+            return mc_global_value
+        }
+    }
+
+    abort("Value not found: ".clone().append(ir_value.name))
 }
 
 func find_register_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Register_Value {

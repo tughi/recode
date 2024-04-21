@@ -129,6 +129,8 @@ func build(self: @IR_Builder) -> Nothing {
             self.create_function(value.as(@Checked_Function_Symbol))
         } else if value is Checked_Type_Symbol {
             \ ignored
+        } else if value is Checked_Variable_Symbol {
+            self.create_global_variable(value.as(@Checked_Variable_Symbol))
         } else {
             abort(value.location, value.object_type)
         }
@@ -182,13 +184,34 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
     self.global_context.symbols.append(ir_function)
 }
 
+func create_global_variable(self: @IR_Builder, checked_variable_symbol: @Checked_Variable_Symbol) -> Nothing {
+    let ir_variable_type = self.convert_type(checked_variable_symbol.type)
+    let ir_variable = make @IR_Global_Variable(
+        checked_symbol = checked_variable_symbol
+        name = checked_variable_symbol.name
+        type = ir_variable_type
+        value_pointer = make @IR_Value(
+            name = "$".clone().append(checked_variable_symbol.name)
+            type = self.create_ir_pointer_type(ir_variable_type)
+        )
+        is_external = checked_variable_symbol.is_external
+    )
+    if not checked_variable_symbol.is_external {
+        abort("TODO: Create variable value")
+    }
+    self.global_context.symbols.append(ir_variable)
+}
+
 func convert_function(self: @IR_Builder, ir_function: @IR_Function) -> Nothing {
     if ir_function.checked_symbol is not Checked_Function_Symbol {
         abort("Invalid state")
     }
     let checked_function_symbol = ir_function.checked_symbol.as(@Checked_Function_Symbol)
     if checked_function_symbol.body != null {
-        self.current_function_context = make @IR_Function_Context(function = ir_function)
+        self.current_function_context = make @IR_Function_Context(
+            parent = self.global_context
+            function = ir_function
+        )
 
         ir_function.parameters.for_each() {
             self.current_function_context.symbols.append(it)
@@ -955,6 +978,15 @@ func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_S
     let ir_symbol = self.current_block_context.find_symbol(checked_expression.symbol)
     if ir_symbol == null {
         abort(checked_expression.location, clone("Unknown symbol: ").append(checked_expression.symbol.name))
+    }
+    if ir_symbol is IR_Global_Variable {
+        let ir_symbol = ir_symbol.as(@IR_Global_Variable)
+        return self.append(
+            make @IR_Load_Instruction(
+                result_value = self.create_temp_value(ir_symbol.type)
+            ).init(ir_symbol.value_pointer)
+            checked_expression.location
+        )
     }
     if ir_symbol is IR_Function_Parameter {
         return ir_symbol.as(@IR_Function_Parameter).value

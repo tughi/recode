@@ -1,8 +1,14 @@
 struct MC_Code {
     functions = make List[@MC_Function]()
+    global_values: @List[@MC_Global_Value]
 }
 
 func write(file: @FILE, code: @MC_Code) -> @FILE {
+    code.global_values.for_each() {
+        let global_value = it
+        file.write(".extern ").write(global_value.name).end_line().end_line()
+    }
+
     let functions_iterator = code.functions.create_iterator()
     if functions_iterator.has_next() {
         loop {
@@ -20,8 +26,18 @@ func write(file: @FILE, code: @MC_Code) -> @FILE {
 struct MC_Function {
     name: @String
     blocks = make List[@MC_Block]()
-    prologue_block = make MC_Block(ir_block = null, function = undefined, name = "S")
-    epilogue_block = make MC_Block(ir_block = null, function = undefined, name = "E")
+    prologue_block = make MC_Block(
+        ir_block = null
+        function = undefined
+        name = "S"
+        global_values = undefined
+    )
+    epilogue_block = make MC_Block(
+        ir_block = null
+        function = undefined
+        name = "E"
+        global_values = undefined
+    )
     stack_size = 0
 }
 
@@ -40,6 +56,7 @@ struct MC_Block {
     ir_block: @IR_Block
     function: @MC_Function
     name: @String
+    global_values: @List[@MC_Global_Value]
     first_instruction: @MC_Instruction = null
     last_instruction: @MC_Instruction = null
     phi_values = make List[@MC_Value]()
@@ -254,6 +271,12 @@ struct MC_JNE_Instruction: MC_Instruction(
 struct MC_MOV_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_MOV_Instruction)
+        if instruction.source == null {
+            abort("Source is null")
+        }
+        if instruction.destination == null {
+            abort("Destination is null")
+        }
         let instruction_data_size = min(instruction.source.data_size(), instruction.destination.data_size())
         return file.write("mov").write_size_suffix(instruction_data_size).write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }

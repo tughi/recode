@@ -178,6 +178,8 @@ struct IR_Symbol: Object {
 func write(file: @FILE, symbol: @IR_Symbol, live: bool) -> Nothing {
     if symbol is IR_Function {
         file.write(symbol.as(@IR_Function), live)
+    } else if symbol is IR_Global_Variable {
+        file.write(symbol.as(@IR_Global_Variable), live)
     } else {
         abort(symbol.object_type)
     }
@@ -191,7 +193,6 @@ func write_name(file: @FILE, symbol: @IR_Symbol) -> @FILE {
     }
     return file.write(symbol.name)
 }
-
 
 struct IR_Function: IR_Symbol {
     function_type: @IR_Function_Type
@@ -263,6 +264,18 @@ func write_cfg(file: @FILE, function: @IR_Function, cluster: i32) -> @FILE {
         }
     }
     return file.write("   }").end_line()
+}
+
+struct IR_Global_Variable: IR_Symbol {
+    value_pointer: @IR_Value
+    is_external = false
+}
+
+func write(file: @FILE, global_variable: @IR_Global_Variable, live: bool) -> @FILE {
+    if global_variable.is_external {
+        return file.write("external $").write(global_variable.name).write(": ").write(global_variable.type.name).end_line()
+    }
+    abort("TODO: Write global variable")
 }
 
 struct IR_Local_Variable: IR_Symbol {
