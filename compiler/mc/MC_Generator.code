@@ -578,6 +578,12 @@ func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Const
             ir_value = ir_instruction.result_value
             value = value
         ))
+    } else if literal is Character_Token {
+        let value = literal.as(@Character_Token).value
+        mc_block.live_values.prepend(make @MC_Immediate_Value(
+            ir_value = ir_instruction.result_value
+            value = value.as(u64)
+        ))
     } else if literal is Integer_Token {
         let literal = literal.as(@Integer_Token)
         let value = literal.value

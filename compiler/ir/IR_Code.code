@@ -1,9 +1,17 @@
 struct IR_Code {
-    types = make Map[@String, @IR_Type]()
+    types: @List[@IR_Type]
     global_symbols: @List[@IR_Symbol]
 }
 
 func write(file: @FILE, code: @IR_Code, live: bool) -> @FILE {
+    code.types.for_each() {
+        if it is IR_User_Defined_Type {
+            let type = it.as(@IR_User_Defined_Type)
+            type.print_definition(file)
+            file.end_line()
+        }
+    }
+
     let symbols_iterator = code.global_symbols.create_iterator()
     if symbols_iterator.has_next() {
         loop {
@@ -37,7 +45,7 @@ struct IR_Type: Object {
     name: @String
     size = 0
     compute_size = func (self: @IR_Type) -> i32 {
-        abort(clone("Unsupported type: ").append(self.name))
+        abort(self.object_type)
     }
 }
 
@@ -100,7 +108,7 @@ struct IR_Undefined_Type: IR_Type(name = "Undefined") {
 struct IR_Nothing_Type: IR_Type(name = "Nothing") {
 }
 
-struct IR_Pointer_Type: IR_Type {
+struct IR_Pointer_Type: IR_Type(size = 8) {
     pointed_type: @IR_Type
 }
 
@@ -123,10 +131,20 @@ struct IR_Function_Type_Parameter {
     type: @IR_Type
 }
 
-struct IR_Opaque_Type: IR_Type {
+struct IR_User_Defined_Type: IR_Type {
+    print_definition = func (self: @IR_Type, file: @FILE) -> Nothing {
+        abort(self.object_type)
+    }
 }
 
-struct IR_Struct_Type: IR_Type {
+struct IR_Opaque_Type: IR_User_Defined_Type(
+    print_definition = func (self: @IR_Type, file: @FILE) -> Nothing {
+        file.write("type ").write(self.name).write(" = opaque").end_line()
+    }
+) {
+}
+
+struct IR_Struct_Type: IR_User_Defined_Type {
     super_type: @IR_Struct_Type = null
     derived_types = make @List[@IR_Struct_Type]()
     members = make @List[@IR_Struct_Type_Member]()

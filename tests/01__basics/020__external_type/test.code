@@ -1,6 +1,3 @@
-\ Expect:
-\ - output: '42\n'
-
 external type File
 
 external stdout: @File

@@ -1,0 +1,19 @@
+type File = opaque
+
+external $stdout: ptr<File>
+
+$fputc(%char: u8, %file: ptr<File>): i32
+
+$main() {
+@1:
+   %1: u8 = const '4'
+   %2: ptr<File> = load $stdout
+   %3: i32 = call $fputc %1 %2
+   %4: u8 = const '2'
+   %5: ptr<File> = load $stdout
+   %6: i32 = call $fputc %4 %5
+   %7: u8 = const '\n'
+   %8: ptr<File> = load $stdout
+   %9: i32 = call $fputc %7 %8
+   ret
+}
