@@ -1,1 +1,1 @@
-tests/01__basics/002__function_return_on_type_any/test.code:1:26: Unsupported return type
+tests/01__basics/002__function_return_on_type_any/test.code:1:26: Cannot use Any as return type

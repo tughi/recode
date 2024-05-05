@@ -1,0 +1,4 @@
+external type Value
+
+func check(value: Value) -> Nothing {
+}

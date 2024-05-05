@@ -1,0 +1,1 @@
+tests/01__basics/020__variable_of_external_type/test.code:3:11: Variable cannot have an opaque type

@@ -1810,7 +1810,9 @@ func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -
     checked_function_type.name.append(") -> ").append(checked_function_type.return_type.name)
 
     if checked_function_type.return_type is Checked_Any_Type {
-        abort(parsed_type.return_type.location, "Unsupported return type")
+        abort(parsed_type.return_type.location, "Cannot use ".clone().append(checked_function_type.return_type.name).append(" as return type"))
+    } else if checked_function_type.return_type is Checked_Opaque_Type {
+        abort(parsed_type.return_type.location, "Cannot use opaque ".clone().append(checked_function_type.return_type.name).append(" as return type"))
     }
 
     return checked_function_type
@@ -1827,12 +1829,12 @@ func check_callable_parameter(self: @Checker, checked_callable_type: @Checked_Ca
 
     \ check parameter type
     let checked_callable_parameter_type = self.convert_type(parsed_callable_parameter.type)
-    if checked_callable_parameter_type is Checked_Any_Type {
-        abort(parsed_callable_parameter.type.location, "Unsupported parameter type")
+    if checked_callable_parameter_type is Checked_Any_Type or checked_callable_parameter_type is Checked_Nothing_Type {
+        abort(parsed_callable_parameter.type.location, "Cannot use ".clone().append(checked_callable_parameter_type.name).append(" as parameter type"))
     } else if checked_callable_parameter_type is Checked_Function_Type {
         checked_callable_parameter_type = make_checked_function_pointer_type(checked_callable_parameter_type.as(@Checked_Function_Type))
-    } else if checked_callable_parameter_type is Checked_Nothing_Type {
-        abort(parsed_callable_parameter.type.location, "Unsupported parameter type")
+    } else if checked_callable_parameter_type is Checked_Opaque_Type {
+        abort(parsed_callable_parameter.type.location, "Cannot use opaque ".clone().append(checked_callable_parameter_type.name).append(" as parameter type"))
     }
 
     \ create parameter
