@@ -145,26 +145,39 @@ def test(paths, save=False, stage=1):
                     diff = compute_diff(test_file, compiler_result.stdout)
                     if diff:
                         if save:
-                            if test_file.endswith('.s'):
-                                # Check if the assembly is valid
-                                assemble(None, f'build/{test_dir}/test', input=compiler_result.stdout, text=True, check=True)
-                                run(f'build/{test_dir}/test', check=True)
-                            open(test_file, 'w').write(compiler_result.stdout)
+                            save_test_output(test_dir, test_file, compiler_result.stdout)
                             save = False
                             continue
                         logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         exit(1)
                 else:
                     if save:
-                        if test_file.endswith('.s'):
-                            # Check if the assembly is valid
-                            assemble(None, f'build/{test_dir}/test', input=compiler_result.stdout, text=True, check=True)
-                            run(f'build/{test_dir}/test', check=True)
-                        open(test_file, 'w').write(compiler_result.stdout)
+                        save_test_output(test_dir, test_file, compiler_result.stdout)
                         save = False
                         continue
                     logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_result.stdout}{COLOR_RESET}")
                     exit(1)
+
+
+def save_test_output(test_dir, test_file, compiler_output):
+    if test_file.endswith('.s'):
+        # Check if the assembly is valid
+        assemble(None, f'build/{test_dir}/test', input=compiler_output, text=True, check=True)
+        test_result = run(f'build/{test_dir}/test', capture_output=True, text=True, check=False)
+        if test_result.returncode != 0:
+            logger.error(f"{COLOR_ERROR}Unexpected return code: {test_result.returncode}{COLOR_RESET}")
+            exit(1)
+        test_output_file = f'{test_dir}/test.output'
+        if os.path.exists(test_output_file):
+            diff = compute_diff(test_output_file, test_result.stdout)
+            if diff:
+                logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
+                exit(1)
+        elif test_result.stdout:
+            logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{test_result.stdout}{COLOR_RESET}")
+            exit(1)
+    open(test_file, 'w').write(compiler_output)
+
 
 
 def test_dirs(paths):
