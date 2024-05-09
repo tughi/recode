@@ -1,0 +1,408 @@
+digraph {
+   fontname=monospace
+   node [shape=record]
+
+   subgraph cluster_0 {
+      label="$main(): i32"
+
+      "$main@1" [label="@1|%check1.ptr: ptr&lt;bool&gt; = alloc bool\l%1: bool = const true\lstore %check1.ptr %1\l%check2.ptr: ptr&lt;bool&gt; = alloc bool\l%2: bool = const false\lstore %check2.ptr %2\l%check3.ptr: ptr&lt;bool&gt; = alloc bool\l%3: bool = const true\lstore %check3.ptr %3\l%check4.ptr: ptr&lt;bool&gt; = alloc bool\l%4: bool = const false\lstore %check4.ptr %4\l%check5.ptr: ptr&lt;bool&gt; = alloc bool\l%5: bool = const true\lstore %check5.ptr %5\l%check6.ptr: ptr&lt;bool&gt; = alloc bool\l%6: bool = const false\lstore %check6.ptr %6\l%check1.1: bool = load %check1.ptr\lbr %check1.1 @2 @3\l"]
+      "$main@1" -> "$main@2" [label="true"]
+      "$main@1" -> "$main@3" [label="false"]
+
+      "$main@2" [label="@2|jmp @4\l"]
+      "$main@2" -> "$main@4"
+
+      "$main@3" [label="@3|%7: i32 = const 1\lret %7\l"]
+
+      "$main@4" [label="@4|%check1.2: bool = load %check1.ptr\l%8: bool = not %check1.2\lbr %8 @5 @6\l"]
+      "$main@4" -> "$main@5" [label="true"]
+      "$main@4" -> "$main@6" [label="false"]
+
+      "$main@5" [label="@5|%9: i32 = const 2\lret %9\l"]
+
+      "$main@6" [label="@6|%check2.1: bool = load %check2.ptr\lbr %check2.1 @7 @8\l"]
+      "$main@6" -> "$main@7" [label="true"]
+      "$main@6" -> "$main@8" [label="false"]
+
+      "$main@7" [label="@7|%10: i32 = const 3\lret %10\l"]
+
+      "$main@8" [label="@8|%check2.2: bool = load %check2.ptr\l%11: bool = not %check2.2\lbr %11 @9 @10\l"]
+      "$main@8" -> "$main@9" [label="true"]
+      "$main@8" -> "$main@10" [label="false"]
+
+      "$main@9" [label="@9|jmp @11\l"]
+      "$main@9" -> "$main@11"
+
+      "$main@10" [label="@10|%12: i32 = const 4\lret %12\l"]
+
+      "$main@11" [label="@11|%check1.3: bool = load %check1.ptr\lbr %check1.3 @14 @15\l"]
+      "$main@11" -> "$main@14" [label="true"]
+      "$main@11" -> "$main@15" [label="false"]
+
+      "$main@12" [label="@12|%14: i32 = const 5\lret %14\l"]
+
+      "$main@13" [label="@13|%check1.4: bool = load %check1.ptr\lbr %check1.4 @19 @20\l"]
+      "$main@13" -> "$main@19" [label="true"]
+      "$main@13" -> "$main@20" [label="false"]
+
+      "$main@14" [label="@14|%check2.3: bool = load %check2.ptr\ljmp @15\l"]
+      "$main@14" -> "$main@15"
+
+      "$main@15" [label="@15|%13: bool = phi @11 %check1.3 @14 %check2.3\lbr %13 @12 @13\l"]
+      "$main@15" -> "$main@12" [label="true"]
+      "$main@15" -> "$main@13" [label="false"]
+
+      "$main@16" [label="@16|jmp @18\l"]
+      "$main@16" -> "$main@18"
+
+      "$main@17" [label="@17|%17: i32 = const 6\lret %17\l"]
+
+      "$main@18" [label="@18|%check1.5: bool = load %check1.ptr\lbr %check1.5 @24 @25\l"]
+      "$main@18" -> "$main@24" [label="true"]
+      "$main@18" -> "$main@25" [label="false"]
+
+      "$main@19" [label="@19|%check2.4: bool = load %check2.ptr\ljmp @20\l"]
+      "$main@19" -> "$main@20"
+
+      "$main@20" [label="@20|%15: bool = phi @13 %check1.4 @19 %check2.4\l%16: bool = not %15\lbr %16 @16 @17\l"]
+      "$main@20" -> "$main@16" [label="true"]
+      "$main@20" -> "$main@17" [label="false"]
+
+      "$main@21" [label="@21|%21: i32 = const 7\lret %21\l"]
+
+      "$main@22" [label="@22|jmp @23\l"]
+      "$main@22" -> "$main@23"
+
+      "$main@23" [label="@23|%check1.6: bool = load %check1.ptr\lbr %check1.6 @30 @29\l"]
+      "$main@23" -> "$main@30" [label="true"]
+      "$main@23" -> "$main@29" [label="false"]
+
+      "$main@24" [label="@24|%check2.5: bool = load %check2.ptr\ljmp @25\l"]
+      "$main@24" -> "$main@25"
+
+      "$main@25" [label="@25|%18: bool = phi @18 %check1.5 @24 %check2.5\l%19: bool = not %18\l%20: bool = not %19\lbr %20 @21 @22\l"]
+      "$main@25" -> "$main@21" [label="true"]
+      "$main@25" -> "$main@22" [label="false"]
+
+      "$main@26" [label="@26|jmp @28\l"]
+      "$main@26" -> "$main@28"
+
+      "$main@27" [label="@27|%23: i32 = const 8\lret %23\l"]
+
+      "$main@28" [label="@28|%check1.7: bool = load %check1.ptr\lbr %check1.7 @35 @34\l"]
+      "$main@28" -> "$main@35" [label="true"]
+      "$main@28" -> "$main@34" [label="false"]
+
+      "$main@29" [label="@29|%check2.6: bool = load %check2.ptr\ljmp @30\l"]
+      "$main@29" -> "$main@30"
+
+      "$main@30" [label="@30|%22: bool = phi @23 %check1.6 @29 %check2.6\lbr %22 @26 @27\l"]
+      "$main@30" -> "$main@26" [label="true"]
+      "$main@30" -> "$main@27" [label="false"]
+
+      "$main@31" [label="@31|%26: i32 = const 9\lret %26\l"]
+
+      "$main@32" [label="@32|jmp @33\l"]
+      "$main@32" -> "$main@33"
+
+      "$main@33" [label="@33|%check1.8: bool = load %check1.ptr\lbr %check1.8 @38 @39\l"]
+      "$main@33" -> "$main@38" [label="true"]
+      "$main@33" -> "$main@39" [label="false"]
+
+      "$main@34" [label="@34|%check2.7: bool = load %check2.ptr\ljmp @35\l"]
+      "$main@34" -> "$main@35"
+
+      "$main@35" [label="@35|%24: bool = phi @28 %check1.7 @34 %check2.7\l%25: bool = not %24\lbr %25 @31 @32\l"]
+      "$main@35" -> "$main@31" [label="true"]
+      "$main@35" -> "$main@32" [label="false"]
+
+      "$main@36" [label="@36|%30: i32 = const 10\lret %30\l"]
+
+      "$main@37" [label="@37|%check2.9: bool = load %check2.ptr\lbr %check2.9 @47 @48\l"]
+      "$main@37" -> "$main@47" [label="true"]
+      "$main@37" -> "$main@48" [label="false"]
+
+      "$main@38" [label="@38|%check2.8: bool = load %check2.ptr\ljmp @39\l"]
+      "$main@38" -> "$main@39"
+
+      "$main@39" [label="@39|%27: bool = phi @33 %check1.8 @38 %check2.8\lbr %27 @41 @40\l"]
+      "$main@39" -> "$main@41" [label="true"]
+      "$main@39" -> "$main@40" [label="false"]
+
+      "$main@40" [label="@40|%check3.1: bool = load %check3.ptr\lbr %check3.1 @42 @43\l"]
+      "$main@40" -> "$main@42" [label="true"]
+      "$main@40" -> "$main@43" [label="false"]
+
+      "$main@41" [label="@41|%29: bool = phi @39 %27 @43 %28\lbr %29 @36 @37\l"]
+      "$main@41" -> "$main@36" [label="true"]
+      "$main@41" -> "$main@37" [label="false"]
+
+      "$main@42" [label="@42|%check4.1: bool = load %check4.ptr\ljmp @43\l"]
+      "$main@42" -> "$main@43"
+
+      "$main@43" [label="@43|%28: bool = phi @40 %check3.1 @42 %check4.1\ljmp @41\l"]
+      "$main@43" -> "$main@41"
+
+      "$main@44" [label="@44|jmp @46\l"]
+      "$main@44" -> "$main@46"
+
+      "$main@45" [label="@45|%34: i32 = const 11\lret %34\l"]
+
+      "$main@46" [label="@46|%check1.10: bool = load %check1.ptr\lbr %check1.10 @56 @57\l"]
+      "$main@46" -> "$main@56" [label="true"]
+      "$main@46" -> "$main@57" [label="false"]
+
+      "$main@47" [label="@47|%check4.2: bool = load %check4.ptr\ljmp @48\l"]
+      "$main@47" -> "$main@48"
+
+      "$main@48" [label="@48|%31: bool = phi @37 %check2.9 @47 %check4.2\lbr %31 @50 @49\l"]
+      "$main@48" -> "$main@50" [label="true"]
+      "$main@48" -> "$main@49" [label="false"]
+
+      "$main@49" [label="@49|%check1.9: bool = load %check1.ptr\lbr %check1.9 @51 @52\l"]
+      "$main@49" -> "$main@51" [label="true"]
+      "$main@49" -> "$main@52" [label="false"]
+
+      "$main@50" [label="@50|%33: bool = phi @48 %31 @52 %32\lbr %33 @44 @45\l"]
+      "$main@50" -> "$main@44" [label="true"]
+      "$main@50" -> "$main@45" [label="false"]
+
+      "$main@51" [label="@51|%check3.2: bool = load %check3.ptr\ljmp @52\l"]
+      "$main@51" -> "$main@52"
+
+      "$main@52" [label="@52|%32: bool = phi @49 %check1.9 @51 %check3.2\ljmp @50\l"]
+      "$main@52" -> "$main@50"
+
+      "$main@53" [label="@53|%38: i32 = const 12\lret %38\l"]
+
+      "$main@54" [label="@54|jmp @55\l"]
+      "$main@54" -> "$main@55"
+
+      "$main@55" [label="@55|%check1.11: bool = load %check1.ptr\lbr %check1.11 @66 @65\l"]
+      "$main@55" -> "$main@66" [label="true"]
+      "$main@55" -> "$main@65" [label="false"]
+
+      "$main@56" [label="@56|%check2.10: bool = load %check2.ptr\lbr %check2.10 @59 @58\l"]
+      "$main@56" -> "$main@59" [label="true"]
+      "$main@56" -> "$main@58" [label="false"]
+
+      "$main@57" [label="@57|%36: bool = phi @46 %check1.10 @59 %35\lbr %36 @60 @61\l"]
+      "$main@57" -> "$main@60" [label="true"]
+      "$main@57" -> "$main@61" [label="false"]
+
+      "$main@58" [label="@58|%check3.3: bool = load %check3.ptr\ljmp @59\l"]
+      "$main@58" -> "$main@59"
+
+      "$main@59" [label="@59|%35: bool = phi @56 %check2.10 @58 %check3.3\ljmp @57\l"]
+      "$main@59" -> "$main@57"
+
+      "$main@60" [label="@60|%check4.3: bool = load %check4.ptr\ljmp @61\l"]
+      "$main@60" -> "$main@61"
+
+      "$main@61" [label="@61|%37: bool = phi @57 %36 @60 %check4.3\lbr %37 @53 @54\l"]
+      "$main@61" -> "$main@53" [label="true"]
+      "$main@61" -> "$main@54" [label="false"]
+
+      "$main@62" [label="@62|jmp @64\l"]
+      "$main@62" -> "$main@64"
+
+      "$main@63" [label="@63|%42: i32 = const 13\lret %42\l"]
+
+      "$main@64" [label="@64|%check1.12: bool = load %check1.ptr\lbr %check1.12 @75 @74\l"]
+      "$main@64" -> "$main@75" [label="true"]
+      "$main@64" -> "$main@74" [label="false"]
+
+      "$main@65" [label="@65|%check2.11: bool = load %check2.ptr\ljmp @66\l"]
+      "$main@65" -> "$main@66"
+
+      "$main@66" [label="@66|%39: bool = phi @55 %check1.11 @65 %check2.11\lbr %39 @67 @68\l"]
+      "$main@66" -> "$main@67" [label="true"]
+      "$main@66" -> "$main@68" [label="false"]
+
+      "$main@67" [label="@67|%check3.4: bool = load %check3.ptr\lbr %check3.4 @70 @69\l"]
+      "$main@67" -> "$main@70" [label="true"]
+      "$main@67" -> "$main@69" [label="false"]
+
+      "$main@68" [label="@68|%41: bool = phi @66 %39 @70 %40\lbr %41 @62 @63\l"]
+      "$main@68" -> "$main@62" [label="true"]
+      "$main@68" -> "$main@63" [label="false"]
+
+      "$main@69" [label="@69|%check4.4: bool = load %check4.ptr\ljmp @70\l"]
+      "$main@69" -> "$main@70"
+
+      "$main@70" [label="@70|%40: bool = phi @67 %check3.4 @69 %check4.4\ljmp @68\l"]
+      "$main@70" -> "$main@68"
+
+      "$main@71" [label="@71|jmp @73\l"]
+      "$main@71" -> "$main@73"
+
+      "$main@72" [label="@72|%46: i32 = const 14\lret %46\l"]
+
+      "$main@73" [label="@73|%check2.13: bool = load %check2.ptr\lbr %check2.13 @84 @83\l"]
+      "$main@73" -> "$main@84" [label="true"]
+      "$main@73" -> "$main@83" [label="false"]
+
+      "$main@74" [label="@74|%check4.5: bool = load %check4.ptr\ljmp @75\l"]
+      "$main@74" -> "$main@75"
+
+      "$main@75" [label="@75|%43: bool = phi @64 %check1.12 @74 %check4.5\lbr %43 @76 @77\l"]
+      "$main@75" -> "$main@76" [label="true"]
+      "$main@75" -> "$main@77" [label="false"]
+
+      "$main@76" [label="@76|%check2.12: bool = load %check2.ptr\lbr %check2.12 @79 @78\l"]
+      "$main@76" -> "$main@79" [label="true"]
+      "$main@76" -> "$main@78" [label="false"]
+
+      "$main@77" [label="@77|%45: bool = phi @75 %43 @79 %44\lbr %45 @71 @72\l"]
+      "$main@77" -> "$main@71" [label="true"]
+      "$main@77" -> "$main@72" [label="false"]
+
+      "$main@78" [label="@78|%check3.5: bool = load %check3.ptr\ljmp @79\l"]
+      "$main@78" -> "$main@79"
+
+      "$main@79" [label="@79|%44: bool = phi @76 %check2.12 @78 %check3.5\ljmp @77\l"]
+      "$main@79" -> "$main@77"
+
+      "$main@80" [label="@80|jmp @82\l"]
+      "$main@80" -> "$main@82"
+
+      "$main@81" [label="@81|%50: i32 = const 15\lret %50\l"]
+
+      "$main@82" [label="@82|%check1.13: bool = load %check1.ptr\lbr %check1.13 @92 @93\l"]
+      "$main@82" -> "$main@92" [label="true"]
+      "$main@82" -> "$main@93" [label="false"]
+
+      "$main@83" [label="@83|%check3.6: bool = load %check3.ptr\lbr %check3.6 @85 @86\l"]
+      "$main@83" -> "$main@85" [label="true"]
+      "$main@83" -> "$main@86" [label="false"]
+
+      "$main@84" [label="@84|%48: bool = phi @73 %check2.13 @86 %47\lbr %48 @88 @87\l"]
+      "$main@84" -> "$main@88" [label="true"]
+      "$main@84" -> "$main@87" [label="false"]
+
+      "$main@85" [label="@85|%check4.6: bool = load %check4.ptr\ljmp @86\l"]
+      "$main@85" -> "$main@86"
+
+      "$main@86" [label="@86|%47: bool = phi @83 %check3.6 @85 %check4.6\ljmp @84\l"]
+      "$main@86" -> "$main@84"
+
+      "$main@87" [label="@87|%check5.1: bool = load %check5.ptr\ljmp @88\l"]
+      "$main@87" -> "$main@88"
+
+      "$main@88" [label="@88|%49: bool = phi @84 %48 @87 %check5.1\lbr %49 @80 @81\l"]
+      "$main@88" -> "$main@80" [label="true"]
+      "$main@88" -> "$main@81" [label="false"]
+
+      "$main@89" [label="@89|%56: i32 = const 16\lret %56\l"]
+
+      "$main@90" [label="@90|jmp @91\l"]
+      "$main@90" -> "$main@91"
+
+      "$main@91" [label="@91|%check1.14: bool = load %check1.ptr\lbr %check1.14 @104 @105\l"]
+      "$main@91" -> "$main@104" [label="true"]
+      "$main@91" -> "$main@105" [label="false"]
+
+      "$main@92" [label="@92|%check2.14: bool = load %check2.ptr\ljmp @93\l"]
+      "$main@92" -> "$main@93"
+
+      "$main@93" [label="@93|%51: bool = phi @82 %check1.13 @92 %check2.14\lbr %51 @95 @94\l"]
+      "$main@93" -> "$main@95" [label="true"]
+      "$main@93" -> "$main@94" [label="false"]
+
+      "$main@94" [label="@94|%check3.7: bool = load %check3.ptr\lbr %check3.7 @96 @97\l"]
+      "$main@94" -> "$main@96" [label="true"]
+      "$main@94" -> "$main@97" [label="false"]
+
+      "$main@95" [label="@95|%53: bool = phi @93 %51 @97 %52\lbr %53 @98 @99\l"]
+      "$main@95" -> "$main@98" [label="true"]
+      "$main@95" -> "$main@99" [label="false"]
+
+      "$main@96" [label="@96|%check4.7: bool = load %check4.ptr\ljmp @97\l"]
+      "$main@96" -> "$main@97"
+
+      "$main@97" [label="@97|%52: bool = phi @94 %check3.7 @96 %check4.7\ljmp @95\l"]
+      "$main@97" -> "$main@95"
+
+      "$main@98" [label="@98|%check5.2: bool = load %check5.ptr\ljmp @99\l"]
+      "$main@98" -> "$main@99"
+
+      "$main@99" [label="@99|%54: bool = phi @95 %53 @98 %check5.2\lbr %54 @101 @100\l"]
+      "$main@99" -> "$main@101" [label="true"]
+      "$main@99" -> "$main@100" [label="false"]
+
+      "$main@100" [label="@100|%check6.1: bool = load %check6.ptr\ljmp @101\l"]
+      "$main@100" -> "$main@101"
+
+      "$main@101" [label="@101|%55: bool = phi @99 %54 @100 %check6.1\lbr %55 @89 @90\l"]
+      "$main@101" -> "$main@89" [label="true"]
+      "$main@101" -> "$main@90" [label="false"]
+
+      "$main@102" [label="@102|%62: i32 = const 17\lret %62\l"]
+
+      "$main@103" [label="@103|%check1.15: bool = load %check1.ptr\lbr %check1.15 @117 @118\l"]
+      "$main@103" -> "$main@117" [label="true"]
+      "$main@103" -> "$main@118" [label="false"]
+
+      "$main@104" [label="@104|%check2.15: bool = load %check2.ptr\ljmp @105\l"]
+      "$main@104" -> "$main@105"
+
+      "$main@105" [label="@105|%57: bool = phi @91 %check1.14 @104 %check2.15\lbr %57 @107 @106\l"]
+      "$main@105" -> "$main@107" [label="true"]
+      "$main@105" -> "$main@106" [label="false"]
+
+      "$main@106" [label="@106|%check3.8: bool = load %check3.ptr\lbr %check3.8 @108 @109\l"]
+      "$main@106" -> "$main@108" [label="true"]
+      "$main@106" -> "$main@109" [label="false"]
+
+      "$main@107" [label="@107|%61: bool = phi @105 %57 @113 %60\lbr %61 @102 @103\l"]
+      "$main@107" -> "$main@102" [label="true"]
+      "$main@107" -> "$main@103" [label="false"]
+
+      "$main@108" [label="@108|%check4.8: bool = load %check4.ptr\ljmp @109\l"]
+      "$main@108" -> "$main@109"
+
+      "$main@109" [label="@109|%58: bool = phi @106 %check3.8 @108 %check4.8\lbr %58 @111 @110\l"]
+      "$main@109" -> "$main@111" [label="true"]
+      "$main@109" -> "$main@110" [label="false"]
+
+      "$main@110" [label="@110|%check6.2: bool = load %check6.ptr\ljmp @111\l"]
+      "$main@110" -> "$main@111"
+
+      "$main@111" [label="@111|%59: bool = phi @109 %58 @110 %check6.2\lbr %59 @112 @113\l"]
+      "$main@111" -> "$main@112" [label="true"]
+      "$main@111" -> "$main@113" [label="false"]
+
+      "$main@112" [label="@112|%check5.3: bool = load %check5.ptr\ljmp @113\l"]
+      "$main@112" -> "$main@113"
+
+      "$main@113" [label="@113|%60: bool = phi @111 %59 @112 %check5.3\ljmp @107\l"]
+      "$main@113" -> "$main@107"
+
+      "$main@114" [label="@114|jmp @116\l"]
+      "$main@114" -> "$main@116"
+
+      "$main@115" [label="@115|%65: i32 = const 18\lret %65\l"]
+
+      "$main@116" [label="@116|%check1.16: bool = load %check1.ptr\l%66: bool = not %check1.16\lbr %66 @122 @121\l"]
+      "$main@116" -> "$main@122" [label="true"]
+      "$main@116" -> "$main@121" [label="false"]
+
+      "$main@117" [label="@117|%check2.16: bool = load %check2.ptr\l%63: bool = not %check2.16\ljmp @118\l"]
+      "$main@117" -> "$main@118"
+
+      "$main@118" [label="@118|%64: bool = phi @103 %check1.15 @117 %63\lbr %64 @114 @115\l"]
+      "$main@118" -> "$main@114" [label="true"]
+      "$main@118" -> "$main@115" [label="false"]
+
+      "$main@119" [label="@119|%68: i32 = const 19\lret %68\l"]
+
+      "$main@120" [label="@120|%69: i32 = const 0\lret %69\l"]
+
+      "$main@121" [label="@121|%check2.17: bool = load %check2.ptr\ljmp @122\l"]
+      "$main@121" -> "$main@122"
+
+      "$main@122" [label="@122|%67: bool = phi @116 %66 @121 %check2.17\lbr %67 @119 @120\l"]
+      "$main@122" -> "$main@119" [label="true"]
+      "$main@122" -> "$main@120" [label="false"]
+   }
+}

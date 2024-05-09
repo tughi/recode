@@ -1,0 +1,760 @@
+$main(): i32 {
+@1:
+   [ ]
+   %check1.ptr: ptr<bool> = alloc bool
+   [ %check1.ptr ]
+   %1: bool = const true
+   [ %check1.ptr %1 ]
+   store %check1.ptr %1
+   [ %check1.ptr ]
+   %check2.ptr: ptr<bool> = alloc bool
+   [ %check1.ptr %check2.ptr ]
+   %2: bool = const false
+   [ %check1.ptr %check2.ptr %2 ]
+   store %check2.ptr %2
+   [ %check1.ptr %check2.ptr ]
+   %check3.ptr: ptr<bool> = alloc bool
+   [ %check1.ptr %check3.ptr %check2.ptr ]
+   %3: bool = const true
+   [ %check1.ptr %check3.ptr %3 %check2.ptr ]
+   store %check3.ptr %3
+   [ %check1.ptr %check2.ptr %check3.ptr ]
+   %check4.ptr: ptr<bool> = alloc bool
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr ]
+   %4: bool = const false
+   [ %check1.ptr %check4.ptr %4 %check2.ptr %check3.ptr ]
+   store %check4.ptr %4
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   %check5.ptr: ptr<bool> = alloc bool
+   [ %check1.ptr %check5.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   %5: bool = const true
+   [ %check1.ptr %check5.ptr %5 %check2.ptr %check3.ptr %check4.ptr ]
+   store %check5.ptr %5
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr ]
+   %check6.ptr: ptr<bool> = alloc bool
+   [ %check1.ptr %check6.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr ]
+   %6: bool = const false
+   [ %check1.ptr %check6.ptr %6 %check2.ptr %check3.ptr %check4.ptr %check5.ptr ]
+   store %check6.ptr %6
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.1: bool = load %check1.ptr
+   [ %check1.1 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check1.1 @2 @3
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@2:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @4
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@3:
+   [ ]
+   %7: i32 = const 1
+   [ %7 ]
+   ret %7
+   [ ]
+@4:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.2: bool = load %check1.ptr
+   [ %check1.2 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %8: bool = not %check1.2
+   [ %8 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %8 @5 @6
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@5:
+   [ ]
+   %9: i32 = const 2
+   [ %9 ]
+   ret %9
+   [ ]
+@6:
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check2.1: bool = load %check2.ptr
+   [ %check2.1 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check2.1 @7 @8
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@7:
+   [ ]
+   %10: i32 = const 3
+   [ %10 ]
+   ret %10
+   [ ]
+@8:
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check2.2: bool = load %check2.ptr
+   [ %check2.2 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %11: bool = not %check2.2
+   [ %11 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %11 @9 @10
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@9:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @11
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@10:
+   [ ]
+   %12: i32 = const 4
+   [ %12 ]
+   ret %12
+   [ ]
+@11:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.3: bool = load %check1.ptr
+   [ %check1.3 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check1.3 @14 @15
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.3 ]
+@12:
+   [ ]
+   %14: i32 = const 5
+   [ %14 ]
+   ret %14
+   [ ]
+@13:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.4: bool = load %check1.ptr
+   [ %check1.4 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check1.4 @19 @20
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.4 ]
+@14:
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check2.3: bool = load %check2.ptr
+   [ %check2.3 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @15
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check2.3 ]
+@15:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %13: bool = phi @11 %check1.3 @14 %check2.3
+   [ %check1.ptr %13 %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %13 @12 @13
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@16:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @18
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@17:
+   [ ]
+   %17: i32 = const 6
+   [ %17 ]
+   ret %17
+   [ ]
+@18:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.5: bool = load %check1.ptr
+   [ %check1.5 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check1.5 @24 @25
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.5 ]
+@19:
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check2.4: bool = load %check2.ptr
+   [ %check2.4 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @20
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check2.4 ]
+@20:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %15: bool = phi @13 %check1.4 @19 %check2.4
+   [ %15 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %16: bool = not %15
+   [ %16 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %16 @16 @17
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@21:
+   [ ]
+   %21: i32 = const 7
+   [ %21 ]
+   ret %21
+   [ ]
+@22:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @23
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@23:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.6: bool = load %check1.ptr
+   [ %check1.6 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check1.6 @30 @29
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.6 ]
+@24:
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check2.5: bool = load %check2.ptr
+   [ %check2.5 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @25
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check2.5 ]
+@25:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %18: bool = phi @18 %check1.5 @24 %check2.5
+   [ %18 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %19: bool = not %18
+   [ %19 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %20: bool = not %19
+   [ %20 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %20 @21 @22
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@26:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @28
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@27:
+   [ ]
+   %23: i32 = const 8
+   [ %23 ]
+   ret %23
+   [ ]
+@28:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.7: bool = load %check1.ptr
+   [ %check1.7 %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check1.7 @35 @34
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.7 ]
+@29:
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check2.6: bool = load %check2.ptr
+   [ %check2.6 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @30
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check2.6 ]
+@30:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %22: bool = phi @23 %check1.6 @29 %check2.6
+   [ %22 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %22 @26 @27
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@31:
+   [ ]
+   %26: i32 = const 9
+   [ %26 ]
+   ret %26
+   [ ]
+@32:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @33
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@33:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.8: bool = load %check1.ptr
+   [ %check1.8 %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   br %check1.8 @38 @39
+   [ %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr %check1.8 ]
+@34:
+   [ %check2.ptr %check1.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check2.7: bool = load %check2.ptr
+   [ %check2.7 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @35
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check2.7 ]
+@35:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %24: bool = phi @28 %check1.7 @34 %check2.7
+   [ %24 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %25: bool = not %24
+   [ %25 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %25 @31 @32
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@36:
+   [ ]
+   %30: i32 = const 10
+   [ %30 ]
+   ret %30
+   [ ]
+@37:
+   [ %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %check2.9: bool = load %check2.ptr
+   [ %check2.9 %check4.ptr %check1.ptr %check3.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   br %check2.9 @47 @48
+   [ %check4.ptr %check1.ptr %check3.ptr %check2.ptr %check5.ptr %check6.ptr %check2.9 ]
+@38:
+   [ %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   %check2.8: bool = load %check2.ptr
+   [ %check2.8 %check3.ptr %check2.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   jmp @39
+   [ %check3.ptr %check2.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr %check2.8 ]
+@39:
+   [ %check3.ptr %check2.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   %27: bool = phi @33 %check1.8 @38 %check2.8
+   [ %27 %check3.ptr %check2.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   br %27 @41 @40
+   [ %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr %27 ]
+@40:
+   [ %check3.ptr %check4.ptr %check2.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   %check3.1: bool = load %check3.ptr
+   [ %check3.1 %check4.ptr %check2.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   br %check3.1 @42 @43
+   [ %check4.ptr %check2.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr %check3.1 ]
+@41:
+   [ %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %29: bool = phi @39 %27 @43 %28
+   [ %check2.ptr %29 %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   br %29 @36 @37
+   [ %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+@42:
+   [ %check4.ptr %check2.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %check4.1: bool = load %check4.ptr
+   [ %check4.1 %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   jmp @43
+   [ %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr %check4.1 ]
+@43:
+   [ %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %28: bool = phi @40 %check3.1 @42 %check4.1
+   [ %28 %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   jmp @41
+   [ %check2.ptr %check4.ptr %check1.ptr %check3.ptr %check5.ptr %check6.ptr %28 ]
+@44:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @46
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@45:
+   [ ]
+   %34: i32 = const 11
+   [ %34 ]
+   ret %34
+   [ ]
+@46:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.10: bool = load %check1.ptr
+   [ %check1.10 %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   br %check1.10 @56 @57
+   [ %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr %check1.10 ]
+@47:
+   [ %check4.ptr %check1.ptr %check3.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   %check4.2: bool = load %check4.ptr
+   [ %check4.2 %check1.ptr %check3.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @48
+   [ %check1.ptr %check3.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr %check4.2 ]
+@48:
+   [ %check1.ptr %check3.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %31: bool = phi @37 %check2.9 @47 %check4.2
+   [ %31 %check1.ptr %check3.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %31 @50 @49
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %31 ]
+@49:
+   [ %check1.ptr %check3.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.9: bool = load %check1.ptr
+   [ %check1.9 %check3.ptr %check1.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %check1.9 @51 @52
+   [ %check3.ptr %check1.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr %check1.9 ]
+@50:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %33: bool = phi @48 %31 @52 %32
+   [ %33 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %33 @44 @45
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@51:
+   [ %check3.ptr %check1.ptr %check2.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check3.2: bool = load %check3.ptr
+   [ %check3.2 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @52
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check3.2 ]
+@52:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %32: bool = phi @49 %check1.9 @51 %check3.2
+   [ %32 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @50
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %32 ]
+@53:
+   [ ]
+   %38: i32 = const 12
+   [ %38 ]
+   ret %38
+   [ ]
+@54:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @55
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@55:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.11: bool = load %check1.ptr
+   [ %check1.11 %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   br %check1.11 @66 @65
+   [ %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr %check1.11 ]
+@56:
+   [ %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   %check2.10: bool = load %check2.ptr
+   [ %check2.10 %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   br %check2.10 @59 @58
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr %check2.10 ]
+@57:
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %36: bool = phi @46 %check1.10 @59 %35
+   [ %36 %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   br %36 @60 @61
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr %36 ]
+@58:
+   [ %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   %check3.3: bool = load %check3.ptr
+   [ %check3.3 %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   jmp @59
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr %check3.3 ]
+@59:
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %35: bool = phi @56 %check2.10 @58 %check3.3
+   [ %35 %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   jmp @57
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr %35 ]
+@60:
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %check4.3: bool = load %check4.ptr
+   [ %check4.3 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @61
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check4.3 ]
+@61:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %37: bool = phi @57 %36 @60 %check4.3
+   [ %37 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %37 @53 @54
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@62:
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   jmp @64
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+@63:
+   [ ]
+   %42: i32 = const 13
+   [ %42 ]
+   ret %42
+   [ ]
+@64:
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %check1.12: bool = load %check1.ptr
+   [ %check1.12 %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   br %check1.12 @75 @74
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr %check1.12 ]
+@65:
+   [ %check2.ptr %check3.ptr %check4.ptr %check1.ptr %check5.ptr %check6.ptr ]
+   %check2.11: bool = load %check2.ptr
+   [ %check2.11 %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   jmp @66
+   [ %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr %check2.11 ]
+@66:
+   [ %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   %39: bool = phi @55 %check1.11 @65 %check2.11
+   [ %39 %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   br %39 @67 @68
+   [ %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr %39 ]
+@67:
+   [ %check3.ptr %check4.ptr %check1.ptr %check2.ptr %check5.ptr %check6.ptr ]
+   %check3.4: bool = load %check3.ptr
+   [ %check3.4 %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   br %check3.4 @70 @69
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr %check3.4 ]
+@68:
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %41: bool = phi @66 %39 @70 %40
+   [ %41 %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   br %41 @62 @63
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+@69:
+   [ %check4.ptr %check1.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %check4.4: bool = load %check4.ptr
+   [ %check4.4 %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   jmp @70
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr %check4.4 ]
+@70:
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   %40: bool = phi @67 %check3.4 @69 %check4.4
+   [ %40 %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr ]
+   jmp @68
+   [ %check1.ptr %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check6.ptr %40 ]
+@71:
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   jmp @73
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+@72:
+   [ ]
+   %46: i32 = const 14
+   [ %46 ]
+   ret %46
+   [ ]
+@73:
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   %check2.13: bool = load %check2.ptr
+   [ %check2.13 %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check2.ptr %check6.ptr ]
+   br %check2.13 @84 @83
+   [ %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check2.13 ]
+@74:
+   [ %check4.ptr %check2.ptr %check3.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   %check4.5: bool = load %check4.ptr
+   [ %check4.5 %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   jmp @75
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr %check4.5 ]
+@75:
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   %43: bool = phi @64 %check1.12 @74 %check4.5
+   [ %43 %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   br %43 @76 @77
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr %43 ]
+@76:
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   %check2.12: bool = load %check2.ptr
+   [ %check2.12 %check3.ptr %check2.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   br %check2.12 @79 @78
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr %check2.12 ]
+@77:
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   %45: bool = phi @75 %43 @79 %44
+   [ %45 %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   br %45 @71 @72
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+@78:
+   [ %check3.ptr %check2.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   %check3.5: bool = load %check3.ptr
+   [ %check3.5 %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   jmp @79
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr %check3.5 ]
+@79:
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   %44: bool = phi @76 %check2.12 @78 %check3.5
+   [ %44 %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr ]
+   jmp @77
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check6.ptr %44 ]
+@80:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @82
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@81:
+   [ ]
+   %50: i32 = const 15
+   [ %50 ]
+   ret %50
+   [ ]
+@82:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %check1.13: bool = load %check1.ptr
+   [ %check1.13 %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr ]
+   br %check1.13 @92 @93
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check1.13 ]
+@83:
+   [ %check3.ptr %check4.ptr %check5.ptr %check1.ptr %check2.ptr %check6.ptr ]
+   %check3.6: bool = load %check3.ptr
+   [ %check3.6 %check4.ptr %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check6.ptr ]
+   br %check3.6 @85 @86
+   [ %check4.ptr %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check6.ptr %check3.6 ]
+@84:
+   [ %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr ]
+   %48: bool = phi @73 %check2.13 @86 %47
+   [ %48 %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr ]
+   br %48 @88 @87
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %48 ]
+@85:
+   [ %check4.ptr %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check6.ptr ]
+   %check4.6: bool = load %check4.ptr
+   [ %check4.6 %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr ]
+   jmp @86
+   [ %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check4.6 ]
+@86:
+   [ %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr ]
+   %47: bool = phi @83 %check3.6 @85 %check4.6
+   [ %47 %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr ]
+   jmp @84
+   [ %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %47 ]
+@87:
+   [ %check5.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr ]
+   %check5.1: bool = load %check5.ptr
+   [ %check5.1 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   jmp @88
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check5.1 ]
+@88:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   %49: bool = phi @84 %48 @87 %check5.1
+   [ %49 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+   br %49 @80 @81
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr ]
+@89:
+   [ ]
+   %56: i32 = const 16
+   [ %56 ]
+   ret %56
+   [ ]
+@90:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+   jmp @91
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+@91:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+   %check1.14: bool = load %check1.ptr
+   [ %check1.14 %check2.ptr %check3.ptr %check1.ptr %check4.ptr %check6.ptr %check5.ptr ]
+   br %check1.14 @104 @105
+   [ %check2.ptr %check3.ptr %check1.ptr %check4.ptr %check6.ptr %check5.ptr %check1.14 ]
+@92:
+   [ %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr ]
+   %check2.14: bool = load %check2.ptr
+   [ %check2.14 %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr ]
+   jmp @93
+   [ %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check2.14 ]
+@93:
+   [ %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr ]
+   %51: bool = phi @82 %check1.13 @92 %check2.14
+   [ %51 %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr ]
+   br %51 @95 @94
+   [ %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %51 ]
+@94:
+   [ %check3.ptr %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr ]
+   %check3.7: bool = load %check3.ptr
+   [ %check3.7 %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr ]
+   br %check3.7 @96 @97
+   [ %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check3.7 ]
+@95:
+   [ %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   %53: bool = phi @93 %51 @97 %52
+   [ %53 %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   br %53 @98 @99
+   [ %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %53 ]
+@96:
+   [ %check4.ptr %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr ]
+   %check4.7: bool = load %check4.ptr
+   [ %check4.7 %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   jmp @97
+   [ %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check4.7 ]
+@97:
+   [ %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   %52: bool = phi @94 %check3.7 @96 %check4.7
+   [ %52 %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   jmp @95
+   [ %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %52 ]
+@98:
+   [ %check5.ptr %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr ]
+   %check5.2: bool = load %check5.ptr
+   [ %check5.2 %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr ]
+   jmp @99
+   [ %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr %check5.2 ]
+@99:
+   [ %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr ]
+   %54: bool = phi @95 %53 @98 %check5.2
+   [ %54 %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr ]
+   br %54 @101 @100
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr %54 ]
+@100:
+   [ %check6.ptr %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check5.ptr ]
+   %check6.1: bool = load %check6.ptr
+   [ %check6.1 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+   jmp @101
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr %check6.1 ]
+@101:
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+   %55: bool = phi @99 %54 @100 %check6.1
+   [ %55 %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+   br %55 @89 @90
+   [ %check1.ptr %check2.ptr %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+@102:
+   [ ]
+   %62: i32 = const 17
+   [ %62 ]
+   ret %62
+   [ ]
+@103:
+   [ %check1.ptr %check2.ptr ]
+   %check1.15: bool = load %check1.ptr
+   [ %check1.15 %check2.ptr %check1.ptr ]
+   br %check1.15 @117 @118
+   [ %check2.ptr %check1.ptr %check1.15 ]
+@104:
+   [ %check2.ptr %check3.ptr %check1.ptr %check4.ptr %check6.ptr %check5.ptr ]
+   %check2.15: bool = load %check2.ptr
+   [ %check2.15 %check3.ptr %check1.ptr %check4.ptr %check6.ptr %check2.ptr %check5.ptr ]
+   jmp @105
+   [ %check3.ptr %check1.ptr %check4.ptr %check6.ptr %check2.ptr %check5.ptr %check2.15 ]
+@105:
+   [ %check3.ptr %check1.ptr %check4.ptr %check6.ptr %check2.ptr %check5.ptr ]
+   %57: bool = phi @91 %check1.14 @104 %check2.15
+   [ %57 %check3.ptr %check1.ptr %check4.ptr %check6.ptr %check2.ptr %check5.ptr ]
+   br %57 @107 @106
+   [ %check1.ptr %check2.ptr %57 %check3.ptr %check4.ptr %check6.ptr %check5.ptr ]
+@106:
+   [ %check3.ptr %check4.ptr %check6.ptr %check5.ptr %check1.ptr %check2.ptr ]
+   %check3.8: bool = load %check3.ptr
+   [ %check3.8 %check4.ptr %check6.ptr %check5.ptr %check1.ptr %check2.ptr ]
+   br %check3.8 @108 @109
+   [ %check4.ptr %check6.ptr %check5.ptr %check1.ptr %check2.ptr %check3.8 ]
+@107:
+   [ %check1.ptr %check2.ptr ]
+   %61: bool = phi @105 %57 @113 %60
+   [ %check1.ptr %61 %check2.ptr ]
+   br %61 @102 @103
+   [ %check1.ptr %check2.ptr ]
+@108:
+   [ %check4.ptr %check6.ptr %check5.ptr %check1.ptr %check2.ptr ]
+   %check4.8: bool = load %check4.ptr
+   [ %check4.8 %check6.ptr %check5.ptr %check1.ptr %check2.ptr ]
+   jmp @109
+   [ %check6.ptr %check5.ptr %check1.ptr %check2.ptr %check4.8 ]
+@109:
+   [ %check6.ptr %check5.ptr %check1.ptr %check2.ptr ]
+   %58: bool = phi @106 %check3.8 @108 %check4.8
+   [ %58 %check6.ptr %check5.ptr %check1.ptr %check2.ptr ]
+   br %58 @111 @110
+   [ %check5.ptr %check1.ptr %check2.ptr %58 %check6.ptr ]
+@110:
+   [ %check6.ptr %check5.ptr %check1.ptr %check2.ptr ]
+   %check6.2: bool = load %check6.ptr
+   [ %check6.2 %check5.ptr %check1.ptr %check2.ptr ]
+   jmp @111
+   [ %check5.ptr %check1.ptr %check2.ptr %check6.2 ]
+@111:
+   [ %check5.ptr %check1.ptr %check2.ptr ]
+   %59: bool = phi @109 %58 @110 %check6.2
+   [ %59 %check5.ptr %check1.ptr %check2.ptr ]
+   br %59 @112 @113
+   [ %check5.ptr %check1.ptr %check2.ptr %59 ]
+@112:
+   [ %check5.ptr %check1.ptr %check2.ptr ]
+   %check5.3: bool = load %check5.ptr
+   [ %check5.3 %check1.ptr %check2.ptr ]
+   jmp @113
+   [ %check1.ptr %check2.ptr %check5.3 ]
+@113:
+   [ %check1.ptr %check2.ptr ]
+   %60: bool = phi @111 %59 @112 %check5.3
+   [ %60 %check1.ptr %check2.ptr ]
+   jmp @107
+   [ %check1.ptr %check2.ptr %60 ]
+@114:
+   [ %check1.ptr %check2.ptr ]
+   jmp @116
+   [ %check1.ptr %check2.ptr ]
+@115:
+   [ ]
+   %65: i32 = const 18
+   [ %65 ]
+   ret %65
+   [ ]
+@116:
+   [ %check1.ptr %check2.ptr ]
+   %check1.16: bool = load %check1.ptr
+   [ %check1.16 %check2.ptr ]
+   %66: bool = not %check1.16
+   [ %66 %check2.ptr ]
+   br %66 @122 @121
+   [ %66 %check2.ptr ]
+@117:
+   [ %check2.ptr %check1.ptr ]
+   %check2.16: bool = load %check2.ptr
+   [ %check2.16 %check1.ptr %check2.ptr ]
+   %63: bool = not %check2.16
+   [ %63 %check1.ptr %check2.ptr ]
+   jmp @118
+   [ %check1.ptr %check2.ptr %63 ]
+@118:
+   [ %check1.ptr %check2.ptr ]
+   %64: bool = phi @103 %check1.15 @117 %63
+   [ %64 %check1.ptr %check2.ptr ]
+   br %64 @114 @115
+   [ %check1.ptr %check2.ptr ]
+@119:
+   [ ]
+   %68: i32 = const 19
+   [ %68 ]
+   ret %68
+   [ ]
+@120:
+   [ ]
+   %69: i32 = const 0
+   [ %69 ]
+   ret %69
+   [ ]
+@121:
+   [ %check2.ptr ]
+   %check2.17: bool = load %check2.ptr
+   [ %check2.17 ]
+   jmp @122
+   [ %check2.17 ]
+@122:
+   [ ]
+   %67: bool = phi @116 %66 @121 %check2.17
+   [ %67 ]
+   br %67 @119 @120
+   [ ]
+}

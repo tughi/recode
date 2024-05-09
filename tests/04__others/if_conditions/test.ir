@@ -1,0 +1,381 @@
+$main(): i32 {
+@1:
+   %check1.ptr: ptr<bool> = alloc bool
+   %1: bool = const true
+   store %check1.ptr %1
+   %check2.ptr: ptr<bool> = alloc bool
+   %2: bool = const false
+   store %check2.ptr %2
+   %check3.ptr: ptr<bool> = alloc bool
+   %3: bool = const true
+   store %check3.ptr %3
+   %check4.ptr: ptr<bool> = alloc bool
+   %4: bool = const false
+   store %check4.ptr %4
+   %check5.ptr: ptr<bool> = alloc bool
+   %5: bool = const true
+   store %check5.ptr %5
+   %check6.ptr: ptr<bool> = alloc bool
+   %6: bool = const false
+   store %check6.ptr %6
+   %check1.1: bool = load %check1.ptr
+   br %check1.1 @2 @3
+@2:
+   jmp @4
+@3:
+   %7: i32 = const 1
+   ret %7
+@4:
+   %check1.2: bool = load %check1.ptr
+   %8: bool = not %check1.2
+   br %8 @5 @6
+@5:
+   %9: i32 = const 2
+   ret %9
+@6:
+   %check2.1: bool = load %check2.ptr
+   br %check2.1 @7 @8
+@7:
+   %10: i32 = const 3
+   ret %10
+@8:
+   %check2.2: bool = load %check2.ptr
+   %11: bool = not %check2.2
+   br %11 @9 @10
+@9:
+   jmp @11
+@10:
+   %12: i32 = const 4
+   ret %12
+@11:
+   %check1.3: bool = load %check1.ptr
+   br %check1.3 @14 @15
+@12:
+   %14: i32 = const 5
+   ret %14
+@13:
+   %check1.4: bool = load %check1.ptr
+   br %check1.4 @19 @20
+@14:
+   %check2.3: bool = load %check2.ptr
+   jmp @15
+@15:
+   %13: bool = phi @11 %check1.3 @14 %check2.3
+   br %13 @12 @13
+@16:
+   jmp @18
+@17:
+   %17: i32 = const 6
+   ret %17
+@18:
+   %check1.5: bool = load %check1.ptr
+   br %check1.5 @24 @25
+@19:
+   %check2.4: bool = load %check2.ptr
+   jmp @20
+@20:
+   %15: bool = phi @13 %check1.4 @19 %check2.4
+   %16: bool = not %15
+   br %16 @16 @17
+@21:
+   %21: i32 = const 7
+   ret %21
+@22:
+   jmp @23
+@23:
+   %check1.6: bool = load %check1.ptr
+   br %check1.6 @30 @29
+@24:
+   %check2.5: bool = load %check2.ptr
+   jmp @25
+@25:
+   %18: bool = phi @18 %check1.5 @24 %check2.5
+   %19: bool = not %18
+   %20: bool = not %19
+   br %20 @21 @22
+@26:
+   jmp @28
+@27:
+   %23: i32 = const 8
+   ret %23
+@28:
+   %check1.7: bool = load %check1.ptr
+   br %check1.7 @35 @34
+@29:
+   %check2.6: bool = load %check2.ptr
+   jmp @30
+@30:
+   %22: bool = phi @23 %check1.6 @29 %check2.6
+   br %22 @26 @27
+@31:
+   %26: i32 = const 9
+   ret %26
+@32:
+   jmp @33
+@33:
+   %check1.8: bool = load %check1.ptr
+   br %check1.8 @38 @39
+@34:
+   %check2.7: bool = load %check2.ptr
+   jmp @35
+@35:
+   %24: bool = phi @28 %check1.7 @34 %check2.7
+   %25: bool = not %24
+   br %25 @31 @32
+@36:
+   %30: i32 = const 10
+   ret %30
+@37:
+   %check2.9: bool = load %check2.ptr
+   br %check2.9 @47 @48
+@38:
+   %check2.8: bool = load %check2.ptr
+   jmp @39
+@39:
+   %27: bool = phi @33 %check1.8 @38 %check2.8
+   br %27 @41 @40
+@40:
+   %check3.1: bool = load %check3.ptr
+   br %check3.1 @42 @43
+@41:
+   %29: bool = phi @39 %27 @43 %28
+   br %29 @36 @37
+@42:
+   %check4.1: bool = load %check4.ptr
+   jmp @43
+@43:
+   %28: bool = phi @40 %check3.1 @42 %check4.1
+   jmp @41
+@44:
+   jmp @46
+@45:
+   %34: i32 = const 11
+   ret %34
+@46:
+   %check1.10: bool = load %check1.ptr
+   br %check1.10 @56 @57
+@47:
+   %check4.2: bool = load %check4.ptr
+   jmp @48
+@48:
+   %31: bool = phi @37 %check2.9 @47 %check4.2
+   br %31 @50 @49
+@49:
+   %check1.9: bool = load %check1.ptr
+   br %check1.9 @51 @52
+@50:
+   %33: bool = phi @48 %31 @52 %32
+   br %33 @44 @45
+@51:
+   %check3.2: bool = load %check3.ptr
+   jmp @52
+@52:
+   %32: bool = phi @49 %check1.9 @51 %check3.2
+   jmp @50
+@53:
+   %38: i32 = const 12
+   ret %38
+@54:
+   jmp @55
+@55:
+   %check1.11: bool = load %check1.ptr
+   br %check1.11 @66 @65
+@56:
+   %check2.10: bool = load %check2.ptr
+   br %check2.10 @59 @58
+@57:
+   %36: bool = phi @46 %check1.10 @59 %35
+   br %36 @60 @61
+@58:
+   %check3.3: bool = load %check3.ptr
+   jmp @59
+@59:
+   %35: bool = phi @56 %check2.10 @58 %check3.3
+   jmp @57
+@60:
+   %check4.3: bool = load %check4.ptr
+   jmp @61
+@61:
+   %37: bool = phi @57 %36 @60 %check4.3
+   br %37 @53 @54
+@62:
+   jmp @64
+@63:
+   %42: i32 = const 13
+   ret %42
+@64:
+   %check1.12: bool = load %check1.ptr
+   br %check1.12 @75 @74
+@65:
+   %check2.11: bool = load %check2.ptr
+   jmp @66
+@66:
+   %39: bool = phi @55 %check1.11 @65 %check2.11
+   br %39 @67 @68
+@67:
+   %check3.4: bool = load %check3.ptr
+   br %check3.4 @70 @69
+@68:
+   %41: bool = phi @66 %39 @70 %40
+   br %41 @62 @63
+@69:
+   %check4.4: bool = load %check4.ptr
+   jmp @70
+@70:
+   %40: bool = phi @67 %check3.4 @69 %check4.4
+   jmp @68
+@71:
+   jmp @73
+@72:
+   %46: i32 = const 14
+   ret %46
+@73:
+   %check2.13: bool = load %check2.ptr
+   br %check2.13 @84 @83
+@74:
+   %check4.5: bool = load %check4.ptr
+   jmp @75
+@75:
+   %43: bool = phi @64 %check1.12 @74 %check4.5
+   br %43 @76 @77
+@76:
+   %check2.12: bool = load %check2.ptr
+   br %check2.12 @79 @78
+@77:
+   %45: bool = phi @75 %43 @79 %44
+   br %45 @71 @72
+@78:
+   %check3.5: bool = load %check3.ptr
+   jmp @79
+@79:
+   %44: bool = phi @76 %check2.12 @78 %check3.5
+   jmp @77
+@80:
+   jmp @82
+@81:
+   %50: i32 = const 15
+   ret %50
+@82:
+   %check1.13: bool = load %check1.ptr
+   br %check1.13 @92 @93
+@83:
+   %check3.6: bool = load %check3.ptr
+   br %check3.6 @85 @86
+@84:
+   %48: bool = phi @73 %check2.13 @86 %47
+   br %48 @88 @87
+@85:
+   %check4.6: bool = load %check4.ptr
+   jmp @86
+@86:
+   %47: bool = phi @83 %check3.6 @85 %check4.6
+   jmp @84
+@87:
+   %check5.1: bool = load %check5.ptr
+   jmp @88
+@88:
+   %49: bool = phi @84 %48 @87 %check5.1
+   br %49 @80 @81
+@89:
+   %56: i32 = const 16
+   ret %56
+@90:
+   jmp @91
+@91:
+   %check1.14: bool = load %check1.ptr
+   br %check1.14 @104 @105
+@92:
+   %check2.14: bool = load %check2.ptr
+   jmp @93
+@93:
+   %51: bool = phi @82 %check1.13 @92 %check2.14
+   br %51 @95 @94
+@94:
+   %check3.7: bool = load %check3.ptr
+   br %check3.7 @96 @97
+@95:
+   %53: bool = phi @93 %51 @97 %52
+   br %53 @98 @99
+@96:
+   %check4.7: bool = load %check4.ptr
+   jmp @97
+@97:
+   %52: bool = phi @94 %check3.7 @96 %check4.7
+   jmp @95
+@98:
+   %check5.2: bool = load %check5.ptr
+   jmp @99
+@99:
+   %54: bool = phi @95 %53 @98 %check5.2
+   br %54 @101 @100
+@100:
+   %check6.1: bool = load %check6.ptr
+   jmp @101
+@101:
+   %55: bool = phi @99 %54 @100 %check6.1
+   br %55 @89 @90
+@102:
+   %62: i32 = const 17
+   ret %62
+@103:
+   %check1.15: bool = load %check1.ptr
+   br %check1.15 @117 @118
+@104:
+   %check2.15: bool = load %check2.ptr
+   jmp @105
+@105:
+   %57: bool = phi @91 %check1.14 @104 %check2.15
+   br %57 @107 @106
+@106:
+   %check3.8: bool = load %check3.ptr
+   br %check3.8 @108 @109
+@107:
+   %61: bool = phi @105 %57 @113 %60
+   br %61 @102 @103
+@108:
+   %check4.8: bool = load %check4.ptr
+   jmp @109
+@109:
+   %58: bool = phi @106 %check3.8 @108 %check4.8
+   br %58 @111 @110
+@110:
+   %check6.2: bool = load %check6.ptr
+   jmp @111
+@111:
+   %59: bool = phi @109 %58 @110 %check6.2
+   br %59 @112 @113
+@112:
+   %check5.3: bool = load %check5.ptr
+   jmp @113
+@113:
+   %60: bool = phi @111 %59 @112 %check5.3
+   jmp @107
+@114:
+   jmp @116
+@115:
+   %65: i32 = const 18
+   ret %65
+@116:
+   %check1.16: bool = load %check1.ptr
+   %66: bool = not %check1.16
+   br %66 @122 @121
+@117:
+   %check2.16: bool = load %check2.ptr
+   %63: bool = not %check2.16
+   jmp @118
+@118:
+   %64: bool = phi @103 %check1.15 @117 %63
+   br %64 @114 @115
+@119:
+   %68: i32 = const 19
+   ret %68
+@120:
+   %69: i32 = const 0
+   ret %69
+@121:
+   %check2.17: bool = load %check2.ptr
+   jmp @122
+@122:
+   %67: bool = phi @116 %66 @121 %check2.17
+   br %67 @119 @120
+}
