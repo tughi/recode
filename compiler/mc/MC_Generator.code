@@ -408,7 +408,9 @@ func get_jump_block(self: @MC_Generator, source_mc_block: @MC_Block, target_ir_b
 }
 
 func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, mc_block: @MC_Block) -> Nothing {
-    stderr.debug().write("Converting instruction: ").reset().write(ir_instruction).end_line()
+    stderr.debug().write("Converting instruction: ").reset()
+    ir_instruction.print(stderr)
+    stderr.end_line()
 
     \ dump live values
     stderr.write("Live-in values: ")
