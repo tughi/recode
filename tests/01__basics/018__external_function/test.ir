@@ -2,8 +2,13 @@ $exit(%status: i32)
 
 $main(): i32 {
 @1:
+   [ ]
    %1: i32 = const 0
+   [ %1 ]
    call $exit %1
+   [ ]
    %2: i32 = const 1
+   [ %2 ]
    ret %2
+   [ ]
 }

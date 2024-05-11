@@ -1,9 +1,0 @@
-graph {
-   fontname=monospace
-   layout=fdp
-
-   subgraph cluster_0 {
-      label="$main"
-      "$main%1" [label="%1"]
-   }
-}

@@ -1,89 +1,173 @@
 $main(): i32 {
 @1:
+   [ ]
    %errors.ptr: ptr<i32> = alloc i32
+   [ %errors.ptr ]
    %1: i32 = const 6
+   [ %errors.ptr %1 ]
    store %errors.ptr %1
+   [ %errors.ptr ]
    %2: i32 = const 42
+   [ %2 %errors.ptr ]
    %3: i32 = call $echo %2
+   [ %3 %errors.ptr ]
    %4: i32 = const 42
+   [ %3 %4 %errors.ptr ]
    %5: bool = cmp_eq %3 %4
+   [ %5 %errors.ptr ]
    br %5 @2 @3
+   [ %errors.ptr ]
 @2:
+   [ %errors.ptr ]
    %errors.1: i32 = load %errors.ptr
+   [ %errors.ptr %errors.1 ]
    %6: i32 = const 1
+   [ %errors.ptr %errors.1 %6 ]
    %7: i32 = sub %errors.1 %6
+   [ %errors.ptr %7 ]
    store %errors.ptr %7
+   [ %errors.ptr ]
    jmp @3
+   [ %errors.ptr ]
 @3:
+   [ %errors.ptr ]
    %8: i32 = const 42
+   [ %8 %errors.ptr ]
    %9: i32 = call $echo %8
+   [ %9 %errors.ptr ]
    %10: i32 = const 42
+   [ %9 %10 %errors.ptr ]
    %11: bool = cmp_ne %9 %10
+   [ %11 %errors.ptr ]
    br %11 @4 @5
+   [ %errors.ptr ]
 @4:
+   [ %errors.ptr ]
    jmp @6
+   [ %errors.ptr ]
 @5:
+   [ %errors.ptr ]
    %errors.2: i32 = load %errors.ptr
+   [ %errors.ptr %errors.2 ]
    %12: i32 = const 1
+   [ %errors.ptr %errors.2 %12 ]
    %13: i32 = sub %errors.2 %12
+   [ %errors.ptr %13 ]
    store %errors.ptr %13
+   [ %errors.ptr ]
    jmp @6
+   [ %errors.ptr ]
 @6:
+   [ %errors.ptr ]
    %14: i32 = const 42
+   [ %14 %errors.ptr ]
    %15: i32 = call $echo %14
+   [ %15 %errors.ptr ]
    %16: i32 = const 13
+   [ %15 %16 %errors.ptr ]
    %17: bool = cmp_lt %15 %16
+   [ %17 %errors.ptr ]
    br %17 @7 @8
+   [ %errors.ptr ]
 @7:
+   [ %errors.ptr ]
    jmp @9
+   [ %errors.ptr ]
 @8:
+   [ %errors.ptr ]
    %errors.3: i32 = load %errors.ptr
+   [ %errors.ptr %errors.3 ]
    %18: i32 = const 1
+   [ %errors.ptr %errors.3 %18 ]
    %19: i32 = sub %errors.3 %18
+   [ %errors.ptr %19 ]
    store %errors.ptr %19
+   [ %errors.ptr ]
    jmp @9
+   [ %errors.ptr ]
 @9:
+   [ %errors.ptr ]
    %20: i32 = const 42
+   [ %20 %errors.ptr ]
    %21: i32 = call $echo %20
+   [ %21 %errors.ptr ]
    %22: i32 = const 42
+   [ %21 %22 %errors.ptr ]
    %23: bool = cmp_le %21 %22
+   [ %23 %errors.ptr ]
    br %23 @10 @11
+   [ %errors.ptr ]
 @10:
+   [ %errors.ptr ]
    %errors.4: i32 = load %errors.ptr
+   [ %errors.ptr %errors.4 ]
    %24: i32 = const 1
+   [ %errors.ptr %errors.4 %24 ]
    %25: i32 = sub %errors.4 %24
+   [ %errors.ptr %25 ]
    store %errors.ptr %25
+   [ %errors.ptr ]
    jmp @11
+   [ %errors.ptr ]
 @11:
+   [ %errors.ptr ]
    %26: i32 = const 42
+   [ %26 %errors.ptr ]
    %27: i32 = call $echo %26
+   [ %27 %errors.ptr ]
    %28: i32 = const 13
+   [ %27 %28 %errors.ptr ]
    %29: bool = cmp_gt %27 %28
+   [ %29 %errors.ptr ]
    br %29 @12 @13
+   [ %errors.ptr ]
 @12:
+   [ %errors.ptr ]
    %errors.5: i32 = load %errors.ptr
+   [ %errors.ptr %errors.5 ]
    %30: i32 = const 1
+   [ %errors.ptr %errors.5 %30 ]
    %31: i32 = sub %errors.5 %30
+   [ %errors.ptr %31 ]
    store %errors.ptr %31
+   [ %errors.ptr ]
    jmp @13
+   [ %errors.ptr ]
 @13:
+   [ %errors.ptr ]
    %32: i32 = const 42
+   [ %32 %errors.ptr ]
    %33: i32 = call $echo %32
+   [ %33 %errors.ptr ]
    %34: i32 = const 42
+   [ %33 %34 %errors.ptr ]
    %35: bool = cmp_ge %33 %34
+   [ %35 %errors.ptr ]
    br %35 @14 @15
+   [ %errors.ptr ]
 @14:
+   [ %errors.ptr ]
    %errors.6: i32 = load %errors.ptr
+   [ %errors.ptr %errors.6 ]
    %36: i32 = const 1
+   [ %errors.ptr %errors.6 %36 ]
    %37: i32 = sub %errors.6 %36
+   [ %errors.ptr %37 ]
    store %errors.ptr %37
+   [ %errors.ptr ]
    jmp @15
+   [ %errors.ptr ]
 @15:
+   [ %errors.ptr ]
    %errors.7: i32 = load %errors.ptr
+   [ %errors.7 ]
    ret %errors.7
+   [ ]
 }
 
 $echo(%v: i32): i32 {
 @1:
+   [ %v ]
    ret %v
+   [ ]
 }

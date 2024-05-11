@@ -1,67 +1,129 @@
 $main(): i32 {
 @1:
+   [ ]
    %t.ptr: ptr<bool> = alloc bool
+   [ %t.ptr ]
    %1: bool = const true
+   [ %t.ptr %1 ]
    %2: bool = call $echo %1
+   [ %t.ptr %2 ]
    store %t.ptr %2
+   [ %t.ptr ]
    %f.ptr: ptr<bool> = alloc bool
+   [ %t.ptr %f.ptr ]
    %3: bool = const false
+   [ %t.ptr %f.ptr %3 ]
    %4: bool = call $echo %3
+   [ %t.ptr %f.ptr %4 ]
    store %f.ptr %4
+   [ %t.ptr %f.ptr ]
    %t.1: bool = load %t.ptr
+   [ %t.1 %f.ptr %t.ptr ]
    br %t.1 @4 @5
+   [ %f.ptr %t.ptr %t.1 ]
 @2:
+   [ ]
    %13: i32 = const 1
+   [ %13 ]
    ret %13
+   [ ]
 @3:
+   [ ]
    %14: i32 = const 0
+   [ %14 ]
    ret %14
+   [ ]
 @4:
+   [ %f.ptr %t.ptr ]
    %f.1: bool = load %f.ptr
+   [ %f.1 %f.ptr %t.ptr ]
    jmp @5
+   [ %f.ptr %t.ptr %f.1 ]
 @5:
+   [ %f.ptr %t.ptr ]
    %5: bool = phi @1 %t.1 @4 %f.1
+   [ %5 %f.ptr %t.ptr ]
    br %5 @7 @6
+   [ %t.ptr %f.ptr %5 ]
 @6:
+   [ %f.ptr %t.ptr ]
    %f.2: bool = load %f.ptr
+   [ %f.2 %t.ptr %f.ptr ]
    br %f.2 @8 @9
+   [ %t.ptr %f.ptr %f.2 ]
 @7:
+   [ %t.ptr %f.ptr ]
    %7: bool = phi @5 %5 @9 %6
+   [ %7 %t.ptr %f.ptr ]
    br %7 @11 @10
+   [ %7 %t.ptr %f.ptr ]
 @8:
+   [ %t.ptr %f.ptr ]
    %t.2: bool = load %t.ptr
+   [ %t.2 %t.ptr %f.ptr ]
    jmp @9
+   [ %t.ptr %f.ptr %t.2 ]
 @9:
+   [ %t.ptr %f.ptr ]
    %6: bool = phi @6 %f.2 @8 %t.2
+   [ %6 %t.ptr %f.ptr ]
    jmp @7
+   [ %t.ptr %f.ptr %6 ]
 @10:
+   [ %t.ptr %f.ptr ]
    %t.3: bool = load %t.ptr
+   [ %t.3 %f.ptr %t.ptr ]
    br %t.3 @13 @12
+   [ %f.ptr %t.ptr %t.3 ]
 @11:
+   [ ]
    %12: bool = phi @7 %7 @15 %11
+   [ %12 ]
    br %12 @2 @3
+   [ ]
 @12:
+   [ %f.ptr %t.ptr ]
    %f.3: bool = load %f.ptr
+   [ %f.3 %f.ptr %t.ptr ]
    jmp @13
+   [ %f.ptr %t.ptr %f.3 ]
 @13:
+   [ %f.ptr %t.ptr ]
    %8: bool = phi @10 %t.3 @12 %f.3
+   [ %8 %f.ptr %t.ptr ]
    br %8 @14 @15
+   [ %f.ptr %t.ptr %8 ]
 @14:
+   [ %f.ptr %t.ptr ]
    %f.4: bool = load %f.ptr
+   [ %f.4 %t.ptr ]
    br %f.4 @17 @16
+   [ %f.4 %t.ptr ]
 @15:
+   [ ]
    %10: bool = phi @13 %8 @17 %9
+   [ %10 ]
    %11: bool = not %10
+   [ %11 ]
    jmp @11
+   [ %11 ]
 @16:
+   [ %t.ptr ]
    %t.4: bool = load %t.ptr
+   [ %t.4 ]
    jmp @17
+   [ %t.4 ]
 @17:
+   [ ]
    %9: bool = phi @14 %f.4 @16 %t.4
+   [ %9 ]
    jmp @15
+   [ %9 ]
 }
 
 $echo(%v: bool): bool {
 @1:
+   [ %v ]
    ret %v
+   [ ]
 }
