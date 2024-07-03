@@ -137,7 +137,7 @@ func parse_args(argc: i32, argv: [[u8; ?]; ?]) -> @Command {
     if not output.equals("cfg") and not output.equals("ig") and not output.equals("ir") and not output.equals("irl") and not output.equals("mc") {
         stderr.error().write("Unsupported output: ").write(output).reset().end_line().end_line()
         print_help(argv[0])
-        abort()
+        exit(1)
     }
 
     arguments_item = arguments_item.next_item
@@ -182,20 +182,20 @@ func print_help(path: [u8; ?]) -> Nothing {
 
 func abort(location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
     stderr.write(location).error().write(": Unexpected type: ").write(unexpected_type.name).reset().end_line()
-    abort()
+    exit(1)
 }
 
 func abort(unexpected_type: @Object_Type) -> Nothing {
     stderr.error().write("Unexpected type: ").write(unexpected_type.name).reset().end_line()
-    abort()
+    exit(1)
 }
 
 func abort(location: @Source_Location, message: @String) -> Nothing {
     stderr.write(location).write(": ").error().write(message).reset().end_line()
-    abort()
+    exit(1)
 }
 
 func abort(message: @String) -> Nothing {
     stderr.error().write(message).reset().end_line()
-    abort()
+    exit(1)
 }

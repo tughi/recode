@@ -6,8 +6,6 @@ import logging
 import os
 import re
 import subprocess
-import sys
-from collections import OrderedDict
 from datetime import datetime
 
 logging.basicConfig(format='[%(asctime)s,%(msecs)03d][%(levelname).1s] %(message)s', datefmt='%H:%M:%S')
@@ -92,6 +90,7 @@ def trace(*command, ignore_output=True):
             '-ex=\'set confirm off\'',
             '-ex=\'set style enabled on\'',
             '-ex=\'set print thread-events off\'',
+            '-ex=\'b exit\'',
             f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'' if ignore_output else f'-ex=\'run {" ".join(command[1:])}\'',
             '-ex=backtrace',
             '-ex=quit',

@@ -7,7 +7,7 @@ struct Parser {
 
 func abort(self: @Parser, unexpected_token: @Token) -> Nothing {
     stderr.write(unexpected_token.location).write(": ").error().write("Unexpected ").write(unexpected_token.object_type.name).write(": ").write(unexpected_token).reset().end_line()
-    abort()
+    exit(1)
 }
 
 func parse(source: @Source) -> @Parsed_Code {

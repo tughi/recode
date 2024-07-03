@@ -58,7 +58,7 @@ func write(self: @FILE, string: @String) -> @FILE {
 func write(self: @FILE, chars: [u8; ?]) -> @FILE {
     if fputs(chars, self).as(isize) < 0 {
         stderr.end_line().end_line().write("Failed to write text").end_line()
-        abort()
+        exit(1)
     }
     return self
 }
@@ -67,7 +67,7 @@ func write(self: @FILE, char: u8) -> @FILE {
     let c = char.as(i32)
     if fputc(c, self) != c {
         stderr.end_line().end_line().write("Failed to write character: ").write(c.as(isize)).end_line()
-        abort()
+        exit(1)
     }
     return self
 }
