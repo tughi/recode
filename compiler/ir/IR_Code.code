@@ -123,7 +123,31 @@ struct IR_Opaque_Type: IR_User_Defined_Type(
 ) {
 }
 
-struct IR_Struct_Type: IR_User_Defined_Type {
+struct IR_Struct_Type: IR_User_Defined_Type(
+    compute_size = func (self: @IR_Type) -> i32 {
+        let struct_type = self.as(@IR_Struct_Type)
+        let size = 0
+        if struct_type.super_type != null {
+            size = size + struct_type.super_type.get_size()
+        }
+        struct_type.members.for_each() {
+            size = size + it.type.get_size()
+        }
+        return size
+    }
+
+    print = func (self: @IR_Type, file: @FILE) -> Nothing {
+        let struct_type = self.as(@IR_Struct_Type)
+        file.write("type ").write(struct_type.name).write(" = struct {").end_line()
+        if struct_type.super_type != null {
+            file.write("  super: ").write(struct_type.super_type.name).end_line()
+        }
+        struct_type.members.for_each() {
+            file.write("  ").write(it.name).write(": ").write(it.type.name).end_line()
+        }
+        file.write("}").end_line()
+    }
+) {
     super_type: @IR_Struct_Type = null
     derived_types = make @List[@IR_Struct_Type]()
     members = make @List[@IR_Struct_Type_Member]()
