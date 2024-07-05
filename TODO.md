@@ -4,6 +4,7 @@
 - [ ] Use _Checked_Code_ as input for _IR_Builder_
 - [X] Introduce the __const__ IR instruction
 - [X] Introduce the __alloc__, __load__ and __store__ IR instructions
+- [ ] Check if accessed variable is initialized
 - [ ] Check parameter assignment
 - [ ] Create `.ir` file parser
 - [ ] Replace function overloading with function with mandatory named parameters
