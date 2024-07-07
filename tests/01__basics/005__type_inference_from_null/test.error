@@ -1,0 +1,1 @@
+tests/01__basics/005__type_inference_from_null/test.code:2:17: Cannot infer variable type from null value
