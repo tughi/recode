@@ -14,7 +14,7 @@ main:
 
 fibonacci:
 .L__fibonacci__S:
-  sub $0x20, %rsp
+  sub $0x10, %rsp
 .L__fibonacci__1:
   cmp $0x1, %edi
   setle %al
@@ -25,9 +25,9 @@ fibonacci:
   movl %edi, %eax
   jmp .L__fibonacci__E
 .L__fibonacci__3:
-  movl $0x0, 28(%rsp)
-  movl $0x1, 24(%rsp)
-  movl $0x2, 20(%rsp)
+  movl $0x0, 12(%rsp)
+  movl $0x1, 8(%rsp)
+  movl $0x2, 4(%rsp)
   jmp .L__fibonacci__4
 .L__fibonacci__4:
   movb $0x1, %al
@@ -35,32 +35,32 @@ fibonacci:
   jne .L__fibonacci__5
   jmp .L__fibonacci__6
 .L__fibonacci__5:
-  movl 28(%rsp), %eax
-  movl 24(%rsp), %ecx
+  movl 12(%rsp), %eax
+  movl 8(%rsp), %ecx
   movl %eax, %edx
   add %ecx, %edx
-  movl %edx, 16(%rsp)
-  movl 24(%rsp), %eax
-  movl %eax, 28(%rsp)
-  movl 16(%rsp), %eax
-  movl %eax, 24(%rsp)
-  movl 20(%rsp), %eax
+  movl %edx, 0(%rsp)
+  movl 8(%rsp), %eax
+  movl %eax, 12(%rsp)
+  movl 0(%rsp), %eax
+  movl %eax, 8(%rsp)
+  movl 4(%rsp), %eax
   cmp %edi, %eax
   sete %cl
   cmp $0x0, %cl
   jne .L__fibonacci__7
   jmp .L__fibonacci__8
 .L__fibonacci__6:
-  movl 24(%rsp), %eax
+  movl 8(%rsp), %eax
   jmp .L__fibonacci__E
 .L__fibonacci__7:
   jmp .L__fibonacci__6
 .L__fibonacci__8:
-  movl 20(%rsp), %eax
+  movl 4(%rsp), %eax
   movl %eax, %ecx
   add $0x1, %ecx
-  movl %ecx, 20(%rsp)
+  movl %ecx, 4(%rsp)
   jmp .L__fibonacci__4
 .L__fibonacci__E:
-  add $0x20, %rsp
+  add $0x10, %rsp
   ret
