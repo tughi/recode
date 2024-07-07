@@ -161,20 +161,41 @@ struct IR_Struct_Type_Member {
     struct_type: @IR_Struct_Type
     name: @String
     type: @IR_Type
+    offset: i32
     checked_struct_type_member: @Checked_Struct_Type_Member
     default_value_expression: @Parsed_Expression
 }
 
 func add_member(self: @IR_Struct_Type, name: @String, type: @IR_Type, checked_struct_type_member: @Checked_Struct_Type_Member, default_value_expression: @Parsed_Expression) -> @IR_Struct_Type_Member {
+    let last_member = self.members.last()
+    let offset: i32
+    if last_member != null {
+        offset = last_member.offset + last_member.type.get_size()
+    } else if self.super_type != null {
+        offset = self.super_type.get_size()
+    } else {
+        offset = 0
+    }
+
     let member = make @IR_Struct_Type_Member(
         struct_type = self
         name = name
         type = type
+        offset = offset
         checked_struct_type_member = checked_struct_type_member
         default_value_expression = default_value_expression
     )
     self.members.append(member)
     return member
+}
+
+func get_member(self: @IR_Struct_Type, checked_struct_type_member: @Checked_Struct_Type_Member) -> @IR_Struct_Type_Member {
+    self.members.for_each() {
+        if it.checked_struct_type_member == checked_struct_type_member {
+            return it
+        }
+    }
+    abort(clone("Member not found: ").append(checked_struct_type_member.name))
 }
 
 func is_object_type(self: @IR_Struct_Type) -> bool {
@@ -710,6 +731,54 @@ func get_value_pointer(self: @IR_Store_Instruction) -> @IR_Value {
 
 func get_value(self: @IR_Store_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
+}
+
+struct IR_Struct_Literal_Instruction: IR_Instruction(
+    print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
+        let instruction = self.as(@IR_Struct_Literal_Instruction)
+        file.write("struct {")
+        let operand_values_entry = instruction.operand_values.first_entry
+        if operand_values_entry != null {
+            loop {
+                let member = operand_values_entry.key.as(@IR_Struct_Type_Member)
+                file.write(' ').write(member.struct_type.name).write('.').write(member.name).write(": ").write(operand_values_entry.value)
+                operand_values_entry = operand_values_entry.next_entry
+                if operand_values_entry == null {
+                    break
+                }
+                file.write(',')
+            }
+        }
+        file.write(" }")
+    }
+) {
+    type: @IR_Struct_Type
+}
+
+func create_ir_struct_literal_instruction(result_value: @IR_Value, type: @IR_Struct_Type, member_values: @Map[@IR_Struct_Type_Member, @IR_Value]) -> @IR_Struct_Literal_Instruction {
+    let instruction = make @IR_Struct_Literal_Instruction(result_value = result_value, type = type)
+    member_values.for_each() {
+        instruction.set_operand_value(key, value)
+    }
+    return instruction
+}
+
+struct IR_Struct_Type_Member_Offset_Instruction: IR_Instruction(
+    print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
+        let instruction = self.as(@IR_Struct_Type_Member_Offset_Instruction)
+        file.write("offset ").write(instruction.get_value_pointer()).write(' ').write(instruction.struct_type_member.struct_type.name).write('.').write(instruction.struct_type_member.name)
+    }
+) {
+    struct_type_member: @IR_Struct_Type_Member
+}
+
+func init(self: @IR_Struct_Type_Member_Offset_Instruction, value_pointer: @IR_Value) -> @IR_Struct_Type_Member_Offset_Instruction {
+    self.set_operand_value("value_pointer", value_pointer)
+    return self
+}
+
+func get_value_pointer(self: @IR_Struct_Type_Member_Offset_Instruction) -> @IR_Value {
+    return self.operand_values.get("value_pointer")
 }
 
 struct IR_Return_Instruction: IR_Terminator_Instruction(

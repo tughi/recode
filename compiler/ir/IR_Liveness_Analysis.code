@@ -59,7 +59,7 @@ func compute_live_values(self: @IR_Function) -> Nothing {
                 \ check predecessor blocks
                 block.predecessors.for_each() {
                     let predecessor_block = it
-                    if predecessor_block.last_instruction.append_live_values(instruction.live_in_values) {
+                    if predecessor_block.last_instruction.append_live_in_values(instruction.live_in_values) {
                         \ new live values were added, so we need to reprocess this block
                         blocks.append(predecessor_block)
                     }
@@ -68,7 +68,7 @@ func compute_live_values(self: @IR_Function) -> Nothing {
                 break
             }
             instruction = instruction.prev_instruction
-            instruction.append_live_values(instruction.next_instruction.live_in_values)
+            instruction.append_live_in_values(instruction.next_instruction.live_in_values)
         }
     }
 
@@ -159,7 +159,7 @@ func compute_live_values(self: @IR_Function) -> Nothing {
     }
 }
 
-func append_live_values(self: @IR_Instruction, live_values: @List[@IR_Value]) -> bool {
+func append_live_in_values(self: @IR_Instruction, live_values: @List[@IR_Value]) -> bool {
     let added = false
     live_values.for_each() {
         if not self.live_in_values.contains(it) and it != self.result_value {

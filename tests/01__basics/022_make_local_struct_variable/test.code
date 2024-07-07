@@ -1,0 +1,17 @@
+struct Point {
+    x: i32
+    y: i32
+}
+
+struct Line {
+    p1: Point
+    p2: Point
+}
+
+func main() -> i32 {
+    let line = make Line(
+        p1 = make Point(x = 16, y = 32)
+        p2 = make Point(x = 48, y = 64)
+    )
+    return 0
+}

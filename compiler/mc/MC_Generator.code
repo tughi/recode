@@ -409,6 +409,9 @@ func get_jump_block(self: @MC_Generator, source_mc_block: @MC_Block, target_ir_b
 
 func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, mc_block: @MC_Block) -> Nothing {
     stderr.debug().write("Converting instruction: ").reset()
+    if ir_instruction.result_value != null {
+        stderr.write(ir_instruction.result_value).write(" = ")
+    }
     ir_instruction.print(stderr)
     stderr.end_line()
 
@@ -451,6 +454,10 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_return_instruction(ir_instruction.as(@IR_Return_Instruction), mc_block)
     } else if ir_instruction is IR_Store_Instruction {
         self.convert_store_instruction(ir_instruction.as(@IR_Store_Instruction), mc_block)
+    } else if ir_instruction is IR_Struct_Literal_Instruction {
+        \ ignored, this is relevant for the IR only
+    } else if ir_instruction is IR_Struct_Type_Member_Offset_Instruction {
+        self.convert_struct_type_member_offset_instruction(ir_instruction.as(@IR_Struct_Type_Member_Offset_Instruction), mc_block)
     } else if ir_instruction is IR_Substract_Instruction {
         self.convert_substract_instruction(ir_instruction.as(@IR_Substract_Instruction), mc_block)
     } else {
@@ -862,6 +869,23 @@ func convert_store_instruction(self: @MC_Generator, ir_store_instruction: @IR_St
         source = mc_block.find_value(ir_store_instruction.get_value())
         destination = mc_block.find_value(ir_store_instruction.get_value_pointer())
     ))
+}
+
+func convert_struct_type_member_offset_instruction(self: @MC_Generator, ir_struct_type_member_offset_instruction: @IR_Struct_Type_Member_Offset_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_struct_pointer_value = mc_block.find_value(ir_struct_type_member_offset_instruction.get_value_pointer())
+    let ir_struct_type_member = ir_struct_type_member_offset_instruction.struct_type_member
+
+    if mc_struct_pointer_value is MC_Local_Value {
+        let mc_struct_pointer_value = mc_struct_pointer_value.as(@MC_Local_Value)
+        let mc_struct_member_pointer_value = make @MC_Local_Value(
+            ir_value = ir_struct_type_member_offset_instruction.result_value
+            function = mc_block.function
+            stack_offset = mc_struct_pointer_value.stack_offset - ir_struct_type_member.offset
+        )
+        mc_block.live_values.prepend(mc_struct_member_pointer_value)
+    } else {
+        abort(mc_struct_pointer_value.object_type)
+    }
 }
 
 func convert_substract_instruction(self: @MC_Generator, ir_substract_instruction: @IR_Substract_Instruction, mc_block: @MC_Block) -> Nothing {
