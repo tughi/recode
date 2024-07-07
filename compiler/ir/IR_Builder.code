@@ -706,6 +706,21 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
     return value
 }
 
+func convert_expression_pointer(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let value: @IR_Value
+    if checked_expression is Checked_Member_Access_Expression {
+        value = self.convert_member_access_expression_pointer(checked_expression.as(@Checked_Member_Access_Expression), expected_type)
+    } else if checked_expression is Checked_Symbol_Expression {
+        value = self.convert_symbol_expression_pointer(checked_expression.as(@Checked_Symbol_Expression), expected_type)
+    } else {
+        abort(checked_expression.location, checked_expression.object_type)
+    }
+    if value.type is not IR_Pointer_Type {
+        abort(checked_expression.location, "Expected pointer type")
+    }
+    return value
+}
+
 func convert_add_expression(self: @IR_Builder, checked_expression: @Checked_Add_Expression, expected_type: @IR_Type) -> @IR_Value {
     let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
     let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
@@ -953,7 +968,30 @@ func convert_make_expression(self: @IR_Builder, checked_expression: @Checked_Mak
 }
 
 func convert_member_access_expression(self: @IR_Builder, checked_expression: @Checked_Member_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert member access expression")
+    let value_pointer = self.convert_member_access_expression_pointer(checked_expression, null)
+    return self.append(
+        make @IR_Load_Instruction(
+            result_value = self.create_temp_value(value_pointer.type.as(@IR_Pointer_Type).pointed_type)
+        ).init(value_pointer)
+        checked_expression.location
+    )
+}
+
+func convert_member_access_expression_pointer(self: @IR_Builder, checked_expression: @Checked_Member_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let value_pointer = self.convert_expression_pointer(checked_expression.object_expression, null)
+    let value_type = value_pointer.type.as(@IR_Pointer_Type).pointed_type
+    if value_type is not IR_Struct_Type {
+        abort(checked_expression.object_expression.location, "Unexpected value type")
+    }
+    let struct_type = value_type.as(@IR_Struct_Type)
+    let struct_type_member = struct_type.get_member(checked_expression.struct_member)
+    if struct_type_member == null {
+        abort(checked_expression.location, "Unknown struct member: ".clone().append(checked_expression.struct_member.name))
+    }
+    return self.append(
+        self.create_ir_struct_type_member_offset_instruction(value_pointer, struct_type_member)
+        checked_expression.location
+    )
 }
 
 func convert_modulo_expression(self: @IR_Builder, checked_expression: @Checked_Modulo_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -1080,3 +1118,13 @@ func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_S
     \ }
     abort(checked_expression.location, clone("Unsupported symbol type: ").append(ir_symbol.object_type.name))
 }
+
+func convert_symbol_expression_pointer(self: @IR_Builder, checked_expression: @Checked_Symbol_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let ir_symbol = self.current_block_context.find_symbol(checked_expression.symbol)
+    if ir_symbol is IR_Local_Variable {
+        let ir_symbol = ir_symbol.as(@IR_Local_Variable)
+        return ir_symbol.value_pointer
+    }
+    abort(checked_expression.location, ir_symbol.object_type)
+}
+
