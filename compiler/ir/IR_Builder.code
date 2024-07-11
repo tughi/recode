@@ -429,6 +429,11 @@ func convert_assignment_statement(self: @IR_Builder, checked_statement: @Checked
         } else {
             abort(checked_destination_expression.location, ir_symbol.object_type)
         }
+    } else if checked_destination_expression is Checked_Member_Access_Expression {
+        let destination_pointer = self.convert_expression_pointer(checked_destination_expression, null)
+        let value_type = destination_pointer.type.as(@IR_Pointer_Type).pointed_type
+        let value = self.convert_expression(checked_statement.value_expression, value_type)
+        self.convert_store_value(destination_pointer, value, checked_statement.location)
     } else {
         abort(checked_destination_expression.location, checked_destination_expression.object_type)
     }
@@ -1127,4 +1132,3 @@ func convert_symbol_expression_pointer(self: @IR_Builder, checked_expression: @C
     }
     abort(checked_expression.location, ir_symbol.object_type)
 }
-
