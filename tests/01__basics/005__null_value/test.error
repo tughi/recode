@@ -1,1 +1,0 @@
-tests/01__basics/005__null_value/test.code:2:18: Incompatible types: got Null instead of i32

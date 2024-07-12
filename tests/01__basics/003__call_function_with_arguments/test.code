@@ -1,0 +1,9 @@
+\ calling a function with one argument
+
+func main() -> i32 {
+    return echo(0)
+}
+
+func echo(value: i32) -> i32 {
+    return value
+}

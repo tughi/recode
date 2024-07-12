@@ -1,0 +1,7 @@
+tests/99__errors/function_calling_coding_style/test.code:13:1: Consumed 9 spaces where 8 are expected
+tests/99__errors/function_calling_coding_style/test.code:19:10: Consumed 1 spaces where 0 are expected
+tests/99__errors/function_calling_coding_style/test.code:19:13: Consumed 0 spaces where 1 are expected
+tests/99__errors/function_calling_coding_style/test.code:19:23: Consumed 1 spaces where 0 are expected
+tests/99__errors/function_calling_coding_style/test.code:21:10: Multi-line argument list must start on a new line
+tests/99__errors/function_calling_coding_style/test.code:28:10: Multi-line argument list must end on a new line
+tests/99__errors/function_calling_coding_style/test.code:33:9: Unexpected Other_Token: ,

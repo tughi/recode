@@ -1,1 +1,0 @@
-tests/01__basics/023__struct_member_type_from_undefined/test.code:2:12: Cannot infer type from an undefined value

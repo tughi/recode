@@ -1,0 +1,1 @@
+tests/99__errors/struct_member_type_recursivity/test.code:2:5: Type recursivity

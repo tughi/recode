@@ -1,0 +1,10 @@
+external func exit(status: i32)
+
+func main() {
+    finish()
+    exit(1)
+}
+
+func finish() {
+    exit(0)
+}

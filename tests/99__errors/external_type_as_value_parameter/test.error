@@ -1,0 +1,1 @@
+tests/99__errors/external_type_as_value_parameter/test.code:3:19: Cannot use opaque Value as parameter type

@@ -1,5 +1,17 @@
 func main() -> i32 {
-    return sub(mul(add(div(42, 10), 2), add(mod(42, 10), 5)), 42)
+    return sub(
+        mul(
+            add(
+                div(42, 10)
+                2
+            )
+            add(
+                mod(42, 10)
+                5
+            )
+        )
+        42
+    )
 }
 
 func add(v1: i32, v2: i32) -> i32 {

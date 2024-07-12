@@ -1,0 +1,1 @@
+tests/99__errors/return_external_type/test.code:3:39: Cannot use opaque Value as return type

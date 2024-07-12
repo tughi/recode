@@ -1,0 +1,1 @@
+tests/99__errors/struct_member_type_inference_from_undefined/test.code:2:12: Cannot infer type from an undefined value

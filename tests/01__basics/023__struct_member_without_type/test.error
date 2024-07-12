@@ -1,1 +1,0 @@
-tests/01__basics/023__struct_member_without_type/test.code:2:5: Cannot infer type of struct member
