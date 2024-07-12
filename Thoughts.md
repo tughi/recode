@@ -15,9 +15,7 @@ There is a fixed set of integer types:
 Integer literals have the `i32` type implicitly. The type can be changed with a type suffix
 (e.g. `42i64`).
 
-To improve readability, integer literals can also include underscores (e.g. `1_000_000`).
-
-> NOTE: Unsigned integers are not supported yet.
+To improve readability, integer literals can include underscore (e.g. `1_000_000`).
 
 ## Boolean
 
@@ -37,19 +35,31 @@ There will be a fixed set of float types:
 
     struct Node {
         name: String        \ embedded
-        parent: @Node       \ pointer to parent Node
-        children: [@Node]   \ checked array of Node pointers
+        parent: @Node       \ parent Node reference
+        children: [@Node]   \ checked array of Node references
         type: i32 = 42      \ with default value
+
+        \ a method that returns @Node
+        func add(self, child: @Node) -> @Self { \ Self is a placeholder for the struct name
+            self.children.append(child)
+            return self
+        }
+
+        \ static method
+        func new() -> Node {
+            return make Node()
+        }
     }
 
-    struct Extended_Node: Node(type = 7) {  \ extend Node and type has another default value
-        data: alias Data                    \ members of Data can be accessed without .data
+    struct Extended_Node {
+        super: Node(type = 7)   \ super must always be the first member
+        data: alias Data        \ members of Data can be accessed without .data
     }
 
 Newly created structs can be initializated using named arguments, which can replace default values.
 
-    let node = make Node()              \ Initializes the local Node variable
-    let node = make @Node(type = 13)    \ Allocates Node before initialization
+    let node = make Node()              \ initializes a stack Node
+    let node = make @Node(type = 13)    \ allocates and initializes a heap Node
 
 Initilization arguments can be declared also on separate lines.
 
@@ -58,45 +68,59 @@ Initilization arguments can be declared also on separate lines.
         type = 6
     )
 
-Structs are value types... They are passed by value.
+Structs are passed by value.
 
 ## Generic structs
 
 Generic structs have one or more other types as parameters.
 
-    struct Box[T] {
-        it: alias T
+    struct Item[T] {
+        next_item: @Self
+        data: T
+
+        func append(self, item: @Self) -> @Self {
+            self.next_item = item
+            return self
+        }
     }
 
-Declared variables of generic structs have different types if the generic type parameters are
-different.
+## Traits
 
-> NOTE: The `Box[!Value]` and `Value` types have similar usage.
+A trait defines shared methods between different types and allows their invocation in a polymorphic
+way, enabling code to operate on objects of different types through a common interface.
 
-## Object types
-
-For each defined struct that extends `Object`, the compiler generates a global variable of type
-`Object_Type`, named after the type.
-
-The `Object_Type` structure looks like this:
-
-    struct Object_Type {
-        _id: u32
-        _max_derivate_id: u32
-        name: String
-        base_type: @Object_Type
+    trait Visitable {
+        func accept(self, visitor: @Visitor)
     }
 
-The *_id* and *_max_derivate_id* fields are used internally for 'is' operations.
+    struct Expression {
+        func accept(self, visitor: @Visitor)
+    }
 
-## Pointers
 
-There is no pointer arithmetic nor support to indexed access.
+The compiler generates trait objects that could be modeled like this:
 
-Pointers to a value can be created usig the `@` operator:
+    struct VisitableTrait[T] {
+        object: @T
+        type: @Type
+        accept: func (self: @T, visitor: @Visitor)
+    }
+
+
+## Extension methods
+
+Methods can be declared also outside of a type block.
+
+    func Binary_Expression.accept(self, visitor: @Visitor) {
+        visitor.visit(self)
+    }
+
+## References
+
+References point to a value and can be created usig the `@` operator:
 
     let data = make Data()      \ local Data variable
-    let data_ref = @data        \ pointer to data's value
+    let data_ref = @data        \ reference to data's value
 
 ## Nullable values
 
@@ -109,7 +133,7 @@ Nullable types have a similar in-memory structure with the following struct:
         value: T
     }
 
-The compiler will complain of missing a null-checks.
+The compiler will complain of missing null-checks.
 
     func length(self: @String?) -> i32 {
         if self != null {
@@ -183,13 +207,6 @@ The variable names are symbols used by the compiler to know where the value are 
     }
 
 Functions that don't return a value are missing the `-> type` part.
-
-Functions can be called using the Uniform Function Call Syntax (UFCS). In this case, if the
-_receiver_ is a struct variable, it is passed by reference.
-
-UFCS is useful to chain function calls.
-
-    file.write("An example of ").write(4).write(" chained calls").end_line()
 
 Call arguments are separated by `,` or new lines.
 
