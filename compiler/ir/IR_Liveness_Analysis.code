@@ -80,71 +80,23 @@ func compute_live_values(self: @IR_Function) -> Nothing {
         instruction.live_out_values = make @List[@IR_Value]()
         if instruction is IR_Branch_Instruction {
             let instruction = instruction.as(@IR_Branch_Instruction)
-            instruction.true_block.first_instruction.live_in_values.for_each() {
-                instruction.live_out_values.append(it)
-            }
-            instruction.true_block.for_each_instruction() {
-                if it is IR_Phi_Instruction {
-                    it.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
-                        if value == block {
-                            if not instruction.live_out_values.contains(key) {
-                                instruction.live_out_values.append(key)
-                            }
-                        }
-                    }
-                } else {
-                    break
-                }
-            }
-            instruction.false_block.first_instruction.live_in_values.for_each() {
-                if not instruction.live_out_values.contains(it) {
-                    instruction.live_out_values.append(it)
-                }
-            }
-            instruction.false_block.for_each_instruction() {
-                if it is IR_Phi_Instruction {
-                    it.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
-                        if value == block {
-                            if not instruction.live_out_values.contains(key) {
-                                instruction.live_out_values.append(key)
-                            }
-                        }
-                    }
-                } else {
-                    break
-                }
-            }
+            instruction.append_live_out_values_from_jump_block(instruction.true_block)
+            instruction.append_live_out_values_from_jump_block(instruction.false_block)
         } else if instruction is IR_Jump_Instruction {
             let instruction = instruction.as(@IR_Jump_Instruction)
-            instruction.block.first_instruction.live_in_values.for_each() {
-                instruction.live_out_values.append(it)
-            }
-            instruction.block.for_each_instruction() {
-                if it is IR_Phi_Instruction {
-                    it.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
-                        if value == block {
-                            if not instruction.live_out_values.contains(key) {
-                                instruction.live_out_values.append(key)
-                            }
-                        }
-                    }
-                } else {
-                    break
-                }
-            }
+            instruction.append_live_out_values_from_jump_block(instruction.block)
         } else if instruction is IR_Return_Instruction {
             \ validate that live-out values are empty
-            let return_value = instruction.as(@IR_Return_Instruction).get_return_value()
-            let live_out_values_count = 0
-            if return_value != null {
-                instruction.live_in_values.for_each() {
-                    if it != return_value {
-                        live_out_values_count = live_out_values_count + 1
-                    }
-                }
+            if instruction.live_out_values.size != 0 {
+                abort(instruction.location, "Invalid state: live-out values for return instruction should be empty")
             }
-            if live_out_values_count != 0 {
-                abort("Invalid state: live-out values for return instruction should be empty")
+        } else if instruction is IR_Direct_Call_Instruction {
+            \ validate that live-out values are empty
+            if not instruction.is_exit_instruction() {
+                abort(instruction.location, "Invalid state: not an exit function")
+            }
+            if instruction.live_out_values.size != 0 {
+                abort(instruction.location, "Invalid state: live-out values for exit instruction should be empty")
             }
         } else {
             abort(instruction.object_type)
@@ -168,4 +120,25 @@ func append_live_in_values(self: @IR_Instruction, live_values: @List[@IR_Value])
         }
     }
     return added
+}
+
+func append_live_out_values_from_jump_block(self: @IR_Instruction, block: @IR_Block) -> Nothing {
+    block.first_instruction.live_in_values.for_each() {
+        if not self.live_out_values.contains(it) {
+            self.live_out_values.append(it)
+        }
+    }
+    block.for_each_instruction() {
+        if it is IR_Phi_Instruction {
+            it.as(@IR_Phi_Instruction).value_block_mapping.for_each() {
+                if value == self.block {
+                    if not self.live_out_values.contains(key) {
+                        self.live_out_values.append(key)
+                    }
+                }
+            }
+        } else {
+            break
+        }
+    }
 }

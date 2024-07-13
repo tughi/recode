@@ -1,10 +1,14 @@
 external func exit(status: i32)
 
-func main() {
+func main() -> i32 {
     finish()
-    exit(1)
+    return 1
 }
 
 func finish() {
+    nothing()
     exit(0)
+}
+
+func nothing() {
 }

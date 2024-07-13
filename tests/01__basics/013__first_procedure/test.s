@@ -2,16 +2,26 @@
 main:
 .L__main__S:
 .L__main__1:
-  call nop
+  call finish
+  movl $0x1, %eax
   jmp .L__main__E
 .L__main__E:
-  xor %rax, %rax
   ret
 
 
-nop:
-.L__nop__S:
-.L__nop__1:
-  jmp .L__nop__E
-.L__nop__E:
+finish:
+.L__finish__S:
+.L__finish__1:
+  call nothing
+  movl $0x0, %edi
+  call exit
+.L__finish__E:
+  ret
+
+
+nothing:
+.L__nothing__S:
+.L__nothing__1:
+  jmp .L__nothing__E
+.L__nothing__E:
   ret

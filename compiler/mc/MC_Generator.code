@@ -613,21 +613,23 @@ func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Const
 }
 
 func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruction: @IR_Direct_Call_Instruction, mc_block: @MC_Block) -> Nothing {
-    \ move live values to callee saved registers or stack slots
-    ir_direct_call_instruction.next_instruction.live_in_values.for_each() {
-        let ir_value = it
-        if ir_value != ir_direct_call_instruction.result_value {
-            let mc_register_value = mc_block.find_register_value(it)
-            if mc_register_value != null and mc_register_value.register.is_caller_saved {
-                \ move value to callee saved register
-                let new_mc_register_value = self.make_register_value(
-                    mc_block = mc_block
-                    ir_value = ir_value
-                    mc_register = self.find_free_callee_saved_register(mc_block)
-                    load_value = true
-                )
-                new_mc_register_value.register.is_used = true
-                mc_block.live_values.remove(mc_register_value).prune()
+    if ir_direct_call_instruction.next_instruction != null {
+        \ move live values to callee saved registers or stack slots
+        ir_direct_call_instruction.next_instruction.live_in_values.for_each() {
+            let ir_value = it
+            if ir_value != ir_direct_call_instruction.result_value {
+                let mc_register_value = mc_block.find_register_value(it)
+                if mc_register_value != null and mc_register_value.register.is_caller_saved {
+                    \ move value to callee saved register
+                    let new_mc_register_value = self.make_register_value(
+                        mc_block = mc_block
+                        ir_value = ir_value
+                        mc_register = self.find_free_callee_saved_register(mc_block)
+                        load_value = true
+                    )
+                    new_mc_register_value.register.is_used = true
+                    mc_block.live_values.remove(mc_register_value).prune()
+                }
             }
         }
     }
