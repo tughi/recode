@@ -1,0 +1,15 @@
+func main(argc: i32, argv: [[u8; ?]; ?]) {
+    if argc != 2 {
+        exit(1)
+    }
+
+    fputc('2', stdout)
+}
+
+external type FILE
+
+external stdout: @FILE
+
+external func fputc(c: u8, file: @FILE) -> i32
+
+external func exit(code: i32)
