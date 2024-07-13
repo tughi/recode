@@ -606,10 +606,10 @@ struct IR_Inequality_Instruction: IR_Comparison_Instruction(
 struct IR_Jump_Instruction: IR_Terminator_Instruction(
     print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
         let instruction = self.as(@IR_Jump_Instruction)
-        file.write("jmp ").write_name(instruction.block)
+        file.write("jmp ").write_name(instruction.jump_block)
     }
 ) {
-    block: @IR_Block
+    jump_block: @IR_Block
 }
 
 struct IR_Less_Than_Instruction: IR_Comparison_Instruction(

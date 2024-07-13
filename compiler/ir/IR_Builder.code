@@ -87,11 +87,11 @@ func append_branch(self: @IR_Builder, condition: @IR_Value, true_block: @IR_Bloc
     false_block.predecessors.append(self.current_block_context.block)
 }
 
-func append_jump(self: @IR_Builder, block: @IR_Block, location: @Source_Location) -> Nothing {
+func append_jump(self: @IR_Builder, jump_block: @IR_Block, location: @Source_Location) -> Nothing {
     self.current_block_context.block.append(
-        make @IR_Jump_Instruction(location = location, block = block)
+        make @IR_Jump_Instruction(location = location, jump_block = jump_block)
     )
-    block.predecessors.append(self.current_block_context.block)
+    jump_block.predecessors.append(self.current_block_context.block)
 }
 
 func create_named_value(self: @IR_Builder, name: @String, type: @IR_Type) -> @IR_Value {

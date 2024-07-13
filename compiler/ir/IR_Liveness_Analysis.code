@@ -84,7 +84,7 @@ func compute_live_values(self: @IR_Function) -> Nothing {
             instruction.append_live_out_values_from_jump_block(instruction.false_block)
         } else if instruction is IR_Jump_Instruction {
             let instruction = instruction.as(@IR_Jump_Instruction)
-            instruction.append_live_out_values_from_jump_block(instruction.block)
+            instruction.append_live_out_values_from_jump_block(instruction.jump_block)
         } else if instruction is IR_Return_Instruction {
             \ validate that live-out values are empty
             if instruction.live_out_values.size != 0 {

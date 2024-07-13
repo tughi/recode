@@ -288,7 +288,7 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block: 
         self.convert_block(ir_branch_instruction.false_block, mc_block, mc_block.stack_size)
     } else if ir_block.last_instruction is IR_Jump_Instruction {
         let ir_jump_instruction = ir_block.last_instruction.as(@IR_Jump_Instruction)
-        self.convert_block(ir_jump_instruction.block, mc_block, mc_block.stack_size)
+        self.convert_block(ir_jump_instruction.jump_block, mc_block, mc_block.stack_size)
     }
 }
 
@@ -723,7 +723,7 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
 
 func convert_jump_instruction(self: @MC_Generator, ir_jump_instruction: @IR_Jump_Instruction, mc_block: @MC_Block) -> Nothing {
     mc_block.append(make @MC_JMP_Instruction(
-        block = self.get_jump_block(mc_block, ir_jump_instruction.block)
+        block = self.get_jump_block(mc_block, ir_jump_instruction.jump_block)
     ))
 }
 
