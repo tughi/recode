@@ -1,0 +1,22 @@
+$main(%argc: i32, %argv: [[u8, ?], ?]) {
+@1:
+   [ %argc ]
+   %1: i32 = const 1
+   [ %argc %1 ]
+   %2: bool = cmp_eq %argc %1
+   [ %2 ]
+   br %2 @2 @3
+   [ ]
+@2:
+   [ ]
+   %3: i32 = const 1
+   [ %3 ]
+   call $exit %3
+   [ ]
+@3:
+   [ ]
+   ret
+   [ ]
+}
+
+$exit(%code: i32)
