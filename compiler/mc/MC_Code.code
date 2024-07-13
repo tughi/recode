@@ -128,8 +128,10 @@ func data_size(self: @MC_Value) -> i32 {
             data_size = 8
         } else if ir_type is IR_UInt8_Type {
             data_size = 1
+        } else if ir_type is IR_Unchecked_Array_Type {
+            data_size = 8
         } else {
-            abort(clone("Unsupported type: ").append(self.object_type.name))
+            abort(clone("Unsupported type: ").append(ir_type.object_type.name))
         }
         self.data_size = data_size
     }
