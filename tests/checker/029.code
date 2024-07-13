@@ -1,4 +1,0 @@
-\ Expect:
-\ - error: 'tests/all/029.code:4:15: Unexpected End_Of_Line_Token: \n'
-
-external value
