@@ -763,22 +763,22 @@ func create_ir_struct_literal_instruction(result_value: @IR_Value, type: @IR_Str
     return instruction
 }
 
-struct IR_Struct_Type_Member_Offset_Instruction: IR_Instruction(
+struct IR_Struct_Member_Offset_Instruction: IR_Instruction(
     print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
-        let instruction = self.as(@IR_Struct_Type_Member_Offset_Instruction)
-        file.write("offset ").write(instruction.get_value_pointer()).write(' ').write(instruction.struct_type_member.struct_type.name).write('.').write(instruction.struct_type_member.name)
+        let instruction = self.as(@IR_Struct_Member_Offset_Instruction)
+        file.write("offset ").write(instruction.get_struct_pointer()).write(' ').write(instruction.struct_type_member.struct_type.name).write('.').write(instruction.struct_type_member.name)
     }
 ) {
     struct_type_member: @IR_Struct_Type_Member
 }
 
-func init(self: @IR_Struct_Type_Member_Offset_Instruction, value_pointer: @IR_Value) -> @IR_Struct_Type_Member_Offset_Instruction {
-    self.set_operand_value("value_pointer", value_pointer)
+func init(self: @IR_Struct_Member_Offset_Instruction, struct_pointer: @IR_Value) -> @IR_Struct_Member_Offset_Instruction {
+    self.set_operand_value("struct_pointer", struct_pointer)
     return self
 }
 
-func get_value_pointer(self: @IR_Struct_Type_Member_Offset_Instruction) -> @IR_Value {
-    return self.operand_values.get("value_pointer")
+func get_struct_pointer(self: @IR_Struct_Member_Offset_Instruction) -> @IR_Value {
+    return self.operand_values.get("struct_pointer")
 }
 
 struct IR_Return_Instruction: IR_Terminator_Instruction(

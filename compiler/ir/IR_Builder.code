@@ -481,15 +481,13 @@ func convert_store_value(self: @IR_Builder, value_pointer: @IR_Value, value: @IR
 
             self.convert_store_value(
                 self.append(
-                    self.create_ir_struct_type_member_offset_instruction(value_pointer, struct_type_member)
+                    self.create_ir_struct_member_offset_instruction(value_pointer, struct_type_member)
                     location
                 )
                 struct_member_value
                 location
             )
         }
-
-        \ abort("TODO: Create store instruction for struct literal")
     } else {
         self.append(
             make @IR_Store_Instruction().init(value_pointer, value)
@@ -498,7 +496,7 @@ func convert_store_value(self: @IR_Builder, value_pointer: @IR_Value, value: @IR
     }
 }
 
-func create_ir_struct_type_member_offset_instruction(self: @IR_Builder, struct_value_pointer: @IR_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Struct_Type_Member_Offset_Instruction {
+func create_ir_struct_member_offset_instruction(self: @IR_Builder, struct_value_pointer: @IR_Value, struct_type_member: @IR_Struct_Type_Member) -> @IR_Struct_Member_Offset_Instruction {
     if struct_value_pointer.type is not IR_Pointer_Type {
         abort("Unexpected value type: ".clone().append(struct_value_pointer.type.name))
     }
@@ -510,7 +508,7 @@ func create_ir_struct_type_member_offset_instruction(self: @IR_Builder, struct_v
     if struct_type_member.struct_type != struct_type {
         abort("Incompatible struct types")
     }
-    return make @IR_Struct_Type_Member_Offset_Instruction(
+    return make @IR_Struct_Member_Offset_Instruction(
         result_value = self.create_temp_value(self.create_ir_pointer_type(struct_type_member.type))
         struct_type_member = struct_type_member
     ).init(struct_value_pointer)
@@ -1023,7 +1021,7 @@ func convert_member_access_expression_pointer(self: @IR_Builder, checked_express
         abort(checked_expression.location, "Unknown struct member: ".clone().append(checked_expression.struct_member.name))
     }
     return self.append(
-        self.create_ir_struct_type_member_offset_instruction(value_pointer, struct_type_member)
+        self.create_ir_struct_member_offset_instruction(value_pointer, struct_type_member)
         checked_expression.location
     )
 }
