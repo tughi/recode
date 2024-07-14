@@ -222,6 +222,35 @@ func convert_function(self: @IR_Builder, ir_function: @IR_Function) -> Nothing {
             parent = self.current_function_context
             block = ir_function.create_block()
         )
+
+        \ convert function parameters into local variables so that each symbol has a value pointer
+        ir_function.parameters.for_each() {
+            let ir_parameter = it
+            let ir_parameter_value = self.current_function_context.find_symbol(ir_parameter.checked_symbol).as(@IR_Function_Parameter).value
+            let ir_local_variable = make @IR_Local_Variable(
+                checked_symbol = ir_parameter.checked_symbol
+                name = ir_parameter.name
+                type = ir_parameter.type
+                value_pointer = undefined
+            )
+            self.current_block_context.symbols.append(ir_local_variable)
+            ir_local_variable.value_pointer = self.append(
+                make @IR_Alloc_Instruction(
+                    result_value = self.create_named_value(
+                        clone(ir_parameter.name).append(".ptr")
+                        self.create_ir_pointer_type(ir_parameter.type)
+                    )
+                    type = ir_parameter.type
+                )
+                ir_parameter.checked_symbol.location
+            )
+            self.convert_store_value(
+                ir_local_variable.value_pointer
+                ir_parameter_value
+                ir_parameter.checked_symbol.location
+            )
+        }
+
         self.convert_block_statement(checked_function_symbol.body)
 
         \ cleanup last block

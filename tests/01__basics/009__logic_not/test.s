@@ -54,9 +54,14 @@ main:
 
 test_not:
 .L__test_not__S:
+  sub $0x10, %rsp
 .L__test_not__1:
-  movb %dil, %al
-  xor $0x1, %al
+  movb %dil, 15(%rsp)
+  movb 15(%rsp), %al
+  movb %al, %cl
+  xor $0x1, %cl
+  movb %cl, %al
   jmp .L__test_not__E
 .L__test_not__E:
+  add $0x10, %rsp
   ret

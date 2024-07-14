@@ -11,8 +11,11 @@ main:
 
 echo:
 .L__echo__S:
+  sub $0x10, %rsp
 .L__echo__1:
-  movl %edi, %eax
+  movl %edi, 12(%rsp)
+  movl 12(%rsp), %eax
   jmp .L__echo__E
 .L__echo__E:
+  add $0x10, %rsp
   ret

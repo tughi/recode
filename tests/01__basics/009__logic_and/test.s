@@ -144,8 +144,11 @@ main:
 
 echo:
 .L__echo__S:
+  sub $0x10, %rsp
 .L__echo__1:
-  movb %dil, %al
+  movb %dil, 15(%rsp)
+  movb 15(%rsp), %al
   jmp .L__echo__E
 .L__echo__E:
+  add $0x10, %rsp
   ret

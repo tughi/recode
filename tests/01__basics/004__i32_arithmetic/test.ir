@@ -33,8 +33,20 @@ $main(): i32 {
 
 $add(%v1: i32, %v2: i32): i32 {
 @1:
-   [ %v1 %v2 ]
-   %1: i32 = add %v1 %v2
+   [ %v2 %v1 ]
+   %v1.ptr: ptr<i32> = alloc i32
+   [ %v1.ptr %v2 %v1 ]
+   store %v1.ptr %v1
+   [ %v1.ptr %v2 ]
+   %v2.ptr: ptr<i32> = alloc i32
+   [ %v2.ptr %v1.ptr %v2 ]
+   store %v2.ptr %v2
+   [ %v2.ptr %v1.ptr ]
+   %v1.1: i32 = load %v1.ptr
+   [ %v1.1 %v2.ptr ]
+   %v2.1: i32 = load %v2.ptr
+   [ %v1.1 %v2.1 ]
+   %1: i32 = add %v1.1 %v2.1
    [ %1 ]
    ret %1
    [ ]
@@ -42,8 +54,20 @@ $add(%v1: i32, %v2: i32): i32 {
 
 $sub(%v1: i32, %v2: i32): i32 {
 @1:
-   [ %v1 %v2 ]
-   %1: i32 = sub %v1 %v2
+   [ %v2 %v1 ]
+   %v1.ptr: ptr<i32> = alloc i32
+   [ %v1.ptr %v2 %v1 ]
+   store %v1.ptr %v1
+   [ %v1.ptr %v2 ]
+   %v2.ptr: ptr<i32> = alloc i32
+   [ %v2.ptr %v1.ptr %v2 ]
+   store %v2.ptr %v2
+   [ %v2.ptr %v1.ptr ]
+   %v1.1: i32 = load %v1.ptr
+   [ %v1.1 %v2.ptr ]
+   %v2.1: i32 = load %v2.ptr
+   [ %v1.1 %v2.1 ]
+   %1: i32 = sub %v1.1 %v2.1
    [ %1 ]
    ret %1
    [ ]
@@ -51,8 +75,20 @@ $sub(%v1: i32, %v2: i32): i32 {
 
 $mul(%v1: i32, %v2: i32): i32 {
 @1:
-   [ %v1 %v2 ]
-   %1: i32 = mul %v1 %v2
+   [ %v2 %v1 ]
+   %v1.ptr: ptr<i32> = alloc i32
+   [ %v1.ptr %v2 %v1 ]
+   store %v1.ptr %v1
+   [ %v1.ptr %v2 ]
+   %v2.ptr: ptr<i32> = alloc i32
+   [ %v2.ptr %v1.ptr %v2 ]
+   store %v2.ptr %v2
+   [ %v2.ptr %v1.ptr ]
+   %v1.1: i32 = load %v1.ptr
+   [ %v1.1 %v2.ptr ]
+   %v2.1: i32 = load %v2.ptr
+   [ %v1.1 %v2.1 ]
+   %1: i32 = mul %v1.1 %v2.1
    [ %1 ]
    ret %1
    [ ]
@@ -60,8 +96,20 @@ $mul(%v1: i32, %v2: i32): i32 {
 
 $div(%v1: i32, %v2: i32): i32 {
 @1:
-   [ %v1 %v2 ]
-   %1: i32 = div %v1 %v2
+   [ %v2 %v1 ]
+   %v1.ptr: ptr<i32> = alloc i32
+   [ %v1.ptr %v2 %v1 ]
+   store %v1.ptr %v1
+   [ %v1.ptr %v2 ]
+   %v2.ptr: ptr<i32> = alloc i32
+   [ %v2.ptr %v1.ptr %v2 ]
+   store %v2.ptr %v2
+   [ %v2.ptr %v1.ptr ]
+   %v1.1: i32 = load %v1.ptr
+   [ %v1.1 %v2.ptr ]
+   %v2.1: i32 = load %v2.ptr
+   [ %v1.1 %v2.1 ]
+   %1: i32 = div %v1.1 %v2.1
    [ %1 ]
    ret %1
    [ ]
@@ -69,8 +117,20 @@ $div(%v1: i32, %v2: i32): i32 {
 
 $mod(%v1: i32, %v2: i32): i32 {
 @1:
-   [ %v1 %v2 ]
-   %1: i32 = mod %v1 %v2
+   [ %v2 %v1 ]
+   %v1.ptr: ptr<i32> = alloc i32
+   [ %v1.ptr %v2 %v1 ]
+   store %v1.ptr %v1
+   [ %v1.ptr %v2 ]
+   %v2.ptr: ptr<i32> = alloc i32
+   [ %v2.ptr %v1.ptr %v2 ]
+   store %v2.ptr %v2
+   [ %v2.ptr %v1.ptr ]
+   %v1.1: i32 = load %v1.ptr
+   [ %v1.1 %v2.ptr ]
+   %v2.1: i32 = load %v2.ptr
+   [ %v1.1 %v2.1 ]
+   %1: i32 = mod %v1.1 %v2.1
    [ %1 ]
    ret %1
    [ ]

@@ -91,7 +91,7 @@ struct IR_Pointer_Type: IR_Type(size = 8) {
     pointed_type: @IR_Type
 }
 
-struct IR_Unchecked_Array_Type: IR_Type {
+struct IR_Unchecked_Array_Type: IR_Type(size = 8) {
     item_type: @IR_Type
 }
 

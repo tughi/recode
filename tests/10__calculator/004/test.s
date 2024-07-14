@@ -3,10 +3,14 @@
 .globl main
 main:
 .L__main__S:
+  sub $0x10, %rsp
 .L__main__1:
-  cmp $0x2, %edi
-  setne %al
-  cmp $0x0, %al
+  movl %edi, 12(%rsp)
+  movq %rsi, 4(%rsp)
+  movl 12(%rsp), %eax
+  cmp $0x2, %eax
+  setne %cl
+  cmp $0x0, %cl
   jne .L__main__2
   jmp .L__main__3
 .L__main__2:
@@ -19,5 +23,6 @@ main:
   call fputc
   jmp .L__main__E
 .L__main__E:
+  add $0x10, %rsp
   xor %rax, %rax
   ret

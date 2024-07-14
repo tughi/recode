@@ -30,52 +30,90 @@ main:
 
 add:
 .L__add__S:
+  sub $0x10, %rsp
 .L__add__1:
-  movl %edi, %eax
-  add %esi, %eax
+  movl %edi, 12(%rsp)
+  movl %esi, 8(%rsp)
+  movl 12(%rsp), %eax
+  movl 8(%rsp), %ecx
+  movl %eax, %edx
+  add %ecx, %edx
+  movl %edx, %eax
   jmp .L__add__E
 .L__add__E:
+  add $0x10, %rsp
   ret
 
 
 sub:
 .L__sub__S:
+  sub $0x10, %rsp
 .L__sub__1:
-  movl %edi, %eax
-  sub %esi, %eax
+  movl %edi, 12(%rsp)
+  movl %esi, 8(%rsp)
+  movl 12(%rsp), %eax
+  movl 8(%rsp), %ecx
+  movl %eax, %edx
+  sub %ecx, %edx
+  movl %edx, %eax
   jmp .L__sub__E
 .L__sub__E:
+  add $0x10, %rsp
   ret
 
 
 mul:
 .L__mul__S:
+  sub $0x10, %rsp
 .L__mul__1:
-  movl %edi, %eax
-  mull %esi
+  movl %edi, 12(%rsp)
+  movl %esi, 8(%rsp)
+  movl 12(%rsp), %eax
+  movl 8(%rsp), %ecx
+  movl %eax, %edx
+  movl %edx, %esi
+  movl %esi, %eax
+  mull %ecx
   jmp .L__mul__E
 .L__mul__E:
+  add $0x10, %rsp
   ret
 
 
 div:
 .L__div__S:
+  sub $0x10, %rsp
 .L__div__1:
-  movl %edi, %eax
+  movl %edi, 12(%rsp)
+  movl %esi, 8(%rsp)
+  movl 12(%rsp), %eax
+  movl 8(%rsp), %ecx
+  movl %eax, %edx
+  movl %edx, %esi
+  movl %esi, %eax
   cltd
-  idiv %esi
+  idiv %ecx
   jmp .L__div__E
 .L__div__E:
+  add $0x10, %rsp
   ret
 
 
 mod:
 .L__mod__S:
+  sub $0x10, %rsp
 .L__mod__1:
-  movl %edi, %eax
+  movl %edi, 12(%rsp)
+  movl %esi, 8(%rsp)
+  movl 12(%rsp), %eax
+  movl 8(%rsp), %ecx
+  movl %eax, %edx
+  movl %edx, %esi
+  movl %esi, %eax
   cltd
-  idiv %esi
+  idiv %ecx
   movl %edx, %eax
   jmp .L__mod__E
 .L__mod__E:
+  add $0x10, %rsp
   ret

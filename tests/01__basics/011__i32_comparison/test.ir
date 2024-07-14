@@ -168,6 +168,12 @@ $main(): i32 {
 $echo(%v: i32): i32 {
 @1:
    [ %v ]
-   ret %v
+   %v.ptr: ptr<i32> = alloc i32
+   [ %v.ptr %v ]
+   store %v.ptr %v
+   [ %v.ptr ]
+   %v.1: i32 = load %v.ptr
+   [ %v.1 ]
+   ret %v.1
    [ ]
 }

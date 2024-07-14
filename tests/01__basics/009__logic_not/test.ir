@@ -76,7 +76,13 @@ $main(): i32 {
 $test_not(%v: bool): bool {
 @1:
    [ %v ]
-   %1: bool = not %v
+   %v.ptr: ptr<bool> = alloc bool
+   [ %v.ptr %v ]
+   store %v.ptr %v
+   [ %v.ptr ]
+   %v.1: bool = load %v.ptr
+   [ %v.1 ]
+   %1: bool = not %v.1
    [ %1 ]
    ret %1
    [ ]
