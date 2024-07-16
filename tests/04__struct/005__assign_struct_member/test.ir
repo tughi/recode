@@ -10,27 +10,27 @@ type Point = struct {
 
 $main(): i32 {
 @1:
-   [ ]
-   %line.ptr: ptr<Line> = alloc Line
-   [ %line.ptr ]
-   %1: ptr<Point> = offset %line.ptr Line.p2
-   [ %line.ptr %1 ]
-   %2: ptr<i32> = offset %1 Point.y
-   [ %line.ptr %2 ]
-   %3: i32 = const 64
-   [ %line.ptr %2 %3 ]
-   store %2 %3
-   [ %line.ptr ]
-   %4: ptr<Point> = offset %line.ptr Line.p2
-   [ %4 ]
-   %5: ptr<i32> = offset %4 Point.y
-   [ %5 ]
-   %6: i32 = load %5
-   [ %6 ]
-   %7: i32 = const 64
-   [ %6 %7 ]
-   %8: i32 = sub %6 %7
-   [ %8 ]
-   ret %8
-   [ ]
+  [ ]
+  %line.ptr: ptr<Line> = alloc Line
+  [ %line.ptr ]
+  %1: ptr<Point> = offset %line.ptr Line.p2
+  [ %line.ptr %1 ]
+  %2: ptr<i32> = offset %1 Point.y
+  [ %line.ptr %2 ]
+  %3: i32 = const 64
+  [ %line.ptr %2 %3 ]
+  store %2 %3
+  [ %line.ptr ]
+  %4: ptr<Point> = offset %line.ptr Line.p2
+  [ %4 ]
+  %5: ptr<i32> = offset %4 Point.y
+  [ %5 ]
+  %6: i32 = load %5
+  [ %6 ]
+  %7: i32 = const 64
+  [ %6 %7 ]
+  %8: i32 = sub %6 %7
+  [ %8 ]
+  ret %8
+  [ ]
 }

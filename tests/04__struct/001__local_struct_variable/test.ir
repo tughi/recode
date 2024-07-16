@@ -5,11 +5,11 @@ type Point = struct {
 
 $main(): i32 {
 @1:
-   [ ]
-   %point.ptr: ptr<Point> = alloc Point
-   [ ]
-   %1: i32 = const 0
-   [ %1 ]
-   ret %1
-   [ ]
+  [ ]
+  %point.ptr: ptr<Point> = alloc Point
+  [ ]
+  %1: i32 = const 0
+  [ %1 ]
+  ret %1
+  [ ]
 }

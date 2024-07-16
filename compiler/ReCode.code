@@ -181,8 +181,8 @@ func print_help(path: [u8; ?]) -> Nothing {
 }
 
 func abort(location: @Source_Location, unexpected_type: @Object_Type) -> Nothing {
-    stderr.write(location).error().write(": Unexpected type: ").write(unexpected_type.name).reset().end_line()
-    exit(1)
+    stderr.write(location).write(": ")
+    abort(unexpected_type)
 }
 
 func abort(unexpected_type: @Object_Type) -> Nothing {
@@ -191,8 +191,8 @@ func abort(unexpected_type: @Object_Type) -> Nothing {
 }
 
 func abort(location: @Source_Location, message: @String) -> Nothing {
-    stderr.write(location).write(": ").error().write(message).reset().end_line()
-    exit(1)
+    stderr.write(location).write(": ")
+    abort(message)
 }
 
 func abort(message: @String) -> Nothing {

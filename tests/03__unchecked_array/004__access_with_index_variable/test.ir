@@ -1,46 +1,46 @@
 $main(%argc: i32, %argv: ptr<ptr<u8>>): i32 {
 @1:
-   [ %argv %argc ]
-   %argc.ptr: ptr<i32> = alloc i32
-   [ %argv %argc.ptr %argc ]
-   store %argc.ptr %argc
-   [ %argv ]
-   %argv.ptr: ptr<ptr<ptr<u8>>> = alloc ptr<ptr<u8>>
-   [ %argv.ptr %argv ]
-   store %argv.ptr %argv
-   [ %argv.ptr ]
-   %i.ptr: ptr<i32> = alloc i32
-   [ %i.ptr %argv.ptr ]
-   %1: i32 = const 1
-   [ %i.ptr %argv.ptr %1 ]
-   store %i.ptr %1
-   [ %i.ptr %argv.ptr ]
-   %i.1: i32 = load %i.ptr
-   [ %i.ptr %argv.ptr %i.1 ]
-   %2: ptr<ptr<u8>> = offset %argv.ptr %i.1
-   [ %2 %i.ptr ]
-   %i.2: i32 = load %i.ptr
-   [ %2 %i.2 ]
-   %3: ptr<u8> = offset %2 %i.2
-   [ %3 ]
-   %4: u8 = load %3
-   [ %4 ]
-   %5: u8 = const '0'
-   [ %4 %5 ]
-   %6: bool = cmp_ne %4 %5
-   [ %6 ]
-   br %6 @2 @3
-   [ ]
+  [ %argv %argc ]
+  %argc.ptr: ptr<i32> = alloc i32
+  [ %argv %argc.ptr %argc ]
+  store %argc.ptr %argc
+  [ %argv ]
+  %argv.ptr: ptr<ptr<ptr<u8>>> = alloc ptr<ptr<u8>>
+  [ %argv.ptr %argv ]
+  store %argv.ptr %argv
+  [ %argv.ptr ]
+  %i.ptr: ptr<i32> = alloc i32
+  [ %i.ptr %argv.ptr ]
+  %1: i32 = const 1
+  [ %i.ptr %argv.ptr %1 ]
+  store %i.ptr %1
+  [ %i.ptr %argv.ptr ]
+  %i.1: i32 = load %i.ptr
+  [ %i.ptr %argv.ptr %i.1 ]
+  %2: ptr<ptr<u8>> = offset %argv.ptr %i.1
+  [ %2 %i.ptr ]
+  %i.2: i32 = load %i.ptr
+  [ %2 %i.2 ]
+  %3: ptr<u8> = offset %2 %i.2
+  [ %3 ]
+  %4: u8 = load %3
+  [ %4 ]
+  %5: u8 = const '0'
+  [ %4 %5 ]
+  %6: bool = cmp_ne %4 %5
+  [ %6 ]
+  br %6 @2 @3
+  [ ]
 @2:
-   [ ]
-   %7: i32 = const 1
-   [ %7 ]
-   ret %7
-   [ ]
+  [ ]
+  %7: i32 = const 1
+  [ %7 ]
+  ret %7
+  [ ]
 @3:
-   [ ]
-   %8: i32 = const 0
-   [ %8 ]
-   ret %8
-   [ ]
+  [ ]
+  %8: i32 = const 0
+  [ %8 ]
+  ret %8
+  [ ]
 }

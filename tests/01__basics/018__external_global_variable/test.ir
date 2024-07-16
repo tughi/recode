@@ -2,13 +2,13 @@ external $optind: i32
 
 $main(): i32 {
 @1:
-   [ $optind ]
-   %1: i32 = load $optind
-   [ %1 ]
-   %2: i32 = const 1
-   [ %1 %2 ]
-   %3: i32 = sub %1 %2
-   [ %3 ]
-   ret %3
-   [ ]
+  [ $optind ]
+  %1: i32 = load $optind
+  [ %1 ]
+  %2: i32 = const 1
+  [ %1 %2 ]
+  %3: i32 = sub %1 %2
+  [ %3 ]
+  ret %3
+  [ ]
 }

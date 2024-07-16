@@ -2,29 +2,29 @@ $exit(%status: i32)
 
 $main(): i32 {
 @1:
-   [ ]
-   call $finish
-   [ ]
-   %1: i32 = const 1
-   [ %1 ]
-   ret %1
-   [ ]
+  [ ]
+  call $finish
+  [ ]
+  %1: i32 = const 1
+  [ %1 ]
+  ret %1
+  [ ]
 }
 
 $finish() {
 @1:
-   [ ]
-   call $nothing
-   [ ]
-   %1: i32 = const 0
-   [ %1 ]
-   call $exit %1
-   [ ]
+  [ ]
+  call $nothing
+  [ ]
+  %1: i32 = const 0
+  [ %1 ]
+  call $exit %1
+  [ ]
 }
 
 $nothing() {
 @1:
-   [ ]
-   ret
-   [ ]
+  [ ]
+  ret
+  [ ]
 }

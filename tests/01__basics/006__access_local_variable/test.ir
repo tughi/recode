@@ -1,18 +1,18 @@
 $main(): i32 {
 @1:
-   [ ]
-   %result.ptr: ptr<i32> = alloc i32
-   [ %result.ptr ]
-   %1: i32 = const 42
-   [ %result.ptr %1 ]
-   store %result.ptr %1
-   [ %result.ptr ]
-   %result.1: i32 = load %result.ptr
-   [ %result.1 ]
-   %2: i32 = const 42
-   [ %result.1 %2 ]
-   %3: i32 = sub %result.1 %2
-   [ %3 ]
-   ret %3
-   [ ]
+  [ ]
+  %result.ptr: ptr<i32> = alloc i32
+  [ %result.ptr ]
+  %1: i32 = const 42
+  [ %result.ptr %1 ]
+  store %result.ptr %1
+  [ %result.ptr ]
+  %result.1: i32 = load %result.ptr
+  [ %result.1 ]
+  %2: i32 = const 42
+  [ %result.1 %2 ]
+  %3: i32 = sub %result.1 %2
+  [ %3 ]
+  ret %3
+  [ ]
 }

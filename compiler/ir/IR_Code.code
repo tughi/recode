@@ -344,16 +344,16 @@ func print(self: @IR_Block, file: @FILE, live: bool) -> @FILE {
     self.for_each_instruction() {
         let block_instruction = it
         if live {
-            file.write("   [")
+            file.write("  [")
             block_instruction.live_in_values.for_each() {
                 file.write(' ').write(it)
             }
             file.write(" ]").end_line()
         }
-        file.write("   ").write(block_instruction).end_line()
+        file.write("  ").write(block_instruction).end_line()
     }
     if live {
-        file.write("   [")
+        file.write("  [")
         self.last_instruction.live_out_values.for_each() {
             file.write(' ').write(it)
         }
