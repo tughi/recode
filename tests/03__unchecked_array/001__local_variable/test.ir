@@ -1,0 +1,8 @@
+$main() {
+@1:
+   [ ]
+   %array.ptr: ptr<ptr<i32>> = alloc ptr<i32>
+   [ ]
+   ret
+   [ ]
+}

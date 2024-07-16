@@ -305,7 +305,7 @@ func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
         return self.create_ir_pointer_type(ir_pointed_type)
     } else if checked_type is Checked_Unchecked_Array_Type {
         let ir_item_type = self.convert_type(checked_type.as(@Checked_Unchecked_Array_Type).item_type)
-        return self.create_ir_unchecked_array_type(ir_item_type)
+        return self.create_ir_pointer_type(ir_item_type)
     } else {
         abort(checked_type.object_type)
     }
@@ -323,20 +323,6 @@ func create_ir_pointer_type(self: @IR_Builder, ir_pointed_type: @IR_Type) -> @IR
     let ir_type = make @IR_Pointer_Type(
         name = ir_type_name
         pointed_type = ir_pointed_type
-    )
-    self.types.append(ir_type)
-    return ir_type
-}
-
-func create_ir_unchecked_array_type(self: @IR_Builder, ir_item_type: @IR_Type) -> @IR_Unchecked_Array_Type {
-    self.types.for_each() {
-        if it is IR_Unchecked_Array_Type and it.as(@IR_Unchecked_Array_Type).item_type == ir_item_type {
-            return it.as(@IR_Unchecked_Array_Type)
-        }
-    }
-    let ir_type = make @IR_Unchecked_Array_Type(
-        name = clone("[").append(ir_item_type.name).append(", ?").append(']')
-        item_type = ir_item_type
     )
     self.types.append(ir_type)
     return ir_type
@@ -683,6 +669,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
     let value: @IR_Value
     if checked_expression is Checked_Add_Expression {
         value = self.convert_add_expression(checked_expression.as(@Checked_Add_Expression), expected_type)
+    } else if checked_expression is Checked_Array_Access_Expression {
+        value = self.convert_array_access_expression(checked_expression.as(@Checked_Array_Access_Expression), expected_type)
     } else if checked_expression is Checked_Cast_Expression {
         value = self.convert_cast_expression(checked_expression.as(@Checked_Cast_Expression), expected_type)
     } else if checked_expression is Checked_Divide_Expression {
@@ -740,7 +728,9 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
 
 func convert_expression_pointer(self: @IR_Builder, checked_expression: @Checked_Expression, expected_type: @IR_Type) -> @IR_Value {
     let value: @IR_Value
-    if checked_expression is Checked_Member_Access_Expression {
+    if checked_expression is Checked_Array_Access_Expression {
+        value = self.convert_array_access_expression_pointer(checked_expression.as(@Checked_Array_Access_Expression), expected_type)
+    } else if checked_expression is Checked_Member_Access_Expression {
         value = self.convert_member_access_expression_pointer(checked_expression.as(@Checked_Member_Access_Expression), expected_type)
     } else if checked_expression is Checked_Symbol_Expression {
         value = self.convert_symbol_expression_pointer(checked_expression.as(@Checked_Symbol_Expression), expected_type)
@@ -760,6 +750,32 @@ func convert_add_expression(self: @IR_Builder, checked_expression: @Checked_Add_
         make @IR_Add_Instruction(
             result_value = self.create_temp_value(left_value.type)
         ).init(left_value, right_value)
+        checked_expression.location
+    )
+}
+
+func convert_array_access_expression(self: @IR_Builder, checked_expression: @Checked_Array_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let value_pointer = self.convert_array_access_expression_pointer(checked_expression, null)
+    return self.append(
+        make @IR_Load_Instruction(
+            result_value = self.create_temp_value(value_pointer.type.as(@IR_Pointer_Type).pointed_type)
+        ).init(value_pointer)
+        checked_expression.location
+    )
+}
+
+func convert_array_access_expression_pointer(self: @IR_Builder, checked_expression: @Checked_Array_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let value_pointer = self.convert_expression_pointer(checked_expression.array_expression, null)
+    let value_type = value_pointer.type.as(@IR_Pointer_Type).pointed_type
+    if value_type is not IR_Pointer_Type {
+        abort(checked_expression.array_expression.location, "Not an array type")
+    }
+    let array_item_type = value_type.as(@IR_Pointer_Type).pointed_type
+    let index_value = self.convert_expression(checked_expression.index_expression, array_item_type)
+    return self.append(
+        make @IR_Array_Item_Offset_Instruction(
+            result_value = self.create_temp_value(value_type)
+        ).init(value_pointer, index_value)
         checked_expression.location
     )
 }

@@ -426,6 +426,8 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_add_instruction(ir_instruction.as(@IR_Add_Instruction), mc_block)
     } else if ir_instruction is IR_Alloc_Instruction {
         self.convert_alloc_instruction(ir_instruction.as(@IR_Alloc_Instruction), mc_block)
+    } else if ir_instruction is IR_Array_Item_Offset_Instruction {
+        self.convert_array_item_offset_instruction(ir_instruction.as(@IR_Array_Item_Offset_Instruction), mc_block)
     } else if ir_instruction is IR_Branch_Instruction {
         self.convert_branch_instruction(ir_instruction.as(@IR_Branch_Instruction), mc_block)
     } else if ir_instruction is IR_Comparison_Instruction {
@@ -509,12 +511,55 @@ func convert_alloc_instruction(self: @MC_Generator, ir_alloc_instruction: @IR_Al
     mc_block.live_values.prepend(mc_stack_value)
 }
 
+func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_offset_instruction: @IR_Array_Item_Offset_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_array_pointer_value = mc_block.find_value(ir_array_item_offset_instruction.get_array_pointer())
+    let mc_array_item_pointer_value = self.make_register_value(
+        mc_block = mc_block
+        ir_value = ir_array_item_offset_instruction.result_value
+        register = self.find_free_caller_saved_register(mc_block)
+        load_value = false
+    )
+    mc_array_item_pointer_value.is_address = true
+
+    let mc_array_pointer_value = mc_array_pointer_value.as(@MC_Local_Value)
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_array_pointer_value
+        destination = make @MC_Register_Value(
+            ir_value = null
+            data_size = 8
+            register = mc_array_item_pointer_value.register
+        )
+    ))
+
+    let mc_array_item_type = ir_array_item_offset_instruction.result_value.type.as(@IR_Pointer_Type).pointed_type
+
+    let mc_index_value = mc_block.find_value(ir_array_item_offset_instruction.get_index_value())
+    if mc_index_value is MC_Immediate_Value {
+        let mc_index_value = mc_index_value.as(@MC_Immediate_Value)
+        if mc_index_value.value != 0 {
+            mc_block.append(make @MC_ADD_Instruction(
+                source = make @MC_Immediate_Value(
+                    ir_value = null
+                    value = mc_index_value.value * mc_array_item_type.get_size().as(u64)
+                )
+                destination = make @MC_Register_Value(
+                    ir_value = null
+                    data_size = 8
+                    register = mc_array_item_pointer_value.register
+                )
+            ))
+        }
+    } else {
+        abort(mc_index_value.object_type)
+    }
+}
+
 func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_Branch_Instruction, mc_block: @MC_Block) -> Nothing {
     let mc_value = mc_block.find_value(ir_branch_instruction.get_condition())
     if mc_value is not MC_Register_Value {
         mc_value = self.make_register_value(
             mc_block = mc_block
-            ir_value = ir_branch_instruction.get_condition()
+            ir_value = mc_value.ir_value
             mc_register = self.find_free_caller_saved_register(mc_block)
             load_value = true
         )
@@ -603,6 +648,11 @@ func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Const
             mc_block.live_values.prepend(make @MC_Immediate_Value(
                 ir_value = ir_instruction.result_value
                 value = (value.as(u32)).as(u64)
+            ))
+        } else if ir_instruction.result_value.type is IR_UInt8_Type {
+            mc_block.live_values.prepend(make @MC_Immediate_Value(
+                ir_value = ir_instruction.result_value
+                value = (value.as(u8)).as(u64)
             ))
         } else {
             abort(ir_instruction.result_value.type.object_type)

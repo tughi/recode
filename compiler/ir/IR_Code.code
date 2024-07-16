@@ -51,31 +51,31 @@ struct IR_Integer_Type: IR_Type {
 struct IR_Int_Type: IR_Integer_Type {
 }
 
-struct IR_Int16_Type: IR_Int_Type(name = "i16") {
+struct IR_Int16_Type: IR_Int_Type(name = "i16", size = 2) {
 }
 
 struct IR_Int32_Type: IR_Int_Type(name = "i32", size = 4) {
 }
 
-struct IR_Int64_Type: IR_Int_Type(name = "i64") {
+struct IR_Int64_Type: IR_Int_Type(name = "i64", size = 8) {
 }
 
-struct IR_Int8_Type: IR_Int_Type(name = "i8") {
+struct IR_Int8_Type: IR_Int_Type(name = "i8", size = 1) {
 }
 
 struct IR_UInt_Type: IR_Integer_Type {
 }
 
-struct IR_UInt16_Type: IR_UInt_Type(name = "u16") {
+struct IR_UInt16_Type: IR_UInt_Type(name = "u16", size = 2) {
 }
 
-struct IR_UInt32_Type: IR_UInt_Type(name = "u32") {
+struct IR_UInt32_Type: IR_UInt_Type(name = "u32", size = 4) {
 }
 
-struct IR_UInt64_Type: IR_UInt_Type(name = "u64") {
+struct IR_UInt64_Type: IR_UInt_Type(name = "u64", size = 8) {
 }
 
-struct IR_UInt8_Type: IR_UInt_Type(name = "u8") {
+struct IR_UInt8_Type: IR_UInt_Type(name = "u8", size = 1) {
 }
 
 struct IR_Null_Type: IR_Type(name = "Null") {
@@ -89,10 +89,6 @@ struct IR_Nothing_Type: IR_Type(name = "Nothing") {
 
 struct IR_Pointer_Type: IR_Type(size = 8) {
     pointed_type: @IR_Type
-}
-
-struct IR_Unchecked_Array_Type: IR_Type(size = 8) {
-    item_type: @IR_Type
 }
 
 struct IR_Fixed_Array_Type: IR_Type {
@@ -437,6 +433,28 @@ struct IR_Alloc_Instruction: IR_Instruction(
     }
 ) {
     type: @IR_Type
+}
+
+struct IR_Array_Item_Offset_Instruction: IR_Instruction(
+    print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
+        let instruction = self.as(@IR_Array_Item_Offset_Instruction)
+        file.write("offset ").write(instruction.get_array_pointer()).write(' ').write(instruction.get_index_value())
+    }
+) {
+}
+
+func init(self: @IR_Array_Item_Offset_Instruction, array_pointer: @IR_Value, index_value: @IR_Value) -> @IR_Array_Item_Offset_Instruction {
+    self.set_operand_value("array_pointer", array_pointer)
+    self.set_operand_value("index_value", index_value)
+    return self
+}
+
+func get_array_pointer(self: @IR_Array_Item_Offset_Instruction) -> @IR_Value {
+    return self.operand_values.get("array_pointer")
+}
+
+func get_index_value(self: @IR_Array_Item_Offset_Instruction) -> @IR_Value {
+    return self.operand_values.get("index_value")
 }
 
 struct IR_Binary_Instruction: IR_Instruction {
