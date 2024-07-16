@@ -172,10 +172,7 @@ struct MC_Register_Value: MC_Value(
     write = func (self: @MC_Value, file: @FILE) -> @FILE {
         let self = self.as(@MC_Register_Value)
         if self.is_address {
-            if self.offset != 0 {
-                file.write(self.offset)
-            }
-            return file.write('(').write(self.register.name_q).write(')')
+            return file.write(self.offset).write('(').write(self.register.name_q).write(')')
         }
         let data_size = self.data_size()
         if data_size == 1 {
@@ -194,7 +191,7 @@ struct MC_Register_Value: MC_Value(
 ) {
     register: @MC_Register
     is_address = false
-    offset = 0
+    offset = 0i64
 }
 
 struct MC_Instruction: Object {
@@ -263,6 +260,16 @@ struct MC_IDIV_Instruction: MC_Instruction(
     source: @MC_Value
 }
 
+struct MC_IMUL_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let self = self.as(@MC_IMUL_Instruction)
+        return file.write("imul").write_size_suffix(self.source.data_size()).write(' ').write(self.source).write(", ").write(self.destination)
+    }
+) {
+    source: @MC_Value
+    destination: @MC_Value
+}
+
 struct MC_JMP_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         return file.write("jmp").write(' ').write_name(self.as(@MC_JMP_Instruction).block)
@@ -279,6 +286,13 @@ struct MC_JNE_Instruction: MC_Instruction(
     block: @MC_Block
 }
 
+struct MC_CQO_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        return file.write("cqo")
+    }
+) {
+}
+
 struct MC_MOV_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_MOV_Instruction)
@@ -290,6 +304,16 @@ struct MC_MOV_Instruction: MC_Instruction(
         }
         let instruction_data_size = min(instruction.source.data_size(), instruction.destination.data_size())
         return file.write("mov").write_size_suffix(instruction_data_size).write(' ').write(instruction.source).write(", ").write(instruction.destination)
+    }
+) {
+    source: @MC_Value
+    destination: @MC_Value
+}
+
+struct MC_MOVSX_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_MOVSX_Instruction)
+        return file.write("movs").write_size_suffix(instruction.source.data_size()).write_size_suffix(instruction.destination.data_size()).write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
     source: @MC_Value

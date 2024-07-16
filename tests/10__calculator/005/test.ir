@@ -1,0 +1,140 @@
+type FILE = opaque
+
+$main(%argc: i32, %argv: ptr<ptr<u8>>) {
+@1:
+   [ %argv %argc $stdout ]
+   %argc.ptr: ptr<i32> = alloc i32
+   [ %argv %argc.ptr %argc $stdout ]
+   store %argc.ptr %argc
+   [ %argv %argc.ptr $stdout ]
+   %argv.ptr: ptr<ptr<ptr<u8>>> = alloc ptr<ptr<u8>>
+   [ %argv.ptr %argv %argc.ptr $stdout ]
+   store %argv.ptr %argv
+   [ %argv.ptr %argc.ptr $stdout ]
+   %i.ptr: ptr<i32> = alloc i32
+   [ %i.ptr %argv.ptr %argc.ptr $stdout ]
+   %1: i32 = const 1
+   [ %i.ptr %1 %argv.ptr %argc.ptr $stdout ]
+   store %i.ptr %1
+   [ %argv.ptr %i.ptr %argc.ptr $stdout ]
+   jmp @2
+   [ %argv.ptr %i.ptr %argc.ptr $stdout ]
+@2:
+   [ %argv.ptr %i.ptr %argc.ptr $stdout ]
+   %arg.ptr: ptr<ptr<u8>> = alloc ptr<u8>
+   [ %arg.ptr %argv.ptr %i.ptr %argc.ptr $stdout ]
+   %i.1: i32 = load %i.ptr
+   [ %arg.ptr %argv.ptr %i.1 %argc.ptr %i.ptr $stdout ]
+   %2: ptr<ptr<u8>> = offset %argv.ptr %i.1
+   [ %arg.ptr %2 %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %3: ptr<u8> = load %2
+   [ %arg.ptr %3 %argc.ptr %i.ptr $stdout %argv.ptr ]
+   store %arg.ptr %3
+   [ %arg.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %j.ptr: ptr<i32> = alloc i32
+   [ %j.ptr %arg.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %4: i32 = const 0
+   [ %j.ptr %4 %arg.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+   store %j.ptr %4
+   [ %arg.ptr %j.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+   jmp @4
+   [ %arg.ptr %j.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+@3:
+   [ ]
+   ret
+   [ ]
+@4:
+   [ %arg.ptr %j.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %j.1: i32 = load %j.ptr
+   [ %arg.ptr %j.1 %argc.ptr %i.ptr %j.ptr $stdout %argv.ptr ]
+   %5: ptr<u8> = offset %arg.ptr %j.1
+   [ %5 %argc.ptr %i.ptr %arg.ptr %j.ptr $stdout %argv.ptr ]
+   %6: u8 = load %5
+   [ %6 %argc.ptr %i.ptr %arg.ptr %j.ptr $stdout %argv.ptr ]
+   %7: u8 = const 0
+   [ %6 %7 %argc.ptr %i.ptr %arg.ptr %j.ptr $stdout %argv.ptr ]
+   %8: bool = cmp_eq %6 %7
+   [ %8 %argc.ptr %i.ptr %arg.ptr %j.ptr $stdout %argv.ptr ]
+   br %8 @6 @7
+   [ %argc.ptr %i.ptr %argv.ptr $stdout %arg.ptr %j.ptr ]
+@5:
+   [ %argc.ptr %i.ptr %argv.ptr $stdout ]
+   %i.2: i32 = load %i.ptr
+   [ %i.2 %argc.ptr %argv.ptr %i.ptr $stdout ]
+   %argc.1: i32 = load %argc.ptr
+   [ %i.2 %argc.1 %argv.ptr %i.ptr $stdout %argc.ptr ]
+   %15: i32 = const 1
+   [ %i.2 %argc.1 %15 %argv.ptr %i.ptr $stdout %argc.ptr ]
+   %16: i32 = sub %argc.1 %15
+   [ %i.2 %16 %argv.ptr %i.ptr $stdout %argc.ptr ]
+   %17: bool = cmp_eq %i.2 %16
+   [ %17 %argv.ptr %i.ptr $stdout %argc.ptr ]
+   br %17 @9 @10
+   [ %argv.ptr %i.ptr $stdout %argc.ptr ]
+@6:
+   [ %argc.ptr %i.ptr %argv.ptr $stdout ]
+   jmp @5
+   [ %argc.ptr %i.ptr %argv.ptr $stdout ]
+@7:
+   [ %arg.ptr %j.ptr $stdout %argc.ptr %i.ptr %argv.ptr ]
+   %j.2: i32 = load %j.ptr
+   [ %arg.ptr %j.ptr $stdout %j.2 %argc.ptr %i.ptr %argv.ptr ]
+   %9: ptr<u8> = offset %arg.ptr %j.2
+   [ %arg.ptr %j.ptr $stdout %9 %argc.ptr %i.ptr %argv.ptr ]
+   %10: u8 = load %9
+   [ %arg.ptr %j.ptr %10 $stdout %argc.ptr %i.ptr %argv.ptr ]
+   %11: ptr<FILE> = load $stdout
+   [ %arg.ptr %j.ptr %10 %11 %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %12: i32 = call $fputc %10 %11
+   [ %arg.ptr %j.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %j.3: i32 = load %j.ptr
+   [ %arg.ptr %j.ptr %j.3 %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %13: i32 = const 1
+   [ %arg.ptr %j.ptr %j.3 %13 %argc.ptr %i.ptr $stdout %argv.ptr ]
+   %14: i32 = add %j.3 %13
+   [ %arg.ptr %j.ptr %14 %argc.ptr %i.ptr $stdout %argv.ptr ]
+   store %j.ptr %14
+   [ %arg.ptr %j.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+   jmp @4
+   [ %arg.ptr %j.ptr %argc.ptr %i.ptr $stdout %argv.ptr ]
+@8:
+   [ %arg.ptr %j.ptr $stdout %argc.ptr %i.ptr %argv.ptr ]
+   jmp @7
+   [ %arg.ptr %j.ptr $stdout %argc.ptr %i.ptr %argv.ptr ]
+@9:
+   [ ]
+   jmp @3
+   [ ]
+@10:
+   [ %argv.ptr %i.ptr $stdout %argc.ptr ]
+   %18: u8 = const ' '
+   [ %argv.ptr %i.ptr %18 $stdout %argc.ptr ]
+   %19: ptr<FILE> = load $stdout
+   [ %argv.ptr %i.ptr %18 %19 %argc.ptr $stdout ]
+   %20: i32 = call $fputc %18 %19
+   [ %argv.ptr %i.ptr %argc.ptr $stdout ]
+   %i.3: i32 = load %i.ptr
+   [ %argv.ptr %i.ptr %i.3 %argc.ptr $stdout ]
+   %21: i32 = const 1
+   [ %argv.ptr %i.ptr %i.3 %21 %argc.ptr $stdout ]
+   %22: i32 = add %i.3 %21
+   [ %argv.ptr %i.ptr %22 %argc.ptr $stdout ]
+   store %i.ptr %22
+   [ %argv.ptr %i.ptr %argc.ptr $stdout ]
+   jmp @2
+   [ %argv.ptr %i.ptr %argc.ptr $stdout ]
+@11:
+   [ %argv.ptr %i.ptr $stdout %argc.ptr ]
+   jmp @10
+   [ %argv.ptr %i.ptr $stdout %argc.ptr ]
+}
+
+external $stdin: ptr<FILE>
+
+external $stdout: ptr<FILE>
+
+external $stderr: ptr<FILE>
+
+$fputc(%c: u8, %file: ptr<FILE>): i32
+
+$exit(%code: i32)

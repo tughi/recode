@@ -5,12 +5,12 @@ main:
 .L__main__1:
   movl %edi, 28(%rsp)
   movq %rsi, 20(%rsp)
-  movq 20(%rsp), %rax
-  movq (%rax), %rcx
-  movq %rcx, 12(%rsp)
-  movq 12(%rsp), %rax
-  movb (%rax), %cl
-  movb %cl, 11(%rsp)
+  movq 20(%rsp), %rcx
+  movq 0(%rcx), %rax
+  movq %rax, 12(%rsp)
+  movq 12(%rsp), %rcx
+  movb 0(%rcx), %al
+  movb %al, 11(%rsp)
   movb 11(%rsp), %al
   cmp $0x62, %al
   setne %cl

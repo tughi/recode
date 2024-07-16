@@ -512,6 +512,12 @@ func convert_alloc_instruction(self: @MC_Generator, ir_alloc_instruction: @IR_Al
 }
 
 func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_offset_instruction: @IR_Array_Item_Offset_Instruction, mc_block: @MC_Block) -> Nothing {
+    \ reserve rax and rdx since they might be needed for the address calculation
+    self.release_register(mc_block, self.register_rax)
+    self.register_rax.is_reserved = true
+    self.release_register(mc_block, self.register_rdx)
+    self.register_rdx.is_reserved = true
+
     let mc_array_pointer_value = mc_block.find_value(ir_array_item_offset_instruction.get_array_pointer())
     let mc_array_item_pointer_value = self.make_register_value(
         mc_block = mc_block
@@ -536,11 +542,45 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
     let mc_index_value = mc_block.find_value(ir_array_item_offset_instruction.get_index_value())
     if mc_index_value is MC_Immediate_Value {
         let mc_index_value = mc_index_value.as(@MC_Immediate_Value)
-        if mc_index_value.value != 0 {
-            mc_block.append(make @MC_ADD_Instruction(
+        \ set address offset
+        mc_array_item_pointer_value.offset = mc_index_value.value.as(i64) * mc_array_item_type.get_size().as(i64)
+    } else if mc_index_value is MC_Register_Value {
+        let mc_index_value = mc_index_value.as(@MC_Register_Value)
+        let mc_index_value_type = mc_index_value.ir_value.type
+        if mc_index_value_type is IR_Int32_Type {
+            \ load index value into rax
+            mc_block.append(make @MC_MOVSX_Instruction(
+                source = mc_index_value
+                destination = make @MC_Register_Value(
+                    ir_value = null
+                    data_size = 8
+                    register = self.register_rax
+                )
+            ))
+
+            \ sign extend index value
+            mc_block.append(make @MC_CQO_Instruction())
+
+            \ multiply index value with item size
+            mc_block.append(make @MC_IMUL_Instruction(
                 source = make @MC_Immediate_Value(
                     ir_value = null
-                    value = mc_index_value.value * mc_array_item_type.get_size().as(u64)
+                    data_size = 8
+                    value = mc_array_item_type.get_size().as(u64)
+                )
+                destination = make @MC_Register_Value(
+                    ir_value = null
+                    data_size = 8
+                    register = self.register_rax
+                )
+            ))
+
+            \ add index value to array pointer
+            mc_block.append(make @MC_ADD_Instruction(
+                source = make @MC_Register_Value(
+                    ir_value = null
+                    data_size = 8
+                    register = self.register_rax
                 )
                 destination = make @MC_Register_Value(
                     ir_value = null
@@ -552,6 +592,10 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
     } else {
         abort(mc_index_value.object_type)
     }
+
+    \ release rax and rdx
+    self.register_rdx.is_reserved = false
+    self.register_rax.is_reserved = false
 }
 
 func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_Branch_Instruction, mc_block: @MC_Block) -> Nothing {
