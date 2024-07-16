@@ -203,12 +203,17 @@ def test_dirs(paths):
         else:
             logger.warning(f"{COLOR_WARNING}Not a folder path: {path}{COLOR_RESET}")
 
-def compute_diff(expected, actual, actual_name='-'):
+def compute_diff(expected, actual):
     expected_lines = expected.splitlines()
     actual_lines = actual.splitlines()
     if actual_lines == expected_lines:
         return None
-    return '\n'.join(difflib.unified_diff(expected_lines, actual_lines, fromfile=expected, tofile=actual_name))
+    differ = difflib.Differ()
+    return '\n'.join(
+        line
+        for line in differ.compare(expected_lines, actual_lines)
+        if line.startswith((' ', '+', '-'))
+    )
 
 
 def build():
