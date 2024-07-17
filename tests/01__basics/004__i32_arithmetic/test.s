@@ -92,7 +92,7 @@ div:
   movl %edx, %esi
   movl %esi, %eax
   cltd
-  idiv %ecx
+  idivl %ecx
   jmp .L__div__E
 .L__div__E:
   add $0x10, %rsp
@@ -111,7 +111,7 @@ mod:
   movl %edx, %esi
   movl %esi, %eax
   cltd
-  idiv %ecx
+  idivl %ecx
   movl %edx, %eax
   jmp .L__mod__E
 .L__mod__E:

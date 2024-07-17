@@ -207,14 +207,81 @@ func write(file: @FILE, instruction: @MC_Instruction) -> @FILE {
     return instruction.write(file)
 }
 
+struct MC_Operand: Object {
+    size: i32
+
+    write = func (self: @MC_Operand, file: @FILE) -> @FILE {
+        abort(clone("Unsupported type: ").append(self.object_type.name))
+    }
+}
+
+func write(file: @FILE, operand: @MC_Operand) -> @FILE {
+    return operand.write(file)
+}
+
+struct MC_Immediate_Operand: MC_Operand(
+    write = func (self: @MC_Operand, file: @FILE) -> @FILE {
+        return file.write("$0x").write_hex(self.as(@MC_Immediate_Operand).value)
+    }
+) {
+    value: u64
+}
+
+struct MC_Register_Operand: MC_Operand(
+    write = func (self: @MC_Operand, file: @FILE) -> @FILE {
+        let self = self.as(@MC_Register_Operand)
+        if self.size == 1 {
+            return file.write(self.register.name_b)
+        } else if self.size == 2 {
+            return file.write(self.register.name_w)
+        } else if self.size == 4 {
+            return file.write(self.register.name_d)
+        } else if self.size == 8 {
+            return file.write(self.register.name_q)
+        }
+        abort(clone("Unsupported size: ").append(self.size))
+    }
+) {
+    register: @MC_Register
+}
+
+struct MC_Label_Operand: MC_Operand(
+    write = func (self: @MC_Operand, file: @FILE) -> @FILE {
+        let self = self.as(@MC_Label_Operand)
+        return file.write(self.label)
+    }
+) {
+    label: @String
+}
+
+struct MC_Memory_Operand: MC_Operand(
+    write = func (self: @MC_Operand, file: @FILE) -> @FILE {
+        let self = self.as(@MC_Memory_Operand)
+        return file.write(self.offset).write('(').write(self.base.name_q).write(')')
+    }
+) {
+    base: @MC_Register
+    offset: i32
+}
+
+struct MC_Stack_Operand: MC_Operand(
+    write = func (self: @MC_Operand, file: @FILE) -> @FILE {
+        let self = self.as(@MC_Stack_Operand)
+        return file.write(self.function.stack_size - self.stack_offset).write("(%rsp)")
+    }
+) {
+    function: @MC_Function
+    stack_offset: i32
+}
+
 struct MC_ADD_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_ADD_Instruction)
         return file.write("add").write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
-    source: @MC_Value
-    destination: @MC_Value
+    source: @MC_Operand
+    destination: @MC_Operand
 }
 
 struct MC_CALL_Instruction: MC_Instruction(
@@ -224,7 +291,7 @@ struct MC_CALL_Instruction: MC_Instruction(
         return file
     }
 ) {
-    callee: @MC_Value
+    callee: @MC_Operand
 }
 
 struct MC_CLTD_Instruction: MC_Instruction(
@@ -240,34 +307,36 @@ struct MC_CMP_Instruction: MC_Instruction(
         return file.write("cmp").write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
-    source: @MC_Value
-    destination: @MC_Value
+    source: @MC_Operand
+    destination: @MC_Operand
 }
 
 struct MC_DIV_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
-        return file.write("div").write(' ').write(self.as(@MC_DIV_Instruction).source)
+        let self = self.as(@MC_DIV_Instruction)
+        return file.write("div").write_size_suffix(self.source.size).write(' ').write(self.source)
     }
 ) {
-    source: @MC_Value
+    source: @MC_Operand
 }
 
 struct MC_IDIV_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
-        return file.write("idiv").write(' ').write(self.as(@MC_DIV_Instruction).source)
+        let self = self.as(@MC_IDIV_Instruction)
+        return file.write("idiv").write_size_suffix(self.source.size).write(' ').write(self.source)
     }
 ) {
-    source: @MC_Value
+    source: @MC_Operand
 }
 
 struct MC_IMUL_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let self = self.as(@MC_IMUL_Instruction)
-        return file.write("imul").write_size_suffix(self.source.data_size()).write(' ').write(self.source).write(", ").write(self.destination)
+        return file.write("imul").write_size_suffix(self.source.size).write(' ').write(self.source).write(", ").write(self.destination)
     }
 ) {
-    source: @MC_Value
-    destination: @MC_Value
+    source: @MC_Operand
+    destination: @MC_Operand
 }
 
 struct MC_JMP_Instruction: MC_Instruction(
@@ -302,31 +371,31 @@ struct MC_MOV_Instruction: MC_Instruction(
         if instruction.destination == null {
             abort("Illegal state: destination is null")
         }
-        let instruction_data_size = min(instruction.source.data_size(), instruction.destination.data_size())
+        let instruction_data_size = min(instruction.source.size, instruction.destination.size)
         return file.write("mov").write_size_suffix(instruction_data_size).write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
-    source: @MC_Value
-    destination: @MC_Value
+    source: @MC_Operand
+    destination: @MC_Operand
 }
 
 struct MC_MOVSX_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_MOVSX_Instruction)
-        return file.write("movs").write_size_suffix(instruction.source.data_size()).write_size_suffix(instruction.destination.data_size()).write(' ').write(instruction.source).write(", ").write(instruction.destination)
+        return file.write("movs").write_size_suffix(instruction.source.size).write_size_suffix(instruction.destination.size).write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
-    source: @MC_Value
-    destination: @MC_Value
+    source: @MC_Operand
+    destination: @MC_Operand
 }
 
 struct MC_MUL_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let self = self.as(@MC_MUL_Instruction)
-        return file.write("mul").write_size_suffix(self.source.data_size()).write(' ').write(self.source)
+        return file.write("mul").write_size_suffix(self.source.size).write(' ').write(self.source)
     }
 ) {
-    source: @MC_Value
+    source: @MC_Operand
 }
 
 struct MC_NEG_Instruction: MC_Instruction(
@@ -334,27 +403,25 @@ struct MC_NEG_Instruction: MC_Instruction(
         return file.write("neg").write(' ').write(self.as(@MC_NEG_Instruction).destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_POP_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_POP_Instruction)
-        let instruction_data_size = instruction.destination.data_size()
-        return file.write("pop").write_size_suffix(instruction_data_size).write(' ').write(instruction.destination)
+        return file.write("pop").write_size_suffix(instruction.destination.size).write(' ').write(instruction.destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_PUSH_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_PUSH_Instruction)
-        let instruction_data_size = instruction.source.data_size()
-        return file.write("push").write_size_suffix(instruction_data_size).write(' ').write(instruction.source)
+        return file.write("push").write_size_suffix(instruction.source.size).write(' ').write(instruction.source)
     }
 ) {
-    source: @MC_Value
+    source: @MC_Operand
 }
 
 struct MC_RET_Instruction: MC_Instruction(
@@ -370,7 +437,7 @@ struct MC_SETE_Instruction: MC_Instruction(
         return file.write("sete").write(' ').write(instruction.destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_SETG_Instruction: MC_Instruction(
@@ -379,7 +446,7 @@ struct MC_SETG_Instruction: MC_Instruction(
         return file.write("setg").write(' ').write(instruction.destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_SETGE_Instruction: MC_Instruction(
@@ -388,7 +455,7 @@ struct MC_SETGE_Instruction: MC_Instruction(
         return file.write("setge").write(' ').write(instruction.destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_SETL_Instruction: MC_Instruction(
@@ -397,7 +464,7 @@ struct MC_SETL_Instruction: MC_Instruction(
         return file.write("setl").write(' ').write(instruction.destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_SETLE_Instruction: MC_Instruction(
@@ -406,7 +473,7 @@ struct MC_SETLE_Instruction: MC_Instruction(
         return file.write("setle").write(' ').write(instruction.destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_SETNE_Instruction: MC_Instruction(
@@ -415,7 +482,7 @@ struct MC_SETNE_Instruction: MC_Instruction(
         return file.write("setne").write(' ').write(instruction.destination)
     }
 ) {
-    destination: @MC_Value
+    destination: @MC_Operand
 }
 
 struct MC_SUB_Instruction: MC_Instruction(
@@ -424,8 +491,8 @@ struct MC_SUB_Instruction: MC_Instruction(
         return file.write("sub").write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
-    source: @MC_Value
-    destination: @MC_Value
+    source: @MC_Operand
+    destination: @MC_Operand
 }
 
 struct MC_XOR_Instruction: MC_Instruction(
@@ -434,8 +501,8 @@ struct MC_XOR_Instruction: MC_Instruction(
         return file.write("xor").write(' ').write(instruction.source).write(", ").write(instruction.destination)
     }
 ) {
-    source: @MC_Value
-    destination: @MC_Value
+    source: @MC_Operand
+    destination: @MC_Operand
 }
 
 func write_size_suffix(file: @FILE, data_size: i32) -> @FILE {

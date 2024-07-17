@@ -159,14 +159,12 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
     self.save_callee_saved_registers(function.prologue_block)
     if function.stack_size > 0 {
         function.prologue_block.append(make @MC_SUB_Instruction(
-            source = make @MC_Immediate_Value(
-                ir_value = null
-                data_size = 8
+            source = make @MC_Immediate_Operand(
+                size = 8
                 value = function.stack_size.as(u64)
             )
-            destination = make @MC_Register_Value(
-                ir_value = null
-                data_size = 8
+            destination = make @MC_Register_Operand(
+                size = 8
                 register = self.register_rsp
             )
         ))
@@ -176,14 +174,12 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
     function.blocks.append(function.epilogue_block)
     if function.stack_size > 0 {
         function.epilogue_block.append(make @MC_ADD_Instruction(
-            source = make @MC_Immediate_Value(
-                ir_value = null
-                data_size = 8
+            source = make @MC_Immediate_Operand(
+                size = 8
                 value = function.stack_size.as(u64)
             )
-            destination = make @MC_Register_Value(
-                ir_value = null
-                data_size = 8
+            destination = make @MC_Register_Operand(
+                size = 8
                 register = self.register_rsp
             )
         ))
@@ -191,14 +187,12 @@ func convert_function(self: @MC_Generator, ir_function: @IR_Function) -> @MC_Fun
     self.restore_callee_saved_registers(function.epilogue_block)
     if ir_function.return_type is IR_Nothing_Type and ir_function.name.equals("main") {
         function.epilogue_block.append(make @MC_XOR_Instruction(
-            source = make @MC_Register_Value(
-                ir_value = null
-                data_size = 8
+            source = make @MC_Register_Operand(
+                size = 8
                 register = self.register_rax
             )
-            destination = make @MC_Register_Value(
-                ir_value = null
-                data_size = 8
+            destination = make @MC_Register_Operand(
+                size = 8
                 register = self.register_rax
             )
         ))
@@ -214,9 +208,8 @@ func save_callee_saved_registers(self: @MC_Generator, mc_block: @MC_Block) -> No
         let mc_register = mc_register_item.data
         if mc_register.is_callee_saved and mc_register.is_used {
             mc_block.append(make @MC_PUSH_Instruction(
-                source = make @MC_Register_Value(
-                    ir_value = null
-                    data_size = 8
+                source = make @MC_Register_Operand(
+                    size = 8
                     register = mc_register
                 )
             ))
@@ -231,9 +224,8 @@ func restore_callee_saved_registers(self: @MC_Generator, mc_block: @MC_Block) ->
         let mc_register = mc_register_item.data
         if mc_register.is_callee_saved and mc_register.is_used {
             mc_block.append(make @MC_POP_Instruction(
-                destination = make @MC_Register_Value(
-                    ir_value = null
-                    data_size = 8
+                destination = make @MC_Register_Operand(
+                    size = 8
                     register = mc_register
                 )
             ))
@@ -359,8 +351,8 @@ func get_jump_block(self: @MC_Generator, source_mc_block: @MC_Block, target_ir_b
                                     load_value = false
                                 )
                                 jump_mc_block.append(make @MC_MOV_Instruction(
-                                    source = live_value
-                                    destination = new_live_value
+                                    source = live_value.make_mc_operand(self)
+                                    destination = new_live_value.make_mc_operand(self)
                                 ))
                             }
                         } else {
@@ -492,12 +484,12 @@ func convert_add_instruction(self: @MC_Generator, ir_add_instruction: @IR_Add_In
         load_value = false
     )
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_add_instruction.get_left_value())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_add_instruction.get_left_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
     mc_block.append(make @MC_ADD_Instruction(
-        source = mc_block.find_value(ir_add_instruction.get_right_value())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_add_instruction.get_right_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
 }
 
@@ -529,10 +521,9 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
 
     let mc_array_pointer_value = mc_array_pointer_value.as(@MC_Local_Value)
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_array_pointer_value
-        destination = make @MC_Register_Value(
-            ir_value = null
-            data_size = 8
+        source = mc_array_pointer_value.make_mc_operand(self)
+        destination = make @MC_Register_Operand(
+            size = 8
             register = mc_array_item_pointer_value.register
         )
     ))
@@ -550,10 +541,9 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
         if mc_index_value_type is IR_Int32_Type {
             \ load index value into rax
             mc_block.append(make @MC_MOVSX_Instruction(
-                source = mc_index_value
-                destination = make @MC_Register_Value(
-                    ir_value = null
-                    data_size = 8
+                source = mc_index_value.make_mc_operand(self)
+                destination = make @MC_Register_Operand(
+                    size = 8
                     register = self.register_rax
                 )
             ))
@@ -563,28 +553,24 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
 
             \ multiply index value with item size
             mc_block.append(make @MC_IMUL_Instruction(
-                source = make @MC_Immediate_Value(
-                    ir_value = null
-                    data_size = 8
+                source = make @MC_Immediate_Operand(
+                    size = 8
                     value = mc_array_item_type.get_size().as(u64)
                 )
-                destination = make @MC_Register_Value(
-                    ir_value = null
-                    data_size = 8
+                destination = make @MC_Register_Operand(
+                    size = 8
                     register = self.register_rax
                 )
             ))
 
             \ add index value to array pointer
             mc_block.append(make @MC_ADD_Instruction(
-                source = make @MC_Register_Value(
-                    ir_value = null
-                    data_size = 8
+                source = make @MC_Register_Operand(
+                    size = 8
                     register = self.register_rax
                 )
-                destination = make @MC_Register_Value(
-                    ir_value = null
-                    data_size = 8
+                destination = make @MC_Register_Operand(
+                    size = 8
                     register = mc_array_item_pointer_value.register
                 )
             ))
@@ -609,11 +595,11 @@ func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_
         )
     }
     mc_block.append(make @MC_CMP_Instruction(
-        source = make @MC_Immediate_Value(
-            ir_value = null
+        source = make @MC_Immediate_Operand(
+            size = 1
             value = 0u64
         )
-        destination = mc_value
+        destination = mc_value.make_mc_operand(self)
     ))
 
     \ jump to true block
@@ -639,8 +625,8 @@ func convert_comparison_instruction(self: @MC_Generator, ir_comparison_instructi
     }
     let right_mc_value = mc_block.find_value(ir_comparison_instruction.get_right_value())
     mc_block.append(make @MC_CMP_Instruction(
-        source = right_mc_value
-        destination = left_mc_value
+        source = right_mc_value.make_mc_operand(self)
+        destination = left_mc_value.make_mc_operand(self)
     ))
     let result_mc_value = self.make_register_value(
         mc_block = mc_block
@@ -649,17 +635,17 @@ func convert_comparison_instruction(self: @MC_Generator, ir_comparison_instructi
         load_value = false
     )
     if ir_comparison_instruction is IR_Equality_Instruction {
-        mc_block.append(make @MC_SETE_Instruction(destination = result_mc_value))
+        mc_block.append(make @MC_SETE_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else if ir_comparison_instruction is IR_Greater_Than_Instruction {
-        mc_block.append(make @MC_SETG_Instruction(destination = result_mc_value))
+        mc_block.append(make @MC_SETG_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else if ir_comparison_instruction is IR_Greater_Than_Or_Equal_Instruction {
-        mc_block.append(make @MC_SETGE_Instruction(destination = result_mc_value))
+        mc_block.append(make @MC_SETGE_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else if ir_comparison_instruction is IR_Inequality_Instruction {
-        mc_block.append(make @MC_SETNE_Instruction(destination = result_mc_value))
+        mc_block.append(make @MC_SETNE_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else if ir_comparison_instruction is IR_Less_Than_Instruction {
-        mc_block.append(make @MC_SETL_Instruction(destination = result_mc_value))
+        mc_block.append(make @MC_SETL_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else if ir_comparison_instruction is IR_Less_Than_Or_Equal_Instruction {
-        mc_block.append(make @MC_SETLE_Instruction(destination = result_mc_value))
+        mc_block.append(make @MC_SETLE_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else {
         abort(ir_comparison_instruction.object_type)
     }
@@ -749,9 +735,9 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
     \ create call instruction
     let ir_function = ir_direct_call_instruction.function
     mc_block.append(make @MC_CALL_Instruction(
-        callee = make @MC_Global_Value(
-            ir_value = null
-            name = ir_function.name
+        callee = make @MC_Label_Operand(
+            size = 0
+            label = ir_function.name
         )
     ))
 
@@ -798,16 +784,15 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
     let left_mc_value = mc_block.find_value(left_ir_value)
     let right_mc_value = mc_block.find_value(right_ir_value)
     mc_block.append(make @MC_MOV_Instruction(
-        source = left_mc_value
-        destination = make @MC_Register_Value(
-            ir_value = null
-            data_size = left_mc_value.data_size()
+        source = left_mc_value.make_mc_operand(self)
+        destination = make @MC_Register_Operand(
+            size = left_mc_value.data_size()
             register = self.register_rax
         )
     ))
     mc_block.append(make @MC_CLTD_Instruction())
     mc_block.append(make @MC_IDIV_Instruction(
-        source = right_mc_value
+        source = right_mc_value.make_mc_operand(self)
     ))
 
     \ unreserve rax and rdx
@@ -829,8 +814,8 @@ func convert_load_instruction(self: @MC_Generator, ir_load_instruction: @IR_Load
         load_value = false
     )
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_load_instruction.get_value_pointer())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_load_instruction.get_value_pointer()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
 }
 
@@ -856,8 +841,8 @@ func convert_multiply_instruction(self: @MC_Generator, ir_multiply_instruction: 
         load_value = false
     )
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_multiply_instruction.get_left_value())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_multiply_instruction.get_left_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
     let right_value = mc_block.find_value(ir_multiply_instruction.get_right_value())
     if right_value is MC_Immediate_Value {
@@ -870,7 +855,7 @@ func convert_multiply_instruction(self: @MC_Generator, ir_multiply_instruction: 
         )
     }
     mc_block.append(make @MC_MUL_Instruction(
-        source = right_value
+        source = right_value.make_mc_operand(self)
     ))
     self.register_rdx.is_reserved = false
     self.register_rax.is_reserved = false
@@ -884,11 +869,11 @@ func convert_negate_instruction(self: @MC_Generator, ir_negate_instruction: @IR_
         load_value = false
     )
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_negate_instruction.get_value())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_negate_instruction.get_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
     mc_block.append(make @MC_NEG_Instruction(
-        destination = mc_register_value
+        destination = mc_register_value.make_mc_operand(self)
     ))
 }
 
@@ -900,17 +885,16 @@ func convert_not_instruction(self: @MC_Generator, ir_not_instruction: @IR_Not_In
         load_value = false
     )
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_not_instruction.get_value())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_not_instruction.get_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
     if ir_not_instruction.result_value.type is IR_Boolean_Type {
         mc_block.append(make @MC_XOR_Instruction(
-            source = make @MC_Immediate_Value(
-                ir_value = null
-                data_size = 1
+            source = make @MC_Immediate_Operand(
+                size = 1
                 value = 1u64
             )
-            destination = mc_register_value
+            destination = mc_register_value.make_mc_operand(self)
         ))
     } else {
         abort(ir_not_instruction.result_value.type.object_type)
@@ -962,8 +946,8 @@ func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_
 
 func convert_store_instruction(self: @MC_Generator, ir_store_instruction: @IR_Store_Instruction, mc_block: @MC_Block) -> Nothing {
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_store_instruction.get_value())
-        destination = mc_block.find_value(ir_store_instruction.get_value_pointer())
+        source = mc_block.find_value(ir_store_instruction.get_value()).make_mc_operand(self)
+        destination = mc_block.find_value(ir_store_instruction.get_value_pointer()).make_mc_operand(self)
     ))
 }
 
@@ -992,12 +976,12 @@ func convert_substract_instruction(self: @MC_Generator, ir_substract_instruction
         load_value = false
     )
     mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_substract_instruction.get_left_value())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_substract_instruction.get_left_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
     mc_block.append(make @MC_SUB_Instruction(
-        source = mc_block.find_value(ir_substract_instruction.get_right_value())
-        destination = mc_register_value
+        source = mc_block.find_value(ir_substract_instruction.get_right_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
     ))
 }
 
@@ -1110,8 +1094,8 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
     if load_value {
         let mc_value = mc_block.find_value(ir_value)
         mc_block.append(make @MC_MOV_Instruction(
-            source = mc_value
-            destination = mc_register_value
+            source = mc_value.make_mc_operand(self)
+            destination = mc_register_value.make_mc_operand(self)
         ))
     }
 
@@ -1119,4 +1103,52 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
     mc_block.live_values.prepend(mc_register_value)
 
     return mc_register_value
+}
+
+func make_mc_operand(self: @MC_Value, generator: @MC_Generator) -> @MC_Operand {
+    if self.ir_value == null {
+        abort("Illegal state: ir_value is null")
+    }
+    let operand_size = self.ir_value.type.get_size()
+
+    if self is MC_Register_Value {
+        let self = self.as(@MC_Register_Value)
+        if self.is_address {
+            return make @MC_Memory_Operand(
+                size = operand_size
+                base = self.register
+                offset = self.offset.as(i32)
+            )
+        }
+        return make @MC_Register_Operand(
+            size = operand_size
+            register = self.register
+        )
+    }
+
+    if self is MC_Local_Value {
+        let self = self.as(@MC_Local_Value)
+        return make @MC_Stack_Operand(
+            size = operand_size
+            function = self.function
+            stack_offset = self.stack_offset
+        )
+    }
+
+    if self is MC_Immediate_Value {
+        return make @MC_Immediate_Operand(
+            size = operand_size
+            value = self.as(@MC_Immediate_Value).value
+        )
+    }
+
+    if self is MC_Global_Value {
+        let self = self.as(@MC_Global_Value)
+        return make @MC_Label_Operand(
+            size = operand_size
+            label = self.name
+        )
+    }
+
+    abort(clone("Unsupported type: ").append(self.object_type.name))
 }
