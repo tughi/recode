@@ -93,7 +93,14 @@ func write_name(file: @FILE, block: @MC_Block) -> @FILE {
 \ MC_Value represents where is the IR_Value stored at the moment of execution 
 struct MC_Value: Object {
     ir_value: @IR_Value
-    data_size = 0
+
+    has_register = func (self: @MC_Value) -> bool {
+        return false
+    }
+
+    get_register = func (self: @MC_Value) -> @MC_Register {
+        abort(self.object_type.name.clone().append(" does not have a register"))
+    }
 
     write = func (self: @MC_Value, file: @FILE) -> @FILE {
         abort(clone("Unsupported type: ").append(self.object_type.name))
@@ -102,41 +109,6 @@ struct MC_Value: Object {
 
 func write(file: @FILE, value: @MC_Value) -> @FILE {
     return value.write(file)
-}
-
-func data_size(self: @MC_Value) -> i32 {
-    let data_size = self.data_size
-    if data_size == 0 {
-        if self.ir_value == null {
-            abort("Illegal state: ir_value is null")
-        }
-        let ir_type = self.ir_value.type
-        if ir_type is IR_Boolean_Type {
-            data_size = 1
-        } else if ir_type is IR_Int16_Type {
-            data_size = 2
-        } else if ir_type is IR_Int32_Type {
-            data_size = 4
-        } else if ir_type is IR_Int64_Type {
-            data_size = 8
-        } else if ir_type is IR_Int8_Type {
-            data_size = 1
-        } else if ir_type is IR_Pointer_Type {
-            data_size = 8
-        } else if ir_type is IR_UInt16_Type {
-            data_size = 2
-        } else if ir_type is IR_UInt32_Type {
-            data_size = 4
-        } else if ir_type is IR_UInt64_Type {
-            data_size = 8
-        } else if ir_type is IR_UInt8_Type {
-            data_size = 1
-        } else {
-            abort(clone("Unsupported type: ").append(ir_type.object_type.name))
-        }
-        self.data_size = data_size
-    }
-    return data_size
 }
 
 \ MC_Global_Value points to an absolute offset
@@ -168,30 +140,39 @@ struct MC_Local_Value: MC_Value(
     stack_offset: i32
 }
 
-struct MC_Register_Value: MC_Value(
+struct MC_Memory_Value: MC_Value(
+    has_register = func (self: @MC_Value) -> bool {
+        return true
+    }
+
+    get_register = func (self: @MC_Value) -> @MC_Register {
+        return self.as(@MC_Memory_Value).register
+    }
+
     write = func (self: @MC_Value, file: @FILE) -> @FILE {
-        let self = self.as(@MC_Register_Value)
-        if self.is_address {
-            return file.write(self.offset).write('(').write(self.register.name_q).write(')')
-        }
-        let data_size = self.data_size()
-        if data_size == 1 {
-            file.write(self.register.name_b)
-        } else if data_size == 2 {
-            file.write(self.register.name_w)
-        } else if data_size == 4 {
-            file.write(self.register.name_d)
-        } else if data_size == 8 {
-            file.write(self.register.name_q)
-        } else {
-            abort(clone("Unsupported data size: ").append(data_size))
-        }
-        return file
+        let self = self.as(@MC_Memory_Value)
+        return file.write(self.offset).write('(').write(self.register.name_q).write(')')
     }
 ) {
     register: @MC_Register
-    is_address = false
-    offset = 0i64
+    offset: i32
+}
+
+struct MC_Register_Value: MC_Value(
+    has_register = func (self: @MC_Value) -> bool {
+        return true
+    }
+
+    get_register = func (self: @MC_Value) -> @MC_Register {
+        return self.as(@MC_Register_Value).register
+    }
+
+    write = func (self: @MC_Value, file: @FILE) -> @FILE {
+        let self = self.as(@MC_Register_Value)
+        return file.write(self.register.name_q)
+    }
+) {
+    register: @MC_Register
 }
 
 struct MC_Instruction: Object {
@@ -505,14 +486,14 @@ struct MC_XOR_Instruction: MC_Instruction(
     destination: @MC_Operand
 }
 
-func write_size_suffix(file: @FILE, data_size: i32) -> @FILE {
-    if data_size == 1 {
+func write_size_suffix(file: @FILE, size: i32) -> @FILE {
+    if size == 1 {
         file.write('b')
-    } else if data_size == 2 {
+    } else if size == 2 {
         file.write('w')
-    } else if data_size == 4 {
+    } else if size == 4 {
         file.write('l')
-    } else if data_size == 8 {
+    } else if size == 8 {
         file.write('q')
     }
     return file
@@ -523,7 +504,6 @@ struct MC_Register: Object {
     name_d: @String
     name_w: @String
     name_b: @String
-    value: @MC_Value = null
     is_callee_saved = false
     is_caller_saved = false
     is_reserved = false

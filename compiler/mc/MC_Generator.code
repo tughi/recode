@@ -51,7 +51,7 @@ func make_mc_generator(file: @FILE) -> @MC_Generator {
     return self
 }
 
-func parameter_register(self: @MC_Generator, index: i32) -> @MC_Register {
+func get_parameter_register(self: @MC_Generator, index: i32) -> @MC_Register {
     let register: @MC_Register
     if index == 0 {
         register = self.register_rdi
@@ -85,7 +85,6 @@ func convert(self: @MC_Generator, ir_code: @IR_Code) -> @MC_Code {
             let global_value = make @MC_Global_Value(
                 name = ir_global_variable.name
                 ir_value = ir_global_variable.value_pointer
-                data_size = ir_global_variable.type.get_size()
             )
             mc_code.global_values.append(global_value)
         }
@@ -261,7 +260,7 @@ func convert_block(self: @MC_Generator, ir_block: @IR_Block, predecessor_block: 
                 let mc_parameter = self.make_register_value(
                     mc_block = mc_block
                     ir_value = ir_parameter.value
-                    register = self.parameter_register(it_index.as(i32))
+                    register = self.get_parameter_register(it_index.as(i32))
                     load_value = false
                 )
             }
@@ -511,20 +510,19 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
     self.register_rdx.is_reserved = true
 
     let mc_array_pointer_value = mc_block.find_value(ir_array_item_offset_instruction.get_array_pointer())
-    let mc_array_item_pointer_value = self.make_register_value(
+    let mc_array_item_pointer_value = self.make_memory_value(
         mc_block = mc_block
         ir_value = ir_array_item_offset_instruction.result_value
         register = self.find_free_caller_saved_register(mc_block)
-        load_value = false
+        offset = 0
     )
-    mc_array_item_pointer_value.is_address = true
 
     let mc_array_pointer_value = mc_array_pointer_value.as(@MC_Local_Value)
     mc_block.append(make @MC_MOV_Instruction(
         source = mc_array_pointer_value.make_mc_operand(self)
         destination = make @MC_Register_Operand(
             size = 8
-            register = mc_array_item_pointer_value.register
+            register = mc_array_item_pointer_value.get_register()
         )
     ))
 
@@ -534,7 +532,7 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
     if mc_index_value is MC_Immediate_Value {
         let mc_index_value = mc_index_value.as(@MC_Immediate_Value)
         \ set address offset
-        mc_array_item_pointer_value.offset = mc_index_value.value.as(i64) * mc_array_item_type.get_size().as(i64)
+        mc_array_item_pointer_value.offset = mc_index_value.value.as(i32) * mc_array_item_type.get_size()
     } else if mc_index_value is MC_Register_Value {
         let mc_index_value = mc_index_value.as(@MC_Register_Value)
         let mc_index_value_type = mc_index_value.ir_value.type
@@ -571,7 +569,7 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
                 )
                 destination = make @MC_Register_Operand(
                     size = 8
-                    register = mc_array_item_pointer_value.register
+                    register = mc_array_item_pointer_value.get_register()
                 )
             ))
         }
@@ -586,7 +584,7 @@ func convert_array_item_offset_instruction(self: @MC_Generator, ir_array_item_of
 
 func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_Branch_Instruction, mc_block: @MC_Block) -> Nothing {
     let mc_value = mc_block.find_value(ir_branch_instruction.get_condition())
-    if mc_value is not MC_Register_Value {
+    if not mc_value.has_register() {
         mc_value = self.make_register_value(
             mc_block = mc_block
             ir_value = mc_value.ir_value
@@ -615,7 +613,7 @@ func convert_branch_instruction(self: @MC_Generator, ir_branch_instruction: @IR_
 
 func convert_comparison_instruction(self: @MC_Generator, ir_comparison_instruction: @IR_Comparison_Instruction, mc_block: @MC_Block) -> Nothing {
     let left_mc_value = mc_block.find_value(ir_comparison_instruction.get_left_value())
-    if left_mc_value is not MC_Register_Value {
+    if not left_mc_value.has_register() {
         left_mc_value = self.make_register_value(
             mc_block = mc_block
             ir_value = left_mc_value.ir_value
@@ -698,17 +696,13 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
         ir_direct_call_instruction.next_instruction.live_in_values.for_each() {
             let ir_value = it
             if ir_value != ir_direct_call_instruction.result_value {
-                let mc_register_value = mc_block.find_register_value(it)
-                if mc_register_value != null and mc_register_value.register.is_caller_saved {
+                let mc_value = mc_block.find_live_value_in_register(ir_value)
+                if mc_value != null and mc_value.get_register().is_caller_saved {
                     \ move value to callee saved register
-                    let new_mc_register_value = self.make_register_value(
-                        mc_block = mc_block
-                        ir_value = ir_value
-                        mc_register = self.find_free_callee_saved_register(mc_block)
-                        load_value = true
-                    )
-                    new_mc_register_value.register.is_used = true
-                    mc_block.live_values.remove(mc_register_value).prune()
+                    let new_mc_register = self.find_free_callee_saved_register(mc_block)
+                    let new_mc_register_value = self.copy_register_value(mc_block, mc_value, new_mc_register)
+                    new_mc_register.is_used = true
+                    mc_block.live_values.remove(mc_value).prune()
                 }
             }
         }
@@ -718,14 +712,14 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
     if ir_direct_call_instruction.arguments_size > 0 {
         let argument_index = 0
         while argument_index < ir_direct_call_instruction.arguments_size {
-            let parameter_register = self.parameter_register(argument_index)
+            let parameter_register = self.get_parameter_register(argument_index)
             if not parameter_register.is_free(mc_block) {
                 abort("Release parameter register: ".clone().append(parameter_register.name_q))
             }
             self.make_register_value(
                 mc_block = mc_block
                 ir_value = ir_direct_call_instruction.get_argument_value(argument_index)
-                mc_register = self.parameter_register(argument_index)
+                mc_register = self.get_parameter_register(argument_index)
                 load_value = true
             )
             argument_index = argument_index + 1
@@ -786,7 +780,7 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
     mc_block.append(make @MC_MOV_Instruction(
         source = left_mc_value.make_mc_operand(self)
         destination = make @MC_Register_Operand(
-            size = left_mc_value.data_size()
+            size = left_mc_value.ir_value.type.get_size()
             register = self.register_rax
         )
     ))
@@ -845,7 +839,7 @@ func convert_multiply_instruction(self: @MC_Generator, ir_multiply_instruction: 
         destination = mc_register_value.make_mc_operand(self)
     ))
     let right_value = mc_block.find_value(ir_multiply_instruction.get_right_value())
-    if right_value is MC_Immediate_Value {
+    if not right_value.has_register() {
         \ move right value to register
         right_value = self.make_register_value(
             mc_block = mc_block
@@ -922,7 +916,7 @@ func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_
         if return_mc_value is MC_Register_Value {
             let return_mc_value = return_mc_value.as(@MC_Register_Value)
             if return_mc_value.register is not MC_Register_RAX {
-                return_mc_value = self.make_register_value(
+                self.make_register_value(
                     mc_block = mc_block
                     ir_value = return_mc_value.ir_value
                     mc_register = self.register_rax
@@ -930,7 +924,7 @@ func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_
                 )
             }
         } else {
-            return_mc_value = self.make_register_value(
+            self.make_register_value(
                 mc_block = mc_block
                 ir_value = return_mc_value.ir_value
                 mc_register = self.register_rax
@@ -1009,8 +1003,8 @@ func is_free(self: @MC_Register, mc_block: @MC_Block) -> bool {
     if self.is_reserved {
         return false
     }
-    let mc_register_value = mc_block.find_register_value(self)
-    return mc_register_value == null
+    let mc_value = mc_block.find_live_value_in_register(self)
+    return mc_value == null
 }
 
 func find_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Value {
@@ -1031,11 +1025,10 @@ func find_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Value {
     abort("Value not found: ".clone().append(ir_value.name))
 }
 
-func find_register_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Register_Value {
+func find_live_value_in_register(self: @MC_Block, ir_value: @IR_Value) -> @MC_Value {
     self.live_values.for_each() {
         let mc_value = it
-        if mc_value is MC_Register_Value {
-            let mc_value = mc_value.as(@MC_Register_Value)
+        if mc_value.has_register() {
             if mc_value.ir_value == ir_value {
                 return mc_value
             }
@@ -1044,12 +1037,11 @@ func find_register_value(self: @MC_Block, ir_value: @IR_Value) -> @MC_Register_V
     return null
 }
 
-func find_register_value(self: @MC_Block, register: @MC_Register) -> @MC_Register_Value {
+func find_live_value_in_register(self: @MC_Block, register: @MC_Register) -> @MC_Value {
     self.live_values.for_each() {
         let mc_value = it
-        if mc_value is MC_Register_Value {
-            let mc_value = mc_value.as(@MC_Register_Value)
-            if mc_value.register == register {
+        if mc_value.has_register() {
+            if mc_value.get_register() == register {
                 return mc_value
             }
         }
@@ -1058,26 +1050,21 @@ func find_register_value(self: @MC_Block, register: @MC_Register) -> @MC_Registe
 }
 
 func release_register(self: @MC_Generator, block: @MC_Block, register: @MC_Register) -> Nothing {
-    let value = block.find_register_value(register)
+    let value = block.find_live_value_in_register(register)
     if value != null {
         \ move value to another free register
-        let new_value = self.make_register_value(
-            mc_block = block
-            ir_value = value.ir_value
-            register = self.find_free_caller_saved_register(block)
-            load_value = true
-        )
+        self.copy_register_value(block, value, self.find_free_caller_saved_register(block))
         block.live_values.remove(value).prune()
     }
 }
 
 func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR_Value, mc_register: @MC_Register, load_value: bool) -> @MC_Register_Value {
     \ make sure register is free
-    let mc_register_value = mc_block.find_register_value(mc_register)
-    if mc_register_value != null {
-        if mc_register_value.ir_value == ir_value {
+    let mc_value = mc_block.find_live_value_in_register(mc_register)
+    if mc_value != null {
+        if mc_value.ir_value == ir_value and mc_value is MC_Register_Value {
             \ register is already loaded
-            return mc_register_value
+            return mc_value.as(@MC_Register_Value)
         }
 
         stderr.write(self.current_function).end_line()
@@ -1105,6 +1092,66 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
     return mc_register_value
 }
 
+func make_memory_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR_Value, mc_register: @MC_Register, offset: i32) -> @MC_Memory_Value {
+    \ make sure register is free
+    let mc_value = mc_block.find_live_value_in_register(mc_register)
+    if mc_value != null {
+        if mc_value.ir_value == ir_value and mc_value is MC_Memory_Value {
+            \ register is already loaded
+            return mc_value.as(@MC_Memory_Value)
+        }
+
+        stderr.write(self.current_function).end_line()
+        abort("Register ".clone().append(mc_register.name_q).append(" is not free"))
+    }
+
+    \ create register value
+    let mc_memory_value = make @MC_Memory_Value(
+        ir_value = ir_value
+        register = mc_register
+        offset = offset
+    )
+
+    \ add register value to live values
+    mc_block.live_values.prepend(mc_memory_value)
+
+    return mc_memory_value
+}
+
+func copy_register_value(self: @MC_Generator, mc_block: @MC_Block, mc_value: @MC_Value, mc_register: @MC_Register) -> @MC_Value {
+    if mc_value is MC_Register_Value {
+        let mc_value = mc_value.as(@MC_Register_Value)
+        let new_mc_value = self.make_register_value(
+            mc_block = mc_block
+            ir_value = mc_value.ir_value
+            mc_register = mc_register
+            load_value = true
+        )
+        return new_mc_value
+    }
+    if mc_value is MC_Memory_Value {
+        let mc_value = mc_value.as(@MC_Memory_Value)
+        let new_mc_value = self.make_memory_value(
+            mc_block = mc_block
+            ir_value = mc_value.ir_value
+            mc_register = mc_register
+            offset = mc_value.offset
+        )
+        mc_block.append(make @MC_MOV_Instruction(
+            source = make @MC_Register_Operand(
+                size = mc_value.ir_value.type.get_size()
+                register = mc_value.register
+            )
+            destination = make @MC_Register_Operand(
+                size = mc_value.ir_value.type.get_size()
+                register = mc_register
+            )
+        ))
+        return new_mc_value
+    }
+    abort(mc_value.object_type)
+}
+
 func make_mc_operand(self: @MC_Value, generator: @MC_Generator) -> @MC_Operand {
     if self.ir_value == null {
         abort("Illegal state: ir_value is null")
@@ -1113,16 +1160,18 @@ func make_mc_operand(self: @MC_Value, generator: @MC_Generator) -> @MC_Operand {
 
     if self is MC_Register_Value {
         let self = self.as(@MC_Register_Value)
-        if self.is_address {
-            return make @MC_Memory_Operand(
-                size = operand_size
-                base = self.register
-                offset = self.offset.as(i32)
-            )
-        }
         return make @MC_Register_Operand(
             size = operand_size
             register = self.register
+        )
+    }
+
+    if self is MC_Memory_Value {
+        let self = self.as(@MC_Memory_Value)
+        return make @MC_Memory_Operand(
+            size = operand_size
+            base = self.register
+            offset = self.offset
         )
     }
 
