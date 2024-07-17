@@ -1,0 +1,55 @@
+func main(argc: i32, argv: [[u8; ?]; ?]) {
+    if argc != 2 {
+        exit(1)
+    }
+
+    let tokenizer = make @Tokenizer(
+        data = argv[1]
+        index = 0
+    )
+
+    while has_next(tokenizer) {
+        let token = next_token(tokenizer)
+        if token.kind == 0 {
+            break
+        }
+        fputc(token.value, stdout)
+    }
+}
+
+struct Tokenizer {
+    data: [u8; ?]
+    index: i32
+}
+
+func has_next(self: @Tokenizer) -> bool {
+    return self.data[self.index] != 0
+}
+
+func next_token(self: @Tokenizer) -> @Token {
+    let value = self.data[self.index]
+    self.index = self.index + 1
+    return make @Token(
+        kind = 1
+        value = value
+    )
+}
+
+struct Token {
+    kind: i32
+    value: u8
+}
+
+\ ------------ LibC ------------
+
+external type FILE
+
+external stdin: @FILE
+external stdout: @FILE
+external stderr: @FILE
+
+external func fputc(c: u8, file: @FILE) -> i32
+
+external func malloc(size: u64) -> @Any
+
+external func exit(code: i32)

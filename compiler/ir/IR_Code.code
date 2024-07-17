@@ -42,6 +42,9 @@ func get_size(self: @IR_Type) -> i32 {
     return self.size
 }
 
+struct IR_Any_Type: IR_Type(name = "Any") {
+}
+
 struct IR_Boolean_Type: IR_Type(name = "bool", size = 1) {
 }
 
@@ -668,6 +671,15 @@ func init(self: @IR_Load_Instruction, value_pointer: @IR_Value) -> @IR_Load_Inst
 
 func get_value_pointer(self: @IR_Load_Instruction) -> @IR_Value {
     return self.operand_values.get("value_pointer")
+}
+
+struct IR_Malloc_Instruction: IR_Instruction(
+    print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
+        let instruction = self.as(@IR_Malloc_Instruction)
+        file.write("malloc ").write(instruction.type.name)
+    }
+) {
+    type: @IR_Type
 }
 
 struct IR_Modulo_Instruction: IR_Binary_Instruction(

@@ -54,6 +54,7 @@ struct IR_Loop {
 
 func create_ir_builder(checked_code: @Checked_Code) -> @IR_Builder {
     let types = make @List[@IR_Type]()
+    types.append(make @IR_Any_Type())
     types.append(make @IR_Boolean_Type())
     types.append(make @IR_Int8_Type())
     types.append(make @IR_Int16_Type())
@@ -1009,6 +1010,64 @@ func convert_logic_or_expression(self: @IR_Builder, checked_expression: @Checked
 
 func convert_make_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression, expected_type: @IR_Type) -> @IR_Value {
     let expression_type = self.convert_type(checked_expression.type)
+    if expression_type is IR_Pointer_Type {
+        let pointed_type = expression_type.as(@IR_Pointer_Type).pointed_type
+        if pointed_type is IR_Struct_Type {
+            let struct_type = pointed_type.as(@IR_Struct_Type)
+            \ find malloc function
+            let checked_malloc_function: @Checked_Function_Symbol = null
+            self.checked_code.functions.for_each() {
+                if it.name.equals("malloc") {
+                    if it.parameters.size == 1 and it.parameters.first().type is Checked_UInt64_Type {
+                        checked_malloc_function = it
+                    }
+                }
+            }
+            if checked_malloc_function == null {
+                abort(checked_expression.location, "Missing malloc function")
+            }
+            \ call malloc
+            let ir_malloc_function = self.global_context.find_symbol(checked_malloc_function)
+            if ir_malloc_function == null or ir_malloc_function is not IR_Function {
+                abort(checked_expression.location, "Missing IR_Function for Checked_Function_Symbol: ".clone().append(checked_malloc_function.name))
+            }
+            let ir_malloc_function = ir_malloc_function.as(@IR_Function)
+            let ir_malloc_call_arguments = make @List[@IR_Call_Argument]()
+            let ir_malloc_size = struct_type.get_size().as(u64)
+            ir_malloc_call_arguments.append(make @IR_Call_Argument(
+                name = "size"
+                value = self.append(
+                    create_ir_constant_instruction(
+                        self.create_temp_value(self.find_named_type("u64"))
+                        make @Integer_Token(
+                            lexeme = "".clone().append(ir_malloc_size)
+                            location = checked_expression.location
+                            value = ir_malloc_size
+                            negative = false
+                            type = "u64"
+                        )
+                    )
+                    checked_expression.location
+                )
+            ))
+            let value = self.append(
+                create_ir_direct_call_instruction(
+                    self.create_temp_value(expression_type)
+                    ir_malloc_call_arguments
+                    ir_malloc_function
+                )
+                checked_expression.location
+            )
+            \ store struct members
+            self.convert_store_value(
+                value
+                self.convert_struct_literal_expression(checked_expression, struct_type)
+                checked_expression.location
+            )
+            return value
+        }
+        abort(checked_expression.location, expression_type.object_type)
+    }
     if expression_type is IR_Struct_Type {
         return self.convert_struct_literal_expression(checked_expression, expression_type.as(@IR_Struct_Type))
     }

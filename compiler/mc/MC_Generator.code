@@ -682,6 +682,11 @@ func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Const
                 ir_value = ir_instruction.result_value
                 value = (value.as(u8)).as(u64)
             ))
+        } else if ir_instruction.result_value.type is IR_UInt64_Type {
+            mc_block.live_values.prepend(make @MC_Immediate_Value(
+                ir_value = ir_instruction.result_value
+                value = value
+            ))
         } else {
             abort(ir_instruction.result_value.type.object_type)
         }
