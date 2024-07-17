@@ -401,7 +401,7 @@ func get_jump_block(self: @MC_Generator, source_mc_block: @MC_Block, target_ir_b
 func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, mc_block: @MC_Block) -> Nothing {
     stderr.debug().write("Converting instruction: ").reset()
     if ir_instruction.result_value != null {
-        stderr.write(ir_instruction.result_value).write(" = ")
+        stderr.write(ir_instruction.result_value).write(": ").write(ir_instruction.result_value.type.name).write(" = ")
     }
     ir_instruction.print(stderr)
     stderr.end_line()
@@ -949,14 +949,34 @@ func convert_struct_member_offset_instruction(self: @MC_Generator, ir_struct_mem
     let mc_struct_pointer_value = mc_block.find_value(ir_struct_member_offset_instruction.get_struct_pointer())
     let ir_struct_type_member = ir_struct_member_offset_instruction.struct_type_member
 
-    if mc_struct_pointer_value is MC_Local_Value {
+    let mc_struct_member_pointer_value = self.make_memory_value(
+        mc_block = mc_block
+        ir_value = ir_struct_member_offset_instruction.result_value
+        register = self.find_free_caller_saved_register(mc_block)
+        offset = ir_struct_type_member.offset
+    )
+
+    if mc_struct_pointer_value is MC_Memory_Value or mc_struct_pointer_value is MC_Local_Value {
         let mc_struct_pointer_value = mc_struct_pointer_value.as(@MC_Local_Value)
-        let mc_struct_member_pointer_value = make @MC_Local_Value(
-            ir_value = ir_struct_member_offset_instruction.result_value
-            function = mc_block.function
-            stack_offset = mc_struct_pointer_value.stack_offset - ir_struct_type_member.offset
-        )
-        mc_block.live_values.prepend(mc_struct_member_pointer_value)
+        mc_block.append(make @MC_LEA_Instruction(
+            source = mc_struct_pointer_value.make_mc_operand(self)
+            destination = make @MC_Register_Operand(
+                size = 8
+                register = mc_struct_member_pointer_value.register
+            )
+        ))
+    } else if mc_struct_pointer_value is MC_Register_Value {
+        let mc_struct_pointer_value = mc_struct_pointer_value.as(@MC_Register_Value)
+        mc_block.append(make @MC_MOV_Instruction(
+            source = make @MC_Register_Operand(
+                size = 8
+                register = mc_struct_pointer_value.register
+            )
+            destination = make @MC_Register_Operand(
+                size = 8
+                register = mc_struct_member_pointer_value.register
+            )
+        ))
     } else {
         abort(mc_struct_pointer_value.object_type)
     }

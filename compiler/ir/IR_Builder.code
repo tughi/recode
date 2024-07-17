@@ -1028,6 +1028,16 @@ func convert_member_access_expression(self: @IR_Builder, checked_expression: @Ch
 func convert_member_access_expression_pointer(self: @IR_Builder, checked_expression: @Checked_Member_Access_Expression, expected_type: @IR_Type) -> @IR_Value {
     let value_pointer = self.convert_expression_pointer(checked_expression.object_expression, null)
     let value_type = value_pointer.type.as(@IR_Pointer_Type).pointed_type
+    if value_type is IR_Pointer_Type {
+        let pointer_type = value_type.as(@IR_Pointer_Type)
+        value_pointer = self.append(
+            make @IR_Load_Instruction(
+                result_value = self.create_temp_value(pointer_type)
+            ).init(value_pointer)
+            checked_expression.object_expression.location
+        )
+        value_type = pointer_type.pointed_type
+    }
     if value_type is not IR_Struct_Type {
         abort(checked_expression.object_expression.location, "Unexpected value type")
     }
