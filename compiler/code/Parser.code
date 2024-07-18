@@ -297,7 +297,7 @@ func parse_external_type(self: @Parser) -> @Parsed_External_Type_Statement {
 }
 
 \ struct
-\   | "struct" IDENTIFIER type_parameters? ( ":" type ( "(" call_arguments? ")" )? )? "{" <EOL> ( IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )? <EOL> )* "}"
+\   | "struct" IDENTIFIER type_parameters? ( ":" type ( "(" call_arguments? ")" )? )? "{" <EOL> ( struct_member <EOL> | struct_method <EOL> )* "}"
 func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
     self.consume(required_struct)
     self.consume_space(1)
@@ -327,31 +327,15 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
     let struct_members = make @List[@Parsed_Struct_Member]()
+    let struct_methods = make @List[@Parsed_Struct_Method]()
     while not self.matches(optional_space, required_close_brace) {
         if not self.consume_empty_line() {
             self.consume_space(self.current_alignment * 4)
-            let struct_member_name = self.consume(required_identifier).as(@Identifier_Token)
-            let struct_member_value_type: @Parsed_Type = null
-            if self.matches(optional_space, required_colon) {
-                self.consume_space(0)
-                self.consume(required_colon)
-                self.consume_space(1)
-                struct_member_value_type = self.parse_type()
+            if self.matches(required_func) {
+                struct_methods.append(self.parse_struct_method())
+            } else {
+                struct_members.append(self.parse_struct_member())
             }
-            let struct_member_value_expression: @Parsed_Expression = null
-            if self.matches(optional_space, required_equals) {
-                self.consume_space(1)
-                self.consume(required_equals)
-                self.consume_space(1)
-                struct_member_value_expression = self.parse_expression()
-            }
-            self.consume_end_of_line()
-            struct_members.append(make @Parsed_Struct_Member(
-                location = struct_member_name.location
-                name = struct_member_name
-                type = struct_member_value_type
-                default_value_expression = struct_member_value_expression
-            ))
         }
     }
     self.current_alignment = self.current_alignment - 1
@@ -361,6 +345,7 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
         location = struct_name.location
         name = struct_name
         members = struct_members
+        methods = struct_methods
         super_type = struct_super_type
         super_arguments = struct_super_arguments
     )
@@ -373,6 +358,101 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
         )
     }
     return struct_statement
+}
+
+\ struct_member
+\   | IDENTIFIER ( ":" type ( "=" expression )? | "=" expression )?
+func parse_struct_member(self: @Parser) -> @Parsed_Struct_Member {
+    let struct_member_name = self.consume(required_identifier).as(@Identifier_Token)
+    let struct_member_value_type: @Parsed_Type = null
+    if self.matches(optional_space, required_colon) {
+        self.consume_space(0)
+        self.consume(required_colon)
+        self.consume_space(1)
+        struct_member_value_type = self.parse_type()
+    }
+    let struct_member_value_expression: @Parsed_Expression = null
+    if self.matches(optional_space, required_equals) {
+        self.consume_space(1)
+        self.consume(required_equals)
+        self.consume_space(1)
+        struct_member_value_expression = self.parse_expression()
+    }
+    self.consume_end_of_line()
+    return make @Parsed_Struct_Member(
+        location = struct_member_name.location
+        name = struct_member_name
+        type = struct_member_value_type
+        default_value_expression = struct_member_value_expression
+    )
+}
+
+\ struct_method
+\   | "func" IDENTIFIER method_signature block
+func parse_struct_method(self: @Parser) -> @Parsed_Struct_Method {
+    self.consume(required_func)
+    self.consume_space(1)
+    let method_name = self.consume(required_identifier).as(@Identifier_Token)
+    self.consume_space(0)
+    let method_signature = self.parse_method_signature()
+    if not self.matches(optional_space, required_open_brace) {
+        abort(method_name.location, "Missing method body")
+    }
+    self.consume_space(1)
+    let method_body = self.parse_block()
+    return make @Parsed_Struct_Method(
+        location = method_name.location
+        name = method_name
+        type = make @Parsed_Function_Type(
+            location = method_name.location
+            type_parameters = null
+            parameters = method_signature.parameters
+            return_type = method_signature.return_type
+        )
+        body = method_body
+    )
+}
+
+\ method_signature
+\   | parameters ( "->" type )?
+func parse_method_signature(self: @Parser) -> @Parsed_Function_Signature {
+    let method_parameters = self.parse_method_parameters()
+    let method_return_type: @Parsed_Type = null
+    if self.matches(optional_space, required_hyphen) {
+        self.consume_space(1)
+        self.consume(required_hyphen, required_greater_than)
+        self.consume_space(1)
+        method_return_type = self.parse_type()
+    }
+    return make @Parsed_Function_Signature(parameters = method_parameters, return_type = method_return_type)
+}
+
+\ method_parameters
+\   | "(" ( ( "self" | parameter ) ( "," parameter )* )? ")"
+func parse_method_parameters(self: @Parser) -> @List[@Parsed_Callable_Parameter] {
+    let parameters = make @List[@Parsed_Callable_Parameter]()
+    self.consume(required_open_paren)
+    self.consume_space(0)
+    if not self.matches(required_close_paren) {
+        if self.matches(required_self) {
+            let self_parameter = self.consume(required_self).as(@Identifier_Token)
+            parameters.append(make @Parsed_Callable_Parameter(
+                location = self_parameter.location
+                name = self_parameter
+                type = null
+            ))
+        } else {
+            parameters.append(self.parse_parameter())
+        }
+        while not self.matches(optional_space, required_close_paren) {
+            self.consume_space(0)
+            self.consume(required_comma)
+            self.consume_space(1)
+            parameters.append(self.parse_parameter())
+        }
+    }
+    self.consume(required_close_paren)
+    return parameters
 }
 
 \ type_parameters
@@ -1371,6 +1451,7 @@ let required_or: @Matcher = undefined
 let required_plus: @Matcher = undefined
 let required_question_mark: @Matcher = undefined
 let required_return: @Matcher = undefined
+let required_self: @Matcher = undefined
 let required_slash: @Matcher = undefined
 let required_string_literal: @Matcher = undefined
 let required_struct: @Matcher = undefined
@@ -1424,6 +1505,7 @@ func init_matchers() -> Nothing {
     required_plus = make @Other_Matcher(is_required = true, lexeme = "+")
     required_question_mark = make @Other_Matcher(is_required = true, lexeme = "?")
     required_return = make @Keyword_Matcher(is_required = true, lexeme = "return")
+    required_self = make @Keyword_Matcher(is_required = true, lexeme = "self")
     required_slash = make @Other_Matcher(is_required = true, lexeme = "/")
     required_string_literal = make @String_Literal_Matcher(is_required = true)
     required_struct = make @Keyword_Matcher(is_required = true, lexeme = "struct")

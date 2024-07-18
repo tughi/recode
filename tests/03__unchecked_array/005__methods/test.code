@@ -1,0 +1,16 @@
+struct Number {
+    value: i32
+
+    func get_value(self) -> i32 {
+        return self.value
+    }
+
+    func set_value(self, value: i32) {
+        self.value = value
+    }
+}
+
+func main() -> i32 {
+    let mode = make Number(value = 42)
+    return mode.get_value() - 42
+}

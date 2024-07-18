@@ -245,6 +245,7 @@ struct Parsed_Struct_Statement: Parsed_Type_Statement {
     super_type: @Parsed_Type
     super_arguments: @List[@Parsed_Call_Argument]
     members: @List[@Parsed_Struct_Member]
+    methods: @List[@Parsed_Struct_Method]
 }
 
 struct Parsed_Generic_Struct_Statement: Parsed_Type_Statement {
@@ -261,6 +262,13 @@ struct Parsed_Struct_Member {
     name: @Identifier_Token
     type: @Parsed_Type
     default_value_expression: @Parsed_Expression
+}
+
+struct Parsed_Struct_Method {
+    location: @Source_Location
+    name: @Identifier_Token
+    type: @Parsed_Function_Type
+    body: @Parsed_Block_Statement
 }
 
 struct Parsed_Assignment_Statement: Parsed_Statement {
