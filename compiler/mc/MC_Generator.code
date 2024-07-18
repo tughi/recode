@@ -944,10 +944,31 @@ func convert_return_instruction(self: @MC_Generator, ir_return_instruction: @IR_
 }
 
 func convert_store_instruction(self: @MC_Generator, ir_store_instruction: @IR_Store_Instruction, mc_block: @MC_Block) -> Nothing {
-    mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_store_instruction.get_value()).make_mc_operand(self)
-        destination = mc_block.find_value(ir_store_instruction.get_value_pointer()).make_mc_operand(self)
-    ))
+    let mc_value = mc_block.find_value(ir_store_instruction.get_value())
+    let mc_value_pointer = mc_block.find_value(ir_store_instruction.get_value_pointer())
+    if mc_value is MC_Local_Value and mc_value_pointer is MC_Local_Value {
+        \ use intermediate register to store value
+        let mc_register = self.find_free_caller_saved_register(mc_block)
+        mc_block.append(make @MC_LEA_Instruction(
+            source = mc_value.make_mc_operand(self)
+            destination = make @MC_Register_Operand(
+                size = 8
+                register = mc_register
+            )
+        ))
+        mc_block.append(make @MC_MOV_Instruction(
+            source = make @MC_Register_Operand(
+                size = 8
+                register = mc_register
+            )
+            destination = mc_value_pointer.make_mc_operand(self)
+        ))
+    } else {
+        mc_block.append(make @MC_MOV_Instruction(
+            source = mc_value.make_mc_operand(self)
+            destination = mc_value_pointer.make_mc_operand(self)
+        ))
+    }
 }
 
 func convert_struct_member_offset_instruction(self: @MC_Generator, ir_struct_member_offset_instruction: @IR_Struct_Member_Offset_Instruction, mc_block: @MC_Block) -> Nothing {
@@ -1104,11 +1125,21 @@ func make_register_value(self: @MC_Generator, mc_block: @MC_Block, ir_value: @IR
 
     \ load value to register
     if load_value {
-        let mc_value = mc_block.find_value(ir_value)
-        mc_block.append(make @MC_MOV_Instruction(
-            source = mc_value.make_mc_operand(self)
-            destination = mc_register_value.make_mc_operand(self)
-        ))
+        mc_value = mc_block.find_value(ir_value)
+        if mc_value is MC_Local_Value or mc_value is MC_Memory_Value {
+            mc_block.append(make @MC_LEA_Instruction(
+                source = mc_value.make_mc_operand(self)
+                destination = make @MC_Register_Operand(
+                    size = ir_value.type.get_size()
+                    register = mc_register
+                )
+            ))
+        } else {
+            mc_block.append(make @MC_MOV_Instruction(
+                source = mc_value.make_mc_operand(self)
+                destination = mc_register_value.make_mc_operand(self)
+            ))
+        }
     }
 
     \ add register value to live values

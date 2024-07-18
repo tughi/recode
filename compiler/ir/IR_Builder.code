@@ -1158,7 +1158,11 @@ func convert_not_equals_expression(self: @IR_Builder, checked_expression: @Check
 }
 
 func convert_reference_expression(self: @IR_Builder, checked_expression: @Checked_Reference_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert reference expression")
+    let object_expression = checked_expression.object_expression
+    if object_expression is Checked_Symbol_Expression {
+        return self.convert_expression_pointer(checked_expression.object_expression, expected_type)
+    }
+    abort(checked_expression.object_expression.location, object_expression.object_type)
 }
 
 func convert_struct_literal_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression, struct_type: @IR_Struct_Type) -> @IR_Value {

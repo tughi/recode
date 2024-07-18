@@ -122,6 +122,17 @@ References point to a value and can be created usig the `@` operator:
     let data = make Data()      \ local Data variable
     let data_ref = @data        \ reference to data's value
 
+Dereferencing is done via the `.@` operator:
+
+    let response = 0
+    let response_ref = @response
+    response_ref.@ = 42
+
+Struct member access uses auto-dereferencing. Following statements are the same:
+
+    let response = data_ref.value
+    let response = data_ref.@.value
+
 ## Nullable values
 
 Types suffixed with a `?` become nullable types, and require a `null` check to get to the its value.
