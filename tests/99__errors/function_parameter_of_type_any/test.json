@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/99__errors/function_parameter_of_type_any/test.code:1:18: Cannot use Any as parameter type"
+    ]
+}

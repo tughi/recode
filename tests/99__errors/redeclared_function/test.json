@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/99__errors/redeclared_function/test.code:5:6: Function declared first here: tests/99__errors/redeclared_function/test.code:1:6"
+    ]
+}

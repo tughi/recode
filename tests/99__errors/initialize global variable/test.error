@@ -1,1 +1,0 @@
-tests/99__errors/initialize global variable/test.code:1:13: Initialized global variables are not yet supported

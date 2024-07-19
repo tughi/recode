@@ -113,31 +113,39 @@ def test(paths, save=False, stage=1):
             ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'irl'), f'{test_dir}/test.ir'),
             ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'mc'), f'{test_dir}/test.s'),
         ]:
+            if os.path.exists(f'{test_dir}/test.json'):
+                test_data = json.loads(open(f'{test_dir}/test.json').read())
+            else:
+                test_data = {}
+
             compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
             if compiler_result.returncode != 0:
-                error_file = f'{test_dir}/test.error'
-                if os.path.exists(error_file):
-                    compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
-                    diff = compute_diff(open(error_file).read(), compiler_error)
-                    if diff:
-                        if save:
-                            open(error_file, 'w').write(compiler_error)
-                            save = False
-                            break
+                compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr).splitlines() if compiler_result.stderr else []
+
+                diff = compute_diff(
+                    json.dumps(test_data.get('error', []), indent=4),
+                    json.dumps(compiler_error, indent=4),
+                )
+                if diff:
+                    if save:
+                        open(f'{test_dir}/test.json', 'w').write(json.dumps(
+                            {
+                                **{k: v for k, v in test_data.items() if k not in {'result'}},
+                                'error': compiler_error,
+                            },
+                            indent=4,
+                        ))
+                        save = False
+                    else:
                         logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
                         trace(*compiler_command)
                         exit(1)
-                    break
-                else:
-                    if save:
-                        compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr) if compiler_result.stderr else ''
-                        open(error_file, 'w').write(compiler_error)
-                        save = False
-                        break
-                    logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_RESET}{compiler_result.stderr}")
+            else:
+                if not save and test_data.get('error'):
+                    logger.error(f"{COLOR_ERROR}Expected error\n{COLOR_RESET}")
                     trace(*compiler_command)
                     exit(1)
-            else:
+
                 if os.path.exists(test_file):
                     diff = compute_diff(open(test_file).read(), compiler_result.stdout)
                     if diff:
@@ -160,11 +168,6 @@ def test(paths, save=False, stage=1):
                     if not os.path.exists(test_binary) or os.path.getmtime(test_file) > os.path.getmtime(test_binary):
                         assemble(None, test_binary, input=compiler_result.stdout, text=True, check=True)
 
-                        if os.path.exists(f'{test_dir}/test.json'):
-                            test_data = json.loads(open(f'{test_dir}/test.json').read())
-                        else:
-                            test_data = {}
-
                         test_result = run(
                             [test_binary, *test_data.get('args', [])],
                             capture_output=True,
@@ -184,9 +187,13 @@ def test(paths, save=False, stage=1):
                         )
                         if diff:
                             if save:
-                                open(f'{test_dir}/test.json', 'w').write(
-                                    json.dumps({**test_data, 'result': actual_result}, indent=4)
-                                )
+                                open(f'{test_dir}/test.json', 'w').write(json.dumps(
+                                    {
+                                        **{k: v for k, v in test_data.items() if k not in {'error'}},
+                                        'result': actual_result,
+                                    },
+                                    indent=4,
+                                ))
                                 save = False
                             else:
                                 logger.error(f"{COLOR_ERROR}Unexpected result\n{COLOR_DEBUG}{diff}{COLOR_RESET}")

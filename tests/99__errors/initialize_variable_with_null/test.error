@@ -1,1 +1,0 @@
-tests/99__errors/initialize_variable_with_null/test.code:2:18: Incompatible types: got Null instead of i32
