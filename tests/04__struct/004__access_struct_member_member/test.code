@@ -10,8 +10,8 @@ struct Line {
 
 func main() -> i32 {
     let line = make Line(
-        p1 = make Point(x = 16, y = 32)
-        p2 = make Point(x = 48, y = 64)
+        p1: make Point(x: 16, y: 32)
+        p2: make Point(x: 48, y: 64)
     )
     return line.p2.y - 64
 }

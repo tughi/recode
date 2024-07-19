@@ -166,7 +166,7 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
         ))
     }
 
-    \ Prepare IR function blocks
+    \ prepare IR function blocks
     let ir_function_blocks: @List[@IR_Block]
     if checked_function_symbol.body != null {
         ir_function_blocks = make @List[@IR_Block]()
@@ -174,9 +174,18 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
         ir_function_blocks = null
     }
 
+    \ create unique IR function name
+    \ TODO: let the Checker create the unique name
+    let ir_function_name = checked_function_symbol.name.clone()
+    checked_function_symbol.function_type.parameters.for_each() {
+        if it.label != null {
+            ir_function_name.append("__").append(it.label)
+        }
+    }
+
     let ir_function = make @IR_Function(
         checked_symbol = checked_function_symbol
-        name = clone("").append(checked_function_symbol.name) \ TODO: Generate unique name using hex hash of parameter types
+        name = ir_function_name
         type = self.create_ir_pointer_type(ir_function_type)
         function_type = ir_function_type
         parameters = ir_function_parameters
@@ -791,8 +800,8 @@ func convert_call_arguments(self: @IR_Builder, checked_call_arguments: @List[@Ch
     checked_call_arguments.for_each() {
         let call_argument = it
         let call_argument_value = self.convert_expression(call_argument.expression, null)
-        if call_argument.name != null {
-            ir_call_arguments.append(make @IR_Call_Argument(name = call_argument.name, value = call_argument_value))
+        if call_argument.label != null {
+            ir_call_arguments.append(make @IR_Call_Argument(name = call_argument.label, value = call_argument_value))
             has_named_arguments = true
         } else {
             if has_named_arguments {

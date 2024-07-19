@@ -14,22 +14,22 @@ func main() -> i32 {
     )
 }
 
-func add(v1: i32, v2: i32) -> i32 {
+func add(anon v1: i32, anon v2: i32) -> i32 {
     return v1 + v2
 }
 
-func sub(v1: i32, v2: i32) -> i32 {
+func sub(anon v1: i32, anon v2: i32) -> i32 {
     return v1 - v2
 }
 
-func mul(v1: i32, v2: i32) -> i32 {
+func mul(anon v1: i32, anon v2: i32) -> i32 {
     return v1 * v2
 }
 
-func div(v1: i32, v2: i32) -> i32 {
+func div(anon v1: i32, anon v2: i32) -> i32 {
     return v1 / v2
 }
 
-func mod(v1: i32, v2: i32) -> i32 {
+func mod(anon v1: i32, anon v2: i32) -> i32 {
     return v1 // v2
 }

@@ -1,4 +1,4 @@
-external func exit(status: i32)
+external func exit(anon status: i32)
 
 func main() -> i32 {
     exit(0)

@@ -1,8 +1,8 @@
 func main() -> i32 {
-    return fibonacci(12) - 144
+    return fibonacci(of: 12) - 144
 }
 
-func fibonacci(n: i32) -> i32 {
+func fibonacci(of n: i32) -> i32 {
     if n <= 1 {
         return n
     }

@@ -1,5 +1,5 @@
 func main() -> i32 {
-    return fibonacci(12) - 144
+    return fibonacci(n: 12) - 144
 }
 
 func fibonacci(n: i32) -> i32 {

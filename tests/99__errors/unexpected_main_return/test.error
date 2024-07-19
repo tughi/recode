@@ -1,0 +1,1 @@
+tests/99__errors/unexpected_main_return/test.code:1:6: Unexpected main return type: u8

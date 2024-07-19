@@ -3,7 +3,7 @@ $main(): i32 {
   [ ]
   %1: i32 = const 12
   [ %1 ]
-  %2: i32 = call $fibonacci %1
+  %2: i32 = call $fibonacci__of %1
   [ %2 ]
   %3: i32 = const 144
   [ %2 %3 ]
@@ -13,7 +13,7 @@ $main(): i32 {
   [ ]
 }
 
-$fibonacci(%n: i32): i32 {
+$fibonacci__of(%n: i32): i32 {
 @1:
   [ %n ]
   %n.ptr: ptr<i32> = alloc i32
@@ -42,7 +42,7 @@ $fibonacci(%n: i32): i32 {
   [ %n.ptr %n.3 %3 ]
   %4: i32 = sub %n.3 %3
   [ %n.ptr %4 ]
-  %5: i32 = call $fibonacci %4
+  %5: i32 = call $fibonacci__of %4
   [ %5 %n.ptr ]
   %n.4: i32 = load %n.ptr
   [ %5 %n.4 ]
@@ -50,7 +50,7 @@ $fibonacci(%n: i32): i32 {
   [ %5 %n.4 %6 ]
   %7: i32 = sub %n.4 %6
   [ %5 %7 ]
-  %8: i32 = call $fibonacci %7
+  %8: i32 = call $fibonacci__of %7
   [ %5 %8 ]
   %9: i32 = add %5 %8
   [ %9 ]

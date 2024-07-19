@@ -1,7 +1,7 @@
-func main(argc: i32, argv: [[u8; ?]; ?]) {
+func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
     if argc == 1 {
         exit(1)
     }
 }
 
-external func exit(code: i32)
+external func exit(anon code: i32)

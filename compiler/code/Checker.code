@@ -37,6 +37,8 @@ struct Checker {
     global_symbols = make Checked_Symbols(parent = null)
     local_symbols: @Checked_Symbols
 
+    callables = make Map[@String, @Checked_Callable]()
+
     expected_return_type: @Checked_Type = null
 
     generic_struct_statements = make Map[@String, @Parsed_Generic_Struct_Statement]()
@@ -58,6 +60,15 @@ struct Checker {
     u8_type: @Checked_Type = undefined
     usize_type: @Checked_Type = undefined
     undefined_type: @Checked_Type = undefined
+}
+
+func add_callable(self: @Checker, callable: @Checked_Callable) -> Nothing {
+    let other_callable = self.callables.get(callable.name)
+    if other_callable != null {
+        stderr.write(other_callable.location).write(": ").warning().write("Callable declared first here").reset().end_line()
+        abort(callable.location, "Callable overloading is not supported")
+    }
+    self.callables.put(callable.name, callable)
 }
 
 func create_builtin_type_symbol(self: @Checker, type: @Checked_Builtin_Type) -> @Checked_Builtin_Type_Symbol {
@@ -97,22 +108,31 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
         } else if it is Parsed_Function_Statement {
             let parsed_function_statement = it.as(@Parsed_Function_Statement)
             if parsed_function_statement.type.type_parameters != null {
-                \ check for duplicates
-                self.generic_function_statements.for_each() {
-                    if parsed_function_statement.is_duplicate(it) {
-                        abort(parsed_function_statement.location, "Generic function declared first here: ".clone().append(it.location))
-                    }
-                }
-
                 \ generic functions are checked only during specialization
-                self.generic_function_statements.append(parsed_function_statement)
+                self.add_callable(
+                    make @Checked_Generic_Function(
+                        location = parsed_function_statement.location
+                        function_statement = parsed_function_statement
+                    ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
+                )
             } else {
-                self.create_function_symbol(parsed_function_statement, null)
+                self.add_callable(
+                    make @Checked_Function(
+                        location = parsed_function_statement.location
+                        function = self.create_function_symbol(parsed_function_statement, null)
+                    ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
+                )
             }
         } else if it is Parsed_Generic_Struct_Statement {
             \ already processed
         } else if it is Parsed_Macro_Statement {
             let parsed_macro_statement = it.as(@Parsed_Macro_Statement)
+            self.add_callable(
+                make @Checked_Macro(
+                    location = parsed_macro_statement.location
+                    macro_statement = parsed_macro_statement
+                ).init(parsed_macro_statement.name, parsed_macro_statement.type.parameters)
+            )
             self.macro_statements.append(parsed_macro_statement)
             self.global_symbols.append(make @Checked_Macro_Symbol(
                 location = parsed_macro_statement.location
@@ -193,9 +213,44 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
     let checked_function_type = self.convert_function_type(parsed_function_statement.type)
     self.local_symbols = parent_symbols
 
+    let checked_function_name = parsed_function_statement.name.lexeme
+
+    \ check main function
+    if checked_function_name.equals("main") {
+        if checked_function_type.return_type is not Checked_Int32_Type and checked_function_type.return_type is not Checked_Nothing_Type {
+            abort(parsed_function_statement.location, "Unexpected main return type: ".clone().append(checked_function_type.return_type.name))
+        }
+        let checked_function_parameters_item = checked_function_type.parameters.first_item
+        if checked_function_parameters_item != null {
+            \ first parameter is argc
+            if checked_function_parameters_item.data.label != null {
+                abort(checked_function_parameters_item.data.location, "Unexpected non-\"anon\" parameter")
+            }
+            if checked_function_parameters_item.data.type is not Checked_Int32_Type {
+                abort(checked_function_parameters_item.data.location, "Unexpected main parameter type: ".clone().append(checked_function_parameters_item.data.type.name))
+            }
+
+            checked_function_parameters_item = checked_function_parameters_item.next_item
+            if checked_function_parameters_item != null {
+                \ second parameter is argv
+                if checked_function_parameters_item.data.label != null {
+                    abort(checked_function_parameters_item.data.location, "Unexpected non-\"anon\" parameter")
+                }
+                if checked_function_parameters_item.data.type is not Checked_Unchecked_Array_Type or checked_function_parameters_item.data.type.as(@Checked_Unchecked_Array_Type).item_type is not Checked_Unchecked_Array_Type or checked_function_parameters_item.data.type.as(@Checked_Unchecked_Array_Type).item_type.as(@Checked_Unchecked_Array_Type).item_type is not Checked_UInt8_Type {
+                    abort(checked_function_parameters_item.data.location, "Unexpected main parameter type: ".clone().append(checked_function_parameters_item.data.type.name))
+                }
+
+                checked_function_parameters_item = checked_function_parameters_item.next_item
+                if checked_function_parameters_item != null {
+                    abort(checked_function_parameters_item.data.location, "Unexpected main parameter")
+                }
+            }
+        }
+    }
+
     \ check for duplicates
     self.checked_code.functions.for_each() {
-        if it.name.equals(parsed_function_statement.name.lexeme) and it.function_type.name.equals(checked_function_type.name) {
+        if it.name.equals(checked_function_name) and it.function_type.name.equals(checked_function_type.name) {
             abort(parsed_function_statement.location, "Function declared first here: ".clone().append(it.location))
         }
     }
@@ -203,7 +258,7 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
     \ create function
     let checked_function_symbol = make @Checked_Function_Symbol(
         location = parsed_function_statement.location
-        name = parsed_function_statement.name.lexeme
+        name = checked_function_name
         type = make_checked_function_pointer_type(checked_function_type)
         function_type = checked_function_type
 
@@ -212,8 +267,13 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
         body = null
     )
 
-    \ TODO: create symbol ID based on parameter types
-    let global_symbol_id = checked_function_symbol.name.clone().append(": ").append(checked_function_type.name)
+    \ create symbol ID based on parameter labels
+    let global_symbol_id = checked_function_symbol.name.clone()
+    checked_function_type.parameters.for_each() {
+        if it.label != null {
+            global_symbol_id.append("__").append(it.label)
+        }
+    }
 
     self.checked_code.global_symbols.put(global_symbol_id, checked_function_symbol)
     self.checked_code.functions.append(checked_function_symbol)
@@ -234,6 +294,10 @@ func check_function_symbol(self: @Checker, checked_function_symbol: @Checked_Fun
         \ check external function
 
         checked_function_type.parameters.for_each() {
+            if it.label != null {
+                abort(parsed_function_statement.location, "External function must declare all parameters \"anon\"")
+            }
+
             let checked_parameter_symbol = make @Checked_Parameter_Symbol(
                 location = it.location
                 name = it.name
@@ -803,27 +867,16 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
 
     \ check call arguments
     let checked_call_arguments = make @List[@Checked_Call_Argument]()
-    let expect_checked_call_argument_name = false
     parsed_expression.arguments.for_each() {
         let parsed_call_argument = it
-        let checked_call_argument_name: @String = null
+        let checked_call_argument_label: @String = null
         if parsed_call_argument.name != null {
-            checked_call_argument_name = parsed_call_argument.name.lexeme
-            \ check for duplicate named arguments
-            checked_call_arguments.for_each() {
-                let checked_call_argument = it
-                if checked_call_argument.name != null and checked_call_argument.name.equals(checked_call_argument_name) {
-                    abort(parsed_expression.location, "Duplicate argument name")
-                }
-            }
-            expect_checked_call_argument_name = true
-        } else if expect_checked_call_argument_name {
-            abort(parsed_call_argument.location, "Argument name expected")
+            checked_call_argument_label = parsed_call_argument.name.lexeme
         }
         let checked_call_argument_expression = self.check_expression(parsed_call_argument.value_expression, null)
         checked_call_arguments.append(make @Checked_Call_Argument(
             location = parsed_call_argument.location
-            name = checked_call_argument_name
+            label = checked_call_argument_label
             expression = checked_call_argument_expression
         ))
     }
@@ -844,7 +897,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
             \ add object reference as first call argument
             checked_call_arguments.prepend(make @Checked_Call_Argument(
                 location = checked_object_expression.location
-                name = null
+                label = null
                 expression = make @Checked_Reference_Expression( \ struct objects have always an address
                     location = checked_object_expression.location
                     type = make_checked_pointer_type(checked_object_type)
@@ -876,7 +929,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
             \ add object as first call argument
             checked_call_arguments.prepend(make @Checked_Call_Argument(
                 location = checked_object_expression.location
-                name = null
+                label = null
                 expression = checked_object_expression
             ))
         }
@@ -1033,134 +1086,203 @@ struct Parsed_Macro_Match: Callable_Match {
 }
 
 func check_callable_call_expression(self: @Checker, callable_name: @Identifier_Token, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
-    let callable_matches = make List[@Callable_Match]()
+    let similar_callables = 0
+    self.callables.for_each() {
+        let callable = value
+        if callable.name.equals(callable_name.lexeme) {
+            if callable.matches_parameter_labels(checked_call_arguments) {
+                \ found callable
+                if callable is Checked_Function {
+                    return self.check_function_call_expression(callable.as(@Checked_Function), checked_call_arguments)
+                }
+                abort(callable_name.location, callable.object_type)
+            }
 
-    \ find all matching functions
-    self.checked_code.functions.for_each() {
-        if callable_name.lexeme.equals(it.name) and it.function_type.accepts(checked_call_arguments) {
-            callable_matches.append(make @Checked_Function_Match(
-                location = it.location
-                callable_type = it.function_type
-                function_symbol = it
-            ))
+            similar_callables = similar_callables + 1
         }
     }
-    \ find all matching generic functions
-    self.generic_function_statements.for_each() {
-        if callable_name.lexeme.equals(it.name.lexeme) {
-            \ create function type
-            let specialized_function_type = self.specialize_callable_type(it.type, checked_call_arguments)
-            if specialized_function_type != null and specialized_function_type.checked_callable_type.accepts(checked_call_arguments) {
-                \ check if generic funtion was already specialized
-                let specialized_function_exists = false
-                callable_matches.for_each() {
-                    if it.callable_type.equals(specialized_function_type.checked_callable_type) {
-                        specialized_function_exists = true
-                        break
-                    }
-                }
 
-                if not specialized_function_exists {
-                    callable_matches.append(make @Parsed_Generic_Function_Match(
-                        location = it.location
-                        callable_type = specialized_function_type.checked_callable_type
-                        function_statement = it
-                        specialization_symbols = specialized_function_type.specialization_symbols
-                    ))
-                }
+    \ list all named functions and report error
+    stderr.write(callable_name.location).write(": ").error().write("No such callable: ").write(callable_name.lexeme).write(checked_call_arguments).reset().end_line()
+    if similar_callables > 0 {
+        self.callables.for_each() {
+            let callable = value
+            if callable.name.equals(callable_name.lexeme) {
+                stderr.write(callable.location).write(": ").warning().write(callable).reset().end_line()
             }
         }
     }
-    \ find all matching macros
-    self.macro_statements.for_each() {
-        if callable_name.lexeme.equals(it.name.lexeme) {
-            \ create macro type
-            let specialized_macro_type = self.specialize_callable_type(it.type, checked_call_arguments)
-            if specialized_macro_type != null and specialized_macro_type.checked_callable_type.accepts(checked_call_arguments) {
-                callable_matches.append(make @Parsed_Macro_Match(
-                    location = it.location
-                    callable_type = specialized_macro_type.checked_callable_type
-                    macro_statement = it
-                    specialization_symbols = specialized_macro_type.specialization_symbols
-                ))
-            }
-        }
-    }
-
-    if callable_matches.size == 0 {
-        \ list all named functions and report error
-        stderr.write(callable_name.location).write(": ").error().write("Found no matching callable").reset().end_line()
-        abort(callable_name.location, "TODO: List all named functions")
-    }
-
-    while callable_matches.size > 1 {
-        \ find matches that accept parameters from another match
-        let removed_callable_match = false
-        let current_matches_item = callable_matches.first_item
-        while current_matches_item != null {
-            let current_match = current_matches_item.data
-            let another_matches_item = current_matches_item.next_item
-            while another_matches_item != null {
-                let another_match = another_matches_item.data
-                if current_match.callable_type.name.equals(another_match.callable_type.name) {
-                    abort(another_match.location, clone("Callable declared first here: ").append(current_match.location))
-                }
-                if current_match.callable_type.accepts(another_match.callable_type) {
-                    \ eliminate current_match
-                    current_matches_item.is_removed = true
-                    removed_callable_match = true
-                }
-                if another_match.callable_type.accepts(current_match.callable_type) {
-                    \ eliminate current_match
-                    another_matches_item.is_removed = true
-                    removed_callable_match = true
-                }
-                another_matches_item = another_matches_item.next_item
-            }
-            current_matches_item = current_matches_item.next_item
-        }
-
-        if removed_callable_match {
-            callable_matches.prune()
-        } else {
-            abort(callable_name.location, "TODO: Report ambiguous call")
-        }
-    }
-
-    let callable_match = callable_matches.first()
-    if callable_match is Checked_Function_Match {
-        let callable_match = callable_match.as(@Checked_Function_Match)
-        return make @Checked_Function_Call_Expression(
-            location = callable_name.location
-            type = callable_match.function_symbol.function_type.return_type
-            call_arguments = checked_call_arguments
-            function_symbol = callable_match.function_symbol
-        )
-    }
-    if callable_match is Parsed_Generic_Function_Match {
-        let callable_match = callable_match.as(@Parsed_Generic_Function_Match)
-        let checked_function_symbol = self.create_function_symbol(callable_match.function_statement, callable_match.specialization_symbols)
-        return make @Checked_Function_Call_Expression(
-            location = callable_name.location
-            type = checked_function_symbol.function_type.return_type
-            call_arguments = checked_call_arguments
-            function_symbol = checked_function_symbol
-        )
-    }
-    if callable_match is Parsed_Macro_Match {
-        let callable_match = callable_match.as(@Parsed_Macro_Match)
-        \ return macro expression to be inlined at the statement level
-        return make @Checked_Macro_Call_Expression(
-            location = callable_name.location
-            type = self.nothing_type
-            parsed_macro_type = callable_match.macro_statement.type
-            parsed_macro_body = callable_match.macro_statement.body
-            specialization_symbols = callable_match.specialization_symbols
-            call_arguments = checked_call_arguments
-        )
-    }
-    abort(callable_name.location, callable_match.object_type)
+    exit(1)
+    return null \ unreachable
 }
+
+func check_function_call_expression(self: @Checker, checked_function: @Checked_Function, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Function_Call_Expression {
+    self.check_call_arguments(checked_function.function.function_type.parameters, checked_call_arguments)
+
+    return make @Checked_Function_Call_Expression(
+        location = checked_function.location
+        type = checked_function.function.function_type.return_type
+        call_arguments = checked_call_arguments
+        function_symbol = checked_function.function
+    )
+}
+
+func check_call_arguments(self: @Checker, checked_callable_parameters: @List[@Checked_Callable_Parameter], checked_call_arguments: @List[@Checked_Call_Argument]) -> Nothing {
+    let checked_callable_parameters_item = checked_callable_parameters.first_item
+    let checked_call_arguments_item = checked_call_arguments.first_item
+    while checked_callable_parameters_item != null and checked_call_arguments_item != null {
+        let checked_callable_parameter = checked_callable_parameters_item.data
+        let checked_call_argument = checked_call_arguments_item.data
+        if checked_callable_parameter.label == null {
+            if checked_call_argument.label != null {
+                abort(checked_call_argument.location, "Argument label mismatch: ".clone().append("No label expected"))
+            }
+        } else if checked_call_argument.label == null or not checked_callable_parameter.label.equals(checked_call_argument.label) {
+            abort(checked_call_argument.location, "Argument label mismatch: ".clone().append("Expected label ").append(checked_callable_parameter.label))
+        }
+        if not checked_callable_parameter.type.accepts(checked_call_argument.expression.type) {
+            abort(checked_call_argument.location, "Argument type mismatch")
+        }
+        checked_callable_parameters_item = checked_callable_parameters_item.next_item
+        checked_call_arguments_item = checked_call_arguments_item.next_item
+    }
+    if checked_callable_parameters_item != null {
+        abort(checked_call_arguments.last().location, "Argument count mismatch")
+    }
+    if checked_call_arguments_item != null {
+        abort(checked_call_arguments_item.data.location, "Argument count mismatch")
+    }
+}
+
+\ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_Token, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
+\     let callable_matches = make List[@Callable_Match]()
+\ 
+\     \ find all matching functions
+\     self.checked_code.functions.for_each() {
+\         if callable_name.lexeme.equals(it.name) and it.function_type.accepts(checked_call_arguments) {
+\             callable_matches.append(make @Checked_Function_Match(
+\                 location = it.location
+\                 callable_type = it.function_type
+\                 function_symbol = it
+\             ))
+\         }
+\     }
+\     \ find all matching generic functions
+\     self.generic_function_statements.for_each() {
+\         if callable_name.lexeme.equals(it.name.lexeme) {
+\             \ create function type
+\             let specialized_function_type = self.specialize_callable_type(it.type, checked_call_arguments)
+\             if specialized_function_type != null and specialized_function_type.checked_callable_type.accepts(checked_call_arguments) {
+\                 \ check if generic funtion was already specialized
+\                 let specialized_function_exists = false
+\                 callable_matches.for_each() {
+\                     if it.callable_type.equals(specialized_function_type.checked_callable_type) {
+\                         specialized_function_exists = true
+\                         break
+\                     }
+\                 }
+\ 
+\                 if not specialized_function_exists {
+\                     callable_matches.append(make @Parsed_Generic_Function_Match(
+\                         location = it.location
+\                         callable_type = specialized_function_type.checked_callable_type
+\                         function_statement = it
+\                         specialization_symbols = specialized_function_type.specialization_symbols
+\                     ))
+\                 }
+\             }
+\         }
+\     }
+\     \ find all matching macros
+\     self.macro_statements.for_each() {
+\         if callable_name.lexeme.equals(it.name.lexeme) {
+\             \ create macro type
+\             let specialized_macro_type = self.specialize_callable_type(it.type, checked_call_arguments)
+\             if specialized_macro_type != null and specialized_macro_type.checked_callable_type.accepts(checked_call_arguments) {
+\                 callable_matches.append(make @Parsed_Macro_Match(
+\                     location = it.location
+\                     callable_type = specialized_macro_type.checked_callable_type
+\                     macro_statement = it
+\                     specialization_symbols = specialized_macro_type.specialization_symbols
+\                 ))
+\             }
+\         }
+\     }
+\ 
+\     if callable_matches.size == 0 {
+\         \ list all named functions and report error
+\         stderr.write(callable_name.location).write(": ").error().write("Found no matching callable").reset().end_line()
+\         abort(callable_name.location, "TODO: List all named functions")
+\     }
+\ 
+\     while callable_matches.size > 1 {
+\         \ find matches that accept parameters from another match
+\         let removed_callable_match = false
+\         let current_matches_item = callable_matches.first_item
+\         while current_matches_item != null {
+\             let current_match = current_matches_item.data
+\             let another_matches_item = current_matches_item.next_item
+\             while another_matches_item != null {
+\                 let another_match = another_matches_item.data
+\                 if current_match.callable_type.name.equals(another_match.callable_type.name) {
+\                     abort(another_match.location, clone("Callable declared first here: ").append(current_match.location))
+\                 }
+\                 if current_match.callable_type.accepts(another_match.callable_type) {
+\                     \ eliminate current_match
+\                     current_matches_item.is_removed = true
+\                     removed_callable_match = true
+\                 }
+\                 if another_match.callable_type.accepts(current_match.callable_type) {
+\                     \ eliminate current_match
+\                     another_matches_item.is_removed = true
+\                     removed_callable_match = true
+\                 }
+\                 another_matches_item = another_matches_item.next_item
+\             }
+\             current_matches_item = current_matches_item.next_item
+\         }
+\ 
+\         if removed_callable_match {
+\             callable_matches.prune()
+\         } else {
+\             abort(callable_name.location, "TODO: Report ambiguous call")
+\         }
+\     }
+\ 
+\     let callable_match = callable_matches.first()
+\     if callable_match is Checked_Function_Match {
+\         let callable_match = callable_match.as(@Checked_Function_Match)
+\         return make @Checked_Function_Call_Expression(
+\             location = callable_name.location
+\             type = callable_match.function_symbol.function_type.return_type
+\             call_arguments = checked_call_arguments
+\             function_symbol = callable_match.function_symbol
+\         )
+\     }
+\     if callable_match is Parsed_Generic_Function_Match {
+\         let callable_match = callable_match.as(@Parsed_Generic_Function_Match)
+\         let checked_function_symbol = self.create_function_symbol(callable_match.function_statement, callable_match.specialization_symbols)
+\         return make @Checked_Function_Call_Expression(
+\             location = callable_name.location
+\             type = checked_function_symbol.function_type.return_type
+\             call_arguments = checked_call_arguments
+\             function_symbol = checked_function_symbol
+\         )
+\     }
+\     if callable_match is Parsed_Macro_Match {
+\         let callable_match = callable_match.as(@Parsed_Macro_Match)
+\         \ return macro expression to be inlined at the statement level
+\         return make @Checked_Macro_Call_Expression(
+\             location = callable_name.location
+\             type = self.nothing_type
+\             parsed_macro_type = callable_match.macro_statement.type
+\             parsed_macro_body = callable_match.macro_statement.body
+\             specialization_symbols = callable_match.specialization_symbols
+\             call_arguments = checked_call_arguments
+\         )
+\     }
+\     abort(callable_name.location, callable_match.object_type)
+\ }
 
 struct Checked_Macro_Call_Expression: Checked_Expression {
     parsed_macro_type: @Parsed_Macro_Type
@@ -1806,6 +1928,11 @@ func convert_function_type(self: @Checker, parsed_type: @Parsed_Function_Type) -
 }
 
 func check_callable_parameter(self: @Checker, checked_callable_type: @Checked_Callable_Type, parsed_callable_parameter: @Parsed_Callable_Parameter) -> @Checked_Callable_Parameter {
+    let checked_callable_parameter_label: @String = null
+    if parsed_callable_parameter.label != null {
+        checked_callable_parameter_label = parsed_callable_parameter.label.lexeme
+    }
+
     \ check parameter name
     let checked_callable_parameter_name = parsed_callable_parameter.name.lexeme
     checked_callable_type.parameters.for_each() {
@@ -1827,6 +1954,7 @@ func check_callable_parameter(self: @Checker, checked_callable_type: @Checked_Ca
     \ create parameter
     let checked_callable_parameter = make @Checked_Callable_Parameter(
         location = parsed_callable_parameter.name.location
+        label = checked_callable_parameter_label
         name = checked_callable_parameter_name
         type = checked_callable_parameter_type
     )

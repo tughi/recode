@@ -1,5 +1,5 @@
 func main() -> i32 {
-    return difference(v1 = 1, 1)
+    return difference(v1: 1, 1)
 }
 
 func difference(v1: i32, v2: i32) -> i32 {

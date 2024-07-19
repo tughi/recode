@@ -1,0 +1,1 @@
+tests/99__errors/external_function_with_argument_label/test.code:1:15: External function must declare all parameters "anon"

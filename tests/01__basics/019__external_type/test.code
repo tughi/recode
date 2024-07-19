@@ -2,7 +2,7 @@ external type File
 
 external stdout: @File
 
-external func fputc(char: u8, file: @File) -> i32
+external func fputc(anon char: u8, anon file: @File) -> i32
 
 func main() -> Nothing {
     fputc('4', stdout)

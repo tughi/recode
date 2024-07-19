@@ -1,0 +1,1 @@
+tests/99__errors/main_with_labeled_argument/test.code:1:27: Unexpected non-"anon" parameter

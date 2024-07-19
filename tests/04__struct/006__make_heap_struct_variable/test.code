@@ -10,10 +10,10 @@ struct Line {
 
 func main() -> i32 {
     let line = make @Line(
-        p1 = make Point(x = 16, y = 32)
-        p2 = make Point(x = 48, y = 64)
+        p1: make Point(x: 16, y: 32)
+        p2: make Point(x: 48, y: 64)
     )
     return line.p1.x + line.p1.y + line.p2.x + line.p2.y - 160
 }
 
-external func malloc(size: u64) -> @Any
+external func malloc(anon size: u64) -> @Any

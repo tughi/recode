@@ -155,6 +155,7 @@ struct Checked_Callable_Type: Checked_Type {
 
 struct Checked_Callable_Parameter {
     location: @Source_Location
+    label: @String
     name: @String
     type: @Checked_Type
 }
@@ -172,10 +173,13 @@ func accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_A
 }
 
 func write(out: @FILE, checked_call_arguments: @List[@Checked_Call_Argument]) -> @FILE {
-    out.write("arguments (")
+    out.write("(")
     checked_call_arguments.for_each_indexed() {
         if it_index > 0 {
             out.write(", ")
+        }
+        if it.label != null {
+            out.write(it.label).write(": ")
         }
         out.write(it.expression.type.name)
     }
@@ -191,7 +195,7 @@ func _accepts(self: @Checked_Callable_Type, call_arguments: @List[@Checked_Call_
         if not parameter_item.data.type.accepts(argument_item.data.expression.type) {
             return false
         }
-        if argument_item.data.name != null and not parameter_item.data.name.equals(argument_item.data.name) {
+        if argument_item.data.label != null and not parameter_item.data.name.equals(argument_item.data.label) {
             return false
         }
         parameter_item = parameter_item.next_item
@@ -219,10 +223,13 @@ func accepts(self: @Checked_Callable_Type, other_parameters: @List[@Checked_Call
 }
 
 func write(out: @FILE, checked_callable_parameters: @List[@Checked_Callable_Parameter]) -> @FILE {
-    out.write("arguments (")
+    out.write("(")
     checked_callable_parameters.for_each_indexed() {
         if it_index > 0 {
             out.write(", ")
+        }
+        if it.label != null {
+            out.write(it.label).write(": ")
         }
         out.write(it.type.name)
     }
@@ -483,6 +490,70 @@ struct Checked_Variable_Symbol: Checked_Symbol {
     is_external: bool
 }
 
+struct Checked_Callable: Object {
+    location: @Source_Location
+    id: @String = undefined
+    name: @String = undefined
+    parameter_labels = make List[@String]()
+}
+
+func init(self: @Checked_Callable, name: @Identifier_Token, parameters: @List[@Parsed_Callable_Parameter]) -> @Checked_Callable {
+    self.id = name.lexeme.clone()
+    self.name = name.lexeme
+    parameters.for_each() {
+        if it.label != null {
+            self.id.append("__").append(it.label.lexeme)
+            self.parameter_labels.append(it.label.lexeme)
+        } else {
+            self.parameter_labels.append(null)
+        }
+    }
+    return self
+}
+
+func matches_parameter_labels(self: @Checked_Callable, call_arguments: @List[@Checked_Call_Argument]) -> bool {
+    let call_argument_item = call_arguments.first_item
+    let parameter_label_item = self.parameter_labels.first_item
+    while call_argument_item != null and parameter_label_item != null {
+        let call_argument_label = call_argument_item.data.label
+        let parameter_label = parameter_label_item.data
+        if call_argument_label == null {
+            if parameter_label != null {
+                return false
+            }
+        } else if parameter_label == null {
+            return false
+        } else if not call_argument_label.equals(parameter_label) {
+            return false
+        }
+        call_argument_item = call_argument_item.next_item
+        parameter_label_item = parameter_label_item.next_item
+    }
+    return call_argument_item == null and parameter_label_item == null
+}
+
+func write(out: @FILE, checked_callable: @Checked_Callable) -> @FILE {
+    if checked_callable is Checked_Function {
+        let checked_function_symbol = checked_callable.as(@Checked_Function).function
+        out.write(checked_function_symbol.name).write(checked_function_symbol.function_type.parameters)
+    } else {
+        abort(checked_callable.object_type)
+    }
+    return out
+}
+
+struct Checked_Function: Checked_Callable {
+    function: @Checked_Function_Symbol
+}
+
+struct Checked_Generic_Function: Checked_Callable {
+    function_statement: @Parsed_Function_Statement
+}
+
+struct Checked_Macro: Checked_Callable {
+    macro_statement: @Parsed_Macro_Statement
+}
+
 struct Checked_Statement: Object {
     location: @Source_Location
 }
@@ -572,7 +643,7 @@ struct Checked_Call_Expression: Checked_Expression {
 
 struct Checked_Call_Argument {
     location: @Source_Location
-    name: @String
+    label: @String
     expression: @Checked_Expression
 }
 

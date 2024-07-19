@@ -1,11 +1,11 @@
-func main(argc: i32, argv: [[u8; ?]; ?]) {
+func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
     if argc != 2 {
         exit(1)
     }
 
     let tokenizer = make Tokenizer(
-        data = argv[1]
-        index = 0
+        data: argv[1]
+        index: 0
     )
     let tokenizer_ref = @tokenizer
 
@@ -23,16 +23,16 @@ struct Tokenizer {
     index: i32
 }
 
-func has_next_token(self: @Tokenizer) -> bool {
+func has_next_token(anon self: @Tokenizer) -> bool {
     return self.data[self.index] != 0
 }
 
-func next_token(self: @Tokenizer) -> @Token {
+func next_token(anon self: @Tokenizer) -> @Token {
     let value = self.data[self.index]
     self.index = self.index + 1
     return make @Token(
-        kind = 1
-        value = value
+        kind: 1
+        value: value
     )
 }
 
@@ -49,8 +49,8 @@ external stdin: @FILE
 external stdout: @FILE
 external stderr: @FILE
 
-external func fputc(c: u8, file: @FILE) -> i32
+external func fputc(anon c: u8, anon file: @FILE) -> i32
 
-external func malloc(size: u64) -> @Any
+external func malloc(anon size: u64) -> @Any
 
-external func exit(code: i32)
+external func exit(anon code: i32)

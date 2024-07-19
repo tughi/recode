@@ -7,6 +7,6 @@ func main() -> i32 {
     return 0
 }
 
-func echo(v: bool) -> bool {
+func echo(anon v: bool) -> bool {
     return v
 }

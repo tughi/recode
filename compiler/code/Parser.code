@@ -438,6 +438,7 @@ func parse_method_parameters(self: @Parser) -> @List[@Parsed_Callable_Parameter]
             let self_parameter = self.consume(required_self).as(@Identifier_Token)
             parameters.append(make @Parsed_Callable_Parameter(
                 location = self_parameter.location
+                label = null
                 name = self_parameter
                 type = null
             ))
@@ -616,14 +617,33 @@ func parse_parameters(self: @Parser) -> @List[@Parsed_Callable_Parameter] {
 }
 
 \ parameter
-\   | IDENTIFIER ":" type
+\   | ( "anon" | IDENTIFIER )? IDENTIFIER ":" type
 func parse_parameter(self: @Parser) -> @Parsed_Callable_Parameter {
-    let parameter_name = self.consume(required_identifier).as(@Identifier_Token)
+    let parameter_label: @Identifier_Token
+    let parameter_name: @Identifier_Token
+    if self.matches(required_identifier, optional_space, required_identifier) {
+        if self.matches(required_anon) {
+            self.consume(required_anon)
+            parameter_label = null
+        } else {
+            parameter_label = self.consume(required_identifier).as(@Identifier_Token)
+        }
+        self.consume_space(1)
+        parameter_name = self.consume(required_identifier).as(@Identifier_Token)
+    } else {
+        parameter_name = self.consume(required_identifier).as(@Identifier_Token)
+        parameter_label = parameter_name
+    }
     self.consume_space(0)
     self.consume(required_colon)
     self.consume_space(1)
     let parameter_type = self.parse_type()
-    return make @Parsed_Callable_Parameter(location = parameter_name.location, name = parameter_name, type = parameter_type)
+    return make @Parsed_Callable_Parameter(
+        location = parameter_name.location
+        label = parameter_label
+        name = parameter_name
+        type = parameter_type
+    )
 }
 
 \ macro
@@ -1125,18 +1145,18 @@ func parse_call_arguments(self: @Parser, call_arguments: @List[@Parsed_Call_Argu
 }
 
 \ call_argument
-\   | ( IDENTIFIER "=" )? expression
+\   | ( IDENTIFIER ":" )? expression
 func parse_call_argument(self: @Parser) -> @Parsed_Call_Argument {
-    if self.matches(required_identifier, optional_space, required_equals) {
-        let name = self.consume(required_identifier).as(@Identifier_Token)
-        self.consume_space(1)
-        self.consume(required_equals)
+    if self.matches(required_identifier, optional_space, required_colon) {
+        let label = self.consume(required_identifier).as(@Identifier_Token)
+        self.consume_space(0)
+        self.consume(required_colon)
         self.consume_space(1)
         let value_expression = self.parse_expression()
         if value_expression == null {
             self.abort(self.scanner.current_token)
         }
-        return make @Parsed_Call_Argument(location = name.location, name = name, value_expression = value_expression)
+        return make @Parsed_Call_Argument(location = label.location, name = label, value_expression = value_expression)
     }
     let value_expression = self.parse_expression()
     if value_expression == null {
@@ -1410,6 +1430,7 @@ let optional_comment: @Matcher = undefined
 let optional_space: @Matcher = undefined
 let required_ampersand: @Matcher = undefined
 let required_and: @Matcher = undefined
+let required_anon: @Matcher = undefined
 let required_as: @Matcher = undefined
 let required_asterisk: @Matcher = undefined
 let required_at: @Matcher = undefined
@@ -1464,6 +1485,7 @@ func init_matchers() -> Nothing {
     optional_space = make @Space_Matcher(is_required = false)
     required_ampersand = make @Other_Matcher(is_required = true, lexeme = "&")
     required_and = make @Keyword_Matcher(is_required = true, lexeme = "and")
+    required_anon = make @Keyword_Matcher(is_required = true, lexeme = "anon")
     required_as = make @Keyword_Matcher(is_required = true, lexeme = "as")
     required_asterisk = make @Other_Matcher(is_required = true, lexeme = "*")
     required_at = make @Other_Matcher(is_required = true, lexeme = "@")

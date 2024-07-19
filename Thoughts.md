@@ -29,7 +29,7 @@ There will be a fixed set of float types:
 - `f32` - 32 bit float
 - `f64` - 64 bit float
 
-> NOTE: Floats are not supported yet.
+> **NOTE**: Floats are not supported yet.
 
 ## Structs
 
@@ -59,13 +59,13 @@ There will be a fixed set of float types:
 Newly created structs can be initializated using named arguments, which can replace default values.
 
     let node = make Node()              \ initializes a stack Node
-    let node = make @Node(type = 13)    \ allocates and initializes a heap Node
+    let node = make @Node(type: 13)     \ allocates and initializes a heap Node
 
 Initilization arguments can be declared also on separate lines.
 
     let node = make @Extended_Node(
-        parent = null
-        type = 6
+        parent: null
+        type: 6
     )
 
 Structs are passed by value.
@@ -208,6 +208,14 @@ String literals are global values of type `String`.
 
 The variable names are symbols used by the compiler to know where the value are stored.
 
+## Any
+
+The `Any` type can be used only as reference to data of unknown type.
+
+    let node = make @Node()
+    let data: @Any = node       \ auto-casting to @Any
+    let token = data.as(@Token) \ unsafe, but this is the way
+
 ## Functions
 
     func max(v1: i32, v2: i32) -> i32 {
@@ -226,6 +234,20 @@ Call arguments are separated by `,` or new lines.
         first_parameter, second_parameter, third_parameter
     )
 
+The function parameters order must be respected and parameter labels are mandatory, unless
+paramaters are marked as anonymous with the `anon` modifier.
+
+    func panic() {}
+    func panic(at location: @Location, anon message: @String) {}
+    func panic(at location: @Location, unexpected_keyword: @Token) {}
+    func panic(at location: @Location, unexpected_token: @Token) {}
+
+    panic(at: token.location, unexpected_token: token)  \ function call with labels 
+
+> **NOTE**: Parameter labels are part of the generated function name, like: *panic*, *panic__at*,
+*panic__at__unexpected_keyword* and *panic__at__unexpected_token*. There cannot be two functions
+having the same name and exactly the same parameter.
+
 ## Generic functions
 
     func max[T](v1: T, v2: T) -> T {
@@ -235,8 +257,7 @@ Call arguments are separated by `,` or new lines.
         return v2
     }
 
-Depending on the generic type parameters and function's body, the compiler might generate multiple
-instances of a generic function.
+The compiler will generate dedicated code for each specialization of a generic function.
 
 ## Macros
 

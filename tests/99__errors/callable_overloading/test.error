@@ -1,0 +1,2 @@
+tests/99__errors/callable_overloading/test.code:1:6: Callable declared first here
+tests/99__errors/callable_overloading/test.code:4:6: Callable overloading is not supported

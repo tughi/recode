@@ -1,4 +1,4 @@
-func main(argc: i32, argv: [[u8; ?]; ?]) {
+func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
     if argc != 2 {
         exit(1)
     }
@@ -10,6 +10,6 @@ external type FILE
 
 external stdout: @FILE
 
-external func fputc(c: u8, file: @FILE) -> i32
+external func fputc(anon c: u8, anon file: @FILE) -> i32
 
-external func exit(code: i32)
+external func exit(anon code: i32)

@@ -323,6 +323,7 @@ struct Parsed_Macro_Type: Parsed_Callable_Type {
 
 struct Parsed_Callable_Parameter {
     location: @Source_Location
+    label: @Identifier_Token
     name: @Identifier_Token
     type: @Parsed_Type
 }
