@@ -327,12 +327,12 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
     let struct_members = make @List[@Parsed_Struct_Member]()
-    let struct_methods = make @List[@Parsed_Struct_Method]()
+    let struct_funtions = make @List[@Parsed_Function_Statement]()
     while not self.matches(optional_space, required_close_brace) {
         if not self.consume_empty_line() {
             self.consume_space(self.current_alignment * 4)
             if self.matches(required_func) {
-                struct_methods.append(self.parse_struct_method())
+                struct_funtions.append(self.parse_function())
             } else {
                 struct_members.append(self.parse_struct_member())
             }
@@ -345,7 +345,7 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
         location = struct_name.location
         name = struct_name
         members = struct_members
-        methods = struct_methods
+        functions = struct_funtions
         super_type = struct_super_type
         super_arguments = struct_super_arguments
     )
@@ -387,75 +387,6 @@ func parse_struct_member(self: @Parser) -> @Parsed_Struct_Member {
     )
 }
 
-\ struct_method
-\   | "func" IDENTIFIER method_signature block
-func parse_struct_method(self: @Parser) -> @Parsed_Struct_Method {
-    self.consume(required_func)
-    self.consume_space(1)
-    let method_name = self.consume(required_identifier).as(@Identifier_Token)
-    self.consume_space(0)
-    let method_signature = self.parse_method_signature()
-    if not self.matches(optional_space, required_open_brace) {
-        abort(method_name.location, "Missing method body")
-    }
-    self.consume_space(1)
-    let method_body = self.parse_block()
-    return make @Parsed_Struct_Method(
-        location = method_name.location
-        name = method_name
-        type = make @Parsed_Function_Type(
-            location = method_name.location
-            type_parameters = null
-            parameters = method_signature.parameters
-            return_type = method_signature.return_type
-        )
-        body = method_body
-    )
-}
-
-\ method_signature
-\   | parameters ( "->" type )?
-func parse_method_signature(self: @Parser) -> @Parsed_Function_Signature {
-    let method_parameters = self.parse_method_parameters()
-    let method_return_type: @Parsed_Type = null
-    if self.matches(optional_space, required_hyphen) {
-        self.consume_space(1)
-        self.consume(required_hyphen, required_greater_than)
-        self.consume_space(1)
-        method_return_type = self.parse_type()
-    }
-    return make @Parsed_Function_Signature(parameters = method_parameters, return_type = method_return_type)
-}
-
-\ method_parameters
-\   | "(" ( ( "self" | parameter ) ( "," parameter )* )? ")"
-func parse_method_parameters(self: @Parser) -> @List[@Parsed_Callable_Parameter] {
-    let parameters = make @List[@Parsed_Callable_Parameter]()
-    self.consume(required_open_paren)
-    self.consume_space(0)
-    if not self.matches(required_close_paren) {
-        if self.matches(required_self) {
-            let self_parameter = self.consume(required_self).as(@Identifier_Token)
-            parameters.append(make @Parsed_Callable_Parameter(
-                location = self_parameter.location
-                label = null
-                name = self_parameter
-                type = null
-            ))
-        } else {
-            parameters.append(self.parse_parameter())
-        }
-        while not self.matches(optional_space, required_close_paren) {
-            self.consume_space(0)
-            self.consume(required_comma)
-            self.consume_space(1)
-            parameters.append(self.parse_parameter())
-        }
-    }
-    self.consume(required_close_paren)
-    return parameters
-}
-
 \ type_parameters
 \   | "[" IDENTIFIER ( "," IDENTIFIER )* "]"
 func parse_type_parameters(self: @Parser) -> @List[@Parsed_Type_Parameter] {
@@ -490,6 +421,7 @@ func parse_external_function(self: @Parser) -> @Parsed_Function_Statement {
     let function_statement = make @Parsed_Function_Statement(
         location = function_name.location
         name = function_name
+        receiver_type = null
         type = make @Parsed_Function_Type(
             location = function_name.location
             type_parameters = null
@@ -524,6 +456,7 @@ func parse_function(self: @Parser) -> @Parsed_Function_Statement {
     let function_statement = make @Parsed_Function_Statement(
         location = function_name.location
         name = function_name
+        receiver_type = null \ TODO
         type = make @Parsed_Function_Type(
             location = function_name.location
             type_parameters = function_type_parameters
@@ -551,6 +484,7 @@ func parse_anonymous_function(self: @Parser, function_name: @Identifier_Token) -
     let function_statement = make @Parsed_Function_Statement(
         location = function_name.location
         name = function_name
+        receiver_type = null
         type = make @Parsed_Function_Type(
             location = function_name.location
             type_parameters = null
@@ -598,13 +532,33 @@ func parse_function_type(self: @Parser) -> @Parsed_Function_Type {
 }
 
 \ parameters
-\   | "(" ( parameter ( "," parameter )* )? ")"
+\   | "(" ( ( "self" | parameter )? ( "," parameter )* )? ")"
 func parse_parameters(self: @Parser) -> @List[@Parsed_Callable_Parameter] {
     let parameters = make @List[@Parsed_Callable_Parameter]()
     self.consume(required_open_paren)
     self.consume_space(0)
     if not self.matches(required_close_paren) {
-        parameters.append(self.parse_parameter())
+        if self.matches(required_self) {
+            let parameter_name = self.consume(required_self).as(@Identifier_Token)
+            self.consume_space(0)
+            parameters.append(make @Parsed_Callable_Parameter(
+                location = parameter_name.location
+                label = null
+                name = parameter_name
+                type = make @Parsed_Pointer_Type(
+                    location = parameter_name.location
+                    pointed_type = make @Parsed_Named_Type(
+                        location = parameter_name.location
+                        name = make @Identifier_Token(
+                            location = parameter_name.location
+                            lexeme = "Self"
+                        )
+                    )
+                )
+            ))
+        } else {
+            parameters.append(self.parse_parameter())
+        }
         while not self.matches(optional_space, required_close_paren) {
             self.consume_space(0)
             self.consume(required_comma)
@@ -638,6 +592,7 @@ func parse_parameter(self: @Parser) -> @Parsed_Callable_Parameter {
     self.consume(required_colon)
     self.consume_space(1)
     let parameter_type = self.parse_type()
+    self.consume_space(0)
     return make @Parsed_Callable_Parameter(
         location = parameter_name.location
         label = parameter_label
@@ -667,6 +622,7 @@ func parse_macro(self: @Parser) -> @Parsed_Macro_Statement {
     let macro_statement = make @Parsed_Macro_Statement(
         location = macro_name.location
         name = macro_name
+        receiver_type = null \ TODO
         type = make @Parsed_Macro_Type(
             type_parameters = macro_type_parameters
             parameters = macro_parameters

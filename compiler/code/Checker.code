@@ -112,6 +112,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 self.add_callable(
                     make @Checked_Generic_Function(
                         location = parsed_function_statement.location
+                        unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
                         function_statement = parsed_function_statement
                     ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
                 )
@@ -119,6 +120,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 self.add_callable(
                     make @Checked_Function(
                         location = parsed_function_statement.location
+                        unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
                         function = self.create_function_symbol(parsed_function_statement, null)
                     ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
                 )
@@ -130,6 +132,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             self.add_callable(
                 make @Checked_Macro(
                     location = parsed_macro_statement.location
+                    unique_name = make_unique_callable_name(parsed_macro_statement.name, parsed_macro_statement.type.parameters, parsed_macro_statement.receiver_type)
                     macro_statement = parsed_macro_statement
                 ).init(parsed_macro_statement.name, parsed_macro_statement.type.parameters)
             )
@@ -142,7 +145,22 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             ))
         } else if it is Parsed_Struct_Statement {
             let parsed_struct_statement = it.as(@Parsed_Struct_Statement)
-            self.create_struct_type_symbol(parsed_struct_statement, parsed_struct_statement.name.lexeme, null)
+            let checked_struct_type_symbol = self.create_struct_type_symbol(parsed_struct_statement, parsed_struct_statement.name.lexeme, null)
+
+            parsed_struct_statement.functions.for_each() {
+                let parsed_struct_funtion = it
+                self.add_callable(
+                    make @Checked_Function(
+                        location = parsed_struct_funtion.location
+                        unique_name = make_unique_callable_name(
+                            parsed_struct_funtion.name
+                            parsed_struct_funtion.type.parameters
+                            make @Parsed_Named_Type(location = parsed_struct_statement.name.location, name = parsed_struct_statement.name)
+                        )
+                        function = self.create_function_symbol(parsed_struct_funtion, null)
+                    ).init(parsed_struct_funtion.name, parsed_struct_funtion.type.parameters)
+                )
+            }
         } else if it is Parsed_Variable_Statement {
             let checked_statement = self.check_variable_statement(it.as(@Parsed_Variable_Statement))
             let variable = checked_statement.variable

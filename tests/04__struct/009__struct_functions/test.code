@@ -10,7 +10,6 @@ struct Number {
     }
 }
 
-func main() -> i32 {
-    let mode = make Number(value = 42)
-    return mode.get_value() - 42
+func main() {
+    let mode = make Number(value: 42)
 }

@@ -492,23 +492,46 @@ struct Checked_Variable_Symbol: Checked_Symbol {
 
 struct Checked_Callable: Object {
     location: @Source_Location
-    id: @String = undefined
+    unique_name: @String
     name: @String = undefined
     parameter_labels = make List[@String]()
 }
 
 func init(self: @Checked_Callable, name: @Identifier_Token, parameters: @List[@Parsed_Callable_Parameter]) -> @Checked_Callable {
-    self.id = name.lexeme.clone()
     self.name = name.lexeme
     parameters.for_each() {
         if it.label != null {
-            self.id.append("__").append(it.label.lexeme)
             self.parameter_labels.append(it.label.lexeme)
         } else {
             self.parameter_labels.append(null)
         }
     }
     return self
+}
+
+func make_unique_callable_name(name: @Identifier_Token, parameters: @List[@Parsed_Callable_Parameter], receiver_type: @Parsed_Type) -> @String {
+    let unique_name = "".clone()
+    if receiver_type != null {
+        unique_name.append_receiver_type(receiver_type)
+        unique_name.append("__")
+    }
+    unique_name.append(name.lexeme)
+    parameters.for_each() {
+        if it.label != null {
+            unique_name.append("__").append(it.label.lexeme)
+        }
+    }
+    return unique_name
+}
+
+func append_receiver_type(self: @String, receiver_type: @Parsed_Type) -> @String {
+    if receiver_type is Parsed_Pointer_Type {
+        return self.append('p').append_receiver_type(receiver_type.as(@Parsed_Pointer_Type).pointed_type)
+    }
+    if receiver_type is Parsed_Named_Type {
+        return self.append(receiver_type.as(@Parsed_Named_Type).name.lexeme)
+    }
+    abort(receiver_type.location, receiver_type.object_type)
 }
 
 func matches_parameter_labels(self: @Checked_Callable, call_arguments: @List[@Checked_Call_Argument]) -> bool {
