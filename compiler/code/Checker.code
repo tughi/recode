@@ -117,11 +117,12 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                     ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
                 )
             } else {
+                let checked_function_symbol_unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
                 self.add_callable(
                     make @Checked_Function(
                         location = parsed_function_statement.location
-                        unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
-                        function = self.create_function_symbol(parsed_function_statement, null)
+                        unique_name = checked_function_symbol_unique_name
+                        function = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
                     ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
                 )
             }
@@ -147,20 +148,36 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             let parsed_struct_statement = it.as(@Parsed_Struct_Statement)
             let checked_struct_type_symbol = self.create_struct_type_symbol(parsed_struct_statement, parsed_struct_statement.name.lexeme, null)
 
+            \ add Self as local symbol
+            self.local_symbols = make @Checked_Symbols(
+                parent = self.local_symbols
+            )
+            self.local_symbols.append(make @Checked_Type_Symbol(
+                location = parsed_struct_statement.name.location
+                name = "Self"
+                type = checked_struct_type_symbol.type
+            ))
+
             parsed_struct_statement.functions.for_each() {
                 let parsed_struct_funtion = it
+
+                let checked_function_symbol_unique_name = make_unique_callable_name(
+                    parsed_struct_funtion.name
+                    parsed_struct_funtion.type.parameters
+                    make @Parsed_Named_Type(location = parsed_struct_statement.name.location, name = parsed_struct_statement.name)
+                )
+
                 self.add_callable(
                     make @Checked_Function(
                         location = parsed_struct_funtion.location
-                        unique_name = make_unique_callable_name(
-                            parsed_struct_funtion.name
-                            parsed_struct_funtion.type.parameters
-                            make @Parsed_Named_Type(location = parsed_struct_statement.name.location, name = parsed_struct_statement.name)
-                        )
-                        function = self.create_function_symbol(parsed_struct_funtion, null)
+                        unique_name = checked_function_symbol_unique_name
+                        function = self.create_function_symbol(parsed_struct_funtion, checked_function_symbol_unique_name, null)
                     ).init(parsed_struct_funtion.name, parsed_struct_funtion.type.parameters)
                 )
             }
+
+            \ restore local symbols
+            self.local_symbols = self.local_symbols.parent
         } else if it is Parsed_Variable_Statement {
             let checked_statement = self.check_variable_statement(it.as(@Parsed_Variable_Statement))
             let variable = checked_statement.variable
@@ -222,7 +239,7 @@ func check_constant_symbol(self: @Checker, checked_constant_symbol: @Checked_Con
     checked_constant_symbol.value_expression = checked_value_expression
 }
 
-func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_Function_Statement, specialization_symbols: @Checked_Symbols) -> @Checked_Function_Symbol {
+func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_Function_Statement, unique_name: @String, specialization_symbols: @Checked_Symbols) -> @Checked_Function_Symbol {
     \ create function type
     let parent_symbols = self.local_symbols
     if specialization_symbols != null {
@@ -277,6 +294,7 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
     let checked_function_symbol = make @Checked_Function_Symbol(
         location = parsed_function_statement.location
         name = checked_function_name
+        unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
         type = make_checked_function_pointer_type(checked_function_type)
         function_type = checked_function_type
 
@@ -1076,7 +1094,8 @@ func check_equals_expression(self: @Checker, parsed_expression: @Parsed_Equals_E
 }
 
 func check_function_expression(self: @Checker, parsed_expression: @Parsed_Function_Expression) -> @Checked_Expression {
-    let checked_function_symbol = self.create_function_symbol(parsed_expression.function_statement, null)
+    abort("TODO: Create unique function symbol name")
+    let checked_function_symbol = self.create_function_symbol(parsed_expression.function_statement, null, null)
     return make @Checked_Symbol_Expression(
         location = parsed_expression.location
         type = checked_function_symbol.type

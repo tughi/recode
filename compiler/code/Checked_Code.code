@@ -452,6 +452,7 @@ struct Checked_Constant_Symbol: Checked_Symbol {
 }
 
 struct Checked_Function_Symbol: Checked_Symbol {
+    unique_name: @String
     function_type: @Checked_Function_Type
     parsed_function_statement: @Parsed_Function_Statement
     specialization_symbols: @Checked_Symbols

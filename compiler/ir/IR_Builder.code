@@ -174,18 +174,9 @@ func create_function(self: @IR_Builder, checked_function_symbol: @Checked_Functi
         ir_function_blocks = null
     }
 
-    \ create unique IR function name
-    \ TODO: let the Checker create the unique name
-    let ir_function_name = checked_function_symbol.name.clone()
-    checked_function_symbol.function_type.parameters.for_each() {
-        if it.label != null {
-            ir_function_name.append("__").append(it.label)
-        }
-    }
-
     let ir_function = make @IR_Function(
         checked_symbol = checked_function_symbol
-        name = ir_function_name
+        name = checked_function_symbol.unique_name
         type = self.create_ir_pointer_type(ir_function_type)
         function_type = ir_function_type
         parameters = ir_function_parameters

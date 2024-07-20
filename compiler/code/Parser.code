@@ -327,12 +327,20 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
     self.consume_end_of_line()
     self.current_alignment = self.current_alignment + 1
     let struct_members = make @List[@Parsed_Struct_Member]()
-    let struct_funtions = make @List[@Parsed_Function_Statement]()
+    let struct_functions = make @List[@Parsed_Function_Statement]()
     while not self.matches(optional_space, required_close_brace) {
         if not self.consume_empty_line() {
             self.consume_space(self.current_alignment * 4)
             if self.matches(required_func) {
-                struct_funtions.append(self.parse_function())
+                let struct_function = self.parse_function()
+                if struct_function.receiver_type != null {
+                    abort(struct_function.location, "Struct function cannot declare a receiver type")
+                }
+                struct_function.receiver_type = make @Parsed_Named_Type(
+                    location = struct_name.location
+                    name = struct_name
+                )
+                struct_functions.append(struct_function)
             } else {
                 struct_members.append(self.parse_struct_member())
             }
@@ -345,7 +353,7 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
         location = struct_name.location
         name = struct_name
         members = struct_members
-        functions = struct_funtions
+        functions = struct_functions
         super_type = struct_super_type
         super_arguments = struct_super_arguments
     )
