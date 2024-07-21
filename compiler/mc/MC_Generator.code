@@ -413,7 +413,7 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
     }
     stderr.end_line()
 
-    mc_block.append(make @MC_SSA_Comment(
+    mc_block.append(make @MC_Instruction_Comment(
         ir_instruction = ir_instruction
     ))
 
@@ -816,10 +816,23 @@ func convert_load_instruction(self: @MC_Generator, ir_load_instruction: @IR_Load
         mc_register = self.find_free_caller_saved_register(mc_block)
         load_value = false
     )
-    mc_block.append(make @MC_MOV_Instruction(
-        source = mc_block.find_value(ir_load_instruction.get_value_pointer()).make_mc_operand(self)
-        destination = mc_register_value.make_mc_operand(self)
-    ))
+    let mc_value_pointer = mc_block.find_value(ir_load_instruction.get_value_pointer())
+    if mc_value_pointer is MC_Register_Value {
+        let mc_value_pointer = mc_value_pointer.as(@MC_Register_Value)
+        mc_block.append(make @MC_MOV_Instruction(
+            source = make @MC_Memory_Operand(
+                size = mc_register_value.ir_value.type.get_size()
+                base = mc_value_pointer.register
+                offset = 0
+            )
+            destination = mc_register_value.make_mc_operand(self)
+        ))
+    } else {
+        mc_block.append(make @MC_MOV_Instruction(
+            source = mc_value_pointer.make_mc_operand(self)
+            destination = mc_register_value.make_mc_operand(self)
+        ))
+    }
 }
 
 func convert_modulo_instruction(self: @MC_Generator, ir_modulo_instruction: @IR_Modulo_Instruction, mc_block: @MC_Block) -> Nothing {

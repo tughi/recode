@@ -674,6 +674,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_array_access_expression(checked_expression.as(@Checked_Array_Access_Expression), expected_type)
     } else if checked_expression is Checked_Cast_Expression {
         value = self.convert_cast_expression(checked_expression.as(@Checked_Cast_Expression), expected_type)
+    } else if checked_expression is Checked_Dereference_Expression {
+        value = self.convert_dereference_expression(checked_expression.as(@Checked_Dereference_Expression), expected_type)
     } else if checked_expression is Checked_Divide_Expression {
         value = self.convert_divide_expression(checked_expression.as(@Checked_Divide_Expression), expected_type)
     } else if checked_expression is Checked_Dynamic_Call_Expression {
@@ -783,6 +785,19 @@ func convert_array_access_expression_pointer(self: @IR_Builder, checked_expressi
 
 func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression, expected_type: @IR_Type) -> @IR_Value {
     abort("TODO: Convert cast expression")
+}
+
+func convert_dereference_expression(self: @IR_Builder, checked_expression: @Checked_Dereference_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let value = self.convert_expression(checked_expression.target_expression, null)
+    if value.type is not IR_Pointer_Type {
+        abort(checked_expression.target_expression.location, "Not a pointer type")
+    }
+    return self.append(
+        make @IR_Load_Instruction(
+            result_value = self.create_temp_value(value.type.as(@IR_Pointer_Type).pointed_type)
+        ).init(value)
+        checked_expression.location
+    )
 }
 
 func convert_call_arguments(self: @IR_Builder, checked_call_arguments: @List[@Checked_Call_Argument]) -> @List[@IR_Call_Argument] {
@@ -1188,6 +1203,9 @@ func convert_struct_literal_expression(self: @IR_Builder, checked_expression: @C
 
 func convert_substract_expression(self: @IR_Builder, checked_expression: @Checked_Substract_Expression, expected_type: @IR_Type) -> @IR_Value {
     let left_value = self.convert_expression(checked_expression.left_expression, expected_type)
+    if left_value.type is not IR_Integer_Type {
+        abort(checked_expression.location, "Not an integer type: ".clone().append(left_value.type.name))
+    }
     let right_value = self.convert_expression(checked_expression.right_expression, left_value.type)
     return self.append(
         make @IR_Substract_Instruction(

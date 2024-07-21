@@ -769,6 +769,8 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_call_expression(parsed_expression.as(@Parsed_Call_Expression))
     } else if parsed_expression is Parsed_Cast_Expression {
         checked_expression = self.check_cast_expression(parsed_expression.as(@Parsed_Cast_Expression))
+    } else if parsed_expression is Parsed_Dereference_Expression {
+        checked_expression = self.check_dereference_expression(parsed_expression.as(@Parsed_Dereference_Expression))
     } else if parsed_expression is Parsed_Divide_Expression {
         checked_expression = self.check_divide_expression(parsed_expression.as(@Parsed_Divide_Expression))
     } else if parsed_expression is Parsed_Equals_Expression {
@@ -809,12 +811,12 @@ func check_expression(self: @Checker, parsed_expression: @Parsed_Expression, exp
         checked_expression = self.check_not_equals_expression(parsed_expression.as(@Parsed_Not_Equals_Expression))
     } else if parsed_expression is Parsed_Paren_Expression {
         checked_expression = self.check_expression(parsed_expression.as(@Parsed_Paren_Expression).expression, expected_type)
+    } else if parsed_expression is Parsed_Reference_Expression {
+        checked_expression = self.check_reference_expression(parsed_expression.as(@Parsed_Reference_Expression))
     } else if parsed_expression is Parsed_Substract_Expression {
         checked_expression = self.check_substract_expression(parsed_expression.as(@Parsed_Substract_Expression))
     } else if parsed_expression is Parsed_Symbol_Expression {
         checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
-    } else if parsed_expression is Parsed_Variable_Reference_Expression {
-        checked_expression = self.check_variable_reference_expression(parsed_expression.as(@Parsed_Variable_Reference_Expression))
     } else if parsed_expression is Parsed_Wrapped_Expression {
         checked_expression = self.check_expression(parsed_expression.as(@Parsed_Wrapped_Expression).expression, expected_type)
     } else {
@@ -1066,6 +1068,18 @@ func check_cast_expression(self: @Checker, parsed_expression: @Parsed_Cast_Expre
         }
     }
     abort(parsed_expression.location, clone("Cannot cast ").append(checked_expression.type.name).append(" to ").append(checked_type.name))
+}
+
+func check_dereference_expression(self: @Checker, parsed_expression: @Parsed_Dereference_Expression) -> @Checked_Expression {
+    let checked_target_expression = self.check_expression(parsed_expression.target_expression, null)
+    if checked_target_expression.type is not Checked_Pointer_Type {
+        abort(parsed_expression.location, "Not a pointer type")
+    }
+    return make @Checked_Dereference_Expression(
+        location = parsed_expression.location
+        type = checked_target_expression.type.as(@Checked_Pointer_Type).pointed_type
+        target_expression = checked_target_expression
+    )
 }
 
 func check_divide_expression(self: @Checker, parsed_expression: @Parsed_Divide_Expression) -> @Checked_Expression {
@@ -1799,6 +1813,32 @@ func check_not_equals_expression(self: @Checker, parsed_expression: @Parsed_Not_
     )
 }
 
+func check_reference_expression(self: @Checker, parsed_expression: @Parsed_Reference_Expression) -> @Checked_Expression {
+    let checked_target_expression = self.check_reference_target_expression(parsed_expression.target_expression)
+    if checked_target_expression is not Checked_Symbol_Expression {
+        abort(checked_target_expression.location, "Not a symbol expression")
+    }
+    let checked_symbol = checked_target_expression.as(@Checked_Symbol_Expression).symbol
+    if checked_symbol is not Checked_Variable_Symbol {
+        abort(checked_target_expression.location, "Not a variable")
+    }
+    return make @Checked_Reference_Expression(
+        location = parsed_expression.location
+        type = make_checked_pointer_type(checked_target_expression.type)
+        object_expression = checked_target_expression
+    )
+}
+
+func check_reference_target_expression(self: @Checker, parsed_expression: @Parsed_Expression) -> @Checked_Expression {
+    if parsed_expression is Parsed_Symbol_Expression {
+        let checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
+        if checked_expression.symbol is Checked_Variable_Symbol {
+            return checked_expression
+        }
+    }
+    abort(parsed_expression.location, "Not a reference target")
+}
+
 func check_substract_expression(self: @Checker, parsed_expression: @Parsed_Substract_Expression) -> @Checked_Expression {
     let left_expression = self.check_expression(parsed_expression.left_expression, null)
     if left_expression.type is not Checked_Integer_Type {
@@ -1813,7 +1853,7 @@ func check_substract_expression(self: @Checker, parsed_expression: @Parsed_Subst
     )
 }
 
-func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression) -> @Checked_Expression {
+func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_Expression) -> @Checked_Symbol_Expression {
     let checked_symbol_name = parsed_expression.name.lexeme
     let checked_symbol = self.local_symbols.find_symbol(checked_symbol_name)
     if checked_symbol == null {
@@ -1851,25 +1891,6 @@ func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_E
 }
 
 struct Checked_Generic_Function_Symbol: Checked_Symbol {
-}
-
-func check_variable_reference_expression(self: @Checker, parsed_expression: @Parsed_Variable_Reference_Expression) -> @Checked_Expression {
-    let checked_variable_expression = self.check_expression(parsed_expression.variable_expression, null)
-    if checked_variable_expression is not Checked_Symbol_Expression {
-        abort(checked_variable_expression.location, "Not a symbol expression")
-    }
-    let checked_symbol = checked_variable_expression.as(@Checked_Symbol_Expression).symbol
-    if checked_symbol is not Checked_Variable_Symbol {
-        abort(checked_variable_expression.location, "Not a variable")
-    }
-    if checked_symbol.type is not Checked_Struct_Type {
-        abort(checked_variable_expression.location, "Cannot reference ".clone().append(checked_symbol.type.name).append(" variables yet"))
-    }
-    return make @Checked_Reference_Expression(
-        location = parsed_expression.location
-        type = make_checked_pointer_type(checked_variable_expression.type)
-        object_expression = checked_variable_expression
-    )
 }
 
 func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {

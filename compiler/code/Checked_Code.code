@@ -679,6 +679,10 @@ struct Checked_Character_Literal_Expression: Checked_Literal_Expression {
     literal: @Character_Token
 }
 
+struct Checked_Dereference_Expression: Checked_Expression {
+    target_expression: @Checked_Expression
+}
+
 struct Checked_Divide_Expression: Checked_Binary_Expression {
 }
 

@@ -992,53 +992,54 @@ func parse_unary_expression(self: @Parser) -> @Parsed_Expression {
 }
 
 \ access_expression
-\   | primary_expression ( "." IDENTIFIER | "." "as" "(" type ")" | "(" call_arguments? ")" | "[" expression "]" )*
+\   | primary_expression ( "." IDENTIFIER | "." "as" "(" type ")" | "." "@" | "(" call_arguments? ")" | "[" expression "]" )*
 func parse_access_expression(self: @Parser) -> @Parsed_Expression {
     let expression = self.parse_primary_expression()
-    if expression != null {
-        loop {
-            let old_expression = expression
-            if self.matches(optional_space, required_dot) {
-                self.consume_space(0)
-                self.consume(required_dot)
-                self.consume_space(0)
-                if self.matches(required_as) {
-                    self.consume(required_as)
-                    self.consume_space(0)
-                    self.consume(required_open_paren)
-                    self.consume_space(0)
-                    let type = self.parse_type()
-                    self.consume_space(0)
-                    self.consume(required_close_paren)
-                    expression = make @Parsed_Cast_Expression(location = expression.location, value_expression = expression, type = type)
-                } else {
-                    expression = make @Parsed_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(required_identifier).as(@Identifier_Token))
-                }
-            }
-            if self.matches(optional_space, required_open_paren) {
+    loop {
+        let old_expression = expression
+        if self.matches(optional_space, required_dot) {
+            self.consume_space(0)
+            self.consume(required_dot)
+            self.consume_space(0)
+            if self.matches(required_as) {
+                self.consume(required_as)
                 self.consume_space(0)
                 self.consume(required_open_paren)
                 self.consume_space(0)
-                let call_arguments = make @List[@Parsed_Call_Argument]()
-                if not self.matches(optional_space, required_close_paren) {
-                    self.parse_call_arguments(call_arguments)
-                }
+                let type = self.parse_type()
                 self.consume_space(0)
                 self.consume(required_close_paren)
-                expression = make @Parsed_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
+                expression = make @Parsed_Cast_Expression(location = expression.location, value_expression = expression, type = type)
+            } else if self.matches(required_at) {
+                expression = make @Parsed_Dereference_Expression(location = expression.location, target_expression = expression)
+                self.consume(required_at)
+            } else {
+                expression = make @Parsed_Member_Access_Expression(location = expression.location, object_expression = expression, member_name = self.consume(required_identifier).as(@Identifier_Token))
             }
-            if self.matches(optional_space, required_open_bracket) {
-                self.consume_space(0)
-                self.consume(required_open_bracket)
-                self.consume_space(0)
-                let index_expression = self.parse_expression()
-                self.consume_space(0)
-                self.consume(required_close_bracket)
-                expression = make @Parsed_Array_Access_Expression(location = expression.location, array_expression = expression, index_expression = index_expression)
+        }
+        if self.matches(optional_space, required_open_paren) {
+            self.consume_space(0)
+            self.consume(required_open_paren)
+            self.consume_space(0)
+            let call_arguments = make @List[@Parsed_Call_Argument]()
+            if not self.matches(optional_space, required_close_paren) {
+                self.parse_call_arguments(call_arguments)
             }
-            if expression == old_expression {
-                break
-            }
+            self.consume_space(0)
+            self.consume(required_close_paren)
+            expression = make @Parsed_Call_Expression(location = expression.location, callee_expression = expression, arguments = call_arguments)
+        }
+        if self.matches(optional_space, required_open_bracket) {
+            self.consume_space(0)
+            self.consume(required_open_bracket)
+            self.consume_space(0)
+            let index_expression = self.parse_expression()
+            self.consume_space(0)
+            self.consume(required_close_bracket)
+            expression = make @Parsed_Array_Access_Expression(location = expression.location, array_expression = expression, index_expression = index_expression)
+        }
+        if expression == old_expression {
+            break
         }
     }
     return expression
@@ -1130,7 +1131,7 @@ func parse_call_argument(self: @Parser) -> @Parsed_Call_Argument {
 }
 
 \ primary_expression
-\   | "@"? IDENTIFIER
+\   | "@"? access_expression
 \   | INTEGER
 \   | STRING
 \   | CHARACTER
@@ -1168,10 +1169,9 @@ func parse_primary_expression(self: @Parser) -> @Parsed_Expression {
     if self.matches(required_at) {
         let location = self.consume(required_at).location
         self.consume_space(0)
-        let identifier = self.consume(required_identifier).as(@Identifier_Token)
-        return make @Parsed_Variable_Reference_Expression(
+        return make @Parsed_Reference_Expression(
             location = location
-            variable_expression = make @Parsed_Symbol_Expression(location = identifier.location, name = identifier)
+            target_expression = self.parse_access_expression()
         )
     }
     if self.matches(required_identifier) {

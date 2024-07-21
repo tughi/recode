@@ -339,8 +339,12 @@ struct Parsed_Symbol_Expression: Parsed_Expression {
     name: @Identifier_Token
 }
 
-struct Parsed_Variable_Reference_Expression: Parsed_Expression {
-    variable_expression: @Parsed_Symbol_Expression
+struct Parsed_Dereference_Expression: Parsed_Expression {
+    target_expression: @Parsed_Expression
+}
+
+struct Parsed_Reference_Expression: Parsed_Expression {
+    target_expression: @Parsed_Expression
 }
 
 struct Parsed_Binary_Expression: Parsed_Expression {
