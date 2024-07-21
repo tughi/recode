@@ -166,7 +166,7 @@ def test(paths, save=False, stage=1):
                 if test_file.endswith('.s'):
                     test_binary = f'build/{test_dir}/test'
                     if not os.path.exists(test_binary) or os.path.getmtime(test_file) > os.path.getmtime(test_binary):
-                        assemble(None, test_binary, input=compiler_result.stdout, text=True, check=True)
+                        assemble(test_file, test_binary, check=True)
 
                         test_result = run(
                             [test_binary, *test_data.get('args', [])],
