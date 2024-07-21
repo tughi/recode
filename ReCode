@@ -123,7 +123,7 @@ def test(paths, save=False, stage=1):
                 compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr).splitlines() if compiler_result.stderr else []
 
                 diff = compute_diff(
-                    json.dumps(test_data.get('error', []), indent=4),
+                    json.dumps(test_data.get('error'), indent=4) if 'error' in test_data else '',
                     json.dumps(compiler_error, indent=4),
                 )
                 if diff:
@@ -182,8 +182,8 @@ def test(paths, save=False, stage=1):
                         }
 
                         diff = compute_diff(
-                            json.dumps(test_data.get('result', {}), indent=4),
-                            json.dumps(actual_result, indent=4),
+                            json.dumps(test_data.get('result'), indent=4) if 'result' in test_data else '',
+                            json.dumps(actual_result, indent=4) if actual_result else '',
                         )
                         if diff:
                             if save:
