@@ -413,6 +413,10 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
     }
     stderr.end_line()
 
+    mc_block.append(make @MC_SSA_Comment(
+        ir_instruction = ir_instruction
+    ))
+
     if ir_instruction is IR_Add_Instruction {
         self.convert_add_instruction(ir_instruction.as(@IR_Add_Instruction), mc_block)
     } else if ir_instruction is IR_Alloc_Instruction {

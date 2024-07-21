@@ -1,0 +1,60 @@
+type Number = struct {
+  value: i32
+}
+
+$Number__get_value(%self: ptr<Number>): i32 {
+@1:
+  [ %self ]
+  %self.ptr: ptr<ptr<Number>> = alloc ptr<Number>
+  [ %self.ptr %self ]
+  store %self.ptr %self
+  [ %self.ptr ]
+  %1: ptr<Number> = load %self.ptr
+  [ %1 ]
+  %2: ptr<i32> = offset %1 Number.value
+  [ %2 ]
+  %3: i32 = load %2
+  [ %3 ]
+  ret %3
+  [ ]
+}
+
+$Number__set_value(%self: ptr<Number>, %value: i32) {
+@1:
+  [ %value %self ]
+  %self.ptr: ptr<ptr<Number>> = alloc ptr<Number>
+  [ %self.ptr %value %self ]
+  store %self.ptr %self
+  [ %self.ptr %value ]
+  %value.ptr: ptr<i32> = alloc i32
+  [ %value.ptr %self.ptr %value ]
+  store %value.ptr %value
+  [ %value.ptr %self.ptr ]
+  %1: ptr<Number> = load %self.ptr
+  [ %value.ptr %1 ]
+  %2: ptr<i32> = offset %1 Number.value
+  [ %2 %value.ptr ]
+  %value.1: i32 = load %value.ptr
+  [ %2 %value.1 ]
+  store %2 %value.1
+  [ ]
+  ret
+  [ ]
+}
+
+$main() {
+@1:
+  [ ]
+  %mode.ptr: ptr<Number> = alloc Number
+  [ %mode.ptr ]
+  %1: i32 = const 42
+  [ %1 %mode.ptr ]
+  %2: Number = struct { Number.value: %1 }
+  [ %1 %mode.ptr ]
+  %3: ptr<i32> = offset %mode.ptr Number.value
+  [ %3 %1 ]
+  store %3 %1
+  [ ]
+  ret
+  [ ]
+}

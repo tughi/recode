@@ -255,6 +255,20 @@ struct MC_Stack_Operand: MC_Operand(
     stack_offset: i32
 }
 
+struct MC_SSA_Comment: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let self = self.as(@MC_SSA_Comment)
+        file.write("# ")
+        if self.ir_instruction.result_value != null {
+            file.write(self.ir_instruction.result_value).write(": ").write(self.ir_instruction.result_value.type.name).write(" = ")
+        }
+        self.ir_instruction.print(file)
+        return file
+    }
+) {
+    ir_instruction: @IR_Instruction
+}
+
 struct MC_ADD_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_ADD_Instruction)
