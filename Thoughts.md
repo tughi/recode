@@ -119,8 +119,13 @@ Methods can be declared also outside of a type block.
 
 References point to a value and can be created usig the `@` operator:
 
-    let data = make Data()      \ local Data variable
-    let data_ref = @data        \ reference to data's value
+    struct Data {
+        value: i32
+    }
+
+    let data = make Data()              \ local Data variable
+    let data_ref = @data                \ reference to data
+    let data_value_ref = @data.value    \ reference to data.value
 
 Dereferencing is done via the `.@` operator:
 
