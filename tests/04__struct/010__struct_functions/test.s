@@ -48,16 +48,28 @@ main:
 .L__main__S:
   sub $0x10, %rsp
 .L__main__1:
-  # %mode.ptr: ptr<Number> = alloc Number
-  # %1: i32 = const 42
+  # %number.ptr: ptr<Number> = alloc Number
+  # %1: i32 = const 0
   # %2: Number = struct { Number.value: %1 }
-  # %3: ptr<i32> = offset %mode.ptr Number.value
+  # %3: ptr<i32> = offset %number.ptr Number.value
   lea 12(%rsp), %rax
   # store %3 %1
-  movl $0x2a, 0(%rax)
-  # ret
+  movl $0x0, 0(%rax)
+  # %4: i32 = const 42
+  # call $Number__set_value %number.ptr %4
+  lea 12(%rsp), %rdi
+  movl $0x2a, %esi
+  call Number__set_value
+  # %5: i32 = call $Number__get_value %number.ptr
+  lea 12(%rsp), %rdi
+  call Number__get_value
+  # %6: i32 = const 42
+  # %7: i32 = sub %5 %6
+  movl %eax, %ecx
+  sub $0x2a, %ecx
+  # ret %7
+  movl %ecx, %eax
   jmp .L__main__E
 .L__main__E:
   add $0x10, %rsp
-  xor %rax, %rax
   ret

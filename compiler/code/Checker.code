@@ -1815,13 +1815,6 @@ func check_not_equals_expression(self: @Checker, parsed_expression: @Parsed_Not_
 
 func check_reference_expression(self: @Checker, parsed_expression: @Parsed_Reference_Expression) -> @Checked_Expression {
     let checked_target_expression = self.check_reference_target_expression(parsed_expression.target_expression)
-    if checked_target_expression is not Checked_Symbol_Expression {
-        abort(checked_target_expression.location, "Not a symbol expression")
-    }
-    let checked_symbol = checked_target_expression.as(@Checked_Symbol_Expression).symbol
-    if checked_symbol is not Checked_Variable_Symbol {
-        abort(checked_target_expression.location, "Not a variable")
-    }
     return make @Checked_Reference_Expression(
         location = parsed_expression.location
         type = make_checked_pointer_type(checked_target_expression.type)
@@ -1830,11 +1823,14 @@ func check_reference_expression(self: @Checker, parsed_expression: @Parsed_Refer
 }
 
 func check_reference_target_expression(self: @Checker, parsed_expression: @Parsed_Expression) -> @Checked_Expression {
-    if parsed_expression is Parsed_Symbol_Expression {
-        let checked_expression = self.check_symbol_expression(parsed_expression.as(@Parsed_Symbol_Expression))
+    let checked_expression = self.check_expression(parsed_expression, null)
+    if checked_expression is Checked_Symbol_Expression {
+        let checked_expression = checked_expression.as(@Checked_Symbol_Expression)
         if checked_expression.symbol is Checked_Variable_Symbol {
             return checked_expression
         }
+    } else if checked_expression is Checked_Member_Access_Expression {
+        return checked_expression
     }
     abort(parsed_expression.location, "Not a reference target")
 }

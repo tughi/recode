@@ -1,0 +1,23 @@
+struct Number {
+    value: i32
+    next: @Number
+}
+
+func main() -> i32 {
+    let third = make Number(value: 43)
+    let second = make Number(value: 42, next: @third)
+    let first = make Number(value: 41, next: @second)
+
+    let second_value = first.next.value
+    let second_value_ref = @first.next.value
+
+    if second_value != 42 {
+        return 1
+    }
+
+    if second_value_ref.@ != 42 {
+        return 2
+    }
+
+    return 0
+}
