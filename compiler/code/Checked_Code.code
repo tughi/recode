@@ -496,6 +496,7 @@ struct Checked_Callable: Object {
     unique_name: @String
     name: @String = undefined
     parameter_labels = make List[@String]()
+    receiver_type: @Checked_Type
 }
 
 func init(self: @Checked_Callable, name: @Identifier_Token, parameters: @List[@Parsed_Callable_Parameter]) -> @Checked_Callable {
@@ -535,31 +536,49 @@ func append_receiver_type(self: @String, receiver_type: @Parsed_Type) -> @String
     abort(receiver_type.location, receiver_type.object_type)
 }
 
-func matches_parameter_labels(self: @Checked_Callable, call_arguments: @List[@Checked_Call_Argument]) -> bool {
-    let call_argument_item = call_arguments.first_item
-    let parameter_label_item = self.parameter_labels.first_item
-    while call_argument_item != null and parameter_label_item != null {
-        let call_argument_label = call_argument_item.data.label
-        let parameter_label = parameter_label_item.data
-        if call_argument_label == null {
-            if parameter_label != null {
-                return false
-            }
-        } else if parameter_label == null {
-            return false
-        } else if not call_argument_label.equals(parameter_label) {
+func matches_parameter_labels(self: @Checked_Callable, parsed_call_arguments: @List[@Parsed_Call_Argument], skip_first_parameter: bool) -> bool {
+    let parsed_call_arguments_item = parsed_call_arguments.first_item
+    let checked_callable_parameter_label_item = self.parameter_labels.first_item
+    if skip_first_parameter {
+        if checked_callable_parameter_label_item == null {
             return false
         }
-        call_argument_item = call_argument_item.next_item
-        parameter_label_item = parameter_label_item.next_item
+        if checked_callable_parameter_label_item.data != null {
+            \ first parameter requires a label
+            return false
+        }
+        checked_callable_parameter_label_item = checked_callable_parameter_label_item.next_item
     }
-    return call_argument_item == null and parameter_label_item == null
+    while parsed_call_arguments_item != null and checked_callable_parameter_label_item != null {
+        let parsed_call_argument = parsed_call_arguments_item.data
+        let checked_callable_parameter_label = checked_callable_parameter_label_item.data
+        if checked_callable_parameter_label != null {
+            if parsed_call_argument.name == null {
+                return false
+            }
+            if not checked_callable_parameter_label.equals(parsed_call_argument.name.lexeme) {
+                return false
+            }
+        } else if parsed_call_argument.name != null {
+            return false
+        }
+        parsed_call_arguments_item = parsed_call_arguments_item.next_item
+        checked_callable_parameter_label_item = checked_callable_parameter_label_item.next_item
+    }
+    return parsed_call_arguments_item == null and checked_callable_parameter_label_item == null
 }
 
 func write(out: @FILE, checked_callable: @Checked_Callable) -> @FILE {
     if checked_callable is Checked_Function {
-        let checked_function_symbol = checked_callable.as(@Checked_Function).function
+        let checked_function_symbol = checked_callable.as(@Checked_Function).function_symbol
+        out.write("func ")
+        if checked_callable.receiver_type != null {
+            out.write(checked_callable.receiver_type.name).write(".")
+        }
         out.write(checked_function_symbol.name).write(checked_function_symbol.function_type.parameters)
+        if checked_function_symbol.function_type.return_type is not Checked_Nothing_Type {
+            out.write(" -> ").write(checked_function_symbol.function_type.return_type.name)
+        }
     } else {
         abort(checked_callable.object_type)
     }
@@ -567,7 +586,7 @@ func write(out: @FILE, checked_callable: @Checked_Callable) -> @FILE {
 }
 
 struct Checked_Function: Checked_Callable {
-    function: @Checked_Function_Symbol
+    function_symbol: @Checked_Function_Symbol
 }
 
 struct Checked_Generic_Function: Checked_Callable {

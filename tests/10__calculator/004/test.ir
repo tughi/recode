@@ -1,5 +1,7 @@
 type FILE = opaque
 
+external $stdout: ptr<FILE>
+
 $main(%argc: i32, %argv: ptr<ptr<u8>>) {
 @1:
   [ %argv %argc $stdout ]
@@ -36,8 +38,6 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   ret
   [ ]
 }
-
-external $stdout: ptr<FILE>
 
 $fputc(%c: u8, %file: ptr<FILE>): i32
 

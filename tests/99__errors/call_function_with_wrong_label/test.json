@@ -1,6 +1,6 @@
 {
     "error": [
         "tests/99__errors/call_function_with_wrong_label/test.code:2:12: No such callable: echo(number: i32)",
-        "tests/99__errors/call_function_with_wrong_label/test.code:5:6: echo(value: i32)"
+        "tests/99__errors/call_function_with_wrong_label/test.code:5:6: func echo(value: i32) -> i32"
     ]
 }

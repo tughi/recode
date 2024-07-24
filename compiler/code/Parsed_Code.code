@@ -18,7 +18,7 @@ func get_named_statements(self: @Parsed_Code, name: @String) -> @List[@Parsed_St
 func get_type_statement(self: @Parsed_Code, name: @String) -> @Parsed_Type_Statement {
     let type_statement: @Parsed_Type_Statement = null
     for_each(self.statements) {
-        if it is Parsed_Type_Statement and (it is not Parsed_Generic_Struct_Statement) {
+        if it is Parsed_Type_Statement {
             let statement = it.as(@Parsed_Type_Statement)
             if statement.name.lexeme.equals(name) {
                 if type_statement != null {

@@ -1,3 +1,5 @@
+type FILE = opaque
+
 type Tokenizer = struct {
   data: ptr<u8>
   index: i32
@@ -8,7 +10,11 @@ type Token = struct {
   value: u8
 }
 
-type FILE = opaque
+external $stdin: ptr<FILE>
+
+external $stdout: ptr<FILE>
+
+external $stderr: ptr<FILE>
 
 $main(%argc: i32, %argv: ptr<ptr<u8>>) {
 @1:
@@ -208,12 +214,6 @@ $next_token(%self: ptr<Tokenizer>): ptr<Token> {
   ret %16
   [ ]
 }
-
-external $stdin: ptr<FILE>
-
-external $stdout: ptr<FILE>
-
-external $stderr: ptr<FILE>
 
 $fputc(%c: u8, %file: ptr<FILE>): i32
 

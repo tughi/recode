@@ -114,6 +114,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                         location = parsed_function_statement.location
                         unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
                         function_statement = parsed_function_statement
+                        receiver_type = null
                     ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
                 )
             } else {
@@ -122,7 +123,8 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                     make @Checked_Function(
                         location = parsed_function_statement.location
                         unique_name = checked_function_symbol_unique_name
-                        function = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
+                        function_symbol = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
+                        receiver_type = null
                     ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
                 )
             }
@@ -135,6 +137,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                     location = parsed_macro_statement.location
                     unique_name = make_unique_callable_name(parsed_macro_statement.name, parsed_macro_statement.type.parameters, parsed_macro_statement.receiver_type)
                     macro_statement = parsed_macro_statement
+                    receiver_type = null
                 ).init(parsed_macro_statement.name, parsed_macro_statement.type.parameters)
             )
             self.macro_statements.append(parsed_macro_statement)
@@ -171,7 +174,8 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                     make @Checked_Function(
                         location = parsed_struct_funtion.location
                         unique_name = checked_function_symbol_unique_name
-                        function = self.create_function_symbol(parsed_struct_funtion, checked_function_symbol_unique_name, null)
+                        function_symbol = self.create_function_symbol(parsed_struct_funtion, checked_function_symbol_unique_name, null)
+                        receiver_type = make_checked_pointer_type(checked_struct_type_symbol.type)
                     ).init(parsed_struct_funtion.name, parsed_struct_funtion.type.parameters)
                 )
             }
@@ -311,12 +315,7 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
         }
     }
 
-    self.checked_code.global_symbols.put(global_symbol_id, checked_function_symbol)
     self.checked_code.functions.append(checked_function_symbol)
-
-    if not parsed_function_statement.is_anonymous {
-        self.global_symbols.append(checked_function_symbol)
-    }
 
     return checked_function_symbol
 }
@@ -900,135 +899,135 @@ func check_array_access_expression(self: @Checker, parsed_expression: @Parsed_Ar
     )
 }
 
-func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression) -> @Checked_Expression {
-    let parsed_callee_expression = parsed_expression.callee_expression
-
-    \ check call arguments
+func check_call_arguments(self: @Checker, parsed_call_expression: @Parsed_Call_Expression, checked_callable_parameters: @List[@Checked_Callable_Parameter], checked_receiver_expression: @Checked_Expression) -> @List[@Checked_Call_Argument] {
     let checked_call_arguments = make @List[@Checked_Call_Argument]()
-    parsed_expression.arguments.for_each() {
-        let parsed_call_argument = it
-        let checked_call_argument_label: @String = null
-        if parsed_call_argument.name != null {
-            checked_call_argument_label = parsed_call_argument.name.lexeme
+
+    let checked_callable_parameters_item = checked_callable_parameters.first_item
+    let parsed_call_arguments_item = parsed_call_expression.arguments.first_item
+    if checked_receiver_expression != null {
+        if checked_callable_parameters_item == null {
+            abort(parsed_call_expression.location, "Unexpected receiver")
         }
-        let checked_call_argument_expression = self.check_expression(parsed_call_argument.value_expression, null)
+        let checked_callable_parameter = checked_callable_parameters_item.data
+        if checked_callable_parameter.label != null {
+            abort(parsed_call_expression.location, "Unexpected receiver")
+        }
+        if not checked_callable_parameter.type.accepts(checked_receiver_expression.type) {
+            abort(checked_receiver_expression.location, "Incompatible receiver type: ".clone().append(checked_receiver_expression.type.name).append(" instead of ").append(checked_callable_parameter.type.name))
+        }
+        checked_call_arguments.append(make @Checked_Call_Argument(
+            location = checked_receiver_expression.location
+            label = null
+            expression = checked_receiver_expression
+        ))
+        checked_callable_parameters_item = checked_callable_parameters_item.next_item
+    }
+    while checked_callable_parameters_item != null and parsed_call_arguments_item != null {
+        let checked_callable_parameter = checked_callable_parameters_item.data
+        let parsed_call_argument = parsed_call_arguments_item.data
+        if checked_callable_parameter.label == null {
+            if parsed_call_argument.name != null {
+                abort(parsed_call_argument.location, "Argument label mismatch: ".clone().append("No label expected"))
+            }
+        } else if parsed_call_argument.name == null or not checked_callable_parameter.label.equals(parsed_call_argument.name.lexeme) {
+            abort(parsed_call_argument.location, "Argument label mismatch: ".clone().append("Expected label ").append(checked_callable_parameter.label))
+        }
         checked_call_arguments.append(make @Checked_Call_Argument(
             location = parsed_call_argument.location
+            label = checked_callable_parameter.label
+            expression = self.check_expression(parsed_call_argument.value_expression, checked_callable_parameter.type)
+        ))
+        checked_callable_parameters_item = checked_callable_parameters_item.next_item
+        parsed_call_arguments_item = parsed_call_arguments_item.next_item
+    }
+    if checked_callable_parameters_item != null {
+        abort(checked_callable_parameters_item.data.location, "Argument count mismatch")
+    }
+    if parsed_call_arguments_item != null {
+        abort(parsed_call_arguments_item.data.location, "Argument count mismatch")
+    }
+
+    return checked_call_arguments
+}
+
+func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression) -> @Checked_Expression {
+    let parsed_callee_expression = parsed_expression.callee_expression
+    if parsed_callee_expression is Parsed_Member_Access_Expression {
+        return self.check_member_call_expression(parsed_expression, parsed_callee_expression.as(@Parsed_Member_Access_Expression))
+    }
+    if parsed_callee_expression is Parsed_Symbol_Expression {
+        return self.check_symbol_call_expression(parsed_expression, parsed_callee_expression.as(@Parsed_Symbol_Expression))
+    }
+    abort(parsed_callee_expression.location, parsed_callee_expression.object_type)
+}
+
+func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, callable_name: @String, checked_receiver_expression: @Checked_Expression) -> @Checked_Expression {
+    let similar_callables = 0
+    self.callables.for_each() {
+        let callable = value
+        if callable.name.equals(callable_name) {
+            if callable.matches_parameter_labels(parsed_expression.arguments, checked_receiver_expression != null) {
+                \ found callable
+                if callable is Checked_Function {
+                    return self.check_function_call_expression(parsed_expression, callable.as(@Checked_Function), checked_receiver_expression)
+                }
+                abort(parsed_expression.location, callable.object_type)
+            }
+
+            similar_callables = similar_callables + 1
+        }
+    }
+
+    \ convert call arguments to know their types
+    let checked_call_arguments = make @List[@Checked_Call_Argument]()
+    if checked_receiver_expression != null {
+        checked_call_arguments.append(make @Checked_Call_Argument(
+            location = checked_receiver_expression.location
+            label = null
+            expression = checked_receiver_expression
+        ))
+    }
+    parsed_expression.arguments.for_each() {
+        let checked_call_argument_label: @String = null
+        if it.name != null {
+            checked_call_argument_label = it.name.lexeme
+        }
+        checked_call_arguments.append(make @Checked_Call_Argument(
+            location = it.location
             label = checked_call_argument_label
-            expression = checked_call_argument_expression
+            expression = self.check_expression(it.value_expression, null)
         ))
     }
 
-    \ treat Parsed_Member_Access_Expression specially
-    if parsed_callee_expression is Parsed_Member_Access_Expression {
-        \ we have a foo.bar(...) call which needs special attention
-        let parsed_member_access_expression = parsed_callee_expression.as(@Parsed_Member_Access_Expression)
-        let parsed_member_name = parsed_member_access_expression.member_name.lexeme
-
-        \ check object expression
-        let checked_object_expression = self.check_expression(parsed_member_access_expression.object_expression, null)
-        let checked_object_type = checked_object_expression.type
-        if checked_object_type is Checked_Pointer_Type {
-            checked_object_type = checked_object_type.as(@Checked_Pointer_Type).pointed_type
-        }
-        if checked_object_type is Checked_Struct_Type {
-            \ add object reference as first call argument
-            checked_call_arguments.prepend(make @Checked_Call_Argument(
-                location = checked_object_expression.location
-                label = null
-                expression = make @Checked_Reference_Expression( \ struct objects have always an address
-                    location = checked_object_expression.location
-                    type = make_checked_pointer_type(checked_object_type)
-                    object_expression = checked_object_expression
-                )
-            ))
-
-            let checked_object_type = checked_object_type.as(@Checked_Struct_Type)
-            let checked_struct_member = checked_object_type.get_member(parsed_member_name)
-            if checked_struct_member != null and checked_struct_member.type is Checked_Function_Pointer_Type {
-                \ create member call
-                let checked_function_type = checked_struct_member.type.as(@Checked_Function_Pointer_Type).function_type
-                if checked_function_type.accepts(checked_call_arguments) {
-                    return make @Checked_Dynamic_Call_Expression(
-                        location = parsed_expression.location
-                        type = checked_function_type.return_type
-                        call_arguments = checked_call_arguments
-                        callee_expression = make @Checked_Member_Access_Expression(
-                            location = parsed_expression.location
-                            type = checked_struct_member.type
-                            object_expression = checked_object_expression
-                            struct_member = checked_struct_member
-                        )
-                    )
-                }
-                abort(parsed_member_access_expression.member_name.location, "Cannot call member of type: ".clone().append(checked_struct_member.type.name))
-            }
-        } else {
-            \ add object as first call argument
-            checked_call_arguments.prepend(make @Checked_Call_Argument(
-                location = checked_object_expression.location
-                label = null
-                expression = checked_object_expression
-            ))
-        }
-
-        \ treat as uniform callable call syntax
-        return self.check_callable_call_expression(parsed_member_access_expression.member_name, checked_call_arguments)
+    \ list all named functions and report error
+    stderr.write(parsed_expression.location).write(": ").error().write("No such callable: ")
+    if checked_receiver_expression != null {
+        stderr.write(checked_receiver_expression.type.name).write('.')
     }
-
-    \ check callee expression
-    let checked_callee_expression = self.check_expression(parsed_callee_expression, null)
-    if checked_callee_expression is Checked_Symbol_Expression {
-        \ we have a `baz(...)` call
-        let checked_callee_expression = checked_callee_expression.as(@Checked_Symbol_Expression)
-        let checked_symbol = checked_callee_expression.symbol
-
-        \ dynamic calls have highest priority
-        if checked_symbol is Checked_Variable_Symbol or checked_symbol is Checked_Parameter_Symbol {
-            let checked_symbol_type = checked_symbol.type
-            if checked_symbol_type is Checked_Pointer_Type {
-                let checked_symbol_type = checked_symbol_type.as(@Checked_Pointer_Type)
-                if checked_symbol_type.pointed_type is Checked_Function_Type {
-                    let checked_function_type = checked_symbol_type.pointed_type.as(@Checked_Function_Type)
-                    if not checked_function_type.accepts(checked_call_arguments) {
-                        abort(parsed_expression.location, "TODO: Report call arguments error")
-                    }
-                    return make @Checked_Dynamic_Call_Expression(
-                        location = parsed_expression.location
-                        type = checked_function_type.return_type
-                        call_arguments = checked_call_arguments
-                        callee_expression = checked_callee_expression
-                    )
-                }
-            }
-            abort(parsed_expression.location, "TODO: Report non-callable symbol error")
+    stderr.write(callable_name).write('(')
+    let checked_call_arguments_item = checked_call_arguments.first_item
+    while checked_call_arguments_item != null {
+        let checked_call_argument = checked_call_arguments_item.data
+        if checked_call_argument.label != null {
+            stderr.write(checked_call_argument.label).write(": ")
         }
-        if checked_symbol is Checked_Macro_Parameter_Symbol {
-            let checked_symbol = checked_symbol.as(@Checked_Macro_Parameter_Symbol)
-            \ create macro call expression to be inlined at the statement level
-            return make @Checked_Macro_Call_Expression(
-                location = parsed_callee_expression.location
-                type = self.nothing_type
-                parsed_macro_type = checked_symbol.parsed_macro_type
-                parsed_macro_body = checked_symbol.parsed_macro_body
-                specialization_symbols = checked_symbol.local_symbols
-                call_arguments = checked_call_arguments
-            )
+        stderr.write(checked_call_argument.expression.type.name)
+        checked_call_arguments_item = checked_call_arguments_item.next_item
+        if checked_call_arguments_item != null {
+            stderr.write(", ")
         }
-
-        \ should be a callable symbol
-        if checked_symbol is Checked_Function_Symbol or checked_symbol is Checked_Macro_Symbol or checked_symbol is Checked_Generic_Function_Symbol {
-            if parsed_callee_expression is not Parsed_Symbol_Expression {
-                abort(parsed_callee_expression.location, parsed_callee_expression.object_type)
-            }
-            return self.check_callable_call_expression(parsed_callee_expression.as(@Parsed_Symbol_Expression).name, checked_call_arguments)
-        }
-
-        \ unsupported symbol
-        abort(checked_symbol.location, checked_symbol.object_type)
     }
-
-    abort(checked_callee_expression.location, checked_callee_expression.object_type)
+    stderr.write(')').reset().end_line()
+    if similar_callables > 0 {
+        self.callables.for_each() {
+            let callable = value
+            if callable.name.equals(callable_name) {
+                stderr.write(callable.location).write(": ").warning().write(callable).reset().end_line()
+            }
+        }
+    }
+    exit(1)
+    return null \ unreachable
 }
 
 func check_cast_expression(self: @Checker, parsed_expression: @Parsed_Cast_Expression) -> @Checked_Expression {
@@ -1117,94 +1116,38 @@ func check_function_expression(self: @Checker, parsed_expression: @Parsed_Functi
     )
 }
 
-struct Callable_Match: Object {
-    location: @Source_Location
-    callable_type: @Checked_Callable_Type
-}
-
-struct Checked_Function_Match: Callable_Match {
-    function_symbol: @Checked_Function_Symbol
-}
-
-struct Parsed_Generic_Function_Match: Callable_Match {
-    function_statement: @Parsed_Function_Statement
-    specialization_symbols: @Checked_Symbols
-}
-
-struct Parsed_Macro_Match: Callable_Match {
-    macro_statement: @Parsed_Macro_Statement
-    specialization_symbols: @Checked_Symbols
-}
-
-func check_callable_call_expression(self: @Checker, callable_name: @Identifier_Token, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
-    let similar_callables = 0
-    self.callables.for_each() {
-        let callable = value
-        if callable.name.equals(callable_name.lexeme) {
-            if callable.matches_parameter_labels(checked_call_arguments) {
-                \ found callable
-                if callable is Checked_Function {
-                    return self.check_function_call_expression(callable.as(@Checked_Function), checked_call_arguments)
-                }
-                abort(callable_name.location, callable.object_type)
-            }
-
-            similar_callables = similar_callables + 1
-        }
-    }
-
-    \ list all named functions and report error
-    stderr.write(callable_name.location).write(": ").error().write("No such callable: ").write(callable_name.lexeme).write(checked_call_arguments).reset().end_line()
-    if similar_callables > 0 {
-        self.callables.for_each() {
-            let callable = value
-            if callable.name.equals(callable_name.lexeme) {
-                stderr.write(callable.location).write(": ").warning().write(callable).reset().end_line()
-            }
-        }
-    }
-    exit(1)
-    return null \ unreachable
-}
-
-func check_function_call_expression(self: @Checker, checked_function: @Checked_Function, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Function_Call_Expression {
-    self.check_call_arguments(checked_function.function.function_type.parameters, checked_call_arguments)
+func check_function_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, checked_function: @Checked_Function, checked_receiver_expression: @Checked_Expression) -> @Checked_Function_Call_Expression {
+    let checked_call_arguments = self.check_call_arguments(parsed_expression, checked_function.function_symbol.function_type.parameters, checked_receiver_expression)
 
     return make @Checked_Function_Call_Expression(
         location = checked_function.location
-        type = checked_function.function.function_type.return_type
+        type = checked_function.function_symbol.function_type.return_type
         call_arguments = checked_call_arguments
-        function_symbol = checked_function.function
+        function_symbol = checked_function.function_symbol
     )
 }
 
-func check_call_arguments(self: @Checker, checked_callable_parameters: @List[@Checked_Callable_Parameter], checked_call_arguments: @List[@Checked_Call_Argument]) -> Nothing {
-    let checked_callable_parameters_item = checked_callable_parameters.first_item
-    let checked_call_arguments_item = checked_call_arguments.first_item
-    while checked_callable_parameters_item != null and checked_call_arguments_item != null {
-        let checked_callable_parameter = checked_callable_parameters_item.data
-        let checked_call_argument = checked_call_arguments_item.data
-        if checked_callable_parameter.label == null {
-            if checked_call_argument.label != null {
-                abort(checked_call_argument.location, "Argument label mismatch: ".clone().append("No label expected"))
-            }
-        } else if checked_call_argument.label == null or not checked_callable_parameter.label.equals(checked_call_argument.label) {
-            abort(checked_call_argument.location, "Argument label mismatch: ".clone().append("Expected label ").append(checked_callable_parameter.label))
-        }
-        if not checked_callable_parameter.type.accepts(checked_call_argument.expression.type) {
-            abort(checked_call_argument.location, "Argument type mismatch")
-        }
-        checked_callable_parameters_item = checked_callable_parameters_item.next_item
-        checked_call_arguments_item = checked_call_arguments_item.next_item
-    }
-    if checked_callable_parameters_item != null {
-        abort(checked_call_arguments.last().location, "Argument count mismatch")
-    }
-    if checked_call_arguments_item != null {
-        abort(checked_call_arguments_item.data.location, "Argument count mismatch")
-    }
-}
-
+\ TODO: Remove commented code once the `generics` and `macros` are implemented
+\
+\ struct Callable_Match: Object {
+\     location: @Source_Location
+\     callable_type: @Checked_Callable_Type
+\ }
+\ 
+\ struct Checked_Function_Match: Callable_Match {
+\     function_symbol: @Checked_Function_Symbol
+\ }
+\ 
+\ struct Parsed_Generic_Function_Match: Callable_Match {
+\     function_statement: @Parsed_Function_Statement
+\     specialization_symbols: @Checked_Symbols
+\ }
+\ 
+\ struct Parsed_Macro_Match: Callable_Match {
+\     macro_statement: @Parsed_Macro_Statement
+\     specialization_symbols: @Checked_Symbols
+\ }
+\ 
 \ func check_callable_call_expression(self: @Checker, callable_name: @Identifier_Token, checked_call_arguments: @List[@Checked_Call_Argument]) -> @Checked_Expression {
 \     let callable_matches = make List[@Callable_Match]()
 \ 
@@ -1762,6 +1705,57 @@ func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_M
     )
 }
 
+func check_member_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, parsed_callee_expression: @Parsed_Member_Access_Expression) -> @Checked_Expression {
+    let parsed_member_name = parsed_callee_expression.member_name.lexeme
+
+    let checked_object_expression = self.check_expression(parsed_callee_expression.object_expression, null)
+    let checked_object_type = checked_object_expression.type
+
+    if checked_object_type is Checked_Struct_Type or checked_object_type is Checked_Pointer_Type and checked_object_type.as(@Checked_Pointer_Type).pointed_type is Checked_Struct_Type {
+        let checked_struct_type: @Checked_Struct_Type
+        if checked_object_type is Checked_Struct_Type {
+            checked_struct_type = checked_object_type.as(@Checked_Struct_Type)
+        } else {
+            checked_struct_type = checked_object_type.as(@Checked_Pointer_Type).pointed_type.as(@Checked_Struct_Type)
+        }
+
+        let checked_struct_member = checked_struct_type.get_member(parsed_member_name)
+        if checked_struct_member != null {
+            if checked_struct_member.type is Checked_Function_Pointer_Type {
+                \ function pointer call
+                let checked_function_type = checked_struct_member.type.as(@Checked_Function_Pointer_Type).function_type
+                \ if checked_function_type.accepts(checked_call_arguments) {
+                \     return make @Checked_Dynamic_Call_Expression(
+                \         location = parsed_expression.location
+                \         type = checked_function_type.return_type
+                \         call_arguments = checked_call_arguments
+                \         callee_expression = make @Checked_Member_Access_Expression(
+                \             location = parsed_expression.location
+                \             type = checked_struct_member.type
+                \             object_expression = checked_object_expression
+                \             struct_member = checked_struct_member
+                \         )
+                \     )
+                \ }
+                abort("Not implemented")
+            }
+            abort(parsed_callee_expression.member_name.location, "Not a callable type: ".clone().append(checked_struct_member.type.name))
+        }
+
+        if checked_object_type is Checked_Struct_Type {
+            \ auto reference
+            checked_object_type = make_checked_pointer_type(checked_object_type)
+            checked_object_expression = make @Checked_Reference_Expression(
+                location = checked_object_expression.location
+                type = checked_object_type
+                object_expression = checked_object_expression
+            )
+        }
+    }
+
+    return self.check_call_expression(parsed_expression, parsed_member_name, checked_object_expression)
+}
+
 func check_modulo_expression(self: @Checker, parsed_expression: @Parsed_Modulo_Expression) -> @Checked_Expression {
     let left_expression = self.check_expression(parsed_expression.left_expression, null)
     if left_expression.type is not Checked_Integer_Type {
@@ -1887,6 +1881,61 @@ func check_symbol_expression(self: @Checker, parsed_expression: @Parsed_Symbol_E
 }
 
 struct Checked_Generic_Function_Symbol: Checked_Symbol {
+}
+
+func check_symbol_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, parsed_callee_expression: @Parsed_Symbol_Expression) -> @Checked_Expression {
+    let checked_symbol = self.local_symbols.find_symbol(parsed_callee_expression.name.lexeme)
+    if checked_symbol != null {
+        \ dynamic calls have highest priority
+        if checked_symbol is Checked_Variable_Symbol or checked_symbol is Checked_Parameter_Symbol {
+            let checked_symbol_type = checked_symbol.type
+            if checked_symbol_type is Checked_Pointer_Type {
+                let checked_symbol_type = checked_symbol_type.as(@Checked_Pointer_Type)
+                if checked_symbol_type.pointed_type is Checked_Function_Type {
+                    let checked_function_type = checked_symbol_type.pointed_type.as(@Checked_Function_Type)
+                    return make @Checked_Dynamic_Call_Expression(
+                        location = parsed_expression.location
+                        type = checked_function_type.return_type
+                        call_arguments = self.check_call_arguments(parsed_expression, checked_function_type.parameters, null)
+                        callee_expression = make @Checked_Symbol_Expression(
+                            location = parsed_callee_expression.location
+                            type = checked_symbol_type
+                            symbol = checked_symbol
+                        )
+                    )
+                }
+            }
+        }
+
+        abort(parsed_expression.location, checked_symbol.object_type)
+    }
+
+    return self.check_call_expression(parsed_expression, parsed_callee_expression.name.lexeme, null)
+
+    \        if checked_symbol is Checked_Macro_Parameter_Symbol {
+    \            let checked_symbol = checked_symbol.as(@Checked_Macro_Parameter_Symbol)
+    \            let checked_macro_type = checked_symbol.type.as(@Checked_Macro_Type)
+    \            \ create macro call expression to be inlined at the statement level
+    \            return make @Checked_Macro_Call_Expression(
+    \                location = parsed_callee_expression.location
+    \                type = self.nothing_type
+    \                parsed_macro_type = checked_symbol.parsed_macro_type
+    \                parsed_macro_body = checked_symbol.parsed_macro_body
+    \                specialization_symbols = checked_symbol.local_symbols
+    \                call_arguments = self.check_call_arguments(parsed_expression, checked_macro_type.parameters)
+    \            )
+    \        }
+    \
+    \        \ should be a callable symbol
+    \        if checked_symbol is Checked_Function_Symbol or checked_symbol is Checked_Macro_Symbol or checked_symbol is Checked_Generic_Function_Symbol {
+    \            if parsed_callee_expression is not Parsed_Symbol_Expression {
+    \                abort(parsed_callee_expression.location, parsed_callee_expression.object_type)
+    \            }
+    \            return self.check_callable_call_expression(parsed_callee_expression.as(@Parsed_Symbol_Expression).name, checked_call_arguments)
+    \        }
+    \
+    \        \ unsupported symbol
+    \        abort(checked_symbol.location, checked_symbol.object_type)
 }
 
 func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {

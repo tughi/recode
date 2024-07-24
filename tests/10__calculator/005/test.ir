@@ -1,5 +1,11 @@
 type FILE = opaque
 
+external $stdin: ptr<FILE>
+
+external $stdout: ptr<FILE>
+
+external $stderr: ptr<FILE>
+
 $main(%argc: i32, %argv: ptr<ptr<u8>>) {
 @1:
   [ %argv %argc $stdout ]
@@ -128,12 +134,6 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   jmp @10
   [ %argv.ptr %i.ptr $stdout %argc.ptr ]
 }
-
-external $stdin: ptr<FILE>
-
-external $stdout: ptr<FILE>
-
-external $stderr: ptr<FILE>
 
 $fputc(%c: u8, %file: ptr<FILE>): i32
 

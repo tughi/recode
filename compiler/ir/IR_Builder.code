@@ -127,15 +127,17 @@ func find_named_type(self: @IR_Builder, name: @String) -> @IR_Type {
 
 func build(self: @IR_Builder) -> Nothing {
     self.checked_code.global_symbols.for_each() {
-        if value is Checked_Function_Symbol {
-            self.create_function(value.as(@Checked_Function_Symbol))
-        } else if value is Checked_Type_Symbol {
+        if value is Checked_Type_Symbol {
             \ ignored
         } else if value is Checked_Variable_Symbol {
             self.create_global_variable(value.as(@Checked_Variable_Symbol))
         } else {
             abort(value.location, value.object_type)
         }
+    }
+
+    self.checked_code.functions.for_each() {
+        self.create_function(it)
     }
 
     self.global_context.symbols.for_each() {

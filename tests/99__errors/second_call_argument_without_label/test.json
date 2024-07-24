@@ -1,6 +1,6 @@
 {
     "error": [
         "tests/99__errors/second_call_argument_without_label/test.code:2:12: No such callable: difference(v1: i32, i32)",
-        "tests/99__errors/second_call_argument_without_label/test.code:5:6: difference(v1: i32, v2: i32)"
+        "tests/99__errors/second_call_argument_without_label/test.code:5:6: func difference(v1: i32, v2: i32) -> i32"
     ]
 }
