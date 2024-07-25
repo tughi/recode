@@ -2,7 +2,7 @@ type Number = struct {
   value: i32
 }
 
-$Number__get_value(%self: ptr<Number>): i32 {
+$pNumber__get_value(%self: ptr<Number>): i32 {
 @1:
   [ %self ]
   %self.ptr: ptr<ptr<Number>> = alloc ptr<Number>
@@ -19,7 +19,7 @@ $Number__get_value(%self: ptr<Number>): i32 {
   [ ]
 }
 
-$Number__set_value(%self: ptr<Number>, %value: i32) {
+$pNumber__set_value(%self: ptr<Number>, %value: i32) {
 @1:
   [ %value %self ]
   %self.ptr: ptr<ptr<Number>> = alloc ptr<Number>
@@ -57,9 +57,9 @@ $main(): i32 {
   [ %number.ptr ]
   %4: i32 = const 42
   [ %number.ptr %4 ]
-  call $Number__set_value %number.ptr %4
+  call $pNumber__set_value %number.ptr %4
   [ %number.ptr ]
-  %5: i32 = call $Number__get_value %number.ptr
+  %5: i32 = call $pNumber__get_value %number.ptr
   [ %5 ]
   %6: i32 = const 42
   [ %5 %6 ]

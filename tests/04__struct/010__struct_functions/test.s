@@ -1,7 +1,7 @@
-Number__get_value:
-.L__Number__get_value__S:
+pNumber__get_value:
+.L__pNumber__get_value__S:
   sub $0x10, %rsp
-.L__Number__get_value__1:
+.L__pNumber__get_value__1:
   # %self.ptr: ptr<ptr<Number>> = alloc ptr<Number>
   # store %self.ptr %self
   movq %rdi, 8(%rsp)
@@ -12,16 +12,16 @@ Number__get_value:
   # %3: i32 = load %2
   movl 0(%rcx), %eax
   # ret %3
-  jmp .L__Number__get_value__E
-.L__Number__get_value__E:
+  jmp .L__pNumber__get_value__E
+.L__pNumber__get_value__E:
   add $0x10, %rsp
   ret
 
 
-Number__set_value:
-.L__Number__set_value__S:
+pNumber__set_value:
+.L__pNumber__set_value__S:
   sub $0x10, %rsp
-.L__Number__set_value__1:
+.L__pNumber__set_value__1:
   # %self.ptr: ptr<ptr<Number>> = alloc ptr<Number>
   # store %self.ptr %self
   movq %rdi, 8(%rsp)
@@ -37,8 +37,8 @@ Number__set_value:
   # store %2 %value.1
   movl %eax, 0(%rcx)
   # ret
-  jmp .L__Number__set_value__E
-.L__Number__set_value__E:
+  jmp .L__pNumber__set_value__E
+.L__pNumber__set_value__E:
   add $0x10, %rsp
   ret
 
@@ -56,13 +56,13 @@ main:
   # store %3 %1
   movl $0x0, 0(%rax)
   # %4: i32 = const 42
-  # call $Number__set_value %number.ptr %4
+  # call $pNumber__set_value %number.ptr %4
   lea 12(%rsp), %rdi
   movl $0x2a, %esi
-  call Number__set_value
-  # %5: i32 = call $Number__get_value %number.ptr
+  call pNumber__set_value
+  # %5: i32 = call $pNumber__get_value %number.ptr
   lea 12(%rsp), %rdi
-  call Number__get_value
+  call pNumber__get_value
   # %6: i32 = const 42
   # %7: i32 = sub %5 %6
   movl %eax, %ecx

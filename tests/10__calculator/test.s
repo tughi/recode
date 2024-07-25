@@ -7,16 +7,16 @@
 .globl main
 main:
 .L__main__S:
-  sub $0x30, %rsp
+  sub $0x20, %rsp
 .L__main__1:
   # %argc.ptr: ptr<i32> = alloc i32
   # store %argc.ptr %argc
-  movl %edi, 44(%rsp)
+  movl %edi, 28(%rsp)
   # %argv.ptr: ptr<ptr<ptr<u8>>> = alloc ptr<ptr<u8>>
   # store %argv.ptr %argv
-  movq %rsi, 36(%rsp)
+  movq %rsi, 20(%rsp)
   # %argc.1: i32 = load %argc.ptr
-  movl 44(%rsp), %eax
+  movl 28(%rsp), %eax
   # %1: i32 = const 2
   # %2: bool = cmp_ne %argc.1 %1
   cmp $0x2, %eax
@@ -34,42 +34,38 @@ main:
   # %tokenizer.ptr: ptr<Tokenizer> = alloc Tokenizer
   # %4: i32 = const 1
   # %5: ptr<ptr<u8>> = offset %argv.ptr %4
-  movq 36(%rsp), %rcx
+  movq 20(%rsp), %rcx
   # %6: ptr<u8> = load %5
   movq 8(%rcx), %rax
   # %7: i32 = const 0
   # %8: Tokenizer = struct { Tokenizer.data: %6, Tokenizer.index: %7 }
   # %9: ptr<ptr<u8>> = offset %tokenizer.ptr Tokenizer.data
-  lea 24(%rsp), %rcx
+  lea 8(%rsp), %rcx
   # store %9 %6
   movq %rax, 0(%rcx)
   # %10: ptr<i32> = offset %tokenizer.ptr Tokenizer.index
-  lea 24(%rsp), %rax
+  lea 8(%rsp), %rax
   # store %10 %7
   movl $0x0, 8(%rax)
-  # %tokenizer_ref.ptr: ptr<ptr<Tokenizer>> = alloc ptr<Tokenizer>
-  # store %tokenizer_ref.ptr %tokenizer.ptr
-  lea 24(%rsp), %rax
-  movq %rax, 16(%rsp)
   # jmp @4
   jmp .L__main__4
 .L__main__4:
-  # %11: bool = call $has_next_token %tokenizer.ptr
-  lea 24(%rsp), %rdi
-  call has_next_token
+  # %11: bool = call $pTokenizer__has_next_token %tokenizer.ptr
+  lea 8(%rsp), %rdi
+  call pTokenizer__has_next_token
   # br %11 @5 @6
   cmp $0x0, %al
   jne .L__main__5
   jmp .L__main__6
 .L__main__5:
   # %token.ptr: ptr<ptr<Token>> = alloc ptr<Token>
-  # %12: ptr<Token> = call $next_token %tokenizer.ptr
-  lea 24(%rsp), %rdi
-  call next_token
+  # %12: ptr<Token> = call $pTokenizer__next_token %tokenizer.ptr
+  lea 8(%rsp), %rdi
+  call pTokenizer__next_token
   # store %token.ptr %12
-  movq %rax, 8(%rsp)
+  movq %rax, 0(%rsp)
   # %13: ptr<Token> = load %token.ptr
-  movq 8(%rsp), %rax
+  movq 0(%rsp), %rax
   # %14: ptr<i32> = offset %13 Token.kind
   movq %rax, %rcx
   # %15: i32 = load %14
@@ -90,7 +86,7 @@ main:
   jmp .L__main__6
 .L__main__8:
   # %18: ptr<Token> = load %token.ptr
-  movq 8(%rsp), %rax
+  movq 0(%rsp), %rax
   # %19: ptr<u8> = offset %18 Token.value
   movq %rax, %rcx
   # %20: u8 = load %19
@@ -104,15 +100,15 @@ main:
   # jmp @4
   jmp .L__main__4
 .L__main__E:
-  add $0x30, %rsp
+  add $0x20, %rsp
   xor %rax, %rax
   ret
 
 
-has_next_token:
-.L__has_next_token__S:
+pTokenizer__has_next_token:
+.L__pTokenizer__has_next_token__S:
   sub $0x10, %rsp
-.L__has_next_token__1:
+.L__pTokenizer__has_next_token__1:
   # %self.ptr: ptr<ptr<Tokenizer>> = alloc ptr<Tokenizer>
   # store %self.ptr %self
   movq %rdi, 8(%rsp)
@@ -142,16 +138,16 @@ has_next_token:
   setne %cl
   # ret %9
   movb %cl, %al
-  jmp .L__has_next_token__E
-.L__has_next_token__E:
+  jmp .L__pTokenizer__has_next_token__E
+.L__pTokenizer__has_next_token__E:
   add $0x10, %rsp
   ret
 
 
-next_token:
-.L__next_token__S:
+pTokenizer__next_token:
+.L__pTokenizer__next_token__S:
   sub $0x10, %rsp
-.L__next_token__1:
+.L__pTokenizer__next_token__1:
   # %self.ptr: ptr<ptr<Tokenizer>> = alloc ptr<Tokenizer>
   # store %self.ptr %self
   movq %rdi, 8(%rsp)
@@ -211,7 +207,7 @@ next_token:
   # store %20 %value.1
   movb %cl, 4(%rdx)
   # ret %16
-  jmp .L__next_token__E
-.L__next_token__E:
+  jmp .L__pTokenizer__next_token__E
+.L__pTokenizer__next_token__E:
   add $0x10, %rsp
   ret

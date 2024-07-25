@@ -7,10 +7,9 @@ func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
         data: argv[1]
         index: 0
     )
-    let tokenizer_ref = @tokenizer
 
-    while has_next_token(@tokenizer) {
-        let token = next_token(@tokenizer)
+    while tokenizer.has_next_token() {
+        let token = tokenizer.next_token()
         if token.kind == 0 {
             break
         }
@@ -21,19 +20,19 @@ func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
 struct Tokenizer {
     data: [u8; ?]
     index: i32
-}
 
-func has_next_token(anon self: @Tokenizer) -> bool {
-    return self.data[self.index] != 0
-}
+    func has_next_token(self) -> bool {
+        return self.data[self.index] != 0
+    }
 
-func next_token(anon self: @Tokenizer) -> @Token {
-    let value = self.data[self.index]
-    self.index = self.index + 1
-    return make @Token(
-        kind: 1
-        value: value
-    )
+    func next_token(self) -> @Token {
+        let value = self.data[self.index]
+        self.index = self.index + 1
+        return make @Token(
+            kind: 1
+            value: value
+        )
+    }
 }
 
 struct Token {

@@ -536,10 +536,16 @@ func append_receiver_type(self: @String, receiver_type: @Parsed_Type) -> @String
     abort(receiver_type.location, receiver_type.object_type)
 }
 
-func matches_parameter_labels(self: @Checked_Callable, parsed_call_arguments: @List[@Parsed_Call_Argument], skip_first_parameter: bool) -> bool {
+func matches_parameter_labels(self: @Checked_Callable, parsed_call_arguments: @List[@Parsed_Call_Argument], checked_receiver_expression: @Checked_Expression) -> bool {
     let parsed_call_arguments_item = parsed_call_arguments.first_item
     let checked_callable_parameter_label_item = self.parameter_labels.first_item
-    if skip_first_parameter {
+    if checked_receiver_expression != null {
+        if self.receiver_type == null {
+            return false
+        }
+        if not self.receiver_type.accepts(checked_receiver_expression.type) {
+            return false
+        }
         if checked_callable_parameter_label_item == null {
             return false
         }

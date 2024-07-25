@@ -167,7 +167,13 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 let checked_function_symbol_unique_name = make_unique_callable_name(
                     parsed_struct_funtion.name
                     parsed_struct_funtion.type.parameters
-                    make @Parsed_Named_Type(location = parsed_struct_statement.name.location, name = parsed_struct_statement.name)
+                    make @Parsed_Pointer_Type(
+                        location = parsed_struct_statement.name.location
+                        pointed_type = make @Parsed_Named_Type(
+                            location = parsed_struct_statement.name.location
+                            name = parsed_struct_statement.name
+                        )
+                    )
                 )
 
                 self.add_callable(
@@ -298,7 +304,7 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
     let checked_function_symbol = make @Checked_Function_Symbol(
         location = parsed_function_statement.location
         name = checked_function_name
-        unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
+        unique_name = unique_name
         type = make_checked_function_pointer_type(checked_function_type)
         function_type = checked_function_type
 
@@ -306,14 +312,6 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
         specialization_symbols = specialization_symbols
         body = null
     )
-
-    \ create symbol ID based on parameter labels
-    let global_symbol_id = checked_function_symbol.name.clone()
-    checked_function_type.parameters.for_each() {
-        if it.label != null {
-            global_symbol_id.append("__").append(it.label)
-        }
-    }
 
     self.checked_code.functions.append(checked_function_symbol)
 
@@ -966,7 +964,7 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
     self.callables.for_each() {
         let callable = value
         if callable.name.equals(callable_name) {
-            if callable.matches_parameter_labels(parsed_expression.arguments, checked_receiver_expression != null) {
+            if callable.matches_parameter_labels(parsed_expression.arguments, checked_receiver_expression) {
                 \ found callable
                 if callable is Checked_Function {
                     return self.check_function_call_expression(parsed_expression, callable.as(@Checked_Function), checked_receiver_expression)
