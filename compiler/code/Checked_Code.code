@@ -322,6 +322,9 @@ struct Checked_Pointer_Type: Checked_Type {
     pointed_type: @Checked_Type
 }
 
+struct Checked_Receiver_Type_Symbol: Checked_Symbol(name = "") {
+}
+
 struct Checked_Specialized_Struct_Type: Checked_Struct_Type {
     generic_struct_name: @String
     specialization_symbols: @Checked_Symbols
@@ -419,6 +422,20 @@ func find_symbol(self: @Checked_Symbols, name: @String) -> @Checked_Symbol {
     }
     if self.parent != null {
         return self.parent.find_symbol(name)
+    }
+    return null
+}
+
+func find_receiver_type_symbol(self: @Checked_Symbols) -> @Checked_Receiver_Type_Symbol {
+    let list_item = self.last_item
+    while list_item != null {
+        if list_item.data is Checked_Receiver_Type_Symbol {
+            return list_item.data.as(@Checked_Receiver_Type_Symbol)
+        }
+        list_item = list_item.prev_item
+    }
+    if self.parent != null {
+        return self.parent.find_receiver_type_symbol()
     }
     return null
 }

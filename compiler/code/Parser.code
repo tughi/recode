@@ -553,15 +553,8 @@ func parse_parameters(self: @Parser) -> @List[@Parsed_Callable_Parameter] {
                 location = parameter_name.location
                 label = null
                 name = parameter_name
-                type = make @Parsed_Pointer_Type(
+                type = make @Parsed_Receiver_Type(
                     location = parameter_name.location
-                    pointed_type = make @Parsed_Named_Type(
-                        location = parameter_name.location
-                        name = make @Identifier_Token(
-                            location = parameter_name.location
-                            lexeme = "Self"
-                        )
-                    )
                 )
             ))
         } else {

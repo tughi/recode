@@ -288,6 +288,9 @@ struct Parsed_Pointer_Type: Parsed_Type {
     pointed_type: @Parsed_Type
 }
 
+struct Parsed_Receiver_Type: Parsed_Type {
+}
+
 struct Parsed_Specialized_Type: Parsed_Type {
     name: @Identifier_Token
     type_arguments: @List[@Parsed_Type_Argument]

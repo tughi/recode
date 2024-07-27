@@ -161,6 +161,12 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 type = checked_struct_type_symbol.type
             ))
 
+            let receiver_type = make_checked_pointer_type(checked_struct_type_symbol.type)
+            self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
+                location = parsed_struct_statement.name.location
+                type = receiver_type
+            ))
+
             parsed_struct_statement.functions.for_each() {
                 let parsed_struct_funtion = it
 
@@ -181,7 +187,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                         location = parsed_struct_funtion.location
                         unique_name = checked_function_symbol_unique_name
                         function_symbol = self.create_function_symbol(parsed_struct_funtion, checked_function_symbol_unique_name, null)
-                        receiver_type = make_checked_pointer_type(checked_struct_type_symbol.type)
+                        receiver_type = receiver_type
                     ).init(parsed_struct_funtion.name, parsed_struct_funtion.type.parameters)
                 )
             }
@@ -253,6 +259,7 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
     \ create function type
     let parent_symbols = self.local_symbols
     if specialization_symbols != null {
+        specialization_symbols.parent = self.local_symbols
         self.local_symbols = specialization_symbols
     }
     let checked_function_type = self.convert_function_type(parsed_function_statement.type)
@@ -1952,6 +1959,9 @@ func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {
     if parsed_type is Parsed_Pointer_Type {
         return self.convert_pointer_type(parsed_type.as(@Parsed_Pointer_Type))
     }
+    if parsed_type is Parsed_Receiver_Type {
+        return self.convert_receiver_type(parsed_type.as(@Parsed_Receiver_Type))
+    }
     if parsed_type is Parsed_Specialized_Type {
         return self.convert_specialized_type(parsed_type.as(@Parsed_Specialized_Type))
     }
@@ -2136,6 +2146,14 @@ func make_checked_function_pointer_type(checked_function_type: @Checked_Function
         pointed_type = checked_function_type
         function_type = checked_function_type
     )
+}
+
+func convert_receiver_type(self: @Checker, parsed_receiver_type: @Parsed_Receiver_Type) -> @Checked_Type {
+    let checked_symbol = self.local_symbols.find_receiver_type_symbol()
+    if checked_symbol == null {
+        abort(parsed_receiver_type.location, "No receiver type")
+    }
+    return checked_symbol.type
 }
 
 func convert_specialized_type(self: @Checker, parsed_specialized_type: @Parsed_Specialized_Type) -> @Checked_Type {
