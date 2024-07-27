@@ -13,7 +13,7 @@ func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
         if token.kind == 0 {
             break
         }
-        fputc(token.value, stdout)
+        stdout.write(char: token.value)
     }
 }
 
@@ -38,6 +38,13 @@ struct Tokenizer {
 struct Token {
     kind: i32
     value: u8
+}
+
+\ ----------- Stream -----------
+
+func @FILE.write(self, char: u8) -> @FILE {
+    fputc(char, stdout)
+    return self
 }
 
 \ ------------ LibC ------------

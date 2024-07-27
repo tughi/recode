@@ -85,18 +85,18 @@ main:
   # jmp @6
   jmp .L__main__6
 .L__main__8:
-  # %18: ptr<Token> = load %token.ptr
-  movq 0(%rsp), %rax
-  # %19: ptr<u8> = offset %18 Token.value
-  movq %rax, %rcx
-  # %20: u8 = load %19
-  movb 4(%rcx), %al
-  # %21: ptr<FILE> = load $stdout
-  movq stdout, %rcx
-  # %22: i32 = call $fputc %20 %21
-  movb %al, %dil
-  movq %rcx, %rsi
-  call fputc
+  # %18: ptr<FILE> = load $stdout
+  movq stdout, %rax
+  # %19: ptr<Token> = load %token.ptr
+  movq 0(%rsp), %rcx
+  # %20: ptr<u8> = offset %19 Token.value
+  movq %rcx, %rdx
+  # %21: u8 = load %20
+  movb 4(%rdx), %cl
+  # %22: ptr<FILE> = call $pFILE__write__char %18 %21
+  movq %rax, %rdi
+  movb %cl, %sil
+  call pFILE__write__char
   # jmp @4
   jmp .L__main__4
 .L__main__E:
@@ -209,5 +209,32 @@ pTokenizer__next_token:
   # ret %16
   jmp .L__pTokenizer__next_token__E
 .L__pTokenizer__next_token__E:
+  add $0x10, %rsp
+  ret
+
+
+pFILE__write__char:
+.L__pFILE__write__char__S:
+  sub $0x10, %rsp
+.L__pFILE__write__char__1:
+  # %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
+  # store %self.ptr %self
+  movq %rdi, 8(%rsp)
+  # %char.ptr: ptr<u8> = alloc u8
+  # store %char.ptr %char
+  movb %sil, 7(%rsp)
+  # %char.1: u8 = load %char.ptr
+  movb 7(%rsp), %al
+  # %1: ptr<FILE> = load $stdout
+  movq stdout, %rcx
+  # %2: i32 = call $fputc %char.1 %1
+  movb %al, %dil
+  movq %rcx, %rsi
+  call fputc
+  # %self.1: ptr<FILE> = load %self.ptr
+  movq 8(%rsp), %rax
+  # ret %self.1
+  jmp .L__pFILE__write__char__E
+.L__pFILE__write__char__E:
   add $0x10, %rsp
   ret

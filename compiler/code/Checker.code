@@ -119,12 +119,28 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 )
             } else {
                 let checked_function_symbol_unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
+                let checked_function_symbol: @Checked_Function_Symbol = null
+                let checked_receiver_type: @Checked_Type = null
+                if parsed_function_statement.receiver_type != null {
+                    self.local_symbols = make @Checked_Symbols(
+                        parent = self.local_symbols
+                    )
+                    checked_receiver_type = self.convert_type(parsed_function_statement.receiver_type)
+                    self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
+                        location = parsed_function_statement.name.location
+                        type = checked_receiver_type
+                    ))
+                    checked_function_symbol = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
+                    self.local_symbols = self.local_symbols.parent
+                } else {
+                    checked_function_symbol = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
+                }
                 self.add_callable(
                     make @Checked_Function(
                         location = parsed_function_statement.location
                         unique_name = checked_function_symbol_unique_name
-                        function_symbol = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
-                        receiver_type = null
+                        function_symbol = checked_function_symbol
+                        receiver_type = checked_receiver_type
                     ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
                 )
             }

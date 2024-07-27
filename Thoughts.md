@@ -111,7 +111,7 @@ The compiler generates trait objects that could be modeled like this:
 
 Methods can be declared also outside of a type block.
 
-    func Binary_Expression.accept(self, visitor: @Visitor) {
+    func @Binary_Expression.accept(self, visitor: @Visitor) {
         visitor.visit(self)
     }
 
@@ -251,7 +251,7 @@ paramaters are marked as anonymous with the `anon` modifier.
 
 > **NOTE**: Parameter labels are part of the generated function name, like: *panic*, *panic__at*,
 *panic__at__unexpected_keyword* and *panic__at__unexpected_token*. There cannot be two functions
-having the same name and exactly the same parameter.
+having the same name and the same sequence of parameter labels.
 
 ## Generic functions
 

@@ -12,6 +12,19 @@ func create_scanner(source: @Source) -> @Scanner {
     return scanner
 }
 
+func peek_line(self: @Scanner) -> @Token {
+    let token = self.current_token
+    loop {
+        if token.next_token == null {
+            token.next_token = self.scan_token()
+        }
+        token = token.next_token
+        if token is End_Of_Line_Token or token is End_Of_File_Token {
+            return self.current_token
+        }
+    }
+}
+
 func peek_token(self: @Scanner, offset: i64) -> @Token {
     if offset < 0 {
         abort("Invalid state")

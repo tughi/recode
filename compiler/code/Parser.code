@@ -334,11 +334,17 @@ func parse_struct(self: @Parser) -> @Parsed_Type_Statement {
             if self.matches(required_func) {
                 let struct_function = self.parse_function()
                 if struct_function.receiver_type != null {
-                    abort(struct_function.location, "Struct function cannot declare a receiver type")
+                    abort(struct_function.location, "Unexpected receiver type")
                 }
-                struct_function.receiver_type = make @Parsed_Named_Type(
-                    location = struct_name.location
-                    name = struct_name
+                struct_function.receiver_type = make @Parsed_Pointer_Type(
+                    location = struct_function.location
+                    pointed_type = make @Parsed_Named_Type(
+                        location = struct_function.location
+                        name = make @Identifier_Token(
+                            location = struct_function.location
+                            lexeme = "Self"
+                        )
+                    )
                 )
                 struct_functions.append(struct_function)
             } else {
@@ -444,10 +450,17 @@ func parse_external_function(self: @Parser) -> @Parsed_Function_Statement {
 }
 
 \ function
-\   | "func" IDENTIFIER type_parameters? function_signature block
+\   | "func" ( type "." )? IDENTIFIER type_parameters? function_signature block
 func parse_function(self: @Parser) -> @Parsed_Function_Statement {
     self.consume(required_func)
     self.consume_space(1)
+    let receiver_type: @Parsed_Type = null
+    if self.matches_line_order(required_dot, required_open_paren) {
+        receiver_type = self.parse_type()
+        self.consume_space(0)
+        self.consume(required_dot)
+        self.consume_space(0)
+    }
     let function_name = self.consume(required_identifier).as(@Identifier_Token)
     self.consume_space(0)
     let function_type_parameters: @List[@Parsed_Type_Parameter] = null
@@ -464,7 +477,7 @@ func parse_function(self: @Parser) -> @Parsed_Function_Statement {
     let function_statement = make @Parsed_Function_Statement(
         location = function_name.location
         name = function_name
-        receiver_type = null \ TODO
+        receiver_type = receiver_type
         type = make @Parsed_Function_Type(
             location = function_name.location
             type_parameters = function_type_parameters
@@ -1303,6 +1316,20 @@ func matches(self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher, t
         }
     }
     return true
+}
+
+func matches_line_order(self: @Parser, first_matcher: @Matcher, second_matcher: @Matcher) -> bool {
+    let token = self.scanner.peek_line()
+    while token != null {
+        if first_matcher.accepts(token) {
+            return true
+        }
+        if second_matcher.accepts(token) {
+            return false
+        }
+        token = token.next_token
+    }
+    return false
 }
 
 struct Matcher: Object {

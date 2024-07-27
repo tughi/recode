@@ -80,17 +80,17 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   store %token.ptr %12
   [ %token.ptr %tokenizer.ptr $stdout ]
   %13: ptr<Token> = load %token.ptr
-  [ %13 %tokenizer.ptr $stdout %token.ptr ]
+  [ %13 %tokenizer.ptr %token.ptr $stdout ]
   %14: ptr<i32> = offset %13 Token.kind
-  [ %14 %tokenizer.ptr $stdout %token.ptr ]
+  [ %14 %tokenizer.ptr %token.ptr $stdout ]
   %15: i32 = load %14
-  [ %15 %tokenizer.ptr $stdout %token.ptr ]
+  [ %15 %tokenizer.ptr %token.ptr $stdout ]
   %16: i32 = const 0
-  [ %15 %16 %tokenizer.ptr $stdout %token.ptr ]
+  [ %15 %16 %tokenizer.ptr %token.ptr $stdout ]
   %17: bool = cmp_eq %15 %16
-  [ %17 %tokenizer.ptr $stdout %token.ptr ]
+  [ %17 %tokenizer.ptr %token.ptr $stdout ]
   br %17 @7 @8
-  [ %tokenizer.ptr $stdout %token.ptr ]
+  [ %tokenizer.ptr %token.ptr $stdout ]
 @6:
   [ ]
   ret
@@ -100,23 +100,23 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   jmp @6
   [ ]
 @8:
-  [ %tokenizer.ptr $stdout %token.ptr ]
-  %18: ptr<Token> = load %token.ptr
-  [ %tokenizer.ptr $stdout %18 ]
-  %19: ptr<u8> = offset %18 Token.value
-  [ %tokenizer.ptr $stdout %19 ]
-  %20: u8 = load %19
-  [ %tokenizer.ptr %20 $stdout ]
-  %21: ptr<FILE> = load $stdout
-  [ %tokenizer.ptr %20 %21 $stdout ]
-  %22: i32 = call $fputc %20 %21
+  [ %tokenizer.ptr %token.ptr $stdout ]
+  %18: ptr<FILE> = load $stdout
+  [ %tokenizer.ptr %18 %token.ptr $stdout ]
+  %19: ptr<Token> = load %token.ptr
+  [ %tokenizer.ptr %18 %19 $stdout ]
+  %20: ptr<u8> = offset %19 Token.value
+  [ %tokenizer.ptr %18 %20 $stdout ]
+  %21: u8 = load %20
+  [ %tokenizer.ptr %18 %21 $stdout ]
+  %22: ptr<FILE> = call $pFILE__write__char %18 %21
   [ %tokenizer.ptr $stdout ]
   jmp @4
   [ %tokenizer.ptr $stdout ]
 @9:
-  [ %tokenizer.ptr $stdout %token.ptr ]
+  [ %tokenizer.ptr %token.ptr $stdout ]
   jmp @8
-  [ %tokenizer.ptr $stdout %token.ptr ]
+  [ %tokenizer.ptr %token.ptr $stdout ]
 }
 
 $pTokenizer__has_next_token(%self: ptr<Tokenizer>): bool {
@@ -208,6 +208,29 @@ $pTokenizer__next_token(%self: ptr<Tokenizer>): ptr<Token> {
   store %20 %value.1
   [ %16 ]
   ret %16
+  [ ]
+}
+
+$pFILE__write__char(%self: ptr<FILE>, %char: u8): ptr<FILE> {
+@1:
+  [ $stdout %char %self ]
+  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
+  [ %self.ptr $stdout %char %self ]
+  store %self.ptr %self
+  [ %self.ptr $stdout %char ]
+  %char.ptr: ptr<u8> = alloc u8
+  [ %self.ptr $stdout %char.ptr %char ]
+  store %char.ptr %char
+  [ %self.ptr $stdout %char.ptr ]
+  %char.1: u8 = load %char.ptr
+  [ %self.ptr %char.1 $stdout ]
+  %1: ptr<FILE> = load $stdout
+  [ %self.ptr %char.1 %1 ]
+  %2: i32 = call $fputc %char.1 %1
+  [ %self.ptr ]
+  %self.1: ptr<FILE> = load %self.ptr
+  [ %self.1 ]
+  ret %self.1
   [ ]
 }
 
