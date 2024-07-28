@@ -1,0 +1,223 @@
+$main(): i32 {
+@1:
+  [ ]
+  %min.ptr: ptr<u8> = alloc u8
+  [ %min.ptr ]
+  %1: u8 = const 0u8
+  [ %min.ptr %1 ]
+  store %min.ptr %1
+  [ %min.ptr ]
+  %max.ptr: ptr<u8> = alloc u8
+  [ %max.ptr %min.ptr ]
+  %2: u8 = const 255u8
+  [ %max.ptr %2 %min.ptr ]
+  store %max.ptr %2
+  [ %max.ptr %min.ptr ]
+  %errors.ptr: ptr<i32> = alloc i32
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %3: i32 = const 8
+  [ %errors.ptr %3 %max.ptr %min.ptr ]
+  store %errors.ptr %3
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %4: u8 = call $forty_two
+  [ %4 %errors.ptr %max.ptr %min.ptr ]
+  %5: u8 = const 42
+  [ %4 %5 %errors.ptr %max.ptr %min.ptr ]
+  %6: bool = cmp_eq %4 %5
+  [ %6 %errors.ptr %max.ptr %min.ptr ]
+  br %6 @2 @3
+  [ %errors.ptr %max.ptr %min.ptr ]
+@2:
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %errors.1: i32 = load %errors.ptr
+  [ %errors.ptr %errors.1 %max.ptr %min.ptr ]
+  %7: i32 = const 1
+  [ %errors.ptr %errors.1 %7 %max.ptr %min.ptr ]
+  %8: i32 = sub %errors.1 %7
+  [ %errors.ptr %8 %max.ptr %min.ptr ]
+  store %errors.ptr %8
+  [ %errors.ptr %max.ptr %min.ptr ]
+  jmp @3
+  [ %errors.ptr %max.ptr %min.ptr ]
+@3:
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %9: u8 = call $forty_two
+  [ %9 %errors.ptr %max.ptr %min.ptr ]
+  %10: u8 = const 42
+  [ %9 %10 %errors.ptr %max.ptr %min.ptr ]
+  %11: bool = cmp_ne %9 %10
+  [ %11 %errors.ptr %max.ptr %min.ptr ]
+  br %11 @4 @5
+  [ %max.ptr %errors.ptr %min.ptr ]
+@4:
+  [ %max.ptr %errors.ptr %min.ptr ]
+  jmp @6
+  [ %max.ptr %errors.ptr %min.ptr ]
+@5:
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %errors.2: i32 = load %errors.ptr
+  [ %errors.ptr %errors.2 %max.ptr %min.ptr ]
+  %12: i32 = const 1
+  [ %errors.ptr %errors.2 %12 %max.ptr %min.ptr ]
+  %13: i32 = sub %errors.2 %12
+  [ %errors.ptr %13 %max.ptr %min.ptr ]
+  store %errors.ptr %13
+  [ %max.ptr %errors.ptr %min.ptr ]
+  jmp @6
+  [ %max.ptr %errors.ptr %min.ptr ]
+@6:
+  [ %max.ptr %errors.ptr %min.ptr ]
+  %14: u8 = call $forty_two
+  [ %14 %max.ptr %errors.ptr %min.ptr ]
+  %max.1: u8 = load %max.ptr
+  [ %14 %max.1 %errors.ptr %min.ptr %max.ptr ]
+  %15: bool = cmp_lt %14 %max.1
+  [ %15 %errors.ptr %min.ptr %max.ptr ]
+  br %15 @7 @8
+  [ %errors.ptr %min.ptr %max.ptr ]
+@7:
+  [ %errors.ptr %min.ptr %max.ptr ]
+  %errors.3: i32 = load %errors.ptr
+  [ %errors.ptr %errors.3 %min.ptr %max.ptr ]
+  %16: i32 = const 1
+  [ %errors.ptr %errors.3 %16 %min.ptr %max.ptr ]
+  %17: i32 = sub %errors.3 %16
+  [ %errors.ptr %17 %min.ptr %max.ptr ]
+  store %errors.ptr %17
+  [ %min.ptr %errors.ptr %max.ptr ]
+  jmp @8
+  [ %min.ptr %errors.ptr %max.ptr ]
+@8:
+  [ %min.ptr %errors.ptr %max.ptr ]
+  %18: u8 = call $forty_two
+  [ %18 %min.ptr %errors.ptr %max.ptr ]
+  %min.1: u8 = load %min.ptr
+  [ %18 %min.1 %errors.ptr %max.ptr %min.ptr ]
+  %19: bool = cmp_lt %18 %min.1
+  [ %19 %errors.ptr %max.ptr %min.ptr ]
+  br %19 @9 @10
+  [ %errors.ptr %max.ptr %min.ptr ]
+@9:
+  [ %errors.ptr %max.ptr %min.ptr ]
+  jmp @11
+  [ %errors.ptr %max.ptr %min.ptr ]
+@10:
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %errors.4: i32 = load %errors.ptr
+  [ %errors.ptr %errors.4 %max.ptr %min.ptr ]
+  %20: i32 = const 1
+  [ %errors.ptr %errors.4 %20 %max.ptr %min.ptr ]
+  %21: i32 = sub %errors.4 %20
+  [ %errors.ptr %21 %max.ptr %min.ptr ]
+  store %errors.ptr %21
+  [ %errors.ptr %max.ptr %min.ptr ]
+  jmp @11
+  [ %errors.ptr %max.ptr %min.ptr ]
+@11:
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %22: u8 = call $forty_two
+  [ %22 %errors.ptr %max.ptr %min.ptr ]
+  %23: u8 = const 42
+  [ %22 %23 %errors.ptr %max.ptr %min.ptr ]
+  %24: bool = cmp_le %22 %23
+  [ %24 %errors.ptr %max.ptr %min.ptr ]
+  br %24 @12 @13
+  [ %errors.ptr %max.ptr %min.ptr ]
+@12:
+  [ %errors.ptr %max.ptr %min.ptr ]
+  %errors.5: i32 = load %errors.ptr
+  [ %errors.ptr %errors.5 %max.ptr %min.ptr ]
+  %25: i32 = const 1
+  [ %errors.ptr %errors.5 %25 %max.ptr %min.ptr ]
+  %26: i32 = sub %errors.5 %25
+  [ %errors.ptr %26 %max.ptr %min.ptr ]
+  store %errors.ptr %26
+  [ %max.ptr %errors.ptr %min.ptr ]
+  jmp @13
+  [ %max.ptr %errors.ptr %min.ptr ]
+@13:
+  [ %max.ptr %errors.ptr %min.ptr ]
+  %27: u8 = call $forty_two
+  [ %27 %max.ptr %errors.ptr %min.ptr ]
+  %max.2: u8 = load %max.ptr
+  [ %27 %max.2 %errors.ptr %min.ptr ]
+  %28: bool = cmp_lt %27 %max.2
+  [ %28 %errors.ptr %min.ptr ]
+  br %28 @14 @15
+  [ %errors.ptr %min.ptr ]
+@14:
+  [ %errors.ptr %min.ptr ]
+  %errors.6: i32 = load %errors.ptr
+  [ %errors.ptr %errors.6 %min.ptr ]
+  %29: i32 = const 1
+  [ %errors.ptr %errors.6 %29 %min.ptr ]
+  %30: i32 = sub %errors.6 %29
+  [ %errors.ptr %30 %min.ptr ]
+  store %errors.ptr %30
+  [ %min.ptr %errors.ptr ]
+  jmp @15
+  [ %min.ptr %errors.ptr ]
+@15:
+  [ %min.ptr %errors.ptr ]
+  %31: u8 = call $forty_two
+  [ %31 %min.ptr %errors.ptr ]
+  %min.2: u8 = load %min.ptr
+  [ %31 %min.2 %errors.ptr ]
+  %32: bool = cmp_lt %31 %min.2
+  [ %32 %errors.ptr ]
+  br %32 @16 @17
+  [ %errors.ptr ]
+@16:
+  [ %errors.ptr ]
+  jmp @18
+  [ %errors.ptr ]
+@17:
+  [ %errors.ptr ]
+  %errors.7: i32 = load %errors.ptr
+  [ %errors.ptr %errors.7 ]
+  %33: i32 = const 1
+  [ %errors.ptr %errors.7 %33 ]
+  %34: i32 = sub %errors.7 %33
+  [ %errors.ptr %34 ]
+  store %errors.ptr %34
+  [ %errors.ptr ]
+  jmp @18
+  [ %errors.ptr ]
+@18:
+  [ %errors.ptr ]
+  %35: u8 = call $forty_two
+  [ %35 %errors.ptr ]
+  %36: u8 = const 42
+  [ %35 %36 %errors.ptr ]
+  %37: bool = cmp_ge %35 %36
+  [ %37 %errors.ptr ]
+  br %37 @19 @20
+  [ %errors.ptr ]
+@19:
+  [ %errors.ptr ]
+  %errors.8: i32 = load %errors.ptr
+  [ %errors.ptr %errors.8 ]
+  %38: i32 = const 1
+  [ %errors.ptr %errors.8 %38 ]
+  %39: i32 = sub %errors.8 %38
+  [ %errors.ptr %39 ]
+  store %errors.ptr %39
+  [ %errors.ptr ]
+  jmp @20
+  [ %errors.ptr ]
+@20:
+  [ %errors.ptr ]
+  %errors.9: i32 = load %errors.ptr
+  [ %errors.9 ]
+  ret %errors.9
+  [ ]
+}
+
+$forty_two(): u8 {
+@1:
+  [ ]
+  %1: u8 = const 42
+  [ %1 ]
+  ret %1
+  [ ]
+}

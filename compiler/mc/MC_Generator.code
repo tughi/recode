@@ -639,15 +639,31 @@ func convert_comparison_instruction(self: @MC_Generator, ir_comparison_instructi
     if ir_comparison_instruction is IR_Equality_Instruction {
         mc_block.append(make @MC_SETE_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else if ir_comparison_instruction is IR_Greater_Than_Instruction {
-        mc_block.append(make @MC_SETG_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        if left_mc_value.ir_value.type is IR_UInt_Type {
+            mc_block.append(make @MC_SETA_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        } else {
+            mc_block.append(make @MC_SETG_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        }
     } else if ir_comparison_instruction is IR_Greater_Than_Or_Equal_Instruction {
-        mc_block.append(make @MC_SETGE_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        if left_mc_value.ir_value.type is IR_UInt_Type {
+            mc_block.append(make @MC_SETAE_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        } else {
+            mc_block.append(make @MC_SETGE_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        }
     } else if ir_comparison_instruction is IR_Inequality_Instruction {
         mc_block.append(make @MC_SETNE_Instruction(destination = result_mc_value.make_mc_operand(self)))
     } else if ir_comparison_instruction is IR_Less_Than_Instruction {
-        mc_block.append(make @MC_SETL_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        if left_mc_value.ir_value.type is IR_UInt_Type {
+            mc_block.append(make @MC_SETB_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        } else {
+            mc_block.append(make @MC_SETL_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        }
     } else if ir_comparison_instruction is IR_Less_Than_Or_Equal_Instruction {
-        mc_block.append(make @MC_SETLE_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        if left_mc_value.ir_value.type is IR_UInt_Type {
+            mc_block.append(make @MC_SETBE_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        } else {
+            mc_block.append(make @MC_SETLE_Instruction(destination = result_mc_value.make_mc_operand(self)))
+        }
     } else {
         abort(ir_comparison_instruction.object_type)
     }

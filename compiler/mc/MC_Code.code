@@ -444,6 +444,42 @@ struct MC_RET_Instruction: MC_Instruction(
 ) {
 }
 
+struct MC_SETA_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETA_Instruction)
+        return file.write("seta").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Operand
+}
+
+struct MC_SETAE_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETAE_Instruction)
+        return file.write("setae").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Operand
+}
+
+struct MC_SETB_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETB_Instruction)
+        return file.write("setb").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Operand
+}
+
+struct MC_SETBE_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_SETBE_Instruction)
+        return file.write("setbe").write(' ').write(instruction.destination)
+    }
+) {
+    destination: @MC_Operand
+}
+
 struct MC_SETE_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let instruction = self.as(@MC_SETE_Instruction)
