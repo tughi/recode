@@ -37,8 +37,6 @@ struct Checker {
     global_symbols = make Checked_Symbols(parent = null)
     local_symbols: @Checked_Symbols
 
-    callables = make Map[@String, @Checked_Callable]()
-
     expected_return_type: @Checked_Type = null
 
     generic_struct_statements = make Map[@String, @Parsed_Generic_Struct_Statement]()
@@ -60,15 +58,6 @@ struct Checker {
     u8_type: @Checked_Type = undefined
     usize_type: @Checked_Type = undefined
     undefined_type: @Checked_Type = undefined
-}
-
-func add_callable(self: @Checker, callable: @Checked_Callable) -> Nothing {
-    let other_callable = self.callables.get(callable.name)
-    if other_callable != null {
-        stderr.write(other_callable.location).write(": ").warning().write("Callable declared first here").reset().end_line()
-        abort(callable.location, "Callable overloading is not supported")
-    }
-    self.callables.put(callable.name, callable)
 }
 
 func create_builtin_type_symbol(self: @Checker, type: @Checked_Builtin_Type) -> @Checked_Builtin_Type_Symbol {
@@ -109,53 +98,27 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             let parsed_function_statement = it.as(@Parsed_Function_Statement)
             if parsed_function_statement.type.type_parameters != null {
                 \ generic functions are checked only during specialization
-                self.add_callable(
-                    make @Checked_Generic_Function(
-                        location = parsed_function_statement.location
-                        unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
-                        function_statement = parsed_function_statement
-                        receiver_type = null
-                    ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
-                )
+                self.generic_function_statements.append(parsed_function_statement)
             } else {
-                let checked_function_symbol_unique_name = make_unique_callable_name(parsed_function_statement.name, parsed_function_statement.type.parameters, parsed_function_statement.receiver_type)
-                let checked_function_symbol: @Checked_Function_Symbol = null
-                let checked_receiver_type: @Checked_Type = null
                 if parsed_function_statement.receiver_type != null {
                     self.local_symbols = make @Checked_Symbols(
                         parent = self.local_symbols
                     )
-                    checked_receiver_type = self.convert_type(parsed_function_statement.receiver_type)
+                    let checked_receiver_type = self.convert_type(parsed_function_statement.receiver_type)
                     self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
                         location = parsed_function_statement.name.location
                         type = checked_receiver_type
                     ))
-                    checked_function_symbol = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
+                    self.create_function_symbol(parsed_function_statement, checked_receiver_type, null)
                     self.local_symbols = self.local_symbols.parent
                 } else {
-                    checked_function_symbol = self.create_function_symbol(parsed_function_statement, checked_function_symbol_unique_name, null)
+                    self.create_function_symbol(parsed_function_statement, null, null)
                 }
-                self.add_callable(
-                    make @Checked_Function(
-                        location = parsed_function_statement.location
-                        unique_name = checked_function_symbol_unique_name
-                        function_symbol = checked_function_symbol
-                        receiver_type = checked_receiver_type
-                    ).init(parsed_function_statement.name, parsed_function_statement.type.parameters)
-                )
             }
         } else if it is Parsed_Generic_Struct_Statement {
             \ already processed
         } else if it is Parsed_Macro_Statement {
             let parsed_macro_statement = it.as(@Parsed_Macro_Statement)
-            self.add_callable(
-                make @Checked_Macro(
-                    location = parsed_macro_statement.location
-                    unique_name = make_unique_callable_name(parsed_macro_statement.name, parsed_macro_statement.type.parameters, parsed_macro_statement.receiver_type)
-                    macro_statement = parsed_macro_statement
-                    receiver_type = null
-                ).init(parsed_macro_statement.name, parsed_macro_statement.type.parameters)
-            )
             self.macro_statements.append(parsed_macro_statement)
             self.global_symbols.append(make @Checked_Macro_Symbol(
                 location = parsed_macro_statement.location
@@ -177,6 +140,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
                 type = checked_struct_type_symbol.type
             ))
 
+            \ add receiver type as local local symbol
             let receiver_type = make_checked_pointer_type(checked_struct_type_symbol.type)
             self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
                 location = parsed_struct_statement.name.location
@@ -186,26 +150,7 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
             parsed_struct_statement.functions.for_each() {
                 let parsed_struct_funtion = it
 
-                let checked_function_symbol_unique_name = make_unique_callable_name(
-                    parsed_struct_funtion.name
-                    parsed_struct_funtion.type.parameters
-                    make @Parsed_Pointer_Type(
-                        location = parsed_struct_statement.name.location
-                        pointed_type = make @Parsed_Named_Type(
-                            location = parsed_struct_statement.name.location
-                            name = parsed_struct_statement.name
-                        )
-                    )
-                )
-
-                self.add_callable(
-                    make @Checked_Function(
-                        location = parsed_struct_funtion.location
-                        unique_name = checked_function_symbol_unique_name
-                        function_symbol = self.create_function_symbol(parsed_struct_funtion, checked_function_symbol_unique_name, null)
-                        receiver_type = receiver_type
-                    ).init(parsed_struct_funtion.name, parsed_struct_funtion.type.parameters)
-                )
+                self.create_function_symbol(parsed_struct_funtion, receiver_type, null)
             }
 
             \ restore local symbols
@@ -271,7 +216,7 @@ func check_constant_symbol(self: @Checker, checked_constant_symbol: @Checked_Con
     checked_constant_symbol.value_expression = checked_value_expression
 }
 
-func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_Function_Statement, unique_name: @String, specialization_symbols: @Checked_Symbols) -> @Checked_Function_Symbol {
+func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_Function_Statement, checked_receiver_type: @Checked_Type, specialization_symbols: @Checked_Symbols) -> @Checked_Function_Symbol {
     \ create function type
     let parent_symbols = self.local_symbols
     if specialization_symbols != null {
@@ -317,25 +262,38 @@ func create_function_symbol(self: @Checker, parsed_function_statement: @Parsed_F
     }
 
     \ check for duplicates
-    self.checked_code.functions.for_each() {
-        if it.name.equals(checked_function_name) and it.function_type.name.equals(checked_function_type.name) {
-            abort(parsed_function_statement.location, "Function declared first here: ".clone().append(it.location))
-        }
+    let checked_callable_symbol = self.global_symbols.find_callable_symbol(checked_function_name, checked_function_type.parameters, checked_receiver_type)
+    if checked_callable_symbol != null {
+        stderr.write(parsed_function_statement.location).write(": ").error().write("Callable overloading is not supported").reset().end_line()
+        stderr.write(checked_callable_symbol.location).write(": ").warning().write("Callable declared first here").reset().end_line()
+        exit(1)
     }
 
     \ create function
+    let checked_function_unique_name = make @String()
+    if checked_receiver_type != null {
+        checked_function_unique_name.append_receiver_type(checked_receiver_type).append("__")
+    }
+    checked_function_unique_name.append(checked_function_name)
+    checked_function_type.parameters.for_each() {
+        if it.label != null {
+            checked_function_unique_name.append("__").append(it.label)
+        }
+    }
     let checked_function_symbol = make @Checked_Function_Symbol(
+        body = null
+        callable_type = checked_function_type
+        function_type = checked_function_type
         location = parsed_function_statement.location
         name = checked_function_name
-        unique_name = unique_name
-        type = make_checked_function_pointer_type(checked_function_type)
-        function_type = checked_function_type
-
         parsed_function_statement = parsed_function_statement
+        receiver_type = checked_receiver_type
         specialization_symbols = specialization_symbols
-        body = null
+        type = make_checked_function_pointer_type(checked_function_type)
+        unique_name = checked_function_unique_name
     )
 
+    self.global_symbols.append(checked_function_symbol)
     self.checked_code.functions.append(checked_function_symbol)
 
     return checked_function_symbol
@@ -983,20 +941,18 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
 }
 
 func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, callable_name: @String, checked_receiver_expression: @Checked_Expression) -> @Checked_Expression {
-    let similar_callables = 0
-    self.callables.for_each() {
-        let callable = value
-        if callable.name.equals(callable_name) {
-            if callable.matches_parameter_labels(parsed_expression.arguments, checked_receiver_expression) {
-                \ found callable
-                if callable is Checked_Function {
-                    return self.check_function_call_expression(parsed_expression, callable.as(@Checked_Function), checked_receiver_expression)
-                }
-                abort(parsed_expression.location, callable.object_type)
-            }
-
-            similar_callables = similar_callables + 1
+    let similar_callables_counter = make Counter[i32]()
+    let checked_receiver_type: @Checked_Type = null
+    if checked_receiver_expression != null {
+        checked_receiver_type = checked_receiver_expression.type
+    }
+    let checked_callable_symbol = self.global_symbols.find_callable_symbol(callable_name, parsed_expression.arguments, checked_receiver_type, @similar_callables_counter)
+    if checked_callable_symbol != null {
+        \ found callable
+        if checked_callable_symbol is Checked_Function_Symbol {
+            return self.check_function_call_expression(parsed_expression, checked_callable_symbol.as(@Checked_Function_Symbol), checked_receiver_expression)
         }
+        abort(parsed_expression.location, checked_callable_symbol.object_type)
     }
 
     \ convert call arguments to know their types
@@ -1019,7 +975,6 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
             expression = self.check_expression(it.value_expression, null)
         ))
     }
-
     \ list all named functions and report error
     stderr.write(parsed_expression.location).write(": ").error().write("No such callable: ")
     if checked_receiver_expression != null {
@@ -1039,11 +994,10 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
         }
     }
     stderr.write(')').reset().end_line()
-    if similar_callables > 0 {
-        self.callables.for_each() {
-            let callable = value
-            if callable.name.equals(callable_name) {
-                stderr.write(callable.location).write(": ").warning().write(callable).reset().end_line()
+    if similar_callables_counter.value > 0 {
+        self.global_symbols.for_each_symbol() {
+            if checked_symbol is Checked_Callable_Symbol and checked_symbol.name.equals(callable_name) {
+                stderr.write(checked_symbol.location).write(": ").warning().write(checked_symbol.as(@Checked_Callable_Symbol)).reset().end_line()
             }
         }
     }
@@ -1137,14 +1091,14 @@ func check_function_expression(self: @Checker, parsed_expression: @Parsed_Functi
     )
 }
 
-func check_function_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, checked_function: @Checked_Function, checked_receiver_expression: @Checked_Expression) -> @Checked_Function_Call_Expression {
-    let checked_call_arguments = self.check_call_arguments(parsed_expression, checked_function.function_symbol.function_type.parameters, checked_receiver_expression)
+func check_function_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, checked_function_symbol: @Checked_Function_Symbol, checked_receiver_expression: @Checked_Expression) -> @Checked_Function_Call_Expression {
+    let checked_call_arguments = self.check_call_arguments(parsed_expression, checked_function_symbol.function_type.parameters, checked_receiver_expression)
 
     return make @Checked_Function_Call_Expression(
-        location = checked_function.location
-        type = checked_function.function_symbol.function_type.return_type
+        location = checked_function_symbol.location
+        type = checked_function_symbol.function_type.return_type
         call_arguments = checked_call_arguments
-        function_symbol = checked_function.function_symbol
+        function_symbol = checked_function_symbol
     )
 }
 
@@ -1926,9 +1880,11 @@ func check_symbol_call_expression(self: @Checker, parsed_expression: @Parsed_Cal
                     )
                 }
             }
+        } else if checked_symbol is Checked_Function_Symbol {
+            \ ignore
+        } else {
+            abort(parsed_expression.location, checked_symbol.object_type)
         }
-
-        abort(parsed_expression.location, checked_symbol.object_type)
     }
 
     return self.check_call_expression(parsed_expression, parsed_callee_expression.name.lexeme, null)

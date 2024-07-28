@@ -136,6 +136,19 @@ func equals(self: @Checked_Type, other: @Checked_Type) -> bool {
     return self == other
 }
 
+func append_receiver_type(self: @String, checked_type: @Checked_Type) -> @String {
+    if checked_type is Checked_Opaque_Type {
+        return self.append(checked_type.as(@Checked_Opaque_Type).name)
+    }
+    if checked_type is Checked_Pointer_Type {
+        return self.append('p').append_receiver_type(checked_type.as(@Checked_Pointer_Type).pointed_type)
+    }
+    if checked_type is Checked_Struct_Type {
+        return self.append(checked_type.as(@Checked_Struct_Type).name)
+    }
+    abort(checked_type.object_type)
+}
+
 struct Checked_Any_Type: Checked_Builtin_Type(name = "Any") {
 }
 
@@ -426,6 +439,51 @@ func find_symbol(self: @Checked_Symbols, name: @String) -> @Checked_Symbol {
     return null
 }
 
+func find_callable_symbol(self: @Checked_Symbols, name: @String, parsed_call_arguments: @List[@Parsed_Call_Argument], checked_receiver_type: @Checked_Type, similar_callables_counter: @Counter[i32]) -> @Checked_Callable_Symbol {
+    self.for_each_symbol() {
+        if checked_symbol is Checked_Callable_Symbol and checked_symbol.name.equals(name) {
+            let checked_callable_symbol = checked_symbol.as(@Checked_Callable_Symbol)
+            similar_callables_counter.next()
+            if checked_receiver_type == null {
+                if checked_callable_symbol.receiver_type == null {
+                    if checked_callable_symbol.matches_parameter_labels(parsed_call_arguments) {
+                        return checked_callable_symbol
+                    }
+                }
+            } else {
+                if checked_callable_symbol.receiver_type != null and checked_receiver_type.accepts(checked_callable_symbol.receiver_type) {
+                    if checked_callable_symbol.matches_parameter_labels(parsed_call_arguments) {
+                        return checked_callable_symbol
+                    }
+                }
+            }
+        }
+    }
+    return null
+}
+
+func find_callable_symbol(self: @Checked_Symbols, name: @String, checked_callable_parameters: @List[@Checked_Callable_Parameter], checked_receiver_type: @Checked_Type) -> @Checked_Callable_Symbol {
+    self.for_each_symbol() {
+        if checked_symbol is Checked_Callable_Symbol and checked_symbol.name.equals(name) {
+            let checked_callable_symbol = checked_symbol.as(@Checked_Callable_Symbol)
+            if checked_receiver_type == null {
+                if checked_callable_symbol.receiver_type == null {
+                    if checked_callable_symbol.matches_parameter_labels(checked_callable_parameters) {
+                        return checked_callable_symbol
+                    }
+                }
+            } else {
+                if checked_callable_symbol.receiver_type != null and checked_receiver_type.accepts(checked_callable_symbol.receiver_type) {
+                    if checked_callable_symbol.matches_parameter_labels(checked_callable_parameters) {
+                        return checked_callable_symbol
+                    }
+                }
+            }
+        }
+    }
+    return null
+}
+
 func find_receiver_type_symbol(self: @Checked_Symbols) -> @Checked_Receiver_Type_Symbol {
     let list_item = self.last_item
     while list_item != null {
@@ -454,6 +512,28 @@ func find_type_symbol(self: @Checked_Symbols, name: @String) -> @Checked_Type_Sy
     return null
 }
 
+macro for_each_symbol(self: @Checked_Symbols, inline: macro (checked_symbol: @Checked_Symbol)) {
+    let checked_symbols = self
+    let checked_symbols_item = checked_symbols.last_item
+    if checked_symbols_item != null {
+        loop {
+            inline(checked_symbols_item.data)
+            checked_symbols_item = checked_symbols_item.prev_item
+            if checked_symbols_item == null {
+                checked_symbols = checked_symbols.parent
+                if checked_symbols != null {
+                    checked_symbols_item = checked_symbols.last_item
+                    if checked_symbols_item == null {
+                        break
+                    }
+                } else {
+                    break
+                }
+            }
+        }
+    }
+}
+
 struct Checked_Symbol: Object {
     location: @Source_Location
     name: @String
@@ -463,12 +543,82 @@ struct Checked_Symbol: Object {
 struct Checked_Builtin_Type_Symbol: Checked_Type_Symbol {
 }
 
+struct Checked_Callable_Symbol: Checked_Symbol {
+    callable_type: @Checked_Callable_Type
+    receiver_type: @Checked_Type
+}
+
+func matches_parameter_labels(self: @Checked_Callable_Symbol, other_callable_parameters: @List[@Checked_Callable_Parameter]) -> bool {
+    let self_callable_parameters_item = self.callable_type.parameters.first_item
+    let other_callable_parameters_item = other_callable_parameters.first_item
+    loop {
+        while self_callable_parameters_item != null and (self_callable_parameters_item.data == null or self_callable_parameters_item.data.label == null) {
+            self_callable_parameters_item = self_callable_parameters_item.next_item
+        }
+        while other_callable_parameters_item != null and (other_callable_parameters_item.data.label == null or other_callable_parameters_item.data.label == null) {
+            other_callable_parameters_item = other_callable_parameters_item.next_item
+        }
+        if self_callable_parameters_item == null {
+            return other_callable_parameters_item == null
+        }
+        if other_callable_parameters_item == null {
+            return false
+        }
+        if not self_callable_parameters_item.data.label.equals(other_callable_parameters_item.data.label) {
+            return false
+        }
+        self_callable_parameters_item = self_callable_parameters_item.next_item
+        other_callable_parameters_item = other_callable_parameters_item.next_item
+    }
+}
+
+func matches_parameter_labels(self: @Checked_Callable_Symbol, parsed_call_arguments: @List[@Parsed_Call_Argument]) -> bool {
+    let checked_callable_parameters_item = self.callable_type.parameters.first_item
+    let parsed_call_arguments_item = parsed_call_arguments.first_item
+    loop {
+        while checked_callable_parameters_item != null and (checked_callable_parameters_item.data == null or checked_callable_parameters_item.data.label == null) {
+            checked_callable_parameters_item = checked_callable_parameters_item.next_item
+        }
+        while parsed_call_arguments_item != null and parsed_call_arguments_item.data.name == null {
+            parsed_call_arguments_item = parsed_call_arguments_item.next_item
+        }
+        if checked_callable_parameters_item == null {
+            return parsed_call_arguments_item == null
+        }
+        if parsed_call_arguments_item == null {
+            return false
+        }
+        if not checked_callable_parameters_item.data.label.equals(parsed_call_arguments_item.data.name.lexeme) {
+            return false
+        }
+        checked_callable_parameters_item = checked_callable_parameters_item.next_item
+        parsed_call_arguments_item = parsed_call_arguments_item.next_item
+    }
+}
+
+func write(out: @FILE, checked_callable_symbol: @Checked_Callable_Symbol) -> @FILE {
+    if checked_callable_symbol is Checked_Function_Symbol {
+        let checked_function_symbol = checked_callable_symbol.as(@Checked_Function_Symbol)
+        out.write("func ")
+        if checked_function_symbol.receiver_type != null {
+            out.write(checked_function_symbol.receiver_type.name).write(".")
+        }
+        out.write(checked_function_symbol.name).write(checked_function_symbol.function_type.parameters)
+        if checked_function_symbol.function_type.return_type is not Checked_Nothing_Type {
+            out.write(" -> ").write(checked_function_symbol.function_type.return_type.name)
+        }
+    } else {
+        abort(checked_callable_symbol.object_type)
+    }
+    return out
+}
+
 struct Checked_Constant_Symbol: Checked_Symbol {
     parsed_constant_statement: @Parsed_Constant_Statement
     value_expression: @Checked_Expression
 }
 
-struct Checked_Function_Symbol: Checked_Symbol {
+struct Checked_Function_Symbol: Checked_Callable_Symbol {
     unique_name: @String
     function_type: @Checked_Function_Type
     parsed_function_statement: @Parsed_Function_Statement
@@ -506,118 +656,6 @@ struct Checked_Type_Symbol: Checked_Symbol {
 struct Checked_Variable_Symbol: Checked_Symbol {
     expression: @Checked_Expression
     is_external: bool
-}
-
-struct Checked_Callable: Object {
-    location: @Source_Location
-    unique_name: @String
-    name: @String = undefined
-    parameter_labels = make List[@String]()
-    receiver_type: @Checked_Type
-}
-
-func init(self: @Checked_Callable, name: @Identifier_Token, parameters: @List[@Parsed_Callable_Parameter]) -> @Checked_Callable {
-    self.name = name.lexeme
-    parameters.for_each() {
-        if it.label != null {
-            self.parameter_labels.append(it.label.lexeme)
-        } else {
-            self.parameter_labels.append(null)
-        }
-    }
-    return self
-}
-
-func make_unique_callable_name(name: @Identifier_Token, parameters: @List[@Parsed_Callable_Parameter], receiver_type: @Parsed_Type) -> @String {
-    let unique_name = "".clone()
-    if receiver_type != null {
-        unique_name.append_receiver_type(receiver_type)
-        unique_name.append("__")
-    }
-    unique_name.append(name.lexeme)
-    parameters.for_each() {
-        if it.label != null {
-            unique_name.append("__").append(it.label.lexeme)
-        }
-    }
-    return unique_name
-}
-
-func append_receiver_type(self: @String, receiver_type: @Parsed_Type) -> @String {
-    if receiver_type is Parsed_Pointer_Type {
-        return self.append('p').append_receiver_type(receiver_type.as(@Parsed_Pointer_Type).pointed_type)
-    }
-    if receiver_type is Parsed_Named_Type {
-        return self.append(receiver_type.as(@Parsed_Named_Type).name.lexeme)
-    }
-    abort(receiver_type.location, receiver_type.object_type)
-}
-
-func matches_parameter_labels(self: @Checked_Callable, parsed_call_arguments: @List[@Parsed_Call_Argument], checked_receiver_expression: @Checked_Expression) -> bool {
-    let parsed_call_arguments_item = parsed_call_arguments.first_item
-    let checked_callable_parameter_label_item = self.parameter_labels.first_item
-    if checked_receiver_expression != null {
-        if self.receiver_type == null {
-            return false
-        }
-        if not self.receiver_type.accepts(checked_receiver_expression.type) {
-            return false
-        }
-        if checked_callable_parameter_label_item == null {
-            return false
-        }
-        if checked_callable_parameter_label_item.data != null {
-            \ first parameter requires a label
-            return false
-        }
-        checked_callable_parameter_label_item = checked_callable_parameter_label_item.next_item
-    }
-    while parsed_call_arguments_item != null and checked_callable_parameter_label_item != null {
-        let parsed_call_argument = parsed_call_arguments_item.data
-        let checked_callable_parameter_label = checked_callable_parameter_label_item.data
-        if checked_callable_parameter_label != null {
-            if parsed_call_argument.name == null {
-                return false
-            }
-            if not checked_callable_parameter_label.equals(parsed_call_argument.name.lexeme) {
-                return false
-            }
-        } else if parsed_call_argument.name != null {
-            return false
-        }
-        parsed_call_arguments_item = parsed_call_arguments_item.next_item
-        checked_callable_parameter_label_item = checked_callable_parameter_label_item.next_item
-    }
-    return parsed_call_arguments_item == null and checked_callable_parameter_label_item == null
-}
-
-func write(out: @FILE, checked_callable: @Checked_Callable) -> @FILE {
-    if checked_callable is Checked_Function {
-        let checked_function_symbol = checked_callable.as(@Checked_Function).function_symbol
-        out.write("func ")
-        if checked_callable.receiver_type != null {
-            out.write(checked_callable.receiver_type.name).write(".")
-        }
-        out.write(checked_function_symbol.name).write(checked_function_symbol.function_type.parameters)
-        if checked_function_symbol.function_type.return_type is not Checked_Nothing_Type {
-            out.write(" -> ").write(checked_function_symbol.function_type.return_type.name)
-        }
-    } else {
-        abort(checked_callable.object_type)
-    }
-    return out
-}
-
-struct Checked_Function: Checked_Callable {
-    function_symbol: @Checked_Function_Symbol
-}
-
-struct Checked_Generic_Function: Checked_Callable {
-    function_statement: @Parsed_Function_Statement
-}
-
-struct Checked_Macro: Checked_Callable {
-    macro_statement: @Parsed_Macro_Statement
 }
 
 struct Checked_Statement: Object {
