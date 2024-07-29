@@ -738,15 +738,30 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
         let argument_index = 0
         while argument_index < ir_direct_call_instruction.arguments_size {
             let parameter_register = self.get_parameter_register(argument_index)
+            let ir_argument_value = ir_direct_call_instruction.get_argument_value(argument_index)
+            stderr.write("Loading ").write(ir_argument_value).write(" into register ").write(parameter_register.name_q).end_line()
             if not parameter_register.is_free(mc_block) {
                 abort("Release parameter register: ".clone().append(parameter_register.name_q))
             }
-            self.make_register_value(
+            let mc_argument_value = self.make_register_value(
                 mc_block = mc_block
-                ir_value = ir_direct_call_instruction.get_argument_value(argument_index)
-                mc_register = self.get_parameter_register(argument_index)
+                ir_value = ir_argument_value
+                mc_register = parameter_register
                 load_value = true
             )
+            if not ir_direct_call_instruction.live_out_values.contains(ir_argument_value) {
+                \ remove argument value from live values
+                let prune = false
+                mc_block.live_values.for_each() {
+                    if it.ir_value == ir_argument_value and it != mc_argument_value.as(@MC_Value) {
+                        mc_block.live_values.remove(it)
+                        prune = true
+                    }
+                }
+                if prune {
+                    mc_block.live_values.prune()
+                }
+            }
             argument_index = argument_index + 1
         }
     }
@@ -810,6 +825,15 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
         )
     ))
     mc_block.append(make @MC_CLTD_Instruction())
+    if right_mc_value is MC_Immediate_Value {
+        \ load immediate value into register
+        right_mc_value = self.make_register_value(
+            mc_block = mc_block
+            ir_value = right_ir_value
+            mc_register = self.find_free_caller_saved_register(mc_block)
+            load_value = true
+        )
+    }
     mc_block.append(make @MC_IDIV_Instruction(
         source = right_mc_value.make_mc_operand(self)
     ))
