@@ -433,6 +433,8 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_direct_call_instruction(ir_instruction.as(@IR_Direct_Call_Instruction), mc_block)
     } else if ir_instruction is IR_Divide_Instruction {
         self.convert_divide_instruction(ir_instruction.as(@IR_Divide_Instruction), mc_block)
+    } else if ir_instruction is IR_Integer_Cast_Instruction {
+        self.convert_integer_cast_instruction(ir_instruction.as(@IR_Integer_Cast_Instruction), mc_block)
     } else if ir_instruction is IR_Jump_Instruction {
         self.convert_jump_instruction(ir_instruction.as(@IR_Jump_Instruction), mc_block)
     } else if ir_instruction is IR_Load_Instruction {
@@ -841,6 +843,38 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
     \ unreserve rax and rdx
     self.register_rdx.is_reserved = false
     self.register_rax.is_reserved = false
+}
+
+func convert_integer_cast_instruction(self: @MC_Generator, ir_integer_cast_instruction: @IR_Integer_Cast_Instruction, mc_block: @MC_Block) -> Nothing {
+    let ir_result_value = ir_integer_cast_instruction.result_value
+    let mc_register_value = self.make_register_value(
+        mc_block = mc_block
+        ir_value = ir_result_value
+        register = self.find_free_caller_saved_register(mc_block)
+        load_value = false
+    )
+    let ir_value = ir_integer_cast_instruction.get_value()
+    let mc_value = mc_block.find_value(ir_value)
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_value.make_mc_operand(self)
+        destination = make @MC_Register_Operand(
+            size = ir_value.type.get_size()
+            register = mc_register_value.get_register()
+        )
+    ))
+    if ir_value.type.get_size() < ir_result_value.type.get_size() {
+        if ir_value.type is IR_UInt_Type {
+            mc_block.append(make @MC_MOVZX_Instruction(
+                source = make @MC_Register_Operand(
+                    size = ir_value.type.get_size()
+                    register = mc_register_value.get_register()
+                )
+                destination = mc_register_value.make_mc_operand(self)
+            ))
+        } else {
+            abort(ir_integer_cast_instruction.location, "Cannot cast ".clone().append(ir_value.type.name).append(" to ").append(ir_result_value.type.name))
+        }
+    }
 }
 
 func convert_jump_instruction(self: @MC_Generator, ir_jump_instruction: @IR_Jump_Instruction, mc_block: @MC_Block) -> Nothing {

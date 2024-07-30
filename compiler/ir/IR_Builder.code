@@ -786,7 +786,17 @@ func convert_array_access_expression_pointer(self: @IR_Builder, checked_expressi
 }
 
 func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cast_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert cast expression")
+    let value = self.convert_expression(checked_expression.expression, null)
+    let result_value = self.create_temp_value(self.convert_type(checked_expression.type))
+    if value.type is IR_Integer_Type and result_value.type is IR_Integer_Type {
+        return self.append(
+            make @IR_Integer_Cast_Instruction(
+                result_value = result_value
+            ).init(value)
+            checked_expression.location
+        )
+    }
+    abort(checked_expression.location, "Cannot cast ".clone().append(value.type.name).append(" to ").append(result_value.type.name))
 }
 
 func convert_dereference_expression(self: @IR_Builder, checked_expression: @Checked_Dereference_Expression, expected_type: @IR_Type) -> @IR_Value {

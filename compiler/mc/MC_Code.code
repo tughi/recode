@@ -402,6 +402,16 @@ struct MC_MOVSX_Instruction: MC_Instruction(
     destination: @MC_Operand
 }
 
+struct MC_MOVZX_Instruction: MC_Instruction(
+    write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let instruction = self.as(@MC_MOVZX_Instruction)
+        return file.write("movz").write_size_suffix(instruction.source.size).write_size_suffix(instruction.destination.size).write(' ').write(instruction.source).write(", ").write(instruction.destination)
+    }
+) {
+    source: @MC_Operand
+    destination: @MC_Operand
+}
+
 struct MC_MUL_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
         let self = self.as(@MC_MUL_Instruction)
