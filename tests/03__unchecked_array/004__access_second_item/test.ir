@@ -13,7 +13,7 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>): i32 {
   [ %argv.ptr %1 ]
   %2: ptr<ptr<u8>> = offset %argv.ptr %1
   [ %2 ]
-  %3: u8 = const 1
+  %3: i32 = const 1
   [ %2 %3 ]
   %4: ptr<u8> = offset %2 %3
   [ %4 ]

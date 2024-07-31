@@ -12,7 +12,7 @@ main:
   # %1: i32 = const 0
   # %2: ptr<ptr<u8>> = offset %argv.ptr %1
   movq 4(%rsp), %rcx
-  # %3: u8 = const 0
+  # %3: i32 = const 0
   # %4: ptr<u8> = offset %2 %3
   movq 0(%rcx), %rsi
   # %5: u8 = load %4

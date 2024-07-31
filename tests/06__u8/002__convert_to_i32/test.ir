@@ -1,7 +1,7 @@
 $main(): i32 {
 @1:
   [ ]
-  %1: i32 = const 255
+  %1: u8 = const 255
   [ %1 ]
   %2: i32 = call $cast %1
   [ %2 ]
@@ -19,7 +19,7 @@ $main(): i32 {
   [ ]
 @3:
   [ ]
-  %6: i32 = const 0
+  %6: u8 = const 0
   [ %6 ]
   %7: i32 = call $cast %6
   [ %7 ]

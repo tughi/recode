@@ -2,9 +2,9 @@
 main:
 .L__main__S:
 .L__main__1:
-  # %1: i32 = const 255
+  # %1: u8 = const 255
   # %2: i32 = call $cast %1
-  movl $0xff, %edi
+  movb $0xff, %dil
   call cast
   # %3: i32 = const 255i32
   # %4: bool = cmp_ne %2 %3
@@ -20,9 +20,9 @@ main:
   movl $0x1, %eax
   jmp .L__main__E
 .L__main__3:
-  # %6: i32 = const 0
+  # %6: u8 = const 0
   # %7: i32 = call $cast %6
-  movl $0x0, %edi
+  movb $0x0, %dil
   call cast
   # %8: i32 = const 0
   # %9: bool = cmp_ne %7 %8

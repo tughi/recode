@@ -725,9 +725,9 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
     } else {
         abort(checked_expression.location, checked_expression.object_type)
     }
-    \ if expected_type != null and not expected_type.accepts(value.type) {
-    \     abort(checked_expression.location, clone("Incompatible types: got ").append(value.type.name).append(" instead of ").append(expected_type.name))
-    \ }
+    if expected_type != null and expected_type != value.type {
+        abort(checked_expression.location, clone("Type mismatch: got ").append(value.type.name).append(" instead of ").append(expected_type.name))
+    }
     return value
 }
 
@@ -776,7 +776,10 @@ func convert_array_access_expression_pointer(self: @IR_Builder, checked_expressi
         abort(checked_expression.array_expression.location, "Not an array type")
     }
     let array_item_type = value_type.as(@IR_Pointer_Type).pointed_type
-    let index_value = self.convert_expression(checked_expression.index_expression, array_item_type)
+    let index_value = self.convert_expression(checked_expression.index_expression, null)
+    if index_value.type is not IR_Integer_Type {
+        abort(checked_expression.index_expression.location, "Not an integer type")
+    }
     return self.append(
         make @IR_Array_Item_Offset_Instruction(
             result_value = self.create_temp_value(value_type)
@@ -949,16 +952,12 @@ func convert_literal_expression(self: @IR_Builder, checked_expression: @Checked_
         )
     }
     if checked_expression is Checked_Integer_Literal_Expression {
-        let integer_literal = checked_expression.as(@Checked_Integer_Literal_Expression).literal
-        if integer_literal.type != null {
-            expected_type = self.find_named_type(integer_literal.type)
-        } else if expected_type == null or expected_type is not IR_Integer_Type {
-            expected_type = self.find_named_type("i32")
-        }
+        let checked_expression = checked_expression.as(@Checked_Integer_Literal_Expression)
+        let ir_expression_type = self.convert_type(checked_expression.type)
         return self.append(
             create_ir_constant_instruction(
-                self.create_temp_value(expected_type)
-                checked_expression.as(@Checked_Integer_Literal_Expression).literal
+                self.create_temp_value(ir_expression_type)
+                checked_expression.literal
             )
             checked_expression.location
         )

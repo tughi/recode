@@ -18,7 +18,7 @@ main:
   # store %arg.ptr %3
   movq %rax, 12(%rsp)
   # %char.ptr: ptr<u8> = alloc u8
-  # %4: u8 = const 0
+  # %4: i32 = const 0
   # %5: ptr<u8> = offset %arg.ptr %4
   movq 12(%rsp), %rcx
   # %6: u8 = load %5
