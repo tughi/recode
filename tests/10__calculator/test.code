@@ -17,6 +17,8 @@ func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
     }
 }
 
+\ ------------------------------------------------------------------------------ Tokenizer
+
 struct Tokenizer {
     data: [u8; ?]
     index: i32
@@ -26,6 +28,11 @@ struct Tokenizer {
     }
 
     func next_token(self) -> @Token {
+        let lexeme_builder = make StringBuilder(
+            data: malloc(4).as([u8; ?])
+            data_size: 4
+            length: 0
+        )
         let char = self.data[self.index]
         if char >= '0' and char <= '9' {
             return self.scan_number_token()
@@ -33,40 +40,76 @@ struct Tokenizer {
         self.index = self.index + 1
         return make @Token(
             kind: char
+            lexeme: lexeme_builder.write(char).build()
             value: 0
         )
     }
 
-    func scan_number_token(self) -> @Token {
+    func scan_number_token(self, lexeme_builder: @StringBuilder) -> @Token {
         let value = 0
         loop {
             let char = self.data[self.index]
             if char < '0' or char > '9' {
                 break
             }
+            lexeme_builder.write(char)
             value = value * 10 + (char - '0').as(i32)
             self.index = self.index + 1
         }
         return make @Token(
             kind: 'n'
+            lexeme: lexeme_builder.build()
             value: value
         )
     }
 }
 
+\ ------------------------------------------------------------------------------ Token
+
 struct Token {
     kind: u8
+    lexeme: [u8; ?]
     value: i32
 }
 
-\ ----------- Stream -----------
-
-func @FILE.write(self, char: u8) -> @FILE {
-    fputc(char, stdout)
+func @Stream.write(self, token: @Token) -> @Stream {
+    self.write(char: token.kind)
+    if token.kind == 'n' {
+        self.write(char: ':').write(char: ' ').write(signed: token.value)
+    }
     return self
 }
 
-func @FILE.write(self, signed value: i32) -> @FILE {
+\ ------------------------------------------------------------------------------ StringBuilder
+
+struct StringBuilder {
+    data: [u8; ?]
+    data_size: i32
+    length: i32
+
+    func write(self, char: u8) -> @StringBuilder {
+        if self.length == self.data_size {
+            self.data_size = self.data_size + 8
+            self.data = realloc(self.data, self.data_size).as([u8; ?])
+        }
+        self.data[self.length] = char
+        self.length = self.length + 1
+        return self
+    }
+
+    func build() -> [u8; ?] {
+        self.write(char: 0)
+        return self.data
+    }
+}
+
+\ ------------------------------------------------------------------------------ Stream
+
+trait Stream {
+    func write(self, char: u8) -> @Self
+}
+
+func @Stream.write(self, signed value: i32) -> @Stream {
     \ TODO: Use a buffer to avoid recursion
     if value < 0 {
         self.write(char: '-')
@@ -78,20 +121,12 @@ func @FILE.write(self, signed value: i32) -> @FILE {
     return self.write(char: (value // 10).as(u8) + '0')
 }
 
-func @FILE.write(self, token: @Token) -> @FILE {
-    self.write(char: token.kind)
-    if token.kind == 'n' {
-        self.write(char: ':').write(char: ' ').write(signed: token.value)
-    }
-    return self
-}
-
-func @FILE.end_line(self) -> @FILE {
+func @Stream.end_line(self) -> @Stream {
     self.write(char: '\n')
     return self
 }
 
-\ ------------ LibC ------------
+\ ------------------------------------------------------------------------------ LibC
 
 external type FILE
 
@@ -101,6 +136,12 @@ external stderr: @FILE
 
 external func fputc(anon c: u8, anon file: @FILE) -> i32
 
+func @FILE.write(self, char: u8) -> @FILE {
+    fputc(char, stdout)
+    return self
+}
+
 external func malloc(anon size: u64) -> @Any
+external func realloc(anon block: @Any, anon size: u64) -> @Any
 
 external func exit(anon code: i32)

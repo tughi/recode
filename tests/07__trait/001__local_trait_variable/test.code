@@ -1,0 +1,20 @@
+struct Dog {
+    func make_sound(self) -> u8 {
+        return 'w'
+    }
+}
+
+trait Animal {
+    func make_sound(self) -> u8
+}
+
+func main() -> i32 {
+    let dog = make Dog()
+    let animal = make Animal(@dog)
+
+    if animal.make_sound() != 'w' {
+        return 1
+    }
+
+    return 0
+}

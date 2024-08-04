@@ -266,6 +266,10 @@ struct Parsed_Struct_Member {
     default_value_expression: @Parsed_Expression
 }
 
+struct Parsed_Trait_Statement: Parsed_Type_Statement {
+    functions: @List[@Parsed_Function_Statement]
+}
+
 struct Parsed_Assignment_Statement: Parsed_Statement {
     storage_expression: @Parsed_Expression
     operator: @Other_Token

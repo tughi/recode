@@ -83,6 +83,8 @@ func parse_statements(self: @Parser, statements: @List[@Parsed_Statement], is_gl
                     self.parsed_code.put_named_statement(statement.as(@Parsed_Macro_Statement).name.lexeme, statement)
                 } else if statement is Parsed_Struct_Statement {
                     self.parsed_code.put_named_statement(statement.as(@Parsed_Struct_Statement).name.lexeme, statement)
+                } else if statement is Parsed_Trait_Statement {
+                    self.parsed_code.put_named_statement(statement.as(@Parsed_Trait_Statement).name.lexeme, statement)
                 } else if statement is Parsed_Variable_Statement {
                     self.parsed_code.put_named_statement(statement.as(@Parsed_Variable_Statement).name.lexeme, statement)
                 } else {
@@ -127,6 +129,7 @@ func make_relative_path(file_path: @String, base_file_path: @String) -> @String 
 \   | break
 \   | return
 \   | struct
+\   | trait
 \   | expression "=" expression
 \   | expression
 func parse_statement(self: @Parser, is_global: bool) -> @Parsed_Statement {
@@ -160,6 +163,9 @@ func parse_statement(self: @Parser, is_global: bool) -> @Parsed_Statement {
         }
         if self.matches(required_struct) {
             return self.parse_struct()
+        }
+        if self.matches(required_trait) {
+            return self.parse_trait()
         }
     } else {
         if self.matches(required_break) {
@@ -419,6 +425,39 @@ func parse_type_parameters(self: @Parser) -> @List[@Parsed_Type_Parameter] {
     }
     self.consume(required_close_bracket)
     return type_parameters
+}
+
+\ trait
+\   | "trait" IDENTIFIER "{" <EOL> ( trait_method <EOL> )* "}"
+func parse_trait(self: @Parser) -> @Parsed_Type_Statement {
+    self.consume(required_trait)
+    self.consume_space(1)
+    let trait_name = self.consume(required_identifier).as(@Identifier_Token)
+    self.consume_space(1)
+    self.consume(required_open_brace)
+    self.consume_end_of_line()
+    self.current_alignment = self.current_alignment + 1
+    let trait_functions = make @List[@Parsed_Function_Statement]()
+    while not self.matches(optional_space, required_close_brace) {
+        if not self.consume_empty_line() {
+            self.consume_space(self.current_alignment * 4)
+            trait_functions.append(self.parse_trait_method())
+        }
+    }
+    self.current_alignment = self.current_alignment - 1
+    self.consume_space(self.current_alignment * 4)
+    self.consume(required_close_brace)
+    return make @Parsed_Trait_Statement(
+        location = trait_name.location
+        name = trait_name
+        functions = trait_functions
+    )
+}
+
+\ trait_method
+\   | "func" IDENTIFIER function_signature
+func parse_trait_method(self: @Parser) -> @Parsed_Function_Statement {
+    return self.parse_external_function()
 }
 
 \ external_function
@@ -1460,6 +1499,7 @@ let required_self: @Matcher = undefined
 let required_slash: @Matcher = undefined
 let required_string_literal: @Matcher = undefined
 let required_struct: @Matcher = undefined
+let required_trait: @Matcher = undefined
 let required_type: @Matcher = undefined
 let required_vertical_bar: @Matcher = undefined
 let required_while: @Matcher = undefined
@@ -1515,6 +1555,7 @@ func init_matchers() -> Nothing {
     required_slash = make @Other_Matcher(is_required = true, lexeme = "/")
     required_string_literal = make @String_Literal_Matcher(is_required = true)
     required_struct = make @Keyword_Matcher(is_required = true, lexeme = "struct")
+    required_trait = make @Keyword_Matcher(is_required = true, lexeme = "trait")
     required_type = make @Keyword_Matcher(is_required = true, lexeme = "type")
     required_vertical_bar = make @Other_Matcher(is_required = true, lexeme = "|")
     required_while = make @Keyword_Matcher(is_required = true, lexeme = "while")

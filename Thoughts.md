@@ -102,7 +102,6 @@ The compiler generates trait objects that could be modeled like this:
 
     struct VisitableTrait[T] {
         object: @T
-        type: @Type
         accept: func (self: @T, visitor: @Visitor)
     }
 
