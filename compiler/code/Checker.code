@@ -155,6 +155,9 @@ func check(self: @Checker, parsed_code: @Parsed_Code) -> Nothing {
 
             \ restore local symbols
             self.local_symbols = self.local_symbols.parent
+        } else if it is Parsed_Trait_Statement {
+            let parsed_trait_statement = it.as(@Parsed_Trait_Statement)
+            self.create_trait_type_symbol(parsed_trait_statement)
         } else if it is Parsed_Variable_Statement {
             let checked_statement = self.check_variable_statement(it.as(@Parsed_Variable_Statement))
             let variable = checked_statement.variable
@@ -490,6 +493,37 @@ func check_struct_type_symbol(self: @Checker, checked_struct_type_symbol: @Check
 
     \ restore type context
     self.local_symbols = local_symbols
+}
+
+func create_trait_type_symbol(self: @Checker, parsed_trait_statement: @Parsed_Trait_Statement) -> @Checked_Trait_Type_Symbol {
+    let checked_trait_name = parsed_trait_statement.name.lexeme
+
+    \ check for uniqueness
+    let checked_symbol = self.checked_code.global_symbols.get(checked_trait_name)
+    if checked_symbol != null {
+        if checked_symbol is not Checked_Trait_Type_Symbol or checked_symbol.as(@Checked_Trait_Type_Symbol).parsed_trait_statement != parsed_trait_statement {
+            abort(parsed_trait_statement.location, clone("Duplicate declaration: ").append(checked_trait_name))
+        }
+        return checked_symbol.as(@Checked_Trait_Type_Symbol)
+    }
+
+    \ create trait type
+    let checked_trait_type = make @Checked_Trait_Type(
+        name = checked_trait_name
+        parsed_trait_statement = parsed_trait_statement
+    )
+
+    \ create trait symbol
+    let checked_trait_type_symbol = make @Checked_Trait_Type_Symbol(
+        location = parsed_trait_statement.name.location
+        name = checked_trait_name
+        type = checked_trait_type
+        parsed_trait_statement = parsed_trait_statement
+    )
+    self.checked_code.global_symbols.put(checked_trait_name, checked_trait_type_symbol)
+    self.global_symbols.append(checked_trait_type_symbol)
+
+    return checked_trait_type_symbol
 }
 
 func create_opaque_type_symbol(self: @Checker, parsed_statement: @Parsed_External_Type_Statement) -> @Checked_Opaque_Type_Symbol {
@@ -1572,6 +1606,9 @@ func check_make_expression(self: @Checker, parsed_expression: @Parsed_Make_Expre
     if checked_type is Checked_Struct_Type {
         return self.check_make_struct_expression(parsed_expression, checked_type.as(@Checked_Struct_Type), make_pointer)
     }
+    if checked_type is Checked_Trait_Type {
+        return self.check_make_trait_expression(parsed_expression, checked_type.as(@Checked_Trait_Type), make_pointer)
+    }
     abort(parsed_expression.location, "Cannot make ".clone().append(checked_type.name))
 }
 
@@ -1587,7 +1624,7 @@ func check_make_struct_expression(self: @Checker, parsed_expression: @Parsed_Mak
         type = checked_expression_type
     )
 
-    \ check init argument
+    \ check init arguments
     parsed_expression.init_arguments.for_each() {
         if it.name == null {
             abort(it.location, "Missing member name")
@@ -1632,6 +1669,65 @@ func check_missing_values(self: @Checked_Struct_Type, location: @Source_Location
             stderr.write(location).write(": ").warning().write(self.name).write('.').write(it.name).write(" is not initialized").reset().end_line()
         }
     }
+}
+
+func check_make_trait_expression(self: @Checker, parsed_expression: @Parsed_Make_Expression, checked_trait_type: @Checked_Trait_Type, make_pointer: bool) -> @Checked_Expression {
+    let checked_expression_type: @Checked_Type
+    if make_pointer {
+        checked_expression_type = make_checked_pointer_type(checked_trait_type)
+    } else {
+        checked_expression_type = checked_trait_type
+    }
+
+    \ check init argument
+    if parsed_expression.init_arguments.size != 1 {
+        abort(parsed_expression.location, "Expected one init argument")
+    }
+    let parsed_init_argument = parsed_expression.init_arguments.first_item.data
+    if parsed_init_argument.name != null {
+        abort(parsed_expression.location, "Unexpected argument label")
+    }
+    let checked_value_expression = self.check_expression(parsed_init_argument.value_expression, null)
+    let checked_value_type = checked_value_expression.type
+    if checked_value_type is Checked_Pointer_Type {
+        checked_value_type = checked_value_type.as(@Checked_Pointer_Type).pointed_type
+    }
+    if checked_value_type is not Checked_Struct_Type {
+        abort(parsed_init_argument.value_expression.location, "Not a struct value")
+    }
+
+    let checked_expression = make @Checked_Make_Trait_Expression(
+        location = parsed_expression.location
+        type = checked_expression_type
+        object_expression = checked_value_expression
+    )
+
+    \ find all matching trait methods
+    self.local_symbols = make @Checked_Symbols(
+        parent = self.local_symbols
+    )
+    let checked_receiver_type = make_checked_pointer_type(checked_value_type)
+    self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
+        location = parsed_expression.location
+        type = checked_receiver_type
+    ))
+    checked_trait_type.parsed_trait_statement.functions.for_each() {
+        let checked_function_type = self.convert_function_type(it.type)
+        let checked_callable_symbol = self.global_symbols.find_callable_symbol(it.name.lexeme, checked_function_type.parameters, checked_receiver_type)
+        if checked_callable_symbol == null {
+            stderr.write(checked_expression.location).write(": ").error().write(checked_value_type.name).write(" does not implement all ").write(checked_trait_type.name).write(" trait methods").reset().end_line()
+            stderr.write(it.location).write(": ").warning().write("Unimplemented trait method").reset().end_line()
+            exit(1)
+        }
+        if checked_callable_symbol is not Checked_Function_Symbol {
+            abort(it.name.location, "Not a function symbol")
+        }
+        let checked_function_symbol = checked_callable_symbol.as(@Checked_Function_Symbol)
+        checked_expression.functions.put(it, checked_function_symbol)
+    }
+    self.local_symbols = self.local_symbols.parent
+
+    return checked_expression
 }
 
 func check_member_access_expression(self: @Checker, parsed_expression: @Parsed_Member_Access_Expression) -> @Checked_Expression {
