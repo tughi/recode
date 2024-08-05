@@ -507,9 +507,35 @@ func create_trait_type_symbol(self: @Checker, parsed_trait_statement: @Parsed_Tr
         return checked_symbol.as(@Checked_Trait_Type_Symbol)
     }
 
+    \ create trait struct type
+    let checked_trait_struct_type = make @Checked_Struct_Type(
+        name = checked_trait_name
+    )
+    checked_trait_struct_type.add_member(parsed_trait_statement.name.location, "self", make_checked_pointer_type(self.any_type), null)
+    self.local_symbols = make @Checked_Symbols(
+        parent = self.local_symbols
+    )
+    self.local_symbols.append(make @Checked_Type_Symbol(
+        location = null
+        name = "Self"
+        type = checked_trait_struct_type
+    ))
+    let checked_receiver_type = make_checked_pointer_type(self.any_type)
+    self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
+        location = null
+        type = checked_receiver_type
+    ))
+    parsed_trait_statement.functions.for_each() {
+        let parsed_trait_function = it
+        let checked_function_type = self.convert_function_type(parsed_trait_function.type)
+        checked_trait_struct_type.add_member(parsed_trait_function.location, parsed_trait_function.name.lexeme, make_checked_function_pointer_type(checked_function_type), null)
+    }
+    self.local_symbols = self.local_symbols.parent
+
     \ create trait type
     let checked_trait_type = make @Checked_Trait_Type(
-        name = checked_trait_name
+        name = checked_trait_struct_type.name
+        struct_type = checked_trait_struct_type
         parsed_trait_statement = parsed_trait_statement
     )
 

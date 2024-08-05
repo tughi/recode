@@ -398,6 +398,7 @@ func has_super_type(self: @Checked_Struct_Type, other: @Checked_Struct_Type) -> 
 }
 
 struct Checked_Trait_Type: Checked_Named_Type {
+    struct_type: @Checked_Struct_Type
     parsed_trait_statement: @Parsed_Trait_Statement
 }
 

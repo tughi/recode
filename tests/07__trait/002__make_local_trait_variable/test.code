@@ -1,0 +1,14 @@
+struct Dog {
+    func legs(self) -> i32 {
+        return 4
+    }
+}
+
+trait Animal {
+    func legs(self) -> i32
+}
+
+func main() {
+    let dog = make Dog()
+    let animal = make Animal(dog)
+}

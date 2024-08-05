@@ -300,6 +300,8 @@ func convert_type(self: @IR_Builder, checked_type: @Checked_Type) -> @IR_Type {
             )
         } else if checked_type is Checked_Struct_Type {
             return self.convert_struct_type(checked_type.as(@Checked_Struct_Type))
+        } else if checked_type is Checked_Trait_Type {
+            return self.convert_struct_type(checked_type.as(@Checked_Trait_Type).struct_type)
         } else {
             abort(checked_type.object_type)
         }

@@ -1,0 +1,20 @@
+trait Animal {
+    func legs(self) -> i32
+}
+
+struct Dog {
+    func legs(self) -> i32 {
+        return 4
+    }
+}
+
+func main() -> i32 {
+    let dog = make Dog()
+    let animal = make Animal(dog)
+
+    if animal.legs() != 4 {
+        return 1
+    }
+
+    return 0
+}

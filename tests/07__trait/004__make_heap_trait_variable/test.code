@@ -1,0 +1,31 @@
+trait Animal {
+    func legs(self) -> i32
+}
+
+struct Dog {
+    func legs(self) -> i32 {
+        return 4
+    }
+}
+
+struct Spider {
+    func legs(self) -> i32 {
+        return 8
+    }
+}
+
+func main() -> i32 {
+    let dog = make Dog()
+    let animal = make @Animal(dog)
+
+    if animal.legs() != 4 {
+        return 1
+    }
+
+    animal = make @Animal(make @Spider())
+    if animal.legs() != 8 {
+        return 2
+    }
+
+    return 0
+}
