@@ -600,6 +600,15 @@ struct IR_Equality_Instruction: IR_Comparison_Instruction(
 ) {
 }
 
+struct IR_Function_Address_Instruction: IR_Instruction(
+    print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
+        let instruction = self.as(@IR_Function_Address_Instruction)
+        file.write("address ").write(instruction.function)
+    }
+) {
+    function: @IR_Function
+}
+
 struct IR_Greater_Than_Instruction: IR_Comparison_Instruction(
     print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
         let instruction = self.as(@IR_Comparison_Instruction)

@@ -334,7 +334,6 @@ func create_ir_pointer_type(self: @IR_Builder, ir_pointed_type: @IR_Type) -> @IR
 }
 
 func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Function_Type) -> @IR_Function_Type {
-    \ TODO: Check if function type already exists
     let ir_function_type_name = make @String().append("func (")
     let ir_function_type_parameters = make @List[@IR_Function_Type_Parameter]()
     checked_function_type.parameters.for_each_indexed() {
@@ -355,7 +354,40 @@ func convert_function_type(self: @IR_Builder, checked_function_type: @Checked_Fu
     if ir_function_type_return_type is not IR_Nothing_Type {
         ir_function_type_name.append(" -> ").append(ir_function_type_return_type.name)
     }
-    return make @IR_Function_Type(name = ir_function_type_name, parameters = ir_function_type_parameters, return_type = ir_function_type_return_type)
+
+    \ check if function type already exists
+    self.types.for_each() {
+        if it is IR_Function_Type {
+            let that = it.as(@IR_Function_Type)
+            let same = that.return_type == ir_function_type_return_type and that.parameters.size == ir_function_type_parameters.size
+            if same {
+                let that_parameters_item = that.parameters.first_item
+                let this_parameters_item = ir_function_type_parameters.first_item
+                while same and that_parameters_item != null and this_parameters_item != null {
+                    let that_parameter = that_parameters_item.data
+                    let this_parameter = this_parameters_item.data
+                    same = (that_parameter.name == null or (this_parameter.name != null and this_parameter.name.equals(that_parameter.name))) and that_parameter.type == this_parameter.type
+                    that_parameters_item = that_parameters_item.next_item
+                    this_parameters_item = this_parameters_item.next_item
+                }
+                if same {
+                    return that
+                }
+            }
+        }
+    }
+
+    \ TODO: create function_name here
+
+    let ir_function_type = make @IR_Function_Type(
+        name = ir_function_type_name
+        parameters = ir_function_type_parameters
+        return_type = ir_function_type_return_type
+    )
+
+    self.types.append(ir_function_type)
+
+    return ir_function_type
 }
 
 func convert_struct_type(self: @IR_Builder, checked_struct_type: @Checked_Struct_Type) -> @IR_Struct_Type {
@@ -1264,13 +1296,16 @@ func convert_symbol_expression(self: @IR_Builder, checked_expression: @Checked_S
     \ if ir_symbol is IR_Constant {
     \     \ return ir_symbol.as(@IR_Constant).value
     \ }
-    \ if ir_symbol is IR_Function {
-    \     let ir_function = ir_symbol.as(@IR_Function)
-    \     return make @IR_Function_Address_Value(
-    \         type = self.create_ir_pointer_type(ir_function.type)
-    \         function = ir_function
-    \     )
-    \ }
+    if ir_symbol is IR_Function {
+        let ir_function = ir_symbol.as(@IR_Function)
+        return self.append(
+            make @IR_Function_Address_Instruction(
+                result_value = self.create_temp_value(ir_function.type)
+                function = ir_function
+            )
+            checked_expression.location
+        )
+    }
     abort(checked_expression.location, clone("Unsupported symbol type: ").append(ir_symbol.object_type.name))
 }
 

@@ -433,6 +433,8 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_direct_call_instruction(ir_instruction.as(@IR_Direct_Call_Instruction), mc_block)
     } else if ir_instruction is IR_Divide_Instruction {
         self.convert_divide_instruction(ir_instruction.as(@IR_Divide_Instruction), mc_block)
+    } else if ir_instruction is IR_Function_Address_Instruction {
+        self.convert_function_address_instruction(ir_instruction.as(@IR_Function_Address_Instruction), mc_block)
     } else if ir_instruction is IR_Integer_Cast_Instruction {
         self.convert_integer_cast_instruction(ir_instruction.as(@IR_Integer_Cast_Instruction), mc_block)
     } else if ir_instruction is IR_Jump_Instruction {
@@ -845,6 +847,15 @@ func make_division(self: @MC_Generator, mc_block: @MC_Block, left_ir_value: @IR_
     self.register_rax.is_reserved = false
 }
 
+func convert_function_address_instruction(self: @MC_Generator, ir_function_address_instruction: @IR_Function_Address_Instruction, mc_block: @MC_Block) -> Nothing {
+    mc_block.live_values.prepend(
+        make @MC_Global_Value(
+            ir_value = ir_function_address_instruction.result_value
+            name = ir_function_address_instruction.function.checked_symbol.as(@Checked_Function_Symbol).unique_name
+        )
+    )
+}
+
 func convert_integer_cast_instruction(self: @MC_Generator, ir_integer_cast_instruction: @IR_Integer_Cast_Instruction, mc_block: @MC_Block) -> Nothing {
     let ir_result_value = ir_integer_cast_instruction.result_value
     let mc_register_value = self.make_register_value(
@@ -1039,7 +1050,7 @@ func convert_store_instruction(self: @MC_Generator, ir_store_instruction: @IR_St
     let mc_value_pointer = mc_block.find_value(ir_store_instruction.get_value_pointer())
 
     let mc_source_operand: @MC_Operand
-    if mc_value is MC_Local_Value or mc_value is MC_Memory_Value {
+    if mc_value is MC_Local_Value or mc_value is MC_Memory_Value or mc_value is MC_Global_Value {
         \ use intermediate register to store value
         let mc_register = self.find_free_caller_saved_register(mc_block)
         mc_block.append(make @MC_LEA_Instruction(
