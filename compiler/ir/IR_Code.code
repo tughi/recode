@@ -592,6 +592,28 @@ struct IR_Divide_Instruction: IR_Binary_Instruction(
 ) {
 }
 
+struct IR_Dynamic_Call_Instruction: IR_Call_Instruction(
+    print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
+        let instruction = self.as(@IR_Dynamic_Call_Instruction)
+        file.write("call ").write(instruction.get_function_pointer()).write_call_arguments(instruction)
+    }
+) {
+}
+
+func create_ir_dynamic_call_instruction(result_value: @IR_Value, call_arguments: @List[@IR_Call_Argument], function_pointer: @IR_Value) -> @IR_Call_Instruction {
+    let instruction = make @IR_Dynamic_Call_Instruction(result_value = result_value)
+    if function_pointer.type is not IR_Pointer_Type {
+        abort("Not a function pointer")
+    }
+    instruction.set_operand_value("!function_pointer", function_pointer)
+    instruction.add_arguments(call_arguments)
+    return instruction
+}
+
+func get_function_pointer(self: @IR_Dynamic_Call_Instruction) -> @IR_Value {
+    return self.operand_values.get("!function_pointer")
+}
+
 struct IR_Equality_Instruction: IR_Comparison_Instruction(
     print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
         let instruction = self.as(@IR_Comparison_Instruction)

@@ -430,9 +430,11 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
     } else if ir_instruction is IR_Constant_Instruction {
         self.convert_constant_instruction(ir_instruction.as(@IR_Constant_Instruction), mc_block)
     } else if ir_instruction is IR_Direct_Call_Instruction {
-        self.convert_direct_call_instruction(ir_instruction.as(@IR_Direct_Call_Instruction), mc_block)
+        self.convert_call_instruction(ir_instruction.as(@IR_Direct_Call_Instruction), mc_block)
     } else if ir_instruction is IR_Divide_Instruction {
         self.convert_divide_instruction(ir_instruction.as(@IR_Divide_Instruction), mc_block)
+    } else if ir_instruction is IR_Dynamic_Call_Instruction {
+        self.convert_call_instruction(ir_instruction.as(@IR_Dynamic_Call_Instruction), mc_block)
     } else if ir_instruction is IR_Function_Address_Instruction {
         self.convert_function_address_instruction(ir_instruction.as(@IR_Function_Address_Instruction), mc_block)
     } else if ir_instruction is IR_Integer_Cast_Instruction {
@@ -719,12 +721,12 @@ func convert_constant_instruction(self: @MC_Generator, ir_instruction: @IR_Const
     }
 }
 
-func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruction: @IR_Direct_Call_Instruction, mc_block: @MC_Block) -> Nothing {
-    if ir_direct_call_instruction.next_instruction != null {
+func convert_call_instruction(self: @MC_Generator, ir_call_instruction: @IR_Call_Instruction, mc_block: @MC_Block) -> Nothing {
+    if ir_call_instruction.next_instruction != null {
         \ move live values to callee saved registers or stack slots
-        ir_direct_call_instruction.next_instruction.live_in_values.for_each() {
+        ir_call_instruction.next_instruction.live_in_values.for_each() {
             let ir_value = it
-            if ir_value != ir_direct_call_instruction.result_value {
+            if ir_value != ir_call_instruction.result_value {
                 let mc_value = mc_block.find_live_value_in_register(ir_value)
                 if mc_value != null and mc_value.get_register().is_caller_saved {
                     \ move value to callee saved register
@@ -738,11 +740,11 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
     }
 
     \ map arguments to registers
-    if ir_direct_call_instruction.arguments_size > 0 {
+    if ir_call_instruction.arguments_size > 0 {
         let argument_index = 0
-        while argument_index < ir_direct_call_instruction.arguments_size {
+        while argument_index < ir_call_instruction.arguments_size {
             let parameter_register = self.get_parameter_register(argument_index)
-            let ir_argument_value = ir_direct_call_instruction.get_argument_value(argument_index)
+            let ir_argument_value = ir_call_instruction.get_argument_value(argument_index)
             stderr.write("Loading ").write(ir_argument_value).write(" into register ").write(parameter_register.name_q).end_line()
             if not parameter_register.is_free(mc_block) {
                 abort("Release parameter register: ".clone().append(parameter_register.name_q))
@@ -753,7 +755,7 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
                 mc_register = parameter_register
                 load_value = true
             )
-            if not ir_direct_call_instruction.live_out_values.contains(ir_argument_value) {
+            if not ir_call_instruction.live_out_values.contains(ir_argument_value) {
                 \ remove argument value from live values
                 let prune = false
                 mc_block.live_values.for_each() {
@@ -771,13 +773,33 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
     }
 
     \ create call instruction
-    let ir_function = ir_direct_call_instruction.function
-    mc_block.append(make @MC_CALL_Instruction(
-        callee = make @MC_Label_Operand(
-            size = 0
-            label = ir_function.name
-        )
-    ))
+    let ir_function_type: @IR_Function_Type = null
+    if ir_call_instruction is IR_Direct_Call_Instruction {
+        let ir_function = ir_call_instruction.as(@IR_Direct_Call_Instruction).function
+        mc_block.append(make @MC_CALL_Instruction(
+            callee = make @MC_Label_Operand(
+                size = 0
+                label = ir_function.name
+            )
+        ))
+        ir_function_type = ir_function.function_type
+    } else if ir_call_instruction is IR_Dynamic_Call_Instruction {
+        let ir_dynamic_call_instruction = ir_call_instruction.as(@IR_Dynamic_Call_Instruction)
+        let ir_function_pointer = ir_dynamic_call_instruction.get_function_pointer()
+        if ir_function_pointer.type is not IR_Pointer_Type or ir_function_pointer.type.as(@IR_Pointer_Type).pointed_type is not IR_Function_Type {
+            abort(ir_function_pointer.type.object_type)
+        }
+        let mc_function_pointer_value = mc_block.find_value(ir_function_pointer)
+        if not mc_function_pointer_value.has_register() {
+            abort("Load function pointer into register")
+        }
+        mc_block.append(make @MC_CALL_Instruction(
+            callee = mc_function_pointer_value.make_mc_operand(self)
+        ))
+        ir_function_type = ir_function_pointer.type.as(@IR_Pointer_Type).pointed_type.as(@IR_Function_Type)
+    } else {
+        abort(ir_call_instruction.object_type)
+    }
 
     \ remove all caller-saved register values
     mc_block.live_values.for_each() {
@@ -792,10 +814,10 @@ func convert_direct_call_instruction(self: @MC_Generator, ir_direct_call_instruc
     mc_block.live_values.prune()
 
     \ map return value to rax
-    if ir_function.return_type is not IR_Nothing_Type {
+    if ir_function_type.return_type is not IR_Nothing_Type {
         let return_value = self.make_register_value(
             mc_block = mc_block
-            ir_value = ir_direct_call_instruction.result_value
+            ir_value = ir_call_instruction.result_value
             register = self.register_rax
             load_value = false
         )

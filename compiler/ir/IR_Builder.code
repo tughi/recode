@@ -880,7 +880,33 @@ func convert_divide_expression(self: @IR_Builder, checked_expression: @Checked_D
 }
 
 func convert_dynamic_call_expression(self: @IR_Builder, checked_expression: @Checked_Dynamic_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
-    abort("TODO: Convert dynamic call expression")
+    let ir_function_pointer = self.convert_expression(checked_expression.callee_expression, null)
+    let ir_function_type: @IR_Function_Type
+    if ir_function_pointer.type is IR_Pointer_Type {
+        let ir_function_pointer_type = ir_function_pointer.type.as(@IR_Pointer_Type)
+        if ir_function_pointer_type.pointed_type is not IR_Function_Type {
+            abort(checked_expression.location, clone("Not a function pointer"))
+        }
+        ir_function_type = ir_function_pointer_type.pointed_type.as(@IR_Function_Type)
+    } else {
+        abort(checked_expression.location, clone("Not a function pointer"))
+    }
+
+    let ir_call_arguments = self.convert_call_arguments(checked_expression.call_arguments)
+
+    let result_value: @IR_Value = null
+    if ir_function_type.return_type is not IR_Nothing_Type {
+        result_value = self.create_temp_value(ir_function_type.return_type)
+    }
+
+    return self.append(
+        create_ir_dynamic_call_instruction(
+            result_value
+            ir_call_arguments
+            ir_function_pointer
+        )
+        checked_expression.location
+    )
 }
 
 func convert_equals_expression(self: @IR_Builder, checked_expression: @Checked_Equals_Expression, expected_type: @IR_Type) -> @IR_Value {
@@ -907,7 +933,15 @@ func convert_function_call_expression(self: @IR_Builder, checked_expression: @Ch
     if ir_function.return_type is not IR_Nothing_Type {
         result_value = self.create_temp_value(ir_function.return_type)
     }
-    return self.append(create_ir_direct_call_instruction(result_value, ir_call_arguments, ir_function), checked_expression.location)
+
+    return self.append(
+        create_ir_direct_call_instruction(
+            result_value
+            ir_call_arguments
+            ir_function
+        )
+        checked_expression.location
+    )
 }
 
 func convert_greater_than_expression(self: @IR_Builder, checked_expression: @Checked_Greater_Than_Expression, expected_type: @IR_Type) -> @IR_Value {
