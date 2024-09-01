@@ -528,7 +528,12 @@ func create_trait_type_symbol(self: @Checker, parsed_trait_statement: @Parsed_Tr
     parsed_trait_statement.functions.for_each() {
         let parsed_trait_function = it
         let checked_function_type = self.convert_function_type(parsed_trait_function.type)
-        checked_trait_struct_type.add_member(parsed_trait_function.location, parsed_trait_function.name.lexeme, make_checked_function_pointer_type(checked_function_type), null)
+        checked_trait_struct_type.add_member(
+            parsed_trait_function.location
+            parsed_trait_function.name.lexeme
+            make_checked_function_pointer_type(checked_function_type)
+            null
+        )
     }
     self.local_symbols = self.local_symbols.parent
 
@@ -1714,10 +1719,10 @@ func check_make_trait_expression(self: @Checker, parsed_expression: @Parsed_Make
         abort(parsed_expression.location, "Unexpected argument label")
     }
     let checked_value_expression = self.check_expression(parsed_init_argument.value_expression, null)
-    let checked_value_type = checked_value_expression.type
-    if checked_value_type is Checked_Pointer_Type {
-        checked_value_type = checked_value_type.as(@Checked_Pointer_Type).pointed_type
+    if checked_value_expression.type is not Checked_Pointer_Type {
+        abort(parsed_init_argument.value_expression.location, "Not a pointer value")
     }
+    let checked_value_type = checked_value_expression.type.as(@Checked_Pointer_Type).pointed_type
     if checked_value_type is not Checked_Struct_Type {
         abort(parsed_init_argument.value_expression.location, "Not a struct value")
     }
@@ -1749,7 +1754,10 @@ func check_make_trait_expression(self: @Checker, parsed_expression: @Parsed_Make
             abort(it.name.location, "Not a function symbol")
         }
         let checked_function_symbol = checked_callable_symbol.as(@Checked_Function_Symbol)
-        checked_expression.functions.put(it, checked_function_symbol)
+        checked_expression.functions.put(
+            checked_trait_type.struct_type.get_member(it.name.lexeme)
+            checked_function_symbol
+        )
     }
     self.local_symbols = self.local_symbols.parent
 

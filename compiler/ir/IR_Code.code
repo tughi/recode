@@ -35,6 +35,39 @@ struct IR_Type: Object {
     }
 }
 
+func accepts(self: @IR_Type, other: @IR_Type) -> bool {
+    if self == other {
+        return true
+    }
+    if self is IR_Pointer_Type {
+        let self_pointed_type = self.as(@IR_Pointer_Type).pointed_type
+        if self_pointed_type is IR_Any_Type {
+            return other is IR_Pointer_Type
+        } else if self_pointed_type is IR_Function_Type {
+            if other is IR_Pointer_Type {
+                let other_pointed_type = other.as(@IR_Pointer_Type).pointed_type
+                if other_pointed_type is IR_Function_Type {
+                    let self_function_type = self_pointed_type.as(@IR_Function_Type)
+                    let other_function_type = other_pointed_type.as(@IR_Function_Type)
+                    if self_function_type.return_type.accepts(other_function_type.return_type) {
+                        let self_parameters = self_function_type.parameters.create_iterator()
+                        let other_parameters = other_function_type.parameters.create_iterator()
+                        while self_parameters.has_next() and other_parameters.has_next() {
+                            let self_parameter = self_parameters.next()
+                            let other_parameter = other_parameters.next()
+                            if not self_parameter.type.accepts(other_parameter.type) {
+                                return false
+                            }
+                        }
+                        return not self_parameters.has_next() and not other_parameters.has_next()
+                    }
+                }
+            }
+        }
+    }
+    return false
+}
+
 func get_size(self: @IR_Type) -> i32 {
     if self.size == 0 {
         self.size = self.compute_size()
@@ -795,7 +828,7 @@ func init(self: @IR_Store_Instruction, value_pointer: @IR_Value, value: @IR_Valu
         abort(clone("Not a pointer type: ").append(value_pointer.type.name))
     }
     let pointed_type = value_pointer.type.as(@IR_Pointer_Type).pointed_type
-    if pointed_type != value.type {
+    if not pointed_type.accepts(value.type) {
         abort(clone("Type mismatch: ").append(pointed_type.name).append(" != ").append(value.type.name))
     }
     self.set_operand_value("value_pointer", value_pointer)

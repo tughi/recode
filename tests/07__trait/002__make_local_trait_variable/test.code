@@ -1,4 +1,6 @@
 struct Dog {
+    age: i32
+
     func legs(self) -> i32 {
         return 4
     }
@@ -9,6 +11,6 @@ trait Animal {
 }
 
 func main() {
-    let dog = make Dog()
-    let animal = make Animal(dog)
+    let dog = make Dog(age: 10)
+    let animal = make Animal(@dog)
 }

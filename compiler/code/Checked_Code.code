@@ -830,7 +830,7 @@ struct Checked_Make_Expression: Checked_Expression {
 
 struct Checked_Make_Trait_Expression: Checked_Expression {
     object_expression: @Checked_Expression
-    functions = make Map[@Parsed_Function_Statement, @Checked_Function_Symbol]()
+    functions = make Map[@Checked_Struct_Type_Member, @Checked_Function_Symbol]()
 }
 
 struct Checked_Member_Access_Expression: Checked_Access_Expression {
