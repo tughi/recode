@@ -824,7 +824,7 @@ struct Checked_Macro_Body: Checked_Expression {
     parsed_macro_body: @Parsed_Macro_Body
 }
 
-struct Checked_Make_Expression: Checked_Expression {
+struct Checked_Make_Struct_Expression: Checked_Expression {
     values = make Map[@Checked_Struct_Type_Member, @Checked_Expression]()
 }
 

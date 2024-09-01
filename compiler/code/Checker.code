@@ -1650,7 +1650,7 @@ func check_make_struct_expression(self: @Checker, parsed_expression: @Parsed_Mak
     } else {
         checked_expression_type = checked_struct_type
     }
-    let checked_expression = make @Checked_Make_Expression(
+    let checked_expression = make @Checked_Make_Struct_Expression(
         location = parsed_expression.location
         type = checked_expression_type
     )
@@ -1714,17 +1714,17 @@ func check_make_trait_expression(self: @Checker, parsed_expression: @Parsed_Make
     if parsed_expression.init_arguments.size != 1 {
         abort(parsed_expression.location, "Expected one init argument")
     }
-    let parsed_init_argument = parsed_expression.init_arguments.first_item.data
-    if parsed_init_argument.name != null {
+    let parsed_self_argument = parsed_expression.init_arguments.first_item.data
+    if parsed_self_argument.name != null {
         abort(parsed_expression.location, "Unexpected argument label")
     }
-    let checked_value_expression = self.check_expression(parsed_init_argument.value_expression, null)
+    let checked_value_expression = self.check_expression(parsed_self_argument.value_expression, null)
     if checked_value_expression.type is not Checked_Pointer_Type {
-        abort(parsed_init_argument.value_expression.location, "Not a pointer value")
+        abort(parsed_self_argument.value_expression.location, "Not a pointer value")
     }
     let checked_value_type = checked_value_expression.type.as(@Checked_Pointer_Type).pointed_type
     if checked_value_type is not Checked_Struct_Type {
-        abort(parsed_init_argument.value_expression.location, "Not a struct value")
+        abort(parsed_self_argument.value_expression.location, "Not a struct value")
     }
 
     let checked_expression = make @Checked_Make_Trait_Expression(

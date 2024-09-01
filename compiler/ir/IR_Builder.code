@@ -736,8 +736,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_logic_not_expression(checked_expression.as(@Checked_Logic_Not_Expression), expected_type)
     } else if checked_expression is Checked_Logic_Or_Expression {
         value = self.convert_logic_or_expression(checked_expression.as(@Checked_Logic_Or_Expression), expected_type)
-    } else if checked_expression is Checked_Make_Expression {
-        value = self.convert_make_expression(checked_expression.as(@Checked_Make_Expression), expected_type)
+    } else if checked_expression is Checked_Make_Struct_Expression {
+        value = self.convert_make_struct_expression(checked_expression.as(@Checked_Make_Struct_Expression), expected_type)
     } else if checked_expression is Checked_Make_Trait_Expression {
         value = self.convert_make_trait_expression(checked_expression.as(@Checked_Make_Trait_Expression), expected_type)
     } else if checked_expression is Checked_Member_Access_Expression {
@@ -1104,7 +1104,7 @@ func convert_logic_or_expression(self: @IR_Builder, checked_expression: @Checked
     )
 }
 
-func convert_make_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression, expected_type: @IR_Type) -> @IR_Value {
+func convert_make_struct_expression(self: @IR_Builder, checked_expression: @Checked_Make_Struct_Expression, expected_type: @IR_Type) -> @IR_Value {
     let expression_type = self.convert_type(checked_expression.type)
     if expression_type is IR_Pointer_Type {
         let pointed_type = expression_type.as(@IR_Pointer_Type).pointed_type
@@ -1320,7 +1320,7 @@ func convert_reference_expression(self: @IR_Builder, checked_expression: @Checke
     abort(object_expression.location, object_expression.object_type)
 }
 
-func convert_struct_literal_expression(self: @IR_Builder, checked_expression: @Checked_Make_Expression, struct_type: @IR_Struct_Type) -> @IR_Value {
+func convert_struct_literal_expression(self: @IR_Builder, checked_expression: @Checked_Make_Struct_Expression, struct_type: @IR_Struct_Type) -> @IR_Value {
     let ir_struct_type_member_values = make @Map[@IR_Struct_Type_Member, @IR_Value]()
     checked_expression.values.for_each() {
         let checked_struct_type_member = key
