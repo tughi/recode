@@ -758,6 +758,8 @@ func convert_expression(self: @IR_Builder, checked_expression: @Checked_Expressi
         value = self.convert_super_access_expression(checked_expression.as(@Checked_Super_Access_Expression), expected_type)
     } else if checked_expression is Checked_Symbol_Expression {
         value = self.convert_symbol_expression(checked_expression.as(@Checked_Symbol_Expression), expected_type)
+    } else if checked_expression is Checked_Trait_Function_Call_Expression {
+        value = self.convert_trait_function_call_expression(checked_expression.as(@Checked_Trait_Function_Call_Expression), expected_type)
     } else {
         abort(checked_expression.location, checked_expression.object_type)
     }
@@ -1408,4 +1410,68 @@ func convert_symbol_expression_pointer(self: @IR_Builder, checked_expression: @C
         return ir_symbol.value_pointer
     }
     abort(checked_expression.location, ir_symbol.object_type)
+}
+
+func convert_trait_function_call_expression(self: @IR_Builder, checked_expression: @Checked_Trait_Function_Call_Expression, expected_type: @IR_Type) -> @IR_Value {
+    let ir_trait_type = self.convert_type(checked_expression.trait_function_symbol.trait_type)
+    if ir_trait_type is not IR_Struct_Type {
+        abort(checked_expression.location, "Expected struct type")
+    }
+    let ir_trait_struct_type = ir_trait_type.as(@IR_Struct_Type)
+    let ir_trait_value = self.convert_expression(checked_expression.call_arguments.first().expression, null)
+    if ir_trait_value.type is not IR_Pointer_Type or ir_trait_value.type.as(@IR_Pointer_Type).pointed_type != ir_trait_type {
+        abort(checked_expression.call_arguments.first().expression.location, "Expected trait value")
+    }
+
+    \ load function pointer
+    let ir_function_pointer = self.append(
+        self.create_ir_struct_member_offset_instruction(
+            ir_trait_value
+            ir_trait_struct_type.get_member(checked_expression.trait_function_symbol.trait_struct_type_member)
+        )
+        checked_expression.location
+    )
+    let ir_function = self.append(
+        make @IR_Load_Instruction(
+            result_value = self.create_temp_value(ir_function_pointer.type.as(@IR_Pointer_Type).pointed_type)
+        ).init(ir_function_pointer)
+        checked_expression.location
+    )
+    if ir_function.type is not IR_Pointer_Type or ir_function.type.as(@IR_Pointer_Type).pointed_type is not IR_Function_Type {
+        abort(checked_expression.location, "Expected function pointer")
+    }
+    let ir_function_type = ir_function.type.as(@IR_Pointer_Type).pointed_type.as(@IR_Function_Type)
+
+    \ load self value
+    let ir_self_pointer = self.append(
+        self.create_ir_struct_member_offset_instruction(ir_trait_value, ir_trait_struct_type.members.first_item.data)
+        checked_expression.location
+    )
+    let ir_self = self.append(
+        make @IR_Load_Instruction(
+            result_value = self.create_temp_value(ir_self_pointer.type.as(@IR_Pointer_Type).pointed_type)
+        ).init(ir_self_pointer)
+        checked_expression.location
+    )
+
+    \ create call arguments
+    let ir_call_arguments = make @List[@IR_Call_Argument]()
+    ir_call_arguments.append(make @IR_Call_Argument(value = ir_self))
+    if checked_expression.call_arguments.size > 1 {
+        abort(checked_expression.location, "Expected only self argument")
+    }
+
+    \ call trait function
+    let result_value: @IR_Value = null
+    if ir_function_type.return_type is not IR_Nothing_Type {
+        result_value = self.create_temp_value(ir_function_type.return_type)
+    }
+    return self.append(
+        create_ir_dynamic_call_instruction(
+            result_value
+            ir_call_arguments
+            ir_function
+        )
+        checked_expression.location
+    )
 }

@@ -520,10 +520,9 @@ func create_trait_type_symbol(self: @Checker, parsed_trait_statement: @Parsed_Tr
         name = "Self"
         type = checked_trait_struct_type
     ))
-    let checked_receiver_type = make_checked_pointer_type(self.any_type)
     self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
         location = null
-        type = checked_receiver_type
+        type = make_checked_pointer_type(self.any_type)
     ))
     parsed_trait_statement.functions.for_each() {
         let parsed_trait_function = it
@@ -553,6 +552,34 @@ func create_trait_type_symbol(self: @Checker, parsed_trait_statement: @Parsed_Tr
     )
     self.checked_code.global_symbols.put(checked_trait_name, checked_trait_type_symbol)
     self.global_symbols.append(checked_trait_type_symbol)
+
+    \ create trait function symbols
+    self.local_symbols = make @Checked_Symbols(
+        parent = self.local_symbols
+    )
+    self.local_symbols.append(make @Checked_Type_Symbol(
+        location = null
+        name = "Self"
+        type = checked_trait_struct_type
+    ))
+    self.local_symbols.append(make @Checked_Receiver_Type_Symbol(
+        location = null
+        type = make_checked_pointer_type(checked_trait_type)
+    ))
+    parsed_trait_statement.functions.for_each() {
+        let parsed_trait_function = it
+        let checked_trait_function_type = self.convert_function_type(parsed_trait_function.type)
+        self.global_symbols.append(make @Checked_Trait_Function_Symbol(
+            location = parsed_trait_function.location
+            type = make_checked_function_pointer_type(checked_trait_function_type)
+            name = parsed_trait_function.name.lexeme
+            callable_type = checked_trait_function_type
+            receiver_type = checked_trait_function_type.parameters.first_item.data.type
+            trait_type = checked_trait_type
+            trait_struct_type_member = checked_trait_struct_type.get_member(parsed_trait_function.name.lexeme)
+        ))
+    }
+    self.local_symbols = self.local_symbols.parent
 
     return checked_trait_type_symbol
 }
@@ -1016,6 +1043,8 @@ func check_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expre
         \ found callable
         if checked_callable_symbol is Checked_Function_Symbol {
             return self.check_function_call_expression(parsed_expression, checked_callable_symbol.as(@Checked_Function_Symbol), checked_receiver_expression)
+        } else if checked_callable_symbol is Checked_Trait_Function_Symbol {
+            return self.check_trait_function_call_expression(parsed_expression, checked_callable_symbol.as(@Checked_Trait_Function_Symbol), checked_receiver_expression)
         }
         abort(parsed_expression.location, checked_callable_symbol.object_type)
     }
@@ -1856,6 +1885,14 @@ func check_member_call_expression(self: @Checker, parsed_expression: @Parsed_Cal
                 object_expression = checked_object_expression
             )
         }
+    } else if checked_object_type is Checked_Trait_Type {
+        \ auto reference
+        checked_object_type = make_checked_pointer_type(checked_object_type)
+        checked_object_expression = make @Checked_Reference_Expression(
+            location = checked_object_expression.location
+            type = checked_object_type
+            object_expression = checked_object_expression
+        )
     }
 
     return self.check_call_expression(parsed_expression, parsed_member_name, checked_object_expression)
@@ -2043,6 +2080,17 @@ func check_symbol_call_expression(self: @Checker, parsed_expression: @Parsed_Cal
     \
     \        \ unsupported symbol
     \        abort(checked_symbol.location, checked_symbol.object_type)
+}
+
+func check_trait_function_call_expression(self: @Checker, parsed_expression: @Parsed_Call_Expression, checked_trait_function_symbol: @Checked_Trait_Function_Symbol, checked_receiver_expression: @Checked_Expression) -> @Checked_Expression {
+    let checked_call_arguments = self.check_call_arguments(parsed_expression, checked_trait_function_symbol.callable_type.parameters, checked_receiver_expression)
+
+    return make @Checked_Trait_Function_Call_Expression(
+        location = parsed_expression.location
+        type = checked_trait_function_symbol.trait_struct_type_member.type.as(@Checked_Function_Pointer_Type).function_type.return_type
+        call_arguments = checked_call_arguments
+        trait_function_symbol = checked_trait_function_symbol
+    )
 }
 
 func convert_type(self: @Checker, parsed_type: @Parsed_Type) -> @Checked_Type {

@@ -1,0 +1,175 @@
+type Square = struct {
+  side: i32
+}
+
+type Circle = struct {
+  radius: i32
+}
+
+type Shape = struct {
+  self: ptr<Any>
+  area: ptr<func (self: ptr<Any>) -> i32>
+}
+
+$pSquare__area(%self: ptr<Square>): i32 {
+@1:
+  [ %self ]
+  %self.ptr: ptr<ptr<Square>> = alloc ptr<Square>
+  [ %self.ptr %self ]
+  store %self.ptr %self
+  [ %self.ptr ]
+  %1: ptr<Square> = load %self.ptr
+  [ %self.ptr %1 ]
+  %2: ptr<i32> = offset %1 Square.side
+  [ %self.ptr %2 ]
+  %3: i32 = load %2
+  [ %3 %self.ptr ]
+  %4: ptr<Square> = load %self.ptr
+  [ %3 %4 ]
+  %5: ptr<i32> = offset %4 Square.side
+  [ %3 %5 ]
+  %6: i32 = load %5
+  [ %3 %6 ]
+  %7: i32 = mul %3 %6
+  [ %7 ]
+  ret %7
+  [ ]
+}
+
+$pCircle__area(%self: ptr<Circle>): i32 {
+@1:
+  [ %self ]
+  %self.ptr: ptr<ptr<Circle>> = alloc ptr<Circle>
+  [ %self.ptr %self ]
+  store %self.ptr %self
+  [ %self.ptr ]
+  %1: i32 = const 312
+  [ %self.ptr %1 ]
+  %2: ptr<Circle> = load %self.ptr
+  [ %self.ptr %1 %2 ]
+  %3: ptr<i32> = offset %2 Circle.radius
+  [ %self.ptr %1 %3 ]
+  %4: i32 = load %3
+  [ %self.ptr %1 %4 ]
+  %5: i32 = mul %1 %4
+  [ %5 %self.ptr ]
+  %6: ptr<Circle> = load %self.ptr
+  [ %5 %6 ]
+  %7: ptr<i32> = offset %6 Circle.radius
+  [ %5 %7 ]
+  %8: i32 = load %7
+  [ %5 %8 ]
+  %9: i32 = mul %5 %8
+  [ %9 ]
+  %10: i32 = const 100
+  [ %9 %10 ]
+  %11: i32 = div %9 %10
+  [ %11 ]
+  ret %11
+  [ ]
+}
+
+$main(): i32 {
+@1:
+  [ ]
+  %square.ptr: ptr<Square> = alloc Square
+  [ %square.ptr ]
+  %1: i32 = const 10
+  [ %square.ptr %1 ]
+  %2: Square = struct { Square.side: %1 }
+  [ %square.ptr %1 ]
+  %3: ptr<i32> = offset %square.ptr Square.side
+  [ %square.ptr %3 %1 ]
+  store %3 %1
+  [ %square.ptr ]
+  %square_shape.ptr: ptr<Shape> = alloc Shape
+  [ %square_shape.ptr %square.ptr ]
+  %4: ptr<func (self: ptr<Square>) -> i32> = address $pSquare__area
+  [ %square_shape.ptr %4 %square.ptr ]
+  %5: Shape = struct { Shape.self: %square.ptr, Shape.area: %4 }
+  [ %square_shape.ptr %4 %square.ptr ]
+  %6: ptr<ptr<Any>> = offset %square_shape.ptr Shape.self
+  [ %square_shape.ptr %4 %6 %square.ptr ]
+  store %6 %square.ptr
+  [ %square_shape.ptr %4 ]
+  %7: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %square_shape.ptr Shape.area
+  [ %square_shape.ptr %7 %4 ]
+  store %7 %4
+  [ %square_shape.ptr ]
+  %circle.ptr: ptr<Circle> = alloc Circle
+  [ %square_shape.ptr %circle.ptr ]
+  %8: i32 = const 10
+  [ %square_shape.ptr %circle.ptr %8 ]
+  %9: Circle = struct { Circle.radius: %8 }
+  [ %square_shape.ptr %circle.ptr %8 ]
+  %10: ptr<i32> = offset %circle.ptr Circle.radius
+  [ %square_shape.ptr %circle.ptr %10 %8 ]
+  store %10 %8
+  [ %square_shape.ptr %circle.ptr ]
+  %circle_shape.ptr: ptr<Shape> = alloc Shape
+  [ %square_shape.ptr %circle_shape.ptr %circle.ptr ]
+  %11: ptr<func (self: ptr<Circle>) -> i32> = address $pCircle__area
+  [ %square_shape.ptr %11 %circle_shape.ptr %circle.ptr ]
+  %12: Shape = struct { Shape.self: %circle.ptr, Shape.area: %11 }
+  [ %square_shape.ptr %11 %circle_shape.ptr %circle.ptr ]
+  %13: ptr<ptr<Any>> = offset %circle_shape.ptr Shape.self
+  [ %square_shape.ptr %11 %circle_shape.ptr %13 %circle.ptr ]
+  store %13 %circle.ptr
+  [ %square_shape.ptr %11 %circle_shape.ptr ]
+  %14: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %circle_shape.ptr Shape.area
+  [ %square_shape.ptr %14 %11 %circle_shape.ptr ]
+  store %14 %11
+  [ %square_shape.ptr %circle_shape.ptr ]
+  %15: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %square_shape.ptr Shape.area
+  [ %square_shape.ptr %15 %circle_shape.ptr ]
+  %16: ptr<func (self: ptr<Any>) -> i32> = load %15
+  [ %16 %square_shape.ptr %circle_shape.ptr ]
+  %17: ptr<ptr<Any>> = offset %square_shape.ptr Shape.self
+  [ %16 %17 %circle_shape.ptr ]
+  %18: ptr<Any> = load %17
+  [ %16 %18 %circle_shape.ptr ]
+  %19: i32 = call %16 %18
+  [ %19 %circle_shape.ptr ]
+  %20: i32 = const 100
+  [ %19 %20 %circle_shape.ptr ]
+  %21: bool = cmp_ne %19 %20
+  [ %21 %circle_shape.ptr ]
+  br %21 @2 @3
+  [ %circle_shape.ptr ]
+@2:
+  [ ]
+  %22: i32 = const 1
+  [ %22 ]
+  ret %22
+  [ ]
+@3:
+  [ %circle_shape.ptr ]
+  %23: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %circle_shape.ptr Shape.area
+  [ %circle_shape.ptr %23 ]
+  %24: ptr<func (self: ptr<Any>) -> i32> = load %23
+  [ %24 %circle_shape.ptr ]
+  %25: ptr<ptr<Any>> = offset %circle_shape.ptr Shape.self
+  [ %24 %25 ]
+  %26: ptr<Any> = load %25
+  [ %24 %26 ]
+  %27: i32 = call %24 %26
+  [ %27 ]
+  %28: i32 = const 312
+  [ %27 %28 ]
+  %29: bool = cmp_ne %27 %28
+  [ %29 ]
+  br %29 @4 @5
+  [ ]
+@4:
+  [ ]
+  %30: i32 = const 2
+  [ %30 ]
+  ret %30
+  [ ]
+@5:
+  [ ]
+  %31: i32 = const 0
+  [ %31 ]
+  ret %31
+  [ ]
+}

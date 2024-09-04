@@ -612,6 +612,13 @@ func write(out: @FILE, checked_callable_symbol: @Checked_Callable_Symbol) -> @FI
         if checked_function_symbol.function_type.return_type is not Checked_Nothing_Type {
             out.write(" -> ").write(checked_function_symbol.function_type.return_type.name)
         }
+    } else if checked_callable_symbol is Checked_Trait_Function_Symbol {
+        let checked_trait_function_symbol = checked_callable_symbol.as(@Checked_Trait_Function_Symbol)
+        let checked_function_type = checked_trait_function_symbol.callable_type.as(@Checked_Function_Type)
+        out.write("func ").write(checked_trait_function_symbol.receiver_type.name).write(".").write(checked_trait_function_symbol.name).write(checked_function_type.parameters)
+        if checked_function_type.return_type is not Checked_Nothing_Type {
+            out.write(" -> ").write(checked_function_type.return_type.name)
+        }
     } else {
         abort(checked_callable_symbol.object_type)
     }
@@ -657,6 +664,11 @@ struct Checked_Struct_Type_Symbol: Checked_Type_Symbol {
 
 struct Checked_Trait_Type_Symbol: Checked_Type_Symbol {
     parsed_trait_statement: @Parsed_Trait_Statement
+}
+
+struct Checked_Trait_Function_Symbol: Checked_Callable_Symbol {
+    trait_type: @Checked_Trait_Type
+    trait_struct_type_member: @Checked_Struct_Type_Member
 }
 
 struct Checked_Type_Symbol: Checked_Symbol {
@@ -872,6 +884,10 @@ struct Checked_Super_Access_Expression: Checked_Access_Expression {
 
 struct Checked_Symbol_Expression: Checked_Expression {
     symbol: @Checked_Symbol
+}
+
+struct Checked_Trait_Function_Call_Expression: Checked_Call_Expression {
+    trait_function_symbol: @Checked_Trait_Function_Symbol
 }
 
 struct Checked_Undefined_Literal_Expression: Checked_Literal_Expression {
