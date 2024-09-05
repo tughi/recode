@@ -146,6 +146,9 @@ func append_receiver_type(self: @String, checked_type: @Checked_Type) -> @String
     if checked_type is Checked_Struct_Type {
         return self.append(checked_type.as(@Checked_Struct_Type).name)
     }
+    if checked_type is Checked_Trait_Type {
+        return self.append(checked_type.as(@Checked_Trait_Type).name)
+    }
     abort(checked_type.object_type)
 }
 

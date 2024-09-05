@@ -1106,7 +1106,7 @@ func check_cast_expression(self: @Checker, parsed_expression: @Parsed_Cast_Expre
     if checked_expression.type.equals(checked_type) {
         stderr.write(parsed_expression.type.location).write(": ").warning().write("Redundant cast").reset().end_line()
     }
-    if checked_expression.type is Checked_Pointer_Type {
+    if checked_expression.type is Checked_Pointer_Type and checked_expression.type.as(@Checked_Pointer_Type).pointed_type is Checked_Any_Type {
         if checked_type is Checked_Pointer_Type or checked_type is Checked_Unchecked_Array_Type {
             return make @Checked_Cast_Expression(
                 location = parsed_expression.location
@@ -1134,7 +1134,16 @@ func check_cast_expression(self: @Checker, parsed_expression: @Parsed_Cast_Expre
                 )
             }
         }
+    } else if checked_expression.type is Checked_Unchecked_Array_Type {
+        if checked_type is Checked_Pointer_Type and checked_type.as(@Checked_Pointer_Type).pointed_type is Checked_Any_Type {
+            return make @Checked_Cast_Expression(
+                location = parsed_expression.location
+                type = checked_type
+                expression = checked_expression
+            )
+        }
     }
+
     abort(parsed_expression.location, clone("Cannot cast ").append(checked_expression.type.name).append(" to ").append(checked_type.name))
 }
 
@@ -1752,9 +1761,6 @@ func check_make_trait_expression(self: @Checker, parsed_expression: @Parsed_Make
         abort(parsed_self_argument.value_expression.location, "Not a pointer value")
     }
     let checked_value_type = checked_value_expression.type.as(@Checked_Pointer_Type).pointed_type
-    if checked_value_type is not Checked_Struct_Type {
-        abort(parsed_self_argument.value_expression.location, "Not a struct value")
-    }
 
     let checked_expression = make @Checked_Make_Trait_Expression(
         location = parsed_expression.location
@@ -2272,6 +2278,10 @@ func convert_named_type(self: @Checker, parsed_type: @Parsed_Named_Type) -> @Che
     if parsed_type_statement is Parsed_Struct_Statement {
         let parsed_type_statement = parsed_type_statement.as(@Parsed_Struct_Statement)
         return self.create_struct_type_symbol(parsed_type_statement, parsed_type_statement.name.lexeme, null).type
+    }
+    if parsed_type_statement is Parsed_Trait_Statement {
+        let parsed_type_statement = parsed_type_statement.as(@Parsed_Trait_Statement)
+        return self.create_trait_type_symbol(parsed_type_statement).type
     }
     abort(parsed_type_statement.location, parsed_type_statement.object_type)
 }

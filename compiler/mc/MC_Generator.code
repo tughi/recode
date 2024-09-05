@@ -463,6 +463,8 @@ func convert_instruction(self: @MC_Generator, ir_instruction: @IR_Instruction, m
         self.convert_struct_member_offset_instruction(ir_instruction.as(@IR_Struct_Member_Offset_Instruction), mc_block)
     } else if ir_instruction is IR_Substract_Instruction {
         self.convert_substract_instruction(ir_instruction.as(@IR_Substract_Instruction), mc_block)
+    } else if ir_instruction is IR_Unsafe_Cast_Instruction {
+        self.convert_unsafe_cast_instruction(ir_instruction.as(@IR_Unsafe_Cast_Instruction), mc_block)
     } else {
         stderr.write(self.current_function).end_line()
         abort(ir_instruction.object_type)
@@ -1145,6 +1147,20 @@ func convert_substract_instruction(self: @MC_Generator, ir_substract_instruction
     ))
     mc_block.append(make @MC_SUB_Instruction(
         source = mc_block.find_value(ir_substract_instruction.get_right_value()).make_mc_operand(self)
+        destination = mc_register_value.make_mc_operand(self)
+    ))
+}
+
+func convert_unsafe_cast_instruction(self: @MC_Generator, ir_unsafe_cast_instruction: @IR_Unsafe_Cast_Instruction, mc_block: @MC_Block) -> Nothing {
+    let mc_register_value = self.make_register_value(
+        mc_block = mc_block
+        ir_value = ir_unsafe_cast_instruction.result_value
+        register = self.find_free_caller_saved_register(mc_block)
+        load_value = false
+    )
+    let mc_value = mc_block.find_value(ir_unsafe_cast_instruction.get_value())
+    mc_block.append(make @MC_MOV_Instruction(
+        source = mc_value.make_mc_operand(self)
         destination = mc_register_value.make_mc_operand(self)
     ))
 }

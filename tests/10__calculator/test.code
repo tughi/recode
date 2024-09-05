@@ -8,12 +8,13 @@ func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
         index: 0
     )
 
+    let stdout_writer = make @Writer(stdout)
     while tokenizer.has_next_token() {
         let token = tokenizer.next_token()
         if token.kind == 0 {
             break
         }
-        stdout.write(token: token).end_line()
+        stdout_writer.write(token: token).end_line()
     }
 }
 
@@ -35,24 +36,24 @@ struct Tokenizer {
         )
         let char = self.data[self.index]
         if char >= '0' and char <= '9' {
-            return self.scan_number_token()
+            return self.scan_number_token(@lexeme_builder)
         }
         self.index = self.index + 1
         return make @Token(
             kind: char
-            lexeme: lexeme_builder.write(char).build()
+            lexeme: lexeme_builder.write(char: char).build()
             value: 0
         )
     }
 
-    func scan_number_token(self, lexeme_builder: @StringBuilder) -> @Token {
+    func scan_number_token(self, anon lexeme_builder: @StringBuilder) -> @Token {
         let value = 0
         loop {
             let char = self.data[self.index]
             if char < '0' or char > '9' {
                 break
             }
-            lexeme_builder.write(char)
+            lexeme_builder.write(char: char)
             value = value * 10 + (char - '0').as(i32)
             self.index = self.index + 1
         }
@@ -72,7 +73,7 @@ struct Token {
     value: i32
 }
 
-func @Stream.write(self, token: @Token) -> @Stream {
+func @Writer.write(self, token: @Token) -> @Writer {
     self.write(char: token.kind)
     if token.kind == 'n' {
         self.write(char: ':').write(char: ' ').write(signed: token.value)
@@ -90,26 +91,35 @@ struct StringBuilder {
     func write(self, char: u8) -> @StringBuilder {
         if self.length == self.data_size {
             self.data_size = self.data_size + 8
-            self.data = realloc(self.data, self.data_size).as([u8; ?])
+            self.data = realloc(self.data.as(@Any), self.data_size.as(u64)).as([u8; ?])
         }
         self.data[self.length] = char
         self.length = self.length + 1
         return self
     }
 
-    func build() -> [u8; ?] {
+    func build(self) -> [u8; ?] {
         self.write(char: 0)
         return self.data
     }
 }
 
-\ ------------------------------------------------------------------------------ Stream
-
-trait Stream {
-    func write(self, char: u8) -> @Self
+func @StringBuilder.write_char(self, anon char: u8) {
+    self.write(char: char)
 }
 
-func @Stream.write(self, signed value: i32) -> @Stream {
+\ ------------------------------------------------------------------------------ Writer
+
+trait Writer {
+    func write_char(self, anon char: u8)
+}
+
+func @Writer.write(self, char: u8) -> @Writer {
+    self.write_char(char)
+    return self
+}
+
+func @Writer.write(self, signed value: i32) -> @Writer {
     \ TODO: Use a buffer to avoid recursion
     if value < 0 {
         self.write(char: '-')
@@ -121,7 +131,7 @@ func @Stream.write(self, signed value: i32) -> @Stream {
     return self.write(char: (value // 10).as(u8) + '0')
 }
 
-func @Stream.end_line(self) -> @Stream {
+func @Writer.end_line(self) -> @Writer {
     self.write(char: '\n')
     return self
 }
@@ -136,9 +146,8 @@ external stderr: @FILE
 
 external func fputc(anon c: u8, anon file: @FILE) -> i32
 
-func @FILE.write(self, char: u8) -> @FILE {
+func @FILE.write_char(self, anon char: u8) {
     fputc(char, stdout)
-    return self
 }
 
 external func malloc(anon size: u64) -> @Any

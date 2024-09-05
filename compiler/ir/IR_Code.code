@@ -938,3 +938,20 @@ func init(self: @IR_Unary_Instruction, value: @IR_Value) -> @IR_Unary_Instructio
 func get_value(self: @IR_Unary_Instruction) -> @IR_Value {
     return self.operand_values.get("value")
 }
+
+struct IR_Unsafe_Cast_Instruction: IR_Instruction(
+    print = func (self: @IR_Instruction, file: @FILE) -> Nothing {
+        let instruction = self.as(@IR_Unsafe_Cast_Instruction)
+        file.write("cast ").write(instruction.get_value())
+    }
+) {
+}
+
+func init(self: @IR_Unsafe_Cast_Instruction, value: @IR_Value) -> @IR_Unsafe_Cast_Instruction {
+    self.set_operand_value("value", value)
+    return self
+}
+
+func get_value(self: @IR_Unsafe_Cast_Instruction) -> @IR_Value {
+    return self.operand_values.get("value")
+}

@@ -836,6 +836,13 @@ func convert_cast_expression(self: @IR_Builder, checked_expression: @Checked_Cas
             ).init(value)
             checked_expression.location
         )
+    } else if value.type is IR_Pointer_Type {
+        return self.append(
+            make @IR_Unsafe_Cast_Instruction(
+                result_value = result_value
+            ).init(value)
+            checked_expression.location
+        )
     }
     abort(checked_expression.location, "Cannot cast ".clone().append(value.type.name).append(" to ").append(result_value.type.name))
 }
