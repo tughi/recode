@@ -27,38 +27,26 @@ main:
   # store %name.ptr %5
   movq %rcx, 4(%rsp)
   # %6: i32 = const 0
-  # %7: ptr<ptr<u8>> = offset %argv.ptr %6
-  movq 20(%rsp), %rcx
-  # %8: i32 = const 0
-  # %9: ptr<u8> = offset %7 %8
-  movq 0(%rcx), %rsi
-  # %10: u8 = load %9
-  movb 0(%rsi), %al
-  # %11: i32 = const 0
-  # %12: ptr<u8> = offset %name.ptr %11
-  movb %al, %cl
-  movq 4(%rsp), %rsi
-  # %13: u8 = load %12
-  movb 0(%rsi), %al
-  # %14: u8 = sub %10 %13
-  movb %cl, %dl
-  sub %al, %dl
-  # %15: u8 = const 0
-  # %16: bool = cmp_ne %14 %15
-  cmp $0x0, %dl
-  setne %al
-  # br %16 @2 @3
-  cmp $0x0, %al
+  # %7: ptr<u8> = offset %name.ptr %6
+  movq 4(%rsp), %rcx
+  # %8: u8 = load %7
+  movb 0(%rcx), %al
+  # %9: u8 = const 'b'
+  # %10: bool = cmp_ne %8 %9
+  cmp $0x62, %al
+  setne %cl
+  # br %10 @2 @3
+  cmp $0x0, %cl
   jne .L__main__2
   jmp .L__main__3
 .L__main__2:
-  # %17: i32 = const 1
-  # ret %17
+  # %11: i32 = const 1
+  # ret %11
   movl $0x1, %eax
   jmp .L__main__E
 .L__main__3:
-  # %18: i32 = const 0
-  # ret %18
+  # %12: i32 = const 0
+  # ret %12
   movl $0x0, %eax
   jmp .L__main__E
 .L__main__E:
