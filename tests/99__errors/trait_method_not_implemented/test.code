@@ -7,5 +7,5 @@ trait Animal {
 
 func main() {
     let dog = make Dog()
-    let animal = make Animal(dog)
+    let animal = make Animal(@dog)
 }
