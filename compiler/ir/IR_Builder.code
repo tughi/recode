@@ -486,6 +486,11 @@ func convert_assignment_statement(self: @IR_Builder, checked_statement: @Checked
         let value_type = destination_pointer.type.as(@IR_Pointer_Type).pointed_type
         let value = self.convert_expression(checked_statement.value_expression, value_type)
         self.convert_store_value(destination_pointer, value, checked_statement.location)
+    } else if checked_destination_expression is Checked_Array_Access_Expression {
+        let destination_pointer = self.convert_array_access_expression_pointer(checked_destination_expression.as(@Checked_Array_Access_Expression), null)
+        let value_type = destination_pointer.type.as(@IR_Pointer_Type).pointed_type
+        let value = self.convert_expression(checked_statement.value_expression, value_type)
+        self.convert_store_value(destination_pointer, value, checked_statement.location)
     } else {
         abort(checked_destination_expression.location, checked_destination_expression.object_type)
     }

@@ -1,0 +1,7 @@
+func main() -> i32 {
+    let array = malloc(32).as([i32; ?])
+    array[3] = 42
+    return array[3] - 42
+}
+
+external func malloc(anon size: u64) -> @Any
