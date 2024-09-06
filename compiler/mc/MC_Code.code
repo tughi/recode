@@ -289,12 +289,17 @@ struct MC_ADD_Instruction: MC_Instruction(
 
 struct MC_CALL_Instruction: MC_Instruction(
     write = func (self: @MC_Instruction, file: @FILE) -> @FILE {
+        let self = self.as(@MC_CALL_Instruction)
         file.write("call").write(' ')
-        self.as(@MC_CALL_Instruction).callee.write(file)
+        if self.indirect {
+            file.write('*')
+        }
+        self.callee.write(file)
         return file
     }
 ) {
     callee: @MC_Operand
+    indirect = false
 }
 
 struct MC_CLTD_Instruction: MC_Instruction(

@@ -13,7 +13,7 @@ main:
   # %2: i32 = const 42
   # %3: i32 = call %echo_pointer.1 %2
   movl $0x2a, %edi
-  call %rax
+  call *%rax
   # %4: i32 = const 42
   # %5: i32 = sub %3 %4
   movl %eax, %ecx

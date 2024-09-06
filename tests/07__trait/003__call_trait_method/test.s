@@ -127,7 +127,7 @@ main:
   movq 0(%rax), %rdx
   # %19: i32 = call %16 %18
   movq %rdx, %rdi
-  call %rcx
+  call *%rcx
   # %20: i32 = const 100
   # %21: bool = cmp_ne %19 %20
   cmp $0x64, %eax
@@ -152,7 +152,7 @@ main:
   movq 0(%rax), %rdx
   # %27: i32 = call %24 %26
   movq %rdx, %rdi
-  call %rcx
+  call *%rcx
   # %28: i32 = const 312
   # %29: bool = cmp_ne %27 %28
   cmp $0x138, %eax

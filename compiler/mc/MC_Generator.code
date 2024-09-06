@@ -757,7 +757,7 @@ func convert_call_instruction(self: @MC_Generator, ir_call_instruction: @IR_Call
             let ir_argument_value = ir_call_instruction.get_argument_value(argument_index)
             stderr.write("Loading ").write(ir_argument_value).write(" into register ").write(parameter_register.name_q).end_line()
             if not parameter_register.is_free(mc_block) {
-                abort("Release parameter register: ".clone().append(parameter_register.name_q))
+                self.release_register(mc_block, parameter_register)
             }
             let mc_argument_value = self.make_register_value(
                 mc_block = mc_block
@@ -805,6 +805,7 @@ func convert_call_instruction(self: @MC_Generator, ir_call_instruction: @IR_Call
         }
         mc_block.append(make @MC_CALL_Instruction(
             callee = mc_function_pointer_value.make_mc_operand(self)
+            indirect = true
         ))
         ir_function_type = ir_function_pointer.type.as(@IR_Pointer_Type).pointed_type.as(@IR_Function_Type)
     } else {
