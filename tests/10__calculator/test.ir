@@ -7,7 +7,19 @@ type Tokenizer = struct {
 
 type Token = struct {
   kind: u8
+  lexeme: ptr<u8>
   value: i32
+}
+
+type StringBuilder = struct {
+  data: ptr<u8>
+  data_size: i32
+  length: i32
+}
+
+type Writer = struct {
+  self: ptr<Any>
+  write_char: ptr<func (self: ptr<Any>, char: u8)>
 }
 
 external $stdin: ptr<FILE>
@@ -26,15 +38,15 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   %argv.ptr: ptr<ptr<ptr<u8>>> = alloc ptr<ptr<u8>>
   [ %argc.ptr %argv.ptr %argv $stdout ]
   store %argv.ptr %argv
-  [ %argc.ptr %argv.ptr $stdout ]
+  [ %argc.ptr $stdout %argv.ptr ]
   %argc.1: i32 = load %argc.ptr
-  [ %argc.1 %argv.ptr $stdout ]
+  [ %argc.1 $stdout %argv.ptr ]
   %1: i32 = const 2
-  [ %argc.1 %1 %argv.ptr $stdout ]
+  [ %argc.1 %1 $stdout %argv.ptr ]
   %2: bool = cmp_ne %argc.1 %1
-  [ %2 %argv.ptr $stdout ]
+  [ %2 $stdout %argv.ptr ]
   br %2 @2 @3
-  [ %argv.ptr $stdout ]
+  [ $stdout %argv.ptr ]
 @2:
   [ ]
   %3: i32 = const 1
@@ -42,55 +54,77 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   call $exit %3
   [ ]
 @3:
-  [ %argv.ptr $stdout ]
+  [ $stdout %argv.ptr ]
   %tokenizer.ptr: ptr<Tokenizer> = alloc Tokenizer
-  [ %tokenizer.ptr %argv.ptr $stdout ]
+  [ $stdout %tokenizer.ptr %argv.ptr ]
   %4: i32 = const 1
-  [ %tokenizer.ptr %argv.ptr %4 $stdout ]
+  [ $stdout %tokenizer.ptr %argv.ptr %4 ]
   %5: ptr<ptr<u8>> = offset %argv.ptr %4
-  [ %tokenizer.ptr %5 $stdout ]
+  [ $stdout %tokenizer.ptr %5 ]
   %6: ptr<u8> = load %5
-  [ %tokenizer.ptr %6 $stdout ]
+  [ $stdout %tokenizer.ptr %6 ]
   %7: i32 = const 0
-  [ %7 %tokenizer.ptr %6 $stdout ]
+  [ $stdout %7 %tokenizer.ptr %6 ]
   %8: Tokenizer = struct { Tokenizer.data: %6, Tokenizer.index: %7 }
-  [ %7 %tokenizer.ptr %6 $stdout ]
+  [ $stdout %7 %tokenizer.ptr %6 ]
   %9: ptr<ptr<u8>> = offset %tokenizer.ptr Tokenizer.data
-  [ %7 %tokenizer.ptr %9 %6 $stdout ]
+  [ $stdout %7 %tokenizer.ptr %9 %6 ]
   store %9 %6
-  [ %7 %tokenizer.ptr $stdout ]
+  [ $stdout %7 %tokenizer.ptr ]
   %10: ptr<i32> = offset %tokenizer.ptr Tokenizer.index
-  [ %10 %7 %tokenizer.ptr $stdout ]
+  [ $stdout %10 %7 %tokenizer.ptr ]
   store %10 %7
-  [ %tokenizer.ptr $stdout ]
+  [ $stdout %tokenizer.ptr ]
+  %stdout_writer.ptr: ptr<ptr<Writer>> = alloc ptr<Writer>
+  [ %stdout_writer.ptr $stdout %tokenizer.ptr ]
+  %11: u64 = const 16
+  [ %stdout_writer.ptr $stdout %11 %tokenizer.ptr ]
+  %12: ptr<Writer> = call $malloc %11
+  [ %stdout_writer.ptr %12 $stdout %tokenizer.ptr ]
+  %13: ptr<FILE> = load $stdout
+  [ %stdout_writer.ptr %12 %13 %tokenizer.ptr ]
+  %14: ptr<func (self: ptr<FILE>, char: u8)> = address $pFILE__write_char
+  [ %stdout_writer.ptr %12 %14 %13 %tokenizer.ptr ]
+  %15: Writer = struct { Writer.self: %13, Writer.write_char: %14 }
+  [ %stdout_writer.ptr %12 %14 %13 %tokenizer.ptr ]
+  %16: ptr<ptr<Any>> = offset %12 Writer.self
+  [ %stdout_writer.ptr %12 %14 %16 %13 %tokenizer.ptr ]
+  store %16 %13
+  [ %stdout_writer.ptr %12 %14 %tokenizer.ptr ]
+  %17: ptr<ptr<func (self: ptr<Any>, char: u8)>> = offset %12 Writer.write_char
+  [ %stdout_writer.ptr %12 %17 %14 %tokenizer.ptr ]
+  store %17 %14
+  [ %stdout_writer.ptr %12 %tokenizer.ptr ]
+  store %stdout_writer.ptr %12
+  [ %tokenizer.ptr %stdout_writer.ptr ]
   jmp @4
-  [ %tokenizer.ptr $stdout ]
+  [ %tokenizer.ptr %stdout_writer.ptr ]
 @4:
-  [ %tokenizer.ptr $stdout ]
-  %11: bool = call $pTokenizer__has_next_token %tokenizer.ptr
-  [ %11 %tokenizer.ptr $stdout ]
-  br %11 @5 @6
-  [ %tokenizer.ptr $stdout ]
+  [ %tokenizer.ptr %stdout_writer.ptr ]
+  %18: bool = call $pTokenizer__has_next_token %tokenizer.ptr
+  [ %18 %tokenizer.ptr %stdout_writer.ptr ]
+  br %18 @5 @6
+  [ %tokenizer.ptr %stdout_writer.ptr ]
 @5:
-  [ %tokenizer.ptr $stdout ]
+  [ %tokenizer.ptr %stdout_writer.ptr ]
   %token.ptr: ptr<ptr<Token>> = alloc ptr<Token>
-  [ %token.ptr %tokenizer.ptr $stdout ]
-  %12: ptr<Token> = call $pTokenizer__next_token %tokenizer.ptr
-  [ %token.ptr %12 %tokenizer.ptr $stdout ]
-  store %token.ptr %12
-  [ %token.ptr %tokenizer.ptr $stdout ]
-  %13: ptr<Token> = load %token.ptr
-  [ %13 %tokenizer.ptr %token.ptr $stdout ]
-  %14: ptr<u8> = offset %13 Token.kind
-  [ %14 %tokenizer.ptr %token.ptr $stdout ]
-  %15: u8 = load %14
-  [ %15 %tokenizer.ptr %token.ptr $stdout ]
-  %16: u8 = const 0
-  [ %15 %16 %tokenizer.ptr %token.ptr $stdout ]
-  %17: bool = cmp_eq %15 %16
-  [ %17 %tokenizer.ptr %token.ptr $stdout ]
-  br %17 @7 @8
-  [ %tokenizer.ptr %token.ptr $stdout ]
+  [ %token.ptr %tokenizer.ptr %stdout_writer.ptr ]
+  %19: ptr<Token> = call $pTokenizer__next_token %tokenizer.ptr
+  [ %token.ptr %19 %tokenizer.ptr %stdout_writer.ptr ]
+  store %token.ptr %19
+  [ %token.ptr %tokenizer.ptr %stdout_writer.ptr ]
+  %20: ptr<Token> = load %token.ptr
+  [ %20 %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
+  %21: ptr<u8> = offset %20 Token.kind
+  [ %21 %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
+  %22: u8 = load %21
+  [ %22 %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
+  %23: u8 = const 0
+  [ %22 %23 %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
+  %24: bool = cmp_eq %22 %23
+  [ %24 %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
+  br %24 @7 @8
+  [ %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
 @6:
   [ ]
   ret
@@ -100,21 +134,21 @@ $main(%argc: i32, %argv: ptr<ptr<u8>>) {
   jmp @6
   [ ]
 @8:
-  [ %tokenizer.ptr %token.ptr $stdout ]
-  %18: ptr<FILE> = load $stdout
-  [ %tokenizer.ptr %18 %token.ptr $stdout ]
+  [ %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
+  %stdout_writer.1: ptr<Writer> = load %stdout_writer.ptr
+  [ %tokenizer.ptr %stdout_writer.1 %token.ptr %stdout_writer.ptr ]
   %token.1: ptr<Token> = load %token.ptr
-  [ %tokenizer.ptr %18 %token.1 $stdout ]
-  %19: ptr<FILE> = call $pFILE__write__token %18 %token.1
-  [ %tokenizer.ptr %19 $stdout ]
-  %20: ptr<FILE> = call $pFILE__end_line %19
-  [ %tokenizer.ptr $stdout ]
+  [ %tokenizer.ptr %stdout_writer.1 %token.1 %stdout_writer.ptr ]
+  %25: ptr<Writer> = call $pWriter__write__token %stdout_writer.1 %token.1
+  [ %tokenizer.ptr %25 %stdout_writer.ptr ]
+  %26: ptr<Writer> = call $pWriter__end_line %25
+  [ %tokenizer.ptr %stdout_writer.ptr ]
   jmp @4
-  [ %tokenizer.ptr $stdout ]
+  [ %tokenizer.ptr %stdout_writer.ptr ]
 @9:
-  [ %tokenizer.ptr %token.ptr $stdout ]
+  [ %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
   jmp @8
-  [ %tokenizer.ptr %token.ptr $stdout ]
+  [ %tokenizer.ptr %token.ptr %stdout_writer.ptr ]
 }
 
 $pTokenizer__has_next_token(%self: ptr<Tokenizer>): bool {
@@ -153,252 +187,534 @@ $pTokenizer__next_token(%self: ptr<Tokenizer>): ptr<Token> {
   [ %self.ptr %self ]
   store %self.ptr %self
   [ %self.ptr ]
+  %lexeme_builder.ptr: ptr<StringBuilder> = alloc StringBuilder
+  [ %self.ptr %lexeme_builder.ptr ]
+  %1: u64 = const 4
+  [ %self.ptr %lexeme_builder.ptr %1 ]
+  %2: ptr<Any> = call $malloc %1
+  [ %self.ptr %lexeme_builder.ptr %2 ]
+  %3: ptr<u8> = cast %2
+  [ %self.ptr %lexeme_builder.ptr %3 ]
+  %4: i32 = const 4
+  [ %self.ptr %lexeme_builder.ptr %4 %3 ]
+  %5: i32 = const 0
+  [ %self.ptr %5 %lexeme_builder.ptr %4 %3 ]
+  %6: StringBuilder = struct { StringBuilder.data: %3, StringBuilder.data_size: %4, StringBuilder.length: %5 }
+  [ %self.ptr %5 %lexeme_builder.ptr %4 %3 ]
+  %7: ptr<ptr<u8>> = offset %lexeme_builder.ptr StringBuilder.data
+  [ %self.ptr %5 %lexeme_builder.ptr %4 %7 %3 ]
+  store %7 %3
+  [ %self.ptr %5 %lexeme_builder.ptr %4 ]
+  %8: ptr<i32> = offset %lexeme_builder.ptr StringBuilder.data_size
+  [ %self.ptr %5 %lexeme_builder.ptr %8 %4 ]
+  store %8 %4
+  [ %self.ptr %5 %lexeme_builder.ptr ]
+  %9: ptr<i32> = offset %lexeme_builder.ptr StringBuilder.length
+  [ %self.ptr %9 %5 %lexeme_builder.ptr ]
+  store %9 %5
+  [ %self.ptr %lexeme_builder.ptr ]
   %char.ptr: ptr<u8> = alloc u8
-  [ %char.ptr %self.ptr ]
-  %1: ptr<Tokenizer> = load %self.ptr
-  [ %char.ptr %self.ptr %1 ]
-  %2: ptr<ptr<u8>> = offset %1 Tokenizer.data
-  [ %char.ptr %2 %self.ptr ]
-  %3: ptr<Tokenizer> = load %self.ptr
-  [ %char.ptr %2 %3 %self.ptr ]
-  %4: ptr<i32> = offset %3 Tokenizer.index
-  [ %char.ptr %2 %4 %self.ptr ]
-  %5: i32 = load %4
-  [ %char.ptr %2 %5 %self.ptr ]
-  %6: ptr<u8> = offset %2 %5
-  [ %char.ptr %6 %self.ptr ]
-  %7: u8 = load %6
-  [ %char.ptr %7 %self.ptr ]
-  store %char.ptr %7
-  [ %char.ptr %self.ptr ]
+  [ %char.ptr %self.ptr %lexeme_builder.ptr ]
+  %10: ptr<Tokenizer> = load %self.ptr
+  [ %char.ptr %self.ptr %10 %lexeme_builder.ptr ]
+  %11: ptr<ptr<u8>> = offset %10 Tokenizer.data
+  [ %char.ptr %11 %self.ptr %lexeme_builder.ptr ]
+  %12: ptr<Tokenizer> = load %self.ptr
+  [ %char.ptr %11 %12 %lexeme_builder.ptr %self.ptr ]
+  %13: ptr<i32> = offset %12 Tokenizer.index
+  [ %char.ptr %11 %13 %lexeme_builder.ptr %self.ptr ]
+  %14: i32 = load %13
+  [ %char.ptr %11 %14 %lexeme_builder.ptr %self.ptr ]
+  %15: ptr<u8> = offset %11 %14
+  [ %char.ptr %15 %lexeme_builder.ptr %self.ptr ]
+  %16: u8 = load %15
+  [ %char.ptr %16 %lexeme_builder.ptr %self.ptr ]
+  store %char.ptr %16
+  [ %char.ptr %lexeme_builder.ptr %self.ptr ]
   %char.1: u8 = load %char.ptr
-  [ %char.1 %char.ptr %self.ptr ]
-  %8: u8 = const '0'
-  [ %char.1 %8 %char.ptr %self.ptr ]
-  %9: bool = cmp_ge %char.1 %8
-  [ %9 %char.ptr %self.ptr ]
-  br %9 @4 @5
-  [ %char.ptr %self.ptr %9 ]
+  [ %char.1 %char.ptr %lexeme_builder.ptr %self.ptr ]
+  %17: u8 = const '0'
+  [ %char.1 %17 %char.ptr %lexeme_builder.ptr %self.ptr ]
+  %18: bool = cmp_ge %char.1 %17
+  [ %18 %char.ptr %lexeme_builder.ptr %self.ptr ]
+  br %18 @4 @5
+  [ %char.ptr %lexeme_builder.ptr %self.ptr %18 ]
 @2:
-  [ %self.ptr ]
+  [ %lexeme_builder.ptr %self.ptr ]
   %self.1: ptr<Tokenizer> = load %self.ptr
-  [ %self.1 ]
-  %13: ptr<Token> = call $pTokenizer__scan_number_token %self.1
-  [ %13 ]
-  ret %13
-  [ ]
-@3:
-  [ %char.ptr %self.ptr ]
-  %14: ptr<Tokenizer> = load %self.ptr
-  [ %char.ptr %self.ptr %14 ]
-  %15: ptr<i32> = offset %14 Tokenizer.index
-  [ %char.ptr %15 %self.ptr ]
-  %16: ptr<Tokenizer> = load %self.ptr
-  [ %char.ptr %15 %16 ]
-  %17: ptr<i32> = offset %16 Tokenizer.index
-  [ %char.ptr %15 %17 ]
-  %18: i32 = load %17
-  [ %char.ptr %15 %18 ]
-  %19: i32 = const 1
-  [ %char.ptr %15 %18 %19 ]
-  %20: i32 = add %18 %19
-  [ %char.ptr %15 %20 ]
-  store %15 %20
-  [ %char.ptr ]
-  %21: u64 = const 5
-  [ %char.ptr %21 ]
-  %22: ptr<Token> = call $malloc %21
-  [ %22 %char.ptr ]
-  %char.3: u8 = load %char.ptr
-  [ %22 %char.3 ]
-  %23: i32 = const 0
-  [ %22 %23 %char.3 ]
-  %24: Token = struct { Token.kind: %char.3, Token.value: %23 }
-  [ %22 %23 %char.3 ]
-  %25: ptr<u8> = offset %22 Token.kind
-  [ %22 %23 %25 %char.3 ]
-  store %25 %char.3
-  [ %22 %23 ]
-  %26: ptr<i32> = offset %22 Token.value
-  [ %22 %26 %23 ]
-  store %26 %23
+  [ %self.1 %lexeme_builder.ptr ]
+  %22: ptr<Token> = call $pTokenizer__scan_number_token %self.1 %lexeme_builder.ptr
   [ %22 ]
   ret %22
   [ ]
-@4:
-  [ %char.ptr %self.ptr ]
-  %char.2: u8 = load %char.ptr
-  [ %char.2 %self.ptr %char.ptr ]
-  %10: u8 = const '9'
-  [ %char.2 %10 %self.ptr %char.ptr ]
-  %11: bool = cmp_le %char.2 %10
-  [ %11 %self.ptr %char.ptr ]
-  jmp @5
-  [ %self.ptr %char.ptr %11 ]
-@5:
-  [ %self.ptr %char.ptr ]
-  %12: bool = phi @1 %9 @4 %11
-  [ %self.ptr %char.ptr %12 ]
-  br %12 @2 @3
-  [ %self.ptr %char.ptr ]
-}
-
-$pTokenizer__scan_number_token(%self: ptr<Tokenizer>): ptr<Token> {
-@1:
-  [ %self ]
-  %self.ptr: ptr<ptr<Tokenizer>> = alloc ptr<Tokenizer>
-  [ %self.ptr %self ]
-  store %self.ptr %self
-  [ %self.ptr ]
-  %value.ptr: ptr<i32> = alloc i32
-  [ %value.ptr %self.ptr ]
-  %1: i32 = const 0
-  [ %value.ptr %1 %self.ptr ]
-  store %value.ptr %1
-  [ %self.ptr %value.ptr ]
-  jmp @2
-  [ %self.ptr %value.ptr ]
-@2:
-  [ %self.ptr %value.ptr ]
-  %char.ptr: ptr<u8> = alloc u8
-  [ %char.ptr %self.ptr %value.ptr ]
-  %2: ptr<Tokenizer> = load %self.ptr
-  [ %char.ptr %self.ptr %2 %value.ptr ]
-  %3: ptr<ptr<u8>> = offset %2 Tokenizer.data
-  [ %char.ptr %3 %self.ptr %value.ptr ]
-  %4: ptr<Tokenizer> = load %self.ptr
-  [ %char.ptr %3 %4 %value.ptr %self.ptr ]
-  %5: ptr<i32> = offset %4 Tokenizer.index
-  [ %char.ptr %3 %5 %value.ptr %self.ptr ]
-  %6: i32 = load %5
-  [ %char.ptr %3 %6 %value.ptr %self.ptr ]
-  %7: ptr<u8> = offset %3 %6
-  [ %char.ptr %7 %value.ptr %self.ptr ]
-  %8: u8 = load %7
-  [ %char.ptr %8 %value.ptr %self.ptr ]
-  store %char.ptr %8
-  [ %char.ptr %value.ptr %self.ptr ]
-  %char.1: u8 = load %char.ptr
-  [ %char.1 %char.ptr %value.ptr %self.ptr ]
-  %9: u8 = const '0'
-  [ %char.1 %9 %char.ptr %value.ptr %self.ptr ]
-  %10: bool = cmp_lt %char.1 %9
-  [ %10 %char.ptr %value.ptr %self.ptr ]
-  br %10 @7 @6
-  [ %value.ptr %self.ptr %char.ptr %10 ]
 @3:
-  [ %value.ptr ]
-  %27: u64 = const 5
-  [ %value.ptr %27 ]
-  %28: ptr<Token> = call $malloc %27
-  [ %28 %value.ptr ]
-  %29: u8 = const 'n'
-  [ %28 %29 %value.ptr ]
-  %value.2: i32 = load %value.ptr
-  [ %28 %value.2 %29 ]
-  %30: Token = struct { Token.kind: %29, Token.value: %value.2 }
-  [ %28 %value.2 %29 ]
-  %31: ptr<u8> = offset %28 Token.kind
-  [ %28 %value.2 %31 %29 ]
-  store %31 %29
-  [ %28 %value.2 ]
-  %32: ptr<i32> = offset %28 Token.value
-  [ %28 %32 %value.2 ]
-  store %32 %value.2
-  [ %28 ]
-  ret %28
+  [ %lexeme_builder.ptr %char.ptr %self.ptr ]
+  %23: ptr<Tokenizer> = load %self.ptr
+  [ %lexeme_builder.ptr %char.ptr %self.ptr %23 ]
+  %24: ptr<i32> = offset %23 Tokenizer.index
+  [ %lexeme_builder.ptr %char.ptr %24 %self.ptr ]
+  %25: ptr<Tokenizer> = load %self.ptr
+  [ %lexeme_builder.ptr %char.ptr %24 %25 ]
+  %26: ptr<i32> = offset %25 Tokenizer.index
+  [ %lexeme_builder.ptr %char.ptr %24 %26 ]
+  %27: i32 = load %26
+  [ %lexeme_builder.ptr %char.ptr %24 %27 ]
+  %28: i32 = const 1
+  [ %lexeme_builder.ptr %char.ptr %24 %27 %28 ]
+  %29: i32 = add %27 %28
+  [ %lexeme_builder.ptr %char.ptr %24 %29 ]
+  store %24 %29
+  [ %lexeme_builder.ptr %char.ptr ]
+  %30: u64 = const 13
+  [ %lexeme_builder.ptr %char.ptr %30 ]
+  %31: ptr<Token> = call $malloc %30
+  [ %31 %lexeme_builder.ptr %char.ptr ]
+  %char.3: u8 = load %char.ptr
+  [ %31 %char.3 %lexeme_builder.ptr %char.ptr ]
+  %char.4: u8 = load %char.ptr
+  [ %31 %char.3 %lexeme_builder.ptr %char.4 ]
+  %32: ptr<StringBuilder> = call $pStringBuilder__write__char %lexeme_builder.ptr %char.4
+  [ %31 %char.3 %32 ]
+  %33: ptr<u8> = call $pStringBuilder__build %32
+  [ %31 %33 %char.3 ]
+  %34: i32 = const 0
+  [ %31 %34 %33 %char.3 ]
+  %35: Token = struct { Token.kind: %char.3, Token.lexeme: %33, Token.value: %34 }
+  [ %31 %34 %33 %char.3 ]
+  %36: ptr<u8> = offset %31 Token.kind
+  [ %31 %34 %33 %36 %char.3 ]
+  store %36 %char.3
+  [ %31 %34 %33 ]
+  %37: ptr<ptr<u8>> = offset %31 Token.lexeme
+  [ %31 %34 %37 %33 ]
+  store %37 %33
+  [ %31 %34 ]
+  %38: ptr<i32> = offset %31 Token.value
+  [ %31 %38 %34 ]
+  store %38 %34
+  [ %31 ]
+  ret %31
   [ ]
 @4:
-  [ %value.ptr ]
-  jmp @3
-  [ %value.ptr ]
-@5:
-  [ %self.ptr %value.ptr %char.ptr ]
-  %value.1: i32 = load %value.ptr
-  [ %self.ptr %value.ptr %char.ptr %value.1 ]
-  %14: i32 = const 10
-  [ %self.ptr %value.ptr %char.ptr %value.1 %14 ]
-  %15: i32 = mul %value.1 %14
-  [ %self.ptr %value.ptr %15 %char.ptr ]
-  %char.3: u8 = load %char.ptr
-  [ %self.ptr %value.ptr %15 %char.3 ]
-  %16: u8 = const '0'
-  [ %self.ptr %value.ptr %15 %char.3 %16 ]
-  %17: u8 = sub %char.3 %16
-  [ %self.ptr %value.ptr %15 %17 ]
-  %18: i32 = cast %17
-  [ %self.ptr %value.ptr %15 %18 ]
-  %19: i32 = add %15 %18
-  [ %self.ptr %value.ptr %19 ]
-  store %value.ptr %19
-  [ %self.ptr %value.ptr ]
-  %20: ptr<Tokenizer> = load %self.ptr
-  [ %self.ptr %20 %value.ptr ]
-  %21: ptr<i32> = offset %20 Tokenizer.index
-  [ %self.ptr %21 %value.ptr ]
-  %22: ptr<Tokenizer> = load %self.ptr
-  [ %self.ptr %21 %22 %value.ptr ]
-  %23: ptr<i32> = offset %22 Tokenizer.index
-  [ %self.ptr %21 %23 %value.ptr ]
-  %24: i32 = load %23
-  [ %self.ptr %21 %24 %value.ptr ]
-  %25: i32 = const 1
-  [ %self.ptr %21 %24 %25 %value.ptr ]
-  %26: i32 = add %24 %25
-  [ %self.ptr %21 %26 %value.ptr ]
-  store %21 %26
-  [ %self.ptr %value.ptr ]
-  jmp @2
-  [ %self.ptr %value.ptr ]
-@6:
-  [ %char.ptr %value.ptr %self.ptr ]
+  [ %char.ptr %lexeme_builder.ptr %self.ptr ]
   %char.2: u8 = load %char.ptr
-  [ %char.2 %value.ptr %self.ptr %char.ptr ]
-  %11: u8 = const '9'
-  [ %char.2 %11 %value.ptr %self.ptr %char.ptr ]
-  %12: bool = cmp_gt %char.2 %11
-  [ %12 %value.ptr %self.ptr %char.ptr ]
-  jmp @7
-  [ %value.ptr %self.ptr %char.ptr %12 ]
-@7:
-  [ %value.ptr %self.ptr %char.ptr ]
-  %13: bool = phi @2 %10 @6 %12
-  [ %value.ptr %self.ptr %char.ptr %13 ]
-  br %13 @4 @5
-  [ %value.ptr %self.ptr %char.ptr ]
-@8:
-  [ %self.ptr %value.ptr %char.ptr ]
+  [ %char.2 %lexeme_builder.ptr %self.ptr %char.ptr ]
+  %19: u8 = const '9'
+  [ %char.2 %19 %lexeme_builder.ptr %self.ptr %char.ptr ]
+  %20: bool = cmp_le %char.2 %19
+  [ %20 %lexeme_builder.ptr %self.ptr %char.ptr ]
   jmp @5
-  [ %self.ptr %value.ptr %char.ptr ]
+  [ %lexeme_builder.ptr %self.ptr %char.ptr %20 ]
+@5:
+  [ %lexeme_builder.ptr %self.ptr %char.ptr ]
+  %21: bool = phi @1 %18 @4 %20
+  [ %lexeme_builder.ptr %self.ptr %char.ptr %21 ]
+  br %21 @2 @3
+  [ %lexeme_builder.ptr %self.ptr %char.ptr ]
 }
 
-$pFILE__write__char(%self: ptr<FILE>, %char: u8): ptr<FILE> {
+$pTokenizer__scan_number_token(%self: ptr<Tokenizer>, %lexeme_builder: ptr<StringBuilder>): ptr<Token> {
 @1:
-  [ $stdout %char %self ]
-  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
-  [ %self.ptr $stdout %char %self ]
+  [ %lexeme_builder %self ]
+  %self.ptr: ptr<ptr<Tokenizer>> = alloc ptr<Tokenizer>
+  [ %lexeme_builder %self.ptr %self ]
   store %self.ptr %self
-  [ %self.ptr $stdout %char ]
+  [ %lexeme_builder %self.ptr ]
+  %lexeme_builder.ptr: ptr<ptr<StringBuilder>> = alloc ptr<StringBuilder>
+  [ %lexeme_builder.ptr %lexeme_builder %self.ptr ]
+  store %lexeme_builder.ptr %lexeme_builder
+  [ %self.ptr %lexeme_builder.ptr ]
+  %value.ptr: ptr<i32> = alloc i32
+  [ %value.ptr %self.ptr %lexeme_builder.ptr ]
+  %1: i32 = const 0
+  [ %value.ptr %1 %self.ptr %lexeme_builder.ptr ]
+  store %value.ptr %1
+  [ %self.ptr %value.ptr %lexeme_builder.ptr ]
+  jmp @2
+  [ %self.ptr %value.ptr %lexeme_builder.ptr ]
+@2:
+  [ %self.ptr %value.ptr %lexeme_builder.ptr ]
   %char.ptr: ptr<u8> = alloc u8
-  [ %self.ptr $stdout %char.ptr %char ]
-  store %char.ptr %char
-  [ %self.ptr $stdout %char.ptr ]
+  [ %char.ptr %self.ptr %value.ptr %lexeme_builder.ptr ]
+  %2: ptr<Tokenizer> = load %self.ptr
+  [ %char.ptr %self.ptr %2 %value.ptr %lexeme_builder.ptr ]
+  %3: ptr<ptr<u8>> = offset %2 Tokenizer.data
+  [ %char.ptr %3 %self.ptr %value.ptr %lexeme_builder.ptr ]
+  %4: ptr<Tokenizer> = load %self.ptr
+  [ %char.ptr %3 %4 %value.ptr %lexeme_builder.ptr %self.ptr ]
+  %5: ptr<i32> = offset %4 Tokenizer.index
+  [ %char.ptr %3 %5 %value.ptr %lexeme_builder.ptr %self.ptr ]
+  %6: i32 = load %5
+  [ %char.ptr %3 %6 %value.ptr %lexeme_builder.ptr %self.ptr ]
+  %7: ptr<u8> = offset %3 %6
+  [ %char.ptr %7 %value.ptr %lexeme_builder.ptr %self.ptr ]
+  %8: u8 = load %7
+  [ %char.ptr %8 %value.ptr %lexeme_builder.ptr %self.ptr ]
+  store %char.ptr %8
+  [ %char.ptr %value.ptr %lexeme_builder.ptr %self.ptr ]
   %char.1: u8 = load %char.ptr
-  [ %self.ptr %char.1 $stdout ]
-  %1: ptr<FILE> = load $stdout
-  [ %self.ptr %char.1 %1 ]
-  %2: i32 = call $fputc %char.1 %1
+  [ %char.1 %char.ptr %value.ptr %lexeme_builder.ptr %self.ptr ]
+  %9: u8 = const '0'
+  [ %char.1 %9 %char.ptr %value.ptr %lexeme_builder.ptr %self.ptr ]
+  %10: bool = cmp_lt %char.1 %9
+  [ %10 %char.ptr %value.ptr %lexeme_builder.ptr %self.ptr ]
+  br %10 @7 @6
+  [ %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr %10 ]
+@3:
+  [ %value.ptr %lexeme_builder.ptr ]
+  %28: u64 = const 13
+  [ %value.ptr %lexeme_builder.ptr %28 ]
+  %29: ptr<Token> = call $malloc %28
+  [ %29 %value.ptr %lexeme_builder.ptr ]
+  %30: u8 = const 'n'
+  [ %29 %30 %value.ptr %lexeme_builder.ptr ]
+  %lexeme_builder.2: ptr<StringBuilder> = load %lexeme_builder.ptr
+  [ %29 %30 %value.ptr %lexeme_builder.2 ]
+  %31: ptr<u8> = call $pStringBuilder__build %lexeme_builder.2
+  [ %29 %31 %30 %value.ptr ]
+  %value.2: i32 = load %value.ptr
+  [ %29 %value.2 %31 %30 ]
+  %32: Token = struct { Token.kind: %30, Token.lexeme: %31, Token.value: %value.2 }
+  [ %29 %value.2 %31 %30 ]
+  %33: ptr<u8> = offset %29 Token.kind
+  [ %29 %value.2 %31 %33 %30 ]
+  store %33 %30
+  [ %29 %value.2 %31 ]
+  %34: ptr<ptr<u8>> = offset %29 Token.lexeme
+  [ %29 %value.2 %34 %31 ]
+  store %34 %31
+  [ %29 %value.2 ]
+  %35: ptr<i32> = offset %29 Token.value
+  [ %29 %35 %value.2 ]
+  store %35 %value.2
+  [ %29 ]
+  ret %29
+  [ ]
+@4:
+  [ %value.ptr %lexeme_builder.ptr ]
+  jmp @3
+  [ %value.ptr %lexeme_builder.ptr ]
+@5:
+  [ %self.ptr %value.ptr %char.ptr %lexeme_builder.ptr ]
+  %lexeme_builder.1: ptr<StringBuilder> = load %lexeme_builder.ptr
+  [ %self.ptr %value.ptr %char.ptr %lexeme_builder.1 %lexeme_builder.ptr ]
+  %char.3: u8 = load %char.ptr
+  [ %self.ptr %value.ptr %char.ptr %lexeme_builder.1 %char.3 %lexeme_builder.ptr ]
+  %14: ptr<StringBuilder> = call $pStringBuilder__write__char %lexeme_builder.1 %char.3
+  [ %self.ptr %value.ptr %char.ptr %lexeme_builder.ptr ]
+  %value.1: i32 = load %value.ptr
+  [ %self.ptr %value.ptr %char.ptr %value.1 %lexeme_builder.ptr ]
+  %15: i32 = const 10
+  [ %self.ptr %value.ptr %char.ptr %value.1 %15 %lexeme_builder.ptr ]
+  %16: i32 = mul %value.1 %15
+  [ %self.ptr %value.ptr %16 %char.ptr %lexeme_builder.ptr ]
+  %char.4: u8 = load %char.ptr
+  [ %self.ptr %value.ptr %16 %char.4 %lexeme_builder.ptr ]
+  %17: u8 = const '0'
+  [ %self.ptr %value.ptr %16 %char.4 %17 %lexeme_builder.ptr ]
+  %18: u8 = sub %char.4 %17
+  [ %self.ptr %value.ptr %16 %18 %lexeme_builder.ptr ]
+  %19: i32 = cast %18
+  [ %self.ptr %value.ptr %16 %19 %lexeme_builder.ptr ]
+  %20: i32 = add %16 %19
+  [ %self.ptr %value.ptr %20 %lexeme_builder.ptr ]
+  store %value.ptr %20
+  [ %self.ptr %value.ptr %lexeme_builder.ptr ]
+  %21: ptr<Tokenizer> = load %self.ptr
+  [ %self.ptr %21 %value.ptr %lexeme_builder.ptr ]
+  %22: ptr<i32> = offset %21 Tokenizer.index
+  [ %self.ptr %22 %value.ptr %lexeme_builder.ptr ]
+  %23: ptr<Tokenizer> = load %self.ptr
+  [ %self.ptr %22 %23 %value.ptr %lexeme_builder.ptr ]
+  %24: ptr<i32> = offset %23 Tokenizer.index
+  [ %self.ptr %22 %24 %value.ptr %lexeme_builder.ptr ]
+  %25: i32 = load %24
+  [ %self.ptr %22 %25 %value.ptr %lexeme_builder.ptr ]
+  %26: i32 = const 1
+  [ %self.ptr %22 %25 %26 %value.ptr %lexeme_builder.ptr ]
+  %27: i32 = add %25 %26
+  [ %self.ptr %22 %27 %value.ptr %lexeme_builder.ptr ]
+  store %22 %27
+  [ %self.ptr %value.ptr %lexeme_builder.ptr ]
+  jmp @2
+  [ %self.ptr %value.ptr %lexeme_builder.ptr ]
+@6:
+  [ %char.ptr %value.ptr %lexeme_builder.ptr %self.ptr ]
+  %char.2: u8 = load %char.ptr
+  [ %char.2 %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr ]
+  %11: u8 = const '9'
+  [ %char.2 %11 %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr ]
+  %12: bool = cmp_gt %char.2 %11
+  [ %12 %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr ]
+  jmp @7
+  [ %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr %12 ]
+@7:
+  [ %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr ]
+  %13: bool = phi @2 %10 @6 %12
+  [ %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr %13 ]
+  br %13 @4 @5
+  [ %value.ptr %lexeme_builder.ptr %self.ptr %char.ptr ]
+@8:
+  [ %self.ptr %value.ptr %char.ptr %lexeme_builder.ptr ]
+  jmp @5
+  [ %self.ptr %value.ptr %char.ptr %lexeme_builder.ptr ]
+}
+
+$pWriter__write__token(%self: ptr<Writer>, %token: ptr<Token>): ptr<Writer> {
+@1:
+  [ %token %self ]
+  %self.ptr: ptr<ptr<Writer>> = alloc ptr<Writer>
+  [ %self.ptr %token %self ]
+  store %self.ptr %self
+  [ %self.ptr %token ]
+  %token.ptr: ptr<ptr<Token>> = alloc ptr<Token>
+  [ %token.ptr %self.ptr %token ]
+  store %token.ptr %token
+  [ %token.ptr %self.ptr ]
+  %self.1: ptr<Writer> = load %self.ptr
+  [ %token.ptr %self.1 %self.ptr ]
+  %1: ptr<Token> = load %token.ptr
+  [ %token.ptr %self.1 %1 %self.ptr ]
+  %2: ptr<u8> = offset %1 Token.kind
+  [ %token.ptr %self.1 %2 %self.ptr ]
+  %3: u8 = load %2
+  [ %token.ptr %self.1 %3 %self.ptr ]
+  %4: ptr<Writer> = call $pWriter__write__char %self.1 %3
+  [ %token.ptr %self.ptr ]
+  %5: ptr<Token> = load %token.ptr
+  [ %5 %token.ptr %self.ptr ]
+  %6: ptr<u8> = offset %5 Token.kind
+  [ %6 %token.ptr %self.ptr ]
+  %7: u8 = load %6
+  [ %7 %token.ptr %self.ptr ]
+  %8: u8 = const 'n'
+  [ %7 %8 %token.ptr %self.ptr ]
+  %9: bool = cmp_eq %7 %8
+  [ %9 %token.ptr %self.ptr ]
+  br %9 @2 @3
+  [ %token.ptr %self.ptr ]
+@2:
+  [ %token.ptr %self.ptr ]
+  %self.2: ptr<Writer> = load %self.ptr
+  [ %token.ptr %self.2 %self.ptr ]
+  %10: u8 = const ':'
+  [ %token.ptr %self.2 %10 %self.ptr ]
+  %11: ptr<Writer> = call $pWriter__write__char %self.2 %10
+  [ %token.ptr %11 %self.ptr ]
+  %12: u8 = const ' '
+  [ %token.ptr %11 %12 %self.ptr ]
+  %13: ptr<Writer> = call $pWriter__write__char %11 %12
+  [ %13 %token.ptr %self.ptr ]
+  %14: ptr<Token> = load %token.ptr
+  [ %13 %14 %self.ptr ]
+  %15: ptr<i32> = offset %14 Token.value
+  [ %13 %15 %self.ptr ]
+  %16: i32 = load %15
+  [ %13 %16 %self.ptr ]
+  %17: ptr<Writer> = call $pWriter__write__signed %13 %16
   [ %self.ptr ]
-  %self.1: ptr<FILE> = load %self.ptr
+  jmp @3
+  [ %self.ptr ]
+@3:
+  [ %self.ptr ]
+  %self.3: ptr<Writer> = load %self.ptr
+  [ %self.3 ]
+  ret %self.3
+  [ ]
+}
+
+$pStringBuilder__write__char(%self: ptr<StringBuilder>, %char: u8): ptr<StringBuilder> {
+@1:
+  [ %char %self ]
+  %self.ptr: ptr<ptr<StringBuilder>> = alloc ptr<StringBuilder>
+  [ %self.ptr %char %self ]
+  store %self.ptr %self
+  [ %self.ptr %char ]
+  %char.ptr: ptr<u8> = alloc u8
+  [ %self.ptr %char.ptr %char ]
+  store %char.ptr %char
+  [ %self.ptr %char.ptr ]
+  %1: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %1 %char.ptr ]
+  %2: ptr<i32> = offset %1 StringBuilder.length
+  [ %self.ptr %2 %char.ptr ]
+  %3: i32 = load %2
+  [ %3 %self.ptr %char.ptr ]
+  %4: ptr<StringBuilder> = load %self.ptr
+  [ %3 %4 %self.ptr %char.ptr ]
+  %5: ptr<i32> = offset %4 StringBuilder.data_size
+  [ %3 %5 %self.ptr %char.ptr ]
+  %6: i32 = load %5
+  [ %3 %6 %self.ptr %char.ptr ]
+  %7: bool = cmp_eq %3 %6
+  [ %7 %self.ptr %char.ptr ]
+  br %7 @2 @3
+  [ %self.ptr %char.ptr ]
+@2:
+  [ %self.ptr %char.ptr ]
+  %8: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %8 %char.ptr ]
+  %9: ptr<i32> = offset %8 StringBuilder.data_size
+  [ %self.ptr %9 %char.ptr ]
+  %10: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %9 %10 %char.ptr ]
+  %11: ptr<i32> = offset %10 StringBuilder.data_size
+  [ %self.ptr %9 %11 %char.ptr ]
+  %12: i32 = load %11
+  [ %self.ptr %9 %12 %char.ptr ]
+  %13: i32 = const 8
+  [ %self.ptr %9 %12 %13 %char.ptr ]
+  %14: i32 = add %12 %13
+  [ %self.ptr %9 %14 %char.ptr ]
+  store %9 %14
+  [ %self.ptr %char.ptr ]
+  %15: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %15 %char.ptr ]
+  %16: ptr<ptr<u8>> = offset %15 StringBuilder.data
+  [ %16 %self.ptr %char.ptr ]
+  %17: ptr<StringBuilder> = load %self.ptr
+  [ %16 %self.ptr %17 %char.ptr ]
+  %18: ptr<ptr<u8>> = offset %17 StringBuilder.data
+  [ %16 %self.ptr %18 %char.ptr ]
+  %19: ptr<u8> = load %18
+  [ %16 %self.ptr %19 %char.ptr ]
+  %20: ptr<Any> = cast %19
+  [ %16 %20 %self.ptr %char.ptr ]
+  %21: ptr<StringBuilder> = load %self.ptr
+  [ %16 %20 %21 %self.ptr %char.ptr ]
+  %22: ptr<i32> = offset %21 StringBuilder.data_size
+  [ %16 %20 %22 %self.ptr %char.ptr ]
+  %23: i32 = load %22
+  [ %16 %20 %23 %self.ptr %char.ptr ]
+  %24: u64 = cast %23
+  [ %16 %20 %24 %self.ptr %char.ptr ]
+  %25: ptr<Any> = call $realloc %20 %24
+  [ %16 %25 %self.ptr %char.ptr ]
+  %26: ptr<u8> = cast %25
+  [ %16 %26 %self.ptr %char.ptr ]
+  store %16 %26
+  [ %self.ptr %char.ptr ]
+  jmp @3
+  [ %self.ptr %char.ptr ]
+@3:
+  [ %self.ptr %char.ptr ]
+  %27: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %char.ptr %27 ]
+  %28: ptr<ptr<u8>> = offset %27 StringBuilder.data
+  [ %self.ptr %char.ptr %28 ]
+  %29: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %char.ptr %28 %29 ]
+  %30: ptr<i32> = offset %29 StringBuilder.length
+  [ %self.ptr %char.ptr %28 %30 ]
+  %31: i32 = load %30
+  [ %self.ptr %char.ptr %28 %31 ]
+  %32: ptr<u8> = offset %28 %31
+  [ %self.ptr %32 %char.ptr ]
+  %char.1: u8 = load %char.ptr
+  [ %self.ptr %32 %char.1 ]
+  store %32 %char.1
+  [ %self.ptr ]
+  %33: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %33 ]
+  %34: ptr<i32> = offset %33 StringBuilder.length
+  [ %self.ptr %34 ]
+  %35: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %34 %35 ]
+  %36: ptr<i32> = offset %35 StringBuilder.length
+  [ %self.ptr %34 %36 ]
+  %37: i32 = load %36
+  [ %self.ptr %34 %37 ]
+  %38: i32 = const 1
+  [ %self.ptr %34 %37 %38 ]
+  %39: i32 = add %37 %38
+  [ %self.ptr %34 %39 ]
+  store %34 %39
+  [ %self.ptr ]
+  %self.1: ptr<StringBuilder> = load %self.ptr
   [ %self.1 ]
   ret %self.1
   [ ]
 }
 
-$pFILE__write__signed(%self: ptr<FILE>, %value: i32): ptr<FILE> {
+$pStringBuilder__build(%self: ptr<StringBuilder>): ptr<u8> {
+@1:
+  [ %self ]
+  %self.ptr: ptr<ptr<StringBuilder>> = alloc ptr<StringBuilder>
+  [ %self.ptr %self ]
+  store %self.ptr %self
+  [ %self.ptr ]
+  %self.1: ptr<StringBuilder> = load %self.ptr
+  [ %self.ptr %self.1 ]
+  %1: u8 = const 0
+  [ %self.ptr %self.1 %1 ]
+  %2: ptr<StringBuilder> = call $pStringBuilder__write__char %self.1 %1
+  [ %self.ptr ]
+  %3: ptr<StringBuilder> = load %self.ptr
+  [ %3 ]
+  %4: ptr<ptr<u8>> = offset %3 StringBuilder.data
+  [ %4 ]
+  %5: ptr<u8> = load %4
+  [ %5 ]
+  ret %5
+  [ ]
+}
+
+$pStringBuilder__write_char(%self: ptr<StringBuilder>, %char: u8) {
+@1:
+  [ %char %self ]
+  %self.ptr: ptr<ptr<StringBuilder>> = alloc ptr<StringBuilder>
+  [ %self.ptr %char %self ]
+  store %self.ptr %self
+  [ %self.ptr %char ]
+  %char.ptr: ptr<u8> = alloc u8
+  [ %char.ptr %self.ptr %char ]
+  store %char.ptr %char
+  [ %char.ptr %self.ptr ]
+  %self.1: ptr<StringBuilder> = load %self.ptr
+  [ %self.1 %char.ptr ]
+  %char.1: u8 = load %char.ptr
+  [ %self.1 %char.1 ]
+  %1: ptr<StringBuilder> = call $pStringBuilder__write__char %self.1 %char.1
+  [ ]
+  ret
+  [ ]
+}
+
+$pWriter__write__char(%self: ptr<Writer>, %char: u8): ptr<Writer> {
+@1:
+  [ %char %self ]
+  %self.ptr: ptr<ptr<Writer>> = alloc ptr<Writer>
+  [ %self.ptr %char %self ]
+  store %self.ptr %self
+  [ %self.ptr %char ]
+  %char.ptr: ptr<u8> = alloc u8
+  [ %self.ptr %char.ptr %char ]
+  store %char.ptr %char
+  [ %self.ptr %char.ptr ]
+  %self.1: ptr<Writer> = load %self.ptr
+  [ %self.ptr %char.ptr %self.1 ]
+  %1: ptr<ptr<func (self: ptr<Any>, char: u8)>> = offset %self.1 Writer.write_char
+  [ %self.ptr %char.ptr %self.1 %1 ]
+  %2: ptr<func (self: ptr<Any>, char: u8)> = load %1
+  [ %self.ptr %2 %char.ptr %self.1 ]
+  %3: ptr<ptr<Any>> = offset %self.1 Writer.self
+  [ %self.ptr %2 %char.ptr %3 ]
+  %4: ptr<Any> = load %3
+  [ %self.ptr %2 %4 %char.ptr ]
+  %char.1: u8 = load %char.ptr
+  [ %self.ptr %2 %4 %char.1 ]
+  call %2 %4 %char.1
+  [ %self.ptr ]
+  %self.2: ptr<Writer> = load %self.ptr
+  [ %self.2 ]
+  ret %self.2
+  [ ]
+}
+
+$pWriter__write__signed(%self: ptr<Writer>, %value: i32): ptr<Writer> {
 @1:
   [ %value %self ]
-  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
+  %self.ptr: ptr<ptr<Writer>> = alloc ptr<Writer>
   [ %value %self.ptr %self ]
   store %self.ptr %self
   [ %value %self.ptr ]
@@ -416,19 +732,19 @@ $pFILE__write__signed(%self: ptr<FILE>, %value: i32): ptr<FILE> {
   [ %value.ptr %self.ptr ]
 @2:
   [ %value.ptr %self.ptr ]
-  %self.1: ptr<FILE> = load %self.ptr
+  %self.1: ptr<Writer> = load %self.ptr
   [ %value.ptr %self.ptr %self.1 ]
   %3: u8 = const '-'
   [ %value.ptr %self.ptr %self.1 %3 ]
-  %4: ptr<FILE> = call $pFILE__write__char %self.1 %3
+  %4: ptr<Writer> = call $pWriter__write__char %self.1 %3
   [ %value.ptr %self.ptr ]
-  %self.2: ptr<FILE> = load %self.ptr
+  %self.2: ptr<Writer> = load %self.ptr
   [ %self.2 %value.ptr ]
   %value.2: i32 = load %value.ptr
   [ %self.2 %value.2 ]
   %5: i32 = neg %value.2
   [ %self.2 %5 ]
-  %6: ptr<FILE> = call $pFILE__write__signed %self.2 %5
+  %6: ptr<Writer> = call $pWriter__write__signed %self.2 %5
   [ %6 ]
   ret %6
   [ ]
@@ -444,7 +760,7 @@ $pFILE__write__signed(%self: ptr<FILE>, %value: i32): ptr<FILE> {
   [ %value.ptr %self.ptr ]
 @4:
   [ %value.ptr %self.ptr ]
-  %self.3: ptr<FILE> = load %self.ptr
+  %self.3: ptr<Writer> = load %self.ptr
   [ %self.3 %value.ptr %self.ptr ]
   %value.4: i32 = load %value.ptr
   [ %self.3 %value.4 %value.ptr %self.ptr ]
@@ -452,13 +768,13 @@ $pFILE__write__signed(%self: ptr<FILE>, %value: i32): ptr<FILE> {
   [ %self.3 %value.4 %9 %value.ptr %self.ptr ]
   %10: i32 = div %value.4 %9
   [ %self.3 %10 %value.ptr %self.ptr ]
-  %11: ptr<FILE> = call $pFILE__write__signed %self.3 %10
+  %11: ptr<Writer> = call $pWriter__write__signed %self.3 %10
   [ %value.ptr %self.ptr ]
   jmp @5
   [ %value.ptr %self.ptr ]
 @5:
   [ %value.ptr %self.ptr ]
-  %self.4: ptr<FILE> = load %self.ptr
+  %self.4: ptr<Writer> = load %self.ptr
   [ %self.4 %value.ptr ]
   %value.5: i32 = load %value.ptr
   [ %self.4 %value.5 ]
@@ -472,89 +788,26 @@ $pFILE__write__signed(%self: ptr<FILE>, %value: i32): ptr<FILE> {
   [ %self.4 %14 %15 ]
   %16: u8 = add %14 %15
   [ %self.4 %16 ]
-  %17: ptr<FILE> = call $pFILE__write__char %self.4 %16
+  %17: ptr<Writer> = call $pWriter__write__char %self.4 %16
   [ %17 ]
   ret %17
   [ ]
 }
 
-$pFILE__write__token(%self: ptr<FILE>, %token: ptr<Token>): ptr<FILE> {
-@1:
-  [ %token %self ]
-  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
-  [ %self.ptr %token %self ]
-  store %self.ptr %self
-  [ %self.ptr %token ]
-  %token.ptr: ptr<ptr<Token>> = alloc ptr<Token>
-  [ %token.ptr %self.ptr %token ]
-  store %token.ptr %token
-  [ %token.ptr %self.ptr ]
-  %self.1: ptr<FILE> = load %self.ptr
-  [ %token.ptr %self.1 %self.ptr ]
-  %1: ptr<Token> = load %token.ptr
-  [ %token.ptr %self.1 %1 %self.ptr ]
-  %2: ptr<u8> = offset %1 Token.kind
-  [ %token.ptr %self.1 %2 %self.ptr ]
-  %3: u8 = load %2
-  [ %token.ptr %self.1 %3 %self.ptr ]
-  %4: ptr<FILE> = call $pFILE__write__char %self.1 %3
-  [ %token.ptr %self.ptr ]
-  %5: ptr<Token> = load %token.ptr
-  [ %5 %token.ptr %self.ptr ]
-  %6: ptr<u8> = offset %5 Token.kind
-  [ %6 %token.ptr %self.ptr ]
-  %7: u8 = load %6
-  [ %7 %token.ptr %self.ptr ]
-  %8: u8 = const 'n'
-  [ %7 %8 %token.ptr %self.ptr ]
-  %9: bool = cmp_eq %7 %8
-  [ %9 %token.ptr %self.ptr ]
-  br %9 @2 @3
-  [ %token.ptr %self.ptr ]
-@2:
-  [ %token.ptr %self.ptr ]
-  %self.2: ptr<FILE> = load %self.ptr
-  [ %token.ptr %self.2 %self.ptr ]
-  %10: u8 = const ':'
-  [ %token.ptr %self.2 %10 %self.ptr ]
-  %11: ptr<FILE> = call $pFILE__write__char %self.2 %10
-  [ %token.ptr %11 %self.ptr ]
-  %12: u8 = const ' '
-  [ %token.ptr %11 %12 %self.ptr ]
-  %13: ptr<FILE> = call $pFILE__write__char %11 %12
-  [ %13 %token.ptr %self.ptr ]
-  %14: ptr<Token> = load %token.ptr
-  [ %13 %14 %self.ptr ]
-  %15: ptr<i32> = offset %14 Token.value
-  [ %13 %15 %self.ptr ]
-  %16: i32 = load %15
-  [ %13 %16 %self.ptr ]
-  %17: ptr<FILE> = call $pFILE__write__signed %13 %16
-  [ %self.ptr ]
-  jmp @3
-  [ %self.ptr ]
-@3:
-  [ %self.ptr ]
-  %self.3: ptr<FILE> = load %self.ptr
-  [ %self.3 ]
-  ret %self.3
-  [ ]
-}
-
-$pFILE__end_line(%self: ptr<FILE>): ptr<FILE> {
+$pWriter__end_line(%self: ptr<Writer>): ptr<Writer> {
 @1:
   [ %self ]
-  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
+  %self.ptr: ptr<ptr<Writer>> = alloc ptr<Writer>
   [ %self.ptr %self ]
   store %self.ptr %self
   [ %self.ptr ]
-  %self.1: ptr<FILE> = load %self.ptr
+  %self.1: ptr<Writer> = load %self.ptr
   [ %self.ptr %self.1 ]
   %1: u8 = const '\n'
   [ %self.ptr %self.1 %1 ]
-  %2: ptr<FILE> = call $pFILE__write__char %self.1 %1
+  %2: ptr<Writer> = call $pWriter__write__char %self.1 %1
   [ %self.ptr ]
-  %self.2: ptr<FILE> = load %self.ptr
+  %self.2: ptr<Writer> = load %self.ptr
   [ %self.2 ]
   ret %self.2
   [ ]
@@ -562,6 +815,29 @@ $pFILE__end_line(%self: ptr<FILE>): ptr<FILE> {
 
 $fputc(%c: u8, %file: ptr<FILE>): i32
 
+$pFILE__write_char(%self: ptr<FILE>, %char: u8) {
+@1:
+  [ $stdout %char %self ]
+  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
+  [ $stdout %char %self.ptr %self ]
+  store %self.ptr %self
+  [ $stdout %char ]
+  %char.ptr: ptr<u8> = alloc u8
+  [ $stdout %char.ptr %char ]
+  store %char.ptr %char
+  [ $stdout %char.ptr ]
+  %char.1: u8 = load %char.ptr
+  [ %char.1 $stdout ]
+  %1: ptr<FILE> = load $stdout
+  [ %char.1 %1 ]
+  %2: i32 = call $fputc %char.1 %1
+  [ ]
+  ret
+  [ ]
+}
+
 $malloc(%size: u64): ptr<Any>
+
+$realloc(%block: ptr<Any>, %size: u64): ptr<Any>
 
 $exit(%code: i32)

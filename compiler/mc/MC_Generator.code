@@ -634,6 +634,14 @@ func convert_comparison_instruction(self: @MC_Generator, ir_comparison_instructi
         )
     }
     let right_mc_value = mc_block.find_value(ir_comparison_instruction.get_right_value())
+    if right_mc_value is MC_Immediate_Value and (right_mc_value.ir_value.type is IR_Int64_Type or right_mc_value.ir_value.type is IR_UInt64_Type) {
+        right_mc_value = self.make_register_value(
+            mc_block = mc_block
+            ir_value = right_mc_value.ir_value
+            mc_register = self.find_free_caller_saved_register(mc_block)
+            load_value = true
+        )
+    }
     mc_block.append(make @MC_CMP_Instruction(
         source = right_mc_value.make_mc_operand(self)
         destination = left_mc_value.make_mc_operand(self)
@@ -906,6 +914,8 @@ func convert_integer_cast_instruction(self: @MC_Generator, ir_integer_cast_instr
                 )
                 destination = mc_register_value.make_mc_operand(self)
             ))
+        } else if ir_value.type is IR_Int32_Type {
+            \ x86-64 processor automatically zero extends 32-bit values to 64-bit values
         } else {
             abort(ir_integer_cast_instruction.location, "Cannot cast ".clone().append(ir_value.type.name).append(" to ").append(ir_result_value.type.name))
         }

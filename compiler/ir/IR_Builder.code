@@ -1438,8 +1438,14 @@ func convert_trait_function_call_expression(self: @IR_Builder, checked_expressio
     \ create call arguments
     let ir_call_arguments = make @List[@IR_Call_Argument]()
     ir_call_arguments.append(make @IR_Call_Argument(value = ir_self))
-    if checked_expression.call_arguments.size > 1 {
-        abort(checked_expression.location, "Expected only self argument")
+    checked_expression.call_arguments.for_each_indexed() {
+        if it_index > 0 {
+            ir_call_arguments.append(
+                make @IR_Call_Argument(
+                    value = self.convert_expression(it.expression, null)
+                )
+            )
+        }
     }
 
     \ call trait function

@@ -91,7 +91,10 @@ struct StringBuilder {
     func write(self, char: u8) -> @StringBuilder {
         if self.length == self.data_size {
             self.data_size = self.data_size + 8
-            self.data = realloc(self.data.as(@Any), self.data_size.as(u64)).as([u8; ?])
+            self.data = realloc(
+                self.data.as(@Any)
+                self.data_size.as(u64)
+            ).as([u8; ?])
         }
         self.data[self.length] = char
         self.length = self.length + 1
