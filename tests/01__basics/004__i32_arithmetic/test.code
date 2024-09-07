@@ -1,0 +1,35 @@
+func main() -> i32 {
+    return sub(
+        mul(
+            add(
+                div(42, 10)
+                2
+            )
+            add(
+                mod(42, 10)
+                5
+            )
+        )
+        42
+    )
+}
+
+func add(anon v1: i32, anon v2: i32) -> i32 {
+    return v1 + v2
+}
+
+func sub(anon v1: i32, anon v2: i32) -> i32 {
+    return v1 - v2
+}
+
+func mul(anon v1: i32, anon v2: i32) -> i32 {
+    return v1 * v2
+}
+
+func div(anon v1: i32, anon v2: i32) -> i32 {
+    return v1 / v2
+}
+
+func mod(anon v1: i32, anon v2: i32) -> i32 {
+    return v1 // v2
+}

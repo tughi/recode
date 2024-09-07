@@ -1,0 +1,6 @@
+/.idea
+/.vscode
+/.zed
+/build
+/temp
+/tests/**/000/

@@ -1,0 +1,14 @@
+$main(%argc: i32, %argv: ptr<ptr<u8>>) {
+@1:
+  [ %argv %argc ]
+  %argc.ptr: ptr<i32> = alloc i32
+  [ %argv %argc.ptr %argc ]
+  store %argc.ptr %argc
+  [ %argv ]
+  %argv.ptr: ptr<ptr<ptr<u8>>> = alloc ptr<ptr<u8>>
+  [ %argv.ptr %argv ]
+  store %argv.ptr %argv
+  [ ]
+  ret
+  [ ]
+}

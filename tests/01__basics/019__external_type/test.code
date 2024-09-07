@@ -1,0 +1,11 @@
+external type File
+
+external stdout: @File
+
+external func fputc(anon char: u8, anon file: @File) -> i32
+
+func main() -> Nothing {
+    fputc('4', stdout)
+    fputc('2', stdout)
+    fputc('\n', stdout)
+}

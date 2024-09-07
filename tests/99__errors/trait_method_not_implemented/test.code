@@ -1,0 +1,11 @@
+struct Dog {
+}
+
+trait Animal {
+    func make_sound(self) -> u8
+}
+
+func main() {
+    let dog = make Dog()
+    let animal = make Animal(@dog)
+}

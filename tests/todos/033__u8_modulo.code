@@ -1,0 +1,16 @@
+\ Expect:
+\ - output: ''
+
+func main() -> i32 {
+    let byte = 250u8
+    if byte // 5 != 0 {
+        return 1
+    }
+
+    let byte = -120i8
+    if byte // 5 != 0 {
+        return 2
+    }
+
+    return 0
+}

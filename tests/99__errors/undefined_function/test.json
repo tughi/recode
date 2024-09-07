@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/99__errors/undefined_function/test.code:2:12: No such callable: get_answer()"
+    ]
+}

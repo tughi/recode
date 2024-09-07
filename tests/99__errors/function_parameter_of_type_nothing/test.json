@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/99__errors/function_parameter_of_type_nothing/test.code:1:18: Cannot use Nothing as parameter type"
+    ]
+}

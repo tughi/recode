@@ -1,0 +1,23 @@
+func main() -> i32 {
+    return fibonacci(of: 12) - 144
+}
+
+func fibonacci(of n: i32) -> i32 {
+    if n <= 1 {
+        return n
+    }
+
+    let v1 = 0
+    let v2 = 1
+    let i = 2
+    loop {
+        let v3 = v1 + v2
+        v1 = v2
+        v2 = v3
+        if i == n {
+            break
+        }
+        i = i + 1
+    }
+    return v2
+}

@@ -1,0 +1,2 @@
+external func test() -> i32 {
+}

@@ -1,0 +1,12 @@
+func main() -> i32 {
+    let t = echo(true)
+    let f = echo(false)
+    if (t and f or f and t) or not ((t or f) and (f or t)) {
+        return 1
+    }
+    return 0
+}
+
+func echo(anon v: bool) -> bool {
+    return v
+}

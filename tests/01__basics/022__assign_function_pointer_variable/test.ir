@@ -1,0 +1,25 @@
+$main() {
+@1:
+  [ ]
+  %function_pointer.ptr: ptr<ptr<func (value: i32) -> i32>> = alloc ptr<func (value: i32) -> i32>
+  [ %function_pointer.ptr ]
+  %1: ptr<func (value: i32) -> i32> = address $echo__value
+  [ %function_pointer.ptr %1 ]
+  store %function_pointer.ptr %1
+  [ ]
+  ret
+  [ ]
+}
+
+$echo__value(%value: i32): i32 {
+@1:
+  [ %value ]
+  %value.ptr: ptr<i32> = alloc i32
+  [ %value.ptr %value ]
+  store %value.ptr %value
+  [ %value.ptr ]
+  %value.1: i32 = load %value.ptr
+  [ %value.1 ]
+  ret %value.1
+  [ ]
+}

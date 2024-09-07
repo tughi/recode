@@ -1,0 +1,312 @@
+#!/usr/bin/env python3
+
+import argparse
+import difflib
+import json
+import logging
+import os
+import re
+import subprocess
+from datetime import datetime
+
+logging.basicConfig(format='[%(asctime)s,%(msecs)03d][%(levelname).1s] %(message)s', datefmt='%H:%M:%S')
+
+logger = logging.getLogger('ReCode')
+logger.setLevel(logging.DEBUG)
+
+COLOR_DEBUG = '\x1b[2;37m'
+COLOR_ERROR = '\x1b[0;91m'
+COLOR_WARNING = '\x1b[0;93m'
+COLOR_RESET = '\x1b[0m'
+
+
+def clean():
+    logger.info("Cleaning")
+    run('rm -fr build stage0')
+
+
+def run(command, **kwargs):
+    if isinstance(command, str):
+        command = command.split(' ')
+    logger.debug(f"{COLOR_DEBUG}{' '.join(command)}{COLOR_RESET}")
+    if 'check' not in kwargs:
+        kwargs['check'] = True
+    return subprocess.run(command, **kwargs)
+
+
+def build_stage(n):
+    logger.info(f"Building stage{n}")
+
+    if not os.path.exists(f'build/stage{n}'):
+        run(f'mkdir -p build/stage{n}')
+
+    if n == 0:
+        assemble('bootstrap/ReCode.s', f'build/stage{n}/ReCode')
+        return
+
+    if n == 1:
+        compiler = 'compiler'
+    else:
+        compiler = 'stage0'
+
+    compiler_changed = not os.path.exists(f'build/stage{n}/ReCode.s') or os.path.getmtime(f'build/stage{n}/ReCode.s') < os.path.getmtime(f'build/stage{n - 1}/ReCode')
+    if not compiler_changed:
+        for root, dirs, files in os.walk(compiler):
+            for file in files:
+                if os.path.getmtime(f'build/stage{n}/ReCode.s') < os.path.getmtime(f'{root}/{file}'):
+                    compiler_changed = True
+                    break
+            else:
+                continue
+            break
+
+    if compiler_changed or not os.path.exists(f'build/stage{n}/ReCode'):
+        if run([f'build/stage{n - 1}/ReCode', f'{compiler}/ReCode.code', f'build/stage{n}/ReCode.s', f'build/stage{n}/ReCode.ir'], check=False).returncode != 0:
+            if os.path.exists(f'build/stage{n}/ReCode.s'):
+                run(f'rm build/stage{n}/ReCode.s')
+            trace(f'build/stage{n - 1}/ReCode', f'{compiler}/ReCode.code', '-')
+            exit(1)
+        try:
+            assemble(f'build/stage{n}/ReCode.s', f'build/stage{n}/ReCode', check=True)
+        except:
+            if os.path.exists(f'build/stage{n}/ReCode'):
+                execute(f'rm build/stage{n}/ReCode')
+            raise
+
+
+def assemble(source_file, output_file, sdl=False, **kwargs):
+    if source_file is None:
+        run(['gcc', '-x', 'assembler', '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else []), '-'], **kwargs)
+    elif not os.path.exists(output_file) or os.path.getmtime(source_file) > os.path.getmtime(output_file):
+        run(['gcc', source_file, '-o', output_file, '-g', '-no-pie', '-Wl,-z,noexecstack', *(['-lSDL2'] if sdl else [])], **kwargs)
+
+
+def trace(*command, ignore_output=True):
+    logger.info(f"Tracing: {' '.join(command)}")
+    subprocess.run(
+        ' '.join([
+            'gdb',
+            command[0],
+            '-batch',
+            '-ex=\'set confirm off\'',
+            '-ex=\'set style enabled on\'',
+            '-ex=\'set print thread-events off\'',
+            '-ex=\'b exit\'',
+            f'-ex=\'run {" ".join(command[1:])} > /dev/null 2> /dev/null\'' if ignore_output else f'-ex=\'run {" ".join(command[1:])}\'',
+            '-ex=backtrace',
+            '-ex=quit',
+        ]),
+        shell=True,
+    )
+
+
+def test(paths, save=False, stage=1):
+    build()
+
+    for test_dir in sorted(test_dirs(paths)):
+        if not os.path.exists(f'build/{test_dir}'):
+            run(f'mkdir -p build/{test_dir}')
+
+        logger.info(f"Testing: {test_dir}")
+
+        for compiler_command, test_file in [
+            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'irl'), f'{test_dir}/test.ir'),
+            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'mc'), f'{test_dir}/test.s'),
+        ]:
+            if os.path.exists(f'{test_dir}/test.json'):
+                test_data = json.loads(open(f'{test_dir}/test.json').read())
+            else:
+                test_data = {}
+
+            compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
+            if compiler_result.returncode != 0:
+                compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr).splitlines() if compiler_result.stderr else []
+
+                diff = compute_diff(
+                    json.dumps(test_data.get('error'), indent=4) if 'error' in test_data else '',
+                    json.dumps(compiler_error, indent=4),
+                )
+                if diff:
+                    if save:
+                        open(f'{test_dir}/test.json', 'w').write(json.dumps(
+                            {
+                                **{k: v for k, v in test_data.items() if k not in {'result'}},
+                                'error': compiler_error,
+                            },
+                            indent=4,
+                        ))
+                        save = False
+                    else:
+                        logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
+                        trace(*compiler_command)
+                        exit(1)
+            else:
+                if not save and test_data.get('error'):
+                    logger.error(f"{COLOR_ERROR}Expected error\n{COLOR_RESET}")
+                    trace(*compiler_command)
+                    exit(1)
+
+                if os.path.exists(test_file):
+                    diff = compute_diff(open(test_file).read(), compiler_result.stdout)
+                    if diff:
+                        if save:
+                            open(test_file, 'w').write(compiler_result.stdout)
+                            save = False
+                        else:
+                            logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
+                            exit(1)
+                else:
+                    if save:
+                        open(test_file, 'w').write(compiler_result.stdout)
+                        save = False
+                    else:
+                        logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_result.stdout}{COLOR_RESET}")
+                        exit(1)
+
+                if test_file.endswith('.s'):
+                    test_binary = f'build/{test_dir}/test'
+                    if not os.path.exists(test_binary) or os.path.getmtime(test_file) > os.path.getmtime(test_binary):
+                        assemble(test_file, test_binary, check=True)
+
+                        test_result = run(
+                            [test_binary, *test_data.get('args', [])],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+
+                        actual_result = {
+                            **({'exit': test_result.returncode} if test_result.returncode != 0 else {}),
+                            **({'stdout': test_result.stdout.splitlines()} if test_result.stdout else {}),
+                            **({'stderr': test_result.stderr.splitlines()} if test_result.stderr else {}),
+                        }
+
+                        diff = compute_diff(
+                            json.dumps(test_data.get('result'), indent=4) if 'result' in test_data else '',
+                            json.dumps(actual_result, indent=4) if actual_result else '',
+                        )
+                        if diff:
+                            if save:
+                                open(f'{test_dir}/test.json', 'w').write(json.dumps(
+                                    {
+                                        **{k: v for k, v in test_data.items() if k not in {'error'}},
+                                        'result': actual_result,
+                                    },
+                                    indent=4,
+                                ))
+                                save = False
+                            else:
+                                logger.error(f"{COLOR_ERROR}Unexpected result\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
+                                os.remove(test_binary)
+                                exit(1)
+
+
+def test_dirs(paths):
+    for path in sorted(paths):
+        if os.path.isdir(path):
+            for root, dirs, files in os.walk(path):
+                if 'test.code' in files:
+                    yield root
+        else:
+            logger.warning(f"{COLOR_WARNING}Not a folder path: {path}{COLOR_RESET}")
+
+def compute_diff(expected, actual):
+    expected_lines = expected.splitlines()
+    actual_lines = actual.splitlines()
+    if actual_lines == expected_lines:
+        return None
+    differ = difflib.Differ()
+    return '\n'.join(
+        line
+        for line in differ.compare(expected_lines, actual_lines)
+        if line.startswith((' ', '+', '-'))
+    )
+
+
+def build():
+    build_stage(0)
+    build_stage(1)
+
+
+def stage():
+    build()
+
+    logger.info("Staging")
+
+    if not os.path.exists('stage0'):
+        run('cp -R compiler stage0')
+
+    build_stage(2)
+    build_stage(3)
+    run('diff -q build/stage2/ReCode.s build/stage3/ReCode.s', check=True)
+
+    test_with_stage(3)
+
+    run('rm -fr bootstrap')
+    run('mkdir bootstrap')
+    run('mv stage0 bootstrap/')
+    run('build/stage2/ReCode bootstrap/stage0/ReCode.code bootstrap/ReCode.s')
+
+    run('rm -fr compiler')
+    run('cp -R bootstrap/stage0 compiler')
+
+
+def editor():
+    build_stage(0)
+    build_stage(1)
+
+    if not os.path.exists(f'build/editor'):
+        run(f'mkdir build/editor')
+
+    compiler_command = ['build/stage1/ReCode', 'editor/Editor.code', 'build/editor/Editor.s', 'build/editor/Editor.ir']
+    if run(compiler_command, check=False).returncode != 0:
+        trace(*compiler_command[:2], '-')
+        exit(1)
+    assemble('build/editor/Editor.s', 'build/editor/Editor', sdl=True)
+    trace('build/editor/Editor', ignore_output=False)
+
+
+def time():
+    build_stage(0)
+    build_stage(1)
+
+    count = 10
+    start_time = datetime.now()
+    for _ in range(count):
+        run('build/stage1/ReCode compiler/ReCode.code build/stage2/ReCode.s')
+    finish_time = datetime.now()
+
+    logger.info(f"Average time: {((finish_time - start_time) / count).total_seconds()}s")
+
+
+if __name__ == '__main__':
+    args_parsers = argparse.ArgumentParser(prog='ReCode')
+    args_command_parser = args_parsers.add_subparsers(dest='command')
+
+    clean_args_parser = args_command_parser.add_parser('clean', help='clean the build directory')
+
+    build_args_parser = args_command_parser.add_parser('build', help='build the compiler')
+    build_args_parser.add_argument('--clean', action='store_true', help='clean before building')
+
+    stage_args_parser = args_command_parser.add_parser('stage', help='stage the compiler')
+    stage_args_parser.add_argument('--clean', action='store_true', help='clean before staging')
+
+    test_args_parser = args_command_parser.add_parser('test', help='test the compiler')
+    test_args_parser.add_argument('path', nargs='*', default=['tests'], help='path to the test file(s)')
+    test_args_parser.add_argument('--clean', action='store_true', help='clean before testing')
+    test_args_parser.add_argument('--save', action='store_true', help='save the first unexpected compiler output')
+
+    args = args_parsers.parse_args()
+    if args.command == 'clean':
+        clean()
+    else:
+        if args.clean:
+            clean()
+        if args.command == 'build':
+            build()
+        elif args.command == 'stage':
+            stage()
+        elif args.command == 'test':
+            test(args.path, save=args.save, stage=1)
+        else:
+            args_parsers.print_help()

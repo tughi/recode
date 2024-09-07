@@ -1,0 +1,7 @@
+func main() -> i32 {
+    return echo(number: 0)
+}
+
+func echo(number value: i32) -> i32 {
+    return value
+}

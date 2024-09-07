@@ -1,0 +1,13 @@
+struct Point {
+    x: i32
+    y: i32
+}
+
+func main() -> i32 {
+    let point = make Point(x: 16, y: 32)
+    return get_y(@point) - 32
+}
+
+func get_y(anon point: @Point) -> i32 {
+    return point.y
+}

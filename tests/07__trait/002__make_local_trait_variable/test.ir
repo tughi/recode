@@ -1,0 +1,52 @@
+type Dog = struct {
+  age: i32
+}
+
+type Animal = struct {
+  self: ptr<Any>
+  legs: ptr<func (self: ptr<Any>) -> i32>
+}
+
+$pDog__legs(%self: ptr<Dog>): i32 {
+@1:
+  [ %self ]
+  %self.ptr: ptr<ptr<Dog>> = alloc ptr<Dog>
+  [ %self.ptr %self ]
+  store %self.ptr %self
+  [ ]
+  %1: i32 = const 4
+  [ %1 ]
+  ret %1
+  [ ]
+}
+
+$main() {
+@1:
+  [ ]
+  %dog.ptr: ptr<Dog> = alloc Dog
+  [ %dog.ptr ]
+  %1: i32 = const 10
+  [ %dog.ptr %1 ]
+  %2: Dog = struct { Dog.age: %1 }
+  [ %dog.ptr %1 ]
+  %3: ptr<i32> = offset %dog.ptr Dog.age
+  [ %dog.ptr %3 %1 ]
+  store %3 %1
+  [ %dog.ptr ]
+  %animal.ptr: ptr<Animal> = alloc Animal
+  [ %animal.ptr %dog.ptr ]
+  %4: ptr<func (self: ptr<Dog>) -> i32> = address $pDog__legs
+  [ %4 %animal.ptr %dog.ptr ]
+  %5: Animal = struct { Animal.self: %dog.ptr, Animal.legs: %4 }
+  [ %4 %animal.ptr %dog.ptr ]
+  %6: ptr<ptr<Any>> = offset %animal.ptr Animal.self
+  [ %4 %animal.ptr %6 %dog.ptr ]
+  store %6 %dog.ptr
+  [ %4 %animal.ptr ]
+  %7: ptr<ptr<func (self: ptr<Any>) -> i32>> = offset %animal.ptr Animal.legs
+  [ %7 %4 ]
+  store %7 %4
+  [ ]
+  ret
+  [ ]
+}

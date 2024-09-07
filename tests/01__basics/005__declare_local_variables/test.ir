@@ -1,0 +1,89 @@
+$main(): i32 {
+@1:
+  [ ]
+  %1: i32 = const 0
+  [ %1 ]
+  ret %1
+  [ ]
+}
+
+$f1() {
+@1:
+  [ ]
+  %v1.ptr: ptr<i32> = alloc i32
+  [ %v1.ptr ]
+  %1: i32 = const 1
+  [ %v1.ptr %1 ]
+  store %v1.ptr %1
+  [ ]
+  ret
+  [ ]
+}
+
+$f2() {
+@1:
+  [ ]
+  %v1.ptr: ptr<i32> = alloc i32
+  [ %v1.ptr ]
+  %1: i32 = const 1
+  [ %v1.ptr %1 ]
+  store %v1.ptr %1
+  [ ]
+  %v2.ptr: ptr<i32> = alloc i32
+  [ %v2.ptr ]
+  %2: i32 = const 2
+  [ %v2.ptr %2 ]
+  store %v2.ptr %2
+  [ ]
+  %v3.ptr: ptr<i32> = alloc i32
+  [ %v3.ptr ]
+  %3: i32 = const 3
+  [ %v3.ptr %3 ]
+  store %v3.ptr %3
+  [ ]
+  %v4.ptr: ptr<i32> = alloc i32
+  [ %v4.ptr ]
+  %4: i32 = const 4
+  [ %v4.ptr %4 ]
+  store %v4.ptr %4
+  [ ]
+  ret
+  [ ]
+}
+
+$f3() {
+@1:
+  [ ]
+  %v1.ptr: ptr<i32> = alloc i32
+  [ %v1.ptr ]
+  %1: i32 = const 1
+  [ %v1.ptr %1 ]
+  store %v1.ptr %1
+  [ ]
+  %v2.ptr: ptr<i32> = alloc i32
+  [ %v2.ptr ]
+  %2: i32 = const 2
+  [ %v2.ptr %2 ]
+  store %v2.ptr %2
+  [ ]
+  %v3.ptr: ptr<i32> = alloc i32
+  [ %v3.ptr ]
+  %3: i32 = const 3
+  [ %v3.ptr %3 ]
+  store %v3.ptr %3
+  [ ]
+  %v4.ptr: ptr<i32> = alloc i32
+  [ %v4.ptr ]
+  %4: i32 = const 4
+  [ %v4.ptr %4 ]
+  store %v4.ptr %4
+  [ ]
+  %v5.ptr: ptr<i32> = alloc i32
+  [ %v5.ptr ]
+  %5: i32 = const 5
+  [ %v5.ptr %5 ]
+  store %v5.ptr %5
+  [ ]
+  ret
+  [ ]
+}

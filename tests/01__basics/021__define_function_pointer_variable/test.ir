@@ -1,0 +1,8 @@
+$main() {
+@1:
+  [ ]
+  %function_pointer.ptr: ptr<ptr<func (value: i32) -> i32>> = alloc ptr<func (value: i32) -> i32>
+  [ ]
+  ret
+  [ ]
+}

@@ -1,0 +1,20 @@
+\ Expect:
+\ - output: ''
+
+struct Token {
+    type: u8
+}
+
+struct Literal: Token {
+}
+
+struct Integer: Literal {
+    value: i32
+}
+
+let integer: Integer = undefined
+
+func main() -> i32 {
+    let token = @integer
+    return token.value
+}

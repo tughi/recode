@@ -1,0 +1,15 @@
+\ Expect:
+\ - output: ''
+
+struct Source {
+    file: @File
+
+    value: i32
+}
+
+external type File \ opaque type
+
+func main() -> i32 {
+    let result = make Source(file = null, value = 42)
+    return result.value - 42
+}

@@ -1,0 +1,46 @@
+\ Expect:
+\ - output: 'Hi!\nHi!\nHi!\n'
+
+macro repeat(times: i32, do: macro (step: i32)) {
+    let i = 0
+    while i < times {
+        do(step = i)
+        i = i + 1
+    }
+}
+
+func yes() -> bool {
+    return true
+}
+
+macro say_hi(step: i32) {
+    fputs("Hi!\n".data, stdout)
+}
+
+func main() -> i32 {
+    let sum = 1
+
+    if yes() {
+        repeat(10) {
+            sum = sum + sum
+        }
+    }
+
+    if sum != 1024 {
+        return 1
+    }
+
+    repeat(3, say_hi)
+
+    return 0
+}
+
+struct String {
+    data: @u8
+    data_size: usize
+    length: usize
+}
+
+external type File
+external stdout: @File
+external func fputs(chars: @u8, file: @File) -> i32

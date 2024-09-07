@@ -1,0 +1,20 @@
+\ Expect:
+\ - output: 'PASS\n'
+
+struct String {
+    data: [u8; ?]
+}
+
+external type File
+external stdout: @File
+external func fputs(s: [u8; ?], stream: @File) -> i32
+
+func main() -> i32 {
+    let value_1: i32 = undefined
+    let value_2 = 42 \ type inference
+    let file: @File = null
+
+    fputs("PASS\n".data, stdout)
+
+    return 0
+}

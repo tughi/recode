@@ -1,0 +1,7 @@
+trait Animal {
+    func legs(self) -> i32
+}
+
+func main() {
+    let animal: Animal
+}

@@ -1,0 +1,45 @@
+\ Expect:
+\ - output: ''
+
+func half_of[T](value: T) -> T {
+    return value / 2
+}
+
+func main() -> i32 {
+    if half_of(42) != 21 {
+        return 1
+    }
+    if half_of(42i8) != 21 {
+        return 2
+    }
+    if half_of(42i16) != 21 {
+        return 3
+    }
+    if half_of(42i32) != 21 {
+        return 4
+    }
+    if half_of(42i64) != 21 {
+        return 5
+    }
+    if half_of(42isize) != 21 {
+        return 6
+    }
+    if half_of(42u8) != 21 {
+        return 7
+    }
+    if half_of(42u16) != 21 {
+        return 8
+    }
+    if half_of(42u32) != 21 {
+        return 9
+    }
+    if half_of(42u64) != 21 {
+        return 10
+    }
+    if half_of(42usize) != 21 {
+        return 11
+    }
+    return 0
+}
+
+

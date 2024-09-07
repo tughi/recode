@@ -1,0 +1,12 @@
+\ Expect:
+\ - output: ''
+
+struct Integer {
+    value: i32
+}
+
+let number: Integer = undefined
+
+func main() -> i32 {
+    return number.value
+}

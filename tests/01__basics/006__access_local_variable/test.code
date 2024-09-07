@@ -1,0 +1,6 @@
+\ read local variable
+
+func main() -> i32 {
+    let result = 42
+    return result - 42
+}

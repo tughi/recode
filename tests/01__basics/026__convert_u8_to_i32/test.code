@@ -1,0 +1,13 @@
+func main() -> i32 {
+    if cast(255) != 255i32 {
+        return 1
+    }
+    if cast(0) != 0 {
+        return 2
+    }
+    return 0
+}
+
+func cast(anon value: u8) -> i32 {
+    return value.as(i32)
+}

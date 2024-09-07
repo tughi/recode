@@ -1,0 +1,26 @@
+func main() -> i32 {
+    let t = echo(true)
+    let f = echo(false)
+    if t and f {
+        return 1
+    }
+    if f and t {
+        return 2
+    }
+    if t and t {
+        \ correct
+    } else {
+        return 3
+    }
+    if f and f {
+        return 4
+    }
+    if (t and t) and (f and f) {
+        return 5
+    }
+    return 0
+}
+
+func echo(anon v: bool) -> bool {
+    return v
+}

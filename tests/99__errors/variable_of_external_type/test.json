@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/99__errors/variable_of_external_type/test.code:3:11: Variable cannot have an opaque type"
+    ]
+}

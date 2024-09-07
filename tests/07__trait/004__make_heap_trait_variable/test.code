@@ -1,0 +1,37 @@
+trait Shape {
+    func area(self) -> i32
+}
+
+struct Square {
+    side: i32
+
+    func area(self) -> i32 {
+        return self.side * self.side
+    }
+}
+
+struct Circle {
+    radius: i32
+
+    func area(self) -> i32 {
+        return 312 * self.radius * self.radius / 100
+    }
+}
+
+func main() -> i32 {
+    let square = make @Square(side: 10)
+    let square_shape = make @Shape(square)
+    let circle = make @Circle(radius: 10)
+
+    if square_shape.area() != 100 {
+        return 1
+    }
+
+    if make @Shape(circle).area() != 312 {
+        return 2
+    }
+
+    return 0
+}
+
+external func malloc(anon size: u64) -> @Any

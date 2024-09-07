@@ -1,0 +1,14 @@
+\ Expect:
+\ - output: ''
+
+func main() -> i32 {
+    let test = func () -> bool {
+        return true
+    }
+
+    if not test() {
+        return 1
+    }
+
+    return 0
+}
