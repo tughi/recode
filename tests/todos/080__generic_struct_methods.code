@@ -1,0 +1,30 @@
+\ Expect:
+\ - output: ''
+
+struct Optional[T] {
+    has_data = false
+    data: T = undefined
+}
+
+func get_data[T](self: @Optional[T]) -> T {
+    return self.data
+}
+
+func set_data[T](self: @Optional[T], data: T) -> Nothing {
+    self.data = data
+    self.has_data = true
+}
+
+func main() -> i32 {
+    let integer = make Optional[i32]()
+    let pointer = make Optional[@Any]()
+
+    \ func set_data(self: @Optional[i32], data: i32) -> Nothing
+    integer.set_data(42)
+
+    \ func set_data(self: @Optional[@Any], data: @Any) -> Nothing
+    pointer.set_data(@integer) \ @Any accepts @Optional[i32]
+
+    \ func get_data(self: @Optional[i32]) -> i32
+    return integer.get_data() - 42
+}

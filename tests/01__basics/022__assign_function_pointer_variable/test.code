@@ -1,0 +1,9 @@
+func main() {
+    let function_pointer: func (value: i32) -> i32
+
+    function_pointer = echo
+}
+
+func echo(value: i32) -> i32 {
+    return value
+}

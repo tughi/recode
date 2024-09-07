@@ -1,0 +1,18 @@
+\ Expect:
+\ - output: ''
+
+struct Value {
+    get: func (self: @Value) -> i32
+}
+
+struct Zero: Value(
+    get = func (self: @Value) -> i32 {
+        return 0
+    }
+) {
+}
+
+func main() -> i32 {
+    let value: @Value = make @Zero()
+    return value.get()
+}

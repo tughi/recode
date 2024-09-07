@@ -1,0 +1,3 @@
+func main() {
+    let function_pointer: func (value: i32) -> i32
+}

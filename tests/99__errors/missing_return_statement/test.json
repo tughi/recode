@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/99__errors/missing_return_statement/test.code:1:6: Missing return statement"
+    ]
+}

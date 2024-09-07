@@ -1,0 +1,7 @@
+func main() -> i32 {
+    let result = 1
+    if true {
+        result = 0
+    }
+    return result
+}

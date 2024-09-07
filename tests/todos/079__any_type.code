@@ -1,0 +1,31 @@
+\ Expect:
+\ - output: ''
+
+struct Integer {
+    value: i32
+}
+
+struct One: Integer(value = 1) {
+}
+
+struct Two: Integer(value = 2) {
+}
+
+func equals(self: @Any, other: @Any) -> bool {
+    return false
+}
+
+func main() -> i32 {
+    let one = make One()
+    let two = make Two()
+
+    if one.equals(@two) {
+        return 1
+    }
+
+    return 0
+}
+
+func equals(self: @Integer, other: @Integer) -> bool {
+    return self.value == other.value
+}

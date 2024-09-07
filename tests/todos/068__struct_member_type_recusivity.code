@@ -1,0 +1,12 @@
+\ Expect:
+\ - error: 'tests/all/068.code:8:5: Type recursivity\n'
+
+struct Shape {
+    color: u32
+    points: i32
+
+    bounds: Rectangle
+}
+
+struct Rectangle: Shape(points = 4) {
+}

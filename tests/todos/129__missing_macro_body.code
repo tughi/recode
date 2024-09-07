@@ -1,0 +1,4 @@
+\ Expect:
+\ - error: 'tests/all/129.code:4:39: Missing macro body\n'
+
+macro repeat(times: i32, do: macro ())

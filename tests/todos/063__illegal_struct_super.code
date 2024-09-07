@@ -1,0 +1,5 @@
+\ Expect:
+\ - error: 'tests/all/063.code:4:14: Not a struct type\n'
+
+struct Test: i32 {
+}

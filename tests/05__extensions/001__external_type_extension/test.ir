@@ -1,0 +1,49 @@
+type FILE = opaque
+
+external $stdout: ptr<FILE>
+
+$main() {
+@1:
+  [ $stdout ]
+  %1: ptr<FILE> = load $stdout
+  [ %1 ]
+  %2: u8 = const '4'
+  [ %1 %2 ]
+  %3: ptr<FILE> = call $pFILE__write__char %1 %2
+  [ %3 ]
+  %4: u8 = const '2'
+  [ %3 %4 ]
+  %5: ptr<FILE> = call $pFILE__write__char %3 %4
+  [ %5 ]
+  %6: u8 = const '\n'
+  [ %5 %6 ]
+  %7: ptr<FILE> = call $pFILE__write__char %5 %6
+  [ ]
+  ret
+  [ ]
+}
+
+$pFILE__write__char(%self: ptr<FILE>, %char: u8): ptr<FILE> {
+@1:
+  [ $stdout %char %self ]
+  %self.ptr: ptr<ptr<FILE>> = alloc ptr<FILE>
+  [ %self.ptr $stdout %char %self ]
+  store %self.ptr %self
+  [ %self.ptr $stdout %char ]
+  %char.ptr: ptr<u8> = alloc u8
+  [ %self.ptr $stdout %char.ptr %char ]
+  store %char.ptr %char
+  [ %self.ptr $stdout %char.ptr ]
+  %char.1: u8 = load %char.ptr
+  [ %self.ptr %char.1 $stdout ]
+  %1: ptr<FILE> = load $stdout
+  [ %self.ptr %char.1 %1 ]
+  %2: i32 = call $fputc %char.1 %1
+  [ %self.ptr ]
+  %self.1: ptr<FILE> = load %self.ptr
+  [ %self.1 ]
+  ret %self.1
+  [ ]
+}
+
+$fputc(%c: u8, %stream: ptr<FILE>): i32

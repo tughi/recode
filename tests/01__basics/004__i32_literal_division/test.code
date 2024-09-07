@@ -1,0 +1,7 @@
+func main() -> i32 {
+    return forty_two() / 42 - 1
+}
+
+func forty_two() -> i32 {
+    return 42
+}

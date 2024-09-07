@@ -1,0 +1,3 @@
+func test() -> Nothing {
+    let value = undefined
+}

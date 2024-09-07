@@ -1,0 +1,23 @@
+\ Expect:
+\ - output: ''
+
+let font: Font
+
+struct Font {
+    height: i32
+    base_line: i32
+    glyphs: [Glyph; 256]
+}
+
+struct Glyph {
+    width: i32
+    mask: [[u8; 9]; 18]
+}
+
+func main() -> i32 {
+    let value = 9isize
+    if value != font.glyphs[0].mask[0].length {
+        return 1
+    }
+    return 0
+}

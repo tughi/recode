@@ -1,0 +1,21 @@
+\ Expect:
+\ - output: ''
+
+struct Task {
+    type: u8
+}
+
+func run(self: @Task) -> i32 {
+    return 0
+}
+
+struct Job {
+    task: Task
+}
+
+func main() -> i32 {
+    let job = make Job(
+        task = make Task(type = 42)
+    )
+    return run(@job.task)
+}

@@ -1,0 +1,47 @@
+\ Expect:
+\ - output: ''
+
+struct String_Values: Map[@String, i32] {
+}
+
+\ Map and Map[K, T] are different types
+struct Map {
+    keys: List[@String] = undefined
+    values: List[u64] = undefined
+}
+
+struct Map[K, V] {
+    keys: List[K]
+    values: List[V]
+}
+
+struct List[T] {
+    items: [T; ?]
+}
+
+struct String {
+    data: [u8; ?]
+    data_size: usize
+    length: usize
+}
+
+func main() -> i32 {
+    let map = make @Map()
+    let map = make Map[String, i32](
+        keys = undefined
+        values = undefined
+    )
+
+    let size = 1usize
+    let map = make @String_Values(
+        keys = make List[@String](items = malloc(size * 8).as([@String; ?]))
+        values = make List[i32](items = malloc(size * 4).as([i32; ?]))
+    )
+
+    map.keys.items[0] = "forty-two"
+    map.values.items[0] = 42
+
+    return 0
+}
+
+external func malloc(size: usize) -> @Any

@@ -1,0 +1,36 @@
+$main(): i32 {
+@1:
+  [ ]
+  %value.ptr: ptr<i32> = alloc i32
+  [ %value.ptr ]
+  %1: i32 = const 42
+  [ %value.ptr %1 ]
+  store %value.ptr %1
+  [ %value.ptr ]
+  %value.1: i32 = load %value.ptr
+  [ %value.ptr %value.1 ]
+  %2: i32 = const -1
+  [ %value.ptr %value.1 %2 ]
+  %3: i32 = mul %value.1 %2
+  [ %3 %value.ptr ]
+  %value.2: i32 = load %value.ptr
+  [ %3 %value.2 ]
+  %4: i32 = neg %value.2
+  [ %3 %4 ]
+  %5: bool = cmp_ne %3 %4
+  [ %5 ]
+  br %5 @2 @3
+  [ ]
+@2:
+  [ ]
+  %6: i32 = const 1
+  [ %6 ]
+  ret %6
+  [ ]
+@3:
+  [ ]
+  %7: i32 = const 0
+  [ %7 ]
+  ret %7
+  [ ]
+}

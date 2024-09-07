@@ -1,0 +1,9 @@
+func main() -> i32 {
+    let echo_pointer = echo
+
+    return echo_pointer(value: 42) - 42
+}
+
+func echo(value: i32) -> i32 {
+    return value
+}

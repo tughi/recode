@@ -1,0 +1,6 @@
+func main(anon argc: i32, anon argv: [[u8; ?]; ?]) -> i32 {
+    if argv[1][1] != '0' {
+        return 1
+    }
+    return 0
+}

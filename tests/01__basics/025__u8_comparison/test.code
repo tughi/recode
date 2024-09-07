@@ -1,0 +1,41 @@
+func main() -> i32 {
+    let min = 0u8
+    let max = 255u8
+
+    let errors = 8
+    if forty_two() == 42 {
+        errors = errors - 1
+    }
+    if forty_two() != 42 {
+        \ ignored
+    } else {
+        errors = errors - 1
+    }
+    if forty_two() < max {
+        errors = errors - 1
+    }
+    if forty_two() < min {
+        \ ignored
+    } else {
+        errors = errors - 1
+    }
+    if forty_two() <= 42 {
+        errors = errors - 1
+    }
+    if forty_two() < max {
+        errors = errors - 1
+    }
+    if forty_two() < min {
+        \ ignored
+    } else {
+        errors = errors - 1
+    }
+    if forty_two() >= 42 {
+        errors = errors - 1
+    }
+    return errors
+}
+
+func forty_two() -> u8 {
+    return 42
+}

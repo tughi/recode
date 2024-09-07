@@ -1,0 +1,6 @@
+{
+    "error": [
+        "tests/99__errors/trait_method_not_implemented/test.code:10:18: Dog does not implement all Animal trait methods",
+        "tests/99__errors/trait_method_not_implemented/test.code:5:10: Unimplemented trait method"
+    ]
+}

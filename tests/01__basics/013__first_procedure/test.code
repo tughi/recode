@@ -1,0 +1,14 @@
+external func exit(anon status: i32)
+
+func main() -> i32 {
+    finish()
+    return 1
+}
+
+func finish() {
+    nothing()
+    exit(0)
+}
+
+func nothing() {
+}

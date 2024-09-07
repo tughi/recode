@@ -1,0 +1,26 @@
+func main() -> i32 {
+    \ expected stack size: 0
+    return 0
+}
+
+func f1() -> Nothing {
+    \ expected stack size: 16
+    let v1 = 1
+}
+
+func f2() -> Nothing {
+    \ expected stack size: 16
+    let v1 = 1
+    let v2 = 2
+    let v3 = 3
+    let v4 = 4
+}
+
+func f3() -> Nothing {
+    \ expected stack size: 32
+    let v1 = 1
+    let v2 = 2
+    let v3 = 3
+    let v4 = 4
+    let v5 = 5
+}

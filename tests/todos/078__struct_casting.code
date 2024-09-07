@@ -1,0 +1,17 @@
+\ Expect:
+\ - output: ''
+
+struct Node {
+    kind: u8
+}
+
+struct Integer: Node(kind = 1) {
+    value: i32
+}
+
+func main() -> i32 {
+    let node: @Node = make @Integer(value = 42)
+    let node = node.as(@Integer)
+
+    return node.value - 42
+}

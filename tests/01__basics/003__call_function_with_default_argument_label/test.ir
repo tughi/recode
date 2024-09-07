@@ -1,0 +1,23 @@
+$main(): i32 {
+@1:
+  [ ]
+  %1: i32 = const 0
+  [ %1 ]
+  %2: i32 = call $echo__value %1
+  [ %2 ]
+  ret %2
+  [ ]
+}
+
+$echo__value(%value: i32): i32 {
+@1:
+  [ %value ]
+  %value.ptr: ptr<i32> = alloc i32
+  [ %value.ptr %value ]
+  store %value.ptr %value
+  [ %value.ptr ]
+  %value.1: i32 = load %value.ptr
+  [ %value.1 ]
+  ret %value.1
+  [ ]
+}

@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/99__errors/struct_member_without_type/test.code:2:5: Cannot infer type of struct member"
+    ]
+}

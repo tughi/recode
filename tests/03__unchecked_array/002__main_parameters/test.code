@@ -1,0 +1,2 @@
+func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
+}

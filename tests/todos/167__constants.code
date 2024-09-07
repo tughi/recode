@@ -1,0 +1,13 @@
+\ Expect:
+\ - output: ''
+
+define FORTY_TWO = 42
+define CONSTANT = FORTY_TWO
+
+func main() -> i32 {
+    define LOCAL_CONSTANT = 42
+
+    let value = LOCAL_CONSTANT
+
+    return value - CONSTANT
+}

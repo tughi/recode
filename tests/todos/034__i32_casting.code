@@ -1,0 +1,45 @@
+\ Expect:
+\ - output: ''
+
+func main() -> i32 {
+    let value = -2147483606i32
+
+    if value.as(i8) != 42 {
+        return 1
+    }
+
+    if value.as(i16) != 42 {
+        return 2
+    }
+
+    if value.as(i64) != -2147483606 {
+        return 3
+    }
+
+    if value.as(isize) != -2147483606 {
+        return 4
+    }
+
+    if value.as(u8) != 42 {
+        return 5
+    }
+
+    if value.as(u16) != 42 {
+        return 6
+    }
+
+    if value.as(u32) != 2147483690 {
+        return 7
+    }
+
+    \ TODO: Uncomment
+    \ if value.as(u64) != 18446744071562068010 {
+    \     return 8
+    \ }
+    \
+    \ if value.as(usize) != 18446744071562068010 {
+    \     return 9
+    \ }
+
+    return 0
+}

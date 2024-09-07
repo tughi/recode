@@ -1,0 +1,13 @@
+type Animal = struct {
+  self: ptr<Any>
+  legs: ptr<func (self: ptr<Any>) -> i32>
+}
+
+$main() {
+@1:
+  [ ]
+  %animal.ptr: ptr<Animal> = alloc Animal
+  [ ]
+  ret
+  [ ]
+}

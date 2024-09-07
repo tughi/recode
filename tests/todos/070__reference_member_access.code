@@ -1,0 +1,19 @@
+\ Expect:
+\ - error: 'tests/all/070.code:18:27: Literal has no value member\n'
+
+struct Token {
+    type: u8
+}
+
+struct Literal: Token {
+}
+
+struct Integer: Literal {
+    value: i32
+}
+
+let integer: Integer = undefined
+
+func main() -> i32 {
+    return @integer.super.value
+}

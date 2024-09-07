@@ -1,0 +1,10 @@
+func main() -> i32 {
+    return fibonacci(of: 12) - 144
+}
+
+func fibonacci(of n: i32) -> i32 {
+    if n <= 1 {
+        return n
+    }
+    return fibonacci(of: n - 1) + fibonacci(of: n - 2)
+}

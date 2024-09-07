@@ -1,0 +1,6 @@
+external func exit(anon status: i32)
+
+func main() -> i32 {
+    exit(0)
+    return 1
+}

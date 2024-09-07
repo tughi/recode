@@ -1,0 +1,19 @@
+\ Expect:
+\ - output: ''
+
+func pow(base: i32, exponent: u8) -> i32 {
+    let result = base
+    while exponent > 1 {
+        result = result * base
+        exponent = exponent - 1
+    }
+    return result
+}
+
+func main() -> i32 {
+    if pow(-2, 3u8) != -8 {
+        return 1
+    }
+
+    return 0
+}
