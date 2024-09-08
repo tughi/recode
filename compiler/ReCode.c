@@ -1,6 +1,7 @@
 /* Copyright (C) 2024 Stefan Selariu */
 
-#include "Generator.h"
+#include "File.h"
+#include "Scanner.h"
 
 void help_recode() {
     fprintf(stderr, "Available commands:\n");
@@ -20,13 +21,24 @@ Source *read_source_file(int32_t argc, char **argv) {
         exit(1);
     }
 
-    return create_source(file_path);
+    return Source__create(String__create_from(file_path));
 }
 
 void recode_code(int32_t argc, char **argv) {
-    Source *code_file = read_source_file(argc, argv);
+    Source *source = read_source_file(argc, argv);
 
-    fwrite(code_file->content, code_file->file_size, 1, stdout);
+    Scanner *scanner = Scanner__create(source);
+    while (true) {
+        Token *token = Scanner__peek_token(scanner, 0);
+        pWriter__write__location(stdout_writer, token->location);
+        pWriter__write__cstring(stdout_writer, ": ");
+        pWriter__write__token_kind(stdout_writer, token->kind);
+        pWriter__end_line(stdout_writer);
+        if (token->kind == TOKEN_KIND__END_OF_FILE) {
+            break;
+        }
+        Scanner__next_token(scanner);
+    }
 }
 
 void recode_module(int32_t argc, char **argv) {
@@ -34,6 +46,8 @@ void recode_module(int32_t argc, char **argv) {
 }
 
 int32_t main(int32_t argc, char **argv) {
+    File__init();
+
     if (argc == 1) {
         help_recode();
     } else if (strcmp(argv[1], "code") == 0) {

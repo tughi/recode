@@ -4,6 +4,7 @@
 #define __STRING_H__
 
 #include "Builtins.h"
+#include "Writer.h"
 
 typedef struct String {
     char *data;
@@ -11,12 +12,28 @@ typedef struct String {
     size_t length;
 } String;
 
-String *create_string();
-String *create_string_with_size(size_t data_size);
-String *create_string_from(char *data);
+String *String__create();
 
-void delete_string(String *string);
+String *String__create_empty(size_t data_size);
 
-String *string_append_char(String *string, char ch);
+String *String__create_from(char *data);
+
+void String__delete(String *self);
+
+String *String__append_char(String *self, char ch);
+
+String *String__append_cstring(String *self, char *s);
+
+String *String__append_int16_t(String *self, int16_t value);
+
+String *String__append_string(String *self, String *other);
+
+String *String__end_with_zero(String *self);
+
+bool String__equals_cstring(String *self, char *s);
+
+bool String__equals_string(String *self, String *other);
+
+Writer *pWriter__write__string(Writer *self, String *string);
 
 #endif

@@ -7,10 +7,13 @@
 
 typedef struct Source {
     char *content;
-    char *file_path;
-    int64_t file_size;
+    String *file_path;
+    size_t file_size;
+
+    struct Source *next;
+    struct Source *prev;
 } Source;
 
-Source *create_source(char *file_path);
+Source *Source__create(String *file_path);
 
 #endif
