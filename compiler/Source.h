@@ -6,10 +6,11 @@
 #include "String.h"
 
 typedef struct Source {
-    String *content;
-    char *path;
+    char *content;
+    char *file_path;
+    int64_t file_size;
 } Source;
 
-Source *Source__create(FILE *file, char *path);
+Source *create_source(char *file_path);
 
 #endif

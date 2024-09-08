@@ -2,42 +2,48 @@
 
 #include "Generator.h"
 
-int32_t main(int32_t argc, char **argv) {
-    /*
-    TODO: Change CLI to "compile" or "run" a file
-        - "compile" transpiles to C
-        - "run" build and runs the binary
-    */
+void help_recode() {
+    fprintf(stderr, "Available commands:\n");
+    fprintf(stderr, "   \033[1mcode\033[0m    compiles whole program\n");
+    fprintf(stderr, "   \033[1mmodule\033[0m  compiles one module\n");
+}
 
+Source *read_source_file(int32_t argc, char **argv) {
     if (argc < 3) {
-        fprintf(stderr, "Usage: %s SOURCE OUTPUT_FOLDER\n", argv[0]);
-        return 1;
+        fprintf(stderr, "Usage: recode %s <file>\n", argv[1]);
+        exit(1);
     }
 
-    char *source_file_path = argv[1];
-    FILE *source_file = fopen(source_file_path, "r");
-    if (source_file == NULL) {
-        fprintf(stderr, "Cannot open file: %s\n", source_file_path);
-        return 1;
+    char *file_path = argv[2];
+    if (strstr(file_path, ".code") == NULL) {
+        fprintf(stderr, "Expected a .code file\n");
+        exit(1);
     }
 
-    char *output_file_path = argv[2];
-    FILE *output_file;
-    if (strcmp(output_file_path, "-") == 0) {
-        output_file = stdout;
+    return create_source(file_path);
+}
+
+void recode_code(int32_t argc, char **argv) {
+    Source *code_file = read_source_file(argc, argv);
+
+    fwrite(code_file->content, code_file->file_size, 1, stdout);
+}
+
+void recode_module(int32_t argc, char **argv) {
+    fprintf(stderr, "Not implemented yet\n");
+}
+
+int32_t main(int32_t argc, char **argv) {
+    if (argc == 1) {
+        help_recode();
+    } else if (strcmp(argv[1], "code") == 0) {
+        recode_code(argc, argv);
+    } else if (strcmp(argv[1], "module") == 0) {
+        recode_module(argc, argv);
     } else {
-        output_file = fopen(output_file_path, "w");
-        if (output_file == NULL) {
-            fprintf(stderr, "Cannot open file: %s\n", output_file_path);
-            return 1;
-        }
+        fprintf(stderr, "Unknown command: %s\n\n", argv[1]);
+        help_recode();
     }
 
-    Source *source = Source__create(source_file, source_file_path);
-    Parsed_Source *parsed_source = parse(source);
-    Checked_Source *checked_source = check(parsed_source);
-    generate(checked_source);
-
-    fclose(source_file);
-    return fclose(output_file);
+    return 0;
 }
