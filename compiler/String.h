@@ -3,7 +3,7 @@
 #ifndef __STRING_H__
 #define __STRING_H__
 
-#include "Builtins.h"
+#include "Writer.h"
 
 typedef struct String {
     char *data;
@@ -15,8 +15,12 @@ String *create_string();
 String *create_string_with_size(size_t data_size);
 String *create_string_from(char *data);
 
-void delete_string(String *string);
+void pString__destroy(String *string);
 
-String *string_append_char(String *string, char ch);
+void pString__clear(String *string);
+
+String *pString__append__char(String *string, char c);
+
+Writer *pWriter__write__string(Writer *writer, String *string);
 
 #endif

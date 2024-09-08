@@ -10,7 +10,7 @@ Source *create_source(char *file_path) {
     }
 
     fseek(file, 0, SEEK_END);
-    int64_t file_size = ftell(file);
+    size_t file_size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
     char *content = malloc(file_size + 1);

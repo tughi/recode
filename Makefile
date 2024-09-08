@@ -14,10 +14,10 @@ $(BIN_FILE): $(OBJECT_FILES)
 	cc -g -o $@ $^
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
-	mkdir -p $(dir $@)
+	@mkdir -p $(dir $@)
 	cc -c -ansi -pedantic -Wno-declaration-after-statement -Werror=return-type -Werror=builtin-declaration-mismatch -MD -g -o $@ $<
 
 clean:
-	rm -rf $(BUILD_DIR)/*
+	rm -rf $(BUILD_DIR)
 
 -include $(OBJECT_FILES:.o=.d)

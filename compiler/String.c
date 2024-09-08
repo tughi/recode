@@ -3,7 +3,7 @@
 #include "String.h"
 
 String *create_string() {
-    return create_string_with_size(8);
+    return create_string_with_size(16);
 }
 
 String *create_string_with_size(size_t data_size) {
@@ -34,7 +34,29 @@ String *create_string_from(char *data) {
     return string;
 }
 
-void delete_string(String *string) {
+void pString__destroy(String *string) {
     free(string->data);
     free(string);
+}
+
+void pString__clear(String *string) {
+    string->length = 0;
+}
+
+String *pString__append__char(String *string, char c) {
+    if (string->length + 1 >= string->data_size) {
+        string->data_size = string->data_size + 16;
+        string->data = realloc(string->data, string->data_size);
+    }
+    string->data[string->length++] = c;
+    return string;
+}
+
+Writer *pWriter__write__string(Writer *writer, String *string) {
+    size_t index = 0;
+    while (index < string->length) {
+        writer->write_char(writer->object, string->data[index]);
+        index++;
+    }
+    return writer;
 }

@@ -9,7 +9,7 @@ Writer *create_writer(void *object, void (*write_char)(void *object, char c)) {
     return writer;
 }
 
-void delete_writer(Writer *writer) {
+void pWriter__destroy(Writer *writer) {
     free(writer);
 }
 
@@ -26,13 +26,10 @@ Writer *pWriter__write__cstring(Writer *writer, char *cstring) {
     return writer;
 }
 
-Writer *pWriter__write__string(Writer *writer, String *string) {
-    char *string_data = string->data;
-    while (*string_data) {
-        writer->write_char(writer->object, *string_data);
-        string_data++;
-    }
-    return writer;
+Writer *pWriter__write__u64(Writer *writer, uint64_t value) {
+    char buffer[21];
+    sprintf(buffer, "%lu", value);
+    return pWriter__write__cstring(writer, buffer);
 }
 
 Writer *pWriter__end_line(Writer *writer) {
