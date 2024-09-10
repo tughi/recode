@@ -3,11 +3,8 @@
 #ifndef __CHECKER_H__
 #define __CHECKER_H__
 
-#include "Parser.h"
-
-typedef struct Checked_Source {
-    void *statements;
-} Checked_Source;
+#include "Checked_Source.h"
+#include "Parsed_Source.h"
 
 Checked_Source *check(Parsed_Source *parsed_source);
 

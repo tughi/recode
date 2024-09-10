@@ -7,4 +7,9 @@
 
 Writer *create_file_writer(FILE *file);
 
+extern Writer *stdout_writer;
+extern Writer *stderr_writer;
+
+void init_file_module();
+
 #endif

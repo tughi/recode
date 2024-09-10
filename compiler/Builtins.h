@@ -1,4 +1,4 @@
-/* Copyright (C) 2024 Stefan Selariu */
+/* Copyright (C) 2023-2024 Stefan Selariu */
 
 #ifndef __BUILTINS_H__
 #define __BUILTINS_H__

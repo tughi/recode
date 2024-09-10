@@ -8,7 +8,7 @@ BIN_FILE = $(BUILD_DIR)/ReCode
 
 .PHONY: all
 all: $(BIN_FILE)
-	$(BIN_FILE) code tests/01__basics/001__first_function/test.code
+	$(BIN_FILE) code compiler/Generator.h
 
 $(BIN_FILE): $(OBJECT_FILES)
 	cc -g -o $@ $^

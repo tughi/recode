@@ -1,16 +1,19 @@
-/* Copyright (C) 2024 Stefan Selariu */
+/* Copyright (C) 2023-2024 Stefan Selariu */
 
 #ifndef __SOURCE_H__
 #define __SOURCE_H__
 
-#include "Builtins.h"
+#include "String.h"
 
 typedef struct Source {
     char *content;
-    char *file_path;
+    String *file_path;
     size_t file_size;
+
+    struct Source *next;
+    struct Source *prev;
 } Source;
 
-Source *create_source(char *file_path);
+Source *Source__create(String *file_path);
 
 #endif

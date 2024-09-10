@@ -1,8 +1,9 @@
 /* Copyright (C) 2024 Stefan Selariu */
 
+#include "Checker.h"
 #include "File.h"
 #include "Generator.h"
-#include "Tokenizer.h"
+#include "Parser.h"
 
 void help_recode() {
     fprintf(stderr, "Available commands:\n");
@@ -13,34 +14,26 @@ void help_recode() {
 Source *read_source_file(int32_t argc, char **argv) {
     if (argc < 3) {
         fprintf(stderr, "Usage: recode %s <file>\n", argv[1]);
-        exit(1);
+        abort();
     }
 
     char *file_path = argv[2];
+    /*
     if (strstr(file_path, ".code") == NULL) {
         fprintf(stderr, "Expected a .code file\n");
-        exit(1);
+        abort();
     }
+    */
 
-    return create_source(file_path);
+    return Source__create(String__create_from(file_path));
 }
 
 void recode_code(int32_t argc, char **argv) {
-    Source *code_file = read_source_file(argc, argv);
+    Source *source = read_source_file(argc, argv);
 
-    Writer *stdout_writer = create_file_writer(stdout);
-
-    Tokenizer *tokenizer = create_tokenizer(code_file);
-    Token *token;
-    while (token = pTokenizer__next(tokenizer)) {
-        pWriter__write__location(stdout_writer, token->location);
-        pWriter__write__cstring(stdout_writer, ": ");
-        pWriter__write__token_type(stdout_writer, token->type);
-        pWriter__end_line(stdout_writer);
-        if (token->type == TOKEN_END_OF_FILE) {
-            break;
-        }
-    }
+    Parsed_Source *parsed_source = parse(source);
+    Checked_Source *checked_source = check(parsed_source);
+    generate(stdout_writer, checked_source);
 }
 
 void recode_module(int32_t argc, char **argv) {
@@ -48,6 +41,8 @@ void recode_module(int32_t argc, char **argv) {
 }
 
 int32_t main(int32_t argc, char **argv) {
+    init_file_module();
+
     if (argc == 1) {
         help_recode();
     } else if (strcmp(argv[1], "code") == 0) {
