@@ -429,8 +429,25 @@ void Generator__generate_enum(Generator *self, Checked_Enum_Type *enum_type) {
 }
 
 void Generator__declare_function(Generator *self, Checked_Function_Symbol *function_symbol) {
-    pWriter__write__checked_type(self->writer, (Checked_Type *)function_symbol->function_type);
-    pWriter__write__cstring(self->writer, ";\n");
+    pWriter__write__checked_type(self->writer, function_symbol->function_type->return_type);
+    if (function_symbol->function_type->return_type->kind != CHECKED_TYPE_KIND__POINTER) {
+        pWriter__write__char(self->writer, ' ');
+    }
+    pWriter__write__string(self->writer, function_symbol->super.name);
+    pWriter__write__char(self->writer, '(');
+    Checked_Function_Parameter *parameter = function_symbol->function_type->first_parameter;
+    while (parameter != NULL) {
+        pWriter__write__checked_type(self->writer, parameter->type);
+        if (parameter->type->kind != CHECKED_TYPE_KIND__POINTER) {
+            pWriter__write__char(self->writer, ' ');
+        }
+        pWriter__write__string(self->writer, parameter->name);
+        parameter = parameter->next_parameter;
+        if (parameter != NULL) {
+            pWriter__write__cstring(self->writer, ", ");
+        }
+    }
+    pWriter__write__cstring(self->writer, ");\n");
 }
 
 void Generator__generate_function(Generator *self, Checked_Function_Symbol *function_symbol) {

@@ -291,7 +291,11 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     } else if (type->kind == CHECKED_TYPE_KIND__POINTER) {
         Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
         pWriter__write__checked_type(self, pointer_type->other_type);
-        pWriter__write__char(self, '*');
+        if (pointer_type->other_type->kind != CHECKED_TYPE_KIND__POINTER) {
+            pWriter__write__cstring(self, " *");
+        } else {
+            pWriter__write__char(self, '*');
+        }
     } else {
         Source_Location__error(type->location, String__create_from("Unsupported type"));
         abort();

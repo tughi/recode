@@ -2,6 +2,7 @@
 
 #include "Parser.h"
 #include "File.h"
+#include "Header_Parser.h"
 
 typedef struct Parser {
     Scanner *scanner;
@@ -908,7 +909,7 @@ void Parser__parse_statements(Parser *self, Parsed_Statements *statements) {
                         last_source->next = source;
                         source->prev = last_source;
 
-                        Parsed_Statement *statement = parse(source)->statements->first_statement;
+                        Parsed_Statement *statement = parse_header(source)->statements->first_statement;
                         while (statement != NULL) {
                             Parsed_Statements__append(statements, statement);
                             statement = statement->next_statement;
