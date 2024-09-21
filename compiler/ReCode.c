@@ -1,7 +1,7 @@
 /* Copyright (C) 2024 Stefan Selariu */
 
 #include "File.h"
-#include "Scanner.h"
+#include "Parser.h"
 
 void help_recode() {
     fprintf(stderr, "Available commands:\n");
@@ -26,19 +26,7 @@ Source *read_source_file(int32_t argc, char **argv) {
 
 void recode_code(int32_t argc, char **argv) {
     Source *source = read_source_file(argc, argv);
-
-    Scanner *scanner = Scanner__create(source);
-    while (true) {
-        Token *token = Scanner__peek_token(scanner, 0);
-        pWriter__write__location(stdout_writer, token->location);
-        pWriter__write__cstring(stdout_writer, ": ");
-        pWriter__write__token_kind(stdout_writer, token->kind);
-        pWriter__end_line(stdout_writer);
-        if (token->kind == TOKEN_KIND__END_OF_FILE) {
-            break;
-        }
-        Scanner__next_token(scanner);
-    }
+    Parsed_Source *parsed_source = parse(source);
 }
 
 void recode_module(int32_t argc, char **argv) {

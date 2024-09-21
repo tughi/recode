@@ -6,7 +6,7 @@ Source *Source__create(String *file_path) {
     FILE *file = fopen(file_path->data, "r");
     if (file == NULL) {
         fprintf(stderr, "Could not open file: %s\n", file_path->data);
-        abort();
+        panic();
     }
 
     fseek(file, 0, SEEK_END);
@@ -16,12 +16,12 @@ Source *Source__create(String *file_path) {
     char *content = malloc(file_size + 1);
     if (content == NULL) {
         fprintf(stderr, "Failed to read file: %s\n", file_path->data);
-        abort();
+        panic();
     }
 
     if (fread(content, 1, file_size, file) != file_size) {
         fprintf(stderr, "Failed to read file: %s\n", file_path->data);
-        abort();
+        panic();
     }
     content[file_size] = '\0'; /* simplifies EOF detection */
 
@@ -30,7 +30,7 @@ Source *Source__create(String *file_path) {
     Source *source = malloc(sizeof(Source));
     if (source == NULL) {
         fprintf(stderr, "Failed to create source: %s\n", file_path->data);
-        abort();
+        panic();
     }
 
     source->content = content;

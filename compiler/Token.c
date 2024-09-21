@@ -28,7 +28,7 @@ Writer *pWriter__write__token_kind(Writer *writer, enum Token_Kind token_kind) {
         return pWriter__write__cstring(writer, "TOKEN_KIND__STRING");
     default:
         fprintf(stderr, "Unknown token kind: %d\n", token_kind);
-        abort();
+        panic();
     }
 }
 
@@ -129,6 +129,14 @@ bool Token__is_keyword(Token *self, char *lexeme) {
     return self->kind == TOKEN_KIND__IDENTIFIER && String__equals_cstring(self->lexeme, lexeme);
 }
 
+bool Token__is_and(Token *self) {
+    return Token__is_keyword(self, "and");
+}
+
+bool Token__is_anon(Token *self) {
+    return Token__is_keyword(self, "anon");
+}
+
 bool Token__is_break(Token *self) {
     return Token__is_keyword(self, "break");
 }
@@ -145,16 +153,40 @@ bool Token__is_extern(Token *self) {
     return Token__is_keyword(self, "extern");
 }
 
+bool Token__is_external(Token *self) {
+    return Token__is_keyword(self, "external");
+}
+
 bool Token__is_false(Token *self) {
     return Token__is_keyword(self, "false");
+}
+
+bool Token__is_func(Token *self) {
+    return Token__is_keyword(self, "func");
 }
 
 bool Token__is_if(Token *self) {
     return Token__is_keyword(self, "if");
 }
 
+bool Token__is_let(Token *self) {
+    return Token__is_keyword(self, "let");
+}
+
+bool Token__is_loop(Token *self) {
+    return Token__is_keyword(self, "loop");
+}
+
+bool Token__is_not(Token *self) {
+    return Token__is_keyword(self, "not");
+}
+
 bool Token__is_null(Token *self) {
     return Token__is_keyword(self, "null");
+}
+
+bool Token__is_or(Token *self) {
+    return Token__is_keyword(self, "or");
 }
 
 bool Token__is_return(Token *self) {
@@ -171,6 +203,10 @@ bool Token__is_struct(Token *self) {
 
 bool Token__is_true(Token *self) {
     return Token__is_keyword(self, "true");
+}
+
+bool Token__is_type(Token *self) {
+    return Token__is_keyword(self, "type");
 }
 
 bool Token__is_typedef(Token *self) {
@@ -193,6 +229,10 @@ bool Token__is_asterisk(Token *self) {
     return Token__is_other(self, "*");
 }
 
+bool Token__is_at(Token *self) {
+    return Token__is_other(self, "@");
+}
+
 bool Token__is_closing_brace(Token *self) {
     return Token__is_other(self, "}");
 }
@@ -203,6 +243,10 @@ bool Token__is_closing_bracket(Token *self) {
 
 bool Token__is_closing_paren(Token *self) {
     return Token__is_other(self, ")");
+}
+
+bool Token__is_colon(Token *self) {
+    return Token__is_other(self, ":");
 }
 
 bool Token__is_comma(Token *self) {

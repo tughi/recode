@@ -3,11 +3,8 @@
 #ifndef __PARSER_H__
 #define __PARSER_H__
 
-#include "Source.h"
-
-typedef struct Parsed_Source {
-    void *statements;
-} Parsed_Source;
+#include "Parsed_Source.h"
+#include "Scanner.h"
 
 Parsed_Source *parse(Source *source);
 

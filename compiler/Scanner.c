@@ -23,7 +23,7 @@ char Scanner__next_char(Scanner *self) {
 Token *Scanner__scan_character_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
     if (Scanner__next_char(self) != '\'') {
         Source_Location__error(source_location, String__create_from("Unexpected char"));
-        abort();
+        panic();
     }
     String__append_char(token_lexeme, '\'');
 
@@ -77,10 +77,34 @@ Token *Scanner__scan_identifier_token(Scanner *self, Source_Location *source_loc
 
 Token *Scanner__scan_integer_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
     uint64_t value = 0;
-    while (char_is_digit(Scanner__peek_char(self))) {
-        char c = Scanner__next_char(self);
-        value = value * 10 + (c - '0');
-        String__append_char(token_lexeme, c);
+    if (Scanner__peek_char(self) == '0') {
+        String__append_char(token_lexeme, Scanner__next_char(self));
+        if (Scanner__peek_char(self) == 'x') {
+            String__append_char(token_lexeme, Scanner__next_char(self));
+            while (true) {
+                char c = Scanner__peek_char(self);
+                if (char_is_digit(c)) {
+                    value = value * 16 + (c - '0');
+                    String__append_char(token_lexeme, Scanner__next_char(self));
+                } else if (c >= 'A' && c <= 'F') {
+                    value = value * 16 + (c - 'A' + 10);
+                    String__append_char(token_lexeme, Scanner__next_char(self));
+                } else if (c >= 'a' && c <= 'f') {
+                    value = value * 16 + (c - 'a' + 10);
+                    String__append_char(token_lexeme, Scanner__next_char(self));
+                } else if (c == '_') {
+                    String__append_char(token_lexeme, Scanner__next_char(self));
+                } else {
+                    break;
+                }
+            }
+        }
+    } else {
+        while (char_is_digit(Scanner__peek_char(self))) {
+            char c = Scanner__next_char(self);
+            value = value * 10 + (c - '0');
+            String__append_char(token_lexeme, c);
+        }
     }
     return (Token *)Integer_Token__create(source_location, token_lexeme, value);
 }
@@ -97,7 +121,7 @@ Token *Scanner__scan_space_token(Scanner *self, Source_Location *source_location
 Token *Scanner__scan_string_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
     if (Scanner__next_char(self) != '"') {
         Source_Location__error(source_location, String__create_from("Unexpected char"));
-        abort();
+        panic();
     }
     String__append_char(token_lexeme, '"');
 
