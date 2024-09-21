@@ -1,14 +1,17 @@
 SRC_DIR = compiler
 BUILD_DIR = build/compiler
 
-C_FILES = $(shell find $(SRC_DIR) -name '*.c')
+C_FILES = $(shell find $(SRC_DIR) -name '*.c' | sort)
 
 OBJECT_FILES := $(patsubst $(SRC_DIR)/%.c,$(BUILD_DIR)/%.o,$(C_FILES))
 BIN_FILE = $(BUILD_DIR)/ReCode
 
 .PHONY: all
 all: $(BIN_FILE)
-	$(BIN_FILE) code tests/01__basics/001__first_function/test.code
+	@for test in $(shell find tests -name test.code | sort); do \
+		echo "$(BIN_FILE) code $$test"; \
+		$(BIN_FILE) code $$test || exit 1; \
+	done
 
 $(BIN_FILE): $(OBJECT_FILES)
 	cc -g -o $@ $^
