@@ -16,7 +16,6 @@ void Source_Location__error(Source_Location *self, String *message) {
     pWriter__write__string(stderr_writer, message);
     pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
     pWriter__end_line(stderr_writer);
-    panic();
 }
 
 void Source_Location__warning(Source_Location *self, String *message) {

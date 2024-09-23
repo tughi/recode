@@ -4,7 +4,7 @@ external stdout: @File
 
 external func fputc(anon char: u8, anon file: @File) -> i32
 
-func main() -> Nothing {
+func main() {
     fputc('4', stdout)
     fputc('2', stdout)
     fputc('\n', stdout)
