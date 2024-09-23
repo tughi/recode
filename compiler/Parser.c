@@ -254,7 +254,15 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
 
 /*
 access_expression
-    | primary_expression ( "." ( "@" | IDENTIFIER ) | "(" call_arguments ")" | "[" expression "]" )*
+    | primary_expression (
+        "." (
+            "@" |
+            "as" "(" type ")" |
+            IDENTIFIER
+        ) |
+        "(" call_arguments ")" |
+        "[" expression "]"
+    )*
 */
 Parsed_Expression *Parser__parse_access_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_primary_expression(self);
@@ -267,6 +275,15 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
             if (Parser__matches_one(self, Token__is_at)) {
                 Source_Location *location = Parser__consume_token(self, Token__is_at)->location;
                 expression = (Parsed_Expression *)Parsed_Dereference_Expression__create(location, expression);
+            } else if (Parser__matches_one(self, Token__is_as)) {
+                Source_Location *location = Parser__consume_token(self, Token__is_as)->location;
+                Parser__consume_space(self, 0);
+                Parser__consume_token(self, Token__is_opening_paren);
+                Parser__consume_space(self, 0);
+                Parsed_Type *type = Parser__parse_type(self);
+                Parser__consume_space(self, 0);
+                Parser__consume_token(self, Token__is_closing_paren);
+                expression = (Parsed_Expression *)Parsed_Cast_Expression__create(location, expression, type);
             } else {
                 Token *name = Parser__consume_token(self, Token__is_identifier);
                 expression = (Parsed_Expression *)Parsed_Member_Access_Expression__create(expression, name);

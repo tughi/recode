@@ -289,7 +289,7 @@ Parsed_Statement *Parsed_If_Statement__create(Source_Location *location, Parsed_
 }
 
 Parsed_Statement *Parsed_Loop_Statement__create(Source_Location *location, Parsed_Statement *body_statement) {
-    Parsed_Loop_Statement *statement = (Parsed_Loop_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__WHILE, sizeof(Parsed_Loop_Statement), location);
+    Parsed_Loop_Statement *statement = (Parsed_Loop_Statement *)Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__LOOP, sizeof(Parsed_Loop_Statement), location);
     statement->body_statement = body_statement;
     return (Parsed_Statement *)statement;
 }

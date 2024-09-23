@@ -99,6 +99,7 @@ bool Token__is_ampersand(Token *self);
 bool Token__is_and(Token *self);
 bool Token__is_anon(Token *self);
 bool Token__is_anything(Token *self);
+bool Token__is_as(Token *self);
 bool Token__is_asterisk(Token *self);
 bool Token__is_at(Token *self);
 bool Token__is_break(Token *self);

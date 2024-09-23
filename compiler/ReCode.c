@@ -1,5 +1,6 @@
 /* Copyright (C) 2024 Stefan Selariu */
 
+#include "Checker.h"
 #include "File.h"
 #include "Parser.h"
 
@@ -27,6 +28,7 @@ Source *read_source_file(int32_t argc, char **argv) {
 void recode_code(int32_t argc, char **argv) {
     Source *source = read_source_file(argc, argv);
     Parsed_Source *parsed_source = parse(source);
+    Checked_Source *checked_source = check(parsed_source);
 }
 
 void recode_module(int32_t argc, char **argv) {

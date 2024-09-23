@@ -137,6 +137,10 @@ bool Token__is_anon(Token *self) {
     return Token__is_keyword(self, "anon");
 }
 
+bool Token__is_as(Token *self) {
+    return Token__is_keyword(self, "as");
+}
+
 bool Token__is_break(Token *self) {
     return Token__is_keyword(self, "break");
 }
