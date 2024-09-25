@@ -8,10 +8,7 @@ BIN_FILE = $(BUILD_DIR)/ReCode
 
 .PHONY: all
 all: $(BIN_FILE)
-	@for test in $(shell find tests -name test.code | sort); do \
-		echo "$(BIN_FILE) code $$test"; \
-		$(BIN_FILE) code $$test || exit 1; \
-	done
+	@echo -n ""
 
 $(BIN_FILE): $(OBJECT_FILES)
 	cc -g -o $@ $^

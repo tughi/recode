@@ -1,5 +1,7 @@
-func main() {
+func main() -> i32 {
     let function_pointer = echo
+
+    return 0
 }
 
 func echo(value: i32) -> i32 {

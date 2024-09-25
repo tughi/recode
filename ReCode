@@ -110,8 +110,7 @@ def test(paths, save=False, stage=1):
         logger.info(f"Testing: {test_dir}")
 
         for compiler_command, test_file in [
-            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'irl'), f'{test_dir}/test.ir'),
-            ((f'build/stage{stage}/ReCode', '--file', f'{test_dir}/test.code', 'mc'), f'{test_dir}/test.s'),
+            ((f'build/stage{stage}/ReCode', 'code', f'{test_dir}/test.code'), f'{test_dir}/test.c'),
         ]:
             if os.path.exists(f'{test_dir}/test.json'):
                 test_data = json.loads(open(f'{test_dir}/test.json').read())
@@ -163,7 +162,7 @@ def test(paths, save=False, stage=1):
                         logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_result.stdout}{COLOR_RESET}")
                         exit(1)
 
-                if test_file.endswith('.s'):
+                if compiler_command[1] == 'code':
                     test_binary = f'build/{test_dir}/test'
                     if not os.path.exists(test_binary) or os.path.getmtime(test_file) > os.path.getmtime(test_binary):
                         assemble(test_file, test_binary, check=True)
@@ -224,8 +223,12 @@ def compute_diff(expected, actual):
 
 
 def build():
-    build_stage(0)
-    build_stage(1)
+    # build_stage(0)
+    # build_stage(1)
+
+    logger.info("Building stage1")
+
+    run(["make", "BUILD_DIR=build/stage1"])
 
 
 def stage():
