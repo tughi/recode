@@ -29,6 +29,8 @@ void recode_code(int32_t argc, char **argv) {
     Source *source = read_source_file(argc, argv);
     Parsed_Source *parsed_source = parse(source);
     Checked_Source *checked_source = check(parsed_source);
+    generate(stdout_writer, checked_source);
+    fflush(stdout);    
 }
 
 void recode_module(int32_t argc, char **argv) {
@@ -47,6 +49,7 @@ int32_t main(int32_t argc, char **argv) {
     } else {
         fprintf(stderr, "Unknown command: %s\n\n", argv[1]);
         help_recode();
+        return 1;
     }
 
     return 0;

@@ -18,6 +18,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__U32,
     CHECKED_TYPE_KIND__U64,
     CHECKED_TYPE_KIND__U8,
+    CHECKED_TYPE_KIND__USIZE,
     CHECKED_TYPE_KIND__VOID,
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */

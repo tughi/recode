@@ -266,6 +266,26 @@ void pWriter__write__checked_function_parameter(Writer *writer, Checked_Function
 void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     if (type == NULL) {
         pWriter__write__cstring(self, "null");
+    } else if (type->kind == CHECKED_TYPE_KIND__I8) {
+        pWriter__write__cstring(self, "int8_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__I16) {
+        pWriter__write__cstring(self, "int16_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__I32) {
+        pWriter__write__cstring(self, "int32_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__I64) {
+        pWriter__write__cstring(self, "int64_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__ISIZE) {
+        pWriter__write__cstring(self, "size_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__U8) {
+        pWriter__write__cstring(self, "uint8_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__U16) {
+        pWriter__write__cstring(self, "uint16_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__U32) {
+        pWriter__write__cstring(self, "uint32_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__U64) {
+        pWriter__write__cstring(self, "uint64_t");
+    } else if (type->kind == CHECKED_TYPE_KIND__USIZE) {
+        pWriter__write__cstring(self, "usize_t");
     } else if (type->kind <= CHECKED_TYPE_KIND__NULL) {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
         pWriter__write__string(self, named_type->name);
@@ -299,6 +319,9 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         } else {
             pWriter__write__char(self, '*');
         }
+    } else if (type->kind == CHECKED_TYPE_KIND__EXTERNAL) {
+        Checked_External_Type *external_type = (Checked_External_Type *)type;
+        pWriter__write__string(self, external_type->super.name);
     } else {
         Source_Location__error(type->location, String__create_from("Unsupported type"));
         panic();

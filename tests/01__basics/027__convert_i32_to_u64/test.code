@@ -2,10 +2,10 @@ func main() -> i32 {
     if cast(255) != 0x0000_0000_0000_00ff {
         return 1
     }
-    if cast(-1) != 0x0000_0000_ffff_ffff {
+    if cast(-1) != 0xffff_ffff_ffff_ffff {
         return 2
     }
-    if cast(-255) != 0x0000_0000_ffff_ff01 {
+    if cast(-255) != 0xffff_ffff_ffff_ff01 {
         return 3
     }
     return 0
