@@ -4,8 +4,9 @@ external stdout: @FILE
 
 external func fputc(anon ch: i32, anon file: @FILE) -> i32
 
-func main() {
-    fputc('4', stdout)
-    fputc('2', stdout)
-    fputc('\n', stdout)
+func main() -> i32 {
+    fputc(52, stdout) \\ '4'
+    fputc(50, stdout) \\ '2'
+    fputc(10, stdout) \\ '\n'
+    return 0
 }
