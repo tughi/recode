@@ -554,60 +554,6 @@ Parsed_Statement *Parser__parse_struct(Parser *self) {
     return (Parsed_Statement *)struct_statement;
 }
 
-/* enum */
-/*      | "typedef" "enum" IDENTIFIER "{" ( IDENTIFIER "," )* "}" IDENTIFIER ";" */
-Parsed_Statement *Parser__parse_enum(Parser *self) {
-    Source_Location *location = Parser__consume_token(self, Token__is_typedef)->location;
-    Parser__consume_space(self, 1);
-    Parser__consume_token(self, Token__is_enum);
-    Parser__consume_space(self, 1);
-    Token *local_name = Parser__consume_token(self, Token__is_identifier);
-    Parsed_Enum_Statement *enum_statement = Parsed_Enum_Statement__create(location, local_name);
-    Parser__consume_space(self, 1);
-    Parser__consume_token(self, Token__is_opening_brace);
-    Parser__consume_end_of_line(self);
-    self->current_identation = self->current_identation + 1;
-    Parsed_Enum_Member *last_member = NULL;
-    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
-        while (Parser__consume_empty_line(self)) {
-            /* ignored */
-        }
-        Parser__consume_space(self, self->current_identation * 4);
-        Token *name = Parser__consume_token(self, Token__is_identifier);
-        Parser__consume_space(self, 0);
-        Parsed_Enum_Member *member = Parsed_Enum_Member__create(name);
-        if (last_member == NULL) {
-            enum_statement->first_member = member;
-            last_member = member;
-        } else {
-            last_member->next_member = member;
-            last_member = member;
-        }
-        if (Parser__matches_one(self, Token__is_comma)) {
-            Parser__consume_token(self, Token__is_comma);
-            Parser__consume_end_of_line(self);
-        } else {
-            Parser__consume_end_of_line(self);
-            while (Parser__consume_empty_line(self)) {
-                /* ignored */
-            }
-            break;
-        }
-    }
-    self->current_identation = self->current_identation - 1;
-    Parser__consume_space(self, self->current_identation * 4);
-    Parser__consume_token(self, Token__is_closing_brace);
-    Parser__consume_space(self, 1);
-    Token *final_name = Parser__consume_token(self, Token__is_identifier);
-    if (!String__equals_string(final_name->lexeme, local_name->lexeme)) {
-        Token__error(final_name, String__append_string(String__create_from("Final enum name doesn't match the local name: "), local_name->lexeme));
-        panic();
-    }
-    Parser__consume_space(self, 0);
-    Parser__consume_token(self, Token__is_semicolon);
-    return (Parsed_Statement *)enum_statement;
-}
-
 /*
 external_type
     | "external" "type" IDENTIFIER
@@ -671,6 +617,7 @@ Parsed_Function_Parameter *Parser__parse_function_parameters(Parser *self) {
 /*
 type
     | "@" type
+    | "[" type ( ";" ( expression | "?" ) )? "]"
     | IDENTIFIER
     | func "(" function_parameters? ")" "->" type
 */
@@ -680,6 +627,30 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         Parser__consume_space(self, 0);
         Parsed_Type *type = Parser__parse_type(self);
         return Parsed_Pointer_Type__create(type);
+    }
+    if (Parser__matches_one(self, Token__is_opening_bracket)) {
+        Source_Location *location = Parser__consume_token(self, Token__is_opening_bracket)->location;
+        Parser__consume_space(self, 0);
+        Parsed_Type *item_type = Parser__parse_type(self);
+        Parser__consume_space(self, 0);
+        if (Parser__matches_one(self, Token__is_semicolon)) {
+            Parser__consume_token(self, Token__is_semicolon);
+            Parser__consume_space(self, 1);
+            if (Parser__matches_one(self, Token__is_question_mark)) {
+                Parser__consume_token(self, Token__is_question_mark);
+                Parser__consume_space(self, 0);
+                Parser__consume_token(self, Token__is_closing_bracket);
+                return (Parsed_Type *)Parsed_Array_Type__create(location, item_type, false, NULL);
+            } else {
+                Parsed_Expression *size_expression = Parser__parse_expression(self);
+                Parser__consume_space(self, 0);
+                Parser__consume_token(self, Token__is_closing_bracket);
+                return (Parsed_Type *)Parsed_Array_Type__create(location, item_type, true, size_expression);
+            }
+        }
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_closing_bracket);
+        return (Parsed_Type *)Parsed_Array_Type__create(location, item_type, true, NULL);
     }
     if (Parser__matches_one(self, Token__is_func)) {
         Source_Location *location = Parser__consume_token(self, Token__is_func)->location;

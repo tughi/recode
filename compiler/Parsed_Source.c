@@ -9,6 +9,14 @@ Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, S
     return type;
 }
 
+Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_Type *item_type, bool is_checked, Parsed_Expression *size_expression) {
+    Parsed_Array_Type *type = (Parsed_Array_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__ARRAY, sizeof(Parsed_Array_Type), location);
+    type->item_type = item_type;
+    type->is_checked = is_checked;
+    type->size_expression = size_expression;
+    return type;
+}
+
 Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *name, Parsed_Type *type) {
     Parsed_Function_Parameter *parameter = (Parsed_Function_Parameter *)malloc(sizeof(Parsed_Function_Parameter));
     parameter->name = name;
@@ -32,12 +40,6 @@ Parsed_Type *Parsed_Named_Type__create(Token *name) {
 
 Parsed_Type *Parsed_Pointer_Type__create(Parsed_Type *other_type) {
     Parsed_Pointer_Type *type = (Parsed_Pointer_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__POINTER, sizeof(Parsed_Pointer_Type), other_type->location);
-    type->other_type = other_type;
-    return (Parsed_Type *)type;
-}
-
-Parsed_Type *Parsed_Struct_Type__create(Source_Location *location, Parsed_Type *other_type) {
-    Parsed_Struct_Type *type = (Parsed_Struct_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__STRUCT, sizeof(Parsed_Struct_Type), location);
     type->other_type = other_type;
     return (Parsed_Type *)type;
 }
@@ -246,19 +248,6 @@ Parsed_Block_Statement *Parsed_Block_Statement__create(Source_Location *location
 
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location *location) {
     return Parsed_Statement__create_kind(PARSED_STATEMENT_KIND__BREAK, sizeof(Parsed_Break_Statement), location);
-}
-
-Parsed_Enum_Member *Parsed_Enum_Member__create(Token *name) {
-    Parsed_Enum_Member *member = (Parsed_Enum_Member *)malloc(sizeof(Parsed_Enum_Member));
-    member->name = name;
-    member->next_member = NULL;
-    return member;
-}
-
-Parsed_Enum_Statement *Parsed_Enum_Statement__create(Source_Location *location, Token *name) {
-    Parsed_Enum_Statement *statement = (Parsed_Enum_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__ENUM, sizeof(Parsed_Enum_Statement), location, name);
-    statement->first_member = NULL;
-    return statement;
 }
 
 Parsed_Expression_Statement *Parsed_Expression_Statement__create(Parsed_Expression *expression) {

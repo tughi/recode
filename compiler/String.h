@@ -14,6 +14,8 @@ typedef struct String {
 
 String *String__create();
 
+String *String__create_copy(String *other);
+
 String *String__create_empty(size_t data_size);
 
 String *String__create_from(char *data);

@@ -5,57 +5,6 @@
 
 #include "Token.h"
 
-typedef enum Parsed_Type_Kind {
-    PARSED_TYPE_KIND__FUNCTION,
-    PARSED_TYPE_KIND__NAMED,
-    PARSED_TYPE_KIND__POINTER,
-    PARSED_TYPE_KIND__STRUCT
-} Parsed_Type_Kind;
-
-typedef struct Parsed_Type {
-    Parsed_Type_Kind kind;
-    Source_Location *location;
-} Parsed_Type;
-
-Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, Source_Location *location);
-
-typedef struct Parsed_Function_Parameter {
-    Token *name;
-    Parsed_Type *type;
-    struct Parsed_Function_Parameter *next_parameter;
-} Parsed_Function_Parameter;
-
-Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *name, Parsed_Type *type);
-
-typedef struct Parsed_Function_Type {
-    Parsed_Type super;
-    Parsed_Function_Parameter *first_parameter;
-    Parsed_Type *return_type;
-} Parsed_Function_Type;
-
-Parsed_Type *Parsed_Function_Type__create(Source_Location *location, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type);
-
-typedef struct Parsed_Named_Type {
-    Parsed_Type super;
-    String *name;
-} Parsed_Named_Type;
-
-Parsed_Type *Parsed_Named_Type__create(Token *name);
-
-typedef struct Parsed_Pointer_Type {
-    Parsed_Type super;
-    Parsed_Type *other_type;
-} Parsed_Pointer_Type;
-
-Parsed_Type *Parsed_Pointer_Type__create(Parsed_Type *other_type);
-
-typedef struct Parsed_Struct_Type {
-    Parsed_Type super;
-    Parsed_Type *other_type;
-} Parsed_Struct_Type;
-
-Parsed_Type *Parsed_Struct_Type__create(Source_Location *location, Parsed_Type *other_type);
-
 typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__ADD,
     PARSED_EXPRESSION_KIND__ADDRESS_OF,
@@ -92,6 +41,59 @@ typedef struct Parsed_Expression {
     Parsed_Expression_Kind kind;
     Source_Location *location;
 } Parsed_Expression;
+
+typedef enum Parsed_Type_Kind {
+    PARSED_TYPE_KIND__ARRAY,
+    PARSED_TYPE_KIND__FUNCTION,
+    PARSED_TYPE_KIND__NAMED,
+    PARSED_TYPE_KIND__POINTER
+} Parsed_Type_Kind;
+
+typedef struct Parsed_Type {
+    Parsed_Type_Kind kind;
+    Source_Location *location;
+} Parsed_Type;
+
+Parsed_Type *Parsed_Type__create_kind(Parsed_Type_Kind kind, size_t kind_size, Source_Location *location);
+
+typedef struct Parsed_Array_Type {
+    Parsed_Type super;
+    Parsed_Type *item_type;
+    bool is_checked;
+    Parsed_Expression *size_expression;
+} Parsed_Array_Type;
+
+Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_Type *item_type, bool is_checked, Parsed_Expression *size_expression);
+
+typedef struct Parsed_Function_Parameter {
+    Token *name;
+    Parsed_Type *type;
+    struct Parsed_Function_Parameter *next_parameter;
+} Parsed_Function_Parameter;
+
+Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *name, Parsed_Type *type);
+
+typedef struct Parsed_Function_Type {
+    Parsed_Type super;
+    Parsed_Function_Parameter *first_parameter;
+    Parsed_Type *return_type;
+} Parsed_Function_Type;
+
+Parsed_Type *Parsed_Function_Type__create(Source_Location *location, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type);
+
+typedef struct Parsed_Named_Type {
+    Parsed_Type super;
+    String *name;
+} Parsed_Named_Type;
+
+Parsed_Type *Parsed_Named_Type__create(Token *name);
+
+typedef struct Parsed_Pointer_Type {
+    Parsed_Type super;
+    Parsed_Type *other_type;
+} Parsed_Pointer_Type;
+
+Parsed_Type *Parsed_Pointer_Type__create(Parsed_Type *other_type);
 
 Parsed_Expression *Parsed_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location *location);
 
@@ -317,7 +319,6 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__ASSIGNMENT,
     PARSED_STATEMENT_KIND__BLOCK,
     PARSED_STATEMENT_KIND__BREAK,
-    PARSED_STATEMENT_KIND__ENUM,
     PARSED_STATEMENT_KIND__EXPRESSION,
     PARSED_STATEMENT_KIND__EXTERNAL_TYPE,
     PARSED_STATEMENT_KIND__FUNCTION,
@@ -374,20 +375,6 @@ typedef struct Parsed_Break_Statement {
 } Parsed_Break_Statement;
 
 Parsed_Statement *Parsed_Break_Statement__create(Source_Location *location);
-
-typedef struct Parsed_Enum_Member {
-    Token *name;
-    struct Parsed_Enum_Member *next_member;
-} Parsed_Enum_Member;
-
-Parsed_Enum_Member *Parsed_Enum_Member__create(Token *name);
-
-typedef struct Parsed_Enum_Statement {
-    Parsed_Named_Statement super;
-    Parsed_Enum_Member *first_member;
-} Parsed_Enum_Statement;
-
-Parsed_Enum_Statement *Parsed_Enum_Statement__create(Source_Location *location, Token *name);
 
 typedef struct Parsed_Expression_Statement {
     Parsed_Statement super;

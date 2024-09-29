@@ -1,6 +1,7 @@
 /* Copyright (C) 2024 Stefan Selariu */
 
 #include "Checked_Source.h"
+#include "File.h"
 
 Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location) {
     Checked_Type *type = (Checked_Type *)malloc(kind_size);
@@ -10,85 +11,36 @@ Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size
     return type;
 }
 
-void Checked_Type__expect_same_type(Checked_Type *self, Checked_Type *other_type, Source_Location *location) {
-    if (self->kind == CHECKED_TYPE_KIND__POINTER && other_type->kind == CHECKED_TYPE_KIND__NULL) {
-        return;
-    }
-    if (!Checked_Type__equals(self, other_type)) {
-        String *message = String__create_from("Unexpected type. Got \"");
-        String__append_checked_type(message, other_type);
-        String__append_cstring(message, "\" instead of \"");
-        String__append_checked_type(message, self);
-        String__append_char(message, '"');
-        Source_Location__error(location, message);
-        panic();
+bool Checked_Type__is_numeric_type(Checked_Type *self) {
+    switch (self->kind) {
+    case CHECKED_TYPE_KIND__I16:
+    case CHECKED_TYPE_KIND__I32:
+    case CHECKED_TYPE_KIND__I64:
+    case CHECKED_TYPE_KIND__I8:
+    case CHECKED_TYPE_KIND__ISIZE:
+    case CHECKED_TYPE_KIND__U16:
+    case CHECKED_TYPE_KIND__U32:
+    case CHECKED_TYPE_KIND__U64:
+    case CHECKED_TYPE_KIND__U8:
+    case CHECKED_TYPE_KIND__USIZE:
+        return true;
+    default:
+        return false;
     }
 }
 
-bool Checked_Type__is_scalar_type(Checked_Type *self) {
-    if (self->kind == CHECKED_TYPE_KIND__I16) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__I32) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__I64) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__I8) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__ISIZE) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__U16) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__U32) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__U64) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__U8) {
-        return true;
-    } else if (self->kind == CHECKED_TYPE_KIND__ENUM) {
-        return true;
-    }
-    return false;
-}
-
-void Checked_Type__expect_scalar_type(Checked_Type *self, Source_Location *location) {
-    if (!Checked_Type__is_scalar_type(self)) {
-        String *message = String__create_from("Type \"");
-        String__append_checked_type(message, self);
-        String__append_cstring(message, "\" is not a scalar type");
-        Source_Location__error(location, message);
-        panic();
-    }
+Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checked_Type *item_type, bool is_checked, Checked_Expression *size_expression) {
+    Checked_Array_Type *type = (Checked_Array_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__ARRAY, sizeof(Checked_Array_Type), location);
+    type->item_type = item_type;
+    type->is_checked = is_checked;
+    type->size_expression = size_expression;
+    return type;
 }
 
 Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location, String *name) {
     Checked_Named_Type *type = (Checked_Named_Type *)Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
     return type;
-}
-
-Checked_Enum_Member *Checked_Enum_Member__create(Source_Location *location, String *name) {
-    Checked_Enum_Member *member = (Checked_Enum_Member *)malloc(sizeof(Checked_Enum_Member));
-    member->location = location;
-    member->name = name;
-    member->next_member = NULL;
-    return member;
-}
-
-Checked_Enum_Type *Checked_Enum_Type__create(Source_Location *location, String *name) {
-    Checked_Enum_Type *type = (Checked_Enum_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__ENUM, sizeof(Checked_Enum_Type), location, name);
-    type->first_member = NULL;
-    return type;
-}
-
-Checked_Enum_Member *Checked_Enum_Type__find_member(Checked_Enum_Type *self, String *name) {
-    Checked_Enum_Member *member = self->first_member;
-    while (member != NULL) {
-        if (String__equals_string(name, member->name)) {
-            break;
-        }
-        member = member->next_member;
-    }
-    return member;
 }
 
 Checked_External_Type *Checked_External_Type__create(Source_Location *location, String *name) {
@@ -225,10 +177,6 @@ String *String__append_checked_type(String *self, Checked_Type *type) {
             }
         }
         String__append_char(self, ')');
-    } else if (type->kind == CHECKED_TYPE_KIND__ENUM) {
-        Checked_Enum_Type *enum_type = (Checked_Enum_Type *)type;
-        String__append_cstring(self, "enum ");
-        String__append_string(self, enum_type->super.name);
     } else if (type->kind == CHECKED_TYPE_KIND__POINTER) {
         Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
         String__append_checked_type(self, pointer_type->other_type);
@@ -264,66 +212,41 @@ void pWriter__write__checked_function_parameter(Writer *writer, Checked_Function
 }
 
 void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
-    if (type == NULL) {
-        pWriter__write__cstring(self, "null");
-    } else if (type->kind == CHECKED_TYPE_KIND__I8) {
-        pWriter__write__cstring(self, "int8_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__I16) {
-        pWriter__write__cstring(self, "int16_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__I32) {
-        pWriter__write__cstring(self, "int32_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__I64) {
-        pWriter__write__cstring(self, "int64_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__ISIZE) {
-        pWriter__write__cstring(self, "size_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__U8) {
-        pWriter__write__cstring(self, "uint8_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__U16) {
-        pWriter__write__cstring(self, "uint16_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__U32) {
-        pWriter__write__cstring(self, "uint32_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__U64) {
-        pWriter__write__cstring(self, "uint64_t");
-    } else if (type->kind == CHECKED_TYPE_KIND__USIZE) {
-        pWriter__write__cstring(self, "usize_t");
-    } else if (type->kind <= CHECKED_TYPE_KIND__NULL) {
+    switch (type->kind) {
+    case CHECKED_TYPE_KIND__BOOL:
+    case CHECKED_TYPE_KIND__I16:
+    case CHECKED_TYPE_KIND__I32:
+    case CHECKED_TYPE_KIND__I64:
+    case CHECKED_TYPE_KIND__I8:
+    case CHECKED_TYPE_KIND__ISIZE:
+    case CHECKED_TYPE_KIND__U16:
+    case CHECKED_TYPE_KIND__U32:
+    case CHECKED_TYPE_KIND__U64:
+    case CHECKED_TYPE_KIND__U8:
+    case CHECKED_TYPE_KIND__USIZE:
+    case CHECKED_TYPE_KIND__ANY: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
         pWriter__write__string(self, named_type->name);
-    } else if (type->kind == CHECKED_TYPE_KIND__STRUCT) {
-        Checked_Struct_Type *struct_type = (Checked_Struct_Type *)type;
-        pWriter__write__cstring(self, "struct ");
-        pWriter__write__string(self, struct_type->super.name);
-    } else if (type->kind == CHECKED_TYPE_KIND__FUNCTION) {
-        Checked_Function_Type *function_type = (Checked_Function_Type *)type;
-        pWriter__write__checked_type(self, function_type->return_type);
-        pWriter__write__char(self, ' ');
-        pWriter__write__char(self, '(');
-        Checked_Function_Parameter *function_parameter = function_type->first_parameter;
-        while (function_parameter != NULL) {
-            pWriter__write__checked_function_parameter(self, function_parameter);
-            function_parameter = function_parameter->next_parameter;
-            if (function_parameter != NULL) {
-                pWriter__write__cstring(self, ", ");
-            }
-        }
-        pWriter__write__char(self, ')');
-    } else if (type->kind == CHECKED_TYPE_KIND__ENUM) {
-        Checked_Enum_Type *enum_type = (Checked_Enum_Type *)type;
-        pWriter__write__cstring(self, "enum ");
-        pWriter__write__string(self, enum_type->super.name);
-    } else if (type->kind == CHECKED_TYPE_KIND__POINTER) {
-        Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
-        pWriter__write__checked_type(self, pointer_type->other_type);
-        if (pointer_type->other_type->kind != CHECKED_TYPE_KIND__POINTER) {
-            pWriter__write__cstring(self, " *");
+        break;
+    }
+    case CHECKED_TYPE_KIND__ARRAY: {
+        Checked_Array_Type *array_type = (Checked_Array_Type *)type;
+        pWriter__write__char(self, '[');
+        pWriter__write__checked_type(self, array_type->item_type);
+        if (array_type->is_checked) {
+            panic();
         } else {
-            pWriter__write__char(self, '*');
+            pWriter__write__cstring(self, "; ?]");
         }
-    } else if (type->kind == CHECKED_TYPE_KIND__EXTERNAL) {
-        Checked_External_Type *external_type = (Checked_External_Type *)type;
-        pWriter__write__string(self, external_type->super.name);
-    } else {
-        Source_Location__error(type->location, String__create_from("Unsupported type"));
+        break;
+    }
+    case CHECKED_TYPE_KIND__POINTER: {
+        Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
+        pWriter__write__char(self, '@');
+        pWriter__write__checked_type(self, pointer_type->other_type);
+        break;
+    }
+    default:
         panic();
     }
 }

@@ -49,6 +49,12 @@ size_t cstring_length(char *s) {
     return length;
 }
 
+String *String__create_copy(String *other) {
+    String *string = String__create_empty(other->length + 1);
+    String__append_string(string, other);
+    return string;
+}
+
 String *String__create_from(char *data) {
     size_t string_length = cstring_length(data);
     String *string = String__create_empty(string_length + 1);

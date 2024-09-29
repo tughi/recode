@@ -1,6 +1,7 @@
 {
-    "error": [
-        "tests/01__basics/019__external_type/test.code:8:11: Unexpected type. Got \"u8\" instead of \"i32\"",
-        "Panic at compiler/Checked_Source.c:24"
-    ]
+    "result": {
+        "stdout": [
+            "42"
+        ]
+    }
 }

@@ -30,7 +30,7 @@ void recode_code(int32_t argc, char **argv) {
     Parsed_Source *parsed_source = parse(source);
     Checked_Source *checked_source = check(parsed_source);
     generate(stdout_writer, checked_source);
-    fflush(stdout);    
+    fflush(stdout);
 }
 
 void recode_module(int32_t argc, char **argv) {

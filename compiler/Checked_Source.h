@@ -19,11 +19,11 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__U64,
     CHECKED_TYPE_KIND__U8,
     CHECKED_TYPE_KIND__USIZE,
-    CHECKED_TYPE_KIND__VOID,
+    CHECKED_TYPE_KIND__ANY,
     CHECKED_TYPE_KIND__NOTHING, /* Pseudo type */
     CHECKED_TYPE_KIND__NULL,    /* Pseudo type */
     /* Defined */
-    CHECKED_TYPE_KIND__ENUM,
+    CHECKED_TYPE_KIND__ARRAY,
     CHECKED_TYPE_KIND__EXTERNAL,
     CHECKED_TYPE_KIND__FUNCTION,
     CHECKED_TYPE_KIND__STRUCT,
@@ -39,11 +39,54 @@ typedef struct Checked_Type {
 
 Checked_Type *Checked_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location);
 
-void Checked_Type__expect_same_type(Checked_Type *self, Checked_Type *other_type, Source_Location *location);
+bool Checked_Type__is_numeric_type(Checked_Type *self);
 
-bool Checked_Type__is_scalar_type(Checked_Type *self);
+typedef enum Checked_Expression_Kind {
+    CHECKED_EXPRESSION_KIND__ADD,
+    CHECKED_EXPRESSION_KIND__ADDRESS_OF,
+    CHECKED_EXPRESSION_KIND__ARRAY_ACCESS,
+    CHECKED_EXPRESSION_KIND__BOOL,
+    CHECKED_EXPRESSION_KIND__CALL,
+    CHECKED_EXPRESSION_KIND__CAST,
+    CHECKED_EXPRESSION_KIND__CHARACTER,
+    CHECKED_EXPRESSION_KIND__DEREFERENCE,
+    CHECKED_EXPRESSION_KIND__DIVIDE,
+    CHECKED_EXPRESSION_KIND__EQUALS,
+    CHECKED_EXPRESSION_KIND__GREATER,
+    CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS,
+    CHECKED_EXPRESSION_KIND__GROUP,
+    CHECKED_EXPRESSION_KIND__INTEGER,
+    CHECKED_EXPRESSION_KIND__LESS,
+    CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS,
+    CHECKED_EXPRESSION_KIND__LOGIC_AND,
+    CHECKED_EXPRESSION_KIND__LOGIC_OR,
+    CHECKED_EXPRESSION_KIND__MEMBER_ACCESS,
+    CHECKED_EXPRESSION_KIND__MINUS,
+    CHECKED_EXPRESSION_KIND__MODULO,
+    CHECKED_EXPRESSION_KIND__MULTIPLY,
+    CHECKED_EXPRESSION_KIND__NOT,
+    CHECKED_EXPRESSION_KIND__NOT_EQUALS,
+    CHECKED_EXPRESSION_KIND__NULL,
+    CHECKED_EXPRESSION_KIND__SIZEOF,
+    CHECKED_EXPRESSION_KIND__STRING,
+    CHECKED_EXPRESSION_KIND__SUBSTRACT,
+    CHECKED_EXPRESSION_KIND__SYMBOL
+} Checked_Expression_Kind;
 
-void Checked_Type__expect_scalar_type(Checked_Type *self, Source_Location *location);
+typedef struct Checked_Expression {
+    Checked_Expression_Kind kind;
+    Source_Location *location;
+    Checked_Type *type;
+} Checked_Expression;
+
+typedef struct Checked_Array_Type {
+    Checked_Type super;
+    Checked_Type *item_type;
+    bool is_checked;
+    Checked_Expression *size_expression;
+} Checked_Array_Type;
+
+Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checked_Type *item_type, bool is_checked, Checked_Expression *size_expression);
 
 typedef struct Checked_Named_Type {
     Checked_Type super;
@@ -51,23 +94,6 @@ typedef struct Checked_Named_Type {
 } Checked_Named_Type;
 
 Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location, String *name);
-
-typedef struct Checked_Enum_Member {
-    Source_Location *location;
-    String *name;
-    struct Checked_Enum_Member *next_member;
-} Checked_Enum_Member;
-
-Checked_Enum_Member *Checked_Enum_Member__create(Source_Location *location, String *name);
-
-typedef struct Checked_Enum_Type {
-    Checked_Named_Type super;
-    Checked_Enum_Member *first_member;
-} Checked_Enum_Type;
-
-Checked_Enum_Type *Checked_Enum_Type__create(Source_Location *location, String *name);
-
-Checked_Enum_Member *Checked_Enum_Type__find_member(Checked_Enum_Type *self, String *name);
 
 typedef struct Checked_External_Type {
     Checked_Named_Type super;
@@ -225,44 +251,6 @@ Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, Stri
 void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbol);
 
 Checked_Symbol *Checked_Symbols__find_symbol(Checked_Symbols *self, String *name);
-
-typedef enum Checked_Expression_Kind {
-    CHECKED_EXPRESSION_KIND__ADD,
-    CHECKED_EXPRESSION_KIND__ADDRESS_OF,
-    CHECKED_EXPRESSION_KIND__ARRAY_ACCESS,
-    CHECKED_EXPRESSION_KIND__BOOL,
-    CHECKED_EXPRESSION_KIND__CALL,
-    CHECKED_EXPRESSION_KIND__CAST,
-    CHECKED_EXPRESSION_KIND__CHARACTER,
-    CHECKED_EXPRESSION_KIND__DEREFERENCE,
-    CHECKED_EXPRESSION_KIND__DIVIDE,
-    CHECKED_EXPRESSION_KIND__EQUALS,
-    CHECKED_EXPRESSION_KIND__GREATER,
-    CHECKED_EXPRESSION_KIND__GREATER_OR_EQUALS,
-    CHECKED_EXPRESSION_KIND__GROUP,
-    CHECKED_EXPRESSION_KIND__INTEGER,
-    CHECKED_EXPRESSION_KIND__LESS,
-    CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS,
-    CHECKED_EXPRESSION_KIND__LOGIC_AND,
-    CHECKED_EXPRESSION_KIND__LOGIC_OR,
-    CHECKED_EXPRESSION_KIND__MEMBER_ACCESS,
-    CHECKED_EXPRESSION_KIND__MINUS,
-    CHECKED_EXPRESSION_KIND__MODULO,
-    CHECKED_EXPRESSION_KIND__MULTIPLY,
-    CHECKED_EXPRESSION_KIND__NOT,
-    CHECKED_EXPRESSION_KIND__NOT_EQUALS,
-    CHECKED_EXPRESSION_KIND__NULL,
-    CHECKED_EXPRESSION_KIND__SIZEOF,
-    CHECKED_EXPRESSION_KIND__STRING,
-    CHECKED_EXPRESSION_KIND__SUBSTRACT,
-    CHECKED_EXPRESSION_KIND__SYMBOL
-} Checked_Expression_Kind;
-
-typedef struct Checked_Expression {
-    Checked_Expression_Kind kind;
-    Source_Location *location;
-    Checked_Type *type;
-} Checked_Expression;
 
 Checked_Expression *Checked_Expression__create_kind(Checked_Expression_Kind kind, size_t kind_size, Source_Location *location, Checked_Type *type);
 

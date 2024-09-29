@@ -1,6 +1,7 @@
 /* Copyright (C) 2024 Stefan Selariu */
 
 #include "Generator.h"
+#include "CDECL.h"
 
 typedef struct Generator {
     Writer *writer;
@@ -59,7 +60,7 @@ void Generator__generate_call_expression(Generator *self, Checked_Call_Expressio
 
 void Generator__generate_cast_expression(Generator *self, Checked_Cast_Expression *expression) {
     pWriter__write__cstring(self->writer, "(");
-    pWriter__write__checked_type(self->writer, expression->super.type);
+    pWriter__write__cdecl(self->writer, NULL, expression->super.type);
     pWriter__write__cstring(self->writer, ") ");
     Generator__generate_expression(self, expression->other_expression);
 }
@@ -373,34 +374,7 @@ void Generator__generate_variable_statement(Generator *self, Checked_Variable_St
     if (statement->is_external) {
         pWriter__write__cstring(self->writer, "extern ");
     }
-    Checked_Type *variable_type = statement->variable->super.type;
-    if (variable_type->kind == CHECKED_TYPE_KIND__POINTER && ((Checked_Pointer_Type *)variable_type)->other_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
-        Checked_Function_Type *function_type = (Checked_Function_Type *)((Checked_Pointer_Type *)variable_type)->other_type;
-        pWriter__write__checked_type(self->writer, function_type->return_type);
-        if (function_type->return_type->kind != CHECKED_TYPE_KIND__POINTER) {
-            pWriter__write__char(self->writer, ' ');
-        }
-        pWriter__write__cstring(self->writer, "(*");
-        pWriter__write__string(self->writer, statement->variable->super.name);
-        pWriter__write__cstring(self->writer, ")(");
-        Checked_Function_Parameter *parameter = function_type->first_parameter;
-        while (parameter != NULL) {
-            pWriter__write__checked_type(self->writer, parameter->type);
-            if (parameter->type->kind != CHECKED_TYPE_KIND__POINTER) {
-                pWriter__write__char(self->writer, ' ');
-            }
-            pWriter__write__string(self->writer, parameter->name);
-            parameter = parameter->next_parameter;
-            if (parameter != NULL) {
-                pWriter__write__cstring(self->writer, ", ");
-            }
-        }
-        pWriter__write__char(self->writer, ')');
-    } else {
-        pWriter__write__checked_type(self->writer, statement->variable->super.type);
-        pWriter__write__char(self->writer, ' ');
-        pWriter__write__string(self->writer, statement->variable->super.name);
-    }
+    pWriter__write__cdecl(self->writer, statement->variable->super.name, statement->variable->super.type);
     if (statement->expression != NULL) {
         pWriter__write__cstring(self->writer, " = ");
         Generator__generate_expression(self, statement->expression);
@@ -459,47 +433,9 @@ void Generator__generate_statements(Generator *self, Checked_Statements *stateme
     self->identation = self->identation - 1;
 }
 
-void Generator__generate_enum(Generator *self, Checked_Enum_Type *enum_type) {
-    pWriter__write__checked_type(self->writer, (Checked_Type *)enum_type);
-    pWriter__write__cstring(self->writer, " {\n");
-    Checked_Enum_Member *enum_member = enum_type->first_member;
-    while (enum_member != NULL) {
-        pWriter__write__char(self->writer, '\t');
-        pWriter__write__string(self->writer, enum_member->name);
-        enum_member = enum_member->next_member;
-        if (enum_member != NULL) {
-            pWriter__write__cstring(self->writer, ",\n");
-        } else {
-            pWriter__write__char(self->writer, '\n');
-        }
-    }
-    pWriter__write__cstring(self->writer, "};\n");
-}
-
 void Generator__declare_function(Generator *self, Checked_Function_Symbol *function_symbol) {
-    if (function_symbol->function_type->return_type->kind == CHECKED_TYPE_KIND__NOTHING) {
-        pWriter__write__cstring(self->writer, "void ");
-    } else {
-        pWriter__write__checked_type(self->writer, function_symbol->function_type->return_type);
-        if (function_symbol->function_type->return_type->kind != CHECKED_TYPE_KIND__POINTER) {
-            pWriter__write__char(self->writer, ' ');
-        }
-    }
-    pWriter__write__string(self->writer, function_symbol->super.name);
-    pWriter__write__char(self->writer, '(');
-    Checked_Function_Parameter *parameter = function_symbol->function_type->first_parameter;
-    while (parameter != NULL) {
-        pWriter__write__checked_type(self->writer, parameter->type);
-        if (parameter->type->kind != CHECKED_TYPE_KIND__POINTER) {
-            pWriter__write__char(self->writer, ' ');
-        }
-        pWriter__write__string(self->writer, parameter->name);
-        parameter = parameter->next_parameter;
-        if (parameter != NULL) {
-            pWriter__write__cstring(self->writer, ", ");
-        }
-    }
-    pWriter__write__cstring(self->writer, ");\n");
+    pWriter__write__cdecl(self->writer, function_symbol->super.name, (Checked_Type *)function_symbol->function_type);
+    pWriter__write__cstring(self->writer, ";\n");
 }
 
 void Generator__generate_function(Generator *self, Checked_Function_Symbol *function_symbol) {
@@ -507,29 +443,8 @@ void Generator__generate_function(Generator *self, Checked_Function_Symbol *func
         return;
     }
     Generator__write_source_location(self, function_symbol->super.location);
-    if (function_symbol->function_type->return_type->kind == CHECKED_TYPE_KIND__NOTHING) {
-        pWriter__write__cstring(self->writer, "void ");
-    } else {
-        pWriter__write__checked_type(self->writer, function_symbol->function_type->return_type);
-        if (function_symbol->function_type->return_type->kind != CHECKED_TYPE_KIND__POINTER) {
-            pWriter__write__char(self->writer, ' ');
-        }
-    }
-    pWriter__write__string(self->writer, function_symbol->super.name);
-    pWriter__write__char(self->writer, '(');
-    Checked_Function_Parameter *parameter = function_symbol->function_type->first_parameter;
-    while (parameter != NULL) {
-        pWriter__write__checked_type(self->writer, parameter->type);
-        if (parameter->type->kind != CHECKED_TYPE_KIND__POINTER) {
-            pWriter__write__char(self->writer, ' ');
-        }
-        pWriter__write__string(self->writer, parameter->name);
-        parameter = parameter->next_parameter;
-        if (parameter != NULL) {
-            pWriter__write__cstring(self->writer, ", ");
-        }
-    }
-    pWriter__write__cstring(self->writer, ") {\n");
+    pWriter__write__cdecl(self->writer, function_symbol->super.name, (Checked_Type *)function_symbol->function_type);
+    pWriter__write__cstring(self->writer, " {\n");
     Generator__generate_statements(self, function_symbol->checked_statements);
     pWriter__write__cstring(self->writer, "}\n\n");
 }
@@ -591,8 +506,6 @@ void generate(Writer *writer, Checked_Source *checked_source) {
             Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
             if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
                 Generator__declare_struct(&generator, (Checked_Struct_Type *)named_type);
-            } else if (named_type->super.kind == CHECKED_TYPE_KIND__ENUM) {
-                Generator__generate_enum(&generator, (Checked_Enum_Type *)named_type);
             } else if (named_type->super.kind == CHECKED_TYPE_KIND__EXTERNAL) {
                 pWriter__write__cstring(generator.writer, "typedef struct ");
                 pWriter__write__string(generator.writer, named_type->name);

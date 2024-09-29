@@ -305,6 +305,10 @@ bool Token__is_plus(Token *self) {
     return Token__is_other(self, "+");
 }
 
+bool Token__is_question_mark(Token *self) {
+    return Token__is_other(self, "?");
+}
+
 bool Token__is_semicolon(Token *self) {
     return Token__is_other(self, ";");
 }

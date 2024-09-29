@@ -140,6 +140,7 @@ bool Token__is_or(Token *self);
 bool Token__is_other(Token *self, char *lexeme);
 bool Token__is_percent(Token *self);
 bool Token__is_plus(Token *self);
+bool Token__is_question_mark(Token *self);
 bool Token__is_return(Token *self);
 bool Token__is_semicolon(Token *self);
 bool Token__is_sizeof(Token *self);
