@@ -1,6 +1,8 @@
 /* Copyright (C) 2024 Stefan Selariu */
 
 #include "Scanner.h"
+#include "File.h"
+#include "Char.h"
 
 char Scanner__peek_char(Scanner *self) {
     return self->source->content[self->current_char_index];
@@ -22,7 +24,9 @@ char Scanner__next_char(Scanner *self) {
 
 Token *Scanner__scan_character_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
     if (Scanner__next_char(self) != '\'') {
-        Source_Location__error(source_location, String__create_from("Unexpected char"));
+        pWriter__begin_location_message(stderr_writer, source_location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unexpected char");
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
     String__append_char(token_lexeme, '\'');
@@ -120,7 +124,9 @@ Token *Scanner__scan_space_token(Scanner *self, Source_Location *source_location
 
 Token *Scanner__scan_string_token(Scanner *self, Source_Location *source_location, String *token_lexeme) {
     if (Scanner__next_char(self) != '"') {
-        Source_Location__error(source_location, String__create_from("Unexpected char"));
+        pWriter__begin_location_message(stderr_writer, source_location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unexpected char");
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
     String__append_char(token_lexeme, '"');

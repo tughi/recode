@@ -2,6 +2,7 @@
 
 #include "Generator.h"
 #include "CDECL.h"
+#include "File.h"
 
 typedef struct Generator {
     Writer *writer;
@@ -178,6 +179,32 @@ void Generator__generate_logic_or_expression(Generator *self, Checked_Logic_Or_E
     Generator__generate_expression(self, expression->super.right_expression);
 }
 
+void Generator__generate_make_struct_expression(Generator *self, Checked_Make_Struct_Expression *expression) {
+    if (expression->super.type->kind == CHECKED_TYPE_KIND__POINTER) {
+        pWriter__write__cstring(self->writer, "__make_");
+        pWriter__write__string(self->writer, expression->struct_type->super.name);
+        pWriter__write__cstring(self->writer, "_value(");
+    }
+    pWriter__write__char(self->writer, '(');
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)expression->struct_type);
+    pWriter__write__cstring(self->writer, "){");
+    Checked_Make_Struct_Argument *argument = expression->first_argument;
+    while (argument != NULL) {
+        pWriter__write__char(self->writer, '.');
+        pWriter__write__string(self->writer, argument->struct_member->name);
+        pWriter__write__cstring(self->writer, " = ");
+        Generator__generate_expression(self, argument->expression);
+        argument = argument->next_argument;
+        if (argument != NULL) {
+            pWriter__write__cstring(self->writer, ", ");
+        }
+    }
+    pWriter__write__char(self->writer, '}');
+    if (expression->super.type->kind == CHECKED_TYPE_KIND__POINTER) {
+        pWriter__write__char(self->writer, ')');
+    }
+}
+
 void Generator__generate_member_access_expression(Generator *self, Checked_Member_Access_Expression *expression) {
     Generator__generate_expression(self, expression->object_expression);
     if (expression->object_expression->type->kind == CHECKED_TYPE_KIND__POINTER) {
@@ -222,7 +249,7 @@ void Generator__generate_null_expression(Generator *self, Checked_Null_Expressio
 
 void Generator__generate_sizeof_expression(Generator *self, Checked_Sizeof_Expression *expression) {
     pWriter__write__cstring(self->writer, "sizeof(");
-    pWriter__write__checked_type(self->writer, expression->sized_type);
+    pWriter__write__cdecl(self->writer, NULL, expression->sized_type);
     pWriter__write__cstring(self->writer, ")");
 }
 
@@ -283,6 +310,8 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
         Generator__generate_logic_and_expression(self, (Checked_Logic_And_Expression *)expression);
     } else if (expression->kind == CHECKED_EXPRESSION_KIND__LOGIC_OR) {
         Generator__generate_logic_or_expression(self, (Checked_Logic_Or_Expression *)expression);
+    } else if (expression->kind == CHECKED_EXPRESSION_KIND__MAKE_STRUCT) {
+        Generator__generate_make_struct_expression(self, (Checked_Make_Struct_Expression *)expression);
     } else if (expression->kind == CHECKED_EXPRESSION_KIND__MEMBER_ACCESS) {
         Generator__generate_member_access_expression(self, (Checked_Member_Access_Expression *)expression);
     } else if (expression->kind == CHECKED_EXPRESSION_KIND__MINUS) {
@@ -306,7 +335,9 @@ void Generator__generate_expression(Generator *self, Checked_Expression *express
     } else if (expression->kind == CHECKED_EXPRESSION_KIND__SYMBOL) {
         Generator__generate_symbol_expression(self, (Checked_Symbol_Expression *)expression);
     } else {
-        Source_Location__error(expression->location, String__create_from("Unsupported expression"));
+        pWriter__begin_location_message(stderr_writer, expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported expression");
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
 }
@@ -409,7 +440,9 @@ void Generator__generate_statement(Generator *self, Checked_Statement *statement
     } else if (statement->kind == CHECKED_STATEMENT_KIND__WHILE) {
         Generator__generate_while_statement(self, (Checked_While_Statement *)statement);
     } else {
-        Source_Location__error(statement->location, String__create_from("Unsupported statement"));
+        pWriter__begin_location_message(stderr_writer, statement->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported statement");
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
 }
@@ -450,7 +483,7 @@ void Generator__generate_function(Generator *self, Checked_Function_Symbol *func
 }
 
 void Generator__declare_struct(Generator *self, Checked_Struct_Type *struct_type) {
-    pWriter__write__checked_type(self->writer, (Checked_Type *)struct_type);
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
     pWriter__write__cstring(self->writer, ";\n");
 }
 
@@ -459,17 +492,43 @@ void Generator__generate_struct(Generator *self, Checked_Struct_Type *struct_typ
     if (struct_member == NULL) {
         return;
     }
-    pWriter__write__checked_type(self->writer, (Checked_Type *)struct_type);
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
     pWriter__write__cstring(self->writer, " {\n");
     while (struct_member != NULL) {
-        pWriter__write__char(self->writer, '\t');
-        pWriter__write__checked_type(self->writer, struct_member->type);
-        pWriter__write__char(self->writer, ' ');
-        pWriter__write__string(self->writer, struct_member->name);
+        pWriter__write__cstring(self->writer, "    ");
+        pWriter__write__cdecl(self->writer, struct_member->name, struct_member->type);
         pWriter__write__cstring(self->writer, ";\n");
         struct_member = struct_member->next_member;
     }
     pWriter__write__cstring(self->writer, "};\n\n");
+}
+
+void Generator__declare_make_struct_function(Generator *self, Checked_Struct_Type *struct_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " *__make_");
+    pWriter__write__string(self->writer, struct_type->super.name);
+    pWriter__write__cstring(self->writer, "_value(");
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " value);\n");
+}
+
+void Generator__generate_make_struct_function(Generator *self, Checked_Struct_Type *struct_type) {
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " *__make_");
+    pWriter__write__string(self->writer, struct_type->super.name);
+    pWriter__write__cstring(self->writer, "_value(");
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " value) {\n");
+    pWriter__write__cstring(self->writer, "    ");
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " *result = (");
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
+    pWriter__write__cstring(self->writer, " *)malloc(sizeof(");
+    pWriter__write__cdecl(self->writer, NULL, (Checked_Type *)struct_type);
+    pWriter__write__cstring(self->writer, "));\n");
+    pWriter__write__cstring(self->writer, "    *result = value;\n");
+    pWriter__write__cstring(self->writer, "    return result;\n");
+    pWriter__write__cstring(self->writer, "}\n\n");
 }
 
 void generate(Writer *writer, Checked_Source *checked_source) {
@@ -499,6 +558,8 @@ void generate(Writer *writer, Checked_Source *checked_source) {
         source = source->next;
     }
 
+    Checked_Function_Symbol *malloc_function = NULL;
+
     /* Declare all defined types */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
@@ -514,6 +575,8 @@ void generate(Writer *writer, Checked_Source *checked_source) {
                 pWriter__write__cstring(generator.writer, ";\n");
             }
             pWriter__end_line(generator.writer);
+        } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && String__equals_cstring(checked_symbol->name, "malloc")) {
+            malloc_function = (Checked_Function_Symbol *)checked_symbol;
         }
         checked_symbol = checked_symbol->next_symbol;
     }
@@ -537,7 +600,9 @@ void generate(Writer *writer, Checked_Source *checked_source) {
             Generator__generate_variable_statement(&generator, (Checked_Variable_Statement *)checked_statement);
             pWriter__end_line(generator.writer);
         } else {
-            Source_Location__error(checked_statement->location, String__create_from("Unsupported statement"));
+            pWriter__begin_location_message(stderr_writer, checked_statement->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Unsupported statement");
+            pWriter__end_location_message(stderr_writer);
             panic();
         }
         checked_statement = checked_statement->next_statement;
@@ -546,9 +611,17 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all defined functions */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && checked_symbol->location->source == checked_source->first_source) {
-            Generator__declare_function(&generator, (Checked_Function_Symbol *)checked_symbol);
-            pWriter__end_line(generator.writer);
+        if (checked_symbol->location->source == checked_source->first_source) {
+            if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
+                Generator__declare_function(&generator, (Checked_Function_Symbol *)checked_symbol);
+                pWriter__end_line(generator.writer);
+            } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_function != NULL) {
+                Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
+                if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
+                    Generator__declare_make_struct_function(&generator, (Checked_Struct_Type *)named_type);
+                    pWriter__end_line(generator.writer);
+                }
+            }
         }
         checked_symbol = checked_symbol->next_symbol;
     }
@@ -556,8 +629,15 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Generate all defined functions */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && checked_symbol->location->source == checked_source->first_source) {
-            Generator__generate_function(&generator, (Checked_Function_Symbol *)checked_symbol);
+        if (checked_symbol->location->source == checked_source->first_source) {
+            if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
+                Generator__generate_function(&generator, (Checked_Function_Symbol *)checked_symbol);
+            } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_function != NULL) {
+                Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
+                if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
+                    Generator__generate_make_struct_function(&generator, (Checked_Struct_Type *)named_type);
+                }
+            }
         }
         checked_symbol = checked_symbol->next_symbol;
     }

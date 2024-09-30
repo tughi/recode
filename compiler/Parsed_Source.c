@@ -91,8 +91,10 @@ Parsed_Bool_Expression *Parsed_Bool_Expression__create(Token *literal, bool valu
     return expression;
 }
 
-Parsed_Call_Argument *Parsed_Call_Argument__create(Parsed_Expression *expression) {
+Parsed_Call_Argument *Parsed_Call_Argument__create(Source_Location *location, Identifier_Token *name, Parsed_Expression *expression) {
     Parsed_Call_Argument *argument = (Parsed_Call_Argument *)malloc(sizeof(Parsed_Call_Argument));
+    argument->location = location;
+    argument->name = name;
     argument->expression = expression;
     argument->next_argument = NULL;
     return argument;
@@ -164,6 +166,13 @@ Parsed_Logic_And_Expression *Parsed_Logic_And_Expression__create(Parsed_Expressi
 
 Parsed_Logic_Or_Expression *Parsed_Logic_Or_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression) {
     return (Parsed_Logic_Or_Expression *)Parsed_Binary_Expression__create_kind(PARSED_EXPRESSION_KIND__LOGIC_OR, left_expression, right_expression);
+}
+
+Parsed_Make_Expression *Parsed_Make_Expression__create(Source_Location *location, Parsed_Type *type, Parsed_Call_Argument *first_argument) {
+    Parsed_Make_Expression *expression = (Parsed_Make_Expression *)Parsed_Expression__create_kind(PARSED_EXPRESSION_KIND__MAKE, sizeof(Parsed_Make_Expression), location);
+    expression->type = type;
+    expression->first_argument = first_argument;
+    return expression;
 }
 
 Parsed_Member_Access_Expression *Parsed_Member_Access_Expression__create(Parsed_Expression *object_expression, Token *member_name) {

@@ -9,14 +9,6 @@ typedef struct Parser {
     uint16_t current_identation;
 } Parser;
 
-void Parser__error(Parser *self, String *message) {
-    Token__error(self->scanner->current_token, message);
-}
-
-void Parser__warning(Parser *self, String *message) {
-    Token__warning(self->scanner->current_token, message);
-}
-
 Token *Parser__peek_token(Parser *self, uint8_t offset) {
     return Scanner__peek_token(self->scanner, offset);
 }
@@ -59,7 +51,9 @@ Token *Parser__consume_token(Parser *self, bool (*check)(Token *token)) {
         Scanner__next_token(self->scanner);
         return token;
     }
-    Parser__error(self, String__create_from("Unexpected token"));
+    pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Unexpected token");
+    pWriter__end_location_message(stderr_writer);
     panic();
 }
 
@@ -71,26 +65,20 @@ void Parser__consume_space(Parser *self, uint16_t count) {
     if (Parser__matches_one(self, Token__is_space)) {
         Space_Token *token = (Space_Token *)Parser__consume_token(self, Token__is_space);
         if (token->count != count) {
-            pWriter__write__location(stderr_writer, token->super.location);
-            pWriter__write__cstring(stderr_writer, ": ");
-            pWriter__style(stderr_writer, WRITER_STYLE__WARNING);
+            pWriter__begin_location_message(stderr_writer, token->super.location, WRITER_STYLE__WARNING);
             pWriter__write__cstring(stderr_writer, "Consumed: ");
             pWriter__write__int64(stderr_writer, token->count);
             pWriter__write__cstring(stderr_writer, " spaces where ");
             pWriter__write__int64(stderr_writer, count);
             pWriter__write__cstring(stderr_writer, " were expected");
-            pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
-            pWriter__end_line(stderr_writer);
+            pWriter__end_location_message(stderr_writer);
         }
     } else if (count > 0) {
-        pWriter__write__location(stderr_writer, self->scanner->current_token->location);
-        pWriter__write__cstring(stderr_writer, ": ");
-        pWriter__style(stderr_writer, WRITER_STYLE__WARNING);
+        pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__WARNING);
         pWriter__write__cstring(stderr_writer, "Consumed 0 spaces where ");
         pWriter__write__int64(stderr_writer, count);
         pWriter__write__cstring(stderr_writer, " were expected");
-        pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
-        pWriter__end_line(stderr_writer);
+        pWriter__end_location_message(stderr_writer);
     }
 }
 
@@ -103,7 +91,9 @@ void Parser__consume_end_of_line(Parser *self) {
     }
     Token *token = Parser__consume_token(self, Token__is_end_of_line);
     if (Token__is_end_of_file(token)) {
-        Token__warning(token, String__create_from("Unexpected end of file"));
+        pWriter__begin_location_message(stderr_writer, token->location, WRITER_STYLE__WARNING);
+        pWriter__write__cstring(stderr_writer, "Unexpected end of file");
+        pWriter__end_location_message(stderr_writer);
     }
 }
 
@@ -124,6 +114,7 @@ bool Parser__consume_empty_line(Parser *self) {
     return false;
 }
 
+Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self);
 Parsed_Expression *Parser__parse_expression(Parser *self);
 Parsed_Type *Parser__parse_type(Parser *self);
 
@@ -132,20 +123,31 @@ primary_expression
     | "false"
     | "null"
     | "true"
+    | "make" type "(" call_arguments? ")"
     | CHARACTER
-    | IDENTIFIER ( "i8" | "i16" | "i32" | "i64" | "isize" | "u8" | "u16" | "u32" | "u64" | "usize" )?
-    | INTEGER
+    | IDENTIFIER
+    | INTEGER ( "i8" | "i16" | "i32" | "i64" | "isize" | "u8" | "u16" | "u32" | "u64" | "usize" )?
     | STRING
 */
 Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
-    if (Parser__matches_one(self, Token__is_true)) {
-        return (Parsed_Expression *)Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true);
+    if (Parser__matches_one(self, Token__is_make)) {
+        Source_Location *location = Parser__consume_token(self, Token__is_make)->location;
+        Parser__consume_space(self, 1);
+        Parsed_Type *type = Parser__parse_type(self);
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_opening_paren);
+        Parsed_Call_Argument *first_call_argument = Parser__parse_call_arguments(self);
+        Parser__consume_token(self, Token__is_closing_paren);
+        return (Parsed_Expression *)Parsed_Make_Expression__create(location, type, first_call_argument);
     }
     if (Parser__matches_one(self, Token__is_null)) {
         return (Parsed_Expression *)Parsed_Null_Expression__create(Parser__consume_token(self, Token__is_null));
     }
     if (Parser__matches_one(self, Token__is_false)) {
         return (Parsed_Expression *)Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_false), false);
+    }
+    if (Parser__matches_one(self, Token__is_true)) {
+        return (Parsed_Expression *)Parsed_Bool_Expression__create(Parser__consume_token(self, Token__is_true), true);
     }
     if (Parser__matches_one(self, Token__is_identifier)) {
         return (Parsed_Expression *)Parsed_Symbol_Expression__create(Parser__consume_token(self, Token__is_identifier));
@@ -189,7 +191,9 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         Parser__consume_token(self, Token__is_closing_paren);
         return (Parsed_Expression *)Parsed_Group_Expression__create(location, expression);
     }
-    Parser__error(self, String__create_from("Unsupported primary expression"));
+    pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Unsupported primary expression");
+    pWriter__end_location_message(stderr_writer);
     panic();
 }
 
@@ -198,15 +202,16 @@ call_argument
     | ( IDENTIFIER ":" )? expression
 */
 Parsed_Call_Argument *Parser__parse_call_argument(Parser *self) {
-    Token *label = NULL;
+    Source_Location *argument_location = self->scanner->current_token->location;
+    Identifier_Token *argument_name = NULL;
     if (Parser__matches_three(self, Token__is_identifier, true, Token__is_space, false, Token__is_colon)) {
-        label = Parser__consume_token(self, Token__is_identifier);
+        argument_name = (Identifier_Token *)Parser__consume_token(self, Token__is_identifier);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_colon);
         Parser__consume_space(self, 1);
     }
-    Parsed_Expression *expression = Parser__parse_expression(self);
-    return Parsed_Call_Argument__create(expression);
+    Parsed_Expression *argument_expression = Parser__parse_expression(self);
+    return Parsed_Call_Argument__create(argument_location, argument_name, argument_expression);
 }
 
 /*
@@ -217,6 +222,7 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
     Parsed_Call_Argument *first_argument = NULL;
     Parsed_Call_Argument *last_argument = NULL;
     if (Parser__matches_end_of_line(self)) {
+        Parser__consume_end_of_line(self);
         self->current_identation = self->current_identation + 1;
         while (Parser__consume_empty_line(self)) {
             /* ignored */
@@ -224,6 +230,7 @@ Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
         while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
             Parser__consume_space(self, self->current_identation * 4);
             Parsed_Call_Argument *argument = Parser__parse_call_argument(self);
+            Parser__consume_end_of_line(self);
             if (last_argument == NULL) {
                 first_argument = argument;
             } else {
@@ -507,50 +514,37 @@ Parsed_Expression *Parser__parse_expression(Parser *self) {
 }
 
 /* struct */
-/*      | "typedef" "struct" IDENTIFIER ( "{" ( type "*"? IDENTIFIER ";" )* "}" )? IDENTIFIER ";" */
+/*      | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type )* "}" */
 Parsed_Statement *Parser__parse_struct(Parser *self) {
-    Source_Location *location = Parser__consume_token(self, Token__is_typedef)->location;
+    Source_Location *struct_location = Parser__consume_token(self, Token__is_struct)->location;
     Parser__consume_space(self, 1);
-    Parser__consume_token(self, Token__is_struct);
+    Token *struct_name = Parser__consume_token(self, Token__is_identifier);
+    Parsed_Struct_Statement *struct_statement = Parsed_Struct_Statement__create(struct_location, struct_name);
     Parser__consume_space(self, 1);
-    Token *local_name = Parser__consume_token(self, Token__is_identifier);
-    Parsed_Struct_Statement *struct_statement = Parsed_Struct_Statement__create(location, local_name);
-    Parser__consume_space(self, 1);
-    if (!Parser__matches_one(self, Token__is_identifier)) {
-        Parsed_Struct_Member *last_member = NULL;
-        Parser__consume_token(self, Token__is_opening_brace);
-        Parser__consume_end_of_line(self);
-        while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
-            while (Parser__consume_empty_line(self)) {
-                /* ignored */
-            }
+    Parser__consume_token(self, Token__is_opening_brace);
+    Parser__consume_end_of_line(self);
+    Parsed_Struct_Member *last_struct_member = NULL;
+    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        if (!Parser__consume_empty_line(self)) {
             Parser__consume_space(self, (self->current_identation + 1) * 4);
-            Parsed_Type *type = Parser__parse_type(self);
-            Parser__consume_space(self, type->kind == PARSED_TYPE_KIND__POINTER ? 0 : 1);
-            Token *name = Parser__consume_token(self, Token__is_identifier);
+            Token *struct_member_name = Parser__consume_token(self, Token__is_identifier);
             Parser__consume_space(self, 0);
-            Parser__consume_token(self, Token__is_semicolon);
+            Parser__consume_token(self, Token__is_colon);
+            Parser__consume_space(self, 1);
+            Parsed_Type *struct_member_type = Parser__parse_type(self);
             Parser__consume_end_of_line(self);
-            Parsed_Struct_Member *member = Parsed_Struct_Member__create(name, type);
-            if (last_member == NULL) {
-                struct_statement->first_member = member;
-                last_member = member;
+            Parsed_Struct_Member *struct_member = Parsed_Struct_Member__create(struct_member_name, struct_member_type);
+            if (last_struct_member == NULL) {
+                struct_statement->first_member = struct_member;
+                last_struct_member = struct_member;
             } else {
-                last_member->next_member = member;
-                last_member = member;
+                last_struct_member->next_member = struct_member;
+                last_struct_member = struct_member;
             }
         }
-        Parser__consume_space(self, 0);
-        Parser__consume_token(self, Token__is_closing_brace);
-        Parser__consume_space(self, 1);
     }
-    Token *final_name = Parser__consume_token(self, Token__is_identifier);
-    if (!String__equals_string(final_name->lexeme, local_name->lexeme)) {
-        Token__error(final_name, String__append_string(String__create_from("Final struct name doesn't match the local name: "), local_name->lexeme));
-        panic();
-    }
-    Parser__consume_space(self, 0);
-    Parser__consume_token(self, Token__is_semicolon);
+    Parser__consume_space(self, self->current_identation * 4);
+    Parser__consume_token(self, Token__is_closing_brace);
     return (Parsed_Statement *)struct_statement;
 }
 
@@ -943,10 +937,14 @@ void Parser__parse_source(Parser *self, Source *source) {
 
     Token *last_token = Parser__peek_token(self, 0);
     if (!Token__is_end_of_file(last_token)) {
-        Parser__error(self, String__create_from("Scanner didn't reach end of file"));
+        pWriter__begin_location_message(stderr_writer, last_token->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Scanner didn't reach end of file");
+        pWriter__end_location_message(stderr_writer);
         panic();
     } else if (last_token->location->column != 1) {
-        Parser__warning(self, String__create_from("No new line at the end of file"));
+        pWriter__begin_location_message(stderr_writer, last_token->location, WRITER_STYLE__WARNING);
+        pWriter__write__cstring(stderr_writer, "No new line at the end of file");
+        pWriter__end_location_message(stderr_writer);
     }
 
     self->scanner = other_scanner;

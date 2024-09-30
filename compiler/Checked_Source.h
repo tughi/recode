@@ -60,6 +60,7 @@ typedef enum Checked_Expression_Kind {
     CHECKED_EXPRESSION_KIND__LESS_OR_EQUALS,
     CHECKED_EXPRESSION_KIND__LOGIC_AND,
     CHECKED_EXPRESSION_KIND__LOGIC_OR,
+    CHECKED_EXPRESSION_KIND__MAKE_STRUCT,
     CHECKED_EXPRESSION_KIND__MEMBER_ACCESS,
     CHECKED_EXPRESSION_KIND__MINUS,
     CHECKED_EXPRESSION_KIND__MODULO,
@@ -236,7 +237,7 @@ typedef struct Checked_Variable_Symbol {
     Checked_Symbol super;
 } Checked_Variable_Symbol;
 
-Checked_Variable_Symbol *Checked_Variable__create(Source_Location *location, String *name, Checked_Type *type);
+Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location *location, String *name, Checked_Type *type);
 
 typedef struct Checked_Symbols {
     struct Checked_Symbols *parent;
@@ -392,6 +393,22 @@ typedef struct Checked_Logic_Or_Expression {
 } Checked_Logic_Or_Expression;
 
 Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression);
+
+typedef struct Checked_Make_Struct_Argument {
+    Checked_Struct_Member *struct_member;
+    Checked_Expression *expression;
+    struct Checked_Make_Struct_Argument *next_argument;
+} Checked_Make_Struct_Argument;
+
+Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Checked_Struct_Member *struct_member, Checked_Expression *expression);
+
+typedef struct Checked_Make_Struct_Expression {
+    Checked_Expression super;
+    Checked_Struct_Type *struct_type;
+    Checked_Make_Struct_Argument *first_argument;
+} Checked_Make_Struct_Expression;
+
+Checked_Make_Struct_Expression *Checked_Make_Struct_Expression__create(Source_Location *location, Checked_Type *type, Checked_Struct_Type *struct_type, Checked_Make_Struct_Argument *first_argument);
 
 typedef struct Checked_Member_Access_Expression {
     Checked_Expression super;

@@ -2,36 +2,6 @@
 
 #include "Token.h"
 
-Writer *pWriter__write__token_kind(Writer *writer, enum Token_Kind token_kind) {
-    switch (token_kind) {
-    case TOKEN_KIND__CHARACTER:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__CHARACTER");
-    case TOKEN_KIND__COMMENT:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__COMMENT");
-    case TOKEN_KIND__END_OF_FILE:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__END_OF_FILE");
-    case TOKEN_KIND__END_OF_LINE:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__END_OF_LINE");
-    case TOKEN_KIND__ERROR:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__ERROR");
-    case TOKEN_KIND__IDENTIFIER:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__IDENTIFIER");
-    case TOKEN_KIND__INTEGER:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__INTEGER");
-    case TOKEN_KIND__KEYWORD:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__KEYWORD");
-    case TOKEN_KIND__OTHER:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__OTHER");
-    case TOKEN_KIND__SPACE:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__SPACE");
-    case TOKEN_KIND__STRING:
-        return pWriter__write__cstring(writer, "TOKEN_KIND__STRING");
-    default:
-        fprintf(stderr, "Unknown token kind: %d\n", token_kind);
-        panic();
-    }
-}
-
 Token *Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location *location, String *lexeme) {
     Token *token = (Token *)malloc(kind_size);
     token->kind = kind;
@@ -39,14 +9,6 @@ Token *Token__create_kind(Token_Kind kind, size_t kind_size, Source_Location *lo
     token->lexeme = lexeme;
     token->next_token = NULL;
     return token;
-}
-
-void Token__error(Token *self, String *message) {
-    Source_Location__error(self->location, message);
-}
-
-void Token__warning(Token *self, String *message) {
-    Source_Location__warning(self->location, message);
 }
 
 Character_Token *Character_Token__create(Source_Location *location, String *lexeme, char value) {
@@ -179,6 +141,10 @@ bool Token__is_let(Token *self) {
 
 bool Token__is_loop(Token *self) {
     return Token__is_keyword(self, "loop");
+}
+
+bool Token__is_make(Token *self) {
+    return Token__is_keyword(self, "make");
 }
 
 bool Token__is_not(Token *self) {

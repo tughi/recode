@@ -149,7 +149,10 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other_type) {
     if (self->kind == CHECKED_TYPE_KIND__STRUCT) {
         return Checked_Struct_Type__equals((Checked_Struct_Type *)self, other_type);
     }
-    error(String__create_from("TODO: Compare unsupported type"));
+    pWriter__style(stderr_writer, WRITER_STYLE__TODO);
+    pWriter__write__cstring(stderr_writer, "Unsupported types");
+    pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
+    pWriter__end_line(stderr_writer);
     panic();
 }
 
@@ -182,7 +185,9 @@ String *String__append_checked_type(String *self, Checked_Type *type) {
         String__append_checked_type(self, pointer_type->other_type);
         String__append_char(self, '*');
     } else {
-        Source_Location__error(type->location, String__create_from("Unsupported type"));
+        pWriter__begin_location_message(stderr_writer, type->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported type");
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
     return self;
@@ -224,7 +229,8 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__U64:
     case CHECKED_TYPE_KIND__U8:
     case CHECKED_TYPE_KIND__USIZE:
-    case CHECKED_TYPE_KIND__ANY: {
+    case CHECKED_TYPE_KIND__ANY:
+    case CHECKED_TYPE_KIND__STRUCT: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
         pWriter__write__string(self, named_type->name);
         break;
@@ -283,7 +289,7 @@ Checked_Type_Symbol *Checked_Type_Symbol__create(Source_Location *location, Stri
     return symbol;
 }
 
-Checked_Variable_Symbol *Checked_Variable__create(Source_Location *location, String *name, Checked_Type *type) {
+Checked_Variable_Symbol *Checked_Variable_Symbol__create(Source_Location *location, String *name, Checked_Type *type) {
     return (Checked_Variable_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__VARIABLE, sizeof(Checked_Variable_Symbol), location, name, type);
 }
 
@@ -308,7 +314,9 @@ Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, Stri
 
 void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbol) {
     if (Checked_Symbols__find_sibling_symbol(self, symbol->name) != NULL) {
-        error(String__create_from("TODO: Report symbol redeclaration"));
+        pWriter__begin_location_message(stderr_writer, symbol->location, WRITER_STYLE__TODO);
+        pWriter__write__cstring(stderr_writer, "TODO: Report symbol redeclaration");
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
 
@@ -449,6 +457,21 @@ Checked_Logic_And_Expression *Checked_Logic_And_Expression__create(Source_Locati
 
 Checked_Logic_Or_Expression *Checked_Logic_Or_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *left_expression, Checked_Expression *right_expression) {
     return (Checked_Logic_Or_Expression *)Checked_Binary_Expression__create_kind(CHECKED_EXPRESSION_KIND__LOGIC_OR, location, type, left_expression, right_expression);
+}
+
+Checked_Make_Struct_Argument *Checked_Make_Struct_Argument__create(Checked_Struct_Member *struct_member, Checked_Expression *expression) {
+    Checked_Make_Struct_Argument *argument = (Checked_Make_Struct_Argument *)malloc(sizeof(Checked_Make_Struct_Argument));
+    argument->struct_member = struct_member;
+    argument->expression = expression;
+    argument->next_argument = NULL;
+    return argument;
+}
+
+Checked_Make_Struct_Expression *Checked_Make_Struct_Expression__create(Source_Location *location, Checked_Type *type, Checked_Struct_Type *struct_type, Checked_Make_Struct_Argument *first_argument) {
+    Checked_Make_Struct_Expression *expression = (Checked_Make_Struct_Expression *)Checked_Expression__create_kind(CHECKED_EXPRESSION_KIND__MAKE_STRUCT, sizeof(Checked_Make_Struct_Expression), location, type);
+    expression->struct_type = struct_type;
+    expression->first_argument = first_argument;
+    return expression;
 }
 
 Checked_Member_Access_Expression *Checked_Member_Access_Expression__create(Source_Location *location, Checked_Type *type, Checked_Expression *object_expression, Checked_Struct_Member *member) {

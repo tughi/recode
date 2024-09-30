@@ -24,6 +24,7 @@ typedef enum Parsed_Expression_Kind {
     PARSED_EXPRESSION_KIND__LESS_OR_EQUALS,
     PARSED_EXPRESSION_KIND__LOGIC_AND,
     PARSED_EXPRESSION_KIND__LOGIC_OR,
+    PARSED_EXPRESSION_KIND__MAKE,
     PARSED_EXPRESSION_KIND__MEMBER_ACCESS,
     PARSED_EXPRESSION_KIND__MINUS,
     PARSED_EXPRESSION_KIND__MODULO,
@@ -147,11 +148,13 @@ typedef struct Parsed_Bool_Expression {
 Parsed_Bool_Expression *Parsed_Bool_Expression__create(Token *literal, bool value);
 
 typedef struct Parsed_Call_Argument {
+    Source_Location *location;
+    Identifier_Token *name;
     Parsed_Expression *expression;
     struct Parsed_Call_Argument *next_argument;
 } Parsed_Call_Argument;
 
-Parsed_Call_Argument *Parsed_Call_Argument__create(Parsed_Expression *expression);
+Parsed_Call_Argument *Parsed_Call_Argument__create(Source_Location *location, Identifier_Token *name, Parsed_Expression *expression);
 
 typedef struct Parsed_Call_Expression {
     Parsed_Expression super;
@@ -243,6 +246,14 @@ typedef struct Parsed_Logic_Or_Expression {
 } Parsed_Logic_Or_Expression;
 
 Parsed_Logic_Or_Expression *Parsed_Logic_Or_Expression__create(Parsed_Expression *left_expression, Parsed_Expression *right_expression);
+
+typedef struct Parsed_Make_Expression {
+    Parsed_Expression super;
+    Parsed_Type *type;
+    Parsed_Call_Argument *first_argument;
+} Parsed_Make_Expression;
+
+Parsed_Make_Expression *Parsed_Make_Expression__create(Source_Location *location, Parsed_Type *type, Parsed_Call_Argument *first_argument);
 
 typedef struct Parsed_Member_Access_Expression {
     Parsed_Expression super;

@@ -20,8 +20,6 @@ typedef enum Token_Kind {
     TOKEN_KIND__STRING
 } Token_Kind;
 
-Writer *pWriter__write__token_kind(Writer *writer, Token_Kind token_kind);
-
 typedef struct Token {
     Token_Kind kind;
     Source_Location *location;
@@ -130,6 +128,7 @@ bool Token__is_keyword(Token *self, char *lexeme);
 bool Token__is_less_than(Token *self);
 bool Token__is_let(Token *self);
 bool Token__is_loop(Token *self);
+bool Token__is_make(Token *self);
 bool Token__is_minus(Token *self);
 bool Token__is_not(Token *self);
 bool Token__is_null(Token *self);

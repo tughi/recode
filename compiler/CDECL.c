@@ -61,23 +61,27 @@ void pWriter__write__cdecl(Writer *writer, String *name, Checked_Type *type) {
 
 void declare_array(CDECL *cdecl, Checked_Array_Type *array_type) {
     if (array_type->is_checked) {
-        pWriter__write__location(stderr_writer, array_type->super.location);
-        pWriter__write__cstring(stderr_writer, ": ");
-        pWriter__style(stderr_writer, WRITER_STYLE__TODO);
+        pWriter__begin_location_message(stderr_writer, array_type->super.location, WRITER_STYLE__TODO);
         pWriter__write__cstring(stderr_writer, "TODO: Add support for checked arrays");
-        pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
-        pWriter__end_line(stderr_writer);
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
     CDECL type_cdecl = {NULL, NULL, NULL};
     declare(&type_cdecl, array_type->item_type);
     cdecl->type = type_cdecl.type;
-    cdecl->left = String__create_from("(*");
+    cdecl->left = String__create();
     if (type_cdecl.left != NULL) {
         String__append_string(cdecl->left, type_cdecl.left);
         String__delete(type_cdecl.left);
     }
-    cdecl->right = String__create_from(")");
+    if (array_type->item_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)array_type->item_type)->is_checked || array_type->item_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+        String__append_char(cdecl->left, '(');
+    }
+    String__append_char(cdecl->left, '*');
+    cdecl->right = String__create();
+    if (array_type->item_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)array_type->item_type)->is_checked || array_type->item_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+        String__append_char(cdecl->right, ')');
+    }
     if (type_cdecl.right != NULL) {
         String__append_string(cdecl->right, type_cdecl.right);
         String__delete(type_cdecl.right);
@@ -110,12 +114,19 @@ void declare_pointer(CDECL *cdecl, Checked_Pointer_Type *pointer_type) {
     CDECL type_cdecl = {NULL, NULL, NULL};
     declare(&type_cdecl, pointer_type->other_type);
     cdecl->type = type_cdecl.type;
-    cdecl->left = String__create_from("(*");
+    cdecl->left = String__create();
     if (type_cdecl.left != NULL) {
         String__append_string(cdecl->left, type_cdecl.left);
         String__delete(type_cdecl.left);
     }
-    cdecl->right = String__create_from(")");
+    if (pointer_type->other_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)pointer_type->other_type)->is_checked || pointer_type->other_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+        String__append_char(cdecl->left, '(');
+    }
+    String__append_char(cdecl->left, '*');
+    cdecl->right = String__create();
+    if (pointer_type->other_type->kind == CHECKED_TYPE_KIND__ARRAY && ((Checked_Array_Type *)pointer_type->other_type)->is_checked || pointer_type->other_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+        String__append_char(cdecl->right, ')');
+    }
     if (type_cdecl.right != NULL) {
         String__append_string(cdecl->right, type_cdecl.right);
         String__delete(type_cdecl.right);
@@ -151,16 +162,16 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
         cdecl->type = String__create_copy(((Checked_External_Type *)symbol_type)->super.name);
     } else if (symbol_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
         declare_function(cdecl, (Checked_Function_Type *)symbol_type);
+    } else if (symbol_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+        cdecl->type = String__create_from("struct ");
+        String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);
     } else if (symbol_type->kind == CHECKED_TYPE_KIND__POINTER) {
         declare_pointer(cdecl, (Checked_Pointer_Type *)symbol_type);
     } else {
-        pWriter__write__location(stderr_writer, symbol_type->location);
-        pWriter__write__cstring(stderr_writer, ": ");
-        pWriter__style(stderr_writer, WRITER_STYLE__TODO);
+        pWriter__begin_location_message(stderr_writer, symbol_type->location, WRITER_STYLE__TODO);
         pWriter__write__cstring(stderr_writer, "TODO: Add support for checked type kind: ");
         pWriter__write__int64(stderr_writer, symbol_type->kind);
-        pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
-        pWriter__end_line(stderr_writer);
+        pWriter__end_location_message(stderr_writer);
         panic();
     }
 }
