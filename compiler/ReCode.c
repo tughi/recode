@@ -1,5 +1,6 @@
 #include "Checker.h"
 #include "File.h"
+#include "Generator.h"
 #include "Parser.h"
 
 void help_recode() {

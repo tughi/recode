@@ -15,7 +15,7 @@ $(BIN_FILE): $(OBJECT_FILES)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	cc -c -ansi -pedantic -Wno-declaration-after-statement -Werror=return-type -Werror=builtin-declaration-mismatch -MD -g -o $@ $<
+	cc -c -MD -g -o $@ $<
 
 clean:
 	rm -rf $(BUILD_DIR)

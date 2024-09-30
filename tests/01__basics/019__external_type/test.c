@@ -4,8 +4,8 @@
 
 typedef struct FILE FILE;
 
-extern FILE (*stdout);
-int32_t fputc(int32_t ch, FILE (*file));
+extern FILE *stdout;
+int32_t fputc(int32_t ch, FILE *file);
 
 int32_t main();
 
