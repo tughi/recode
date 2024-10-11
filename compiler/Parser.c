@@ -513,8 +513,10 @@ Parsed_Expression *Parser__parse_expression(Parser *self) {
     return Parser__parse_logic_or_expression(self);
 }
 
+Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_type);
+
 /* struct */
-/*      | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type )* "}" */
+/*      | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type | function )* "}" */
 Parsed_Statement *Parser__parse_struct(Parser *self) {
     Source_Location *struct_location = Parser__consume_token(self, Token__is_struct)->location;
     Parser__consume_space(self, 1);
@@ -523,26 +525,41 @@ Parsed_Statement *Parser__parse_struct(Parser *self) {
     Parser__consume_space(self, 1);
     Parser__consume_token(self, Token__is_opening_brace);
     Parser__consume_end_of_line(self);
+    self->current_identation = self->current_identation + 1;
     Parsed_Struct_Member *last_struct_member = NULL;
+    Parsed_Struct_Method *last_struct_method = NULL;
     while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
         if (!Parser__consume_empty_line(self)) {
-            Parser__consume_space(self, (self->current_identation + 1) * 4);
-            Token *struct_member_name = Parser__consume_token(self, Token__is_identifier);
-            Parser__consume_space(self, 0);
-            Parser__consume_token(self, Token__is_colon);
-            Parser__consume_space(self, 1);
-            Parsed_Type *struct_member_type = Parser__parse_type(self);
-            Parser__consume_end_of_line(self);
-            Parsed_Struct_Member *struct_member = Parsed_Struct_Member__create(struct_member_name, struct_member_type);
-            if (last_struct_member == NULL) {
-                struct_statement->first_member = struct_member;
-                last_struct_member = struct_member;
+            Parser__consume_space(self, self->current_identation * 4);
+            if (Parser__matches_one(self, Token__is_func)) {
+                Parsed_Statement *function_statement = Parser__parse_function(self, Parsed_Pointer_Type__create(Parsed_Named_Type__create(struct_name)));
+                Parsed_Struct_Method *struct_method = Parsed_Struct_Method__create((Parsed_Function_Statement *)function_statement);
+                if (last_struct_method == NULL) {
+                    struct_statement->first_method = struct_method;
+                    last_struct_method = struct_method;
+                } else {
+                    last_struct_method->next_method = struct_method;
+                    last_struct_method = struct_method;
+                }
             } else {
-                last_struct_member->next_member = struct_member;
-                last_struct_member = struct_member;
+                Token *struct_member_name = Parser__consume_token(self, Token__is_identifier);
+                Parser__consume_space(self, 0);
+                Parser__consume_token(self, Token__is_colon);
+                Parser__consume_space(self, 1);
+                Parsed_Type *struct_member_type = Parser__parse_type(self);
+                Parser__consume_end_of_line(self);
+                Parsed_Struct_Member *struct_member = Parsed_Struct_Member__create(struct_member_name, struct_member_type);
+                if (last_struct_member == NULL) {
+                    struct_statement->first_member = struct_member;
+                    last_struct_member = struct_member;
+                } else {
+                    last_struct_member->next_member = struct_member;
+                    last_struct_member = struct_member;
+                }
             }
         }
     }
+    self->current_identation = self->current_identation - 1;
     Parser__consume_space(self, self->current_identation * 4);
     Parser__consume_token(self, Token__is_closing_brace);
     return (Parsed_Statement *)struct_statement;
@@ -575,7 +592,7 @@ Parsed_Function_Parameter *Parser__parse_function_parameter(Parser *self) {
         name = Parser__consume_token(self, Token__is_identifier);
         if (Token__is_anon(label)) {
             anonymous = true;
-            label = name;
+            label = NULL;
         }
     } else {
         label = name = Parser__consume_token(self, Token__is_identifier);
@@ -584,18 +601,23 @@ Parsed_Function_Parameter *Parser__parse_function_parameter(Parser *self) {
     Parser__consume_token(self, Token__is_colon);
     Parser__consume_space(self, 1);
     Parsed_Type *type = Parser__parse_type(self);
-    return Parsed_Function_Parameter__create(name, type);
+    return Parsed_Function_Parameter__create(label, name, type);
 }
 
 /*
 function_parameters
     | function_parameter ( "," function_parameter )*
 */
-Parsed_Function_Parameter *Parser__parse_function_parameters(Parser *self) {
+Parsed_Function_Parameter *Parser__parse_function_parameters(Parser *self, Parsed_Type *receiver_type) {
     Parsed_Function_Parameter *first_parameter = NULL;
     if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
         Parser__consume_space(self, 0);
-        first_parameter = Parser__parse_function_parameter(self);
+        if (receiver_type != NULL) {
+            Token *parameter_name = Parser__consume_token(self, Token__is_identifier);
+            first_parameter = Parsed_Function_Parameter__create(NULL, parameter_name, receiver_type);
+        } else {
+            first_parameter = Parser__parse_function_parameter(self);
+        }
         Parsed_Function_Parameter *last_parameter = first_parameter;
         while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
             Parser__consume_space(self, 0);
@@ -613,7 +635,7 @@ type
     | "@" type
     | "[" type ( ";" ( expression | "?" ) )? "]"
     | IDENTIFIER
-    | func "(" function_parameters? ")" "->" type
+    | func "(" function_parameters? ")" ( "->" type )?
 */
 Parsed_Type *Parser__parse_type(Parser *self) {
     if (Parser__matches_one(self, Token__is_at)) {
@@ -650,14 +672,17 @@ Parsed_Type *Parser__parse_type(Parser *self) {
         Source_Location *location = Parser__consume_token(self, Token__is_func)->location;
         Parser__consume_space(self, 1);
         Parser__consume_token(self, Token__is_opening_paren);
-        Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self);
+        Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self, NULL);
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_paren);
-        Parser__consume_space(self, 1);
-        Parser__consume_token(self, Token__is_minus);
-        Parser__consume_token(self, Token__is_greater_than);
-        Parser__consume_space(self, 1);
-        Parsed_Type *return_type = Parser__parse_type(self);
+        Parsed_Type *return_type = NULL;
+        if (Parser__matches_two(self, Token__is_space, false, Token__is_minus)) {
+            Parser__consume_space(self, 1);
+            Parser__consume_token(self, Token__is_minus);
+            Parser__consume_token(self, Token__is_greater_than);
+            Parser__consume_space(self, 1);
+            return_type = Parser__parse_type(self);
+        }
         return Parsed_Function_Type__create(location, first_parameter, return_type);
     }
     Token *name = Parser__consume_token(self, Token__is_identifier);
@@ -717,9 +742,9 @@ Parsed_Block_Statement *Parser__parse_block_statement(Parser *self) {
 
 /*
 function
-    | "external"? "func" IDENTIFIER "(" function_parameter* ")" "->" type block?
+    | "external"? "func" ( type "." )? IDENTIFIER "(" function_parameter* ")" "->" type block?
 */
-Parsed_Statement *Parser__parse_function(Parser *self) {
+Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_type) {
     bool is_external = false;
     if (Parser__matches_one(self, Token__is_external)) {
         is_external = true;
@@ -731,7 +756,7 @@ Parsed_Statement *Parser__parse_function(Parser *self) {
     Token *name = Parser__consume_token(self, Token__is_identifier);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_opening_paren);
-    Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self);
+    Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self, receiver_type);
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_closing_paren);
     Parsed_Type *return_type = NULL;
@@ -754,7 +779,7 @@ Parsed_Statement *Parser__parse_function(Parser *self) {
         Parser__consume_space(self, self->current_identation * 4);
         Parser__consume_token(self, Token__is_closing_brace);
     }
-    return Parsed_Function_Statement__create(location, name, first_parameter, return_type, statements, is_external);
+    return Parsed_Function_Statement__create(location, name, receiver_type, first_parameter, return_type, statements, is_external);
 }
 
 /*
@@ -847,7 +872,7 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
 
     if (Parser__matches_two(self, Token__is_external, true, Token__is_space)) {
         if (Token__is_func(Parser__peek_token(self, 2))) {
-            return Parser__parse_function(self);
+            return Parser__parse_function(self, NULL);
         }
 
         if (Token__is_type(Parser__peek_token(self, 2))) {
@@ -858,7 +883,7 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
     }
 
     if (Parser__matches_one(self, Token__is_func)) {
-        return Parser__parse_function(self);
+        return Parser__parse_function(self, NULL);
     }
 
     if (Parser__matches_one(self, Token__is_let)) {

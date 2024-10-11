@@ -28,6 +28,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__FUNCTION,
     CHECKED_TYPE_KIND__STRUCT,
     /* Dynamic */
+    CHECKED_TYPE_KIND__FUNCTION_POINTER,
     CHECKED_TYPE_KIND__POINTER
 } Checked_Type_Kind;
 
@@ -104,12 +105,13 @@ Checked_External_Type *Checked_External_Type__create(Source_Location *location, 
 
 typedef struct Checked_Function_Parameter {
     Source_Location *location;
+    String *label;
     String *name;
     Checked_Type *type;
     struct Checked_Function_Parameter *next_parameter;
 } Checked_Function_Parameter;
 
-Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location *location, String *name, Checked_Type *type);
+Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location *location, String *label, String *name, Checked_Type *type);
 
 typedef struct Checked_Function_Type {
     Checked_Type super;
@@ -119,7 +121,12 @@ typedef struct Checked_Function_Type {
 
 Checked_Function_Type *Checked_Function_Type__create(Source_Location *location, Checked_Function_Parameter *first_parameter, Checked_Type *return_type);
 
-bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Type *other_type);
+typedef struct Checked_Function_Pointer_Type {
+    Checked_Type super;
+    Checked_Function_Type *function_type;
+} Checked_Function_Pointer_Type;
+
+Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Location *location, Checked_Function_Type *function_type);
 
 typedef struct Checked_Pointer_Type {
     Checked_Type super;
@@ -127,8 +134,6 @@ typedef struct Checked_Pointer_Type {
 } Checked_Pointer_Type;
 
 Checked_Pointer_Type *Checked_Pointer_Type__create(Source_Location *location, Checked_Type *other_type);
-
-bool Checked_Pointer_Type__equals(Checked_Pointer_Type *self, Checked_Type *other_type);
 
 typedef struct Checked_Struct_Member {
     Source_Location *location;
@@ -148,11 +153,7 @@ Checked_Struct_Type *Checked_Struct_Type__create(Source_Location *location, Stri
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
 
-bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Type *other_type);
-
-bool Checked_Type__equals(Checked_Type *self, Checked_Type *other_type);
-
-String *String__append_checked_type(String *self, Checked_Type *type);
+bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
 void pWriter__write__checked_function_parameter(Writer *writer, Checked_Function_Parameter *parameter);
 
@@ -214,11 +215,13 @@ void Checked_Statements__append(Checked_Statements *self, Checked_Statement *sta
 
 typedef struct Checked_Function_Symbol {
     Checked_Symbol super;
+    String *function_name;
     Checked_Function_Type *function_type;
+    Checked_Type *receiver_type;
     Checked_Statements *checked_statements;
 } Checked_Function_Symbol;
 
-Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *location, String *name, Checked_Function_Type *function_type);
+Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *location, String *symbol_name, String *function_name, Checked_Function_Type *function_type, Checked_Type *receiver_type);
 
 typedef struct Checked_Function_Parameter_Symbol {
     Checked_Symbol super;

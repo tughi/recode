@@ -7,6 +7,7 @@ typedef struct Checker {
     Checked_Named_Type *first_type;
     Checked_Named_Type *last_type;
     Checked_Named_Type *last_builting_type;
+    Checked_Symbols *global_symbols;
     Checked_Symbols *symbols;
     Checked_Type *return_type;
 } Checker;
@@ -17,7 +18,7 @@ Checker *Checker__create() {
     Checker *checker = (Checker *)malloc(sizeof(Checker));
     checker->first_type = NULL;
     checker->last_type = NULL;
-    checker->symbols = Checked_Symbols__create(NULL);
+    checker->global_symbols = checker->symbols = Checked_Symbols__create(NULL);
 
     Source_Location *location = Source_Location__create(NULL, 0, 1);
     Checker__append_type(checker, Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__BOOL, sizeof(Checked_Named_Type), location, String__create_from("bool")));
@@ -107,19 +108,24 @@ Checked_Type *Checker__resolve_type(Checker *self, Parsed_Type *parsed_type) {
         Checked_Function_Parameter *function_first_parameter = NULL;
         Parsed_Function_Parameter *parsed_parameter = parsed_function_type->first_parameter;
         if (parsed_parameter != NULL) {
-            function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+            function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
             Checked_Function_Parameter *function_last_parameter = function_first_parameter;
             parsed_parameter = parsed_parameter->next_parameter;
             while (parsed_parameter != NULL) {
-                Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+                Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
                 function_last_parameter->next_parameter = function_parameter;
                 function_last_parameter = function_parameter;
                 parsed_parameter = parsed_parameter->next_parameter;
             }
         }
-        Checked_Type *function_return_type = Checker__resolve_type(self, parsed_function_type->return_type);
+        Checked_Type *function_return_type;
+        if (parsed_function_type->return_type == NULL) {
+            function_return_type = (Checked_Type *)Checker__get_builtin_type(self, CHECKED_TYPE_KIND__NOTHING);
+        } else {
+            function_return_type = Checker__resolve_type(self, parsed_function_type->return_type);
+        }
         Checked_Function_Type *function_type = Checked_Function_Type__create(parsed_function_type->super.location, function_first_parameter, function_return_type);
-        return (Checked_Type *)Checked_Pointer_Type__create(parsed_type->location, (Checked_Type *)function_type);
+        return (Checked_Type *)Checked_Function_Pointer_Type__create(parsed_type->location, function_type);
     }
     pWriter__write__todo(stderr_writer, __FILE__, __LINE__, "Report undefined type");
     panic();
@@ -191,20 +197,152 @@ Checked_Expression *Checker__check_bool_expression(Checker *self, Parsed_Bool_Ex
     return (Checked_Expression *)Checked_Bool_Expression__create(parsed_expression->super.super.location, expression_type, value);
 }
 
-Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression) {
-    Checked_Expression *callee_expression = Checker__check_expression(self, parsed_expression->callee_expression, NULL);
-    Checked_Type *callee_type = callee_expression->type;
-    if (callee_type->kind != CHECKED_TYPE_KIND__POINTER || ((Checked_Pointer_Type *)callee_type)->other_type->kind != CHECKED_TYPE_KIND__FUNCTION) {
-        pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Not a function");
+Checked_Function_Symbol *Checker__find_function_symbol(Checker *self, String *function_name, Parsed_Call_Argument *first_call_argument, Checked_Type *receiver_type, int *similars) {
+    Checked_Symbol *symbol = self->global_symbols->first_symbol;
+    for (; symbol != NULL; symbol = symbol->next_symbol) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
+            Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
+            if (String__equals_string(function_symbol->function_name, function_name)) {
+                (*similars)++;
+                Checked_Function_Parameter *function_parameter = function_symbol->function_type->first_parameter;
+                if (receiver_type != NULL) {
+                    if (function_symbol->receiver_type == NULL || !Checked_Type__equals(function_symbol->receiver_type, receiver_type)) {
+                        continue;
+                    }
+                    if (function_parameter == NULL || !Checked_Type__equals(function_parameter->type, receiver_type)) {
+                        panic();
+                    }
+                    function_parameter = function_parameter->next_parameter;
+                }
+                Parsed_Call_Argument *call_argument = first_call_argument;
+                while (function_parameter != NULL && call_argument != NULL) {
+                    if (function_parameter->label == NULL) {
+                        if (call_argument->name != NULL) {
+                            break;
+                        }
+                    } else if (call_argument->name == NULL || !String__equals_string(function_parameter->label, call_argument->name->super.lexeme)) {
+                        break;
+                    }
+                    function_parameter = function_parameter->next_parameter;
+                    call_argument = call_argument->next_argument;
+                }
+                if (function_parameter == NULL && call_argument == NULL) {
+                    return function_symbol;
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+typedef struct Checked_Callable {
+    Checked_Function_Type *function_type;
+    Checked_Expression *callee_expression;
+    Checked_Expression *receiver_expression;
+} Checked_Callable;
+
+Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_name, Parsed_Call_Argument *first_parsed_argument, Checked_Expression *receiver_expression) {
+    if (receiver_expression == NULL) {
+        Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, symbol_name->lexeme);
+        if (symbol != NULL) {
+            if (symbol->type->kind != CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+                pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Not a function pointer");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            return (Checked_Callable){
+                .function_type = ((Checked_Function_Pointer_Type *)symbol->type)->function_type,
+                .callee_expression = (Checked_Expression *)Checked_Symbol_Expression__create(symbol_name->location, symbol->type, (Checked_Symbol *)symbol),
+                .receiver_expression = NULL,
+            };
+        }
+    }
+
+    int similar_function_symbols = 0;
+    Checked_Function_Symbol *function_symbol = Checker__find_function_symbol(self, symbol_name->lexeme, first_parsed_argument, receiver_expression != NULL ? receiver_expression->type : NULL, &similar_function_symbols);
+    if (function_symbol == NULL) {
+        pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Undefined function: ");
+        pWriter__write__token(stderr_writer, symbol_name);
         pWriter__end_location_message(stderr_writer);
         panic();
     }
-    Checked_Function_Type *function_type = (Checked_Function_Type *)((Checked_Pointer_Type *)callee_type)->other_type;
+    return (Checked_Callable){
+        .function_type = function_symbol->function_type,
+        .callee_expression = (Checked_Expression *)Checked_Symbol_Expression__create(symbol_name->location, function_symbol->super.type, (Checked_Symbol *)function_symbol),
+        .receiver_expression = receiver_expression,
+    };
+}
+
+Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Access_Expression *parsed_callee_expression, Parsed_Call_Argument *first_parsed_argument) {
+    Checked_Expression *object_expression = Checker__check_expression(self, parsed_callee_expression->object_expression, NULL);
+    Checked_Type *object_type = object_expression->type;
+    if (object_type->kind == CHECKED_TYPE_KIND__STRUCT || object_type->kind == CHECKED_TYPE_KIND__POINTER && ((Checked_Pointer_Type *)object_type)->other_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+        Checked_Struct_Type *struct_type;
+        if (object_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+            struct_type = (Checked_Struct_Type *)object_type;
+        } else {
+            struct_type = (Checked_Struct_Type *)((Checked_Pointer_Type *)object_type)->other_type;
+        }
+        Checked_Struct_Member *struct_member = Checked_Struct_Type__find_member(struct_type, parsed_callee_expression->member_name->lexeme);
+        if (struct_member != NULL) {
+            if (struct_member->type->kind != CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+                pWriter__begin_location_message(stderr_writer, parsed_callee_expression->member_name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Not a function pointer");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+            return (Checked_Callable){
+                .function_type = ((Checked_Function_Pointer_Type *)struct_member->type)->function_type,
+                .callee_expression = (Checked_Expression *)Checked_Member_Access_Expression__create(parsed_callee_expression->super.location, struct_member->type, object_expression, struct_member),
+                .receiver_expression = NULL,
+            };
+        }
+        if (object_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+            /* auto reference */
+            object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
+            object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(parsed_callee_expression->object_expression->location, object_type, object_expression);
+        }
+        return Checker__check_callable_symbol(self, parsed_callee_expression->member_name, first_parsed_argument, object_expression);
+    }
+    pWriter__begin_location_message(stderr_writer, parsed_callee_expression->object_expression->location, WRITER_STYLE__ERROR);
+    pWriter__write__cstring(stderr_writer, "Not a struct");
+    pWriter__end_location_message(stderr_writer);
+    panic();
+}
+
+Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression) {
+    Checked_Callable checked_callable;
+    switch (parsed_expression->callee_expression->kind) {
+    case PARSED_EXPRESSION_KIND__MEMBER_ACCESS:
+        checked_callable = Checker__check_callable_member(self, (Parsed_Member_Access_Expression *)parsed_expression->callee_expression, parsed_expression->first_argument);
+        break;
+    case PARSED_EXPRESSION_KIND__SYMBOL:
+        checked_callable = Checker__check_callable_symbol(self, ((Parsed_Symbol_Expression *)parsed_expression->callee_expression)->name, parsed_expression->first_argument, NULL);
+        break;
+    default:
+        pWriter__begin_location_message(stderr_writer, parsed_expression->callee_expression->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Unsupported callee expression");
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
+
     Checked_Call_Argument *first_argument = NULL;
-    if (parsed_expression->first_argument != NULL) {
+    if (parsed_expression->first_argument != NULL || checked_callable.receiver_expression != NULL) {
         Checked_Call_Argument *last_argument = NULL;
-        Checked_Function_Parameter *function_parameter = function_type->first_parameter;
+        Checked_Function_Parameter *function_parameter = checked_callable.function_type->first_parameter;
+        if (function_parameter == NULL) {
+            pWriter__begin_location_message(stderr_writer, checked_callable.callee_expression->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Function has no parameters");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        if (checked_callable.receiver_expression != NULL) {
+            Checker__require_same_type(self, function_parameter->type, checked_callable.receiver_expression->type, checked_callable.receiver_expression->location);
+            first_argument = last_argument = Checked_Call_Argument__create(checked_callable.receiver_expression);
+            function_parameter = function_parameter->next_parameter;
+        }
         Parsed_Call_Argument *parsed_argument = parsed_expression->first_argument;
         while (function_parameter != NULL && parsed_argument != NULL) {
             Checked_Expression *argument_expression = Checker__check_expression(self, parsed_argument->expression, function_parameter->type);
@@ -220,19 +358,19 @@ Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Ex
             parsed_argument = parsed_argument->next_argument;
         }
         if (function_parameter != NULL) {
-            pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__TODO);
+            pWriter__begin_location_message(stderr_writer, checked_callable.callee_expression->location, WRITER_STYLE__TODO);
             pWriter__write__cstring(stderr_writer, "Report too few arguments");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
         if (parsed_argument != NULL) {
-            pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__TODO);
+            pWriter__begin_location_message(stderr_writer, checked_callable.callee_expression->location, WRITER_STYLE__TODO);
             pWriter__write__cstring(stderr_writer, "Report too many arguments");
             pWriter__end_location_message(stderr_writer);
             panic();
         }
     }
-    return (Checked_Expression *)Checked_Call_Expression__create(parsed_expression->super.location, function_type->return_type, callee_expression, first_argument);
+    return (Checked_Expression *)Checked_Call_Expression__create(checked_callable.callee_expression->location, checked_callable.function_type->return_type, checked_callable.callee_expression, first_argument);
 }
 
 Checked_Expression *Checker__check_cast_expression(Checker *self, Parsed_Cast_Expression *parsed_expression) {
@@ -525,9 +663,47 @@ Checked_Expression *Checker__check_substract_expression(Checker *self, Parsed_Su
     return (Checked_Expression *)Checked_Substract_Expression__create(parsed_expression->super.super.location, left_expression->type, left_expression, right_expression);
 }
 
-Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression) {
+Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbol_Expression *parsed_expression, Checked_Type *expected_type) {
+    if (expected_type != NULL && expected_type->kind == CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+        Checked_Symbol *symbol = self->global_symbols->first_symbol;
+        for (; symbol != NULL; symbol = symbol->next_symbol) {
+            if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
+                Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
+                if (String__equals_string(function_symbol->function_name, parsed_expression->name->lexeme) && Checked_Type__equals(symbol->type, expected_type)) {
+                    return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, expected_type, symbol);
+                }
+            }
+        }
+        pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Undefined function: ");
+        pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
+        pWriter__end_location_message(stderr_writer);
+        panic();
+    }
     Checked_Symbol *symbol = Checked_Symbols__find_symbol(self->symbols, parsed_expression->name->lexeme);
     if (symbol == NULL) {
+        if (expected_type == NULL) {
+            Checked_Symbol *function_symbol = NULL;
+            int function_simbols = 0;
+            symbol = self->global_symbols->first_symbol;
+            for (; symbol != NULL; symbol = symbol->next_symbol) {
+                if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && String__equals_string(((Checked_Function_Symbol *)symbol)->function_name, parsed_expression->name->lexeme)) {
+                    function_symbol = symbol;
+                    function_simbols++;
+                }
+            }
+            if (function_simbols == 1) {
+                return (Checked_Expression *)Checked_Symbol_Expression__create(parsed_expression->super.location, function_symbol->type, function_symbol);
+            } else if (function_simbols > 1) {
+                pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Found ");
+                pWriter__write__int64(stderr_writer, function_simbols);
+                pWriter__write__cstring(stderr_writer, " functions named: ");
+                pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
+        }
         pWriter__begin_location_message(stderr_writer, parsed_expression->name->location, WRITER_STYLE__ERROR);
         pWriter__write__cstring(stderr_writer, "Undefined symbol: ");
         pWriter__write__string(stderr_writer, parsed_expression->name->lexeme);
@@ -544,66 +720,67 @@ Checked_Expression *Checker__check_symbol_expression(Checker *self, Parsed_Symbo
 }
 
 Checked_Expression *Checker__check_expression(Checker *self, Parsed_Expression *parsed_expression, Checked_Type *expected_type) {
-    if (parsed_expression->kind == PARSED_EXPRESSION_KIND__ADD) {
+    switch (parsed_expression->kind) {
+    case PARSED_EXPRESSION_KIND__ADD:
         return Checker__check_add_expression(self, (Parsed_Add_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__ADDRESS_OF) {
+    case PARSED_EXPRESSION_KIND__ADDRESS_OF:
         return Checker__check_address_of_expression(self, (Parsed_Address_Of_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__ARRAY_ACCESS) {
+    case PARSED_EXPRESSION_KIND__ARRAY_ACCESS:
         return Checker__check_array_access_expression(self, (Parsed_Array_Access_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__BOOL) {
+    case PARSED_EXPRESSION_KIND__BOOL:
         return Checker__check_bool_expression(self, (Parsed_Bool_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__CALL) {
+    case PARSED_EXPRESSION_KIND__CALL:
         return Checker__check_call_expression(self, (Parsed_Call_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__CAST) {
+    case PARSED_EXPRESSION_KIND__CAST:
         return Checker__check_cast_expression(self, (Parsed_Cast_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__CHARACTER) {
+    case PARSED_EXPRESSION_KIND__CHARACTER:
         return Checker__check_character_expression(self, (Parsed_Character_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__DEREFERENCE) {
+    case PARSED_EXPRESSION_KIND__DEREFERENCE:
         return Checker__check_dereference_expression(self, (Parsed_Dereference_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__DIVIDE) {
+    case PARSED_EXPRESSION_KIND__DIVIDE:
         return Checker__check_divide_expression(self, (Parsed_Divide_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__EQUALS) {
+    case PARSED_EXPRESSION_KIND__EQUALS:
         return Checker__check_equals_expression(self, (Parsed_Equals_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__GREATER) {
+    case PARSED_EXPRESSION_KIND__GREATER:
         return Checker__check_greater_expression(self, (Parsed_Greater_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS) {
+    case PARSED_EXPRESSION_KIND__GREATER_OR_EQUALS:
         return Checker__check_greater_or_equals_expression(self, (Parsed_Greater_Or_Equals_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__GROUP) {
+    case PARSED_EXPRESSION_KIND__GROUP:
         return Checker__check_group_expression(self, (Parsed_Group_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__INTEGER) {
+    case PARSED_EXPRESSION_KIND__INTEGER:
         return Checker__check_integer_expression(self, (Parsed_Integer_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__LESS) {
+    case PARSED_EXPRESSION_KIND__LESS:
         return Checker__check_less_expression(self, (Parsed_Less_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__LESS_OR_EQUALS) {
+    case PARSED_EXPRESSION_KIND__LESS_OR_EQUALS:
         return Checker__check_less_or_equals_expression(self, (Parsed_Less_Or_Equals_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__LOGIC_AND) {
+    case PARSED_EXPRESSION_KIND__LOGIC_AND:
         return Checker__check_logic_and_expression(self, (Parsed_Logic_And_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__LOGIC_OR) {
+    case PARSED_EXPRESSION_KIND__LOGIC_OR:
         return Checker__check_logic_or_expression(self, (Parsed_Logic_Or_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__MAKE) {
+    case PARSED_EXPRESSION_KIND__MAKE:
         return Checker__check_make_expression(self, (Parsed_Make_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__MEMBER_ACCESS) {
+    case PARSED_EXPRESSION_KIND__MEMBER_ACCESS:
         return Checker__check_member_access_expression(self, (Parsed_Member_Access_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__MINUS) {
+    case PARSED_EXPRESSION_KIND__MINUS:
         return Checker__check_minus_expression(self, (Parsed_Minus_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__MODULO) {
+    case PARSED_EXPRESSION_KIND__MODULO:
         return Checker__check_modulo_expression(self, (Parsed_Modulo_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__MULTIPLY) {
+    case PARSED_EXPRESSION_KIND__MULTIPLY:
         return Checker__check_multiply_expression(self, (Parsed_Multiply_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__NOT) {
+    case PARSED_EXPRESSION_KIND__NOT:
         return Checker__check_not_expression(self, (Parsed_Not_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__NOT_EQUALS) {
+    case PARSED_EXPRESSION_KIND__NOT_EQUALS:
         return Checker__check_not_equals_expression(self, (Parsed_Not_Equals_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__NULL) {
+    case PARSED_EXPRESSION_KIND__NULL:
         return Checker__check_null_expression(self, (Parsed_Null_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__SIZEOF) {
+    case PARSED_EXPRESSION_KIND__SIZEOF:
         return Checker__check_sizeof_expression(self, (Parsed_Sizeof_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__STRING) {
+    case PARSED_EXPRESSION_KIND__STRING:
         return Checker__check_string_expression(self, (Parsed_String_Expression *)parsed_expression);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__SUBSTRACT) {
+    case PARSED_EXPRESSION_KIND__SUBSTRACT:
         return Checker__check_substract_expression(self, (Parsed_Substract_Expression *)parsed_expression, expected_type);
-    } else if (parsed_expression->kind == PARSED_EXPRESSION_KIND__SYMBOL) {
-        return Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression);
+    case PARSED_EXPRESSION_KIND__SYMBOL:
+        return Checker__check_symbol_expression(self, (Parsed_Symbol_Expression *)parsed_expression, expected_type);
     }
     pWriter__begin_location_message(stderr_writer, parsed_expression->location, WRITER_STYLE__ERROR);
     pWriter__write__cstring(stderr_writer, "Unsupported expression kind");
@@ -746,8 +923,21 @@ Checked_While_Statement *Checker__check_while_statement(Checker *self, Parsed_Wh
     return Checked_While_Statement__create(parsed_statement->super.location, considition_expression, body_statement);
 }
 
+static void String__append_receiver_type(String *symbol_name, Checked_Type *receiver_type) {
+    switch (receiver_type->kind) {
+    case CHECKED_TYPE_KIND__POINTER:
+        String__append_char(symbol_name, 'p');
+        String__append_receiver_type(symbol_name, ((Checked_Pointer_Type *)receiver_type)->other_type);
+        break;
+    case CHECKED_TYPE_KIND__STRUCT:
+        String__append_string(symbol_name, ((Checked_Named_Type *)receiver_type)->name);
+        break;
+    default:
+        panic();
+    }
+}
+
 void Checker__check_function_declaration(Checker *self, Parsed_Function_Statement *parsed_statement) {
-    String *function_name = parsed_statement->super.name->lexeme;
     Checked_Type *function_return_type;
     if (parsed_statement->return_type != NULL) {
         function_return_type = Checker__resolve_type(self, parsed_statement->return_type);
@@ -757,11 +947,11 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
     Checked_Function_Parameter *function_first_parameter = NULL;
     Parsed_Function_Parameter *parsed_parameter = parsed_statement->first_parameter;
     if (parsed_parameter != NULL) {
-        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
         Checked_Function_Parameter *function_last_parameter = function_first_parameter;
         parsed_parameter = parsed_parameter->next_parameter;
         while (parsed_parameter != NULL) {
-            Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
+            Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
             function_last_parameter->next_parameter = function_parameter;
             function_last_parameter = function_parameter;
             parsed_parameter = parsed_parameter->next_parameter;
@@ -769,17 +959,30 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
     }
     Checked_Function_Type *function_type = Checked_Function_Type__create(parsed_statement->super.super.location, function_first_parameter, function_return_type);
 
-    Checked_Symbol *other_symbol = Checked_Symbols__find_sibling_symbol(self->symbols, function_name);
-    if (other_symbol != NULL) {
-        if (other_symbol->kind != CHECKED_SYMBOL_KIND__FUNCTION || !Checked_Type__equals((Checked_Type *)function_type, (Checked_Type *)((Checked_Function_Symbol *)other_symbol)->function_type)) {
-            pWriter__begin_location_message(stderr_writer, parsed_statement->super.name->location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Function name already used");
-            pWriter__end_location_message(stderr_writer);
-            panic();
-        }
-    } else {
-        Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Function_Symbol__create(parsed_statement->super.name->location, function_name, function_type));
+    String *function_name = parsed_statement->super.name->lexeme;
+
+    String *symbol_name = String__create();
+    Checked_Type *receiver_type = NULL;
+    if (parsed_statement->receiver_type != NULL) {
+        receiver_type = Checker__resolve_type(self, parsed_statement->receiver_type);
+        String__append_receiver_type(symbol_name, receiver_type);
+        String__append_cstring(symbol_name, "__");
     }
+    String__append_string(symbol_name, function_name);
+    Checked_Function_Parameter *function_parameter = function_first_parameter;
+    int function_parameter_index = 0;
+    while (function_parameter != NULL) {
+        if (function_parameter->label != NULL) {
+            String__append_cstring(symbol_name, "__");
+            String__append_int16_t(symbol_name, function_parameter_index);
+            String__append_cstring(symbol_name, "_");
+            String__append_string(symbol_name, function_parameter->label);
+        }
+        function_parameter = function_parameter->next_parameter;
+        function_parameter_index++;
+    }
+
+    Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Function_Symbol__create(parsed_statement->super.name->location, symbol_name, function_name, function_type, receiver_type));
 }
 
 Checked_Statement *Checker__check_statement(Checker *self, Parsed_Statement *parsed_statement) {
@@ -827,9 +1030,18 @@ Checked_Statements *Checker__check_statements(Checker *self, Parsed_Statements *
 }
 
 void Checker__check_function_definition(Checker *self, Parsed_Function_Statement *parsed_statement) {
-    Checked_Symbol *symbol = Checked_Symbols__find_sibling_symbol(self->symbols, parsed_statement->super.name->lexeme);
-    if (symbol == NULL || symbol->kind != CHECKED_SYMBOL_KIND__FUNCTION) {
-        pWriter__write__todo(stderr_writer, __FILE__, __LINE__, "Report missing function symbol");
+    Checked_Symbol *symbol = self->symbols->first_symbol;
+    while (symbol != NULL) {
+        if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
+            Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
+            if (function_symbol->function_name == parsed_statement->super.name->lexeme) {
+                break;
+            }
+        }
+        symbol = symbol->next_symbol;
+    }
+    if (symbol == NULL) {
+        // Function symbol should exist
         panic();
     }
     Checked_Function_Symbol *function_symbol = (Checked_Function_Symbol *)symbol;
@@ -880,7 +1092,12 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
             checked_statement = (Checked_Statement *)Checker__check_variable_statement(self, (Parsed_Variable_Statement *)parsed_statement);
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
-            /* ignored */
+            Parsed_Struct_Statement *parsed_struct_statement = (Parsed_Struct_Statement *)parsed_statement;
+            Parsed_Struct_Method *parsed_struct_method = parsed_struct_statement->first_method;
+            while (parsed_struct_method != NULL) {
+                Checker__check_function_declaration(self, parsed_struct_method->function_statement);
+                parsed_struct_method = parsed_struct_method->next_method;
+            }
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__EXTERNAL_TYPE) {
             /* ignored */
         } else {
@@ -906,7 +1123,13 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__VARIABLE) {
             /* ignored */
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__STRUCT) {
-            /* ignored */
+            Parsed_Struct_Statement *parsed_struct_statement = (Parsed_Struct_Statement *)parsed_statement;
+            Parsed_Struct_Method *parsed_struct_method = parsed_struct_statement->first_method;
+            while (parsed_struct_method != NULL) {
+                Checker__check_function_definition(self, parsed_struct_method->function_statement);
+                parsed_struct_method = parsed_struct_method->next_method;
+            }
+
         } else if (parsed_statement->kind == PARSED_STATEMENT_KIND__EXTERNAL_TYPE) {
             /* ignored */
         } else {

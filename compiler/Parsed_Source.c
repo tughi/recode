@@ -17,8 +17,9 @@ Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_T
     return type;
 }
 
-Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *name, Parsed_Type *type) {
+Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *label, Token *name, Parsed_Type *type) {
     Parsed_Function_Parameter *parameter = (Parsed_Function_Parameter *)malloc(sizeof(Parsed_Function_Parameter));
+    parameter->label = label;
     parameter->name = name;
     parameter->type = type;
     parameter->next_parameter = NULL;
@@ -269,8 +270,9 @@ Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Lo
     return (Parsed_External_Type_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__EXTERNAL_TYPE, sizeof(Parsed_External_Type_Statement), location, name);
 }
 
-Parsed_Statement *Parsed_Function_Statement__create(Source_Location *location, Token *name, Parsed_Function_Parameter *first_parameter, Parsed_Type *resturn_type, Parsed_Statements *statements, bool is_external) {
+Parsed_Statement *Parsed_Function_Statement__create(Source_Location *location, Token *name, Parsed_Type *receiver_type, Parsed_Function_Parameter *first_parameter, Parsed_Type *resturn_type, Parsed_Statements *statements, bool is_external) {
     Parsed_Function_Statement *statement = (Parsed_Function_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__FUNCTION, sizeof(Parsed_Function_Statement), location, name);
+    statement->receiver_type = receiver_type;
     statement->first_parameter = first_parameter;
     statement->return_type = resturn_type;
     statement->statements = statements;
@@ -306,9 +308,17 @@ Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *typ
     return member;
 }
 
+Parsed_Struct_Method *Parsed_Struct_Method__create(Parsed_Function_Statement *function_statement) {
+    Parsed_Struct_Method *method = (Parsed_Struct_Method *)malloc(sizeof(Parsed_Struct_Method));
+    method->function_statement = function_statement;
+    method->next_method = NULL;
+    return method;
+}
+
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *location, Token *name) {
     Parsed_Struct_Statement *statement = (Parsed_Struct_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__STRUCT, sizeof(Parsed_Struct_Statement), location, name);
     statement->first_member = NULL;
+    statement->first_method = NULL;
     return statement;
 }
 

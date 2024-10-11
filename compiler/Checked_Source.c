@@ -48,9 +48,10 @@ Checked_External_Type *Checked_External_Type__create(Source_Location *location, 
     return type;
 }
 
-Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location *location, String *name, Checked_Type *type) {
+Checked_Function_Parameter *Checked_Function_Parameter__create(Source_Location *location, String *label, String *name, Checked_Type *type) {
     Checked_Function_Parameter *parameter = (Checked_Function_Parameter *)malloc(sizeof(Checked_Function_Parameter));
     parameter->location = location;
+    parameter->label = label;
     parameter->name = name;
     parameter->type = type;
     parameter->next_parameter = NULL;
@@ -64,16 +65,12 @@ Checked_Function_Type *Checked_Function_Type__create(Source_Location *location, 
     return type;
 }
 
-bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Type *other_type) {
-    if (other_type->kind != self->super.kind) {
-        return false;
-    }
-    Checked_Function_Type *function_type = (Checked_Function_Type *)other_type;
-    if (!Checked_Type__equals(self->return_type, function_type->return_type)) {
+bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Function_Type *other) {
+    if (!Checked_Type__equals(self->return_type, other->return_type)) {
         return false;
     }
     Checked_Function_Parameter *self_parameter = self->first_parameter;
-    Checked_Function_Parameter *function_parameter = function_type->first_parameter;
+    Checked_Function_Parameter *function_parameter = other->first_parameter;
     while (self_parameter != NULL && function_parameter != NULL) {
         if (!Checked_Type__equals(self_parameter->type, function_parameter->type)) {
             return false;
@@ -87,17 +84,24 @@ bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Type *ot
     return true;
 }
 
+Checked_Function_Pointer_Type *Checked_Function_Pointer_Type__create(Source_Location *location, Checked_Function_Type *function_type) {
+    Checked_Function_Pointer_Type *type = (Checked_Function_Pointer_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__FUNCTION_POINTER, sizeof(Checked_Function_Pointer_Type), location);
+    type->function_type = function_type;
+    return type;
+}
+
+bool Checked_Function_Pointer_Type__equals(Checked_Function_Pointer_Type *self, Checked_Function_Pointer_Type *other) {
+    return Checked_Function_Type__equals(self->function_type, other->function_type);
+}
+
 Checked_Pointer_Type *Checked_Pointer_Type__create(Source_Location *location, Checked_Type *other_type) {
     Checked_Pointer_Type *type = (Checked_Pointer_Type *)Checked_Type__create_kind(CHECKED_TYPE_KIND__POINTER, sizeof(Checked_Pointer_Type), location);
     type->other_type = other_type;
     return type;
 }
 
-bool Checked_Pointer_Type__equals(Checked_Pointer_Type *self, Checked_Type *other_type) {
-    if (other_type->kind != self->super.kind) {
-        return false;
-    }
-    return Checked_Type__equals(self->other_type, ((Checked_Pointer_Type *)other_type)->other_type);
+bool Checked_Pointer_Type__equals(Checked_Pointer_Type *self, Checked_Pointer_Type *other) {
+    return Checked_Type__equals(self->other_type, other->other_type);
 }
 
 Checked_Struct_Member *Checked_Struct_Member__create(Source_Location *location, String *name, Checked_Type *type) {
@@ -126,71 +130,32 @@ Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *sel
     return member;
 }
 
-bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Type *other_type) {
-    if (self->super.super.kind != other_type->kind) {
-        return false;
-    }
-    return String__equals_string(self->super.name, ((Checked_Struct_Type *)other_type)->super.name);
+bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Struct_Type *other) {
+    return String__equals_string(self->super.name, other->super.name);
 }
 
-bool Checked_Type__equals(Checked_Type *self, Checked_Type *other_type) {
-    if (self == other_type) {
+bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
+    if (self == other) {
         return true;
     }
-    if (self->kind != other_type->kind) {
+    if (self->kind != other->kind) {
         return false;
     }
-    if (self->kind == CHECKED_TYPE_KIND__FUNCTION) {
-        return Checked_Function_Type__equals((Checked_Function_Type *)self, other_type);
-    }
-    if (self->kind == CHECKED_TYPE_KIND__POINTER) {
-        return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, other_type);
-    }
-    if (self->kind == CHECKED_TYPE_KIND__STRUCT) {
-        return Checked_Struct_Type__equals((Checked_Struct_Type *)self, other_type);
+    switch (self->kind) {
+    case CHECKED_TYPE_KIND__FUNCTION:
+        return Checked_Function_Type__equals((Checked_Function_Type *)self, (Checked_Function_Type *)other);
+    case CHECKED_TYPE_KIND__FUNCTION_POINTER:
+        return Checked_Function_Pointer_Type__equals((Checked_Function_Pointer_Type *)self, (Checked_Function_Pointer_Type *)other);
+    case CHECKED_TYPE_KIND__POINTER:
+        return Checked_Pointer_Type__equals((Checked_Pointer_Type *)self, (Checked_Pointer_Type *)other);
+    case CHECKED_TYPE_KIND__STRUCT:
+        return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
     }
     pWriter__style(stderr_writer, WRITER_STYLE__TODO);
     pWriter__write__cstring(stderr_writer, "Unsupported types");
     pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
     pWriter__end_line(stderr_writer);
     panic();
-}
-
-String *String__append_checked_type(String *self, Checked_Type *type) {
-    if (type->kind <= CHECKED_TYPE_KIND__NULL) {
-        Checked_Named_Type *named_type = (Checked_Named_Type *)type;
-        String__append_string(self, named_type->name);
-    } else if (type->kind == CHECKED_TYPE_KIND__STRUCT) {
-        Checked_Struct_Type *struct_type = (Checked_Struct_Type *)type;
-        String__append_cstring(self, "struct ");
-        String__append_string(self, struct_type->super.name);
-    } else if (type->kind == CHECKED_TYPE_KIND__FUNCTION) {
-        Checked_Function_Type *function_type = (Checked_Function_Type *)type;
-        String__append_checked_type(self, function_type->return_type);
-        String__append_char(self, ' ');
-        String__append_char(self, '(');
-        Checked_Function_Parameter *function_parameter = function_type->first_parameter;
-        while (function_parameter != NULL) {
-            String__append_checked_type(self, function_parameter->type);
-            String__append_char(self, ' ');
-            String__append_string(self, function_parameter->name);
-            function_parameter = function_parameter->next_parameter;
-            if (function_parameter != NULL) {
-                String__append_cstring(self, ", ");
-            }
-        }
-        String__append_char(self, ')');
-    } else if (type->kind == CHECKED_TYPE_KIND__POINTER) {
-        Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
-        String__append_checked_type(self, pointer_type->other_type);
-        String__append_char(self, '*');
-    } else {
-        pWriter__begin_location_message(stderr_writer, type->location, WRITER_STYLE__ERROR);
-        pWriter__write__cstring(stderr_writer, "Unsupported type");
-        pWriter__end_location_message(stderr_writer);
-        panic();
-    }
-    return self;
 }
 
 void pWriter__write__checked_function_parameter(Writer *writer, Checked_Function_Parameter *parameter) {
@@ -246,6 +211,27 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
         }
         break;
     }
+    case CHECKED_TYPE_KIND__FUNCTION: {
+        panic();
+        break;
+    }
+    case CHECKED_TYPE_KIND__FUNCTION_POINTER: {
+        Checked_Function_Pointer_Type *function_pointer_type = (Checked_Function_Pointer_Type *)type;
+        pWriter__write__cstring(self, "func (");
+        Checked_Function_Parameter *function_parameter = function_pointer_type->function_type->first_parameter;
+        while (function_parameter != NULL) {
+            pWriter__write__string(self, function_parameter->name);
+            pWriter__write__cstring(self, ": ");
+            pWriter__write__checked_type(self, function_parameter->type);
+            function_parameter = function_parameter->next_parameter;
+            if (function_parameter != NULL) {
+                pWriter__write__cstring(self, ", ");
+            }
+        }
+        pWriter__write__cstring(self, ") -> ");
+        pWriter__write__checked_type(self, function_pointer_type->function_type->return_type);
+        break;
+    }
     case CHECKED_TYPE_KIND__POINTER: {
         Checked_Pointer_Type *pointer_type = (Checked_Pointer_Type *)type;
         pWriter__write__char(self, '@');
@@ -272,9 +258,11 @@ Checked_Enum_Member_Symbol *Checked_Enum_Member_Symbol__create(Source_Location *
     return (Checked_Enum_Member_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__ENUM_MEMBER, sizeof(Checked_Enum_Member_Symbol), location, name, type);
 }
 
-Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *location, String *name, Checked_Function_Type *function_type) {
-    Checked_Function_Symbol *symbol = (Checked_Function_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__FUNCTION, sizeof(Checked_Function_Symbol), location, name, (Checked_Type *)Checked_Pointer_Type__create(function_type->super.location, (Checked_Type *)function_type));
+Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *location, String *symbol_name, String *function_name, Checked_Function_Type *function_type, Checked_Type *receiver_type) {
+    Checked_Function_Symbol *symbol = (Checked_Function_Symbol *)Checked_Symbol__create_kind(CHECKED_SYMBOL_KIND__FUNCTION, sizeof(Checked_Function_Symbol), location, symbol_name, (Checked_Type *)Checked_Function_Pointer_Type__create(function_type->super.location, function_type));
+    symbol->function_name = function_name;
     symbol->function_type = function_type;
+    symbol->receiver_type = receiver_type;
     symbol->checked_statements = NULL;
     return symbol;
 }
@@ -313,9 +301,11 @@ Checked_Symbol *Checked_Symbols__find_sibling_symbol(Checked_Symbols *self, Stri
 }
 
 void Checked_Symbols__append_symbol(Checked_Symbols *self, Checked_Symbol *symbol) {
-    if (Checked_Symbols__find_sibling_symbol(self, symbol->name) != NULL) {
-        pWriter__begin_location_message(stderr_writer, symbol->location, WRITER_STYLE__TODO);
-        pWriter__write__cstring(stderr_writer, "TODO: Report symbol redeclaration");
+    Checked_Symbol *other_symbol = Checked_Symbols__find_sibling_symbol(self, symbol->name);
+    if (other_symbol != NULL) {
+        pWriter__begin_location_message(stderr_writer, symbol->location, WRITER_STYLE__ERROR);
+        pWriter__write__cstring(stderr_writer, "Symbol already defined here: ");
+        pWriter__write__location(stderr_writer, other_symbol->location);
         pWriter__end_location_message(stderr_writer);
         panic();
     }

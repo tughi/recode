@@ -110,6 +110,19 @@ void declare_function(CDECL *cdecl, Checked_Function_Type *function_type) {
     }
 }
 
+void declare_function_pointer(CDECL *cdecl, Checked_Function_Pointer_Type *function_pointer_type) {
+    CDECL function_cdecl = {NULL, NULL, NULL};
+    declare_function(&function_cdecl, function_pointer_type->function_type);
+    cdecl->type = function_cdecl.type;
+    cdecl->left = String__create_from("(*");
+    if (function_cdecl.left != NULL) {
+        panic();
+    }
+    cdecl->right = String__create_from(")");
+    String__append_string(cdecl->right, function_cdecl.right);
+    String__delete(function_cdecl.right);
+}
+
 void declare_pointer(CDECL *cdecl, Checked_Pointer_Type *pointer_type) {
     CDECL type_cdecl = {NULL, NULL, NULL};
     declare(&type_cdecl, pointer_type->other_type);
@@ -162,6 +175,8 @@ void declare(CDECL *cdecl, Checked_Type *symbol_type) {
         cdecl->type = String__create_copy(((Checked_External_Type *)symbol_type)->super.name);
     } else if (symbol_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
         declare_function(cdecl, (Checked_Function_Type *)symbol_type);
+    } else if (symbol_type->kind == CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+        declare_function_pointer(cdecl, (Checked_Function_Pointer_Type *)symbol_type);
     } else if (symbol_type->kind == CHECKED_TYPE_KIND__STRUCT) {
         cdecl->type = String__create_from("struct ");
         String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);

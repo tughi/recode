@@ -67,12 +67,13 @@ typedef struct Parsed_Array_Type {
 Parsed_Array_Type *Parsed_Array_Type__create(Source_Location *location, Parsed_Type *item_type, bool is_checked, Parsed_Expression *size_expression);
 
 typedef struct Parsed_Function_Parameter {
+    Token *label;
     Token *name;
     Parsed_Type *type;
     struct Parsed_Function_Parameter *next_parameter;
 } Parsed_Function_Parameter;
 
-Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *name, Parsed_Type *type);
+Parsed_Function_Parameter *Parsed_Function_Parameter__create(Token *label, Token *name, Parsed_Type *type);
 
 typedef struct Parsed_Function_Type {
     Parsed_Type super;
@@ -402,13 +403,14 @@ Parsed_External_Type_Statement *Parsed_External_Type_Statement__create(Source_Lo
 
 typedef struct Parsed_Function_Statement {
     Parsed_Named_Statement super;
+    Parsed_Type *receiver_type;
     Parsed_Function_Parameter *first_parameter;
     Parsed_Type *return_type;
     struct Parsed_Statements *statements;
     bool is_external;
 } Parsed_Function_Statement;
 
-Parsed_Statement *Parsed_Function_Statement__create(Source_Location *location, Token *name, Parsed_Function_Parameter *first_parameter, Parsed_Type *resturn_type, struct Parsed_Statements *statements, bool is_external);
+Parsed_Statement *Parsed_Function_Statement__create(Source_Location *location, Token *name, Parsed_Type *receiver_type, Parsed_Function_Parameter *first_parameter, Parsed_Type *resturn_type, struct Parsed_Statements *statements, bool is_external);
 
 typedef struct Parsed_If_Statement {
     Parsed_Statement super;
@@ -441,9 +443,17 @@ typedef struct Parsed_Struct_Member {
 
 Parsed_Struct_Member *Parsed_Struct_Member__create(Token *name, Parsed_Type *type);
 
+typedef struct Parsed_Struct_Method {
+    Parsed_Function_Statement *function_statement;
+    struct Parsed_Struct_Method *next_method;
+} Parsed_Struct_Method;
+
+Parsed_Struct_Method *Parsed_Struct_Method__create(Parsed_Function_Statement *function_statement);
+
 typedef struct Parsed_Struct_Statement {
     Parsed_Named_Statement super;
     Parsed_Struct_Member *first_member;
+    Parsed_Struct_Method *first_method;
 } Parsed_Struct_Statement;
 
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *location, Token *name);
