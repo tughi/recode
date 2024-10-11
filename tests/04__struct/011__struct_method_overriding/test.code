@@ -10,8 +10,18 @@ struct Number {
     }
 }
 
+struct Boolean {
+    value: bool
+
+    func get_value(self) -> bool {
+        return self.value
+    }
+}
+
 func main() -> i32 {
     let number = make Number(value: 0)
+
     number.set_value(42)
+
     return number.get_value() - 42
 }

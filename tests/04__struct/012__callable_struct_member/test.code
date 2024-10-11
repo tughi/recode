@@ -1,0 +1,13 @@
+struct Function {
+    run: func () -> i32
+}
+
+func forty_two() -> i32 {
+    return 42
+}
+
+func main() -> i32 {
+    let function = make Function(run: forty_two)
+
+    return function.run() - 42
+}

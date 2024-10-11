@@ -4,16 +4,16 @@
 
 int32_t main();
 
-int32_t fibonacci(int32_t n);
+int32_t fibonacci__0_n(int32_t n);
 
 #line 1 "tests/01__basics/015__break/test.code"
 int32_t main() {
 #line 2 "tests/01__basics/015__break/test.code"
-    return fibonacci(12) - 144;
+    return fibonacci__0_n(12) - 144;
 }
 
 #line 5 "tests/01__basics/015__break/test.code"
-int32_t fibonacci(int32_t n) {
+int32_t fibonacci__0_n(int32_t n) {
 #line 6 "tests/01__basics/015__break/test.code"
     if (n <= 1) {
 #line 7 "tests/01__basics/015__break/test.code"
