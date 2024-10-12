@@ -1,0 +1,17 @@
+func [u8; ?].length(self) -> i32 {
+    let length = 0
+    while self[length] != 0 {
+        length = length + 1
+    }
+    return length
+}
+
+func main(anon argc: i32, anon argv: [[u8; ?]; ?]) -> i32 {
+    if argc != 2 {
+        return 1
+    }
+    if argv[1].length() != 4 {
+        return 2
+    }
+    return 0
+}

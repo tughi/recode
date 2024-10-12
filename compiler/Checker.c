@@ -304,12 +304,8 @@ Checked_Callable Checker__check_callable_member(Checker *self, Parsed_Member_Acc
             object_type = (Checked_Type *)Checked_Pointer_Type__create(object_type->location, object_type);
             object_expression = (Checked_Expression *)Checked_Address_Of_Expression__create(parsed_callee_expression->object_expression->location, object_type, object_expression);
         }
-        return Checker__check_callable_symbol(self, parsed_callee_expression->member_name, first_parsed_argument, object_expression);
     }
-    pWriter__begin_location_message(stderr_writer, parsed_callee_expression->object_expression->location, WRITER_STYLE__ERROR);
-    pWriter__write__cstring(stderr_writer, "Not a struct");
-    pWriter__end_location_message(stderr_writer);
-    panic();
+    return Checker__check_callable_symbol(self, parsed_callee_expression->member_name, first_parsed_argument, object_expression);
 }
 
 Checked_Expression *Checker__check_call_expression(Checker *self, Parsed_Call_Expression *parsed_expression) {
@@ -925,13 +921,28 @@ Checked_While_Statement *Checker__check_while_statement(Checker *self, Parsed_Wh
 
 static void String__append_receiver_type(String *symbol_name, Checked_Type *receiver_type) {
     switch (receiver_type->kind) {
-    case CHECKED_TYPE_KIND__POINTER:
+    case CHECKED_TYPE_KIND__ARRAY: {
+        Checked_Array_Type *array_type = (Checked_Array_Type *)receiver_type;
+        if (array_type->is_checked) {
+            panic();
+        }
+        String__append_cstring(symbol_name, "d_");
+        String__append_receiver_type(symbol_name, array_type->item_type);
+        String__append_cstring(symbol_name, "_b");
+        break;
+    }
+    case CHECKED_TYPE_KIND__POINTER: {
         String__append_char(symbol_name, 'p');
         String__append_receiver_type(symbol_name, ((Checked_Pointer_Type *)receiver_type)->other_type);
         break;
+    }
+    case CHECKED_TYPE_KIND__I32:
+    case CHECKED_TYPE_KIND__EXTERNAL:
     case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__U8: {
         String__append_string(symbol_name, ((Checked_Named_Type *)receiver_type)->name);
         break;
+    }
     default:
         panic();
     }

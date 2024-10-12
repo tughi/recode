@@ -37,6 +37,20 @@ Checked_Array_Type *Checked_Array_Type__create(Source_Location *location, Checke
     return type;
 }
 
+bool Checked_Array_Type__equals(Checked_Array_Type *self, Checked_Array_Type *other) {
+    if (self->is_checked != other->is_checked || !Checked_Type__equals(self->item_type, other->item_type)) {
+        return false;
+    }
+    if (self->size_expression == NULL) {
+        return other->size_expression == NULL;
+    }
+    if (other->size_expression == NULL) {
+        return false;
+    }
+    // TODO: check size expressions
+    panic();
+}
+
 Checked_Named_Type *Checked_Named_Type__create_kind(Checked_Type_Kind kind, size_t kind_size, Source_Location *location, String *name) {
     Checked_Named_Type *type = (Checked_Named_Type *)Checked_Type__create_kind(kind, kind_size, location);
     type->name = name;
@@ -142,6 +156,8 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
         return false;
     }
     switch (self->kind) {
+    case CHECKED_TYPE_KIND__ARRAY:
+        return Checked_Array_Type__equals((Checked_Array_Type *)self, (Checked_Array_Type *)other);
     case CHECKED_TYPE_KIND__FUNCTION:
         return Checked_Function_Type__equals((Checked_Function_Type *)self, (Checked_Function_Type *)other);
     case CHECKED_TYPE_KIND__FUNCTION_POINTER:

@@ -753,7 +753,23 @@ Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_typ
     }
     Source_Location *location = Parser__consume_token(self, Token__is_func)->location;
     Parser__consume_space(self, 1);
-    Token *name = Parser__consume_token(self, Token__is_identifier);
+    Token *name = NULL;
+    if (Parser__matches_three(self, Token__is_identifier, true, Token__is_space, false, Token__is_opening_paren)) {
+        name = Parser__consume_token(self, Token__is_identifier);
+    } else {
+        Parsed_Type *type = Parser__parse_type(self);
+        Parser__consume_space(self, 0);
+        Parser__consume_token(self, Token__is_dot);
+        Parser__consume_space(self, 0);
+        name = Parser__consume_token(self, Token__is_identifier);
+        if (receiver_type != NULL) {
+            pWriter__begin_location_message(stderr_writer, name->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Function already has a receiver type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
+        receiver_type = type;
+    }
     Parser__consume_space(self, 0);
     Parser__consume_token(self, Token__is_opening_paren);
     Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self, receiver_type);

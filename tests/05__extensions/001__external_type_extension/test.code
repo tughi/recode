@@ -1,12 +1,13 @@
-func main() {
+func main() -> i32 {
     stdout.write(char: '4').write(char: '2').write(char: '\n')
+    return 0
 }
 
-func @FILE.write(self, char: u8) -> @FILE {
-    fputc(char, stdout)
+func @FILE.write(self, char ch: u8) -> @FILE {
+    fputc(ch.as(i32), stdout)
     return self
 }
 
 external type FILE
 external stdout: @FILE
-external func fputc(anon c: u8, anon stream: @FILE) -> i32
+external func fputc(anon c: i32, anon stream: @FILE) -> i32
