@@ -47,7 +47,8 @@ typedef enum Parsed_Type_Kind {
     PARSED_TYPE_KIND__ARRAY,
     PARSED_TYPE_KIND__FUNCTION,
     PARSED_TYPE_KIND__NAMED,
-    PARSED_TYPE_KIND__POINTER
+    PARSED_TYPE_KIND__POINTER,
+    PARSED_TYPE_KIND__RECEIVER
 } Parsed_Type_Kind;
 
 typedef struct Parsed_Type {
@@ -96,6 +97,12 @@ typedef struct Parsed_Pointer_Type {
 } Parsed_Pointer_Type;
 
 Parsed_Type *Parsed_Pointer_Type__create(Parsed_Type *other_type);
+
+typedef struct Parsed_Receiver_Type {
+    Parsed_Type super;
+} Parsed_Receiver_Type;
+
+Parsed_Receiver_Type *Parsed_Receiver_Type__create(Source_Location *location);
 
 Parsed_Expression *Parsed_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location *location);
 
@@ -338,6 +345,7 @@ typedef enum Parsed_Statement_Kind {
     PARSED_STATEMENT_KIND__LOOP,
     PARSED_STATEMENT_KIND__RETURN,
     PARSED_STATEMENT_KIND__STRUCT,
+    PARSED_STATEMENT_KIND__TRAIT,
     PARSED_STATEMENT_KIND__VARIABLE,
     PARSED_STATEMENT_KIND__WHILE
 } Parsed_Statement_Kind;
@@ -457,6 +465,23 @@ typedef struct Parsed_Struct_Statement {
 } Parsed_Struct_Statement;
 
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *location, Token *name);
+
+typedef struct Parsed_Trait_Method {
+    Source_Location *location;
+    Token *name;
+    Parsed_Function_Parameter *first_parameter;
+    Parsed_Type *return_type;
+    struct Parsed_Trait_Method *next_method;
+} Parsed_Trait_Method;
+
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location *location, Token *name, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type);
+
+typedef struct Parsed_Trait_Statement {
+    Parsed_Named_Statement super;
+    Parsed_Trait_Method *first_method;
+} Parsed_Trait_Statement;
+
+Parsed_Trait_Statement *Parsed_Trait_Statement__create(Source_Location *location, Token *name);
 
 typedef struct Parsed_Variable_Statement {
     Parsed_Named_Statement super;

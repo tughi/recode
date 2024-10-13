@@ -45,6 +45,10 @@ Parsed_Type *Parsed_Pointer_Type__create(Parsed_Type *other_type) {
     return (Parsed_Type *)type;
 }
 
+Parsed_Receiver_Type *Parsed_Receiver_Type__create(Source_Location *location) {
+    return (Parsed_Receiver_Type *)Parsed_Type__create_kind(PARSED_TYPE_KIND__RECEIVER, sizeof(Parsed_Receiver_Type), location);
+}
+
 Parsed_Expression *Parsed_Expression__create_kind(Parsed_Expression_Kind kind, size_t kind_size, Source_Location *location) {
     Parsed_Expression *expression = (Parsed_Expression *)malloc(kind_size);
     expression->kind = kind;
@@ -318,6 +322,22 @@ Parsed_Struct_Method *Parsed_Struct_Method__create(Parsed_Function_Statement *fu
 Parsed_Struct_Statement *Parsed_Struct_Statement__create(Source_Location *location, Token *name) {
     Parsed_Struct_Statement *statement = (Parsed_Struct_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__STRUCT, sizeof(Parsed_Struct_Statement), location, name);
     statement->first_member = NULL;
+    statement->first_method = NULL;
+    return statement;
+}
+
+Parsed_Trait_Method *Parsed_Trait_Method__create(Source_Location *location, Token *name, Parsed_Function_Parameter *first_parameter, Parsed_Type *return_type) {
+    Parsed_Trait_Method *method = (Parsed_Trait_Method *)malloc(sizeof(Parsed_Trait_Method));
+    method->location = location;
+    method->name = name;
+    method->first_parameter = first_parameter;
+    method->return_type = return_type;
+    method->next_method = NULL;
+    return method;
+}
+
+Parsed_Trait_Statement *Parsed_Trait_Statement__create(Source_Location *location, Token *name) {
+    Parsed_Trait_Statement *statement = (Parsed_Trait_Statement *)Parsed_Named_Statement__create_kind(PARSED_STATEMENT_KIND__TRAIT, sizeof(Parsed_Trait_Statement), location, name);
     statement->first_method = NULL;
     return statement;
 }

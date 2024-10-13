@@ -51,24 +51,9 @@ Writer *pWriter__style(Writer *self, Writer_Style style) {
     case WRITER_STYLE__ERROR:
         pWriter__write__cstring(self, "\033[0;91m");
         break;
-    case WRITER_STYLE__TODO:
-        pWriter__write__cstring(self, "\033[0;95m");
-        break;
     case WRITER_STYLE__WARNING:
         pWriter__write__cstring(self, "\033[0;93m");
         break;
     }
     return self;
-}
-
-Writer *pWriter__write__todo(Writer *self, char *file, int line, char *message) {
-    pWriter__write__cstring(self, file);
-    pWriter__write__char(self, ':');
-    pWriter__write__int64(self, line);
-    pWriter__write__cstring(self, ": ");
-    pWriter__style(self, WRITER_STYLE__TODO);
-    pWriter__write__cstring(self, "TODO: ");
-    pWriter__write__cstring(self, message);
-    pWriter__style(self, WRITER_STYLE__DEFAULT);
-    return pWriter__end_line(self);
 }

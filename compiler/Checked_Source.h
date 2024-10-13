@@ -27,6 +27,7 @@ typedef enum Checked_Type_Kind {
     CHECKED_TYPE_KIND__EXTERNAL,
     CHECKED_TYPE_KIND__FUNCTION,
     CHECKED_TYPE_KIND__STRUCT,
+    CHECKED_TYPE_KIND__TRAIT,
     /* Dynamic */
     CHECKED_TYPE_KIND__FUNCTION_POINTER,
     CHECKED_TYPE_KIND__POINTER
@@ -121,6 +122,8 @@ typedef struct Checked_Function_Type {
 
 Checked_Function_Type *Checked_Function_Type__create(Source_Location *location, Checked_Function_Parameter *first_parameter, Checked_Type *return_type);
 
+bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Function_Type *other);
+
 typedef struct Checked_Function_Pointer_Type {
     Checked_Type super;
     Checked_Function_Type *function_type;
@@ -152,6 +155,25 @@ typedef struct Checked_Struct_Type {
 Checked_Struct_Type *Checked_Struct_Type__create(Source_Location *location, String *name);
 
 Checked_Struct_Member *Checked_Struct_Type__find_member(Checked_Struct_Type *self, String *name);
+
+typedef struct Checked_Trait_Method {
+    Source_Location *location;
+    String *name;
+    Checked_Function_Type *function_type;
+    Checked_Struct_Member *struct_member;
+    struct Checked_Trait_Method *next_method;
+} Checked_Trait_Method;
+
+Checked_Trait_Method *Checked_Trait_Method__create(Source_Location *location, String *name, Checked_Function_Type *function_type, Checked_Struct_Member *struct_member);
+
+typedef struct Checked_Trait_Type {
+    Checked_Named_Type super;
+    Checked_Struct_Type *struct_type;
+    Checked_Struct_Member *self_struct_member;
+    Checked_Trait_Method *first_method;
+} Checked_Trait_Type;
+
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String *name);
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
