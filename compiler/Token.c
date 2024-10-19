@@ -171,6 +171,10 @@ bool Token__is_struct(Token *self) {
     return Token__is_keyword(self, "struct");
 }
 
+bool Token__is_trait(Token *self) {
+    return Token__is_keyword(self, "trait");
+}
+
 bool Token__is_true(Token *self) {
     return Token__is_keyword(self, "true");
 }

@@ -24,12 +24,9 @@ Writer *pWriter__end_line(Writer *self);
 typedef enum Writer_Style {
     WRITER_STYLE__DEFAULT,
     WRITER_STYLE__ERROR,
-    WRITER_STYLE__TODO,
     WRITER_STYLE__WARNING
 } Writer_Style;
 
 Writer *pWriter__style(Writer *self, Writer_Style style);
-
-Writer *pWriter__write__todo(Writer *self, char *file, int32_t line, char *cstring);
 
 #endif

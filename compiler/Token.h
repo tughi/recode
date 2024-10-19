@@ -147,6 +147,7 @@ bool Token__is_slash(Token *self);
 bool Token__is_space(Token *self);
 bool Token__is_string(Token *self);
 bool Token__is_struct(Token *self);
+bool Token__is_trait(Token *self);
 bool Token__is_true(Token *self);
 bool Token__is_type(Token *self);
 bool Token__is_typedef(Token *self);

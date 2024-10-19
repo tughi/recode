@@ -466,6 +466,14 @@ void Generator__generate_statements(Generator *self, Checked_Statements *stateme
     self->identation = self->identation - 1;
 }
 
+void Generator__declare_external_type(Generator *self, Checked_External_Type *external_type) {
+    pWriter__write__cstring(self->writer, "typedef struct ");
+    pWriter__write__string(self->writer, external_type->super.name);
+    pWriter__write__char(self->writer, ' ');
+    pWriter__write__string(self->writer, external_type->super.name);
+    pWriter__write__cstring(self->writer, ";\n");
+}
+
 void Generator__declare_function(Generator *self, Checked_Function_Symbol *function_symbol) {
     pWriter__write__cdecl(self->writer, function_symbol->super.name, (Checked_Type *)function_symbol->function_type);
     pWriter__write__cstring(self->writer, ";\n");
@@ -531,6 +539,14 @@ void Generator__generate_make_struct_function(Generator *self, Checked_Struct_Ty
     pWriter__write__cstring(self->writer, "}\n\n");
 }
 
+void Generator__declare_trait(Generator *self, Checked_Trait_Type *trait_type) {
+    Generator__declare_struct(self, trait_type->struct_type);
+}
+
+void Generator__generate_trait(Generator *self, Checked_Trait_Type *trait_type) {
+    Generator__generate_struct(self, trait_type->struct_type);
+}
+
 void generate(Writer *writer, Checked_Source *checked_source) {
     Generator generator;
     generator.writer = writer;
@@ -563,16 +579,18 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all defined types */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location->source == checked_source->first_source) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source) {
             Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
-            if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
+            switch (named_type->super.kind) {
+            case CHECKED_TYPE_KIND__EXTERNAL:
+                Generator__declare_external_type(&generator, (Checked_External_Type *)named_type);
+                break;
+            case CHECKED_TYPE_KIND__STRUCT:
                 Generator__declare_struct(&generator, (Checked_Struct_Type *)named_type);
-            } else if (named_type->super.kind == CHECKED_TYPE_KIND__EXTERNAL) {
-                pWriter__write__cstring(generator.writer, "typedef struct ");
-                pWriter__write__string(generator.writer, named_type->name);
-                pWriter__write__char(generator.writer, ' ');
-                pWriter__write__string(generator.writer, named_type->name);
-                pWriter__write__cstring(generator.writer, ";\n");
+                break;
+            case CHECKED_TYPE_KIND__TRAIT:
+                Generator__declare_trait(&generator, (Checked_Trait_Type *)named_type);
+                break;
             }
             pWriter__end_line(generator.writer);
         } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION && String__equals_cstring(checked_symbol->name, "malloc")) {
@@ -584,10 +602,15 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Generate all defined types */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location->source == checked_source->first_source) {
+        if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source) {
             Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
-            if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
+            switch (named_type->super.kind) {
+            case CHECKED_TYPE_KIND__STRUCT:
                 Generator__generate_struct(&generator, (Checked_Struct_Type *)named_type);
+                break;
+            case CHECKED_TYPE_KIND__TRAIT:
+                Generator__generate_trait(&generator, (Checked_Trait_Type *)named_type);
+                break;
             }
         }
         checked_symbol = checked_symbol->next_symbol;
@@ -596,7 +619,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all global variables */
     Checked_Statement *checked_statement = checked_source->statements->first_statement;
     while (checked_statement != NULL) {
-        if (checked_statement->kind == CHECKED_STATEMENT_KIND__VARIABLE && checked_statement->location->source == checked_source->first_source) {
+        if (checked_statement->kind == CHECKED_STATEMENT_KIND__VARIABLE && checked_statement->location != NULL && checked_statement->location->source == checked_source->first_source) {
             Generator__generate_variable_statement(&generator, (Checked_Variable_Statement *)checked_statement);
             pWriter__end_line(generator.writer);
         } else {
@@ -611,7 +634,7 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Declare all defined functions */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location->source == checked_source->first_source) {
+        if (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
                 Generator__declare_function(&generator, (Checked_Function_Symbol *)checked_symbol);
                 pWriter__end_line(generator.writer);
@@ -619,6 +642,9 @@ void generate(Writer *writer, Checked_Source *checked_source) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
                 if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
                     Generator__declare_make_struct_function(&generator, (Checked_Struct_Type *)named_type);
+                    pWriter__end_line(generator.writer);
+                } else if (named_type->super.kind == CHECKED_TYPE_KIND__TRAIT) {
+                    Generator__declare_make_struct_function(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
                     pWriter__end_line(generator.writer);
                 }
             }
@@ -629,13 +655,15 @@ void generate(Writer *writer, Checked_Source *checked_source) {
     /* Generate all defined functions */
     checked_symbol = checked_source->first_symbol;
     while (checked_symbol != NULL) {
-        if (checked_symbol->location->source == checked_source->first_source) {
+        if (checked_symbol->location != NULL && checked_symbol->location->source == checked_source->first_source) {
             if (checked_symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
                 Generator__generate_function(&generator, (Checked_Function_Symbol *)checked_symbol);
             } else if (checked_symbol->kind == CHECKED_SYMBOL_KIND__TYPE && malloc_function != NULL) {
                 Checked_Named_Type *named_type = ((Checked_Type_Symbol *)checked_symbol)->named_type;
                 if (named_type->super.kind == CHECKED_TYPE_KIND__STRUCT) {
                     Generator__generate_make_struct_function(&generator, (Checked_Struct_Type *)named_type);
+                } else if (named_type->super.kind == CHECKED_TYPE_KIND__TRAIT) {
+                    Generator__generate_make_struct_function(&generator, ((Checked_Trait_Type *)named_type)->struct_type);
                 }
             }
         }

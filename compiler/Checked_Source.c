@@ -84,15 +84,15 @@ bool Checked_Function_Type__equals(Checked_Function_Type *self, Checked_Function
         return false;
     }
     Checked_Function_Parameter *self_parameter = self->first_parameter;
-    Checked_Function_Parameter *function_parameter = other->first_parameter;
-    while (self_parameter != NULL && function_parameter != NULL) {
-        if (!Checked_Type__equals(self_parameter->type, function_parameter->type)) {
+    Checked_Function_Parameter *other_parameter = other->first_parameter;
+    while (self_parameter != NULL && other_parameter != NULL) {
+        if (!Checked_Type__equals(self_parameter->type, other_parameter->type)) {
             return false;
         }
         self_parameter = self_parameter->next_parameter;
-        function_parameter = function_parameter->next_parameter;
+        other_parameter = other_parameter->next_parameter;
     }
-    if (self_parameter != NULL || function_parameter != NULL) {
+    if (self_parameter != NULL || other_parameter != NULL) {
         return false;
     }
     return true;
@@ -148,6 +148,24 @@ bool Checked_Struct_Type__equals(Checked_Struct_Type *self, Checked_Struct_Type 
     return String__equals_string(self->super.name, other->super.name);
 }
 
+Checked_Trait_Method *Checked_Trait_Method__create(Source_Location *location, String *name, Checked_Function_Type *function_type, Checked_Struct_Member *struct_member) {
+    Checked_Trait_Method *method = (Checked_Trait_Method *)malloc(sizeof(Checked_Trait_Method));
+    method->location = location;
+    method->name = name;
+    method->function_type = function_type;
+    method->struct_member = struct_member;
+    method->next_method = NULL;
+    return method;
+}
+
+Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String *name) {
+    Checked_Trait_Type *type = (Checked_Trait_Type *)Checked_Named_Type__create_kind(CHECKED_TYPE_KIND__TRAIT, sizeof(Checked_Trait_Type), location, name);
+    type->struct_type = NULL;
+    type->self_struct_member = NULL;
+    type->first_method = NULL;
+    return type;
+}
+
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     if (self == other) {
         return true;
@@ -167,11 +185,7 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     case CHECKED_TYPE_KIND__STRUCT:
         return Checked_Struct_Type__equals((Checked_Struct_Type *)self, (Checked_Struct_Type *)other);
     }
-    pWriter__style(stderr_writer, WRITER_STYLE__TODO);
-    pWriter__write__cstring(stderr_writer, "Unsupported types");
-    pWriter__style(stderr_writer, WRITER_STYLE__DEFAULT);
-    pWriter__end_line(stderr_writer);
-    panic();
+    todo("Handle unexpected Checked_Type_Kind");
 }
 
 void pWriter__write__checked_function_parameter(Writer *writer, Checked_Function_Parameter *parameter) {
@@ -211,7 +225,8 @@ void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     case CHECKED_TYPE_KIND__U8:
     case CHECKED_TYPE_KIND__USIZE:
     case CHECKED_TYPE_KIND__ANY:
-    case CHECKED_TYPE_KIND__STRUCT: {
+    case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__TRAIT: {
         Checked_Named_Type *named_type = (Checked_Named_Type *)type;
         pWriter__write__string(self, named_type->name);
         break;

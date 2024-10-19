@@ -320,12 +320,14 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
     return expression;
 }
 
-/* unary_expression */
-/*      | "-" unary_expression */
-/*      | "not" unary_expression */
-/*      | "@" unary_expression */
-/*      | "sizeof" "(" type ")" */
-/*      | access_expression */
+/*
+unary_expression
+    | "-" unary_expression
+    | "not" unary_expression
+    | "@" unary_expression
+    | "sizeof" "(" type ")"
+    | access_expression
+*/
 Parsed_Expression *Parser__parse_unary_expression(Parser *self) {
     if (Parser__matches_one(self, Token__is_minus)) {
         Source_Location *location = Parser__consume_token(self, Token__is_minus)->location;
@@ -365,7 +367,7 @@ bool Token__is_mutliplication(Token *self) {
 /*
 multiplication
     | unary_expression ( ( "*" | "/" | "//" ) unary_expression )*
- */
+*/
 Parsed_Expression *Parser__parse_multiplication_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_unary_expression(self);
     while (Parser__matches_two(self, Token__is_space, false, Token__is_mutliplication)) {
@@ -396,8 +398,10 @@ bool Token__is_addition(Token *self) {
     return Token__is_plus(self) || Token__is_minus(self);
 }
 
-/* addition */
-/*      | multiplication ( ( "+" | "-" ) multiplication )* */
+/*
+addition
+    | multiplication ( ( "+" | "-" ) multiplication )*
+*/
 Parsed_Expression *Parser__parse_addition_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_multiplication_expression(self);
     while (Parser__matches_two(self, Token__is_space, false, Token__is_addition)) {
@@ -417,8 +421,10 @@ Parsed_Expression *Parser__parse_addition_expression(Parser *self) {
     return expression;
 }
 
-/* comparison */
-/*      | addition ( ( "<=" | "<" | ">" | ">=") addition )* */
+/*
+comparison
+    | addition ( ( "<=" | "<" | ">" | ">=") addition )*
+*/
 Parsed_Expression *Parser__parse_comparison_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_addition_expression(self);
     if (Parser__matches_two(self, Token__is_space, false, Token__is_less_than)) {
@@ -451,8 +457,10 @@ Parsed_Expression *Parser__parse_comparison_expression(Parser *self) {
     return expression;
 }
 
-/* equality */
-/*      | comparison ( ( "==" | "!=" ) comparison )* */
+/*
+equality
+    | comparison ( ( "==" | "!=" ) comparison )*
+*/
 Parsed_Expression *Parser__parse_equality_expression(Parser *self) {
     Parsed_Expression *expression = Parser__parse_comparison_expression(self);
     if (Parser__matches_three(self, Token__is_space, false, Token__is_equals, true, Token__is_equals)) {
@@ -515,8 +523,10 @@ Parsed_Expression *Parser__parse_expression(Parser *self) {
 
 Parsed_Statement *Parser__parse_function(Parser *self, Parsed_Type *receiver_type);
 
-/* struct */
-/*      | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type | function )* "}" */
+/*
+struct
+    | "struct" IDENTIFIER "{" ( IDENTIFIER ":" type | function )* "}"
+*/
 Parsed_Statement *Parser__parse_struct(Parser *self) {
     Source_Location *struct_location = Parser__consume_token(self, Token__is_struct)->location;
     Parser__consume_space(self, 1);
@@ -532,7 +542,7 @@ Parsed_Statement *Parser__parse_struct(Parser *self) {
         if (!Parser__consume_empty_line(self)) {
             Parser__consume_space(self, self->current_identation * 4);
             if (Parser__matches_one(self, Token__is_func)) {
-                Parsed_Statement *function_statement = Parser__parse_function(self, Parsed_Pointer_Type__create(Parsed_Named_Type__create(struct_name)));
+                Parsed_Statement *function_statement = Parser__parse_function(self, (Parsed_Type *)Parsed_Receiver_Type__create(struct_name->location));
                 Parsed_Struct_Method *struct_method = Parsed_Struct_Method__create((Parsed_Function_Statement *)function_statement);
                 if (last_struct_method == NULL) {
                     struct_statement->first_method = struct_method;
@@ -563,6 +573,57 @@ Parsed_Statement *Parser__parse_struct(Parser *self) {
     Parser__consume_space(self, self->current_identation * 4);
     Parser__consume_token(self, Token__is_closing_brace);
     return (Parsed_Statement *)struct_statement;
+}
+
+Parsed_Function_Parameter *Parser__parse_function_parameters(Parser *self, Parsed_Type *receiver_type);
+
+/*
+trait
+    | "trait" IDENTIFIER "{" trait_method* "}"
+*/
+Parsed_Statement *Parser__parse_trait(Parser *self) {
+    Source_Location *trait_location = Parser__consume_token(self, Token__is_trait)->location;
+    Parser__consume_space(self, 1);
+    Token *trait_name = Parser__consume_token(self, Token__is_identifier);
+    Parsed_Trait_Statement *trait_statement = Parsed_Trait_Statement__create(trait_location, trait_name);
+    Parser__consume_space(self, 1);
+    Parser__consume_token(self, Token__is_opening_brace);
+    Parser__consume_end_of_line(self);
+    self->current_identation = self->current_identation + 1;
+    Parsed_Trait_Method *last_trait_method = NULL;
+    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_brace)) {
+        if (!Parser__consume_empty_line(self)) {
+            Parser__consume_space(self, self->current_identation * 4);
+            Source_Location *method_location = Parser__consume_token(self, Token__is_func)->location;
+            Parser__consume_space(self, 1);
+            Token *method_name = Parser__consume_token(self, Token__is_identifier);
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_opening_paren);
+            Parsed_Function_Parameter *first_parameter = Parser__parse_function_parameters(self, (Parsed_Type *)Parsed_Receiver_Type__create(trait_name->location));
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_closing_paren);
+            Parsed_Type *return_type = NULL;
+            if (Parser__matches_two(self, Token__is_space, false, Token__is_minus)) {
+                Parser__consume_space(self, 1);
+                Parser__consume_token(self, Token__is_minus);
+                Parser__consume_token(self, Token__is_greater_than);
+                Parser__consume_space(self, 1);
+                return_type = Parser__parse_type(self);
+            }
+            Parser__consume_end_of_line(self);
+            Parsed_Trait_Method *trait_method = Parsed_Trait_Method__create(method_location, method_name, first_parameter, return_type);
+            if (last_trait_method == NULL) {
+                trait_statement->first_method = trait_method;
+            } else {
+                last_trait_method->next_method = trait_method;
+            }
+            last_trait_method = trait_method;
+        }
+    }
+    self->current_identation = self->current_identation - 1;
+    Parser__consume_space(self, self->current_identation * 4);
+    Parser__consume_token(self, Token__is_closing_brace);
+    return (Parsed_Statement *)trait_statement;
 }
 
 /*
@@ -910,6 +971,10 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
         return Parser__parse_struct(self);
     }
 
+    if (Parser__matches_one(self, Token__is_trait)) {
+        return Parser__parse_trait(self);
+    }
+
     if (Parser__matches_one(self, Token__is_if)) {
         return Parser__parse_if_statement(self);
     }
@@ -943,8 +1008,10 @@ Parsed_Statement *Parser__parse_statement(Parser *self) {
     return (Parsed_Statement *)Parsed_Expression_Statement__create(expresion);
 }
 
-/* statements */
-/*      | ( statement )* */
+/*
+statements
+    | ( statement )*
+*/
 void Parser__parse_statements(Parser *self, Parsed_Statements *statements) {
     while (true) {
         while (Parser__consume_empty_line(self)) {

@@ -61,10 +61,7 @@ void pWriter__write__cdecl(Writer *writer, String *name, Checked_Type *type) {
 
 void declare_array(CDECL *cdecl, Checked_Array_Type *array_type) {
     if (array_type->is_checked) {
-        pWriter__begin_location_message(stderr_writer, array_type->super.location, WRITER_STYLE__TODO);
-        pWriter__write__cstring(stderr_writer, "TODO: Add support for checked arrays");
-        pWriter__end_location_message(stderr_writer);
-        panic();
+        todo("Declare checked array");
     }
     CDECL type_cdecl = {NULL, NULL, NULL};
     declare(&type_cdecl, array_type->item_type);
@@ -147,46 +144,59 @@ void declare_pointer(CDECL *cdecl, Checked_Pointer_Type *pointer_type) {
 }
 
 void declare(CDECL *cdecl, Checked_Type *symbol_type) {
-    if (symbol_type->kind == CHECKED_TYPE_KIND__BOOL) {
+    switch (symbol_type->kind) {
+    case CHECKED_TYPE_KIND__BOOL:
         cdecl->type = String__create_from("bool");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__I16) {
+        break;
+    case CHECKED_TYPE_KIND__I16:
         cdecl->type = String__create_from("int16_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__I32) {
+        break;
+    case CHECKED_TYPE_KIND__I32:
         cdecl->type = String__create_from("int32_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__I64) {
+        break;
+    case CHECKED_TYPE_KIND__I64:
         cdecl->type = String__create_from("int64_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__I8) {
+        break;
+    case CHECKED_TYPE_KIND__I8:
         cdecl->type = String__create_from("int8_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__U16) {
+        break;
+    case CHECKED_TYPE_KIND__U16:
         cdecl->type = String__create_from("uint16_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__U32) {
+        break;
+    case CHECKED_TYPE_KIND__U32:
         cdecl->type = String__create_from("uint32_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__U64) {
+        break;
+    case CHECKED_TYPE_KIND__U64:
         cdecl->type = String__create_from("uint64_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__U8) {
+        break;
+    case CHECKED_TYPE_KIND__U8:
         cdecl->type = String__create_from("uint8_t");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__ANY) {
+        break;
+    case CHECKED_TYPE_KIND__ANY:
+    case CHECKED_TYPE_KIND__NOTHING:
         cdecl->type = String__create_from("void");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__NOTHING) {
-        cdecl->type = String__create_from("void");
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__ARRAY) {
+        break;
+    case CHECKED_TYPE_KIND__ARRAY:
         declare_array(cdecl, (Checked_Array_Type *)symbol_type);
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__EXTERNAL) {
+        break;
+    case CHECKED_TYPE_KIND__EXTERNAL:
         cdecl->type = String__create_copy(((Checked_External_Type *)symbol_type)->super.name);
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
+        break;
+    case CHECKED_TYPE_KIND__FUNCTION:
         declare_function(cdecl, (Checked_Function_Type *)symbol_type);
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__FUNCTION_POINTER) {
+        break;
+    case CHECKED_TYPE_KIND__FUNCTION_POINTER:
         declare_function_pointer(cdecl, (Checked_Function_Pointer_Type *)symbol_type);
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__STRUCT) {
+        break;
+    case CHECKED_TYPE_KIND__STRUCT:
+    case CHECKED_TYPE_KIND__TRAIT:
         cdecl->type = String__create_from("struct ");
         String__append_string(cdecl->type, ((Checked_Named_Type *)symbol_type)->name);
-    } else if (symbol_type->kind == CHECKED_TYPE_KIND__POINTER) {
+        break;
+    case CHECKED_TYPE_KIND__POINTER:
         declare_pointer(cdecl, (Checked_Pointer_Type *)symbol_type);
-    } else {
-        pWriter__begin_location_message(stderr_writer, symbol_type->location, WRITER_STYLE__TODO);
-        pWriter__write__cstring(stderr_writer, "TODO: Add support for checked type kind: ");
-        pWriter__write__int64(stderr_writer, symbol_type->kind);
-        pWriter__end_location_message(stderr_writer);
-        panic();
+        break;
+    default:
+        todo("Handle unexpected Checked_Type_Kind");
     }
 }

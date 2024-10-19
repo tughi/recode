@@ -22,12 +22,13 @@ func main() -> i32 {
     let square = make @Square(side: 10)
     let square_shape = make @Shape(square)
     let circle = make @Circle(radius: 10)
+    let circle_shape = make @Shape(circle)
 
     if square_shape.area() != 100 {
         return 1
     }
 
-    if make @Shape(circle).area() != 312 {
+    if circle_shape.area() != 312 {
         return 2
     }
 
