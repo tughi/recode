@@ -8,7 +8,7 @@ func main(anon argc: i32, anon argv: [[u8; ?]; ?]) {
         index: 0
     )
 
-    let stdout_writer = make @Writer(stdout)
+    let stdout_writer = make Writer(stdout)
     while tokenizer.has_next_token() {
         let token = tokenizer.next_token()
         if token.kind == 0 {
@@ -34,14 +34,14 @@ struct Tokenizer {
             data_size: 4
             length: 0
         )
-        let char = self.data[self.index]
-        if char >= '0' and char <= '9' {
+        let c = self.data[self.index]
+        if c >= '0' and c <= '9' {
             return self.scan_number_token(@lexeme_builder)
         }
         self.index = self.index + 1
         return make @Token(
-            kind: char
-            lexeme: lexeme_builder.write(char: char).build()
+            kind: c
+            lexeme: lexeme_builder.write(char: c).build()
             value: 0
         )
     }
@@ -49,12 +49,12 @@ struct Tokenizer {
     func scan_number_token(self, anon lexeme_builder: @StringBuilder) -> @Token {
         let value = 0
         loop {
-            let char = self.data[self.index]
-            if char < '0' or char > '9' {
+            let c = self.data[self.index]
+            if c < '0' or c > '9' {
                 break
             }
-            lexeme_builder.write(char: char)
-            value = value * 10 + (char - '0').as(i32)
+            lexeme_builder.write(char: c)
+            value = value * 10 + (c - '0').as(i32)
             self.index = self.index + 1
         }
         return make @Token(
@@ -88,7 +88,7 @@ struct StringBuilder {
     data_size: i32
     length: i32
 
-    func write(self, char: u8) -> @StringBuilder {
+    func write(self, char c: u8) -> @StringBuilder {
         if self.length == self.data_size {
             self.data_size = self.data_size + 8
             self.data = realloc(
@@ -96,7 +96,7 @@ struct StringBuilder {
                 self.data_size.as(u64)
             ).as([u8; ?])
         }
-        self.data[self.length] = char
+        self.data[self.length] = c
         self.length = self.length + 1
         return self
     }
@@ -107,18 +107,18 @@ struct StringBuilder {
     }
 }
 
-func @StringBuilder.write_char(self, anon char: u8) {
-    self.write(char: char)
+func @StringBuilder.write_char(self, anon c: u8) {
+    self.write(char: c)
 }
 
 \ ------------------------------------------------------------------------------ Writer
 
 trait Writer {
-    func write_char(self, anon char: u8)
+    func write_char(self, anon c: u8)
 }
 
-func @Writer.write(self, char: u8) -> @Writer {
-    self.write_char(char)
+func @Writer.write(self, char c: u8) -> @Writer {
+    self.write_char(c)
     return self
 }
 
@@ -147,10 +147,10 @@ external stdin: @FILE
 external stdout: @FILE
 external stderr: @FILE
 
-external func fputc(anon c: u8, anon file: @FILE) -> i32
+external func fputc(anon c: i32, anon file: @FILE) -> i32
 
-func @FILE.write_char(self, anon char: u8) {
-    fputc(char, stdout)
+func @FILE.write_char(self, anon c: u8) {
+    fputc(c.as(i32), stdout)
 }
 
 external func malloc(anon size: u64) -> @Any

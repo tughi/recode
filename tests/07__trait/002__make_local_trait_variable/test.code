@@ -10,7 +10,8 @@ trait Animal {
     func legs(self) -> i32
 }
 
-func main() {
+func main() -> i32 {
     let dog = make Dog(age: 10)
     let animal = make Animal(@dog)
+    return 0
 }

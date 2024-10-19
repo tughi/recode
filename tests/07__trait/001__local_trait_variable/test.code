@@ -2,6 +2,7 @@ trait Animal {
     func legs(self) -> i32
 }
 
-func main() {
+func main() -> i32 {
     let animal: Animal
+    return 0
 }
