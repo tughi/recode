@@ -177,8 +177,6 @@ Checked_Trait_Type *Checked_Trait_Type__create(Source_Location *location, String
 
 bool Checked_Type__equals(Checked_Type *self, Checked_Type *other);
 
-void pWriter__write__checked_function_parameter(Writer *writer, Checked_Function_Parameter *parameter);
-
 void pWriter__write__checked_type(Writer *writer, Checked_Type *type);
 
 typedef enum Checked_Symbol_Kind {
@@ -244,6 +242,8 @@ typedef struct Checked_Function_Symbol {
 } Checked_Function_Symbol;
 
 Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *location, String *symbol_name, String *function_name, Checked_Function_Type *function_type, Checked_Type *receiver_type);
+
+void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Symbol *function_symbol);
 
 typedef struct Checked_Function_Parameter_Symbol {
     Checked_Symbol super;

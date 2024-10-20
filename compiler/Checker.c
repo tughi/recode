@@ -306,6 +306,23 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
         }
         pWriter__write__char(stderr_writer, ')');
         pWriter__end_location_message(stderr_writer);
+        if (similar_function_symbols > 0) {
+            pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Similar callables:");
+            pWriter__end_line(stderr_writer);
+            Checked_Symbol *symbol = self->global_symbols->first_symbol;
+            for (; symbol != NULL; symbol = symbol->next_symbol) {
+                if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
+                    function_symbol = (Checked_Function_Symbol *)symbol;
+                    if (String__equals_string(function_symbol->function_name, symbol_name->lexeme)) {
+                        pWriter__begin_location_message(stderr_writer, function_symbol->super.location, WRITER_STYLE__WARNING);
+                        pWriter__write__checked_function_symbol(stderr_writer, function_symbol);
+                        pWriter__end_location_message(stderr_writer);
+                    }
+                }
+            }
+            panic();
+        }
         panic();
     }
     return (Checked_Callable){
@@ -1131,6 +1148,12 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
     String *symbol_name = String__create();
     Checked_Type *receiver_type = NULL;
     if (parsed_statement->receiver_type != NULL) {
+        if (parsed_statement->is_external) {
+            pWriter__begin_location_message(stderr_writer, parsed_statement->receiver_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "External functions cannot have a receiver type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
         receiver_type = Checker__resolve_type(self, parsed_statement->receiver_type);
         String__append_receiver_type(symbol_name, receiver_type);
         String__append_cstring(symbol_name, "__");
@@ -1140,6 +1163,12 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
     int function_parameter_index = 0;
     while (function_parameter != NULL) {
         if (function_parameter->label != NULL) {
+            if (parsed_statement->is_external) {
+                pWriter__begin_location_message(stderr_writer, function_parameter->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External functions can have only anonymous parameters");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
             String__append_cstring(symbol_name, "__");
             String__append_int16_t(symbol_name, function_parameter_index);
             String__append_cstring(symbol_name, "_");
@@ -1223,6 +1252,12 @@ void Checker__check_function_definition(Checker *self, Parsed_Function_Statement
         /* Create a symbol for each function parameter */
         Checked_Function_Parameter *parameter = function_type->first_parameter;
         while (parameter != NULL) {
+            if (parameter->type->kind == CHECKED_TYPE_KIND__EXTERNAL) {
+                pWriter__begin_location_message(stderr_writer, parameter->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Cannot use external types as function parameters");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
             Checked_Symbols__append_symbol(self->symbols, (Checked_Symbol *)Checked_Function_Parameter_Symbol__create(parameter->location, parameter->name, parameter->type));
             parameter = parameter->next_parameter;
         }
@@ -1308,8 +1343,19 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
             break;
         case PARSED_STATEMENT_KIND__FUNCTION: {
             Parsed_Function_Statement *function_statement = (Parsed_Function_Statement *)parsed_statement;
-            if (function_statement->statements != NULL) {
+            if (!function_statement->is_external) {
+                if (function_statement->statements == NULL) {
+                    pWriter__begin_location_message(stderr_writer, function_statement->super.name->location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Missing function body");
+                    pWriter__end_location_message(stderr_writer);
+                    panic();
+                }
                 Checker__check_function_definition(self, function_statement);
+            } else if (function_statement->statements != NULL) {
+                pWriter__begin_location_message(stderr_writer, function_statement->super.name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External function with body");
+                pWriter__end_location_message(stderr_writer);
+                panic();
             }
             break;
         }

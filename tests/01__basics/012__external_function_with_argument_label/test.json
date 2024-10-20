@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/01__basics/012__external_function_with_argument_label/test.code:1:20: External functions can have only anonymous parameters"
+    ]
+}

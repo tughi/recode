@@ -120,6 +120,9 @@ def test(paths, save=False, stage=1):
             compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
             if compiler_result.returncode != 0:
                 compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr).splitlines() if compiler_result.stderr else []
+                if compiler_error and re.match(r'^compiler/.*:\d+: Panic!$', compiler_error[-1]):
+                    # discard the panic message
+                    compiler_error.pop()
 
                 diff = compute_diff(
                     json.dumps(test_data.get('error'), indent=4) if 'error' in test_data else '',

@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/01__basics/018__external_global_variable_without_type/test.code:1:1: Missing type"
+    ]
+}

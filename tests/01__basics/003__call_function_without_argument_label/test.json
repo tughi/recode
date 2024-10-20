@@ -1,0 +1,7 @@
+{
+    "error": [
+        "tests/01__basics/003__call_function_without_argument_label/test.code:2:12: Unknown callable: echo(i32)",
+        "tests/01__basics/003__call_function_without_argument_label/test.code:2:12: Similar callables:",
+        "tests/01__basics/003__call_function_without_argument_label/test.code:5:6: func echo(value: i32) -> i32"
+    ]
+}

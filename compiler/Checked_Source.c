@@ -188,29 +188,6 @@ bool Checked_Type__equals(Checked_Type *self, Checked_Type *other) {
     todo("Handle unexpected Checked_Type_Kind");
 }
 
-void pWriter__write__checked_function_parameter(Writer *writer, Checked_Function_Parameter *parameter) {
-    if (parameter->type->kind == CHECKED_TYPE_KIND__POINTER && ((Checked_Pointer_Type *)parameter->type)->other_type->kind == CHECKED_TYPE_KIND__FUNCTION) {
-        Checked_Function_Type *function_type = (Checked_Function_Type *)((Checked_Pointer_Type *)parameter->type)->other_type;
-        pWriter__write__checked_type(writer, function_type->return_type);
-        pWriter__write__cstring(writer, " (*");
-        pWriter__write__string(writer, parameter->name);
-        pWriter__write__cstring(writer, ")(");
-        Checked_Function_Parameter *function_parameter = function_type->first_parameter;
-        while (function_parameter != NULL) {
-            pWriter__write__checked_function_parameter(writer, function_parameter);
-            function_parameter = function_parameter->next_parameter;
-            if (function_parameter != NULL) {
-                pWriter__write__cstring(writer, ", ");
-            }
-        }
-        pWriter__write__char(writer, ')');
-    } else {
-        pWriter__write__checked_type(writer, parameter->type);
-        pWriter__write__char(writer, ' ');
-        pWriter__write__string(writer, parameter->name);
-    }
-}
-
 void pWriter__write__checked_type(Writer *self, Checked_Type *type) {
     switch (type->kind) {
     case CHECKED_TYPE_KIND__BOOL:
@@ -296,6 +273,31 @@ Checked_Function_Symbol *Checked_Function_Symbol__create(Source_Location *locati
     symbol->receiver_type = receiver_type;
     symbol->checked_statements = NULL;
     return symbol;
+}
+
+void pWriter__write__checked_function_symbol(Writer *writer, Checked_Function_Symbol *function_symbol) {
+    pWriter__write__cstring(writer, "func ");
+    pWriter__write__string(writer, function_symbol->function_name);
+    pWriter__write__char(writer, '(');
+    Checked_Function_Parameter *parameter = function_symbol->function_type->first_parameter;
+    while (parameter != NULL) {
+        if (parameter->label != NULL && !String__equals_string(parameter->label, parameter->name)) {
+            pWriter__write__string(writer, parameter->label);
+            pWriter__write__char(writer, ' ');
+        }
+        pWriter__write__string(writer, parameter->name);
+        pWriter__write__cstring(writer, ": ");
+        pWriter__write__checked_type(writer, parameter->type);
+        parameter = parameter->next_parameter;
+        if (parameter != NULL) {
+            pWriter__write__char(writer, ',');
+        }
+    }
+    pWriter__write__char(writer, ')');
+    if (function_symbol->function_type->return_type != NULL) {
+        pWriter__write__cstring(writer, " -> ");
+        pWriter__write__checked_type(writer, function_symbol->function_type->return_type);
+    }
 }
 
 Checked_Function_Parameter_Symbol *Checked_Function_Parameter_Symbol__create(Source_Location *location, String *name, Checked_Type *type) {

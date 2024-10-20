@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/01__basics/012__external_function_with_body/test.code:1:15: External function with body"
+    ]
+}

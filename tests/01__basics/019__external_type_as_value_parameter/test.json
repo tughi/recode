@@ -1,0 +1,5 @@
+{
+    "error": [
+        "tests/01__basics/019__external_type_as_value_parameter/test.code:3:12: Cannot use external types as function parameters"
+    ]
+}
