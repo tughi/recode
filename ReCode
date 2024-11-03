@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import dataclasses
 import difflib
 import json
 import logging
@@ -8,6 +9,7 @@ import os
 import re
 import subprocess
 from datetime import datetime
+from typing import List, Optional
 
 logging.basicConfig(format='[%(asctime)s,%(msecs)03d][%(levelname).1s] %(message)s', datefmt='%H:%M:%S')
 
@@ -31,7 +33,10 @@ def run(command, **kwargs):
     logger.debug(f"{COLOR_DEBUG}{' '.join(command)}{COLOR_RESET}")
     if 'check' not in kwargs:
         kwargs['check'] = True
-    return subprocess.run(command, **kwargs)
+    try:
+        return subprocess.run(command, **kwargs)
+    except subprocess.CalledProcessError:
+        exit(1)
 
 
 def build_stage(n):
@@ -100,8 +105,150 @@ def trace(*command, ignore_output=True):
     )
 
 
+@dataclasses.dataclass
+class TestData:
+    compile_error: int
+    compile_stderr: List[str]
+    execute_args: List[str]
+    execute_error: int
+    execute_stderr: List[str]
+    execute_stdout: List[str]
+
+    def has_data(self) -> bool:
+        if self.compile_error: return True
+        if self.compile_stderr: return True
+        if self.execute_args: return True
+        if self.execute_error: return True
+        if self.execute_stderr: return True
+        if self.execute_stdout: return True
+        return False
+
+
+class Tester:
+    test_dir: str
+    test_file: str
+    
+    compile_panic: Optional[str]
+
+    expect_test_file_content: str
+    expect_test_data: TestData
+
+    actual_test_file_content: str
+    actual_test_data: TestData
+
+    apply_change: bool
+
+    def __init__(self, apply_change: bool):
+        self.apply_change = apply_change
+
+    def load_test_data(self, test_dir: str) -> TestData:
+        self.test_dir = test_dir
+        self.test_file = f'{test_dir}/test.c'
+
+        self.expect_test_file_content = open(self.test_file).read() if os.path.exists(self.test_file) else ''
+         
+        test_data = json.loads(open(f'{test_dir}/test.json').read()) if os.path.exists(f'{test_dir}/test.json') else {}
+        self.expect_test_data = TestData(
+            compile_error=test_data.get('compile', {}).get('error', 0),
+            compile_stderr=test_data.get('compile', {}).get('stderr', []),
+            execute_args=test_data.get('execute', {}).get('args', []),
+            execute_error=test_data.get('execute', {}).get('error', 0),
+            execute_stderr=test_data.get('execute', {}).get('stderr', []),
+            execute_stdout=test_data.get('execute', {}).get('stdout', []),
+        )
+
+        self.actual_test_file_content = self.expect_test_file_content
+
+        self.actual_test_data = dataclasses.replace(self.expect_test_data)
+
+
+    def update_actual_compile_error(self, compile_error: int) -> None:
+        self.actual_test_data = dataclasses.replace(
+            self.actual_test_data,
+            compile_error=compile_error,
+        )
+
+    def update_actual_compile_stderr(self, compile_stderr: str) -> None:
+        lines = compile_stderr.splitlines()
+        self.actual_test_data = dataclasses.replace(
+            self.actual_test_data,
+            compile_stderr=[re.sub(r'\x1b\[[0-9;]+m', '', line) for line in lines],
+        )
+        if lines and re.match(r'^compiler/.*:\d+: Panic!$', self.actual_test_data.compile_stderr[-1]):
+            self.actual_test_data.compile_stderr.pop()
+            self.compile_panic = lines.pop()
+        else:
+            self.compile_panic = None
+
+    def update_actual_test_file_content(self, compile_stdout: str) -> None:
+        self.actual_test_file_content = compile_stdout
+
+    def update_actual_execute_error(self, execute_error: int) -> None:
+        self.actual_test_data = dataclasses.replace(
+            self.actual_test_data,
+            execute_error=execute_error,
+        )
+
+    def update_actual_execute_stderr(self, execute_stderr: str) -> None:
+        self.actual_test_data = dataclasses.replace(
+            self.actual_test_data,
+            execute_stderr=[re.sub(r'\x1b\[[0-9;]+m', '', line) for line in execute_stderr.splitlines()],
+        )
+
+    def update_actual_execute_stdout(self, execute_stdout: str) -> None:
+        self.actual_test_data = dataclasses.replace(
+            self.actual_test_data,
+            execute_stdout=[re.sub(r'\x1b\[[0-9;]+m', '', line) for line in execute_stdout.splitlines()],
+        )
+
+    def save_test_data(self) -> None:
+        if not self.actual_test_data.has_data():
+            if os.path.exists(f'{test_dir}/test.json'):
+                os.remove(f'{test_dir}/test.json')
+        else:
+            compile_data = {}
+            execute_data = {}
+            if self.actual_test_data.compile_error:
+                compile_data['error'] = self.actual_test_data.compile_error
+            else:
+                if self.actual_test_data.execute_args: execute_data['args'] = self.actual_test_data.execute_args
+                if self.actual_test_data.execute_error: execute_data['error'] = self.actual_test_data.execute_error
+                if self.actual_test_data.execute_stderr: execute_data['stderr'] = self.actual_test_data.execute_stderr
+                if self.actual_test_data.execute_stdout: execute_data['stdout'] = self.actual_test_data.execute_stdout
+            if self.actual_test_data.compile_stderr:
+                compile_data['stderr'] = self.actual_test_data.compile_stderr
+            open(f'{self.test_dir}/test.json', 'w').write(json.dumps(
+                {
+                    **({"compile": compile_data} if compile_data else {}),
+                    **({"execute": execute_data} if execute_data else {}),
+                },
+                indent=4,
+            ))
+
+    def check_test_data(self) -> bool:
+        if self.actual_test_data != self.expect_test_data:
+            if self.apply_change:
+                self.save_test_data()
+                self.expect_test_data = self.actual_test_data
+                self.apply_change = False
+            else:
+                return False
+        return True
+
+    def check_test_file(self) -> bool:
+        if self.actual_test_file_content != self.expect_test_file_content:
+            if self.apply_change:
+                open(self.test_file, 'w').write(self.actual_test_file_content)
+                self.apply_change = False
+            else:
+                return False
+        return True
+
+
 def test(paths, save=False, stage=1):
     build()
+
+    tester = Tester(apply_change=save)
 
     for test_dir in sorted(test_dirs(paths)):
         if not os.path.exists(f'build/{test_dir}'):
@@ -109,95 +256,76 @@ def test(paths, save=False, stage=1):
 
         logger.info(f"Testing: {test_dir}")
 
-        for compiler_command, test_file in [
-            ((f'build/stage{stage}/ReCode', 'code', f'{test_dir}/test.code'), f'{test_dir}/test.c'),
-        ]:
-            if os.path.exists(f'{test_dir}/test.json'):
-                test_data = json.loads(open(f'{test_dir}/test.json').read())
-            else:
-                test_data = {}
+        compiler_command = [f'build/stage{stage}/ReCode', 'code', f'{test_dir}/test.code']
 
-            compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
-            if compiler_result.returncode != 0:
-                compiler_error = re.sub(r'\x1b\[[0-9;]+m', '', compiler_result.stderr).splitlines() if compiler_result.stderr else []
+        tester.load_test_data(test_dir)
 
-                diff = compute_diff(
-                    json.dumps(test_data.get('error'), indent=4) if 'error' in test_data else '',
-                    json.dumps(compiler_error, indent=4),
-                )
-                if diff:
-                    if save:
-                        open(f'{test_dir}/test.json', 'w').write(json.dumps(
-                            {
-                                **{k: v for k, v in test_data.items() if k not in {'result'}},
-                                'error': compiler_error,
-                            },
-                            indent=4,
-                        ))
-                        save = False
-                    else:
-                        logger.error(f"{COLOR_ERROR}Unexpected error\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
-                        trace(*compiler_command)
+        compiler_result = run(compiler_command, capture_output=True, text=True, check=False)
+        if compiler_result.returncode != 0:
+            tester.update_actual_compile_error(compiler_result.returncode)
+            tester.update_actual_compile_stderr(compiler_result.stderr)
+            if not tester.check_test_data():
+                logger.error(f"{COLOR_ERROR}Unexpected compiler message\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.compile_stderr, tester.expect_test_data.compile_stderr)}{COLOR_RESET}")
+                if tester.compile_panic:
+                    logger.error(f"{COLOR_ERROR}{tester.compile_panic}{COLOR_RESET}")
+                trace(*compiler_command)
+                exit(1)
+        else:
+            tester.update_actual_compile_error(compiler_result.returncode)
+            if not tester.check_test_data():
+                logger.error(f"{COLOR_ERROR}Expected compiler error\n{COLOR_RESET}")
+                exit(1)
+
+            tester.update_actual_compile_stderr(compiler_result.stderr)
+            if not tester.check_test_data():
+                logger.error(f"{COLOR_ERROR}Unexpected compiler message\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.compile_stderr, tester.expect_test_data.compile_stderr)}{COLOR_RESET}")
+                exit(1)
+
+            tester.update_actual_test_file_content(compiler_result.stdout)
+            if not tester.check_test_file():
+                logger.error(f"{COLOR_ERROR}Unexpected compiler result\n{COLOR_DEBUG}{compute_diff(tester.actual_test_file_content.splitlines(), tester.expect_test_file_content.splitlines())}{COLOR_RESET}")
+                exit(1)
+
+            if compiler_command[1] == 'code':
+                test_binary = f'build/{test_dir}/test'
+
+                test_data_file = f'{test_dir}/test.json'
+                run_test = os.path.exists(test_data_file) and os.path.exists(test_binary) and os.path.getmtime(test_data_file) > os.path.getmtime(test_binary)
+
+                test_binary = f'build/{test_dir}/test'
+                if not os.path.exists(test_binary) or os.path.getmtime(tester.test_file) > os.path.getmtime(test_binary):
+                    assemble(tester.test_file, test_binary, check=True)
+                    run_test = True
+
+                if run_test:
+                    run(['touch', test_binary])
+
+                    test_result = run(
+                        [test_binary, *tester.actual_test_data.execute_args],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+
+                    tester.update_actual_execute_error(test_result.returncode)
+                    if not tester.check_test_data():
+                        logger.error(f"{COLOR_ERROR}Unexpected execute exit: {test_result.returncode}{COLOR_RESET}")
+                        trace(test_binary, *tester.actual_test_data.execute_args)
+                        os.remove(test_binary)
                         exit(1)
-            else:
-                if not save and test_data.get('error'):
-                    logger.error(f"{COLOR_ERROR}Expected error\n{COLOR_RESET}")
-                    trace(*compiler_command)
-                    exit(1)
 
-                if os.path.exists(test_file):
-                    diff = compute_diff(open(test_file).read(), compiler_result.stdout)
-                    if diff:
-                        if save:
-                            open(test_file, 'w').write(compiler_result.stdout)
-                            save = False
-                        else:
-                            logger.error(f"{COLOR_ERROR}Unexpected output\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
-                            exit(1)
-                else:
-                    if save:
-                        open(test_file, 'w').write(compiler_result.stdout)
-                        save = False
-                    else:
-                        logger.error(f"{COLOR_ERROR}Unchecked output\n{COLOR_DEBUG}{compiler_result.stdout}{COLOR_RESET}")
+                    tester.update_actual_execute_stderr(test_result.stderr)
+                    if not tester.check_test_data():
+                        logger.error(f"{COLOR_ERROR}Unexpected execute stderr\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stderr, tester.expect_test_data.execute_stderr)}{COLOR_RESET}")
+                        trace(test_binary, *tester.actual_test_data.execute_args)
+                        os.remove(test_binary)
                         exit(1)
 
-                if compiler_command[1] == 'code':
-                    test_binary = f'build/{test_dir}/test'
-                    if not os.path.exists(test_binary) or os.path.getmtime(test_file) > os.path.getmtime(test_binary):
-                        assemble(test_file, test_binary, check=True)
-
-                        test_result = run(
-                            [test_binary, *test_data.get('args', [])],
-                            capture_output=True,
-                            text=True,
-                            check=False,
-                        )
-
-                        actual_result = {
-                            **({'exit': test_result.returncode} if test_result.returncode != 0 else {}),
-                            **({'stdout': test_result.stdout.splitlines()} if test_result.stdout else {}),
-                            **({'stderr': test_result.stderr.splitlines()} if test_result.stderr else {}),
-                        }
-
-                        diff = compute_diff(
-                            json.dumps(test_data.get('result'), indent=4) if 'result' in test_data else '',
-                            json.dumps(actual_result, indent=4) if actual_result else '',
-                        )
-                        if diff:
-                            if save:
-                                open(f'{test_dir}/test.json', 'w').write(json.dumps(
-                                    {
-                                        **{k: v for k, v in test_data.items() if k not in {'error', 'result'}},
-                                        **({'result': actual_result} if actual_result else {}),
-                                    },
-                                    indent=4,
-                                ))
-                                save = False
-                            else:
-                                logger.error(f"{COLOR_ERROR}Unexpected result\n{COLOR_DEBUG}{diff}{COLOR_RESET}")
-                                os.remove(test_binary)
-                                exit(1)
+                    tester.update_actual_execute_stdout(test_result.stdout)
+                    if not tester.check_test_data():
+                        logger.error(f"{COLOR_ERROR}Unexpected execute stdout\n{COLOR_DEBUG}{compute_diff(tester.actual_test_data.execute_stdout, tester.expect_test_data.execute_stdout)}{COLOR_RESET}")
+                        os.remove(test_binary)
+                        exit(1)
 
 
 def test_dirs(paths):
@@ -209,16 +337,11 @@ def test_dirs(paths):
         else:
             logger.warning(f"{COLOR_WARNING}Not a folder path: {path}{COLOR_RESET}")
 
-def compute_diff(expected, actual):
-    expected_lines = expected.splitlines()
-    actual_lines = actual.splitlines()
-    if actual_lines == expected_lines:
-        return None
-    differ = difflib.Differ()
-    return '\n'.join(
+def compute_diff(actual_lines, expected_lines):
+    return "\n".join(
         line
-        for line in differ.compare(expected_lines, actual_lines)
-        if line.startswith((' ', '+', '-'))
+        for line in difflib.Differ().compare(expected_lines, actual_lines)
+        if line.startswith((" ", "+", "-"))
     )
 
 

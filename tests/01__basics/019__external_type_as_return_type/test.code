@@ -1,0 +1,3 @@
+external type Value
+
+external func convert(anon number: i32) -> Value

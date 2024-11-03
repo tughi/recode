@@ -63,8 +63,8 @@ void Parser__consume_space(Parser *self, uint16_t count) {
     if (Parser__matches_one(self, Token__is_space)) {
         Space_Token *token = (Space_Token *)Parser__consume_token(self, Token__is_space);
         if (token->count != count) {
-            pWriter__begin_location_message(stderr_writer, token->super.location, WRITER_STYLE__WARNING);
-            pWriter__write__cstring(stderr_writer, "Consumed: ");
+            pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Consumed ");
             pWriter__write__int64(stderr_writer, token->count);
             pWriter__write__cstring(stderr_writer, " spaces where ");
             pWriter__write__int64(stderr_writer, count);
@@ -135,6 +135,7 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_opening_paren);
         Parsed_Call_Argument *first_call_argument = Parser__parse_call_arguments(self);
+        Parser__consume_space(self, 0);
         Parser__consume_token(self, Token__is_closing_paren);
         return (Parsed_Expression *)Parsed_Make_Expression__create(location, type, first_call_argument);
     }
@@ -190,7 +191,7 @@ Parsed_Expression *Parser__parse_primary_expression(Parser *self) {
         return (Parsed_Expression *)Parsed_Group_Expression__create(location, expression);
     }
     pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__ERROR);
-    pWriter__write__cstring(stderr_writer, "Unsupported primary expression");
+    pWriter__write__cstring(stderr_writer, "Unexpected token");
     pWriter__end_location_message(stderr_writer);
     panic();
 }
@@ -219,41 +220,70 @@ call_arguments
 Parsed_Call_Argument *Parser__parse_call_arguments(Parser *self) {
     Parsed_Call_Argument *first_argument = NULL;
     Parsed_Call_Argument *last_argument = NULL;
+
+    bool multiline = false;
+    int space_before_argument_list = 0;
+
     if (Parser__matches_end_of_line(self)) {
-        Parser__consume_end_of_line(self);
+        Parser__consume_space(self, 0);
+        multiline = true;
         self->current_identation = self->current_identation + 1;
+        space_before_argument_list = self->current_identation * 4;
         while (Parser__consume_empty_line(self)) {
             /* ignored */
         }
-        while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
-            Parser__consume_space(self, self->current_identation * 4);
-            Parsed_Call_Argument *argument = Parser__parse_call_argument(self);
-            Parser__consume_end_of_line(self);
-            if (last_argument == NULL) {
-                first_argument = argument;
-            } else {
-                last_argument->next_argument = argument;
-            }
-            last_argument = argument;
+    }
 
+    while (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
+        Parser__consume_space(self, space_before_argument_list);
+
+        Parsed_Call_Argument *argument = Parser__parse_call_argument(self);
+        if (last_argument == NULL) {
+            first_argument = argument;
+        } else {
+            last_argument->next_argument = argument;
+        }
+        last_argument = argument;
+
+        while (Parser__matches_two(self, Token__is_space, false, Token__is_comma)) {
+            Parser__consume_space(self, 0);
+            Parser__consume_token(self, Token__is_comma);
+            Parser__consume_space(self, 1);
+            argument = Parser__parse_call_argument(self);
+            last_argument->next_argument = argument;
+            last_argument = argument;
+        }
+
+        if (Parser__matches_end_of_line(self)) {
+            Parser__consume_end_of_line(self);
+            if (!multiline) {
+                pWriter__begin_location_message(stderr_writer, first_argument->location, WRITER_STYLE__WARNING);
+                pWriter__write__cstring(stderr_writer, "Multi-line argument list must start on a new line");
+                pWriter__end_location_message(stderr_writer);
+                multiline = true;
+                self->current_identation = self->current_identation + 1;
+                space_before_argument_list = self->current_identation * 4;
+            }
+        } else if (multiline && Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
+            pWriter__begin_location_message(stderr_writer, self->scanner->current_token->location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Multi-line argument list must end on a new line");
+            pWriter__end_location_message(stderr_writer);
+            multiline = false;
+            self->current_identation = self->current_identation - 1;
+        }
+
+        if (multiline) {
             while (Parser__consume_empty_line(self)) {
                 /* ignored */
             }
         }
+    }
+
+    if (multiline) {
         self->current_identation = self->current_identation - 1;
         Parser__consume_space(self, self->current_identation * 4);
-    } else if (!Parser__matches_two(self, Token__is_space, false, Token__is_closing_paren)) {
-        first_argument = Parser__parse_call_argument(self);
-        last_argument = first_argument;
-        while (Parser__matches_one(self, Token__is_comma)) {
-            Parser__consume_token(self, Token__is_comma);
-            Parser__consume_space(self, 1);
-            Parsed_Call_Argument *argument = Parser__parse_call_argument(self);
-            last_argument->next_argument = argument;
-            last_argument = argument;
-            Parser__consume_space(self, 0);
-        }
     }
+
     return first_argument;
 }
 
@@ -297,8 +327,8 @@ Parsed_Expression *Parser__parse_access_expression(Parser *self) {
         if (Parser__matches_two(self, Token__is_space, false, Token__is_opening_paren)) {
             Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_opening_paren);
-            Parser__consume_space(self, 0);
             Parsed_Call_Argument *call_arguments = Parser__parse_call_arguments(self);
+            Parser__consume_space(self, 0);
             Parser__consume_token(self, Token__is_closing_paren);
             expression = (Parsed_Expression *)Parsed_Call_Expression__create(expression, call_arguments);
         }

@@ -1,0 +1,31 @@
+func test(anon one: i32, anon two: i32, anon three: i32, anon four: i32, anon five: i32) {
+}
+
+func main() -> i32 {
+    test(1, 2, 3, 4, 5)
+
+    test(
+
+        1, 2, 3 \ comment
+
+        \ comment
+
+         4
+        \ comment
+        5
+
+    )
+
+    test( 1,2, 3, 4, 5 )
+
+    test(1, 2
+        3, 4, 5
+    )
+
+    test(
+        1, 2
+        3, 4
+        5)
+
+    return 0
+}

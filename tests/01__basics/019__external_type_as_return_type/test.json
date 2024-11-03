@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/019__external_type_as_return_type/test.code:3:44: Cannot use external type as return type"
+        ]
+    }
+}

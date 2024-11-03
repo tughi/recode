@@ -1,0 +1,9 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/07__trait/005__missing_function/test.code:10:18: Dog does not implement Animal trait.",
+            "tests/07__trait/005__missing_function/test.code:10:18: Missing function: func make_sound(self: @Dog) -> u8"
+        ]
+    }
+}

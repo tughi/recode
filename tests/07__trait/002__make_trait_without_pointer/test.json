@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/07__trait/002__make_trait_without_pointer/test.code:13:30: Expected pointer type"
+        ]
+    }
+}

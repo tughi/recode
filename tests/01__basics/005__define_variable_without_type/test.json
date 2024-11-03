@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/005__define_variable_without_type/test.code:2:5: Missing type"
+        ]
+    }
+}

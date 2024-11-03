@@ -1,0 +1,7 @@
+func main() -> i32 {
+    let mem = malloc(42)
+
+    return 0
+}
+
+external func malloc(anon size: u64) -> @Any

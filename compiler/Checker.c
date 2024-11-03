@@ -298,12 +298,29 @@ Checked_Callable Checker__check_callable_symbol(Checker *self, Token *symbol_nam
                 pWriter__write__checked_type(stderr_writer, argument_type);
                 parsed_argument = parsed_argument->next_argument;
                 if (parsed_argument != NULL) {
-                    pWriter__write__char(stderr_writer, ',');
+                    pWriter__write__cstring(stderr_writer, ", ");
                 }
             }
         }
         pWriter__write__char(stderr_writer, ')');
         pWriter__end_location_message(stderr_writer);
+        if (similar_function_symbols > 0) {
+            pWriter__begin_location_message(stderr_writer, symbol_name->location, WRITER_STYLE__WARNING);
+            pWriter__write__cstring(stderr_writer, "Similar callables:");
+            pWriter__end_line(stderr_writer);
+            Checked_Symbol *symbol = self->global_symbols->first_symbol;
+            for (; symbol != NULL; symbol = symbol->next_symbol) {
+                if (symbol->kind == CHECKED_SYMBOL_KIND__FUNCTION) {
+                    function_symbol = (Checked_Function_Symbol *)symbol;
+                    if (String__equals_string(function_symbol->function_name, symbol_name->lexeme)) {
+                        pWriter__begin_location_message(stderr_writer, function_symbol->super.location, WRITER_STYLE__WARNING);
+                        pWriter__write__checked_function_symbol(stderr_writer, function_symbol);
+                        pWriter__end_location_message(stderr_writer);
+                    }
+                }
+            }
+            panic();
+        }
         panic();
     }
     return (Checked_Callable){
@@ -635,6 +652,7 @@ Checked_Expression *Checker__check_make_trait_expression(Checker *self, Parsed_M
         pWriter__end_location_message(stderr_writer);
         panic();
     }
+    Checked_Type *self_type = ((Checked_Pointer_Type *)self_expression->type)->other_type;
     Checked_Make_Struct_Argument *first_make_struct_argument = Checked_Make_Struct_Argument__create(trait_type->self_struct_member, self_expression);
 
     Checked_Make_Struct_Argument *last_make_struct_argument = first_make_struct_argument;
@@ -657,8 +675,17 @@ Checked_Expression *Checker__check_make_trait_expression(Checker *self, Parsed_M
             panic();
         } else {
             pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
-            pWriter__write__cstring(stderr_writer, "Missing function symbol: ");
-            pWriter__write__string(stderr_writer, trait_method->name);
+            pWriter__write__checked_type(stderr_writer, self_type);
+            pWriter__write__cstring(stderr_writer, " does not implement ");
+            pWriter__write__checked_type(stderr_writer, (Checked_Type *)trait_type);
+            pWriter__write__cstring(stderr_writer, " trait.");
+            pWriter__end_location_message(stderr_writer);
+            pWriter__begin_location_message(stderr_writer, parsed_expression->super.location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Missing function: ");
+            Checked_Function_Symbol missing_function_symbol = {.function_name = trait_method->name, .function_type = trait_method->function_type};
+            trait_method->function_type->first_parameter->type = self_expression->type;
+            pWriter__write__checked_function_symbol(stderr_writer, &missing_function_symbol);
+            trait_method->function_type->first_parameter->type = saved_first_parameter_type;
             pWriter__end_location_message(stderr_writer);
             panic();
         }
@@ -930,6 +957,12 @@ void Checker__check_struct_statement(Checker *self, Parsed_Struct_Statement *par
                 todo("Report duplicate struct member declaration");
             }
             Checked_Type *struct_member_type = Checker__resolve_type(self, parsed_member->type);
+            if (Checked_Type__equals(struct_member_type, (Checked_Type *)struct_type)) {
+                pWriter__begin_location_message(stderr_writer, parsed_member->type->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Struct member cannot be of its own type");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
             struct_member = Checked_Struct_Member__create(parsed_member->name->location, parsed_member->name->lexeme, struct_member_type);
             if (last_struct_member == NULL) {
                 struct_type->first_member = struct_member;
@@ -946,21 +979,46 @@ Checked_Function_Type *Checker__check_function_type(Checker *self, Source_Locati
     Checked_Type *function_return_type;
     if (parsed_return_type != NULL) {
         function_return_type = Checker__resolve_type(self, parsed_return_type);
+        switch (function_return_type->kind) {
+        case CHECKED_TYPE_KIND__ANY:
+            pWriter__begin_location_message(stderr_writer, parsed_return_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use Any as return type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        case CHECKED_TYPE_KIND__EXTERNAL:
+            pWriter__begin_location_message(stderr_writer, parsed_return_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use external type as return type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
     } else {
         function_return_type = (Checked_Type *)Checker__get_builtin_type(self, CHECKED_TYPE_KIND__NOTHING);
     }
     Checked_Function_Parameter *function_first_parameter = NULL;
+    Checked_Function_Parameter *function_last_parameter = NULL;
     Parsed_Function_Parameter *parsed_parameter = first_parsed_parameter;
-    if (parsed_parameter != NULL) {
-        function_first_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
-        Checked_Function_Parameter *function_last_parameter = function_first_parameter;
-        parsed_parameter = parsed_parameter->next_parameter;
-        while (parsed_parameter != NULL) {
-            Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, Checker__resolve_type(self, parsed_parameter->type));
-            function_last_parameter->next_parameter = function_parameter;
-            function_last_parameter = function_parameter;
-            parsed_parameter = parsed_parameter->next_parameter;
+    while (parsed_parameter != NULL) {
+        Checked_Type *function_parameter_type = Checker__resolve_type(self, parsed_parameter->type);
+        switch (function_parameter_type->kind) {
+        case CHECKED_TYPE_KIND__ANY:
+            pWriter__begin_location_message(stderr_writer, parsed_parameter->type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use Any as parameter type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        case CHECKED_TYPE_KIND__EXTERNAL:
+            pWriter__begin_location_message(stderr_writer, parsed_parameter->type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "Cannot use external types as function parameters");
+            pWriter__end_location_message(stderr_writer);
+            panic();
         }
+        Checked_Function_Parameter *function_parameter = Checked_Function_Parameter__create(parsed_parameter->name->location, parsed_parameter->label ? parsed_parameter->label->lexeme : NULL, parsed_parameter->name->lexeme, function_parameter_type);
+        if (function_first_parameter == NULL) {
+            function_first_parameter = function_parameter;
+        } else {
+            function_last_parameter->next_parameter = function_parameter;
+        }
+        function_last_parameter = function_parameter;
+        parsed_parameter = parsed_parameter->next_parameter;
     }
     return Checked_Function_Type__create(location, function_first_parameter, function_return_type);
 }
@@ -1074,6 +1132,13 @@ Checked_Variable_Statement *Checker__check_variable_statement(Checker *self, Par
     if (parsed_statement->expression != NULL) {
         expression = Checker__check_expression(self, parsed_statement->expression, type);
         if (type == NULL) {
+            switch (expression->type->kind) {
+            case CHECKED_TYPE_KIND__NULL:
+                pWriter__begin_location_message(stderr_writer, parsed_statement->expression->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "Cannot infer type from null expression");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
             type = expression->type;
         } else {
             Checker__require_same_type(self, type, expression->type, expression->location);
@@ -1129,6 +1194,12 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
     String *symbol_name = String__create();
     Checked_Type *receiver_type = NULL;
     if (parsed_statement->receiver_type != NULL) {
+        if (parsed_statement->is_external) {
+            pWriter__begin_location_message(stderr_writer, parsed_statement->receiver_type->location, WRITER_STYLE__ERROR);
+            pWriter__write__cstring(stderr_writer, "External functions cannot have a receiver type");
+            pWriter__end_location_message(stderr_writer);
+            panic();
+        }
         receiver_type = Checker__resolve_type(self, parsed_statement->receiver_type);
         String__append_receiver_type(symbol_name, receiver_type);
         String__append_cstring(symbol_name, "__");
@@ -1138,6 +1209,12 @@ void Checker__check_function_declaration(Checker *self, Parsed_Function_Statemen
     int function_parameter_index = 0;
     while (function_parameter != NULL) {
         if (function_parameter->label != NULL) {
+            if (parsed_statement->is_external) {
+                pWriter__begin_location_message(stderr_writer, function_parameter->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External functions can have only anonymous parameters");
+                pWriter__end_location_message(stderr_writer);
+                panic();
+            }
             String__append_cstring(symbol_name, "__");
             String__append_int16_t(symbol_name, function_parameter_index);
             String__append_cstring(symbol_name, "_");
@@ -1306,8 +1383,19 @@ Checked_Source *Checker__check_source(Checker *self, Parsed_Source *parsed_sourc
             break;
         case PARSED_STATEMENT_KIND__FUNCTION: {
             Parsed_Function_Statement *function_statement = (Parsed_Function_Statement *)parsed_statement;
-            if (function_statement->statements != NULL) {
+            if (!function_statement->is_external) {
+                if (function_statement->statements == NULL) {
+                    pWriter__begin_location_message(stderr_writer, function_statement->super.name->location, WRITER_STYLE__ERROR);
+                    pWriter__write__cstring(stderr_writer, "Missing function body");
+                    pWriter__end_location_message(stderr_writer);
+                    panic();
+                }
                 Checker__check_function_definition(self, function_statement);
+            } else if (function_statement->statements != NULL) {
+                pWriter__begin_location_message(stderr_writer, function_statement->super.name->location, WRITER_STYLE__ERROR);
+                pWriter__write__cstring(stderr_writer, "External function with body");
+                pWriter__end_location_message(stderr_writer);
+                panic();
             }
             break;
         }

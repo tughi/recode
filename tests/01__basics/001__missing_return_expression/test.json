@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/001__missing_return_expression/test.code:2:5: Missing expression"
+        ]
+    }
+}

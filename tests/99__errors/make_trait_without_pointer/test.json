@@ -1,5 +1,0 @@
-{
-    "error": [
-        "tests/99__errors/make_trait_without_pointer/test.code:13:30: Not a pointer value"
-    ]
-}

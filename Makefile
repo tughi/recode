@@ -15,7 +15,7 @@ $(BIN_FILE): $(OBJECT_FILES)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	cc -c -MD -g -o $@ $<
+	cc -c -MD -g -Werror=implicit-function-declaration -o $@ $<
 
 clean:
 	rm -rf $(BUILD_DIR)

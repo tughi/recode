@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/01__basics/028__unexpected_return_expression_type/test.code:2:12: Expected type i32 but got u8"
+        ]
+    }
+}

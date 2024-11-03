@@ -1,0 +1,8 @@
+{
+    "compile": {
+        "error": 1,
+        "stderr": [
+            "tests/04__struct/014__struct_member_without_type/test.code:2:11: Unexpected token"
+        ]
+    }
+}

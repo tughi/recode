@@ -1,5 +1,7 @@
 {
-    "args": [
-        "test"
-    ]
+    "execute": {
+        "args": [
+            "test"
+        ]
+    }
 }

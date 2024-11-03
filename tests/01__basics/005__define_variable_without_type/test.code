@@ -1,4 +1,4 @@
 func main() -> i32 {
-    let value = 42
+    let value
     return 0
 }
